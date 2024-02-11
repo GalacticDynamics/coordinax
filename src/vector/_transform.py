@@ -4,8 +4,8 @@ __all__ = ["represent_as"]
 
 from warnings import warn
 
+import array_api_jax_compat as xp
 import astropy.units as u
-import jax.experimental.array_api as xp
 from jax_quantity import Quantity
 from jaxtyping import ArrayLike
 from plum import dispatch
