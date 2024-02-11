@@ -329,10 +329,10 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian2DVector, Cartesian2DVector),
-    (PolarVector, PolarVector),
-    (LnPolarVector, LnPolarVector),
-    (Log10PolarVector, Log10PolarVector),
+    (Cartesian2DVector, type[Cartesian2DVector]),
+    (PolarVector, type[PolarVector]),
+    (LnPolarVector, type[LnPolarVector]),
+    (Log10PolarVector, type[Log10PolarVector]),
 )
 def represent_as(
     current: Abstract2DVector, target: type[Abstract2DVector], /
@@ -342,10 +342,10 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian2DVector, LnPolarVector),
-    (Cartesian2DVector, Log10PolarVector),
-    (LnPolarVector, Cartesian2DVector),
-    (Log10PolarVector, Cartesian2DVector),
+    (Cartesian2DVector, type[LnPolarVector]),
+    (Cartesian2DVector, type[Log10PolarVector]),
+    (LnPolarVector, type[Cartesian2DVector]),
+    (Log10PolarVector, type[Cartesian2DVector]),
 )
 def represent_as(
     current: Abstract2DVector, target: type[Abstract2DVector], /
@@ -356,8 +356,8 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian2DVector, SphericalVector),
-    (Cartesian2DVector, CylindricalVector),
+    (Cartesian2DVector, type[SphericalVector]),
+    (Cartesian2DVector, type[CylindricalVector]),
 )
 def represent_as(
     current: Abstract2DVector, target: type[Abstract3DVector], /, z: ArrayLike = 0
@@ -373,14 +373,14 @@ def represent_as(
 
 
 @dispatch.multi(
-    (PolarVector, Cartesian3DVector),
-    (PolarVector, SphericalVector),
-    (LnPolarVector, Cartesian3DVector),
-    (LnPolarVector, CylindricalVector),
-    (LnPolarVector, SphericalVector),
-    (Log10PolarVector, Cartesian3DVector),
-    (Log10PolarVector, CylindricalVector),
-    (Log10PolarVector, SphericalVector),
+    (PolarVector, type[Cartesian3DVector]),
+    (PolarVector, type[SphericalVector]),
+    (LnPolarVector, type[Cartesian3DVector]),
+    (LnPolarVector, type[CylindricalVector]),
+    (LnPolarVector, type[SphericalVector]),
+    (Log10PolarVector, type[Cartesian3DVector]),
+    (Log10PolarVector, type[CylindricalVector]),
+    (Log10PolarVector, type[SphericalVector]),
 )
 def represent_as(
     current: Abstract2DVector, target: type[Abstract3DVector], /, z: ArrayLike = 0
@@ -635,9 +635,9 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian3DVector, Cartesian3DVector),
-    (SphericalVector, SphericalVector),
-    (CylindricalVector, CylindricalVector),
+    (Cartesian3DVector, type[Cartesian3DVector]),
+    (SphericalVector, type[SphericalVector]),
+    (CylindricalVector, type[CylindricalVector]),
 )
 def represent_as(
     current: Abstract3DVector, target: type[Abstract3DVector], /
@@ -647,10 +647,10 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CylindricalVector, LnPolarVector),
-    (CylindricalVector, Log10PolarVector),
-    (SphericalVector, LnPolarVector),
-    (SphericalVector, Log10PolarVector),
+    (CylindricalVector, type[LnPolarVector]),
+    (CylindricalVector, type[Log10PolarVector]),
+    (SphericalVector, type[LnPolarVector]),
+    (SphericalVector, type[Log10PolarVector]),
 )
 def represent_as(
     current: Abstract3DVector, target: type[Abstract2DVector]
@@ -704,9 +704,9 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian3DVector, PolarVector),
-    (Cartesian3DVector, LnPolarVector),
-    (Cartesian3DVector, Log10PolarVector),
+    (Cartesian3DVector, type[PolarVector]),
+    (Cartesian3DVector, type[LnPolarVector]),
+    (Cartesian3DVector, type[Log10PolarVector]),
 )
 def represent_as(
     current: Cartesian3DVector, target: type[Abstract2DVector], /
