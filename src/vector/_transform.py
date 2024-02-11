@@ -21,8 +21,8 @@ from ._builtin import (  # pylint: disable=cyclic-import
     Cartesian2DVector,
     Cartesian3DVector,
     CylindricalVector,
-    LnPolarVector,
-    Log10PolarVector,
+    # LnPolarVector,
+    # Log10PolarVector,
     PolarVector,
     RadialVector,
     SphericalVector,
@@ -55,20 +55,20 @@ def represent_as(
     return current
 
 
-@dispatch.multi(
-    (RadialVector, type[LnPolarVector]),
-    (RadialVector, type[Log10PolarVector]),
-)
-def represent_as(
-    current: Abstract1DVector,
-    target: type[Abstract2DVector],
-    /,
-    phi: Quantity = Quantity(0.0, u.radian),
-    **kwargs: Any,
-) -> Abstract2DVector:
-    """Abstract1DVector -> PolarVector -> Abstract2DVector."""
-    polar = represent_as(current, PolarVector, phi=phi)
-    return represent_as(polar, target)
+# @dispatch.multi(
+#     (RadialVector, type[LnPolarVector]),
+#     (RadialVector, type[Log10PolarVector]),
+# )
+# def represent_as(
+#     current: Abstract1DVector,
+#     target: type[Abstract2DVector],
+#     /,
+#     phi: Quantity = Quantity(0.0, u.radian),
+#     **kwargs: Any,
+# ) -> Abstract2DVector:
+#     """Abstract1DVector -> PolarVector -> Abstract2DVector."""
+#     polar = represent_as(current, PolarVector, phi=phi)
+#     return represent_as(polar, target)
 
 
 # =============================================================================
@@ -128,38 +128,38 @@ def represent_as(
     return target(r=current.x, phi=phi)
 
 
-@dispatch
-def represent_as(
-    current: Cartesian1DVector,
-    target: type[LnPolarVector],
-    /,
-    *,
-    phi: Quantity = Quantity(0.0, u.radian),
-    **kwargs: Any,
-) -> LnPolarVector:
-    """Cartesian1DVector -> LnPolarVector.
+# @dispatch
+# def represent_as(
+#     current: Cartesian1DVector,
+#     target: type[LnPolarVector],
+#     /,
+#     *,
+#     phi: Quantity = Quantity(0.0, u.radian),
+#     **kwargs: Any,
+# ) -> LnPolarVector:
+#     """Cartesian1DVector -> LnPolarVector.
 
-    The `x` coordinate is converted to the radial coordinate `lnr`.
-    The `phi` coordinate is a keyword argument and defaults to 0.
-    """
-    return target(lnr=xp.log(current.x), phi=phi)
+#     The `x` coordinate is converted to the radial coordinate `lnr`.
+#     The `phi` coordinate is a keyword argument and defaults to 0.
+#     """
+#     return target(lnr=xp.log(current.x), phi=phi)
 
 
-@dispatch
-def represent_as(
-    current: Cartesian1DVector,
-    target: type[Log10PolarVector],
-    /,
-    *,
-    phi: Quantity = Quantity(0.0, u.radian),
-    **kwargs: Any,
-) -> Log10PolarVector:
-    """Cartesian1DVector -> Log10PolarVector.
+# @dispatch
+# def represent_as(
+#     current: Cartesian1DVector,
+#     target: type[Log10PolarVector],
+#     /,
+#     *,
+#     phi: Quantity = Quantity(0.0, u.radian),
+#     **kwargs: Any,
+# ) -> Log10PolarVector:
+#     """Cartesian1DVector -> Log10PolarVector.
 
-    The `x` coordinate is converted to the radial coordinate `log10r`.
-    The `phi` coordinate is a keyword argument and defaults to 0.
-    """
-    return target(log10r=xp.log10(current.x), phi=phi)
+#     The `x` coordinate is converted to the radial coordinate `log10r`.
+#     The `phi` coordinate is a keyword argument and defaults to 0.
+#     """
+#     return target(log10r=xp.log10(current.x), phi=phi)
 
 
 # -----------------------------------------------
@@ -352,8 +352,8 @@ def represent_as(
 @dispatch.multi(
     (Cartesian2DVector, type[Cartesian2DVector]),
     (PolarVector, type[PolarVector]),
-    (LnPolarVector, type[LnPolarVector]),
-    (Log10PolarVector, type[Log10PolarVector]),
+    # (LnPolarVector, type[LnPolarVector]),
+    # (Log10PolarVector, type[Log10PolarVector]),
 )
 def represent_as(
     current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
@@ -362,18 +362,18 @@ def represent_as(
     return current
 
 
-@dispatch.multi(
-    (Cartesian2DVector, type[LnPolarVector]),
-    (Cartesian2DVector, type[Log10PolarVector]),
-    (LnPolarVector, type[Cartesian2DVector]),
-    (Log10PolarVector, type[Cartesian2DVector]),
-)
-def represent_as(
-    current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
-) -> Abstract2DVector:
-    """Abstract2DVector -> PolarVector -> Abstract2DVector."""
-    polar = represent_as(current, PolarVector)
-    return represent_as(polar, target)
+# @dispatch.multi(
+#     (Cartesian2DVector, type[LnPolarVector]),
+#     (Cartesian2DVector, type[Log10PolarVector]),
+#     (LnPolarVector, type[Cartesian2DVector]),
+#     (Log10PolarVector, type[Cartesian2DVector]),
+# )
+# def represent_as(
+#     current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
+# ) -> Abstract2DVector:
+#     """Abstract2DVector -> PolarVector -> Abstract2DVector."""
+#     polar = represent_as(current, PolarVector)
+#     return represent_as(polar, target)
 
 
 @dispatch.multi(
@@ -400,12 +400,12 @@ def represent_as(
 @dispatch.multi(
     (PolarVector, type[Cartesian3DVector]),
     (PolarVector, type[SphericalVector]),
-    (LnPolarVector, type[Cartesian3DVector]),
-    (LnPolarVector, type[CylindricalVector]),
-    (LnPolarVector, type[SphericalVector]),
-    (Log10PolarVector, type[Cartesian3DVector]),
-    (Log10PolarVector, type[CylindricalVector]),
-    (Log10PolarVector, type[SphericalVector]),
+    # (LnPolarVector, type[Cartesian3DVector]),
+    # (LnPolarVector, type[CylindricalVector]),
+    # (LnPolarVector, type[SphericalVector]),
+    # (Log10PolarVector, type[Cartesian3DVector]),
+    # (Log10PolarVector, type[CylindricalVector]),
+    # (Log10PolarVector, type[SphericalVector]),
 )
 def represent_as(
     current: Abstract2DVector,
@@ -536,20 +536,20 @@ def represent_as(
     return target(x=x, y=y)
 
 
-@dispatch
-def represent_as(
-    current: PolarVector, target: type[LnPolarVector], /, **kwargs: Any
-) -> LnPolarVector:
-    """PolarVector -> LnPolarVector."""
-    return target(lnr=xp.log(current.r), phi=current.phi)
+# @dispatch
+# def represent_as(
+#     current: PolarVector, target: type[LnPolarVector], /, **kwargs: Any
+# ) -> LnPolarVector:
+#     """PolarVector -> LnPolarVector."""
+#     return target(lnr=xp.log(current.r), phi=current.phi)
 
 
-@dispatch
-def represent_as(
-    current: PolarVector, target: type[Log10PolarVector], /, **kwargs: Any
-) -> Log10PolarVector:
-    """PolarVector -> Log10PolarVector."""
-    return target(log10r=xp.log10(current.r), phi=current.phi)
+# @dispatch
+# def represent_as(
+#     current: PolarVector, target: type[Log10PolarVector], /, **kwargs: Any
+# ) -> Log10PolarVector:
+#     """PolarVector -> Log10PolarVector."""
+#     return target(log10r=xp.log10(current.r), phi=current.phi)
 
 
 # -----------------------------------------------
@@ -569,96 +569,96 @@ def represent_as(
     return target(rho=current.r, phi=current.phi, z=z)
 
 
-# =============================================================================
-# LnPolarVector
+# # =============================================================================
+# # LnPolarVector
 
-# -----------------------------------------------
-# 1D
-
-
-@dispatch
-def represent_as(
-    current: LnPolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """LnPolarVector -> Cartesian1DVector."""
-    polar = represent_as(current, PolarVector)
-    return represent_as(polar, target)
+# # -----------------------------------------------
+# # 1D
 
 
-@dispatch
-def represent_as(
-    current: LnPolarVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """LnPolarVector -> RadialVector."""
-    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=xp.exp(current.lnr))
+# @dispatch
+# def represent_as(
+#     current: LnPolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
+# ) -> Cartesian1DVector:
+#     """LnPolarVector -> Cartesian1DVector."""
+#     polar = represent_as(current, PolarVector)
+#     return represent_as(polar, target)
 
 
-# -----------------------------------------------
-# 2D
+# @dispatch
+# def represent_as(
+#     current: LnPolarVector, target: type[RadialVector], /, **kwargs: Any
+# ) -> RadialVector:
+#     """LnPolarVector -> RadialVector."""
+#     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+#     return target(r=xp.exp(current.lnr))
 
 
-@dispatch
-def represent_as(
-    current: LnPolarVector, target: type[PolarVector], /, **kwargs: Any
-) -> PolarVector:
-    """LnPolarVector -> PolarVector."""
-    return target(r=xp.exp(current.lnr), phi=current.phi)
+# # -----------------------------------------------
+# # 2D
 
 
-@dispatch
-def represent_as(
-    current: LnPolarVector, target: type[Log10PolarVector], /, **kwargs: Any
-) -> Log10PolarVector:
-    """LnPolarVector -> Log10PolarVector."""
-    return target(log10r=current.lnr / xp.log(10), phi=current.phi)
+# @dispatch
+# def represent_as(
+#     current: LnPolarVector, target: type[PolarVector], /, **kwargs: Any
+# ) -> PolarVector:
+#     """LnPolarVector -> PolarVector."""
+#     return target(r=xp.exp(current.lnr), phi=current.phi)
 
 
-# =============================================================================
-# Log10PolarVector
-
-# -----------------------------------------------
-# 1D
-
-
-@dispatch
-def represent_as(
-    current: Log10PolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """Log10PolarVector -> Cartesian1DVector."""
-    # warn("irreversible dimension change", IrreversibleDimensionChange,
-    # stacklevel=2)
-    polar = represent_as(current, PolarVector)
-    return represent_as(polar, target)
+# @dispatch
+# def represent_as(
+#     current: LnPolarVector, target: type[Log10PolarVector], /, **kwargs: Any
+# ) -> Log10PolarVector:
+#     """LnPolarVector -> Log10PolarVector."""
+#     return target(log10r=current.lnr / xp.log(10), phi=current.phi)
 
 
-@dispatch
-def represent_as(
-    current: Log10PolarVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """Log10PolarVector -> RadialVector."""
-    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=xp.pow(10, current.log10r))
+# # =============================================================================
+# # Log10PolarVector
+
+# # -----------------------------------------------
+# # 1D
 
 
-# -----------------------------------------------
-# 2D
+# @dispatch
+# def represent_as(
+#     current: Log10PolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
+# ) -> Cartesian1DVector:
+#     """Log10PolarVector -> Cartesian1DVector."""
+#     # warn("irreversible dimension change", IrreversibleDimensionChange,
+#     # stacklevel=2)
+#     polar = represent_as(current, PolarVector)
+#     return represent_as(polar, target)
 
 
-@dispatch
-def represent_as(
-    current: Log10PolarVector, target: type[PolarVector], /, **kwargs: Any
-) -> PolarVector:
-    """Log10PolarVector -> PolarVector."""
-    return target(r=xp.pow(10, current.log10r), phi=current.phi)
+# @dispatch
+# def represent_as(
+#     current: Log10PolarVector, target: type[RadialVector], /, **kwargs: Any
+# ) -> RadialVector:
+#     """Log10PolarVector -> RadialVector."""
+#     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+#     return target(r=xp.pow(10, current.log10r))
 
 
-@dispatch
-def represent_as(
-    current: Log10PolarVector, target: type[LnPolarVector], /, **kwargs: Any
-) -> LnPolarVector:
-    """Log10PolarVector -> LnPolarVector."""
-    return target(lnr=current.log10r * xp.log(10), phi=current.phi)
+# # -----------------------------------------------
+# # 2D
+
+
+# @dispatch
+# def represent_as(
+#     current: Log10PolarVector, target: type[PolarVector], /, **kwargs: Any
+# ) -> PolarVector:
+#     """Log10PolarVector -> PolarVector."""
+#     return target(r=xp.pow(10, current.log10r), phi=current.phi)
+
+
+# @dispatch
+# def represent_as(
+#     current: Log10PolarVector, target: type[LnPolarVector], /, **kwargs: Any
+# ) -> LnPolarVector:
+#     """Log10PolarVector -> LnPolarVector."""
+#     return target(lnr=current.log10r * xp.log(10), phi=current.phi)
 
 
 ###############################################################################
@@ -685,20 +685,20 @@ def represent_as(
     return current
 
 
-@dispatch.multi(
-    (CylindricalVector, type[LnPolarVector]),
-    (CylindricalVector, type[Log10PolarVector]),
-    (SphericalVector, type[LnPolarVector]),
-    (SphericalVector, type[Log10PolarVector]),
-)
-def represent_as(
-    current: Abstract3DVector, target: type[Abstract2DVector], **kwargs: Any
-) -> Abstract2DVector:
-    """Abstract3DVector -> Cylindrical -> PolarVector -> Abstract2DVector."""
-    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    cyl = represent_as(current, CylindricalVector)
-    polar = represent_as(cyl, PolarVector)
-    return represent_as(polar, target)
+# @dispatch.multi(
+#     (CylindricalVector, type[LnPolarVector]),
+#     (CylindricalVector, type[Log10PolarVector]),
+#     (SphericalVector, type[LnPolarVector]),
+#     (SphericalVector, type[Log10PolarVector]),
+# )
+# def represent_as(
+#     current: Abstract3DVector, target: type[Abstract2DVector], **kwargs: Any
+# ) -> Abstract2DVector:
+#     """Abstract3DVector -> Cylindrical -> PolarVector -> Abstract2DVector."""
+#     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+#     cyl = represent_as(current, CylindricalVector)
+#     polar = represent_as(cyl, PolarVector)
+#     return represent_as(polar, target)
 
 
 # =============================================================================
@@ -744,8 +744,8 @@ def represent_as(
 
 @dispatch.multi(
     (Cartesian3DVector, type[PolarVector]),
-    (Cartesian3DVector, type[LnPolarVector]),
-    (Cartesian3DVector, type[Log10PolarVector]),
+    # (Cartesian3DVector, type[LnPolarVector]),
+    # (Cartesian3DVector, type[Log10PolarVector]),
 )
 def represent_as(
     current: Cartesian3DVector, target: type[Abstract2DVector], /, **kwargs: Any

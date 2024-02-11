@@ -7,8 +7,8 @@ __all__ = [
     # 2D
     "Cartesian2DVector",
     "PolarVector",
-    "LnPolarVector",
-    "Log10PolarVector",
+    # "LnPolarVector",
+    # "Log10PolarVector",
     # 3D
     "Cartesian3DVector",
     "SphericalVector",
@@ -62,18 +62,18 @@ class PolarVector(Abstract2DVector):
     phi: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
 
 
-class LnPolarVector(Abstract2DVector):
-    """Log-polar vector representation."""
+# class LnPolarVector(Abstract2DVector):
+#     """Log-polar vector representation."""
 
-    lnr: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
-    theta: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+#     lnr: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+#     theta: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
 
 
-class Log10PolarVector(Abstract2DVector):
-    """Log10-polar vector representation."""
+# class Log10PolarVector(Abstract2DVector):
+#     """Log10-polar vector representation."""
 
-    log10r: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
-    theta: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+#     log10r: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+#     theta: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
 
 
 # =============================================================================
