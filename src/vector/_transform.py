@@ -472,7 +472,7 @@ def represent_as(
     the angular coordinate `phi`.
     """
     r = xp.sqrt(current.x**2 + current.y**2)
-    phi = xp.arctan2(current.y, current.x)
+    phi = xp.atan2(current.y, current.x)
     return target(r=r, phi=phi)
 
 
