@@ -766,8 +766,8 @@ def represent_as(
 ) -> SphericalVector:
     """Cartesian3DVector -> SphericalVector."""
     r = xp.sqrt(current.x**2 + current.y**2 + current.z**2)
-    theta = xp.arccos(current.z / r)
-    phi = xp.arctan2(current.y, current.x)
+    theta = xp.acos(current.z / r)
+    phi = xp.atan2(current.y, current.x)
     return target(r=r, theta=theta, phi=phi)
 
 
@@ -777,7 +777,7 @@ def represent_as(
 ) -> CylindricalVector:
     """Cartesian3DVector -> CylindricalVector."""
     rho = xp.sqrt(current.x**2 + current.y**2)
-    phi = xp.arctan2(current.y, current.x)
+    phi = xp.atan2(current.y, current.x)
     return target(rho=rho, phi=phi, z=current.z)
 
 
@@ -930,6 +930,6 @@ def represent_as(
 ) -> SphericalVector:
     """CylindricalVector -> SphericalVector."""
     r = xp.sqrt(current.rho**2 + current.z**2)
-    theta = xp.arccos(current.z / r)
+    theta = xp.acos(current.z / r)
     phi = current.phi
     return target(r=r, theta=theta, phi=phi)
