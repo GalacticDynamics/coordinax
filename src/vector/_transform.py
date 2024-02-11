@@ -440,9 +440,7 @@ def represent_as(
 
     The `y` coordinate is dropped.
     """
-    warn(
-        "The y coordinate is being dropped.", IrreversibleDimensionChange, stacklevel=2
-    )
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     return target(x=current.x)
 
 
@@ -736,9 +734,7 @@ def represent_as(
     current: Cartesian3DVector, target: type[Cartesian2DVector], /, **kwargs: Any
 ) -> Cartesian2DVector:
     """Cartesian3DVector -> Cartesian2DVector."""
-    warn(
-        "The z coordinate is being dropped.", IrreversibleDimensionChange, stacklevel=2
-    )
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     return target(x=current.x, y=current.y)
 
 
@@ -840,7 +836,6 @@ def represent_as(
     current: SphericalVector, target: type[Cartesian3DVector], /, **kwargs: Any
 ) -> Cartesian3DVector:
     """SphericalVector -> Cartesian3DVector."""
-    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     x = current.r * xp.sin(current.theta) * xp.cos(current.phi)
     y = current.r * xp.sin(current.theta) * xp.sin(current.phi)
     z = current.r * xp.cos(current.theta)
@@ -852,7 +847,6 @@ def represent_as(
     current: SphericalVector, target: type[CylindricalVector], /, **kwargs: Any
 ) -> CylindricalVector:
     """SphericalVector -> CylindricalVector."""
-    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     rho = current.r * xp.sin(current.theta)
     phi = current.phi
     z = current.r * xp.cos(current.theta)
