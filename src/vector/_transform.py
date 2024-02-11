@@ -55,7 +55,10 @@ def represent_as(
     (RadialVector, type[Log10PolarVector]),
 )
 def represent_as(
-    current: Abstract1DVector, target: type[Abstract2DVector], /, phi: ArrayLike = 0.0
+    current: Abstract1DVector,
+    target: type[Abstract2DVector],
+    /,
+    phi: Quantity = Quantity(0.0, u.radian),
 ) -> Abstract2DVector:
     """Abstract1DVector -> PolarVector -> Abstract2DVector."""
     polar = represent_as(current, PolarVector, phi=phi)
