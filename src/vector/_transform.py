@@ -2,16 +2,21 @@
 
 __all__ = ["represent_as"]
 
+from typing import Any
 from warnings import warn
 
+import array_api_jax_compat as xp
 import astropy.units as u
-import jax.experimental.array_api as xp
 from jax_quantity import Quantity
 from jaxtyping import ArrayLike
 from plum import dispatch
 
-from ._base import Abstract1DVector, Abstract2DVector, Abstract3DVector
-from ._builtin import (
+from ._base import (  # pylint: disable=cyclic-import
+    Abstract1DVector,
+    Abstract2DVector,
+    Abstract3DVector,
+)
+from ._builtin import (  # pylint: disable=cyclic-import
     Cartesian1DVector,
     Cartesian2DVector,
     Cartesian3DVector,
@@ -30,7 +35,7 @@ from ._exceptions import IrreversibleDimensionChange
 
 @dispatch
 def represent_as(
-    current: Abstract1DVector, target: type[Abstract1DVector], /
+    current: Abstract1DVector, target: type[Abstract1DVector], /, **kwargs: Any
 ) -> Abstract1DVector:
     """Abstract1DVector -> Cartesian1D -> Abstract1DVector.
 
@@ -44,7 +49,7 @@ def represent_as(
     (Cartesian1DVector, type[Cartesian1DVector]), (RadialVector, type[RadialVector])
 )
 def represent_as(
-    current: Abstract1DVector, target: type[Abstract1DVector], /
+    current: Abstract1DVector, target: type[Abstract1DVector], /, **kwargs: Any
 ) -> Abstract1DVector:
     """Self transform of 1D vectors."""
     return current
@@ -55,7 +60,11 @@ def represent_as(
     (RadialVector, type[Log10PolarVector]),
 )
 def represent_as(
-    current: Abstract1DVector, target: type[Abstract2DVector], /, phi: ArrayLike = 0.0
+    current: Abstract1DVector,
+    target: type[Abstract2DVector],
+    /,
+    phi: Quantity = Quantity(0.0, u.radian),
+    **kwargs: Any,
 ) -> Abstract2DVector:
     """Abstract1DVector -> PolarVector -> Abstract2DVector."""
     polar = represent_as(current, PolarVector, phi=phi)
@@ -72,7 +81,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian1DVector, target: type[RadialVector], /
+    current: Cartesian1DVector, target: type[RadialVector], /, **kwargs: Any
 ) -> RadialVector:
     """Cartesian1DVector -> RadialVector.
 
@@ -91,7 +100,8 @@ def represent_as(
     target: type[Cartesian2DVector],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.meter),
+    y: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> Cartesian2DVector:
     """Cartesian1DVector -> Cartesian2DVector.
 
@@ -108,6 +118,7 @@ def represent_as(
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
+    **kwargs: Any,
 ) -> PolarVector:
     """Cartesian1DVector -> PolarVector.
 
@@ -124,6 +135,7 @@ def represent_as(
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
+    **kwargs: Any,
 ) -> LnPolarVector:
     """Cartesian1DVector -> LnPolarVector.
 
@@ -140,6 +152,7 @@ def represent_as(
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
+    **kwargs: Any,
 ) -> Log10PolarVector:
     """Cartesian1DVector -> Log10PolarVector.
 
@@ -159,8 +172,9 @@ def represent_as(
     target: type[Cartesian3DVector],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.meter),
-    z: Quantity = Quantity(0.0, u.meter),
+    y: Quantity = Quantity(0.0, u.m),
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> Cartesian3DVector:
     """Cartesian1DVector -> Cartesian3DVector.
 
@@ -178,6 +192,7 @@ def represent_as(
     *,
     theta: Quantity = Quantity(0.0, u.radian),
     phi: Quantity = Quantity(0.0, u.radian),
+    **kwargs: Any,
 ) -> SphericalVector:
     """Cartesian1DVector -> SphericalVector.
 
@@ -194,7 +209,8 @@ def represent_as(
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
-    z: Quantity = Quantity(0.0, u.meter),
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> CylindricalVector:
     """Cartesian1DVector -> CylindricalVector.
 
@@ -213,7 +229,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: RadialVector, target: type[Cartesian1DVector], /
+    current: RadialVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """RadialVector -> Cartesian1DVector.
 
@@ -232,7 +248,8 @@ def represent_as(
     target: type[Cartesian2DVector],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.meter),
+    y: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> Cartesian2DVector:
     """RadialVector -> Cartesian2DVector.
 
@@ -249,6 +266,7 @@ def represent_as(
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
+    **kwargs: Any,
 ) -> PolarVector:
     """RadialVector -> PolarVector.
 
@@ -268,8 +286,9 @@ def represent_as(
     target: type[Cartesian3DVector],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.meter),
-    z: Quantity = Quantity(0.0, u.meter),
+    y: Quantity = Quantity(0.0, u.m),
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> Cartesian3DVector:
     """RadialVector -> Cartesian3DVector.
 
@@ -287,6 +306,7 @@ def represent_as(
     *,
     theta: ArrayLike = 0.0,
     phi: Quantity = Quantity(0.0, u.radian),
+    **kwargs: Any,
 ) -> SphericalVector:
     """RadialVector -> SphericalVector.
 
@@ -303,7 +323,8 @@ def represent_as(
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
-    z: Quantity = Quantity(0.0, u.meter),
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> CylindricalVector:
     """RadialVector -> CylindricalVector.
 
@@ -319,7 +340,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Abstract2DVector, target: type[Abstract2DVector], /
+    current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
 ) -> Abstract2DVector:
     """Abstract2DVector -> Cartesian2D -> Abstract2DVector.
 
@@ -329,26 +350,26 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian2DVector, Cartesian2DVector),
-    (PolarVector, PolarVector),
-    (LnPolarVector, LnPolarVector),
-    (Log10PolarVector, Log10PolarVector),
+    (Cartesian2DVector, type[Cartesian2DVector]),
+    (PolarVector, type[PolarVector]),
+    (LnPolarVector, type[LnPolarVector]),
+    (Log10PolarVector, type[Log10PolarVector]),
 )
 def represent_as(
-    current: Abstract2DVector, target: type[Abstract2DVector], /
+    current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
 ) -> Abstract2DVector:
     """Self transform of 2D vectors."""
     return current
 
 
 @dispatch.multi(
-    (Cartesian2DVector, LnPolarVector),
-    (Cartesian2DVector, Log10PolarVector),
-    (LnPolarVector, Cartesian2DVector),
-    (Log10PolarVector, Cartesian2DVector),
+    (Cartesian2DVector, type[LnPolarVector]),
+    (Cartesian2DVector, type[Log10PolarVector]),
+    (LnPolarVector, type[Cartesian2DVector]),
+    (Log10PolarVector, type[Cartesian2DVector]),
 )
 def represent_as(
-    current: Abstract2DVector, target: type[Abstract2DVector], /
+    current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
 ) -> Abstract2DVector:
     """Abstract2DVector -> PolarVector -> Abstract2DVector."""
     polar = represent_as(current, PolarVector)
@@ -356,11 +377,15 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian2DVector, SphericalVector),
-    (Cartesian2DVector, CylindricalVector),
+    (Cartesian2DVector, type[SphericalVector]),
+    (Cartesian2DVector, type[CylindricalVector]),
 )
 def represent_as(
-    current: Abstract2DVector, target: type[Abstract3DVector], /, z: ArrayLike = 0
+    current: Abstract2DVector,
+    target: type[Abstract3DVector],
+    /,
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> Abstract3DVector:
     """Abstract2DVector -> Cartesian2D -> Cartesian3D -> Abstract3DVector.
 
@@ -373,17 +398,21 @@ def represent_as(
 
 
 @dispatch.multi(
-    (PolarVector, Cartesian3DVector),
-    (PolarVector, SphericalVector),
-    (LnPolarVector, Cartesian3DVector),
-    (LnPolarVector, CylindricalVector),
-    (LnPolarVector, SphericalVector),
-    (Log10PolarVector, Cartesian3DVector),
-    (Log10PolarVector, CylindricalVector),
-    (Log10PolarVector, SphericalVector),
+    (PolarVector, type[Cartesian3DVector]),
+    (PolarVector, type[SphericalVector]),
+    (LnPolarVector, type[Cartesian3DVector]),
+    (LnPolarVector, type[CylindricalVector]),
+    (LnPolarVector, type[SphericalVector]),
+    (Log10PolarVector, type[Cartesian3DVector]),
+    (Log10PolarVector, type[CylindricalVector]),
+    (Log10PolarVector, type[SphericalVector]),
 )
 def represent_as(
-    current: Abstract2DVector, target: type[Abstract3DVector], /, z: ArrayLike = 0
+    current: Abstract2DVector,
+    target: type[Abstract3DVector],
+    /,
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> Abstract3DVector:
     """Abstract2DVector -> PolarVector -> Cylindrical -> Abstract3DVector.
 
@@ -405,7 +434,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[Cartesian1DVector], /
+    current: Cartesian2DVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """Cartesian2DVector -> Cartesian1DVector.
 
@@ -419,7 +448,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[RadialVector], /
+    current: Cartesian2DVector, target: type[RadialVector], /, **kwargs: Any
 ) -> RadialVector:
     """Cartesian2DVector -> RadialVector.
 
@@ -435,7 +464,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[PolarVector], /
+    current: Cartesian2DVector, target: type[PolarVector], /, **kwargs: Any
 ) -> PolarVector:
     """Cartesian2DVector -> PolarVector.
 
@@ -457,7 +486,8 @@ def represent_as(
     target: type[Cartesian3DVector],
     /,
     *,
-    z: Quantity = Quantity(0.0, u.meter),
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> Cartesian3DVector:
     """Cartesian2DVector -> Cartesian3DVector.
 
@@ -476,7 +506,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: PolarVector, target: type[Cartesian1DVector], /
+    current: PolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """PolarVector -> Cartesian1DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -484,7 +514,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(current: PolarVector, target: type[RadialVector], /) -> RadialVector:
+def represent_as(
+    current: PolarVector, target: type[RadialVector], /, **kwargs: Any
+) -> RadialVector:
     """PolarVector -> RadialVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     return target(r=current.r)
@@ -496,7 +528,7 @@ def represent_as(current: PolarVector, target: type[RadialVector], /) -> RadialV
 
 @dispatch
 def represent_as(
-    current: PolarVector, target: type[Cartesian2DVector], /
+    current: PolarVector, target: type[Cartesian2DVector], /, **kwargs: Any
 ) -> Cartesian2DVector:
     """PolarVector -> Cartesian2DVector."""
     x = current.r * xp.cos(current.phi)
@@ -505,14 +537,16 @@ def represent_as(
 
 
 @dispatch
-def represent_as(current: PolarVector, target: type[LnPolarVector], /) -> LnPolarVector:
+def represent_as(
+    current: PolarVector, target: type[LnPolarVector], /, **kwargs: Any
+) -> LnPolarVector:
     """PolarVector -> LnPolarVector."""
     return target(lnr=xp.log(current.r), phi=current.phi)
 
 
 @dispatch
 def represent_as(
-    current: PolarVector, target: type[Log10PolarVector], /
+    current: PolarVector, target: type[Log10PolarVector], /, **kwargs: Any
 ) -> Log10PolarVector:
     """PolarVector -> Log10PolarVector."""
     return target(log10r=xp.log10(current.r), phi=current.phi)
@@ -528,7 +562,8 @@ def represent_as(
     target: type[CylindricalVector],
     /,
     *,
-    z: Quantity = Quantity(0.0, u.meter),
+    z: Quantity = Quantity(0.0, u.m),
+    **kwargs: Any,
 ) -> CylindricalVector:
     """PolarVector -> CylindricalVector."""
     return target(rho=current.r, phi=current.phi, z=z)
@@ -543,7 +578,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: LnPolarVector, target: type[Cartesian1DVector], /
+    current: LnPolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """LnPolarVector -> Cartesian1DVector."""
     polar = represent_as(current, PolarVector)
@@ -551,7 +586,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(current: LnPolarVector, target: type[RadialVector], /) -> RadialVector:
+def represent_as(
+    current: LnPolarVector, target: type[RadialVector], /, **kwargs: Any
+) -> RadialVector:
     """LnPolarVector -> RadialVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     return target(r=xp.exp(current.lnr))
@@ -562,14 +599,16 @@ def represent_as(current: LnPolarVector, target: type[RadialVector], /) -> Radia
 
 
 @dispatch
-def represent_as(current: LnPolarVector, target: type[PolarVector], /) -> PolarVector:
+def represent_as(
+    current: LnPolarVector, target: type[PolarVector], /, **kwargs: Any
+) -> PolarVector:
     """LnPolarVector -> PolarVector."""
     return target(r=xp.exp(current.lnr), phi=current.phi)
 
 
 @dispatch
 def represent_as(
-    current: LnPolarVector, target: type[Log10PolarVector], /
+    current: LnPolarVector, target: type[Log10PolarVector], /, **kwargs: Any
 ) -> Log10PolarVector:
     """LnPolarVector -> Log10PolarVector."""
     return target(log10r=current.lnr / xp.log(10), phi=current.phi)
@@ -584,7 +623,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Log10PolarVector, target: type[Cartesian1DVector], /
+    current: Log10PolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """Log10PolarVector -> Cartesian1DVector."""
     # warn("irreversible dimension change", IrreversibleDimensionChange,
@@ -595,7 +634,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Log10PolarVector, target: type[RadialVector], /
+    current: Log10PolarVector, target: type[RadialVector], /, **kwargs: Any
 ) -> RadialVector:
     """Log10PolarVector -> RadialVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -608,7 +647,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Log10PolarVector, target: type[PolarVector], /
+    current: Log10PolarVector, target: type[PolarVector], /, **kwargs: Any
 ) -> PolarVector:
     """Log10PolarVector -> PolarVector."""
     return target(r=xp.pow(10, current.log10r), phi=current.phi)
@@ -616,7 +655,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Log10PolarVector, target: type[LnPolarVector], /
+    current: Log10PolarVector, target: type[LnPolarVector], /, **kwargs: Any
 ) -> LnPolarVector:
     """Log10PolarVector -> LnPolarVector."""
     return target(lnr=current.log10r * xp.log(10), phi=current.phi)
@@ -628,32 +667,32 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Abstract3DVector, target: type[Abstract3DVector], /
+    current: Abstract3DVector, target: type[Abstract3DVector], /, **kwargs: Any
 ) -> Abstract3DVector:
     """Abstract3DVector -> Cartesian3D -> Abstract3DVector."""
     return represent_as(represent_as(current, Cartesian3DVector), target)
 
 
 @dispatch.multi(
-    (Cartesian3DVector, Cartesian3DVector),
-    (SphericalVector, SphericalVector),
-    (CylindricalVector, CylindricalVector),
+    (Cartesian3DVector, type[Cartesian3DVector]),
+    (SphericalVector, type[SphericalVector]),
+    (CylindricalVector, type[CylindricalVector]),
 )
 def represent_as(
-    current: Abstract3DVector, target: type[Abstract3DVector], /
+    current: Abstract3DVector, target: type[Abstract3DVector], /, **kwargs: Any
 ) -> Abstract3DVector:
     """Self transform."""
     return current
 
 
 @dispatch.multi(
-    (CylindricalVector, LnPolarVector),
-    (CylindricalVector, Log10PolarVector),
-    (SphericalVector, LnPolarVector),
-    (SphericalVector, Log10PolarVector),
+    (CylindricalVector, type[LnPolarVector]),
+    (CylindricalVector, type[Log10PolarVector]),
+    (SphericalVector, type[LnPolarVector]),
+    (SphericalVector, type[Log10PolarVector]),
 )
 def represent_as(
-    current: Abstract3DVector, target: type[Abstract2DVector]
+    current: Abstract3DVector, target: type[Abstract2DVector], **kwargs: Any
 ) -> Abstract2DVector:
     """Abstract3DVector -> Cylindrical -> PolarVector -> Abstract2DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -672,7 +711,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[Cartesian1DVector], /
+    current: Cartesian3DVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """Cartesian3DVector -> Cartesian1DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -681,7 +720,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[RadialVector], /
+    current: Cartesian3DVector, target: type[RadialVector], /, **kwargs: Any
 ) -> RadialVector:
     """Cartesian3DVector -> RadialVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -694,7 +733,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[Cartesian2DVector], /
+    current: Cartesian3DVector, target: type[Cartesian2DVector], /, **kwargs: Any
 ) -> Cartesian2DVector:
     """Cartesian3DVector -> Cartesian2DVector."""
     warn(
@@ -704,12 +743,12 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian3DVector, PolarVector),
-    (Cartesian3DVector, LnPolarVector),
-    (Cartesian3DVector, Log10PolarVector),
+    (Cartesian3DVector, type[PolarVector]),
+    (Cartesian3DVector, type[LnPolarVector]),
+    (Cartesian3DVector, type[Log10PolarVector]),
 )
 def represent_as(
-    current: Cartesian3DVector, target: type[Abstract2DVector], /
+    current: Cartesian3DVector, target: type[Abstract2DVector], /, **kwargs: Any
 ) -> Abstract2DVector:
     """Cartesian3DVector -> Cartesian2D -> Abstract2DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -723,7 +762,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[SphericalVector], /
+    current: Cartesian3DVector, target: type[SphericalVector], /, **kwargs: Any
 ) -> SphericalVector:
     """Cartesian3DVector -> SphericalVector."""
     r = xp.sqrt(current.x**2 + current.y**2 + current.z**2)
@@ -734,7 +773,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[CylindricalVector], /
+    current: Cartesian3DVector, target: type[CylindricalVector], /, **kwargs: Any
 ) -> CylindricalVector:
     """Cartesian3DVector -> CylindricalVector."""
     rho = xp.sqrt(current.x**2 + current.y**2)
@@ -752,7 +791,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[Cartesian1DVector], /
+    current: SphericalVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """SphericalVector -> Cartesian1DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -761,7 +800,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[RadialVector], /
+    current: SphericalVector, target: type[RadialVector], /, **kwargs: Any
 ) -> RadialVector:
     """SphericalVector -> RadialVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -774,7 +813,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[Cartesian2DVector], /
+    current: SphericalVector, target: type[Cartesian2DVector], /, **kwargs: Any
 ) -> Cartesian2DVector:
     """SphericalVector -> Cartesian2DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -784,7 +823,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(current: SphericalVector, target: type[PolarVector], /) -> PolarVector:
+def represent_as(
+    current: SphericalVector, target: type[PolarVector], /, **kwargs: Any
+) -> PolarVector:
     """SphericalVector -> PolarVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     return target(r=current.r * xp.sin(current.theta), phi=current.phi)
@@ -796,7 +837,7 @@ def represent_as(current: SphericalVector, target: type[PolarVector], /) -> Pola
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[Cartesian3DVector], /
+    current: SphericalVector, target: type[Cartesian3DVector], /, **kwargs: Any
 ) -> Cartesian3DVector:
     """SphericalVector -> Cartesian3DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -808,7 +849,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[CylindricalVector], /
+    current: SphericalVector, target: type[CylindricalVector], /, **kwargs: Any
 ) -> CylindricalVector:
     """SphericalVector -> CylindricalVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -828,7 +869,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[Cartesian1DVector], /
+    current: CylindricalVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
     """CylindricalVector -> Cartesian1DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -837,7 +878,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[RadialVector], /
+    current: CylindricalVector, target: type[RadialVector], /, **kwargs: Any
 ) -> RadialVector:
     """CylindricalVector -> RadialVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -850,7 +891,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[Cartesian2DVector], /
+    current: CylindricalVector, target: type[Cartesian2DVector], /, **kwargs: Any
 ) -> Cartesian2DVector:
     """CylindricalVector -> Cartesian2DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -861,7 +902,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[PolarVector], /
+    current: CylindricalVector, target: type[PolarVector], /, **kwargs: Any
 ) -> PolarVector:
     """CylindricalVector -> PolarVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -874,7 +915,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[Cartesian3DVector], /
+    current: CylindricalVector, target: type[Cartesian3DVector], /, **kwargs: Any
 ) -> Cartesian3DVector:
     """CylindricalVector -> Cartesian3DVector."""
     x = current.rho * xp.cos(current.phi)
@@ -885,7 +926,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[SphericalVector], /
+    current: CylindricalVector, target: type[SphericalVector], /, **kwargs: Any
 ) -> SphericalVector:
     """CylindricalVector -> SphericalVector."""
     r = xp.sqrt(current.rho**2 + current.z**2)

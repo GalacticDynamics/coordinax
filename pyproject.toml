@@ -35,6 +35,7 @@ dependencies = [
   "jax",
   "jaxlib",
   "jaxtyping",
+  "jax_quantity >= 0.1",
   "quax>=0.0.3",
 ]
 

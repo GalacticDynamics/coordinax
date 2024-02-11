@@ -14,7 +14,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
     def represent_as(self, target: type[T], **kwargs: Any) -> T:
         """Represent the vector as another type."""
-        from ._transform import represent_as
+        from ._transform import represent_as  # pylint: disable=import-outside-toplevel
 
         return represent_as(self, target, **kwargs)
 
