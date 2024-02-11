@@ -1,6 +1,7 @@
 """Test :mod:`vector._utils`."""
 
 from contextlib import AbstractContextManager, nullcontext
+from typing import Any
 
 import pytest
 
@@ -37,8 +38,11 @@ BUILTIN_VECTORS = [
 ]
 
 
-def context_dimension_reduction(vector, target) -> AbstractContextManager:
-    context: AbstractContextManager
+def context_dimension_reduction(
+    vector: AbstractVector, target: type[AbstractVector]
+) -> AbstractContextManager[Any]:
+    """Return a context manager that checks for dimensionality reduction."""
+    context: AbstractContextManager[Any]
     if (
         isinstance(vector, Abstract2DVector) and issubclass(target, Abstract1DVector)
     ) or (
