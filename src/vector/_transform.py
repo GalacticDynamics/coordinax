@@ -8,7 +8,6 @@ from warnings import warn
 import array_api_jax_compat as xp
 import astropy.units as u
 from jax_quantity import Quantity
-from jaxtyping import ArrayLike
 from plum import dispatch
 
 from ._base import (  # pylint: disable=cyclic-import
@@ -304,7 +303,7 @@ def represent_as(
     target: type[SphericalVector],
     /,
     *,
-    theta: ArrayLike = 0.0,
+    theta: Quantity = Quantity(0.0, u.radian),
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
 ) -> SphericalVector:
