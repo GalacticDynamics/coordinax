@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVector", "Abstract1DVector", "Abstract2DVector", "Abstract3DVector"]
+__all__ = ["AbstractVector"]
 
 from typing import Any, TypeVar
 
@@ -17,15 +17,3 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         from ._transform import represent_as  # pylint: disable=import-outside-toplevel
 
         return represent_as(self, target, **kwargs)
-
-
-class Abstract1DVector(AbstractVector):
-    """Abstract representation of 1D coordinates in different systems."""
-
-
-class Abstract2DVector(AbstractVector):
-    """Abstract representation of 2D coordinates in different systems."""
-
-
-class Abstract3DVector(AbstractVector):
-    """Abstract representation of 3D coordinates in different systems."""
