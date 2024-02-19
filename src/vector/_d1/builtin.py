@@ -6,6 +6,8 @@ __all__ = [
     "RadialVector",
 ]
 
+from typing import final
+
 import equinox as eqx
 
 from vector._typing import BatchFloatScalarQ
@@ -17,6 +19,7 @@ from .base import Abstract1DVector
 # Position
 
 
+@final
 class Cartesian1DVector(Abstract1DVector):
     """Cartesian vector representation."""
 
@@ -24,6 +27,7 @@ class Cartesian1DVector(Abstract1DVector):
     """x coordinate."""
 
 
+@final
 class RadialVector(Abstract1DVector):
     """Radial vector representation."""
 

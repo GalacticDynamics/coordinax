@@ -7,6 +7,8 @@ __all__ = [
     # "Log10PolarVector",
 ]
 
+from typing import final
+
 import equinox as eqx
 
 from vector._typing import BatchFloatScalarQ
@@ -18,6 +20,7 @@ from .base import Abstract2DVector
 # 2D
 
 
+@final
 class Cartesian2DVector(Abstract2DVector):
     """Cartesian vector representation."""
 
@@ -25,6 +28,7 @@ class Cartesian2DVector(Abstract2DVector):
     y: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
 
 
+@final
 class PolarVector(Abstract2DVector):
     """Polar vector representation.
 

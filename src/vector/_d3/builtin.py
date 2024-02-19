@@ -6,6 +6,8 @@ __all__ = [
     "CylindricalVector",
 ]
 
+from typing import final
+
 import equinox as eqx
 
 from vector._typing import BatchFloatScalarQ
@@ -17,6 +19,7 @@ from .base import Abstract3DVector
 # Position
 
 
+@final
 class Cartesian3DVector(Abstract3DVector):
     """Cartesian vector representation."""
 
@@ -25,6 +28,7 @@ class Cartesian3DVector(Abstract3DVector):
     z: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
 
 
+@final
 class SphericalVector(Abstract3DVector):
     """Spherical vector representation."""
 
@@ -33,6 +37,7 @@ class SphericalVector(Abstract3DVector):
     phi: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
 
 
+@final
 class CylindricalVector(Abstract3DVector):
     """Cylindrical vector representation."""
 
