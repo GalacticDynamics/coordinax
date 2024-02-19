@@ -1,20 +1,24 @@
 """Built-in vector classes."""
 
 __all__ = [
+    # Position
     "Cartesian2DVector",
     "PolarVector",
     # "LnPolarVector",
     # "Log10PolarVector",
+    # Differential
+    "CartesianDifferential2D",
+    "PolarDifferential",
 ]
 
-from typing import final
+from typing import ClassVar, final
 
 import equinox as eqx
 
 from vector._typing import BatchFloatScalarQ
 from vector._utils import converter_quantity_array
 
-from .base import Abstract2DVector
+from .base import Abstract2DVector, Abstract2DVectorDifferential
 
 # =============================================================================
 # 2D
@@ -51,3 +55,26 @@ class PolarVector(Abstract2DVector):
 
 #     log10r: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
 #     theta: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+
+
+##############################################################################
+
+
+@final
+class CartesianDifferential2D(Abstract2DVectorDifferential):
+    """Cartesian differential representation."""
+
+    d_x: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    d_y: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+
+    vector_cls: ClassVar[type[Cartesian2DVector]] = Cartesian2DVector  # type: ignore[misc]
+
+
+@final
+class PolarDifferential(Abstract2DVectorDifferential):
+    """Polar differential representation."""
+
+    d_r: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    d_phi: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+
+    vector_cls: ClassVar[type[PolarVector]] = PolarVector  # type: ignore[misc]
