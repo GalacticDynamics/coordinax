@@ -2,8 +2,10 @@
 
 __all__: list[str] = []
 
+from collections.abc import Iterator
+from dataclasses import Field, fields
 from functools import singledispatch
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import array_api_jax_compat as xp
 import astropy.units as u
@@ -11,6 +13,9 @@ import jax.numpy as jnp
 from jax.dtypes import canonicalize_dtype
 from jax_quantity import Quantity
 from jaxtyping import Array, Float, Shaped
+
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
 
 @singledispatch
@@ -33,3 +38,11 @@ def _convert_jax_array(x: Shaped[Array, "*shape"], /) -> Float[Quantity, "*shape
     dtype = jnp.promote_types(x.dtype, canonicalize_dtype(float))
     x = xp.asarray(x, dtype=dtype)
     return Quantity(x, u.one)
+
+
+# ============================================================================
+
+
+def fields_and_values(obj: "DataclassInstance") -> Iterator[tuple[Field[Any], Any]]:
+    """Return the fields and values of a dataclass instance."""
+    return ((f, getattr(obj, f.name)) for f in fields(obj))
