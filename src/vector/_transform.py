@@ -97,9 +97,10 @@ def represent_as(
     return target(
         **{  # Each field is the dot product of the row of the J and the diff.
             k: xp.sum(  # Doing the dot product.
-                xp.asarray(
-                    [j_c * getattr(current, f"d_{kk}") for kk, j_c in j_r.items()]
+                xp.concat(
+                    tuple(j_c * getattr(current, f"d_{kk}") for kk, j_c in j_r.items())
                 ),
+                axis=-1,
             )
             for k, j_r in jac_rows.items()
         }
