@@ -79,7 +79,11 @@ def context_dimension_reduction(
     return context
 
 
-class AbstractVectorTest:
+class AbstractVectorBaseTest:
+    """Test :class:`vector.AbstractVectorBase`."""
+
+
+class AbstractVectorTest(AbstractVectorBaseTest):
     """Test :class:`vector.AbstractVector`."""
 
     @pytest.fixture(scope="class")
@@ -102,7 +106,7 @@ class AbstractVectorTest:
         assert isinstance(newvec, target)
 
 
-class AbstractVectorDifferentialTest:
+class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
     """Test :class:`vector.AbstractVectorDifferential`."""
 
     @pytest.fixture(scope="class")
