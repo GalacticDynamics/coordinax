@@ -81,8 +81,20 @@
 
 
 [tool.coverage]
-  report.exclude_also = ['\.\.\.', 'if typing.TYPE_CHECKING:']
   run.source = ["vector"]
+
+  [tool.coverage.report]
+    exclude_also = [
+      # Have to re-enable the standard pragma
+      'pragma: no cover',
+      # Ignore type-checking stuff
+      'if typing.TYPE_CHECKING:',
+      'if TYPE_CHECKING:',
+      '\.\.\.',
+      # Ignore contents of abstract methods
+      '@abc.abstractmethod',
+      '@abstractmethod',
+    ]
 
 [tool.mypy]
   disable_error_code = ["no-redef"]

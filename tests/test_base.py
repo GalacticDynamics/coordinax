@@ -7,18 +7,27 @@ import pytest
 
 from vector import (
     Abstract1DVector,
+    Abstract1DVectorDifferential,
     Abstract2DVector,
+    Abstract2DVectorDifferential,
     Abstract3DVector,
+    Abstract3DVectorDifferential,
     AbstractVector,
+    AbstractVectorDifferential,
     Cartesian1DVector,
     Cartesian2DVector,
     Cartesian3DVector,
+    CartesianDifferential1D,
+    CartesianDifferential2D,
+    CartesianDifferential3D,
+    CylindricalDifferential,
     CylindricalVector,
     IrreversibleDimensionChange,
-    # LnPolarVector,
-    # Log10PolarVector,
+    PolarDifferential,
     PolarVector,
+    RadialDifferential,
     RadialVector,
+    SphericalDifferential,
     SphericalVector,
 )
 
@@ -35,6 +44,21 @@ BUILTIN_VECTORS = [
     Cartesian3DVector,
     SphericalVector,
     CylindricalVector,
+]
+
+BUILTIN_DIFFERENTIALS = [
+    # 1D
+    CartesianDifferential1D,
+    RadialDifferential,
+    # 2D
+    CartesianDifferential2D,
+    PolarDifferential,
+    # LnPolarDifferential,
+    # Log10PolarDifferential,
+    # 3D
+    CartesianDifferential3D,
+    SphericalDifferential,
+    CylindricalDifferential,
 ]
 
 
@@ -78,13 +102,47 @@ class AbstractVectorTest:
         assert isinstance(newvec, target)
 
 
-class Abstract1DVectorTest(AbstractVectorTest):
-    """Test :class:`vector.Abstract1DVector`."""
+class AbstractVectorDifferentialTest:
+    """Test :class:`vector.AbstractVectorDifferential`."""
 
+    @pytest.fixture(scope="class")
+    def vector(self) -> AbstractVector:  # noqa: PT004
+        """Return a vector."""
+        raise NotImplementedError
 
-class Abstract2DVectorTest(AbstractVectorTest):
-    """Test :class:`vector.Abstract2DVector`."""
+    @pytest.fixture(scope="class")
+    def difntl(self) -> AbstractVectorDifferential:  # noqa: PT004
+        """Return a vector."""
+        raise NotImplementedError
 
+    @pytest.mark.parametrize("target", BUILTIN_DIFFERENTIALS)
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_represent_as(self, difntl, target, vector):
+        """Test :meth:`AbstractVector.represent_as`.
 
-class Abstract3DVectorTest(AbstractVectorTest):
-    """Test :class:`vector.Abstract3DVector`."""
+        This just tests that the machiner works.
+        """
+        # TODO: have all the convertsions
+        if (
+            (
+                isinstance(difntl, Abstract1DVectorDifferential)
+                and not issubclass(target, Abstract1DVectorDifferential)
+            )
+            or (
+                isinstance(difntl, Abstract2DVectorDifferential)
+                and not issubclass(target, Abstract2DVectorDifferential)
+            )
+            or (
+                isinstance(difntl, Abstract3DVectorDifferential)
+                and not issubclass(target, Abstract3DVectorDifferential)
+            )
+        ):
+            pytest.xfail("Not implemented yet")
+
+        # Perform the conversion.
+        # Detecting whether the conversion reduces the dimensionality.
+        with context_dimension_reduction(vector, target.vector_cls):
+            newdif = difntl.represent_as(target, vector)
+
+        # Test
+        assert isinstance(newdif, target)
