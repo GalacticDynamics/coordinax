@@ -1,8 +1,10 @@
 """Test :mod:`vector._d1`."""
 
 import astropy.units as u
+import jax.numpy as jnp
 import pytest
 from jax_quantity import Quantity
+from quax import quaxify
 
 from vector import (
     AbstractVector,
@@ -20,9 +22,12 @@ from vector import (
     RadialVector,
     SphericalDifferential,
     SphericalVector,
+    represent_as,
 )
 
 from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest
+
+array_equal = quaxify(jnp.array_equal)
 
 
 class Abstract1DVectorTest(AbstractVectorTest):
@@ -44,7 +49,12 @@ class TestCartesian1DVector(Abstract1DVectorTest):
 
     def test_cartesian1d_to_cartesian1d(self, vector):
         """Test ``vector.represent_as(Cartesian1DVector)``."""
+        # Jit can copy
         newvec = vector.represent_as(Cartesian1DVector)
+        assert newvec == vector
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(vector, Cartesian1DVector)
         assert newvec is vector
 
     def test_cartesian1d_to_radial(self, vector):
@@ -52,7 +62,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
-        assert radial.r == Quantity([1, 2, 3, 4], u.kpc)
+        assert array_equal(radial.r, Quantity([1, 2, 3, 4], u.kpc))
 
     def test_cartesian1d_to_cartesian2d(self, vector):
         """Test ``vector.represent_as(Cartesian2DVector)``."""
@@ -148,7 +158,12 @@ class TestRadialVector(Abstract1DVectorTest):
 
     def test_radial_to_radial(self, vector):
         """Test ``vector.represent_as(RadialVector)``."""
+        # Jit can copy
         newvec = vector.represent_as(RadialVector)
+        assert newvec == vector
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(vector, RadialVector)
         assert newvec is vector
 
     def test_radial_to_cartesian2d(self, vector):
@@ -238,7 +253,12 @@ class TestCartesianDifferential1D(Abstract1DVectorDifferentialTest):
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian1d_to_cartesian1d(self, difntl, vector):
         """Test ``difntl.represent_as(CartesianDifferential1D)``."""
+        # Jit can copy
         newvec = difntl.represent_as(CartesianDifferential1D, vector)
+        assert newvec == difntl
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(difntl, CartesianDifferential1D, vector)
         assert newvec is difntl
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -349,7 +369,12 @@ class TestRadialDifferential(Abstract1DVectorDifferentialTest):
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_radial(self, difntl, vector):
         """Test ``difntl.represent_as(RadialDifferential)``."""
+        # Jit can copy
         newvec = difntl.represent_as(RadialDifferential, vector)
+        assert newvec == difntl
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(difntl, RadialDifferential, vector)
         assert newvec is difntl
 
     @pytest.mark.xfail(reason="Not implemented")
