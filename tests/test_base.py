@@ -2,13 +2,14 @@
 
 from collections import UserDict
 from contextlib import AbstractContextManager, nullcontext
+from dataclasses import replace
 from types import MappingProxyType
 from typing import Any
 
+import array_api_jax_compat as xp
 import jax.numpy as jnp
 import pytest
 from jax_quantity import Quantity
-from numpy import array_equal
 from quax import quaxify
 
 from vector import (
@@ -36,6 +37,7 @@ from vector import (
     SphericalDifferential,
     SphericalVector,
 )
+from vector._utils import dataclass_items
 
 BUILTIN_VECTORS = [
     # 1D
@@ -89,6 +91,68 @@ def context_dimension_reduction(
 
 class AbstractVectorBaseTest:
     """Test :class:`vector.AbstractVectorBase`."""
+
+    # ===============================================================
+    # Array
+
+    def test_shape(self, vector):
+        """Test :meth:`AbstractVector.shape`."""
+        shape = vector.shape
+        assert isinstance(shape, tuple)
+        assert all(isinstance(s, int) for s in shape)
+        assert shape == jnp.broadcast_shapes(
+            *(getattr(vector, c).shape for c in vector.components)
+        )
+
+    def test_flatten(self, vector):
+        """Test :meth:`AbstractVector.flatten`."""
+        # Test input vector
+        flat = vector.flatten()
+        assert isinstance(flat, type(vector))
+        assert all(
+            array_equal(getattr(flat, c), getattr(vector, c).flatten())
+            for c in vector.components
+        )
+
+        # Test an explicitly shaped vector
+        vec = replace(
+            vector,
+            **{
+                k: replace(v, value=xp.ones((2, 4))) for k, v in dataclass_items(vector)
+            },
+        )
+        flat = vec.flatten()
+        assert isinstance(flat, type(vec))
+        assert all(
+            array_equal(getattr(flat, c).value, xp.ones(8)) for c in vec.components
+        )
+
+    def test_reshape(self, vector):
+        """Test :meth:`AbstractVector.reshape`."""
+        # Test input vector
+        reshaped = vector.reshape(2, -1)
+        assert isinstance(reshaped, type(vector))
+        assert all(
+            array_equal(getattr(reshaped, c), getattr(vector, c).reshape(2, -1))
+            for c in vector.components
+        )
+
+        # Test an explicitly shaped vector
+        vec = replace(
+            vector,
+            **{
+                k: replace(v, value=xp.ones((2, 4))) for k, v in dataclass_items(vector)
+            },
+        )
+        reshaped = vec.reshape(1, 8)
+        assert isinstance(reshaped, type(vec))
+        assert all(
+            array_equal(getattr(reshaped, c).value, xp.ones((1, 8)))
+            for c in vec.components
+        )
+
+    # ===============================================================
+    # Collection
 
     def test_asdict(self, vector):
         """Test :meth:`AbstractVector.asdict`."""

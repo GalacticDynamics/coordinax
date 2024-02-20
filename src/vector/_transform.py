@@ -62,6 +62,11 @@ def represent_as(
     # differential to construct the Jacobian.
     current_position = represent_as(position, current.vector_cls, **kwargs)
 
+    # # Need to ensure that the shape of the differential is the same as the
+    # # shape of the position. This can probably be relaxed, but for now it's
+    # # a requirement.
+    # current_position = eqx.error_if()
+
     # Takes the Jacobian through the representation transformation function.  This
     # returns a representation of the target type, where the value of each field the
     # corresponding row of the Jacobian. The value of the field is a Quantity with
@@ -84,7 +89,7 @@ def represent_as(
     # Now we can use the Jacobian to transform the differential.
     flat_current = current.reshape(flat_shape)
     return target(
-        **{  # Each field is the dot product of the row of the J and the diff.
+        **{  # Each field is the dot product of the row of the J and the diff column.
             k: xp.sum(  # Doing the dot product.
                 xp.stack(
                     tuple(
