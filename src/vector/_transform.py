@@ -40,6 +40,27 @@ from ._exceptions import IrreversibleDimensionChange
 from ._utils import fields_and_values
 
 
+# Self transform
+@dispatch.multi(
+    (CartesianDifferential1D, type[CartesianDifferential1D], AbstractVector),
+    (RadialDifferential, type[RadialDifferential], AbstractVector),
+    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractVector),
+    (PolarDifferential, type[PolarDifferential], AbstractVector),
+    (CartesianDifferential3D, type[CartesianDifferential3D], AbstractVector),
+    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
+    (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
+)
+def represent_as(
+    current: AbstractVectorDifferential,
+    target: type[AbstractVectorDifferential],
+    position: AbstractVector,
+    /,
+    **kwargs: Any,
+) -> AbstractVectorDifferential:
+    """Self transform."""
+    return current
+
+
 # TODO: implement for cross-representations
 @dispatch.multi(
     # N-D -> N-D
@@ -80,9 +101,7 @@ def represent_as(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
-    jac_nested_vecs = jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None))(
-        current_position, target.vector_cls
-    )
+    jac_nested_vecs = jac_rep_as(current_position, target.vector_cls)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for
@@ -109,25 +128,10 @@ def represent_as(
     )
 
 
-# Self transform
-@dispatch.multi(
-    (CartesianDifferential1D, type[CartesianDifferential1D], AbstractVector),
-    (RadialDifferential, type[RadialDifferential], AbstractVector),
-    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractVector),
-    (PolarDifferential, type[PolarDifferential], AbstractVector),
-    (CartesianDifferential3D, type[CartesianDifferential3D], AbstractVector),
-    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
-    (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
+# TODO: situate this better to show how represent_as is used
+jac_rep_as = jax.jit(
+    jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None)), static_argnums=(1,)
 )
-def represent_as(
-    current: AbstractVectorDifferential,
-    target: type[AbstractVectorDifferential],
-    position: AbstractVector,
-    /,
-    **kwargs: Any,
-) -> AbstractVectorDifferential:
-    """Self transform."""
-    return current
 
 
 ###############################################################################
