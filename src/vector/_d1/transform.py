@@ -20,6 +20,22 @@ from .builtin import (
 # 1D
 
 
+@dispatch(precedence=1)
+def represent_as(
+    current: Cartesian1DVector, target: type[Cartesian1DVector], /, **kwargs: Any
+) -> Cartesian1DVector:
+    """Self transform of 1D vectors."""
+    return current
+
+
+@dispatch(precedence=1)
+def represent_as(
+    current: RadialVector, target: type[RadialVector], /, **kwargs: Any
+) -> RadialVector:
+    """Self transform of 1D vectors."""
+    return current
+
+
 @dispatch
 def represent_as(
     current: Abstract1DVector, target: type[Abstract1DVector], /, **kwargs: Any
@@ -30,16 +46,6 @@ def represent_as(
     """
     cart1d = represent_as(current, Cartesian1DVector)
     return represent_as(cart1d, target)
-
-
-@dispatch.multi(
-    (Cartesian1DVector, type[Cartesian1DVector]), (RadialVector, type[RadialVector])
-)
-def represent_as(
-    current: Abstract1DVector, target: type[Abstract1DVector], /, **kwargs: Any
-) -> Abstract1DVector:
-    """Self transform of 1D vectors."""
-    return current
 
 
 @dispatch.multi(
