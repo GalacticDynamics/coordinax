@@ -7,8 +7,15 @@ from typing import Any
 import array_api_jax_compat as xp
 from plum import dispatch
 
-from .base import Abstract2DVector  # pylint: disable=cyclic-import
-from .builtin import Cartesian2DVector, PolarVector
+from vector._base import AbstractVector
+
+from .base import Abstract2DVector, Abstract2DVectorDifferential
+from .builtin import (
+    Cartesian2DVector,
+    CartesianDifferential2D,
+    PolarDifferential,
+    PolarVector,
+)
 
 
 @dispatch
@@ -32,6 +39,21 @@ def represent_as(
     current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
 ) -> Abstract2DVector:
     """Self transform of 2D vectors."""
+    return current
+
+
+@dispatch.multi(
+    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractVector),
+    (PolarDifferential, type[PolarDifferential], AbstractVector),
+)
+def represent_as(
+    current: Abstract2DVectorDifferential,
+    target: type[Abstract2DVectorDifferential],
+    position: AbstractVector,
+    /,
+    **kwargs: Any,
+) -> Abstract2DVectorDifferential:
+    """Self transform of 2D Differentials."""
     return current
 
 

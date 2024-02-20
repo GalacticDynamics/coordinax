@@ -14,69 +14,31 @@ from plum import dispatch
 
 from ._base import AbstractVector, AbstractVectorDifferential
 from ._d1.base import Abstract1DVectorDifferential
-from ._d1.builtin import (
-    Cartesian1DVector,
-    CartesianDifferential1D,
-    RadialDifferential,
-    RadialVector,
-)
+from ._d1.builtin import Cartesian1DVector, RadialVector
 from ._d2.base import Abstract2DVector, Abstract2DVectorDifferential
-from ._d2.builtin import (
-    Cartesian2DVector,
-    CartesianDifferential2D,
-    PolarDifferential,
-    PolarVector,
-)
+from ._d2.builtin import Cartesian2DVector, PolarVector
 from ._d3.base import Abstract3DVector, Abstract3DVectorDifferential
-from ._d3.builtin import (
-    Cartesian3DVector,
-    CartesianDifferential3D,
-    CylindricalDifferential,
-    CylindricalVector,
-    SphericalDifferential,
-    SphericalVector,
-)
+from ._d3.builtin import Cartesian3DVector, CylindricalVector, SphericalVector
 from ._exceptions import IrreversibleDimensionChange
 from ._utils import fields_and_values
 
 
-# Self transform
-@dispatch.multi(
-    (CartesianDifferential1D, type[CartesianDifferential1D], AbstractVector),
-    (RadialDifferential, type[RadialDifferential], AbstractVector),
-    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractVector),
-    (PolarDifferential, type[PolarDifferential], AbstractVector),
-    (CartesianDifferential3D, type[CartesianDifferential3D], AbstractVector),
-    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
-    (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
-)
-def represent_as(
-    current: AbstractVectorDifferential,
-    target: type[AbstractVectorDifferential],
-    position: AbstractVector,
-    /,
-    **kwargs: Any,
-) -> AbstractVectorDifferential:
-    """Self transform."""
-    return current
-
-
 # TODO: implement for cross-representations
-@dispatch.multi(
+@dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
     (
         Abstract1DVectorDifferential,
-        type[Abstract1DVectorDifferential],
+        type[Abstract1DVectorDifferential],  # type: ignore[misc]
         AbstractVector,
     ),
     (
         Abstract2DVectorDifferential,
-        type[Abstract2DVectorDifferential],
+        type[Abstract2DVectorDifferential],  # type: ignore[misc]
         AbstractVector,
     ),
     (
         Abstract3DVectorDifferential,
-        type[Abstract3DVectorDifferential],
+        type[Abstract3DVectorDifferential],  # type: ignore[misc]
         AbstractVector,
     ),
 )
