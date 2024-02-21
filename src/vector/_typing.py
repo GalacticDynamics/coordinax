@@ -7,3 +7,4 @@ from jaxtyping import Float, Shaped
 
 FloatScalarQ = Float[Quantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]
+BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]

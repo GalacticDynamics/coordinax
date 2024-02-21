@@ -13,7 +13,7 @@ from typing import ClassVar, final
 
 import equinox as eqx
 
-from vector._typing import BatchFloatScalarQ
+from vector._typing import BatchableFloatScalarQ
 from vector._utils import converter_quantity_array
 
 from .base import Abstract1DVector, Abstract1DVectorDifferential
@@ -26,7 +26,7 @@ from .base import Abstract1DVector, Abstract1DVectorDifferential
 class Cartesian1DVector(Abstract1DVector):
     """Cartesian vector representation."""
 
-    x: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    x: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
     """x coordinate."""
 
 
@@ -34,7 +34,7 @@ class Cartesian1DVector(Abstract1DVector):
 class RadialVector(Abstract1DVector):
     """Radial vector representation."""
 
-    r: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    r: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
     """Radial coordinate."""
 
 
@@ -46,7 +46,7 @@ class RadialVector(Abstract1DVector):
 class CartesianDifferential1D(Abstract1DVectorDifferential):
     """Cartesian differential representation."""
 
-    d_x: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    d_x: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
     """Differential d_x/d_<>."""
 
     vector_cls: ClassVar[type[Cartesian1DVector]] = Cartesian1DVector  # type: ignore[misc]
@@ -56,7 +56,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
 class RadialDifferential(Abstract1DVectorDifferential):
     """Radial differential representation."""
 
-    d_r: BatchFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    d_r: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
     """Differential d_r/d_<>."""
 
     vector_cls: ClassVar[type[RadialVector]] = RadialVector  # type: ignore[misc]
