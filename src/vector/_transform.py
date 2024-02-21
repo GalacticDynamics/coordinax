@@ -80,7 +80,9 @@ def represent_as(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
-    jac_nested_vecs = jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None))(current_position, target.vector_cls)
+    jac_nested_vecs = jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None))(
+        current_position, target.vector_cls
+    )
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for
