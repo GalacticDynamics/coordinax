@@ -13,6 +13,7 @@ from vector import (
     PolarVector,
     RadialVector,
     SphericalVector,
+    represent_as,
 )
 from vector._d1.builtin import CartesianDifferential1D, RadialDifferential
 from vector._d2.builtin import CartesianDifferential2D, PolarDifferential
@@ -59,6 +60,16 @@ class TestCartesian2DVector:
 
         assert isinstance(radial, RadialVector)
         assert radial.r == Quantity([1, 2, 3, 4], u.kpc)
+
+    def test_cartesian2d_to_cartesian2d(self, vector):
+        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        # Jit can copy
+        newvec = vector.represent_as(Cartesian2DVector)
+        assert newvec == vector
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(vector, Cartesian2DVector)
+        assert newvec is vector
 
     def test_cartesian2d_to_polar(self, vector):
         """Test ``vector.represent_as(PolarVector)``."""
@@ -151,7 +162,12 @@ class TestPolarVector:
 
     def test_polar_to_polar(self, vector):
         """Test ``vector.represent_as(PolarVector)``."""
+        # Jit can copy
         newvec = vector.represent_as(PolarVector)
+        assert newvec == vector
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(vector, PolarVector)
         assert newvec is vector
 
     # def test_polar_to_lnpolar(self, vector):
@@ -242,9 +258,13 @@ class TestCartesianDifferential2D(Abstract2DVectorDifferentialTest):
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_cartesian2d(self, difntl, vector):
         """Test ``difntl.represent_as(CartesianDifferential2D, vector)``."""
-        newdifntl = difntl.represent_as(CartesianDifferential2D, vector)
+        # Jit can copy
+        newvec = difntl.represent_as(CartesianDifferential2D, vector)
+        assert newvec == difntl
 
-        assert newdifntl is difntl
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(difntl, CartesianDifferential2D, vector)
+        assert newvec is difntl
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_polar(self, difntl, vector):
@@ -346,9 +366,13 @@ class TestPolarDifferential(Abstract2DVectorDifferentialTest):
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_polar(self, difntl, vector):
         """Test ``difntl.represent_as(PolarDifferential, vector)``."""
-        newdifntl = difntl.represent_as(PolarDifferential, vector)
+        # Jit can copy
+        newvec = difntl.represent_as(PolarDifferential, vector)
+        assert newvec == difntl
 
-        assert newdifntl is difntl
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(difntl, PolarDifferential, vector)
+        assert newvec is difntl
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")

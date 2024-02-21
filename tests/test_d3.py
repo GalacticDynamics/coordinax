@@ -13,9 +13,17 @@ from vector import (
     PolarVector,
     RadialVector,
     SphericalVector,
+    represent_as,
+)
+from vector._d1.builtin import CartesianDifferential1D
+from vector._d2.builtin import CartesianDifferential2D
+from vector._d3.builtin import (
+    CartesianDifferential3D,
+    CylindricalDifferential,
+    SphericalDifferential,
 )
 
-from .test_base import AbstractVectorTest
+from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest
 
 
 class Abstract3DVectorTest(AbstractVectorTest):
@@ -85,7 +93,12 @@ class TestCartesian3DVector:
 
     def test_cartesian3d_to_cartesian3d(self, vector):
         """Test ``vector.represent_as(Cartesian3DVector)``."""
+        # Jit can copy
         newvec = vector.represent_as(Cartesian3DVector)
+        assert newvec == vector
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(vector, Cartesian3DVector)
         assert newvec is vector
 
     def test_cartesian3d_to_spherical(self, vector):
@@ -190,7 +203,12 @@ class TestSphericalVector:
 
     def test_spherical_to_spherical(self, vector):
         """Test ``vector.represent_as(SphericalVector)``."""
+        # Jit can copy
         newvec = vector.represent_as(SphericalVector)
+        assert newvec == vector
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(vector, SphericalVector)
         assert newvec is vector
 
     def test_spherical_to_cylindrical(self, vector):
@@ -288,5 +306,284 @@ class TestCylindricalVector:
 
     def test_cylindrical_to_cylindrical(self, vector):
         """Test ``vector.represent_as(CylindricalVector)``."""
+        # Jit can copy
         newvec = vector.represent_as(CylindricalVector)
+        assert newvec == vector
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(vector, CylindricalVector)
         assert newvec is vector
+
+
+class Abstract3DVectorDifferentialTest(AbstractVectorDifferentialTest):
+    """Test :class:`vector.Abstract2DVectorDifferential`."""
+
+
+class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
+    """Test :class:`vector.CartesianDifferential3D`."""
+
+    @pytest.fixture(scope="class")
+    def difntl(self) -> CartesianDifferential3D:
+        """Return a differential."""
+        return CartesianDifferential3D(
+            d_x=Quantity([1, 2, 3, 4], u.km / u.s),
+            d_y=Quantity([5, 6, 7, 8], u.km / u.s),
+            d_z=Quantity([9, 10, 11, 12], u.km / u.s),
+        )
+
+    @pytest.fixture(scope="class")
+    def vector(self) -> Cartesian3DVector:
+        """Return a vector."""
+        return Cartesian3DVector(
+            x=Quantity([1, 2, 3, 4], u.kpc),
+            y=Quantity([5, 6, 7, 8], u.kpc),
+            z=Quantity([9, 10, 11, 12], u.kpc),
+        )
+
+    # ==========================================================================
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cartesian3d_to_cartesian1d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        cart1d = difntl.represent_as(CartesianDifferential1D, vector)
+
+        assert isinstance(cart1d, CartesianDifferential1D)
+        assert cart1d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cartesian3d_to_radial(self, difntl, vector):
+        """Test ``vector.represent_as(RadialVector)``."""
+        radial = difntl.represent_as(RadialVector, vector)
+
+        assert isinstance(radial, RadialVector)
+        assert radial.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cartesian3d_to_cartesian2d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        cart2d = difntl.represent_as(CartesianDifferential2D, vector)
+
+        assert isinstance(cart2d, CartesianDifferential2D)
+        assert cart2d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert cart2d.d_y == Quantity([5, 6, 7, 8], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cartesian3d_to_polar(self, difntl, vector):
+        """Test ``vector.represent_as(PolarVector)``."""
+        polar = difntl.represent_as(PolarVector, vector)
+
+        assert isinstance(polar, PolarVector)
+        assert polar.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert polar.d_phi == Quantity([5, 6, 7, 8], u.mas / u.yr)
+
+    def test_cartesian3d_to_cartesian3d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        # Jit can copy
+        newvec = difntl.represent_as(CartesianDifferential3D, vector)
+        assert newvec == difntl
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(difntl, CartesianDifferential3D, vector)
+        assert newvec is difntl
+
+    def test_cartesian3d_to_spherical(self, difntl, vector):
+        """Test ``vector.represent_as(SphericalDifferential)``."""
+        spherical = difntl.represent_as(SphericalDifferential, vector)
+
+        assert isinstance(spherical, SphericalDifferential)
+        assert spherical.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert spherical.d_phi == Quantity([5, 6, 7, 8], u.mas / u.yr)
+        assert spherical.d_theta == Quantity([9, 10, 11, 12], u.mas / u.yr)
+
+    def test_cartesian3d_to_cylindrical(self, difntl, vector):
+        """Test ``vector.represent_as(CylindricalDifferential)``."""
+        cylindrical = difntl.represent_as(CylindricalDifferential, vector)
+
+        assert isinstance(cylindrical, CylindricalDifferential)
+        assert cylindrical.d_rho == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert cylindrical.d_phi == Quantity([5, 6, 7, 8], u.mas / u.yr)
+        assert cylindrical.d_z == Quantity([9, 10, 11, 12], u.km / u.s)
+
+
+class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
+    """Test :class:`vector.SphericalDifferential`."""
+
+    @pytest.fixture(scope="class")
+    def difntl(self) -> SphericalDifferential:
+        """Return a differential."""
+        return SphericalDifferential(
+            d_r=Quantity([1, 2, 3, 4], u.km / u.s),
+            d_phi=Quantity([5, 6, 7, 8], u.mas / u.yr),
+            d_theta=Quantity([9, 10, 11, 12], u.mas / u.yr),
+        )
+
+    @pytest.fixture(scope="class")
+    def vector(self) -> SphericalVector:
+        """Return a vector."""
+        return SphericalVector(
+            r=Quantity([1, 2, 3, 4], u.kpc),
+            phi=Quantity([0, 1, 2, 3], u.rad),
+            theta=Quantity([4, 5, 6, 7], u.rad),
+        )
+
+    # ==========================================================================
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_spherical_to_cartesian1d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        cart1d = difntl.represent_as(CartesianDifferential1D, vector)
+
+        assert isinstance(cart1d, CartesianDifferential1D)
+        assert cart1d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_spherical_to_radial(self, difntl, vector):
+        """Test ``vector.represent_as(RadialVector)``."""
+        radial = difntl.represent_as(RadialVector, vector)
+
+        assert isinstance(radial, RadialVector)
+        assert radial.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_spherical_to_cartesian2d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        cart2d = difntl.represent_as(CartesianDifferential2D, vector)
+
+        assert isinstance(cart2d, CartesianDifferential2D)
+        assert cart2d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert cart2d.d_y == Quantity([5, 6, 7, 8], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_spherical_to_polar(self, difntl, vector):
+        """Test ``vector.represent_as(PolarVector)``."""
+        polar = difntl.represent_as(PolarVector, vector)
+
+        assert isinstance(polar, PolarVector)
+        assert polar.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert polar.d_phi == Quantity([5, 6, 7, 8], u.mas / u.yr)
+
+    def test_spherical_to_cartesian3d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        cart3d = difntl.represent_as(CartesianDifferential3D, vector)
+
+        assert isinstance(cart3d, CartesianDifferential3D)
+        assert cart3d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert cart3d.d_y == Quantity([5, 6, 7, 8], u.km / u.s)
+        assert cart3d.d_z == Quantity([9, 10, 11, 12], u.km / u.s)
+
+    def test_spherical_to_spherical(self, difntl, vector):
+        """Test ``vector.represent_as(SphericalDifferential)``."""
+        # Jit can copy
+        newvec = difntl.represent_as(SphericalDifferential, vector)
+        assert newvec == difntl
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(difntl, SphericalDifferential, vector)
+        assert newvec is difntl
+
+    def test_spherical_to_cylindrical(self, difntl, vector):
+        """Test ``vector.represent_as(CylindricalDifferential)``."""
+        cylindrical = difntl.represent_as(CylindricalDifferential, vector)
+
+        assert isinstance(cylindrical, CylindricalDifferential)
+        assert cylindrical.d_rho == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert cylindrical.d_phi == Quantity([5, 6, 7, 8], u.mas / u.yr)
+        assert cylindrical.d_z == Quantity([9, 10, 11, 12], u.km / u.s)
+
+
+class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
+    """Test :class:`vector.CylindricalDifferential`."""
+
+    @pytest.fixture(scope="class")
+    def difntl(self) -> CylindricalDifferential:
+        """Return a differential."""
+        return CylindricalDifferential(
+            d_rho=Quantity([1, 2, 3, 4], u.km / u.s),
+            d_phi=Quantity([5, 6, 7, 8], u.mas / u.yr),
+            d_z=Quantity([9, 10, 11, 12], u.km / u.s),
+        )
+
+    @pytest.fixture(scope="class")
+    def vector(self) -> CylindricalVector:
+        """Return a vector."""
+        return CylindricalVector(
+            rho=Quantity([1, 2, 3, 4], u.kpc),
+            phi=Quantity([0, 1, 2, 3], u.rad),
+            z=Quantity([9, 10, 11, 12], u.kpc),
+        )
+
+    # ==========================================================================
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cylindrical_to_cartesian1d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        cart1d = difntl.represent_as(CartesianDifferential1D, vector)
+
+        assert isinstance(cart1d, CartesianDifferential1D)
+        assert cart1d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cylindrical_to_radial(self, difntl, vector):
+        """Test ``vector.represent_as(RadialVector)``."""
+        radial = difntl.represent_as(RadialVector, vector)
+
+        assert isinstance(radial, RadialVector)
+        assert radial.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cylindrical_to_cartesian2d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        cart2d = difntl.represent_as(CartesianDifferential2D, vector)
+
+        assert isinstance(cart2d, CartesianDifferential2D)
+        assert cart2d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert cart2d.d_y == Quantity([5, 6, 7, 8], u.km / u.s)
+
+    @pytest.mark.xfail(reason="Not implemented")
+    @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
+    def test_cylindrical_to_polar(self, difntl, vector):
+        """Test ``vector.represent_as(PolarVector)``."""
+        polar = difntl.represent_as(PolarVector, vector)
+
+        assert isinstance(polar, PolarVector)
+        assert polar.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert polar.d_phi == Quantity([5, 6, 7, 8], u.mas / u.yr)
+
+    def test_cylindrical_to_cartesian3d(self, difntl, vector):
+        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        cart3d = difntl.represent_as(CartesianDifferential3D, vector)
+
+        assert isinstance(cart3d, CartesianDifferential3D)
+        assert cart3d.d_x == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert cart3d.d_y == Quantity([5, 6, 7, 8], u.km / u.s)
+        assert cart3d.d_z == Quantity([9, 10, 11, 12], u.km / u.s)
+
+    def test_cylindrical_to_spherical(self, difntl, vector):
+        """Test ``vector.represent_as(SphericalDifferential)``."""
+        spherical = difntl.represent_as(SphericalDifferential, vector)
+
+        assert isinstance(spherical, SphericalDifferential)
+        assert spherical.d_r == Quantity([1, 2, 3, 4], u.km / u.s)
+        assert spherical.d_phi == Quantity([5, 6, 7, 8], u.mas / u.yr)
+        assert spherical.d_theta == Quantity([9, 10, 11, 12], u.mas / u.yr)
+
+    def test_cylindrical_to_cylindrical(self, difntl, vector):
+        """Test ``vector.represent_as(CylindricalDifferential)``."""
+        # Jit can copy
+        newvec = difntl.represent_as(CylindricalDifferential, vector)
+        assert newvec == difntl
+
+        # The normal `represent_as` method should return the same object
+        newvec = represent_as(difntl, CylindricalDifferential, vector)
+        assert newvec is difntl

@@ -14,48 +14,31 @@ from plum import dispatch
 
 from ._base import AbstractVector, AbstractVectorDifferential
 from ._d1.base import Abstract1DVectorDifferential
-from ._d1.builtin import (
-    Cartesian1DVector,
-    CartesianDifferential1D,
-    RadialDifferential,
-    RadialVector,
-)
+from ._d1.builtin import Cartesian1DVector, RadialVector
 from ._d2.base import Abstract2DVector, Abstract2DVectorDifferential
-from ._d2.builtin import (
-    Cartesian2DVector,
-    CartesianDifferential2D,
-    PolarDifferential,
-    PolarVector,
-)
+from ._d2.builtin import Cartesian2DVector, PolarVector
 from ._d3.base import Abstract3DVector, Abstract3DVectorDifferential
-from ._d3.builtin import (
-    Cartesian3DVector,
-    CartesianDifferential3D,
-    CylindricalDifferential,
-    CylindricalVector,
-    SphericalDifferential,
-    SphericalVector,
-)
+from ._d3.builtin import Cartesian3DVector, CylindricalVector, SphericalVector
 from ._exceptions import IrreversibleDimensionChange
 from ._utils import fields_and_values
 
 
 # TODO: implement for cross-representations
-@dispatch.multi(
+@dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
     (
         Abstract1DVectorDifferential,
-        type[Abstract1DVectorDifferential],
+        type[Abstract1DVectorDifferential],  # type: ignore[misc]
         AbstractVector,
     ),
     (
         Abstract2DVectorDifferential,
-        type[Abstract2DVectorDifferential],
+        type[Abstract2DVectorDifferential],  # type: ignore[misc]
         AbstractVector,
     ),
     (
         Abstract3DVectorDifferential,
-        type[Abstract3DVectorDifferential],
+        type[Abstract3DVectorDifferential],  # type: ignore[misc]
         AbstractVector,
     ),
 )
@@ -80,9 +63,7 @@ def represent_as(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
-    jac_nested_vecs = jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None))(
-        current_position, target.vector_cls
-    )
+    jac_nested_vecs = jac_rep_as(current_position, target.vector_cls)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for
@@ -109,25 +90,10 @@ def represent_as(
     )
 
 
-# Self transform
-@dispatch.multi(
-    (CartesianDifferential1D, type[CartesianDifferential1D], AbstractVector),
-    (RadialDifferential, type[RadialDifferential], AbstractVector),
-    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractVector),
-    (PolarDifferential, type[PolarDifferential], AbstractVector),
-    (CartesianDifferential3D, type[CartesianDifferential3D], AbstractVector),
-    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
-    (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
+# TODO: situate this better to show how represent_as is used
+jac_rep_as = jax.jit(
+    jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None)), static_argnums=(1,)
 )
-def represent_as(
-    current: AbstractVectorDifferential,
-    target: type[AbstractVectorDifferential],
-    position: AbstractVector,
-    /,
-    **kwargs: Any,
-) -> AbstractVectorDifferential:
-    """Self transform."""
-    return current
 
 
 ###############################################################################

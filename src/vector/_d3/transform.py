@@ -7,8 +7,17 @@ from typing import Any
 import array_api_jax_compat as xp
 from plum import dispatch
 
-from .base import Abstract3DVector
-from .builtin import Cartesian3DVector, CylindricalVector, SphericalVector
+from vector._base import AbstractVector
+
+from .base import Abstract3DVector, Abstract3DVectorDifferential
+from .builtin import (
+    Cartesian3DVector,
+    CartesianDifferential3D,
+    CylindricalDifferential,
+    CylindricalVector,
+    SphericalDifferential,
+    SphericalVector,
+)
 
 ###############################################################################
 # 3D
@@ -31,6 +40,22 @@ def represent_as(
     current: Abstract3DVector, target: type[Abstract3DVector], /, **kwargs: Any
 ) -> Abstract3DVector:
     """Self transform."""
+    return current
+
+
+@dispatch.multi(
+    (CartesianDifferential3D, type[CartesianDifferential3D], AbstractVector),
+    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
+    (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
+)
+def represent_as(
+    current: Abstract3DVectorDifferential,
+    target: type[Abstract3DVectorDifferential],
+    position: AbstractVector,
+    /,
+    **kwargs: Any,
+) -> Abstract3DVectorDifferential:
+    """Self transform of 3D Differentials."""
     return current
 
 
