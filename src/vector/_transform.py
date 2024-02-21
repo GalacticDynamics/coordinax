@@ -2,7 +2,6 @@
 
 __all__ = ["represent_as"]
 
-from dataclasses import replace
 from typing import Any
 from warnings import warn
 
@@ -70,7 +69,7 @@ def represent_as(
     # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
     jac_rows = {
         f"d_{f.name}": {
-            ff.name: replace(vv, unit=v.unit / vv.unit)
+            ff.name: Quantity(vv.value, unit=v.unit / vv.unit)
             for ff, vv in fields_and_values(v.value)
         }
         for f, v in fields_and_values(jac_nested_vecs)
