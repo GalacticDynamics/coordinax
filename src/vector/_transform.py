@@ -2,6 +2,7 @@
 
 __all__ = ["represent_as"]
 
+from math import prod
 from typing import Any
 from warnings import warn
 
@@ -52,9 +53,19 @@ def represent_as(
 
     This is the base case for the transformation of 1D vector differentials.
     """
+    # TODO: not require the shape munging / support more shapes
+    shape = current.shape
+    flat_shape = prod(shape)
+    position = position.reshape(flat_shape)  # flattened
+
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
     current_position = represent_as(position, current.vector_cls, **kwargs)
+
+    # # Need to ensure that the shape of the differential is the same as the
+    # # shape of the position. This can probably be relaxed, but for now it's
+    # # a requirement.
+    # current_position = eqx.error_if()
 
     # Takes the Jacobian through the representation transformation function.  This
     # returns a representation of the target type, where the value of each field the
@@ -76,17 +87,21 @@ def represent_as(
     }
 
     # Now we can use the Jacobian to transform the differential.
+    flat_current = current.reshape(flat_shape)
     return target(
-        **{  # Each field is the dot product of the row of the J and the diff.
+        **{  # Each field is the dot product of the row of the J and the diff column.
             k: xp.sum(  # Doing the dot product.
-                xp.concat(
-                    tuple(j_c * getattr(current, f"d_{kk}") for kk, j_c in j_r.items())
+                xp.stack(
+                    tuple(
+                        j_c * getattr(flat_current, f"d_{kk}")
+                        for kk, j_c in j_r.items()
+                    )
                 ),
-                axis=-1,
+                axis=0,
             )
             for k, j_r in jac_rows.items()
         }
-    )
+    ).reshape(shape)
 
 
 # TODO: situate this better to show how represent_as is used
@@ -375,7 +390,6 @@ def represent_as(
 
 @dispatch.multi(
     (PolarVector, type[Cartesian3DVector]),
-    (PolarVector, type[SphericalVector]),
     # (LnPolarVector, type[Cartesian3DVector]),
     # (LnPolarVector, type[CylindricalVector]),
     # (LnPolarVector, type[SphericalVector]),
@@ -485,10 +499,22 @@ def represent_as(
 @dispatch
 def represent_as(
     current: PolarVector,
+    target: type[SphericalVector],
+    /,
+    theta: Quantity["angle"] = Quantity(0.0, u.radian),  # type: ignore[name-defined]
+    **kwargs: Any,
+) -> SphericalVector:
+    """PolarVector -> SphericalVector."""
+    return target(r=current.r, theta=theta, phi=current.phi)
+
+
+@dispatch
+def represent_as(
+    current: PolarVector,
     target: type[CylindricalVector],
     /,
     *,
-    z: Quantity = Quantity(0.0, u.m),
+    z: Quantity["length"] = Quantity(0.0, u.m),  # type: ignore[name-defined]
     **kwargs: Any,
 ) -> CylindricalVector:
     """PolarVector -> CylindricalVector."""
