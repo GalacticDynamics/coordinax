@@ -167,8 +167,9 @@ class TestSphericalVector:
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
-        assert array_equal(
-            cart1d.x, Quantity([-0.7568025, -1.036218, 0.34883362, -2.6016471], u.kpc)
+        assert jnp.allclose(
+            cart1d.x.to_value(u.kpc),
+            xp.asarray([-0.7568025, -1.036218, 0.34883362, -2.6016471]),
         )
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
@@ -281,8 +282,8 @@ class TestCylindricalVector:
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
-        assert array_equal(
-            cart1d.x, Quantity([1.0, 1.0806047, -1.2484405, -3.95997], u.kpc)
+        assert jnp.allclose(
+            cart1d.x.to_value(u.kpc), xp.asarray([1.0, 1.0806047, -1.2484405, -3.95997])
         )
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
