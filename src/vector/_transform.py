@@ -2,6 +2,7 @@
 
 __all__ = ["represent_as"]
 
+from math import prod
 from typing import Any
 from warnings import warn
 
@@ -52,6 +53,11 @@ def represent_as(
 
     This is the base case for the transformation of 1D vector differentials.
     """
+    # TODO: not require the shape munging / support more shapes
+    shape = current.shape
+    flat_shape = prod(shape)
+    position = position.reshape(flat_shape)  # flattened
+
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
     current_position = represent_as(position, current.vector_cls, **kwargs)
@@ -76,17 +82,21 @@ def represent_as(
     }
 
     # Now we can use the Jacobian to transform the differential.
+    flat_current = current.reshape(flat_shape)
     return target(
         **{  # Each field is the dot product of the row of the J and the diff.
             k: xp.sum(  # Doing the dot product.
-                xp.concat(
-                    tuple(j_c * getattr(current, f"d_{kk}") for kk, j_c in j_r.items())
+                xp.stack(
+                    tuple(
+                        j_c * getattr(flat_current, f"d_{kk}")
+                        for kk, j_c in j_r.items()
+                    )
                 ),
-                axis=-1,
+                axis=0,
             )
             for k, j_r in jac_rows.items()
         }
-    )
+    ).reshape(shape)
 
 
 # TODO: situate this better to show how represent_as is used
