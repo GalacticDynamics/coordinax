@@ -43,6 +43,11 @@ def _convert_jax_array(x: Shaped[Array, "*shape"], /) -> Float[Quantity, "*shape
 # ============================================================================
 
 
+def dataclass_values(obj: "DataclassInstance") -> Iterator[Any]:
+    """Return the values of a dataclass instance."""
+    yield from (getattr(obj, f.name) for f in fields(obj))
+
+
 def dataclass_items(obj: "DataclassInstance") -> Iterator[tuple[str, Any]]:
     """Return the field names and values of a dataclass instance."""
     yield from ((f.name, getattr(obj, f.name)) for f in fields(obj))
