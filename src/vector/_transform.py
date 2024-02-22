@@ -385,7 +385,6 @@ def represent_as(
 
 @dispatch.multi(
     (PolarVector, type[Cartesian3DVector]),
-    (PolarVector, type[SphericalVector]),
     # (LnPolarVector, type[Cartesian3DVector]),
     # (LnPolarVector, type[CylindricalVector]),
     # (LnPolarVector, type[SphericalVector]),
@@ -495,10 +494,22 @@ def represent_as(
 @dispatch
 def represent_as(
     current: PolarVector,
+    target: type[SphericalVector],
+    /,
+    theta: Quantity["angle"] = Quantity(0.0, u.radian),  # type: ignore[name-defined]
+    **kwargs: Any,
+) -> SphericalVector:
+    """PolarVector -> SphericalVector."""
+    return target(r=current.r, theta=theta, phi=current.phi)
+
+
+@dispatch
+def represent_as(
+    current: PolarVector,
     target: type[CylindricalVector],
     /,
     *,
-    z: Quantity = Quantity(0.0, u.m),
+    z: Quantity["length"] = Quantity(0.0, u.m),  # type: ignore[name-defined]
     **kwargs: Any,
 ) -> CylindricalVector:
     """PolarVector -> CylindricalVector."""
