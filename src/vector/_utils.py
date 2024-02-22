@@ -3,7 +3,7 @@
 __all__: list[str] = []
 
 from collections.abc import Iterator
-from dataclasses import Field, fields
+from dataclasses import fields
 from functools import singledispatch
 from typing import TYPE_CHECKING, Any
 
@@ -43,6 +43,6 @@ def _convert_jax_array(x: Shaped[Array, "*shape"], /) -> Float[Quantity, "*shape
 # ============================================================================
 
 
-def fields_and_values(obj: "DataclassInstance") -> Iterator[tuple[Field[Any], Any]]:
-    """Return the fields and values of a dataclass instance."""
-    yield from ((f, getattr(obj, f.name)) for f in fields(obj))
+def dataclass_items(obj: "DataclassInstance") -> Iterator[tuple[str, Any]]:
+    """Return the field names and values of a dataclass instance."""
+    yield from ((f.name, getattr(obj, f.name)) for f in fields(obj))

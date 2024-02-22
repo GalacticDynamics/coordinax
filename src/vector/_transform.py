@@ -19,7 +19,7 @@ from ._d2.builtin import Cartesian2DVector, PolarVector
 from ._d3.base import Abstract3DVector, Abstract3DVectorDifferential
 from ._d3.builtin import Cartesian3DVector, CylindricalVector, SphericalVector
 from ._exceptions import IrreversibleDimensionChange
-from ._utils import fields_and_values
+from ._utils import dataclass_items
 
 
 # TODO: implement for cross-representations
@@ -68,11 +68,11 @@ def represent_as(
     # being that row's column as a dictionary, now with the correct units for
     # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
     jac_rows = {
-        f"d_{f.name}": {
-            ff.name: Quantity(vv.value, unit=v.unit / vv.unit)
-            for ff, vv in fields_and_values(v.value)
+        f"d_{k}": {
+            kk: Quantity(vv.value, unit=v.unit / vv.unit)
+            for kk, vv in dataclass_items(v.value)
         }
-        for f, v in fields_and_values(jac_nested_vecs)
+        for k, v in dataclass_items(jac_nested_vecs)
     }
 
     # Now we can use the Jacobian to transform the differential.
