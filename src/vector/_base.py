@@ -5,16 +5,24 @@ __all__ = ["AbstractVectorBase", "AbstractVector", "AbstractVectorDifferential"]
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-from dataclasses import fields
+from dataclasses import fields, replace
 from functools import partial
 from types import MappingProxyType
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
+import array_api_jax_compat as xp
 import equinox as eqx
 import jax
+import jax.numpy as jnp
 from jax_quantity import Quantity
 
-from ._utils import dataclass_items
+from ._utils import dataclass_items, dataclass_values
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 BT = TypeVar("BT", bound="AbstractVectorBase")
 VT = TypeVar("VT", bound="AbstractVector")
@@ -28,6 +36,36 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     coordinate systems. This class provides a common interface for all vector
     types. All fields of the vector are expected to be components of the vector.
     """
+
+    # ===============================================================
+    # Array
+
+    @property
+    def shape(self) -> Any:
+        """Get the shape of the vector's components.
+
+        When represented as a single array, the vector has an additional
+        dimension at the end for the components.
+        """
+        return jnp.broadcast_shapes(*self.shapes.values())
+
+    def flatten(self) -> "Self":
+        """Flatten the vector."""
+        return replace(self, **{k: v.flatten() for k, v in dataclass_items(self)})
+
+    @property
+    def _full_shaped(self) -> "Self":
+        """Return the vector, fully broadcasting all components."""
+        arrays = xp.broadcast_arrays(*dataclass_values(self))
+        return replace(self, **dict(zip(self.components, arrays, strict=True)))
+
+    def reshape(self, *args: Any, order: str = "C") -> "Self":
+        """Reshape the components of the vector."""
+        # TODO: enable not needing to make a full-shaped copy
+        full = self._full_shaped
+        return replace(
+            self, **{k: v.reshape(*args, order=order) for k, v in dataclass_items(full)}
+        )
 
     # ===============================================================
     # Collection
