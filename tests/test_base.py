@@ -1,9 +1,15 @@
 """Test :mod:`vector._utils`."""
 
+from collections import UserDict
 from contextlib import AbstractContextManager, nullcontext
+from types import MappingProxyType
 from typing import Any
 
+import jax.numpy as jnp
 import pytest
+from jax_quantity import Quantity
+from numpy import array_equal
+from quax import quaxify
 
 from vector import (
     Abstract1DVector,
@@ -61,6 +67,8 @@ BUILTIN_DIFFERENTIALS = [
     CylindricalDifferential,
 ]
 
+array_equal = quaxify(jnp.array_equal)
+
 
 def context_dimension_reduction(
     vector: AbstractVector, target: type[AbstractVector]
@@ -81,6 +89,37 @@ def context_dimension_reduction(
 
 class AbstractVectorBaseTest:
     """Test :class:`vector.AbstractVectorBase`."""
+
+    def test_asdict(self, vector):
+        """Test :meth:`AbstractVector.asdict`."""
+        # Simple test
+        adict = vector.asdict()
+        assert isinstance(adict, dict)
+        for k, v in adict.items():
+            assert isinstance(k, str)
+            assert isinstance(v, Quantity)
+            assert array_equal(v, getattr(vector, k))
+
+        # Test with a different dict_factory
+        adict = vector.asdict(dict_factory=UserDict)
+        assert isinstance(adict, UserDict)
+        assert all(array_equal(v, getattr(vector, k)) for k, v in adict.items())
+
+    def test_components(self, vector):
+        """Test :meth:`AbstractVector.components`."""
+        # Simple test
+        components = vector.components
+        assert isinstance(components, tuple)
+        assert all(isinstance(c, str) for c in components)
+        assert all(hasattr(vector, c) for c in components)
+
+    def test_shapes(self, vector):
+        """Test :meth:`AbstractVector.shapes`."""
+        # Simple test
+        shapes = vector.shapes
+        assert isinstance(shapes, MappingProxyType)
+        assert set(shapes.keys()) == set(vector.components)
+        assert all(v == getattr(vector, k).shape for k, v in shapes.items())
 
 
 class AbstractVectorTest(AbstractVectorBaseTest):
