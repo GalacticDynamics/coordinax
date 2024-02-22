@@ -63,7 +63,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(self))
 
     @property
-    def shapes(self) -> MappingProxyType[str, tuple[int, ...]]:
+    def shapes(self) -> Mapping[str, tuple[int, ...]]:
         """Get the shapes of the vector's components."""
         return MappingProxyType({k: v.shape for k, v in dataclass_items(self)})
 

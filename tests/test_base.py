@@ -1,6 +1,6 @@
 """Test :mod:`vector._utils`."""
 
-from collections import defaultdict
+from collections import UserDict
 from contextlib import AbstractContextManager, nullcontext
 from types import MappingProxyType
 from typing import Any
@@ -101,8 +101,8 @@ class AbstractVectorBaseTest:
             assert array_equal(v, getattr(vector, k))
 
         # Test with a different dict_factory
-        adict = vector.asdict(dict_factory=defaultdict)
-        assert isinstance(adict, defaultdict)
+        adict = vector.asdict(dict_factory=UserDict)
+        assert isinstance(adict, UserDict)
         assert all(array_equal(v, getattr(vector, k)) for k, v in adict.items())
 
     def test_components(self, vector):
