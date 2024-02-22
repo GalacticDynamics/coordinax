@@ -7,6 +7,7 @@ from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import fields
 from functools import partial
+from types import MappingProxyType
 from typing import Any, TypeVar
 
 import equinox as eqx
@@ -62,9 +63,9 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(self))
 
     @property
-    def shapes(self) -> dict[str, tuple[int, ...]]:
+    def shapes(self) -> MappingProxyType[str, tuple[int, ...]]:
         """Get the shapes of the vector's components."""
-        return {k: v.shape for k, v in dataclass_items(self)}
+        return MappingProxyType({k: v.shape for k, v in dataclass_items(self)})
 
     # ===============================================================
     # Convenience methods
