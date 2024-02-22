@@ -123,9 +123,9 @@ class TestCartesian3DVector:
         assert array_equal(
             spherical.phi, Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], u.rad)
         )
-        assert array_equal(
-            spherical.theta,
-            Quantity([0.51546645, 0.5639427, 0.6055685, 0.64052236], u.rad),
+        assert jnp.allclose(
+            spherical.theta.to_value(u.rad),
+            xp.asarray([0.51546645, 0.5639427, 0.6055685, 0.64052236]),
         )
 
     def test_cartesian3d_to_cylindrical(self, vector):
