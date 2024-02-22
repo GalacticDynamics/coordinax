@@ -162,8 +162,8 @@ class TestPolarVector:
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
-        assert array_equal(
-            cart1d.x, Quantity([1.0, 1.0806047, -1.2484405, -3.95997], u.kpc)
+        assert jnp.allclose(
+            cart1d.x.to_value(u.kpc), xp.asarray([1.0, 1.0806047, -1.2484405, -3.95997])
         )
         assert array_equal(cart1d.x, vector.r * xp.cos(vector.phi))
 
