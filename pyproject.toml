@@ -40,7 +40,8 @@
   requires-python = ">=3.10"
 
   [project.optional-dependencies]
-    dev = ["pytest >=6", "pytest-cov >=3"]
+    all = ["vector[docs]", "vector[test]"]
+    dev = ["vector[test]"]
     docs = [
       "sphinx>=7.0",
       "myst_parser>=0.13",
@@ -146,6 +147,7 @@
       "D203",    # 1 blank line required before class docstring
       "D213",    # Multi-line docstring summary should start at the second line
       "ERA001",  # Commented out code
+      "F722",   # Syntax error in forward annotation  <- jaxtyping
       "F811",    # redefinition of unused '...'  <- plum-dispatch
       "F821",    # undefined name '...'  <- jaxtyping
       "FIX002",  # Line contains TODO
