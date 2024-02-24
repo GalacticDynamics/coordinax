@@ -547,11 +547,13 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         spherical = difntl.represent_as(SphericalDifferential, vector)
 
         assert isinstance(spherical, SphericalDifferential)
-        assert array_equal(
-            spherical.d_r,
-            Quantity([10.344081, 11.832159, 13.379088, 14.966629], u.km / u.s),
+        assert jnp.allclose(
+            spherical.d_r.to_value(u.km / u.s),
+            xp.asarray([10.344081, 11.832159, 13.379088, 14.966629]),
         )
-        assert jnp.allclose(spherical.d_phi.value, xp.asarray([0, 0, 2e-8, 0]))
+        assert jnp.allclose(
+            spherical.d_phi.to_value(u.mas / u.Myr), xp.asarray([0, 0, 0.00471509, 0])
+        )
         assert jnp.allclose(
             spherical.d_theta.to_value(u.mas / u.Myr),
             xp.asarray([0.03221978, -0.05186598, -0.01964621, -0.01886036]),
