@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """3-dimensional."""
 
 from . import base, builtin, compat, transform
