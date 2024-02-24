@@ -11,9 +11,12 @@ __all__ = [
     "CylindricalDifferential",
 ]
 
+from functools import partial
 from typing import ClassVar, final
 
+import array_api_jax_compat as xp
 import equinox as eqx
+import jax
 
 from vector._checks import check_phi_range, check_r_non_negative, check_theta_range
 from vector._typing import (
@@ -43,6 +46,11 @@ class Cartesian3DVector(Abstract3DVector):
     z: BatchableLength = eqx.field(converter=converter_quantity_array)
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
 
+    @partial(jax.jit)
+    def norm(self) -> BatchableLength:
+        """Return the norm of the vector."""
+        return xp.sqrt(self.x**2 + self.y**2 + self.z**2)
+
 
 @final
 class SphericalVector(Abstract3DVector):
@@ -63,6 +71,11 @@ class SphericalVector(Abstract3DVector):
         check_theta_range(self.theta)
         check_phi_range(self.phi)
 
+    @partial(jax.jit)
+    def norm(self) -> BatchableLength:
+        """Return the norm of the vector."""
+        return self.r
+
 
 @final
 class CylindricalVector(Abstract3DVector):
@@ -81,6 +94,11 @@ class CylindricalVector(Abstract3DVector):
         """Check the validity of the initialisation."""
         check_r_non_negative(self.rho)
         check_phi_range(self.phi)
+
+    @partial(jax.jit)
+    def norm(self) -> BatchableLength:
+        """Return the norm of the vector."""
+        return xp.sqrt(self.rho**2 + self.z**2)
 
 
 ##############################################################################

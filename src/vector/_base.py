@@ -136,6 +136,12 @@ class AbstractVector(AbstractVectorBase):
 
         return represent_as(self, target, **kwargs)
 
+    @abstractmethod
+    def norm(self) -> Quantity:
+        """Return the norm of the vector."""
+        # TODO: make a generic method that works on all dimensions
+        raise NotImplementedError
+
 
 class AbstractVectorDifferential(AbstractVectorBase):
     """Abstract representation of vector differentials in different systems."""
