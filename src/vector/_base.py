@@ -16,7 +16,7 @@ import jax
 import jax.numpy as jnp
 from jax_quantity import Quantity
 
-from ._utils import dataclass_items, dataclass_values
+from ._utils import dataclass_items, full_shaped
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -59,16 +59,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         """Flatten the vector."""
         return replace(self, **{k: v.flatten() for k, v in dataclass_items(self)})
 
-    @property
-    def _full_shaped(self) -> "Self":
-        """Return the vector, fully broadcasting all components."""
-        arrays = xp.broadcast_arrays(*dataclass_values(self))
-        return replace(self, **dict(zip(self.components, arrays, strict=True)))
-
     def reshape(self, *args: Any, order: str = "C") -> "Self":
         """Reshape the components of the vector."""
         # TODO: enable not needing to make a full-shaped copy
-        full = self._full_shaped
+        full = full_shaped(self)
         return replace(
             self, **{k: v.reshape(*args, order=order) for k, v in dataclass_items(full)}
         )

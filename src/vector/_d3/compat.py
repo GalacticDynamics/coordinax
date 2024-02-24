@@ -3,10 +3,16 @@
 __all__: list[str] = []
 
 
+import array_api_jax_compat as xp
 import astropy.coordinates as apyc
 import astropy.units as apyu
+from jax_quantity import Quantity
+from jaxtyping import Shaped
 from plum import conversion_method
 
+from vector._utils import dataclass_values, full_shaped
+
+from .base import Abstract3DVector
 from .builtin import (
     Cartesian3DVector,
     CartesianDifferential3D,
@@ -15,6 +21,25 @@ from .builtin import (
     SphericalDifferential,
     SphericalVector,
 )
+
+#####################################################################
+# Quantity
+
+
+@conversion_method(type_from=Abstract3DVector, type_to=Quantity)  # type: ignore[misc]
+def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]:
+    """`vector.Abstract3DVector` -> `jax_quantity.Quantity`."""
+    cart = full_shaped(obj.represent_as(Cartesian3DVector))
+    return xp.stack(tuple(dataclass_values(cart)), axis=-1)
+
+
+@conversion_method(type_from=CartesianDifferential3D, type_to=Quantity)  # type: ignore[misc]
+def vec_diff_to_q(
+    obj: CartesianDifferential3D, /
+) -> Shaped[Quantity["speed"], "*batch 3"]:
+    """`vector.CartesianDifferential3D` -> `jax_quantity.Quantity`."""
+    return xp.stack(tuple(dataclass_values(full_shaped(obj))), axis=-1)
+
 
 #####################################################################
 # Astropy
