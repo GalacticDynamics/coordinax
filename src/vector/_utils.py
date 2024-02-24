@@ -3,7 +3,7 @@
 __all__: list[str] = []
 
 from collections.abc import Iterator
-from dataclasses import fields
+from dataclasses import fields, replace
 from functools import singledispatch
 from typing import TYPE_CHECKING, Any
 

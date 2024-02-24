@@ -9,7 +9,7 @@ import astropy.units as apyu
 from jax_quantity import Quantity
 from plum import conversion_method
 
-from vector._utils import dataclass_values
+from vector._utils import dataclass_values, full_shaped
 
 from .base import Abstract3DVector
 from .builtin import (

@@ -7,7 +7,7 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 from plum import conversion_method
 
-from vector._utils import dataclass_values
+from vector._utils import dataclass_values, full_shaped
 
 from .base import Abstract1DVector
 from .builtin import Cartesian1DVector, CartesianDifferential1D
