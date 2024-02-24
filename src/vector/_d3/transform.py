@@ -104,7 +104,7 @@ def represent_as(
     current: SphericalVector, target: type[CylindricalVector], /, **kwargs: Any
 ) -> CylindricalVector:
     """SphericalVector -> CylindricalVector."""
-    rho = current.r * xp.sin(current.theta)
+    rho = xp.abs(current.r * xp.sin(current.theta))
     phi = current.phi
     z = current.r * xp.cos(current.theta)
     return target(rho=rho, phi=phi, z=z)
