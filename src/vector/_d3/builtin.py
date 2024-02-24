@@ -120,6 +120,11 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
 
     vector_cls: ClassVar[type[Cartesian3DVector]] = Cartesian3DVector  # type: ignore[misc]
 
+    @partial(jax.jit)
+    def norm(self, _: Abstract3DVector | None = None, /) -> BatchableSpeed:
+        """Return the norm of the vector."""
+        return xp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
+
 
 @final
 class SphericalDifferential(Abstract3DVectorDifferential):

@@ -162,3 +162,9 @@ class AbstractVectorDifferential(AbstractVectorBase):
         from ._transform import represent_as  # pylint: disable=import-outside-toplevel
 
         return represent_as(self, target, position, **kwargs)
+
+    @abstractmethod
+    def norm(self) -> Quantity:
+        """Return the norm of the vector."""
+        # TODO: make a generic method that works on all dimensions
+        raise NotImplementedError

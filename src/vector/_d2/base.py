@@ -27,3 +27,10 @@ class Abstract2DVectorDifferential(AbstractVectorDifferential):
     """Abstract representation of 2D vector differentials."""
 
     vector_cls: eqx.AbstractClassVar[type[Abstract2DVector]]
+
+    @partial(jax.jit)
+    def norm(self, position: AbstractVector, /) -> Quantity["length"]:
+        """Return the norm of the vector."""
+        from .builtin import CartesianDifferential2D  # pylint: disable=C0415
+
+        return self.represent_as(CartesianDifferential2D, position).norm()

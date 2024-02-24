@@ -102,6 +102,11 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 
     vector_cls: ClassVar[type[Cartesian2DVector]] = Cartesian2DVector  # type: ignore[misc]
 
+    @partial(jax.jit)
+    def norm(self, _: Abstract2DVector | None = None, /) -> BatchableSpeed:
+        """Return the norm of the vector."""
+        return xp.sqrt(self.d_x**2 + self.d_y**2)
+
 
 @final
 class PolarDifferential(Abstract2DVectorDifferential):
