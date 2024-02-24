@@ -98,7 +98,10 @@
     ]
 
 [tool.mypy]
-  disable_error_code = ["no-redef"]
+  disable_error_code = [
+    "no-redef",  # for plum-dispatch
+    "name-defined",  # for jaxtyping
+  ]
   disallow_incomplete_defs = false
   disallow_untyped_defs = false
   enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]

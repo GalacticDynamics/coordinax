@@ -9,9 +9,12 @@ __all__ = [
     "RadialDifferential",
 ]
 
+from functools import partial
 from typing import ClassVar, final
 
+import array_api_jax_compat as xp
 import equinox as eqx
+import jax
 
 from vector._checks import check_r_non_negative
 from vector._typing import BatchableLength, BatchableSpeed
@@ -29,6 +32,11 @@ class Cartesian1DVector(Abstract1DVector):
 
     x: BatchableLength = eqx.field(converter=converter_quantity_array)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
+
+    @partial(jax.jit)
+    def norm(self) -> BatchableLength:
+        """Return the norm of the vector."""
+        return xp.abs(self.x)
 
 
 @final
