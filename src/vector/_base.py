@@ -164,7 +164,7 @@ class AbstractVectorDifferential(AbstractVectorBase):
         return represent_as(self, target, position, **kwargs)
 
     @abstractmethod
-    def norm(self) -> Quantity:
+    def norm(self, position: AbstractVector, /) -> Quantity:
         """Return the norm of the vector."""
         # TODO: make a generic method that works on all dimensions
         raise NotImplementedError
