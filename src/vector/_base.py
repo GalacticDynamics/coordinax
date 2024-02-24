@@ -29,6 +29,12 @@ VT = TypeVar("VT", bound="AbstractVector")
 DT = TypeVar("DT", bound="AbstractVectorDifferential")
 
 
+_0m = Quantity(0, "meter")
+_0d = Quantity(0, "rad")
+_pid = Quantity(xp.pi, "rad")
+_2pid = Quantity(2 * xp.pi, "rad")
+
+
 class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     """Base class for all vector types.
 

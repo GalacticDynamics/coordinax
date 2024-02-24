@@ -15,7 +15,13 @@ from typing import ClassVar, final
 
 import equinox as eqx
 
-from vector._typing import BatchableFloatScalarQ
+from vector._checks import check_phi_range, check_r_non_negative
+from vector._typing import (
+    BatchableAngle,
+    BatchableAngularSpeed,
+    BatchableLength,
+    BatchableSpeed,
+)
 from vector._utils import converter_quantity_array
 
 from .base import Abstract2DVector, Abstract2DVectorDifferential
@@ -28,8 +34,11 @@ from .base import Abstract2DVector, Abstract2DVectorDifferential
 class Cartesian2DVector(Abstract2DVector):
     """Cartesian vector representation."""
 
-    x: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-    y: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    x: BatchableLength = eqx.field(converter=converter_quantity_array)
+    r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
+
+    y: BatchableLength = eqx.field(converter=converter_quantity_array)
+    r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
 
 @final
@@ -39,8 +48,16 @@ class PolarVector(Abstract2DVector):
     We use the symbol `phi` instead of `theta` to adhere to the ISO standard.
     """
 
-    r: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-    phi: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    r: BatchableLength = eqx.field(converter=converter_quantity_array)
+    r"""Radial distance :math:`r \in [0,+\infty)`."""
+
+    phi: BatchableAngle = eqx.field(converter=converter_quantity_array)
+    r"""Polar angle :math:`\phi \in [0,2\pi)`."""
+
+    def __check_init__(self) -> None:
+        """Check the initialization."""
+        check_r_non_negative(self.r)
+        check_phi_range(self.phi)
 
 
 # class LnPolarVector(Abstract2DVector):
@@ -64,8 +81,11 @@ class PolarVector(Abstract2DVector):
 class CartesianDifferential2D(Abstract2DVectorDifferential):
     """Cartesian differential representation."""
 
-    d_x: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-    d_y: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    d_x: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
+
+    d_y: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
     vector_cls: ClassVar[type[Cartesian2DVector]] = Cartesian2DVector  # type: ignore[misc]
 
@@ -74,7 +94,10 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 class PolarDifferential(Abstract2DVectorDifferential):
     """Polar differential representation."""
 
-    d_r: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-    d_phi: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
+    d_r: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
+
+    d_phi: BatchableAngularSpeed = eqx.field(converter=converter_quantity_array)
+    r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
     vector_cls: ClassVar[type[PolarVector]] = PolarVector  # type: ignore[misc]

@@ -8,3 +8,8 @@ from jaxtyping import Float, Shaped
 FloatScalarQ = Float[Quantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]
 BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]
+
+BatchableAngle = Shaped[Quantity["angle"], "*#batch"]
+BatchableLength = Shaped[Quantity["length"], "*#batch"]
+BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
+BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
