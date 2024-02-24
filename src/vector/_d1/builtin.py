@@ -64,6 +64,11 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
 
     vector_cls: ClassVar[type[Cartesian1DVector]] = Cartesian1DVector  # type: ignore[misc]
 
+    @partial(jax.jit)
+    def norm(self, _: Abstract1DVector | None = None, /) -> BatchableSpeed:
+        """Return the norm of the vector."""
+        return xp.abs(self.d_x)
+
 
 @final
 class RadialDifferential(Abstract1DVectorDifferential):
