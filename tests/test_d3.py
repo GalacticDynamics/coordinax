@@ -120,9 +120,9 @@ class TestCartesian3DVector:
         """Test Astropy equivalence."""
         newvec = vector.represent_as(Cartesian3DVector)
 
-        assert np.allclose(newvec.x.as_type(u.Quantity), apyvector.x)
-        assert np.allclose(newvec.y.as_type(u.Quantity), apyvector.y)
-        assert np.allclose(newvec.z.as_type(u.Quantity), apyvector.z)
+        assert np.allclose(convert(newvec.x, u.Quantity), apyvector.x)
+        assert np.allclose(convert(newvec.y, u.Quantity), apyvector.y)
+        assert np.allclose(convert(newvec.z, u.Quantity), apyvector.z)
 
     def test_cartesian3d_to_spherical(self, vector):
         """Test ``vector.represent_as(SphericalVector)``."""
@@ -145,9 +145,9 @@ class TestCartesian3DVector:
         sph = vector.represent_as(SphericalVector)
 
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
-        assert np.allclose(sph.r.as_type(u.Quantity), apysph.r)
-        assert np.allclose(sph.theta.as_type(u.Quantity), apysph.theta)
-        assert np.allclose(sph.phi.as_type(u.Quantity), apysph.phi)
+        assert np.allclose(convert(sph.r, u.Quantity), apysph.r)
+        assert np.allclose(convert(sph.theta, u.Quantity), apysph.theta)
+        assert np.allclose(convert(sph.phi, u.Quantity), apysph.phi)
 
     def test_cartesian3d_to_cylindrical(self, vector):
         """Test ``vector.represent_as(CylindricalVector)``."""
@@ -166,9 +166,9 @@ class TestCartesian3DVector:
         cyl = vector.represent_as(CylindricalVector)
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
-        assert np.allclose(cyl.rho.as_type(u.Quantity), apycyl.rho)
-        assert np.allclose(cyl.z.as_type(u.Quantity), apycyl.z)
-        assert np.allclose(cyl.phi.as_type(u.Quantity), apycyl.phi)
+        assert np.allclose(convert(cyl.rho, u.Quantity), apycyl.rho)
+        assert np.allclose(convert(cyl.z, u.Quantity), apycyl.z)
+        assert np.allclose(convert(cyl.phi, u.Quantity), apycyl.phi)
 
 
 class TestSphericalVector:
@@ -264,9 +264,9 @@ class TestSphericalVector:
         cart3d = vector.represent_as(Cartesian3DVector)
 
         apycart3 = apyvector.represent_as(apyc.CartesianRepresentation)
-        assert np.allclose(cart3d.x.as_type(u.Quantity), apycart3.x)
-        assert np.allclose(cart3d.y.as_type(u.Quantity), apycart3.y)
-        assert np.allclose(cart3d.z.as_type(u.Quantity), apycart3.z)
+        assert np.allclose(convert(cart3d.x, u.Quantity), apycart3.x)
+        assert np.allclose(convert(cart3d.y, u.Quantity), apycart3.y)
+        assert np.allclose(convert(cart3d.z, u.Quantity), apycart3.z)
 
     def test_spherical_to_spherical(self, vector):
         """Test ``vector.represent_as(SphericalVector)``."""
@@ -283,9 +283,9 @@ class TestSphericalVector:
         sph = vector.represent_as(SphericalVector)
 
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
-        assert np.allclose(sph.r.as_type(u.Quantity), apysph.r)
-        assert np.allclose(sph.theta.as_type(u.Quantity), apysph.theta)
-        assert np.allclose(sph.phi.as_type(u.Quantity), apysph.phi)
+        assert np.allclose(convert(sph.r, u.Quantity), apysph.r)
+        assert np.allclose(convert(sph.theta, u.Quantity), apysph.theta)
+        assert np.allclose(convert(sph.phi, u.Quantity), apysph.phi)
 
     def test_spherical_to_cylindrical(self, vector):
         """Test ``vector.represent_as(CylindricalVector)``."""
@@ -308,11 +308,11 @@ class TestSphericalVector:
         cyl = vector.represent_as(CylindricalVector, z=Quantity([9, 10, 11, 12], u.m))
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
-        assert np.allclose(cyl.rho.as_type(u.Quantity), apycyl.rho)
-        assert np.allclose(cyl.z.as_type(u.Quantity), apycyl.z)
+        assert np.allclose(convert(cyl.rho, u.Quantity), apycyl.rho)
+        assert np.allclose(convert(cyl.z, u.Quantity), apycyl.z)
 
         with pytest.raises(AssertionError):  # TODO: Fix this
-            assert np.allclose(cyl.phi.as_type(u.Quantity), apycyl.phi)
+            assert np.allclose(convert(cyl.phi, u.Quantity), apycyl.phi)
 
 
 class TestCylindricalVector:
@@ -405,9 +405,9 @@ class TestCylindricalVector:
         cart3d = vector.represent_as(Cartesian3DVector)
 
         apycart3 = apyvector.represent_as(apyc.CartesianRepresentation)
-        assert np.allclose(cart3d.x.as_type(u.Quantity), apycart3.x)
-        assert np.allclose(cart3d.y.as_type(u.Quantity), apycart3.y)
-        assert np.allclose(cart3d.z.as_type(u.Quantity), apycart3.z)
+        assert np.allclose(convert(cart3d.x, u.Quantity), apycart3.x)
+        assert np.allclose(convert(cart3d.y, u.Quantity), apycart3.y)
+        assert np.allclose(convert(cart3d.z, u.Quantity), apycart3.z)
 
     def test_cylindrical_to_spherical(self, vector):
         """Test ``vector.represent_as(SphericalVector)``."""
@@ -422,9 +422,9 @@ class TestCylindricalVector:
         """Test Astropy equivalence."""
         sph = vector.represent_as(SphericalVector)
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
-        assert np.allclose(sph.r.as_type(u.Quantity), apysph.r)
-        assert np.allclose(sph.theta.as_type(u.Quantity), apysph.theta)
-        assert np.allclose(sph.phi.as_type(u.Quantity), apysph.phi)
+        assert np.allclose(convert(sph.r, u.Quantity), apysph.r)
+        assert np.allclose(convert(sph.theta, u.Quantity), apysph.theta)
+        assert np.allclose(convert(sph.phi, u.Quantity), apysph.phi)
 
     def test_cylindrical_to_cylindrical(self, vector):
         """Test ``vector.represent_as(CylindricalVector)``."""
@@ -441,9 +441,9 @@ class TestCylindricalVector:
         cyl = vector.represent_as(CylindricalVector)
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
-        assert np.allclose(cyl.rho.as_type(u.Quantity), apycyl.rho)
-        assert np.allclose(cyl.z.as_type(u.Quantity), apycyl.z)
-        assert np.allclose(cyl.phi.as_type(u.Quantity), apycyl.phi)
+        assert np.allclose(convert(cyl.rho, u.Quantity), apycyl.rho)
+        assert np.allclose(convert(cyl.z, u.Quantity), apycyl.z)
+        assert np.allclose(convert(cyl.phi, u.Quantity), apycyl.phi)
 
 
 class Abstract3DVectorDifferentialTest(AbstractVectorDifferentialTest):
@@ -538,9 +538,9 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         cart3 = difntl.represent_as(CartesianDifferential3D, vector)
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
-        assert np.allclose(cart3.d_x.as_type(u.Quantity), apycart3.d_x)
-        assert np.allclose(cart3.d_y.as_type(u.Quantity), apycart3.d_y)
-        assert np.allclose(cart3.d_z.as_type(u.Quantity), apycart3.d_z)
+        assert np.allclose(convert(cart3.d_x, u.Quantity), apycart3.d_x)
+        assert np.allclose(convert(cart3.d_y, u.Quantity), apycart3.d_y)
+        assert np.allclose(convert(cart3.d_z, u.Quantity), apycart3.d_z)
 
     def test_cartesian3d_to_spherical(self, difntl, vector):
         """Test ``vector.represent_as(SphericalDifferential)``."""
@@ -566,16 +566,16 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         sph = difntl.represent_as(SphericalDifferential, vector)
 
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
-        assert np.allclose(sph.d_r.as_type(u.Quantity), apysph.d_r)
+        assert np.allclose(convert(sph.d_r, u.Quantity), apysph.d_r)
         with pytest.raises(AssertionError):  # TODO: fixme
             assert np.allclose(
-                sph.d_theta.as_type(u.Quantity).to(u.mas / u.Myr),
+                convert(sph.d_theta, u.Quantity).to(u.mas / u.Myr),
                 apysph.d_theta.to(u.mas / u.Myr),
                 atol=1e-9,
             )
         with pytest.raises(AssertionError):  # TODO: fixme
             assert np.allclose(
-                sph.d_phi.as_type(u.Quantity).to(u.mas / u.Myr),
+                convert(sph.d_phi, u.Quantity).to(u.mas / u.Myr),
                 apysph.d_phi.to(u.mas / u.Myr),
                 atol=1e-7,
             )
@@ -600,10 +600,10 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         """Test Astropy equivalence."""
         cyl = difntl.represent_as(CylindricalDifferential, vector)
         apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
-        assert np.allclose(cyl.d_rho.as_type(u.Quantity), apycyl.d_rho)
-        assert np.allclose(cyl.d_z.as_type(u.Quantity), apycyl.d_z)
+        assert np.allclose(convert(cyl.d_rho, u.Quantity), apycyl.d_rho)
+        assert np.allclose(convert(cyl.d_z, u.Quantity), apycyl.d_z)
         with pytest.raises(AssertionError):  # TODO: fixme
-            assert np.allclose(cyl.d_phi.as_type(u.Quantity), apycyl.d_phi)
+            assert np.allclose(convert(cyl.d_phi, u.Quantity), apycyl.d_phi)
 
 
 class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
@@ -704,9 +704,9 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         cart3d = difntl.represent_as(CartesianDifferential3D, vector)
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
-        assert np.allclose(cart3d.d_x.as_type(u.Quantity), apycart3.d_x)
-        assert np.allclose(cart3d.d_y.as_type(u.Quantity), apycart3.d_y)
-        assert np.allclose(cart3d.d_z.as_type(u.Quantity), apycart3.d_z)
+        assert np.allclose(convert(cart3d.d_x, u.Quantity), apycart3.d_x)
+        assert np.allclose(convert(cart3d.d_y, u.Quantity), apycart3.d_y)
+        assert np.allclose(convert(cart3d.d_z, u.Quantity), apycart3.d_z)
 
     def test_spherical_to_spherical(self, difntl, vector):
         """Test ``vector.represent_as(SphericalDifferential)``."""
@@ -722,9 +722,9 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         """Test Astropy equivalence."""
         sph = difntl.represent_as(SphericalDifferential, vector)
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
-        assert np.allclose(sph.d_r.as_type(u.Quantity), apysph.d_r)
-        assert np.allclose(sph.d_theta.as_type(u.Quantity), apysph.d_theta)
-        assert np.allclose(sph.d_phi.as_type(u.Quantity), apysph.d_phi)
+        assert np.allclose(convert(sph.d_r, u.Quantity), apysph.d_r)
+        assert np.allclose(convert(sph.d_theta, u.Quantity), apysph.d_theta)
+        assert np.allclose(convert(sph.d_phi, u.Quantity), apysph.d_phi)
 
     def test_spherical_to_cylindrical(self, difntl, vector):
         """Test ``vector.represent_as(CylindricalDifferential)``."""
@@ -747,9 +747,9 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         """Test Astropy equivalence."""
         cyl = difntl.represent_as(CylindricalDifferential, vector)
         apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
-        assert np.allclose(cyl.d_rho.as_type(u.Quantity), apycyl.d_rho)
-        assert np.allclose(cyl.d_z.as_type(u.Quantity), apycyl.d_z)
-        assert np.allclose(cyl.d_phi.as_type(u.Quantity), apycyl.d_phi)
+        assert np.allclose(convert(cyl.d_rho, u.Quantity), apycyl.d_rho)
+        assert np.allclose(convert(cyl.d_z, u.Quantity), apycyl.d_z)
+        assert np.allclose(convert(cyl.d_phi, u.Quantity), apycyl.d_phi)
 
 
 class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
@@ -838,9 +838,9 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         assert array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], u.km / u.s))
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
-        assert np.allclose(cart3d.d_x.as_type(u.Quantity), apycart3.d_x)
-        assert np.allclose(cart3d.d_y.as_type(u.Quantity), apycart3.d_y)
-        assert np.allclose(cart3d.d_z.as_type(u.Quantity), apycart3.d_z)
+        assert np.allclose(convert(cart3d.d_x, u.Quantity), apycart3.d_x)
+        assert np.allclose(convert(cart3d.d_y, u.Quantity), apycart3.d_y)
+        assert np.allclose(convert(cart3d.d_z, u.Quantity), apycart3.d_z)
 
     def test_cylindrical_to_spherical(self, difntl, vector):
         """Test ``vector.represent_as(SphericalDifferential)``."""
@@ -863,10 +863,10 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         """Test Astropy equivalence."""
         sph = difntl.represent_as(SphericalDifferential, vector)
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
-        assert np.allclose(sph.d_r.as_type(u.Quantity), apysph.d_r)
+        assert np.allclose(convert(sph.d_r, u.Quantity), apysph.d_r)
         with pytest.raises(AssertionError):
-            assert np.allclose(sph.d_theta.as_type(u.Quantity), apysph.d_theta)
-        assert np.allclose(sph.d_phi.as_type(u.Quantity), apysph.d_phi)
+            assert np.allclose(convert(sph.d_theta, u.Quantity), apysph.d_theta)
+        assert np.allclose(convert(sph.d_phi, u.Quantity), apysph.d_phi)
 
     def test_cylindrical_to_cylindrical(self, difntl, vector):
         """Test ``vector.represent_as(CylindricalDifferential)``."""
@@ -882,6 +882,6 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         """Test Astropy equivalence."""
         cyl = difntl.represent_as(CylindricalDifferential, vector)
         apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
-        assert np.allclose(cyl.d_rho.as_type(u.Quantity), apycyl.d_rho)
-        assert np.allclose(cyl.d_z.as_type(u.Quantity), apycyl.d_z)
-        assert np.allclose(cyl.d_phi.as_type(u.Quantity), apycyl.d_phi)
+        assert np.allclose(convert(cyl.d_rho, u.Quantity), apycyl.d_rho)
+        assert np.allclose(convert(cyl.d_z, u.Quantity), apycyl.d_z)
+        assert np.allclose(convert(cyl.d_phi, u.Quantity), apycyl.d_phi)
