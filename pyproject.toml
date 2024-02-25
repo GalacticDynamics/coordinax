@@ -182,6 +182,7 @@
     "design",
     "fixme",
     "function-redefined",         # plum-dispatch
+    "invalid-name",               # handled by ruff
     "line-too-long",
     "missing-function-docstring", # TODO: resolve
     "missing-module-docstring",
