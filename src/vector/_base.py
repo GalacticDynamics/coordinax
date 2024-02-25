@@ -67,6 +67,11 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
             self, **{k: v.reshape(*args, order=order) for k, v in dataclass_items(full)}
         )
 
+    def __getitem__(self, index: Any) -> "Self":
+        """Return a new object with the given slice applied."""
+        full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
+        return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
+
     # ===============================================================
     # Collection
 
