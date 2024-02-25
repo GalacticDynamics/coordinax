@@ -14,6 +14,7 @@ import array_api_jax_compat as xp
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+from jax import Device
 from jax_quantity import Quantity
 from plum import dispatch
 
@@ -56,7 +57,21 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return cls(**obj)
 
     # ===============================================================
-    # Array
+    # Array API
+
+    def __array_namespace__(self) -> "ArrayAPINamespace":
+        """Return the array API namespace."""
+        return xp
+
+    @property
+    def mT(self) -> "Self":  # noqa: N802
+        """Transpose the vector."""
+        return replace(self, **{k: v.mT for k, v in dataclass_items(self)})
+
+    @property
+    def ndim(self) -> int:
+        """Number of array dimensions (axes)."""
+        return len(self.shape)
 
     @property
     def shape(self) -> Any:
@@ -66,6 +81,25 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         dimension at the end for the components.
         """
         return jnp.broadcast_shapes(*self.shapes.values())
+
+    @property
+    def size(self) -> int:
+        """Total number of elements in the vector."""
+        return int(jnp.prod(xp.asarray(self.shape)))
+
+    @property
+    def T(self) -> "Self":  # noqa: N802
+        """Transpose the vector."""
+        return replace(self, **{k: v.T for k, v in dataclass_items(self)})
+
+    def to_device(self, device: None | Device = None) -> "Self":
+        """Move the vector to a new device."""
+        return replace(
+            self, **{k: v.to_device(device) for k, v in dataclass_items(self)}
+        )
+
+    # ===============================================================
+    # Further array methods
 
     def flatten(self) -> "Self":
         """Flatten the vector."""
@@ -118,9 +152,24 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(self))
 
     @property
+    def dtypes(self) -> Mapping[str, str]:
+        """Get the dtypes of the vector's components."""
+        return MappingProxyType({k: v.dtype for k, v in dataclass_items(self)})
+
+    @property
+    def devices(self) -> Mapping[str, str]:
+        """Get the devices of the vector's components."""
+        return MappingProxyType({k: v.device for k, v in dataclass_items(self)})
+
+    @property
     def shapes(self) -> Mapping[str, tuple[int, ...]]:
         """Get the shapes of the vector's components."""
         return MappingProxyType({k: v.shape for k, v in dataclass_items(self)})
+
+    @property
+    def sizes(self) -> Mapping[str, int]:
+        """Get the sizes of the vector's components."""
+        return MappingProxyType({k: v.size for k, v in dataclass_items(self)})
 
     # ===============================================================
     # Convenience methods
