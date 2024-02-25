@@ -8,7 +8,7 @@ import astropy.coordinates as apyc
 import astropy.units as apyu
 from jax_quantity import Quantity
 from jaxtyping import Shaped
-from plum import conversion_method
+from plum import conversion_method, convert
 
 from vector._utils import dataclass_values, full_shaped
 
@@ -53,9 +53,9 @@ def vec_diff_to_q(
 def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation:
     """`vector.Cartesian3DVector` -> `astropy.CartesianRepresentation`."""
     return apyc.CartesianRepresentation(
-        x=obj.x.as_type(apyu.Quantity),
-        y=obj.y.as_type(apyu.Quantity),
-        z=obj.z.as_type(apyu.Quantity),
+        x=convert(obj.x, apyu.Quantity),
+        y=convert(obj.y, apyu.Quantity),
+        z=convert(obj.z, apyu.Quantity),
     )
 
 
@@ -76,9 +76,9 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector
 def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentation:
     """`vector.SphericalVector` -> `astropy.PhysicsSphericalRepresentation`."""
     return apyc.PhysicsSphericalRepresentation(
-        r=obj.r.as_type(apyu.Quantity),
-        phi=obj.phi.as_type(apyu.Quantity),
-        theta=obj.theta.as_type(apyu.Quantity),
+        r=convert(obj.r, apyu.Quantity),
+        phi=convert(obj.phi, apyu.Quantity),
+        theta=convert(obj.theta, apyu.Quantity),
     )
 
 
@@ -99,9 +99,9 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVecto
 def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
     """`vector.CylindricalVector` -> `astropy.CylindricalRepresentation`."""
     return apyc.CylindricalRepresentation(
-        rho=obj.rho.as_type(apyu.Quantity),
-        phi=obj.phi.as_type(apyu.Quantity),
-        z=obj.z.as_type(apyu.Quantity),
+        rho=convert(obj.rho, apyu.Quantity),
+        phi=convert(obj.phi, apyu.Quantity),
+        z=convert(obj.z, apyu.Quantity),
     )
 
 
@@ -123,9 +123,9 @@ def diffcart3_to_apycart3(
 ) -> apyc.CartesianDifferential:
     """`vector.CartesianDifferential3D` -> `astropy.CartesianDifferential`."""
     return apyc.CartesianDifferential(
-        d_x=obj.d_x.as_type(apyu.Quantity),
-        d_y=obj.d_y.as_type(apyu.Quantity),
-        d_z=obj.d_z.as_type(apyu.Quantity),
+        d_x=convert(obj.d_x, apyu.Quantity),
+        d_y=convert(obj.d_y, apyu.Quantity),
+        d_z=convert(obj.d_z, apyu.Quantity),
     )
 
 
@@ -152,9 +152,9 @@ def diffsph_to_apysph(
 ) -> apyc.PhysicsSphericalDifferential:
     """`vector.SphericalDifferential` -> `astropy.PhysicsSphericalDifferential`."""
     return apyc.PhysicsSphericalDifferential(
-        d_r=obj.d_r.as_type(apyu.Quantity),
-        d_phi=obj.d_phi.as_type(apyu.Quantity),
-        d_theta=obj.d_theta.as_type(apyu.Quantity),
+        d_r=convert(obj.d_r, apyu.Quantity),
+        d_phi=convert(obj.d_phi, apyu.Quantity),
+        d_theta=convert(obj.d_theta, apyu.Quantity),
     )
 
 
@@ -179,9 +179,9 @@ def apysph_to_diffsph(
 def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDifferential:
     """`vector.CylindricalDifferential` -> `astropy.CylindricalDifferential`."""
     return apyc.CylindricalDifferential(
-        d_rho=obj.d_rho.as_type(apyu.Quantity),
-        d_phi=obj.d_phi.as_type(apyu.Quantity),
-        d_z=obj.d_z.as_type(apyu.Quantity),
+        d_rho=convert(obj.d_rho, apyu.Quantity),
+        d_phi=convert(obj.d_phi, apyu.Quantity),
+        d_z=convert(obj.d_z, apyu.Quantity),
     )
 
 
