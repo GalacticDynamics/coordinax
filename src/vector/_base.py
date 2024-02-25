@@ -152,12 +152,12 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(self))
 
     @property
-    def dtypes(self) -> Mapping[str, str]:
+    def dtypes(self) -> Mapping[str, jnp.dtype]:
         """Get the dtypes of the vector's components."""
         return MappingProxyType({k: v.dtype for k, v in dataclass_items(self)})
 
     @property
-    def devices(self) -> Mapping[str, str]:
+    def devices(self) -> Mapping[str, Device]:
         """Get the devices of the vector's components."""
         return MappingProxyType({k: v.device for k, v in dataclass_items(self)})
 
