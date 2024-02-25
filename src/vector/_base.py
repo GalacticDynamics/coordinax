@@ -15,6 +15,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax_quantity import Quantity
+from plum import dispatch
 
 from ._utils import dataclass_items, full_shaped
 
@@ -42,6 +43,17 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     coordinate systems. This class provides a common interface for all vector
     types. All fields of the vector are expected to be components of the vector.
     """
+
+    # ---------------------------------------------------------------
+    # Constructors
+
+    @classmethod
+    @dispatch  # type: ignore[misc]
+    def constructor(
+        cls: "type[AbstractVectorBase]", obj: Mapping[str, Any], /
+    ) -> "AbstractVectorBase":
+        """Construct a vector from a mapping."""
+        return cls(**obj)
 
     # ===============================================================
     # Array
