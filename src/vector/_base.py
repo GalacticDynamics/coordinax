@@ -47,6 +47,13 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     types. All fields of the vector are expected to be components of the vector.
     """
 
+    @abstractmethod
+    def _cartesian_cls(self) -> type["AbstractVectorBase"]:
+        """Return the corresponding Cartesian vector class."""
+        # TODO: something nicer than this for getting the corresponding class
+        # TODO: classproperty
+        raise NotImplementedError
+
     # ---------------------------------------------------------------
     # Constructors
 
@@ -384,8 +391,8 @@ class AbstractVector(AbstractVectorBase):
 
         return represent_as(self, target, **kwargs)
 
-    @abstractmethod
-    def norm(self) -> Quantity:
+    @partial(jax.jit)
+    def norm(self) -> Quantity["length"]:
         """Return the norm of the vector.
 
         Returns
@@ -406,8 +413,7 @@ class AbstractVector(AbstractVectorBase):
         Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
 
         """
-        # TODO: make a generic method that works on all dimensions
-        raise NotImplementedError
+        return self.represent_as(self._cartesian_cls).norm()
 
 
 #####################################################################
@@ -434,8 +440,7 @@ class AbstractVectorDifferential(AbstractVectorBase):
 
         return represent_as(self, target, position, **kwargs)
 
-    @abstractmethod
-    def norm(self, position: AbstractVector, /) -> Quantity:
+    @partial(jax.jit)
+    def norm(self, position: AbstractVector, /) -> Quantity["speed"]:
         """Return the norm of the vector."""
-        # TODO: make a generic method that works on all dimensions
-        raise NotImplementedError
+        return self.represent_as(self._cartesian_cls, position).norm()
