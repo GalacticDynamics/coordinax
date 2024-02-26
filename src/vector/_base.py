@@ -2,6 +2,7 @@
 
 __all__ = ["AbstractVectorBase", "AbstractVector", "AbstractVectorDifferential"]
 
+import operator
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
@@ -15,15 +16,13 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Device
+from jaxtyping import ArrayLike
 from plum import dispatch
 
 import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from ._utils import dataclass_items, full_shaped
-
-if TYPE_CHECKING:
-    from typing_extensions import Self
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -335,6 +334,67 @@ def constructor(
 
 class AbstractVector(AbstractVectorBase):
     """Abstract representation of coordinates in different systems."""
+
+    # ===============================================================
+    # Array
+
+    # -----------------------------------------------------
+    # Binary arithmetic operations
+
+    def __add__(self, other: Any) -> "Self":
+        """Add another object to this vector."""
+        if not isinstance(other, AbstractVector):
+            return NotImplemented
+
+        # The base implementation is to convert to Cartesian and perform the
+        # operation.  Cartesian coordinates do not have any branch cuts or
+        # singularities or ranges that need to be handled, so this is a safe
+        # default.
+        return operator.add(
+            self.represent_as(self._cartesian_cls),
+            other.represent_as(self._cartesian_cls),
+        ).represent_as(type(self))
+
+    def __sub__(self, other: Any) -> "Self":
+        """Add another object to this vector."""
+        if not isinstance(other, AbstractVector):
+            return NotImplemented
+
+        # The base implementation is to convert to Cartesian and perform the
+        # operation.  Cartesian coordinates do not have any branch cuts or
+        # singularities or ranges that need to be handled, so this is a safe
+        # default.
+        return operator.sub(
+            self.represent_as(self._cartesian_cls),
+            other.represent_as(self._cartesian_cls),
+        ).represent_as(type(self))
+
+    @dispatch
+    def __mul__(self: "AbstractVector", other: Any) -> Any:
+        return NotImplemented
+
+    @dispatch
+    def __mul__(self: "AbstractVector", other: ArrayLike) -> Any:
+        return replace(self, **{k: v * other for k, v in dataclass_items(self)})
+
+    @dispatch
+    def __truediv__(self: "AbstractVector", other: Any) -> Any:
+        return NotImplemented
+
+    @dispatch
+    def __truediv__(self: "AbstractVector", other: ArrayLike) -> Any:
+        return replace(self, **{k: v / other for k, v in dataclass_items(self)})
+
+    # ---------------------------------
+    # Reverse binary operations
+
+    @dispatch
+    def __rmul__(self: "AbstractVector", other: Any) -> Any:
+        return NotImplemented
+
+    @dispatch
+    def __rmul__(self: "AbstractVector", other: ArrayLike) -> Any:
+        return replace(self, **{k: other * v for k, v in dataclass_items(self)})
 
     # ===============================================================
     # Convenience methods

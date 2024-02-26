@@ -9,8 +9,9 @@ __all__ = [
     "RadialDifferential",
 ]
 
+from dataclasses import replace
 from functools import partial
-from typing import ClassVar, final
+from typing import Any, ClassVar, final
 
 import equinox as eqx
 import jax
@@ -19,6 +20,7 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract1DVector, Abstract1DVectorDifferential
+from vector._base import AbstractVector
 from vector._checks import check_r_non_negative
 from vector._typing import BatchableLength, BatchableSpeed
 
@@ -34,6 +36,24 @@ class Cartesian1DVector(Abstract1DVector):
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
+
+    def __add__(self, other: Any, /) -> "Cartesian1DVector":
+        """Add two vectors."""
+        if not isinstance(other, AbstractVector):
+            msg = f"Cannot add {Cartesian1DVector!r} and {type(other)!r}."
+            raise TypeError(msg)
+
+        cart = other.represent_as(Cartesian1DVector)
+        return replace(self, x=self.x + cart.x)
+
+    def __sub__(self, other: Any, /) -> "Cartesian1DVector":
+        """Subtract two vectors."""
+        if not isinstance(other, AbstractVector):
+            msg = f"Cannot subtract {Cartesian1DVector!r} and {type(other)!r}."
+            raise TypeError(msg)
+
+        cart = other.represent_as(Cartesian1DVector)
+        return replace(self, x=self.x - cart.x)
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:

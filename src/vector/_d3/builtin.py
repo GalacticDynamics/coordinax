@@ -11,8 +11,9 @@ __all__ = [
     "CylindricalDifferential",
 ]
 
+from dataclasses import replace
 from functools import partial
-from typing import ClassVar, final
+from typing import Any, ClassVar, final
 
 import equinox as eqx
 import jax
@@ -21,6 +22,7 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract3DVector, Abstract3DVectorDifferential
+from vector._base import AbstractVector
 from vector._checks import check_phi_range, check_r_non_negative, check_theta_range
 from vector._typing import (
     BatchableAngle,
@@ -51,6 +53,24 @@ class Cartesian3DVector(Abstract3DVector):
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
+
+    def __add__(self, other: Any, /) -> "Cartesian3DVector":
+        """Add two vectors."""
+        if not isinstance(other, AbstractVector):
+            msg = f"Cannot add {self._cartesian_cls!r} and {type(other)!r}."
+            raise TypeError(msg)
+
+        cart = other.represent_as(Cartesian3DVector)
+        return replace(self, x=self.x + cart.x, y=self.y + cart.y, z=self.z + cart.z)
+
+    def __sub__(self, other: Any, /) -> "Cartesian3DVector":
+        """Subtract two vectors."""
+        if not isinstance(other, AbstractVector):
+            msg = f"Cannot subtract {self._cartesian_cls!r} and {type(other)!r}."
+            raise TypeError(msg)
+
+        cart = other.represent_as(Cartesian3DVector)
+        return replace(self, x=self.x - cart.x, y=self.y - cart.y, z=self.z - cart.z)
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:

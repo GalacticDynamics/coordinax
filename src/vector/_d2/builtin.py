@@ -12,7 +12,7 @@ __all__ = [
 ]
 
 from functools import partial
-from typing import ClassVar, final
+from typing import Any, ClassVar, final
 
 import equinox as eqx
 import jax
@@ -21,6 +21,7 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract2DVector, Abstract2DVectorDifferential
+from vector._base import AbstractVector
 from vector._checks import check_phi_range, check_r_non_negative
 from vector._typing import (
     BatchableAngle,
@@ -46,6 +47,24 @@ class Cartesian2DVector(Abstract2DVector):
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
+
+    def __add__(self, other: Any, /) -> "Cartesian2DVector":
+        """Add two vectors."""
+        if not isinstance(other, AbstractVector):
+            msg = f"Cannot add {Cartesian2DVector!r} and {type(other)!r}."
+            raise TypeError(msg)
+
+        cart = other.represent_as(Cartesian2DVector)
+        return replace(self, x=self.x + cart.x, y=self.y + cart.y)
+
+    def __sub__(self, other: Any, /) -> "Cartesian2DVector":
+        """Subtract two vectors."""
+        if not isinstance(other, AbstractVector):
+            msg = f"Cannot subtract {Cartesian2DVector!r} and {type(other)!r}."
+            raise TypeError(msg)
+
+        cart = other.represent_as(Cartesian2DVector)
+        return replace(self, x=self.x - cart.x, y=self.y - cart.y)
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
