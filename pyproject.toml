@@ -43,13 +43,20 @@
     all = ["vector[docs]", "vector[test]"]
     dev = ["vector[test]"]
     docs = [
-      "sphinx>=7.0",
+      "furo>=2023.08.17",
       "myst_parser>=0.13",
+      "sphinx>=7.0",
       "sphinx_copybutton",
       "sphinx_autodoc_typehints",
-      "furo>=2023.08.17",
     ]
-    test = ["hypothesis[numpy]", "nox", "pytest >=6", "pytest-cov >=3"]
+    test = [
+      "hypothesis[numpy]",
+      "nox",
+      "pytest >=6",
+      "pytest-cov >=3",
+      "pytest-arraydiff",
+      "sybil",
+    ]
 
   [project.urls]
     "Bug Tracker" = "https://github.com/GalacticDynamics/vector/issues"
@@ -70,7 +77,13 @@
 
 
 [tool.pytest.ini_options]
-  addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+  addopts = [
+    "-ra",
+    "--arraydiff",
+    "--showlocals",
+    "--strict-markers",
+    "--strict-config",
+  ]
   filterwarnings = [
     "error",
     "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",
@@ -99,8 +112,8 @@
 
 [tool.mypy]
   disable_error_code = [
-    "no-redef",  # for plum-dispatch
-    "name-defined",  # for jaxtyping
+    "no-redef",     # for plum-dispatch
+    "name-defined", # for jaxtyping
   ]
   disallow_incomplete_defs = false
   disallow_untyped_defs = false

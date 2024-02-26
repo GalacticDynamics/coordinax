@@ -49,12 +49,99 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     # Constructors
 
     @classmethod
-    @dispatch  # type: ignore[misc]
+    @dispatch
     def constructor(
-        cls: "type[AbstractVectorBase]", obj: Mapping[str, Any], /
+        cls: "type[AbstractVectorBase]", obj: Mapping[str, Quantity], /
     ) -> "AbstractVectorBase":
-        """Construct a vector from a mapping."""
+        """Construct a vector from a mapping.
+
+        Parameters
+        ----------
+        obj : Mapping[str, Any]
+            The mapping of components.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector constructed from the mapping.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+
+        >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+
+        >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
+        ...       "z": Quantity([5, 6], "m")}
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+        )
+
+        """
         return cls(**obj)
+
+    @classmethod
+    @dispatch
+    def constructor(
+        cls: "type[AbstractVectorBase]",
+        obj: Quantity,
+        /,  # TODO: shape hint
+    ) -> "AbstractVectorBase":
+        """Construct a vector from a Quantity array.
+
+        The array is expected to have the components as the last dimension.
+
+        Parameters
+        ----------
+        obj : Quantity[Any, (*#batch, N), "..."]
+            The array of components.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector constructed from the array.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+
+        >>> xs = Quantity([1, 2, 3], "meter")
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+
+        >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+        )
+        >>> vec.x
+        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+
+        """
+        return cls(**{f.name: obj[..., i] for i, f in enumerate(fields(cls))})
 
     # ===============================================================
     # Array API
@@ -180,6 +267,57 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         raise NotImplementedError
 
 
+# -----------------------------------------------
+# Register additional constructors
+
+
+@AbstractVectorBase.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: type[AbstractVectorBase], obj: AbstractVectorBase
+) -> AbstractVectorBase:
+    """Construct a vector from another vector.
+
+    Parameters
+    ----------
+    cls : type[AbstractVectorBase]
+        The class to construct.
+    obj : AbstractVectorBase
+        The vector to construct from.
+
+    Returns
+    -------
+    AbstractVectorBase
+        The vector constructed from the other vector.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from jax_quantity import Quantity
+    >>> from vector import Cartesian3DVector
+
+    >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
+    >>> vec = Cartesian3DVector(x=x, y=y, z=z)
+    >>> cart = Cartesian3DVector.constructor(vec)
+    >>> cart
+    Cartesian3DVector(
+      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+    )
+    >>> cart.x
+    Quantity['length'](Array(1., dtype=float32), unit='m')
+
+    """
+    if not isinstance(obj, cls):
+        msg = f"Cannot construct {cls} from {type(obj)}."
+        raise TypeError(msg)
+
+    return cls(**dict(dataclass_items(obj)))
+
+
+#####################################################################
+
+
 class AbstractVector(AbstractVectorBase):
     """Abstract representation of coordinates in different systems."""
 
@@ -188,7 +326,49 @@ class AbstractVector(AbstractVectorBase):
 
     @partial(jax.jit, static_argnums=1)
     def represent_as(self, target: type[VT], /, *args: Any, **kwargs: Any) -> VT:
-        """Represent the vector as another type."""
+        """Represent the vector as another type.
+
+        Parameters
+        ----------
+        target : type[AbstractVector]
+            The type to represent the vector as.
+        *args : Any
+            Extra arguments. Raises a warning if any are given.
+        **kwargs : Any
+            Extra keyword arguments.
+
+        Returns
+        -------
+        AbstractVector
+            The vector represented as the target type.
+
+        Warns
+        -----
+        UserWarning
+            If extra arguments are given.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector, SphericalVector
+
+        We can represent a vector as another type:
+
+        >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
+        >>> vec = Cartesian3DVector(x=x, y=y, z=z)
+        >>> sph = vec.represent_as(SphericalVector)
+        >>> sph
+        SphericalVector(
+          r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+          theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad")),
+          phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad"))
+        )
+        >>> sph.r
+        Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
+
+        """
         if any(args):
             warnings.warn("Extra arguments are ignored.", UserWarning, stacklevel=2)
 
@@ -198,15 +378,38 @@ class AbstractVector(AbstractVectorBase):
 
     @abstractmethod
     def norm(self) -> Quantity:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Returns
+        -------
+        Quantity
+            The norm of the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+
+        We can compute the norm of a vector
+        >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
+        >>> vec = Cartesian3DVector(x=x, y=y, z=z)
+        >>> vec.norm()
+        Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
+
+        """
         # TODO: make a generic method that works on all dimensions
         raise NotImplementedError
+
+
+#####################################################################
 
 
 class AbstractVectorDifferential(AbstractVectorBase):
     """Abstract representation of vector differentials in different systems."""
 
     vector_cls: eqx.AbstractClassVar[type[AbstractVector]]
+    """The vector type associated with the differential."""
 
     # ===============================================================
     # Convenience methods
