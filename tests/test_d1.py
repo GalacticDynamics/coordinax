@@ -40,8 +40,6 @@ class TestCartesian1DVector(Abstract1DVectorTest):
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractVector:
         """Return a vector."""
-        from vector import Cartesian1DVector
-
         return Cartesian1DVector(x=Quantity([1, 2, 3, 4], u.kpc))
 
     # ==========================================================================

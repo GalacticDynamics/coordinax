@@ -15,10 +15,10 @@ from typing import ClassVar, final
 import array_api_jax_compat as xp
 import equinox as eqx
 import jax
+from jax_quantity import Quantity
 
 from vector._checks import check_r_non_negative
 from vector._typing import BatchableLength, BatchableSpeed
-from vector._utils import converter_quantity_array
 
 from .base import Abstract1DVector, Abstract1DVectorDifferential
 
@@ -30,7 +30,9 @@ from .base import Abstract1DVector, Abstract1DVectorDifferential
 class Cartesian1DVector(Abstract1DVector):
     """Cartesian vector representation."""
 
-    x: BatchableLength = eqx.field(converter=converter_quantity_array)
+    x: BatchableLength = eqx.field(
+        converter=partial(Quantity["length"].constructor, dtype=float)
+    )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
     @partial(jax.jit)
@@ -43,7 +45,9 @@ class Cartesian1DVector(Abstract1DVector):
 class RadialVector(Abstract1DVector):
     """Radial vector representation."""
 
-    r: BatchableLength = eqx.field(converter=converter_quantity_array)
+    r: BatchableLength = eqx.field(
+        converter=partial(Quantity["length"].constructor, dtype=float)
+    )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     def __check_init__(self) -> None:
@@ -59,7 +63,7 @@ class RadialVector(Abstract1DVector):
 class CartesianDifferential1D(Abstract1DVectorDifferential):
     """Cartesian differential representation."""
 
-    d_x: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    d_x: BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     vector_cls: ClassVar[type[Cartesian1DVector]] = Cartesian1DVector  # type: ignore[misc]
@@ -74,7 +78,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
 class RadialDifferential(Abstract1DVectorDifferential):
     """Radial differential representation."""
 
-    d_r: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    d_r: BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
     vector_cls: ClassVar[type[RadialVector]] = RadialVector  # type: ignore[misc]
