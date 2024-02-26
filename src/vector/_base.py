@@ -49,12 +49,99 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     # Constructors
 
     @classmethod
-    @dispatch  # type: ignore[misc]
+    @dispatch
     def constructor(
-        cls: "type[AbstractVectorBase]", obj: Mapping[str, Any], /
+        cls: "type[AbstractVectorBase]", obj: Mapping[str, Quantity], /
     ) -> "AbstractVectorBase":
-        """Construct a vector from a mapping."""
+        """Construct a vector from a mapping.
+
+        Parameters
+        ----------
+        obj : Mapping[str, Any]
+            The mapping of components.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector constructed from the mapping.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+
+        >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+
+        >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
+        ...       "z": Quantity([5, 6], "m")}
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+        )
+
+        """
         return cls(**obj)
+
+    @classmethod
+    @dispatch
+    def constructor(
+        cls: "type[AbstractVectorBase]",
+        obj: Quantity,
+        /,  # TODO: shape hint
+    ) -> "AbstractVectorBase":
+        """Construct a vector from a Quantity array.
+
+        The array is expected to have the components as the last dimension.
+
+        Parameters
+        ----------
+        obj : Quantity[Any, (*#batch, N), "..."]
+            The array of components.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector constructed from the array.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+
+        >>> xs = Quantity([1, 2, 3], "meter")
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+
+        >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+        )
+        >>> vec.x
+        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+
+        """
+        return cls(**{f.name: obj[..., i] for i, f in enumerate(fields(cls))})
 
     # ===============================================================
     # Array API
@@ -180,6 +267,9 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         raise NotImplementedError
 
 
+#####################################################################
+
+
 class AbstractVector(AbstractVectorBase):
     """Abstract representation of coordinates in different systems."""
 
@@ -201,6 +291,9 @@ class AbstractVector(AbstractVectorBase):
         """Return the norm of the vector."""
         # TODO: make a generic method that works on all dimensions
         raise NotImplementedError
+
+
+#####################################################################
 
 
 class AbstractVectorDifferential(AbstractVectorBase):
