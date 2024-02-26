@@ -142,7 +142,13 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
 
         """
-        return cls(**{f.name: obj[..., i] for i, f in enumerate(fields(cls))})
+        _ = eqx.error_if(
+            obj,
+            obj.shape[-1] != len(fields(cls)),
+            f"Cannot construct {cls} from array with shape {obj.shape}.",
+        )
+        comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+        return cls(**comps)
 
     # ===============================================================
     # Array API
