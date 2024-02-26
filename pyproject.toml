@@ -153,6 +153,7 @@
     extend-select = ["ALL"]
     ignore = [
       "A002",    # Argument is shadowing a Python builtin
+      "ANN001",  # Missing type annotation for `cls` in method
       "ANN101",  # Missing type annotation for `self` in method
       "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
       "ARG001",  # Unused function argument  # TODO: resolve
@@ -195,6 +196,7 @@
   messages_control.disable = [
     "cyclic-import",              # broken?
     "design",
+    "import-outside-toplevel",    # handled by ruff
     "fixme",
     "function-redefined",         # plum-dispatch
     "invalid-name",               # handled by ruff
@@ -203,6 +205,7 @@
     "missing-module-docstring",
     "protected-access",           # handled by ruff
     "redefined-builtin",          # handled by ruff
+    "unsubscriptable-object",     # handled by mypy
     "unused-argument",            # handled by ruff
     "wrong-import-position",
     "wrong-import-order",         # handled by ruff

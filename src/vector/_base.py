@@ -22,7 +22,7 @@ from plum import dispatch
 import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
-from ._utils import dataclass_items, full_shaped
+from ._utils import classproperty, dataclass_items, full_shaped
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -46,11 +46,11 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     types. All fields of the vector are expected to be components of the vector.
     """
 
+    @classproperty
     @abstractmethod
-    def _cartesian_cls(self) -> type["AbstractVectorBase"]:
+    def _cartesian_cls(self: type["AbstractVectorBase"]) -> type["AbstractVectorBase"]:
         """Return the corresponding Cartesian vector class."""
         # TODO: something nicer than this for getting the corresponding class
-        # TODO: classproperty
         raise NotImplementedError
 
     # ---------------------------------------------------------------
@@ -166,12 +166,59 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
     @property
     def mT(self) -> "Self":  # noqa: N802
-        """Transpose the vector."""
+        """Transpose the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+
+        We can transpose a vector:
+
+        >>> vec = Cartesian3DVector(x=Quantity([[0, 1], [2, 3]], "m"),
+        ...                         y=Quantity([[0, 1], [2, 3]], "m"),
+        ...                         z=Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec.mT.x
+        Quantity['length'](Array([[0., 2.],
+                                  [1., 3.]], dtype=float32), unit='m')
+
+        """
         return replace(self, **{k: v.mT for k, v in dataclass_items(self)})
 
     @property
     def ndim(self) -> int:
-        """Number of array dimensions (axes)."""
+        """Number of array dimensions (axes).
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector
+
+        We can get the number of dimensions of a vector:
+
+        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec.ndim
+        1
+
+        >>> vec = Cartesian1DVector(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec.ndim
+        2
+
+        ``ndim`` is calculated from the broadcasted shape. We can
+        see this by creating a 2D vector in which the components have
+        different shapes:
+
+        >>> from vector import Cartesian2DVector
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec.ndim
+        2
+
+        """
         return len(self.shape)
 
     @property
@@ -180,21 +227,124 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         When represented as a single array, the vector has an additional
         dimension at the end for the components.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector
+
+        We can get the shape of a vector:
+
+        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec.shape
+        (2,)
+
+        >>> vec = Cartesian1DVector(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec.shape
+        (2, 2)
+
+        ``shape`` is calculated from the broadcasted shape. We can
+        see this by creating a 2D vector in which the components have
+        different shapes:
+
+        >>> from vector import Cartesian2DVector
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec.shape
+        (2, 2)
+
         """
         return jnp.broadcast_shapes(*self.shapes.values())
 
     @property
     def size(self) -> int:
-        """Total number of elements in the vector."""
+        """Total number of elements in the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector
+
+        We can get the size of a vector:
+
+        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec.size
+        2
+
+        >>> vec = Cartesian1DVector(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec.size
+        4
+
+        ``size`` is calculated from the broadcasted shape. We can
+        see this by creating a 2D vector in which the components have
+        different shapes:
+
+        >>> from vector import Cartesian2DVector
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec.size
+        4
+
+        """
         return int(jnp.prod(xp.asarray(self.shape)))
 
     @property
     def T(self) -> "Self":  # noqa: N802
-        """Transpose the vector."""
+        """Transpose the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+
+        We can transpose a vector:
+
+        >>> vec = Cartesian3DVector(x=Quantity([[0, 1], [2, 3]], "m"),
+        ...                         y=Quantity([[0, 1], [2, 3]], "m"),
+        ...                         z=Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec.T.x
+        Quantity['length'](Array([[0., 2.],
+                                  [1., 3.]], dtype=float32), unit='m')
+
+        """
         return replace(self, **{k: v.T for k, v in dataclass_items(self)})
 
     def to_device(self, device: None | Device = None) -> "Self":
-        """Move the vector to a new device."""
+        """Move the vector to a new device.
+
+        Parameters
+        ----------
+        device : None, Device
+            The device to move the vector to.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector moved to the new device.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax import devices
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector
+
+        We can move a vector to a new device:
+
+        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec.to_device(devices()[0])
+        Cartesian1DVector(
+            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+        )
+
+        """
         return replace(
             self, **{k: v.to_device(device) for k, v in dataclass_items(self)}
         )
@@ -203,11 +353,62 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     # Further array methods
 
     def flatten(self) -> "Self":
-        """Flatten the vector."""
+        """Flatten the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+
+        We can flatten a vector:
+
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec.flatten()
+        Cartesian2DVector(
+            x=Quantity[PhysicalType('length')](value=f32[4], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[1], unit=Unit("m"))
+        )
+
+        """
         return replace(self, **{k: v.flatten() for k, v in dataclass_items(self)})
 
     def reshape(self, *args: Any, order: str = "C") -> "Self":
-        """Reshape the components of the vector."""
+        """Reshape the components of the vector.
+
+        Parameters
+        ----------
+        *args : Any
+            The new shape.
+        order : str
+            The order to use for the reshape.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector with the reshaped components.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+
+        We can reshape a vector:
+
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+
+        >>> vec.reshape(4)
+        Cartesian2DVector(
+            x=Quantity[PhysicalType('length')](value=f32[4], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[4], unit=Unit("m"))
+        )
+
+        """
         # TODO: enable not needing to make a full-shaped copy
         full = full_shaped(self)
         return replace(
@@ -215,7 +416,33 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         )
 
     def __getitem__(self, index: Any) -> "Self":
-        """Return a new object with the given slice applied."""
+        """Return a new object with the given slice applied.
+
+        Parameters
+        ----------
+        index : Any
+            The slice to apply.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector with the slice applied.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+
+        We can slice a vector:
+
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec[0].x
+        Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
+
+        """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
         return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
 
@@ -244,12 +471,44 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         `dataclasses.asdict`
             This applies recursively to the components of the vector.
 
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+
+        We can get the vector as a mapping:
+
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec.asdict()
+        {'x': Quantity['length'](Array([[1., 2.], [3., 4.]], dtype=float32), unit='m'),
+         'y': Quantity['length'](Array(0., dtype=float32), unit='m')}
+
         """
         return dict_factory(dataclass_items(self))
 
-    @property
-    def components(self) -> tuple[str, ...]:
-        """Vector component names."""
+    @classproperty
+    def components(self: type["AbstractVectorBase"]) -> tuple[str, ...]:
+        """Vector component names.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from vector import Cartesian2DVector, SphericalVector, RadialDifferential
+
+        We can get the components of a vector:
+
+        >>> Cartesian2DVector.components
+        ('x', 'y')
+        >>> SphericalVector.components
+        ('r', 'theta', 'phi')
+        >>> RadialDifferential.components
+        ('d_r',)
+
+        """
         return tuple(f.name for f in fields(self))
 
     @property
@@ -332,7 +591,7 @@ def constructor(
 #####################################################################
 
 
-class AbstractVector(AbstractVectorBase):
+class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
     # ===============================================================
@@ -479,7 +738,7 @@ class AbstractVector(AbstractVectorBase):
 #####################################################################
 
 
-class AbstractVectorDifferential(AbstractVectorBase):
+class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
     vector_cls: eqx.AbstractClassVar[type[AbstractVector]]

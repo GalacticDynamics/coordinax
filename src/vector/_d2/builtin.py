@@ -11,6 +11,7 @@ __all__ = [
     "PolarDifferential",
 ]
 
+from dataclasses import replace
 from functools import partial
 from typing import Any, ClassVar, final
 
