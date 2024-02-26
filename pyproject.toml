@@ -49,7 +49,14 @@
       "sphinx_copybutton",
       "sphinx_autodoc_typehints",
     ]
-    test = ["hypothesis[numpy]", "nox", "pytest >=6", "pytest-cov >=3", "sybil"]
+    test = [
+      "hypothesis[numpy]",
+      "nox",
+      "pytest >=6",
+      "pytest-cov >=3",
+      "pytest-arraydiff",
+      "sybil",
+    ]
 
   [project.urls]
     "Bug Tracker" = "https://github.com/GalacticDynamics/vector/issues"
@@ -70,7 +77,13 @@
 
 
 [tool.pytest.ini_options]
-  addopts = ["-ra", "--showlocals", "--strict-markers", "--strict-config"]
+  addopts = [
+    "-ra",
+    "--arraydiff",
+    "--showlocals",
+    "--strict-markers",
+    "--strict-config",
+  ]
   filterwarnings = [
     "error",
     "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",
