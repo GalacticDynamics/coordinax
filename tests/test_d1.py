@@ -3,9 +3,11 @@
 import astropy.units as u
 import jax.numpy as jnp
 import pytest
-from jax_quantity import Quantity
 from quax import quaxify
 
+from jax_quantity import Quantity
+
+from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
 from vector import (
     AbstractVector,
     Cartesian1DVector,
@@ -24,8 +26,6 @@ from vector import (
     SphericalVector,
     represent_as,
 )
-
-from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
 
 array_equal = quaxify(jnp.array_equal)
 

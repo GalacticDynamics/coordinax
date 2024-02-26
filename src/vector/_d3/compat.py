@@ -3,14 +3,13 @@
 __all__: list[str] = []
 
 
-import array_api_jax_compat as xp
 import astropy.coordinates as apyc
 import astropy.units as apyu
-from jax_quantity import Quantity
 from jaxtyping import Shaped
 from plum import conversion_method, convert
 
-from vector._utils import dataclass_values, full_shaped
+import array_api_jax_compat as xp
+from jax_quantity import Quantity
 
 from .base import Abstract3DVector
 from .builtin import (
@@ -21,6 +20,7 @@ from .builtin import (
     SphericalDifferential,
     SphericalVector,
 )
+from vector._utils import dataclass_values, full_shaped
 
 #####################################################################
 # Quantity

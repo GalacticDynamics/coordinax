@@ -3,8 +3,9 @@
 __all__: list[str] = []
 
 
-import array_api_jax_compat as xp
 import equinox as eqx
+
+import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from vector._typing import BatchableAngle, BatchableLength

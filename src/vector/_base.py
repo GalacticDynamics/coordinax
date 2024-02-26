@@ -10,14 +10,15 @@ from functools import partial
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import array_api_jax_compat as xp
 import astropy.units as u
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jax import Device
-from jax_quantity import Quantity
 from plum import dispatch
+
+import array_api_jax_compat as xp
+from jax_quantity import Quantity
 
 from ._utils import dataclass_items, full_shaped
 

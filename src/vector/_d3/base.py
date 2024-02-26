@@ -7,6 +7,7 @@ from functools import partial
 
 import equinox as eqx
 import jax
+
 from jax_quantity import Quantity
 
 from vector._base import AbstractVector, AbstractVectorDifferential

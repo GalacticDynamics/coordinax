@@ -4,10 +4,9 @@ __all__: list[str] = []
 
 from typing import Any
 
-import array_api_jax_compat as xp
 from plum import dispatch
 
-from vector._base import AbstractVector
+import array_api_jax_compat as xp
 
 from .base import Abstract2DVector, Abstract2DVectorDifferential
 from .builtin import (
@@ -16,6 +15,7 @@ from .builtin import (
     PolarDifferential,
     PolarVector,
 )
+from vector._base import AbstractVector
 
 
 @dispatch

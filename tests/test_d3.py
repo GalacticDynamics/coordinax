@@ -1,14 +1,17 @@
 """Test :mod:`vector._builtin`."""
 
-import array_api_jax_compat as xp
 import astropy.coordinates as apyc
 import astropy.units as u
 import jax.numpy as jnp
 import numpy as np
 import pytest
-from jax_quantity import Quantity
 from plum import convert
 
+import array_api_jax_compat as xp
+from jax_quantity import Quantity
+
+from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
+from .test_d2 import hypot
 from vector import (
     AbstractVector,
     Cartesian1DVector,
@@ -27,9 +30,6 @@ from vector._d3.builtin import (
     CylindricalDifferential,
     SphericalDifferential,
 )
-
-from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
-from .test_d2 import hypot
 
 
 class Abstract3DVectorTest(AbstractVectorTest):
