@@ -11,6 +11,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import array_api_jax_compat as xp
+import astropy.units as u
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -97,7 +98,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     @dispatch
     def constructor(
         cls: "type[AbstractVectorBase]",
-        obj: Quantity,
+        obj: Quantity | u.Quantity,
         /,  # TODO: shape hint
     ) -> "AbstractVectorBase":
         """Construct a vector from a Quantity array.

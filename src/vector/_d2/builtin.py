@@ -17,6 +17,7 @@ from typing import ClassVar, final
 import array_api_jax_compat as xp
 import equinox as eqx
 import jax
+from jax_quantity import Quantity
 
 from vector._checks import check_phi_range, check_r_non_negative
 from vector._typing import (
@@ -25,7 +26,6 @@ from vector._typing import (
     BatchableLength,
     BatchableSpeed,
 )
-from vector._utils import converter_quantity_array
 
 from .base import Abstract2DVector, Abstract2DVectorDifferential
 
@@ -37,10 +37,14 @@ from .base import Abstract2DVector, Abstract2DVectorDifferential
 class Cartesian2DVector(Abstract2DVector):
     """Cartesian vector representation."""
 
-    x: BatchableLength = eqx.field(converter=converter_quantity_array)
+    x: BatchableLength = eqx.field(
+        converter=partial(Quantity["length"].constructor, dtype=float)
+    )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: BatchableLength = eqx.field(converter=converter_quantity_array)
+    y: BatchableLength = eqx.field(
+        converter=partial(Quantity["length"].constructor, dtype=float)
+    )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
     @partial(jax.jit)
@@ -56,10 +60,14 @@ class PolarVector(Abstract2DVector):
     We use the symbol `phi` instead of `theta` to adhere to the ISO standard.
     """
 
-    r: BatchableLength = eqx.field(converter=converter_quantity_array)
+    r: BatchableLength = eqx.field(
+        converter=partial(Quantity["length"].constructor, dtype=float)
+    )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    phi: BatchableAngle = eqx.field(converter=converter_quantity_array)
+    phi: BatchableAngle = eqx.field(
+        converter=partial(Quantity["angle"].constructor, dtype=float)
+    )
     r"""Polar angle :math:`\phi \in [0,2\pi)`."""
 
     def __check_init__(self) -> None:
@@ -73,20 +81,6 @@ class PolarVector(Abstract2DVector):
         return self.r
 
 
-# class LnPolarVector(Abstract2DVector):
-#     """Log-polar vector representation."""
-
-#     lnr: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-#     theta: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-
-
-# class Log10PolarVector(Abstract2DVector):
-#     """Log10-polar vector representation."""
-
-#     log10r: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-#     theta: BatchableFloatScalarQ = eqx.field(converter=converter_quantity_array)
-
-
 ##############################################################################
 
 
@@ -94,10 +88,14 @@ class PolarVector(Abstract2DVector):
 class CartesianDifferential2D(Abstract2DVectorDifferential):
     """Cartesian differential representation."""
 
-    d_x: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    d_x: BatchableSpeed = eqx.field(
+        converter=partial(Quantity["speed"].constructor, dtype=float)
+    )
     r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
 
-    d_y: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    d_y: BatchableSpeed = eqx.field(
+        converter=partial(Quantity["speed"].constructor, dtype=float)
+    )
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
     vector_cls: ClassVar[type[Cartesian2DVector]] = Cartesian2DVector  # type: ignore[misc]
@@ -112,10 +110,14 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 class PolarDifferential(Abstract2DVectorDifferential):
     """Polar differential representation."""
 
-    d_r: BatchableSpeed = eqx.field(converter=converter_quantity_array)
+    d_r: BatchableSpeed = eqx.field(
+        converter=partial(Quantity["speed"].constructor, dtype=float)
+    )
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
-    d_phi: BatchableAngularSpeed = eqx.field(converter=converter_quantity_array)
+    d_phi: BatchableAngularSpeed = eqx.field(
+        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+    )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
     vector_cls: ClassVar[type[PolarVector]] = PolarVector  # type: ignore[misc]
