@@ -3,25 +3,20 @@
 __all__ = ["Abstract2DVector", "Abstract2DVectorDifferential"]
 
 
-from functools import partial
-
 import equinox as eqx
-import jax
 
-from jax_quantity import Quantity
-
-from vector._base import AbstractVector, AbstractVectorDifferential
+from vector._base import AbstractVector, AbstractVectorBase, AbstractVectorDifferential
+from vector._utils import classproperty
 
 
 class Abstract2DVector(AbstractVector):
     """Abstract representation of 2D coordinates in different systems."""
 
-    @partial(jax.jit)
-    def norm(self) -> Quantity["length"]:
-        """Return the norm of the vector."""
-        from .builtin import Cartesian2DVector  # pylint: disable=C0415
+    @classproperty
+    def _cartesian_cls(self: type[AbstractVectorBase]) -> type[AbstractVectorBase]:
+        from .builtin import Cartesian2DVector
 
-        return self.represent_as(Cartesian2DVector).norm()
+        return Cartesian2DVector
 
 
 class Abstract2DVectorDifferential(AbstractVectorDifferential):
@@ -29,9 +24,8 @@ class Abstract2DVectorDifferential(AbstractVectorDifferential):
 
     vector_cls: eqx.AbstractClassVar[type[Abstract2DVector]]
 
-    @partial(jax.jit)
-    def norm(self, position: Abstract2DVector, /) -> Quantity["length"]:
-        """Return the norm of the vector."""
-        from .builtin import CartesianDifferential2D  # pylint: disable=C0415
+    @classproperty
+    def _cartesian_cls(self: type[AbstractVectorBase]) -> type[AbstractVectorBase]:
+        from .builtin import CartesianDifferential2D
 
-        return self.represent_as(CartesianDifferential2D, position).norm()
+        return CartesianDifferential2D
