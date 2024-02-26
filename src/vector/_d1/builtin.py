@@ -12,15 +12,15 @@ __all__ = [
 from functools import partial
 from typing import ClassVar, final
 
-import array_api_jax_compat as xp
 import equinox as eqx
 import jax
+
+import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
+from .base import Abstract1DVector, Abstract1DVectorDifferential
 from vector._checks import check_r_non_negative
 from vector._typing import BatchableLength, BatchableSpeed
-
-from .base import Abstract1DVector, Abstract1DVectorDifferential
 
 ##############################################################################
 # Position

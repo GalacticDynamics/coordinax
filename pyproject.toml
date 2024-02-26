@@ -186,6 +186,8 @@
 
     [tool.ruff.lint.isort]
       combine-as-imports = true
+      known-first-party = ["array_api_jax_compat", "jax_quantity"]
+      known-local-folder = ["vector"]
 
 
 [tool.pylint]

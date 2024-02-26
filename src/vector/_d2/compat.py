@@ -3,15 +3,15 @@
 __all__: list[str] = []
 
 
-import array_api_jax_compat as xp
-from jax_quantity import Quantity
 from jaxtyping import Shaped
 from plum import conversion_method
 
-from vector._utils import dataclass_values, full_shaped
+import array_api_jax_compat as xp
+from jax_quantity import Quantity
 
 from .base import Abstract2DVector
 from .builtin import Cartesian2DVector, CartesianDifferential2D
+from vector._utils import dataclass_values, full_shaped
 
 #####################################################################
 # Quantity

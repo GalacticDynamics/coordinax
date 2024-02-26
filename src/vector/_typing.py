@@ -2,8 +2,9 @@
 
 __all__: list[str] = []
 
-from jax_quantity import Quantity
 from jaxtyping import Float, Shaped
+
+from jax_quantity import Quantity
 
 FloatScalarQ = Float[Quantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]

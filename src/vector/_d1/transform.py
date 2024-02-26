@@ -6,8 +6,6 @@ from typing import Any
 
 from plum import dispatch
 
-from vector._base import AbstractVector
-
 from .base import Abstract1DVector, Abstract1DVectorDifferential
 from .builtin import (
     Cartesian1DVector,
@@ -15,6 +13,7 @@ from .builtin import (
     RadialDifferential,
     RadialVector,
 )
+from vector._base import AbstractVector
 
 ###############################################################################
 # 1D

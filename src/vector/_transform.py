@@ -6,11 +6,12 @@ from math import prod
 from typing import Any
 from warnings import warn
 
-import array_api_jax_compat as xp
 import astropy.units as u
 import jax
-from jax_quantity import Quantity
 from plum import dispatch
+
+import array_api_jax_compat as xp
+from jax_quantity import Quantity
 
 from ._base import AbstractVector, AbstractVectorDifferential
 from ._d1.base import Abstract1DVectorDifferential

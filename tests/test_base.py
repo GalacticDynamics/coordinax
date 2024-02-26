@@ -6,11 +6,12 @@ from dataclasses import replace
 from types import MappingProxyType
 from typing import Any
 
-import array_api_jax_compat as xp
 import jax.numpy as jnp
 import pytest
-from jax_quantity import Quantity
 from quax import quaxify
+
+import array_api_jax_compat as xp
+from jax_quantity import Quantity
 
 from vector import (
     Abstract1DVector,

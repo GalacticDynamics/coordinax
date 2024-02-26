@@ -14,11 +14,13 @@ __all__ = [
 from functools import partial
 from typing import ClassVar, final
 
-import array_api_jax_compat as xp
 import equinox as eqx
 import jax
+
+import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
+from .base import Abstract3DVector, Abstract3DVectorDifferential
 from vector._checks import check_phi_range, check_r_non_negative, check_theta_range
 from vector._typing import (
     BatchableAngle,
@@ -26,8 +28,6 @@ from vector._typing import (
     BatchableLength,
     BatchableSpeed,
 )
-
-from .base import Abstract3DVector, Abstract3DVectorDifferential
 
 ##############################################################################
 # Position

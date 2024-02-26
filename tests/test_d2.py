@@ -1,12 +1,14 @@
 """Test :mod:`vector._d2`."""
 
-import array_api_jax_compat as xp
 import astropy.units as u
 import jax.numpy as jnp
 import pytest
-from jax_quantity import Quantity
 from quax import quaxify
 
+import array_api_jax_compat as xp
+from jax_quantity import Quantity
+
+from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
 from vector import (
     AbstractVector,
     Cartesian1DVector,
@@ -25,8 +27,6 @@ from vector import (
     SphericalVector,
     represent_as,
 )
-
-from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
 
 hypot = quaxify(jnp.hypot)
 allclose = quaxify(jnp.allclose)
