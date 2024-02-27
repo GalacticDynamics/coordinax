@@ -155,6 +155,7 @@
       "A002",    # Argument is shadowing a Python builtin
       "ANN001",  # Missing type annotation for `cls` in method
       "ANN101",  # Missing type annotation for `self` in method
+      "ANN102",  # Missing type annotation for `cls` in method
       "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
       "ARG001",  # Unused function argument  # TODO: resolve
       "B008",    # Do not perform function calls in argument defaults

@@ -42,8 +42,14 @@ class ClassPropertyDescriptor(Generic[EnclosingT, GetterRetT]):
 
     fget: classmethod | staticmethod  # type: ignore[type-arg]
 
-    def __get__(self, obj: EnclosingT, klass: type[EnclosingT] | None) -> GetterRetT:
+    def __get__(
+        self, obj: EnclosingT | None, klass: type[EnclosingT] | None
+    ) -> GetterRetT:
+        if obj is None and klass is None:
+            msg = "Descriptor must be accessed from an instance or class."
+            raise TypeError(msg)
         if klass is None:
+            assert obj is not None  # just for mypy # noqa: S101
             klass = type(obj)
 
         return self.fget.__get__(obj, klass)()

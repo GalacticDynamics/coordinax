@@ -4,8 +4,6 @@ __all__ = [
     # Position
     "Cartesian2DVector",
     "PolarVector",
-    # "LnPolarVector",
-    # "Log10PolarVector",
     # Differential
     "CartesianDifferential2D",
     "PolarDifferential",
@@ -13,7 +11,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, ClassVar, final
+from typing import Any, final
 
 import equinox as eqx
 import jax
@@ -30,6 +28,7 @@ from vector._typing import (
     BatchableLength,
     BatchableSpeed,
 )
+from vector._utils import classproperty
 
 # =============================================================================
 # 2D
@@ -48,6 +47,11 @@ class Cartesian2DVector(Abstract2DVector):
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
+
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["CartesianDifferential2D"]:
+        return CartesianDifferential2D
 
     def __add__(self, other: Any, /) -> "Cartesian2DVector":
         """Add two vectors."""
@@ -95,6 +99,11 @@ class PolarVector(Abstract2DVector):
         check_r_non_negative(self.r)
         check_phi_range(self.phi)
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["PolarDifferential"]:
+        return PolarDifferential
+
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
         """Return the norm of the vector."""
@@ -118,7 +127,10 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
     )
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
-    vector_cls: ClassVar[type[Cartesian2DVector]] = Cartesian2DVector  # type: ignore[misc]
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[Cartesian2DVector]:
+        return Cartesian2DVector
 
     @partial(jax.jit)
     def norm(self, _: Abstract2DVector | None = None, /) -> BatchableSpeed:
@@ -140,4 +152,7 @@ class PolarDifferential(Abstract2DVectorDifferential):
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
-    vector_cls: ClassVar[type[PolarVector]] = PolarVector  # type: ignore[misc]
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[PolarVector]:
+        return PolarVector

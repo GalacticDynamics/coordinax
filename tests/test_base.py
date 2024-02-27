@@ -249,7 +249,7 @@ class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
 
         # Perform the conversion.
         # Detecting whether the conversion reduces the dimensionality.
-        with context_dimension_reduction(vector, target.vector_cls):
+        with context_dimension_reduction(vector, target.integral_cls):
             newdif = difntl.represent_as(target, vector)
 
         # Test
