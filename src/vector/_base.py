@@ -57,10 +57,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> from vector import RadialVector, SphericalVector
 
         >>> RadialVector._cartesian_cls
-        <class 'vector.Cartesian1DVector'>
+        <class 'vector._d1.builtin.Cartesian1DVector'>
 
         >>> SphericalVector._cartesian_cls
-        <class 'vector.Cartesian3DVector'>
+        <class 'vector._d3.builtin.Cartesian3DVector'>
 
         """
         # TODO: something nicer than this for getting the corresponding class
@@ -619,10 +619,10 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
         >>> from vector import RadialVector, SphericalVector
 
         >>> RadialVector.differential_cls
-        <class 'vector.RadialDifferential'>
+        <class 'vector._d1.builtin.RadialDifferential'>
 
         >>> SphericalVector.differential_cls
-        <class 'vector.SphericalDifferential'>
+        <class 'vector._d3.builtin.SphericalDifferential'>
 
         """
         raise NotImplementedError
@@ -785,10 +785,10 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         >>> from vector import RadialDifferential, SphericalDifferential
 
         >>> RadialDifferential.integral_cls
-        <class 'vector.RadialVector'>
+        <class 'vector._d1.builtin.RadialVector'>
 
         >>> SphericalDifferential.integral_cls
-        <class 'vector.Sphericalvector'>
+        <class 'vector._d3.builtin.SphericalVector'>
 
         """
         raise NotImplementedError
