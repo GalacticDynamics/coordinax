@@ -13,7 +13,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, ClassVar, final
+from typing import Any, final
 
 import equinox as eqx
 import jax
@@ -30,6 +30,7 @@ from vector._typing import (
     BatchableLength,
     BatchableSpeed,
 )
+from vector._utils import classproperty
 
 ##############################################################################
 # Position
@@ -53,6 +54,11 @@ class Cartesian3DVector(Abstract3DVector):
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
+
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["CartesianDifferential3D"]:
+        return CartesianDifferential3D
 
     def __add__(self, other: Any, /) -> "Cartesian3DVector":
         """Add two vectors."""
@@ -103,6 +109,11 @@ class SphericalVector(Abstract3DVector):
         check_theta_range(self.theta)
         check_phi_range(self.phi)
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["SphericalDifferential"]:
+        return SphericalDifferential
+
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
         """Return the norm of the vector."""
@@ -133,6 +144,11 @@ class CylindricalVector(Abstract3DVector):
         check_r_non_negative(self.rho)
         check_phi_range(self.phi)
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["CylindricalDifferential"]:
+        return CylindricalDifferential
+
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
         """Return the norm of the vector."""
@@ -162,7 +178,10 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
     )
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
-    vector_cls: ClassVar[type[Cartesian3DVector]] = Cartesian3DVector  # type: ignore[misc]
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[Cartesian3DVector]:
+        return Cartesian3DVector
 
     @partial(jax.jit)
     def norm(self, _: Abstract3DVector | None = None, /) -> BatchableSpeed:
@@ -189,7 +208,10 @@ class SphericalDifferential(Abstract3DVectorDifferential):
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    vector_cls: ClassVar[type[SphericalVector]] = SphericalVector  # type: ignore[misc]
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[SphericalVector]:
+        return SphericalVector
 
 
 @final
@@ -211,4 +233,7 @@ class CylindricalDifferential(Abstract3DVectorDifferential):
     )
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
-    vector_cls: ClassVar[type[CylindricalVector]] = CylindricalVector  # type: ignore[misc]
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[CylindricalVector]:
+        return CylindricalVector

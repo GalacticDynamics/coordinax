@@ -47,9 +47,22 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     """
 
     @classproperty
+    @classmethod
     @abstractmethod
-    def _cartesian_cls(self: type["AbstractVectorBase"]) -> type["AbstractVectorBase"]:
-        """Return the corresponding Cartesian vector class."""
+    def _cartesian_cls(cls) -> type["AbstractVectorBase"]:
+        """Return the corresponding Cartesian vector class.
+
+        Examples
+        --------
+        >>> from vector import RadialVector, SphericalVector
+
+        >>> RadialVector._cartesian_cls
+        <class 'vector._d1.builtin.Cartesian1DVector'>
+
+        >>> SphericalVector._cartesian_cls
+        <class 'vector._d3.builtin.Cartesian3DVector'>
+
+        """
         # TODO: something nicer than this for getting the corresponding class
         raise NotImplementedError
 
@@ -490,7 +503,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return dict_factory(dataclass_items(self))
 
     @classproperty
-    def components(self: type["AbstractVectorBase"]) -> tuple[str, ...]:
+    @classmethod
+    def components(cls) -> tuple[str, ...]:
         """Vector component names.
 
         Examples
@@ -509,7 +523,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         ('d_r',)
 
         """
-        return tuple(f.name for f in fields(self))
+        return tuple(f.name for f in fields(cls))
 
     @property
     def dtypes(self) -> Mapping[str, jnp.dtype]:
@@ -593,6 +607,25 @@ def constructor(
 
 class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
+
+    @classproperty
+    @classmethod
+    @abstractmethod
+    def differential_cls(cls) -> type["AbstractVectorDifferential"]:
+        """Return the corresponding differential vector class.
+
+        Examples
+        --------
+        >>> from vector import RadialVector, SphericalVector
+
+        >>> RadialVector.differential_cls
+        <class 'vector._d1.builtin.RadialDifferential'>
+
+        >>> SphericalVector.differential_cls
+        <class 'vector._d3.builtin.SphericalDifferential'>
+
+        """
+        raise NotImplementedError
 
     # ===============================================================
     # Array
@@ -741,8 +774,24 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
 class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
-    vector_cls: eqx.AbstractClassVar[type[AbstractVector]]
-    """The vector type associated with the differential."""
+    @classproperty
+    @classmethod
+    @abstractmethod
+    def integral_cls(cls) -> type["AbstractVectorDifferential"]:
+        """Return the corresponding vector class.
+
+        Examples
+        --------
+        >>> from vector import RadialDifferential, SphericalDifferential
+
+        >>> RadialDifferential.integral_cls
+        <class 'vector._d1.builtin.RadialVector'>
+
+        >>> SphericalDifferential.integral_cls
+        <class 'vector._d3.builtin.SphericalVector'>
+
+        """
+        raise NotImplementedError
 
     # ===============================================================
     # Convenience methods
