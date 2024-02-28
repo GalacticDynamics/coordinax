@@ -6,10 +6,12 @@ from dataclasses import KW_ONLY
 from functools import partial
 from typing import TYPE_CHECKING, Any, final
 
+import astropy.units as u
 import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jaxtyping import Shaped
+from plum import dispatch
 
 import array_api_jax_compat as xp
 from jax_quantity import Quantity
@@ -98,7 +100,67 @@ class FourVector(Abstract4DVector):
             msg = "t and q must be broadcastable to the same shape."
             raise ValueError(msg)
 
-    # -------------------------------------------
+    # ---------------------------------------------------------------
+    # Constructors
+
+    @classmethod
+    @dispatch  # type: ignore[misc]
+    def constructor(
+        cls: "type[FourVector]",
+        obj: Quantity | u.Quantity,
+        /,  # TODO: shape hint
+    ) -> "FourVector":
+        """Construct a vector from a Quantity array.
+
+        The array is expected to have the components as the last dimension.
+
+        Parameters
+        ----------
+        obj : Quantity[Any, (*#batch, 4), "..."]
+            The array of components.
+            The 4 components are the (c x) time, x, y, z.
+
+        Returns
+        -------
+        FourVector
+            The vector constructed from the array.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> from jax_quantity import Quantity
+        >>> from vector import FourVector
+
+        >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
+        >>> vec = FourVector.constructor(xs)
+        >>> vec
+        FourVector(
+            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
+            q=Cartesian3DVector( ... )
+        )
+
+        >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
+        >>> vec = FourVector.constructor(xs)
+        >>> vec
+        FourVector(
+            t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
+            q=Cartesian3DVector( ... )
+        )
+
+        >>> vec.x
+        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+
+        """
+        _ = eqx.error_if(
+            obj,
+            obj.shape[-1] != 4,
+            f"Cannot construct {cls} from array with shape {obj.shape}.",
+        )
+        c = cls.__dataclass_fields__["c"].default_factory()
+        comps = {"t": obj[..., 0] / c, "q": obj[..., 1:]}
+        return cls(**comps)
+
+    # ===============================================================
 
     def __getattr__(self, name: str) -> Any:
         """Get the attribute from the 3-vector.
@@ -142,7 +204,7 @@ class FourVector(Abstract4DVector):
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.norm2()
-        Quantity['area'](Array(8.987552e+10, dtype=float32), unit='km2')
+        Quantity['area'](Array(8.987552e+16, dtype=float32), unit='m2')
 
         """
         return -(self.q.norm() ** 2) + (self.c * self.t) ** 2  # for units
@@ -158,7 +220,7 @@ class FourVector(Abstract4DVector):
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.norm()
-        Quantity['length'](Array(299792.47+0.j, dtype=complex64), unit='km')
+        Quantity['length'](Array(2.9979248e+08+0.j, dtype=complex64), unit='m')
 
         """
         return xp.sqrt(xp.asarray(self.norm2(), dtype=complex))
