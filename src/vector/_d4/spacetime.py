@@ -15,6 +15,7 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract4DVector
+from vector._base import AbstractVectorBase
 from vector._d3.base import Abstract3DVector
 from vector._d3.builtin import Cartesian3DVector
 from vector._typing import BatchableLength, BatchableTime
@@ -118,6 +119,12 @@ class FourVector(Abstract4DVector):
 
     @classproperty
     @classmethod
+    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+        msg = "Not yet implemented"
+        raise NotImplementedError(msg)
+
+    @classproperty
+    @classmethod
     def differential_cls(cls) -> "Never":  # type: ignore[override]
         msg = "Not yet implemented"
         raise NotImplementedError(msg)
@@ -138,7 +145,7 @@ class FourVector(Abstract4DVector):
         Quantity['area'](Array(8.987552e+10, dtype=float32), unit='km2')
 
         """
-        return (self.c * self.t) ** 2 - self.q.norm() ** 2
+        return -(self.q.norm() ** 2) + (self.c * self.t) ** 2  # for units
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
