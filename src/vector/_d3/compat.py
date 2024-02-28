@@ -23,6 +23,140 @@ from .builtin import (
 from vector._utils import dataclass_values, full_shaped
 
 #####################################################################
+# Constructors
+# Using the registered `plum.convert`
+
+
+@Cartesian3DVector.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[Cartesian3DVector], obj: apyc.CartesianRepresentation
+) -> Cartesian3DVector:
+    """Construct from a :class:`astropy.coordinates.CartesianRepresentation`.
+
+    Examples
+    --------
+    >>> from astropy.coordinates import CartesianRepresentation
+    >>> from vector import Cartesian3DVector
+
+    >>> cart = CartesianRepresentation(1, 2, 3, unit="kpc")
+    >>> vec = Cartesian3DVector.constructor(cart)
+    >>> vec.x
+    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+
+    """
+    return convert(obj, cls)
+
+
+@SphericalVector.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[SphericalVector], obj: apyc.PhysicsSphericalRepresentation
+) -> SphericalVector:
+    """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> from astropy.coordinates import PhysicsSphericalRepresentation
+    >>> from vector import SphericalVector
+
+    >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
+    ...                                      phi=3 * u.deg)
+    >>> vec = SphericalVector.constructor(sph)
+    >>> vec.r
+    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+
+    """
+    return convert(obj, cls)
+
+
+@CylindricalVector.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[CylindricalVector], obj: apyc.CylindricalRepresentation
+) -> CylindricalVector:
+    """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> from astropy.coordinates import CylindricalRepresentation
+    >>> from vector import CylindricalVector
+
+    >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg,
+    ...                                 z=30 * u.pc)
+    >>> vec = CylindricalVector.constructor(cyl)
+    >>> vec.rho
+    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+
+    """
+    return convert(obj, cls)
+
+
+@CartesianDifferential3D.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[CartesianDifferential3D], obj: apyc.CartesianDifferential
+) -> CartesianDifferential3D:
+    """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> from astropy.coordinates import CartesianDifferential
+    >>> from vector import CartesianDifferential3D
+
+    >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
+    >>> dif = CartesianDifferential3D.constructor(dcart)
+    >>> dif.d_x
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return convert(obj, cls)
+
+
+@SphericalDifferential.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[SphericalDifferential], obj: apyc.PhysicsSphericalDifferential
+) -> SphericalDifferential:
+    """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> from astropy.coordinates import PhysicsSphericalDifferential
+    >>> from vector import SphericalDifferential
+
+    >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
+    ...                                     d_phi=3 * u.mas/u.yr)
+    >>> dif = SphericalDifferential.constructor(dsph)
+    >>> dif.d_r
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return convert(obj, cls)
+
+
+@CylindricalDifferential.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[CylindricalDifferential], obj: apyc.CylindricalDifferential
+) -> CylindricalDifferential:
+    """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import astropy.coordinates as apyc
+    >>> from vector import CylindricalDifferential
+
+    >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
+    ...                                     d_z=2 * u.km / u.s)
+    >>> dif = CylindricalDifferential.constructor(dcyl)
+    >>> dif.d_rho
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return convert(obj, cls)
+
+
+#####################################################################
 # Quantity
 
 

@@ -81,11 +81,6 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         obj : Mapping[str, Any]
             The mapping of components.
 
-        Returns
-        -------
-        AbstractVectorBase
-            The vector constructed from the mapping.
-
         Examples
         --------
         >>> import jax.numpy as jnp
@@ -129,11 +124,6 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         ----------
         obj : Quantity[Any, (*#batch, N), "..."]
             The array of components.
-
-        Returns
-        -------
-        AbstractVectorBase
-            The vector constructed from the array.
 
         Examples
         --------
@@ -559,22 +549,15 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
 
 @AbstractVectorBase.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+def constructor(  # noqa: D417
     cls: type[AbstractVectorBase], obj: AbstractVectorBase
 ) -> AbstractVectorBase:
     """Construct a vector from another vector.
 
     Parameters
     ----------
-    cls : type[AbstractVectorBase]
-        The class to construct.
-    obj : AbstractVectorBase
+    obj : :class:`vector.AbstractVectorBase`
         The vector to construct from.
-
-    Returns
-    -------
-    AbstractVectorBase
-        The vector constructed from the other vector.
 
     Examples
     --------
