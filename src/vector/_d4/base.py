@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 class Abstract4DVector(AbstractVector):
-    """Abstract representation of 3D coordinates in different systems."""
+    """Abstract representation of 4D coordinates in different systems."""
 
     @classproperty
     @classmethod
