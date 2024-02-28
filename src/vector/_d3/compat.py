@@ -23,6 +23,59 @@ from .builtin import (
 from vector._utils import dataclass_values, full_shaped
 
 #####################################################################
+# Constructors
+# Using the registered `plum.convert`
+
+
+@Cartesian3DVector.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[Cartesian3DVector], obj: apyc.CartesianRepresentation
+) -> Cartesian3DVector:
+    """Construct from a :class:`astropy.coordinates.CartesianRepresentation`."""
+    return convert(obj, cls)
+
+
+@SphericalVector.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[SphericalVector], obj: apyc.PhysicsSphericalRepresentation
+) -> SphericalVector:
+    """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`."""
+    return convert(obj, cls)
+
+
+@CylindricalVector.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[CylindricalVector], obj: apyc.CylindricalRepresentation
+) -> CylindricalVector:
+    """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`."""
+    return convert(obj, cls)
+
+
+@CartesianDifferential3D.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[CartesianDifferential3D], obj: apyc.CartesianDifferential
+) -> CartesianDifferential3D:
+    """Construct from a :class:`astropy.coordinates.CartesianDifferential`."""
+    return convert(obj, cls)
+
+
+@SphericalDifferential.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[SphericalDifferential], obj: apyc.PhysicsSphericalDifferential
+) -> SphericalDifferential:
+    """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`."""
+    return convert(obj, cls)
+
+
+@CylindricalDifferential.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[CylindricalDifferential], obj: apyc.CylindricalDifferential
+) -> CylindricalDifferential:
+    """Construct from a :class:`astropy.coordinates.CylindricalDifferential`."""
+    return convert(obj, cls)
+
+
+#####################################################################
 # Quantity
 
 
