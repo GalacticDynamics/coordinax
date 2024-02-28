@@ -20,7 +20,7 @@ from .base import Abstract4DVector
 from vector._base import AbstractVectorBase
 from vector._d3.base import Abstract3DVector
 from vector._d3.builtin import Cartesian3DVector
-from vector._typing import BatchableLength, BatchableTime
+from vector._typing import BatchableLength, BatchableTime, ScalarTime
 from vector._utils import classproperty
 
 if TYPE_CHECKING:
@@ -73,7 +73,7 @@ class FourVector(Abstract4DVector):
 
     """
 
-    t: BatchableTime = eqx.field(
+    t: BatchableTime | ScalarTime = eqx.field(
         converter=partial(Quantity["time"].constructor, dtype=float)
     )
     """Time coordinate."""
