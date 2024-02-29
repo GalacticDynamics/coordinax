@@ -583,6 +583,10 @@ def constructor(  # noqa: D417
         msg = f"Cannot construct {cls} from {type(obj)}."
         raise TypeError(msg)
 
+    # avoid copying if the types are the same
+    if type(obj) is cls:
+        return obj
+
     return cls(**dict(dataclass_items(obj)))
 
 
