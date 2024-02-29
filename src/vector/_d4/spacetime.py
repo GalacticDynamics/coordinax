@@ -212,6 +212,67 @@ class FourVector(Abstract4DVector):
         return replace(self, t=-self.t, q=-self.q)
 
     # -------------------------------------------
+    # Binary operations
+
+    def __add__(self, other: Any) -> "FourVector":
+        """Add two 4-vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import FourVector, Cartesian3DVector
+
+        >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+        >>> w3 = w1 + w2
+        >>> w3
+        FourVector(
+            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
+            q=Cartesian3DVector( ... )
+        )
+
+        >>> w3.t
+        Quantity['time'](Array(3., dtype=float32), unit='s')
+
+        >>> w3.x
+        Quantity['length'](Array(5., dtype=float32), unit='m')
+
+        """
+        if not isinstance(other, FourVector):
+            return NotImplemented
+
+        return replace(self, t=self.t + other.t, q=self.q + other.q)
+
+    def __sub__(self, other: Any) -> "FourVector":
+        """Add two 4-vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import FourVector, Cartesian3DVector
+
+        >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+        >>> w3 = w1 - w2
+        >>> w3
+        FourVector(
+            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
+            q=Cartesian3DVector( ... )
+        )
+
+        >>> w3.t
+        Quantity['time'](Array(-1., dtype=float32), unit='s')
+
+        >>> w3.x
+        Quantity['length'](Array(-3., dtype=float32), unit='m')
+
+        """
+        if not isinstance(other, FourVector):
+            return NotImplemented
+
+        return replace(self, t=self.t - other.t, q=self.q - other.q)
+
+    # -------------------------------------------
 
     @partial(jax.jit)
     def norm2(self) -> Shaped[Quantity["area"], "*#batch"]:
