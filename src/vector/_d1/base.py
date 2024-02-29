@@ -17,27 +17,6 @@ from vector._utils import classproperty
 class Abstract1DVector(AbstractVector):
     """Abstract representation of 1D coordinates in different systems."""
 
-    @classmethod
-    @AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-    def constructor(
-        cls: type["Abstract1DVector"], x: Shaped[Quantity["length"], ""], /
-    ) -> "Abstract1DVector":
-        """Construct a 1D vector.
-
-        Examples
-        --------
-        >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian1DVector
-
-        >>> q = Cartesian1DVector.constructor(Quantity(1, "kpc"))
-        >>> q
-        Cartesian1DVector(
-           x=Quantity[PhysicalType('length')](value=f32[1], unit=Unit("kpc"))
-        )
-
-        """
-        return cls(**{fields(cls)[0].name: x.reshape(1)})
-
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVectorBase]:
@@ -50,6 +29,28 @@ class Abstract1DVector(AbstractVector):
     @abstractmethod
     def differential_cls(cls) -> type["Abstract1DVectorDifferential"]:
         raise NotImplementedError
+
+
+# TODO: move to the class in py3.11+
+@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: "type[Abstract1DVector]", x: Shaped[Quantity["length"], ""], /
+) -> "Abstract1DVector":
+    """Construct a 1D vector.
+
+    Examples
+    --------
+    >>> from jax_quantity import Quantity
+    >>> from vector import Cartesian1DVector
+
+    >>> q = Cartesian1DVector.constructor(Quantity(1, "kpc"))
+    >>> q
+    Cartesian1DVector(
+        x=Quantity[PhysicalType('length')](value=f32[1], unit=Unit("kpc"))
+    )
+
+    """
+    return cls(**{fields(cls)[0].name: x.reshape(1)})
 
 
 class Abstract1DVectorDifferential(AbstractVectorDifferential):

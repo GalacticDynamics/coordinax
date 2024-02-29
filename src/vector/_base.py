@@ -72,7 +72,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     @classmethod
     @dispatch
     def constructor(
-        cls: type["AbstractVectorBase"], obj: Mapping[str, Quantity], /
+        cls: "type[AbstractVectorBase]", obj: Mapping[str, Quantity], /
     ) -> "AbstractVectorBase":
         """Construct a vector from a mapping.
 
@@ -112,7 +112,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     @classmethod
     @dispatch
     def constructor(
-        cls: type["AbstractVectorBase"],
+        cls: "type[AbstractVectorBase]",
         obj: Quantity | u.Quantity,
         /,  # TODO: shape hint
     ) -> "AbstractVectorBase":
@@ -548,7 +548,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 # Register additional constructors
 
 
-# TODO: try moving this to the class
+# TODO: move to the class in py3.11+
 @AbstractVectorBase.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(  # noqa: D417
     cls: type[AbstractVectorBase], obj: AbstractVectorBase
