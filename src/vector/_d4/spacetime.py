@@ -2,7 +2,7 @@
 
 __all__ = ["FourVector"]
 
-from dataclasses import KW_ONLY
+from dataclasses import KW_ONLY, replace
 from functools import partial
 from typing import TYPE_CHECKING, Any, final
 
@@ -189,6 +189,27 @@ class FourVector(Abstract4DVector):
     def differential_cls(cls) -> "Never":  # type: ignore[override]
         msg = "Not yet implemented"
         raise NotImplementedError(msg)
+
+    # -------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "FourVector":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import FourVector, Cartesian3DVector
+
+        >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> -w
+        FourVector(
+            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
+            q=Cartesian3DVector( ... )
+        )
+
+        """
+        return replace(self, t=-self.t, q=-self.q)
 
     # -------------------------------------------
 
