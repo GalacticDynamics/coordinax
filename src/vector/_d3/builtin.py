@@ -60,6 +60,26 @@ class Cartesian3DVector(Abstract3DVector):
     def differential_cls(cls) -> type["CartesianDifferential3D"]:
         return CartesianDifferential3D
 
+    # -----------------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> (-q).x
+        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+
+        """
+        return replace(self, x=-self.x, y=-self.y, z=-self.z)
+
+    # -----------------------------------------------------
+    # Binary operations
+
     def __add__(self, other: Any, /) -> "Cartesian3DVector":
         """Add two vectors."""
         if not isinstance(other, AbstractVector):

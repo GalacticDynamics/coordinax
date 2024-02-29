@@ -43,6 +43,28 @@ class Cartesian1DVector(Abstract1DVector):
     def differential_cls(cls) -> type["CartesianDifferential1D"]:
         return CartesianDifferential1D
 
+    # -----------------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector
+        >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
+        >>> -q
+        Cartesian1DVector(
+           x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+        )
+
+        """
+        return replace(self, x=-self.x)
+
+    # -----------------------------------------------------
+    # Binary operations
+
     def __add__(self, other: Any, /) -> "Cartesian1DVector":
         """Add two vectors."""
         if not isinstance(other, AbstractVector):

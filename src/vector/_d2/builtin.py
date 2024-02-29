@@ -53,6 +53,27 @@ class Cartesian2DVector(Abstract2DVector):
     def differential_cls(cls) -> type["CartesianDifferential2D"]:
         return CartesianDifferential2D
 
+    # -----------------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+
+        >>> q = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
+        >>> (-q).x
+        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+
+        """
+        return replace(self, x=-self.x, y=-self.y)
+
+    # -----------------------------------------------------
+    # Binary operations
+
     def __add__(self, other: Any, /) -> "Cartesian2DVector":
         """Add two vectors."""
         if not isinstance(other, AbstractVector):
