@@ -11,7 +11,6 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jaxtyping import Shaped
-from plum import dispatch
 
 import array_api_jax_compat as xp
 from jax_quantity import Quantity
@@ -104,7 +103,7 @@ class FourVector(Abstract4DVector):
     # Constructors
 
     @classmethod
-    @dispatch  # type: ignore[misc]
+    @AbstractVectorBase.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
     def constructor(
         cls: "type[FourVector]",
         obj: Quantity | u.Quantity,
