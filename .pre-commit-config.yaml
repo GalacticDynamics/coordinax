@@ -6,7 +6,7 @@ default_stages: [pre-commit, pre-push]
 
 repos:
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v3.15.0
+    rev: v3.16.0
     hooks:
       - id: commitizen
       # - id: commitizen-branch
