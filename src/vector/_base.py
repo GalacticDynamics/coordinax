@@ -794,6 +794,31 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         raise NotImplementedError
 
     # ===============================================================
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import RadialDifferential
+        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> -dr
+        RadialDifferential( d_r=Quantity[...]( value=f32[], unit=Unit("m / s") ) )
+
+        >>> from vector import PolarDifferential
+        >>> dp = PolarDifferential(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
+        >>> neg_dp = -dp
+        >>> neg_dp.d_r
+        Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
+        >>> neg_dp.d_phi
+        Quantity['angular frequency'](Array(-1., dtype=float32), unit='mas / yr')
+
+        """
+        return replace(self, **{k: -v for k, v in dataclass_items(self)})
+
+    # ===============================================================
     # Binary operations
 
     @dispatch  # type: ignore[misc]

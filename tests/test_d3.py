@@ -5,6 +5,7 @@ import astropy.units as u
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from astropy.coordinates.tests.test_representation import representation_equal
 from plum import convert
 
 import array_api_jax_compat as xp
@@ -36,7 +37,7 @@ class Abstract3DVectorTest(AbstractVectorTest):
     """Test :class:`vector.Abstract3DVector`."""
 
 
-class TestCartesian3DVector:
+class TestCartesian3DVector(Abstract3DVectorTest):
     """Test :class:`vector.Cartesian3DVector`."""
 
     @pytest.fixture(scope="class")
@@ -51,7 +52,7 @@ class TestCartesian3DVector:
         )
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: AbstractVector):
+    def apyvector(self, vector: AbstractVector) -> apyc.CartesianRepresentation:
         """Return an Astropy vector."""
         return convert(vector, apyc.CartesianRepresentation)
 
@@ -171,7 +172,7 @@ class TestCartesian3DVector:
         assert np.allclose(convert(cyl.phi, u.Quantity), apycyl.phi)
 
 
-class TestSphericalVector:
+class TestSphericalVector(Abstract3DVectorTest):
     """Test :class:`vector.SphericalVector`."""
 
     @pytest.fixture(scope="class")
@@ -315,7 +316,7 @@ class TestSphericalVector:
             assert np.allclose(convert(cyl.phi, u.Quantity), apycyl.phi)
 
 
-class TestCylindricalVector:
+class TestCylindricalVector(Abstract3DVectorTest):
     """Test :class:`vector.CylindricalVector`."""
 
     @pytest.fixture(scope="class")
@@ -448,6 +449,15 @@ class TestCylindricalVector:
 
 class Abstract3DVectorDifferentialTest(AbstractVectorDifferentialTest):
     """Test :class:`vector.Abstract2DVectorDifferential`."""
+
+    # ==========================================================================
+    # Unary operations
+
+    def test_neg_compare_apy(
+        self, difntl: AbstractVector, apydifntl: apyc.BaseRepresentation
+    ):
+        """Test negation."""
+        assert all(representation_equal(convert(-difntl, type(apydifntl)), -apydifntl))
 
 
 class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
