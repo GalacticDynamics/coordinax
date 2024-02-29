@@ -40,7 +40,7 @@
   requires-python = ">=3.10"
 
   [project.optional-dependencies]
-    all = ["vector[docs]", "vector[test]"]
+    all = ["vector[docs]", "vector[dev]", "vector[test]"]
     dev = ["vector[test]"]
     docs = [
       "furo>=2023.08.17",
@@ -201,6 +201,7 @@
     "fixme",
     "function-redefined",         # plum-dispatch
     "invalid-name",               # handled by ruff
+    "invalid-unary-operand-type", # pylint doesn't understand dataclass fields
     "line-too-long",
     "missing-function-docstring", # TODO: resolve
     "missing-module-docstring",

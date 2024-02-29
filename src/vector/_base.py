@@ -548,6 +548,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 # Register additional constructors
 
 
+# TODO: move to the class in py3.11+
 @AbstractVectorBase.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(  # noqa: D417
     cls: type[AbstractVectorBase], obj: AbstractVectorBase
@@ -612,6 +613,17 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
 
     # ===============================================================
     # Array
+
+    # -----------------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        The default implementation is to go through Cartesian coordinates.
+        """
+        cart = self.represent_as(self._cartesian_cls)
+        return (-cart).represent_as(type(self))
 
     # -----------------------------------------------------
     # Binary arithmetic operations

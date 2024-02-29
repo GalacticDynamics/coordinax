@@ -60,8 +60,40 @@ class Cartesian3DVector(Abstract3DVector):
     def differential_cls(cls) -> type["CartesianDifferential3D"]:
         return CartesianDifferential3D
 
+    # -----------------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> (-q).x
+        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+
+        """
+        return replace(self, x=-self.x, y=-self.y, z=-self.z)
+
+    # -----------------------------------------------------
+    # Binary operations
+
     def __add__(self, other: Any, /) -> "Cartesian3DVector":
-        """Add two vectors."""
+        """Add two vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector, SphericalVector
+        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        ...                     phi=Quantity(0, "deg"))
+        >>> (q + s).x
+        Quantity['length'](Array(2., dtype=float32), unit='kpc')
+
+        """
         if not isinstance(other, AbstractVector):
             msg = f"Cannot add {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
@@ -70,7 +102,19 @@ class Cartesian3DVector(Abstract3DVector):
         return replace(self, x=self.x + cart.x, y=self.y + cart.y, z=self.z + cart.z)
 
     def __sub__(self, other: Any, /) -> "Cartesian3DVector":
-        """Subtract two vectors."""
+        """Subtract two vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector, SphericalVector
+        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        ...                     phi=Quantity(0, "deg"))
+        >>> (q - s).x
+        Quantity['length'](Array(0., dtype=float32), unit='kpc')
+
+        """
         if not isinstance(other, AbstractVector):
             msg = f"Cannot subtract {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
@@ -80,7 +124,17 @@ class Cartesian3DVector(Abstract3DVector):
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian3DVector
+        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q.norm()
+        Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
+
+        """
         return xp.sqrt(self.x**2 + self.y**2 + self.z**2)
 
 
@@ -116,7 +170,18 @@ class SphericalVector(Abstract3DVector):
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import SphericalVector
+        >>> s = SphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
+        ...                     phi=Quantity(0, "deg"))
+        >>> s.norm()
+        Quantity['length'](Array(3., dtype=float32), unit='kpc')
+
+        """
         return self.r
 
 
@@ -151,7 +216,18 @@ class CylindricalVector(Abstract3DVector):
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import CylindricalVector
+        >>> c = CylindricalVector(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
+        ...                       z=Quantity(4, "kpc"))
+        >>> c.norm()
+        Quantity['length'](Array(5., dtype=float32), unit='kpc')
+
+        """
         return xp.sqrt(self.rho**2 + self.z**2)
 
 
@@ -185,7 +261,19 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
 
     @partial(jax.jit)
     def norm(self, _: Abstract3DVector | None = None, /) -> BatchableSpeed:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import CartesianDifferential3D
+        >>> c = CartesianDifferential3D(d_x=Quantity(1, "km/s"),
+        ...                              d_y=Quantity(2, "km/s"),
+        ...                              d_z=Quantity(3, "km/s"))
+        >>> c.norm()
+        Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
+
+        """
         return xp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
 
 

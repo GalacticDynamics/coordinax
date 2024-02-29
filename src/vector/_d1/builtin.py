@@ -43,8 +43,47 @@ class Cartesian1DVector(Abstract1DVector):
     def differential_cls(cls) -> type["CartesianDifferential1D"]:
         return CartesianDifferential1D
 
+    # -----------------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector
+        >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
+        >>> -q
+        Cartesian1DVector(
+           x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+        )
+
+        """
+        return replace(self, x=-self.x)
+
+    # -----------------------------------------------------
+    # Binary operations
+
     def __add__(self, other: Any, /) -> "Cartesian1DVector":
-        """Add two vectors."""
+        """Add two vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector, RadialVector
+
+        >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
+        >>> r = RadialVector.constructor(Quantity([1], "kpc"))
+        >>> qpr = q + r
+        >>> qpr
+        Cartesian1DVector(
+           x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+        )
+        >>> qpr.x
+        Quantity['length'](Array(2., dtype=float32), unit='kpc')
+
+        """
         if not isinstance(other, AbstractVector):
             msg = f"Cannot add {Cartesian1DVector!r} and {type(other)!r}."
             raise TypeError(msg)
@@ -53,7 +92,24 @@ class Cartesian1DVector(Abstract1DVector):
         return replace(self, x=self.x + cart.x)
 
     def __sub__(self, other: Any, /) -> "Cartesian1DVector":
-        """Subtract two vectors."""
+        """Subtract two vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector, RadialVector
+
+        >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
+        >>> r = RadialVector.constructor(Quantity([1], "kpc"))
+        >>> qmr = q - r
+        >>> qmr
+        Cartesian1DVector(
+           x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+        )
+        >>> qmr.x
+        Quantity['length'](Array(0., dtype=float32), unit='kpc')
+
+        """
         if not isinstance(other, AbstractVector):
             msg = f"Cannot subtract {Cartesian1DVector!r} and {type(other)!r}."
             raise TypeError(msg)
@@ -63,7 +119,18 @@ class Cartesian1DVector(Abstract1DVector):
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian1DVector, RadialVector
+
+        >>> q = Cartesian1DVector.constructor(Quantity([-1], "kpc"))
+        >>> q.norm()
+        Quantity['length'](Array(1., dtype=float32), unit='kpc')
+
+        """
         return xp.abs(self.x)
 
 
@@ -104,7 +171,17 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
 
     @partial(jax.jit)
     def norm(self, _: Abstract1DVector | None = None, /) -> BatchableSpeed:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import CartesianDifferential1D
+        >>> q = CartesianDifferential1D.constructor(Quantity([-1], "km/s"))
+        >>> q.norm()
+        Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+        """
         return xp.abs(self.d_x)
 
 

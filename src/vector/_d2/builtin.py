@@ -53,8 +53,41 @@ class Cartesian2DVector(Abstract2DVector):
     def differential_cls(cls) -> type["CartesianDifferential2D"]:
         return CartesianDifferential2D
 
+    # -----------------------------------------------------
+    # Unary operations
+
+    def __neg__(self) -> "Self":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+
+        >>> q = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
+        >>> (-q).x
+        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+
+        """
+        return replace(self, x=-self.x, y=-self.y)
+
+    # -----------------------------------------------------
+    # Binary operations
+
     def __add__(self, other: Any, /) -> "Cartesian2DVector":
-        """Add two vectors."""
+        """Add two vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector, PolarVector
+        >>> cart = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
+        >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+
+        >>> (cart + polr).x
+        Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
+
+        """
         if not isinstance(other, AbstractVector):
             msg = f"Cannot add {Cartesian2DVector!r} and {type(other)!r}."
             raise TypeError(msg)
@@ -63,7 +96,19 @@ class Cartesian2DVector(Abstract2DVector):
         return replace(self, x=self.x + cart.x, y=self.y + cart.y)
 
     def __sub__(self, other: Any, /) -> "Cartesian2DVector":
-        """Subtract two vectors."""
+        """Subtract two vectors.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector, PolarVector
+        >>> cart = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
+        >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+
+        >>> (cart - polr).x
+        Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
+
+        """
         if not isinstance(other, AbstractVector):
             msg = f"Cannot subtract {Cartesian2DVector!r} and {type(other)!r}."
             raise TypeError(msg)
@@ -73,7 +118,17 @@ class Cartesian2DVector(Abstract2DVector):
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+        >>> q = Cartesian2DVector.constructor(Quantity([3, 4], "kpc"))
+        >>> q.norm()
+        Quantity['length'](Array(5., dtype=float32), unit='kpc')
+
+        """
         return xp.sqrt(self.x**2 + self.y**2)
 
 
@@ -106,7 +161,17 @@ class PolarVector(Abstract2DVector):
 
     @partial(jax.jit)
     def norm(self) -> BatchableLength:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import PolarVector
+        >>> q = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> q.norm()
+        Quantity['length'](Array(3., dtype=float32), unit='kpc')
+
+        """
         return self.r
 
 
@@ -134,7 +199,17 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 
     @partial(jax.jit)
     def norm(self, _: Abstract2DVector | None = None, /) -> BatchableSpeed:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import CartesianDifferential2D
+        >>> v = CartesianDifferential2D.constructor(Quantity([3, 4], "km/s"))
+        >>> v.norm()
+        Quantity['speed'](Array(5., dtype=float32), unit='km / s')
+
+        """
         return xp.sqrt(self.d_x**2 + self.d_y**2)
 
 
