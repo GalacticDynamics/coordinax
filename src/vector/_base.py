@@ -794,6 +794,32 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         raise NotImplementedError
 
     # ===============================================================
+    # Binary operations
+
+    @dispatch  # type: ignore[misc]
+    def __mul__(
+        self: "AbstractVectorDifferential", other: Quantity
+    ) -> "AbstractVector":
+        """Multiply the vector by a :class:`jax_quantity.Quantity`.
+
+        Examples
+        --------
+        >>> from jax_quantity import Quantity
+        >>> from vector import RadialDifferential
+
+        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> vec = dr * Quantity(2, "s")
+        >>> vec
+        RadialVector(r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")))
+        >>> vec.r
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
+        return self.integral_cls.constructor(
+            {k[2:]: v * other for k, v in dataclass_items(self)}
+        )
+
+    # ===============================================================
     # Convenience methods
 
     @partial(jax.jit, static_argnums=1)
