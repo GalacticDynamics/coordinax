@@ -12,8 +12,8 @@ from vector._typing import BatchableAngle, BatchableLength
 
 _0m = Quantity(0, "meter")
 _0d = Quantity(0, "rad")
-_pid = Quantity(xp.pi, "rad")
-_2pid = Quantity(2 * xp.pi, "rad")
+_pid = Quantity(180, "deg")
+_2pid = Quantity(360, "deg")
 
 
 def check_r_non_negative(r: BatchableLength) -> BatchableLength:
