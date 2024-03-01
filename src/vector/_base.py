@@ -9,7 +9,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import fields, replace
 from functools import partial
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import astropy.units as u
 import equinox as eqx
@@ -22,7 +22,8 @@ from plum import dispatch
 import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
-from ._utils import classproperty, dataclass_items, full_shaped
+from ._utils import classproperty, dataclass_items, dataclass_values, full_shaped
+from vector._typing import Unit
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -166,6 +167,37 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     def __array_namespace__(self) -> "ArrayAPINamespace":
         """Return the array API namespace."""
         return xp
+
+    def __getitem__(self, index: Any) -> "Self":
+        """Return a new object with the given slice applied.
+
+        Parameters
+        ----------
+        index : Any
+            The slice to apply.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector with the slice applied.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector
+
+        We can slice a vector:
+
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec[0].x
+        Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
+
+        """
+        full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
+        return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
 
     @property
     def mT(self) -> "Self":  # noqa: N802
@@ -418,37 +450,6 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
             self, **{k: v.reshape(*args, order=order) for k, v in dataclass_items(full)}
         )
 
-    def __getitem__(self, index: Any) -> "Self":
-        """Return a new object with the given slice applied.
-
-        Parameters
-        ----------
-        index : Any
-            The slice to apply.
-
-        Returns
-        -------
-        AbstractVectorBase
-            The vector with the slice applied.
-
-        Examples
-        --------
-        We assume the following imports:
-
-        >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian2DVector
-
-        We can slice a vector:
-
-        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
-        >>> vec[0].x
-        Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
-
-        """
-        full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
-        return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
-
     # ===============================================================
     # Collection
 
@@ -543,6 +544,86 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         """Represent the vector as another type."""
         raise NotImplementedError
 
+    def to_units(
+        self,
+        units: (
+            Mapping[u.PhysicalType | str, Unit] | Literal["consistent"]
+        ) = "consistent",
+        /,
+    ) -> "Self":
+        """Convert the vector to the given units.
+
+        Parameters
+        ----------
+        units : Mapping[PhysicalType | str, Unit] | Literal["consistent"]
+            The units to convert to according to the physical type of the
+            components. If "consistent", the vector is converted to consistent
+            units by looking for the first quantity with each physical type and
+            converting all components to the units of that quantity.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector with the components converted to the given units.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import Cartesian2DVector, SphericalVector
+
+        We can convert a vector to the given units:
+
+        >>> cart = Cartesian2DVector(x=Quantity(1, "m"), y=Quantity(2, "km"))
+        >>> cart.to_units({"length": "km"})
+        Cartesian2DVector(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km"))
+        )
+
+        This also works for vectors with different units:
+
+        >>> sph = SphericalVector(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
+        ...                       phi=Quantity(3, "rad"))
+        >>> sph.to_units({"length": "km", "angle": "deg"})
+        SphericalVector(
+            r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
+            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
+            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
+        )
+
+        If all you want is to convert to consistent units, you can use
+        ``"consistent"``:
+
+        >>> cart.to_units("consistent")
+        Cartesian2DVector(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+
+        >>> sph.to_units("consistent")
+        SphericalVector(
+            r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
+            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
+        )
+
+        """
+        if units != "consistent":
+            units_ = {u.get_physical_type(k): v for k, v in units.items()}
+        else:
+            units_ = {}
+            for v in dataclass_values(self):
+                pt = v.unit.physical_type
+                if pt not in units_:
+                    units_[pt] = v.unit
+
+        return replace(
+            self,
+            **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
+        )
+
 
 # -----------------------------------------------
 # Register additional constructors
@@ -551,7 +632,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 # TODO: move to the class in py3.11+
 @AbstractVectorBase.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(  # noqa: D417
-    cls: type[AbstractVectorBase], obj: AbstractVectorBase
+    cls: type[AbstractVectorBase], obj: AbstractVectorBase, /
 ) -> AbstractVectorBase:
     """Construct a vector from another vector.
 
