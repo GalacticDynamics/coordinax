@@ -36,6 +36,42 @@ from vector._d3.builtin import (
 class Abstract3DVectorTest(AbstractVectorTest):
     """Test :class:`vector.Abstract3DVector`."""
 
+    # ==========================================================================
+    # Unary operations
+
+    def test_neg_compare_apy(
+        self, vector: AbstractVector, apyvector: apyc.BaseRepresentation
+    ):
+        """Test negation."""
+        # To take the negative, Vector converts to Cartesian coordinates, takes
+        # the negative, then converts back to the original representation.
+        # This can result in equivalent but different angular coordinates than
+        # Astropy. AFAIK this only happens at the poles.
+        cart = convert(-vector, type(apyvector)).represent_as(
+            apyc.CartesianRepresentation
+        )
+        apycart = -apyvector.represent_as(apyc.CartesianRepresentation)
+        assert np.allclose(cart.x, apycart.x, atol=5e-7)
+        assert np.allclose(cart.y, apycart.y, atol=5e-7)
+        assert np.allclose(cart.z, apycart.z, atol=5e-7)
+
+        # # Try finding the poles
+        # if hasattr(vector, "theta"):
+        #     sel = (vector.theta.to_value("deg") != 0) & (
+        #         vector.theta.to_value("deg") != 180
+        #     )
+        # else:
+        #     sel = slice(None)
+        # vecsel = convert(-vector[sel], type(apyvector))
+        # apyvecsel = -apyvector[sel]
+        # for c in vecsel.components:
+        #     unit = getattr(apyvecsel, c).unit
+        #     assert np.allclose(
+        #         getattr(vecsel, c).to_value(unit),
+        #         getattr(apyvecsel, c).to_value(unit),
+        #         atol=5e-7,
+        #     )
+
 
 class TestCartesian3DVector(Abstract3DVectorTest):
     """Test :class:`vector.Cartesian3DVector`."""
@@ -604,7 +640,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         )
         assert array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], u.km / u.s))
 
-    def test_cartesian3d_to_spherical_astropy(
+    def test_cartesian3d_to_cylindrical_astropy(
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
