@@ -851,7 +851,42 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
     def represent_as(
         self, target: type[DT], position: AbstractVector, /, *args: Any, **kwargs: Any
     ) -> DT:
-        """Represent the vector as another type."""
+        """Represent the vector as another type.
+
+        Parameters
+        ----------
+        target : type[AbstractVectorDifferential]
+            The type to represent the vector as.
+        position : AbstractVector
+            The position vector.
+        *args : Any
+            Not used. Raises a warning if any are given.
+        **kwargs : Any
+            Extra keyword arguments. Passed to :func:`vector.represent_as`.
+
+        Returns
+        -------
+        AbstractVectorDifferential
+            The vector represented as the target type.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import RadialDifferential, RadialVector, CartesianDifferential1D
+
+        We can construct a differential vector:
+
+        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> r = RadialVector(Quantity(2, "m"))
+
+        And represent it as a different type:
+
+        >>> dr.represent_as(CartesianDifferential1D, r)
+        CartesianDifferential1D( d_x=Quantity[...]( value=f64[], unit=Unit("m / s") ) )
+
+        """
         if any(args):
             warnings.warn("Extra arguments are ignored.", UserWarning, stacklevel=2)
 
@@ -861,5 +896,31 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
 
     @partial(jax.jit)
     def norm(self, position: AbstractVector, /) -> Quantity["speed"]:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Parameters
+        ----------
+        position : :class:`vector.AbstractVector`
+            The position vector.
+
+        Returns
+        -------
+        :class:`jax_quantity.Quantity`['speed']
+            The norm of the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from jax_quantity import Quantity
+        >>> from vector import RadialDifferential, RadialVector
+
+        We can compute the norm of a differential vector:
+
+        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> r = RadialVector(Quantity(2, "m"))
+        >>> dr.norm(r)
+        Quantity['speed'](Array(1., dtype=float32), unit='m / s')
+
+        """
         return self.represent_as(self._cartesian_cls, position).norm()
