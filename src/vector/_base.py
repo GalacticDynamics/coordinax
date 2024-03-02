@@ -15,6 +15,7 @@ import astropy.units as u
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import quax
 from jax import Device
 from jaxtyping import ArrayLike
 from plum import dispatch
@@ -39,7 +40,7 @@ _pid = Quantity(xp.pi, "rad")
 _2pid = Quantity(2 * xp.pi, "rad")
 
 
-class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
+class AbstractVectorBase(quax.ArrayValue):  # type: ignore[misc]
     """Base class for all vector types.
 
     A vector is a collection of components that can be represented in different

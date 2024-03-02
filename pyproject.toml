@@ -70,7 +70,6 @@
   metadata.allow-direct-references = true
   version.source = "vcs"
 
-
   [tool.hatch.env.default]
     features = ["test"]
     scripts.test = "pytest {args}"
