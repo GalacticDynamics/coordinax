@@ -1,1 +1,1 @@
-"""Test :mod:`vector._utils`."""
+"""Test :mod:`coordinax._utils`."""

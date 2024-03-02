@@ -20,15 +20,15 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract2DVector, Abstract2DVectorDifferential
-from vector._base import AbstractVector
-from vector._checks import check_phi_range, check_r_non_negative
-from vector._typing import (
+from coordinax._base import AbstractVector
+from coordinax._checks import check_phi_range, check_r_non_negative
+from coordinax._typing import (
     BatchableAngle,
     BatchableAngularSpeed,
     BatchableLength,
     BatchableSpeed,
 )
-from vector._utils import classproperty
+from coordinax._utils import classproperty
 
 # =============================================================================
 # 2D
@@ -62,7 +62,7 @@ class Cartesian2DVector(Abstract2DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian2DVector
+        >>> from coordinax import Cartesian2DVector
 
         >>> q = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
         >>> (-q).x
@@ -80,7 +80,7 @@ class Cartesian2DVector(Abstract2DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian2DVector, PolarVector
+        >>> from coordinax import Cartesian2DVector, PolarVector
         >>> cart = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
         >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
@@ -101,7 +101,7 @@ class Cartesian2DVector(Abstract2DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian2DVector, PolarVector
+        >>> from coordinax import Cartesian2DVector, PolarVector
         >>> cart = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
         >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
@@ -123,7 +123,7 @@ class Cartesian2DVector(Abstract2DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian2DVector
+        >>> from coordinax import Cartesian2DVector
         >>> q = Cartesian2DVector.constructor(Quantity([3, 4], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
@@ -166,7 +166,7 @@ class PolarVector(Abstract2DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import PolarVector
+        >>> from coordinax import PolarVector
         >>> q = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> q.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
@@ -204,7 +204,7 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import CartesianDifferential2D
+        >>> from coordinax import CartesianDifferential2D
         >>> v = CartesianDifferential2D.constructor(Quantity([3, 4], "km/s"))
         >>> v.norm()
         Quantity['speed'](Array(5., dtype=float32), unit='km / s')

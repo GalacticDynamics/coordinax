@@ -13,7 +13,7 @@ from .builtin import (
     RadialDifferential,
     RadialVector,
 )
-from vector._base import AbstractVector
+from coordinax._base import AbstractVector
 
 ###############################################################################
 # 1D

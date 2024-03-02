@@ -1,4 +1,4 @@
-"""Test :mod:`vector._utils`."""
+"""Test :mod:`coordinax._utils`."""
 
 from collections import UserDict
 from contextlib import AbstractContextManager, nullcontext
@@ -13,7 +13,7 @@ from quax import quaxify
 import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
-from vector import (
+from coordinax import (
     Abstract1DVector,
     Abstract1DVectorDifferential,
     Abstract2DVector,
@@ -38,7 +38,7 @@ from vector import (
     SphericalDifferential,
     SphericalVector,
 )
-from vector._utils import dataclass_items
+from coordinax._utils import dataclass_items
 
 BUILTIN_VECTORS = [
     # 1D
@@ -91,7 +91,7 @@ def context_dimension_reduction(
 
 
 class AbstractVectorBaseTest:
-    """Test :class:`vector.AbstractVectorBase`."""
+    """Test :class:`coordinax.AbstractVectorBase`."""
 
     # ===============================================================
     # Array
@@ -188,7 +188,7 @@ class AbstractVectorBaseTest:
 
 
 class AbstractVectorTest(AbstractVectorBaseTest):
-    """Test :class:`vector.AbstractVector`."""
+    """Test :class:`coordinax.AbstractVector`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractVector:  # noqa: PT004
@@ -211,7 +211,7 @@ class AbstractVectorTest(AbstractVectorBaseTest):
 
 
 class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
-    """Test :class:`vector.AbstractVectorDifferential`."""
+    """Test :class:`coordinax.AbstractVectorDifferential`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractVector:  # noqa: PT004

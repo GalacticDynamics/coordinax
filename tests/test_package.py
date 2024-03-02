@@ -2,9 +2,9 @@
 
 import importlib.metadata
 
-import vector as m
+import coordinax as pkg
 
 
 def test_version():
     """Test version."""
-    assert importlib.metadata.version("vector") == m.__version__
+    assert importlib.metadata.version("coordinax") == pkg.__version__

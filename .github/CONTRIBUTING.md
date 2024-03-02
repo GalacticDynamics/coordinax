@@ -71,7 +71,7 @@ pytest
 Use pytest-cov to generate coverage reports:
 
 ```bash
-pytest --cov=vector
+pytest --cov=coordinax
 ```
 
 # Building docs

@@ -17,7 +17,7 @@ from .builtin import (
     SphericalDifferential,
     SphericalVector,
 )
-from vector._base import AbstractVector
+from coordinax._base import AbstractVector
 
 ###############################################################################
 # 3D

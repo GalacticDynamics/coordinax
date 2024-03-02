@@ -20,10 +20,10 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract1DVector, Abstract1DVectorDifferential
-from vector._base import AbstractVector
-from vector._checks import check_r_non_negative
-from vector._typing import BatchableLength, BatchableSpeed
-from vector._utils import classproperty
+from coordinax._base import AbstractVector
+from coordinax._checks import check_r_non_negative
+from coordinax._typing import BatchableLength, BatchableSpeed
+from coordinax._utils import classproperty
 
 ##############################################################################
 # Position
@@ -52,7 +52,7 @@ class Cartesian1DVector(Abstract1DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian1DVector
+        >>> from coordinax import Cartesian1DVector
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
         >>> -q
         Cartesian1DVector(
@@ -71,7 +71,7 @@ class Cartesian1DVector(Abstract1DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian1DVector, RadialVector
+        >>> from coordinax import Cartesian1DVector, RadialVector
 
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
         >>> r = RadialVector.constructor(Quantity([1], "kpc"))
@@ -97,7 +97,7 @@ class Cartesian1DVector(Abstract1DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian1DVector, RadialVector
+        >>> from coordinax import Cartesian1DVector, RadialVector
 
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
         >>> r = RadialVector.constructor(Quantity([1], "kpc"))
@@ -124,7 +124,7 @@ class Cartesian1DVector(Abstract1DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian1DVector, RadialVector
+        >>> from coordinax import Cartesian1DVector, RadialVector
 
         >>> q = Cartesian1DVector.constructor(Quantity([-1], "kpc"))
         >>> q.norm()
@@ -176,7 +176,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import CartesianDifferential1D
+        >>> from coordinax import CartesianDifferential1D
         >>> q = CartesianDifferential1D.constructor(Quantity([-1], "km/s"))
         >>> q.norm()
         Quantity['speed'](Array(1., dtype=float32), unit='km / s')

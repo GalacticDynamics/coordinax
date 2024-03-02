@@ -22,15 +22,15 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract3DVector, Abstract3DVectorDifferential
-from vector._base import AbstractVector
-from vector._checks import check_phi_range, check_r_non_negative, check_theta_range
-from vector._typing import (
+from coordinax._base import AbstractVector
+from coordinax._checks import check_phi_range, check_r_non_negative, check_theta_range
+from coordinax._typing import (
     BatchableAngle,
     BatchableAngularSpeed,
     BatchableLength,
     BatchableSpeed,
 )
-from vector._utils import classproperty
+from coordinax._utils import classproperty
 
 ##############################################################################
 # Position
@@ -69,7 +69,7 @@ class Cartesian3DVector(Abstract3DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian3DVector
+        >>> from coordinax import Cartesian3DVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> (-q).x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
@@ -86,7 +86,7 @@ class Cartesian3DVector(Abstract3DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian3DVector, SphericalVector
+        >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
@@ -107,7 +107,7 @@ class Cartesian3DVector(Abstract3DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian3DVector, SphericalVector
+        >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
@@ -129,7 +129,7 @@ class Cartesian3DVector(Abstract3DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import Cartesian3DVector
+        >>> from coordinax import Cartesian3DVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
@@ -175,7 +175,7 @@ class SphericalVector(Abstract3DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import SphericalVector
+        >>> from coordinax import SphericalVector
         >>> s = SphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> s.norm()
@@ -221,7 +221,7 @@ class CylindricalVector(Abstract3DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import CylindricalVector
+        >>> from coordinax import CylindricalVector
         >>> c = CylindricalVector(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
         ...                       z=Quantity(4, "kpc"))
         >>> c.norm()
@@ -266,7 +266,7 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import CartesianDifferential3D
+        >>> from coordinax import CartesianDifferential3D
         >>> c = CartesianDifferential3D(d_x=Quantity(1, "km/s"),
         ...                              d_y=Quantity(2, "km/s"),
         ...                              d_z=Quantity(3, "km/s"))

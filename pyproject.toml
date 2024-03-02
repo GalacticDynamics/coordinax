@@ -35,13 +35,13 @@
   description = "Vectors in JAX"
   dynamic = ["version"]
   license.file = "LICENSE"
-  name = "vector"
+  name = "coordinax"
   readme = "README.md"
   requires-python = ">=3.10"
 
   [project.optional-dependencies]
-    all = ["vector[docs]", "vector[dev]", "vector[test]"]
-    dev = ["vector[test]"]
+    all = ["coordinax[docs]", "coordinax[dev]", "coordinax[test]"]
+    dev = ["coordinax[test]"]
     docs = [
       "furo>=2023.08.17",
       "myst_parser>=0.13",
@@ -59,14 +59,14 @@
     ]
 
   [project.urls]
-    "Bug Tracker" = "https://github.com/GalacticDynamics/vector/issues"
-    Changelog = "https://github.com/GalacticDynamics/vector/releases"
-    Discussions = "https://github.com/GalacticDynamics/vector/discussions"
-    Homepage = "https://github.com/GalacticDynamics/vector"
+    "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
+    Changelog = "https://github.com/GalacticDynamics/coordinax/releases"
+    Discussions = "https://github.com/GalacticDynamics/coordinax/discussions"
+    Homepage = "https://github.com/GalacticDynamics/coordinax"
 
 
 [tool.hatch]
-  build.hooks.vcs.version-file = "src/vector/_version.py"
+  build.hooks.vcs.version-file = "src/coordinax/_version.py"
   metadata.allow-direct-references = true
   version.source = "vcs"
 
@@ -95,7 +95,7 @@
 
 
 [tool.coverage]
-  run.source = ["vector"]
+  run.source = ["coordinax"]
 
   [tool.coverage.report]
     exclude_also = [
@@ -128,7 +128,7 @@
   [[tool.mypy.overrides]]
     disallow_incomplete_defs = true
     disallow_untyped_defs = true
-    module = "vector.*"
+    module = "coordinax.*"
 
   [[tool.mypy.overrides]]
     ignore_missing_imports = true
@@ -139,7 +139,7 @@
       "equinox.*",
       "hypothesis.*",
       "jax.*",
-      "vector.*",
+      "coordinax.*",
       "jaxtyping.*",
       "numpy.*",
       "quax.*",
@@ -178,7 +178,7 @@
       "TD003",   # Missing issue link on the line following this TODO
     ]
     # Uncomment if using a _compat.typing backport
-    # typing-modules = ["vector._compat.typing"]
+    # typing-modules = ["coordinax._compat.typing"]
 
     [tool.ruff.lint.per-file-ignores]
       "__init__.py" = ["F403"]
@@ -189,7 +189,7 @@
     [tool.ruff.lint.isort]
       combine-as-imports = true
       known-first-party = ["array_api_jax_compat", "jax_quantity"]
-      known-local-folder = ["vector"]
+      known-local-folder = ["coordinax"]
 
 
 [tool.pylint]

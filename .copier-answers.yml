@@ -6,7 +6,7 @@ email: nstarman@users.noreply.github.com
 full_name: Nathaniel Starkman
 license: BSD
 org: GalacticDynamics
-project_name: vector
+project_name: coordinax
 project_short_description: Vectors in Jax
-url: https://github.com/GalacticDynamics/vector
+url: https://github.com/GalacticDynamics/coordinax
 vcs: true

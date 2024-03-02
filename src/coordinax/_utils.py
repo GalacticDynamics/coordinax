@@ -11,7 +11,7 @@ import array_api_jax_compat as xp
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
 
-    from vector._base import AbstractVectorBase
+    from coordinax._base import AbstractVectorBase
 
 
 def dataclass_values(obj: "DataclassInstance") -> Iterator[Any]:

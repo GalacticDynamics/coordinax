@@ -16,11 +16,11 @@ import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
 from .base import Abstract4DVector
-from vector._base import AbstractVectorBase
-from vector._d3.base import Abstract3DVector
-from vector._d3.builtin import Cartesian3DVector
-from vector._typing import BatchableLength, BatchableTime, ScalarTime
-from vector._utils import classproperty
+from coordinax._base import AbstractVectorBase
+from coordinax._d3.base import Abstract3DVector
+from coordinax._d3.builtin import Cartesian3DVector
+from coordinax._typing import BatchableLength, BatchableTime, ScalarTime
+from coordinax._utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Never
@@ -48,7 +48,7 @@ class FourVector(Abstract4DVector):
     Examples
     --------
     >>> from jax_quantity import Quantity
-    >>> from vector import FourVector, Cartesian3DVector
+    >>> from coordinax import FourVector, Cartesian3DVector
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
@@ -61,8 +61,8 @@ class FourVector(Abstract4DVector):
 
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
     3)`` array to the `q` argument. This assumes that `q` is a
-    :class:`vector.Cartesian3DVector` and uses the
-    :meth:`vector.Cartesian3DVector.constructor` method to create the 3D vector.
+    :class:`coordinax.Cartesian3DVector` and uses the
+    :meth:`coordinax.Cartesian3DVector.constructor` method to create the 3D vector.
 
     We can also create the 3D vector explicitly:
 
@@ -128,7 +128,7 @@ class FourVector(Abstract4DVector):
         --------
         >>> import jax.numpy as jnp
         >>> from jax_quantity import Quantity
-        >>> from vector import FourVector
+        >>> from coordinax import FourVector
 
         >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
         >>> vec = FourVector.constructor(xs)
@@ -167,7 +167,7 @@ class FourVector(Abstract4DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.x
@@ -199,7 +199,7 @@ class FourVector(Abstract4DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> -w
@@ -220,7 +220,7 @@ class FourVector(Abstract4DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
@@ -249,7 +249,7 @@ class FourVector(Abstract4DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
@@ -281,7 +281,7 @@ class FourVector(Abstract4DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.norm2()
@@ -297,7 +297,7 @@ class FourVector(Abstract4DVector):
         Examples
         --------
         >>> from jax_quantity import Quantity
-        >>> from vector import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.norm()
