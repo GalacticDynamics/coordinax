@@ -4,10 +4,10 @@
 
 import importlib.metadata
 
-project = "vector"
+project = "coordinax"
 copyright = "2023, Nathaniel Starkman"
 author = "Nathaniel Starkman"
-version = release = importlib.metadata.version("vector")
+version = release = importlib.metadata.version("coordinax")
 
 extensions = [
     "myst_parser",

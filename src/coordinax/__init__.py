@@ -2,7 +2,7 @@
 
 """Copyright (c) 2023 Nathaniel Starkman. All rights reserved.
 
-vector: Vectors in JAX
+coordinax: Vectors in JAX
 """
 
 from jaxtyping import install_import_hook
@@ -10,7 +10,7 @@ from jaxtyping import install_import_hook
 from ._version import version as __version__
 from .setup_package import RUNTIME_TYPECHECKER
 
-with install_import_hook("vector", RUNTIME_TYPECHECKER):
+with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from ._base import *
     from ._d1 import *
     from ._d2 import *

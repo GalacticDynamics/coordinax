@@ -8,7 +8,7 @@ import equinox as eqx
 import array_api_jax_compat as xp
 from jax_quantity import Quantity
 
-from vector._typing import BatchableAngle, BatchableLength
+from coordinax._typing import BatchableAngle, BatchableLength
 
 _0m = Quantity(0, "meter")
 _0d = Quantity(0, "rad")

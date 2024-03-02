@@ -11,7 +11,7 @@ from jax_quantity import Quantity
 
 from .base import Abstract2DVector
 from .builtin import Cartesian2DVector, CartesianDifferential2D
-from vector._utils import dataclass_values, full_shaped
+from coordinax._utils import dataclass_values, full_shaped
 
 #####################################################################
 # Quantity
@@ -19,7 +19,7 @@ from vector._utils import dataclass_values, full_shaped
 
 @conversion_method(type_from=Abstract2DVector, type_to=Quantity)  # type: ignore[misc]
 def vec_to_q(obj: Abstract2DVector, /) -> Shaped[Quantity["length"], "*batch 2"]:
-    """`vector.Abstract2DVector` -> `jax_quantity.Quantity`."""
+    """`coordinax.Abstract2DVector` -> `jax_quantity.Quantity`."""
     cart = full_shaped(obj.represent_as(Cartesian2DVector))
     return xp.stack(tuple(dataclass_values(cart)), axis=-1)
 
@@ -28,5 +28,5 @@ def vec_to_q(obj: Abstract2DVector, /) -> Shaped[Quantity["length"], "*batch 2"]
 def vec_diff_to_q(
     obj: CartesianDifferential2D, /
 ) -> Shaped[Quantity["speed"], "*batch 2"]:
-    """`vector.CartesianDifferential2D` -> `jax_quantity.Quantity`."""
+    """`coordinax.CartesianDifferential2D` -> `jax_quantity.Quantity`."""
     return xp.stack(tuple(dataclass_values(full_shaped(obj))), axis=-1)

@@ -1,4 +1,4 @@
-"""Test :mod:`vector._d1`."""
+"""Test :mod:`coordinax._d1`."""
 
 import astropy.units as u
 import jax.numpy as jnp
@@ -8,7 +8,7 @@ from quax import quaxify
 from jax_quantity import Quantity
 
 from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
-from vector import (
+from coordinax import (
     AbstractVector,
     Cartesian1DVector,
     Cartesian2DVector,
@@ -31,11 +31,11 @@ array_equal = quaxify(jnp.array_equal)
 
 
 class Abstract1DVectorTest(AbstractVectorTest):
-    """Test :class:`vector.Abstract1DVector`."""
+    """Test :class:`coordinax.Abstract1DVector`."""
 
 
 class TestCartesian1DVector(Abstract1DVectorTest):
-    """Test :class:`vector.Cartesian1DVector`."""
+    """Test :class:`coordinax.Cartesian1DVector`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractVector:
@@ -46,7 +46,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
     # represent_as
 
     def test_cartesian1d_to_cartesian1d(self, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         # Jit can copy
         newvec = vector.represent_as(Cartesian1DVector)
         assert newvec == vector
@@ -56,14 +56,14 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         assert newvec is vector
 
     def test_cartesian1d_to_radial(self, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
         assert array_equal(radial.r, Quantity([1, 2, 3, 4], u.kpc))
 
     def test_cartesian1d_to_cartesian2d(self, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = vector.represent_as(Cartesian2DVector, y=Quantity([5, 6, 7, 8], u.km))
 
         assert isinstance(cart2d, Cartesian2DVector)
@@ -71,7 +71,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         assert array_equal(cart2d.y, Quantity([5, 6, 7, 8], u.km))
 
     def test_cartesian1d_to_polar(self, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = vector.represent_as(PolarVector, phi=Quantity([0, 1, 2, 3], u.rad))
 
         assert isinstance(polar, PolarVector)
@@ -79,7 +79,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         assert array_equal(polar.phi, Quantity([0, 1, 2, 3], u.rad))
 
     # def test_cartesian1d_to_lnpolar(self, vector):
-    #     """Test ``vector.represent_as(LnPolarVector)``."""
+    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
     #     lnpolar = vector.to_lnpolar(phi=Quantity([0, 1, 2, 3], u.rad))
 
     #     assert isinstance(lnpolar, LnPolarVector)
@@ -87,7 +87,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
     #     assert array_equal(lnpolar.phi, Quantity([0, 1, 2, 3], u.rad))
 
     # def test_cartesian1d_to_log10polar(self, vector):
-    #     """Test ``vector.represent_as(Log10PolarVector)``."""
+    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
     #     log10polar = vector.to_log10polar(phi=Quantity([0, 1, 2, 3], u.rad))
 
     #     assert isinstance(log10polar, Log10PolarVector)
@@ -95,7 +95,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
     #     assert array_equal(log10polar.phi, Quantity([0, 1, 2, 3], u.rad))
 
     def test_cartesian1d_to_cartesian3d(self, vector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = vector.represent_as(
             Cartesian3DVector,
             y=Quantity([5, 6, 7, 8], u.km),
@@ -108,7 +108,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         assert array_equal(cart3d.z, Quantity([9, 10, 11, 12], u.m))
 
     def test_cartesian1d_to_spherical(self, vector):
-        """Test ``vector.represent_as(SphericalVector)``."""
+        """Test ``coordinax.represent_as(SphericalVector)``."""
         spherical = vector.represent_as(
             SphericalVector,
             phi=Quantity([0, 1, 2, 3], u.rad),
@@ -121,7 +121,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         assert array_equal(spherical.theta, Quantity([4, 5, 6, 7], u.rad))
 
     def test_cartesian1d_to_cylindrical(self, vector):
-        """Test ``vector.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalVector)``."""
         cylindrical = vector.represent_as(
             CylindricalVector,
             phi=Quantity([0, 1, 2, 3], u.rad),
@@ -135,12 +135,12 @@ class TestCartesian1DVector(Abstract1DVectorTest):
 
 
 class TestRadialVector(Abstract1DVectorTest):
-    """Test :class:`vector.RadialVector`."""
+    """Test :class:`coordinax.RadialVector`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractVector:
         """Return a vector."""
-        from vector import RadialVector
+        from coordinax import RadialVector
 
         return RadialVector(r=Quantity([1, 2, 3, 4], u.kpc))
 
@@ -148,14 +148,14 @@ class TestRadialVector(Abstract1DVectorTest):
     # represent_as
 
     def test_radial_to_cartesian1d(self, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
         assert array_equal(cart1d.x, Quantity([1, 2, 3, 4], u.kpc))
 
     def test_radial_to_radial(self, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         # Jit can copy
         newvec = vector.represent_as(RadialVector)
         assert newvec == vector
@@ -165,7 +165,7 @@ class TestRadialVector(Abstract1DVectorTest):
         assert newvec is vector
 
     def test_radial_to_cartesian2d(self, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = vector.represent_as(Cartesian2DVector, y=Quantity([5, 6, 7, 8], u.km))
 
         assert isinstance(cart2d, Cartesian2DVector)
@@ -173,7 +173,7 @@ class TestRadialVector(Abstract1DVectorTest):
         assert array_equal(cart2d.y, Quantity([5, 6, 7, 8], u.km))
 
     def test_radial_to_polar(self, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = vector.represent_as(PolarVector, phi=Quantity([0, 1, 2, 3], u.rad))
 
         assert isinstance(polar, PolarVector)
@@ -181,15 +181,15 @@ class TestRadialVector(Abstract1DVectorTest):
         assert array_equal(polar.phi, Quantity([0, 1, 2, 3], u.rad))
 
     # def test_radial_to_lnpolar(self, vector):
-    #     """Test ``vector.represent_as(LnPolarVector)``."""
+    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
     #     assert False
 
     # def test_radial_to_log10polar(self, vector):
-    #     """Test ``vector.represent_as(Log10PolarVector)``."""
+    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
     #     assert False
 
     def test_radial_to_cartesian3d(self, vector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = vector.represent_as(
             Cartesian3DVector,
             y=Quantity([5, 6, 7, 8], u.km),
@@ -202,7 +202,7 @@ class TestRadialVector(Abstract1DVectorTest):
         assert array_equal(cart3d.z, Quantity([9, 10, 11, 12], u.m))
 
     def test_radial_to_spherical(self, vector):
-        """Test ``vector.represent_as(SphericalVector)``."""
+        """Test ``coordinax.represent_as(SphericalVector)``."""
         spherical = vector.represent_as(
             SphericalVector,
             phi=Quantity([0, 1, 2, 3], u.rad),
@@ -215,7 +215,7 @@ class TestRadialVector(Abstract1DVectorTest):
         assert array_equal(spherical.theta, Quantity([4, 5, 6, 7], u.rad))
 
     def test_radial_to_cylindrical(self, vector):
-        """Test ``vector.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalVector)``."""
         cylindrical = vector.represent_as(
             CylindricalVector,
             phi=Quantity([0, 1, 2, 3], u.rad),
@@ -229,11 +229,11 @@ class TestRadialVector(Abstract1DVectorTest):
 
 
 class Abstract1DVectorDifferentialTest(AbstractVectorDifferentialTest):
-    """Test :class:`vector.Abstract1DVectorDifferential`."""
+    """Test :class:`coordinax.Abstract1DVectorDifferential`."""
 
 
 class TestCartesianDifferential1D(Abstract1DVectorDifferentialTest):
-    """Test :class:`vector.CartesianDifferential1D`."""
+    """Test :class:`coordinax.CartesianDifferential1D`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> CartesianDifferential1D:
@@ -341,7 +341,7 @@ class TestCartesianDifferential1D(Abstract1DVectorDifferentialTest):
 
 
 class TestRadialDifferential(Abstract1DVectorDifferentialTest):
-    """Test :class:`vector.RadialDifferential`."""
+    """Test :class:`coordinax.RadialDifferential`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> RadialDifferential:

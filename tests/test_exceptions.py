@@ -1,10 +1,10 @@
-"""Test :mod:`vector._utils`."""
+"""Test :mod:`coordinax._utils`."""
 
 from warnings import warn
 
 import pytest
 
-from vector._exceptions import IrreversibleDimensionChange
+from coordinax._exceptions import IrreversibleDimensionChange
 
 
 def test_warning_irreversibledimensionchange():

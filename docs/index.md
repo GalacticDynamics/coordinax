@@ -1,4 +1,4 @@
-# vector
+# coordinax
 
 ```{toctree}
 :maxdepth: 2

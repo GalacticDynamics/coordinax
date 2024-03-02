@@ -1,4 +1,4 @@
-"""Test :mod:`vector._builtin`."""
+"""Test :mod:`coordinax._builtin`."""
 
 import astropy.coordinates as apyc
 import astropy.units as u
@@ -13,7 +13,7 @@ from jax_quantity import Quantity
 
 from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
 from .test_d2 import hypot
-from vector import (
+from coordinax import (
     AbstractVector,
     Cartesian1DVector,
     Cartesian2DVector,
@@ -24,9 +24,9 @@ from vector import (
     SphericalVector,
     represent_as,
 )
-from vector._d1.builtin import CartesianDifferential1D
-from vector._d2.builtin import CartesianDifferential2D
-from vector._d3.builtin import (
+from coordinax._d1.builtin import CartesianDifferential1D
+from coordinax._d2.builtin import CartesianDifferential2D
+from coordinax._d3.builtin import (
     CartesianDifferential3D,
     CylindricalDifferential,
     SphericalDifferential,
@@ -34,7 +34,7 @@ from vector._d3.builtin import (
 
 
 class Abstract3DVectorTest(AbstractVectorTest):
-    """Test :class:`vector.Abstract3DVector`."""
+    """Test :class:`coordinax.Abstract3DVector`."""
 
     # ==========================================================================
     # Unary operations
@@ -74,12 +74,12 @@ class Abstract3DVectorTest(AbstractVectorTest):
 
 
 class TestCartesian3DVector(Abstract3DVectorTest):
-    """Test :class:`vector.Cartesian3DVector`."""
+    """Test :class:`coordinax.Cartesian3DVector`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractVector:
         """Return a vector."""
-        from vector import Cartesian3DVector
+        from coordinax import Cartesian3DVector
 
         return Cartesian3DVector(
             x=Quantity([1, 2, 3, 4], u.kpc),
@@ -97,7 +97,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_cartesian1d(self, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
@@ -105,7 +105,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_radial(self, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
@@ -115,7 +115,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_cartesian2d(self, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = vector.represent_as(Cartesian2DVector, y=Quantity([5, 6, 7, 8], u.km))
 
         assert isinstance(cart2d, Cartesian2DVector)
@@ -124,7 +124,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_polar(self, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = vector.represent_as(PolarVector, phi=Quantity([0, 1, 2, 3], u.rad))
 
         assert isinstance(polar, PolarVector)
@@ -135,16 +135,16 @@ class TestCartesian3DVector(Abstract3DVectorTest):
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_cartesian3d_to_lnpolar(self, vector):
-    #     """Test ``vector.represent_as(LnPolarVector)``."""
+    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
     #     assert False
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_cartesian3d_to_log10polar(self, vector):
-    #     """Test ``vector.represent_as(Log10PolarVector)``."""
+    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
     #     assert False
 
     def test_cartesian3d_to_cartesian3d(self, vector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         # Jit can copy
         newvec = vector.represent_as(Cartesian3DVector)
         assert newvec == vector
@@ -162,7 +162,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         assert np.allclose(convert(newvec.z, u.Quantity), apyvector.z)
 
     def test_cartesian3d_to_spherical(self, vector):
-        """Test ``vector.represent_as(SphericalVector)``."""
+        """Test ``coordinax.represent_as(SphericalVector)``."""
         spherical = vector.represent_as(SphericalVector)
 
         assert isinstance(spherical, SphericalVector)
@@ -187,7 +187,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         assert np.allclose(convert(sph.phi, u.Quantity), apysph.phi)
 
     def test_cartesian3d_to_cylindrical(self, vector):
-        """Test ``vector.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalVector)``."""
         cylindrical = vector.represent_as(CylindricalVector)
 
         assert isinstance(cylindrical, CylindricalVector)
@@ -209,7 +209,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
 
 
 class TestSphericalVector(Abstract3DVectorTest):
-    """Test :class:`vector.SphericalVector`."""
+    """Test :class:`coordinax.SphericalVector`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> SphericalVector:
@@ -230,7 +230,7 @@ class TestSphericalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_cartesian1d(self, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
@@ -241,7 +241,7 @@ class TestSphericalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_radial(self, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
@@ -249,7 +249,7 @@ class TestSphericalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_cartesian2d(self, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = vector.represent_as(Cartesian2DVector, y=Quantity([5, 6, 7, 8], u.km))
 
         assert isinstance(cart2d, Cartesian2DVector)
@@ -263,7 +263,7 @@ class TestSphericalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_polar(self, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = vector.represent_as(PolarVector, phi=Quantity([0, 1, 2, 3], u.rad))
 
         assert isinstance(polar, PolarVector)
@@ -275,16 +275,16 @@ class TestSphericalVector(Abstract3DVectorTest):
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_spherical_to_lnpolar(self, vector):
-    #     """Test ``vector.represent_as(LnPolarVector)``."""
+    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
     #     assert False
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_spherical_to_log10polar(self, vector):
-    #     """Test ``vector.represent_as(Log10PolarVector)``."""
+    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
     #     assert False
 
     def test_spherical_to_cartesian3d(self, vector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = vector.represent_as(Cartesian3DVector)
 
         assert isinstance(cart3d, Cartesian3DVector)
@@ -306,7 +306,7 @@ class TestSphericalVector(Abstract3DVectorTest):
         assert np.allclose(convert(cart3d.z, u.Quantity), apycart3.z)
 
     def test_spherical_to_spherical(self, vector):
-        """Test ``vector.represent_as(SphericalVector)``."""
+        """Test ``coordinax.represent_as(SphericalVector)``."""
         # Jit can copy
         newvec = vector.represent_as(SphericalVector)
         assert newvec == vector
@@ -325,7 +325,7 @@ class TestSphericalVector(Abstract3DVectorTest):
         assert np.allclose(convert(sph.phi, u.Quantity), apysph.phi)
 
     def test_spherical_to_cylindrical(self, vector):
-        """Test ``vector.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalVector)``."""
         cylindrical = vector.represent_as(
             CylindricalVector, z=Quantity([9, 10, 11, 12], u.m)
         )
@@ -341,7 +341,7 @@ class TestSphericalVector(Abstract3DVectorTest):
         )
 
     def test_spherical_to_cylindrical_astropy(self, vector, apyvector):
-        """Test ``vector.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalVector)``."""
         cyl = vector.represent_as(CylindricalVector, z=Quantity([9, 10, 11, 12], u.m))
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
@@ -353,12 +353,12 @@ class TestSphericalVector(Abstract3DVectorTest):
 
 
 class TestCylindricalVector(Abstract3DVectorTest):
-    """Test :class:`vector.CylindricalVector`."""
+    """Test :class:`coordinax.CylindricalVector`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractVector:
         """Return a vector."""
-        from vector import CylindricalVector
+        from coordinax import CylindricalVector
 
         return CylindricalVector(
             rho=Quantity([1, 2, 3, 4], u.kpc),
@@ -376,7 +376,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_cartesian1d(self, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
@@ -386,7 +386,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_radial(self, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
@@ -394,7 +394,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_cartesian2d(self, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = vector.represent_as(Cartesian2DVector)
 
         assert isinstance(cart2d, Cartesian2DVector)
@@ -407,7 +407,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_polar(self, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = vector.represent_as(PolarVector)
 
         assert isinstance(polar, PolarVector)
@@ -416,16 +416,16 @@ class TestCylindricalVector(Abstract3DVectorTest):
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_cylindrical_to_lnpolar(self, vector):
-    #     """Test ``vector.represent_as(LnPolarVector)``."""
+    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
     #     assert False
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_cylindrical_to_log10polar(self, vector):
-    #     """Test ``vector.represent_as(Log10PolarVector)``."""
+    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
     #     assert False
 
     def test_cylindrical_to_cartesian3d(self, vector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = vector.represent_as(Cartesian3DVector)
 
         assert isinstance(cart3d, Cartesian3DVector)
@@ -447,7 +447,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
         assert np.allclose(convert(cart3d.z, u.Quantity), apycart3.z)
 
     def test_cylindrical_to_spherical(self, vector):
-        """Test ``vector.represent_as(SphericalVector)``."""
+        """Test ``coordinax.represent_as(SphericalVector)``."""
         spherical = vector.represent_as(SphericalVector)
 
         assert isinstance(spherical, SphericalVector)
@@ -464,7 +464,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
         assert np.allclose(convert(sph.phi, u.Quantity), apysph.phi)
 
     def test_cylindrical_to_cylindrical(self, vector):
-        """Test ``vector.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalVector)``."""
         # Jit can copy
         newvec = vector.represent_as(CylindricalVector)
         assert newvec == vector
@@ -484,7 +484,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
 
 
 class Abstract3DVectorDifferentialTest(AbstractVectorDifferentialTest):
-    """Test :class:`vector.Abstract2DVectorDifferential`."""
+    """Test :class:`coordinax.Abstract2DVectorDifferential`."""
 
     # ==========================================================================
     # Unary operations
@@ -497,7 +497,7 @@ class Abstract3DVectorDifferentialTest(AbstractVectorDifferentialTest):
 
 
 class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
-    """Test :class:`vector.CartesianDifferential3D`."""
+    """Test :class:`coordinax.CartesianDifferential3D`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> CartesianDifferential3D:
@@ -532,7 +532,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_cartesian1d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         cart1d = difntl.represent_as(CartesianDifferential1D, vector)
 
         assert isinstance(cart1d, CartesianDifferential1D)
@@ -541,7 +541,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_radial(self, difntl, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         radial = difntl.represent_as(RadialVector, vector)
 
         assert isinstance(radial, RadialVector)
@@ -550,7 +550,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_cartesian2d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = difntl.represent_as(CartesianDifferential2D, vector)
 
         assert isinstance(cart2d, CartesianDifferential2D)
@@ -560,7 +560,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_polar(self, difntl, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = difntl.represent_as(PolarVector, vector)
 
         assert isinstance(polar, PolarVector)
@@ -568,7 +568,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         assert array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
 
     def test_cartesian3d_to_cartesian3d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         # Jit can copy
         newvec = difntl.represent_as(CartesianDifferential3D, vector)
         assert newvec == difntl
@@ -589,7 +589,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         assert np.allclose(convert(cart3.d_z, u.Quantity), apycart3.d_z)
 
     def test_cartesian3d_to_spherical(self, difntl, vector):
-        """Test ``vector.represent_as(SphericalDifferential)``."""
+        """Test ``coordinax.represent_as(SphericalDifferential)``."""
         spherical = difntl.represent_as(SphericalDifferential, vector)
 
         assert isinstance(spherical, SphericalDifferential)
@@ -627,7 +627,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
             )
 
     def test_cartesian3d_to_cylindrical(self, difntl, vector):
-        """Test ``vector.represent_as(CylindricalDifferential)``."""
+        """Test ``coordinax.represent_as(CylindricalDifferential)``."""
         cylindrical = difntl.represent_as(CylindricalDifferential, vector)
 
         assert isinstance(cylindrical, CylindricalDifferential)
@@ -653,7 +653,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
 
 
 class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
-    """Test :class:`vector.SphericalDifferential`."""
+    """Test :class:`coordinax.SphericalDifferential`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> SphericalDifferential:
@@ -690,7 +690,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_cartesian1d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         cart1d = difntl.represent_as(CartesianDifferential1D, vector)
 
         assert isinstance(cart1d, CartesianDifferential1D)
@@ -699,7 +699,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_radial(self, difntl, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         radial = difntl.represent_as(RadialVector, vector)
 
         assert isinstance(radial, RadialVector)
@@ -708,7 +708,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_cartesian2d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = difntl.represent_as(CartesianDifferential2D, vector)
 
         assert isinstance(cart2d, CartesianDifferential2D)
@@ -718,7 +718,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_polar(self, difntl, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = difntl.represent_as(PolarVector, vector)
 
         assert isinstance(polar, PolarVector)
@@ -726,7 +726,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         assert array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
 
     def test_spherical_to_cartesian3d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = difntl.represent_as(CartesianDifferential3D, vector)
 
         assert isinstance(cart3d, CartesianDifferential3D)
@@ -755,7 +755,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         assert np.allclose(convert(cart3d.d_z, u.Quantity), apycart3.d_z)
 
     def test_spherical_to_spherical(self, difntl, vector):
-        """Test ``vector.represent_as(SphericalDifferential)``."""
+        """Test ``coordinax.represent_as(SphericalDifferential)``."""
         # Jit can copy
         newvec = difntl.represent_as(SphericalDifferential, vector)
         assert newvec == difntl
@@ -773,7 +773,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         assert np.allclose(convert(sph.d_phi, u.Quantity), apysph.d_phi)
 
     def test_spherical_to_cylindrical(self, difntl, vector):
-        """Test ``vector.represent_as(CylindricalDifferential)``."""
+        """Test ``coordinax.represent_as(CylindricalDifferential)``."""
         cylindrical = difntl.represent_as(CylindricalDifferential, vector)
 
         assert isinstance(cylindrical, CylindricalDifferential)
@@ -799,7 +799,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
 
 
 class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
-    """Test :class:`vector.CylindricalDifferential`."""
+    """Test :class:`coordinax.CylindricalDifferential`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> CylindricalDifferential:
@@ -834,7 +834,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_cartesian1d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
         cart1d = difntl.represent_as(CartesianDifferential1D, vector)
 
         assert isinstance(cart1d, CartesianDifferential1D)
@@ -843,7 +843,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_radial(self, difntl, vector):
-        """Test ``vector.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialVector)``."""
         radial = difntl.represent_as(RadialVector, vector)
 
         assert isinstance(radial, RadialVector)
@@ -852,7 +852,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_cartesian2d(self, difntl, vector):
-        """Test ``vector.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
         cart2d = difntl.represent_as(CartesianDifferential2D, vector)
 
         assert isinstance(cart2d, CartesianDifferential2D)
@@ -862,7 +862,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_polar(self, difntl, vector):
-        """Test ``vector.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarVector)``."""
         polar = difntl.represent_as(PolarVector, vector)
 
         assert isinstance(polar, PolarVector)
@@ -870,7 +870,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         assert array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
 
     def test_cylindrical_to_cartesian3d(self, difntl, vector, apydifntl, apyvector):
-        """Test ``vector.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = difntl.represent_as(CartesianDifferential3D, vector)
 
         assert isinstance(cart3d, CartesianDifferential3D)
@@ -889,7 +889,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         assert np.allclose(convert(cart3d.d_z, u.Quantity), apycart3.d_z)
 
     def test_cylindrical_to_spherical(self, difntl, vector):
-        """Test ``vector.represent_as(SphericalDifferential)``."""
+        """Test ``coordinax.represent_as(SphericalDifferential)``."""
         spherical = difntl.represent_as(SphericalDifferential, vector)
 
         assert isinstance(spherical, SphericalDifferential)
@@ -915,7 +915,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         assert np.allclose(convert(sph.d_phi, u.Quantity), apysph.d_phi)
 
     def test_cylindrical_to_cylindrical(self, difntl, vector):
-        """Test ``vector.represent_as(CylindricalDifferential)``."""
+        """Test ``coordinax.represent_as(CylindricalDifferential)``."""
         # Jit can copy
         newvec = difntl.represent_as(CylindricalDifferential, vector)
         assert newvec == difntl

@@ -6,8 +6,8 @@ __all__ = ["Abstract4DVector"]
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
-from vector._base import AbstractVector, AbstractVectorBase
-from vector._utils import classproperty
+from coordinax._base import AbstractVector, AbstractVectorBase
+from coordinax._utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Never

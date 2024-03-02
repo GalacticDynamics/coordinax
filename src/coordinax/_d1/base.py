@@ -10,8 +10,12 @@ from jaxtyping import Shaped
 
 from jax_quantity import Quantity
 
-from vector._base import AbstractVector, AbstractVectorBase, AbstractVectorDifferential
-from vector._utils import classproperty
+from coordinax._base import (
+    AbstractVector,
+    AbstractVectorBase,
+    AbstractVectorDifferential,
+)
+from coordinax._utils import classproperty
 
 
 class Abstract1DVector(AbstractVector):
@@ -41,7 +45,7 @@ def constructor(
     Examples
     --------
     >>> from jax_quantity import Quantity
-    >>> from vector import Cartesian1DVector
+    >>> from coordinax import Cartesian1DVector
 
     >>> q = Cartesian1DVector.constructor(Quantity(1, "kpc"))
     >>> q
