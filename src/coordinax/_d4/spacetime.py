@@ -86,8 +86,7 @@ class FourVector(Abstract4DVector):
 
     _: KW_ONLY
     c: Shaped[Quantity["speed"], ""] = eqx.field(
-        default_factory=lambda: Quantity(299_792.458, "km/s"),
-        repr=False,
+        default=Quantity(299_792.458, "km/s"), repr=False
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
@@ -155,7 +154,7 @@ class FourVector(Abstract4DVector):
             obj.shape[-1] != 4,
             f"Cannot construct {cls} from array with shape {obj.shape}.",
         )
-        c = cls.__dataclass_fields__["c"].default_factory()
+        c = cls.__dataclass_fields__["c"].default
         comps = {"t": obj[..., 0] / c, "q": obj[..., 1:]}
         return cls(**comps)
 
