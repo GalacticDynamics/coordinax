@@ -14,6 +14,9 @@ if TYPE_CHECKING:
     from coordinax._base import AbstractVectorBase
 
 
+################################################################################
+
+
 def dataclass_values(obj: "DataclassInstance") -> Iterator[Any]:
     """Return the values of a dataclass instance."""
     yield from (getattr(obj, f.name) for f in fields(obj))

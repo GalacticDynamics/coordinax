@@ -29,7 +29,7 @@
     "jax",
     "jaxlib",
     "jaxtyping",
-    "jax_quantity >= 0.2.1",
+    "jax_quantity @ git+https://github.com/GalacticDynamics/jax-quantity.git",
     "quax>=0.0.3",
   ]
   description = "Vectors in JAX"
