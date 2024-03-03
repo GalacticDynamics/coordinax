@@ -8,6 +8,7 @@ from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import fields, replace
 from functools import partial
+from inspect import isabstract
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
@@ -32,11 +33,8 @@ BT = TypeVar("BT", bound="AbstractVectorBase")
 VT = TypeVar("VT", bound="AbstractVector")
 DT = TypeVar("DT", bound="AbstractVectorDifferential")
 
-
-_0m = Quantity(0, "meter")
-_0d = Quantity(0, "rad")
-_pid = Quantity(xp.pi, "rad")
-_2pid = Quantity(2 * xp.pi, "rad")
+VECTOR_CLASSES: list[type["AbstractVector"]] = []
+DIFFERENTIAL_CLASSES: list[type["AbstractVectorDifferential"]] = []
 
 
 class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
@@ -678,6 +676,17 @@ def constructor(  # noqa: D417
 class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Initialize the subclass.
+
+        The subclass is registered if it is not an abstract class.
+        """
+        # TODO: a more robust check using equinox.
+        if isabstract(cls) or cls.__name__.startswith("Abstract"):
+            return
+
+        VECTOR_CLASSES.append(cls)
+
     @classproperty
     @classmethod
     @abstractmethod
@@ -854,6 +863,13 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
 
 class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Initialize the subclass.
+
+        The subclass is registered.
+        """
+        DIFFERENTIAL_CLASSES.append(cls)
 
     @classproperty
     @classmethod
