@@ -37,7 +37,7 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
     >>> newpos
     FourVector( t=Quantity[PhysicalType('time')](...), q=Cartesian3DVector( ... ) )
     >>> newpos.q.x
-    Quantity['length'](Array(2., dtype=float64), unit='kpc')
+    Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
     """
     q, t = self(v4.q, v4.t)
@@ -65,11 +65,11 @@ def call(
 
     >>> pos = Quantity([0, 1.0, 2.0, 3.0], "kpc")
     >>> pos
-    Quantity['length'](Array([0., 1., 2., 3.], dtype=float64), unit='kpc')
+    Quantity['length'](Array([0., 1., 2., 3.], dtype=float32), unit='kpc')
 
     >>> newpos = op(pos)
     >>> newpos
-    Quantity['length'](Array([0., 2., 4., 6.], dtype=float64), unit='kpc')
+    Quantity['length'](Array([0., 2., 4., 6.], dtype=float32), unit='kpc')
 
     """
     return convert(self(FourVector.constructor(x)), Quantity)
