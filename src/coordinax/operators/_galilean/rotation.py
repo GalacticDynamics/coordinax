@@ -27,6 +27,15 @@ from coordinax.operators._identity import IdentityOperator
 vec_matmul = quaxify(jnp.vectorize(jnp.matmul, signature="(3,3),(3)->(3)"))
 
 
+def converter(x: Any) -> Array:
+    """Convert the input to a rotation matrix."""
+    if isinstance(x, GalileanRotationOperator):
+        out = x.rotation
+    elif isinstance(x, Quantity):
+        out = x.to_value("")
+    return jnp.asarray(out)
+
+
 @final
 class GalileanRotationOperator(AbstractGalileanOperator):
     r"""Operator for Galilean rotations.
@@ -109,11 +118,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     """
 
-    rotation: Shaped[Array, "3 3"] = eqx.field(
-        converter=lambda x: (
-            x.rotation if isinstance(x, GalileanRotationOperator) else jnp.asarray(x)
-        )
-    )
+    rotation: Shaped[Array, "3 3"] = eqx.field(converter=converter)
     """The rotation vector."""
 
     check_tol: Mapping[str, Any] = eqx.field(

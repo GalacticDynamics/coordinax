@@ -83,7 +83,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     >>> op = cx.operators.GalileanOperator(
     ...     translation=cx.operators.GalileanTranslationOperator(
-    ...         FourVector(t=Quantity(2.5, "Gyr"),
+    ...         cx.FourVector(t=Quantity(2.5, "Gyr"),
     ...                    q=cx.SphericalVector(r=Quantity(1, "kpc"),
     ...                                         theta=Quantity(90, "deg"),
     ...                                         phi=Quantity(0, "rad") ) ) ),
