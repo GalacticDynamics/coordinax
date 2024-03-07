@@ -1,0 +1,36 @@
+"""Base classes for operators on coordinates and potentials."""
+
+__all__ = ["simplify_op"]
+
+from functools import singledispatch
+
+from ._base import AbstractOperator
+
+
+@singledispatch
+def simplify_op(op: AbstractOperator, /) -> AbstractOperator:
+    """Simplify an operator.
+
+    Examples
+    --------
+    >>> from jax_quantity import Quantity
+    >>> import coordinax.operators as co
+
+    An operator with real effect cannot be simplified:
+
+    >>> shift = Quantity([1, 0, 0], "m")  # no shift
+    >>> op = co.GalileanSpatialTranslationOperator(shift)
+    >>> co.simplify_op(op)
+    GalileanSpatialTranslationOperator(
+      translation=Cartesian3DVector( ... )
+    )
+
+    An operator with no effect can be simplified:
+
+    >>> shift = Quantity([0, 0, 0], "m")  # no shift
+    >>> op = co.GalileanSpatialTranslationOperator(shift)
+    >>> co.simplify_op(op)
+    IdentityOperator()
+
+    """
+    return op

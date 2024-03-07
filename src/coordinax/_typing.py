@@ -22,3 +22,6 @@ BatchableLength = Shaped[Quantity["length"], "*#batch"]
 BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
 BatchableTime = Shaped[Quantity["time"], "*#batch"]
 BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
+
+
+TimeBatchOrScalar = ScalarTime | BatchableTime

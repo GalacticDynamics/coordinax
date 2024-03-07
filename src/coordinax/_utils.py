@@ -4,17 +4,30 @@ __all__: list[str] = []
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, fields, replace
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ClassVar,
+    Generic,
+    Protocol,
+    TypeVar,
+    runtime_checkable,
+)
 
 import array_api_jax_compat as xp
 
 if TYPE_CHECKING:
-    from _typeshed import DataclassInstance
-
     from coordinax._base import AbstractVectorBase
 
 
 ################################################################################
+
+
+@runtime_checkable
+class DataclassInstance(Protocol):
+    """Protocol for dataclass instances."""
+
+    __dataclass_fields__: ClassVar[dict[str, Any]]
 
 
 def dataclass_values(obj: "DataclassInstance") -> Iterator[Any]:
