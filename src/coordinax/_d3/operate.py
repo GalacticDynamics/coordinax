@@ -46,8 +46,8 @@ def call(
     >>> t = Quantity(0.0, "Gyr")
 
     >>> op(pos, t)
-    (Quantity['length'](Array([2., 4., 6.], dtype=float64), unit='kpc'),
-        Quantity['time'](Array(0., dtype=float64, ...), unit='Gyr'))
+    (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='kpc'),
+        Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
 
     """
     vec, t = self(Cartesian3DVector.constructor(x), t)

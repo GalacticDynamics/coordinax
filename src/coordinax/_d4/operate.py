@@ -13,7 +13,7 @@ from coordinax.operators._base import AbstractOperator, op_call_dispatch
 
 
 @op_call_dispatch
-def call(self: AbstractOperator, x: FourVector, /) -> FourVector:
+def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
     """Dispatch to the operator's `__call__` method.
 
     Examples
@@ -40,7 +40,7 @@ def call(self: AbstractOperator, x: FourVector, /) -> FourVector:
     Quantity['length'](Array(2., dtype=float64), unit='kpc')
 
     """
-    q, t = self(x.q, x.t)
+    q, t = self(v4.q, v4.t)
     return FourVector(t=t, q=q)
 
 
