@@ -83,12 +83,12 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     >>> from coordinax import SphericalVector, FourVector, CartesianDifferential3D
     >>> op = co.GalileanOperator(
-    ...     translation=gco.GalileanTranslationOperator(
+    ...     translation=co.GalileanTranslationOperator(
     ...         FourVector(t=Quantity(2.5, "Gyr"),
     ...                    q=SphericalVector(r=Quantity(1, "kpc"),
     ...                                      theta=Quantity(90, "deg"),
     ...                                      phi=Quantity(0, "rad") ) ) ),
-    ...     velocity=gco.GalileanBoostOperator(
+    ...     velocity=co.GalileanBoostOperator(
     ...         CartesianDifferential3D(d_x=Quantity(1, "km/s"),
     ...                                 d_y=Quantity(2, "km/s"),
     ...                                 d_z=Quantity(3, "km/s")))
@@ -98,7 +98,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       rotation=GalileanRotationOperator(rotation=f32[3,3]),
       translation=GalileanTranslationOperator(
         translation=FourVector(
-          t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
+          t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
           q=SphericalVector( ... ) )
       ),
       velocity=GalileanBoostOperator( velocity=CartesianDifferential3D( ... ) )

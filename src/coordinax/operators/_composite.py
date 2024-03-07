@@ -44,7 +44,7 @@ class AbstractCompositeOperator(AbstractOperator):
     @op_call_dispatch(precedence=1)
     def __call__(
         self: "AbstractCompositeOperator", x: AbstractVector, /
-    ) -> tuple[AbstractVector]:
+    ) -> AbstractVector:
         """Apply the operator to the coordinates.
 
         This is the default implementation, which applies the operators in
@@ -62,7 +62,7 @@ class AbstractCompositeOperator(AbstractOperator):
         """Apply the operator to the coordinates."""
         # TODO: with lax.scan?
         for op in self.operators:
-            x = op(x, t)
+            x, t = op(x, t)
         return x, t
 
     @property

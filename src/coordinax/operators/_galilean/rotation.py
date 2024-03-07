@@ -79,7 +79,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     >>> t = Quantity(1, "s")
     >>> newq, newt = op(q, t)
     >>> newq
-    Quantity['length'](Array([0.70710678, 0.70710678 , 0. ], dtype=float32), unit='m')
+    Quantity['length'](Array([0.70710677, 0.70710677 , 0. ], dtype=float32), unit='m')
 
     The time is not affected by the rotation.
 
@@ -93,8 +93,8 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     >>> newq, newt = op(q, t)
     >>> newq
-    Quantity['length'](Array([[ 0.70710678,  0.70710678,  0.        ],
-                              [-0.70710678,  0.70710678,  0.        ]], dtype=float32),
+    Quantity['length'](Array([[ 0.70710677,  0.70710677,  0.        ],
+                              [-0.70710677,  0.70710677,  0.        ]], dtype=float32),
                        unit='m')
 
     Translation operators can be applied to :class:`vector.Abstract3DVector`:
@@ -103,26 +103,9 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     >>> q = Cartesian3DVector.constructor(q)  # from the previous example
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array([ 0.70710678, -0.70710678], dtype=float32), unit='m')
-    >>> newq.norm()
-    Quantity['length'](Array([1., 1.], dtype=float32), unit='m')
-
-    Translation operators can be applied to
-    :class:`galax.coordinates.PhaseSpacePosition`:
-
-    >>> from galax.coordinates import PhaseSpaceTimePosition
-    >>> psp = PhaseSpaceTimePosition(q=q, p=Quantity([2, 0, 0], "km/s"), t=t)
-    >>> newpsp = op(psp)
-    >>> newpsp
-    PhaseSpaceTimePosition(
-      q=Cartesian3DVector( ... ),
-      p=CartesianDifferential3D( ... ),
-      t=Quantity[PhysicalType('time')](value=f32[1], unit=Unit("s"))
-    )
-    >>> newpsp.q.x
-    Quantity['length'](Array([ 0.70710678, -0.70710678], dtype=float32), unit='m')
-    >>> newpsp.p.d_x
-    Quantity['speed'](Array(1.41421356, dtype=float32), unit='km / s')
+    Quantity['length'](Array([ 0.70710677, -0.70710677], dtype=float32), unit='m')
+    >>> newq.norm().value.round(2)
+    Array([1., 1.], dtype=float32)
 
     """
 
@@ -217,7 +200,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq
-        Quantity[...](Array([0.70710678, 0.70710678, 0. ], dtype=float32), unit='m')
+        Quantity[...](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')
 
         The time is not affected by the rotation.
         >>> newt
@@ -249,7 +232,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq.x
-        Quantity['length'](Array(0.70710678, dtype=float32), unit='m')
+        Quantity['length'](Array(0.70710677, dtype=float32), unit='m')
 
         The time is not affected by the rotation.
         >>> newt

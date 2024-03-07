@@ -4,6 +4,7 @@
 __all__ = ["GalileanBoostOperator"]
 
 
+from dataclasses import replace
 from typing import Any, Literal, final
 
 import equinox as eqx
@@ -16,6 +17,7 @@ from jax_quantity import Quantity
 from .base import AbstractGalileanOperator
 from coordinax._d3.base import Abstract3DVector
 from coordinax._d3.builtin import CartesianDifferential3D
+from coordinax._d4.spacetime import FourVector
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
 from coordinax.operators._funcs import simplify_op
 from coordinax.operators._identity import IdentityOperator
@@ -120,7 +122,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     # -----------------------------------------------------
 
-    @op_call_dispatch(precedence=1)  # type: ignore[misc]
+    @op_call_dispatch(precedence=1)
     def __call__(
         self: "GalileanBoostOperator", q: Abstract3DVector, t: Quantity["time"], /
     ) -> tuple[Abstract3DVector, Quantity["time"]]:
@@ -144,6 +146,11 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
         """
         return q + self.velocity * t, t
+
+    @op_call_dispatch
+    def __call__(self: "GalileanBoostOperator", v4: FourVector, /) -> FourVector:
+        """Apply the boost to the coordinates."""  # TODO: add example
+        return replace(v4, q=v4.q + self.velocity * v4.t)
 
 
 @simplify_op.register
