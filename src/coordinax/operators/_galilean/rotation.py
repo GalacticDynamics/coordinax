@@ -33,6 +33,8 @@ def converter(x: Any) -> Array:
         out = x.rotation
     elif isinstance(x, Quantity):
         out = x.to_value("")
+    else:
+        out = x
     return jnp.asarray(out)
 
 
