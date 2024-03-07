@@ -27,6 +27,28 @@ def call(self: AbstractOperator, x: Q3, /) -> Q3:
 def call(
     self: AbstractOperator, x: Q3, t: TimeBatchOrScalar, /
 ) -> tuple[Q3, TimeBatchOrScalar]:
-    """Dispatch to the operator's `__call__` method."""
+    """Dispatch to the operator's `__call__` method.
+
+    Examples
+    --------
+    >>> from jax_quantity import Quantity
+    >>> import coordinax as cx
+
+    We can then create a spatial translation operator:
+
+    >>> op = cx.operators.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
+    >>> op
+    GalileanSpatialTranslationOperator( translation=Cartesian3DVector( ... ) )
+
+    We can then apply the operator to a position:
+
+    >>> pos = Quantity([1.0, 2.0, 3.0], "kpc")
+    >>> t = Quantity(0.0, "Gyr")
+
+    >>> op(pos, t)
+    (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='kpc'),
+        Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
+
+    """
     vec, t = self(Cartesian3DVector.constructor(x), t)
     return convert(vec, Quantity), t

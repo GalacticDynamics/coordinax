@@ -4,6 +4,7 @@
 __all__ = ["GalileanSpatialTranslationOperator", "GalileanTranslationOperator"]
 
 
+from dataclasses import replace
 from typing import Any, Literal, final
 
 import equinox as eqx
@@ -275,6 +276,13 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
         """
         return q + self.translation, t
+
+    @op_call_dispatch(precedence=1)
+    def __call__(
+        self: "GalileanSpatialTranslationOperator", v4: FourVector, /
+    ) -> AbstractVector:
+        """Apply the translation to the coordinates."""  # TODO: docstring
+        return replace(v4, q=v4.q + self.translation)
 
 
 @simplify_op.register
