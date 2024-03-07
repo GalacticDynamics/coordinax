@@ -206,8 +206,10 @@
     "missing-function-docstring", # TODO: resolve
     "missing-module-docstring",
     "no-member",                  # handled by mypy
+    "not-a-mapping",              # pylint doesn't understand dataclass fields
     "protected-access",           # handled by ruff
     "redefined-builtin",          # handled by ruff
+    "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
     "unsubscriptable-object",     # handled by mypy
     "unused-argument",            # handled by ruff
     "wrong-import-position",

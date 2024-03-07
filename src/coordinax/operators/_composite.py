@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
 @runtime_checkable
 class HasOperatorsAttr(DataclassInstance, Protocol):
+    """Protocol for classes with an `operators` attribute."""
+
     operators: tuple[AbstractOperator, ...]
 
 
@@ -71,7 +73,7 @@ class AbstractCompositeOperator(AbstractOperator):
     @property
     def inverse(self: HasOperatorsAttr) -> "AbstractCompositeOperator":
         """The inverse of the operator."""
-        from .sequential import OperatorSequence
+        from ._sequential import OperatorSequence
 
         return OperatorSequence(tuple(op.inverse for op in reversed(self.operators)))
 

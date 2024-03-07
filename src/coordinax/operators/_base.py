@@ -117,7 +117,7 @@ def constructor(
     obj : :class:`coordinax.operators.AbstractOperator`
         The object to construct from.
 
-    """
+    """  # pylint: disable=R0801
     if not isinstance(obj, cls):
         msg = f"Cannot construct {cls} from {type(obj)}."
         raise TypeError(msg)
