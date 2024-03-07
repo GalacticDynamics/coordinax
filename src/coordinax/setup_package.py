@@ -1,4 +1,4 @@
-"""Copyright (c) 2023 galax maintainers. All rights reserved."""
+"""Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
 import os
 

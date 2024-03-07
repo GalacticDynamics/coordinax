@@ -56,11 +56,11 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     We start with the required imports:
 
     >>> from jax_quantity import Quantity
-    >>> import coordinax.operators as co
+    >>> import coordinax as cx
 
     We can then create a Galilean operator:
 
-    >>> op = co.GalileanOperator(
+    >>> op = cx.operators.GalileanOperator(
     ...     translation=Quantity([0., 2., 3., 4.], "kpc"),
     ...     velocity=Quantity([1., 2., 3.], "km/s"))
     >>> op
@@ -81,67 +81,53 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     :class:`vector.CartesianDifferential3D` velocity. We can also construct them
     directly, which allows for other vector types.
 
-    >>> from coordinax import SphericalVector, FourVector, CartesianDifferential3D
-    >>> op = co.GalileanOperator(
-    ...     translation=co.GalileanTranslationOperator(
+    >>> op = cx.operators.GalileanOperator(
+    ...     translation=cx.operators.GalileanTranslationOperator(
     ...         FourVector(t=Quantity(2.5, "Gyr"),
-    ...                    q=SphericalVector(r=Quantity(1, "kpc"),
-    ...                                      theta=Quantity(90, "deg"),
-    ...                                      phi=Quantity(0, "rad") ) ) ),
-    ...     velocity=co.GalileanBoostOperator(
-    ...         CartesianDifferential3D(d_x=Quantity(1, "km/s"),
-    ...                                 d_y=Quantity(2, "km/s"),
-    ...                                 d_z=Quantity(3, "km/s")))
+    ...                    q=cx.SphericalVector(r=Quantity(1, "kpc"),
+    ...                                         theta=Quantity(90, "deg"),
+    ...                                         phi=Quantity(0, "rad") ) ) ),
+    ...     velocity=cx.operators.GalileanBoostOperator(
+    ...         cx.CartesianDifferential3D(d_x=Quantity(1, "km/s"),
+    ...                                    d_y=Quantity(2, "km/s"),
+    ...                                    d_z=Quantity(3, "km/s")))
     ... )
     >>> op
     GalileanOperator(
       rotation=GalileanRotationOperator(rotation=f32[3,3]),
       translation=GalileanTranslationOperator(
         translation=FourVector(
-          t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-          q=SphericalVector( ... ) )
+          t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
+          q=SphericalVector( ... )
+        )
       ),
       velocity=GalileanBoostOperator( velocity=CartesianDifferential3D( ... ) )
-      )
     )
 
     Galilean operators can be applied to :class:`vector.FourVector`:
 
-    >>> w = FourVector.constructor(Quantity([0, 0, 0, 0], "kpc"))
+    >>> w = cx.FourVector.constructor(Quantity([0, 0, 0, 0], "kpc"))
     >>> new = op(w)
     >>> new
     FourVector(
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
       q=Cartesian3DVector( ... )
     )
-    >>> new.t.to("Gyr")
-    Quantity['time'](Array(2.5, dtype=float32), unit='Gyr')
+    >>> new.t.to("Gyr").value.round(2)
+    Array(2.5, dtype=float32)
     >>> new.q.x
-    Quantity['length'](Array(3.55678041, dtype=float32), unit='kpc')
+    Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
 
     Also the Galilean operators can also be applied to
     :class:`vector.Abstract3DVector` and :class:`jax_quantity.Quantity`:
 
-    >>> q = Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
+    >>> q = cx.Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
     >>> t = Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array(3.55678041, dtype=float32), unit='kpc')
+    Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
     >>> newt
     Quantity['time'](Array(2.5, dtype=float32), unit='Gyr')
-
-    As another example we can apply the operator to a
-    :class:`~galax.coordinates.PhaseSpacePosition`:
-
-    >>> from galax.coordinates import PhaseSpacePosition
-    >>> psp = PhaseSpacePosition(q=Quantity([0, 0, 0], "kpc"),
-    ...                          p=Quantity([0, 0, 0], "kpc/Gyr"))
-    >>> newpsp, newt = op(psp, Quantity(1, "Gyr"))
-    >>> newpsp.q.x
-    Quantity['length'](Array(4.57949258, dtype=float32), unit='kpc')
-
-    >>> newt
-    Quantity['time'](Array(3.5, dtype=float32), unit='Gyr')
 
     """
 

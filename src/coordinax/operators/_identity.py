@@ -132,7 +132,7 @@ class IdentityOperator(AbstractOperator):
     # Dispatched call signatures
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
-    @op_call_dispatch
+    @op_call_dispatch(precedence=1)
     def __call__(self: "IdentityOperator", x: AbstractVector, /) -> AbstractVector:
         """Apply the Identity operation.
 

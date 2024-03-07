@@ -79,7 +79,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     >>> t = Quantity(1, "s")
     >>> newq, newt = op(q, t)
     >>> newq
-    Quantity['length'](Array([0.70710677, 0.70710677 , 0. ], dtype=float32), unit='m')
+    Quantity['length'](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')
 
     The time is not affected by the rotation.
 
@@ -111,7 +111,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     rotation: Shaped[Array, "3 3"] = eqx.field(
         converter=lambda x: (
-            x.rotation if isinstance(x, GalileanRotationOperator) else xp.asarray(x)
+            x.rotation if isinstance(x, GalileanRotationOperator) else jnp.asarray(x)
         )
     )
     """The rotation vector."""

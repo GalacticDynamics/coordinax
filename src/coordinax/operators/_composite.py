@@ -30,8 +30,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
     See Also
     --------
-    :class:`galax.coordinates.frame.OperatorSequence`
-    :class:`galax.coordinates.frame.GalileanOperator`
+    :class:`coordinax.operators.OperatorSequence`
+    :class:`coordinax.operators.GalileanOperator`
 
     """
 
