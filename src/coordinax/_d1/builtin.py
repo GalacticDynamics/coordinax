@@ -16,7 +16,7 @@ from typing import Any, final
 import equinox as eqx
 import jax
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from .base import Abstract1DVector, Abstract1DVectorDifferential

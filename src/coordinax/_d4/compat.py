@@ -6,7 +6,7 @@ __all__: list[str] = []
 from jaxtyping import Shaped
 from plum import conversion_method, convert
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from .spacetime import FourVector

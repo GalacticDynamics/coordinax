@@ -23,7 +23,7 @@
     "Typing :: Typed",
   ]
   dependencies = [
-    "array_api_jax_compat >= 0.1",
+    "quaxed >= 0.1",
     "astropy",
     "equinox",
     "jax",
@@ -134,7 +134,7 @@
     ignore_missing_imports = true
     module = [
       "array_api.*",
-      "array_api_jax_compat.*",
+      "quaxed.*",
       "astropy.*",
       "equinox.*",
       "hypothesis.*",
@@ -188,7 +188,7 @@
 
     [tool.ruff.lint.isort]
       combine-as-imports = true
-      known-first-party = ["array_api_jax_compat", "jax_quantity"]
+      known-first-party = ["quaxed", "jax_quantity"]
       known-local-folder = ["coordinax"]
 
 

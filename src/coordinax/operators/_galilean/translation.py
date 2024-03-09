@@ -11,7 +11,7 @@ import equinox as eqx
 import jax.numpy as jnp
 from plum import convert
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from .base import AbstractGalileanOperator
@@ -79,7 +79,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     --------
     We start with the required imports:
 
-    >>> import array_api_jax_compat as xp
+    >>> import quaxed.array_api as xp
     >>> from jax_quantity import Quantity
     >>> import coordinax as cx
 
@@ -324,7 +324,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
     --------
     We start with the required imports:
 
-    >>> import array_api_jax_compat as xp
+    >>> import quaxed.array_api as xp
     >>> from jax_quantity import Quantity
     >>> import coordinax.operators as co
 

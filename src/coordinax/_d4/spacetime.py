@@ -12,7 +12,7 @@ import jax
 import jax.numpy as jnp
 from jaxtyping import Shaped
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from .base import Abstract4DVector
