@@ -1,4 +1,4 @@
-"""Representation of coordinates in different systems."""
+"""Transformations between representations."""
 
 __all__ = ["represent_as"]
 
@@ -10,7 +10,7 @@ import astropy.units as u
 import jax
 from plum import dispatch
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from ._base import AbstractVector, AbstractVectorDifferential

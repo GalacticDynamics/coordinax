@@ -14,7 +14,7 @@ from typing import (
     runtime_checkable,
 )
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 
 if TYPE_CHECKING:
     from coordinax._base import AbstractVectorBase

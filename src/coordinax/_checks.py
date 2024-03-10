@@ -5,7 +5,7 @@ __all__: list[str] = []
 
 import equinox as eqx
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from coordinax._typing import BatchableAngle, BatchableLength

@@ -14,7 +14,7 @@ from jaxtyping import Array, Shaped
 from plum import convert
 from quax import quaxify
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from .base import AbstractGalileanOperator
@@ -145,7 +145,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import array_api_jax_compat as xp
+        >>> import quaxed.array_api as xp
         >>> from jax_quantity import Quantity
         >>> from coordinax.operators import GalileanRotationOperator
 
@@ -166,7 +166,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import array_api_jax_compat as xp
+        >>> import quaxed.array_api as xp
         >>> from jax_quantity import Quantity
         >>> from coordinax.operators import GalileanRotationOperator
 
@@ -194,7 +194,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import array_api_jax_compat as xp
+        >>> import quaxed.array_api as xp
         >>> from jax_quantity import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
         >>> from coordinax.operators import GalileanRotationOperator
@@ -226,7 +226,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import array_api_jax_compat as xp
+        >>> import quaxed.array_api as xp
         >>> from jax_quantity import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
         >>> from coordinax.operators import GalileanRotationOperator

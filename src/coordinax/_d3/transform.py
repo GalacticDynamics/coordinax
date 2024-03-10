@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 
 from .base import Abstract3DVector, Abstract3DVectorDifferential
 from .builtin import (

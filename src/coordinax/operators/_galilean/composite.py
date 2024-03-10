@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, final, overload
 
 import equinox as eqx
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from .base import AbstractGalileanOperator

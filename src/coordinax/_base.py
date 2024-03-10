@@ -20,7 +20,7 @@ from jax import Device
 from jaxtyping import ArrayLike
 from plum import dispatch
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from ._utils import classproperty, dataclass_items, dataclass_values, full_shaped

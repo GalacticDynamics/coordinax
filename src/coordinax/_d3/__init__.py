@@ -1,5 +1,5 @@
 # pylint: disable=duplicate-code
-"""3-dimensional."""
+"""3-dimensional representations."""
 
 from . import base, builtin, compat, operate, transform
 from .base import *

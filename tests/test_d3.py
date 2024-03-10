@@ -8,7 +8,7 @@ import pytest
 from astropy.coordinates.tests.test_representation import representation_equal
 from plum import convert
 
-import array_api_jax_compat as xp
+import quaxed.array_api as xp
 from jax_quantity import Quantity
 
 from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
