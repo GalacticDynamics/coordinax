@@ -1,4 +1,4 @@
-"""Representation of coordinates in different systems."""
+"""Transformations between representations."""
 
 __all__ = ["represent_as"]
 
