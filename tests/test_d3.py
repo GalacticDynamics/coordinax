@@ -9,10 +9,10 @@ from astropy.coordinates.tests.test_representation import representation_equal
 from plum import convert
 
 import quaxed.array_api as xp
+import quaxed.numpy as qnp
 from jax_quantity import Quantity
 
-from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest, array_equal
-from .test_d2 import hypot
+from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest
 from coordinax import (
     AbstractVector,
     Cartesian1DVector,
@@ -101,7 +101,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
-        assert array_equal(cart1d.x, Quantity([1, 2, 3, 4], u.kpc))
+        assert qnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], u.kpc))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_radial(self, vector):
@@ -109,7 +109,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
-        assert array_equal(
+        assert qnp.array_equal(
             radial.r, Quantity([10.34408, 11.83216, 13.379088, 14.96663], u.kpc)
         )
 
@@ -119,8 +119,8 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         cart2d = vector.represent_as(Cartesian2DVector, y=Quantity([5, 6, 7, 8], u.km))
 
         assert isinstance(cart2d, Cartesian2DVector)
-        assert array_equal(cart2d.x, Quantity([1, 2, 3, 4], u.kpc))
-        assert array_equal(cart2d.y, Quantity([5, 6, 7, 8], u.kpc))
+        assert qnp.array_equal(cart2d.x, Quantity([1, 2, 3, 4], u.kpc))
+        assert qnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], u.kpc))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_polar(self, vector):
@@ -128,8 +128,8 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         polar = vector.represent_as(PolarVector, phi=Quantity([0, 1, 2, 3], u.rad))
 
         assert isinstance(polar, PolarVector)
-        assert array_equal(polar.r, hypot(vector.x, vector.y))
-        assert array_equal(
+        assert qnp.array_equal(polar.r, qnp.hypot(vector.x, vector.y))
+        assert qnp.array_equal(
             polar.phi, Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], u.rad)
         )
 
@@ -166,10 +166,10 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         spherical = vector.represent_as(SphericalVector)
 
         assert isinstance(spherical, SphericalVector)
-        assert array_equal(
+        assert qnp.array_equal(
             spherical.r, Quantity([10.34408, 11.83216, 13.379088, 14.96663], u.kpc)
         )
-        assert array_equal(
+        assert qnp.array_equal(
             spherical.phi, Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], u.rad)
         )
         assert jnp.allclose(
@@ -191,12 +191,12 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         cylindrical = vector.represent_as(CylindricalVector)
 
         assert isinstance(cylindrical, CylindricalVector)
-        assert array_equal(cylindrical.rho, hypot(vector.x, vector.y))
-        assert array_equal(
+        assert qnp.array_equal(cylindrical.rho, qnp.hypot(vector.x, vector.y))
+        assert qnp.array_equal(
             cylindrical.phi,
             Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], u.rad),
         )
-        assert array_equal(cylindrical.z, Quantity([9.0, 10, 11, 12], u.kpc))
+        assert qnp.array_equal(cylindrical.z, Quantity([9.0, 10, 11, 12], u.kpc))
 
     def test_cartesian3d_to_cylindrical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
@@ -245,7 +245,7 @@ class TestSphericalVector(Abstract3DVectorTest):
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
-        assert array_equal(radial.r, Quantity([1, 2, 3, 4], u.kpc))
+        assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], u.kpc))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_cartesian2d(self, vector):
@@ -253,11 +253,11 @@ class TestSphericalVector(Abstract3DVectorTest):
         cart2d = vector.represent_as(Cartesian2DVector, y=Quantity([5, 6, 7, 8], u.km))
 
         assert isinstance(cart2d, Cartesian2DVector)
-        assert array_equal(
+        assert qnp.array_equal(
             cart2d.x,
             Quantity([0, 0.49681753, -1.3060151, -4.1700245e-15], u.kpc),
         )
-        assert array_equal(
+        assert qnp.array_equal(
             cart2d.y, Quantity([0.0, 1.0654287, 1.3060151, 3.4969111e-07], u.kpc)
         )
 
@@ -267,11 +267,11 @@ class TestSphericalVector(Abstract3DVectorTest):
         polar = vector.represent_as(PolarVector, phi=Quantity([0, 1, 2, 3], u.rad))
 
         assert isinstance(polar, PolarVector)
-        assert array_equal(
+        assert qnp.array_equal(
             polar.r,
             Quantity([0.0, 1.1755705, 1.8469844, -3.4969111e-07], u.kpc),
         )
-        assert array_equal(polar.phi, Quantity([0.0, 65.0, 135.0, 270.0], u.deg))
+        assert qnp.array_equal(polar.phi, Quantity([0.0, 65.0, 135.0, 270.0], u.deg))
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_spherical_to_lnpolar(self, vector):
@@ -288,13 +288,15 @@ class TestSphericalVector(Abstract3DVectorTest):
         cart3d = vector.represent_as(Cartesian3DVector)
 
         assert isinstance(cart3d, Cartesian3DVector)
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.x, Quantity([0, 0.49681753, -1.3060151, -4.1700245e-15], u.kpc)
         )
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.y, Quantity([0.0, 1.0654287, 1.3060151, 3.4969111e-07], u.kpc)
         )
-        assert array_equal(cart3d.z, Quantity([1.0, 1.618034, -2.3640323, -4.0], u.kpc))
+        assert qnp.array_equal(
+            cart3d.z, Quantity([1.0, 1.618034, -2.3640323, -4.0], u.kpc)
+        )
 
     def test_spherical_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
@@ -331,12 +333,14 @@ class TestSphericalVector(Abstract3DVectorTest):
         )
 
         assert isinstance(cylindrical, CylindricalVector)
-        assert array_equal(
+        assert qnp.array_equal(
             cylindrical.rho,
             Quantity([0.0, 1.1755705, 1.8469844, 3.4969111e-07], u.kpc),
         )
-        assert array_equal(cylindrical.phi, Quantity([0.0, 65.0, 135.0, 270.0], u.deg))
-        assert array_equal(
+        assert qnp.array_equal(
+            cylindrical.phi, Quantity([0.0, 65.0, 135.0, 270.0], u.deg)
+        )
+        assert qnp.array_equal(
             cylindrical.z, Quantity([1.0, 1.618034, -2.3640323, -4.0], u.kpc)
         )
 
@@ -390,7 +394,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
         radial = vector.represent_as(RadialVector)
 
         assert isinstance(radial, RadialVector)
-        assert array_equal(radial.r, Quantity([1, 2, 3, 4], u.kpc))
+        assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], u.kpc))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_cartesian2d(self, vector):
@@ -398,10 +402,10 @@ class TestCylindricalVector(Abstract3DVectorTest):
         cart2d = vector.represent_as(Cartesian2DVector)
 
         assert isinstance(cart2d, Cartesian2DVector)
-        assert array_equal(
+        assert qnp.array_equal(
             cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], u.kpc)
         )
-        assert array_equal(
+        assert qnp.array_equal(
             cart2d.y, Quantity([0.0, 1.6829419, 2.7278922, 0.56448], u.kpc)
         )
 
@@ -411,8 +415,8 @@ class TestCylindricalVector(Abstract3DVectorTest):
         polar = vector.represent_as(PolarVector)
 
         assert isinstance(polar, PolarVector)
-        assert array_equal(polar.r, Quantity([1, 2, 3, 4], u.kpc))
-        assert array_equal(polar.phi, Quantity([0, 1, 2, 3], u.rad))
+        assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], u.kpc))
+        assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], u.rad))
 
     # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     # def test_cylindrical_to_lnpolar(self, vector):
@@ -429,13 +433,13 @@ class TestCylindricalVector(Abstract3DVectorTest):
         cart3d = vector.represent_as(Cartesian3DVector)
 
         assert isinstance(cart3d, Cartesian3DVector)
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], u.kpc)
         )
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.y, Quantity([0.0, 1.6829419, 2.7278922, 0.56448], u.kpc)
         )
-        assert array_equal(cart3d.z, vector.z)
+        assert qnp.array_equal(cart3d.z, vector.z)
 
     def test_cylindrical_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
@@ -451,9 +455,9 @@ class TestCylindricalVector(Abstract3DVectorTest):
         spherical = vector.represent_as(SphericalVector)
 
         assert isinstance(spherical, SphericalVector)
-        assert array_equal(spherical.r, Quantity([1, 2, 3, 4], u.kpc))
-        assert array_equal(spherical.phi, Quantity([0, 1, 2, 3], u.rad))
-        assert array_equal(spherical.theta, Quantity(xp.full(4, xp.pi / 2), u.rad))
+        assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], u.kpc))
+        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], u.rad))
+        assert qnp.array_equal(spherical.theta, Quantity(xp.full(4, xp.pi / 2), u.rad))
 
     def test_cylindrical_to_spherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
@@ -536,7 +540,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         cart1d = difntl.represent_as(CartesianDifferential1D, vector)
 
         assert isinstance(cart1d, CartesianDifferential1D)
-        assert array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -545,7 +549,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         radial = difntl.represent_as(RadialVector, vector)
 
         assert isinstance(radial, RadialVector)
-        assert array_equal(radial.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -554,8 +558,8 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         cart2d = difntl.represent_as(CartesianDifferential2D, vector)
 
         assert isinstance(cart2d, CartesianDifferential2D)
-        assert array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
-        assert array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], u.km / u.s))
+        assert qnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -564,8 +568,8 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         polar = difntl.represent_as(PolarVector, vector)
 
         assert isinstance(polar, PolarVector)
-        assert array_equal(polar.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
-        assert array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
+        assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
 
     def test_cartesian3d_to_cartesian3d(self, difntl, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""
@@ -631,14 +635,14 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         cylindrical = difntl.represent_as(CylindricalDifferential, vector)
 
         assert isinstance(cylindrical, CylindricalDifferential)
-        assert array_equal(
+        assert qnp.array_equal(
             cylindrical.d_rho,
             Quantity([5.0990195, 6.324555, 7.6157727, 8.944272], u.km / u.s),
         )
         assert jnp.allclose(
             cylindrical.d_phi.to_value(u.mas / u.Myr), xp.asarray([0, 0, 0.00471509, 0])
         )
-        assert array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], u.km / u.s))
+        assert qnp.array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], u.km / u.s))
 
     def test_cartesian3d_to_cylindrical_astropy(
         self, difntl, vector, apydifntl, apyvector
@@ -694,7 +698,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         cart1d = difntl.represent_as(CartesianDifferential1D, vector)
 
         assert isinstance(cart1d, CartesianDifferential1D)
-        assert array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -703,7 +707,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         radial = difntl.represent_as(RadialVector, vector)
 
         assert isinstance(radial, RadialVector)
-        assert array_equal(radial.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -712,8 +716,8 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         cart2d = difntl.represent_as(CartesianDifferential2D, vector)
 
         assert isinstance(cart2d, CartesianDifferential2D)
-        assert array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
-        assert array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], u.km / u.s))
+        assert qnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -722,23 +726,23 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         polar = difntl.represent_as(PolarVector, vector)
 
         assert isinstance(polar, PolarVector)
-        assert array_equal(polar.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
-        assert array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
+        assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
 
     def test_spherical_to_cartesian3d(self, difntl, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = difntl.represent_as(CartesianDifferential3D, vector)
 
         assert isinstance(cart3d, CartesianDifferential3D)
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.d_x,
             Quantity([42.658096, -0.6040496, -36.867138, 1.323785], u.km / u.s),
         )
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.d_y,
             Quantity([1.2404853, 67.66016, -92.52022, 227.499], u.km / u.s),
         )
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.d_z,
             Quantity([-1.2342439, -83.56782, -156.43553, -5.985529], u.km / u.s),
         )
@@ -777,12 +781,12 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         cylindrical = difntl.represent_as(CylindricalDifferential, vector)
 
         assert isinstance(cylindrical, CylindricalDifferential)
-        assert array_equal(
+        assert qnp.array_equal(
             cylindrical.d_rho,
             Quantity([42.658096, 44.824585, 2.999993, -227.499], u.km / u.s),
         )
-        assert array_equal(cylindrical.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
-        assert array_equal(
+        assert qnp.array_equal(cylindrical.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
+        assert qnp.array_equal(
             cylindrical.d_z,
             Quantity([-1.2342439, -83.56782, -156.43553, -5.985529], u.km / u.s),
         )
@@ -838,7 +842,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         cart1d = difntl.represent_as(CartesianDifferential1D, vector)
 
         assert isinstance(cart1d, CartesianDifferential1D)
-        assert array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -847,7 +851,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         radial = difntl.represent_as(RadialVector, vector)
 
         assert isinstance(radial, RadialVector)
-        assert array_equal(radial.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -856,8 +860,8 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         cart2d = difntl.represent_as(CartesianDifferential2D, vector)
 
         assert isinstance(cart2d, CartesianDifferential2D)
-        assert array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
-        assert array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], u.km / u.s))
+        assert qnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], u.km / u.s))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -866,22 +870,22 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         polar = difntl.represent_as(PolarVector, vector)
 
         assert isinstance(polar, PolarVector)
-        assert array_equal(polar.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
-        assert array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
+        assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], u.km / u.s))
+        assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
 
     def test_cylindrical_to_cartesian3d(self, difntl, vector, apydifntl, apyvector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = difntl.represent_as(CartesianDifferential3D, vector)
 
         assert isinstance(cart3d, CartesianDifferential3D)
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.d_x, Quantity([1.0, -46.787014, -91.76889, -25.367176], u.km / u.s)
         )
-        assert array_equal(
+        assert qnp.array_equal(
             cart3d.d_y,
             Quantity([23.702353, 32.418385, -38.69947, -149.61249], u.km / u.s),
         )
-        assert array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], u.km / u.s))
+        assert qnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], u.km / u.s))
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
         assert np.allclose(convert(cart3d.d_x, u.Quantity), apycart3.d_x)
@@ -893,11 +897,11 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         spherical = difntl.represent_as(SphericalDifferential, vector)
 
         assert isinstance(spherical, SphericalDifferential)
-        assert array_equal(
+        assert qnp.array_equal(
             spherical.d_r,
             Quantity([9.055385, 10.198039, 11.401753, 12.64911], u.km / u.s),
         )
-        assert array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
+        assert qnp.array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], u.mas / u.yr))
         assert jnp.allclose(
             spherical.d_theta.to_value(u.mas / u.Myr),
             xp.asarray([-0.08428223, 0.07544143, -0.0326127, -0.01571696]),
