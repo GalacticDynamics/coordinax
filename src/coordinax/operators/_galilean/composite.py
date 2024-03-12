@@ -180,12 +180,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         return (self.rotation, self.translation, self.velocity)
 
     @overload
-    def __getitem__(self, key: int) -> AbstractOperator:
-        ...
+    def __getitem__(self, key: int) -> AbstractOperator: ...
 
     @overload
-    def __getitem__(self, key: slice) -> "Self":
-        ...
+    def __getitem__(self, key: slice) -> "Self": ...
 
     def __getitem__(self, key: int | slice) -> "AbstractOperator | Self":
         if isinstance(key, int):
