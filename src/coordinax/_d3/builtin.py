@@ -19,7 +19,7 @@ import equinox as eqx
 import jax
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import Abstract3DVector, Abstract3DVectorDifferential
 from coordinax._base import AbstractVector
@@ -68,7 +68,7 @@ class Cartesian3DVector(Abstract3DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> (-q).x
@@ -85,7 +85,7 @@ class Cartesian3DVector(Abstract3DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
@@ -106,7 +106,7 @@ class Cartesian3DVector(Abstract3DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
@@ -128,7 +128,7 @@ class Cartesian3DVector(Abstract3DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
         >>> q.norm()
@@ -174,7 +174,7 @@ class SphericalVector(Abstract3DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import SphericalVector
         >>> s = SphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
@@ -220,7 +220,7 @@ class CylindricalVector(Abstract3DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import CylindricalVector
         >>> c = CylindricalVector(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
         ...                       z=Quantity(4, "kpc"))
@@ -265,7 +265,7 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import CartesianDifferential3D
         >>> c = CartesianDifferential3D(d_x=Quantity(1, "km/s"),
         ...                              d_y=Quantity(2, "km/s"),

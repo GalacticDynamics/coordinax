@@ -6,7 +6,7 @@ __all__: list[str] = []
 from jaxtyping import Shaped
 from plum import convert
 
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .spacetime import FourVector
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
@@ -18,7 +18,7 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
 
     Examples
     --------
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     We can then create a spatial translation operator:
@@ -52,7 +52,7 @@ def call(
 
     Examples
     --------
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     We can then create a spatial translation operator:

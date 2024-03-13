@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 import equinox as eqx
 from plum import dispatch
 
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from coordinax._base import AbstractVector
 from coordinax._utils import dataclass_items

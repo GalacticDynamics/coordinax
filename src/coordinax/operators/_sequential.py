@@ -38,7 +38,7 @@ class OperatorSequence(AbstractCompositeOperator):
 
     Examples
     --------
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax.operators as co
 
     >>> shift = co.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))

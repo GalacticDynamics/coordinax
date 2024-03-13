@@ -6,7 +6,7 @@ import astropy.units as u
 import jax
 import pytest
 
-from jax_quantity import Quantity
+from unxt import Quantity
 
 import coordinax as cx
 from coordinax._base import VECTOR_CLASSES

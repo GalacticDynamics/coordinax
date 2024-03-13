@@ -9,7 +9,7 @@ from jaxtyping import Shaped
 from plum import conversion_method, convert
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import Abstract3DVector
 from .builtin import (
@@ -162,7 +162,7 @@ def constructor(
 
 @conversion_method(type_from=Abstract3DVector, type_to=Quantity)  # type: ignore[misc]
 def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]:
-    """`coordinax.Abstract3DVector` -> `jax_quantity.Quantity`."""
+    """`coordinax.Abstract3DVector` -> `unxt.Quantity`."""
     cart = full_shaped(obj.represent_as(Cartesian3DVector))
     return xp.stack(tuple(dataclass_values(cart)), axis=-1)
 
@@ -171,7 +171,7 @@ def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]
 def vec_diff_to_q(
     obj: CartesianDifferential3D, /
 ) -> Shaped[Quantity["speed"], "*batch 3"]:
-    """`coordinax.CartesianDifferential3D` -> `jax_quantity.Quantity`."""
+    """`coordinax.CartesianDifferential3D` -> `unxt.Quantity`."""
     return xp.stack(tuple(dataclass_values(full_shaped(obj))), axis=-1)
 
 

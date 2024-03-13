@@ -29,7 +29,7 @@
     "jax",
     "jaxlib",
     "jaxtyping",
-    "jax_quantity @ git+https://github.com/GalacticDynamics/jax-quantity.git",
+    "unxt @ git+https://github.com/GalacticDynamics/unxt.git",
     "quax>=0.0.3",
   ]
   description = "Vectors in JAX"
@@ -188,7 +188,7 @@
 
     [tool.ruff.lint.isort]
       combine-as-imports = true
-      known-first-party = ["quaxed", "jax_quantity"]
+      known-first-party = ["quaxed", "unxt"]
       known-local-folder = ["coordinax"]
 
 

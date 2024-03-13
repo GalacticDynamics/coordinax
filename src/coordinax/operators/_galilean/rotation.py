@@ -15,7 +15,7 @@ from plum import convert
 
 import quaxed.array_api as xp
 import quaxed.numpy as qnp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from coordinax._d3.base import Abstract3DVector
@@ -71,7 +71,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     We start with the required imports:
 
     >>> import jax.numpy as jnp
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax.operators as co
 
     We can then create a rotation operator:
@@ -146,7 +146,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.array_api as xp
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
@@ -167,7 +167,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.array_api as xp
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
@@ -195,7 +195,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.array_api as xp
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
         >>> from coordinax.operators import GalileanRotationOperator
 
@@ -227,7 +227,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.array_api as xp
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
         >>> from coordinax.operators import GalileanRotationOperator
 

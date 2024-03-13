@@ -4,7 +4,7 @@ import astropy.units as u
 import pytest
 
 import quaxed.numpy as qnp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest
 from coordinax import (

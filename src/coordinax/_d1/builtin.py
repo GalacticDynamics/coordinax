@@ -17,7 +17,7 @@ import equinox as eqx
 import jax
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import Abstract1DVector, Abstract1DVectorDifferential
 from coordinax._base import AbstractVector
@@ -51,7 +51,7 @@ class Cartesian1DVector(Abstract1DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
         >>> -q
@@ -70,7 +70,7 @@ class Cartesian1DVector(Abstract1DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector, RadialVector
 
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
@@ -96,7 +96,7 @@ class Cartesian1DVector(Abstract1DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector, RadialVector
 
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
@@ -123,7 +123,7 @@ class Cartesian1DVector(Abstract1DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector, RadialVector
 
         >>> q = Cartesian1DVector.constructor(Quantity([-1], "kpc"))
@@ -175,7 +175,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import CartesianDifferential1D
         >>> q = CartesianDifferential1D.constructor(Quantity([-1], "km/s"))
         >>> q.norm()

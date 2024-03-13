@@ -8,7 +8,7 @@ from dataclasses import fields
 
 from jaxtyping import Shaped
 
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from coordinax._base import (
     AbstractVector,
@@ -44,7 +44,7 @@ def constructor(
 
     Examples
     --------
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> from coordinax import Cartesian1DVector
 
     >>> q = Cartesian1DVector.constructor(Quantity(1, "kpc"))

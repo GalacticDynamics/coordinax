@@ -13,7 +13,7 @@ def simplify_op(op: AbstractOperator, /) -> AbstractOperator:
 
     Examples
     --------
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax.operators as co
 
     An operator with real effect cannot be simplified:
