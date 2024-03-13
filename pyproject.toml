@@ -23,14 +23,14 @@
     "Typing :: Typed",
   ]
   dependencies = [
-    "quaxed >= 0.3",
     "astropy",
     "equinox",
     "jax",
     "jaxlib",
     "jaxtyping",
-    "unxt @ git+https://github.com/GalacticDynamics/unxt.git",
     "quax>=0.0.3",
+    "quaxed >= 0.3",
+    "unxt >= 0.4",
   ]
   description = "Vectors in JAX"
   dynamic = ["version"]
