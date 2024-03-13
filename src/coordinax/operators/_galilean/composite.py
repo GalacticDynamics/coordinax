@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, final, overload
 import equinox as eqx
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from .boost import GalileanBoostOperator
@@ -55,7 +55,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     --------
     We start with the required imports:
 
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     We can then create a Galilean operator:
@@ -119,7 +119,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
 
     Also the Galilean operators can also be applied to
-    :class:`vector.Abstract3DVector` and :class:`jax_quantity.Quantity`:
+    :class:`vector.Abstract3DVector` and :class:`unxt.Quantity`:
 
     >>> q = cx.Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
     >>> t = Quantity(0, "Gyr")

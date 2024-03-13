@@ -11,7 +11,7 @@ import jax
 from plum import dispatch
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from ._base import AbstractVector, AbstractVectorDifferential
 from ._d1.base import Abstract1DVectorDifferential

@@ -12,7 +12,7 @@ import jax.numpy as jnp
 from plum import convert
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from coordinax._base import AbstractVector
@@ -80,7 +80,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     We start with the required imports:
 
     >>> import quaxed.array_api as xp
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     We can then create a spatial translation operator:
@@ -109,7 +109,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Cartesian3DVector( ... )
 
-    And to :class:`~jax_quantity.Quantity`:
+    And to :class:`~unxt.Quantity`:
 
     >>> q = Quantity([0, 0, 0], "kpc")
     >>> op(q).value.round(2)
@@ -184,7 +184,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
@@ -203,7 +203,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
@@ -229,7 +229,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
@@ -256,7 +256,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
@@ -325,7 +325,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
     We start with the required imports:
 
     >>> import quaxed.array_api as xp
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax.operators as co
 
     We can then create a translation operator:
@@ -362,7 +362,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
       q=Cartesian3DVector( ... )
     )
 
-    Also to :class:`vector.Abstract3DVector` and :class:`jax_quantity.Quantity`:
+    Also to :class:`vector.Abstract3DVector` and :class:`unxt.Quantity`:
 
     >>> q = Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
     >>> t = Quantity(0, "Gyr")
@@ -390,7 +390,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector
         >>> from coordinax.operators import GalileanTranslationOperator
 
@@ -409,7 +409,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, FourVector
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
@@ -435,7 +435,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, FourVector
         >>> from coordinax.operators import GalileanTranslationOperator
 
@@ -473,7 +473,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, FourVector
         >>> from coordinax.operators import GalileanTranslationOperator
 

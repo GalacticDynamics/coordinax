@@ -8,7 +8,7 @@ from typing import TypeAlias
 from jaxtyping import Shaped
 from plum import convert
 
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .builtin import Cartesian2DVector
 from coordinax._typing import TimeBatchOrScalar

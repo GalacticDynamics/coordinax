@@ -6,7 +6,7 @@ from typing import Literal, final
 
 from jaxtyping import Shaped
 
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
 from coordinax._base import AbstractVector
@@ -25,7 +25,7 @@ class IdentityOperator(AbstractOperator):
 
     First, we make an instance of the operator:
 
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> op = cx.operators.IdentityOperator()
@@ -96,7 +96,7 @@ class IdentityOperator(AbstractOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> from coordinax.operators import IdentityOperator
 
@@ -115,7 +115,7 @@ class IdentityOperator(AbstractOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> from coordinax.operators import IdentityOperator
 
@@ -140,7 +140,7 @@ class IdentityOperator(AbstractOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
         >>> from coordinax.operators import IdentityOperator
 
@@ -162,7 +162,7 @@ class IdentityOperator(AbstractOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax.operators import IdentityOperator
 
         >>> q = Quantity([1, 2, 3], "kpc")

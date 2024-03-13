@@ -13,7 +13,7 @@ import jax.numpy as jnp
 from jaxtyping import Shaped
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import Abstract4DVector
 from coordinax._base import AbstractVectorBase
@@ -47,7 +47,7 @@ class FourVector(Abstract4DVector):
 
     Examples
     --------
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> from coordinax import FourVector, Cartesian3DVector
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
@@ -126,7 +126,7 @@ class FourVector(Abstract4DVector):
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector
 
         >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
@@ -165,7 +165,7 @@ class FourVector(Abstract4DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
@@ -197,7 +197,7 @@ class FourVector(Abstract4DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
@@ -218,7 +218,7 @@ class FourVector(Abstract4DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
@@ -247,7 +247,7 @@ class FourVector(Abstract4DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
@@ -279,7 +279,7 @@ class FourVector(Abstract4DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
@@ -295,7 +295,7 @@ class FourVector(Abstract4DVector):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import FourVector, Cartesian3DVector
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))

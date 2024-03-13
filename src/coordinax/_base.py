@@ -21,7 +21,7 @@ from jaxtyping import ArrayLike
 from plum import dispatch
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from ._utils import classproperty, dataclass_items, dataclass_values, full_shaped
 from coordinax._typing import Unit
@@ -83,7 +83,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
 
         >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
@@ -127,7 +127,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
 
         >>> xs = Quantity([1, 2, 3], "meter")
@@ -183,7 +183,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian2DVector
 
         We can slice a vector:
@@ -205,7 +205,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
 
         We can transpose a vector:
@@ -228,7 +228,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector
 
         We can get the number of dimensions of a vector:
@@ -265,7 +265,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector
 
         We can get the shape of a vector:
@@ -299,7 +299,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector
 
         We can get the size of a vector:
@@ -333,7 +333,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
 
         We can transpose a vector:
@@ -366,7 +366,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from jax import devices
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian1DVector
 
         We can move a vector to a new device:
@@ -392,7 +392,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian2DVector
 
         We can flatten a vector:
@@ -427,7 +427,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian2DVector
 
         We can reshape a vector:
@@ -477,7 +477,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian2DVector
 
         We can get the vector as a mapping:
@@ -568,7 +568,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian2DVector, SphericalVector
 
         We can convert a vector to the given units:
@@ -642,7 +642,7 @@ def constructor(  # noqa: D417
     Examples
     --------
     >>> import jax.numpy as jnp
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> from coordinax import Cartesian3DVector
 
     >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
@@ -808,7 +808,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
         --------
         We assume the following imports:
 
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, SphericalVector
 
         We can represent a vector as another type:
@@ -845,7 +845,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
         Examples
         --------
         We assume the following imports:
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector
 
         We can compute the norm of a vector
@@ -898,7 +898,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import RadialDifferential
         >>> dr = RadialDifferential(Quantity(1, "m/s"))
         >>> -dr
@@ -922,11 +922,11 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
     def __mul__(
         self: "AbstractVectorDifferential", other: Quantity
     ) -> "AbstractVector":
-        """Multiply the vector by a :class:`jax_quantity.Quantity`.
+        """Multiply the vector by a :class:`unxt.Quantity`.
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import RadialDifferential
 
         >>> dr = RadialDifferential(Quantity(1, "m/s"))

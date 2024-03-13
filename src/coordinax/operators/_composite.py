@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
 from coordinax._base import AbstractVector

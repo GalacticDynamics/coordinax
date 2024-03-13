@@ -12,7 +12,7 @@ import jax.numpy as jnp
 from plum import convert
 
 import quaxed.array_api as xp
-from jax_quantity import Quantity
+from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from coordinax._d3.base import Abstract3DVector
@@ -48,7 +48,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
     We start with the required imports:
 
     >>> import quaxed.array_api as xp
-    >>> from jax_quantity import Quantity
+    >>> from unxt import Quantity
     >>> from coordinax import CartesianDifferential3D, Cartesian3DVector
     >>> import coordinax.operators as co
 
@@ -89,7 +89,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
         >>> from coordinax.operators import GalileanBoostOperator
 
@@ -106,7 +106,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
         >>> from coordinax.operators import GalileanBoostOperator
 
@@ -130,7 +130,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> from jax_quantity import Quantity
+        >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
         >>> from coordinax.operators import GalileanBoostOperator
 
