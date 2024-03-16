@@ -30,7 +30,7 @@
     "jaxtyping",
     "quax>=0.0.3",
     "quaxed >= 0.3",
-    "unxt >= 0.5",
+    "unxt >= 0.6",
   ]
   description = "Vectors in JAX"
   dynamic = ["version"]
