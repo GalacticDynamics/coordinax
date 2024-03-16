@@ -12,9 +12,9 @@ import equinox as eqx
 import jax.numpy as jnp
 from jaxtyping import Array, Shaped
 from plum import convert
+from quax import quaxify
 
 import quaxed.array_api as xp
-import quaxed.numpy as qnp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
@@ -24,7 +24,7 @@ from coordinax.operators._base import AbstractOperator, op_call_dispatch
 from coordinax.operators._funcs import simplify_op
 from coordinax.operators._identity import IdentityOperator
 
-vec_matmul = qnp.vectorize(jnp.matmul, signature="(3,3),(3)->(3)")
+vec_matmul = quaxify(jnp.vectorize(jnp.matmul, signature="(3,3),(3)->(3)"))
 
 
 def converter(x: Any) -> Array:
