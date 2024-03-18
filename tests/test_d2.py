@@ -1,7 +1,6 @@
 """Test :mod:`coordinax._d2`."""
 
 import astropy.units as u
-import jax.numpy as jnp
 import pytest
 
 import quaxed.array_api as xp
@@ -83,7 +82,7 @@ class TestCartesian2DVector:
 
         assert isinstance(polar, PolarVector)
         assert qnp.array_equal(polar.r, qnp.hypot(vector.x, vector.y))
-        assert jnp.allclose(
+        assert qnp.allclose(
             polar.phi.value,
             xp.asarray([1.3734008, 1.2490457, 1.1659045, 1.1071488]),
         )
@@ -115,7 +114,7 @@ class TestCartesian2DVector:
 
         assert isinstance(spherical, SphericalVector)
         assert qnp.array_equal(spherical.r, qnp.hypot(vector.x, vector.y))
-        assert jnp.allclose(
+        assert qnp.allclose(
             spherical.phi.to_value(u.rad),
             xp.asarray([1.3734008, 1.2490457, 1.1659045, 1.1071488]),
         )
@@ -159,7 +158,7 @@ class TestPolarVector:
         cart1d = vector.represent_as(Cartesian1DVector)
 
         assert isinstance(cart1d, Cartesian1DVector)
-        assert jnp.allclose(
+        assert qnp.allclose(
             cart1d.x.to_value(u.kpc), xp.asarray([1.0, 1.0806047, -1.2484405, -3.95997])
         )
         assert qnp.array_equal(cart1d.x, vector.r * xp.cos(vector.phi))
@@ -180,11 +179,11 @@ class TestPolarVector:
         assert qnp.array_equal(
             cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], u.kpc)
         )
-        assert jnp.allclose(cart2d.x.value, (vector.r * xp.cos(vector.phi)).value)
+        assert qnp.allclose(cart2d.x.value, (vector.r * xp.cos(vector.phi)).value)
         assert qnp.array_equal(
             cart2d.y, Quantity([0.0, 1.6829419, 2.7278922, 0.56448], u.kpc)
         )
-        assert jnp.allclose(cart2d.y.value, (vector.r * xp.sin(vector.phi)).value)
+        assert qnp.allclose(cart2d.y.value, (vector.r * xp.sin(vector.phi)).value)
 
     def test_polar_to_polar(self, vector):
         """Test ``coordinax.represent_as(PolarVector)``."""
