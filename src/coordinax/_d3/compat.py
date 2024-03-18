@@ -6,7 +6,7 @@ __all__: list[str] = []
 import astropy.coordinates as apyc
 import astropy.units as apyu
 from jaxtyping import Shaped
-from plum import conversion_method, convert
+from plum import add_conversion_method, conversion_method, convert
 
 import quaxed.array_api as xp
 from unxt import Quantity
@@ -162,14 +162,14 @@ def constructor(
 # Quantity
 
 
-@conversion_method(type_from=Abstract3DVector, type_to=Quantity)  # type: ignore[misc]
+@conversion_method(Abstract3DVector, Quantity)  # type: ignore[misc]
 def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]:
     """`coordinax.Abstract3DVector` -> `unxt.Quantity`."""
     cart = full_shaped(obj.represent_as(Cartesian3DVector))
     return xp.stack(tuple(dataclass_values(cart)), axis=-1)
 
 
-@conversion_method(type_from=CartesianDifferential3D, type_to=Quantity)  # type: ignore[misc]
+@conversion_method(CartesianDifferential3D, Quantity)  # type: ignore[misc]
 def vec_diff_to_q(
     obj: CartesianDifferential3D, /
 ) -> Shaped[Quantity["speed"], "*batch 3"]:
@@ -185,7 +185,8 @@ def vec_diff_to_q(
 # Cartesian3DVector
 
 
-@conversion_method(type_from=Cartesian3DVector, type_to=apyc.CartesianRepresentation)  # type: ignore[misc]
+# @conversion_method(Cartesian3DVector, apyc.BaseRepresentation)
+# @conversion_method(Cartesian3DVector, apyc.CartesianRepresentation)
 def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation:
     """`coordinax.Cartesian3DVector` -> `astropy.CartesianRepresentation`."""
     return apyc.CartesianRepresentation(
@@ -195,7 +196,14 @@ def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation
     )
 
 
-@conversion_method(type_from=apyc.CartesianRepresentation, type_to=Cartesian3DVector)  # type: ignore[misc]
+# TODO: use decorator when https://github.com/beartype/plum/pull/135
+add_conversion_method(Cartesian3DVector, apyc.BaseRepresentation, cart3_to_apycart3)
+add_conversion_method(
+    Cartesian3DVector, apyc.CartesianRepresentation, cart3_to_apycart3
+)
+
+
+@conversion_method(apyc.CartesianRepresentation, Cartesian3DVector)  # type: ignore[misc]
 def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector:
     """`astropy.CartesianRepresentation` -> `coordinax.Cartesian3DVector`."""
     return Cartesian3DVector.constructor(obj)
@@ -205,10 +213,10 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector
 # SphericalVector
 
 
-@conversion_method(
-    type_from=SphericalVector,
-    type_to=apyc.PhysicsSphericalRepresentation,  # type: ignore[misc]
-)
+# @conversion_method(SphericalVector, apyc.BaseRepresentation)
+# @conversion_method(
+#     SphericalVector, apyc.PhysicsSphericalRepresentation
+# )
 def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentation:
     """`coordinax.SphericalVector` -> `astropy.PhysicsSphericalRepresentation`."""
     return apyc.PhysicsSphericalRepresentation(
@@ -218,10 +226,14 @@ def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentatio
     )
 
 
-@conversion_method(
-    type_from=apyc.PhysicsSphericalRepresentation,
-    type_to=SphericalVector,  # type: ignore[misc]
+# TODO: use decorator when https://github.com/beartype/plum/pull/135
+add_conversion_method(SphericalVector, apyc.BaseRepresentation, sph_to_apysph)
+add_conversion_method(
+    SphericalVector, apyc.PhysicsSphericalRepresentation, sph_to_apysph
 )
+
+
+@conversion_method(apyc.PhysicsSphericalRepresentation, SphericalVector)  # type: ignore[misc]
 def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVector:
     """`astropy.PhysicsSphericalRepresentation` -> `coordinax.SphericalVector`."""
     return SphericalVector.constructor(obj)
@@ -231,7 +243,8 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVecto
 # CylindricalVector
 
 
-@conversion_method(type_from=CylindricalVector, type_to=apyc.CylindricalRepresentation)  # type: ignore[misc]
+# @conversion_method(CylindricalVector, apyc.BaseRepresentation)
+# @conversion_method(CylindricalVector, apyc.CylindricalRepresentation)
 def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
     """`coordinax.CylindricalVector` -> `astropy.CylindricalRepresentation`."""
     return apyc.CylindricalRepresentation(
@@ -241,7 +254,12 @@ def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
     )
 
 
-@conversion_method(type_from=apyc.CylindricalRepresentation, type_to=CylindricalVector)  # type: ignore[misc]
+# TODO: use decorator when https://github.com/beartype/plum/pull/135
+add_conversion_method(CylindricalVector, apyc.BaseRepresentation, cyl_to_apycyl)
+add_conversion_method(CylindricalVector, apyc.CylindricalRepresentation, cyl_to_apycyl)
+
+
+@conversion_method(apyc.CylindricalRepresentation, CylindricalVector)  # type: ignore[misc]
 def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
     """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalVector`."""
     return CylindricalVector.constructor(obj)
@@ -251,9 +269,10 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
 # CartesianDifferential3D
 
 
-@conversion_method(  # type: ignore[misc]
-    type_from=CartesianDifferential3D, type_to=apyc.CartesianDifferential
-)
+# @conversion_method(CartesianDifferential3D, apyc.BaseDifferential)
+# @conversion_method(
+#     CartesianDifferential3D, apyc.CartesianDifferential
+# )
 def diffcart3_to_apycart3(
     obj: CartesianDifferential3D, /
 ) -> apyc.CartesianDifferential:
@@ -265,8 +284,17 @@ def diffcart3_to_apycart3(
     )
 
 
+# TODO: use decorator when https://github.com/beartype/plum/pull/135
+add_conversion_method(
+    CartesianDifferential3D, apyc.BaseDifferential, diffcart3_to_apycart3
+)
+add_conversion_method(
+    CartesianDifferential3D, apyc.CartesianDifferential, diffcart3_to_apycart3
+)
+
+
 @conversion_method(  # type: ignore[misc]
-    type_from=apyc.CartesianDifferential, type_to=CartesianDifferential3D
+    apyc.CartesianDifferential, CartesianDifferential3D
 )
 def apycart3_to_diffcart3(
     obj: apyc.CartesianDifferential, /
@@ -279,10 +307,10 @@ def apycart3_to_diffcart3(
 # SphericalDifferential
 
 
-@conversion_method(  # type: ignore[misc]
-    type_from=SphericalDifferential,
-    type_to=apyc.PhysicsSphericalDifferential,
-)
+# @conversion_method(SphericalDifferential, apyc.BaseDifferential)
+# @conversion_method(
+#     SphericalDifferential, apyc.PhysicsSphericalDifferential
+# )
 def diffsph_to_apysph(
     obj: SphericalDifferential, /
 ) -> apyc.PhysicsSphericalDifferential:
@@ -294,9 +322,15 @@ def diffsph_to_apysph(
     )
 
 
+# TODO: use decorator when https://github.com/beartype/plum/pull/135
+add_conversion_method(SphericalDifferential, apyc.BaseDifferential, diffsph_to_apysph)
+add_conversion_method(
+    SphericalDifferential, apyc.PhysicsSphericalDifferential, diffsph_to_apysph
+)
+
+
 @conversion_method(  # type: ignore[misc]
-    type_from=apyc.PhysicsSphericalDifferential,
-    type_to=SphericalDifferential,
+    apyc.PhysicsSphericalDifferential, SphericalDifferential
 )
 def apysph_to_diffsph(
     obj: apyc.PhysicsSphericalDifferential, /
@@ -309,9 +343,10 @@ def apysph_to_diffsph(
 # CylindricalDifferential
 
 
-@conversion_method(  # type: ignore[misc]
-    type_from=CylindricalDifferential, type_to=apyc.CylindricalDifferential
-)
+# @conversion_method(CylindricalDifferential, apyc.BaseDifferential)
+# @conversion_method(
+#     CylindricalDifferential, apyc.CylindricalDifferential
+# )
 def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDifferential:
     """`coordinax.CylindricalDifferential` -> `astropy.CylindricalDifferential`."""
     return apyc.CylindricalDifferential(
@@ -321,8 +356,15 @@ def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDiffer
     )
 
 
+# TODO: use decorator when https://github.com/beartype/plum/pull/135
+add_conversion_method(CylindricalDifferential, apyc.BaseDifferential, diffcyl_to_apycyl)
+add_conversion_method(
+    CylindricalDifferential, apyc.CylindricalDifferential, diffcyl_to_apycyl
+)
+
+
 @conversion_method(  # type: ignore[misc]
-    type_from=apyc.CylindricalDifferential, type_to=CylindricalDifferential
+    apyc.CylindricalDifferential, CylindricalDifferential
 )
 def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalDifferential:
     """`astropy.CylindricalDifferential` -> `coordinax.CylindricalDifferential`."""
