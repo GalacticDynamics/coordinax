@@ -127,15 +127,16 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         default_factory=lambda: {"atol": 1e-7}, repr=False, static=True
     )
 
-    def __check_init__(self) -> None:
-        # Check that the rotation matrix is orthogonal.
-        _ = eqx.error_if(
-            self.rotation,
-            not jnp.allclose(
-                self.rotation @ self.rotation.T, jnp.eye(3), **self.check_tol
-            ),
-            "The rotation matrix must be orthogonal.",
-        )
+    # TODO: fix so that it works in jitted contexts
+    # def __check_init__(self) -> None:
+    #     # Check that the rotation matrix is orthogonal.
+    #     _ = eqx.error_if(
+    #         self.rotation,
+    #         not jnp.allclose(
+    #             self.rotation @ self.rotation.T, jnp.eye(3), **self.check_tol
+    #         ),
+    #         "The rotation matrix must be orthogonal.",
+    #     )
 
     # -----------------------------------------------------
 
