@@ -24,14 +24,13 @@ from coordinax._utils import dataclass_values, full_shaped
 
 #####################################################################
 # Constructors
-# Using the registered `plum.convert`
 
 
 @Cartesian3DVector.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[Cartesian3DVector], obj: apyc.CartesianRepresentation
+    cls: type[Cartesian3DVector], obj: apyc.BaseRepresentation
 ) -> Cartesian3DVector:
-    """Construct from a :class:`astropy.coordinates.CartesianRepresentation`.
+    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -44,14 +43,15 @@ def constructor(
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
     """
-    return convert(obj, cls)
+    obj = obj.represent_as(apyc.CartesianRepresentation)
+    return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
 @SphericalVector.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[SphericalVector], obj: apyc.PhysicsSphericalRepresentation
+    cls: type[SphericalVector], obj: apyc.BaseRepresentation
 ) -> SphericalVector:
-    """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`.
+    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -66,14 +66,15 @@ def constructor(
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
     """
-    return convert(obj, cls)
+    obj = obj.represent_as(apyc.PhysicsSphericalRepresentation)
+    return cls(r=obj.r, phi=obj.phi, theta=obj.theta)
 
 
 @CylindricalVector.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalVector], obj: apyc.CylindricalRepresentation
+    cls: type[CylindricalVector], obj: apyc.BaseRepresentation
 ) -> CylindricalVector:
-    """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`.
+    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -88,7 +89,8 @@ def constructor(
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
     """
-    return convert(obj, cls)
+    obj = obj.represent_as(apyc.CylindricalRepresentation)
+    return cls(rho=obj.rho, phi=obj.phi, z=obj.z)
 
 
 @CartesianDifferential3D.constructor._f.register  # noqa: SLF001
@@ -109,7 +111,7 @@ def constructor(
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
     """
-    return convert(obj, cls)
+    return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
 @SphericalDifferential.constructor._f.register  # noqa: SLF001
@@ -131,7 +133,7 @@ def constructor(
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
     """
-    return convert(obj, cls)
+    return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
 
 
 @CylindricalDifferential.constructor._f.register  # noqa: SLF001
@@ -153,7 +155,7 @@ def constructor(
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
     """
-    return convert(obj, cls)
+    return cls(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
 
 
 #####################################################################
@@ -196,7 +198,7 @@ def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation
 @conversion_method(type_from=apyc.CartesianRepresentation, type_to=Cartesian3DVector)  # type: ignore[misc]
 def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector:
     """`astropy.CartesianRepresentation` -> `coordinax.Cartesian3DVector`."""
-    return Cartesian3DVector(x=obj.x, y=obj.y, z=obj.z)
+    return Cartesian3DVector.constructor(obj)
 
 
 # =====================================
@@ -222,7 +224,7 @@ def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentatio
 )
 def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVector:
     """`astropy.PhysicsSphericalRepresentation` -> `coordinax.SphericalVector`."""
-    return SphericalVector(r=obj.r, phi=obj.phi, theta=obj.theta)
+    return SphericalVector.constructor(obj)
 
 
 # =====================================
@@ -242,7 +244,7 @@ def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
 @conversion_method(type_from=apyc.CylindricalRepresentation, type_to=CylindricalVector)  # type: ignore[misc]
 def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
     """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalVector`."""
-    return CylindricalVector(rho=obj.rho, phi=obj.phi, z=obj.z)
+    return CylindricalVector.constructor(obj)
 
 
 # =====================================
@@ -270,7 +272,7 @@ def apycart3_to_diffcart3(
     obj: apyc.CartesianDifferential, /
 ) -> CartesianDifferential3D:
     """`astropy.CartesianDifferential` -> `coordinax.CartesianDifferential3D`."""
-    return CartesianDifferential3D(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
+    return CartesianDifferential3D.constructor(obj)
 
 
 # =====================================
@@ -300,7 +302,7 @@ def apysph_to_diffsph(
     obj: apyc.PhysicsSphericalDifferential, /
 ) -> SphericalDifferential:
     """`astropy.PhysicsSphericalDifferential` -> `coordinax.SphericalDifferential`."""
-    return SphericalDifferential(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
+    return SphericalDifferential.constructor(obj)
 
 
 # =====================================
@@ -324,7 +326,7 @@ def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDiffer
 )
 def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalDifferential:
     """`astropy.CylindricalDifferential` -> `coordinax.CylindricalDifferential`."""
-    return CylindricalDifferential(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
+    return CylindricalDifferential.constructor(obj)
 
 
 #####################################################################
