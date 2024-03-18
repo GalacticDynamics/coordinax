@@ -87,6 +87,7 @@
   filterwarnings = [
     "error",
     "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",
+    "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available"
   ]
   log_cli_level = "INFO"
   minversion = "6.0"
