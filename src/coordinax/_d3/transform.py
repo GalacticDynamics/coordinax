@@ -39,7 +39,34 @@ def represent_as(
 def represent_as(
     current: Abstract3DVector, target: type[Abstract3DVector], /, **kwargs: Any
 ) -> Abstract3DVector:
-    """Self transform."""
+    """Self transforms for 3D vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    Cartesian to Cartesian:
+
+    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+    >>> cx.represent_as(vec, cx.Cartesian3DVector) is vec
+    True
+
+    Spherical to Spherical:
+
+    >>> vec = cx.SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(2, "deg"),
+    ...                          phi=Quantity(3, "deg"))
+    >>> cx.represent_as(vec, cx.SphericalVector) is vec
+    True
+
+    Cylindrical to Cylindrical:
+
+    >>> vec = cx.CylindricalVector(rho=Quantity(1, "kpc"), phi=Quantity(2, "deg"),
+    ...                            z=Quantity(3, "kpc"))
+    >>> cx.represent_as(vec, cx.CylindricalVector) is vec
+    True
+
+    """
     return current
 
 
@@ -55,7 +82,37 @@ def represent_as(
     /,
     **kwargs: Any,
 ) -> Abstract3DVectorDifferential:
-    """Self transform of 3D Differentials."""
+    """Self transforms for 3D differentials.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    For these transformations the position does not matter since the
+    self-transform returns the differential unchanged.
+
+    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+
+    Cartesian to Cartesian Differential:
+
+    >>> dif = cx.CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
+    >>> cx.represent_as(dif, cx.CartesianDifferential3D, vec) is dif
+    True
+
+    >>> dif = cx.SphericalDifferential(d_r=Quantity(1, "km/s"),
+    ...                                d_theta=Quantity(2, "mas/yr"),
+    ...                                d_phi=Quantity(3, "mas/yr"))
+    >>> cx.represent_as(dif, cx.SphericalDifferential, vec) is dif
+    True
+
+    >>> dif = cx.CylindricalDifferential(d_rho=Quantity(1, "km/s"),
+    ...                                  d_phi=Quantity(2, "mas/yr"),
+    ...                                  d_z=Quantity(3, "km/s"))
+    >>> cx.represent_as(dif, cx.CylindricalDifferential, vec) is dif
+    True
+
+    """
     return current
 
 
