@@ -686,7 +686,18 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     # Misc
 
     def __str__(self) -> str:
-        """Return a string representation of the vector."""
+        r"""Return a string representation of the vector.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "m"))
+        >>> str(vec)
+        '<Cartesian3DVector (x, y, z) in (m, m, m)\n    [1. 2. 3.]>'
+
+        """
         cls_name = type(self).__name__
         comps = ", ".join(self.components)
         units = ", ".join(map(str, self.units.values()))
