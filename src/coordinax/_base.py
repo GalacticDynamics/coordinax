@@ -1,12 +1,20 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVectorBase", "AbstractVector", "AbstractVectorDifferential"]
+__all__ = [
+    # vector classes
+    "AbstractVectorBase",
+    "AbstractVector",
+    "AbstractVectorDifferential",
+    # other
+    "ToUnitsOptions",
+]
 
 import operator
 import warnings
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import fields, replace
+from enum import Enum
 from functools import partial
 from inspect import isabstract
 from types import MappingProxyType
@@ -21,7 +29,7 @@ from jaxtyping import ArrayLike
 from plum import dispatch
 
 import quaxed.array_api as xp
-from unxt import Quantity
+from unxt import Quantity, UnitSystem
 
 from ._utils import classproperty, dataclass_items, dataclass_values, full_shaped
 from coordinax._typing import Unit
@@ -35,6 +43,16 @@ DT = TypeVar("DT", bound="AbstractVectorDifferential")
 
 VECTOR_CLASSES: list[type["AbstractVector"]] = []
 DIFFERENTIAL_CLASSES: list[type["AbstractVectorDifferential"]] = []
+
+
+class ToUnitsOptions(Enum):
+    """Options for the units argument of :meth:`AbstractVector.to_units`."""
+
+    consistent = "consistent"
+    """Convert to consistent units."""
+
+
+# ===================================================================
 
 
 class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
@@ -542,32 +560,52 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         """Represent the vector as another type."""
         raise NotImplementedError
 
-    def to_units(
-        self,
-        units: (
-            Mapping[u.PhysicalType | str, Unit] | Literal["consistent"]
-        ) = "consistent",
-        /,
-    ) -> "Self":
+    @dispatch
+    def to_units(self, units: UnitSystem) -> "AbstractVectorBase":
         """Convert the vector to the given units.
 
         Parameters
         ----------
-        units : Mapping[PhysicalType | str, Unit] | Literal["consistent"]
+        units : UnitSystem
             The units to convert to according to the physical type of the
-            components. If "consistent", the vector is converted to consistent
-            units by looking for the first quantity with each physical type and
-            converting all components to the units of that quantity.
-
-        Returns
-        -------
-        AbstractVectorBase
-            The vector with the components converted to the given units.
+            components.
 
         Examples
         --------
-        We assume the following imports:
+        >>> import astropy.units as u
+        >>> from unxt import Quantity, UnitSystem
+        >>> import coordinax as cx
 
+        >>> units = UnitSystem(u.m, u.s, u.kg, u.rad)
+
+        >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
+        >>> vec.to_units(units)
+        Cartesian3DVector(
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m")),
+            z=Quantity[...](value=f32[], unit=Unit("m"))
+        )
+
+        """
+        return replace(
+            self,
+            **{k: v.to(units[v.unit.physical_type]) for k, v in dataclass_items(self)},
+        )
+
+    @dispatch
+    def to_units(
+        self, units: Mapping[u.PhysicalType | str, Unit], /
+    ) -> "AbstractVectorBase":
+        """Convert the vector to the given units.
+
+        Parameters
+        ----------
+        units : Mapping[PhysicalType | str, Unit]
+            The units to convert to according to the physical type of the
+            components.
+
+        Examples
+        --------
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian2DVector, SphericalVector
 
@@ -591,16 +629,48 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
             phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
         )
 
+        """
+        # Ensure `units_` is PT -> Unit
+        units_ = {u.get_physical_type(k): v for k, v in units.items()}
+        # Convert to the given units
+        return replace(
+            self,
+            **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
+        )
+
+    @dispatch
+    def to_units(
+        self, _: Literal[ToUnitsOptions.consistent], /
+    ) -> "AbstractVectorBase":
+        """Convert the vector to a self-consistent set of units.
+
+        Parameters
+        ----------
+        units : Literal[ToUnitsOptions.consistent]
+            The vector is converted to consistent units by looking for the first
+            quantity with each physical type and converting all components to
+            the units of that quantity.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> from coordinax import Cartesian2DVector, SphericalVector
+        >>> from coordinax import ToUnitsOptions
+
+        We can convert a vector to the given units:
+
+        >>> cart = Cartesian2DVector(x=Quantity(1, "m"), y=Quantity(2, "km"))
+
         If all you want is to convert to consistent units, you can use
         ``"consistent"``:
 
-        >>> cart.to_units("consistent")
+        >>> cart.to_units(ToUnitsOptions.consistent)
         Cartesian2DVector(
             x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
         )
 
-        >>> sph.to_units("consistent")
+        >>> sph.to_units(ToUnitsOptions.consistent)
         SphericalVector(
             r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
@@ -608,14 +678,11 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         )
 
         """
-        if units != "consistent":
-            units_ = {u.get_physical_type(k): v for k, v in units.items()}
-        else:
-            units_ = {}
-            for v in dataclass_values(self):
-                pt = v.unit.physical_type
-                if pt not in units_:
-                    units_[pt] = v.unit
+        units_ = {}
+        for v in dataclass_values(self):
+            pt = v.unit.physical_type
+            if pt not in units_:
+                units_[pt] = v.unit
 
         return replace(
             self,
