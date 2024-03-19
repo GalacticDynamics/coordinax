@@ -9,7 +9,7 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
-from coordinax._base import AbstractVector
+from coordinax._base_vec import AbstractVector
 
 
 @final

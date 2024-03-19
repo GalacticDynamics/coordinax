@@ -10,11 +10,9 @@ from jaxtyping import Shaped
 
 from unxt import Quantity
 
-from coordinax._base import (
-    AbstractVector,
-    AbstractVectorBase,
-    AbstractVectorDifferential,
-)
+from coordinax._base import AbstractVectorBase
+from coordinax._base_dif import AbstractVectorDifferential
+from coordinax._base_vec import AbstractVector
 from coordinax._utils import classproperty
 
 

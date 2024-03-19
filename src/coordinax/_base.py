@@ -1,27 +1,27 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVectorBase", "AbstractVector", "AbstractVectorDifferential"]
+__all__ = [
+    # vector classes
+    "AbstractVectorBase",
+    # other
+    "ToUnitsOptions",
+]
 
-import operator
-import warnings
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import fields, replace
-from functools import partial
-from inspect import isabstract
+from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import astropy.units as u
 import equinox as eqx
-import jax
 import jax.numpy as jnp
 from jax import Device
-from jaxtyping import ArrayLike
 from plum import dispatch
 
 import quaxed.array_api as xp
-from unxt import Quantity
+from unxt import Quantity, UnitSystem
 
 from ._utils import classproperty, dataclass_items, dataclass_values, full_shaped
 from coordinax._typing import Unit
@@ -30,11 +30,16 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
 BT = TypeVar("BT", bound="AbstractVectorBase")
-VT = TypeVar("VT", bound="AbstractVector")
-DT = TypeVar("DT", bound="AbstractVectorDifferential")
 
-VECTOR_CLASSES: list[type["AbstractVector"]] = []
-DIFFERENTIAL_CLASSES: list[type["AbstractVectorDifferential"]] = []
+
+class ToUnitsOptions(Enum):
+    """Options for the units argument of :meth:`AbstractVector.to_units`."""
+
+    consistent = "consistent"
+    """Convert to consistent units."""
+
+
+# ===================================================================
 
 
 class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
@@ -542,32 +547,52 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         """Represent the vector as another type."""
         raise NotImplementedError
 
-    def to_units(
-        self,
-        units: (
-            Mapping[u.PhysicalType | str, Unit] | Literal["consistent"]
-        ) = "consistent",
-        /,
-    ) -> "Self":
+    @dispatch
+    def to_units(self, units: UnitSystem) -> "AbstractVectorBase":
         """Convert the vector to the given units.
 
         Parameters
         ----------
-        units : Mapping[PhysicalType | str, Unit] | Literal["consistent"]
+        units : UnitSystem
             The units to convert to according to the physical type of the
-            components. If "consistent", the vector is converted to consistent
-            units by looking for the first quantity with each physical type and
-            converting all components to the units of that quantity.
-
-        Returns
-        -------
-        AbstractVectorBase
-            The vector with the components converted to the given units.
+            components.
 
         Examples
         --------
-        We assume the following imports:
+        >>> import astropy.units as u
+        >>> from unxt import Quantity, UnitSystem
+        >>> import coordinax as cx
 
+        >>> units = UnitSystem(u.m, u.s, u.kg, u.rad)
+
+        >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
+        >>> vec.to_units(units)
+        Cartesian3DVector(
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m")),
+            z=Quantity[...](value=f32[], unit=Unit("m"))
+        )
+
+        """
+        return replace(
+            self,
+            **{k: v.to(units[v.unit.physical_type]) for k, v in dataclass_items(self)},
+        )
+
+    @dispatch
+    def to_units(
+        self, units: Mapping[u.PhysicalType | str, Unit], /
+    ) -> "AbstractVectorBase":
+        """Convert the vector to the given units.
+
+        Parameters
+        ----------
+        units : Mapping[PhysicalType | str, Unit]
+            The units to convert to according to the physical type of the
+            components.
+
+        Examples
+        --------
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian2DVector, SphericalVector
 
@@ -591,16 +616,48 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
             phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
         )
 
+        """
+        # Ensure `units_` is PT -> Unit
+        units_ = {u.get_physical_type(k): v for k, v in units.items()}
+        # Convert to the given units
+        return replace(
+            self,
+            **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
+        )
+
+    @dispatch
+    def to_units(
+        self, _: Literal[ToUnitsOptions.consistent], /
+    ) -> "AbstractVectorBase":
+        """Convert the vector to a self-consistent set of units.
+
+        Parameters
+        ----------
+        units : Literal[ToUnitsOptions.consistent]
+            The vector is converted to consistent units by looking for the first
+            quantity with each physical type and converting all components to
+            the units of that quantity.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> from coordinax import Cartesian2DVector, SphericalVector
+        >>> from coordinax import ToUnitsOptions
+
+        We can convert a vector to the given units:
+
+        >>> cart = Cartesian2DVector(x=Quantity(1, "m"), y=Quantity(2, "km"))
+
         If all you want is to convert to consistent units, you can use
         ``"consistent"``:
 
-        >>> cart.to_units("consistent")
+        >>> cart.to_units(ToUnitsOptions.consistent)
         Cartesian2DVector(
             x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
         )
 
-        >>> sph.to_units("consistent")
+        >>> sph.to_units(ToUnitsOptions.consistent)
         SphericalVector(
             r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
@@ -608,14 +665,11 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         )
 
         """
-        if units != "consistent":
-            units_ = {u.get_physical_type(k): v for k, v in units.items()}
-        else:
-            units_ = {}
-            for v in dataclass_values(self):
-                pt = v.unit.physical_type
-                if pt not in units_:
-                    units_[pt] = v.unit
+        units_ = {}
+        for v in dataclass_values(self):
+            pt = v.unit.physical_type
+            if pt not in units_:
+                units_[pt] = v.unit
 
         return replace(
             self,
@@ -668,295 +722,3 @@ def constructor(  # noqa: D417
         return obj
 
     return cls(**dict(dataclass_items(obj)))
-
-
-#####################################################################
-
-
-class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
-    """Abstract representation of coordinates in different systems."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Initialize the subclass.
-
-        The subclass is registered if it is not an abstract class.
-        """
-        # TODO: a more robust check using equinox.
-        if isabstract(cls) or cls.__name__.startswith("Abstract"):
-            return
-
-        VECTOR_CLASSES.append(cls)
-
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def differential_cls(cls) -> type["AbstractVectorDifferential"]:
-        """Return the corresponding differential vector class.
-
-        Examples
-        --------
-        >>> from coordinax import RadialVector, SphericalVector
-
-        >>> RadialVector.differential_cls
-        <class 'coordinax._d1.builtin.RadialDifferential'>
-
-        >>> SphericalVector.differential_cls
-        <class 'coordinax._d3.builtin.SphericalDifferential'>
-
-        """
-        raise NotImplementedError
-
-    # ===============================================================
-    # Array
-
-    # -----------------------------------------------------
-    # Unary operations
-
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        The default implementation is to go through Cartesian coordinates.
-        """
-        cart = self.represent_as(self._cartesian_cls)
-        return (-cart).represent_as(type(self))
-
-    # -----------------------------------------------------
-    # Binary arithmetic operations
-
-    def __add__(self, other: Any) -> "Self":
-        """Add another object to this vector."""
-        if not isinstance(other, AbstractVector):
-            return NotImplemented
-
-        # The base implementation is to convert to Cartesian and perform the
-        # operation.  Cartesian coordinates do not have any branch cuts or
-        # singularities or ranges that need to be handled, so this is a safe
-        # default.
-        return operator.add(
-            self.represent_as(self._cartesian_cls),
-            other.represent_as(self._cartesian_cls),
-        ).represent_as(type(self))
-
-    def __sub__(self, other: Any) -> "Self":
-        """Add another object to this vector."""
-        if not isinstance(other, AbstractVector):
-            return NotImplemented
-
-        # The base implementation is to convert to Cartesian and perform the
-        # operation.  Cartesian coordinates do not have any branch cuts or
-        # singularities or ranges that need to be handled, so this is a safe
-        # default.
-        return operator.sub(
-            self.represent_as(self._cartesian_cls),
-            other.represent_as(self._cartesian_cls),
-        ).represent_as(type(self))
-
-    @dispatch
-    def __mul__(self: "AbstractVector", other: Any) -> Any:
-        return NotImplemented
-
-    @dispatch
-    def __mul__(self: "AbstractVector", other: ArrayLike) -> Any:
-        return replace(self, **{k: v * other for k, v in dataclass_items(self)})
-
-    @dispatch
-    def __truediv__(self: "AbstractVector", other: Any) -> Any:
-        return NotImplemented
-
-    @dispatch
-    def __truediv__(self: "AbstractVector", other: ArrayLike) -> Any:
-        return replace(self, **{k: v / other for k, v in dataclass_items(self)})
-
-    # ---------------------------------
-    # Reverse binary operations
-
-    @dispatch
-    def __rmul__(self: "AbstractVector", other: Any) -> Any:
-        return NotImplemented
-
-    @dispatch
-    def __rmul__(self: "AbstractVector", other: ArrayLike) -> Any:
-        return replace(self, **{k: other * v for k, v in dataclass_items(self)})
-
-    # ===============================================================
-    # Convenience methods
-
-    @partial(jax.jit, static_argnums=1)
-    def represent_as(self, target: type[VT], /, *args: Any, **kwargs: Any) -> VT:
-        """Represent the vector as another type.
-
-        Parameters
-        ----------
-        target : type[AbstractVector]
-            The type to represent the vector as.
-        *args : Any
-            Extra arguments. Raises a warning if any are given.
-        **kwargs : Any
-            Extra keyword arguments.
-
-        Returns
-        -------
-        AbstractVector
-            The vector represented as the target type.
-
-        Warns
-        -----
-        UserWarning
-            If extra arguments are given.
-
-        Examples
-        --------
-        We assume the following imports:
-
-        >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, SphericalVector
-
-        We can represent a vector as another type:
-
-        >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-        >>> vec = Cartesian3DVector(x=x, y=y, z=z)
-        >>> sph = vec.represent_as(SphericalVector)
-        >>> sph
-        SphericalVector(
-          r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-          theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad")),
-          phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad"))
-        )
-        >>> sph.r
-        Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
-
-        """
-        if any(args):
-            warnings.warn("Extra arguments are ignored.", UserWarning, stacklevel=2)
-
-        from ._transform import represent_as  # pylint: disable=import-outside-toplevel
-
-        return represent_as(self, target, **kwargs)
-
-    @partial(jax.jit)
-    def norm(self) -> Quantity["length"]:
-        """Return the norm of the vector.
-
-        Returns
-        -------
-        Quantity
-            The norm of the vector.
-
-        Examples
-        --------
-        We assume the following imports:
-        >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
-
-        We can compute the norm of a vector
-        >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-        >>> vec = Cartesian3DVector(x=x, y=y, z=z)
-        >>> vec.norm()
-        Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
-
-        """
-        return self.represent_as(self._cartesian_cls).norm()
-
-
-#####################################################################
-
-
-class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstract-method
-    """Abstract representation of vector differentials in different systems."""
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Initialize the subclass.
-
-        The subclass is registered.
-        """
-        DIFFERENTIAL_CLASSES.append(cls)
-
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def integral_cls(cls) -> type["AbstractVectorDifferential"]:
-        """Return the corresponding vector class.
-
-        Examples
-        --------
-        >>> from coordinax import RadialDifferential, SphericalDifferential
-
-        >>> RadialDifferential.integral_cls
-        <class 'coordinax._d1.builtin.RadialVector'>
-
-        >>> SphericalDifferential.integral_cls
-        <class 'coordinax._d3.builtin.SphericalVector'>
-
-        """
-        raise NotImplementedError
-
-    # ===============================================================
-    # Unary operations
-
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> from coordinax import RadialDifferential
-        >>> dr = RadialDifferential(Quantity(1, "m/s"))
-        >>> -dr
-        RadialDifferential( d_r=Quantity[...]( value=f32[], unit=Unit("m / s") ) )
-
-        >>> from coordinax import PolarDifferential
-        >>> dp = PolarDifferential(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
-        >>> neg_dp = -dp
-        >>> neg_dp.d_r
-        Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
-        >>> neg_dp.d_phi
-        Quantity['angular frequency'](Array(-1., dtype=float32), unit='mas / yr')
-
-        """
-        return replace(self, **{k: -v for k, v in dataclass_items(self)})
-
-    # ===============================================================
-    # Binary operations
-
-    @dispatch  # type: ignore[misc]
-    def __mul__(
-        self: "AbstractVectorDifferential", other: Quantity
-    ) -> "AbstractVector":
-        """Multiply the vector by a :class:`unxt.Quantity`.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> from coordinax import RadialDifferential
-
-        >>> dr = RadialDifferential(Quantity(1, "m/s"))
-        >>> vec = dr * Quantity(2, "s")
-        >>> vec
-        RadialVector(r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")))
-        >>> vec.r
-        Quantity['length'](Array(2., dtype=float32), unit='m')
-
-        """
-        return self.integral_cls.constructor(
-            {k[2:]: v * other for k, v in dataclass_items(self)}
-        )
-
-    # ===============================================================
-    # Convenience methods
-
-    @partial(jax.jit, static_argnums=1)
-    def represent_as(
-        self, target: type[DT], position: AbstractVector, /, *args: Any, **kwargs: Any
-    ) -> DT:
-        """Represent the vector as another type."""
-        if any(args):
-            warnings.warn("Extra arguments are ignored.", UserWarning, stacklevel=2)
-
-        from ._transform import represent_as  # pylint: disable=import-outside-toplevel
-
-        return represent_as(self, target, position, **kwargs)
-
-    @partial(jax.jit)
-    def norm(self, position: AbstractVector, /) -> Quantity["speed"]:
-        """Return the norm of the vector."""
-        return self.represent_as(self._cartesian_cls, position).norm()
