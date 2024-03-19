@@ -88,8 +88,8 @@ class Cartesian3DVector(Abstract3DVector):
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
-        ...                     phi=Quantity(0, "deg"))
+        >>> s = SphericalVector(r=Quantity(1, "kpc"), phi=Quantity(0, "deg"),
+        ...                     theta=Quantity(90, "deg"))
         >>> (q + s).x
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
@@ -109,8 +109,8 @@ class Cartesian3DVector(Abstract3DVector):
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
-        ...                     phi=Quantity(0, "deg"))
+        >>> s = SphericalVector(r=Quantity(1, "kpc"), phi=Quantity(0, "deg"),
+        ...                     theta=Quantity(90, "deg"))
         >>> (q - s).x
         Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
@@ -147,15 +147,15 @@ class SphericalVector(Abstract3DVector):
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    theta: BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
-    )
-    r"""Inclination angle :math:`\phi \in [0,180]`."""
-
     phi: BatchableAngle = eqx.field(
         converter=partial(Quantity["angle"].constructor, dtype=float)
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
+
+    theta: BatchableAngle = eqx.field(
+        converter=partial(Quantity["angle"].constructor, dtype=float)
+    )
+    r"""Inclination angle :math:`\phi \in [0,180]`."""
 
     def __check_init__(self) -> None:
         """Check the validity of the initialisation."""

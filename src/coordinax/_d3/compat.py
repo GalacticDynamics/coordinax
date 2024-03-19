@@ -330,8 +330,8 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVecto
     >>> convert(sph, cx.SphericalVector)
     SphericalVector(
       r=Quantity[...](value=f32[], unit=Unit("kpc")),
-      theta=Quantity[...](value=f32[], unit=Unit("deg")),
-      phi=Quantity[...](value=f32[], unit=Unit("deg"))
+      phi=Quantity[...](value=f32[], unit=Unit("deg")),
+      theta=Quantity[...](value=f32[], unit=Unit("deg"))
     )
 
     """

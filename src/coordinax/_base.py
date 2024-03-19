@@ -513,7 +513,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> Cartesian2DVector.components
         ('x', 'y')
         >>> SphericalVector.components
-        ('r', 'theta', 'phi')
+        ('r', 'phi', 'theta')
         >>> RadialDifferential.components
         ('d_r',)
 
@@ -618,8 +618,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> sph.to_units({"length": "km", "angle": "deg"})
         SphericalVector(
             r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
-            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
-            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
+            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
+            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
         )
 
         """
@@ -666,8 +666,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> sph.to_units(ToUnitsOptions.consistent)
         SphericalVector(
             r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
-            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
+            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad")),
+            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad"))
         )
 
         """
