@@ -339,8 +339,11 @@ class TestSphericalVector(Abstract3DVectorTest):
         assert np.allclose(convert(cyl.rho, APYQuantity), apycyl.rho)
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
 
+        assert np.allclose(convert(cyl.phi[:-1], APYQuantity), apycyl.phi[:-1])
+        # There's a 'bug' in Astropy where at the origin phi is always 90, or at
+        # least doesn't keep its value.
         with pytest.raises(AssertionError):  # TODO: Fix this
-            assert np.allclose(convert(cyl.phi, APYQuantity), apycyl.phi)
+            assert np.allclose(convert(cyl.phi[-1], APYQuantity), apycyl.phi[-1])
 
 
 class TestCylindricalVector(Abstract3DVectorTest):
