@@ -173,7 +173,20 @@ def represent_as(
 def represent_as(
     current: SphericalVector, target: type[Cartesian3DVector], /, **kwargs: Any
 ) -> Cartesian3DVector:
-    """SphericalVector -> Cartesian3DVector."""
+    """SphericalVector -> Cartesian3DVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    ...                          theta=Quantity(90, "deg"))
+    >>> print(cx.represent_as(vec, cx.Cartesian3DVector))
+    <Cartesian3DVector (x[kpc], y[kpc], z[kpc])
+        [-4.371e-08  1.000e+00 -4.371e-08]>
+
+    """
     x = current.r * xp.sin(current.theta) * xp.cos(current.phi)
     y = current.r * xp.sin(current.theta) * xp.sin(current.phi)
     z = current.r * xp.cos(current.theta)
@@ -184,7 +197,20 @@ def represent_as(
 def represent_as(
     current: SphericalVector, target: type[CylindricalVector], /, **kwargs: Any
 ) -> CylindricalVector:
-    """SphericalVector -> CylindricalVector."""
+    """SphericalVector -> CylindricalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    ...                          theta=Quantity(90, "deg"))
+    >>> print(cx.represent_as(vec, cx.CylindricalVector))
+    <CylindricalVector (rho[kpc], phi[deg], z[kpc])
+        [ 1.000e+00  9.000e+01 -4.371e-08]>
+
+    """
     rho = xp.abs(current.r * xp.sin(current.theta))
     phi = current.phi
     z = current.r * xp.cos(current.theta)
