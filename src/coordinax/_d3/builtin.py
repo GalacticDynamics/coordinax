@@ -24,6 +24,7 @@ from unxt import Quantity
 from .base import Abstract3DVector, Abstract3DVectorDifferential
 from coordinax._base_vec import AbstractVector
 from coordinax._checks import check_phi_range, check_r_non_negative, check_theta_range
+from coordinax._converters import converter_phi_to_range
 from coordinax._typing import (
     BatchableAngle,
     BatchableAngularSpeed,
@@ -148,7 +149,9 @@ class SphericalVector(Abstract3DVector):
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
+        converter=lambda x: converter_phi_to_range(
+            Quantity["angle"].constructor(x, dtype=float)
+        )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
@@ -195,7 +198,9 @@ class CylindricalVector(Abstract3DVector):
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
+        converter=lambda x: converter_phi_to_range(
+            Quantity["angle"].constructor(x, dtype=float)
+        )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
