@@ -18,6 +18,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
+from coordinax._base import ToUnitsOptions
 from coordinax._d3.base import Abstract3DVector
 from coordinax._d3.builtin import Cartesian3DVector
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
@@ -250,7 +251,8 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         """
         vec = convert(  # Array[float, (N, 3)]
-            q.represent_as(Cartesian3DVector).to_units("consistent"), Quantity
+            q.represent_as(Cartesian3DVector).to_units(ToUnitsOptions.consistent),
+            Quantity,
         )
         rcart = Cartesian3DVector.constructor(vec_matmul(self.rotation, vec))
         return rcart.represent_as(type(q))
