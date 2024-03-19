@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeVar
 import astropy.units as u
 import equinox as eqx
 import jax.numpy as jnp
+import numpy as np
 from jax import Device
 from plum import dispatch
 
@@ -520,6 +521,11 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(cls))
 
     @property
+    def units(self) -> Mapping[str, u.Unit]:
+        """Get the units of the vector's components."""
+        return MappingProxyType({k: v.unit for k, v in dataclass_items(self)})
+
+    @property
     def dtypes(self) -> Mapping[str, jnp.dtype]:
         """Get the dtypes of the vector's components."""
         return MappingProxyType({k: v.dtype for k, v in dataclass_items(self)})
@@ -675,6 +681,35 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
             self,
             **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
         )
+
+    # ===============================================================
+    # Misc
+
+    def __str__(self) -> str:
+        r"""Return a string representation of the vector.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "m"))
+        >>> str(vec)
+        '<Cartesian3DVector (x, y, z) in (m, m, m)\n    [1. 2. 3.]>'
+
+        """
+        cls_name = type(self).__name__
+        comps = ", ".join(self.components)
+        units = ", ".join(map(str, self.units.values()))
+        vs = np.array2string(
+            xp.stack(
+                tuple(v.value for v in xp.broadcast_arrays(*dataclass_values(self))),
+                axis=-1,
+            ),
+            precision=3,
+            prefix="    ",
+        )
+        return f"<{cls_name} ({comps}) in ({units})\n    {vs}>"
 
 
 # -----------------------------------------------
