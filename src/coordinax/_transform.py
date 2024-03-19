@@ -13,7 +13,8 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from ._base import AbstractVector, AbstractVectorDifferential
+from ._base_dif import AbstractVectorDifferential
+from ._base_vec import AbstractVector
 from ._d1.base import Abstract1DVectorDifferential
 from ._d1.builtin import Cartesian1DVector, RadialVector
 from ._d2.base import Abstract2DVector, Abstract2DVectorDifferential

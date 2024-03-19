@@ -20,7 +20,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import Abstract1DVector, Abstract1DVectorDifferential
-from coordinax._base import AbstractVector
+from coordinax._base_vec import AbstractVector
 from coordinax._checks import check_r_non_negative
 from coordinax._typing import BatchableLength, BatchableSpeed
 from coordinax._utils import classproperty

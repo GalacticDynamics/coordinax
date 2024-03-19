@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
-from coordinax._base import AbstractVector
+from coordinax._base_vec import AbstractVector
 from coordinax._utils import DataclassInstance
 
 if TYPE_CHECKING:
