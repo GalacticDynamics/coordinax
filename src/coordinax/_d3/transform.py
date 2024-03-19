@@ -124,7 +124,19 @@ def represent_as(
 def represent_as(
     current: Cartesian3DVector, target: type[SphericalVector], /, **kwargs: Any
 ) -> SphericalVector:
-    """Cartesian3DVector -> SphericalVector."""
+    """Cartesian3DVector -> SphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
+    >>> print(cx.represent_as(vec, cx.SphericalVector))
+    <SphericalVector (r[km], phi[rad], theta[rad])
+        [3.742 1.107 0.641]>
+
+    """
     r = xp.sqrt(current.x**2 + current.y**2 + current.z**2)
     theta = xp.acos(current.z / r)
     phi = xp.atan2(current.y, current.x)
@@ -135,7 +147,19 @@ def represent_as(
 def represent_as(
     current: Cartesian3DVector, target: type[CylindricalVector], /, **kwargs: Any
 ) -> CylindricalVector:
-    """Cartesian3DVector -> CylindricalVector."""
+    """Cartesian3DVector -> CylindricalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
+    >>> print(cx.represent_as(vec, cx.CylindricalVector))
+    <CylindricalVector (rho[km], phi[rad], z[km])
+        [2.236 1.107 3.   ]>
+
+    """
     rho = xp.sqrt(current.x**2 + current.y**2)
     phi = xp.atan2(current.y, current.x)
     return target(rho=rho, phi=phi, z=current.z)
