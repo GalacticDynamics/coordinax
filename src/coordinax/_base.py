@@ -695,12 +695,12 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "m"))
         >>> str(vec)
-        '<Cartesian3DVector (x, y, z) in (m, m, m)\n    [1. 2. 3.]>'
+        '<Cartesian3DVector (x[m], y[m], z[m])\n    [1. 2. 3.]>'
 
         """
         cls_name = type(self).__name__
-        comps = ", ".join(self.components)
-        units = ", ".join(map(str, self.units.values()))
+        units = self.units
+        comps = ", ".join(f"{c}[{units[c]}]" for c in self.components)
         vs = np.array2string(
             xp.stack(
                 tuple(v.value for v in xp.broadcast_arrays(*dataclass_values(self))),
@@ -709,7 +709,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
             precision=3,
             prefix="    ",
         )
-        return f"<{cls_name} ({comps}) in ({units})\n    {vs}>"
+        return f"<{cls_name} ({comps})\n    {vs}>"
 
 
 # -----------------------------------------------

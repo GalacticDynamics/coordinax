@@ -228,7 +228,7 @@ class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
 
         This just tests that the machiner works.
         """
-        # TODO: have all the convertsions
+        # TODO: have all the conversions
         if (
             (
                 isinstance(difntl, Abstract1DVectorDifferential)
