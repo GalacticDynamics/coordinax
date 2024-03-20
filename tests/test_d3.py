@@ -782,7 +782,7 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         assert qnp.allclose(
             cylindrical.d_phi,
             Quantity([5, 6, 7, 8], "mas/yr"),
-            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
+            atol=Quantity(1e-6, "mas/yr"),  # TODO: tighter atol
         )
         assert qnp.allclose(
             cylindrical.d_z,
