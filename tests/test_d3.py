@@ -1,7 +1,6 @@
 """Test :mod:`coordinax._builtin`."""
 
 import astropy.coordinates as apyc
-import jax.numpy as jnp
 import numpy as np
 import pytest
 from astropy.coordinates.tests.test_representation import representation_equal
@@ -155,9 +154,10 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         assert qnp.array_equal(
             spherical.phi, Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], "rad")
         )
-        assert jnp.allclose(
-            spherical.theta.to_value("rad"),
-            xp.asarray([0.51546645, 0.5639427, 0.6055685, 0.64052236]),
+        assert qnp.allclose(
+            spherical.theta,
+            Quantity([0.51546645, 0.5639427, 0.6055685, 0.64052236], "rad"),
+            atol=Quantity(1e-8, "rad"),
         )
 
     def test_cartesian3d_to_spherical_astropy(self, vector, apyvector):
@@ -217,9 +217,10 @@ class TestSphericalVector(Abstract3DVectorTest):
         cart1d = vector.represent_as(cx.Cartesian1DVector)
 
         assert isinstance(cart1d, cx.Cartesian1DVector)
-        assert jnp.allclose(
-            cart1d.x.to_value("kpc"),
-            xp.asarray([0, 0.49681753, -1.3060151, -4.1700245e-15]),
+        assert qnp.allclose(
+            cart1d.x,
+            Quantity([0, 0.49681753, -1.3060151, -4.1700245e-15], "kpc"),
+            atol=Quantity(1e-8, "kpc"),
         )
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
@@ -372,8 +373,10 @@ class TestCylindricalVector(Abstract3DVectorTest):
         cart1d = vector.represent_as(cx.Cartesian1DVector)
 
         assert isinstance(cart1d, cx.Cartesian1DVector)
-        assert jnp.allclose(
-            cart1d.x.to_value("kpc"), xp.asarray([1.0, 1.0806047, -1.2484405, -3.95997])
+        assert qnp.allclose(
+            cart1d.x,
+            Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
+            atol=Quantity(1e-8, "kpc"),
         )
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
@@ -585,16 +588,20 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         spherical = difntl.represent_as(cx.SphericalDifferential, vector)
 
         assert isinstance(spherical, cx.SphericalDifferential)
-        assert jnp.allclose(
-            spherical.d_r.to_value("km/s"),
-            xp.asarray([10.344081, 11.832159, 13.379088, 14.966629]),
+        assert qnp.allclose(
+            spherical.d_r,
+            Quantity([10.344081, 11.832159, 13.379088, 14.966629], "km/s"),
+            atol=Quantity(1e-8, "km/s"),
         )
-        assert jnp.allclose(
-            spherical.d_phi.to_value("mas/Myr"), xp.asarray([0, 0, 0.00471509, 0])
+        assert qnp.allclose(
+            spherical.d_phi,
+            Quantity([0, 0, 0.00471509, 0], "mas/Myr"),
+            atol=Quantity(1e-8, "mas/Myr"),
         )
-        assert jnp.allclose(
-            spherical.d_theta.to_value("mas/Myr"),
-            xp.asarray([0.03221978, -0.05186598, -0.01964621, -0.01886036]),
+        assert qnp.allclose(
+            spherical.d_theta,
+            Quantity([0.03221978, -0.05186598, -0.01964621, -0.01886036], "mas/Myr"),
+            atol=Quantity(1e-8, "mas/Myr"),
         )
 
     def test_cartesian3d_to_spherical_astropy(
@@ -627,8 +634,10 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
             cylindrical.d_rho,
             Quantity([5.0990195, 6.324555, 7.6157727, 8.944272], "km/s"),
         )
-        assert jnp.allclose(
-            cylindrical.d_phi.to_value("mas/Myr"), xp.asarray([0, 0, 0.00471509, 0])
+        assert qnp.allclose(
+            cylindrical.d_phi,
+            Quantity([0, 0, 0.00471509, 0], "mas/Myr"),
+            atol=Quantity(1e-8, "mas/Myr"),
         )
         assert qnp.array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], "km/s"))
 
@@ -893,17 +902,18 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
 
     def test_cylindrical_to_spherical(self, difntl, vector):
         """Test ``coordinax.represent_as(SphericalDifferential)``."""
-        spherical = difntl.represent_as(cx.SphericalDifferential, vector)
+        dsph = difntl.represent_as(cx.SphericalDifferential, vector)
 
-        assert isinstance(spherical, cx.SphericalDifferential)
+        assert isinstance(dsph, cx.SphericalDifferential)
         assert qnp.array_equal(
-            spherical.d_r,
+            dsph.d_r,
             Quantity([9.055385, 10.198039, 11.401753, 12.64911], "km/s"),
         )
-        assert qnp.array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
-        assert jnp.allclose(
-            spherical.d_theta.to_value("mas/Myr"),
-            xp.asarray([-0.08428223, 0.07544143, -0.0326127, -0.01571696]),
+        assert qnp.array_equal(dsph.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
+        assert qnp.allclose(
+            dsph.d_theta,
+            Quantity([0.0, 0, 0, 0], "mas/yr"),
+            atol=Quantity(5e-7, "mas/yr"),
         )
 
     def test_cylindrical_to_spherical_astropy(

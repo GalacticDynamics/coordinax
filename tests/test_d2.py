@@ -65,8 +65,9 @@ class TestCartesian2DVector:
         assert isinstance(polar, cx.PolarVector)
         assert qnp.array_equal(polar.r, qnp.hypot(vector.x, vector.y))
         assert qnp.allclose(
-            polar.phi.value,
-            xp.asarray([1.3734008, 1.2490457, 1.1659045, 1.1071488]),
+            polar.phi,
+            Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], "rad"),
+            atol=Quantity(1e-8, "deg"),
         )
 
     # def test_cartesian2d_to_lnpolar(self, vector):
@@ -97,8 +98,9 @@ class TestCartesian2DVector:
         assert isinstance(spherical, cx.SphericalVector)
         assert qnp.array_equal(spherical.r, qnp.hypot(vector.x, vector.y))
         assert qnp.allclose(
-            spherical.phi.to_value("rad"),
-            xp.asarray([1.3734008, 1.2490457, 1.1659045, 1.1071488]),
+            spherical.phi,
+            Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], "rad"),
+            atol=Quantity(1e-8, "rad"),
         )
         assert qnp.array_equal(
             spherical.theta, Quantity(xp.full(4, fill_value=xp.pi / 2), "rad")
@@ -139,7 +141,9 @@ class TestPolarVector:
 
         assert isinstance(cart1d, cx.Cartesian1DVector)
         assert qnp.allclose(
-            cart1d.x.to_value("kpc"), xp.asarray([1.0, 1.0806047, -1.2484405, -3.95997])
+            cart1d.x,
+            Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
+            atol=Quantity(1e-8, "kpc"),
         )
         assert qnp.array_equal(cart1d.x, vector.r * xp.cos(vector.phi))
 
@@ -161,11 +165,15 @@ class TestPolarVector:
         assert qnp.array_equal(
             cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
         )
-        assert qnp.allclose(cart2d.x.value, (vector.r * xp.cos(vector.phi)).value)
+        assert qnp.allclose(
+            cart2d.x, (vector.r * xp.cos(vector.phi)), atol=Quantity(1e-8, "kpc")
+        )
         assert qnp.array_equal(
             cart2d.y, Quantity([0.0, 1.6829419, 2.7278922, 0.56448], "kpc")
         )
-        assert qnp.allclose(cart2d.y.value, (vector.r * xp.sin(vector.phi)).value)
+        assert qnp.allclose(
+            cart2d.y, (vector.r * xp.sin(vector.phi)), atol=Quantity(1e-8, "kpc")
+        )
 
     def test_polar_to_polar(self, vector):
         """Test ``coordinax.represent_as(PolarVector)``."""
