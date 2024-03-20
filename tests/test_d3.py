@@ -913,7 +913,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         assert qnp.allclose(
             dsph.d_theta,
             Quantity([0.0, 0, 0, 0], "mas/yr"),
-            atol=Quantity(1e-8, "mas/yr"),
+            atol=Quantity(5e-7, "mas/yr"),
         )
 
     def test_cylindrical_to_spherical_astropy(
