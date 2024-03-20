@@ -147,7 +147,7 @@ class PolarVector(Abstract2DVector):
 
     phi: BatchableAngle = eqx.field(
         converter=lambda x: converter_phi_to_range(
-            Quantity["angle"].constructor(x, dtype=float)
+            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Polar angle :math:`\phi \in [0,2\pi)`."""

@@ -198,6 +198,7 @@
   messages_control.disable = [
     "cyclic-import",              # broken?
     "design",
+    "duplicate-code",
     "import-outside-toplevel",    # handled by ruff
     "fixme",
     "function-redefined",         # plum-dispatch

@@ -150,7 +150,7 @@ class SphericalVector(Abstract3DVector):
 
     phi: BatchableAngle = eqx.field(
         converter=lambda x: converter_phi_to_range(
-            Quantity["angle"].constructor(x, dtype=float)
+            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
@@ -199,7 +199,7 @@ class CylindricalVector(Abstract3DVector):
 
     phi: BatchableAngle = eqx.field(
         converter=lambda x: converter_phi_to_range(
-            Quantity["angle"].constructor(x, dtype=float)
+            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
