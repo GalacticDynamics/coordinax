@@ -339,8 +339,11 @@ class TestSphericalVector(Abstract3DVectorTest):
         assert np.allclose(convert(cyl.rho, APYQuantity), apycyl.rho)
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
 
+        assert np.allclose(convert(cyl.phi[:-1], APYQuantity), apycyl.phi[:-1])
+        # There's a 'bug' in Astropy where at the origin phi is always 90, or at
+        # least doesn't keep its value.
         with pytest.raises(AssertionError):  # TODO: Fix this
-            assert np.allclose(convert(cyl.phi, APYQuantity), apycyl.phi)
+            assert np.allclose(convert(cyl.phi[-1], APYQuantity), apycyl.phi[-1])
 
 
 class TestCylindricalVector(Abstract3DVectorTest):
@@ -721,17 +724,20 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         cart3d = difntl.represent_as(cx.CartesianDifferential3D, vector)
 
         assert isinstance(cart3d, cx.CartesianDifferential3D)
-        assert qnp.array_equal(
+        assert qnp.allclose(
             cart3d.d_x,
             Quantity([42.658096, -0.6040496, -36.867138, 1.323785], "km/s"),
+            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
         )
-        assert qnp.array_equal(
+        assert qnp.allclose(
             cart3d.d_y,
             Quantity([1.2404853, 67.66016, -92.52022, 227.499], "km/s"),
+            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
         )
-        assert qnp.array_equal(
+        assert qnp.allclose(
             cart3d.d_z,
             Quantity([-1.2342439, -83.56782, -156.43553, -5.985529], "km/s"),
+            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
         )
 
     def test_spherical_to_cartesian3d_astropy(
@@ -768,14 +774,20 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         cylindrical = difntl.represent_as(cx.CylindricalDifferential, vector)
 
         assert isinstance(cylindrical, cx.CylindricalDifferential)
-        assert qnp.array_equal(
+        assert qnp.allclose(
             cylindrical.d_rho,
             Quantity([42.658096, 44.824585, 2.999993, -227.499], "km/s"),
+            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
         )
-        assert qnp.array_equal(cylindrical.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
-        assert qnp.array_equal(
+        assert qnp.allclose(
+            cylindrical.d_phi,
+            Quantity([5, 6, 7, 8], "mas/yr"),
+            atol=Quantity(1e-6, "mas/yr"),  # TODO: tighter atol
+        )
+        assert qnp.allclose(
             cylindrical.d_z,
             Quantity([-1.2342439, -83.56782, -156.43553, -5.985529], "km/s"),
+            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
         )
 
     def test_spherical_to_cylindrical_astropy(

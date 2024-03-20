@@ -22,6 +22,7 @@ from unxt import Quantity
 from .base import Abstract2DVector, Abstract2DVectorDifferential
 from coordinax._base_vec import AbstractVector
 from coordinax._checks import check_phi_range, check_r_non_negative
+from coordinax._converters import converter_phi_to_range
 from coordinax._typing import (
     BatchableAngle,
     BatchableAngularSpeed,
@@ -145,7 +146,9 @@ class PolarVector(Abstract2DVector):
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
+        converter=lambda x: converter_phi_to_range(
+            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+        )
     )
     r"""Polar angle :math:`\phi \in [0,2\pi)`."""
 
@@ -166,8 +169,8 @@ class PolarVector(Abstract2DVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import PolarVector
-        >>> q = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> import coordinax as cx
+        >>> q = cx.PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> q.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
 

@@ -154,8 +154,8 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> vec = cx.Cartesian3DVector.constructor(q).represent_as(cx.SphericalVector)
     >>> op(vec)
     SphericalVector( r=Quantity[...](value=f32[], unit=Unit("kpc")),
-                     theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                     phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                     phi=Quantity[...](value=f32[], unit=Unit("rad")),
+                     theta=Quantity[...](value=f32[], unit=Unit("rad")) )
 
     Many operators are time dependent and require a time argument. This operator
     is time independent and will pass through the time argument:
