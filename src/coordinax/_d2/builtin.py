@@ -169,8 +169,8 @@ class PolarVector(Abstract2DVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import PolarVector
-        >>> q = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> import coordinax as cx
+        >>> q = cx.PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> q.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
