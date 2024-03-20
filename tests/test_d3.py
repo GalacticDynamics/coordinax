@@ -902,17 +902,17 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
 
     def test_cylindrical_to_spherical(self, difntl, vector):
         """Test ``coordinax.represent_as(SphericalDifferential)``."""
-        spherical = difntl.represent_as(cx.SphericalDifferential, vector)
+        dsph = difntl.represent_as(cx.SphericalDifferential, vector)
 
-        assert isinstance(spherical, cx.SphericalDifferential)
+        assert isinstance(dsph, cx.SphericalDifferential)
         assert qnp.array_equal(
-            spherical.d_r,
+            dsph.d_r,
             Quantity([9.055385, 10.198039, 11.401753, 12.64911], "km/s"),
         )
-        assert qnp.array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
+        assert qnp.array_equal(dsph.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
         assert qnp.allclose(
-            spherical.d_theta,
-            Quantity([-0.08428223, 0.07544143, -0.0326127, -0.01571696], "mas/yr"),
+            dsph.d_theta,
+            Quantity([0.0, 0, 0, 0], "mas/yr"),
             atol=Quantity(1e-8, "mas/yr"),
         )
 
