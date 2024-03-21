@@ -498,9 +498,9 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
     def difntl(self) -> cx.CartesianDifferential3D:
         """Return a differential."""
         return cx.CartesianDifferential3D(
-            d_x=Quantity([1, 2, 3, 4], "km/s"),
-            d_y=Quantity([5, 6, 7, 8], "km/s"),
-            d_z=Quantity([9, 10, 11, 12], "km/s"),
+            d_x=Quantity([5, 6, 7, 8], "km/s"),
+            d_y=Quantity([9, 10, 11, 12], "km/s"),
+            d_z=Quantity([13, 14, 15, 16], "km/s"),
         )
 
     @pytest.fixture(scope="class")
@@ -590,17 +590,21 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         assert isinstance(spherical, cx.SphericalDifferential)
         assert qnp.allclose(
             spherical.d_r,
-            Quantity([10.344081, 11.832159, 13.379088, 14.966629], "km/s"),
+            Quantity([16.1445, 17.917269, 19.657543, 21.380898], "km/s"),
             atol=Quantity(1e-8, "km/s"),
         )
         assert qnp.allclose(
             spherical.d_phi,
-            Quantity([0, 0, 0.00471509, 0], "mas/Myr"),
+            Quantity(
+                [-0.61538464, -0.40000004, -0.275862, -0.19999999], "km rad / (kpc s)"
+            ),
             atol=Quantity(1e-8, "mas/Myr"),
         )
         assert qnp.allclose(
             spherical.d_theta,
-            Quantity([0.03221978, -0.05186598, -0.01964621, -0.01886036], "mas/Myr"),
+            Quantity(
+                [0.2052807, 0.1807012, 0.15257944, 0.12777519], "km rad / (kpc s)"
+            ),
             atol=Quantity(1e-8, "mas/Myr"),
         )
 
@@ -612,18 +616,8 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
 
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
-        with pytest.raises(AssertionError):  # TODO: fixme
-            assert np.allclose(
-                convert(sph.d_theta, APYQuantity).to("mas/Myr"),
-                apysph.d_theta.to("mas/Myr"),
-                atol=1e-9,
-            )
-        with pytest.raises(AssertionError):  # TODO: fixme
-            assert np.allclose(
-                convert(sph.d_phi, APYQuantity).to("mas/Myr"),
-                apysph.d_phi.to("mas/Myr"),
-                atol=1e-7,
-            )
+        assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta, atol=1e-9)
+        assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi, atol=1e-7)
 
     def test_cartesian3d_to_cylindrical(self, difntl, vector):
         """Test ``coordinax.represent_as(CylindricalDifferential)``."""
@@ -632,14 +626,18 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         assert isinstance(cylindrical, cx.CylindricalDifferential)
         assert qnp.array_equal(
             cylindrical.d_rho,
-            Quantity([5.0990195, 6.324555, 7.6157727, 8.944272], "km/s"),
+            Quantity([9.805807, 11.384199, 12.86803, 14.310835], "km/s"),
         )
         assert qnp.allclose(
             cylindrical.d_phi,
-            Quantity([0, 0, 0.00471509, 0], "mas/Myr"),
+            Quantity(
+                [-0.61538464, -0.40000004, -0.275862, -0.19999999], "km rad / (kpc s)"
+            ),
             atol=Quantity(1e-8, "mas/Myr"),
         )
-        assert qnp.array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], "km/s"))
+        assert qnp.array_equal(
+            cylindrical.d_z, Quantity([13.0, 14.0, 15.0, 16], "km/s")
+        )
 
     def test_cartesian3d_to_cylindrical_astropy(
         self, difntl, vector, apydifntl, apyvector
@@ -649,8 +647,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
-        with pytest.raises(AssertionError):  # TODO: fixme
-            assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
+        assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
 
 
 class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
@@ -660,9 +657,9 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
     def difntl(self) -> cx.SphericalDifferential:
         """Return a differential."""
         return cx.SphericalDifferential(
-            d_r=Quantity([1, 2, 3, 4], "km/s"),
-            d_phi=Quantity([5, 6, 7, 8], "mas/yr"),
-            d_theta=Quantity([9, 10, 11, 12], "mas/yr"),
+            d_r=Quantity([5, 6, 7, 8], "km/s"),
+            d_phi=Quantity([9, 10, 11, 12], "mas/yr"),
+            d_theta=Quantity([13, 14, 15, 16], "mas/yr"),
         )
 
     @pytest.fixture(scope="class")
@@ -735,18 +732,18 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         assert isinstance(cart3d, cx.CartesianDifferential3D)
         assert qnp.allclose(
             cart3d.d_x,
-            Quantity([42.658096, -0.6040496, -36.867138, 1.323785], "km/s"),
-            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
+            Quantity([61.803337, -7.770853, -60.081947, 1.985678], "km/s"),
+            atol=Quantity(1e-8, "km/s"),
         )
         assert qnp.allclose(
             cart3d.d_y,
-            Quantity([1.2404853, 67.66016, -92.52022, 227.499], "km/s"),
-            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
+            Quantity([2.2328734, 106.6765, -144.60716, 303.30875], "km/s"),
+            atol=Quantity(1e-8, "km/s"),
         )
         assert qnp.allclose(
             cart3d.d_z,
-            Quantity([-1.2342439, -83.56782, -156.43553, -5.985529], "km/s"),
-            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
+            Quantity([1.7678856, -115.542175, -213.32118, -10.647271], "km/s"),
+            atol=Quantity(1e-8, "km/s"),
         )
 
     def test_spherical_to_cartesian3d_astropy(
@@ -785,18 +782,18 @@ class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
         assert isinstance(cylindrical, cx.CylindricalDifferential)
         assert qnp.allclose(
             cylindrical.d_rho,
-            Quantity([42.658096, 44.824585, 2.999993, -227.499], "km/s"),
-            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
+            Quantity([61.803337, 65.60564, 6.9999905, -303.30875], "km/s"),
+            atol=Quantity(1e-8, "km/s"),
         )
         assert qnp.allclose(
             cylindrical.d_phi,
-            Quantity([5, 6, 7, 8], "mas/yr"),
-            atol=Quantity(1e-6, "mas/yr"),  # TODO: tighter atol
+            Quantity([2444.4805, 2716.0894, 2987.6985, 3259.3074], "deg km / (kpc s)"),
+            atol=Quantity(1e-8, "mas/yr"),
         )
         assert qnp.allclose(
             cylindrical.d_z,
-            Quantity([-1.2342439, -83.56782, -156.43553, -5.985529], "km/s"),
-            atol=Quantity(1e-6, "km/s"),  # TODO: tighter atol
+            Quantity([1.7678856, -115.542175, -213.32118, -10.647271], "km/s"),
+            atol=Quantity(1e-8, "km/s"),
         )
 
     def test_spherical_to_cylindrical_astropy(
@@ -817,9 +814,9 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
     def difntl(self) -> cx.CylindricalDifferential:
         """Return a differential."""
         return cx.CylindricalDifferential(
-            d_rho=Quantity([1, 2, 3, 4], "km/s"),
-            d_phi=Quantity([5, 6, 7, 8], "mas/yr"),
-            d_z=Quantity([9, 10, 11, 12], "km/s"),
+            d_rho=Quantity([5, 6, 7, 8], "km/s"),
+            d_phi=Quantity([9, 10, 11, 12], "mas/yr"),
+            d_z=Quantity([13, 14, 15, 16], "km/s"),
         )
 
     @pytest.fixture(scope="class")
@@ -887,13 +884,13 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
 
         assert isinstance(cart3d, cx.CartesianDifferential3D)
         assert qnp.array_equal(
-            cart3d.d_x, Quantity([1.0, -46.787014, -91.76889, -25.367176], "km/s")
+            cart3d.d_x, Quantity([5.0, -76.537544, -145.15944, -40.03075], "km/s")
         )
         assert qnp.array_equal(
             cart3d.d_y,
-            Quantity([23.702353, 32.418385, -38.69947, -149.61249], "km/s"),
+            Quantity([42.664234, 56.274563, -58.73506, -224.13647], "km/s"),
         )
-        assert qnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], "km/s"))
+        assert qnp.array_equal(cart3d.d_z, Quantity([13.0, 14.0, 15.0, 16.0], "km/s"))
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
         assert np.allclose(convert(cart3d.d_x, APYQuantity), apycart3.d_x)
@@ -907,13 +904,18 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         assert isinstance(dsph, cx.SphericalDifferential)
         assert qnp.array_equal(
             dsph.d_r,
-            Quantity([9.055385, 10.198039, 11.401753, 12.64911], "km/s"),
+            Quantity([13.472646, 14.904826, 16.313278, 17.708754], "km/s"),
         )
-        assert qnp.array_equal(dsph.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
+        assert qnp.array_equal(
+            dsph.d_phi,
+            Quantity([42.664234, 47.404705, 52.145176, 56.885643], "km rad / (kpc s)"),
+        )
         assert qnp.allclose(
             dsph.d_theta,
-            Quantity([0.0, 0, 0, 0], "mas/yr"),
-            atol=Quantity(5e-7, "mas/yr"),
+            Quantity(
+                [0.3902412, 0.30769292, 0.24615361, 0.19999981], "km rad / (kpc s)"
+            ),
+            atol=Quantity(5e-7, "km rad / (kpc s)"),
         )
 
     def test_cylindrical_to_spherical_astropy(
@@ -923,8 +925,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         sph = difntl.represent_as(cx.SphericalDifferential, vector)
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
-        with pytest.raises(AssertionError):
-            assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
+        assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
 
     def test_cylindrical_to_cylindrical(self, difntl, vector):
