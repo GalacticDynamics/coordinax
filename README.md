@@ -7,7 +7,9 @@
 [![Conda-Forge][conda-badge]][conda-link]
 [![PyPI platforms][pypi-platforms]][pypi-link]
 
-[![GitHub Discussion][github-discussions-badge]][github-discussions-link]
+[![DOI][zenodo-badge]][zenodo-link]
+
+<!-- [![GitHub Discussion][github-discussions-badge]][github-discussions-link] -->
 
 <!-- SPHINX-START -->
 
@@ -16,12 +18,14 @@
 [actions-link]:             https://github.com/GalacticDynamics/coordinax/actions
 [conda-badge]:              https://img.shields.io/conda/vn/conda-forge/coordinax
 [conda-link]:               https://github.com/conda-forge/coordinax-feedstock
-[github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
-[github-discussions-link]:  https://github.com/GalacticDynamics/coordinax/discussions
+<!-- [github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
+[github-discussions-link]:  https://github.com/GalacticDynamics/coordinax/discussions -->
 [pypi-link]:                https://pypi.org/project/coordinax/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/coordinax
 [pypi-version]:             https://img.shields.io/pypi/v/coordinax
 [rtd-badge]:                https://readthedocs.org/projects/coordinax/badge/?version=latest
 [rtd-link]:                 https://coordinax.readthedocs.io/en/latest/?badge=latest
+[zenodo-badge]:             https://zenodo.org/badge/755708966.svg
+[zenodo-link]:              https://zenodo.org/doi/10.5281/zenodo.10850557
 
 <!-- prettier-ignore-end -->
