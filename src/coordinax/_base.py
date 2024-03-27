@@ -559,7 +559,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         Parameters
         ----------
-        units : UnitSystem
+        units : `unxt.AbstractUnitSystem`
             The units to convert to according to the physical type of the
             components.
 
