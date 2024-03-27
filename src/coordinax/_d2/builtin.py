@@ -19,16 +19,11 @@ import jax
 import quaxed.array_api as xp
 from unxt import Quantity
 
+import coordinax._typing as ct
 from .base import Abstract2DVector, Abstract2DVectorDifferential
 from coordinax._base_vec import AbstractVector
 from coordinax._checks import check_phi_range, check_r_non_negative
 from coordinax._converters import converter_phi_to_range
-from coordinax._typing import (
-    BatchableAngle,
-    BatchableAngularSpeed,
-    BatchableLength,
-    BatchableSpeed,
-)
 from coordinax._utils import classproperty
 
 # =============================================================================
@@ -39,12 +34,12 @@ from coordinax._utils import classproperty
 class Cartesian2DVector(Abstract2DVector):
     """Cartesian vector representation."""
 
-    x: BatchableLength = eqx.field(
+    x: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: BatchableLength = eqx.field(
+    y: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
@@ -118,7 +113,7 @@ class Cartesian2DVector(Abstract2DVector):
         return replace(self, x=self.x - cart.x, y=self.y - cart.y)
 
     @partial(jax.jit)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
         Examples
@@ -140,12 +135,12 @@ class PolarVector(Abstract2DVector):
     We use the symbol `phi` instead of `theta` to adhere to the ISO standard.
     """
 
-    r: BatchableLength = eqx.field(
+    r: ct.BatchableDistance = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    phi: BatchableAngle = eqx.field(
+    phi: ct.BatchableAngle = eqx.field(
         converter=lambda x: converter_phi_to_range(
             Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
@@ -163,7 +158,7 @@ class PolarVector(Abstract2DVector):
         return PolarDifferential
 
     @partial(jax.jit)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
         Examples
@@ -185,12 +180,12 @@ class PolarVector(Abstract2DVector):
 class CartesianDifferential2D(Abstract2DVectorDifferential):
     """Cartesian differential representation."""
 
-    d_x: BatchableSpeed = eqx.field(
+    d_x: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
 
-    d_y: BatchableSpeed = eqx.field(
+    d_y: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
@@ -201,7 +196,7 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
         return Cartesian2DVector
 
     @partial(jax.jit)
-    def norm(self, _: Abstract2DVector | None = None, /) -> BatchableSpeed:
+    def norm(self, _: Abstract2DVector | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -220,12 +215,12 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 class PolarDifferential(Abstract2DVectorDifferential):
     """Polar differential representation."""
 
-    d_r: BatchableSpeed = eqx.field(
+    d_r: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
-    d_phi: BatchableAngularSpeed = eqx.field(
+    d_phi: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""

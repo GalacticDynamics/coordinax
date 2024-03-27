@@ -19,18 +19,13 @@ import equinox as eqx
 import jax
 
 import quaxed.array_api as xp
-from unxt import Quantity
+from unxt import Distance, Quantity
 
+import coordinax._typing as ct
 from .base import Abstract3DVector, Abstract3DVectorDifferential
 from coordinax._base_vec import AbstractVector
 from coordinax._checks import check_phi_range, check_r_non_negative, check_theta_range
 from coordinax._converters import converter_phi_to_range
-from coordinax._typing import (
-    BatchableAngle,
-    BatchableAngularSpeed,
-    BatchableLength,
-    BatchableSpeed,
-)
 from coordinax._utils import classproperty
 
 ##############################################################################
@@ -41,17 +36,17 @@ from coordinax._utils import classproperty
 class Cartesian3DVector(Abstract3DVector):
     """Cartesian vector representation."""
 
-    x: BatchableLength = eqx.field(
+    x: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: BatchableLength = eqx.field(
+    y: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
-    z: BatchableLength = eqx.field(
+    z: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
@@ -124,7 +119,7 @@ class Cartesian3DVector(Abstract3DVector):
         return replace(self, x=self.x - cart.x, y=self.y - cart.y, z=self.z - cart.z)
 
     @partial(jax.jit)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
         Examples
@@ -143,19 +138,19 @@ class Cartesian3DVector(Abstract3DVector):
 class SphericalVector(Abstract3DVector):
     """Spherical vector representation."""
 
-    r: BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+    r: ct.BatchableDistance = eqx.field(
+        converter=partial(Distance.constructor, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    phi: BatchableAngle = eqx.field(
+    phi: ct.BatchableAngle = eqx.field(
         converter=lambda x: converter_phi_to_range(
             Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
-    theta: BatchableAngle = eqx.field(
+    theta: ct.BatchableAngle = eqx.field(
         converter=partial(Quantity["angle"].constructor, dtype=float)
     )
     r"""Inclination angle :math:`\phi \in [0,180]`."""
@@ -172,7 +167,7 @@ class SphericalVector(Abstract3DVector):
         return SphericalDifferential
 
     @partial(jax.jit)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
         Examples
@@ -192,19 +187,19 @@ class SphericalVector(Abstract3DVector):
 class CylindricalVector(Abstract3DVector):
     """Cylindrical vector representation."""
 
-    rho: BatchableLength = eqx.field(
+    rho: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
-    phi: BatchableAngle = eqx.field(
+    phi: ct.BatchableAngle = eqx.field(
         converter=lambda x: converter_phi_to_range(
             Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
-    z: BatchableLength = eqx.field(
+    z: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""Height :math:`z \in (-\infty,+\infty)`."""
@@ -220,7 +215,7 @@ class CylindricalVector(Abstract3DVector):
         return CylindricalDifferential
 
     @partial(jax.jit)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
         Examples
@@ -244,17 +239,17 @@ class CylindricalVector(Abstract3DVector):
 class CartesianDifferential3D(Abstract3DVectorDifferential):
     """Cartesian differential representation."""
 
-    d_x: BatchableSpeed = eqx.field(
+    d_x: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""X speed :math:`dx/dt \in [-\infty, \infty]."""
 
-    d_y: BatchableSpeed = eqx.field(
+    d_y: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""Y speed :math:`dy/dt \in [-\infty, \infty]."""
 
-    d_z: BatchableSpeed = eqx.field(
+    d_z: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
@@ -265,7 +260,7 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
         return Cartesian3DVector
 
     @partial(jax.jit)
-    def norm(self, _: Abstract3DVector | None = None, /) -> BatchableSpeed:
+    def norm(self, _: Abstract3DVector | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -286,17 +281,17 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
 class SphericalDifferential(Abstract3DVectorDifferential):
     """Spherical differential representation."""
 
-    d_r: BatchableSpeed = eqx.field(
+    d_r: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
-    d_theta: BatchableAngularSpeed = eqx.field(
+    d_theta: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
-    d_phi: BatchableAngularSpeed = eqx.field(
+    d_phi: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
@@ -311,17 +306,17 @@ class SphericalDifferential(Abstract3DVectorDifferential):
 class CylindricalDifferential(Abstract3DVectorDifferential):
     """Cylindrical differential representation."""
 
-    d_rho: BatchableSpeed = eqx.field(
+    d_rho: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
-    d_phi: BatchableAngularSpeed = eqx.field(
+    d_phi: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    d_z: BatchableSpeed = eqx.field(
+    d_z: ct.BatchableSpeed = eqx.field(
         converter=partial(Quantity["speed"].constructor, dtype=float)
     )
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
