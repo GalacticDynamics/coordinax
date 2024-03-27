@@ -7,7 +7,7 @@ from typing import TypeAlias
 import astropy.units as u
 from jaxtyping import Float, Int, Shaped
 
-from unxt import Quantity
+from unxt import Distance, Quantity
 
 Unit: TypeAlias = u.Unit | u.UnitBase | u.CompositeUnit
 
