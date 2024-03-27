@@ -22,7 +22,7 @@ from jax import Device
 from plum import dispatch
 
 import quaxed.array_api as xp
-from unxt import Quantity, UnitSystem
+from unxt import Quantity, unitsystem
 
 from ._utils import classproperty, dataclass_items, dataclass_values, full_shaped
 from coordinax._typing import Unit
@@ -521,7 +521,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(cls))
 
     @property
-    def units(self) -> Mapping[str, u.Unit]:
+    def units(self) -> Mapping[str, Unit]:
         """Get the units of the vector's components."""
         return MappingProxyType({k: v.unit for k, v in dataclass_items(self)})
 
@@ -554,7 +554,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         raise NotImplementedError
 
     @dispatch
-    def to_units(self, units: UnitSystem) -> "AbstractVectorBase":
+    def to_units(self, units: Any) -> "AbstractVectorBase":
         """Convert the vector to the given units.
 
         Parameters
@@ -580,9 +580,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         )
 
         """
+        usys = unitsystem(units)
         return replace(
             self,
-            **{k: v.to(units[v.unit.physical_type]) for k, v in dataclass_items(self)},
+            **{k: v.to(usys[v.unit.physical_type]) for k, v in dataclass_items(self)},
         )
 
     @dispatch
