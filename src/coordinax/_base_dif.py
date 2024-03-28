@@ -98,7 +98,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         >>> vec
         RadialVector(r=Distance(value=f32[], unit=Unit("m")))
         >>> vec.r
-        Quantity(Array(2., dtype=float32), unit='m')
+        Distance(Array(2., dtype=float32), unit='m')
 
         """
         return self.integral_cls.constructor(
