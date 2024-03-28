@@ -128,7 +128,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     >>> vec = cx.Cartesian1DVector.constructor(q).represent_as(cx.RadialVector)
     >>> op(vec)
-    RadialVector(r=Quantity[...](value=f32[], unit=Unit("kpc")))
+    RadialVector(r=Distance(value=f32[], unit=Unit("kpc")))
 
     - 2D:
 
@@ -140,7 +140,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     >>> vec = cx.Cartesian2DVector.constructor(q).represent_as(cx.PolarVector)
     >>> op(vec)
-    PolarVector( r=Quantity[...](value=f32[], unit=Unit("kpc")),
+    PolarVector( r=Distance(value=f32[], unit=Unit("kpc")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )
 
     - 3D:
@@ -153,7 +153,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     >>> vec = cx.Cartesian3DVector.constructor(q).represent_as(cx.SphericalVector)
     >>> op(vec)
-    SphericalVector( r=Quantity[...](value=f32[], unit=Unit("kpc")),
+    SphericalVector( r=Distance(value=f32[], unit=Unit("kpc")),
                      phi=Quantity[...](value=f32[], unit=Unit("rad")),
                      theta=Quantity[...](value=f32[], unit=Unit("rad")) )
 

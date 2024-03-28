@@ -17,7 +17,7 @@ import equinox as eqx
 import jax
 
 import quaxed.array_api as xp
-from unxt import Quantity
+from unxt import Distance, Quantity
 
 import coordinax._typing as ct
 from .base import Abstract2DVector, Abstract2DVectorDifferential
@@ -136,7 +136,7 @@ class PolarVector(Abstract2DVector):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Distance.constructor, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -167,7 +167,7 @@ class PolarVector(Abstract2DVector):
         >>> import coordinax as cx
         >>> q = cx.PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> q.norm()
-        Distance(Array(3., dtype=float32), unit='kpc')
+        Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
         """
         return self.r
