@@ -96,9 +96,9 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         >>> dr = RadialDifferential(Quantity(1, "m/s"))
         >>> vec = dr * Quantity(2, "s")
         >>> vec
-        RadialVector(r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")))
+        RadialVector(r=Distance(value=f32[], unit=Unit("m")))
         >>> vec.r
-        Quantity['length'](Array(2., dtype=float32), unit='m')
+        Distance(Array(2., dtype=float32), unit='m')
 
         """
         return self.integral_cls.constructor(

@@ -6,7 +6,7 @@ import astropy.units as u
 import jax
 import pytest
 
-from unxt import Quantity
+from unxt import AbstractQuantity, Quantity
 
 import coordinax as cx
 from coordinax._base_vec import VECTOR_CLASSES
@@ -37,4 +37,4 @@ def test_jax_through_representation(
 
     assert isinstance(newq, cx.AbstractVector)
     for k, f in dataclass_items(newq):
-        assert isinstance(f, Quantity), k
+        assert isinstance(f, AbstractQuantity), k

@@ -618,7 +618,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         ...                       phi=Quantity(3, "rad"))
         >>> sph.to_units({"length": "km", "angle": "deg"})
         SphericalVector(
-            r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
+            r=Distance(value=f32[], unit=Unit("km")),
             phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
             theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
         )
@@ -666,7 +666,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         >>> sph.to_units(ToUnitsOptions.consistent)
         SphericalVector(
-            r=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            r=Distance(value=f32[], unit=Unit("m")),
             phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad")),
             theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad"))
         )

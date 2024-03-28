@@ -63,7 +63,7 @@ def constructor(
     ...                                      phi=3 * u.deg)
     >>> vec = SphericalVector.constructor(sph)
     >>> vec.r
-    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+    Distance(Array(1., dtype=float32), unit='kpc')
 
     """
     obj = obj.represent_as(apyc.PhysicsSphericalRepresentation)
@@ -329,7 +329,7 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVecto
     ...                                      phi=3 * u.deg)
     >>> convert(sph, cx.SphericalVector)
     SphericalVector(
-      r=Quantity[...](value=f32[], unit=Unit("kpc")),
+      r=Distance(value=f32[], unit=Unit("kpc")),
       phi=Quantity[...](value=f32[], unit=Unit("deg")),
       theta=Quantity[...](value=f32[], unit=Unit("deg"))
     )

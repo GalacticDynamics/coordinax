@@ -17,12 +17,12 @@ import equinox as eqx
 import jax
 
 import quaxed.array_api as xp
-from unxt import Quantity
+from unxt import Distance, Quantity
 
+import coordinax._typing as ct
 from .base import Abstract1DVector, Abstract1DVectorDifferential
 from coordinax._base_vec import AbstractVector
 from coordinax._checks import check_r_non_negative
-from coordinax._typing import BatchableLength, BatchableSpeed
 from coordinax._utils import classproperty
 
 ##############################################################################
@@ -33,7 +33,7 @@ from coordinax._utils import classproperty
 class Cartesian1DVector(Abstract1DVector):
     """Cartesian vector representation."""
 
-    x: BatchableLength = eqx.field(
+    x: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
@@ -118,7 +118,7 @@ class Cartesian1DVector(Abstract1DVector):
         return replace(self, x=self.x - cart.x)
 
     @partial(jax.jit)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
         Examples
@@ -138,8 +138,8 @@ class Cartesian1DVector(Abstract1DVector):
 class RadialVector(Abstract1DVector):
     """Radial vector representation."""
 
-    r: BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+    r: ct.BatchableDistance = eqx.field(
+        converter=partial(Distance.constructor, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -161,7 +161,7 @@ class RadialVector(Abstract1DVector):
 class CartesianDifferential1D(Abstract1DVectorDifferential):
     """Cartesian differential representation."""
 
-    d_x: BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
+    d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @classproperty
@@ -170,7 +170,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
         return Cartesian1DVector
 
     @partial(jax.jit)
-    def norm(self, _: Abstract1DVector | None = None, /) -> BatchableSpeed:
+    def norm(self, _: Abstract1DVector | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -189,7 +189,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
 class RadialDifferential(Abstract1DVectorDifferential):
     """Radial differential representation."""
 
-    d_r: BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
+    d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
     @classproperty
