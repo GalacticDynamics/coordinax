@@ -167,7 +167,7 @@ class PolarVector(Abstract2DVector):
         >>> import coordinax as cx
         >>> q = cx.PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> q.norm()
-        Quantity['length'](Array(3., dtype=float32), unit='kpc')
+        Distance(Array(3., dtype=float32), unit='kpc')
 
         """
         return self.r

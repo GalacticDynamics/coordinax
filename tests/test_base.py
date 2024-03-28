@@ -11,7 +11,7 @@ import pytest
 
 import quaxed.array_api as xp
 import quaxed.numpy as qnp
-from unxt import Quantity
+from unxt import AbstractQuantity
 
 from coordinax import (
     Abstract1DVector,
@@ -160,7 +160,7 @@ class AbstractVectorBaseTest:
         assert isinstance(adict, dict)
         for k, v in adict.items():
             assert isinstance(k, str)
-            assert isinstance(v, Quantity)
+            assert isinstance(v, AbstractQuantity)
             assert qnp.array_equal(v, getattr(vector, k))
 
         # Test with a different dict_factory

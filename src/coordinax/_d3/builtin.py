@@ -177,7 +177,7 @@ class SphericalVector(Abstract3DVector):
         >>> s = SphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> s.norm()
-        Quantity['length'](Array(3., dtype=float32), unit='kpc')
+        Distance(Array(3., dtype=float32), unit='kpc')
 
         """
         return self.r
