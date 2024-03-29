@@ -83,6 +83,7 @@
     "--showlocals",
     "--strict-markers",
     "--strict-config",
+    "--doctest-glob='*.rst | *.py'",
   ]
   filterwarnings = [
     "error",
