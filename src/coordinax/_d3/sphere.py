@@ -12,6 +12,7 @@ __all__ = [
     # Geographic / Astronomical conventions
     "LonLatSphericalVector",
     "LonLatSphericalDifferential",
+    "LonCosLatSphericalDifferential",
 ]
 
 from abc import abstractmethod
@@ -309,6 +310,31 @@ class LonLatSphericalDifferential(Abstract3DVectorDifferential):
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
     r"""Longitude speed :math:`d\theta/dt \in [-\infty, \infty]."""
+
+    d_lat: ct.BatchableAngularSpeed = eqx.field(
+        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+    )
+    r"""Latitude speed :math:`d\phi/dt \in [-\infty, \infty]."""
+
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[LonLatSphericalVector]:
+        return LonLatSphericalVector
+
+
+@final
+class LonCosLatSphericalDifferential(Abstract3DVectorDifferential):
+    """Spherical differential representation."""
+
+    d_distance: ct.BatchableSpeed = eqx.field(
+        converter=partial(Quantity["speed"].constructor, dtype=float)
+    )
+    r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
+
+    d_lon_coslat: ct.BatchableAngularSpeed = eqx.field(
+        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+    )
+    r"""Longitude * cos(Latitude) speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
     d_lat: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)

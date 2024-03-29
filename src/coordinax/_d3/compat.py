@@ -19,6 +19,7 @@ from .builtin import (
     CylindricalVector,
 )
 from .sphere import (
+    LonCosLatSphericalDifferential,
     LonLatSphericalDifferential,
     LonLatSphericalVector,
     SphericalDifferential,
@@ -206,6 +207,37 @@ def constructor(
 
     """
     return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
+
+
+@LonCosLatSphericalDifferential.constructor._f.register  # noqa: SLF001
+def constructor(
+    cls: type[LonCosLatSphericalDifferential], obj: apyc.SphericalCosLatDifferential
+) -> LonCosLatSphericalDifferential:
+    """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import SphericalCosLatDifferential
+
+    >>> dsph = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
+    ...                                    d_lon_coslat=2 * u.mas/u.yr,
+    ...                                    d_lat=3 * u.mas/u.yr)
+    >>> dif = cx.LonCosLatSphericalDifferential.constructor(dsph)
+    >>> dif
+    LonCosLatSphericalDifferential(
+      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
+      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+    )
+    >>> dif.d_distance
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return cls(
+        d_distance=obj.d_distance, d_lon_coslat=obj.d_lon_coslat, d_lat=obj.d_lat
+    )
 
 
 #####################################################################
@@ -787,3 +819,79 @@ def apysph_to_difflonlatsph(
 
     """
     return LonLatSphericalDifferential.constructor(obj)
+
+
+# =====================================
+# LonCosLatSphericalDifferential
+
+
+# @conversion_method(LonCosLatSphericalDifferential, apyc.BaseDifferential)
+# @conversion_method(
+#     LonCosLatSphericalDifferential, apyc.SphericalCosLatDifferential
+# )
+def diffloncoslatsph_to_apysph(
+    obj: LonCosLatSphericalDifferential, /
+) -> apyc.SphericalCosLatDifferential:
+    """LonCosLatSphericalDifferential -> `astropy.SphericalCosLatDifferential`.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> dif = cx.LonCosLatSphericalDifferential(d_distance=Quantity(1, unit="km/s"),
+    ...                                         d_lat=Quantity(2, unit="mas/yr"),
+    ...                                         d_lon_coslat=Quantity(3, unit="mas/yr"))
+    >>> convert(dif, apyc.SphericalCosLatDifferential)
+    <SphericalCosLatDifferential (d_lon_coslat, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
+        (3., 2., 1.)>
+
+    >>> convert(dif, apyc.BaseDifferential)
+    <SphericalCosLatDifferential (d_lon_coslat, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
+        (3., 2., 1.)>
+
+    """  # noqa: E501
+    return apyc.SphericalCosLatDifferential(
+        d_distance=convert(obj.d_distance, apyu.Quantity),
+        d_lon_coslat=convert(obj.d_lon_coslat, apyu.Quantity),
+        d_lat=convert(obj.d_lat, apyu.Quantity),
+    )
+
+
+# TODO: use decorator when https://github.com/beartype/plum/pull/135
+add_conversion_method(
+    LonCosLatSphericalDifferential, apyc.BaseDifferential, diffloncoslatsph_to_apysph
+)
+add_conversion_method(
+    LonCosLatSphericalDifferential,
+    apyc.SphericalCosLatDifferential,
+    diffloncoslatsph_to_apysph,
+)
+
+
+@conversion_method(  # type: ignore[misc]
+    apyc.SphericalCosLatDifferential, LonCosLatSphericalDifferential
+)
+def apysph_to_diffloncoslatsph(
+    obj: apyc.SphericalCosLatDifferential, /
+) -> LonCosLatSphericalDifferential:
+    """`astropy.SphericalCosLatDifferential` -> LonCosLatSphericalDifferential.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import SphericalCosLatDifferential
+
+    >>> dif = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
+    ...                                   d_lat=2 * u.mas/u.yr,
+    ...                                   d_lon_coslat=3 * u.mas/u.yr)
+    >>> convert(dif, cx.LonCosLatSphericalDifferential)
+    LonCosLatSphericalDifferential(
+      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
+      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+    )
+
+    """
+    return LonCosLatSphericalDifferential.constructor(obj)

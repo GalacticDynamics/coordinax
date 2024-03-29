@@ -18,6 +18,7 @@ from .builtin import (
 )
 from .sphere import (
     AbstractSphericalVector,
+    LonCosLatSphericalDifferential,
     LonLatSphericalDifferential,
     LonLatSphericalVector,
     MathSphericalDifferential,
@@ -99,6 +100,11 @@ def represent_as(
     (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
     (SphericalDifferential, type[SphericalDifferential], AbstractVector),
     (LonLatSphericalDifferential, type[LonLatSphericalDifferential], AbstractVector),
+    (
+        LonCosLatSphericalDifferential,
+        type[LonCosLatSphericalDifferential],
+        AbstractVector,
+    ),
     (MathSphericalDifferential, type[MathSphericalDifferential], AbstractVector),
 )
 def represent_as(
@@ -148,6 +154,14 @@ def represent_as(
     ...                                      d_lat=Quantity(2, "mas/yr"),
     ...                                      d_distance=Quantity(3, "km/s"))
     >>> cx.represent_as(dif, cx.LonLatSphericalDifferential, vec) is dif
+    True
+
+    LonCosLatSpherical to LonCosLatSpherical differential:
+
+    >>> dif = cx.LonCosLatSphericalDifferential(d_lon_coslat=Quantity(1, "mas/yr"),
+    ...                                         d_lat=Quantity(2, "mas/yr"),
+    ...                                         d_distance=Quantity(3, "km/s"))
+    >>> cx.represent_as(dif, cx.LonCosLatSphericalDifferential, vec) is dif
     True
 
     MathSpherical to MathSpherical differential:
@@ -558,3 +572,89 @@ def represent_as(
 
     """
     return target(r=current.r, theta=current.phi, phi=current.theta)
+
+
+# =============================================================================
+# LonLatSphericalDifferential
+
+
+@dispatch
+def represent_as(
+    current: Abstract3DVectorDifferential,
+    target: type[LonCosLatSphericalDifferential],
+    position: AbstractVector | Quantity["length"],
+    /,
+    **kwargs: Any,
+) -> LonCosLatSphericalDifferential:
+    """Abstract3DVectorDifferential -> LonCosLatSphericalDifferential.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.LonLatSphericalVector(lon=Quantity(15, "deg"), lat=Quantity(10, "deg"),
+    ...                                distance=Quantity(1.5, "kpc"))
+    >>> dif = cx.LonLatSphericalDifferential(d_lon=Quantity(7, "mas/yr"),
+    ...                                      d_lat=Quantity(0, "deg/Gyr"),
+    ...                                      d_distance=Quantity(-5, "km/s"))
+    >>> newdif = cx.represent_as(dif, cx.LonCosLatSphericalDifferential, vec)
+    >>> newdif
+    LonCosLatSphericalDifferential(
+        d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
+        d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+        d_lat=Quantity[...]( value=f32[], unit=Unit("deg / Gyr") ) )
+
+    >>> newdif.d_lon_coslat / xp.cos(vec.lat)  # float32 imprecision
+    Quantity['angular frequency'](Array(6.9999995, dtype=float32), unit='mas / yr')
+
+    """
+    # Parse the position to an AbstractVector
+    if isinstance(position, AbstractVector):
+        posvec = position
+    else:  # Q -> Cart<X>D
+        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+            position
+        )
+
+    # Transform the differential to LonLatSphericalDifferential
+    current = represent_as(current, LonLatSphericalDifferential, posvec)
+
+    # Transform the position to the required type
+    posvec = represent_as(posvec, current.integral_cls)
+
+    # Calculate the differential in the new system
+    return target(
+        d_lon_coslat=current.d_lon * xp.cos(posvec.lat),
+        d_lat=current.d_lat,
+        d_distance=current.d_distance,
+    )
+
+
+@dispatch
+def represent_as(
+    current: LonCosLatSphericalDifferential,
+    target: type[LonLatSphericalDifferential],
+    position: AbstractVector | Quantity["length"],
+    /,
+    **kwargs: Any,
+) -> LonLatSphericalDifferential:
+    """LonCosLatSphericalDifferential -> LonLatSphericalDifferential."""
+    # Parse the position to an AbstractVector
+    if isinstance(position, AbstractVector):
+        posvec = position
+    else:  # Q -> Cart<X>D
+        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+            position
+        )
+
+    # Transform the position to the required type
+    posvec = represent_as(posvec, current.integral_cls)
+
+    # Calculate the differential in the new system
+    return target(
+        d_lon=current.d_lon_coslat / xp.cos(posvec.lat),
+        d_lat=current.d_lat,
+        d_distance=current.d_distance,
+    )
