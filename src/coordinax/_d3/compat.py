@@ -17,9 +17,8 @@ from .builtin import (
     CartesianDifferential3D,
     CylindricalDifferential,
     CylindricalVector,
-    SphericalDifferential,
-    SphericalVector,
 )
+from .sphere import SphericalDifferential, SphericalVector
 from coordinax._utils import dataclass_values, full_shaped
 
 #####################################################################
@@ -527,8 +526,8 @@ def apysph_to_diffsph(
     >>> convert(dif, cx.SphericalDifferential)
     SphericalDifferential(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+      d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_theta=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
     )
 
     """

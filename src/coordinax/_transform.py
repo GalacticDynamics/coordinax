@@ -20,7 +20,8 @@ from ._d1.builtin import Cartesian1DVector, RadialVector
 from ._d2.base import Abstract2DVector, Abstract2DVectorDifferential
 from ._d2.builtin import Cartesian2DVector, PolarVector
 from ._d3.base import Abstract3DVector, Abstract3DVectorDifferential
-from ._d3.builtin import Cartesian3DVector, CylindricalVector, SphericalVector
+from ._d3.builtin import Cartesian3DVector, CylindricalVector
+from ._d3.sphere import MathSphericalVector, SphericalVector
 from ._exceptions import IrreversibleDimensionChange
 from ._utils import dataclass_items
 
@@ -95,8 +96,8 @@ def represent_as(
     >>> cx.represent_as(p, cx.SphericalDifferential, q)
     SphericalDifferential(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
+      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     If given a position as a Quantity, it will be converted to the appropriate
@@ -106,8 +107,8 @@ def represent_as(
     >>> cx.represent_as(p, cx.SphericalDifferential, Quantity([1.0, 2.0, 3.0], "km"))
     SphericalDifferential(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
+      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     """
@@ -293,14 +294,14 @@ def represent_as(
 @dispatch
 def represent_as(
     current: Cartesian1DVector,
-    target: type[SphericalVector],
+    target: type[SphericalVector] | type[MathSphericalVector],
     /,
     *,
     theta: Quantity = Quantity(0.0, u.radian),
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
-) -> SphericalVector:
-    """Cartesian1DVector -> SphericalVector.
+) -> SphericalVector | MathSphericalVector:
+    """Cartesian1DVector -> SphericalVector | MathSphericalVector.
 
     The `x` coordinate is converted to the radial coordinate `r`.
     The `theta` and `phi` coordinates are keyword arguments and default to 0.
@@ -392,14 +393,14 @@ def represent_as(
 @dispatch
 def represent_as(
     current: RadialVector,
-    target: type[SphericalVector],
+    target: type[SphericalVector] | type[MathSphericalVector],
     /,
     *,
     theta: Quantity = Quantity(0.0, u.radian),
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
-) -> SphericalVector:
-    """RadialVector -> SphericalVector.
+) -> SphericalVector | MathSphericalVector:
+    """RadialVector -> SphericalVector | MathSphericalVector.
 
     The `r` coordinate is converted to the radial coordinate `r`.
     The `theta` and `phi` coordinates are keyword arguments and default to 0.
@@ -430,8 +431,9 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian2DVector, type[SphericalVector]),
     (Cartesian2DVector, type[CylindricalVector]),
+    (Cartesian2DVector, type[SphericalVector]),
+    (Cartesian2DVector, type[MathSphericalVector]),
 )
 def represent_as(
     current: Abstract2DVector,
@@ -573,6 +575,18 @@ def represent_as(
 @dispatch
 def represent_as(
     current: PolarVector,
+    target: type[MathSphericalVector],
+    /,
+    phi: Quantity["angle"] = Quantity(0.0, u.radian),  # type: ignore[name-defined]
+    **kwargs: Any,
+) -> MathSphericalVector:
+    """PolarVector -> MathSphericalVector."""
+    return target(r=current.r, phi=phi, theta=current.phi)
+
+
+@dispatch
+def represent_as(
+    current: PolarVector,
     target: type[CylindricalVector],
     /,
     *,
@@ -709,6 +723,56 @@ def represent_as(
 
 
 # =============================================================================
+# CylindricalVector
+
+
+# -----------------------------------------------
+# 1D
+
+
+@dispatch
+def represent_as(
+    current: CylindricalVector, target: type[Cartesian1DVector], /, **kwargs: Any
+) -> Cartesian1DVector:
+    """CylindricalVector -> Cartesian1DVector."""
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    return target(x=current.rho * xp.cos(current.phi))
+
+
+@dispatch
+def represent_as(
+    current: CylindricalVector, target: type[RadialVector], /, **kwargs: Any
+) -> RadialVector:
+    """CylindricalVector -> RadialVector."""
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    return target(r=current.rho)
+
+
+# -----------------------------------------------
+# 2D
+
+
+@dispatch
+def represent_as(
+    current: CylindricalVector, target: type[Cartesian2DVector], /, **kwargs: Any
+) -> Cartesian2DVector:
+    """CylindricalVector -> Cartesian2DVector."""
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    x = current.rho * xp.cos(current.phi)
+    y = current.rho * xp.sin(current.phi)
+    return target(x=x, y=y)
+
+
+@dispatch
+def represent_as(
+    current: CylindricalVector, target: type[PolarVector], /, **kwargs: Any
+) -> PolarVector:
+    """CylindricalVector -> PolarVector."""
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    return target(r=current.rho, phi=current.phi)
+
+
+# =============================================================================
 # SphericalVector
 
 
@@ -759,7 +823,7 @@ def represent_as(
 
 
 # =============================================================================
-# CylindricalVector
+# MathSphericalVector
 
 
 # -----------------------------------------------
@@ -768,20 +832,20 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[Cartesian1DVector], /, **kwargs: Any
+    current: MathSphericalVector, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
-    """CylindricalVector -> Cartesian1DVector."""
+    """MathSphericalVector -> Cartesian1DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(x=current.rho * xp.cos(current.phi))
+    return target(x=current.r * xp.sin(current.phi) * xp.cos(current.theta))
 
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[RadialVector], /, **kwargs: Any
+    current: MathSphericalVector, target: type[RadialVector], /, **kwargs: Any
 ) -> RadialVector:
-    """CylindricalVector -> RadialVector."""
+    """MathSphericalVector -> RadialVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=current.rho)
+    return target(r=current.r)
 
 
 # -----------------------------------------------
@@ -790,19 +854,19 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[Cartesian2DVector], /, **kwargs: Any
+    current: MathSphericalVector, target: type[Cartesian2DVector], /, **kwargs: Any
 ) -> Cartesian2DVector:
-    """CylindricalVector -> Cartesian2DVector."""
+    """MathSphericalVector -> Cartesian2DVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    x = current.rho * xp.cos(current.phi)
-    y = current.rho * xp.sin(current.phi)
+    x = current.r * xp.sin(current.phi) * xp.cos(current.theta)
+    y = current.r * xp.sin(current.phi) * xp.sin(current.theta)
     return target(x=x, y=y)
 
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[PolarVector], /, **kwargs: Any
+    current: MathSphericalVector, target: type[PolarVector], /, **kwargs: Any
 ) -> PolarVector:
-    """CylindricalVector -> PolarVector."""
+    """MathSphericalVector -> PolarVector."""
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=current.rho, phi=current.phi)
+    return target(r=current.r * xp.sin(current.phi), phi=current.theta)
