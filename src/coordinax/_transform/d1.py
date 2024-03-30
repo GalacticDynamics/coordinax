@@ -163,8 +163,8 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.SphericalVector)
     >>> x2
     SphericalVector( r=Distance(value=f32[], unit=Unit("km")),
-                     phi=Quantity[...](value=f32[], unit=Unit("rad")),
-                     theta=Quantity[...](value=f32[], unit=Unit("rad")) )
+                     theta=Quantity[...](value=f32[], unit=Unit("rad")),
+                     phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x2.theta
@@ -388,8 +388,8 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.SphericalVector)
     >>> x2
     SphericalVector( r=Distance(value=f32[], unit=Unit("km")),
-                     phi=Quantity[...](value=f32[], unit=Unit("rad")),
-                     theta=Quantity[...](value=f32[], unit=Unit("rad")) )
+                     theta=Quantity[...](value=f32[], unit=Unit("rad")),
+                     phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x2.theta

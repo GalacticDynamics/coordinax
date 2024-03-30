@@ -78,14 +78,14 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         """Test ``coordinax.represent_as(SphericalVector)``."""
         spherical = vector.represent_as(
             cx.SphericalVector,
-            phi=Quantity([0, 1, 2, 3], "rad"),
             theta=Quantity([4, 5, 6, 7], "rad"),
+            phi=Quantity([0, 1, 2, 3], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalVector)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cartesian1d_to_cylindrical(self, vector):
         """Test ``coordinax.represent_as(CylindricalVector)``."""
@@ -164,14 +164,14 @@ class TestRadialVector(Abstract1DVectorTest):
         """Test ``coordinax.represent_as(SphericalVector)``."""
         spherical = vector.represent_as(
             cx.SphericalVector,
-            phi=Quantity([0, 1, 2, 3], "rad"),
             theta=Quantity([4, 5, 6, 7], "rad"),
+            phi=Quantity([0, 1, 2, 3], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalVector)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_radial_to_cylindrical(self, vector):
         """Test ``coordinax.represent_as(CylindricalVector)``."""
@@ -273,14 +273,14 @@ class TestCartesianDifferential1D(Abstract1DVectorDifferentialTest):
         spherical = difntl.represent_as(
             cx.SphericalDifferential,
             vector,
-            d_phi=Quantity([0, 1, 2, 3], "rad"),
             d_theta=Quantity([4, 5, 6, 7], "rad"),
+            d_phi=Quantity([0, 1, 2, 3], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalDifferential)
         assert qnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "kpc"))
+        assert spherical.d_theta == Quantity([4, 5, 6, 7], "rad")
         assert qnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad"))
-        assert spherical.dtheta == Quantity([4, 5, 6, 7], "rad")
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -381,14 +381,14 @@ class TestRadialDifferential(Abstract1DVectorDifferentialTest):
         spherical = difntl.represent_as(
             cx.SphericalDifferential,
             vector,
+            d_theta=Quantity([4, 5, 6, 7], "rad"),
             d_phi=Quantity([0, 1, 2, 3], "rad"),
-            dtheta=Quantity([4, 5, 6, 7], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalDifferential)
         assert qnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "kpc"))
+        assert spherical.d_theta == Quantity([4, 5, 6, 7], "rad")
         assert qnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad"))
-        assert spherical.dtheta == Quantity([4, 5, 6, 7], "rad")
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")

@@ -172,10 +172,9 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
         >>> sph = vec.represent_as(SphericalVector)
         >>> sph
         SphericalVector(
-          r=Distance(value=f32[], unit=Unit("m")),
-          phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad")),
-          theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad"))
-        )
+            r=Distance(value=f32[], unit=Unit("m")),
+            theta=Quantity[...](value=f32[], unit=Unit("rad")),
+            phi=Quantity[...](value=f32[], unit=Unit("rad")) )
         >>> sph.r
         Distance(Array(3.7416575, dtype=float32), unit='m')
 

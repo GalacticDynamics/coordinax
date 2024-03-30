@@ -200,8 +200,8 @@ class TestPolarVector:
 
         assert isinstance(spherical, cx.SphericalVector)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_polar_to_cylindrical(self, vector):
         """Test ``coordinax.represent_as(CylindricalVector)``."""
@@ -304,8 +304,8 @@ class TestCartesianDifferential2D(Abstract2DVectorDifferentialTest):
 
         assert isinstance(spherical, cx.SphericalDifferential)
         assert qnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "km/s"))
-        assert qnp.array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], "km/s"))
         assert qnp.array_equal(spherical.d_theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -408,8 +408,8 @@ class TestPolarDifferential(Abstract2DVectorDifferentialTest):
 
         assert isinstance(spherical, cx.SphericalDifferential)
         assert qnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "km/s"))
-        assert qnp.array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], "km/s"))
         assert qnp.array_equal(spherical.d_theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.d_phi, Quantity([5, 6, 7, 8], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")

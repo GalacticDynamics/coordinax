@@ -86,8 +86,8 @@ def represent_as(
 
     MathSpherical to MathSpherical:
 
-    >>> vec = cx.MathSphericalVector(r=Quantity(1, "kpc"), phi=Quantity(2, "deg"),
-    ...                              theta=Quantity(3, "deg"))
+    >>> vec = cx.MathSphericalVector(r=Quantity(1, "kpc"), theta=Quantity(2, "deg"),
+    ...                              phi=Quantity(3, "deg"))
     >>> cx.represent_as(vec, cx.MathSphericalVector) is vec
     True
 
@@ -143,8 +143,8 @@ def represent_as(
     Spherical to Spherical differential:
 
     >>> dif = cx.SphericalDifferential(d_r=Quantity(1, "km/s"),
-    ...                                d_phi=Quantity(2, "mas/yr"),
-    ...                                d_theta=Quantity(3, "mas/yr"))
+    ...                                d_theta=Quantity(2, "mas/yr"),
+    ...                                d_phi=Quantity(3, "mas/yr"))
     >>> cx.represent_as(dif, cx.SphericalDifferential, vec) is dif
     True
 
@@ -215,14 +215,14 @@ def represent_as(
 
     >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
     >>> print(cx.represent_as(vec, cx.SphericalVector))
-    <SphericalVector (r[km], phi[rad], theta[rad])
-        [3.742 1.107 0.641]>
+    <SphericalVector (r[km], theta[rad], phi[rad])
+        [3.742 0.641 1.107]>
 
     """
     r = xp.sqrt(current.x**2 + current.y**2 + current.z**2)
-    phi = xp.atan2(current.y, current.x)
     theta = xp.acos(current.z / r)
-    return target(r=r, phi=phi, theta=theta)
+    phi = xp.atan2(current.y, current.x)
+    return target(r=r, theta=theta, phi=phi)
 
 
 @dispatch.multi(
@@ -242,8 +242,8 @@ def represent_as(
     >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
 
     >>> print(cx.represent_as(vec, cx.LonLatSphericalVector))
-    <LonLatSphericalVector (distance[km], lon[rad], lat[deg])
-        [ 3.742  1.107 53.301]>
+    <LonLatSphericalVector (lon[rad], lat[deg], distance[km])
+        [ 1.107 53.301  3.742]>
 
     >>> print(cx.represent_as(vec, cx.MathSphericalVector))
     <MathSphericalVector (r[km], theta[rad], phi[rad])
@@ -295,14 +295,13 @@ def represent_as(
     >>> vec = cx.CylindricalVector(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
     ...                            z=Quantity(1, "kpc"))
     >>> print(cx.represent_as(vec, cx.SphericalVector))
-    <SphericalVector (r[kpc], phi[deg], theta[rad])
-        [ 1.414 90.     0.785]>
+    <SphericalVector (r[kpc], theta[rad], phi[deg])
+        [ 1.414  0.785 90.   ]>
 
     """
     r = xp.sqrt(current.rho**2 + current.z**2)
     theta = xp.acos(current.z / r)
-    phi = current.phi
-    return target(r=r, phi=phi, theta=theta)
+    return target(r=r, theta=theta, phi=current.phi)
 
 
 @dispatch.multi(
@@ -323,8 +322,8 @@ def represent_as(
     ...                            z=Quantity(1, "kpc"))
 
     >>> print(cx.represent_as(vec, cx.LonLatSphericalVector))
-    <LonLatSphericalVector (distance[kpc], lon[deg], lat[deg])
-        [ 1.414 90.    45.   ]>
+    <LonLatSphericalVector (lon[deg], lat[deg], distance[kpc])
+        [90.    45.     1.414]>
 
     >>> print(cx.represent_as(vec, cx.MathSphericalVector))
     <MathSphericalVector (r[kpc], theta[deg], phi[rad])
@@ -349,8 +348,8 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
-    ...                          theta=Quantity(90, "deg"))
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
+    ...                          phi=Quantity(90, "deg"))
     >>> print(cx.represent_as(vec, cx.Cartesian3DVector))
     <Cartesian3DVector (x[kpc], y[kpc], z[kpc])
         [-4.371e-08  1.000e+00 -4.371e-08]>
@@ -373,17 +372,16 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
-    ...                          theta=Quantity(90, "deg"))
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
+    ...                          phi=Quantity(90, "deg"))
     >>> print(cx.represent_as(vec, cx.CylindricalVector))
     <CylindricalVector (rho[kpc], phi[deg], z[kpc])
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
     rho = xp.abs(current.r * xp.sin(current.theta))
-    phi = current.phi
     z = current.r * xp.cos(current.theta)
-    return target(rho=rho, phi=phi, z=z)
+    return target(rho=rho, phi=current.phi, z=z)
 
 
 @dispatch
@@ -397,17 +395,15 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
-    ...                          theta=Quantity(90, "deg"))
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
+    ...                          phi=Quantity(90, "deg"))
     >>> print(cx.represent_as(vec, cx.LonLatSphericalVector))
-    <LonLatSphericalVector (distance[kpc], lon[deg], lat[deg])
-        [ 1. 90.  0.]>
+    <LonLatSphericalVector (lon[deg], lat[deg], distance[kpc])
+        [90.  0.  1.]>
 
     """
     return target(
-        distance=current.r,
-        lon=current.phi,
-        lat=Quantity(90, "deg") - current.theta,
+        lon=current.phi, lat=Quantity(90, "deg") - current.theta, distance=current.r
     )
 
 
@@ -422,8 +418,8 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
-    ...                          theta=Quantity(90, "deg"))
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
+    ...                          phi=Quantity(90, "deg"))
     >>> print(cx.represent_as(vec, cx.MathSphericalVector))
     <MathSphericalVector (r[kpc], theta[deg], phi[deg])
         [ 1. 90. 90.]>
@@ -492,12 +488,12 @@ def represent_as(
     >>> vec = cx.LonLatSphericalVector(lon=Quantity(90, "deg"), lat=Quantity(0, "deg"),
     ...                                distance=Quantity(1., "kpc"))
     >>> print(cx.represent_as(vec, cx.SphericalVector))
-    <SphericalVector (r[kpc], phi[deg], theta[deg])
+    <SphericalVector (r[kpc], theta[deg], phi[deg])
         [ 1. 90. 90.]>
 
     """
     return target(
-        r=current.distance, phi=current.lon, theta=Quantity(90, "deg") - current.lat
+        r=current.distance, theta=Quantity(90, "deg") - current.lat, phi=current.lon
     )
 
 
@@ -548,9 +544,8 @@ def represent_as(
 
     """
     rho = xp.abs(current.r * xp.sin(current.phi))
-    phi = current.theta
     z = current.r * xp.cos(current.phi)
-    return target(rho=rho, phi=phi, z=z)
+    return target(rho=rho, phi=current.theta, z=z)
 
 
 @dispatch
@@ -567,7 +562,7 @@ def represent_as(
     >>> vec = cx.MathSphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
     ...                              phi=Quantity(90, "deg"))
     >>> print(cx.represent_as(vec, cx.SphericalVector))
-    <SphericalVector (r[kpc], phi[deg], theta[deg])
+    <SphericalVector (r[kpc], theta[deg], phi[deg])
         [ 1. 90. 90.]>
 
     """
@@ -602,9 +597,10 @@ def represent_as(
     >>> newdif = cx.represent_as(dif, cx.LonCosLatSphericalDifferential, vec)
     >>> newdif
     LonCosLatSphericalDifferential(
-        d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-        d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-        d_lat=Quantity[...]( value=f32[], unit=Unit("deg / Gyr") ) )
+      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_lat=Quantity[...]( value=f32[], unit=Unit("deg / Gyr") ),
+      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
+    )
 
     >>> newdif.d_lon_coslat / xp.cos(vec.lat)  # float32 imprecision
     Quantity['angular frequency'](Array(6.9999995, dtype=float32), unit='mas / yr')

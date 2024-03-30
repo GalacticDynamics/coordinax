@@ -89,8 +89,8 @@ def represent_as(
     >>> cx.represent_as(p, cx.SphericalDifferential, q)
     SphericalDifferential(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
+      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     If given a position as a Quantity, it will be converted to the appropriate
@@ -100,8 +100,8 @@ def represent_as(
     >>> cx.represent_as(p, cx.SphericalDifferential, Quantity([1.0, 2.0, 3.0], "km"))
     SphericalDifferential(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
+      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     """
