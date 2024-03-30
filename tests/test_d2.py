@@ -70,14 +70,6 @@ class TestCartesian2DVector:
             atol=Quantity(1e-8, "deg"),
         )
 
-    # def test_cartesian2d_to_lnpolar(self, vector):
-    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
-    #     assert False
-
-    # def test_cartesian2d_to_log10polar(self, vector):
-    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
-    #    assert False
-
     def test_cartesian2d_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = vector.represent_as(
@@ -184,14 +176,6 @@ class TestPolarVector:
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(vector, cx.PolarVector)
         assert newvec is vector
-
-    # def test_polar_to_lnpolar(self, vector):
-    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
-    #     assert False
-
-    # def test_polar_to_log10polar(self, vector):
-    #     """Test ``coordinax.represent_as(Log10PolarVector)
-    #     assert False
 
     def test_polar_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""

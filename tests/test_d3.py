@@ -115,16 +115,6 @@ class TestCartesian3DVector(Abstract3DVectorTest):
             polar.phi, Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], "rad")
         )
 
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cartesian3d_to_lnpolar(self, vector):
-    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
-    #     assert False
-
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cartesian3d_to_log10polar(self, vector):
-    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
-    #     assert False
-
     def test_cartesian3d_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         # Jit can copy
@@ -253,16 +243,6 @@ class TestCylindricalVector(Abstract3DVectorTest):
         assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cylindrical_to_lnpolar(self, vector):
-    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
-    #     assert False
-
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cylindrical_to_log10polar(self, vector):
-    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
-    #     assert False
-
     def test_cylindrical_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = vector.represent_as(cx.Cartesian3DVector)
@@ -389,16 +369,6 @@ class TestSphericalVector(Abstract3DVectorTest):
             Quantity([0.0, 1.1755705, 1.8469844, -3.4969111e-07], "kpc"),
         )
         assert qnp.array_equal(polar.phi, Quantity([0.0, 65.0, 135.0, 270.0], "deg"))
-
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_spherical_to_lnpolar(self, vector):
-    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
-    #     assert False
-
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_spherical_to_log10polar(self, vector):
-    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
-    #     assert False
 
     def test_spherical_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""

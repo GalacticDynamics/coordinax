@@ -47,8 +47,6 @@ BUILTIN_VECTORS = [
     # 2D
     Cartesian2DVector,
     PolarVector,
-    # LnPolarVector,
-    # Log10PolarVector,
     # 3D
     Cartesian3DVector,
     SphericalVector,
