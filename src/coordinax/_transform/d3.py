@@ -34,6 +34,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -60,6 +61,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -88,6 +90,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -115,6 +118,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -149,6 +153,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -174,6 +179,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -203,6 +209,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -231,6 +238,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -265,6 +273,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -290,6 +299,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -319,6 +329,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -347,6 +358,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -381,6 +393,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -406,6 +419,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -435,6 +449,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -463,6 +478,7 @@ def represent_as(
 
     Examples
     --------
+    >>> import warnings
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
