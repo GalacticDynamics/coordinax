@@ -3,11 +3,9 @@
 __all__ = [
     # Position
     "Cartesian3DVector",
-    "SphericalVector",
     "CylindricalVector",
     # Differential
     "CartesianDifferential3D",
-    "SphericalDifferential",
     "CylindricalDifferential",
 ]
 
@@ -19,12 +17,12 @@ import equinox as eqx
 import jax
 
 import quaxed.array_api as xp
-from unxt import Distance, Quantity
+from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import Abstract3DVector, Abstract3DVectorDifferential
 from coordinax._base_vec import AbstractVector
-from coordinax._checks import check_phi_range, check_r_non_negative, check_theta_range
+from coordinax._checks import check_phi_range, check_r_non_negative
 from coordinax._converters import converter_phi_to_range
 from coordinax._utils import classproperty
 
@@ -135,55 +133,6 @@ class Cartesian3DVector(Abstract3DVector):
 
 
 @final
-class SphericalVector(Abstract3DVector):
-    """Spherical vector representation."""
-
-    r: ct.BatchableDistance = eqx.field(
-        converter=partial(Distance.constructor, dtype=float)
-    )
-    r"""Radial distance :math:`r \in [0,+\infty)`."""
-
-    phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_phi_to_range(
-            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
-        )
-    )
-    r"""Azimuthal angle :math:`\phi \in [0,360)`."""
-
-    theta: ct.BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
-    )
-    r"""Inclination angle :math:`\phi \in [0,180]`."""
-
-    def __check_init__(self) -> None:
-        """Check the validity of the initialisation."""
-        check_r_non_negative(self.r)
-        check_theta_range(self.theta)
-        check_phi_range(self.phi)
-
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["SphericalDifferential"]:
-        return SphericalDifferential
-
-    @partial(jax.jit)
-    def norm(self) -> ct.BatchableLength:
-        """Return the norm of the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> from coordinax import SphericalVector
-        >>> s = SphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
-        ...                     phi=Quantity(0, "deg"))
-        >>> s.norm()
-        Distance(Array(3., dtype=float32), unit='kpc')
-
-        """
-        return self.r
-
-
-@final
 class CylindricalVector(Abstract3DVector):
     """Cylindrical vector representation."""
 
@@ -275,31 +224,6 @@ class CartesianDifferential3D(Abstract3DVectorDifferential):
 
         """
         return xp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
-
-
-@final
-class SphericalDifferential(Abstract3DVectorDifferential):
-    """Spherical differential representation."""
-
-    d_r: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
-    )
-    r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
-
-    d_theta: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
-    )
-    r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
-
-    d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
-    )
-    r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
-
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[SphericalVector]:
-        return SphericalVector
 
 
 @final

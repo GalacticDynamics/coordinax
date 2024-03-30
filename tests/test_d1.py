@@ -61,22 +61,6 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
-    # def test_cartesian1d_to_lnpolar(self, vector):
-    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
-    #     lnpolar = vector.to_lnpolar(phi=Quantity([0, 1, 2, 3], "rad"))
-
-    #     assert isinstance(lnpolar, LnPolarVector)
-    #     assert lnpolar.lnr == xp.log(Quantity([1, 2, 3, 4], "kpc"))
-    #     assert qnp.array_equal(lnpolar.phi, Quantity([0, 1, 2, 3], "rad"))
-
-    # def test_cartesian1d_to_log10polar(self, vector):
-    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
-    #     log10polar = vector.to_log10polar(phi=Quantity([0, 1, 2, 3], "rad"))
-
-    #     assert isinstance(log10polar, Log10PolarVector)
-    #     assert log10polar.log10r == xp.log10(Quantity([1, 2, 3, 4], "kpc"))
-    #     assert qnp.array_equal(log10polar.phi, Quantity([0, 1, 2, 3], "rad"))
-
     def test_cartesian1d_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""
         cart3d = vector.represent_as(
@@ -162,14 +146,6 @@ class TestRadialVector(Abstract1DVectorTest):
         assert isinstance(polar, cx.PolarVector)
         assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
-
-    # def test_radial_to_lnpolar(self, vector):
-    #     """Test ``coordinax.represent_as(LnPolarVector)``."""
-    #     assert False
-
-    # def test_radial_to_log10polar(self, vector):
-    #     """Test ``coordinax.represent_as(Log10PolarVector)``."""
-    #     assert False
 
     def test_radial_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(Cartesian3DVector)``."""

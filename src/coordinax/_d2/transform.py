@@ -32,8 +32,6 @@ def represent_as(
 @dispatch.multi(
     (Cartesian2DVector, type[Cartesian2DVector]),
     (PolarVector, type[PolarVector]),
-    # (LnPolarVector, type[LnPolarVector]),
-    # (Log10PolarVector, type[Log10PolarVector]),
 )
 def represent_as(
     current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
@@ -55,20 +53,6 @@ def represent_as(
 ) -> Abstract2DVectorDifferential:
     """Self transform of 2D Differentials."""
     return current
-
-
-# @dispatch.multi(
-#     (Cartesian2DVector, type[LnPolarVector]),
-#     (Cartesian2DVector, type[Log10PolarVector]),
-#     (LnPolarVector, type[Cartesian2DVector]),
-#     (Log10PolarVector, type[Cartesian2DVector]),
-# )
-# def represent_as(
-#     current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
-# ) -> Abstract2DVector:
-#     """Abstract2DVector -> PolarVector -> Abstract2DVector."""
-#     polar = represent_as(current, PolarVector)
-#     return represent_as(polar, target)
 
 
 # =============================================================================
@@ -107,65 +91,3 @@ def represent_as(
     x = current.r * xp.cos(current.phi)
     y = current.r * xp.sin(current.phi)
     return target(x=x, y=y)
-
-
-# @dispatch
-# def represent_as(
-#     current: PolarVector, target: type[LnPolarVector], /, **kwargs: Any
-# ) -> LnPolarVector:
-#     """PolarVector -> LnPolarVector."""
-#     return target(lnr=xp.log(current.r), phi=current.phi)
-
-
-# @dispatch
-# def represent_as(
-#     current: PolarVector, target: type[Log10PolarVector], /, **kwargs: Any
-# ) -> Log10PolarVector:
-#     """PolarVector -> Log10PolarVector."""
-#     return target(log10r=xp.log10(current.r), phi=current.phi)
-
-
-# # =============================================================================
-# # LnPolarVector
-
-# # -----------------------------------------------
-# # 2D
-
-
-# @dispatch
-# def represent_as(
-#     current: LnPolarVector, target: type[PolarVector], /, **kwargs: Any
-# ) -> PolarVector:
-#     """LnPolarVector -> PolarVector."""
-#     return target(r=xp.exp(current.lnr), phi=current.phi)
-
-
-# @dispatch
-# def represent_as(
-#     current: LnPolarVector, target: type[Log10PolarVector], /, **kwargs: Any
-# ) -> Log10PolarVector:
-#     """LnPolarVector -> Log10PolarVector."""
-#     return target(log10r=current.lnr / xp.log(10), phi=current.phi)
-
-
-# # =============================================================================
-# # Log10PolarVector
-
-# # -----------------------------------------------
-# # 2D
-
-
-# @dispatch
-# def represent_as(
-#     current: Log10PolarVector, target: type[PolarVector], /, **kwargs: Any
-# ) -> PolarVector:
-#     """Log10PolarVector -> PolarVector."""
-#     return target(r=xp.pow(10, current.log10r), phi=current.phi)
-
-
-# @dispatch
-# def represent_as(
-#     current: Log10PolarVector, target: type[LnPolarVector], /, **kwargs: Any
-# ) -> LnPolarVector:
-#     """Log10PolarVector -> LnPolarVector."""
-#     return target(lnr=current.log10r * xp.log(10), phi=current.phi)

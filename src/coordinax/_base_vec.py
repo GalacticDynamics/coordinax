@@ -51,11 +51,11 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
         --------
         >>> from coordinax import RadialVector, SphericalVector
 
-        >>> RadialVector.differential_cls
-        <class 'coordinax._d1.builtin.RadialDifferential'>
+        >>> RadialVector.differential_cls.__name__
+        'RadialDifferential'
 
-        >>> SphericalVector.differential_cls
-        <class 'coordinax._d3.builtin.SphericalDifferential'>
+        >>> SphericalVector.differential_cls.__name__
+        'SphericalDifferential'
 
         """
         raise NotImplementedError

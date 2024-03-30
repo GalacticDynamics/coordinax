@@ -83,6 +83,7 @@
     "--showlocals",
     "--strict-markers",
     "--strict-config",
+    "--doctest-glob='*.rst | *.py'",
   ]
   filterwarnings = [
     "error",
@@ -208,6 +209,7 @@
     "missing-function-docstring", # TODO: resolve
     "missing-module-docstring",
     "no-member",                  # handled by mypy
+    "no-value-for-parameter",     # pylint doesn't understand multiple dispatch
     "not-a-mapping",              # pylint doesn't understand dataclass fields
     "protected-access",           # handled by ruff
     "redefined-builtin",          # handled by ruff

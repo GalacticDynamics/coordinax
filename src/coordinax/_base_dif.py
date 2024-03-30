@@ -45,11 +45,11 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         --------
         >>> from coordinax import RadialDifferential, SphericalDifferential
 
-        >>> RadialDifferential.integral_cls
-        <class 'coordinax._d1.builtin.RadialVector'>
+        >>> RadialDifferential.integral_cls.__name__
+        'RadialVector'
 
-        >>> SphericalDifferential.integral_cls
-        <class 'coordinax._d3.builtin.SphericalVector'>
+        >>> SphericalDifferential.integral_cls.__name__
+        'SphericalVector'
 
         """
         raise NotImplementedError

@@ -7,6 +7,7 @@ from typing import Any
 from plum import dispatch
 
 import quaxed.array_api as xp
+from unxt import Quantity
 
 from .base import Abstract3DVector, Abstract3DVectorDifferential
 from .builtin import (
@@ -14,6 +15,14 @@ from .builtin import (
     CartesianDifferential3D,
     CylindricalDifferential,
     CylindricalVector,
+)
+from .sphere import (
+    AbstractSphericalVector,
+    LonCosLatSphericalDifferential,
+    LonLatSphericalDifferential,
+    LonLatSphericalVector,
+    MathSphericalDifferential,
+    MathSphericalVector,
     SphericalDifferential,
     SphericalVector,
 )
@@ -33,8 +42,10 @@ def represent_as(
 
 @dispatch.multi(
     (Cartesian3DVector, type[Cartesian3DVector]),
-    (SphericalVector, type[SphericalVector]),
     (CylindricalVector, type[CylindricalVector]),
+    (SphericalVector, type[SphericalVector]),
+    (LonLatSphericalVector, type[LonLatSphericalVector]),
+    (MathSphericalVector, type[MathSphericalVector]),
 )
 def represent_as(
     current: Abstract3DVector, target: type[Abstract3DVector], /, **kwargs: Any
@@ -52,6 +63,13 @@ def represent_as(
     >>> cx.represent_as(vec, cx.Cartesian3DVector) is vec
     True
 
+    Cylindrical to Cylindrical:
+
+    >>> vec = cx.CylindricalVector(rho=Quantity(1, "kpc"), phi=Quantity(2, "deg"),
+    ...                            z=Quantity(3, "kpc"))
+    >>> cx.represent_as(vec, cx.CylindricalVector) is vec
+    True
+
     Spherical to Spherical:
 
     >>> vec = cx.SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(2, "deg"),
@@ -59,11 +77,18 @@ def represent_as(
     >>> cx.represent_as(vec, cx.SphericalVector) is vec
     True
 
-    Cylindrical to Cylindrical:
+    LonLatSpherical to LonLatSpherical:
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1, "kpc"), phi=Quantity(2, "deg"),
-    ...                            z=Quantity(3, "kpc"))
-    >>> cx.represent_as(vec, cx.CylindricalVector) is vec
+    >>> vec = cx.LonLatSphericalVector(lon=Quantity(1, "deg"), lat=Quantity(2, "deg"),
+    ...                                distance=Quantity(3, "kpc"))
+    >>> cx.represent_as(vec, cx.LonLatSphericalVector) is vec
+    True
+
+    MathSpherical to MathSpherical:
+
+    >>> vec = cx.MathSphericalVector(r=Quantity(1, "kpc"), phi=Quantity(2, "deg"),
+    ...                              theta=Quantity(3, "deg"))
+    >>> cx.represent_as(vec, cx.MathSphericalVector) is vec
     True
 
     """
@@ -72,8 +97,15 @@ def represent_as(
 
 @dispatch.multi(
     (CartesianDifferential3D, type[CartesianDifferential3D], AbstractVector),
-    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
     (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
+    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
+    (LonLatSphericalDifferential, type[LonLatSphericalDifferential], AbstractVector),
+    (
+        LonCosLatSphericalDifferential,
+        type[LonCosLatSphericalDifferential],
+        AbstractVector,
+    ),
+    (MathSphericalDifferential, type[MathSphericalDifferential], AbstractVector),
 )
 def represent_as(
     current: Abstract3DVectorDifferential,
@@ -94,22 +126,50 @@ def represent_as(
 
     >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
 
-    Cartesian to Cartesian Differential:
+    Cartesian to Cartesian differential:
 
     >>> dif = cx.CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
     >>> cx.represent_as(dif, cx.CartesianDifferential3D, vec) is dif
     True
 
-    >>> dif = cx.SphericalDifferential(d_r=Quantity(1, "km/s"),
-    ...                                d_theta=Quantity(2, "mas/yr"),
-    ...                                d_phi=Quantity(3, "mas/yr"))
-    >>> cx.represent_as(dif, cx.SphericalDifferential, vec) is dif
-    True
+    Cylindrical to Cylindrical differential:
 
     >>> dif = cx.CylindricalDifferential(d_rho=Quantity(1, "km/s"),
     ...                                  d_phi=Quantity(2, "mas/yr"),
     ...                                  d_z=Quantity(3, "km/s"))
     >>> cx.represent_as(dif, cx.CylindricalDifferential, vec) is dif
+    True
+
+    Spherical to Spherical differential:
+
+    >>> dif = cx.SphericalDifferential(d_r=Quantity(1, "km/s"),
+    ...                                d_phi=Quantity(2, "mas/yr"),
+    ...                                d_theta=Quantity(3, "mas/yr"))
+    >>> cx.represent_as(dif, cx.SphericalDifferential, vec) is dif
+    True
+
+    LonLatSpherical to LonLatSpherical differential:
+
+    >>> dif = cx.LonLatSphericalDifferential(d_lon=Quantity(1, "mas/yr"),
+    ...                                      d_lat=Quantity(2, "mas/yr"),
+    ...                                      d_distance=Quantity(3, "km/s"))
+    >>> cx.represent_as(dif, cx.LonLatSphericalDifferential, vec) is dif
+    True
+
+    LonCosLatSpherical to LonCosLatSpherical differential:
+
+    >>> dif = cx.LonCosLatSphericalDifferential(d_lon_coslat=Quantity(1, "mas/yr"),
+    ...                                         d_lat=Quantity(2, "mas/yr"),
+    ...                                         d_distance=Quantity(3, "km/s"))
+    >>> cx.represent_as(dif, cx.LonCosLatSphericalDifferential, vec) is dif
+    True
+
+    MathSpherical to MathSpherical differential:
+
+    >>> dif = cx.MathSphericalDifferential(d_r=Quantity(1, "km/s"),
+    ...                                    d_theta=Quantity(2, "mas/yr"),
+    ...                                    d_phi=Quantity(3, "mas/yr"))
+    >>> cx.represent_as(dif, cx.MathSphericalDifferential, vec) is dif
     True
 
     """
@@ -118,29 +178,6 @@ def represent_as(
 
 # =============================================================================
 # Cartesian3DVector
-
-
-@dispatch
-def represent_as(
-    current: Cartesian3DVector, target: type[SphericalVector], /, **kwargs: Any
-) -> SphericalVector:
-    """Cartesian3DVector -> SphericalVector.
-
-    Examples
-    --------
-    >>> from unxt import Quantity
-    >>> import coordinax as cx
-
-    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
-    >>> print(cx.represent_as(vec, cx.SphericalVector))
-    <SphericalVector (r[km], phi[rad], theta[rad])
-        [3.742 1.107 0.641]>
-
-    """
-    r = xp.sqrt(current.x**2 + current.y**2 + current.z**2)
-    theta = xp.acos(current.z / r)
-    phi = xp.atan2(current.y, current.x)
-    return target(r=r, theta=theta, phi=phi)
 
 
 @dispatch
@@ -163,6 +200,138 @@ def represent_as(
     rho = xp.sqrt(current.x**2 + current.y**2)
     phi = xp.atan2(current.y, current.x)
     return target(rho=rho, phi=phi, z=current.z)
+
+
+@dispatch
+def represent_as(
+    current: Cartesian3DVector, target: type[SphericalVector], /, **kwargs: Any
+) -> SphericalVector:
+    """Cartesian3DVector -> SphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
+    >>> print(cx.represent_as(vec, cx.SphericalVector))
+    <SphericalVector (r[km], phi[rad], theta[rad])
+        [3.742 1.107 0.641]>
+
+    """
+    r = xp.sqrt(current.x**2 + current.y**2 + current.z**2)
+    phi = xp.atan2(current.y, current.x)
+    theta = xp.acos(current.z / r)
+    return target(r=r, phi=phi, theta=theta)
+
+
+@dispatch.multi(
+    (Cartesian3DVector, type[LonLatSphericalVector]),
+    (Cartesian3DVector, type[MathSphericalVector]),
+)
+def represent_as(
+    current: Cartesian3DVector, target: type[AbstractSphericalVector], /, **kwargs: Any
+) -> AbstractSphericalVector:
+    """Cartesian3DVector -> AbstractSphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
+
+    >>> print(cx.represent_as(vec, cx.LonLatSphericalVector))
+    <LonLatSphericalVector (distance[km], lon[rad], lat[deg])
+        [ 3.742  1.107 53.301]>
+
+    >>> print(cx.represent_as(vec, cx.MathSphericalVector))
+    <MathSphericalVector (r[km], theta[rad], phi[rad])
+        [3.742 1.107 0.641]>
+
+    """
+    return represent_as(represent_as(current, SphericalVector), target)
+
+
+# =============================================================================
+# CylindricalVector
+
+
+@dispatch
+def represent_as(
+    current: CylindricalVector, target: type[Cartesian3DVector], /, **kwargs: Any
+) -> Cartesian3DVector:
+    """CylindricalVector -> Cartesian3DVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CylindricalVector(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    ...                            z=Quantity(1, "kpc"))
+    >>> print(cx.represent_as(vec, cx.Cartesian3DVector))
+    <Cartesian3DVector (x[kpc], y[kpc], z[kpc])
+        [-4.371e-08  1.000e+00  1.000e+00]>
+
+    """
+    x = current.rho * xp.cos(current.phi)
+    y = current.rho * xp.sin(current.phi)
+    z = current.z
+    return target(x=x, y=y, z=z)
+
+
+@dispatch
+def represent_as(
+    current: CylindricalVector, target: type[SphericalVector], /, **kwargs: Any
+) -> SphericalVector:
+    """CylindricalVector -> SphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CylindricalVector(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    ...                            z=Quantity(1, "kpc"))
+    >>> print(cx.represent_as(vec, cx.SphericalVector))
+    <SphericalVector (r[kpc], phi[deg], theta[rad])
+        [ 1.414 90.     0.785]>
+
+    """
+    r = xp.sqrt(current.rho**2 + current.z**2)
+    theta = xp.acos(current.z / r)
+    phi = current.phi
+    return target(r=r, phi=phi, theta=theta)
+
+
+@dispatch.multi(
+    (CylindricalVector, type[LonLatSphericalVector]),
+    (CylindricalVector, type[MathSphericalVector]),
+)
+def represent_as(
+    current: CylindricalVector, target: type[AbstractSphericalVector], /, **kwargs: Any
+) -> AbstractSphericalVector:
+    """CylindricalVector -> AbstractSphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CylindricalVector(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    ...                            z=Quantity(1, "kpc"))
+
+    >>> print(cx.represent_as(vec, cx.LonLatSphericalVector))
+    <LonLatSphericalVector (distance[kpc], lon[deg], lat[deg])
+        [ 1.414 90.    45.   ]>
+
+    >>> print(cx.represent_as(vec, cx.MathSphericalVector))
+    <MathSphericalVector (r[kpc], theta[deg], phi[rad])
+        [ 1.414 90.     0.785]>
+
+    """
+    return represent_as(represent_as(current, SphericalVector), target)
 
 
 # =============================================================================
@@ -217,27 +386,275 @@ def represent_as(
     return target(rho=rho, phi=phi, z=z)
 
 
-# =============================================================================
-# CylindricalVector
+@dispatch
+def represent_as(
+    current: SphericalVector, target: type[LonLatSphericalVector], /, **kwargs: Any
+) -> LonLatSphericalVector:
+    """SphericalVector -> LonLatSphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    ...                          theta=Quantity(90, "deg"))
+    >>> print(cx.represent_as(vec, cx.LonLatSphericalVector))
+    <LonLatSphericalVector (distance[kpc], lon[deg], lat[deg])
+        [ 1. 90.  0.]>
+
+    """
+    return target(
+        distance=current.r,
+        lon=current.phi,
+        lat=Quantity(90, "deg") - current.theta,
+    )
 
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[Cartesian3DVector], /, **kwargs: Any
+    current: SphericalVector, target: type[MathSphericalVector], /, **kwargs: Any
+) -> MathSphericalVector:
+    """SphericalVector -> MathSphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    ...                          theta=Quantity(90, "deg"))
+    >>> print(cx.represent_as(vec, cx.MathSphericalVector))
+    <MathSphericalVector (r[kpc], theta[deg], phi[deg])
+        [ 1. 90. 90.]>
+
+    """
+    return target(r=current.r, theta=current.phi, phi=current.theta)
+
+
+# =============================================================================
+# LonLatSphericalVector
+
+
+@dispatch
+def represent_as(
+    current: LonLatSphericalVector, target: type[Cartesian3DVector], /, **kwargs: Any
 ) -> Cartesian3DVector:
-    """CylindricalVector -> Cartesian3DVector."""
-    x = current.rho * xp.cos(current.phi)
-    y = current.rho * xp.sin(current.phi)
-    z = current.z
+    """LonLatSphericalVector -> Cartesian3DVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.LonLatSphericalVector(lon=Quantity(90, "deg"), lat=Quantity(0, "deg"),
+    ...                                distance=Quantity(1., "kpc"))
+    >>> print(cx.represent_as(vec, cx.Cartesian3DVector))
+    <Cartesian3DVector (x[kpc], y[kpc], z[kpc])
+        [-4.371e-08  1.000e+00 -4.371e-08]>
+
+    """
+    return represent_as(represent_as(current, SphericalVector), Cartesian3DVector)
+
+
+@dispatch
+def represent_as(
+    current: LonLatSphericalVector, target: type[CylindricalVector], /, **kwargs: Any
+) -> CylindricalVector:
+    """LonLatSphericalVector -> CylindricalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.LonLatSphericalVector(lon=Quantity(90, "deg"), lat=Quantity(0, "deg"),
+    ...                                distance=Quantity(1., "kpc"))
+    >>> print(cx.represent_as(vec, cx.CylindricalVector))
+    <CylindricalVector (rho[kpc], phi[deg], z[kpc])
+        [ 1.000e+00  9.000e+01 -4.371e-08]>
+
+    """
+    return represent_as(represent_as(current, SphericalVector), target)
+
+
+@dispatch
+def represent_as(
+    current: LonLatSphericalVector, target: type[SphericalVector], /, **kwargs: Any
+) -> SphericalVector:
+    """LonLatSphericalVector -> SphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.LonLatSphericalVector(lon=Quantity(90, "deg"), lat=Quantity(0, "deg"),
+    ...                                distance=Quantity(1., "kpc"))
+    >>> print(cx.represent_as(vec, cx.SphericalVector))
+    <SphericalVector (r[kpc], phi[deg], theta[deg])
+        [ 1. 90. 90.]>
+
+    """
+    return target(
+        r=current.distance, phi=current.lon, theta=Quantity(90, "deg") - current.lat
+    )
+
+
+# =============================================================================
+# MathSphericalVector
+
+
+@dispatch
+def represent_as(
+    current: MathSphericalVector, target: type[Cartesian3DVector], /, **kwargs: Any
+) -> Cartesian3DVector:
+    """MathSphericalVector -> Cartesian3DVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.MathSphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
+    ...                              phi=Quantity(90, "deg"))
+    >>> print(cx.represent_as(vec, cx.Cartesian3DVector))
+    <Cartesian3DVector (x[kpc], y[kpc], z[kpc])
+        [-4.371e-08  1.000e+00 -4.371e-08]>
+
+    """
+    x = current.r * xp.sin(current.phi) * xp.cos(current.theta)
+    y = current.r * xp.sin(current.phi) * xp.sin(current.theta)
+    z = current.r * xp.cos(current.phi)
     return target(x=x, y=y, z=z)
 
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[SphericalVector], /, **kwargs: Any
+    current: MathSphericalVector, target: type[CylindricalVector], /, **kwargs: Any
+) -> CylindricalVector:
+    """MathSphericalVector -> CylindricalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.MathSphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
+    ...                              phi=Quantity(90, "deg"))
+    >>> print(cx.represent_as(vec, cx.CylindricalVector))
+    <CylindricalVector (rho[kpc], phi[deg], z[kpc])
+        [ 1.000e+00  9.000e+01 -4.371e-08]>
+
+    """
+    rho = xp.abs(current.r * xp.sin(current.phi))
+    phi = current.theta
+    z = current.r * xp.cos(current.phi)
+    return target(rho=rho, phi=phi, z=z)
+
+
+@dispatch
+def represent_as(
+    current: MathSphericalVector, target: type[SphericalVector], /, **kwargs: Any
 ) -> SphericalVector:
-    """CylindricalVector -> SphericalVector."""
-    r = xp.sqrt(current.rho**2 + current.z**2)
-    theta = xp.acos(current.z / r)
-    phi = current.phi
-    return target(r=r, theta=theta, phi=phi)
+    """MathSphericalVector -> SphericalVector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.MathSphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
+    ...                              phi=Quantity(90, "deg"))
+    >>> print(cx.represent_as(vec, cx.SphericalVector))
+    <SphericalVector (r[kpc], phi[deg], theta[deg])
+        [ 1. 90. 90.]>
+
+    """
+    return target(r=current.r, theta=current.phi, phi=current.theta)
+
+
+# =============================================================================
+# LonLatSphericalDifferential
+
+
+@dispatch
+def represent_as(
+    current: Abstract3DVectorDifferential,
+    target: type[LonCosLatSphericalDifferential],
+    position: AbstractVector | Quantity["length"],
+    /,
+    **kwargs: Any,
+) -> LonCosLatSphericalDifferential:
+    """Abstract3DVectorDifferential -> LonCosLatSphericalDifferential.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.LonLatSphericalVector(lon=Quantity(15, "deg"), lat=Quantity(10, "deg"),
+    ...                                distance=Quantity(1.5, "kpc"))
+    >>> dif = cx.LonLatSphericalDifferential(d_lon=Quantity(7, "mas/yr"),
+    ...                                      d_lat=Quantity(0, "deg/Gyr"),
+    ...                                      d_distance=Quantity(-5, "km/s"))
+    >>> newdif = cx.represent_as(dif, cx.LonCosLatSphericalDifferential, vec)
+    >>> newdif
+    LonCosLatSphericalDifferential(
+        d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
+        d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+        d_lat=Quantity[...]( value=f32[], unit=Unit("deg / Gyr") ) )
+
+    >>> newdif.d_lon_coslat / xp.cos(vec.lat)  # float32 imprecision
+    Quantity['angular frequency'](Array(6.9999995, dtype=float32), unit='mas / yr')
+
+    """
+    # Parse the position to an AbstractVector
+    if isinstance(position, AbstractVector):
+        posvec = position
+    else:  # Q -> Cart<X>D
+        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+            position
+        )
+
+    # Transform the differential to LonLatSphericalDifferential
+    current = represent_as(current, LonLatSphericalDifferential, posvec)
+
+    # Transform the position to the required type
+    posvec = represent_as(posvec, current.integral_cls)
+
+    # Calculate the differential in the new system
+    return target(
+        d_lon_coslat=current.d_lon * xp.cos(posvec.lat),
+        d_lat=current.d_lat,
+        d_distance=current.d_distance,
+    )
+
+
+@dispatch
+def represent_as(
+    current: LonCosLatSphericalDifferential,
+    target: type[LonLatSphericalDifferential],
+    position: AbstractVector | Quantity["length"],
+    /,
+    **kwargs: Any,
+) -> LonLatSphericalDifferential:
+    """LonCosLatSphericalDifferential -> LonLatSphericalDifferential."""
+    # Parse the position to an AbstractVector
+    if isinstance(position, AbstractVector):
+        posvec = position
+    else:  # Q -> Cart<X>D
+        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+            position
+        )
+
+    # Transform the position to the required type
+    posvec = represent_as(posvec, current.integral_cls)
+
+    # Calculate the differential in the new system
+    return target(
+        d_lon=current.d_lon_coslat / xp.cos(posvec.lat),
+        d_lat=current.d_lat,
+        d_distance=current.d_distance,
+    )
