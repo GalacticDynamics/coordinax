@@ -26,8 +26,12 @@ from unxt import Distance, Quantity
 
 import coordinax._typing as ct
 from .base import Abstract3DVector, Abstract3DVectorDifferential
-from coordinax._checks import check_phi_range, check_r_non_negative, check_theta_range
-from coordinax._converters import converter_phi_to_range
+from coordinax._checks import (
+    check_azimuth_range,
+    check_polar_range,
+    check_r_non_negative,
+)
+from coordinax._converters import converter_azimuth_to_range
 from coordinax._utils import classproperty
 
 ##############################################################################
@@ -55,10 +59,10 @@ class SphericalVector(AbstractSphericalVector):
     ----------
     r : Distance
         Radial distance r (slant distance to origin),
-    phi : Quantity['angle']
-        Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
     theta : Quantity['angle']
         Polar angle [0, 180] [deg] where 0 is the z-axis.
+    phi : Quantity['angle']
+        Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
 
     """
 
@@ -67,23 +71,23 @@ class SphericalVector(AbstractSphericalVector):
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
+    theta: ct.BatchableAngle = eqx.field(
+        converter=partial(Quantity["angle"].constructor, dtype=float)
+    )
+    r"""Inclination angle :math:`\theta \in [0,180]`."""
+
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_phi_to_range(
+        converter=lambda x: converter_azimuth_to_range(
             Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
-    theta: ct.BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
-    )
-    r"""Inclination angle :math:`\phi \in [0,180]`."""
-
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         check_r_non_negative(self.r)
-        check_theta_range(self.theta)
-        check_phi_range(self.phi)
+        check_polar_range(self.theta)
+        check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod
@@ -98,8 +102,8 @@ class SphericalVector(AbstractSphericalVector):
         --------
         >>> from unxt import Quantity
         >>> from coordinax import SphericalVector
-        >>> s = SphericalVector(r=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
-        ...                     theta=Quantity(90, "deg"))
+        >>> s = SphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
+        ...                     phi=Quantity(0, "deg"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -132,11 +136,11 @@ class MathSphericalVector(AbstractSphericalVector):
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     theta: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_phi_to_range(
+        converter=lambda x: converter_azimuth_to_range(
             Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
-    r"""Azimuthal angle :math:`\phi \in [0,360)`."""
+    r"""Azimuthal angle :math:`\theta \in [0,360)`."""
 
     phi: ct.BatchableAngle = eqx.field(
         converter=partial(Quantity["angle"].constructor, dtype=float)
@@ -146,8 +150,8 @@ class MathSphericalVector(AbstractSphericalVector):
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         check_r_non_negative(self.r)
-        check_theta_range(self.phi)
-        check_phi_range(self.theta)
+        check_azimuth_range(self.theta)
+        check_polar_range(self.phi)
 
     @classproperty
     @classmethod
@@ -181,37 +185,37 @@ class LonLatSphericalVector(AbstractSphericalVector):
 
     Parameters
     ----------
-    distance : Distance
-        Radial distance r (slant distance to origin),
     lon : Quantity['angle']
         The longitude (azimuthal) angle [0, 360) [deg] where 0 is the x-axis.
     lat : Quantity['angle']
         The latitude (polar angle) [-90, 90] [deg] where 90 is the z-axis.
+    distance : Distance
+        Radial distance r (slant distance to origin),
 
     """
+
+    lon: ct.BatchableAngle = eqx.field(
+        converter=lambda x: converter_azimuth_to_range(
+            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+        )
+    )
+    r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
+
+    lat: ct.BatchableAngle = eqx.field(
+        converter=lambda x: Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+    )
+    r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
     distance: ct.BatchableDistance = eqx.field(
         converter=partial(Distance.constructor, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    lon: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_phi_to_range(
-            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
-        )
-    )
-    r"""Longitude angle :math:`\phi \in [0,360)`."""
-
-    lat: ct.BatchableAngle = eqx.field(
-        converter=lambda x: Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
-    )
-    r"""Latitude angle :math:`\phi \in [-90,90]`."""
-
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
+        check_azimuth_range(self.lon)
+        check_polar_range(self.lat)
         check_r_non_negative(self.distance)
-        check_phi_range(self.lon)
-        check_theta_range(self.lat)
 
     @classproperty
     @classmethod
@@ -256,15 +260,15 @@ class SphericalDifferential(Abstract3DVectorDifferential):
     )
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
-    d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
-    )
-    r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
-
     d_theta: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
+
+    d_phi: ct.BatchableAngularSpeed = eqx.field(
+        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+    )
+    r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
     @classproperty
     @classmethod
@@ -301,20 +305,20 @@ class MathSphericalDifferential(Abstract3DVectorDifferential):
 class LonLatSphericalDifferential(Abstract3DVectorDifferential):
     """Spherical differential representation."""
 
-    d_distance: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
-    )
-    r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
-
     d_lon: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
-    r"""Longitude speed :math:`d\theta/dt \in [-\infty, \infty]."""
+    r"""Longitude speed :math:`dlon/dt \in [-\infty, \infty]."""
 
     d_lat: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
-    r"""Latitude speed :math:`d\phi/dt \in [-\infty, \infty]."""
+    r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
+
+    d_distance: ct.BatchableSpeed = eqx.field(
+        converter=partial(Quantity["speed"].constructor, dtype=float)
+    )
+    r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
     @classproperty
     @classmethod
@@ -326,20 +330,20 @@ class LonLatSphericalDifferential(Abstract3DVectorDifferential):
 class LonCosLatSphericalDifferential(Abstract3DVectorDifferential):
     """Spherical differential representation."""
 
-    d_distance: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
-    )
-    r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
-
     d_lon_coslat: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
-    r"""Longitude * cos(Latitude) speed :math:`d\theta/dt \in [-\infty, \infty]."""
+    r"""Longitude * cos(Latitude) speed :math:`dlon/dt \in [-\infty, \infty]."""
 
     d_lat: ct.BatchableAngularSpeed = eqx.field(
         converter=partial(Quantity["angular speed"].constructor, dtype=float)
     )
-    r"""Latitude speed :math:`d\phi/dt \in [-\infty, \infty]."""
+    r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
+
+    d_distance: ct.BatchableSpeed = eqx.field(
+        converter=partial(Quantity["speed"].constructor, dtype=float)
+    )
+    r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
     @classproperty
     @classmethod

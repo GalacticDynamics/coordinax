@@ -95,7 +95,7 @@ def constructor(
 
     """
     obj = obj.represent_as(apyc.PhysicsSphericalRepresentation)
-    return cls(r=obj.r, phi=obj.phi, theta=obj.theta)
+    return cls(r=obj.r, theta=obj.theta, phi=obj.phi)
 
 
 @LonLatSphericalVector.constructor._f.register  # noqa: SLF001
@@ -227,9 +227,9 @@ def constructor(
     >>> dif = cx.LonCosLatSphericalDifferential.constructor(dsph)
     >>> dif
     LonCosLatSphericalDifferential(
-      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
     >>> dif.d_distance
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
@@ -265,8 +265,8 @@ def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]
                        unit='kpc')
 
     >>> vec = cx.CylindricalVector(rho=Quantity(1, unit="kpc"),
-    ...                           phi=Quantity(2, unit="deg"),
-    ...                           z=Quantity(3, unit="pc"))
+    ...                            phi=Quantity(2, unit="deg"),
+    ...                            z=Quantity(3, unit="pc"))
     >>> convert(vec, Quantity)
     Quantity['length'](Array([0.99939084, 0.0348995 , 0.003     ], dtype=float32),
                        unit='kpc')
@@ -472,8 +472,8 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVecto
     >>> convert(sph, cx.SphericalVector)
     SphericalVector(
       r=Distance(value=f32[], unit=Unit("kpc")),
-      phi=Quantity[...](value=f32[], unit=Unit("deg")),
-      theta=Quantity[...](value=f32[], unit=Unit("deg"))
+      theta=Quantity[...](value=f32[], unit=Unit("deg")),
+      phi=Quantity[...](value=f32[], unit=Unit("deg"))
     )
 
     """
@@ -534,9 +534,9 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> LonLatSpherical
     ...                               distance=1 * u.kpc)
     >>> convert(sph, cx.LonLatSphericalVector)
     LonLatSphericalVector(
-      distance=Distance(value=f32[], unit=Unit("kpc")),
       lon=Quantity[...](value=f32[], unit=Unit("deg")),
-      lat=Quantity[...](value=f32[], unit=Unit("deg"))
+      lat=Quantity[...](value=f32[], unit=Unit("deg")),
+      distance=Distance(value=f32[], unit=Unit("kpc"))
     )
 
     """
@@ -696,8 +696,8 @@ def diffsph_to_apysph(
     >>> import coordinax as cx
 
     >>> dif = cx.SphericalDifferential(d_r=Quantity(1, unit="km/s"),
-    ...                                 d_theta=Quantity(2, unit="mas/yr"),
-    ...                                 d_phi=Quantity(3, unit="mas/yr"))
+    ...                                d_theta=Quantity(2, unit="mas/yr"),
+    ...                                d_phi=Quantity(3, unit="mas/yr"))
     >>> convert(dif, apyc.PhysicsSphericalDifferential)
     <PhysicsSphericalDifferential (d_phi, d_theta, d_r) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
@@ -709,8 +709,8 @@ def diffsph_to_apysph(
     """
     return apyc.PhysicsSphericalDifferential(
         d_r=convert(obj.d_r, apyu.Quantity),
-        d_phi=convert(obj.d_phi, apyu.Quantity),
         d_theta=convert(obj.d_theta, apyu.Quantity),
+        d_phi=convert(obj.d_phi, apyu.Quantity),
     )
 
 
@@ -740,8 +740,8 @@ def apysph_to_diffsph(
     >>> convert(dif, cx.SphericalDifferential)
     SphericalDifferential(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+      d_theta=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
     )
 
     """
@@ -812,9 +812,9 @@ def apysph_to_difflonlatsph(
     ...                             d_lon=3 * u.mas/u.yr)
     >>> convert(dif, cx.LonLatSphericalDifferential)
     LonLatSphericalDifferential(
-      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_lon=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
@@ -888,9 +888,9 @@ def apysph_to_diffloncoslatsph(
     ...                                   d_lon_coslat=3 * u.mas/u.yr)
     >>> convert(dif, cx.LonCosLatSphericalDifferential)
     LonCosLatSphericalDifferential(
-      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """

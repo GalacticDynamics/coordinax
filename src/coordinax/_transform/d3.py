@@ -277,8 +277,8 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                        theta=Quantity(14, "deg"))
+    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -303,8 +303,8 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                        theta=Quantity(14, "deg"))
+    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -333,8 +333,8 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                        theta=Quantity(14, "deg"))
+    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -362,8 +362,8 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                        theta=Quantity(14, "deg"))
+    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")

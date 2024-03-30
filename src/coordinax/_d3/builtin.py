@@ -22,8 +22,8 @@ from unxt import Quantity
 import coordinax._typing as ct
 from .base import Abstract3DVector, Abstract3DVectorDifferential
 from coordinax._base_vec import AbstractVector
-from coordinax._checks import check_phi_range, check_r_non_negative
-from coordinax._converters import converter_phi_to_range
+from coordinax._checks import check_azimuth_range, check_r_non_negative
+from coordinax._converters import converter_azimuth_to_range
 from coordinax._utils import classproperty
 
 ##############################################################################
@@ -82,8 +82,8 @@ class Cartesian3DVector(Abstract3DVector):
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalVector(r=Quantity(1, "kpc"), phi=Quantity(0, "deg"),
-        ...                     theta=Quantity(90, "deg"))
+        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        ...                     phi=Quantity(0, "deg"))
         >>> (q + s).x
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
@@ -103,8 +103,8 @@ class Cartesian3DVector(Abstract3DVector):
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, SphericalVector
         >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalVector(r=Quantity(1, "kpc"), phi=Quantity(0, "deg"),
-        ...                     theta=Quantity(90, "deg"))
+        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        ...                     phi=Quantity(0, "deg"))
         >>> (q - s).x
         Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
@@ -134,7 +134,11 @@ class Cartesian3DVector(Abstract3DVector):
 
 @final
 class CylindricalVector(Abstract3DVector):
-    """Cylindrical vector representation."""
+    """Cylindrical vector representation.
+
+    This adheres to ISO standard 31-11.
+
+    """
 
     rho: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
@@ -142,7 +146,7 @@ class CylindricalVector(Abstract3DVector):
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_phi_to_range(
+        converter=lambda x: converter_azimuth_to_range(
             Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
@@ -156,7 +160,7 @@ class CylindricalVector(Abstract3DVector):
     def __check_init__(self) -> None:
         """Check the validity of the initialisation."""
         check_r_non_negative(self.rho)
-        check_phi_range(self.phi)
+        check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod

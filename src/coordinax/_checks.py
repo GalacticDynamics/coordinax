@@ -25,7 +25,7 @@ def check_r_non_negative(r: BatchableLength) -> BatchableLength:
     )
 
 
-def check_phi_range(phi: BatchableAngle) -> BatchableAngle:
+def check_azimuth_range(phi: BatchableAngle) -> BatchableAngle:
     """Check that the polar angle is in the range [0, 2pi)."""
     return eqx.error_if(
         phi,
@@ -34,7 +34,7 @@ def check_phi_range(phi: BatchableAngle) -> BatchableAngle:
     )
 
 
-def check_theta_range(theta: BatchableAngle) -> BatchableAngle:
+def check_polar_range(theta: BatchableAngle) -> BatchableAngle:
     """Check that the inclination angle is in the range [0, pi]."""
     return eqx.error_if(
         theta,

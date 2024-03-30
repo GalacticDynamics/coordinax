@@ -513,7 +513,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> Cartesian2DVector.components
         ('x', 'y')
         >>> SphericalVector.components
-        ('r', 'phi', 'theta')
+        ('r', 'theta', 'phi')
         >>> RadialDifferential.components
         ('d_r',)
 
@@ -608,8 +608,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> cart = Cartesian2DVector(x=Quantity(1, "m"), y=Quantity(2, "km"))
         >>> cart.to_units({"length": "km"})
         Cartesian2DVector(
-            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
-            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km"))
+            x=Quantity[...](value=f32[], unit=Unit("km")),
+            y=Quantity[...](value=f32[], unit=Unit("km"))
         )
 
         This also works for vectors with different units:
@@ -619,9 +619,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> sph.to_units({"length": "km", "angle": "deg"})
         SphericalVector(
             r=Distance(value=f32[], unit=Unit("km")),
-            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
-            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg"))
-        )
+            theta=Quantity[...](value=f32[], unit=Unit("deg")),
+            phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
         """
         # Ensure `units_` is PT -> Unit
@@ -667,9 +666,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         >>> sph.to_units(ToUnitsOptions.consistent)
         SphericalVector(
             r=Distance(value=f32[], unit=Unit("m")),
-            phi=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad")),
-            theta=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("rad"))
-        )
+            theta=Quantity[...](value=f32[], unit=Unit("deg")),
+            phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
         """
         units_ = {}

@@ -22,8 +22,8 @@ from unxt import Distance, Quantity
 import coordinax._typing as ct
 from .base import Abstract2DVector, Abstract2DVectorDifferential
 from coordinax._base_vec import AbstractVector
-from coordinax._checks import check_phi_range, check_r_non_negative
-from coordinax._converters import converter_phi_to_range
+from coordinax._checks import check_azimuth_range, check_r_non_negative
+from coordinax._converters import converter_azimuth_to_range
 from coordinax._utils import classproperty
 
 # =============================================================================
@@ -130,9 +130,16 @@ class Cartesian2DVector(Abstract2DVector):
 
 @final
 class PolarVector(Abstract2DVector):
-    """Polar vector representation.
+    r"""Polar vector representation.
 
-    We use the symbol `phi` instead of `theta` to adhere to the ISO standard.
+    Parameters
+    ----------
+    r : BatchableDistance
+        Radial distance :math:`r \in [0,+\infty)`.
+    phi : BatchableAngle
+        Polar angle :math:`\phi \in [0,2\pi)`.  We use the symbol `phi` to
+        adhere to the ISO standard 31-11.
+
     """
 
     r: ct.BatchableDistance = eqx.field(
@@ -141,7 +148,7 @@ class PolarVector(Abstract2DVector):
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_phi_to_range(
+        converter=lambda x: converter_azimuth_to_range(
             Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
         )
     )
@@ -150,7 +157,7 @@ class PolarVector(Abstract2DVector):
     def __check_init__(self) -> None:
         """Check the initialization."""
         check_r_non_negative(self.r)
-        check_phi_range(self.phi)
+        check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod
