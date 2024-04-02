@@ -583,7 +583,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         usys = unitsystem(units)
         return replace(
             self,
-            **{k: v.to(usys[v.unit.physical_type]) for k, v in dataclass_items(self)},
+            **{
+                k: v.to_units(usys[v.unit.physical_type])
+                for k, v in dataclass_items(self)
+            },
         )
 
     @dispatch
@@ -628,7 +631,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         # Convert to the given units
         return replace(
             self,
-            **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
+            **{
+                k: v.to_units(units_[v.unit.physical_type])
+                for k, v in dataclass_items(self)
+            },
         )
 
     @dispatch
@@ -678,7 +684,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         return replace(
             self,
-            **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
+            **{
+                k: v.to_units(units_[v.unit.physical_type])
+                for k, v in dataclass_items(self)
+            },
         )
 
     # ===============================================================

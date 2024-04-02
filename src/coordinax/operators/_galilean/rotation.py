@@ -33,7 +33,7 @@ def converter(x: Any) -> Array:
     if isinstance(x, GalileanRotationOperator):
         out = x.rotation
     elif isinstance(x, Quantity):
-        out = x.to_value("")
+        out = x.to_units_value("")
     else:
         out = x
     return jnp.asarray(out)

@@ -113,7 +113,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
       q=Cartesian3DVector( ... )
     )
-    >>> new.t.to("Gyr").value.round(2)
+    >>> new.t.to_units("Gyr").value.round(2)
     Array(2.5, dtype=float32)
     >>> new.q.x
     Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')

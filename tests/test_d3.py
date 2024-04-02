@@ -39,8 +39,8 @@ class Abstract3DVectorTest(AbstractVectorTest):
 
         # # Try finding the poles
         # if hasattr(vector, "theta"):
-        #     sel = (vector.theta.to_value("deg") != 0) & (
-        #         vector.theta.to_value("deg") != 180
+        #     sel = (vector.theta.to_units_value("deg") != 0) & (
+        #         vector.theta.to_units_value("deg") != 180
         #     )
         # else:
         #     sel = slice(None)
@@ -49,8 +49,8 @@ class Abstract3DVectorTest(AbstractVectorTest):
         # for c in vecsel.components:
         #     unit = getattr(apyvecsel, c).unit
         #     assert np.allclose(
-        #         getattr(vecsel, c).to_value(unit),
-        #         getattr(apyvecsel, c).to_value(unit),
+        #         getattr(vecsel, c).to_units_value(unit),
+        #         getattr(apyvecsel, c).to_units_value(unit),
         #         atol=5e-7,
         #     )
 
