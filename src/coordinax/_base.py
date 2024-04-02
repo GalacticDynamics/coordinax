@@ -591,13 +591,13 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
     @dispatch
     def to_units(
-        self, units: Mapping[u.PhysicalType | str, Unit], /
+        self, units: Mapping[u.PhysicalType | str, Unit | str], /
     ) -> "AbstractVectorBase":
         """Convert the vector to the given units.
 
         Parameters
         ----------
-        units : Mapping[PhysicalType | str, Unit]
+        units : Mapping[PhysicalType | str, Unit | str]
             The units to convert to according to the physical type of the
             components.
 
