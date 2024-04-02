@@ -6,7 +6,7 @@ __all__: list[str] = []
 import astropy.coordinates as apyc
 import astropy.units as apyu
 from jaxtyping import Shaped
-from plum import add_conversion_method, conversion_method, convert
+from plum import conversion_method, convert
 
 import quaxed.array_api as xp
 from unxt import Quantity
@@ -303,8 +303,8 @@ def vec_diff_to_q(
 # Cartesian3DVector
 
 
-# @conversion_method(Cartesian3DVector, apyc.BaseRepresentation)
-# @conversion_method(Cartesian3DVector, apyc.CartesianRepresentation)
+@conversion_method(Cartesian3DVector, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(Cartesian3DVector, apyc.CartesianRepresentation)  # type: ignore[misc]
 def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation:
     """`coordinax.Cartesian3DVector` -> `astropy.CartesianRepresentation`.
 
@@ -328,13 +328,6 @@ def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation
         y=convert(obj.y, apyu.Quantity),
         z=convert(obj.z, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(Cartesian3DVector, apyc.BaseRepresentation, cart3_to_apycart3)
-add_conversion_method(
-    Cartesian3DVector, apyc.CartesianRepresentation, cart3_to_apycart3
-)
 
 
 @conversion_method(apyc.CartesianRepresentation, Cartesian3DVector)  # type: ignore[misc]
@@ -363,8 +356,8 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector
 # CylindricalVector
 
 
-# @conversion_method(CylindricalVector, apyc.BaseRepresentation)
-# @conversion_method(CylindricalVector, apyc.CylindricalRepresentation)
+@conversion_method(CylindricalVector, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(CylindricalVector, apyc.CylindricalRepresentation)  # type: ignore[misc]
 def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
     """`coordinax.CylindricalVector` -> `astropy.CylindricalRepresentation`.
 
@@ -390,11 +383,6 @@ def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
         phi=convert(obj.phi, apyu.Quantity),
         z=convert(obj.z, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(CylindricalVector, apyc.BaseRepresentation, cyl_to_apycyl)
-add_conversion_method(CylindricalVector, apyc.CylindricalRepresentation, cyl_to_apycyl)
 
 
 @conversion_method(apyc.CylindricalRepresentation, CylindricalVector)  # type: ignore[misc]
@@ -423,10 +411,8 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
 # SphericalVector
 
 
-# @conversion_method(SphericalVector, apyc.BaseRepresentation)
-# @conversion_method(
-#     SphericalVector, apyc.PhysicsSphericalRepresentation
-# )
+@conversion_method(SphericalVector, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(SphericalVector, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
 def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentation:
     """`coordinax.SphericalVector` -> `astropy.PhysicsSphericalRepresentation`.
 
@@ -448,13 +434,6 @@ def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentatio
         phi=convert(obj.phi, apyu.Quantity),
         theta=convert(obj.theta, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(SphericalVector, apyc.BaseRepresentation, sph_to_apysph)
-add_conversion_method(
-    SphericalVector, apyc.PhysicsSphericalRepresentation, sph_to_apysph
-)
 
 
 @conversion_method(apyc.PhysicsSphericalRepresentation, SphericalVector)  # type: ignore[misc]
@@ -484,10 +463,8 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVecto
 # LonLatSphericalVector
 
 
-# @conversion_method(LonLatSphericalVector, apyc.BaseRepresentation)
-# @conversion_method(
-#     LonLatSphericalVector, apyc.PhysicsSphericalRepresentation
-# )
+@conversion_method(LonLatSphericalVector, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(LonLatSphericalVector, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
 def lonlatsph_to_apysph(obj: LonLatSphericalVector, /) -> apyc.SphericalRepresentation:
     """`coordinax.LonLatSphericalVector` -> `astropy.SphericalRepresentation`.
 
@@ -509,15 +486,6 @@ def lonlatsph_to_apysph(obj: LonLatSphericalVector, /) -> apyc.SphericalRepresen
         lat=convert(obj.lat, apyu.Quantity),
         distance=convert(obj.distance, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(
-    LonLatSphericalVector, apyc.BaseRepresentation, lonlatsph_to_apysph
-)
-add_conversion_method(
-    LonLatSphericalVector, apyc.SphericalRepresentation, lonlatsph_to_apysph
-)
 
 
 @conversion_method(apyc.SphericalRepresentation, LonLatSphericalVector)  # type: ignore[misc]
@@ -547,10 +515,8 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> LonLatSpherical
 # CartesianDifferential3D
 
 
-# @conversion_method(CartesianDifferential3D, apyc.BaseDifferential)
-# @conversion_method(
-#     CartesianDifferential3D, apyc.CartesianDifferential
-# )
+@conversion_method(CartesianDifferential3D, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(CartesianDifferential3D, apyc.CartesianDifferential)  # type: ignore[misc]
 def diffcart3_to_apycart3(
     obj: CartesianDifferential3D, /
 ) -> apyc.CartesianDifferential:
@@ -572,15 +538,6 @@ def diffcart3_to_apycart3(
         d_y=convert(obj.d_y, apyu.Quantity),
         d_z=convert(obj.d_z, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(
-    CartesianDifferential3D, apyc.BaseDifferential, diffcart3_to_apycart3
-)
-add_conversion_method(
-    CartesianDifferential3D, apyc.CartesianDifferential, diffcart3_to_apycart3
-)
 
 
 @conversion_method(  # type: ignore[misc]
@@ -613,10 +570,8 @@ def apycart3_to_diffcart3(
 # CylindricalDifferential
 
 
-# @conversion_method(CylindricalDifferential, apyc.BaseDifferential)
-# @conversion_method(
-#     CylindricalDifferential, apyc.CylindricalDifferential
-# )
+@conversion_method(CylindricalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(CylindricalDifferential, apyc.CylindricalDifferential)  # type: ignore[misc]
 def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDifferential:
     """`coordinax.CylindricalDifferential` -> `astropy.CylindricalDifferential`.
 
@@ -643,13 +598,6 @@ def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDiffer
         d_phi=convert(obj.d_phi, apyu.Quantity),
         d_z=convert(obj.d_z, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(CylindricalDifferential, apyc.BaseDifferential, diffcyl_to_apycyl)
-add_conversion_method(
-    CylindricalDifferential, apyc.CylindricalDifferential, diffcyl_to_apycyl
-)
 
 
 @conversion_method(  # type: ignore[misc]
@@ -681,10 +629,8 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalDiffer
 # SphericalDifferential
 
 
-# @conversion_method(SphericalDifferential, apyc.BaseDifferential)
-# @conversion_method(
-#     SphericalDifferential, apyc.PhysicsSphericalDifferential
-# )
+@conversion_method(SphericalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(SphericalDifferential, apyc.PhysicsSphericalDifferential)  # type: ignore[misc]
 def diffsph_to_apysph(
     obj: SphericalDifferential, /
 ) -> apyc.PhysicsSphericalDifferential:
@@ -712,13 +658,6 @@ def diffsph_to_apysph(
         d_theta=convert(obj.d_theta, apyu.Quantity),
         d_phi=convert(obj.d_phi, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(SphericalDifferential, apyc.BaseDifferential, diffsph_to_apysph)
-add_conversion_method(
-    SphericalDifferential, apyc.PhysicsSphericalDifferential, diffsph_to_apysph
-)
 
 
 @conversion_method(  # type: ignore[misc]
@@ -752,10 +691,8 @@ def apysph_to_diffsph(
 # LonLatSphericalDifferential
 
 
-# @conversion_method(LonLatSphericalDifferential, apyc.BaseDifferential)
-# @conversion_method(
-#     LonLatSphericalDifferential, apyc.SphericalDifferential
-# )
+@conversion_method(LonLatSphericalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(LonLatSphericalDifferential, apyc.SphericalDifferential)  # type: ignore[misc]
 def difflonlatsph_to_apysph(
     obj: LonLatSphericalDifferential, /
 ) -> apyc.SphericalDifferential:
@@ -783,15 +720,6 @@ def difflonlatsph_to_apysph(
         d_lon=convert(obj.d_lon, apyu.Quantity),
         d_lat=convert(obj.d_lat, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(
-    LonLatSphericalDifferential, apyc.BaseDifferential, difflonlatsph_to_apysph
-)
-add_conversion_method(
-    LonLatSphericalDifferential, apyc.SphericalDifferential, difflonlatsph_to_apysph
-)
 
 
 @conversion_method(  # type: ignore[misc]
@@ -825,10 +753,8 @@ def apysph_to_difflonlatsph(
 # LonCosLatSphericalDifferential
 
 
-# @conversion_method(LonCosLatSphericalDifferential, apyc.BaseDifferential)
-# @conversion_method(
-#     LonCosLatSphericalDifferential, apyc.SphericalCosLatDifferential
-# )
+@conversion_method(LonCosLatSphericalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(LonCosLatSphericalDifferential, apyc.SphericalCosLatDifferential)  # type: ignore[misc]
 def diffloncoslatsph_to_apysph(
     obj: LonCosLatSphericalDifferential, /
 ) -> apyc.SphericalCosLatDifferential:
@@ -856,17 +782,6 @@ def diffloncoslatsph_to_apysph(
         d_lon_coslat=convert(obj.d_lon_coslat, apyu.Quantity),
         d_lat=convert(obj.d_lat, apyu.Quantity),
     )
-
-
-# TODO: use decorator when https://github.com/beartype/plum/pull/135
-add_conversion_method(
-    LonCosLatSphericalDifferential, apyc.BaseDifferential, diffloncoslatsph_to_apysph
-)
-add_conversion_method(
-    LonCosLatSphericalDifferential,
-    apyc.SphericalCosLatDifferential,
-    diffloncoslatsph_to_apysph,
-)
 
 
 @conversion_method(  # type: ignore[misc]
