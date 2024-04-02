@@ -654,3 +654,25 @@ def represent_as(
         d_lat=current.d_lat,
         d_distance=current.d_distance,
     )
+
+
+@dispatch
+def represent_as(
+    current: LonCosLatSphericalDifferential,
+    target: type[Abstract3DVectorDifferential],
+    position: AbstractVector | Quantity["length"],
+    /,
+    **kwargs: Any,
+) -> Abstract3DVectorDifferential:
+    """LonCosLatSphericalDifferential -> Abstract3DVectorDifferential."""
+    # Parse the position to an AbstractVector
+    if isinstance(position, AbstractVector):
+        posvec = position
+    else:  # Q -> Cart<X>D
+        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+            position
+        )
+    # Transform the differential to LonLatSphericalDifferential
+    current = represent_as(current, LonLatSphericalDifferential, posvec)
+    # Transform the position to the required type
+    return represent_as(current, target, posvec)
