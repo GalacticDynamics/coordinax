@@ -459,7 +459,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
         >>> new.x
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
-        >>> new.t.to("Gyr")
+        >>> new.t.to_units("Gyr")
         Quantity['time'](Array(0.99999994, dtype=float32), unit='Gyr')
 
         """

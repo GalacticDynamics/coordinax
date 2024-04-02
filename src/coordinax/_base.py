@@ -583,18 +583,21 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         usys = unitsystem(units)
         return replace(
             self,
-            **{k: v.to(usys[v.unit.physical_type]) for k, v in dataclass_items(self)},
+            **{
+                k: v.to_units(usys[v.unit.physical_type])
+                for k, v in dataclass_items(self)
+            },
         )
 
     @dispatch
     def to_units(
-        self, units: Mapping[u.PhysicalType | str, Unit], /
+        self, units: Mapping[u.PhysicalType | str, Unit | str], /
     ) -> "AbstractVectorBase":
         """Convert the vector to the given units.
 
         Parameters
         ----------
-        units : Mapping[PhysicalType | str, Unit]
+        units : Mapping[PhysicalType | str, Unit | str]
             The units to convert to according to the physical type of the
             components.
 
@@ -628,7 +631,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         # Convert to the given units
         return replace(
             self,
-            **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
+            **{
+                k: v.to_units(units_[v.unit.physical_type])
+                for k, v in dataclass_items(self)
+            },
         )
 
     @dispatch
@@ -678,7 +684,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         return replace(
             self,
-            **{k: v.to(units_[v.unit.physical_type]) for k, v in dataclass_items(self)},
+            **{
+                k: v.to_units(units_[v.unit.physical_type])
+                for k, v in dataclass_items(self)
+            },
         )
 
     # ===============================================================
