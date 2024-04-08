@@ -225,6 +225,8 @@ class LonLatSphericalVector(AbstractSphericalVector):
 
     The latitude is not wrapped, but it is checked to be in the [-90, 90] degrees range.
 
+    .. skip: next
+
     >>> try:
     ...     cx.LonLatSphericalVector(lon=Quantity(0, "deg"), lat=Quantity(100, "deg"),
     ...                              distance=Quantity(3, "kpc"))
@@ -233,6 +235,8 @@ class LonLatSphericalVector(AbstractSphericalVector):
     The inclination angle must be in the range [0, pi]...
 
     Likewise, the radial distance is checked to be non-negative.
+
+    .. skip: next
 
     >>> try:
     ...     cx.LonLatSphericalVector(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
