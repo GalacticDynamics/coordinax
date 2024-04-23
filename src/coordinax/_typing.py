@@ -7,7 +7,7 @@ from typing import TypeAlias
 import astropy.units as u
 from jaxtyping import Float, Int, Shaped
 
-from unxt import Distance, Quantity
+from unxt import AbstractDistance, Quantity
 
 Unit: TypeAlias = u.Unit | u.UnitBase | u.CompositeUnit
 
@@ -19,7 +19,7 @@ ScalarTime = Float[Quantity["time"], ""] | Int[Quantity["time"], ""]
 
 BatchableAngle = Shaped[Quantity["angle"], "*#batch"]
 BatchableLength = Shaped[Quantity["length"], "*#batch"]
-BatchableDistance = Shaped[Distance, "*#batch"]
+BatchableDistance = Shaped[AbstractDistance, "*#batch"]
 BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
 BatchableTime = Shaped[Quantity["time"], "*#batch"]
 BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
