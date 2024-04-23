@@ -158,8 +158,9 @@ class PolarVector(Abstract2DVector):
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        check_r_non_negative(self.r)
-        check_azimuth_range(self.phi)
+        if self.check_fields:
+            check_r_non_negative(self.r)
+            check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod
