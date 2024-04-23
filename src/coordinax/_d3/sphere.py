@@ -24,7 +24,7 @@ import jax
 
 import quaxed.array_api as xp
 import quaxed.lax as qlax
-from unxt import Distance, Quantity
+from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
 from .base import Abstract3DVector, Abstract3DVectorDifferential
@@ -72,7 +72,9 @@ class SphericalVector(AbstractSphericalVector):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=partial(Distance.constructor, dtype=float)
+        converter=lambda x: x
+        if isinstance(x, AbstractDistance)
+        else Distance.constructor(x, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -136,7 +138,9 @@ class MathSphericalVector(AbstractSphericalVector):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=partial(Distance.constructor, dtype=float)
+        converter=lambda x: x
+        if isinstance(x, AbstractDistance)
+        else Distance.constructor(x, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -256,7 +260,9 @@ class LonLatSphericalVector(AbstractSphericalVector):
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
     distance: ct.BatchableDistance = eqx.field(
-        converter=partial(Distance.constructor, dtype=float)
+        converter=lambda x: x
+        if isinstance(x, AbstractDistance)
+        else Distance.constructor(x, dtype=float)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
