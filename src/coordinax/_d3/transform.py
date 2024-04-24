@@ -355,9 +355,9 @@ def represent_as(
         [-4.371e-08  1.000e+00 -4.371e-08]>
 
     """
-    x = current.r * xp.sin(current.theta) * xp.cos(current.phi)
-    y = current.r * xp.sin(current.theta) * xp.sin(current.phi)
-    z = current.r * xp.cos(current.theta)
+    x = current.r.distance * xp.sin(current.theta) * xp.cos(current.phi)
+    y = current.r.distance * xp.sin(current.theta) * xp.sin(current.phi)
+    z = current.r.distance * xp.cos(current.theta)
     return target(x=x, y=y, z=z)
 
 
@@ -379,8 +379,8 @@ def represent_as(
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
-    rho = xp.abs(current.r * xp.sin(current.theta))
-    z = current.r * xp.cos(current.theta)
+    rho = xp.abs(current.r.distance * xp.sin(current.theta))
+    z = current.r.distance * xp.cos(current.theta)
     return target(rho=rho, phi=current.phi, z=z)
 
 
@@ -519,9 +519,9 @@ def represent_as(
         [-4.371e-08  1.000e+00 -4.371e-08]>
 
     """
-    x = current.r * xp.sin(current.phi) * xp.cos(current.theta)
-    y = current.r * xp.sin(current.phi) * xp.sin(current.theta)
-    z = current.r * xp.cos(current.phi)
+    x = current.r.distance * xp.sin(current.phi) * xp.cos(current.theta)
+    y = current.r.distance * xp.sin(current.phi) * xp.sin(current.theta)
+    z = current.r.distance * xp.cos(current.phi)
     return target(x=x, y=y, z=z)
 
 
@@ -543,8 +543,8 @@ def represent_as(
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
-    rho = xp.abs(current.r * xp.sin(current.phi))
-    z = current.r * xp.cos(current.phi)
+    rho = xp.abs(current.r.distance * xp.sin(current.phi))
+    z = current.r.distance * xp.cos(current.phi)
     return target(rho=rho, phi=current.theta, z=z)
 
 

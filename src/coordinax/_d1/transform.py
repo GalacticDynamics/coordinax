@@ -89,4 +89,4 @@ def represent_as(
 
     The `r` coordinate is converted to the `x` coordinate of the 1D system.
     """
-    return target(x=current.r)
+    return target(x=current.r.distance)
