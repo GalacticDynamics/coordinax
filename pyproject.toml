@@ -30,7 +30,7 @@
     "jaxtyping",
     "plum-dispatch>=2.3.3",
     "quax>=0.0.3",
-    "quaxed >= 0.3",
+    "quaxed >= 0.4",
     "unxt >= 0.10",
   ]
   description = "Vectors in JAX"
