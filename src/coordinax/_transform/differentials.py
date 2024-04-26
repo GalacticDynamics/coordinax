@@ -2,6 +2,7 @@
 
 __all__ = ["represent_as"]
 
+from dataclasses import replace
 from math import prod
 from typing import Any
 
@@ -9,7 +10,7 @@ import jax
 from plum import dispatch
 
 import quaxed.array_api as xp
-from unxt import Quantity
+from unxt import AbstractDistance, Quantity
 
 from coordinax._base_dif import AbstractVectorDifferential
 from coordinax._base_vec import AbstractVector
@@ -122,6 +123,15 @@ def represent_as(
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
     current_pos = represent_as(posvec, current.integral_cls, **kwargs)
+    # TODO: not need to cast to distance
+    current_pos = replace(
+        current_pos,
+        **{
+            k: v.distance
+            for k, v in dataclass_items(current_pos)
+            if isinstance(v, AbstractDistance)
+        },
+    )
 
     # Takes the Jacobian through the representation transformation function.  This
     # returns a representation of the target type, where the value of each field the

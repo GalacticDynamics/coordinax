@@ -88,6 +88,6 @@ def represent_as(
     current: PolarVector, target: type[Cartesian2DVector], /, **kwargs: Any
 ) -> Cartesian2DVector:
     """PolarVector -> Cartesian2DVector."""
-    x = current.r * xp.cos(current.phi)
-    y = current.r * xp.sin(current.phi)
+    x = current.r.distance * xp.cos(current.phi)
+    y = current.r.distance * xp.sin(current.phi)
     return target(x=x, y=y)
