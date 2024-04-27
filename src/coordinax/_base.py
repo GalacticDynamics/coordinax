@@ -12,7 +12,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import fields, replace
 from enum import Enum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeVar
 
 import astropy.units as u
 import equinox as eqx
@@ -113,6 +113,48 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         """
         return cls(**obj)
+
+    @classmethod
+    @dispatch
+    def constructor(
+        cls: "type[AbstractVectorBase]", obj: NamedTuple, /
+    ) -> "AbstractVectorBase":
+        """Construct a vector from a :class:`~typing.NamedTuple`.
+
+        Parameters
+        ----------
+        obj : NamedTuple
+            A named-tuple of components.
+
+        Examples
+        --------
+        >>> from collections import namedtuple
+        >>> import jax.numpy as jnp
+        >>> from unxt import Quantity
+        >>> from coordinax import Cartesian3DVector
+
+        >>> VecTuple = namedtuple("VecTuple", ["x", "y", "z"])
+        >>> xs = VecTuple(Quantity(1, "m"), Quantity(2, "m"), Quantity(3, "m"))
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+
+        >>> xs = VecTuple(Quantity([1, 2], "m"), Quantity([3, 4], "m"),
+        ...               Quantity([5, 6], "m"))
+        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec
+        Cartesian3DVector(
+            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+        )
+
+        """
+        return cls(**obj._asdict())
 
     @classmethod
     @dispatch
@@ -759,7 +801,7 @@ def constructor(  # noqa: D417
         msg = f"Cannot construct {cls} from {type(obj)}."
         raise TypeError(msg)
 
-    # avoid copying if the types are the same. Isinstance is not strict
+    # Avoid copying if the types are the same. Isinstance is not strict
     # enough, so we use type() instead.
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj
