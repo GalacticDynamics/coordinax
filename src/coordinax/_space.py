@@ -261,6 +261,22 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
     # Methods
 
     def __neg__(self) -> "Self":
+        """Negative of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> from unxt import Quantity
+
+        >>> w = cx.Space(
+        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
+        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ... )
+
+        >>> (-w)["length"].x
+        Quantity['length'](Array([[-1., -4.]], dtype=float32), unit='m')
+
+        """  # noqa: E501
         return type(self)(**{k: -v for k, v in self.items()})
 
     def __repr__(self) -> str:
