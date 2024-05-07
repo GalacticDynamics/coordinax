@@ -417,14 +417,13 @@ class TestSphericalVector(Abstract3DVectorTest):
         )
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
-        assert np.allclose(convert(cyl.rho, APYQuantity), apycyl.rho)
-        assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
+        # There's a 'bug' in Astropy where rho can be negative.
+        with pytest.raises(AssertionError):
+            assert convert(cyl.rho[-1], APYQuantity) == apycyl.rho[-1]
+        assert np.allclose(convert(cyl.rho, APYQuantity), np.abs(apycyl.rho))
 
-        assert np.allclose(convert(cyl.phi[:-1], APYQuantity), apycyl.phi[:-1])
-        # There's a 'bug' in Astropy where at the origin phi is always 90, or at
-        # least doesn't keep its value.
-        with pytest.raises(AssertionError):  # TODO: Fix this
-            assert np.allclose(convert(cyl.phi[-1], APYQuantity), apycyl.phi[-1])
+        assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
+        assert np.allclose(convert(cyl.phi, APYQuantity), apycyl.phi)
 
     def test_spherical_to_spherical(self, vector):
         """Test ``coordinax.represent_as(SphericalVector)``."""
