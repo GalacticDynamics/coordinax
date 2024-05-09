@@ -121,6 +121,9 @@ def constructor(
     return cls(distance=obj.distance, lon=obj.lon, lat=obj.lat)
 
 
+# -------------------------------------------------------------------
+
+
 @CartesianDifferential3D.constructor._f.register  # noqa: SLF001
 def constructor(
     cls: type[CartesianDifferential3D], obj: apyc.CartesianDifferential
