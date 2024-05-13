@@ -181,7 +181,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
         >>> from coordinax import CartesianDifferential1D
         >>> q = CartesianDifferential1D.constructor(Quantity([-1], "km/s"))
         >>> q.norm()
-        Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+        Quantity['speed'](Array(1., dtype=float32, ...), unit='km / s')
 
         """
         return xp.abs(self.d_x)
