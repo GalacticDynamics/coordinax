@@ -88,10 +88,10 @@ repos:
       - id: codespell
 
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: "v0.16"
+    rev: "v0.17"
     hooks:
       - id: validate-pyproject
-        additional_dependencies: ["validate-pyproject-schema-store[all]"]
+        # additional_dependencies: ["validate-pyproject-schema-store[all]"]
 
   - repo: local
     hooks:
