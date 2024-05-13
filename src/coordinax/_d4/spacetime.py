@@ -92,6 +92,7 @@ class FourVector(Abstract4DVector):
 
     def __check_init__(self) -> None:
         """Check that the initialization is valid."""
+        # if self.check_fields:
         # Check the shapes are the same, allowing for broadcasting of the time.
         shape = jnp.broadcast_shapes(self.t.shape, self.q.shape)
         if shape != self.q.shape:

@@ -147,7 +147,8 @@ class RadialVector(Abstract1DVector):
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        check_r_non_negative(self.r)
+        if self.check_fields:
+            check_r_non_negative(self.r)
 
     @classproperty
     @classmethod

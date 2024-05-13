@@ -9,7 +9,7 @@ __all__ = [
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-from dataclasses import fields, replace
+from dataclasses import KW_ONLY, fields, replace
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
@@ -50,6 +50,9 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     coordinate systems. This class provides a common interface for all vector
     types. All fields of the vector are expected to be components of the vector.
     """
+
+    _: KW_ONLY
+    check_fields: bool = eqx.field(default=True, static=True, compare=False, repr=False)
 
     @classproperty
     @classmethod

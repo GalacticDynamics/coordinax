@@ -159,8 +159,9 @@ class CylindricalVector(Abstract3DVector):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialisation."""
-        check_r_non_negative(self.rho)
-        check_azimuth_range(self.phi)
+        if self.check_fields:
+            check_r_non_negative(self.rho)
+            check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod

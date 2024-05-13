@@ -92,9 +92,10 @@ class SphericalVector(AbstractSphericalVector):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        check_r_non_negative(self.r)
-        check_polar_range(self.theta)
-        check_azimuth_range(self.phi)
+        if self.check_fields:
+            check_r_non_negative(self.r)
+            check_polar_range(self.theta)
+            check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod
@@ -158,9 +159,10 @@ class MathSphericalVector(AbstractSphericalVector):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        check_r_non_negative(self.r)
-        check_azimuth_range(self.theta)
-        check_polar_range(self.phi)
+        if self.check_fields:
+            check_r_non_negative(self.r)
+            check_azimuth_range(self.theta)
+            check_polar_range(self.phi)
 
     @classproperty
     @classmethod
@@ -272,9 +274,10 @@ class LonLatSphericalVector(AbstractSphericalVector):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        check_azimuth_range(self.lon)
-        check_polar_range(self.lat, -Quantity(90, "deg"), Quantity(90, "deg"))
-        check_r_non_negative(self.distance)
+        if self.check_fields:
+            check_azimuth_range(self.lon)
+            check_polar_range(self.lat, -Quantity(90, "deg"), Quantity(90, "deg"))
+            check_r_non_negative(self.distance)
 
     @classproperty
     @classmethod
