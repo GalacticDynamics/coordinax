@@ -44,14 +44,14 @@ repos:
       - id: rst-inline-touching-normal
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.28.2"
+    rev: "0.28.3"
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
       - id: check-readthedocs
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: "v0.4.1"
+    rev: "v0.4.4"
     hooks:
       # Run the linter
       - id: ruff
