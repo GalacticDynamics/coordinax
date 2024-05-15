@@ -208,12 +208,14 @@
     "invalid-unary-operand-type", # pylint doesn't understand dataclass fields
     "line-too-long",
     "missing-function-docstring", # TODO: resolve
+    "missing-kwoa",               # plum-dispatch
     "missing-module-docstring",
     "no-member",                  # handled by mypy
     "no-value-for-parameter",     # pylint doesn't understand multiple dispatch
     "not-a-mapping",              # pylint doesn't understand dataclass fields
     "protected-access",           # handled by ruff
     "redefined-builtin",          # handled by ruff
+    "too-many-function-args",     # plum-dispatch
     "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
     "unsubscriptable-object",     # handled by mypy
     "unused-argument",            # handled by ruff
