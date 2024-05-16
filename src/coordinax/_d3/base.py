@@ -5,6 +5,8 @@ __all__ = ["Abstract3DVector", "Abstract3DVectorDifferential"]
 
 from abc import abstractmethod
 
+from typing_extensions import override
+
 from coordinax._base import AbstractVectorBase
 from coordinax._base_dif import AbstractVectorDifferential
 from coordinax._base_vec import AbstractVector
@@ -14,6 +16,7 @@ from coordinax._utils import classproperty
 class Abstract3DVector(AbstractVector):
     """Abstract representation of 3D coordinates in different systems."""
 
+    @override
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVectorBase]:

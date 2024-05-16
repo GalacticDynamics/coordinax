@@ -198,6 +198,7 @@
 [tool.pylint]
   ignore-paths = [".*/_version.py"]
   messages_control.disable = [
+    "abstract-method",            # pylint doesn't like ABC hierarchies
     "cyclic-import",              # broken?
     "design",
     "duplicate-code",
@@ -206,6 +207,7 @@
     "function-redefined",         # plum-dispatch
     "invalid-name",               # handled by ruff
     "invalid-unary-operand-type", # pylint doesn't understand dataclass fields
+    "isinstance-second-argument-not-valid-type", # pylint doesn't understand _cartesian_cls
     "line-too-long",
     "missing-function-docstring", # TODO: resolve
     "missing-kwoa",               # plum-dispatch

@@ -66,7 +66,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         >>> from coordinax import RadialDifferential
         >>> dr = RadialDifferential(Quantity(1, "m/s"))
         >>> -dr
-        RadialDifferential( d_r=Quantity[...]( value=f32[], unit=Unit("m / s") ) )
+        RadialDifferential( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
         >>> from coordinax import PolarDifferential
         >>> dp = PolarDifferential(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
@@ -124,3 +124,52 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
     def norm(self, position: AbstractVector, /) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, position).norm()
+
+
+# =============================================================================
+
+
+class AdditionMixin(AbstractVectorBase):
+    """Mixin for addition operations."""
+
+    def __add__(self: "Self", other: Any, /) -> "Self":
+        """Add two differentials.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
+        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
+        >>> q2 = q + q
+        >>> q2.d_y
+        Quantity['speed'](Array(4., dtype=float32), unit='km / s')
+
+        """
+        if not isinstance(other, self._cartesian_cls):
+            msg = f"Cannot add {type(other)!r} to {self._cartesian_cls!r}."
+            raise TypeError(msg)
+
+        return replace(
+            self, **{k: v + getattr(other, k) for k, v in dataclass_items(self)}
+        )
+
+    def __sub__(self: "Self", other: Any, /) -> "Self":
+        """Subtract two differentials.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
+        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
+        >>> q2 = q - q
+        >>> q2.d_y
+        Quantity['speed'](Array(0., dtype=float32), unit='km / s')
+
+        """
+        if not isinstance(other, self._cartesian_cls):
+            msg = f"Cannot subtract {type(other)!r} from {self._cartesian_cls!r}."
+            raise TypeError(msg)
+
+        return replace(
+            self, **{k: v - getattr(other, k) for k, v in dataclass_items(self)}
+        )
