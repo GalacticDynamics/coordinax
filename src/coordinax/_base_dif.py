@@ -66,7 +66,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         >>> from coordinax import RadialDifferential
         >>> dr = RadialDifferential(Quantity(1, "m/s"))
         >>> -dr
-        RadialDifferential( d_r=Quantity[...]( value=f32[], unit=Unit("m / s") ) )
+        RadialDifferential( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
         >>> from coordinax import PolarDifferential
         >>> dp = PolarDifferential(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
@@ -139,9 +139,9 @@ class AdditionMixin(AbstractVectorBase):
         --------
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
-        >>> q = CartesianDifferential3D(Quantity([1, 2, 3], "km/s"))
+        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
         >>> q2 = q + q
-        >>> q2.y
+        >>> q2.d_y
         Quantity['speed'](Array(4., dtype=float32), unit='km / s')
 
         """
@@ -160,9 +160,9 @@ class AdditionMixin(AbstractVectorBase):
         --------
         >>> from unxt import Quantity
         >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
-        >>> q = CartesianDifferential3D(Quantity([1, 2, 3], "km/s"))
+        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
         >>> q2 = q - q
-        >>> q2.y
+        >>> q2.d_y
         Quantity['speed'](Array(0., dtype=float32), unit='km / s')
 
         """
