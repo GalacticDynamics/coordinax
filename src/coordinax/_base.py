@@ -414,12 +414,12 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         """
         return replace(self, **{k: v.flatten() for k, v in dataclass_items(self)})
 
-    def reshape(self, *args: Any, order: str = "C") -> "Self":
+    def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the components of the vector.
 
         Parameters
         ----------
-        *args : Any
+        *shape : Any
             The new shape.
         order : str
             The order to use for the reshape.
@@ -451,7 +451,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         # TODO: enable not needing to make a full-shaped copy
         full = full_shaped(self)
         return replace(
-            self, **{k: v.reshape(*args, order=order) for k, v in dataclass_items(full)}
+            self,
+            **{k: v.reshape(*shape, order=order) for k, v in dataclass_items(full)},
         )
 
     # ===============================================================

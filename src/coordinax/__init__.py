@@ -15,6 +15,7 @@ from . import (
     _d2,
     _d3,
     _d4,
+    _dn,
     _exceptions,
     _transform,
     _typing,
@@ -28,6 +29,7 @@ from ._d1 import *
 from ._d2 import *
 from ._d3 import *
 from ._d4 import *
+from ._dn import *
 from ._exceptions import *
 from ._transform import *
 from ._typing import *
@@ -43,6 +45,7 @@ __all__ += _d1.__all__
 __all__ += _d2.__all__
 __all__ += _d3.__all__
 __all__ += _d4.__all__
+__all__ += _dn.__all__
 __all__ += _exceptions.__all__
 __all__ += _transform.__all__
 __all__ += _typing.__all__
@@ -65,5 +68,6 @@ del (
     _d2,
     _d3,
     _d4,
+    _dn,
     RUNTIME_TYPECHECKER,
 )
