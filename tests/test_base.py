@@ -33,8 +33,8 @@ from coordinax import (
     IrreversibleDimensionChange,
     PolarDifferential,
     PolarVector,
-    RadialDifferential,
-    RadialVector,
+    RadialPosition,
+    RadialVelocity,
     SphericalDifferential,
     SphericalVector,
 )
@@ -43,7 +43,7 @@ from coordinax._utils import dataclass_items
 BUILTIN_VECTORS = [
     # 1D
     Cartesian1DVector,
-    RadialVector,
+    RadialPosition,
     # 2D
     Cartesian2DVector,
     PolarVector,
@@ -56,7 +56,7 @@ BUILTIN_VECTORS = [
 BUILTIN_DIFFERENTIALS = [
     # 1D
     CartesianDifferential1D,
-    RadialDifferential,
+    RadialVelocity,
     # 2D
     CartesianDifferential2D,
     PolarDifferential,

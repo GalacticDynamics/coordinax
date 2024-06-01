@@ -37,10 +37,10 @@ class TestCartesian1DVector(AbstractPosition1DTest):
         assert newvec is vector
 
     def test_cartesian1d_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = vector.represent_as(cx.RadialVector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = vector.represent_as(cx.RadialPosition)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_cartesian1d_to_cartesian2d(self, vector):
@@ -101,13 +101,13 @@ class TestCartesian1DVector(AbstractPosition1DTest):
         assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
 
 
-class TestRadialVector(AbstractPosition1DTest):
-    """Test :class:`coordinax.RadialVector`."""
+class TestRadialPosition(AbstractPosition1DTest):
+    """Test :class:`coordinax.RadialPosition`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
-        return cx.RadialVector(r=Quantity([1, 2, 3, 4], "kpc"))
+        return cx.RadialPosition(r=Quantity([1, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
@@ -120,13 +120,13 @@ class TestRadialVector(AbstractPosition1DTest):
         assert qnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_radial_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
+        """Test ``coordinax.represent_as(RadialPosition)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.RadialVector)
+        newvec = vector.represent_as(cx.RadialPosition)
         assert newvec == vector
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.RadialVector)
+        newvec = cx.represent_as(vector, cx.RadialPosition)
         assert newvec is vector
 
     def test_radial_to_cartesian2d(self, vector):
@@ -220,10 +220,10 @@ class TestCartesianDifferential1D(AbstractVelocity1DTest):
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian1d_to_radial(self, difntl, vector):
-        """Test ``difntl.represent_as(RadialDifferential)``."""
-        radial = difntl.represent_as(cx.RadialDifferential, vector)
+        """Test ``difntl.represent_as(RadialVelocity)``."""
+        radial = difntl.represent_as(cx.RadialVelocity, vector)
 
-        assert isinstance(radial, cx.RadialDifferential)
+        assert isinstance(radial, cx.RadialVelocity)
         assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -299,18 +299,18 @@ class TestCartesianDifferential1D(AbstractVelocity1DTest):
         assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m"))
 
 
-class TestRadialDifferential(AbstractVelocity1DTest):
-    """Test :class:`coordinax.RadialDifferential`."""
+class TestRadialVelocity(AbstractVelocity1DTest):
+    """Test :class:`coordinax.RadialVelocity`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.RadialDifferential:
+    def difntl(self) -> cx.RadialVelocity:
         """Return a vector."""
-        return cx.RadialDifferential(d_r=Quantity([1, 2, 3, 4], "km/s"))
+        return cx.RadialVelocity(d_r=Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.RadialVector:
+    def vector(self) -> cx.RadialPosition:
         """Return a vector."""
-        return cx.RadialVector(r=Quantity([1, 2, 3, 4], "kpc"))
+        return cx.RadialPosition(r=Quantity([1, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
@@ -325,13 +325,13 @@ class TestRadialDifferential(AbstractVelocity1DTest):
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_radial(self, difntl, vector):
-        """Test ``difntl.represent_as(RadialDifferential)``."""
+        """Test ``difntl.represent_as(RadialVelocity)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.RadialDifferential, vector)
+        newvec = difntl.represent_as(cx.RadialVelocity, vector)
         assert newvec == difntl
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.RadialDifferential, vector)
+        newvec = cx.represent_as(difntl, cx.RadialVelocity, vector)
         assert newvec is difntl
 
     @pytest.mark.xfail(reason="Not implemented")

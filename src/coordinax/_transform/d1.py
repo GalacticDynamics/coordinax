@@ -9,7 +9,7 @@ from plum import dispatch
 
 from unxt import Quantity
 
-from coordinax._d1.builtin import Cartesian1DVector, RadialVector
+from coordinax._d1.builtin import Cartesian1DVector, RadialPosition
 from coordinax._d2.builtin import Cartesian2DVector, PolarVector
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
@@ -240,7 +240,7 @@ def represent_as(
 
 
 # =============================================================================
-# RadialVector
+# RadialPosition
 
 # -----------------------------------------------
 # 2D
@@ -248,14 +248,14 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: RadialVector,
+    current: RadialPosition,
     target: type[Cartesian2DVector],
     /,
     *,
     y: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> Cartesian2DVector:
-    """RadialVector -> Cartesian2DVector.
+    """RadialPosition -> Cartesian2DVector.
 
     The `r` coordinate is converted to the cartesian coordinate `x`.
     The `y` coordinate is a keyword argument and defaults to 0.
@@ -265,7 +265,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.RadialVector(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.Cartesian2DVector)
     >>> x2
     Cartesian2DVector( x=Quantity[...](value=f32[], unit=Unit("km")),
@@ -283,14 +283,14 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: RadialVector,
+    current: RadialPosition,
     target: type[PolarVector],
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
 ) -> PolarVector:
-    """RadialVector -> PolarVector.
+    """RadialPosition -> PolarVector.
 
     The `r` coordinate is converted to the radial coordinate `r`.
     The `phi` coordinate is a keyword argument and defaults to 0.
@@ -300,7 +300,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.RadialVector(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.PolarVector)
     >>> x2
     PolarVector( r=Distance(value=f32[], unit=Unit("km")),
@@ -322,7 +322,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: RadialVector,
+    current: RadialPosition,
     target: type[Cartesian3DVector],
     /,
     *,
@@ -330,7 +330,7 @@ def represent_as(
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> Cartesian3DVector:
-    """RadialVector -> Cartesian3DVector.
+    """RadialPosition -> Cartesian3DVector.
 
     The `r` coordinate is converted to the `x` coordinate of the 3D system.
     The `y` and `z` coordinates are keyword arguments and default to 0.
@@ -340,7 +340,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.RadialVector(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.Cartesian3DVector)
     >>> x2
     Cartesian3DVector( x=Quantity[...](value=f32[], unit=Unit("km")),
@@ -363,7 +363,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: RadialVector,
+    current: RadialPosition,
     target: type[SphericalVector] | type[MathSphericalVector],
     /,
     *,
@@ -371,7 +371,7 @@ def represent_as(
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
 ) -> SphericalVector | MathSphericalVector:
-    """RadialVector -> SphericalVector | MathSphericalVector.
+    """RadialPosition -> SphericalVector | MathSphericalVector.
 
     The `r` coordinate is converted to the radial coordinate `r`.
     The `theta` and `phi` coordinates are keyword arguments and default to 0.
@@ -381,7 +381,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.RadialVector(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
 
     SphericalVector:
 
@@ -425,7 +425,7 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: RadialVector,
+    current: RadialPosition,
     target: type[CylindricalVector],
     /,
     *,
@@ -433,7 +433,7 @@ def represent_as(
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> CylindricalVector:
-    """RadialVector -> CylindricalVector.
+    """RadialPosition -> CylindricalVector.
 
     The `r` coordinate is converted to the radial coordinate `rho`.
     The `phi` and `z` coordinates are keyword arguments and default to 0.
@@ -443,7 +443,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.RadialVector(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.CylindricalVector)
     >>> x2
     CylindricalVector( rho=Quantity[...](value=f32[], unit=Unit("km")),

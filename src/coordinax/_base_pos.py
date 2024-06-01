@@ -49,10 +49,10 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialVector, SphericalVector
+        >>> from coordinax import RadialPosition, SphericalVector
 
-        >>> RadialVector.differential_cls.__name__
-        'RadialDifferential'
+        >>> RadialPosition.differential_cls.__name__
+        'RadialVelocity'
 
         >>> SphericalVector.differential_cls.__name__
         'SphericalDifferential'

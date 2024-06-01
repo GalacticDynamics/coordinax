@@ -59,9 +59,9 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from coordinax import RadialVector, SphericalVector
+        >>> from coordinax import RadialPosition, SphericalVector
 
-        >>> RadialVector._cartesian_cls
+        >>> RadialPosition._cartesian_cls
         <class 'coordinax._d1.builtin.Cartesian1DVector'>
 
         >>> SphericalVector._cartesian_cls
@@ -507,7 +507,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from coordinax import Cartesian2DVector, SphericalVector, RadialDifferential
+        >>> from coordinax import Cartesian2DVector, SphericalVector, RadialVelocity
 
         We can get the components of a vector:
 
@@ -515,7 +515,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         ('x', 'y')
         >>> SphericalVector.components
         ('r', 'theta', 'phi')
-        >>> RadialDifferential.components
+        >>> RadialVelocity.components
         ('d_r',)
 
         """

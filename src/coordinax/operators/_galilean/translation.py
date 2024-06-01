@@ -126,9 +126,9 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.Cartesian1DVector.constructor(q).represent_as(cx.RadialVector)
+    >>> vec = cx.Cartesian1DVector.constructor(q).represent_as(cx.RadialPosition)
     >>> op(vec)
-    RadialVector(r=Distance(value=f32[], unit=Unit("kpc")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("kpc")))
 
     - 2D:
 

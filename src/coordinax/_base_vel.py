@@ -43,10 +43,10 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialDifferential, SphericalDifferential
+        >>> from coordinax import RadialVelocity, SphericalDifferential
 
-        >>> RadialDifferential.integral_cls.__name__
-        'RadialVector'
+        >>> RadialVelocity.integral_cls.__name__
+        'RadialPosition'
 
         >>> SphericalDifferential.integral_cls.__name__
         'SphericalVector'
@@ -63,10 +63,10 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import RadialDifferential
-        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> from coordinax import RadialVelocity
+        >>> dr = RadialVelocity(Quantity(1, "m/s"))
         >>> -dr
-        RadialDifferential( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+        RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
         >>> from coordinax import PolarDifferential
         >>> dp = PolarDifferential(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
@@ -89,12 +89,12 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import RadialDifferential
+        >>> from coordinax import RadialVelocity
 
-        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> dr = RadialVelocity(Quantity(1, "m/s"))
         >>> vec = dr * Quantity(2, "s")
         >>> vec
-        RadialVector(r=Distance(value=f32[], unit=Unit("m")))
+        RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
         >>> vec.r
         Distance(Array(2., dtype=float32), unit='m')
 

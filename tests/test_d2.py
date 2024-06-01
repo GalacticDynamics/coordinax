@@ -37,10 +37,10 @@ class TestCartesian2DVector:
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian2d_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = vector.represent_as(cx.RadialVector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = vector.represent_as(cx.RadialPosition)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.r, qnp.hypot(vector.x, vector.y))
 
     def test_cartesian2d_to_cartesian2d(self, vector):
@@ -141,10 +141,10 @@ class TestPolarVector:
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_polar_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = vector.represent_as(cx.RadialVector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = vector.represent_as(cx.RadialPosition)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_polar_to_cartesian2d(self, vector):
@@ -252,10 +252,10 @@ class TestCartesianDifferential2D(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_radial(self, difntl, vector):
-        """Test ``difntl.represent_as(RadialDifferential, vector)``."""
-        radial = difntl.represent_as(cx.RadialDifferential, vector)
+        """Test ``difntl.represent_as(RadialVelocity, vector)``."""
+        radial = difntl.represent_as(cx.RadialVelocity, vector)
 
-        assert isinstance(radial, cx.RadialDifferential)
+        assert isinstance(radial, cx.RadialVelocity)
         assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -354,10 +354,10 @@ class TestPolarDifferential(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_radial(self, difntl, vector):
-        """Test ``difntl.represent_as(RadialDifferential, vector)``."""
-        radial = difntl.represent_as(cx.RadialDifferential, vector)
+        """Test ``difntl.represent_as(RadialVelocity, vector)``."""
+        radial = difntl.represent_as(cx.RadialVelocity, vector)
 
-        assert isinstance(radial, cx.RadialDifferential)
+        assert isinstance(radial, cx.RadialVelocity)
         assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")

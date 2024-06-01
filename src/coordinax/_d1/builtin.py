@@ -3,10 +3,10 @@
 __all__ = [
     # Position
     "Cartesian1DVector",
-    "RadialVector",
+    "RadialPosition",
     # Differential
     "CartesianDifferential1D",
-    "RadialDifferential",
+    "RadialVelocity",
 ]
 
 from dataclasses import replace
@@ -71,10 +71,10 @@ class Cartesian1DVector(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector, RadialVector
+        >>> from coordinax import Cartesian1DVector, RadialPosition
 
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
-        >>> r = RadialVector.constructor(Quantity([1], "kpc"))
+        >>> r = RadialPosition.constructor(Quantity([1], "kpc"))
         >>> qpr = q + r
         >>> qpr
         Cartesian1DVector(
@@ -97,10 +97,10 @@ class Cartesian1DVector(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector, RadialVector
+        >>> from coordinax import Cartesian1DVector, RadialPosition
 
         >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
-        >>> r = RadialVector.constructor(Quantity([1], "kpc"))
+        >>> r = RadialPosition.constructor(Quantity([1], "kpc"))
         >>> qmr = q - r
         >>> qmr
         Cartesian1DVector(
@@ -124,7 +124,7 @@ class Cartesian1DVector(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector, RadialVector
+        >>> from coordinax import Cartesian1DVector, RadialPosition
 
         >>> q = Cartesian1DVector.constructor(Quantity([-1], "kpc"))
         >>> q.norm()
@@ -135,7 +135,7 @@ class Cartesian1DVector(AbstractPosition1D):
 
 
 @final
-class RadialVector(AbstractPosition1D):
+class RadialPosition(AbstractPosition1D):
     """Radial vector representation."""
 
     r: ct.BatchableDistance = eqx.field(
@@ -151,8 +151,8 @@ class RadialVector(AbstractPosition1D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["RadialDifferential"]:
-        return RadialDifferential
+    def differential_cls(cls) -> type["RadialVelocity"]:
+        return RadialVelocity
 
 
 ##############################################################################
@@ -188,7 +188,7 @@ class CartesianDifferential1D(AbstractVelocity1D):
 
 
 @final
-class RadialDifferential(AbstractVelocity1D):
+class RadialVelocity(AbstractVelocity1D):
     """Radial differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
@@ -196,5 +196,5 @@ class RadialDifferential(AbstractVelocity1D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[RadialVector]:
-        return RadialVector
+    def integral_cls(cls) -> type[RadialPosition]:
+        return RadialPosition

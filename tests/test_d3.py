@@ -85,10 +85,10 @@ class TestCartesian3DVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = vector.represent_as(cx.RadialVector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = vector.represent_as(cx.RadialPosition)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(
             radial.r, Quantity([10.34408, 11.83216, 13.379088, 14.96663], "kpc")
         )
@@ -215,10 +215,10 @@ class TestCylindricalVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = vector.represent_as(cx.RadialVector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = vector.represent_as(cx.RadialPosition)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
@@ -336,10 +336,10 @@ class TestSphericalVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = vector.represent_as(cx.RadialVector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = vector.represent_as(cx.RadialPosition)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
@@ -530,10 +530,10 @@ class TestCartesianDifferential3D(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_radial(self, difntl, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = difntl.represent_as(cx.RadialVector, vector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = difntl.represent_as(cx.RadialPosition, vector)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -689,10 +689,10 @@ class TestCylindricalDifferential(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_radial(self, difntl, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = difntl.represent_as(cx.RadialVector, vector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = difntl.represent_as(cx.RadialPosition, vector)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -833,10 +833,10 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_radial(self, difntl, vector):
-        """Test ``coordinax.represent_as(RadialVector)``."""
-        radial = difntl.represent_as(cx.RadialVector, vector)
+        """Test ``coordinax.represent_as(RadialPosition)``."""
+        radial = difntl.represent_as(cx.RadialPosition, vector)
 
-        assert isinstance(radial, cx.RadialVector)
+        assert isinstance(radial, cx.RadialPosition)
         assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")

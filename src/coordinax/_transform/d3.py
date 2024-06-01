@@ -9,7 +9,7 @@ from plum import dispatch
 
 import quaxed.array_api as xp
 
-from coordinax._d1.builtin import Cartesian1DVector, RadialVector
+from coordinax._d1.builtin import Cartesian1DVector, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import Cartesian2DVector, PolarVector
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
@@ -55,9 +55,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """Cartesian3DVector -> RadialVector.
+    current: Cartesian3DVector, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """Cartesian3DVector -> RadialPosition.
 
     Examples
     --------
@@ -69,9 +69,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialVector)
+    ...     x2 = cx.represent_as(x, cx.RadialPosition)
     >>> x2
-    RadialVector(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -173,9 +173,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """CylindricalVector -> RadialVector.
+    current: CylindricalVector, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """CylindricalVector -> RadialPosition.
 
     Examples
     --------
@@ -188,9 +188,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialVector)
+    ...     x2 = cx.represent_as(x, cx.RadialPosition)
     >>> x2
-    RadialVector(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -293,9 +293,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """SphericalVector -> RadialVector.
+    current: SphericalVector, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """SphericalVector -> RadialPosition.
 
     Examples
     --------
@@ -308,9 +308,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialVector)
+    ...     x2 = cx.represent_as(x, cx.RadialPosition)
     >>> x2
-    RadialVector(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -413,9 +413,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """MathSphericalVector -> RadialVector.
+    current: MathSphericalVector, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """MathSphericalVector -> RadialPosition.
 
     Examples
     --------
@@ -428,9 +428,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialVector)
+    ...     x2 = cx.represent_as(x, cx.RadialPosition)
     >>> x2
-    RadialVector(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)

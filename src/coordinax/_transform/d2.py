@@ -11,7 +11,7 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from coordinax._d1.builtin import Cartesian1DVector, RadialVector
+from coordinax._d1.builtin import Cartesian1DVector, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import Cartesian2DVector, PolarVector
 from coordinax._d3.base import AbstractPosition3D
@@ -149,9 +149,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """Cartesian2DVector -> RadialVector.
+    current: Cartesian2DVector, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """Cartesian2DVector -> RadialPosition.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r`.
 
@@ -164,9 +164,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialVector, z=Quantity(14, "km"))
+    ...     x2 = cx.represent_as(x, cx.RadialPosition, z=Quantity(14, "km"))
     >>> x2
-    RadialVector(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
     >>> x2.r
     Distance(Array(2.236068, dtype=float32), unit='km')
 
@@ -248,9 +248,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: PolarVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """PolarVector -> RadialVector.
+    current: PolarVector, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """PolarVector -> RadialPosition.
 
     Examples
     --------
@@ -262,9 +262,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialVector)
+    ...     x2 = cx.represent_as(x, cx.RadialPosition)
     >>> x2
-    RadialVector(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
     >>> x2.r
     Distance(Array(1., dtype=float32), unit='km')
 

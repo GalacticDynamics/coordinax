@@ -10,8 +10,8 @@ from .base import AbstractPosition1D, AbstractVelocity1D
 from .builtin import (
     Cartesian1DVector,
     CartesianDifferential1D,
-    RadialDifferential,
-    RadialVector,
+    RadialPosition,
+    RadialVelocity,
 )
 from coordinax._base_pos import AbstractPosition
 
@@ -29,8 +29,8 @@ def represent_as(
 
 @dispatch(precedence=1)
 def represent_as(
-    current: RadialVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
+    current: RadialPosition, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
     """Self transform of 1D vectors."""
     return current
 
@@ -49,7 +49,7 @@ def represent_as(
 
 @dispatch.multi(
     (CartesianDifferential1D, type[CartesianDifferential1D], AbstractPosition),
-    (RadialDifferential, type[RadialDifferential], AbstractPosition),
+    (RadialVelocity, type[RadialVelocity], AbstractPosition),
 )
 def represent_as(
     current: AbstractVelocity1D,
@@ -68,9 +68,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian1DVector, target: type[RadialVector], /, **kwargs: Any
-) -> RadialVector:
-    """Cartesian1DVector -> RadialVector.
+    current: Cartesian1DVector, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """Cartesian1DVector -> RadialPosition.
 
     The `x` coordinate is converted to the radial coordinate `r`.
     """
@@ -78,14 +78,14 @@ def represent_as(
 
 
 # =============================================================================
-# RadialVector
+# RadialPosition
 
 
 @dispatch
 def represent_as(
-    current: RadialVector, target: type[Cartesian1DVector], /, **kwargs: Any
+    current: RadialPosition, target: type[Cartesian1DVector], /, **kwargs: Any
 ) -> Cartesian1DVector:
-    """RadialVector -> Cartesian1DVector.
+    """RadialPosition -> Cartesian1DVector.
 
     The `r` coordinate is converted to the `x` coordinate of the 1D system.
     """
