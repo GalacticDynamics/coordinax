@@ -1,6 +1,6 @@
-"""Representation of coordinates in different systems."""
+"""Representation of velocities in different systems."""
 
-__all__ = ["AbstractVectorDifferential"]
+__all__ = ["AbstractVelocity"]
 
 import warnings
 from abc import abstractmethod
@@ -20,12 +20,12 @@ from ._utils import classproperty, dataclass_items
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-DT = TypeVar("DT", bound="AbstractVectorDifferential")
+DT = TypeVar("DT", bound="AbstractVelocity")
 
-DIFFERENTIAL_CLASSES: set[type["AbstractVectorDifferential"]] = set()
+DIFFERENTIAL_CLASSES: set[type["AbstractVelocity"]] = set()
 
 
-class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstract-method
+class AbstractVelocity(AbstractVectorBase):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -83,9 +83,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
     # Binary operations
 
     @dispatch  # type: ignore[misc]
-    def __mul__(
-        self: "AbstractVectorDifferential", other: Quantity
-    ) -> "AbstractPosition":
+    def __mul__(self: "AbstractVelocity", other: Quantity) -> "AbstractPosition":
         """Multiply the vector by a :class:`unxt.Quantity`.
 
         Examples

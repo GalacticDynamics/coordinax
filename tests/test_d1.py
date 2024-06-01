@@ -6,7 +6,7 @@ import quaxed.numpy as qnp
 from unxt import Quantity
 
 import coordinax as cx
-from .test_base import AbstractPositionTest, AbstractVectorDifferentialTest
+from .test_base import AbstractPositionTest, AbstractVelocityTest
 
 
 class Abstract1DVectorTest(AbstractPositionTest):
@@ -187,7 +187,7 @@ class TestRadialVector(Abstract1DVectorTest):
         assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
 
 
-class Abstract1DVectorDifferentialTest(AbstractVectorDifferentialTest):
+class Abstract1DVectorDifferentialTest(AbstractVelocityTest):
     """Test :class:`coordinax.Abstract1DVectorDifferential`."""
 
 

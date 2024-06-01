@@ -7,7 +7,7 @@ from abc import abstractmethod
 
 from coordinax._base import AbstractVectorBase
 from coordinax._base_pos import AbstractPosition
-from coordinax._base_vel import AbstractVectorDifferential
+from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 
@@ -28,7 +28,7 @@ class Abstract2DVector(AbstractPosition):
         raise NotImplementedError
 
 
-class Abstract2DVectorDifferential(AbstractVectorDifferential):
+class Abstract2DVectorDifferential(AbstractVelocity):
     """Abstract representation of 2D vector differentials."""
 
     @classproperty

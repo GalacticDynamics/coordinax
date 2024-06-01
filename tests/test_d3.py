@@ -12,7 +12,7 @@ import quaxed.numpy as qnp
 from unxt import Quantity
 
 import coordinax as cx
-from .test_base import AbstractPositionTest, AbstractVectorDifferentialTest
+from .test_base import AbstractPositionTest, AbstractVelocityTest
 
 
 class Abstract3DVectorTest(AbstractPositionTest):
@@ -472,14 +472,14 @@ class TestSphericalVector(Abstract3DVectorTest):
         assert np.allclose(convert(llsph.lat, APYQuantity), apycart3.lat)
 
 
-class Abstract3DVectorDifferentialTest(AbstractVectorDifferentialTest):
+class Abstract3DVectorDifferentialTest(AbstractVelocityTest):
     """Test :class:`coordinax.Abstract2DVectorDifferential`."""
 
     # ==========================================================================
     # Unary operations
 
     def test_neg_compare_apy(
-        self, difntl: cx.AbstractVectorDifferential, apydifntl: apyc.BaseDifferential
+        self, difntl: cx.AbstractVelocity, apydifntl: apyc.BaseDifferential
     ):
         """Test negation."""
         assert all(representation_equal(convert(-difntl, type(apydifntl)), -apydifntl))

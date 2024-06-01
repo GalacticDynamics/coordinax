@@ -21,7 +21,7 @@ from coordinax import (
     Abstract3DVector,
     Abstract3DVectorDifferential,
     AbstractPosition,
-    AbstractVectorDifferential,
+    AbstractVelocity,
     Cartesian1DVector,
     Cartesian2DVector,
     Cartesian3DVector,
@@ -206,8 +206,8 @@ class AbstractPositionTest(AbstractVectorBaseTest):
         assert isinstance(newvec, target)
 
 
-class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
-    """Test :class:`coordinax.AbstractVectorDifferential`."""
+class AbstractVelocityTest(AbstractVectorBaseTest):
+    """Test :class:`coordinax.AbstractVelocity`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractPosition:  # noqa: PT004
@@ -215,7 +215,7 @@ class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> AbstractVectorDifferential:  # noqa: PT004
+    def difntl(self) -> AbstractVelocity:  # noqa: PT004
         """Return a vector."""
         raise NotImplementedError
 

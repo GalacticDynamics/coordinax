@@ -12,7 +12,7 @@ from unxt import Quantity
 
 from coordinax._base import AbstractVectorBase
 from coordinax._base_pos import AbstractPosition
-from coordinax._base_vel import AbstractVectorDifferential
+from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 
@@ -55,7 +55,7 @@ def constructor(
     return cls(**{fields(cls)[0].name: x.reshape(1)})
 
 
-class Abstract1DVectorDifferential(AbstractVectorDifferential):
+class Abstract1DVectorDifferential(AbstractVelocity):
     """Abstract representation of 1D differentials in different systems."""
 
     @classproperty

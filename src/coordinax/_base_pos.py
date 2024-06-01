@@ -44,7 +44,7 @@ class AbstractPosition(AbstractVectorBase):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVectorDifferential"]:
+    def differential_cls(cls) -> type["AbstractVelocity"]:
         """Return the corresponding differential vector class.
 
         Examples

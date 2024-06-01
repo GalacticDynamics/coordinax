@@ -9,7 +9,7 @@ from typing_extensions import override
 
 from coordinax._base import AbstractVectorBase
 from coordinax._base_pos import AbstractPosition
-from coordinax._base_vel import AbstractVectorDifferential
+from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 
@@ -31,7 +31,7 @@ class Abstract3DVector(AbstractPosition):
         raise NotImplementedError
 
 
-class Abstract3DVectorDifferential(AbstractVectorDifferential):
+class Abstract3DVectorDifferential(AbstractVelocity):
     """Abstract representation of 3D vector differentials."""
 
     @classproperty

@@ -12,7 +12,7 @@ import quaxed.numpy as qnp
 
 from coordinax._base import AbstractVectorBase
 from coordinax._base_pos import AbstractPosition
-from coordinax._base_vel import AbstractVectorDifferential
+from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 if TYPE_CHECKING:
@@ -82,7 +82,7 @@ class AbstractNDVector(AbstractPosition):
         return replace(self, q=self.q.reshape(*hape, self.q.shape[-1], order=order))
 
 
-class AbstractNDVectorDifferential(AbstractVectorDifferential):
+class AbstractNDVectorDifferential(AbstractVelocity):
     """Abstract representation of N-D vector differentials."""
 
     @classproperty
