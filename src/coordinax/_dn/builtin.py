@@ -19,7 +19,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 import coordinax._typing as ct
-from .base import AbstractNDVector, AbstractNDVectorDifferential
+from .base import AbstractPositionND, AbstractPositionNDDifferential
 from coordinax._base_pos import AbstractPosition
 from coordinax._utils import classproperty
 
@@ -28,7 +28,7 @@ from coordinax._utils import classproperty
 
 
 @final
-class CartesianNDVector(AbstractNDVector):
+class CartesianNDVector(AbstractPositionND):
     """N-dimensional Cartesian vector representation.
 
     Examples
@@ -188,7 +188,7 @@ class CartesianNDVector(AbstractNDVector):
 
 
 @final
-class CartesianDifferentialND(AbstractNDVectorDifferential):
+class CartesianDifferentialND(AbstractPositionNDDifferential):
     """Cartesian differential representation.
 
     Examples
@@ -253,7 +253,7 @@ class CartesianDifferentialND(AbstractNDVectorDifferential):
         return CartesianNDVector
 
     @partial(jax.jit)
-    def norm(self, _: AbstractNDVector | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPositionND | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples

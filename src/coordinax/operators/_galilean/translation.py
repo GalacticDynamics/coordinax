@@ -18,7 +18,7 @@ from .base import AbstractGalileanOperator
 from coordinax._base_pos import AbstractPosition
 from coordinax._d1.builtin import Cartesian1DVector
 from coordinax._d2.builtin import Cartesian2DVector
-from coordinax._d3.base import Abstract3DVector
+from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import Cartesian3DVector
 from coordinax._d4.spacetime import FourVector
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
@@ -68,9 +68,9 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : :class:`vector.Abstract3DVector`
+    translation : :class:`vector.AbstractPosition3D`
         The spatial translation vector. This parameters accepts either a
-        :class:`vector.Abstract3DVector` instance or uses
+        :class:`vector.AbstractPosition3D` instance or uses
         :meth:`vector.Cartesian3DVector.constructor` to enable a variety of more
         convenient input types to create a Cartesian vector. See
         :class:`vector.Cartesian3DVector` for details.
@@ -362,7 +362,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
       q=Cartesian3DVector( ... )
     )
 
-    Also to :class:`vector.Abstract3DVector` and :class:`unxt.Quantity`:
+    Also to :class:`vector.AbstractPosition3D` and :class:`unxt.Quantity`:
 
     >>> q = Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
     >>> t = Quantity(0, "Gyr")
@@ -467,8 +467,11 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanTranslationOperator", x: Abstract3DVector, t: Quantity["time"], /
-    ) -> tuple[Abstract3DVector, Quantity["time"]]:
+        self: "GalileanTranslationOperator",
+        x: AbstractPosition3D,
+        t: Quantity["time"],
+        /,
+    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
         """Apply the translation to the coordinates.
 
         Examples

@@ -20,7 +20,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 import coordinax._typing as ct
-from .base import Abstract3DVector, Abstract3DVectorDifferential
+from .base import AbstractPosition3D, AbstractVelocity3D
 from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AdditionMixin
 from coordinax._checks import check_azimuth_range, check_r_non_negative
@@ -32,7 +32,7 @@ from coordinax._utils import classproperty
 
 
 @final
-class Cartesian3DVector(Abstract3DVector):
+class Cartesian3DVector(AbstractPosition3D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
@@ -134,7 +134,7 @@ class Cartesian3DVector(Abstract3DVector):
 
 
 @final
-class CylindricalVector(Abstract3DVector):
+class CylindricalVector(AbstractPosition3D):
     """Cylindrical vector representation.
 
     This adheres to ISO standard 31-11.
@@ -190,7 +190,7 @@ class CylindricalVector(Abstract3DVector):
 
 
 @final
-class CartesianDifferential3D(Abstract3DVectorDifferential, AdditionMixin):
+class CartesianDifferential3D(AbstractVelocity3D, AdditionMixin):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -214,7 +214,7 @@ class CartesianDifferential3D(Abstract3DVectorDifferential, AdditionMixin):
         return Cartesian3DVector
 
     @partial(jax.jit)
-    def norm(self, _: Abstract3DVector | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPosition3D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -232,7 +232,7 @@ class CartesianDifferential3D(Abstract3DVectorDifferential, AdditionMixin):
 
 
 @final
-class CylindricalDifferential(Abstract3DVectorDifferential):
+class CylindricalDifferential(AbstractVelocity3D):
     """Cylindrical differential representation."""
 
     d_rho: ct.BatchableSpeed = eqx.field(

@@ -10,7 +10,7 @@ from plum import dispatch
 import quaxed.array_api as xp
 
 from coordinax._d1.builtin import Cartesian1DVector, RadialVector
-from coordinax._d2.base import Abstract2DVector
+from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import Cartesian2DVector, PolarVector
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
@@ -112,9 +112,9 @@ def represent_as(
     (Cartesian3DVector, type[PolarVector]),
 )
 def represent_as(
-    current: Cartesian3DVector, target: type[Abstract2DVector], /, **kwargs: Any
-) -> Abstract2DVector:
-    """Cartesian3DVector -> Cartesian2D -> Abstract2DVector.
+    current: Cartesian3DVector, target: type[AbstractPosition2D], /, **kwargs: Any
+) -> AbstractPosition2D:
+    """Cartesian3DVector -> Cartesian2D -> AbstractPosition2D.
 
     Examples
     --------

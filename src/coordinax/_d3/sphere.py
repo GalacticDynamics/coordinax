@@ -27,7 +27,7 @@ import quaxed.lax as qlax
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
-from .base import Abstract3DVector, Abstract3DVectorDifferential
+from .base import AbstractPosition3D, AbstractVelocity3D
 from coordinax._checks import (
     check_azimuth_range,
     check_polar_range,
@@ -43,7 +43,7 @@ _180d = Quantity(180, "deg")
 # Position
 
 
-class AbstractSphericalVector(Abstract3DVector):
+class AbstractSphericalVector(AbstractPosition3D):
     """Abstract spherical vector representation."""
 
     @classproperty
@@ -397,7 +397,7 @@ def constructor(
 ##############################################################################
 
 
-class AbstractSphericalDifferential(Abstract3DVectorDifferential):
+class AbstractSphericalDifferential(AbstractVelocity3D):
     """Spherical differential representation."""
 
     @classproperty
@@ -407,7 +407,7 @@ class AbstractSphericalDifferential(Abstract3DVectorDifferential):
 
 
 @final
-class SphericalDifferential(Abstract3DVectorDifferential):
+class SphericalDifferential(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -432,7 +432,7 @@ class SphericalDifferential(Abstract3DVectorDifferential):
 
 
 @final
-class MathSphericalDifferential(Abstract3DVectorDifferential):
+class MathSphericalDifferential(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -457,7 +457,7 @@ class MathSphericalDifferential(Abstract3DVectorDifferential):
 
 
 @final
-class LonLatSphericalDifferential(Abstract3DVectorDifferential):
+class LonLatSphericalDifferential(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_lon: ct.BatchableAngularSpeed = eqx.field(
@@ -482,7 +482,7 @@ class LonLatSphericalDifferential(Abstract3DVectorDifferential):
 
 
 @final
-class LonCosLatSphericalDifferential(Abstract3DVectorDifferential):
+class LonCosLatSphericalDifferential(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_lon_coslat: ct.BatchableAngularSpeed = eqx.field(

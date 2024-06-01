@@ -9,7 +9,7 @@ from plum import conversion_method
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from .base import Abstract1DVector
+from .base import AbstractPosition1D
 from .builtin import Cartesian1DVector, CartesianDifferential1D
 from coordinax._utils import dataclass_values, full_shaped
 
@@ -17,9 +17,9 @@ from coordinax._utils import dataclass_values, full_shaped
 # Quantity
 
 
-@conversion_method(type_from=Abstract1DVector, type_to=Quantity)  # type: ignore[misc]
-def vec_to_q(obj: Abstract1DVector, /) -> Shaped[Quantity["length"], "*batch 1"]:
-    """`coordinax.Abstract1DVector` -> `unxt.Quantity`."""
+@conversion_method(type_from=AbstractPosition1D, type_to=Quantity)  # type: ignore[misc]
+def vec_to_q(obj: AbstractPosition1D, /) -> Shaped[Quantity["length"], "*batch 1"]:
+    """`coordinax.AbstractPosition1D` -> `unxt.Quantity`."""
     cart = full_shaped(obj.represent_as(Cartesian1DVector))
     return xp.stack(tuple(dataclass_values(cart)), axis=-1)
 

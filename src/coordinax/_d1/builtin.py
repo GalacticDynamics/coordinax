@@ -20,7 +20,7 @@ import quaxed.array_api as xp
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
-from .base import Abstract1DVector, Abstract1DVectorDifferential
+from .base import AbstractPosition1D, AbstractVelocity1D
 from coordinax._base_pos import AbstractPosition
 from coordinax._checks import check_r_non_negative
 from coordinax._utils import classproperty
@@ -30,7 +30,7 @@ from coordinax._utils import classproperty
 
 
 @final
-class Cartesian1DVector(Abstract1DVector):
+class Cartesian1DVector(AbstractPosition1D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
@@ -135,7 +135,7 @@ class Cartesian1DVector(Abstract1DVector):
 
 
 @final
-class RadialVector(Abstract1DVector):
+class RadialVector(AbstractPosition1D):
     """Radial vector representation."""
 
     r: ct.BatchableDistance = eqx.field(
@@ -160,7 +160,7 @@ class RadialVector(Abstract1DVector):
 
 
 @final
-class CartesianDifferential1D(Abstract1DVectorDifferential):
+class CartesianDifferential1D(AbstractVelocity1D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
@@ -172,7 +172,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
         return Cartesian1DVector
 
     @partial(jax.jit)
-    def norm(self, _: Abstract1DVector | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -188,7 +188,7 @@ class CartesianDifferential1D(Abstract1DVectorDifferential):
 
 
 @final
-class RadialDifferential(Abstract1DVectorDifferential):
+class RadialDifferential(AbstractVelocity1D):
     """Radial differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)

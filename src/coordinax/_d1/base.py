@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["Abstract1DVector", "Abstract1DVectorDifferential"]
+__all__ = ["AbstractPosition1D", "AbstractVelocity1D"]
 
 
 from abc import abstractmethod
@@ -16,7 +16,7 @@ from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 
-class Abstract1DVector(AbstractPosition):
+class AbstractPosition1D(AbstractPosition):
     """Abstract representation of 1D coordinates in different systems."""
 
     @classproperty
@@ -29,15 +29,15 @@ class Abstract1DVector(AbstractPosition):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["Abstract1DVectorDifferential"]:
+    def differential_cls(cls) -> type["AbstractVelocity1D"]:
         raise NotImplementedError
 
 
 # TODO: move to the class in py3.11+
 @AbstractPosition.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
-    cls: "type[Abstract1DVector]", x: Shaped[Quantity["length"], ""], /
-) -> "Abstract1DVector":
+    cls: "type[AbstractPosition1D]", x: Shaped[Quantity["length"], ""], /
+) -> "AbstractPosition1D":
     """Construct a 1D vector.
 
     Examples
@@ -55,7 +55,7 @@ def constructor(
     return cls(**{fields(cls)[0].name: x.reshape(1)})
 
 
-class Abstract1DVectorDifferential(AbstractVelocity):
+class AbstractVelocity1D(AbstractVelocity):
     """Abstract representation of 1D differentials in different systems."""
 
     @classproperty
@@ -68,5 +68,5 @@ class Abstract1DVectorDifferential(AbstractVelocity):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[Abstract1DVector]:
+    def integral_cls(cls) -> type[AbstractPosition1D]:
         raise NotImplementedError

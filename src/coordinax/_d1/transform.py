@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .base import Abstract1DVector, Abstract1DVectorDifferential
+from .base import AbstractPosition1D, AbstractVelocity1D
 from .builtin import (
     Cartesian1DVector,
     CartesianDifferential1D,
@@ -37,9 +37,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Abstract1DVector, target: type[Abstract1DVector], /, **kwargs: Any
-) -> Abstract1DVector:
-    """Abstract1DVector -> Cartesian1D -> Abstract1DVector.
+    current: AbstractPosition1D, target: type[AbstractPosition1D], /, **kwargs: Any
+) -> AbstractPosition1D:
+    """AbstractPosition1D -> Cartesian1D -> AbstractPosition1D.
 
     This is the base case for the transformation of 1D vectors.
     """
@@ -52,12 +52,12 @@ def represent_as(
     (RadialDifferential, type[RadialDifferential], AbstractPosition),
 )
 def represent_as(
-    current: Abstract1DVectorDifferential,
-    target: type[Abstract1DVectorDifferential],
+    current: AbstractVelocity1D,
+    target: type[AbstractVelocity1D],
     position: AbstractPosition,
     /,
     **kwargs: Any,
-) -> Abstract1DVectorDifferential:
+) -> AbstractVelocity1D:
     """Self transform of 1D Differentials."""
     return current
 

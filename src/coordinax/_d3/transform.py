@@ -9,7 +9,7 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from .base import Abstract3DVector, Abstract3DVectorDifferential
+from .base import AbstractPosition3D, AbstractVelocity3D
 from .builtin import (
     Cartesian3DVector,
     CartesianDifferential3D,
@@ -34,9 +34,9 @@ from coordinax._base_pos import AbstractPosition
 
 @dispatch
 def represent_as(
-    current: Abstract3DVector, target: type[Abstract3DVector], /, **kwargs: Any
-) -> Abstract3DVector:
-    """Abstract3DVector -> Cartesian3D -> Abstract3DVector."""
+    current: AbstractPosition3D, target: type[AbstractPosition3D], /, **kwargs: Any
+) -> AbstractPosition3D:
+    """AbstractPosition3D -> Cartesian3D -> AbstractPosition3D."""
     return represent_as(represent_as(current, Cartesian3DVector), target)
 
 
@@ -48,8 +48,8 @@ def represent_as(
     (MathSphericalVector, type[MathSphericalVector]),
 )
 def represent_as(
-    current: Abstract3DVector, target: type[Abstract3DVector], /, **kwargs: Any
-) -> Abstract3DVector:
+    current: AbstractPosition3D, target: type[AbstractPosition3D], /, **kwargs: Any
+) -> AbstractPosition3D:
     """Self transforms for 3D vectors.
 
     Examples
@@ -108,12 +108,12 @@ def represent_as(
     (MathSphericalDifferential, type[MathSphericalDifferential], AbstractPosition),
 )
 def represent_as(
-    current: Abstract3DVectorDifferential,
-    target: type[Abstract3DVectorDifferential],
+    current: AbstractVelocity3D,
+    target: type[AbstractVelocity3D],
     position: AbstractPosition,
     /,
     **kwargs: Any,
-) -> Abstract3DVectorDifferential:
+) -> AbstractVelocity3D:
     """Self transforms for 3D differentials.
 
     Examples
@@ -575,13 +575,13 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Abstract3DVectorDifferential,
+    current: AbstractVelocity3D,
     target: type[LonCosLatSphericalDifferential],
     position: AbstractPosition | Quantity["length"],
     /,
     **kwargs: Any,
 ) -> LonCosLatSphericalDifferential:
-    """Abstract3DVectorDifferential -> LonCosLatSphericalDifferential.
+    """AbstractVelocity3D -> LonCosLatSphericalDifferential.
 
     Examples
     --------
@@ -659,12 +659,12 @@ def represent_as(
 @dispatch
 def represent_as(
     current: LonCosLatSphericalDifferential,
-    target: type[Abstract3DVectorDifferential],
+    target: type[AbstractVelocity3D],
     position: AbstractPosition | Quantity["length"],
     /,
     **kwargs: Any,
-) -> Abstract3DVectorDifferential:
-    """LonCosLatSphericalDifferential -> Abstract3DVectorDifferential."""
+) -> AbstractVelocity3D:
+    """LonCosLatSphericalDifferential -> AbstractVelocity3D."""
     # Parse the position to an AbstractPosition
     if isinstance(position, AbstractPosition):
         posvec = position

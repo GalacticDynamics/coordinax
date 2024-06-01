@@ -14,9 +14,9 @@ from unxt import AbstractDistance, Quantity
 
 from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVelocity
-from coordinax._d1.base import Abstract1DVectorDifferential
-from coordinax._d2.base import Abstract2DVectorDifferential
-from coordinax._d3.base import Abstract3DVectorDifferential
+from coordinax._d1.base import AbstractVelocity1D
+from coordinax._d2.base import AbstractVelocity2D
+from coordinax._d3.base import AbstractVelocity3D
 from coordinax._utils import dataclass_items
 
 
@@ -24,18 +24,18 @@ from coordinax._utils import dataclass_items
 @dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
     (
-        Abstract1DVectorDifferential,
-        type[Abstract1DVectorDifferential],  # type: ignore[misc]
+        AbstractVelocity1D,
+        type[AbstractVelocity1D],  # type: ignore[misc]
         AbstractPosition | Quantity["length"],
     ),
     (
-        Abstract2DVectorDifferential,
-        type[Abstract2DVectorDifferential],  # type: ignore[misc]
+        AbstractVelocity2D,
+        type[AbstractVelocity2D],  # type: ignore[misc]
         AbstractPosition | Quantity["length"],
     ),
     (
-        Abstract3DVectorDifferential,
-        type[Abstract3DVectorDifferential],  # type: ignore[misc]
+        AbstractVelocity3D,
+        type[AbstractVelocity3D],  # type: ignore[misc]
         AbstractPosition | Quantity["length"],
     ),
 )

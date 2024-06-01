@@ -12,9 +12,9 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from coordinax._d1.builtin import Cartesian1DVector, RadialVector
-from coordinax._d2.base import Abstract2DVector
+from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import Cartesian2DVector, PolarVector
-from coordinax._d3.base import Abstract3DVector
+from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 from coordinax._exceptions import IrreversibleDimensionChange
@@ -26,13 +26,13 @@ from coordinax._exceptions import IrreversibleDimensionChange
     (Cartesian2DVector, type[MathSphericalVector]),
 )
 def represent_as(
-    current: Abstract2DVector,
-    target: type[Abstract3DVector],
+    current: AbstractPosition2D,
+    target: type[AbstractPosition3D],
     /,
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
-) -> Abstract3DVector:
-    """Abstract2DVector -> Cartesian2D -> Cartesian3D -> Abstract3DVector.
+) -> AbstractPosition3D:
+    """AbstractPosition2D -> Cartesian2D -> Cartesian3D -> AbstractPosition3D.
 
     The 2D vector is in the xy plane. The `z` coordinate is a keyword argument and
     defaults to 0.
@@ -78,13 +78,13 @@ def represent_as(
     (PolarVector, type[Cartesian3DVector]),
 )
 def represent_as(
-    current: Abstract2DVector,
-    target: type[Abstract3DVector],
+    current: AbstractPosition2D,
+    target: type[AbstractPosition3D],
     /,
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
-) -> Abstract3DVector:
-    """Abstract2DVector -> PolarVector -> Cylindrical -> Abstract3DVector.
+) -> AbstractPosition3D:
+    """AbstractPosition2D -> PolarVector -> Cylindrical -> AbstractPosition3D.
 
     The 2D vector is in the xy plane. The `z` coordinate is a keyword argument and
     defaults to 0.

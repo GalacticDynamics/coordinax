@@ -11,7 +11,7 @@ from plum import conversion_method, convert
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from .base import Abstract3DVector
+from .base import AbstractPosition3D
 from .builtin import (
     Cartesian3DVector,
     CartesianDifferential3D,
@@ -247,9 +247,9 @@ def constructor(
 # Quantity
 
 
-@conversion_method(Abstract3DVector, Quantity)  # type: ignore[misc]
-def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]:
-    """`coordinax.Abstract3DVector` -> `unxt.Quantity`.
+@conversion_method(AbstractPosition3D, Quantity)  # type: ignore[misc]
+def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3"]:
+    """`coordinax.AbstractPosition3D` -> `unxt.Quantity`.
 
     Examples
     --------

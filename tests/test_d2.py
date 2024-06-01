@@ -10,8 +10,8 @@ import coordinax as cx
 from .test_base import AbstractPositionTest, AbstractVelocityTest
 
 
-class Abstract2DVectorTest(AbstractPositionTest):
-    """Test :class:`coordinax.Abstract2DVector`."""
+class AbstractPosition2DTest(AbstractPositionTest):
+    """Test :class:`coordinax.AbstractPosition2D`."""
 
 
 class TestCartesian2DVector:
@@ -215,11 +215,11 @@ class TestPolarVector:
         assert qnp.array_equal(cylindrical.z, Quantity([9, 10, 11, 12], "m"))
 
 
-class Abstract2DVectorDifferentialTest(AbstractVelocityTest):
-    """Test :class:`coordinax.Abstract2DVectorDifferential`."""
+class AbstractVelocity2DTest(AbstractVelocityTest):
+    """Test :class:`coordinax.AbstractVelocity2D`."""
 
 
-class TestCartesianDifferential2D(Abstract2DVectorDifferentialTest):
+class TestCartesianDifferential2D(AbstractVelocity2DTest):
     """Test :class:`coordinax.CartesianDifferential2D`."""
 
     @pytest.fixture(scope="class")
@@ -321,7 +321,7 @@ class TestCartesianDifferential2D(Abstract2DVectorDifferentialTest):
         assert qnp.array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], "m/s"))
 
 
-class TestPolarDifferential(Abstract2DVectorDifferentialTest):
+class TestPolarDifferential(AbstractVelocity2DTest):
     """Test :class:`coordinax.PolarDifferential`."""
 
     @pytest.fixture(scope="class")

@@ -19,7 +19,7 @@ from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from coordinax._base import ToUnitsOptions
-from coordinax._d3.base import Abstract3DVector
+from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import Cartesian3DVector
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
 from coordinax.operators._funcs import simplify_op
@@ -109,7 +109,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
                               [-0.70710677,  0.70710677,  0.        ]], dtype=float32),
                        unit='m')
 
-    Translation operators can be applied to :class:`vector.Abstract3DVector`:
+    Translation operators can be applied to :class:`vector.AbstractPosition3D`:
 
     >>> from coordinax import Cartesian3DVector
     >>> q = Cartesian3DVector.constructor(q)  # from the previous example
@@ -222,8 +222,8 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotationOperator", q: Abstract3DVector, /
-    ) -> Abstract3DVector:
+        self: "GalileanRotationOperator", q: AbstractPosition3D, /
+    ) -> AbstractPosition3D:
         """Apply the boost to the coordinates.
 
         Examples
@@ -260,19 +260,19 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     @op_call_dispatch(precedence=1)
     def __call__(
         self: "GalileanRotationOperator",
-        q: Abstract3DVector,
+        q: AbstractPosition3D,
         t: Quantity["time"],
         /,
-    ) -> tuple[Abstract3DVector, Quantity["time"]]:
+    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
         return self(q), t
 
     @op_call_dispatch(precedence=1)
     def __call__(
         self: "GalileanRotationOperator",
-        q: Abstract3DVector,
+        q: AbstractPosition3D,
         t: Quantity["time"],
         /,
-    ) -> tuple[Abstract3DVector, Quantity["time"]]:
+    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
         return self(q), t
 
 

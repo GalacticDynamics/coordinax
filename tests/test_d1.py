@@ -9,13 +9,13 @@ import coordinax as cx
 from .test_base import AbstractPositionTest, AbstractVelocityTest
 
 
-class Abstract1DVectorTest(AbstractPositionTest):
-    """Test :class:`coordinax.Abstract1DVector`."""
+class AbstractPosition1DTest(AbstractPositionTest):
+    """Test :class:`coordinax.AbstractPosition1D`."""
 
     # TODO: Add tests
 
 
-class TestCartesian1DVector(Abstract1DVectorTest):
+class TestCartesian1DVector(AbstractPosition1DTest):
     """Test :class:`coordinax.Cartesian1DVector`."""
 
     @pytest.fixture(scope="class")
@@ -101,7 +101,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
         assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
 
 
-class TestRadialVector(Abstract1DVectorTest):
+class TestRadialVector(AbstractPosition1DTest):
     """Test :class:`coordinax.RadialVector`."""
 
     @pytest.fixture(scope="class")
@@ -187,11 +187,11 @@ class TestRadialVector(Abstract1DVectorTest):
         assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
 
 
-class Abstract1DVectorDifferentialTest(AbstractVelocityTest):
-    """Test :class:`coordinax.Abstract1DVectorDifferential`."""
+class AbstractVelocity1DTest(AbstractVelocityTest):
+    """Test :class:`coordinax.AbstractVelocity1D`."""
 
 
-class TestCartesianDifferential1D(Abstract1DVectorDifferentialTest):
+class TestCartesianDifferential1D(AbstractVelocity1DTest):
     """Test :class:`coordinax.CartesianDifferential1D`."""
 
     @pytest.fixture(scope="class")
@@ -299,7 +299,7 @@ class TestCartesianDifferential1D(Abstract1DVectorDifferentialTest):
         assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m"))
 
 
-class TestRadialDifferential(Abstract1DVectorDifferentialTest):
+class TestRadialDifferential(AbstractVelocity1DTest):
     """Test :class:`coordinax.RadialDifferential`."""
 
     @pytest.fixture(scope="class")

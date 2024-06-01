@@ -20,7 +20,7 @@ import quaxed.array_api as xp
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
-from .base import Abstract2DVector, Abstract2DVectorDifferential
+from .base import AbstractPosition2D, AbstractVelocity2D
 from coordinax._base_pos import AbstractPosition
 from coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._converters import converter_azimuth_to_range
@@ -31,7 +31,7 @@ from coordinax._utils import classproperty
 
 
 @final
-class Cartesian2DVector(Abstract2DVector):
+class Cartesian2DVector(AbstractPosition2D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
@@ -129,7 +129,7 @@ class Cartesian2DVector(Abstract2DVector):
 
 
 @final
-class PolarVector(Abstract2DVector):
+class PolarVector(AbstractPosition2D):
     r"""Polar vector representation.
 
     Parameters
@@ -186,7 +186,7 @@ class PolarVector(Abstract2DVector):
 
 
 @final
-class CartesianDifferential2D(Abstract2DVectorDifferential):
+class CartesianDifferential2D(AbstractVelocity2D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -205,7 +205,7 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
         return Cartesian2DVector
 
     @partial(jax.jit)
-    def norm(self, _: Abstract2DVector | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPosition2D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -221,7 +221,7 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 
 
 @final
-class PolarDifferential(Abstract2DVectorDifferential):
+class PolarDifferential(AbstractVelocity2D):
     """Polar differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(

@@ -15,8 +15,8 @@ import coordinax as cx
 from .test_base import AbstractPositionTest, AbstractVelocityTest
 
 
-class Abstract3DVectorTest(AbstractPositionTest):
-    """Test :class:`coordinax.Abstract3DVector`."""
+class AbstractPosition3DTest(AbstractPositionTest):
+    """Test :class:`coordinax.AbstractPosition3D`."""
 
     # ==========================================================================
     # Unary operations
@@ -55,7 +55,7 @@ class Abstract3DVectorTest(AbstractPositionTest):
         #     )
 
 
-class TestCartesian3DVector(Abstract3DVectorTest):
+class TestCartesian3DVector(AbstractPosition3DTest):
     """Test :class:`coordinax.Cartesian3DVector`."""
 
     @pytest.fixture(scope="class")
@@ -181,7 +181,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
 
 
-class TestCylindricalVector(Abstract3DVectorTest):
+class TestCylindricalVector(AbstractPosition3DTest):
     """Test :class:`coordinax.CylindricalVector`."""
 
     @pytest.fixture(scope="class")
@@ -302,7 +302,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
 
 
-class TestSphericalVector(Abstract3DVectorTest):
+class TestSphericalVector(AbstractPosition3DTest):
     """Test :class:`coordinax.SphericalVector`."""
 
     @pytest.fixture(scope="class")
@@ -472,8 +472,8 @@ class TestSphericalVector(Abstract3DVectorTest):
         assert np.allclose(convert(llsph.lat, APYQuantity), apycart3.lat)
 
 
-class Abstract3DVectorDifferentialTest(AbstractVelocityTest):
-    """Test :class:`coordinax.Abstract2DVectorDifferential`."""
+class AbstractVelocity3DTest(AbstractVelocityTest):
+    """Test :class:`coordinax.AbstractVelocity2D`."""
 
     # ==========================================================================
     # Unary operations
@@ -485,7 +485,7 @@ class Abstract3DVectorDifferentialTest(AbstractVelocityTest):
         assert all(representation_equal(convert(-difntl, type(apydifntl)), -apydifntl))
 
 
-class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
+class TestCartesianDifferential3D(AbstractVelocity3DTest):
     """Test :class:`coordinax.CartesianDifferential3D`."""
 
     @pytest.fixture(scope="class")
@@ -644,7 +644,7 @@ class TestCartesianDifferential3D(Abstract3DVectorDifferentialTest):
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
 
 
-class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
+class TestCylindricalDifferential(AbstractVelocity3DTest):
     """Test :class:`coordinax.CylindricalDifferential`."""
 
     @pytest.fixture(scope="class")
@@ -784,7 +784,7 @@ class TestCylindricalDifferential(Abstract3DVectorDifferentialTest):
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
 
 
-class TestSphericalDifferential(Abstract3DVectorDifferentialTest):
+class TestSphericalDifferential(AbstractVelocity3DTest):
     """Test :class:`coordinax.SphericalDifferential`."""
 
     @pytest.fixture(scope="class")

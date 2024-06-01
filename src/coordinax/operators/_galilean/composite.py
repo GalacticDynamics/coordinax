@@ -119,7 +119,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
 
     Also the Galilean operators can also be applied to
-    :class:`vector.Abstract3DVector` and :class:`unxt.Quantity`:
+    :class:`vector.AbstractPosition3D` and :class:`unxt.Quantity`:
 
     >>> q = cx.Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
     >>> t = Quantity(0, "Gyr")

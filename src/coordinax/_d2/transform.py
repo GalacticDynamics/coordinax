@@ -8,7 +8,7 @@ from plum import dispatch
 
 import quaxed.array_api as xp
 
-from .base import Abstract2DVector, Abstract2DVectorDifferential
+from .base import AbstractPosition2D, AbstractVelocity2D
 from .builtin import (
     Cartesian2DVector,
     CartesianDifferential2D,
@@ -20,9 +20,9 @@ from coordinax._base_pos import AbstractPosition
 
 @dispatch
 def represent_as(
-    current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
-) -> Abstract2DVector:
-    """Abstract2DVector -> Cartesian2D -> Abstract2DVector.
+    current: AbstractPosition2D, target: type[AbstractPosition2D], /, **kwargs: Any
+) -> AbstractPosition2D:
+    """AbstractPosition2D -> Cartesian2D -> AbstractPosition2D.
 
     This is the base case for the transformation of 2D vectors.
     """
@@ -34,8 +34,8 @@ def represent_as(
     (PolarVector, type[PolarVector]),
 )
 def represent_as(
-    current: Abstract2DVector, target: type[Abstract2DVector], /, **kwargs: Any
-) -> Abstract2DVector:
+    current: AbstractPosition2D, target: type[AbstractPosition2D], /, **kwargs: Any
+) -> AbstractPosition2D:
     """Self transform of 2D vectors."""
     return current
 
@@ -45,12 +45,12 @@ def represent_as(
     (PolarDifferential, type[PolarDifferential], AbstractPosition),
 )
 def represent_as(
-    current: Abstract2DVectorDifferential,
-    target: type[Abstract2DVectorDifferential],
+    current: AbstractVelocity2D,
+    target: type[AbstractVelocity2D],
     position: AbstractPosition,
     /,
     **kwargs: Any,
-) -> Abstract2DVectorDifferential:
+) -> AbstractVelocity2D:
     """Self transform of 2D Differentials."""
     return current
 

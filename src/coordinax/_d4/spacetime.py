@@ -15,9 +15,9 @@ from jaxtyping import Shaped
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from .base import Abstract4DVector
+from .base import AbstractPosition4D
 from coordinax._base import AbstractVector
-from coordinax._d3.base import Abstract3DVector
+from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import Cartesian3DVector
 from coordinax._typing import BatchableLength, BatchableTime, ScalarTime
 from coordinax._utils import classproperty
@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
 
 @final
-class FourVector(Abstract4DVector):
+class FourVector(AbstractPosition4D):
     """3+1 vector representation.
 
     The 3+1 vector representation is a 4-vector with 3 spatial coordinates and 1
@@ -40,7 +40,7 @@ class FourVector(Abstract4DVector):
     ----------
     t : Quantity[float, (*batch,), "time"]
         Time coordinate.
-    q : Abstract3DVector[float, (*batch, 3)]
+    q : AbstractPosition3D[float, (*batch, 3)]
         Spatial coordinates.
     c : Quantity[float, (), "speed"], optional
         Speed of light, by default ``Quantity(299_792.458, "km/s")``.
@@ -77,9 +77,9 @@ class FourVector(Abstract4DVector):
     )
     """Time coordinate."""
 
-    q: Abstract3DVector = eqx.field(
+    q: AbstractPosition3D = eqx.field(
         converter=lambda q: (
-            q if isinstance(q, Abstract3DVector) else Cartesian3DVector.constructor(q)
+            q if isinstance(q, AbstractPosition3D) else Cartesian3DVector.constructor(q)
         )
     )
     """Spatial coordinates."""

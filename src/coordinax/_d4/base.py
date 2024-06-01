@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["Abstract4DVector"]
+__all__ = ["AbstractPosition4D"]
 
 
 from abc import abstractmethod
@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class Abstract4DVector(AbstractPosition):
+class AbstractPosition4D(AbstractPosition):
     """Abstract representation of 4D coordinates in different systems."""
 
     @classproperty

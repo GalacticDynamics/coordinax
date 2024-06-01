@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["Abstract3DVector", "Abstract3DVectorDifferential"]
+__all__ = ["AbstractPosition3D", "AbstractVelocity3D"]
 
 
 from abc import abstractmethod
@@ -13,7 +13,7 @@ from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 
-class Abstract3DVector(AbstractPosition):
+class AbstractPosition3D(AbstractPosition):
     """Abstract representation of 3D coordinates in different systems."""
 
     @override
@@ -27,11 +27,11 @@ class Abstract3DVector(AbstractPosition):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["Abstract3DVectorDifferential"]:
+    def differential_cls(cls) -> type["AbstractVelocity3D"]:
         raise NotImplementedError
 
 
-class Abstract3DVectorDifferential(AbstractVelocity):
+class AbstractVelocity3D(AbstractVelocity):
     """Abstract representation of 3D vector differentials."""
 
     @classproperty
@@ -44,5 +44,5 @@ class Abstract3DVectorDifferential(AbstractVelocity):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[Abstract3DVector]:
+    def integral_cls(cls) -> type[AbstractPosition3D]:
         raise NotImplementedError
