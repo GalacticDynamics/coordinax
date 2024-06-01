@@ -1,8 +1,8 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "AbstractSphericalVector",
-    "AbstractSphericalDifferential",
+    "AbstractSphericalPosition",
+    "AbstractSphericalVelocity",
     # Physics conventions
     "SphericalVector",
     "SphericalDifferential",
@@ -43,17 +43,17 @@ _180d = Quantity(180, "deg")
 # Position
 
 
-class AbstractSphericalVector(AbstractPosition3D):
+class AbstractSphericalPosition(AbstractPosition3D):
     """Abstract spherical vector representation."""
 
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractSphericalDifferential"]: ...
+    def differential_cls(cls) -> type["AbstractSphericalVelocity"]: ...
 
 
 @final
-class SphericalVector(AbstractSphericalVector):
+class SphericalVector(AbstractSphericalPosition):
     """Spherical vector representation.
 
     .. note::
@@ -119,7 +119,7 @@ class SphericalVector(AbstractSphericalVector):
 
 
 @final
-class MathSphericalVector(AbstractSphericalVector):
+class MathSphericalVector(AbstractSphericalPosition):
     """Spherical vector representation.
 
     .. note::
@@ -188,7 +188,7 @@ class MathSphericalVector(AbstractSphericalVector):
 
 
 @final
-class LonLatSphericalVector(AbstractSphericalVector):
+class LonLatSphericalVector(AbstractSphericalPosition):
     """Spherical vector representation.
 
     .. note::
@@ -397,7 +397,7 @@ def constructor(
 ##############################################################################
 
 
-class AbstractSphericalDifferential(AbstractVelocity3D):
+class AbstractSphericalVelocity(AbstractVelocity3D):
     """Spherical differential representation."""
 
     @classproperty

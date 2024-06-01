@@ -17,7 +17,7 @@ from .builtin import (
     CylindricalVelocity,
 )
 from .sphere import (
-    AbstractSphericalVector,
+    AbstractSphericalPosition,
     LonCosLatSphericalDifferential,
     LonLatSphericalDifferential,
     LonLatSphericalVector,
@@ -231,11 +231,11 @@ def represent_as(
 )
 def represent_as(
     current: CartesianPosition3D,
-    target: type[AbstractSphericalVector],
+    target: type[AbstractSphericalPosition],
     /,
     **kwargs: Any,
-) -> AbstractSphericalVector:
-    """CartesianPosition3D -> AbstractSphericalVector.
+) -> AbstractSphericalPosition:
+    """CartesianPosition3D -> AbstractSphericalPosition.
 
     Examples
     --------
@@ -313,11 +313,11 @@ def represent_as(
 )
 def represent_as(
     current: CylindricalPosition,
-    target: type[AbstractSphericalVector],
+    target: type[AbstractSphericalPosition],
     /,
     **kwargs: Any,
-) -> AbstractSphericalVector:
-    """CylindricalPosition -> AbstractSphericalVector.
+) -> AbstractSphericalPosition:
+    """CylindricalPosition -> AbstractSphericalPosition.
 
     Examples
     --------
