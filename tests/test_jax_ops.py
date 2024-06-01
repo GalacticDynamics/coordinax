@@ -19,7 +19,7 @@ VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.AbstractPosit
 @pytest.fixture(params=VECTOR_CLASSES_3D)
 def q(request) -> cx.AbstractPosition:
     """Fixture for 3D Vectors."""
-    q = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], unit=u.kpc))
+    q = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit=u.kpc))
     return q.represent_as(request.param)
 
 

@@ -10,7 +10,7 @@ from plum import convert
 
 from unxt import Quantity
 
-from .builtin import Cartesian3DVector
+from .builtin import CartesianPosition3D
 from coordinax._typing import TimeBatchOrScalar
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
 
@@ -22,7 +22,7 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     r"""Operate on a 3D Quantity.
 
     `q` is the position vector. This is interpreted as a 3D CartesianVector.
-    See :class:`coordinax.Cartesian3DVector` for more details.
+    See :class:`coordinax.CartesianPosition3D` for more details.
 
     Returns
     -------
@@ -50,7 +50,8 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
 
     """
     return convert(
-        self(Cartesian3DVector.constructor(q)).represent_as(Cartesian3DVector), Quantity
+        self(CartesianPosition3D.constructor(q)).represent_as(CartesianPosition3D),
+        Quantity,
     )
 
 
@@ -69,7 +70,7 @@ def call(
 
     >>> op = cx.operators.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
     >>> op
-    GalileanSpatialTranslationOperator( translation=Cartesian3DVector( ... ) )
+    GalileanSpatialTranslationOperator( translation=CartesianPosition3D( ... ) )
 
     We can then apply the operator to a position:
 
@@ -88,5 +89,5 @@ def call(
         Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
 
     """
-    vec, t = self(Cartesian3DVector.constructor(x), t)
+    vec, t = self(CartesianPosition3D.constructor(x), t)
     return convert(vec, Quantity), t

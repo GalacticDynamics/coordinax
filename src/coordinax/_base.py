@@ -65,7 +65,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         <class 'coordinax._d1.builtin.CartesianPosition1D'>
 
         >>> SphericalVector._cartesian_cls
-        <class 'coordinax._d3.builtin.Cartesian3DVector'>
+        <class 'coordinax._d3.builtin.CartesianPosition3D'>
 
         """
         # TODO: something nicer than this for getting the corresponding class
@@ -90,12 +90,12 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         --------
         >>> import jax.numpy as jnp
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
 
         >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
-        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec = CartesianPosition3D.constructor(xs)
         >>> vec
-        Cartesian3DVector(
+        CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
@@ -103,9 +103,9 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
         ...       "z": Quantity([5, 6], "m")}
-        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec = CartesianPosition3D.constructor(xs)
         >>> vec
-        Cartesian3DVector(
+        CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
             y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
             z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
@@ -134,21 +134,21 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         --------
         >>> import jax.numpy as jnp
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
 
         >>> xs = Quantity([1, 2, 3], "meter")
-        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec = CartesianPosition3D.constructor(xs)
         >>> vec
-        Cartesian3DVector(
+        CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
         )
 
         >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
-        >>> vec = Cartesian3DVector.constructor(xs)
+        >>> vec = CartesianPosition3D.constructor(xs)
         >>> vec
-        Cartesian3DVector(
+        CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
             y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
             z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
@@ -212,11 +212,11 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
 
         We can transpose a vector:
 
-        >>> vec = Cartesian3DVector(x=Quantity([[0, 1], [2, 3]], "m"),
+        >>> vec = CartesianPosition3D(x=Quantity([[0, 1], [2, 3]], "m"),
         ...                         y=Quantity([[0, 1], [2, 3]], "m"),
         ...                         z=Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.mT.x
@@ -340,11 +340,11 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
 
         We can transpose a vector:
 
-        >>> vec = Cartesian3DVector(x=Quantity([[0, 1], [2, 3]], "m"),
+        >>> vec = CartesianPosition3D(x=Quantity([[0, 1], [2, 3]], "m"),
         ...                         y=Quantity([[0, 1], [2, 3]], "m"),
         ...                         z=Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.T.x
@@ -572,9 +572,9 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         >>> units = UnitSystem(u.m, u.s, u.kg, u.rad)
 
-        >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "km"))
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "km"))
         >>> vec.to_units(units)
-        Cartesian3DVector(
+        CartesianPosition3D(
             x=Quantity[...](value=f32[], unit=Unit("m")),
             y=Quantity[...](value=f32[], unit=Unit("m")),
             z=Quantity[...](value=f32[], unit=Unit("m"))
@@ -700,9 +700,9 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], "m"))
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
         >>> str(vec)
-        '<Cartesian3DVector (x[m], y[m], z[m])\n    [1. 2. 3.]>'
+        '<CartesianPosition3D (x[m], y[m], z[m])\n    [1. 2. 3.]>'
 
         """
         cls_name = type(self).__name__
@@ -739,13 +739,13 @@ def constructor(  # noqa: D417
     --------
     >>> import jax.numpy as jnp
     >>> from unxt import Quantity
-    >>> from coordinax import Cartesian3DVector
+    >>> from coordinax import CartesianPosition3D
 
     >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-    >>> vec = Cartesian3DVector(x=x, y=y, z=z)
-    >>> cart = Cartesian3DVector.constructor(vec)
+    >>> vec = CartesianPosition3D(x=x, y=y, z=z)
+    >>> cart = CartesianPosition3D.constructor(vec)
     >>> cart
-    Cartesian3DVector(
+    CartesianPosition3D(
       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
       y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
       z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))

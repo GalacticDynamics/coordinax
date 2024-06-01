@@ -22,7 +22,7 @@ def simplify_op(op: AbstractOperator, /) -> AbstractOperator:
     >>> op = co.GalileanSpatialTranslationOperator(shift)
     >>> co.simplify_op(op)
     GalileanSpatialTranslationOperator(
-      translation=Cartesian3DVector( ... )
+      translation=CartesianPosition3D( ... )
     )
 
     An operator with no effect can be simplified:

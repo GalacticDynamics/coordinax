@@ -15,7 +15,7 @@ from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.base import AbstractPosition3D
-from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
+from coordinax._d3.builtin import CartesianPosition3D, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 from coordinax._exceptions import IrreversibleDimensionChange
 
@@ -70,12 +70,12 @@ def represent_as(
 
     """
     cart2 = represent_as(current, CartesianPosition2D)
-    cart3 = represent_as(cart2, Cartesian3DVector, z=z)
+    cart3 = represent_as(cart2, CartesianPosition3D, z=z)
     return represent_as(cart3, target)
 
 
 @dispatch.multi(
-    (PolarPosition, type[Cartesian3DVector]),
+    (PolarPosition, type[CartesianPosition3D]),
 )
 def represent_as(
     current: AbstractPosition2D,
@@ -96,9 +96,9 @@ def represent_as(
 
     >>> x = cx.PolarPosition(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"))
 
-    >>> x2 = cx.represent_as(x, cx.Cartesian3DVector, z=Quantity(14, "km"))
+    >>> x2 = cx.represent_as(x, cx.CartesianPosition3D, z=Quantity(14, "km"))
     >>> x2
-    Cartesian3DVector( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPosition3D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("km")),
                        z=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.z
@@ -182,13 +182,13 @@ def represent_as(
 @dispatch
 def represent_as(
     current: CartesianPosition2D,
-    target: type[Cartesian3DVector],
+    target: type[CartesianPosition3D],
     /,
     *,
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
-) -> Cartesian3DVector:
-    """CartesianPosition2D -> Cartesian3DVector.
+) -> CartesianPosition3D:
+    """CartesianPosition2D -> CartesianPosition3D.
 
     The `x` and `y` coordinates are converted to the `x` and `y` coordinates of
     the 3D system.  The `z` coordinate is a keyword argument and defaults to 0.
@@ -200,9 +200,9 @@ def represent_as(
 
     >>> x = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
 
-    >>> x2 = cx.represent_as(x, cx.Cartesian3DVector, z=Quantity(14, "km"))
+    >>> x2 = cx.represent_as(x, cx.CartesianPosition3D, z=Quantity(14, "km"))
     >>> x2
-    Cartesian3DVector( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPosition3D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("km")),
                        z=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.z

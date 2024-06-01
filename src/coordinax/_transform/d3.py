@@ -12,12 +12,12 @@ import quaxed.array_api as xp
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
-from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
+from coordinax._d3.builtin import CartesianPosition3D, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 from coordinax._exceptions import IrreversibleDimensionChange
 
 # =============================================================================
-# Cartesian3DVector
+# CartesianPosition3D
 
 
 # -----------------------------------------------
@@ -26,9 +26,9 @@ from coordinax._exceptions import IrreversibleDimensionChange
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[CartesianPosition1D], /, **kwargs: Any
+    current: CartesianPosition3D, target: type[CartesianPosition1D], /, **kwargs: Any
 ) -> CartesianPosition1D:
-    """Cartesian3DVector -> CartesianPosition1D.
+    """CartesianPosition3D -> CartesianPosition1D.
 
     The `y` and `z` coordinates are dropped.
 
@@ -38,7 +38,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian3DVector.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -55,9 +55,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[RadialPosition], /, **kwargs: Any
+    current: CartesianPosition3D, target: type[RadialPosition], /, **kwargs: Any
 ) -> RadialPosition:
-    """Cartesian3DVector -> RadialPosition.
+    """CartesianPosition3D -> RadialPosition.
 
     Examples
     --------
@@ -65,7 +65,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian3DVector.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -84,9 +84,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[CartesianPosition2D], /, **kwargs: Any
+    current: CartesianPosition3D, target: type[CartesianPosition2D], /, **kwargs: Any
 ) -> CartesianPosition2D:
-    """Cartesian3DVector -> CartesianPosition2D.
+    """CartesianPosition3D -> CartesianPosition2D.
 
     Examples
     --------
@@ -94,7 +94,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian3DVector.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -109,12 +109,12 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian3DVector, type[PolarPosition]),
+    (CartesianPosition3D, type[PolarPosition]),
 )
 def represent_as(
-    current: Cartesian3DVector, target: type[AbstractPosition2D], /, **kwargs: Any
+    current: CartesianPosition3D, target: type[AbstractPosition2D], /, **kwargs: Any
 ) -> AbstractPosition2D:
-    """Cartesian3DVector -> Cartesian2D -> AbstractPosition2D.
+    """CartesianPosition3D -> Cartesian2D -> AbstractPosition2D.
 
     Examples
     --------
@@ -122,7 +122,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian3DVector.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")

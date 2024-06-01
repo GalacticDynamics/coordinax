@@ -2,10 +2,10 @@
 
 __all__ = [
     # Position
-    "Cartesian3DVector",
+    "CartesianPosition3D",
     "CylindricalVector",
     # Differential
-    "CartesianDifferential3D",
+    "CartesianVelocity3D",
     "CylindricalDifferential",
 ]
 
@@ -32,7 +32,7 @@ from coordinax._utils import classproperty
 
 
 @final
-class Cartesian3DVector(AbstractPosition3D):
+class CartesianPosition3D(AbstractPosition3D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
@@ -52,8 +52,8 @@ class Cartesian3DVector(AbstractPosition3D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianDifferential3D"]:
-        return CartesianDifferential3D
+    def differential_cls(cls) -> type["CartesianVelocity3D"]:
+        return CartesianVelocity3D
 
     # -----------------------------------------------------
     # Unary operations
@@ -64,8 +64,8 @@ class Cartesian3DVector(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> from coordinax import CartesianPosition3D
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> (-q).x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
 
@@ -75,14 +75,14 @@ class Cartesian3DVector(AbstractPosition3D):
     # -----------------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any, /) -> "Cartesian3DVector":
+    def __add__(self, other: Any, /) -> "CartesianPosition3D":
         """Add two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, SphericalVector
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> from coordinax import CartesianPosition3D, SphericalVector
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> (q + s).x
@@ -93,17 +93,17 @@ class Cartesian3DVector(AbstractPosition3D):
             msg = f"Cannot add {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(Cartesian3DVector)
+        cart = other.represent_as(CartesianPosition3D)
         return replace(self, x=self.x + cart.x, y=self.y + cart.y, z=self.z + cart.z)
 
-    def __sub__(self, other: Any, /) -> "Cartesian3DVector":
+    def __sub__(self, other: Any, /) -> "CartesianPosition3D":
         """Subtract two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, SphericalVector
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> from coordinax import CartesianPosition3D, SphericalVector
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> (q - s).x
@@ -114,7 +114,7 @@ class Cartesian3DVector(AbstractPosition3D):
             msg = f"Cannot subtract {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(Cartesian3DVector)
+        cart = other.represent_as(CartesianPosition3D)
         return replace(self, x=self.x - cart.x, y=self.y - cart.y, z=self.z - cart.z)
 
     @partial(jax.jit)
@@ -124,8 +124,8 @@ class Cartesian3DVector(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> from coordinax import CartesianPosition3D
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
 
@@ -190,7 +190,7 @@ class CylindricalVector(AbstractPosition3D):
 
 
 @final
-class CartesianDifferential3D(AbstractVelocity3D, AdditionMixin):
+class CartesianVelocity3D(AbstractVelocity3D, AdditionMixin):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -210,8 +210,8 @@ class CartesianDifferential3D(AbstractVelocity3D, AdditionMixin):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[Cartesian3DVector]:
-        return Cartesian3DVector
+    def integral_cls(cls) -> type[CartesianPosition3D]:
+        return CartesianPosition3D
 
     @partial(jax.jit)
     def norm(self, _: AbstractPosition3D | None = None, /) -> ct.BatchableSpeed:
@@ -220,8 +220,8 @@ class CartesianDifferential3D(AbstractVelocity3D, AdditionMixin):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianDifferential3D
-        >>> c = CartesianDifferential3D(d_x=Quantity(1, "km/s"),
+        >>> from coordinax import CartesianVelocity3D
+        >>> c = CartesianVelocity3D(d_x=Quantity(1, "km/s"),
         ...                              d_y=Quantity(2, "km/s"),
         ...                              d_z=Quantity(3, "km/s"))
         >>> c.norm()

@@ -13,8 +13,8 @@ from unxt import Quantity
 
 from .base import AbstractPosition3D
 from .builtin import (
-    Cartesian3DVector,
-    CartesianDifferential3D,
+    CartesianPosition3D,
+    CartesianVelocity3D,
     CylindricalDifferential,
     CylindricalVector,
 )
@@ -31,10 +31,10 @@ from coordinax._utils import dataclass_values, full_shaped
 # Constructors
 
 
-@Cartesian3DVector.constructor._f.register  # noqa: SLF001
+@CartesianPosition3D.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[Cartesian3DVector], obj: apyc.BaseRepresentation
-) -> Cartesian3DVector:
+    cls: type[CartesianPosition3D], obj: apyc.BaseRepresentation
+) -> CartesianPosition3D:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -43,7 +43,7 @@ def constructor(
     >>> from astropy.coordinates import CartesianRepresentation
 
     >>> cart = CartesianRepresentation(1, 2, 3, unit="kpc")
-    >>> vec = cx.Cartesian3DVector.constructor(cart)
+    >>> vec = cx.CartesianPosition3D.constructor(cart)
     >>> vec.x
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
@@ -124,10 +124,10 @@ def constructor(
 # -------------------------------------------------------------------
 
 
-@CartesianDifferential3D.constructor._f.register  # noqa: SLF001
+@CartesianVelocity3D.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CartesianDifferential3D], obj: apyc.CartesianDifferential
-) -> CartesianDifferential3D:
+    cls: type[CartesianVelocity3D], obj: apyc.CartesianDifferential
+) -> CartesianVelocity3D:
     """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
 
     Examples
@@ -137,7 +137,7 @@ def constructor(
     >>> from astropy.coordinates import CartesianDifferential
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
-    >>> dif = cx.CartesianDifferential3D.constructor(dcart)
+    >>> dif = cx.CartesianVelocity3D.constructor(dcart)
     >>> dif.d_x
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -256,7 +256,7 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], unit="kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
     >>> convert(vec, Quantity)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
@@ -275,22 +275,20 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
                        unit='kpc')
 
     """
-    cart = full_shaped(obj.represent_as(Cartesian3DVector))
+    cart = full_shaped(obj.represent_as(CartesianPosition3D))
     return xp.stack(tuple(dataclass_values(cart)), axis=-1)
 
 
-@conversion_method(CartesianDifferential3D, Quantity)  # type: ignore[misc]
-def vec_diff_to_q(
-    obj: CartesianDifferential3D, /
-) -> Shaped[Quantity["speed"], "*batch 3"]:
-    """`coordinax.CartesianDifferential3D` -> `unxt.Quantity`.
+@conversion_method(CartesianVelocity3D, Quantity)  # type: ignore[misc]
+def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*batch 3"]:
+    """`coordinax.CartesianVelocity3D` -> `unxt.Quantity`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.CartesianDifferential3D.constructor(Quantity([1, 2, 3], unit="km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
     >>> convert(dif, Quantity)
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
 
@@ -303,20 +301,20 @@ def vec_diff_to_q(
 
 
 # =====================================
-# Cartesian3DVector
+# CartesianPosition3D
 
 
-@conversion_method(Cartesian3DVector, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(Cartesian3DVector, apyc.CartesianRepresentation)  # type: ignore[misc]
-def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation:
-    """`coordinax.Cartesian3DVector` -> `astropy.CartesianRepresentation`.
+@conversion_method(CartesianPosition3D, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(CartesianPosition3D, apyc.CartesianRepresentation)  # type: ignore[misc]
+def cart3_to_apycart3(obj: CartesianPosition3D, /) -> apyc.CartesianRepresentation:
+    """`coordinax.CartesianPosition3D` -> `astropy.CartesianRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], unit="kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
     >>> convert(vec, apyc.CartesianRepresentation)
     <CartesianRepresentation (x, y, z) in kpc
         (1., 2., 3.)>
@@ -333,9 +331,9 @@ def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation
     )
 
 
-@conversion_method(apyc.CartesianRepresentation, Cartesian3DVector)  # type: ignore[misc]
-def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector:
-    """`astropy.CartesianRepresentation` -> `coordinax.Cartesian3DVector`.
+@conversion_method(apyc.CartesianRepresentation, CartesianPosition3D)  # type: ignore[misc]
+def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> CartesianPosition3D:
+    """`astropy.CartesianRepresentation` -> `coordinax.CartesianPosition3D`.
 
     Examples
     --------
@@ -344,15 +342,15 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector
     >>> from astropy.coordinates import CartesianRepresentation
 
     >>> vec = CartesianRepresentation(1, 2, 3, unit="kpc")
-    >>> convert(vec, cx.Cartesian3DVector)
-    Cartesian3DVector(
+    >>> convert(vec, cx.CartesianPosition3D)
+    CartesianPosition3D(
       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
       y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
       z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
     )
 
     """
-    return Cartesian3DVector.constructor(obj)
+    return CartesianPosition3D.constructor(obj)
 
 
 # =====================================
@@ -515,22 +513,20 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> LonLatSpherical
 
 
 # =====================================
-# CartesianDifferential3D
+# CartesianVelocity3D
 
 
-@conversion_method(CartesianDifferential3D, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(CartesianDifferential3D, apyc.CartesianDifferential)  # type: ignore[misc]
-def diffcart3_to_apycart3(
-    obj: CartesianDifferential3D, /
-) -> apyc.CartesianDifferential:
-    """`coordinax.CartesianDifferential3D` -> `astropy.CartesianDifferential`.
+@conversion_method(CartesianVelocity3D, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(CartesianVelocity3D, apyc.CartesianDifferential)  # type: ignore[misc]
+def diffcart3_to_apycart3(obj: CartesianVelocity3D, /) -> apyc.CartesianDifferential:
+    """`coordinax.CartesianVelocity3D` -> `astropy.CartesianDifferential`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.CartesianDifferential3D.constructor(Quantity([1, 2, 3], unit="km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
     >>> convert(dif, apyc.CartesianDifferential)
     <CartesianDifferential (d_x, d_y, d_z) in km / s
         (1., 2., 3.)>
@@ -544,12 +540,10 @@ def diffcart3_to_apycart3(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.CartesianDifferential, CartesianDifferential3D
+    apyc.CartesianDifferential, CartesianVelocity3D
 )
-def apycart3_to_diffcart3(
-    obj: apyc.CartesianDifferential, /
-) -> CartesianDifferential3D:
-    """`astropy.CartesianDifferential` -> `coordinax.CartesianDifferential3D`.
+def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> CartesianVelocity3D:
+    """`astropy.CartesianDifferential` -> `coordinax.CartesianVelocity3D`.
 
     Examples
     --------
@@ -558,15 +552,15 @@ def apycart3_to_diffcart3(
     >>> from astropy.coordinates import CartesianDifferential
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
-    >>> convert(dcart, cx.CartesianDifferential3D)
-    CartesianDifferential3D(
+    >>> convert(dcart, cx.CartesianVelocity3D)
+    CartesianVelocity3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return CartesianDifferential3D.constructor(obj)
+    return CartesianVelocity3D.constructor(obj)
 
 
 # =====================================

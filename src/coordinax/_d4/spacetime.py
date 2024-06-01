@@ -18,7 +18,7 @@ from unxt import Quantity
 from .base import AbstractPosition4D
 from coordinax._base import AbstractVector
 from coordinax._d3.base import AbstractPosition3D
-from coordinax._d3.builtin import Cartesian3DVector
+from coordinax._d3.builtin import CartesianPosition3D
 from coordinax._typing import BatchableLength, BatchableTime, ScalarTime
 from coordinax._utils import classproperty
 
@@ -48,7 +48,7 @@ class FourVector(AbstractPosition4D):
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import FourVector, Cartesian3DVector
+    >>> from coordinax import FourVector, CartesianPosition3D
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
@@ -56,17 +56,17 @@ class FourVector(AbstractPosition4D):
     >>> w
     FourVector(
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-      q=Cartesian3DVector( ... )
+      q=CartesianPosition3D( ... )
     )
 
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
     3)`` array to the `q` argument. This assumes that `q` is a
-    :class:`coordinax.Cartesian3DVector` and uses the
-    :meth:`coordinax.Cartesian3DVector.constructor` method to create the 3D vector.
+    :class:`coordinax.CartesianPosition3D` and uses the
+    :meth:`coordinax.CartesianPosition3D.constructor` method to create the 3D vector.
 
     We can also create the 3D vector explicitly:
 
-    >>> q = Cartesian3DVector(x=Quantity(1, "m"), y=Quantity(2, "m"),
+    >>> q = CartesianPosition3D(x=Quantity(1, "m"), y=Quantity(2, "m"),
     ...                       z=Quantity(3, "m"))
     >>> w = FourVector(t=Quantity(1, "s"), q=q)
 
@@ -79,7 +79,9 @@ class FourVector(AbstractPosition4D):
 
     q: AbstractPosition3D = eqx.field(
         converter=lambda q: (
-            q if isinstance(q, AbstractPosition3D) else Cartesian3DVector.constructor(q)
+            q
+            if isinstance(q, AbstractPosition3D)
+            else CartesianPosition3D.constructor(q)
         )
     )
     """Spatial coordinates."""
@@ -134,7 +136,7 @@ class FourVector(AbstractPosition4D):
         >>> vec
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
-            q=Cartesian3DVector( ... )
+            q=CartesianPosition3D( ... )
         )
 
         >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
@@ -142,7 +144,7 @@ class FourVector(AbstractPosition4D):
         >>> vec
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
-            q=Cartesian3DVector( ... )
+            q=CartesianPosition3D( ... )
         )
 
         >>> vec.x
@@ -166,7 +168,7 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, CartesianPosition3D
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.x
@@ -198,13 +200,13 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, CartesianPosition3D
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> -w
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-            q=Cartesian3DVector( ... )
+            q=CartesianPosition3D( ... )
         )
 
         """
@@ -219,7 +221,7 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, CartesianPosition3D
 
         >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
@@ -227,7 +229,7 @@ class FourVector(AbstractPosition4D):
         >>> w3
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-            q=Cartesian3DVector( ... )
+            q=CartesianPosition3D( ... )
         )
 
         >>> w3.t
@@ -248,7 +250,7 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, CartesianPosition3D
 
         >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
@@ -256,7 +258,7 @@ class FourVector(AbstractPosition4D):
         >>> w3
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-            q=Cartesian3DVector( ... )
+            q=CartesianPosition3D( ... )
         )
 
         >>> w3.t
@@ -280,7 +282,7 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, CartesianPosition3D
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.norm2()
@@ -296,7 +298,7 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, Cartesian3DVector
+        >>> from coordinax import FourVector, CartesianPosition3D
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.norm()

@@ -136,8 +136,8 @@ class AdditionMixin(AbstractVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
-        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
+        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
+        >>> q = CartesianVelocity3D.constructor(Quantity([1, 2, 3], "km/s"))
         >>> q2 = q + q
         >>> q2.d_y
         Quantity['speed'](Array(4., dtype=float32), unit='km / s')
@@ -157,8 +157,8 @@ class AdditionMixin(AbstractVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
-        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
+        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
+        >>> q = CartesianVelocity3D.constructor(Quantity([1, 2, 3], "km/s"))
         >>> q2 = q - q
         >>> q2.d_y
         Quantity['speed'](Array(0., dtype=float32), unit='km / s')

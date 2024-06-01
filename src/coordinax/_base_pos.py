@@ -163,12 +163,12 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, SphericalVector
+        >>> from coordinax import CartesianPosition3D, SphericalVector
 
         We can represent a vector as another type:
 
         >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-        >>> vec = Cartesian3DVector(x=x, y=y, z=z)
+        >>> vec = CartesianPosition3D(x=x, y=y, z=z)
         >>> sph = vec.represent_as(SphericalVector)
         >>> sph
         SphericalVector(
@@ -199,11 +199,11 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         --------
         We assume the following imports:
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
 
         We can compute the norm of a vector
         >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-        >>> vec = Cartesian3DVector(x=x, y=y, z=z)
+        >>> vec = CartesianPosition3D(x=x, y=y, z=z)
         >>> vec.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
 

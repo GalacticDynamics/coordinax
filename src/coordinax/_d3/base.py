@@ -20,9 +20,9 @@ class AbstractPosition3D(AbstractPosition):
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import Cartesian3DVector
+        from .builtin import CartesianPosition3D
 
-        return Cartesian3DVector
+        return CartesianPosition3D
 
     @classproperty
     @classmethod
@@ -37,9 +37,9 @@ class AbstractVelocity3D(AbstractVelocity):
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import CartesianDifferential3D
+        from .builtin import CartesianVelocity3D
 
-        return CartesianDifferential3D
+        return CartesianVelocity3D
 
     @classproperty
     @classmethod

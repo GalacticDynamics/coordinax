@@ -55,13 +55,13 @@ class AbstractPosition3DTest(AbstractPositionTest):
         #     )
 
 
-class TestCartesian3DVector(AbstractPosition3DTest):
-    """Test :class:`coordinax.Cartesian3DVector`."""
+class TestCartesianPosition3D(AbstractPosition3DTest):
+    """Test :class:`coordinax.CartesianPosition3D`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
-        return cx.Cartesian3DVector(
+        return cx.CartesianPosition3D(
             x=Quantity([1, 2, 3, 4], "kpc"),
             y=Quantity([5, 6, 7, 8], "kpc"),
             z=Quantity([9, 10, 11, 12], "kpc"),
@@ -116,18 +116,18 @@ class TestCartesian3DVector(AbstractPosition3DTest):
         )
 
     def test_cartesian3d_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.Cartesian3DVector)
+        newvec = vector.represent_as(cx.CartesianPosition3D)
         assert newvec == vector
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.Cartesian3DVector)
+        newvec = cx.represent_as(vector, cx.CartesianPosition3D)
         assert newvec is vector
 
     def test_cartesian3d_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        newvec = vector.represent_as(cx.Cartesian3DVector)
+        newvec = vector.represent_as(cx.CartesianPosition3D)
 
         assert np.allclose(convert(newvec.x, APYQuantity), apyvector.x)
         assert np.allclose(convert(newvec.y, APYQuantity), apyvector.y)
@@ -244,10 +244,10 @@ class TestCylindricalVector(AbstractPosition3DTest):
         assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cylindrical_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
-        cart3d = vector.represent_as(cx.Cartesian3DVector)
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
+        cart3d = vector.represent_as(cx.CartesianPosition3D)
 
-        assert isinstance(cart3d, cx.Cartesian3DVector)
+        assert isinstance(cart3d, cx.CartesianPosition3D)
         assert qnp.array_equal(
             cart3d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
         )
@@ -258,7 +258,7 @@ class TestCylindricalVector(AbstractPosition3DTest):
 
     def test_cylindrical_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cart3d = vector.represent_as(cx.Cartesian3DVector)
+        cart3d = vector.represent_as(cx.CartesianPosition3D)
 
         apycart3 = apyvector.represent_as(apyc.CartesianRepresentation)
         assert np.allclose(convert(cart3d.x, APYQuantity), apycart3.x)
@@ -371,10 +371,10 @@ class TestSphericalVector(AbstractPosition3DTest):
         assert qnp.array_equal(polar.phi, Quantity([0.0, 65.0, 135.0, 270.0], "deg"))
 
     def test_spherical_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
-        cart3d = vector.represent_as(cx.Cartesian3DVector)
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
+        cart3d = vector.represent_as(cx.CartesianPosition3D)
 
-        assert isinstance(cart3d, cx.Cartesian3DVector)
+        assert isinstance(cart3d, cx.CartesianPosition3D)
         assert qnp.array_equal(
             cart3d.x, Quantity([0, 0.49681753, -1.3060151, -4.1700245e-15], "kpc")
         )
@@ -387,7 +387,7 @@ class TestSphericalVector(AbstractPosition3DTest):
 
     def test_spherical_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cart3d = vector.represent_as(cx.Cartesian3DVector)
+        cart3d = vector.represent_as(cx.CartesianPosition3D)
 
         apycart3 = apyvector.represent_as(apyc.CartesianRepresentation)
         assert np.allclose(convert(cart3d.x, APYQuantity), apycart3.x)
@@ -485,34 +485,34 @@ class AbstractVelocity3DTest(AbstractVelocityTest):
         assert all(representation_equal(convert(-difntl, type(apydifntl)), -apydifntl))
 
 
-class TestCartesianDifferential3D(AbstractVelocity3DTest):
-    """Test :class:`coordinax.CartesianDifferential3D`."""
+class TestCartesianVelocity3D(AbstractVelocity3DTest):
+    """Test :class:`coordinax.CartesianVelocity3D`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.CartesianDifferential3D:
+    def difntl(self) -> cx.CartesianVelocity3D:
         """Return a differential."""
-        return cx.CartesianDifferential3D(
+        return cx.CartesianVelocity3D(
             d_x=Quantity([5, 6, 7, 8], "km/s"),
             d_y=Quantity([9, 10, 11, 12], "km/s"),
             d_z=Quantity([13, 14, 15, 16], "km/s"),
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.Cartesian3DVector:
+    def vector(self) -> cx.CartesianPosition3D:
         """Return a vector."""
-        return cx.Cartesian3DVector(
+        return cx.CartesianPosition3D(
             x=Quantity([1, 2, 3, 4], "kpc"),
             y=Quantity([5, 6, 7, 8], "kpc"),
             z=Quantity([9, 10, 11, 12], "kpc"),
         )
 
     @pytest.fixture(scope="class")
-    def apydifntl(self, difntl: cx.CartesianDifferential3D):
+    def apydifntl(self, difntl: cx.CartesianVelocity3D):
         """Return an Astropy differential."""
         return convert(difntl, apyc.CartesianDifferential)
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.Cartesian3DVector):
+    def apyvector(self, vector: cx.CartesianPosition3D):
         """Return an Astropy vector."""
         return convert(vector, apyc.CartesianRepresentation)
 
@@ -557,20 +557,20 @@ class TestCartesianDifferential3D(AbstractVelocity3DTest):
         assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
 
     def test_cartesian3d_to_cartesian3d(self, difntl, vector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.CartesianDifferential3D, vector)
+        newvec = difntl.represent_as(cx.CartesianVelocity3D, vector)
         assert newvec == difntl
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.CartesianDifferential3D, vector)
+        newvec = cx.represent_as(difntl, cx.CartesianVelocity3D, vector)
         assert newvec is difntl
 
     def test_cartesian3d_to_cartesian3d_astropy(
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cart3 = difntl.represent_as(cx.CartesianDifferential3D, vector)
+        cart3 = difntl.represent_as(cx.CartesianVelocity3D, vector)
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
         assert np.allclose(convert(cart3.d_x, APYQuantity), apycart3.d_x)
@@ -716,10 +716,10 @@ class TestCylindricalDifferential(AbstractVelocity3DTest):
         assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
 
     def test_cylindrical_to_cartesian3d(self, difntl, vector, apydifntl, apyvector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
-        cart3d = difntl.represent_as(cx.CartesianDifferential3D, vector)
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
+        cart3d = difntl.represent_as(cx.CartesianVelocity3D, vector)
 
-        assert isinstance(cart3d, cx.CartesianDifferential3D)
+        assert isinstance(cart3d, cx.CartesianVelocity3D)
         assert qnp.array_equal(
             cart3d.d_x, Quantity([5.0, -76.537544, -145.15944, -40.03075], "km/s")
         )
@@ -860,10 +860,10 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
         assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
 
     def test_spherical_to_cartesian3d(self, difntl, vector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
-        cart3d = difntl.represent_as(cx.CartesianDifferential3D, vector)
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
+        cart3d = difntl.represent_as(cx.CartesianVelocity3D, vector)
 
-        assert isinstance(cart3d, cx.CartesianDifferential3D)
+        assert isinstance(cart3d, cx.CartesianVelocity3D)
         assert qnp.allclose(
             cart3d.d_x,
             Quantity([61.803337, -7.770853, -60.081947, 1.985678], "km/s"),
@@ -884,7 +884,7 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cart3d = difntl.represent_as(cx.CartesianDifferential3D, vector)
+        cart3d = difntl.represent_as(cx.CartesianVelocity3D, vector)
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
         assert np.allclose(convert(cart3d.d_x, APYQuantity), apycart3.d_x)

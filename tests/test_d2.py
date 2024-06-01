@@ -71,12 +71,12 @@ class TestCartesianPosition2D:
         )
 
     def test_cartesian2d_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
         cart3d = vector.represent_as(
-            cx.Cartesian3DVector, z=Quantity([9, 10, 11, 12], "m")
+            cx.CartesianPosition3D, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cart3d, cx.Cartesian3DVector)
+        assert isinstance(cart3d, cx.CartesianPosition3D)
         assert qnp.array_equal(cart3d.x, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cart3d.y, Quantity([5, 6, 7, 8], "kpc"))
         assert qnp.array_equal(cart3d.z, Quantity([9, 10, 11, 12], "m"))
@@ -178,12 +178,12 @@ class TestPolarPosition:
         assert newvec is vector
 
     def test_polar_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian3DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
         cart3d = vector.represent_as(
-            cx.Cartesian3DVector, z=Quantity([9, 10, 11, 12], "m")
+            cx.CartesianPosition3D, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cart3d, cx.Cartesian3DVector)
+        assert isinstance(cart3d, cx.CartesianPosition3D)
         assert qnp.array_equal(
             cart3d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
         )
@@ -284,12 +284,12 @@ class TestCartesianVelocity2D(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_cartesian3d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential3D, vector)``."""
+        """Test ``difntl.represent_as(CartesianVelocity3D, vector)``."""
         cart3d = difntl.represent_as(
-            cx.CartesianDifferential3D, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
+            cx.CartesianVelocity3D, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
         )
 
-        assert isinstance(cart3d, cx.CartesianDifferential3D)
+        assert isinstance(cart3d, cx.CartesianVelocity3D)
         assert qnp.array_equal(cart3d.d_x, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(cart3d.d_y, Quantity([5, 6, 7, 8], "km/s"))
         assert qnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], "m/s"))
@@ -388,12 +388,12 @@ class TestPolarVelocity(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_cartesian3d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential3D, vector)``."""
+        """Test ``difntl.represent_as(CartesianVelocity3D, vector)``."""
         cart3d = difntl.represent_as(
-            cx.CartesianDifferential3D, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
+            cx.CartesianVelocity3D, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
         )
 
-        assert isinstance(cart3d, cx.CartesianDifferential3D)
+        assert isinstance(cart3d, cx.CartesianVelocity3D)
         assert qnp.array_equal(cart3d.d_x, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(cart3d.d_y, Quantity([5, 6, 7, 8], "km/s"))
         assert qnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], "m/s"))
