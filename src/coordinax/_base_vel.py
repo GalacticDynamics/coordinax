@@ -13,7 +13,7 @@ from plum import dispatch
 
 from unxt import Quantity
 
-from ._base import AbstractVectorBase
+from ._base import AbstractVector
 from ._base_pos import AbstractPosition
 from ._utils import classproperty, dataclass_items
 
@@ -25,7 +25,7 @@ DT = TypeVar("DT", bound="AbstractVelocity")
 DIFFERENTIAL_CLASSES: set[type["AbstractVelocity"]] = set()
 
 
-class AbstractVelocity(AbstractVectorBase):  # pylint: disable=abstract-method
+class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -127,7 +127,7 @@ class AbstractVelocity(AbstractVectorBase):  # pylint: disable=abstract-method
 # =============================================================================
 
 
-class AdditionMixin(AbstractVectorBase):
+class AdditionMixin(AbstractVector):
     """Mixin for addition operations."""
 
     def __add__(self: "Self", other: Any, /) -> "Self":

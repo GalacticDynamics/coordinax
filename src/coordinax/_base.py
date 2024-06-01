@@ -2,7 +2,7 @@
 
 __all__ = [
     # vector classes
-    "AbstractVectorBase",
+    "AbstractVector",
     # other
     "ToUnitsOptions",
 ]
@@ -30,7 +30,7 @@ from coordinax._typing import Unit
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-BT = TypeVar("BT", bound="AbstractVectorBase")
+BT = TypeVar("BT", bound="AbstractVector")
 
 
 class ToUnitsOptions(Enum):
@@ -43,7 +43,7 @@ class ToUnitsOptions(Enum):
 # ===================================================================
 
 
-class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
+class AbstractVector(eqx.Module):  # type: ignore[misc]
     """Base class for all vector types.
 
     A vector is a collection of components that can be represented in different
@@ -54,7 +54,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     @classproperty
     @classmethod
     @abstractmethod
-    def _cartesian_cls(cls) -> type["AbstractVectorBase"]:
+    def _cartesian_cls(cls) -> type["AbstractVector"]:
         """Return the corresponding Cartesian vector class.
 
         Examples
@@ -77,8 +77,8 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     @classmethod
     @dispatch
     def constructor(
-        cls: "type[AbstractVectorBase]", obj: Mapping[str, Quantity], /
-    ) -> "AbstractVectorBase":
+        cls: "type[AbstractVector]", obj: Mapping[str, Quantity], /
+    ) -> "AbstractVector":
         """Construct a vector from a mapping.
 
         Parameters
@@ -117,10 +117,10 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     @classmethod
     @dispatch
     def constructor(
-        cls: "type[AbstractVectorBase]",
+        cls: "type[AbstractVector]",
         obj: Quantity | u.Quantity,
         /,  # TODO: shape hint
-    ) -> "AbstractVectorBase":
+    ) -> "AbstractVector":
         """Construct a vector from a Quantity array.
 
         The array is expected to have the components as the last dimension.
@@ -182,7 +182,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         Returns
         -------
-        AbstractVectorBase
+        AbstractVector
             The vector with the slice applied.
 
         Examples
@@ -364,7 +364,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         Returns
         -------
-        AbstractVectorBase
+        AbstractVector
             The vector moved to the new device.
 
         Examples
@@ -426,7 +426,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
         Returns
         -------
-        AbstractVectorBase
+        AbstractVector
             The vector with the reshaped components.
 
         Examples
@@ -555,7 +555,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         raise NotImplementedError
 
     @dispatch
-    def to_units(self, units: Any) -> "AbstractVectorBase":
+    def to_units(self, units: Any) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters
@@ -593,7 +593,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
     @dispatch
     def to_units(
         self, units: Mapping[u.PhysicalType | str, Unit | str], /
-    ) -> "AbstractVectorBase":
+    ) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters
@@ -639,9 +639,7 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
         )
 
     @dispatch
-    def to_units(
-        self, _: Literal[ToUnitsOptions.consistent], /
-    ) -> "AbstractVectorBase":
+    def to_units(self, _: Literal[ToUnitsOptions.consistent], /) -> "AbstractVector":
         """Convert the vector to a self-consistent set of units.
 
         Parameters
@@ -726,15 +724,15 @@ class AbstractVectorBase(eqx.Module):  # type: ignore[misc]
 
 
 # TODO: move to the class in py3.11+
-@AbstractVectorBase.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVector.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(  # noqa: D417
-    cls: type[AbstractVectorBase], obj: AbstractVectorBase, /
-) -> AbstractVectorBase:
+    cls: type[AbstractVector], obj: AbstractVector, /
+) -> AbstractVector:
     """Construct a vector from another vector.
 
     Parameters
     ----------
-    obj : :class:`coordinax.AbstractVectorBase`
+    obj : :class:`coordinax.AbstractVector`
         The vector to construct from.
 
     Examples

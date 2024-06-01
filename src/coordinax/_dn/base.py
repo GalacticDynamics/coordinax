@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 import quaxed.lax as qlax
 import quaxed.numpy as qnp
 
-from coordinax._base import AbstractVectorBase
+from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
@@ -24,7 +24,7 @@ class AbstractNDVector(AbstractPosition):
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         from .builtin import CartesianNDVector
 
         return CartesianNDVector
@@ -87,7 +87,7 @@ class AbstractNDVectorDifferential(AbstractVelocity):
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         from .builtin import CartesianDifferentialND
 
         return CartesianDifferentialND

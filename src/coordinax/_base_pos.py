@@ -16,7 +16,7 @@ from plum import dispatch
 
 from unxt import Quantity
 
-from ._base import AbstractVectorBase
+from ._base import AbstractVector
 from ._utils import classproperty, dataclass_items
 
 if TYPE_CHECKING:
@@ -27,7 +27,7 @@ VT = TypeVar("VT", bound="AbstractPosition")
 VECTOR_CLASSES: set[type["AbstractPosition"]] = set()
 
 
-class AbstractPosition(AbstractVectorBase):  # pylint: disable=abstract-method
+class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:

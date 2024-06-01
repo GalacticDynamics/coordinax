@@ -6,7 +6,7 @@ __all__ = ["Abstract4DVector"]
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
-from coordinax._base import AbstractVectorBase
+from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._utils import classproperty
 
@@ -19,7 +19,7 @@ class Abstract4DVector(AbstractPosition):
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         raise NotImplementedError
 
     @classproperty

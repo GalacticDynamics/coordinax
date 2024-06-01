@@ -17,7 +17,7 @@ from typing import (
 import quaxed.array_api as xp
 
 if TYPE_CHECKING:
-    from coordinax._base import AbstractVectorBase
+    from coordinax._base import AbstractVector
 
 
 ################################################################################
@@ -40,7 +40,7 @@ def dataclass_items(obj: "DataclassInstance") -> Iterator[tuple[str, Any]]:
     yield from ((f.name, getattr(obj, f.name)) for f in fields(obj))
 
 
-def full_shaped(obj: "AbstractVectorBase", /) -> "AbstractVectorBase":
+def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
     """Return the vector, fully broadcasting all components."""
     arrays = xp.broadcast_arrays(*dataclass_values(obj))
     return replace(obj, **dict(zip(obj.components, arrays, strict=True)))

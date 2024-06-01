@@ -86,14 +86,14 @@ def context_dimension_reduction(
     return context
 
 
-class AbstractVectorBaseTest:
-    """Test :class:`coordinax.AbstractVectorBase`."""
+class AbstractVectorTest:
+    """Test :class:`coordinax.AbstractVector`."""
 
     # ===============================================================
     # Array
 
     def test_shape(self, vector):
-        """Test :meth:`AbstractVectorBase.shape`."""
+        """Test :meth:`AbstractVector.shape`."""
         shape = vector.shape
         assert isinstance(shape, tuple)
         assert all(isinstance(s, int) for s in shape)
@@ -102,7 +102,7 @@ class AbstractVectorBaseTest:
         )
 
     def test_flatten(self, vector):
-        """Test :meth:`AbstractVectorBase.flatten`."""
+        """Test :meth:`AbstractVector.flatten`."""
         # Test input vector
         flat = vector.flatten()
         assert isinstance(flat, type(vector))
@@ -125,7 +125,7 @@ class AbstractVectorBaseTest:
         )
 
     def test_reshape(self, vector):
-        """Test :meth:`AbstractVectorBase.reshape`."""
+        """Test :meth:`AbstractVector.reshape`."""
         # Test input vector
         reshaped = vector.reshape(2, -1)
         assert isinstance(reshaped, type(vector))
@@ -152,7 +152,7 @@ class AbstractVectorBaseTest:
     # Collection
 
     def test_asdict(self, vector):
-        """Test :meth:`AbstractVectorBase.asdict`."""
+        """Test :meth:`AbstractVector.asdict`."""
         # Simple test
         adict = vector.asdict()
         assert isinstance(adict, dict)
@@ -167,7 +167,7 @@ class AbstractVectorBaseTest:
         assert all(qnp.array_equal(v, getattr(vector, k)) for k, v in adict.items())
 
     def test_components(self, vector):
-        """Test :meth:`AbstractVectorBase.components`."""
+        """Test :meth:`AbstractVector.components`."""
         # Simple test
         components = vector.components
         assert isinstance(components, tuple)
@@ -175,7 +175,7 @@ class AbstractVectorBaseTest:
         assert all(hasattr(vector, c) for c in components)
 
     def test_shapes(self, vector):
-        """Test :meth:`AbstractVectorBase.shapes`."""
+        """Test :meth:`AbstractVector.shapes`."""
         # Simple test
         shapes = vector.shapes
         assert isinstance(shapes, MappingProxyType)
@@ -183,7 +183,7 @@ class AbstractVectorBaseTest:
         assert all(v == getattr(vector, k).shape for k, v in shapes.items())
 
 
-class AbstractPositionTest(AbstractVectorBaseTest):
+class AbstractPositionTest(AbstractVectorTest):
     """Test :class:`coordinax.AbstractPosition`."""
 
     @pytest.fixture(scope="class")
@@ -206,7 +206,7 @@ class AbstractPositionTest(AbstractVectorBaseTest):
         assert isinstance(newvec, target)
 
 
-class AbstractVelocityTest(AbstractVectorBaseTest):
+class AbstractVelocityTest(AbstractVectorTest):
     """Test :class:`coordinax.AbstractVelocity`."""
 
     @pytest.fixture(scope="class")
