@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 VT = TypeVar("VT", bound="AbstractVector")
 
-VECTOR_CLASSES: list[type["AbstractVector"]] = []
+VECTOR_CLASSES: set[type["AbstractVector"]] = set()
 
 
 class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
@@ -39,7 +39,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
         if isabstract(cls) or cls.__name__.startswith("Abstract"):
             return
 
-        VECTOR_CLASSES.append(cls)
+        VECTOR_CLASSES.add(cls)
 
     @classproperty
     @classmethod
