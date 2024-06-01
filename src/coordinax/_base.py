@@ -59,12 +59,12 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from coordinax import RadialPosition, SphericalVector
+        >>> from coordinax import RadialPosition, SphericalPosition
 
         >>> RadialPosition._cartesian_cls
         <class 'coordinax._d1.builtin.CartesianPosition1D'>
 
-        >>> SphericalVector._cartesian_cls
+        >>> SphericalPosition._cartesian_cls
         <class 'coordinax._d3.builtin.CartesianPosition3D'>
 
         """
@@ -507,13 +507,13 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from coordinax import CartesianPosition2D, SphericalVector, RadialVelocity
+        >>> from coordinax import CartesianPosition2D, SphericalPosition, RadialVelocity
 
         We can get the components of a vector:
 
         >>> CartesianPosition2D.components
         ('x', 'y')
-        >>> SphericalVector.components
+        >>> SphericalPosition.components
         ('r', 'theta', 'phi')
         >>> RadialVelocity.components
         ('d_r',)
@@ -605,7 +605,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, SphericalVector
+        >>> from coordinax import CartesianPosition2D, SphericalPosition
 
         We can convert a vector to the given units:
 
@@ -618,10 +618,10 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         This also works for vectors with different units:
 
-        >>> sph = SphericalVector(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
+        >>> sph = SphericalPosition(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
         ...                       phi=Quantity(3, "rad"))
         >>> sph.to_units({"length": "km", "angle": "deg"})
-        SphericalVector(
+        SphericalPosition(
             r=Distance(value=f32[], unit=Unit("km")),
             theta=Quantity[...](value=f32[], unit=Unit("deg")),
             phi=Quantity[...](value=f32[], unit=Unit("deg")) )
@@ -652,7 +652,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, SphericalVector
+        >>> from coordinax import CartesianPosition2D, SphericalPosition
         >>> from coordinax import ToUnitsOptions
 
         We can convert a vector to the given units:
@@ -669,7 +669,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         )
 
         >>> sph.to_units(ToUnitsOptions.consistent)
-        SphericalVector(
+        SphericalPosition(
             r=Distance(value=f32[], unit=Unit("m")),
             theta=Quantity[...](value=f32[], unit=Unit("deg")),
             phi=Quantity[...](value=f32[], unit=Unit("deg")) )

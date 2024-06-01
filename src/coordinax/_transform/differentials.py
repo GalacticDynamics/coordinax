@@ -87,8 +87,8 @@ def represent_as(
 
     >>> q = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
     >>> p = cx.CartesianVelocity3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
-    >>> cx.represent_as(p, cx.SphericalDifferential, q)
-    SphericalDifferential(
+    >>> cx.represent_as(p, cx.SphericalVelocity, q)
+    SphericalVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
@@ -98,8 +98,8 @@ def represent_as(
     Cartesian vector:
 
     >>> p = cx.CartesianVelocity3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
-    >>> cx.represent_as(p, cx.SphericalDifferential, Quantity([1.0, 2.0, 3.0], "km"))
-    SphericalDifferential(
+    >>> cx.represent_as(p, cx.SphericalVelocity, Quantity([1.0, 2.0, 3.0], "km"))
+    SphericalVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )

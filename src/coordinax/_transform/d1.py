@@ -12,7 +12,7 @@ from unxt import Quantity
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
-from coordinax._d3.sphere import MathSphericalVector, SphericalVector
+from coordinax._d3.sphere import MathSphericalPosition, SphericalPosition
 
 # =============================================================================
 # CartesianPosition1D
@@ -140,14 +140,14 @@ def represent_as(
 @dispatch
 def represent_as(
     current: CartesianPosition1D,
-    target: type[SphericalVector] | type[MathSphericalVector],
+    target: type[SphericalPosition] | type[MathSphericalPosition],
     /,
     *,
     theta: Quantity = Quantity(0.0, u.radian),
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
-) -> SphericalVector | MathSphericalVector:
-    """CartesianPosition1D -> SphericalVector | MathSphericalVector.
+) -> SphericalPosition | MathSphericalPosition:
+    """CartesianPosition1D -> SphericalPosition | MathSphericalPosition.
 
     The `x` coordinate is converted to the radial coordinate `r`.
     The `theta` and `phi` coordinates are keyword arguments and default to 0.
@@ -157,12 +157,12 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    SphericalVector:
+    SphericalPosition:
 
     >>> x = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
-    >>> x2 = cx.represent_as(x, cx.SphericalVector)
+    >>> x2 = cx.represent_as(x, cx.SphericalPosition)
     >>> x2
-    SphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    SphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                      theta=Quantity[...](value=f32[], unit=Unit("rad")),
                      phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
@@ -170,17 +170,17 @@ def represent_as(
     >>> x2.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.SphericalVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.SphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
     >>> x2.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    MathSphericalVector:
+    MathSphericalPosition:
 
-    >>> x2 = cx.represent_as(x, cx.MathSphericalVector)
+    >>> x2 = cx.represent_as(x, cx.MathSphericalPosition)
     >>> x2
-    MathSphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    MathSphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                          theta=Quantity[...](value=f32[], unit=Unit("rad")),
                          phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.theta
@@ -188,7 +188,7 @@ def represent_as(
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.MathSphericalVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.MathSphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x3.phi
@@ -364,14 +364,14 @@ def represent_as(
 @dispatch
 def represent_as(
     current: RadialPosition,
-    target: type[SphericalVector] | type[MathSphericalVector],
+    target: type[SphericalPosition] | type[MathSphericalPosition],
     /,
     *,
     theta: Quantity = Quantity(0.0, u.radian),
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
-) -> SphericalVector | MathSphericalVector:
-    """RadialPosition -> SphericalVector | MathSphericalVector.
+) -> SphericalPosition | MathSphericalPosition:
+    """RadialPosition -> SphericalPosition | MathSphericalPosition.
 
     The `r` coordinate is converted to the radial coordinate `r`.
     The `theta` and `phi` coordinates are keyword arguments and default to 0.
@@ -383,11 +383,11 @@ def represent_as(
 
     >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
 
-    SphericalVector:
+    SphericalPosition:
 
-    >>> x2 = cx.represent_as(x, cx.SphericalVector)
+    >>> x2 = cx.represent_as(x, cx.SphericalPosition)
     >>> x2
-    SphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    SphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                      theta=Quantity[...](value=f32[], unit=Unit("rad")),
                      phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
@@ -395,17 +395,17 @@ def represent_as(
     >>> x2.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.SphericalVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.SphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
     >>> x3.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    MathSphericalVector:
+    MathSphericalPosition:
 
-    >>> x2 = cx.represent_as(x, cx.MathSphericalVector)
+    >>> x2 = cx.represent_as(x, cx.MathSphericalPosition)
     >>> x2
-    MathSphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    MathSphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                          theta=Quantity[...](value=f32[], unit=Unit("rad")),
                          phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.theta
@@ -413,7 +413,7 @@ def represent_as(
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.MathSphericalVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.MathSphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x3.phi

@@ -43,13 +43,13 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialVelocity, SphericalDifferential
+        >>> from coordinax import RadialVelocity, SphericalVelocity
 
         >>> RadialVelocity.integral_cls.__name__
         'RadialPosition'
 
-        >>> SphericalDifferential.integral_cls.__name__
-        'SphericalVector'
+        >>> SphericalVelocity.integral_cls.__name__
+        'SphericalPosition'
 
         """
         raise NotImplementedError

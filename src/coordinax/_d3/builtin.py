@@ -81,9 +81,9 @@ class CartesianPosition3D(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, SphericalVector
+        >>> from coordinax import CartesianPosition3D, SphericalPosition
         >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        >>> s = SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> (q + s).x
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
@@ -102,9 +102,9 @@ class CartesianPosition3D(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, SphericalVector
+        >>> from coordinax import CartesianPosition3D, SphericalPosition
         >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalVector(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        >>> s = SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> (q - s).x
         Quantity['length'](Array(0., dtype=float32), unit='kpc')

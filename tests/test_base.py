@@ -35,8 +35,8 @@ from coordinax import (
     PolarVelocity,
     RadialPosition,
     RadialVelocity,
-    SphericalDifferential,
-    SphericalVector,
+    SphericalPosition,
+    SphericalVelocity,
 )
 from coordinax._utils import dataclass_items
 
@@ -49,7 +49,7 @@ BUILTIN_VECTORS = [
     PolarPosition,
     # 3D
     CartesianPosition3D,
-    SphericalVector,
+    SphericalPosition,
     CylindricalPosition,
 ]
 
@@ -64,7 +64,7 @@ BUILTIN_DIFFERENTIALS = [
     # Log10PolarVelocity,
     # 3D
     CartesianVelocity3D,
-    SphericalDifferential,
+    SphericalVelocity,
     CylindricalVelocity,
 ]
 

@@ -134,10 +134,10 @@ class TestCartesianPosition3D(AbstractPosition3DTest):
         assert np.allclose(convert(newvec.z, APYQuantity), apyvector.z)
 
     def test_cartesian3d_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalVector)``."""
-        spherical = vector.represent_as(cx.SphericalVector)
+        """Test ``coordinax.represent_as(SphericalPosition)``."""
+        spherical = vector.represent_as(cx.SphericalPosition)
 
-        assert isinstance(spherical, cx.SphericalVector)
+        assert isinstance(spherical, cx.SphericalPosition)
         assert qnp.array_equal(
             spherical.r, Quantity([10.34408, 11.83216, 13.379088, 14.96663], "kpc")
         )
@@ -152,7 +152,7 @@ class TestCartesianPosition3D(AbstractPosition3DTest):
 
     def test_cartesian3d_to_spherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        sph = vector.represent_as(cx.SphericalVector)
+        sph = vector.represent_as(cx.SphericalPosition)
 
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
         assert np.allclose(convert(sph.r, APYQuantity), apysph.r)
@@ -266,17 +266,17 @@ class TestCylindricalPosition(AbstractPosition3DTest):
         assert np.allclose(convert(cart3d.z, APYQuantity), apycart3.z)
 
     def test_cylindrical_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalVector)``."""
-        spherical = vector.represent_as(cx.SphericalVector)
+        """Test ``coordinax.represent_as(SphericalPosition)``."""
+        spherical = vector.represent_as(cx.SphericalPosition)
 
-        assert isinstance(spherical, cx.SphericalVector)
+        assert isinstance(spherical, cx.SphericalPosition)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(spherical.theta, Quantity(xp.full(4, xp.pi / 2), "rad"))
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cylindrical_to_spherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        sph = vector.represent_as(cx.SphericalVector)
+        sph = vector.represent_as(cx.SphericalPosition)
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
         assert np.allclose(convert(sph.r, APYQuantity), apysph.r)
         assert np.allclose(convert(sph.theta, APYQuantity), apysph.theta)
@@ -302,13 +302,13 @@ class TestCylindricalPosition(AbstractPosition3DTest):
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
 
 
-class TestSphericalVector(AbstractPosition3DTest):
-    """Test :class:`coordinax.SphericalVector`."""
+class TestSphericalPosition(AbstractPosition3DTest):
+    """Test :class:`coordinax.SphericalPosition`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.SphericalVector:
+    def vector(self) -> cx.SphericalPosition:
         """Return a vector."""
-        return cx.SphericalVector(
+        return cx.SphericalPosition(
             r=Quantity([1, 2, 3, 4], "kpc"),
             theta=Quantity([0, 36, 142, 180], "deg"),
             phi=Quantity([0, 65, 135, 270], "deg"),
@@ -426,18 +426,18 @@ class TestSphericalVector(AbstractPosition3DTest):
         assert np.allclose(convert(cyl.phi, APYQuantity), apycyl.phi)
 
     def test_spherical_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalVector)``."""
+        """Test ``coordinax.represent_as(SphericalPosition)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.SphericalVector)
+        newvec = vector.represent_as(cx.SphericalPosition)
         assert newvec == vector
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.SphericalVector)
+        newvec = cx.represent_as(vector, cx.SphericalPosition)
         assert newvec is vector
 
     def test_spherical_to_spherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        sph = vector.represent_as(cx.SphericalVector)
+        sph = vector.represent_as(cx.SphericalPosition)
 
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
         assert np.allclose(convert(sph.r, APYQuantity), apysph.r)
@@ -445,26 +445,26 @@ class TestSphericalVector(AbstractPosition3DTest):
         assert np.allclose(convert(sph.phi, APYQuantity), apysph.phi)
 
     def test_spherical_to_mathspherical(self, vector):
-        """Test ``coordinax.represent_as(MathSphericalVector)``."""
-        newvec = cx.represent_as(vector, cx.MathSphericalVector)
+        """Test ``coordinax.represent_as(MathSphericalPosition)``."""
+        newvec = cx.represent_as(vector, cx.MathSphericalPosition)
         assert qnp.array_equal(newvec.r, vector.r)
         assert qnp.array_equal(newvec.theta, vector.phi)
         assert qnp.array_equal(newvec.phi, vector.theta)
 
     def test_spherical_to_lonlatspherical(self, vector):
-        """Test ``coordinax.represent_as(LonLatSphericalVector)``."""
+        """Test ``coordinax.represent_as(LonLatSphericalPosition)``."""
         llsph = vector.represent_as(
-            cx.LonLatSphericalVector, z=Quantity([9, 10, 11, 12], "m")
+            cx.LonLatSphericalPosition, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(llsph, cx.LonLatSphericalVector)
+        assert isinstance(llsph, cx.LonLatSphericalPosition)
         assert qnp.array_equal(llsph.lon, vector.phi)
         assert qnp.array_equal(llsph.lat, Quantity(90, "deg") - vector.theta)
         assert qnp.array_equal(llsph.distance, vector.r)
 
     def test_spherical_to_lonlatspherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        llsph = vector.represent_as(cx.LonLatSphericalVector)
+        llsph = vector.represent_as(cx.LonLatSphericalPosition)
 
         apycart3 = apyvector.represent_as(apyc.SphericalRepresentation)
         assert np.allclose(convert(llsph.distance, APYQuantity), apycart3.distance)
@@ -578,10 +578,10 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
         assert np.allclose(convert(cart3.d_z, APYQuantity), apycart3.d_z)
 
     def test_cartesian3d_to_spherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(SphericalDifferential)``."""
-        spherical = difntl.represent_as(cx.SphericalDifferential, vector)
+        """Test ``coordinax.represent_as(SphericalVelocity)``."""
+        spherical = difntl.represent_as(cx.SphericalVelocity, vector)
 
-        assert isinstance(spherical, cx.SphericalDifferential)
+        assert isinstance(spherical, cx.SphericalVelocity)
         assert qnp.allclose(
             spherical.d_r,
             Quantity([16.1445, 17.917269, 19.657543, 21.380898], "km/s"),
@@ -606,9 +606,9 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        sph = difntl.represent_as(cx.SphericalDifferential, vector)
+        sph = difntl.represent_as(cx.SphericalVelocity, vector)
 
-        apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
+        apysph = apydifntl.represent_as(apyc.PhysicsSphericalVelocity, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta, atol=1e-9)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi, atol=1e-7)
@@ -737,10 +737,10 @@ class TestCylindricalVelocity(AbstractVelocity3DTest):
         assert np.allclose(convert(cart3d.d_z, APYQuantity), apycart3.d_z)
 
     def test_cylindrical_to_spherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(SphericalDifferential)``."""
-        dsph = difntl.represent_as(cx.SphericalDifferential, vector)
+        """Test ``coordinax.represent_as(SphericalVelocity)``."""
+        dsph = difntl.represent_as(cx.SphericalVelocity, vector)
 
-        assert isinstance(dsph, cx.SphericalDifferential)
+        assert isinstance(dsph, cx.SphericalVelocity)
         assert qnp.array_equal(
             dsph.d_r,
             Quantity([13.472646, 14.904826, 16.313278, 17.708754], "km/s"),
@@ -761,8 +761,8 @@ class TestCylindricalVelocity(AbstractVelocity3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        sph = difntl.represent_as(cx.SphericalDifferential, vector)
-        apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
+        sph = difntl.represent_as(cx.SphericalVelocity, vector)
+        apysph = apydifntl.represent_as(apyc.PhysicsSphericalVelocity, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
@@ -786,37 +786,35 @@ class TestCylindricalVelocity(AbstractVelocity3DTest):
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
 
 
-class TestSphericalDifferential(AbstractVelocity3DTest):
-    """Test :class:`coordinax.SphericalDifferential`."""
+class TestSphericalVelocity(AbstractVelocity3DTest):
+    """Test :class:`coordinax.SphericalVelocity`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.SphericalDifferential:
+    def difntl(self) -> cx.SphericalVelocity:
         """Return a differential."""
-        return cx.SphericalDifferential(
+        return cx.SphericalVelocity(
             d_r=Quantity([5, 6, 7, 8], "km/s"),
             d_theta=Quantity([13, 14, 15, 16], "mas/yr"),
             d_phi=Quantity([9, 10, 11, 12], "mas/yr"),
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.SphericalVector:
+    def vector(self) -> cx.SphericalPosition:
         """Return a vector."""
-        return cx.SphericalVector(
+        return cx.SphericalPosition(
             r=Quantity([1, 2, 3, 4], "kpc"),
             theta=Quantity([3, 63, 90, 179.5], "deg"),
             phi=Quantity([0, 42, 160, 270], "deg"),
         )
 
     @pytest.fixture(scope="class")
-    def apydifntl(
-        self, difntl: cx.SphericalDifferential
-    ) -> apyc.PhysicsSphericalDifferential:
+    def apydifntl(self, difntl: cx.SphericalVelocity) -> apyc.PhysicsSphericalVelocity:
         """Return an Astropy differential."""
-        return convert(difntl, apyc.PhysicsSphericalDifferential)
+        return convert(difntl, apyc.PhysicsSphericalVelocity)
 
     @pytest.fixture(scope="class")
     def apyvector(
-        self, vector: cx.SphericalVector
+        self, vector: cx.SphericalPosition
     ) -> apyc.PhysicsSphericalRepresentation:
         """Return an Astropy vector."""
         return convert(vector, apyc.PhysicsSphericalRepresentation)
@@ -925,28 +923,28 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
 
     def test_spherical_to_spherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(SphericalDifferential)``."""
+        """Test ``coordinax.represent_as(SphericalVelocity)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.SphericalDifferential, vector)
+        newvec = difntl.represent_as(cx.SphericalVelocity, vector)
         assert newvec == difntl
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.SphericalDifferential, vector)
+        newvec = cx.represent_as(difntl, cx.SphericalVelocity, vector)
         assert newvec is difntl
 
     def test_spherical_to_spherical_astropy(self, difntl, vector, apydifntl, apyvector):
         """Test Astropy equivalence."""
-        sph = difntl.represent_as(cx.SphericalDifferential, vector)
-        apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
+        sph = difntl.represent_as(cx.SphericalVelocity, vector)
+        apysph = apydifntl.represent_as(apyc.PhysicsSphericalVelocity, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
 
     def test_spherical_to_lonlatspherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(LonLatSphericalDifferential)``."""
-        llsph = difntl.represent_as(cx.LonLatSphericalDifferential, vector)
+        """Test ``coordinax.represent_as(LonLatSphericalVelocity)``."""
+        llsph = difntl.represent_as(cx.LonLatSphericalVelocity, vector)
 
-        assert isinstance(llsph, cx.LonLatSphericalDifferential)
+        assert isinstance(llsph, cx.LonLatSphericalVelocity)
         assert qnp.array_equal(llsph.d_distance, difntl.d_r)
         assert qnp.array_equal(llsph.d_lon, difntl.d_phi)
         assert qnp.allclose(
@@ -959,18 +957,18 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cart3d = difntl.represent_as(cx.LonLatSphericalDifferential, vector)
+        cart3d = difntl.represent_as(cx.LonLatSphericalVelocity, vector)
 
-        apycart3 = apydifntl.represent_as(apyc.SphericalDifferential, apyvector)
+        apycart3 = apydifntl.represent_as(apyc.SphericalVelocity, apyvector)
         assert np.allclose(convert(cart3d.d_distance, APYQuantity), apycart3.d_distance)
         assert np.allclose(convert(cart3d.d_lon, APYQuantity), apycart3.d_lon)
         assert np.allclose(convert(cart3d.d_lat, APYQuantity), apycart3.d_lat)
 
     def test_spherical_to_mathspherical(self, difntl, vector):
         """Test ``coordinax.represent_as(MathSpherical)``."""
-        llsph = difntl.represent_as(cx.MathSphericalDifferential, vector)
+        llsph = difntl.represent_as(cx.MathSphericalVelocity, vector)
 
-        assert isinstance(llsph, cx.MathSphericalDifferential)
+        assert isinstance(llsph, cx.MathSphericalVelocity)
         assert qnp.array_equal(llsph.d_r, difntl.d_r)
         assert qnp.array_equal(llsph.d_phi, difntl.d_theta)
         assert qnp.array_equal(llsph.d_theta, difntl.d_phi)

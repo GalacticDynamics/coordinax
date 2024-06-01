@@ -84,7 +84,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> op = cx.operators.GalileanOperator(
     ...     translation=cx.operators.GalileanTranslationOperator(
     ...         cx.FourVector(t=Quantity(2.5, "Gyr"),
-    ...                    q=cx.SphericalVector(r=Quantity(1, "kpc"),
+    ...                    q=cx.SphericalPosition(r=Quantity(1, "kpc"),
     ...                                         theta=Quantity(90, "deg"),
     ...                                         phi=Quantity(0, "rad") ) ) ),
     ...     velocity=cx.operators.GalileanBoostOperator(
@@ -98,7 +98,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       translation=GalileanTranslationOperator(
         translation=FourVector(
           t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
-          q=SphericalVector( ... )
+          q=SphericalPosition( ... )
         )
       ),
       velocity=GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )

@@ -13,7 +13,7 @@ from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
-from coordinax._d3.sphere import MathSphericalVector, SphericalVector
+from coordinax._d3.sphere import MathSphericalPosition, SphericalPosition
 from coordinax._exceptions import IrreversibleDimensionChange
 
 # =============================================================================
@@ -258,7 +258,7 @@ def represent_as(
 
 
 # =============================================================================
-# SphericalVector
+# SphericalPosition
 
 
 # -----------------------------------------------
@@ -267,9 +267,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[CartesianPosition1D], /, **kwargs: Any
+    current: SphericalPosition, target: type[CartesianPosition1D], /, **kwargs: Any
 ) -> CartesianPosition1D:
-    """SphericalVector -> CartesianPosition1D.
+    """SphericalPosition -> CartesianPosition1D.
 
     Examples
     --------
@@ -277,7 +277,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
@@ -293,9 +293,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[RadialPosition], /, **kwargs: Any
+    current: SphericalPosition, target: type[RadialPosition], /, **kwargs: Any
 ) -> RadialPosition:
-    """SphericalVector -> RadialPosition.
+    """SphericalPosition -> RadialPosition.
 
     Examples
     --------
@@ -303,7 +303,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
@@ -323,9 +323,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[CartesianPosition2D], /, **kwargs: Any
+    current: SphericalPosition, target: type[CartesianPosition2D], /, **kwargs: Any
 ) -> CartesianPosition2D:
-    """SphericalVector -> CartesianPosition2D.
+    """SphericalPosition -> CartesianPosition2D.
 
     Examples
     --------
@@ -333,7 +333,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
@@ -352,9 +352,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[PolarPosition], /, **kwargs: Any
+    current: SphericalPosition, target: type[PolarPosition], /, **kwargs: Any
 ) -> PolarPosition:
-    """SphericalVector -> PolarPosition.
+    """SphericalPosition -> PolarPosition.
 
     Examples
     --------
@@ -362,7 +362,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalVector(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
@@ -378,7 +378,7 @@ def represent_as(
 
 
 # =============================================================================
-# MathSphericalVector
+# MathSphericalPosition
 
 
 # -----------------------------------------------
@@ -387,9 +387,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[CartesianPosition1D], /, **kwargs: Any
+    current: MathSphericalPosition, target: type[CartesianPosition1D], /, **kwargs: Any
 ) -> CartesianPosition1D:
-    """MathSphericalVector -> CartesianPosition1D.
+    """MathSphericalPosition -> CartesianPosition1D.
 
     Examples
     --------
@@ -397,7 +397,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalVector(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
@@ -413,9 +413,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[RadialPosition], /, **kwargs: Any
+    current: MathSphericalPosition, target: type[RadialPosition], /, **kwargs: Any
 ) -> RadialPosition:
-    """MathSphericalVector -> RadialPosition.
+    """MathSphericalPosition -> RadialPosition.
 
     Examples
     --------
@@ -423,7 +423,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalVector(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
@@ -443,9 +443,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[CartesianPosition2D], /, **kwargs: Any
+    current: MathSphericalPosition, target: type[CartesianPosition2D], /, **kwargs: Any
 ) -> CartesianPosition2D:
-    """MathSphericalVector -> CartesianPosition2D.
+    """MathSphericalPosition -> CartesianPosition2D.
 
     Examples
     --------
@@ -453,7 +453,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalVector(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
@@ -472,9 +472,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[PolarPosition], /, **kwargs: Any
+    current: MathSphericalPosition, target: type[PolarPosition], /, **kwargs: Any
 ) -> PolarPosition:
-    """MathSphericalVector -> PolarPosition.
+    """MathSphericalPosition -> PolarPosition.
 
     Examples
     --------
@@ -482,7 +482,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalVector(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():

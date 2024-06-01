@@ -95,13 +95,13 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     :meth:`vector.CartesianPosition3D.constructor`. We can also construct it
     directly, which allows for other vector types.
 
-    >>> from coordinax import SphericalVector
-    >>> shift = SphericalVector(r=Quantity(1.0, "kpc"),
+    >>> from coordinax import SphericalPosition
+    >>> shift = SphericalPosition(r=Quantity(1.0, "kpc"),
     ...                         theta=Quantity(xp.pi/2, "rad"),
     ...                         phi=Quantity(0, "rad"))
     >>> op = cx.operators.GalileanSpatialTranslationOperator(shift)
     >>> op
-    GalileanSpatialTranslationOperator( translation=SphericalVector( ... ) )
+    GalileanSpatialTranslationOperator( translation=SphericalPosition( ... ) )
 
     Translation operators can be applied to :class:`vector.AbstractPosition`:
 
@@ -151,9 +151,9 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.CartesianPosition3D.constructor(q).represent_as(cx.SphericalVector)
+    >>> vec = cx.CartesianPosition3D.constructor(q).represent_as(cx.SphericalPosition)
     >>> op(vec)
-    SphericalVector( r=Distance(value=f32[], unit=Unit("kpc")),
+    SphericalPosition( r=Distance(value=f32[], unit=Unit("kpc")),
                      theta=Quantity[...](value=f32[], unit=Unit("rad")),
                      phi=Quantity[...](value=f32[], unit=Unit("rad")) )
 
@@ -342,15 +342,16 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
     constructed from a 1D array, using :meth:`vector.FourVector.constructor`. We
     can also construct it directly, which allows for other vector types.
 
-    >>> from coordinax import SphericalVector
-    >>> qshift = SphericalVector(r=Quantity(1.0, "kpc"), theta=Quantity(xp.pi/2, "rad"),
-    ...                          phi=Quantity(0, "rad"))
+    >>> from coordinax import SphericalPosition
+    >>> qshift = SphericalPosition(r=Quantity(1.0, "kpc"),
+    ...                            theta=Quantity(xp.pi/2, "rad"),
+    ...                            phi=Quantity(0, "rad"))
     >>> op = GalileanTranslationOperator(FourVector(t=Quantity(1.0, "Gyr"), q=qshift))
     >>> op
     GalileanTranslationOperator(
       translation=FourVector(
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
-        q=SphericalVector( ... ) )
+        q=SphericalPosition( ... ) )
     )
 
     Translation operators can be applied to :class:`vector.FourVector`:

@@ -66,7 +66,7 @@ class IdentityOperator(AbstractOperator):
     - 3D (not using a `~coordinax.CartesianPosition3D` instance):
 
     >>> q = Quantity([1, 2, 3], "kpc")
-    >>> vec = cx.CartesianPosition3D.constructor(q).represent_as(cx.SphericalVector)
+    >>> vec = cx.CartesianPosition3D.constructor(q).represent_as(cx.SphericalPosition)
     >>> op(vec) is vec and op(q) is q
     True
 

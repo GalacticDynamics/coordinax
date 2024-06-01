@@ -16,14 +16,14 @@ from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
-from coordinax._d3.sphere import MathSphericalVector, SphericalVector
+from coordinax._d3.sphere import MathSphericalPosition, SphericalPosition
 from coordinax._exceptions import IrreversibleDimensionChange
 
 
 @dispatch.multi(
     (CartesianPosition2D, type[CylindricalPosition]),
-    (CartesianPosition2D, type[SphericalVector]),
-    (CartesianPosition2D, type[MathSphericalVector]),
+    (CartesianPosition2D, type[SphericalPosition]),
+    (CartesianPosition2D, type[MathSphericalPosition]),
 )
 def represent_as(
     current: AbstractPosition2D,
@@ -52,17 +52,17 @@ def represent_as(
     >>> x2.z
     Quantity['length'](Array(14., dtype=float32), unit='km')
 
-    >>> x3 = cx.represent_as(x, cx.SphericalVector, z=Quantity(14, "km"))
+    >>> x3 = cx.represent_as(x, cx.SphericalPosition, z=Quantity(14, "km"))
     >>> x3
-    SphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    SphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                      theta=Quantity[...](value=f32[], unit=Unit("rad")),
                      phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x3.r
     Distance(Array(14.177447, dtype=float32), unit='km')
 
-    >>> x3 = cx.represent_as(x, cx.MathSphericalVector, z=Quantity(14, "km"))
+    >>> x3 = cx.represent_as(x, cx.MathSphericalPosition, z=Quantity(14, "km"))
     >>> x3
-    MathSphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    MathSphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                          theta=Quantity[...](value=f32[], unit=Unit("rad")),
                          phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x3.r
@@ -280,12 +280,12 @@ def represent_as(
 @dispatch
 def represent_as(
     current: PolarPosition,
-    target: type[SphericalVector],
+    target: type[SphericalPosition],
     /,
     theta: Quantity["angle"] = Quantity(0.0, u.radian),  # type: ignore[name-defined]
     **kwargs: Any,
-) -> SphericalVector:
-    """PolarPosition -> SphericalVector.
+) -> SphericalPosition:
+    """PolarPosition -> SphericalPosition.
 
     Examples
     --------
@@ -294,9 +294,9 @@ def represent_as(
 
     >>> x = cx.PolarPosition(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"))
 
-    >>> x2 = cx.represent_as(x, cx.SphericalVector, theta=Quantity(14, "deg"))
+    >>> x2 = cx.represent_as(x, cx.SphericalPosition, theta=Quantity(14, "deg"))
     >>> x2
-    SphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    SphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                      theta=Quantity[...](value=f32[], unit=Unit("deg")),
                      phi=Quantity[...](value=f32[], unit=Unit("deg")) )
     >>> x2.theta
@@ -309,12 +309,12 @@ def represent_as(
 @dispatch
 def represent_as(
     current: PolarPosition,
-    target: type[MathSphericalVector],
+    target: type[MathSphericalPosition],
     /,
     phi: Quantity["angle"] = Quantity(0.0, u.radian),  # type: ignore[name-defined]
     **kwargs: Any,
-) -> MathSphericalVector:
-    """PolarPosition -> MathSphericalVector.
+) -> MathSphericalPosition:
+    """PolarPosition -> MathSphericalPosition.
 
     Examples
     --------
@@ -323,9 +323,9 @@ def represent_as(
 
     >>> x = cx.PolarPosition(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"))
 
-    >>> x2 = cx.represent_as(x, cx.MathSphericalVector, phi=Quantity(14, "deg"))
+    >>> x2 = cx.represent_as(x, cx.MathSphericalPosition, phi=Quantity(14, "deg"))
     >>> x2
-    MathSphericalVector( r=Distance(value=f32[], unit=Unit("km")),
+    MathSphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                          theta=Quantity[...](value=f32[], unit=Unit("deg")),
                          phi=Quantity[...](value=f32[], unit=Unit("deg")) )
     >>> x2.phi

@@ -49,13 +49,13 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialPosition, SphericalVector
+        >>> from coordinax import RadialPosition, SphericalPosition
 
         >>> RadialPosition.differential_cls.__name__
         'RadialVelocity'
 
-        >>> SphericalVector.differential_cls.__name__
-        'SphericalDifferential'
+        >>> SphericalPosition.differential_cls.__name__
+        'SphericalVelocity'
 
         """
         raise NotImplementedError
@@ -163,15 +163,15 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, SphericalVector
+        >>> from coordinax import CartesianPosition3D, SphericalPosition
 
         We can represent a vector as another type:
 
         >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
         >>> vec = CartesianPosition3D(x=x, y=y, z=z)
-        >>> sph = vec.represent_as(SphericalVector)
+        >>> sph = vec.represent_as(SphericalPosition)
         >>> sph
-        SphericalVector(
+        SphericalPosition(
             r=Distance(value=f32[], unit=Unit("m")),
             theta=Quantity[...](value=f32[], unit=Unit("rad")),
             phi=Quantity[...](value=f32[], unit=Unit("rad")) )
