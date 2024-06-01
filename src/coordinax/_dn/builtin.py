@@ -20,7 +20,7 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import AbstractNDVector, AbstractNDVectorDifferential
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._utils import classproperty
 
 ##############################################################################
@@ -132,7 +132,7 @@ class CartesianNDVector(AbstractNDVector):
         Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot add {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 
@@ -155,7 +155,7 @@ class CartesianNDVector(AbstractNDVector):
         Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot subtract {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 

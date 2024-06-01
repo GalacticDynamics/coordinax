@@ -9,7 +9,7 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 
 
 @final
@@ -133,7 +133,7 @@ class IdentityOperator(AbstractOperator):
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
     @op_call_dispatch(precedence=1)
-    def __call__(self: "IdentityOperator", x: AbstractVector, /) -> AbstractVector:
+    def __call__(self: "IdentityOperator", x: AbstractPosition, /) -> AbstractPosition:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.
@@ -175,8 +175,8 @@ class IdentityOperator(AbstractOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "IdentityOperator", x: AbstractVector, t: Quantity["time"], /
-    ) -> tuple[AbstractVector, Quantity["time"]]:
+        self: "IdentityOperator", x: AbstractPosition, t: Quantity["time"], /
+    ) -> tuple[AbstractPosition, Quantity["time"]]:
         """Apply the Identity operation."""  # TODO: docstring
         return x, t
 

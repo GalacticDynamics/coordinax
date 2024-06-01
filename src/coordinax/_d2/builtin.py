@@ -21,7 +21,7 @@ from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
 from .base import Abstract2DVector, Abstract2DVectorDifferential
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._converters import converter_azimuth_to_range
 from coordinax._utils import classproperty
@@ -84,7 +84,7 @@ class Cartesian2DVector(Abstract2DVector):
         Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot add {Cartesian2DVector!r} and {type(other)!r}."
             raise TypeError(msg)
 
@@ -105,7 +105,7 @@ class Cartesian2DVector(Abstract2DVector):
         Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot subtract {Cartesian2DVector!r} and {type(other)!r}."
             raise TypeError(msg)
 

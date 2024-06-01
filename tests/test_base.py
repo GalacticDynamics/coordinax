@@ -20,7 +20,7 @@ from coordinax import (
     Abstract2DVectorDifferential,
     Abstract3DVector,
     Abstract3DVectorDifferential,
-    AbstractVector,
+    AbstractPosition,
     AbstractVectorDifferential,
     Cartesian1DVector,
     Cartesian2DVector,
@@ -70,7 +70,7 @@ BUILTIN_DIFFERENTIALS = [
 
 
 def context_dimension_reduction(
-    vector: AbstractVector, target: type[AbstractVector]
+    vector: AbstractPosition, target: type[AbstractPosition]
 ) -> AbstractContextManager[Any]:
     """Return a context manager that checks for dimensionality reduction."""
     context: AbstractContextManager[Any]
@@ -93,7 +93,7 @@ class AbstractVectorBaseTest:
     # Array
 
     def test_shape(self, vector):
-        """Test :meth:`AbstractVector.shape`."""
+        """Test :meth:`AbstractVectorBase.shape`."""
         shape = vector.shape
         assert isinstance(shape, tuple)
         assert all(isinstance(s, int) for s in shape)
@@ -102,7 +102,7 @@ class AbstractVectorBaseTest:
         )
 
     def test_flatten(self, vector):
-        """Test :meth:`AbstractVector.flatten`."""
+        """Test :meth:`AbstractVectorBase.flatten`."""
         # Test input vector
         flat = vector.flatten()
         assert isinstance(flat, type(vector))
@@ -125,7 +125,7 @@ class AbstractVectorBaseTest:
         )
 
     def test_reshape(self, vector):
-        """Test :meth:`AbstractVector.reshape`."""
+        """Test :meth:`AbstractVectorBase.reshape`."""
         # Test input vector
         reshaped = vector.reshape(2, -1)
         assert isinstance(reshaped, type(vector))
@@ -152,7 +152,7 @@ class AbstractVectorBaseTest:
     # Collection
 
     def test_asdict(self, vector):
-        """Test :meth:`AbstractVector.asdict`."""
+        """Test :meth:`AbstractVectorBase.asdict`."""
         # Simple test
         adict = vector.asdict()
         assert isinstance(adict, dict)
@@ -167,7 +167,7 @@ class AbstractVectorBaseTest:
         assert all(qnp.array_equal(v, getattr(vector, k)) for k, v in adict.items())
 
     def test_components(self, vector):
-        """Test :meth:`AbstractVector.components`."""
+        """Test :meth:`AbstractVectorBase.components`."""
         # Simple test
         components = vector.components
         assert isinstance(components, tuple)
@@ -175,7 +175,7 @@ class AbstractVectorBaseTest:
         assert all(hasattr(vector, c) for c in components)
 
     def test_shapes(self, vector):
-        """Test :meth:`AbstractVector.shapes`."""
+        """Test :meth:`AbstractVectorBase.shapes`."""
         # Simple test
         shapes = vector.shapes
         assert isinstance(shapes, MappingProxyType)
@@ -183,17 +183,17 @@ class AbstractVectorBaseTest:
         assert all(v == getattr(vector, k).shape for k, v in shapes.items())
 
 
-class AbstractVectorTest(AbstractVectorBaseTest):
-    """Test :class:`coordinax.AbstractVector`."""
+class AbstractPositionTest(AbstractVectorBaseTest):
+    """Test :class:`coordinax.AbstractPosition`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractVector:  # noqa: PT004
+    def vector(self) -> AbstractPosition:  # noqa: PT004
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.mark.parametrize("target", BUILTIN_VECTORS)
     def test_represent_as(self, vector, target):
-        """Test :meth:`AbstractVector.represent_as`.
+        """Test :meth:`AbstractPosition.represent_as`.
 
         This just tests that the machiner works.
         """
@@ -210,7 +210,7 @@ class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
     """Test :class:`coordinax.AbstractVectorDifferential`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractVector:  # noqa: PT004
+    def vector(self) -> AbstractPosition:  # noqa: PT004
         """Return a vector."""
         raise NotImplementedError
 
@@ -222,7 +222,7 @@ class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
     @pytest.mark.parametrize("target", BUILTIN_DIFFERENTIALS)
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_represent_as(self, difntl, target, vector):
-        """Test :meth:`AbstractVector.represent_as`.
+        """Test :meth:`AbstractPosition.represent_as`.
 
         This just tests that the machiner works.
         """

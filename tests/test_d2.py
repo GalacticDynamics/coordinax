@@ -7,10 +7,10 @@ import quaxed.numpy as qnp
 from unxt import Quantity
 
 import coordinax as cx
-from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest
+from .test_base import AbstractPositionTest, AbstractVectorDifferentialTest
 
 
-class Abstract2DVectorTest(AbstractVectorTest):
+class Abstract2DVectorTest(AbstractPositionTest):
     """Test :class:`coordinax.Abstract2DVector`."""
 
 
@@ -117,7 +117,7 @@ class TestPolarVector:
     """Test :class:`coordinax.PolarVector`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractVector:
+    def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
         return cx.PolarVector(
             r=Quantity([1, 2, 3, 4], "kpc"), phi=Quantity([0, 1, 2, 3], "rad")

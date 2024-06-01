@@ -11,7 +11,7 @@ import quaxed.lax as qlax
 import quaxed.numpy as qnp
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._utils import classproperty
 
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class AbstractNDVector(AbstractVector):
+class AbstractNDVector(AbstractPosition):
     """Abstract representation of N-D coordinates in different systems."""
 
     @classproperty

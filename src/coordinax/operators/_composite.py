@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._utils import DataclassInstance
 
 if TYPE_CHECKING:
@@ -43,8 +43,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "AbstractCompositeOperator", x: AbstractVector, /
-    ) -> AbstractVector:
+        self: "AbstractCompositeOperator", x: AbstractPosition, /
+    ) -> AbstractPosition:
         """Apply the operator to the coordinates.
 
         This is the default implementation, which applies the operators in
@@ -57,8 +57,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "AbstractCompositeOperator", x: AbstractVector, t: Quantity["time"], /
-    ) -> tuple[AbstractVector, Quantity["time"]]:
+        self: "AbstractCompositeOperator", x: AbstractPosition, t: Quantity["time"], /
+    ) -> tuple[AbstractPosition, Quantity["time"]]:
         """Apply the operator to the coordinates."""
         # TODO: with lax.scan?
         for op in self.operators:

@@ -13,7 +13,7 @@ from .builtin import (
     RadialDifferential,
     RadialVector,
 )
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 
 ###############################################################################
 # 1D
@@ -48,13 +48,13 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianDifferential1D, type[CartesianDifferential1D], AbstractVector),
-    (RadialDifferential, type[RadialDifferential], AbstractVector),
+    (CartesianDifferential1D, type[CartesianDifferential1D], AbstractPosition),
+    (RadialDifferential, type[RadialDifferential], AbstractPosition),
 )
 def represent_as(
     current: Abstract1DVectorDifferential,
     target: type[Abstract1DVectorDifferential],
-    position: AbstractVector,
+    position: AbstractPosition,
     /,
     **kwargs: Any,
 ) -> Abstract1DVectorDifferential:

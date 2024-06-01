@@ -26,7 +26,7 @@ from .sphere import (
     SphericalDifferential,
     SphericalVector,
 )
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 
 ###############################################################################
 # 3D
@@ -96,21 +96,21 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianDifferential3D, type[CartesianDifferential3D], AbstractVector),
-    (CylindricalDifferential, type[CylindricalDifferential], AbstractVector),
-    (SphericalDifferential, type[SphericalDifferential], AbstractVector),
-    (LonLatSphericalDifferential, type[LonLatSphericalDifferential], AbstractVector),
+    (CartesianDifferential3D, type[CartesianDifferential3D], AbstractPosition),
+    (CylindricalDifferential, type[CylindricalDifferential], AbstractPosition),
+    (SphericalDifferential, type[SphericalDifferential], AbstractPosition),
+    (LonLatSphericalDifferential, type[LonLatSphericalDifferential], AbstractPosition),
     (
         LonCosLatSphericalDifferential,
         type[LonCosLatSphericalDifferential],
-        AbstractVector,
+        AbstractPosition,
     ),
-    (MathSphericalDifferential, type[MathSphericalDifferential], AbstractVector),
+    (MathSphericalDifferential, type[MathSphericalDifferential], AbstractPosition),
 )
 def represent_as(
     current: Abstract3DVectorDifferential,
     target: type[Abstract3DVectorDifferential],
-    position: AbstractVector,
+    position: AbstractPosition,
     /,
     **kwargs: Any,
 ) -> Abstract3DVectorDifferential:
@@ -577,7 +577,7 @@ def represent_as(
 def represent_as(
     current: Abstract3DVectorDifferential,
     target: type[LonCosLatSphericalDifferential],
-    position: AbstractVector | Quantity["length"],
+    position: AbstractPosition | Quantity["length"],
     /,
     **kwargs: Any,
 ) -> LonCosLatSphericalDifferential:
@@ -606,8 +606,8 @@ def represent_as(
     Quantity['angular frequency'](Array(6.9999995, dtype=float32), unit='mas / yr')
 
     """
-    # Parse the position to an AbstractVector
-    if isinstance(position, AbstractVector):
+    # Parse the position to an AbstractPosition
+    if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
         posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
@@ -632,13 +632,13 @@ def represent_as(
 def represent_as(
     current: LonCosLatSphericalDifferential,
     target: type[LonLatSphericalDifferential],
-    position: AbstractVector | Quantity["length"],
+    position: AbstractPosition | Quantity["length"],
     /,
     **kwargs: Any,
 ) -> LonLatSphericalDifferential:
     """LonCosLatSphericalDifferential -> LonLatSphericalDifferential."""
-    # Parse the position to an AbstractVector
-    if isinstance(position, AbstractVector):
+    # Parse the position to an AbstractPosition
+    if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
         posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
@@ -660,13 +660,13 @@ def represent_as(
 def represent_as(
     current: LonCosLatSphericalDifferential,
     target: type[Abstract3DVectorDifferential],
-    position: AbstractVector | Quantity["length"],
+    position: AbstractPosition | Quantity["length"],
     /,
     **kwargs: Any,
 ) -> Abstract3DVectorDifferential:
     """LonCosLatSphericalDifferential -> Abstract3DVectorDifferential."""
-    # Parse the position to an AbstractVector
-    if isinstance(position, AbstractVector):
+    # Parse the position to an AbstractPosition
+    if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
         posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001

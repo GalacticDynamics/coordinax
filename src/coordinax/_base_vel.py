@@ -14,7 +14,7 @@ from plum import dispatch
 from unxt import Quantity
 
 from ._base import AbstractVectorBase
-from ._base_pos import AbstractVector
+from ._base_pos import AbstractPosition
 from ._utils import classproperty, dataclass_items
 
 if TYPE_CHECKING:
@@ -38,7 +38,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type["AbstractVector"]:
+    def integral_cls(cls) -> type["AbstractPosition"]:
         """Return the corresponding vector class.
 
         Examples
@@ -85,7 +85,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
     @dispatch  # type: ignore[misc]
     def __mul__(
         self: "AbstractVectorDifferential", other: Quantity
-    ) -> "AbstractVector":
+    ) -> "AbstractPosition":
         """Multiply the vector by a :class:`unxt.Quantity`.
 
         Examples
@@ -110,7 +110,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
 
     @partial(jax.jit, static_argnums=1)
     def represent_as(
-        self, target: type[DT], position: AbstractVector, /, *args: Any, **kwargs: Any
+        self, target: type[DT], position: AbstractPosition, /, *args: Any, **kwargs: Any
     ) -> DT:
         """Represent the vector as another type."""
         if any(args):
@@ -121,7 +121,7 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
         return represent_as(self, target, position, **kwargs)
 
     @partial(jax.jit)
-    def norm(self, position: AbstractVector, /) -> Quantity["speed"]:
+    def norm(self, position: AbstractPosition, /) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, position).norm()
 

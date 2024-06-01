@@ -12,7 +12,7 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import AbstractDistance, Quantity
 
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._d1.base import Abstract1DVectorDifferential
 from coordinax._d2.base import Abstract2DVectorDifferential
@@ -26,23 +26,23 @@ from coordinax._utils import dataclass_items
     (
         Abstract1DVectorDifferential,
         type[Abstract1DVectorDifferential],  # type: ignore[misc]
-        AbstractVector | Quantity["length"],
+        AbstractPosition | Quantity["length"],
     ),
     (
         Abstract2DVectorDifferential,
         type[Abstract2DVectorDifferential],  # type: ignore[misc]
-        AbstractVector | Quantity["length"],
+        AbstractPosition | Quantity["length"],
     ),
     (
         Abstract3DVectorDifferential,
         type[Abstract3DVectorDifferential],  # type: ignore[misc]
-        AbstractVector | Quantity["length"],
+        AbstractPosition | Quantity["length"],
     ),
 )
 def represent_as(
     current: AbstractVectorDifferential,
     target: type[AbstractVectorDifferential],
-    position: AbstractVector | Quantity["length"],
+    position: AbstractPosition | Quantity["length"],
     /,
     **kwargs: Any,
 ) -> AbstractVectorDifferential:
@@ -56,7 +56,7 @@ def represent_as(
         The vector differential to transform.
     target : type[AbstractVectorDifferential]
         The target type of the vector differential.
-    position : AbstractVector
+    position : AbstractPosition
         The position vector used to transform the differential.
     **kwargs : Any
         Additional keyword arguments.
@@ -110,8 +110,8 @@ def represent_as(
     shape = current.shape
     flat_shape = prod(shape)
 
-    # Parse the position to an AbstractVector
-    if isinstance(position, AbstractVector):
+    # Parse the position to an AbstractPosition
+    if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
         posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001

@@ -6,12 +6,12 @@ __all__ = ["Abstract2DVector", "Abstract2DVectorDifferential"]
 from abc import abstractmethod
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._utils import classproperty
 
 
-class Abstract2DVector(AbstractVector):
+class Abstract2DVector(AbstractPosition):
     """Abstract representation of 2D coordinates in different systems."""
 
     @classproperty

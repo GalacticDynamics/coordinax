@@ -7,14 +7,14 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class Abstract4DVector(AbstractVector):
+class Abstract4DVector(AbstractPosition):
     """Abstract representation of 4D coordinates in different systems."""
 
     @classproperty

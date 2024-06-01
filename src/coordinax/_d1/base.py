@@ -11,12 +11,12 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._utils import classproperty
 
 
-class Abstract1DVector(AbstractVector):
+class Abstract1DVector(AbstractPosition):
     """Abstract representation of 1D coordinates in different systems."""
 
     @classproperty
@@ -34,7 +34,7 @@ class Abstract1DVector(AbstractVector):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractPosition.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
     cls: "type[Abstract1DVector]", x: Shaped[Quantity["length"], ""], /
 ) -> "Abstract1DVector":

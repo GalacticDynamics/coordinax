@@ -15,7 +15,7 @@ from .builtin import (
     PolarDifferential,
     PolarVector,
 )
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 
 
 @dispatch
@@ -41,13 +41,13 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractVector),
-    (PolarDifferential, type[PolarDifferential], AbstractVector),
+    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractPosition),
+    (PolarDifferential, type[PolarDifferential], AbstractPosition),
 )
 def represent_as(
     current: Abstract2DVectorDifferential,
     target: type[Abstract2DVectorDifferential],
-    position: AbstractVector,
+    position: AbstractPosition,
     /,
     **kwargs: Any,
 ) -> Abstract2DVectorDifferential:

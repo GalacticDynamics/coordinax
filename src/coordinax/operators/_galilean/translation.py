@@ -15,7 +15,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._d1.builtin import Cartesian1DVector
 from coordinax._d2.builtin import Cartesian2DVector
 from coordinax._d3.base import Abstract3DVector
@@ -29,12 +29,12 @@ from coordinax.operators._identity import IdentityOperator
 # Spatial Translations
 
 
-def _converter_spatialtranslation(x: Any) -> AbstractVector:
+def _converter_spatialtranslation(x: Any) -> AbstractPosition:
     """Convert to a spatial translation vector."""
-    out: AbstractVector | None = None
+    out: AbstractPosition | None = None
     if isinstance(x, GalileanSpatialTranslationOperator):
         out = x.translation
-    elif isinstance(x, AbstractVector):
+    elif isinstance(x, AbstractPosition):
         out = x
     elif isinstance(x, Quantity):
         shape: tuple[int, ...] = x.shape
@@ -103,7 +103,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op
     GalileanSpatialTranslationOperator( translation=SphericalVector( ... ) )
 
-    Translation operators can be applied to :class:`vector.AbstractVector`:
+    Translation operators can be applied to :class:`vector.AbstractPosition`:
 
     >>> q = cx.Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
     >>> op(q)
@@ -166,7 +166,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     """
 
-    translation: AbstractVector = eqx.field(converter=_converter_spatialtranslation)
+    translation: AbstractPosition = eqx.field(converter=_converter_spatialtranslation)
     """The spatial translation.
 
     This parameters accepts either a :class:`vector.AbstracVector` instance or
@@ -223,8 +223,8 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanSpatialTranslationOperator", q: AbstractVector, /
-    ) -> AbstractVector:
+        self: "GalileanSpatialTranslationOperator", q: AbstractPosition, /
+    ) -> AbstractPosition:
         """Apply the translation to the coordinates.
 
         Examples
@@ -248,10 +248,10 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     @op_call_dispatch(precedence=1)
     def __call__(
         self: "GalileanSpatialTranslationOperator",
-        q: AbstractVector,
+        q: AbstractPosition,
         t: Quantity["time"],
         /,
-    ) -> tuple[AbstractVector, Quantity["time"]]:
+    ) -> tuple[AbstractPosition, Quantity["time"]]:
         """Apply the translation to the coordinates.
 
         Examples
@@ -280,7 +280,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     @op_call_dispatch(precedence=1)
     def __call__(
         self: "GalileanSpatialTranslationOperator", v4: FourVector, /
-    ) -> AbstractVector:
+    ) -> AbstractPosition:
         """Apply the translation to the coordinates."""  # TODO: docstring
         return replace(v4, q=v4.q + self.translation)
 

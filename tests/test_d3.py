@@ -12,17 +12,17 @@ import quaxed.numpy as qnp
 from unxt import Quantity
 
 import coordinax as cx
-from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest
+from .test_base import AbstractPositionTest, AbstractVectorDifferentialTest
 
 
-class Abstract3DVectorTest(AbstractVectorTest):
+class Abstract3DVectorTest(AbstractPositionTest):
     """Test :class:`coordinax.Abstract3DVector`."""
 
     # ==========================================================================
     # Unary operations
 
     def test_neg_compare_apy(
-        self, vector: cx.AbstractVector, apyvector: apyc.BaseRepresentation
+        self, vector: cx.AbstractPosition, apyvector: apyc.BaseRepresentation
     ):
         """Test negation."""
         # To take the negative, Vector converts to Cartesian coordinates, takes
@@ -59,7 +59,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
     """Test :class:`coordinax.Cartesian3DVector`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractVector:
+    def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
         return cx.Cartesian3DVector(
             x=Quantity([1, 2, 3, 4], "kpc"),
@@ -68,7 +68,7 @@ class TestCartesian3DVector(Abstract3DVectorTest):
         )
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.AbstractVector) -> apyc.CartesianRepresentation:
+    def apyvector(self, vector: cx.AbstractPosition) -> apyc.CartesianRepresentation:
         """Return an Astropy vector."""
         return convert(vector, apyc.CartesianRepresentation)
 
@@ -185,7 +185,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
     """Test :class:`coordinax.CylindricalVector`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractVector:
+    def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
         return cx.CylindricalVector(
             rho=Quantity([1, 2, 3, 4], "kpc"),
@@ -194,7 +194,7 @@ class TestCylindricalVector(Abstract3DVectorTest):
         )
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.AbstractVector):
+    def apyvector(self, vector: cx.AbstractPosition):
         """Return an Astropy vector."""
         return convert(vector, apyc.CylindricalRepresentation)
 
@@ -315,7 +315,7 @@ class TestSphericalVector(Abstract3DVectorTest):
         )
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.AbstractVector):
+    def apyvector(self, vector: cx.AbstractPosition):
         """Return an Astropy vector."""
         return convert(vector, apyc.PhysicsSphericalRepresentation)
 
@@ -479,7 +479,7 @@ class Abstract3DVectorDifferentialTest(AbstractVectorDifferentialTest):
     # Unary operations
 
     def test_neg_compare_apy(
-        self, difntl: cx.AbstractVector, apydifntl: apyc.BaseRepresentation
+        self, difntl: cx.AbstractVectorDifferential, apydifntl: apyc.BaseDifferential
     ):
         """Test negation."""
         assert all(representation_equal(convert(-difntl, type(apydifntl)), -apydifntl))

@@ -21,7 +21,7 @@ from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
 from .base import Abstract1DVector, Abstract1DVectorDifferential
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._checks import check_r_non_negative
 from coordinax._utils import classproperty
 
@@ -84,7 +84,7 @@ class Cartesian1DVector(Abstract1DVector):
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot add {Cartesian1DVector!r} and {type(other)!r}."
             raise TypeError(msg)
 
@@ -110,7 +110,7 @@ class Cartesian1DVector(Abstract1DVector):
         Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot subtract {Cartesian1DVector!r} and {type(other)!r}."
             raise TypeError(msg)
 

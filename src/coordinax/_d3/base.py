@@ -8,12 +8,12 @@ from abc import abstractmethod
 from typing_extensions import override
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_pos import AbstractVector
+from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._utils import classproperty
 
 
-class Abstract3DVector(AbstractVector):
+class Abstract3DVector(AbstractPosition):
     """Abstract representation of 3D coordinates in different systems."""
 
     @override
