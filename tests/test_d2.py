@@ -59,10 +59,10 @@ class TestCartesianPosition2D:
         assert newvec is vector
 
     def test_cartesian2d_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = vector.represent_as(cx.PolarVector)
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = vector.represent_as(cx.PolarPosition)
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.r, qnp.hypot(vector.x, vector.y))
         assert qnp.allclose(
             polar.phi,
@@ -113,13 +113,13 @@ class TestCartesianPosition2D:
         assert qnp.array_equal(cylindrical.z, Quantity([9, 10, 11, 12], "m"))
 
 
-class TestPolarVector:
-    """Test :class:`coordinax.PolarVector`."""
+class TestPolarPosition:
+    """Test :class:`coordinax.PolarPosition`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
-        return cx.PolarVector(
+        return cx.PolarPosition(
             r=Quantity([1, 2, 3, 4], "kpc"), phi=Quantity([0, 1, 2, 3], "rad")
         )
 
@@ -168,13 +168,13 @@ class TestPolarVector:
         )
 
     def test_polar_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
+        """Test ``coordinax.represent_as(PolarPosition)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.PolarVector)
+        newvec = vector.represent_as(cx.PolarPosition)
         assert newvec == vector
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.PolarVector)
+        newvec = cx.represent_as(vector, cx.PolarPosition)
         assert newvec is vector
 
     def test_polar_to_cartesian3d(self, vector):
@@ -271,10 +271,10 @@ class TestCartesianVelocity2D(AbstractVelocity2DTest):
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_polar(self, difntl, vector):
-        """Test ``difntl.represent_as(PolarDifferential, vector)``."""
-        polar = difntl.represent_as(cx.PolarDifferential, vector)
+        """Test ``difntl.represent_as(PolarVelocity, vector)``."""
+        polar = difntl.represent_as(cx.PolarVelocity, vector)
 
-        assert isinstance(polar, cx.PolarDifferential)
+        assert isinstance(polar, cx.PolarVelocity)
         assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(
             polar.d_phi,
@@ -321,21 +321,21 @@ class TestCartesianVelocity2D(AbstractVelocity2DTest):
         assert qnp.array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], "m/s"))
 
 
-class TestPolarDifferential(AbstractVelocity2DTest):
-    """Test :class:`coordinax.PolarDifferential`."""
+class TestPolarVelocity(AbstractVelocity2DTest):
+    """Test :class:`coordinax.PolarVelocity`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.PolarDifferential:
+    def difntl(self) -> cx.PolarVelocity:
         """Return a differential."""
-        return cx.PolarDifferential(
+        return cx.PolarVelocity(
             d_r=Quantity([1, 2, 3, 4], "km/s"),
             d_phi=Quantity([5, 6, 7, 8], "mas/yr"),
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.PolarVector:
+    def vector(self) -> cx.PolarPosition:
         """Return a vector."""
-        return cx.PolarVector(
+        return cx.PolarPosition(
             r=Quantity([1, 2, 3, 4], "kpc"), phi=Quantity([0, 1, 2, 3], "rad")
         )
 
@@ -376,13 +376,13 @@ class TestPolarDifferential(AbstractVelocity2DTest):
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_polar(self, difntl, vector):
-        """Test ``difntl.represent_as(PolarDifferential, vector)``."""
+        """Test ``difntl.represent_as(PolarVelocity, vector)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.PolarDifferential, vector)
+        newvec = difntl.represent_as(cx.PolarVelocity, vector)
         assert newvec == difntl
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.PolarDifferential, vector)
+        newvec = cx.represent_as(difntl, cx.PolarVelocity, vector)
         assert newvec is difntl
 
     @pytest.mark.xfail(reason="Not implemented")

@@ -10,7 +10,7 @@ from plum import dispatch
 from unxt import Quantity
 
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
-from coordinax._d2.builtin import CartesianPosition2D, PolarVector
+from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 
@@ -60,13 +60,13 @@ def represent_as(
 @dispatch
 def represent_as(
     current: CartesianPosition1D,
-    target: type[PolarVector],
+    target: type[PolarPosition],
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
-) -> PolarVector:
-    """CartesianPosition1D -> PolarVector.
+) -> PolarPosition:
+    """CartesianPosition1D -> PolarPosition.
 
     The `x` coordinate is converted to the radial coordinate `r`.
     The `phi` coordinate is a keyword argument and defaults to 0.
@@ -77,14 +77,14 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
-    >>> x2 = cx.represent_as(x, cx.PolarVector)
+    >>> x2 = cx.represent_as(x, cx.PolarPosition)
     >>> x2
-    PolarVector( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.PolarVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.PolarPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
@@ -284,13 +284,13 @@ def represent_as(
 @dispatch
 def represent_as(
     current: RadialPosition,
-    target: type[PolarVector],
+    target: type[PolarPosition],
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
     **kwargs: Any,
-) -> PolarVector:
-    """RadialPosition -> PolarVector.
+) -> PolarPosition:
+    """RadialPosition -> PolarPosition.
 
     The `r` coordinate is converted to the radial coordinate `r`.
     The `phi` coordinate is a keyword argument and defaults to 0.
@@ -301,14 +301,14 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
-    >>> x2 = cx.represent_as(x, cx.PolarVector)
+    >>> x2 = cx.represent_as(x, cx.PolarPosition)
     >>> x2
-    PolarVector( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.PolarVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.PolarPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 

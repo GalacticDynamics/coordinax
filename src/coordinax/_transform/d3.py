@@ -11,7 +11,7 @@ import quaxed.array_api as xp
 
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
-from coordinax._d2.builtin import CartesianPosition2D, PolarVector
+from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 from coordinax._exceptions import IrreversibleDimensionChange
@@ -109,7 +109,7 @@ def represent_as(
 
 
 @dispatch.multi(
-    (Cartesian3DVector, type[PolarVector]),
+    (Cartesian3DVector, type[PolarPosition]),
 )
 def represent_as(
     current: Cartesian3DVector, target: type[AbstractPosition2D], /, **kwargs: Any
@@ -126,9 +126,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarVector)
+    ...     x2 = cx.represent_as(x, cx.PolarPosition)
     >>> x2
-    PolarVector( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )
 
     """
@@ -232,9 +232,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[PolarVector], /, **kwargs: Any
-) -> PolarVector:
-    """CylindricalVector -> PolarVector.
+    current: CylindricalVector, target: type[PolarPosition], /, **kwargs: Any
+) -> PolarPosition:
+    """CylindricalVector -> PolarPosition.
 
     Examples
     --------
@@ -247,9 +247,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarVector)
+    ...     x2 = cx.represent_as(x, cx.PolarPosition)
     >>> x2
-    PolarVector( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
     """
@@ -352,9 +352,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[PolarVector], /, **kwargs: Any
-) -> PolarVector:
-    """SphericalVector -> PolarVector.
+    current: SphericalVector, target: type[PolarPosition], /, **kwargs: Any
+) -> PolarPosition:
+    """SphericalVector -> PolarPosition.
 
     Examples
     --------
@@ -367,9 +367,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarVector)
+    ...     x2 = cx.represent_as(x, cx.PolarPosition)
     >>> x2
-    PolarVector( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
     """
@@ -472,9 +472,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[PolarVector], /, **kwargs: Any
-) -> PolarVector:
-    """MathSphericalVector -> PolarVector.
+    current: MathSphericalVector, target: type[PolarPosition], /, **kwargs: Any
+) -> PolarPosition:
+    """MathSphericalVector -> PolarPosition.
 
     Examples
     --------
@@ -487,9 +487,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarVector)
+    ...     x2 = cx.represent_as(x, cx.PolarPosition)
     >>> x2
-    PolarVector( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
     """

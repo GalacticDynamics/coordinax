@@ -3,10 +3,10 @@
 __all__ = [
     # Position
     "CartesianPosition2D",
-    "PolarVector",
+    "PolarPosition",
     # Differential
     "CartesianVelocity2D",
-    "PolarDifferential",
+    "PolarVelocity",
 ]
 
 from dataclasses import replace
@@ -76,9 +76,9 @@ class CartesianPosition2D(AbstractPosition2D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, PolarVector
+        >>> from coordinax import CartesianPosition2D, PolarPosition
         >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
-        >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
         >>> (cart + polr).x
         Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
@@ -97,9 +97,9 @@ class CartesianPosition2D(AbstractPosition2D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, PolarVector
+        >>> from coordinax import CartesianPosition2D, PolarPosition
         >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
-        >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
         >>> (cart - polr).x
         Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
@@ -129,7 +129,7 @@ class CartesianPosition2D(AbstractPosition2D):
 
 
 @final
-class PolarVector(AbstractPosition2D):
+class PolarPosition(AbstractPosition2D):
     r"""Polar vector representation.
 
     Parameters
@@ -163,8 +163,8 @@ class PolarVector(AbstractPosition2D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarDifferential"]:
-        return PolarDifferential
+    def differential_cls(cls) -> type["PolarVelocity"]:
+        return PolarVelocity
 
     @partial(jax.jit)
     def norm(self) -> ct.BatchableLength:
@@ -174,7 +174,7 @@ class PolarVector(AbstractPosition2D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> q = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> q.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -221,7 +221,7 @@ class CartesianVelocity2D(AbstractVelocity2D):
 
 
 @final
-class PolarDifferential(AbstractVelocity2D):
+class PolarVelocity(AbstractVelocity2D):
     """Polar differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -236,5 +236,5 @@ class PolarDifferential(AbstractVelocity2D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarVector]:
-        return PolarVector
+    def integral_cls(cls) -> type[PolarPosition]:
+        return PolarPosition

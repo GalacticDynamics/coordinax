@@ -77,8 +77,8 @@ def represent_as(
 
     >>> q = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
     >>> p = cx.CartesianVelocity2D.constructor(Quantity([1.0, 2.0], "km/s"))
-    >>> cx.represent_as(p, cx.PolarDifferential, q)
-    PolarDifferential(
+    >>> cx.represent_as(p, cx.PolarVelocity, q)
+    PolarVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )

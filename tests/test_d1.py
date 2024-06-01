@@ -54,10 +54,10 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         assert qnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
 
     def test_cartesian1d_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = vector.represent_as(cx.PolarVector, phi=Quantity([0, 1, 2, 3], "rad"))
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = vector.represent_as(cx.PolarPosition, phi=Quantity([0, 1, 2, 3], "rad"))
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
@@ -140,10 +140,10 @@ class TestRadialPosition(AbstractPosition1DTest):
         assert qnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
 
     def test_radial_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = vector.represent_as(cx.PolarVector, phi=Quantity([0, 1, 2, 3], "rad"))
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = vector.represent_as(cx.PolarPosition, phi=Quantity([0, 1, 2, 3], "rad"))
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
@@ -241,12 +241,12 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian1d_to_polar(self, difntl, vector):
-        """Test ``difntl.represent_as(PolarDifferential)``."""
+        """Test ``difntl.represent_as(PolarVelocity)``."""
         polar = difntl.represent_as(
-            cx.PolarDifferential, vector, d_phi=Quantity([0, 1, 2, 3], "rad")
+            cx.PolarVelocity, vector, d_phi=Quantity([0, 1, 2, 3], "rad")
         )
 
-        assert isinstance(polar, cx.PolarDifferential)
+        assert isinstance(polar, cx.PolarVelocity)
         assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(polar.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
 
@@ -349,12 +349,12 @@ class TestRadialVelocity(AbstractVelocity1DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_polar(self, difntl, vector):
-        """Test ``difntl.represent_as(PolarDifferential)``."""
+        """Test ``difntl.represent_as(PolarVelocity)``."""
         polar = difntl.represent_as(
-            cx.PolarDifferential, vector, d_phi=Quantity([0, 1, 2, 3], "rad")
+            cx.PolarVelocity, vector, d_phi=Quantity([0, 1, 2, 3], "rad")
         )
 
-        assert isinstance(polar, cx.PolarDifferential)
+        assert isinstance(polar, cx.PolarVelocity)
         assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(polar.d_phi, Quantity([0, 1, 2, 3], "rad"))
 

@@ -12,8 +12,8 @@ from .base import AbstractPosition2D, AbstractVelocity2D
 from .builtin import (
     CartesianPosition2D,
     CartesianVelocity2D,
-    PolarDifferential,
-    PolarVector,
+    PolarPosition,
+    PolarVelocity,
 )
 from coordinax._base_pos import AbstractPosition
 
@@ -31,7 +31,7 @@ def represent_as(
 
 @dispatch.multi(
     (CartesianPosition2D, type[CartesianPosition2D]),
-    (PolarVector, type[PolarVector]),
+    (PolarPosition, type[PolarPosition]),
 )
 def represent_as(
     current: AbstractPosition2D, target: type[AbstractPosition2D], /, **kwargs: Any
@@ -42,7 +42,7 @@ def represent_as(
 
 @dispatch.multi(
     (CartesianVelocity2D, type[CartesianVelocity2D], AbstractPosition),
-    (PolarDifferential, type[PolarDifferential], AbstractPosition),
+    (PolarVelocity, type[PolarVelocity], AbstractPosition),
 )
 def represent_as(
     current: AbstractVelocity2D,
@@ -64,9 +64,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CartesianPosition2D, target: type[PolarVector], /, **kwargs: Any
-) -> PolarVector:
-    """CartesianPosition2D -> PolarVector.
+    current: CartesianPosition2D, target: type[PolarPosition], /, **kwargs: Any
+) -> PolarPosition:
+    """CartesianPosition2D -> PolarPosition.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r` and
     the angular coordinate `phi`.
@@ -77,7 +77,7 @@ def represent_as(
 
 
 # =============================================================================
-# PolarVector
+# PolarPosition
 
 # -----------------------------------------------
 # 2D
@@ -85,9 +85,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: PolarVector, target: type[CartesianPosition2D], /, **kwargs: Any
+    current: PolarPosition, target: type[CartesianPosition2D], /, **kwargs: Any
 ) -> CartesianPosition2D:
-    """PolarVector -> CartesianPosition2D."""
+    """PolarPosition -> CartesianPosition2D."""
     x = current.r.distance * xp.cos(current.phi)
     y = current.r.distance * xp.sin(current.phi)
     return target(x=x, y=y)

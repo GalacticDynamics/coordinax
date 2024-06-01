@@ -68,8 +68,8 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         >>> -dr
         RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-        >>> from coordinax import PolarDifferential
-        >>> dp = PolarDifferential(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
+        >>> from coordinax import PolarVelocity
+        >>> dp = PolarVelocity(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
         >>> neg_dp = -dp
         >>> neg_dp.d_r
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')

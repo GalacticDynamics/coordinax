@@ -138,9 +138,9 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.CartesianPosition2D.constructor(q).represent_as(cx.PolarVector)
+    >>> vec = cx.CartesianPosition2D.constructor(q).represent_as(cx.PolarPosition)
     >>> op(vec)
-    PolarVector( r=Distance(value=f32[], unit=Unit("kpc")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("kpc")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )
 
     - 3D:

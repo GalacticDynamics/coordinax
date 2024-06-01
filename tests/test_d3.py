@@ -106,10 +106,10 @@ class TestCartesian3DVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = vector.represent_as(cx.PolarVector, phi=Quantity([0, 1, 2, 3], "rad"))
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = vector.represent_as(cx.PolarPosition, phi=Quantity([0, 1, 2, 3], "rad"))
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.r, qnp.hypot(vector.x, vector.y))
         assert qnp.array_equal(
             polar.phi, Quantity([1.3734008, 1.2490457, 1.1659045, 1.1071488], "rad")
@@ -236,10 +236,10 @@ class TestCylindricalVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = vector.represent_as(cx.PolarVector)
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = vector.represent_as(cx.PolarPosition)
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
@@ -360,10 +360,10 @@ class TestSphericalVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = vector.represent_as(cx.PolarVector, phi=Quantity([0, 1, 2, 3], "rad"))
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = vector.represent_as(cx.PolarPosition, phi=Quantity([0, 1, 2, 3], "rad"))
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(
             polar.r,
             Quantity([0.0, 1.1755705, 1.8469844, -3.4969111e-07], "kpc"),
@@ -549,10 +549,10 @@ class TestCartesianDifferential3D(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_polar(self, difntl, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = difntl.represent_as(cx.PolarVector, vector)
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = difntl.represent_as(cx.PolarPosition, vector)
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
 
@@ -708,10 +708,10 @@ class TestCylindricalDifferential(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_polar(self, difntl, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = difntl.represent_as(cx.PolarVector, vector)
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = difntl.represent_as(cx.PolarPosition, vector)
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
 
@@ -852,10 +852,10 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_polar(self, difntl, vector):
-        """Test ``coordinax.represent_as(PolarVector)``."""
-        polar = difntl.represent_as(cx.PolarVector, vector)
+        """Test ``coordinax.represent_as(PolarPosition)``."""
+        polar = difntl.represent_as(cx.PolarPosition, vector)
 
-        assert isinstance(polar, cx.PolarVector)
+        assert isinstance(polar, cx.PolarPosition)
         assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(polar.d_phi, Quantity([5, 6, 7, 8], "mas/yr"))
 
