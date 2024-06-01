@@ -8,8 +8,8 @@ from plum import dispatch
 
 from .base import AbstractPosition1D, AbstractVelocity1D
 from .builtin import (
-    Cartesian1DVector,
-    CartesianDifferential1D,
+    CartesianPosition1D,
+    CartesianVelocity1D,
     RadialPosition,
     RadialVelocity,
 )
@@ -21,8 +21,8 @@ from coordinax._base_pos import AbstractPosition
 
 @dispatch(precedence=1)
 def represent_as(
-    current: Cartesian1DVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
+    current: CartesianPosition1D, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
     """Self transform of 1D vectors."""
     return current
 
@@ -43,12 +43,12 @@ def represent_as(
 
     This is the base case for the transformation of 1D vectors.
     """
-    cart1d = represent_as(current, Cartesian1DVector)
+    cart1d = represent_as(current, CartesianPosition1D)
     return represent_as(cart1d, target)
 
 
 @dispatch.multi(
-    (CartesianDifferential1D, type[CartesianDifferential1D], AbstractPosition),
+    (CartesianVelocity1D, type[CartesianVelocity1D], AbstractPosition),
     (RadialVelocity, type[RadialVelocity], AbstractPosition),
 )
 def represent_as(
@@ -63,14 +63,14 @@ def represent_as(
 
 
 # =============================================================================
-# Cartesian1DVector
+# CartesianPosition1D
 
 
 @dispatch
 def represent_as(
-    current: Cartesian1DVector, target: type[RadialPosition], /, **kwargs: Any
+    current: CartesianPosition1D, target: type[RadialPosition], /, **kwargs: Any
 ) -> RadialPosition:
-    """Cartesian1DVector -> RadialPosition.
+    """CartesianPosition1D -> RadialPosition.
 
     The `x` coordinate is converted to the radial coordinate `r`.
     """
@@ -83,9 +83,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: RadialPosition, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """RadialPosition -> Cartesian1DVector.
+    current: RadialPosition, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """RadialPosition -> CartesianPosition1D.
 
     The `r` coordinate is converted to the `x` coordinate of the 1D system.
     """

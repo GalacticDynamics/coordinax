@@ -77,10 +77,10 @@ class TestCartesian3DVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = vector.represent_as(cx.Cartesian1DVector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPosition1D)
 
-        assert isinstance(cart1d, cx.Cartesian1DVector)
+        assert isinstance(cart1d, cx.CartesianPosition1D)
         assert qnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
@@ -203,10 +203,10 @@ class TestCylindricalVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = vector.represent_as(cx.Cartesian1DVector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPosition1D)
 
-        assert isinstance(cart1d, cx.Cartesian1DVector)
+        assert isinstance(cart1d, cx.CartesianPosition1D)
         assert qnp.allclose(
             cart1d.x,
             Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
@@ -324,10 +324,10 @@ class TestSphericalVector(AbstractPosition3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = vector.represent_as(cx.Cartesian1DVector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPosition1D)
 
-        assert isinstance(cart1d, cx.Cartesian1DVector)
+        assert isinstance(cart1d, cx.CartesianPosition1D)
         assert qnp.allclose(
             cart1d.x,
             Quantity([0, 0.49681753, -1.3060151, -4.1700245e-15], "kpc"),
@@ -521,10 +521,10 @@ class TestCartesianDifferential3D(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_cartesian1d(self, difntl, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = difntl.represent_as(cx.CartesianDifferential1D, vector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = difntl.represent_as(cx.CartesianVelocity1D, vector)
 
-        assert isinstance(cart1d, cx.CartesianDifferential1D)
+        assert isinstance(cart1d, cx.CartesianVelocity1D)
         assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -680,10 +680,10 @@ class TestCylindricalDifferential(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_cartesian1d(self, difntl, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = difntl.represent_as(cx.CartesianDifferential1D, vector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = difntl.represent_as(cx.CartesianVelocity1D, vector)
 
-        assert isinstance(cart1d, cx.CartesianDifferential1D)
+        assert isinstance(cart1d, cx.CartesianVelocity1D)
         assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -824,10 +824,10 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_cartesian1d(self, difntl, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = difntl.represent_as(cx.CartesianDifferential1D, vector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = difntl.represent_as(cx.CartesianVelocity1D, vector)
 
-        assert isinstance(cart1d, cx.CartesianDifferential1D)
+        assert isinstance(cart1d, cx.CartesianVelocity1D)
         assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")

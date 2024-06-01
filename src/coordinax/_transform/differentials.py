@@ -68,8 +68,8 @@ def represent_as(
 
     Let's start in 1D:
 
-    >>> q = cx.Cartesian1DVector(x=Quantity(1.0, "km"))
-    >>> p = cx.CartesianDifferential1D(d_x=Quantity(1.0, "km/s"))
+    >>> q = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
+    >>> p = cx.CartesianVelocity1D(d_x=Quantity(1.0, "km/s"))
     >>> cx.represent_as(p, cx.RadialVelocity, q)
     RadialVelocity( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 

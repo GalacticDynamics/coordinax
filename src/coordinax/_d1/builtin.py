@@ -2,10 +2,10 @@
 
 __all__ = [
     # Position
-    "Cartesian1DVector",
+    "CartesianPosition1D",
     "RadialPosition",
     # Differential
-    "CartesianDifferential1D",
+    "CartesianVelocity1D",
     "RadialVelocity",
 ]
 
@@ -30,7 +30,7 @@ from coordinax._utils import classproperty
 
 
 @final
-class Cartesian1DVector(AbstractPosition1D):
+class CartesianPosition1D(AbstractPosition1D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
@@ -40,8 +40,8 @@ class Cartesian1DVector(AbstractPosition1D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianDifferential1D"]:
-        return CartesianDifferential1D
+    def differential_cls(cls) -> type["CartesianVelocity1D"]:
+        return CartesianVelocity1D
 
     # -----------------------------------------------------
     # Unary operations
@@ -52,10 +52,10 @@ class Cartesian1DVector(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector
-        >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
+        >>> from coordinax import CartesianPosition1D
+        >>> q = CartesianPosition1D.constructor(Quantity([1], "kpc"))
         >>> -q
-        Cartesian1DVector(
+        CartesianPosition1D(
            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
         )
 
@@ -65,19 +65,19 @@ class Cartesian1DVector(AbstractPosition1D):
     # -----------------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any, /) -> "Cartesian1DVector":
+    def __add__(self, other: Any, /) -> "CartesianPosition1D":
         """Add two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector, RadialPosition
+        >>> from coordinax import CartesianPosition1D, RadialPosition
 
-        >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
+        >>> q = CartesianPosition1D.constructor(Quantity([1], "kpc"))
         >>> r = RadialPosition.constructor(Quantity([1], "kpc"))
         >>> qpr = q + r
         >>> qpr
-        Cartesian1DVector(
+        CartesianPosition1D(
            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
         )
         >>> qpr.x
@@ -85,25 +85,25 @@ class Cartesian1DVector(AbstractPosition1D):
 
         """
         if not isinstance(other, AbstractPosition):
-            msg = f"Cannot add {Cartesian1DVector!r} and {type(other)!r}."
+            msg = f"Cannot add {CartesianPosition1D!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(Cartesian1DVector)
+        cart = other.represent_as(CartesianPosition1D)
         return replace(self, x=self.x + cart.x)
 
-    def __sub__(self, other: Any, /) -> "Cartesian1DVector":
+    def __sub__(self, other: Any, /) -> "CartesianPosition1D":
         """Subtract two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector, RadialPosition
+        >>> from coordinax import CartesianPosition1D, RadialPosition
 
-        >>> q = Cartesian1DVector.constructor(Quantity([1], "kpc"))
+        >>> q = CartesianPosition1D.constructor(Quantity([1], "kpc"))
         >>> r = RadialPosition.constructor(Quantity([1], "kpc"))
         >>> qmr = q - r
         >>> qmr
-        Cartesian1DVector(
+        CartesianPosition1D(
            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
         )
         >>> qmr.x
@@ -111,10 +111,10 @@ class Cartesian1DVector(AbstractPosition1D):
 
         """
         if not isinstance(other, AbstractPosition):
-            msg = f"Cannot subtract {Cartesian1DVector!r} and {type(other)!r}."
+            msg = f"Cannot subtract {CartesianPosition1D!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(Cartesian1DVector)
+        cart = other.represent_as(CartesianPosition1D)
         return replace(self, x=self.x - cart.x)
 
     @partial(jax.jit)
@@ -124,9 +124,9 @@ class Cartesian1DVector(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector, RadialPosition
+        >>> from coordinax import CartesianPosition1D, RadialPosition
 
-        >>> q = Cartesian1DVector.constructor(Quantity([-1], "kpc"))
+        >>> q = CartesianPosition1D.constructor(Quantity([-1], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
@@ -160,7 +160,7 @@ class RadialPosition(AbstractPosition1D):
 
 
 @final
-class CartesianDifferential1D(AbstractVelocity1D):
+class CartesianVelocity1D(AbstractVelocity1D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
@@ -168,8 +168,8 @@ class CartesianDifferential1D(AbstractVelocity1D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[Cartesian1DVector]:
-        return Cartesian1DVector
+    def integral_cls(cls) -> type[CartesianPosition1D]:
+        return CartesianPosition1D
 
     @partial(jax.jit)
     def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableSpeed:
@@ -178,8 +178,8 @@ class CartesianDifferential1D(AbstractVelocity1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianDifferential1D
-        >>> q = CartesianDifferential1D.constructor(Quantity([-1], "km/s"))
+        >>> from coordinax import CartesianVelocity1D
+        >>> q = CartesianVelocity1D.constructor(Quantity([-1], "km/s"))
         >>> q.norm()
         Quantity['speed'](Array(1, dtype=int32), unit='km / s')
 

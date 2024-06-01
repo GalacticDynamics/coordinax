@@ -9,7 +9,7 @@ from plum import dispatch
 
 import quaxed.array_api as xp
 
-from coordinax._d1.builtin import Cartesian1DVector, RadialPosition
+from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import Cartesian2DVector, PolarVector
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
@@ -26,9 +26,9 @@ from coordinax._exceptions import IrreversibleDimensionChange
 
 @dispatch
 def represent_as(
-    current: Cartesian3DVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """Cartesian3DVector -> Cartesian1DVector.
+    current: Cartesian3DVector, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """Cartesian3DVector -> CartesianPosition1D.
 
     The `y` and `z` coordinates are dropped.
 
@@ -42,9 +42,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.Cartesian1DVector)
+    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
     >>> x2
-    Cartesian1DVector(
+    CartesianPosition1D(
       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km"))
     )
 
@@ -147,9 +147,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """CylindricalVector -> Cartesian1DVector.
+    current: CylindricalVector, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """CylindricalVector -> CartesianPosition1D.
 
     Examples
     --------
@@ -162,9 +162,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.Cartesian1DVector)
+    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
     >>> x2
-    Cartesian1DVector( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -267,9 +267,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """SphericalVector -> Cartesian1DVector.
+    current: SphericalVector, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """SphericalVector -> CartesianPosition1D.
 
     Examples
     --------
@@ -282,9 +282,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.Cartesian1DVector)
+    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
     >>> x2
-    Cartesian1DVector( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -387,9 +387,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """MathSphericalVector -> Cartesian1DVector.
+    current: MathSphericalVector, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """MathSphericalVector -> CartesianPosition1D.
 
     Examples
     --------
@@ -402,9 +402,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.Cartesian1DVector)
+    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
     >>> x2
-    Cartesian1DVector( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)

@@ -22,12 +22,12 @@ from coordinax import (
     AbstractVelocity1D,
     AbstractVelocity2D,
     AbstractVelocity3D,
-    Cartesian1DVector,
     Cartesian2DVector,
     Cartesian3DVector,
-    CartesianDifferential1D,
     CartesianDifferential2D,
     CartesianDifferential3D,
+    CartesianPosition1D,
+    CartesianVelocity1D,
     CylindricalDifferential,
     CylindricalVector,
     IrreversibleDimensionChange,
@@ -42,7 +42,7 @@ from coordinax._utils import dataclass_items
 
 BUILTIN_VECTORS = [
     # 1D
-    Cartesian1DVector,
+    CartesianPosition1D,
     RadialPosition,
     # 2D
     Cartesian2DVector,
@@ -55,7 +55,7 @@ BUILTIN_VECTORS = [
 
 BUILTIN_DIFFERENTIALS = [
     # 1D
-    CartesianDifferential1D,
+    CartesianVelocity1D,
     RadialVelocity,
     # 2D
     CartesianDifferential2D,

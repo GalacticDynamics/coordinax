@@ -62,7 +62,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         >>> from coordinax import RadialPosition, SphericalVector
 
         >>> RadialPosition._cartesian_cls
-        <class 'coordinax._d1.builtin.Cartesian1DVector'>
+        <class 'coordinax._d1.builtin.CartesianPosition1D'>
 
         >>> SphericalVector._cartesian_cls
         <class 'coordinax._d3.builtin.Cartesian3DVector'>
@@ -235,15 +235,15 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector
+        >>> from coordinax import CartesianPosition1D
 
         We can get the number of dimensions of a vector:
 
-        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
         >>> vec.ndim
         1
 
-        >>> vec = Cartesian1DVector(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = CartesianPosition1D(x=Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.ndim
         2
 
@@ -272,15 +272,15 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector
+        >>> from coordinax import CartesianPosition1D
 
         We can get the shape of a vector:
 
-        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
         >>> vec.shape
         (2,)
 
-        >>> vec = Cartesian1DVector(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = CartesianPosition1D(x=Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.shape
         (2, 2)
 
@@ -306,15 +306,15 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector
+        >>> from coordinax import CartesianPosition1D
 
         We can get the size of a vector:
 
-        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
         >>> vec.size
         2
 
-        >>> vec = Cartesian1DVector(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = CartesianPosition1D(x=Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.size
         4
 
@@ -373,13 +373,13 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         >>> from jax import devices
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian1DVector
+        >>> from coordinax import CartesianPosition1D
 
         We can move a vector to a new device:
 
-        >>> vec = Cartesian1DVector(x=Quantity([1, 2], "m"))
+        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
-        Cartesian1DVector(
+        CartesianPosition1D(
             x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
         )
 

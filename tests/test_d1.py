@@ -15,25 +15,25 @@ class AbstractPosition1DTest(AbstractPositionTest):
     # TODO: Add tests
 
 
-class TestCartesian1DVector(AbstractPosition1DTest):
-    """Test :class:`coordinax.Cartesian1DVector`."""
+class TestCartesianPosition1D(AbstractPosition1DTest):
+    """Test :class:`coordinax.CartesianPosition1D`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
-        return cx.Cartesian1DVector(x=Quantity([1, 2, 3, 4], "kpc"))
+        return cx.CartesianPosition1D(x=Quantity([1, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
 
     def test_cartesian1d_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.Cartesian1DVector)
+        newvec = vector.represent_as(cx.CartesianPosition1D)
         assert newvec == vector
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.Cartesian1DVector)
+        newvec = cx.represent_as(vector, cx.CartesianPosition1D)
         assert newvec is vector
 
     def test_cartesian1d_to_radial(self, vector):
@@ -113,10 +113,10 @@ class TestRadialPosition(AbstractPosition1DTest):
     # represent_as
 
     def test_radial_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = vector.represent_as(cx.Cartesian1DVector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPosition1D)
 
-        assert isinstance(cart1d, cx.Cartesian1DVector)
+        assert isinstance(cart1d, cx.CartesianPosition1D)
         assert qnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_radial_to_radial(self, vector):
@@ -191,31 +191,31 @@ class AbstractVelocity1DTest(AbstractVelocityTest):
     """Test :class:`coordinax.AbstractVelocity1D`."""
 
 
-class TestCartesianDifferential1D(AbstractVelocity1DTest):
-    """Test :class:`coordinax.CartesianDifferential1D`."""
+class TestCartesianVelocity1D(AbstractVelocity1DTest):
+    """Test :class:`coordinax.CartesianVelocity1D`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.CartesianDifferential1D:
+    def difntl(self) -> cx.CartesianVelocity1D:
         """Return a vector."""
-        return cx.CartesianDifferential1D(d_x=Quantity([1.0, 2, 3, 4], "km/s"))
+        return cx.CartesianVelocity1D(d_x=Quantity([1.0, 2, 3, 4], "km/s"))
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.Cartesian1DVector:
+    def vector(self) -> cx.CartesianPosition1D:
         """Return a vector."""
-        return cx.Cartesian1DVector(x=Quantity([1.0, 2, 3, 4], "kpc"))
+        return cx.CartesianPosition1D(x=Quantity([1.0, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian1d_to_cartesian1d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential1D)``."""
+        """Test ``difntl.represent_as(CartesianVelocity1D)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.CartesianDifferential1D, vector)
+        newvec = difntl.represent_as(cx.CartesianVelocity1D, vector)
         assert newvec == difntl
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.CartesianDifferential1D, vector)
+        newvec = cx.represent_as(difntl, cx.CartesianVelocity1D, vector)
         assert newvec is difntl
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -317,10 +317,10 @@ class TestRadialVelocity(AbstractVelocity1DTest):
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_cartesian1d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential1D)``."""
-        cart1d = difntl.represent_as(cx.CartesianDifferential1D, vector)
+        """Test ``difntl.represent_as(CartesianVelocity1D)``."""
+        cart1d = difntl.represent_as(cx.CartesianVelocity1D, vector)
 
-        assert isinstance(cart1d, cx.CartesianDifferential1D)
+        assert isinstance(cart1d, cx.CartesianVelocity1D)
         assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")

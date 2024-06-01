@@ -29,10 +29,10 @@ class TestCartesian2DVector:
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian2d_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = vector.represent_as(cx.Cartesian1DVector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPosition1D)
 
-        assert isinstance(cart1d, cx.Cartesian1DVector)
+        assert isinstance(cart1d, cx.CartesianPosition1D)
         assert qnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
@@ -128,10 +128,10 @@ class TestPolarVector:
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_polar_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian1DVector)``."""
-        cart1d = vector.represent_as(cx.Cartesian1DVector)
+        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPosition1D)
 
-        assert isinstance(cart1d, cx.Cartesian1DVector)
+        assert isinstance(cart1d, cx.CartesianPosition1D)
         assert qnp.allclose(
             cart1d.x,
             Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
@@ -243,10 +243,10 @@ class TestCartesianDifferential2D(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_cartesian1d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential1D, vector)``."""
-        cart1d = difntl.represent_as(cx.CartesianDifferential1D, vector)
+        """Test ``difntl.represent_as(CartesianVelocity1D, vector)``."""
+        cart1d = difntl.represent_as(cx.CartesianVelocity1D, vector)
 
-        assert isinstance(cart1d, cx.CartesianDifferential1D)
+        assert isinstance(cart1d, cx.CartesianVelocity1D)
         assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -345,10 +345,10 @@ class TestPolarDifferential(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_cartesian1d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential1D, vector)``."""
-        cart1d = difntl.represent_as(cx.CartesianDifferential1D, vector)
+        """Test ``difntl.represent_as(CartesianVelocity1D, vector)``."""
+        cart1d = difntl.represent_as(cx.CartesianVelocity1D, vector)
 
-        assert isinstance(cart1d, cx.CartesianDifferential1D)
+        assert isinstance(cart1d, cx.CartesianVelocity1D)
         assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")

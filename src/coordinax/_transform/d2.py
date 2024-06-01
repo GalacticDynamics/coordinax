@@ -11,7 +11,7 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from coordinax._d1.builtin import Cartesian1DVector, RadialPosition
+from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import Cartesian2DVector, PolarVector
 from coordinax._d3.base import AbstractPosition3D
@@ -120,9 +120,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """Cartesian2DVector -> Cartesian1DVector.
+    current: Cartesian2DVector, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """Cartesian2DVector -> CartesianPosition1D.
 
     The `y` coordinate is dropped.
 
@@ -136,9 +136,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.Cartesian1DVector, z=Quantity(14, "km"))
+    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D, z=Quantity(14, "km"))
     >>> x2
-    Cartesian1DVector( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.x
     Quantity['length'](Array(1., dtype=float32), unit='km')
 
@@ -221,9 +221,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: PolarVector, target: type[Cartesian1DVector], /, **kwargs: Any
-) -> Cartesian1DVector:
-    """PolarVector -> Cartesian1DVector.
+    current: PolarVector, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """PolarVector -> CartesianPosition1D.
 
     Examples
     --------
@@ -235,9 +235,9 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.Cartesian1DVector)
+    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
     >>> x2
-    Cartesian1DVector( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.x
     Quantity['length'](Array(0.9848077, dtype=float32), unit='km')
 

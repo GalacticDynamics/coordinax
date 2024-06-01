@@ -16,7 +16,7 @@ from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from coordinax._base_pos import AbstractPosition
-from coordinax._d1.builtin import Cartesian1DVector
+from coordinax._d1.builtin import CartesianPosition1D
 from coordinax._d2.builtin import Cartesian2DVector
 from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import Cartesian3DVector
@@ -40,7 +40,7 @@ def _converter_spatialtranslation(x: Any) -> AbstractPosition:
         shape: tuple[int, ...] = x.shape
         match shape:
             case (1,):
-                out = Cartesian1DVector.constructor(x)
+                out = CartesianPosition1D.constructor(x)
             case (2,):
                 out = Cartesian2DVector.constructor(x)
             case (3,):
@@ -126,7 +126,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.Cartesian1DVector.constructor(q).represent_as(cx.RadialPosition)
+    >>> vec = cx.CartesianPosition1D.constructor(q).represent_as(cx.RadialPosition)
     >>> op(vec)
     RadialPosition(r=Distance(value=f32[], unit=Unit("kpc")))
 

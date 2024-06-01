@@ -22,9 +22,9 @@ class AbstractPosition1D(AbstractPosition):
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import Cartesian1DVector
+        from .builtin import CartesianPosition1D
 
-        return Cartesian1DVector
+        return CartesianPosition1D
 
     @classproperty
     @classmethod
@@ -43,11 +43,11 @@ def constructor(
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import Cartesian1DVector
+    >>> from coordinax import CartesianPosition1D
 
-    >>> q = Cartesian1DVector.constructor(Quantity(1, "kpc"))
+    >>> q = CartesianPosition1D.constructor(Quantity(1, "kpc"))
     >>> q
-    Cartesian1DVector(
+    CartesianPosition1D(
         x=Quantity[PhysicalType('length')](value=f32[1], unit=Unit("kpc"))
     )
 
@@ -61,9 +61,9 @@ class AbstractVelocity1D(AbstractVelocity):
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import CartesianDifferential1D
+        from .builtin import CartesianVelocity1D
 
-        return CartesianDifferential1D
+        return CartesianVelocity1D
 
     @classproperty
     @classmethod
