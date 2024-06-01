@@ -17,7 +17,7 @@ from unxt import Quantity
 from .base import AbstractGalileanOperator
 from coordinax._base_pos import AbstractPosition
 from coordinax._d1.builtin import CartesianPosition1D
-from coordinax._d2.builtin import Cartesian2DVector
+from coordinax._d2.builtin import CartesianPosition2D
 from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import Cartesian3DVector
 from coordinax._d4.spacetime import FourVector
@@ -42,7 +42,7 @@ def _converter_spatialtranslation(x: Any) -> AbstractPosition:
             case (1,):
                 out = CartesianPosition1D.constructor(x)
             case (2,):
-                out = Cartesian2DVector.constructor(x)
+                out = CartesianPosition2D.constructor(x)
             case (3,):
                 out = Cartesian3DVector.constructor(x)
             case _:
@@ -138,7 +138,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.Cartesian2DVector.constructor(q).represent_as(cx.PolarVector)
+    >>> vec = cx.CartesianPosition2D.constructor(q).represent_as(cx.PolarVector)
     >>> op(vec)
     PolarVector( r=Distance(value=f32[], unit=Unit("kpc")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )

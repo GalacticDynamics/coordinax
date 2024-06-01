@@ -44,12 +44,12 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_cartesian1d_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
         cart2d = vector.represent_as(
-            cx.Cartesian2DVector, y=Quantity([5, 6, 7, 8], "km")
+            cx.CartesianPosition2D, y=Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.Cartesian2DVector)
+        assert isinstance(cart2d, cx.CartesianPosition2D)
         assert qnp.array_equal(cart2d.x, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
 
@@ -130,12 +130,12 @@ class TestRadialPosition(AbstractPosition1DTest):
         assert newvec is vector
 
     def test_radial_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
         cart2d = vector.represent_as(
-            cx.Cartesian2DVector, y=Quantity([5, 6, 7, 8], "km")
+            cx.CartesianPosition2D, y=Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.Cartesian2DVector)
+        assert isinstance(cart2d, cx.CartesianPosition2D)
         assert qnp.array_equal(cart2d.x, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
 
@@ -229,12 +229,12 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian1d_to_cartesian2d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential2D)``."""
+        """Test ``difntl.represent_as(CartesianVelocity2D)``."""
         cart2d = difntl.represent_as(
-            cx.CartesianDifferential2D, vector, d_y=Quantity([5, 6, 7, 8], "km")
+            cx.CartesianVelocity2D, vector, d_y=Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.CartesianDifferential2D)
+        assert isinstance(cart2d, cx.CartesianVelocity2D)
         assert qnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], "km/s"))
 
@@ -337,12 +337,12 @@ class TestRadialVelocity(AbstractVelocity1DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_cartesian2d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential2D)``."""
+        """Test ``difntl.represent_as(CartesianVelocity2D)``."""
         cart2d = difntl.represent_as(
-            cx.CartesianDifferential2D, vector, d_y=Quantity([5, 6, 7, 8], "km")
+            cx.CartesianVelocity2D, vector, d_y=Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.CartesianDifferential2D)
+        assert isinstance(cart2d, cx.CartesianVelocity2D)
         assert qnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], "km"))
 

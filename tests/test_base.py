@@ -22,12 +22,12 @@ from coordinax import (
     AbstractVelocity1D,
     AbstractVelocity2D,
     AbstractVelocity3D,
-    Cartesian2DVector,
     Cartesian3DVector,
-    CartesianDifferential2D,
     CartesianDifferential3D,
     CartesianPosition1D,
+    CartesianPosition2D,
     CartesianVelocity1D,
+    CartesianVelocity2D,
     CylindricalDifferential,
     CylindricalVector,
     IrreversibleDimensionChange,
@@ -45,7 +45,7 @@ BUILTIN_VECTORS = [
     CartesianPosition1D,
     RadialPosition,
     # 2D
-    Cartesian2DVector,
+    CartesianPosition2D,
     PolarVector,
     # 3D
     Cartesian3DVector,
@@ -58,7 +58,7 @@ BUILTIN_DIFFERENTIALS = [
     CartesianVelocity1D,
     RadialVelocity,
     # 2D
-    CartesianDifferential2D,
+    CartesianVelocity2D,
     PolarDifferential,
     # LnPolarDifferential,
     # Log10PolarDifferential,

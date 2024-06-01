@@ -14,13 +14,13 @@ class AbstractPosition2DTest(AbstractPositionTest):
     """Test :class:`coordinax.AbstractPosition2D`."""
 
 
-class TestCartesian2DVector:
-    """Test :class:`coordinax.Cartesian2DVector`."""
+class TestCartesianPosition2D:
+    """Test :class:`coordinax.CartesianPosition2D`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.Cartesian2DVector:
+    def vector(self) -> cx.CartesianPosition2D:
         """Return a vector."""
-        return cx.Cartesian2DVector(
+        return cx.CartesianPosition2D(
             x=Quantity([1, 2, 3, 4], "kpc"), y=Quantity([5, 6, 7, 8], "kpc")
         )
 
@@ -44,18 +44,18 @@ class TestCartesian2DVector:
         assert qnp.array_equal(radial.r, qnp.hypot(vector.x, vector.y))
 
     def test_cartesian2d_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
-        newvec = vector.represent_as(cx.Cartesian2DVector)
+        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
+        newvec = vector.represent_as(cx.CartesianPosition2D)
         assert newvec is vector
 
     def test_cartesian2d_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.Cartesian2DVector)
+        newvec = vector.represent_as(cx.CartesianPosition2D)
         assert newvec == vector
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.Cartesian2DVector)
+        newvec = cx.represent_as(vector, cx.CartesianPosition2D)
         assert newvec is vector
 
     def test_cartesian2d_to_polar(self, vector):
@@ -148,12 +148,12 @@ class TestPolarVector:
         assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_polar_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(Cartesian2DVector)``."""
+        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
         cart2d = vector.represent_as(
-            cx.Cartesian2DVector, y=Quantity([5, 6, 7, 8], "km")
+            cx.CartesianPosition2D, y=Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.Cartesian2DVector)
+        assert isinstance(cart2d, cx.CartesianPosition2D)
         assert qnp.array_equal(
             cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
         )
@@ -219,21 +219,21 @@ class AbstractVelocity2DTest(AbstractVelocityTest):
     """Test :class:`coordinax.AbstractVelocity2D`."""
 
 
-class TestCartesianDifferential2D(AbstractVelocity2DTest):
-    """Test :class:`coordinax.CartesianDifferential2D`."""
+class TestCartesianVelocity2D(AbstractVelocity2DTest):
+    """Test :class:`coordinax.CartesianVelocity2D`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.CartesianDifferential2D:
+    def difntl(self) -> cx.CartesianVelocity2D:
         """Return a differential."""
-        return cx.CartesianDifferential2D(
+        return cx.CartesianVelocity2D(
             d_x=Quantity([1, 2, 3, 4], "km/s"),
             d_y=Quantity([5, 6, 7, 8], "km/s"),
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.Cartesian2DVector:
+    def vector(self) -> cx.CartesianPosition2D:
         """Return a vector."""
-        return cx.Cartesian2DVector(
+        return cx.CartesianPosition2D(
             x=Quantity([1, 2, 3, 4], "kpc"), y=Quantity([5, 6, 7, 8], "km")
         )
 
@@ -260,13 +260,13 @@ class TestCartesianDifferential2D(AbstractVelocity2DTest):
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_cartesian2d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential2D, vector)``."""
+        """Test ``difntl.represent_as(CartesianVelocity2D, vector)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.CartesianDifferential2D, vector)
+        newvec = difntl.represent_as(cx.CartesianVelocity2D, vector)
         assert newvec == difntl
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.CartesianDifferential2D, vector)
+        newvec = cx.represent_as(difntl, cx.CartesianVelocity2D, vector)
         assert newvec is difntl
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -362,10 +362,10 @@ class TestPolarDifferential(AbstractVelocity2DTest):
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_cartesian2d(self, difntl, vector):
-        """Test ``difntl.represent_as(CartesianDifferential2D, vector)``."""
-        cart2d = difntl.represent_as(cx.CartesianDifferential2D, vector)
+        """Test ``difntl.represent_as(CartesianVelocity2D, vector)``."""
+        cart2d = difntl.represent_as(cx.CartesianVelocity2D, vector)
 
-        assert isinstance(cart2d, cx.CartesianDifferential2D)
+        assert isinstance(cart2d, cx.CartesianVelocity2D)
         assert qnp.array_equal(
             cart2d.d_x, Quantity([1.0, -46.787014, -91.76889, -25.367176], "km/s")
         )

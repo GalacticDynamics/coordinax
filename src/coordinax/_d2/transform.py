@@ -10,8 +10,8 @@ import quaxed.array_api as xp
 
 from .base import AbstractPosition2D, AbstractVelocity2D
 from .builtin import (
-    Cartesian2DVector,
-    CartesianDifferential2D,
+    CartesianPosition2D,
+    CartesianVelocity2D,
     PolarDifferential,
     PolarVector,
 )
@@ -26,11 +26,11 @@ def represent_as(
 
     This is the base case for the transformation of 2D vectors.
     """
-    return represent_as(represent_as(current, Cartesian2DVector), target)
+    return represent_as(represent_as(current, CartesianPosition2D), target)
 
 
 @dispatch.multi(
-    (Cartesian2DVector, type[Cartesian2DVector]),
+    (CartesianPosition2D, type[CartesianPosition2D]),
     (PolarVector, type[PolarVector]),
 )
 def represent_as(
@@ -41,7 +41,7 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianDifferential2D, type[CartesianDifferential2D], AbstractPosition),
+    (CartesianVelocity2D, type[CartesianVelocity2D], AbstractPosition),
     (PolarDifferential, type[PolarDifferential], AbstractPosition),
 )
 def represent_as(
@@ -56,7 +56,7 @@ def represent_as(
 
 
 # =============================================================================
-# Cartesian2DVector
+# CartesianPosition2D
 
 # -----------------------------------------------
 # 2D
@@ -64,9 +64,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[PolarVector], /, **kwargs: Any
+    current: CartesianPosition2D, target: type[PolarVector], /, **kwargs: Any
 ) -> PolarVector:
-    """Cartesian2DVector -> PolarVector.
+    """CartesianPosition2D -> PolarVector.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r` and
     the angular coordinate `phi`.
@@ -85,9 +85,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: PolarVector, target: type[Cartesian2DVector], /, **kwargs: Any
-) -> Cartesian2DVector:
-    """PolarVector -> Cartesian2DVector."""
+    current: PolarVector, target: type[CartesianPosition2D], /, **kwargs: Any
+) -> CartesianPosition2D:
+    """PolarVector -> CartesianPosition2D."""
     x = current.r.distance * xp.cos(current.phi)
     y = current.r.distance * xp.sin(current.phi)
     return target(x=x, y=y)

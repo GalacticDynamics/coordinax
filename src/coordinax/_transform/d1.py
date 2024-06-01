@@ -10,7 +10,7 @@ from plum import dispatch
 from unxt import Quantity
 
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
-from coordinax._d2.builtin import Cartesian2DVector, PolarVector
+from coordinax._d2.builtin import CartesianPosition2D, PolarVector
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 
@@ -25,13 +25,13 @@ from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 @dispatch
 def represent_as(
     current: CartesianPosition1D,
-    target: type[Cartesian2DVector],
+    target: type[CartesianPosition2D],
     /,
     *,
     y: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
-) -> Cartesian2DVector:
-    """CartesianPosition1D -> Cartesian2DVector.
+) -> CartesianPosition2D:
+    """CartesianPosition1D -> CartesianPosition2D.
 
     The `x` coordinate is converted to the `x` coordinate of the 2D system.
     The `y` coordinate is a keyword argument and defaults to 0.
@@ -42,9 +42,9 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
-    >>> x2 = cx.represent_as(x, cx.Cartesian2DVector)
+    >>> x2 = cx.represent_as(x, cx.CartesianPosition2D)
     >>> x2
-    Cartesian2DVector( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPosition2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.y
     Quantity['length'](Array(0., dtype=float32), unit='m')
@@ -249,13 +249,13 @@ def represent_as(
 @dispatch
 def represent_as(
     current: RadialPosition,
-    target: type[Cartesian2DVector],
+    target: type[CartesianPosition2D],
     /,
     *,
     y: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
-) -> Cartesian2DVector:
-    """RadialPosition -> Cartesian2DVector.
+) -> CartesianPosition2D:
+    """RadialPosition -> CartesianPosition2D.
 
     The `r` coordinate is converted to the cartesian coordinate `x`.
     The `y` coordinate is a keyword argument and defaults to 0.
@@ -266,14 +266,14 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
-    >>> x2 = cx.represent_as(x, cx.Cartesian2DVector)
+    >>> x2 = cx.represent_as(x, cx.CartesianPosition2D)
     >>> x2
-    Cartesian2DVector( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPosition2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.y
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.Cartesian2DVector, y=Quantity(14, "km"))
+    >>> x3 = cx.represent_as(x, cx.CartesianPosition2D, y=Quantity(14, "km"))
     >>> x3.y
     Quantity['length'](Array(14., dtype=float32), unit='km')
 

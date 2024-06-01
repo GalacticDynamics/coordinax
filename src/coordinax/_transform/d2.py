@@ -13,7 +13,7 @@ from unxt import Quantity
 
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
-from coordinax._d2.builtin import Cartesian2DVector, PolarVector
+from coordinax._d2.builtin import CartesianPosition2D, PolarVector
 from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import Cartesian3DVector, CylindricalVector
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
@@ -21,9 +21,9 @@ from coordinax._exceptions import IrreversibleDimensionChange
 
 
 @dispatch.multi(
-    (Cartesian2DVector, type[CylindricalVector]),
-    (Cartesian2DVector, type[SphericalVector]),
-    (Cartesian2DVector, type[MathSphericalVector]),
+    (CartesianPosition2D, type[CylindricalVector]),
+    (CartesianPosition2D, type[SphericalVector]),
+    (CartesianPosition2D, type[MathSphericalVector]),
 )
 def represent_as(
     current: AbstractPosition2D,
@@ -42,7 +42,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian2DVector.constructor(Quantity([1.0, 2.0], "km"))
+    >>> x = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
 
     >>> x2 = cx.represent_as(x, cx.CylindricalVector, z=Quantity(14, "km"))
     >>> x2
@@ -69,7 +69,7 @@ def represent_as(
     Distance(Array(14.177447, dtype=float32), unit='km')
 
     """
-    cart2 = represent_as(current, Cartesian2DVector)
+    cart2 = represent_as(current, CartesianPosition2D)
     cart3 = represent_as(cart2, Cartesian3DVector, z=z)
     return represent_as(cart3, target)
 
@@ -111,7 +111,7 @@ def represent_as(
 
 
 # =============================================================================
-# Cartesian2DVector
+# CartesianPosition2D
 
 
 # -----------------------------------------------
@@ -120,9 +120,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[CartesianPosition1D], /, **kwargs: Any
+    current: CartesianPosition2D, target: type[CartesianPosition1D], /, **kwargs: Any
 ) -> CartesianPosition1D:
-    """Cartesian2DVector -> CartesianPosition1D.
+    """CartesianPosition2D -> CartesianPosition1D.
 
     The `y` coordinate is dropped.
 
@@ -132,7 +132,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian2DVector.constructor(Quantity([1.0, 2.0], "km"))
+    >>> x = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -149,9 +149,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector, target: type[RadialPosition], /, **kwargs: Any
+    current: CartesianPosition2D, target: type[RadialPosition], /, **kwargs: Any
 ) -> RadialPosition:
-    """Cartesian2DVector -> RadialPosition.
+    """CartesianPosition2D -> RadialPosition.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r`.
 
@@ -160,7 +160,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian2DVector.constructor(Quantity([1.0, 2.0], "km"))
+    >>> x = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -181,14 +181,14 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: Cartesian2DVector,
+    current: CartesianPosition2D,
     target: type[Cartesian3DVector],
     /,
     *,
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> Cartesian3DVector:
-    """Cartesian2DVector -> Cartesian3DVector.
+    """CartesianPosition2D -> Cartesian3DVector.
 
     The `x` and `y` coordinates are converted to the `x` and `y` coordinates of
     the 3D system.  The `z` coordinate is a keyword argument and defaults to 0.
@@ -198,7 +198,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.Cartesian2DVector.constructor(Quantity([1.0, 2.0], "km"))
+    >>> x = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
 
     >>> x2 = cx.represent_as(x, cx.Cartesian3DVector, z=Quantity(14, "km"))
     >>> x2

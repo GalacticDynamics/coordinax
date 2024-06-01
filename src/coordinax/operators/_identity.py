@@ -59,7 +59,7 @@ class IdentityOperator(AbstractOperator):
     - 2D:
 
     >>> q = Quantity([1, 2], "kpc")
-    >>> vec = cx.Cartesian2DVector.constructor(q)
+    >>> vec = cx.CartesianPosition2D.constructor(q)
     >>> op(vec) is vec and op(q) is q
     True
 
