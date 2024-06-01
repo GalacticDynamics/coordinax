@@ -3,10 +3,10 @@
 __all__ = [
     # Position
     "CartesianPosition3D",
-    "CylindricalVector",
+    "CylindricalPosition",
     # Differential
     "CartesianVelocity3D",
-    "CylindricalDifferential",
+    "CylindricalVelocity",
 ]
 
 from dataclasses import replace
@@ -134,7 +134,7 @@ class CartesianPosition3D(AbstractPosition3D):
 
 
 @final
-class CylindricalVector(AbstractPosition3D):
+class CylindricalPosition(AbstractPosition3D):
     """Cylindrical vector representation.
 
     This adheres to ISO standard 31-11.
@@ -165,8 +165,8 @@ class CylindricalVector(AbstractPosition3D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CylindricalDifferential"]:
-        return CylindricalDifferential
+    def differential_cls(cls) -> type["CylindricalVelocity"]:
+        return CylindricalVelocity
 
     @partial(jax.jit)
     def norm(self) -> ct.BatchableLength:
@@ -175,8 +175,8 @@ class CylindricalVector(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CylindricalVector
-        >>> c = CylindricalVector(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
+        >>> from coordinax import CylindricalPosition
+        >>> c = CylindricalPosition(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
         ...                       z=Quantity(4, "kpc"))
         >>> c.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
@@ -232,7 +232,7 @@ class CartesianVelocity3D(AbstractVelocity3D, AdditionMixin):
 
 
 @final
-class CylindricalDifferential(AbstractVelocity3D):
+class CylindricalVelocity(AbstractVelocity3D):
     """Cylindrical differential representation."""
 
     d_rho: ct.BatchableSpeed = eqx.field(
@@ -252,5 +252,5 @@ class CylindricalDifferential(AbstractVelocity3D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CylindricalVector]:
-        return CylindricalVector
+    def integral_cls(cls) -> type[CylindricalPosition]:
+        return CylindricalPosition

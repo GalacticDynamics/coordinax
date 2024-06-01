@@ -11,7 +11,7 @@ from unxt import Quantity
 
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
-from coordinax._d3.builtin import CartesianPosition3D, CylindricalVector
+from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 
 # =============================================================================
@@ -201,14 +201,14 @@ def represent_as(
 @dispatch
 def represent_as(
     current: CartesianPosition1D,
-    target: type[CylindricalVector],
+    target: type[CylindricalPosition],
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
-) -> CylindricalVector:
-    """CartesianPosition1D -> CylindricalVector.
+) -> CylindricalPosition:
+    """CartesianPosition1D -> CylindricalPosition.
 
     The `x` coordinate is converted to the radial coordinate `rho`.
     The `phi` and `z` coordinates are keyword arguments and default to 0.
@@ -219,9 +219,9 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
-    >>> x2 = cx.represent_as(x, cx.CylindricalVector)
+    >>> x2 = cx.represent_as(x, cx.CylindricalPosition)
     >>> x2
-    CylindricalVector( rho=Quantity[...](value=f32[], unit=Unit("km")),
+    CylindricalPosition( rho=Quantity[...](value=f32[], unit=Unit("km")),
                        phi=Quantity[...](value=f32[], unit=Unit("rad")),
                        z=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.phi
@@ -229,7 +229,7 @@ def represent_as(
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CylindricalVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.CylindricalPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
     >>> x3.z
@@ -426,14 +426,14 @@ def represent_as(
 @dispatch
 def represent_as(
     current: RadialPosition,
-    target: type[CylindricalVector],
+    target: type[CylindricalPosition],
     /,
     *,
     phi: Quantity = Quantity(0.0, u.radian),
     z: Quantity = Quantity(0.0, u.m),
     **kwargs: Any,
-) -> CylindricalVector:
-    """RadialPosition -> CylindricalVector.
+) -> CylindricalPosition:
+    """RadialPosition -> CylindricalPosition.
 
     The `r` coordinate is converted to the radial coordinate `rho`.
     The `phi` and `z` coordinates are keyword arguments and default to 0.
@@ -444,9 +444,9 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.RadialPosition(r=Quantity(1.0, "km"))
-    >>> x2 = cx.represent_as(x, cx.CylindricalVector)
+    >>> x2 = cx.represent_as(x, cx.CylindricalPosition)
     >>> x2
-    CylindricalVector( rho=Quantity[...](value=f32[], unit=Unit("km")),
+    CylindricalPosition( rho=Quantity[...](value=f32[], unit=Unit("km")),
                        phi=Quantity[...](value=f32[], unit=Unit("rad")),
                        z=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.phi
@@ -454,7 +454,7 @@ def represent_as(
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CylindricalVector, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.CylindricalPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
     >>> x3.z

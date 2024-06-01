@@ -160,10 +160,10 @@ class TestCartesianPosition3D(AbstractPosition3DTest):
         assert np.allclose(convert(sph.phi, APYQuantity), apysph.phi)
 
     def test_cartesian3d_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
-        cylindrical = vector.represent_as(cx.CylindricalVector)
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
+        cylindrical = vector.represent_as(cx.CylindricalPosition)
 
-        assert isinstance(cylindrical, cx.CylindricalVector)
+        assert isinstance(cylindrical, cx.CylindricalPosition)
         assert qnp.array_equal(cylindrical.rho, qnp.hypot(vector.x, vector.y))
         assert qnp.array_equal(
             cylindrical.phi,
@@ -173,7 +173,7 @@ class TestCartesianPosition3D(AbstractPosition3DTest):
 
     def test_cartesian3d_to_cylindrical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cyl = vector.represent_as(cx.CylindricalVector)
+        cyl = vector.represent_as(cx.CylindricalPosition)
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
         assert np.allclose(convert(cyl.rho, APYQuantity), apycyl.rho)
@@ -181,13 +181,13 @@ class TestCartesianPosition3D(AbstractPosition3DTest):
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
 
 
-class TestCylindricalVector(AbstractPosition3DTest):
-    """Test :class:`coordinax.CylindricalVector`."""
+class TestCylindricalPosition(AbstractPosition3DTest):
+    """Test :class:`coordinax.CylindricalPosition`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
-        return cx.CylindricalVector(
+        return cx.CylindricalPosition(
             rho=Quantity([1, 2, 3, 4], "kpc"),
             phi=Quantity([0, 1, 2, 3], "rad"),
             z=Quantity([9, 10, 11, 12], "m"),
@@ -283,18 +283,18 @@ class TestCylindricalVector(AbstractPosition3DTest):
         assert np.allclose(convert(sph.phi, APYQuantity), apysph.phi)
 
     def test_cylindrical_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.CylindricalVector)
+        newvec = vector.represent_as(cx.CylindricalPosition)
         assert newvec == vector
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.CylindricalVector)
+        newvec = cx.represent_as(vector, cx.CylindricalPosition)
         assert newvec is vector
 
     def test_cylindrical_to_cylindrical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cyl = vector.represent_as(cx.CylindricalVector)
+        cyl = vector.represent_as(cx.CylindricalPosition)
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
         assert np.allclose(convert(cyl.rho, APYQuantity), apycyl.rho)
@@ -395,12 +395,12 @@ class TestSphericalVector(AbstractPosition3DTest):
         assert np.allclose(convert(cart3d.z, APYQuantity), apycart3.z)
 
     def test_spherical_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
         cyl = vector.represent_as(
-            cx.CylindricalVector, z=Quantity([9, 10, 11, 12], "m")
+            cx.CylindricalPosition, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cyl, cx.CylindricalVector)
+        assert isinstance(cyl, cx.CylindricalPosition)
         assert qnp.array_equal(
             cyl.rho,
             Quantity([0.0, 1.1755705, 1.8469844, 3.4969111e-07], "kpc"),
@@ -411,9 +411,9 @@ class TestSphericalVector(AbstractPosition3DTest):
         )
 
     def test_spherical_to_cylindrical_astropy(self, vector, apyvector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
         cyl = vector.represent_as(
-            cx.CylindricalVector, z=Quantity([9, 10, 11, 12], "m")
+            cx.CylindricalPosition, z=Quantity([9, 10, 11, 12], "m")
         )
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
@@ -614,10 +614,10 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi, atol=1e-7)
 
     def test_cartesian3d_to_cylindrical(self, difntl, vector):
-        """Test ``coordinax.represent_as(CylindricalDifferential)``."""
-        cylindrical = difntl.represent_as(cx.CylindricalDifferential, vector)
+        """Test ``coordinax.represent_as(CylindricalVelocity)``."""
+        cylindrical = difntl.represent_as(cx.CylindricalVelocity, vector)
 
-        assert isinstance(cylindrical, cx.CylindricalDifferential)
+        assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.array_equal(
             cylindrical.d_rho,
             Quantity([9.805807, 11.384199, 12.86803, 14.310835], "km/s"),
@@ -637,41 +637,43 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cyl = difntl.represent_as(cx.CylindricalDifferential, vector)
-        apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
+        cyl = difntl.represent_as(cx.CylindricalVelocity, vector)
+        apycyl = apydifntl.represent_as(apyc.CylindricalVelocity, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
 
 
-class TestCylindricalDifferential(AbstractVelocity3DTest):
-    """Test :class:`coordinax.CylindricalDifferential`."""
+class TestCylindricalVelocity(AbstractVelocity3DTest):
+    """Test :class:`coordinax.CylindricalVelocity`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.CylindricalDifferential:
+    def difntl(self) -> cx.CylindricalVelocity:
         """Return a differential."""
-        return cx.CylindricalDifferential(
+        return cx.CylindricalVelocity(
             d_rho=Quantity([5, 6, 7, 8], "km/s"),
             d_phi=Quantity([9, 10, 11, 12], "mas/yr"),
             d_z=Quantity([13, 14, 15, 16], "km/s"),
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.CylindricalVector:
+    def vector(self) -> cx.CylindricalPosition:
         """Return a vector."""
-        return cx.CylindricalVector(
+        return cx.CylindricalPosition(
             rho=Quantity([1, 2, 3, 4], "kpc"),
             phi=Quantity([0, 1, 2, 3], "rad"),
             z=Quantity([9, 10, 11, 12], "kpc"),
         )
 
     @pytest.fixture(scope="class")
-    def apydifntl(self, difntl: cx.CylindricalDifferential):
+    def apydifntl(self, difntl: cx.CylindricalVelocity):
         """Return an Astropy differential."""
-        return convert(difntl, apyc.CylindricalDifferential)
+        return convert(difntl, apyc.CylindricalVelocity)
 
     @pytest.fixture(scope="class")
-    def apyvector(self, vector: cx.CylindricalVector) -> apyc.CylindricalRepresentation:
+    def apyvector(
+        self, vector: cx.CylindricalPosition
+    ) -> apyc.CylindricalRepresentation:
         """Return an Astropy vector."""
         return convert(vector, apyc.CylindricalRepresentation)
 
@@ -766,19 +768,19 @@ class TestCylindricalDifferential(AbstractVelocity3DTest):
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
 
     def test_cylindrical_to_cylindrical(self, difntl, vector):
-        """Test ``coordinax.represent_as(CylindricalDifferential)``."""
+        """Test ``coordinax.represent_as(CylindricalVelocity)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.CylindricalDifferential, vector)
+        newvec = difntl.represent_as(cx.CylindricalVelocity, vector)
         assert newvec == difntl
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.CylindricalDifferential, vector)
+        newvec = cx.represent_as(difntl, cx.CylindricalVelocity, vector)
         assert newvec is difntl
 
     def test_cylindrical_to_cylindrical(self, difntl, vector, apydifntl, apyvector):
         """Test Astropy equivalence."""
-        cyl = difntl.represent_as(cx.CylindricalDifferential, vector)
-        apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
+        cyl = difntl.represent_as(cx.CylindricalVelocity, vector)
+        apycyl = apydifntl.represent_as(apyc.CylindricalVelocity, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
@@ -892,10 +894,10 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
         assert np.allclose(convert(cart3d.d_z, APYQuantity), apycart3.d_z)
 
     def test_spherical_to_cylindrical(self, difntl, vector):
-        """Test ``coordinax.represent_as(CylindricalDifferential)``."""
-        cylindrical = difntl.represent_as(cx.CylindricalDifferential, vector)
+        """Test ``coordinax.represent_as(CylindricalVelocity)``."""
+        cylindrical = difntl.represent_as(cx.CylindricalVelocity, vector)
 
-        assert isinstance(cylindrical, cx.CylindricalDifferential)
+        assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.allclose(
             cylindrical.d_rho,
             Quantity([61.803337, 65.60564, 6.9999905, -303.30875], "km/s"),
@@ -916,8 +918,8 @@ class TestSphericalDifferential(AbstractVelocity3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cyl = difntl.represent_as(cx.CylindricalDifferential, vector)
-        apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
+        cyl = difntl.represent_as(cx.CylindricalVelocity, vector)
+        apycyl = apydifntl.represent_as(apyc.CylindricalVelocity, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)

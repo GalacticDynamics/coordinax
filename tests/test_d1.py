@@ -88,14 +88,14 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cartesian1d_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalVector,
+            cx.CylindricalPosition,
             phi=Quantity([0, 1, 2, 3], "rad"),
             z=Quantity([4, 5, 6, 7], "m"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalVector)
+        assert isinstance(cylindrical, cx.CylindricalPosition)
         assert qnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
@@ -174,14 +174,14 @@ class TestRadialPosition(AbstractPosition1DTest):
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_radial_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalVector,
+            cx.CylindricalPosition,
             phi=Quantity([0, 1, 2, 3], "rad"),
             z=Quantity([4, 5, 6, 7], "m"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalVector)
+        assert isinstance(cylindrical, cx.CylindricalPosition)
         assert qnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
@@ -285,15 +285,15 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian1d_to_cylindrical(self, difntl, vector):
-        """Test ``difntl.represent_as(CylindricalDifferential)``."""
+        """Test ``difntl.represent_as(CylindricalVelocity)``."""
         cylindrical = difntl.represent_as(
-            cx.CylindricalDifferential,
+            cx.CylindricalVelocity,
             vector,
             d_phi=Quantity([0, 1, 2, 3], "rad"),
             d_z=Quantity([4, 5, 6, 7], "m"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalDifferential)
+        assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m"))
@@ -393,15 +393,15 @@ class TestRadialVelocity(AbstractVelocity1DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_cylindrical(self, difntl, vector):
-        """Test ``difntl.represent_as(CylindricalDifferential)``."""
+        """Test ``difntl.represent_as(CylindricalVelocity)``."""
         cylindrical = difntl.represent_as(
-            cx.CylindricalDifferential,
+            cx.CylindricalVelocity,
             vector,
             d_phi=Quantity([0, 1, 2, 3], "rad"),
             d_z=Quantity([4, 5, 6, 7], "m"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalDifferential)
+        assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m"))

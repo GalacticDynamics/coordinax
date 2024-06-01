@@ -15,8 +15,8 @@ from .base import AbstractPosition3D
 from .builtin import (
     CartesianPosition3D,
     CartesianVelocity3D,
-    CylindricalDifferential,
-    CylindricalVector,
+    CylindricalPosition,
+    CylindricalVelocity,
 )
 from .sphere import (
     LonCosLatSphericalDifferential,
@@ -52,10 +52,10 @@ def constructor(
     return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
-@CylindricalVector.constructor._f.register  # noqa: SLF001
+@CylindricalPosition.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalVector], obj: apyc.BaseRepresentation
-) -> CylindricalVector:
+    cls: type[CylindricalPosition], obj: apyc.BaseRepresentation
+) -> CylindricalPosition:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -66,7 +66,7 @@ def constructor(
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg,
     ...                                 z=30 * u.pc)
-    >>> vec = cx.CylindricalVector.constructor(cyl)
+    >>> vec = cx.CylindricalPosition.constructor(cyl)
     >>> vec.rho
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
@@ -145,11 +145,11 @@ def constructor(
     return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
-@CylindricalDifferential.constructor._f.register  # noqa: SLF001
+@CylindricalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalDifferential], obj: apyc.CylindricalDifferential
-) -> CylindricalDifferential:
-    """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
+    cls: type[CylindricalVelocity], obj: apyc.CylindricalVelocity
+) -> CylindricalVelocity:
+    """Construct from a :class:`astropy.coordinates.CylindricalVelocity`.
 
     Examples
     --------
@@ -157,9 +157,9 @@ def constructor(
     >>> import astropy.coordinates as apyc
     >>> import coordinax as cx
 
-    >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
+    >>> dcyl = apyc.CylindricalVelocity(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> dif = cx.CylindricalDifferential.constructor(dcyl)
+    >>> dif = cx.CylindricalVelocity.constructor(dcyl)
     >>> dif.d_rho
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -267,7 +267,7 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
     Quantity['length'](Array([0.03485167, 0.0018265 , 0.99939084], dtype=float32),
                        unit='kpc')
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1, unit="kpc"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
     ...                            phi=Quantity(2, unit="deg"),
     ...                            z=Quantity(3, unit="pc"))
     >>> convert(vec, Quantity)
@@ -354,20 +354,20 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> CartesianPosition
 
 
 # =====================================
-# CylindricalVector
+# CylindricalPosition
 
 
-@conversion_method(CylindricalVector, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(CylindricalVector, apyc.CylindricalRepresentation)  # type: ignore[misc]
-def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
-    """`coordinax.CylindricalVector` -> `astropy.CylindricalRepresentation`.
+@conversion_method(CylindricalPosition, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(CylindricalPosition, apyc.CylindricalRepresentation)  # type: ignore[misc]
+def cyl_to_apycyl(obj: CylindricalPosition, /) -> apyc.CylindricalRepresentation:
+    """`coordinax.CylindricalPosition` -> `astropy.CylindricalRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1, unit="kpc"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
     ...                            phi=Quantity(2, unit="deg"),
     ...                            z=Quantity(3, unit="pc"))
     >>> convert(vec, apyc.CylindricalRepresentation)
@@ -386,9 +386,9 @@ def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
     )
 
 
-@conversion_method(apyc.CylindricalRepresentation, CylindricalVector)  # type: ignore[misc]
-def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
-    """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalVector`.
+@conversion_method(apyc.CylindricalRepresentation, CylindricalPosition)  # type: ignore[misc]
+def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalPosition:
+    """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalPosition`.
 
     Examples
     --------
@@ -397,15 +397,15 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
     >>> from astropy.coordinates import CylindricalRepresentation
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg, z=30 * u.pc)
-    >>> convert(cyl, cx.CylindricalVector)
-    CylindricalVector(
+    >>> convert(cyl, cx.CylindricalPosition)
+    CylindricalPosition(
         rho=Quantity[...](value=f32[], unit=Unit("kpc")),
         phi=Quantity[...](value=f32[], unit=Unit("deg")),
         z=Quantity[...](value=f32[], unit=Unit("pc"))
     )
 
     """
-    return CylindricalVector.constructor(obj)
+    return CylindricalPosition.constructor(obj)
 
 
 # =====================================
@@ -564,13 +564,13 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> CartesianVeloci
 
 
 # =====================================
-# CylindricalDifferential
+# CylindricalVelocity
 
 
-@conversion_method(CylindricalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(CylindricalDifferential, apyc.CylindricalDifferential)  # type: ignore[misc]
-def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDifferential:
-    """`coordinax.CylindricalDifferential` -> `astropy.CylindricalDifferential`.
+@conversion_method(CylindricalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(CylindricalVelocity, apyc.CylindricalVelocity)  # type: ignore[misc]
+def diffcyl_to_apycyl(obj: CylindricalVelocity, /) -> apyc.CylindricalVelocity:
+    """`coordinax.CylindricalVelocity` -> `astropy.CylindricalVelocity`.
 
     Examples
     --------
@@ -578,19 +578,19 @@ def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDiffer
     >>> import coordinax as cx
     >>> import astropy.coordinates as apyc
 
-    >>> dif = cx.CylindricalDifferential(d_rho=Quantity(1, unit="km/s"),
+    >>> dif = cx.CylindricalVelocity(d_rho=Quantity(1, unit="km/s"),
     ...                                  d_phi=Quantity(2, unit="mas/yr"),
     ...                                  d_z=Quantity(3, unit="km/s"))
-    >>> convert(dif, apyc.CylindricalDifferential)
-    <CylindricalDifferential (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
+    >>> convert(dif, apyc.CylindricalVelocity)
+    <CylindricalVelocity (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
         (1., 2., 3.)>
 
     >>> convert(dif, apyc.BaseDifferential)
-    <CylindricalDifferential (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
+    <CylindricalVelocity (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
         (1., 2., 3.)>
 
     """
-    return apyc.CylindricalDifferential(
+    return apyc.CylindricalVelocity(
         d_rho=convert(obj.d_rho, apyu.Quantity),
         d_phi=convert(obj.d_phi, apyu.Quantity),
         d_z=convert(obj.d_z, apyu.Quantity),
@@ -598,10 +598,10 @@ def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDiffer
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.CylindricalDifferential, CylindricalDifferential
+    apyc.CylindricalVelocity, CylindricalVelocity
 )
-def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalDifferential:
-    """`astropy.CylindricalDifferential` -> `coordinax.CylindricalDifferential`.
+def apycyl_to_diffcyl(obj: apyc.CylindricalVelocity, /) -> CylindricalVelocity:
+    """`astropy.CylindricalVelocity` -> `coordinax.CylindricalVelocity`.
 
     Examples
     --------
@@ -609,17 +609,17 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalDiffer
     >>> import astropy.coordinates as apyc
     >>> import coordinax as cx
 
-    >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
+    >>> dcyl = apyc.CylindricalVelocity(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> convert(dcyl, cx.CylindricalDifferential)
-    CylindricalDifferential(
+    >>> convert(dcyl, cx.CylindricalVelocity)
+    CylindricalVelocity(
       d_rho=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return CylindricalDifferential.constructor(obj)
+    return CylindricalVelocity.constructor(obj)
 
 
 # =====================================

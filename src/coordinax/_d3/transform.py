@@ -13,8 +13,8 @@ from .base import AbstractPosition3D, AbstractVelocity3D
 from .builtin import (
     CartesianPosition3D,
     CartesianVelocity3D,
-    CylindricalDifferential,
-    CylindricalVector,
+    CylindricalPosition,
+    CylindricalVelocity,
 )
 from .sphere import (
     AbstractSphericalVector,
@@ -42,7 +42,7 @@ def represent_as(
 
 @dispatch.multi(
     (CartesianPosition3D, type[CartesianPosition3D]),
-    (CylindricalVector, type[CylindricalVector]),
+    (CylindricalPosition, type[CylindricalPosition]),
     (SphericalVector, type[SphericalVector]),
     (LonLatSphericalVector, type[LonLatSphericalVector]),
     (MathSphericalVector, type[MathSphericalVector]),
@@ -65,9 +65,9 @@ def represent_as(
 
     Cylindrical to Cylindrical:
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1, "kpc"), phi=Quantity(2, "deg"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1, "kpc"), phi=Quantity(2, "deg"),
     ...                            z=Quantity(3, "kpc"))
-    >>> cx.represent_as(vec, cx.CylindricalVector) is vec
+    >>> cx.represent_as(vec, cx.CylindricalPosition) is vec
     True
 
     Spherical to Spherical:
@@ -97,7 +97,7 @@ def represent_as(
 
 @dispatch.multi(
     (CartesianVelocity3D, type[CartesianVelocity3D], AbstractPosition),
-    (CylindricalDifferential, type[CylindricalDifferential], AbstractPosition),
+    (CylindricalVelocity, type[CylindricalVelocity], AbstractPosition),
     (SphericalDifferential, type[SphericalDifferential], AbstractPosition),
     (LonLatSphericalDifferential, type[LonLatSphericalDifferential], AbstractPosition),
     (
@@ -134,10 +134,10 @@ def represent_as(
 
     Cylindrical to Cylindrical differential:
 
-    >>> dif = cx.CylindricalDifferential(d_rho=Quantity(1, "km/s"),
+    >>> dif = cx.CylindricalVelocity(d_rho=Quantity(1, "km/s"),
     ...                                  d_phi=Quantity(2, "mas/yr"),
     ...                                  d_z=Quantity(3, "km/s"))
-    >>> cx.represent_as(dif, cx.CylindricalDifferential, vec) is dif
+    >>> cx.represent_as(dif, cx.CylindricalVelocity, vec) is dif
     True
 
     Spherical to Spherical differential:
@@ -182,9 +182,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CartesianPosition3D, target: type[CylindricalVector], /, **kwargs: Any
-) -> CylindricalVector:
-    """CartesianPosition3D -> CylindricalVector.
+    current: CartesianPosition3D, target: type[CylindricalPosition], /, **kwargs: Any
+) -> CylindricalPosition:
+    """CartesianPosition3D -> CylindricalPosition.
 
     Examples
     --------
@@ -192,8 +192,8 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "km"))
-    >>> print(cx.represent_as(vec, cx.CylindricalVector))
-    <CylindricalVector (rho[km], phi[rad], z[km])
+    >>> print(cx.represent_as(vec, cx.CylindricalPosition))
+    <CylindricalPosition (rho[km], phi[rad], z[km])
         [2.236 1.107 3.   ]>
 
     """
@@ -257,21 +257,21 @@ def represent_as(
 
 
 # =============================================================================
-# CylindricalVector
+# CylindricalPosition
 
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[CartesianPosition3D], /, **kwargs: Any
+    current: CylindricalPosition, target: type[CartesianPosition3D], /, **kwargs: Any
 ) -> CartesianPosition3D:
-    """CylindricalVector -> CartesianPosition3D.
+    """CylindricalPosition -> CartesianPosition3D.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
     ...                            z=Quantity(1, "kpc"))
     >>> print(cx.represent_as(vec, cx.CartesianPosition3D))
     <CartesianPosition3D (x[kpc], y[kpc], z[kpc])
@@ -286,16 +286,16 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[SphericalVector], /, **kwargs: Any
+    current: CylindricalPosition, target: type[SphericalVector], /, **kwargs: Any
 ) -> SphericalVector:
-    """CylindricalVector -> SphericalVector.
+    """CylindricalPosition -> SphericalVector.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
     ...                            z=Quantity(1, "kpc"))
     >>> print(cx.represent_as(vec, cx.SphericalVector))
     <SphericalVector (r[kpc], theta[rad], phi[deg])
@@ -308,20 +308,23 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CylindricalVector, type[LonLatSphericalVector]),
-    (CylindricalVector, type[MathSphericalVector]),
+    (CylindricalPosition, type[LonLatSphericalVector]),
+    (CylindricalPosition, type[MathSphericalVector]),
 )
 def represent_as(
-    current: CylindricalVector, target: type[AbstractSphericalVector], /, **kwargs: Any
+    current: CylindricalPosition,
+    target: type[AbstractSphericalVector],
+    /,
+    **kwargs: Any,
 ) -> AbstractSphericalVector:
-    """CylindricalVector -> AbstractSphericalVector.
+    """CylindricalPosition -> AbstractSphericalVector.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
     ...                            z=Quantity(1, "kpc"))
 
     >>> print(cx.represent_as(vec, cx.LonLatSphericalVector))
@@ -366,9 +369,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalVector, target: type[CylindricalVector], /, **kwargs: Any
-) -> CylindricalVector:
-    """SphericalVector -> CylindricalVector.
+    current: SphericalVector, target: type[CylindricalPosition], /, **kwargs: Any
+) -> CylindricalPosition:
+    """SphericalVector -> CylindricalPosition.
 
     Examples
     --------
@@ -377,8 +380,8 @@ def represent_as(
 
     >>> vec = cx.SphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
     ...                          phi=Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.CylindricalVector))
-    <CylindricalVector (rho[kpc], phi[deg], z[kpc])
+    >>> print(cx.represent_as(vec, cx.CylindricalPosition))
+    <CylindricalPosition (rho[kpc], phi[deg], z[kpc])
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
@@ -458,9 +461,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: LonLatSphericalVector, target: type[CylindricalVector], /, **kwargs: Any
-) -> CylindricalVector:
-    """LonLatSphericalVector -> CylindricalVector.
+    current: LonLatSphericalVector, target: type[CylindricalPosition], /, **kwargs: Any
+) -> CylindricalPosition:
+    """LonLatSphericalVector -> CylindricalPosition.
 
     Examples
     --------
@@ -469,8 +472,8 @@ def represent_as(
 
     >>> vec = cx.LonLatSphericalVector(lon=Quantity(90, "deg"), lat=Quantity(0, "deg"),
     ...                                distance=Quantity(1., "kpc"))
-    >>> print(cx.represent_as(vec, cx.CylindricalVector))
-    <CylindricalVector (rho[kpc], phi[deg], z[kpc])
+    >>> print(cx.represent_as(vec, cx.CylindricalPosition))
+    <CylindricalPosition (rho[kpc], phi[deg], z[kpc])
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
@@ -530,9 +533,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalVector, target: type[CylindricalVector], /, **kwargs: Any
-) -> CylindricalVector:
-    """MathSphericalVector -> CylindricalVector.
+    current: MathSphericalVector, target: type[CylindricalPosition], /, **kwargs: Any
+) -> CylindricalPosition:
+    """MathSphericalVector -> CylindricalPosition.
 
     Examples
     --------
@@ -541,8 +544,8 @@ def represent_as(
 
     >>> vec = cx.MathSphericalVector(r=Quantity(1., "kpc"), theta=Quantity(90, "deg"),
     ...                              phi=Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.CylindricalVector))
-    <CylindricalVector (rho[kpc], phi[deg], z[kpc])
+    >>> print(cx.represent_as(vec, cx.CylindricalPosition))
+    <CylindricalPosition (rho[kpc], phi[deg], z[kpc])
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """

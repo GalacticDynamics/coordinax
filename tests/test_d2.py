@@ -99,12 +99,12 @@ class TestCartesianPosition2D:
         )
 
     def test_cartesian2d_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalVector, z=Quantity([9, 10, 11, 12], "m")
+            cx.CylindricalPosition, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cylindrical, cx.CylindricalVector)
+        assert isinstance(cylindrical, cx.CylindricalPosition)
         assert qnp.array_equal(cylindrical.rho, qnp.hypot(vector.x, vector.y))
         assert qnp.array_equal(
             cylindrical.phi,
@@ -204,12 +204,12 @@ class TestPolarPosition:
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_polar_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalVector)``."""
+        """Test ``coordinax.represent_as(CylindricalPosition)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalVector, z=Quantity([9, 10, 11, 12], "m")
+            cx.CylindricalPosition, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cylindrical, cx.CylindricalVector)
+        assert isinstance(cylindrical, cx.CylindricalPosition)
         assert qnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
         assert qnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
         assert qnp.array_equal(cylindrical.z, Quantity([9, 10, 11, 12], "m"))
@@ -310,12 +310,12 @@ class TestCartesianVelocity2D(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_cylindrical(self, difntl, vector):
-        """Test ``difntl.represent_as(CylindricalDifferential, vector)``."""
+        """Test ``difntl.represent_as(CylindricalVelocity, vector)``."""
         cylindrical = difntl.represent_as(
-            cx.CylindricalDifferential, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
+            cx.CylindricalVelocity, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
         )
 
-        assert isinstance(cylindrical, cx.CylindricalDifferential)
+        assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(cylindrical.d_phi, Quantity([5, 6, 7, 8], "km/s"))
         assert qnp.array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], "m/s"))
@@ -414,12 +414,12 @@ class TestPolarVelocity(AbstractVelocity2DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_cylindrical(self, difntl, vector):
-        """Test ``difntl.represent_as(CylindricalDifferential, vector)``."""
+        """Test ``difntl.represent_as(CylindricalVelocity, vector)``."""
         cylindrical = difntl.represent_as(
-            cx.CylindricalDifferential, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
+            cx.CylindricalVelocity, vector, d_z=Quantity([9, 10, 11, 12], "m/s")
         )
 
-        assert isinstance(cylindrical, cx.CylindricalDifferential)
+        assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "km/s"))
         assert qnp.array_equal(cylindrical.d_phi, Quantity([5, 6, 7, 8], "km/s"))
         assert qnp.array_equal(cylindrical.d_z, Quantity([9, 10, 11, 12], "m/s"))

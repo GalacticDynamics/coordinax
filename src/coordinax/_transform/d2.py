@@ -15,13 +15,13 @@ from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.base import AbstractPosition3D
-from coordinax._d3.builtin import CartesianPosition3D, CylindricalVector
+from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 from coordinax._exceptions import IrreversibleDimensionChange
 
 
 @dispatch.multi(
-    (CartesianPosition2D, type[CylindricalVector]),
+    (CartesianPosition2D, type[CylindricalPosition]),
     (CartesianPosition2D, type[SphericalVector]),
     (CartesianPosition2D, type[MathSphericalVector]),
 )
@@ -44,9 +44,9 @@ def represent_as(
 
     >>> x = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
 
-    >>> x2 = cx.represent_as(x, cx.CylindricalVector, z=Quantity(14, "km"))
+    >>> x2 = cx.represent_as(x, cx.CylindricalPosition, z=Quantity(14, "km"))
     >>> x2
-    CylindricalVector( rho=Quantity[...](value=f32[], unit=Unit("km")),
+    CylindricalPosition( rho=Quantity[...](value=f32[], unit=Unit("km")),
                        phi=Quantity[...](value=f32[], unit=Unit("rad")),
                        z=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.z
@@ -106,7 +106,7 @@ def represent_as(
 
     """
     polar = represent_as(current, PolarPosition)
-    cyl = represent_as(polar, CylindricalVector, z=z)
+    cyl = represent_as(polar, CylindricalPosition, z=z)
     return represent_as(cyl, target)
 
 
@@ -338,13 +338,13 @@ def represent_as(
 @dispatch
 def represent_as(
     current: PolarPosition,
-    target: type[CylindricalVector],
+    target: type[CylindricalPosition],
     /,
     *,
     z: Quantity["length"] = Quantity(0.0, u.m),  # type: ignore[name-defined]
     **kwargs: Any,
-) -> CylindricalVector:
-    """PolarPosition -> CylindricalVector.
+) -> CylindricalPosition:
+    """PolarPosition -> CylindricalPosition.
 
     Examples
     --------
@@ -353,9 +353,9 @@ def represent_as(
 
     >>> x = cx.PolarPosition(r=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"))
 
-    >>> x2 = cx.represent_as(x, cx.CylindricalVector, z=Quantity(14, "km"))
+    >>> x2 = cx.represent_as(x, cx.CylindricalPosition, z=Quantity(14, "km"))
     >>> x2
-    CylindricalVector( rho=Quantity[...](value=f32[], unit=Unit("km")),
+    CylindricalPosition( rho=Quantity[...](value=f32[], unit=Unit("km")),
                        phi=Quantity[...](value=f32[], unit=Unit("deg")),
                        z=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.z

@@ -12,7 +12,7 @@ import quaxed.array_api as xp
 from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
 from coordinax._d2.base import AbstractPosition2D
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
-from coordinax._d3.builtin import CartesianPosition3D, CylindricalVector
+from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
 from coordinax._d3.sphere import MathSphericalVector, SphericalVector
 from coordinax._exceptions import IrreversibleDimensionChange
 
@@ -138,7 +138,7 @@ def represent_as(
 
 
 # =============================================================================
-# CylindricalVector
+# CylindricalPosition
 
 
 # -----------------------------------------------
@@ -147,9 +147,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[CartesianPosition1D], /, **kwargs: Any
+    current: CylindricalPosition, target: type[CartesianPosition1D], /, **kwargs: Any
 ) -> CartesianPosition1D:
-    """CylindricalVector -> CartesianPosition1D.
+    """CylindricalPosition -> CartesianPosition1D.
 
     Examples
     --------
@@ -157,7 +157,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalVector(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
@@ -173,9 +173,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[RadialPosition], /, **kwargs: Any
+    current: CylindricalPosition, target: type[RadialPosition], /, **kwargs: Any
 ) -> RadialPosition:
-    """CylindricalVector -> RadialPosition.
+    """CylindricalPosition -> RadialPosition.
 
     Examples
     --------
@@ -183,7 +183,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalVector(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
@@ -203,9 +203,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[CartesianPosition2D], /, **kwargs: Any
+    current: CylindricalPosition, target: type[CartesianPosition2D], /, **kwargs: Any
 ) -> CartesianPosition2D:
-    """CylindricalVector -> CartesianPosition2D.
+    """CylindricalPosition -> CartesianPosition2D.
 
     Examples
     --------
@@ -213,7 +213,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalVector(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
@@ -232,9 +232,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalVector, target: type[PolarPosition], /, **kwargs: Any
+    current: CylindricalPosition, target: type[PolarPosition], /, **kwargs: Any
 ) -> PolarPosition:
-    """CylindricalVector -> PolarPosition.
+    """CylindricalPosition -> PolarPosition.
 
     Examples
     --------
@@ -242,7 +242,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalVector(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
