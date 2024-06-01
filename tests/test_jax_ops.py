@@ -9,7 +9,7 @@ import pytest
 from unxt import AbstractQuantity, Quantity
 
 import coordinax as cx
-from coordinax._base_vec import VECTOR_CLASSES
+from coordinax._base_pos import VECTOR_CLASSES
 from coordinax._utils import dataclass_items
 
 VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.Abstract3DVector)]

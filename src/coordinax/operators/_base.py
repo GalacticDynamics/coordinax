@@ -11,7 +11,7 @@ from plum import dispatch
 
 from unxt import Quantity
 
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 from coordinax._utils import dataclass_items
 
 if TYPE_CHECKING:

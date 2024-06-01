@@ -15,7 +15,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 from coordinax._d1.builtin import Cartesian1DVector
 from coordinax._d2.builtin import Cartesian2DVector
 from coordinax._d3.base import Abstract3DVector

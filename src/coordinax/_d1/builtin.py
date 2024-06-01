@@ -21,7 +21,7 @@ from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
 from .base import Abstract1DVector, Abstract1DVectorDifferential
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 from coordinax._checks import check_r_non_negative
 from coordinax._utils import classproperty
 

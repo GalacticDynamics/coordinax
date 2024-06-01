@@ -14,7 +14,7 @@ from plum import dispatch
 from unxt import Quantity
 
 from ._base import AbstractVectorBase
-from ._base_vec import AbstractVector
+from ._base_pos import AbstractVector
 from ._utils import classproperty, dataclass_items
 
 if TYPE_CHECKING:

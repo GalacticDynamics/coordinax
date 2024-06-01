@@ -11,7 +11,7 @@ import quaxed.lax as qlax
 import quaxed.numpy as qnp
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._utils import classproperty
 

@@ -15,7 +15,7 @@ from .builtin import (
     PolarDifferential,
     PolarVector,
 )
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 
 
 @dispatch

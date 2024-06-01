@@ -20,7 +20,7 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import AbstractNDVector, AbstractNDVectorDifferential
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 from coordinax._utils import classproperty
 
 ##############################################################################

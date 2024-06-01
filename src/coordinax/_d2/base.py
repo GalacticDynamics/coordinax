@@ -6,7 +6,7 @@ __all__ = ["Abstract2DVector", "Abstract2DVectorDifferential"]
 from abc import abstractmethod
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._utils import classproperty
 

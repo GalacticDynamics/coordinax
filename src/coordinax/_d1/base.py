@@ -11,7 +11,7 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 from coordinax._base import AbstractVectorBase
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractVector
 from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._utils import classproperty
 
