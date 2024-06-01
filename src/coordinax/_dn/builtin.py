@@ -2,9 +2,9 @@
 
 __all__ = [
     # Position
-    "CartesianNDVector",
+    "CartesianPositionND",
     # Differential
-    "CartesianDifferentialND",
+    "CartesianVelocityND",
 ]
 
 from dataclasses import replace
@@ -28,17 +28,17 @@ from coordinax._utils import classproperty
 
 
 @final
-class CartesianNDVector(AbstractPositionND):
+class CartesianPositionND(AbstractPositionND):
     """N-dimensional Cartesian vector representation.
 
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianNDVector
+    >>> from coordinax import CartesianPositionND
 
     A 1D vector:
 
-    >>> q = CartesianNDVector(Quantity([[1]], "kpc"))
+    >>> q = CartesianPositionND(Quantity([[1]], "kpc"))
     >>> q.q
     Quantity['length'](Array([[1.]], dtype=float32), unit='kpc')
     >>> q.shape
@@ -46,7 +46,7 @@ class CartesianNDVector(AbstractPositionND):
 
     A 2D vector:
 
-    >>> q = CartesianNDVector(Quantity([1, 2], "kpc"))
+    >>> q = CartesianPositionND(Quantity([1, 2], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -54,7 +54,7 @@ class CartesianNDVector(AbstractPositionND):
 
     A 3D vector:
 
-    >>> q = CartesianNDVector(Quantity([1, 2, 3], "kpc"))
+    >>> q = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -62,7 +62,7 @@ class CartesianNDVector(AbstractPositionND):
 
     A 4D vector:
 
-    >>> q = CartesianNDVector(Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = CartesianPositionND(Quantity([1, 2, 3, 4], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3., 4.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -70,7 +70,7 @@ class CartesianNDVector(AbstractPositionND):
 
     A 5D vector:
 
-    >>> q = CartesianNDVector(Quantity([1, 2, 3, 4, 5], "kpc"))
+    >>> q = CartesianPositionND(Quantity([1, 2, 3, 4, 5], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -90,8 +90,8 @@ class CartesianNDVector(AbstractPositionND):
     @classproperty
     @classmethod
     @override
-    def differential_cls(cls) -> type["CartesianDifferentialND"]:  # type: ignore[override]
-        return CartesianDifferentialND
+    def differential_cls(cls) -> type["CartesianVelocityND"]:  # type: ignore[override]
+        return CartesianVelocityND
 
     # -----------------------------------------------------
     # Unary operations
@@ -102,11 +102,11 @@ class CartesianNDVector(AbstractPositionND):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianNDVector
+        >>> from coordinax import CartesianPositionND
 
         A 3D vector:
 
-        >>> q = CartesianNDVector(Quantity([1, 2, 3], "kpc"))
+        >>> q = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
         >>> (-q).q
         Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
 
@@ -116,18 +116,18 @@ class CartesianNDVector(AbstractPositionND):
     # -----------------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any, /) -> "CartesianNDVector":
+    def __add__(self, other: Any, /) -> "CartesianPositionND":
         """Add two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianNDVector
+        >>> from coordinax import CartesianPositionND
 
         A 3D vector:
 
-        >>> q1 = CartesianNDVector(Quantity([1, 2, 3], "kpc"))
-        >>> q2 = CartesianNDVector(Quantity([2, 3, 4], "kpc"))
+        >>> q1 = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> q2 = CartesianPositionND(Quantity([2, 3, 4], "kpc"))
         >>> (q1 + q2).q
         Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
 
@@ -136,21 +136,21 @@ class CartesianNDVector(AbstractPositionND):
             msg = f"Cannot add {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(CartesianNDVector)
+        cart = other.represent_as(CartesianPositionND)
         return replace(self, q=self.q + cart.q)
 
-    def __sub__(self, other: Any, /) -> "CartesianNDVector":
+    def __sub__(self, other: Any, /) -> "CartesianPositionND":
         """Subtract two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianNDVector
+        >>> from coordinax import CartesianPositionND
 
         A 3D vector:
 
-        >>> q1 = CartesianNDVector(Quantity([1, 2, 3], "kpc"))
-        >>> q2 = CartesianNDVector(Quantity([2, 3, 4], "kpc"))
+        >>> q1 = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> q2 = CartesianPositionND(Quantity([2, 3, 4], "kpc"))
         >>> (q1 - q2).q
         Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
 
@@ -159,7 +159,7 @@ class CartesianNDVector(AbstractPositionND):
             msg = f"Cannot subtract {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(CartesianNDVector)
+        cart = other.represent_as(CartesianPositionND)
         return replace(self, q=self.q - cart.q)
 
     # -----------------------------------------------------
@@ -171,11 +171,11 @@ class CartesianNDVector(AbstractPositionND):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianNDVector
+        >>> from coordinax import CartesianPositionND
 
         A 3D vector:
 
-        >>> q = CartesianNDVector(Quantity([1, 2, 3], "kpc"))
+        >>> q = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
 
@@ -188,17 +188,17 @@ class CartesianNDVector(AbstractPositionND):
 
 
 @final
-class CartesianDifferentialND(AbstractPositionNDDifferential):
+class CartesianVelocityND(AbstractPositionNDDifferential):
     """Cartesian differential representation.
 
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianDifferentialND
+    >>> from coordinax import CartesianVelocityND
 
     A 1D vector:
 
-    >>> q = CartesianDifferentialND(Quantity([[1]], "km/s"))
+    >>> q = CartesianVelocityND(Quantity([[1]], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([[1.]], dtype=float32), unit='km / s')
     >>> q.shape
@@ -206,7 +206,7 @@ class CartesianDifferentialND(AbstractPositionNDDifferential):
 
     A 2D vector:
 
-    >>> q = CartesianDifferentialND(Quantity([1, 2], "km/s"))
+    >>> q = CartesianVelocityND(Quantity([1, 2], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -214,7 +214,7 @@ class CartesianDifferentialND(AbstractPositionNDDifferential):
 
     A 3D vector:
 
-    >>> q = CartesianDifferentialND(Quantity([1, 2, 3], "km/s"))
+    >>> q = CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -222,7 +222,7 @@ class CartesianDifferentialND(AbstractPositionNDDifferential):
 
     A 4D vector:
 
-    >>> q = CartesianDifferentialND(Quantity([1, 2, 3, 4], "km/s"))
+    >>> q = CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3., 4.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -230,7 +230,7 @@ class CartesianDifferentialND(AbstractPositionNDDifferential):
 
     A 5D vector:
 
-    >>> q = CartesianDifferentialND(Quantity([1, 2, 3, 4, 5], "km/s"))
+    >>> q = CartesianVelocityND(Quantity([1, 2, 3, 4, 5], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -249,8 +249,8 @@ class CartesianDifferentialND(AbstractPositionNDDifferential):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianNDVector]:
-        return CartesianNDVector
+    def integral_cls(cls) -> type[CartesianPositionND]:
+        return CartesianPositionND
 
     @partial(jax.jit)
     def norm(self, _: AbstractPositionND | None = None, /) -> ct.BatchableSpeed:
@@ -259,11 +259,11 @@ class CartesianDifferentialND(AbstractPositionNDDifferential):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianDifferentialND
+        >>> from coordinax import CartesianVelocityND
 
         A 3D vector:
 
-        >>> c = CartesianDifferentialND(Quantity([1, 2, 3], "km/s"))
+        >>> c = CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
         >>> c.norm()
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 

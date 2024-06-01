@@ -25,9 +25,9 @@ class AbstractPositionND(AbstractPosition):
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import CartesianNDVector
+        from .builtin import CartesianPositionND
 
-        return CartesianNDVector
+        return CartesianPositionND
 
     @classproperty
     @classmethod
@@ -88,9 +88,9 @@ class AbstractPositionNDDifferential(AbstractVelocity):
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import CartesianDifferentialND
+        from .builtin import CartesianVelocityND
 
-        return CartesianDifferentialND
+        return CartesianVelocityND
 
     @classproperty
     @classmethod
