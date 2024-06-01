@@ -12,8 +12,8 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import AbstractDistance, Quantity
 
-from coordinax._base_dif import AbstractVectorDifferential
 from coordinax._base_vec import AbstractVector
+from coordinax._base_vel import AbstractVectorDifferential
 from coordinax._d1.base import Abstract1DVectorDifferential
 from coordinax._d2.base import Abstract2DVectorDifferential
 from coordinax._d3.base import Abstract3DVectorDifferential

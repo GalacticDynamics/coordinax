@@ -9,8 +9,8 @@ from jaxtyping import install_import_hook
 
 from . import (
     _base,
-    _base_dif,
     _base_vec,
+    _base_vel,
     _d1,
     _d2,
     _d3,
@@ -23,8 +23,8 @@ from . import (
     operators,
 )
 from ._base import *
-from ._base_dif import *
 from ._base_vec import *
+from ._base_vel import *
 from ._d1 import *
 from ._d2 import *
 from ._d3 import *
@@ -40,7 +40,7 @@ from .setup_package import RUNTIME_TYPECHECKER
 __all__ = ["__version__", "operators"]
 __all__ += _base.__all__
 __all__ += _base_vec.__all__
-__all__ += _base_dif.__all__
+__all__ += _base_vel.__all__
 __all__ += _d1.__all__
 __all__ += _d2.__all__
 __all__ += _d3.__all__
@@ -58,7 +58,7 @@ install_import_hook("coordinax", RUNTIME_TYPECHECKER)
 # Cleanup
 del (
     _base,
-    _base_dif,
+    _base_vel,
     _base_vec,
     _exceptions,
     _transform,

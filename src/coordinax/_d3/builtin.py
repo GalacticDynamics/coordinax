@@ -21,8 +21,8 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import Abstract3DVector, Abstract3DVectorDifferential
-from coordinax._base_dif import AdditionMixin
 from coordinax._base_vec import AbstractVector
+from coordinax._base_vel import AdditionMixin
 from coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._converters import converter_azimuth_to_range
 from coordinax._utils import classproperty
