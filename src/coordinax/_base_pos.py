@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVector"]
+__all__ = ["AbstractPosition"]
 
 import operator
 import warnings
@@ -16,18 +16,18 @@ from plum import dispatch
 
 from unxt import Quantity
 
-from ._base import AbstractVectorBase
+from ._base import AbstractVector
 from ._utils import classproperty, dataclass_items
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-VT = TypeVar("VT", bound="AbstractVector")
+VT = TypeVar("VT", bound="AbstractPosition")
 
-VECTOR_CLASSES: set[type["AbstractVector"]] = set()
+VECTOR_CLASSES: set[type["AbstractPosition"]] = set()
 
 
-class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
+class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -44,7 +44,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVectorDifferential"]:
+    def differential_cls(cls) -> type["AbstractVelocity"]:
         """Return the corresponding differential vector class.
 
         Examples
@@ -79,7 +79,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
 
     def __add__(self, other: Any) -> "Self":
         """Add another object to this vector."""
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             return NotImplemented
 
         # The base implementation is to convert to Cartesian and perform the
@@ -93,7 +93,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
 
     def __sub__(self, other: Any) -> "Self":
         """Add another object to this vector."""
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             return NotImplemented
 
         # The base implementation is to convert to Cartesian and perform the
@@ -106,30 +106,30 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
         ).represent_as(type(self))
 
     @dispatch
-    def __mul__(self: "AbstractVector", other: Any) -> Any:
+    def __mul__(self: "AbstractPosition", other: Any) -> Any:
         return NotImplemented
 
     @dispatch
-    def __mul__(self: "AbstractVector", other: ArrayLike) -> Any:
+    def __mul__(self: "AbstractPosition", other: ArrayLike) -> Any:
         return replace(self, **{k: v * other for k, v in dataclass_items(self)})
 
     @dispatch
-    def __truediv__(self: "AbstractVector", other: Any) -> Any:
+    def __truediv__(self: "AbstractPosition", other: Any) -> Any:
         return NotImplemented
 
     @dispatch
-    def __truediv__(self: "AbstractVector", other: ArrayLike) -> Any:
+    def __truediv__(self: "AbstractPosition", other: ArrayLike) -> Any:
         return replace(self, **{k: v / other for k, v in dataclass_items(self)})
 
     # ---------------------------------
     # Reverse binary operations
 
     @dispatch
-    def __rmul__(self: "AbstractVector", other: Any) -> Any:
+    def __rmul__(self: "AbstractPosition", other: Any) -> Any:
         return NotImplemented
 
     @dispatch
-    def __rmul__(self: "AbstractVector", other: ArrayLike) -> Any:
+    def __rmul__(self: "AbstractPosition", other: ArrayLike) -> Any:
         return replace(self, **{k: other * v for k, v in dataclass_items(self)})
 
     # ===============================================================
@@ -141,7 +141,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
 
         Parameters
         ----------
-        target : type[AbstractVector]
+        target : type[AbstractPosition]
             The type to represent the vector as.
         *args : Any
             Extra arguments. Raises a warning if any are given.
@@ -150,7 +150,7 @@ class AbstractVector(AbstractVectorBase):  # pylint: disable=abstract-method
 
         Returns
         -------
-        AbstractVector
+        AbstractPosition
             The vector represented as the target type.
 
         Warns

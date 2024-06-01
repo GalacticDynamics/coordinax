@@ -16,7 +16,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import Abstract4DVector
-from coordinax._base import AbstractVectorBase
+from coordinax._base import AbstractVector
 from coordinax._d3.base import Abstract3DVector
 from coordinax._d3.builtin import Cartesian3DVector
 from coordinax._typing import BatchableLength, BatchableTime, ScalarTime
@@ -102,7 +102,7 @@ class FourVector(Abstract4DVector):
     # Constructors
 
     @classmethod
-    @AbstractVectorBase.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+    @AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
     def constructor(
         cls: "type[FourVector]",
         obj: Quantity | u.Quantity,
@@ -179,7 +179,7 @@ class FourVector(Abstract4DVector):
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         msg = "Not yet implemented"
         raise NotImplementedError(msg)
 

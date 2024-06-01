@@ -20,8 +20,8 @@ from coordinax import (
     Abstract2DVectorDifferential,
     Abstract3DVector,
     Abstract3DVectorDifferential,
-    AbstractVector,
-    AbstractVectorDifferential,
+    AbstractPosition,
+    AbstractVelocity,
     Cartesian1DVector,
     Cartesian2DVector,
     Cartesian3DVector,
@@ -70,7 +70,7 @@ BUILTIN_DIFFERENTIALS = [
 
 
 def context_dimension_reduction(
-    vector: AbstractVector, target: type[AbstractVector]
+    vector: AbstractPosition, target: type[AbstractPosition]
 ) -> AbstractContextManager[Any]:
     """Return a context manager that checks for dimensionality reduction."""
     context: AbstractContextManager[Any]
@@ -86,8 +86,8 @@ def context_dimension_reduction(
     return context
 
 
-class AbstractVectorBaseTest:
-    """Test :class:`coordinax.AbstractVectorBase`."""
+class AbstractVectorTest:
+    """Test :class:`coordinax.AbstractVector`."""
 
     # ===============================================================
     # Array
@@ -183,17 +183,17 @@ class AbstractVectorBaseTest:
         assert all(v == getattr(vector, k).shape for k, v in shapes.items())
 
 
-class AbstractVectorTest(AbstractVectorBaseTest):
-    """Test :class:`coordinax.AbstractVector`."""
+class AbstractPositionTest(AbstractVectorTest):
+    """Test :class:`coordinax.AbstractPosition`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractVector:  # noqa: PT004
+    def vector(self) -> AbstractPosition:  # noqa: PT004
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.mark.parametrize("target", BUILTIN_VECTORS)
     def test_represent_as(self, vector, target):
-        """Test :meth:`AbstractVector.represent_as`.
+        """Test :meth:`AbstractPosition.represent_as`.
 
         This just tests that the machiner works.
         """
@@ -206,23 +206,23 @@ class AbstractVectorTest(AbstractVectorBaseTest):
         assert isinstance(newvec, target)
 
 
-class AbstractVectorDifferentialTest(AbstractVectorBaseTest):
-    """Test :class:`coordinax.AbstractVectorDifferential`."""
+class AbstractVelocityTest(AbstractVectorTest):
+    """Test :class:`coordinax.AbstractVelocity`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractVector:  # noqa: PT004
+    def vector(self) -> AbstractPosition:  # noqa: PT004
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> AbstractVectorDifferential:  # noqa: PT004
+    def difntl(self) -> AbstractVelocity:  # noqa: PT004
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.mark.parametrize("target", BUILTIN_DIFFERENTIALS)
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_represent_as(self, difntl, target, vector):
-        """Test :meth:`AbstractVector.represent_as`.
+        """Test :meth:`AbstractPosition.represent_as`.
 
         This just tests that the machiner works.
         """

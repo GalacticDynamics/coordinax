@@ -10,21 +10,21 @@ from typing import TYPE_CHECKING, Any
 import quaxed.lax as qlax
 import quaxed.numpy as qnp
 
-from coordinax._base import AbstractVectorBase
-from coordinax._base_dif import AbstractVectorDifferential
-from coordinax._base_vec import AbstractVector
+from coordinax._base import AbstractVector
+from coordinax._base_pos import AbstractPosition
+from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class AbstractNDVector(AbstractVector):
+class AbstractNDVector(AbstractPosition):
     """Abstract representation of N-D coordinates in different systems."""
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         from .builtin import CartesianNDVector
 
         return CartesianNDVector
@@ -82,12 +82,12 @@ class AbstractNDVector(AbstractVector):
         return replace(self, q=self.q.reshape(*hape, self.q.shape[-1], order=order))
 
 
-class AbstractNDVectorDifferential(AbstractVectorDifferential):
+class AbstractNDVectorDifferential(AbstractVelocity):
     """Abstract representation of N-D vector differentials."""
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         from .builtin import CartesianDifferentialND
 
         return CartesianDifferentialND

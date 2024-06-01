@@ -6,10 +6,10 @@ import quaxed.numpy as qnp
 from unxt import Quantity
 
 import coordinax as cx
-from .test_base import AbstractVectorDifferentialTest, AbstractVectorTest
+from .test_base import AbstractPositionTest, AbstractVelocityTest
 
 
-class Abstract1DVectorTest(AbstractVectorTest):
+class Abstract1DVectorTest(AbstractPositionTest):
     """Test :class:`coordinax.Abstract1DVector`."""
 
     # TODO: Add tests
@@ -19,7 +19,7 @@ class TestCartesian1DVector(Abstract1DVectorTest):
     """Test :class:`coordinax.Cartesian1DVector`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractVector:
+    def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
         return cx.Cartesian1DVector(x=Quantity([1, 2, 3, 4], "kpc"))
 
@@ -105,7 +105,7 @@ class TestRadialVector(Abstract1DVectorTest):
     """Test :class:`coordinax.RadialVector`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractVector:
+    def vector(self) -> cx.AbstractPosition:
         """Return a vector."""
         return cx.RadialVector(r=Quantity([1, 2, 3, 4], "kpc"))
 
@@ -187,7 +187,7 @@ class TestRadialVector(Abstract1DVectorTest):
         assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
 
 
-class Abstract1DVectorDifferentialTest(AbstractVectorDifferentialTest):
+class Abstract1DVectorDifferentialTest(AbstractVelocityTest):
     """Test :class:`coordinax.Abstract1DVectorDifferential`."""
 
 

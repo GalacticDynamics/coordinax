@@ -10,18 +10,18 @@ from jaxtyping import Shaped
 
 from unxt import Quantity
 
-from coordinax._base import AbstractVectorBase
-from coordinax._base_dif import AbstractVectorDifferential
-from coordinax._base_vec import AbstractVector
+from coordinax._base import AbstractVector
+from coordinax._base_pos import AbstractPosition
+from coordinax._base_vel import AbstractVelocity
 from coordinax._utils import classproperty
 
 
-class Abstract1DVector(AbstractVector):
+class Abstract1DVector(AbstractPosition):
     """Abstract representation of 1D coordinates in different systems."""
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         from .builtin import Cartesian1DVector
 
         return Cartesian1DVector
@@ -34,7 +34,7 @@ class Abstract1DVector(AbstractVector):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractPosition.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
     cls: "type[Abstract1DVector]", x: Shaped[Quantity["length"], ""], /
 ) -> "Abstract1DVector":
@@ -55,12 +55,12 @@ def constructor(
     return cls(**{fields(cls)[0].name: x.reshape(1)})
 
 
-class Abstract1DVectorDifferential(AbstractVectorDifferential):
+class Abstract1DVectorDifferential(AbstractVelocity):
     """Abstract representation of 1D differentials in different systems."""
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVectorBase]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:
         from .builtin import CartesianDifferential1D
 
         return CartesianDifferential1D

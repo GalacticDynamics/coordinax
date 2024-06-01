@@ -21,8 +21,8 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import Abstract3DVector, Abstract3DVectorDifferential
-from coordinax._base_dif import AdditionMixin
-from coordinax._base_vec import AbstractVector
+from coordinax._base_pos import AbstractPosition
+from coordinax._base_vel import AdditionMixin
 from coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._converters import converter_azimuth_to_range
 from coordinax._utils import classproperty
@@ -89,7 +89,7 @@ class Cartesian3DVector(Abstract3DVector):
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot add {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 
@@ -110,7 +110,7 @@ class Cartesian3DVector(Abstract3DVector):
         Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractVector):
+        if not isinstance(other, AbstractPosition):
             msg = f"Cannot subtract {self._cartesian_cls!r} and {type(other)!r}."
             raise TypeError(msg)
 
