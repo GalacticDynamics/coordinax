@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 DT = TypeVar("DT", bound="AbstractVectorDifferential")
 
-DIFFERENTIAL_CLASSES: list[type["AbstractVectorDifferential"]] = []
+DIFFERENTIAL_CLASSES: set[type["AbstractVectorDifferential"]] = set()
 
 
 class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstract-method
@@ -33,12 +33,12 @@ class AbstractVectorDifferential(AbstractVectorBase):  # pylint: disable=abstrac
 
         The subclass is registered.
         """
-        DIFFERENTIAL_CLASSES.append(cls)
+        DIFFERENTIAL_CLASSES.add(cls)
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type["AbstractVectorDifferential"]:
+    def integral_cls(cls) -> type["AbstractVector"]:
         """Return the corresponding vector class.
 
         Examples
