@@ -147,7 +147,7 @@ def constructor(
 
 @CylindricalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalVelocity], obj: apyc.CylindricalVelocity
+    cls: type[CylindricalVelocity], obj: apyc.CylindricalDifferential
 ) -> CylindricalVelocity:
     """Construct from a :class:`astropy.coordinates.CylindricalVelocity`.
 
@@ -157,7 +157,7 @@ def constructor(
     >>> import astropy.coordinates as apyc
     >>> import coordinax as cx
 
-    >>> dcyl = apyc.CylindricalVelocity(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
+    >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
     >>> dif = cx.CylindricalVelocity.constructor(dcyl)
     >>> dif.d_rho
@@ -169,17 +169,17 @@ def constructor(
 
 @SphericalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[SphericalVelocity], obj: apyc.PhysicsSphericalVelocity
+    cls: type[SphericalVelocity], obj: apyc.PhysicsSphericalDifferential
 ) -> SphericalVelocity:
-    """Construct from a :class:`astropy.coordinates.PhysicsSphericalVelocity`.
+    """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
 
     Examples
     --------
     >>> import astropy.units as u
     >>> import coordinax as cx
-    >>> from astropy.coordinates import PhysicsSphericalVelocity
+    >>> from astropy.coordinates import PhysicsSphericalDifferential
 
-    >>> dsph = PhysicsSphericalVelocity(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
+    >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                     d_phi=3 * u.mas/u.yr)
     >>> dif = cx.SphericalVelocity.constructor(dsph)
     >>> dif.d_r
@@ -191,7 +191,7 @@ def constructor(
 
 @LonLatSphericalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[LonLatSphericalVelocity], obj: apyc.SphericalVelocity
+    cls: type[LonLatSphericalVelocity], obj: apyc.SphericalDifferential
 ) -> LonLatSphericalVelocity:
     """Construct from a :class:`astropy.coordinates.SphericalVelocity`.
 
@@ -199,9 +199,9 @@ def constructor(
     --------
     >>> import astropy.units as u
     >>> import coordinax as cx
-    >>> from astropy.coordinates import SphericalVelocity
+    >>> from astropy.coordinates import SphericalDifferential
 
-    >>> dsph = SphericalVelocity(d_distance=1 * u.km / u.s,
+    >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
     ...                              d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
     >>> dif = cx.LonLatSphericalVelocity.constructor(dsph)
@@ -572,9 +572,9 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> CartesianVeloci
 
 
 @conversion_method(CylindricalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(CylindricalVelocity, apyc.CylindricalVelocity)  # type: ignore[misc]
-def diffcyl_to_apycyl(obj: CylindricalVelocity, /) -> apyc.CylindricalVelocity:
-    """`coordinax.CylindricalVelocity` -> `astropy.CylindricalVelocity`.
+@conversion_method(CylindricalVelocity, apyc.CylindricalDifferential)  # type: ignore[misc]
+def diffcyl_to_apycyl(obj: CylindricalVelocity, /) -> apyc.CylindricalDifferential:
+    """`coordinax.CylindricalVelocity` -> `astropy.CylindricalDifferential`.
 
     Examples
     --------
@@ -585,16 +585,16 @@ def diffcyl_to_apycyl(obj: CylindricalVelocity, /) -> apyc.CylindricalVelocity:
     >>> dif = cx.CylindricalVelocity(d_rho=Quantity(1, unit="km/s"),
     ...                                  d_phi=Quantity(2, unit="mas/yr"),
     ...                                  d_z=Quantity(3, unit="km/s"))
-    >>> convert(dif, apyc.CylindricalVelocity)
-    <CylindricalVelocity (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
+    >>> convert(dif, apyc.CylindricalDifferential)
+    <CylindricalDifferential (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
         (1., 2., 3.)>
 
     >>> convert(dif, apyc.BaseDifferential)
-    <CylindricalVelocity (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
+    <CylindricalDifferential (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
         (1., 2., 3.)>
 
     """
-    return apyc.CylindricalVelocity(
+    return apyc.CylindricalDifferential(
         d_rho=convert(obj.d_rho, apyu.Quantity),
         d_phi=convert(obj.d_phi, apyu.Quantity),
         d_z=convert(obj.d_z, apyu.Quantity),
@@ -602,9 +602,9 @@ def diffcyl_to_apycyl(obj: CylindricalVelocity, /) -> apyc.CylindricalVelocity:
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.CylindricalVelocity, CylindricalVelocity
+    apyc.CylindricalDifferential, CylindricalVelocity
 )
-def apycyl_to_diffcyl(obj: apyc.CylindricalVelocity, /) -> CylindricalVelocity:
+def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalVelocity:
     """`astropy.CylindricalVelocity` -> `coordinax.CylindricalVelocity`.
 
     Examples
@@ -613,7 +613,7 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalVelocity, /) -> CylindricalVelocity:
     >>> import astropy.coordinates as apyc
     >>> import coordinax as cx
 
-    >>> dcyl = apyc.CylindricalVelocity(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
+    >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
     >>> convert(dcyl, cx.CylindricalVelocity)
     CylindricalVelocity(
@@ -631,9 +631,9 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalVelocity, /) -> CylindricalVelocity:
 
 
 @conversion_method(SphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(SphericalVelocity, apyc.PhysicsSphericalVelocity)  # type: ignore[misc]
-def diffsph_to_apysph(obj: SphericalVelocity, /) -> apyc.PhysicsSphericalVelocity:
-    """SphericalVelocity -> `astropy.PhysicsSphericalVelocity`.
+@conversion_method(SphericalVelocity, apyc.PhysicsSphericalDifferential)  # type: ignore[misc]
+def diffsph_to_apysph(obj: SphericalVelocity, /) -> apyc.PhysicsSphericalDifferential:
+    """SphericalVelocity -> `astropy.PhysicsSphericalDifferential`.
 
     Examples
     --------
@@ -643,16 +643,16 @@ def diffsph_to_apysph(obj: SphericalVelocity, /) -> apyc.PhysicsSphericalVelocit
     >>> dif = cx.SphericalVelocity(d_r=Quantity(1, unit="km/s"),
     ...                                d_theta=Quantity(2, unit="mas/yr"),
     ...                                d_phi=Quantity(3, unit="mas/yr"))
-    >>> convert(dif, apyc.PhysicsSphericalVelocity)
-    <PhysicsSphericalVelocity (d_phi, d_theta, d_r) in (mas / yr, mas / yr, km / s)
+    >>> convert(dif, apyc.PhysicsSphericalDifferential)
+    <PhysicsSphericalDifferential (d_phi, d_theta, d_r) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
 
     >>> convert(dif, apyc.BaseDifferential)
-    <PhysicsSphericalVelocity (d_phi, d_theta, d_r) in (mas / yr, mas / yr, km / s)
+    <PhysicsSphericalDifferential (d_phi, d_theta, d_r) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
 
     """
-    return apyc.PhysicsSphericalVelocity(
+    return apyc.PhysicsSphericalDifferential(
         d_r=convert(obj.d_r, apyu.Quantity),
         d_theta=convert(obj.d_theta, apyu.Quantity),
         d_phi=convert(obj.d_phi, apyu.Quantity),
@@ -660,18 +660,18 @@ def diffsph_to_apysph(obj: SphericalVelocity, /) -> apyc.PhysicsSphericalVelocit
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.PhysicsSphericalVelocity, SphericalVelocity
+    apyc.PhysicsSphericalDifferential, SphericalVelocity
 )
-def apysph_to_diffsph(obj: apyc.PhysicsSphericalVelocity, /) -> SphericalVelocity:
-    """`astropy.PhysicsSphericalVelocity` -> SphericalVelocity.
+def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> SphericalVelocity:
+    """`astropy.PhysicsSphericalDifferential` -> SphericalVelocity.
 
     Examples
     --------
     >>> import astropy.units as u
     >>> import coordinax as cx
-    >>> from astropy.coordinates import PhysicsSphericalVelocity
+    >>> from astropy.coordinates import PhysicsSphericalDifferential
 
-    >>> dif = PhysicsSphericalVelocity(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
+    >>> dif = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                    d_phi=3 * u.mas/u.yr)
     >>> convert(dif, cx.SphericalVelocity)
     SphericalVelocity(
@@ -689,8 +689,10 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalVelocity, /) -> SphericalVelocit
 
 
 @conversion_method(LonLatSphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(LonLatSphericalVelocity, apyc.SphericalVelocity)  # type: ignore[misc]
-def difflonlatsph_to_apysph(obj: LonLatSphericalVelocity, /) -> apyc.SphericalVelocity:
+@conversion_method(LonLatSphericalVelocity, apyc.SphericalDifferential)  # type: ignore[misc]
+def difflonlatsph_to_apysph(
+    obj: LonLatSphericalVelocity, /
+) -> apyc.SphericalDifferential:
     """LonLatSphericalVelocity -> `astropy.SphericalVelocity`.
 
     Examples
@@ -701,16 +703,16 @@ def difflonlatsph_to_apysph(obj: LonLatSphericalVelocity, /) -> apyc.SphericalVe
     >>> dif = cx.LonLatSphericalVelocity(d_distance=Quantity(1, unit="km/s"),
     ...                                      d_lat=Quantity(2, unit="mas/yr"),
     ...                                      d_lon=Quantity(3, unit="mas/yr"))
-    >>> convert(dif, apyc.SphericalVelocity)
-    <SphericalVelocity (d_lon, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
+    >>> convert(dif, apyc.SphericalDifferential)
+    <SphericalDifferential (d_lon, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
 
     >>> convert(dif, apyc.BaseDifferential)
-    <SphericalVelocity (d_lon, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
+    <SphericalDifferential (d_lon, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
 
     """
-    return apyc.SphericalVelocity(
+    return apyc.SphericalDifferential(
         d_distance=convert(obj.d_distance, apyu.Quantity),
         d_lon=convert(obj.d_lon, apyu.Quantity),
         d_lat=convert(obj.d_lat, apyu.Quantity),
@@ -718,18 +720,20 @@ def difflonlatsph_to_apysph(obj: LonLatSphericalVelocity, /) -> apyc.SphericalVe
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.SphericalVelocity, LonLatSphericalVelocity
+    apyc.SphericalDifferential, LonLatSphericalVelocity
 )
-def apysph_to_difflonlatsph(obj: apyc.SphericalVelocity, /) -> LonLatSphericalVelocity:
-    """`astropy.SphericalVelocity` -> LonLatSphericalVelocity.
+def apysph_to_difflonlatsph(
+    obj: apyc.SphericalDifferential, /
+) -> LonLatSphericalVelocity:
+    """`astropy.coordinates.SphericalDifferential` -> LonLatSphericalVelocity.
 
     Examples
     --------
     >>> import astropy.units as u
     >>> import coordinax as cx
-    >>> from astropy.coordinates import SphericalVelocity
+    >>> from astropy.coordinates import SphericalDifferential
 
-    >>> dif = SphericalVelocity(d_distance=1 * u.km / u.s, d_lat=2 * u.mas/u.yr,
+    >>> dif = SphericalDifferential(d_distance=1 * u.km / u.s, d_lat=2 * u.mas/u.yr,
     ...                             d_lon=3 * u.mas/u.yr)
     >>> convert(dif, cx.LonLatSphericalVelocity)
     LonLatSphericalVelocity(

@@ -608,7 +608,7 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
         """Test Astropy equivalence."""
         sph = difntl.represent_as(cx.SphericalVelocity, vector)
 
-        apysph = apydifntl.represent_as(apyc.PhysicsSphericalVelocity, apyvector)
+        apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta, atol=1e-9)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi, atol=1e-7)
@@ -638,7 +638,7 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
     ):
         """Test Astropy equivalence."""
         cyl = difntl.represent_as(cx.CylindricalVelocity, vector)
-        apycyl = apydifntl.represent_as(apyc.CylindricalVelocity, apyvector)
+        apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
@@ -668,7 +668,7 @@ class TestCylindricalVelocity(AbstractVelocity3DTest):
     @pytest.fixture(scope="class")
     def apydifntl(self, difntl: cx.CylindricalVelocity):
         """Return an Astropy differential."""
-        return convert(difntl, apyc.CylindricalVelocity)
+        return convert(difntl, apyc.CylindricalDifferential)
 
     @pytest.fixture(scope="class")
     def apyvector(
@@ -762,7 +762,7 @@ class TestCylindricalVelocity(AbstractVelocity3DTest):
     ):
         """Test Astropy equivalence."""
         sph = difntl.represent_as(cx.SphericalVelocity, vector)
-        apysph = apydifntl.represent_as(apyc.PhysicsSphericalVelocity, apyvector)
+        apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
@@ -780,7 +780,7 @@ class TestCylindricalVelocity(AbstractVelocity3DTest):
     def test_cylindrical_to_cylindrical(self, difntl, vector, apydifntl, apyvector):
         """Test Astropy equivalence."""
         cyl = difntl.represent_as(cx.CylindricalVelocity, vector)
-        apycyl = apydifntl.represent_as(apyc.CylindricalVelocity, apyvector)
+        apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
@@ -808,9 +808,11 @@ class TestSphericalVelocity(AbstractVelocity3DTest):
         )
 
     @pytest.fixture(scope="class")
-    def apydifntl(self, difntl: cx.SphericalVelocity) -> apyc.PhysicsSphericalVelocity:
+    def apydifntl(
+        self, difntl: cx.SphericalVelocity
+    ) -> apyc.PhysicsSphericalDifferential:
         """Return an Astropy differential."""
-        return convert(difntl, apyc.PhysicsSphericalVelocity)
+        return convert(difntl, apyc.PhysicsSphericalDifferential)
 
     @pytest.fixture(scope="class")
     def apyvector(
@@ -917,7 +919,7 @@ class TestSphericalVelocity(AbstractVelocity3DTest):
     ):
         """Test Astropy equivalence."""
         cyl = difntl.represent_as(cx.CylindricalVelocity, vector)
-        apycyl = apydifntl.represent_as(apyc.CylindricalVelocity, apyvector)
+        apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
@@ -935,7 +937,7 @@ class TestSphericalVelocity(AbstractVelocity3DTest):
     def test_spherical_to_spherical_astropy(self, difntl, vector, apydifntl, apyvector):
         """Test Astropy equivalence."""
         sph = difntl.represent_as(cx.SphericalVelocity, vector)
-        apysph = apydifntl.represent_as(apyc.PhysicsSphericalVelocity, apyvector)
+        apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
@@ -959,7 +961,7 @@ class TestSphericalVelocity(AbstractVelocity3DTest):
         """Test Astropy equivalence."""
         cart3d = difntl.represent_as(cx.LonLatSphericalVelocity, vector)
 
-        apycart3 = apydifntl.represent_as(apyc.SphericalVelocity, apyvector)
+        apycart3 = apydifntl.represent_as(apyc.SphericalDifferential, apyvector)
         assert np.allclose(convert(cart3d.d_distance, APYQuantity), apycart3.d_distance)
         assert np.allclose(convert(cart3d.d_lon, APYQuantity), apycart3.d_lon)
         assert np.allclose(convert(cart3d.d_lat, APYQuantity), apycart3.d_lat)
