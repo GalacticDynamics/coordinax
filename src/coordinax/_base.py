@@ -20,6 +20,7 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Device
 from plum import dispatch
+from typing_extensions import Never
 
 import quaxed.array_api as xp
 from unxt import Quantity, unitsystem
@@ -168,40 +169,8 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
     # ===============================================================
     # Array API
 
-    def __array_namespace__(self) -> "ArrayAPINamespace":
-        """Return the array API namespace."""
-        return xp
-
-    def __getitem__(self, index: Any) -> "Self":
-        """Return a new object with the given slice applied.
-
-        Parameters
-        ----------
-        index : Any
-            The slice to apply.
-
-        Returns
-        -------
-        AbstractVector
-            The vector with the slice applied.
-
-        Examples
-        --------
-        We assume the following imports:
-
-        >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D
-
-        We can slice a vector:
-
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
-        >>> vec[0].x
-        Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
-
-        """
-        full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
-        return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
+    # ---------------------------------------------------------------
+    # Attributes
 
     @property
     def mT(self) -> "Self":  # noqa: N802
@@ -353,6 +322,75 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         """
         return replace(self, **{k: v.T for k, v in dataclass_items(self)})
+
+    # ---------------------------------------------------------------
+    # Methods
+
+    def __abs__(self) -> Quantity:
+        return self.norm()
+
+    @dispatch  # type: ignore[misc]
+    def __add__(self: "AbstractVectorBase", other: Any) -> "AbstractVectorBase":
+        return NotImplemented
+
+    def __array_namespace__(self) -> "ArrayAPINamespace":
+        """Return the array API namespace."""
+        return xp
+
+    def __getitem__(self, index: Any) -> "Self":
+        """Return a new object with the given slice applied.
+
+        Parameters
+        ----------
+        index : Any
+            The slice to apply.
+
+        Returns
+        -------
+        AbstractVectorBase
+            The vector with the slice applied.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from unxt import Quantity
+        >>> from coordinax import Cartesian2DVector
+
+        We can slice a vector:
+
+        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec[0].x
+        Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
+
+        """
+        full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
+        return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
+
+    @dispatch  # type: ignore[misc]
+    def __mul__(self: "AbstractVectorBase", other: Any) -> Any:
+        return NotImplemented
+
+    @abstractmethod
+    def __neg__(self) -> "Self":
+        raise NotImplementedError
+
+    @dispatch  # type: ignore[misc]
+    def __rmul__(self: "AbstractVectorBase", other: Any) -> Any:
+        return NotImplemented
+
+    def __setitem__(self, k: Any, v: Any) -> Never:
+        msg = f"{type(self).__name__} is immutable."
+        raise TypeError(msg)
+
+    @dispatch  # type: ignore[misc]
+    def __sub__(self: "AbstractVectorBase", other: Any) -> "AbstractVectorBase":
+        raise NotImplementedError
+
+    @dispatch  # type: ignore[misc]
+    def __truediv__(self: "AbstractVectorBase", other: Any) -> "AbstractVectorBase":
+        return NotImplemented
 
     def to_device(self, device: None | Device = None) -> "Self":
         """Move the vector to a new device.

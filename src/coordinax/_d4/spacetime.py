@@ -215,7 +215,8 @@ class FourVector(AbstractPosition4D):
     # -------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any) -> "FourVector":
+    @AbstractVector.__add__.dispatch  # type: ignore[misc]
+    def __add__(self: "FourVector", other: "FourVector") -> "FourVector":
         """Add two 4-vectors.
 
         Examples
@@ -239,12 +240,10 @@ class FourVector(AbstractPosition4D):
         Quantity['length'](Array(5., dtype=float32), unit='m')
 
         """
-        if not isinstance(other, FourVector):
-            return NotImplemented
-
         return replace(self, t=self.t + other.t, q=self.q + other.q)
 
-    def __sub__(self, other: Any) -> "FourVector":
+    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
+    def __sub__(self: "FourVector", other: "FourVector") -> "FourVector":
         """Add two 4-vectors.
 
         Examples
@@ -268,9 +267,6 @@ class FourVector(AbstractPosition4D):
         Quantity['length'](Array(-3., dtype=float32), unit='m')
 
         """
-        if not isinstance(other, FourVector):
-            return NotImplemented
-
         return replace(self, t=self.t - other.t, q=self.q - other.q)
 
     # -------------------------------------------
