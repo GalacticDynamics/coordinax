@@ -14,9 +14,9 @@ from unxt import AbstractDistance, Quantity
 
 from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVelocity
-from coordinax._d1.base import Abstract1DVectorDifferential
-from coordinax._d2.base import Abstract2DVectorDifferential
-from coordinax._d3.base import Abstract3DVectorDifferential
+from coordinax._d1.base import AbstractVelocity1D
+from coordinax._d2.base import AbstractVelocity2D
+from coordinax._d3.base import AbstractVelocity3D
 from coordinax._utils import dataclass_items
 
 
@@ -24,18 +24,18 @@ from coordinax._utils import dataclass_items
 @dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
     (
-        Abstract1DVectorDifferential,
-        type[Abstract1DVectorDifferential],  # type: ignore[misc]
+        AbstractVelocity1D,
+        type[AbstractVelocity1D],  # type: ignore[misc]
         AbstractPosition | Quantity["length"],
     ),
     (
-        Abstract2DVectorDifferential,
-        type[Abstract2DVectorDifferential],  # type: ignore[misc]
+        AbstractVelocity2D,
+        type[AbstractVelocity2D],  # type: ignore[misc]
         AbstractPosition | Quantity["length"],
     ),
     (
-        Abstract3DVectorDifferential,
-        type[Abstract3DVectorDifferential],  # type: ignore[misc]
+        AbstractVelocity3D,
+        type[AbstractVelocity3D],  # type: ignore[misc]
         AbstractPosition | Quantity["length"],
     ),
 )
@@ -68,27 +68,27 @@ def represent_as(
 
     Let's start in 1D:
 
-    >>> q = cx.Cartesian1DVector(x=Quantity(1.0, "km"))
-    >>> p = cx.CartesianDifferential1D(d_x=Quantity(1.0, "km/s"))
-    >>> cx.represent_as(p, cx.RadialDifferential, q)
-    RadialDifferential( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
+    >>> q = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
+    >>> p = cx.CartesianVelocity1D(d_x=Quantity(1.0, "km/s"))
+    >>> cx.represent_as(p, cx.RadialVelocity, q)
+    RadialVelocity( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 
     Now in 2D:
 
-    >>> q = cx.Cartesian2DVector.constructor(Quantity([1.0, 2.0], "km"))
-    >>> p = cx.CartesianDifferential2D.constructor(Quantity([1.0, 2.0], "km/s"))
-    >>> cx.represent_as(p, cx.PolarDifferential, q)
-    PolarDifferential(
+    >>> q = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
+    >>> p = cx.CartesianVelocity2D.constructor(Quantity([1.0, 2.0], "km/s"))
+    >>> cx.represent_as(p, cx.PolarVelocity, q)
+    PolarVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     And in 3D:
 
-    >>> q = cx.Cartesian3DVector.constructor(Quantity([1.0, 2.0, 3.0], "km"))
-    >>> p = cx.CartesianDifferential3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
-    >>> cx.represent_as(p, cx.SphericalDifferential, q)
-    SphericalDifferential(
+    >>> q = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> p = cx.CartesianVelocity3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
+    >>> cx.represent_as(p, cx.SphericalVelocity, q)
+    SphericalVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
@@ -97,9 +97,9 @@ def represent_as(
     If given a position as a Quantity, it will be converted to the appropriate
     Cartesian vector:
 
-    >>> p = cx.CartesianDifferential3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
-    >>> cx.represent_as(p, cx.SphericalDifferential, Quantity([1.0, 2.0, 3.0], "km"))
-    SphericalDifferential(
+    >>> p = cx.CartesianVelocity3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
+    >>> cx.represent_as(p, cx.SphericalVelocity, Quantity([1.0, 2.0, 3.0], "km"))
+    SphericalVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )

@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractNDVector", "AbstractNDVectorDifferential"]
+__all__ = ["AbstractPositionND", "AbstractPositionNDDifferential"]
 
 
 from abc import abstractmethod
@@ -19,15 +19,15 @@ if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class AbstractNDVector(AbstractPosition):
+class AbstractPositionND(AbstractPosition):
     """Abstract representation of N-D coordinates in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import CartesianNDVector
+        from .builtin import CartesianPositionND
 
-        return CartesianNDVector
+        return CartesianPositionND
 
     @classproperty
     @classmethod
@@ -82,20 +82,20 @@ class AbstractNDVector(AbstractPosition):
         return replace(self, q=self.q.reshape(*hape, self.q.shape[-1], order=order))
 
 
-class AbstractNDVectorDifferential(AbstractVelocity):
+class AbstractPositionNDDifferential(AbstractVelocity):
     """Abstract representation of N-D vector differentials."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .builtin import CartesianDifferentialND
+        from .builtin import CartesianVelocityND
 
-        return CartesianDifferentialND
+        return CartesianVelocityND
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractNDVector]:
+    def integral_cls(cls) -> type[AbstractPositionND]:
         raise NotImplementedError
 
     # ===============================================================

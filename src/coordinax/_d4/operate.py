@@ -25,17 +25,17 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
 
     >>> op = cx.operators.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
     >>> op
-    GalileanSpatialTranslationOperator( translation=Cartesian3DVector( ... ) )
+    GalileanSpatialTranslationOperator( translation=CartesianPosition3D( ... ) )
 
     We can then apply the operator to a position:
 
     >>> pos = cx.FourVector.constructor(Quantity([0, 1.0, 2.0, 3.0], "kpc"))
     >>> pos
-    FourVector( t=Quantity[PhysicalType('time')](...), q=Cartesian3DVector( ... ) )
+    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPosition3D( ... ) )
 
     >>> newpos = op(pos)
     >>> newpos
-    FourVector( t=Quantity[PhysicalType('time')](...), q=Cartesian3DVector( ... ) )
+    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPosition3D( ... ) )
     >>> newpos.q.x
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
@@ -59,7 +59,7 @@ def call(
 
     >>> op = cx.operators.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
     >>> op
-    GalileanSpatialTranslationOperator( translation=Cartesian3DVector( ... ) )
+    GalileanSpatialTranslationOperator( translation=CartesianPosition3D( ... ) )
 
     We can then apply the operator to a position:
 

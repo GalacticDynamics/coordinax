@@ -14,58 +14,58 @@ import quaxed.numpy as qnp
 from unxt import AbstractQuantity
 
 from coordinax import (
-    Abstract1DVector,
-    Abstract1DVectorDifferential,
-    Abstract2DVector,
-    Abstract2DVectorDifferential,
-    Abstract3DVector,
-    Abstract3DVectorDifferential,
     AbstractPosition,
+    AbstractPosition1D,
+    AbstractPosition2D,
+    AbstractPosition3D,
     AbstractVelocity,
-    Cartesian1DVector,
-    Cartesian2DVector,
-    Cartesian3DVector,
-    CartesianDifferential1D,
-    CartesianDifferential2D,
-    CartesianDifferential3D,
-    CylindricalDifferential,
-    CylindricalVector,
+    AbstractVelocity1D,
+    AbstractVelocity2D,
+    AbstractVelocity3D,
+    CartesianPosition1D,
+    CartesianPosition2D,
+    CartesianPosition3D,
+    CartesianVelocity1D,
+    CartesianVelocity2D,
+    CartesianVelocity3D,
+    CylindricalPosition,
+    CylindricalVelocity,
     IrreversibleDimensionChange,
-    PolarDifferential,
-    PolarVector,
-    RadialDifferential,
-    RadialVector,
-    SphericalDifferential,
-    SphericalVector,
+    PolarPosition,
+    PolarVelocity,
+    RadialPosition,
+    RadialVelocity,
+    SphericalPosition,
+    SphericalVelocity,
 )
 from coordinax._utils import dataclass_items
 
 BUILTIN_VECTORS = [
     # 1D
-    Cartesian1DVector,
-    RadialVector,
+    CartesianPosition1D,
+    RadialPosition,
     # 2D
-    Cartesian2DVector,
-    PolarVector,
+    CartesianPosition2D,
+    PolarPosition,
     # 3D
-    Cartesian3DVector,
-    SphericalVector,
-    CylindricalVector,
+    CartesianPosition3D,
+    SphericalPosition,
+    CylindricalPosition,
 ]
 
 BUILTIN_DIFFERENTIALS = [
     # 1D
-    CartesianDifferential1D,
-    RadialDifferential,
+    CartesianVelocity1D,
+    RadialVelocity,
     # 2D
-    CartesianDifferential2D,
-    PolarDifferential,
-    # LnPolarDifferential,
-    # Log10PolarDifferential,
+    CartesianVelocity2D,
+    PolarVelocity,
+    # LnPolarVelocity,
+    # Log10PolarVelocity,
     # 3D
-    CartesianDifferential3D,
-    SphericalDifferential,
-    CylindricalDifferential,
+    CartesianVelocity3D,
+    SphericalVelocity,
+    CylindricalVelocity,
 ]
 
 
@@ -75,10 +75,11 @@ def context_dimension_reduction(
     """Return a context manager that checks for dimensionality reduction."""
     context: AbstractContextManager[Any]
     if (
-        isinstance(vector, Abstract2DVector) and issubclass(target, Abstract1DVector)
+        isinstance(vector, AbstractPosition2D)
+        and issubclass(target, AbstractPosition1D)
     ) or (
-        isinstance(vector, Abstract3DVector)
-        and issubclass(target, Abstract2DVector | Abstract1DVector)
+        isinstance(vector, AbstractPosition3D)
+        and issubclass(target, AbstractPosition2D | AbstractPosition1D)
     ):
         context = pytest.warns(IrreversibleDimensionChange)
     else:
@@ -229,16 +230,16 @@ class AbstractVelocityTest(AbstractVectorTest):
         # TODO: have all the conversions
         if (
             (
-                isinstance(difntl, Abstract1DVectorDifferential)
-                and not issubclass(target, Abstract1DVectorDifferential)
+                isinstance(difntl, AbstractVelocity1D)
+                and not issubclass(target, AbstractVelocity1D)
             )
             or (
-                isinstance(difntl, Abstract2DVectorDifferential)
-                and not issubclass(target, Abstract2DVectorDifferential)
+                isinstance(difntl, AbstractVelocity2D)
+                and not issubclass(target, AbstractVelocity2D)
             )
             or (
-                isinstance(difntl, Abstract3DVectorDifferential)
-                and not issubclass(target, Abstract3DVectorDifferential)
+                isinstance(difntl, AbstractVelocity3D)
+                and not issubclass(target, AbstractVelocity3D)
             )
         ):
             pytest.xfail("Not implemented yet")

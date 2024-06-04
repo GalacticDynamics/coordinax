@@ -12,14 +12,14 @@ import coordinax as cx
 from coordinax._base_pos import VECTOR_CLASSES
 from coordinax._utils import dataclass_items
 
-VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.Abstract3DVector)]
+VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.AbstractPosition3D)]
 
 
 # TODO: cycle through all representations
 @pytest.fixture(params=VECTOR_CLASSES_3D)
 def q(request) -> cx.AbstractPosition:
     """Fixture for 3D Vectors."""
-    q = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], unit=u.kpc))
+    q = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit=u.kpc))
     return q.represent_as(request.param)
 
 

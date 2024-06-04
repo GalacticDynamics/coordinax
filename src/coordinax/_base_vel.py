@@ -43,13 +43,13 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialDifferential, SphericalDifferential
+        >>> from coordinax import RadialVelocity, SphericalVelocity
 
-        >>> RadialDifferential.integral_cls.__name__
-        'RadialVector'
+        >>> RadialVelocity.integral_cls.__name__
+        'RadialPosition'
 
-        >>> SphericalDifferential.integral_cls.__name__
-        'SphericalVector'
+        >>> SphericalVelocity.integral_cls.__name__
+        'SphericalPosition'
 
         """
         raise NotImplementedError
@@ -63,13 +63,13 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import RadialDifferential
-        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> from coordinax import RadialVelocity
+        >>> dr = RadialVelocity(Quantity(1, "m/s"))
         >>> -dr
-        RadialDifferential( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+        RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-        >>> from coordinax import PolarDifferential
-        >>> dp = PolarDifferential(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
+        >>> from coordinax import PolarVelocity
+        >>> dp = PolarVelocity(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
         >>> neg_dp = -dp
         >>> neg_dp.d_r
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
@@ -89,12 +89,12 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import RadialDifferential
+        >>> from coordinax import RadialVelocity
 
-        >>> dr = RadialDifferential(Quantity(1, "m/s"))
+        >>> dr = RadialVelocity(Quantity(1, "m/s"))
         >>> vec = dr * Quantity(2, "s")
         >>> vec
-        RadialVector(r=Distance(value=f32[], unit=Unit("m")))
+        RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
         >>> vec.r
         Distance(Array(2., dtype=float32), unit='m')
 
@@ -136,8 +136,8 @@ class AdditionMixin(AbstractVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
-        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
+        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
+        >>> q = CartesianVelocity3D.constructor(Quantity([1, 2, 3], "km/s"))
         >>> q2 = q + q
         >>> q2.d_y
         Quantity['speed'](Array(4., dtype=float32), unit='km / s')
@@ -157,8 +157,8 @@ class AdditionMixin(AbstractVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
-        >>> q = CartesianDifferential3D.constructor(Quantity([1, 2, 3], "km/s"))
+        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
+        >>> q = CartesianVelocity3D.constructor(Quantity([1, 2, 3], "km/s"))
         >>> q2 = q - q
         >>> q2.d_y
         Quantity['speed'](Array(0., dtype=float32), unit='km / s')

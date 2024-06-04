@@ -1,18 +1,18 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "AbstractSphericalVector",
-    "AbstractSphericalDifferential",
+    "AbstractSphericalPosition",
+    "AbstractSphericalVelocity",
     # Physics conventions
-    "SphericalVector",
-    "SphericalDifferential",
+    "SphericalPosition",
+    "SphericalVelocity",
     # Mathematics conventions
-    "MathSphericalVector",
-    "MathSphericalDifferential",
+    "MathSphericalPosition",
+    "MathSphericalVelocity",
     # Geographic / Astronomical conventions
-    "LonLatSphericalVector",
-    "LonLatSphericalDifferential",
-    "LonCosLatSphericalDifferential",
+    "LonLatSphericalPosition",
+    "LonLatSphericalVelocity",
+    "LonCosLatSphericalVelocity",
 ]
 
 from abc import abstractmethod
@@ -27,7 +27,7 @@ import quaxed.lax as qlax
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
-from .base import Abstract3DVector, Abstract3DVectorDifferential
+from .base import AbstractPosition3D, AbstractVelocity3D
 from coordinax._checks import (
     check_azimuth_range,
     check_polar_range,
@@ -43,17 +43,17 @@ _180d = Quantity(180, "deg")
 # Position
 
 
-class AbstractSphericalVector(Abstract3DVector):
+class AbstractSphericalPosition(AbstractPosition3D):
     """Abstract spherical vector representation."""
 
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractSphericalDifferential"]: ...
+    def differential_cls(cls) -> type["AbstractSphericalVelocity"]: ...
 
 
 @final
-class SphericalVector(AbstractSphericalVector):
+class SphericalPosition(AbstractSphericalPosition):
     """Spherical vector representation.
 
     .. note::
@@ -98,8 +98,8 @@ class SphericalVector(AbstractSphericalVector):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["SphericalDifferential"]:
-        return SphericalDifferential
+    def differential_cls(cls) -> type["SphericalVelocity"]:
+        return SphericalVelocity
 
     @partial(jax.jit)
     def norm(self) -> ct.BatchableDistance:
@@ -108,8 +108,8 @@ class SphericalVector(AbstractSphericalVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import SphericalVector
-        >>> s = SphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
+        >>> from coordinax import SphericalPosition
+        >>> s = SphericalPosition(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
@@ -119,7 +119,7 @@ class SphericalVector(AbstractSphericalVector):
 
 
 @final
-class MathSphericalVector(AbstractSphericalVector):
+class MathSphericalPosition(AbstractSphericalPosition):
     """Spherical vector representation.
 
     .. note::
@@ -164,8 +164,8 @@ class MathSphericalVector(AbstractSphericalVector):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["MathSphericalDifferential"]:
-        return MathSphericalDifferential
+    def differential_cls(cls) -> type["MathSphericalVelocity"]:
+        return MathSphericalVelocity
 
     @partial(jax.jit)
     def norm(self) -> ct.BatchableDistance:
@@ -174,8 +174,8 @@ class MathSphericalVector(AbstractSphericalVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import MathSphericalVector
-        >>> s = MathSphericalVector(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
+        >>> from coordinax import MathSphericalPosition
+        >>> s = MathSphericalPosition(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
         ...                         phi=Quantity(0, "deg"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
@@ -188,7 +188,7 @@ class MathSphericalVector(AbstractSphericalVector):
 
 
 @final
-class LonLatSphericalVector(AbstractSphericalVector):
+class LonLatSphericalPosition(AbstractSphericalPosition):
     """Spherical vector representation.
 
     .. note::
@@ -209,9 +209,9 @@ class LonLatSphericalVector(AbstractSphericalVector):
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.LonLatSphericalVector(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
+    >>> cx.LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
     ...                          distance=Quantity(3, "kpc"))
-    LonLatSphericalVector(
+    LonLatSphericalPosition(
       lon=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       lat=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
@@ -221,7 +221,7 @@ class LonLatSphericalVector(AbstractSphericalVector):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.LonLatSphericalVector(lon=Quantity(365, "deg"),
+    >>> vec = cx.LonLatSphericalPosition(lon=Quantity(365, "deg"),
     ...                                lat=Quantity(90, "deg"),
     ...                                distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -232,7 +232,7 @@ class LonLatSphericalVector(AbstractSphericalVector):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalVector(lon=Quantity(0, "deg"), lat=Quantity(100, "deg"),
+    ...     cx.LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(100, "deg"),
     ...                              distance=Quantity(3, "kpc"))
     ... except Exception as e:
     ...     print(e)
@@ -243,7 +243,7 @@ class LonLatSphericalVector(AbstractSphericalVector):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalVector(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
+    ...     cx.LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
     ...                              distance=Quantity(-3, "kpc"))
     ... except Exception as e:
     ...     print(e)
@@ -278,8 +278,8 @@ class LonLatSphericalVector(AbstractSphericalVector):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalDifferential"]:
-        return LonLatSphericalDifferential
+    def differential_cls(cls) -> type["LonLatSphericalVelocity"]:
+        return LonLatSphericalVelocity
 
     @partial(jax.jit)
     def norm(self) -> ct.BatchableDistance:
@@ -288,8 +288,8 @@ class LonLatSphericalVector(AbstractSphericalVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import LonLatSphericalVector
-        >>> s = LonLatSphericalVector(lon=Quantity(0, "deg"), lat=Quantity(90, "deg"),
+        >>> from coordinax import LonLatSphericalPosition
+        >>> s = LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(90, "deg"),
         ...                           distance=Quantity(3, "kpc"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
@@ -298,15 +298,15 @@ class LonLatSphericalVector(AbstractSphericalVector):
         return self.distance
 
 
-@LonLatSphericalVector.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@LonLatSphericalPosition.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
-    cls: type[LonLatSphericalVector],
+    cls: type[LonLatSphericalPosition],
     *,
     lon: Quantity["angle"],
     lat: Quantity["angle"],
     distance: Distance,
-) -> LonLatSphericalVector:
-    """Construct LonLatSphericalVector, allowing for out-of-range values.
+) -> LonLatSphericalPosition:
+    """Construct LonLatSphericalPosition, allowing for out-of-range values.
 
     Examples
     --------
@@ -314,10 +314,10 @@ def constructor(
 
     Let's start with a valid input:
 
-    >>> cx.LonLatSphericalVector.constructor(lon=Quantity(0, "deg"),
+    >>> cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
     ...                                      lat=Quantity(0, "deg"),
     ...                                      distance=Quantity(3, "kpc"))
-    LonLatSphericalVector(
+    LonLatSphericalPosition(
       lon=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       lat=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
@@ -326,7 +326,7 @@ def constructor(
     The distance can be negative, which wraps the longitude by 180 degrees and
     flips the latitude:
 
-    >>> vec = cx.LonLatSphericalVector.constructor(lon=Quantity(0, "deg"),
+    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
     ...                                            lat=Quantity(45, "deg"),
     ...                                            distance=Quantity(-3, "kpc"))
     >>> vec.lon
@@ -339,7 +339,7 @@ def constructor(
     The latitude can be outside the [-90, 90] deg range, causing the longitude
     to be shifted by 180 degrees:
 
-    >>> vec = cx.LonLatSphericalVector.constructor(lon=Quantity(0, "deg"),
+    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
     ...                                            lat=Quantity(-100, "deg"),
     ...                                            distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -349,7 +349,7 @@ def constructor(
     >>> vec.distance
     Distance(Array(3., dtype=float32), unit='kpc')
 
-    >>> vec = cx.LonLatSphericalVector.constructor(lon=Quantity(0, "deg"),
+    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
     ...                                            lat=Quantity(100, "deg"),
     ...                                            distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -362,7 +362,7 @@ def constructor(
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cx.LonLatSphericalVector.constructor(lon=Quantity(365, "deg"),
+    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(365, "deg"),
     ...                                            lat=Quantity(0, "deg"),
     ...                                            distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -370,7 +370,7 @@ def constructor(
 
     """
     # 1) Convert the inputs
-    fields = LonLatSphericalVector.__dataclass_fields__
+    fields = LonLatSphericalPosition.__dataclass_fields__
     lon = fields["lon"].metadata["converter"](lon)
     lat = fields["lat"].metadata["converter"](lat)
     distance = fields["distance"].metadata["converter"](distance)
@@ -397,17 +397,17 @@ def constructor(
 ##############################################################################
 
 
-class AbstractSphericalDifferential(Abstract3DVectorDifferential):
+class AbstractSphericalVelocity(AbstractVelocity3D):
     """Spherical differential representation."""
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[SphericalVector]: ...
+    def integral_cls(cls) -> type[SphericalPosition]: ...
 
 
 @final
-class SphericalDifferential(Abstract3DVectorDifferential):
+class SphericalVelocity(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -427,12 +427,12 @@ class SphericalDifferential(Abstract3DVectorDifferential):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[SphericalVector]:
-        return SphericalVector
+    def integral_cls(cls) -> type[SphericalPosition]:
+        return SphericalPosition
 
 
 @final
-class MathSphericalDifferential(Abstract3DVectorDifferential):
+class MathSphericalVelocity(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -452,12 +452,12 @@ class MathSphericalDifferential(Abstract3DVectorDifferential):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[MathSphericalVector]:
-        return MathSphericalVector
+    def integral_cls(cls) -> type[MathSphericalPosition]:
+        return MathSphericalPosition
 
 
 @final
-class LonLatSphericalDifferential(Abstract3DVectorDifferential):
+class LonLatSphericalVelocity(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_lon: ct.BatchableAngularSpeed = eqx.field(
@@ -477,12 +477,12 @@ class LonLatSphericalDifferential(Abstract3DVectorDifferential):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalVector]:
-        return LonLatSphericalVector
+    def integral_cls(cls) -> type[LonLatSphericalPosition]:
+        return LonLatSphericalPosition
 
 
 @final
-class LonCosLatSphericalDifferential(Abstract3DVectorDifferential):
+class LonCosLatSphericalVelocity(AbstractVelocity3D):
     """Spherical differential representation."""
 
     d_lon_coslat: ct.BatchableAngularSpeed = eqx.field(
@@ -502,5 +502,5 @@ class LonCosLatSphericalDifferential(Abstract3DVectorDifferential):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalVector]:
-        return LonLatSphericalVector
+    def integral_cls(cls) -> type[LonLatSphericalPosition]:
+        return LonLatSphericalPosition

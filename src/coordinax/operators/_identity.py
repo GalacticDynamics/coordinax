@@ -35,7 +35,7 @@ class IdentityOperator(AbstractOperator):
     And the common objects we will use:
 
     >>> q = Quantity([1, 2, 3], "kpc")
-    >>> vec = cx.Cartesian3DVector.constructor(q)
+    >>> vec = cx.CartesianPosition3D.constructor(q)
 
     The first call signature is for the case where the input is a vector:
 
@@ -52,21 +52,21 @@ class IdentityOperator(AbstractOperator):
     - 1D:
 
     >>> q = Quantity([1], "kpc")
-    >>> vec = cx.Cartesian1DVector.constructor(q)
+    >>> vec = cx.CartesianPosition1D.constructor(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 2D:
 
     >>> q = Quantity([1, 2], "kpc")
-    >>> vec = cx.Cartesian2DVector.constructor(q)
+    >>> vec = cx.CartesianPosition2D.constructor(q)
     >>> op(vec) is vec and op(q) is q
     True
 
-    - 3D (not using a `~coordinax.Cartesian3DVector` instance):
+    - 3D (not using a `~coordinax.CartesianPosition3D` instance):
 
     >>> q = Quantity([1, 2, 3], "kpc")
-    >>> vec = cx.Cartesian3DVector.constructor(q).represent_as(cx.SphericalVector)
+    >>> vec = cx.CartesianPosition3D.constructor(q).represent_as(cx.SphericalPosition)
     >>> op(vec) is vec and op(q) is q
     True
 
@@ -97,10 +97,10 @@ class IdentityOperator(AbstractOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> t = Quantity(0, "Gyr")
         >>> op = IdentityOperator()
         >>> op.is_inertial
@@ -116,7 +116,7 @@ class IdentityOperator(AbstractOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import IdentityOperator
 
         >>> op = IdentityOperator()
@@ -141,10 +141,10 @@ class IdentityOperator(AbstractOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> op = IdentityOperator()
         >>> op(q) is q
         True

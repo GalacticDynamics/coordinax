@@ -11,19 +11,19 @@ from plum import conversion_method, convert
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from .base import Abstract3DVector
+from .base import AbstractPosition3D
 from .builtin import (
-    Cartesian3DVector,
-    CartesianDifferential3D,
-    CylindricalDifferential,
-    CylindricalVector,
+    CartesianPosition3D,
+    CartesianVelocity3D,
+    CylindricalPosition,
+    CylindricalVelocity,
 )
 from .sphere import (
-    LonCosLatSphericalDifferential,
-    LonLatSphericalDifferential,
-    LonLatSphericalVector,
-    SphericalDifferential,
-    SphericalVector,
+    LonCosLatSphericalVelocity,
+    LonLatSphericalPosition,
+    LonLatSphericalVelocity,
+    SphericalPosition,
+    SphericalVelocity,
 )
 from coordinax._utils import dataclass_values, full_shaped
 
@@ -31,10 +31,10 @@ from coordinax._utils import dataclass_values, full_shaped
 # Constructors
 
 
-@Cartesian3DVector.constructor._f.register  # noqa: SLF001
+@CartesianPosition3D.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[Cartesian3DVector], obj: apyc.BaseRepresentation
-) -> Cartesian3DVector:
+    cls: type[CartesianPosition3D], obj: apyc.BaseRepresentation
+) -> CartesianPosition3D:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -43,7 +43,7 @@ def constructor(
     >>> from astropy.coordinates import CartesianRepresentation
 
     >>> cart = CartesianRepresentation(1, 2, 3, unit="kpc")
-    >>> vec = cx.Cartesian3DVector.constructor(cart)
+    >>> vec = cx.CartesianPosition3D.constructor(cart)
     >>> vec.x
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
@@ -52,10 +52,10 @@ def constructor(
     return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
-@CylindricalVector.constructor._f.register  # noqa: SLF001
+@CylindricalPosition.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalVector], obj: apyc.BaseRepresentation
-) -> CylindricalVector:
+    cls: type[CylindricalPosition], obj: apyc.BaseRepresentation
+) -> CylindricalPosition:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -66,7 +66,7 @@ def constructor(
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg,
     ...                                 z=30 * u.pc)
-    >>> vec = cx.CylindricalVector.constructor(cyl)
+    >>> vec = cx.CylindricalPosition.constructor(cyl)
     >>> vec.rho
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
@@ -75,10 +75,10 @@ def constructor(
     return cls(rho=obj.rho, phi=obj.phi, z=obj.z)
 
 
-@SphericalVector.constructor._f.register  # noqa: SLF001
+@SphericalPosition.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[SphericalVector], obj: apyc.BaseRepresentation
-) -> SphericalVector:
+    cls: type[SphericalPosition], obj: apyc.BaseRepresentation
+) -> SphericalPosition:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -89,7 +89,7 @@ def constructor(
 
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
-    >>> vec = cx.SphericalVector.constructor(sph)
+    >>> vec = cx.SphericalPosition.constructor(sph)
     >>> vec.r
     Distance(Array(1., dtype=float32), unit='kpc')
 
@@ -98,10 +98,10 @@ def constructor(
     return cls(r=obj.r, theta=obj.theta, phi=obj.phi)
 
 
-@LonLatSphericalVector.constructor._f.register  # noqa: SLF001
+@LonLatSphericalPosition.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[LonLatSphericalVector], obj: apyc.BaseRepresentation
-) -> LonLatSphericalVector:
+    cls: type[LonLatSphericalPosition], obj: apyc.BaseRepresentation
+) -> LonLatSphericalPosition:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -112,7 +112,7 @@ def constructor(
 
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
     ...                               distance=1 * u.kpc)
-    >>> vec = cx.LonLatSphericalVector.constructor(sph)
+    >>> vec = cx.LonLatSphericalPosition.constructor(sph)
     >>> vec.distance
     Distance(Array(1., dtype=float32), unit='kpc')
 
@@ -124,10 +124,10 @@ def constructor(
 # -------------------------------------------------------------------
 
 
-@CartesianDifferential3D.constructor._f.register  # noqa: SLF001
+@CartesianVelocity3D.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CartesianDifferential3D], obj: apyc.CartesianDifferential
-) -> CartesianDifferential3D:
+    cls: type[CartesianVelocity3D], obj: apyc.CartesianDifferential
+) -> CartesianVelocity3D:
     """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
 
     Examples
@@ -137,7 +137,7 @@ def constructor(
     >>> from astropy.coordinates import CartesianDifferential
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
-    >>> dif = cx.CartesianDifferential3D.constructor(dcart)
+    >>> dif = cx.CartesianVelocity3D.constructor(dcart)
     >>> dif.d_x
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -145,11 +145,11 @@ def constructor(
     return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
-@CylindricalDifferential.constructor._f.register  # noqa: SLF001
+@CylindricalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalDifferential], obj: apyc.CylindricalDifferential
-) -> CylindricalDifferential:
-    """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
+    cls: type[CylindricalVelocity], obj: apyc.CylindricalDifferential
+) -> CylindricalVelocity:
+    """Construct from a :class:`astropy.coordinates.CylindricalVelocity`.
 
     Examples
     --------
@@ -159,7 +159,7 @@ def constructor(
 
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> dif = cx.CylindricalDifferential.constructor(dcyl)
+    >>> dif = cx.CylindricalVelocity.constructor(dcyl)
     >>> dif.d_rho
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -167,10 +167,10 @@ def constructor(
     return cls(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
 
 
-@SphericalDifferential.constructor._f.register  # noqa: SLF001
+@SphericalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[SphericalDifferential], obj: apyc.PhysicsSphericalDifferential
-) -> SphericalDifferential:
+    cls: type[SphericalVelocity], obj: apyc.PhysicsSphericalDifferential
+) -> SphericalVelocity:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
 
     Examples
@@ -181,7 +181,7 @@ def constructor(
 
     >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                     d_phi=3 * u.mas/u.yr)
-    >>> dif = cx.SphericalDifferential.constructor(dsph)
+    >>> dif = cx.SphericalVelocity.constructor(dsph)
     >>> dif.d_r
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -189,11 +189,11 @@ def constructor(
     return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
 
 
-@LonLatSphericalDifferential.constructor._f.register  # noqa: SLF001
+@LonLatSphericalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[LonLatSphericalDifferential], obj: apyc.SphericalDifferential
-) -> LonLatSphericalDifferential:
-    """Construct from a :class:`astropy.coordinates.SphericalDifferential`.
+    cls: type[LonLatSphericalVelocity], obj: apyc.SphericalDifferential
+) -> LonLatSphericalVelocity:
+    """Construct from a :class:`astropy.coordinates.SphericalVelocity`.
 
     Examples
     --------
@@ -204,7 +204,7 @@ def constructor(
     >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
     ...                              d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.LonLatSphericalDifferential.constructor(dsph)
+    >>> dif = cx.LonLatSphericalVelocity.constructor(dsph)
     >>> dif.d_distance
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -212,10 +212,10 @@ def constructor(
     return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
 
 
-@LonCosLatSphericalDifferential.constructor._f.register  # noqa: SLF001
+@LonCosLatSphericalVelocity.constructor._f.register  # noqa: SLF001
 def constructor(
-    cls: type[LonCosLatSphericalDifferential], obj: apyc.SphericalCosLatDifferential
-) -> LonCosLatSphericalDifferential:
+    cls: type[LonCosLatSphericalVelocity], obj: apyc.SphericalCosLatDifferential
+) -> LonCosLatSphericalVelocity:
     """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
 
     Examples
@@ -227,9 +227,9 @@ def constructor(
     >>> dsph = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
     ...                                    d_lon_coslat=2 * u.mas/u.yr,
     ...                                    d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.LonCosLatSphericalDifferential.constructor(dsph)
+    >>> dif = cx.LonCosLatSphericalVelocity.constructor(dsph)
     >>> dif
-    LonCosLatSphericalDifferential(
+    LonCosLatSphericalVelocity(
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
@@ -247,27 +247,27 @@ def constructor(
 # Quantity
 
 
-@conversion_method(Abstract3DVector, Quantity)  # type: ignore[misc]
-def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]:
-    """`coordinax.Abstract3DVector` -> `unxt.Quantity`.
+@conversion_method(AbstractPosition3D, Quantity)  # type: ignore[misc]
+def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3"]:
+    """`coordinax.AbstractPosition3D` -> `unxt.Quantity`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], unit="kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
     >>> convert(vec, Quantity)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.SphericalVector(r=Quantity(1, unit="kpc"),
+    >>> vec = cx.SphericalPosition(r=Quantity(1, unit="kpc"),
     ...                          theta=Quantity(2, unit="deg"),
     ...                          phi=Quantity(3, unit="deg"))
     >>> convert(vec, Quantity)
     Quantity['length'](Array([0.03485167, 0.0018265 , 0.99939084], dtype=float32),
                        unit='kpc')
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1, unit="kpc"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
     ...                            phi=Quantity(2, unit="deg"),
     ...                            z=Quantity(3, unit="pc"))
     >>> convert(vec, Quantity)
@@ -275,22 +275,20 @@ def vec_to_q(obj: Abstract3DVector, /) -> Shaped[Quantity["length"], "*batch 3"]
                        unit='kpc')
 
     """
-    cart = full_shaped(obj.represent_as(Cartesian3DVector))
+    cart = full_shaped(obj.represent_as(CartesianPosition3D))
     return xp.stack(tuple(dataclass_values(cart)), axis=-1)
 
 
-@conversion_method(CartesianDifferential3D, Quantity)  # type: ignore[misc]
-def vec_diff_to_q(
-    obj: CartesianDifferential3D, /
-) -> Shaped[Quantity["speed"], "*batch 3"]:
-    """`coordinax.CartesianDifferential3D` -> `unxt.Quantity`.
+@conversion_method(CartesianVelocity3D, Quantity)  # type: ignore[misc]
+def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*batch 3"]:
+    """`coordinax.CartesianVelocity3D` -> `unxt.Quantity`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.CartesianDifferential3D.constructor(Quantity([1, 2, 3], unit="km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
     >>> convert(dif, Quantity)
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
 
@@ -303,20 +301,20 @@ def vec_diff_to_q(
 
 
 # =====================================
-# Cartesian3DVector
+# CartesianPosition3D
 
 
-@conversion_method(Cartesian3DVector, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(Cartesian3DVector, apyc.CartesianRepresentation)  # type: ignore[misc]
-def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation:
-    """`coordinax.Cartesian3DVector` -> `astropy.CartesianRepresentation`.
+@conversion_method(CartesianPosition3D, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(CartesianPosition3D, apyc.CartesianRepresentation)  # type: ignore[misc]
+def cart3_to_apycart3(obj: CartesianPosition3D, /) -> apyc.CartesianRepresentation:
+    """`coordinax.CartesianPosition3D` -> `astropy.CartesianRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.Cartesian3DVector.constructor(Quantity([1, 2, 3], unit="kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
     >>> convert(vec, apyc.CartesianRepresentation)
     <CartesianRepresentation (x, y, z) in kpc
         (1., 2., 3.)>
@@ -333,9 +331,9 @@ def cart3_to_apycart3(obj: Cartesian3DVector, /) -> apyc.CartesianRepresentation
     )
 
 
-@conversion_method(apyc.CartesianRepresentation, Cartesian3DVector)  # type: ignore[misc]
-def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector:
-    """`astropy.CartesianRepresentation` -> `coordinax.Cartesian3DVector`.
+@conversion_method(apyc.CartesianRepresentation, CartesianPosition3D)  # type: ignore[misc]
+def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> CartesianPosition3D:
+    """`astropy.CartesianRepresentation` -> `coordinax.CartesianPosition3D`.
 
     Examples
     --------
@@ -344,32 +342,32 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> Cartesian3DVector
     >>> from astropy.coordinates import CartesianRepresentation
 
     >>> vec = CartesianRepresentation(1, 2, 3, unit="kpc")
-    >>> convert(vec, cx.Cartesian3DVector)
-    Cartesian3DVector(
+    >>> convert(vec, cx.CartesianPosition3D)
+    CartesianPosition3D(
       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
       y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
       z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
     )
 
     """
-    return Cartesian3DVector.constructor(obj)
+    return CartesianPosition3D.constructor(obj)
 
 
 # =====================================
-# CylindricalVector
+# CylindricalPosition
 
 
-@conversion_method(CylindricalVector, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(CylindricalVector, apyc.CylindricalRepresentation)  # type: ignore[misc]
-def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
-    """`coordinax.CylindricalVector` -> `astropy.CylindricalRepresentation`.
+@conversion_method(CylindricalPosition, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(CylindricalPosition, apyc.CylindricalRepresentation)  # type: ignore[misc]
+def cyl_to_apycyl(obj: CylindricalPosition, /) -> apyc.CylindricalRepresentation:
+    """`coordinax.CylindricalPosition` -> `astropy.CylindricalRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CylindricalVector(rho=Quantity(1, unit="kpc"),
+    >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
     ...                            phi=Quantity(2, unit="deg"),
     ...                            z=Quantity(3, unit="pc"))
     >>> convert(vec, apyc.CylindricalRepresentation)
@@ -388,9 +386,9 @@ def cyl_to_apycyl(obj: CylindricalVector, /) -> apyc.CylindricalRepresentation:
     )
 
 
-@conversion_method(apyc.CylindricalRepresentation, CylindricalVector)  # type: ignore[misc]
-def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
-    """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalVector`.
+@conversion_method(apyc.CylindricalRepresentation, CylindricalPosition)  # type: ignore[misc]
+def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalPosition:
+    """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalPosition`.
 
     Examples
     --------
@@ -399,32 +397,32 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> CylindricalVector:
     >>> from astropy.coordinates import CylindricalRepresentation
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg, z=30 * u.pc)
-    >>> convert(cyl, cx.CylindricalVector)
-    CylindricalVector(
+    >>> convert(cyl, cx.CylindricalPosition)
+    CylindricalPosition(
         rho=Quantity[...](value=f32[], unit=Unit("kpc")),
         phi=Quantity[...](value=f32[], unit=Unit("deg")),
         z=Quantity[...](value=f32[], unit=Unit("pc"))
     )
 
     """
-    return CylindricalVector.constructor(obj)
+    return CylindricalPosition.constructor(obj)
 
 
 # =====================================
-# SphericalVector
+# SphericalPosition
 
 
-@conversion_method(SphericalVector, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(SphericalVector, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
-def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentation:
-    """`coordinax.SphericalVector` -> `astropy.PhysicsSphericalRepresentation`.
+@conversion_method(SphericalPosition, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(SphericalPosition, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
+def sph_to_apysph(obj: SphericalPosition, /) -> apyc.PhysicsSphericalRepresentation:
+    """`coordinax.SphericalPosition` -> `astropy.PhysicsSphericalRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalVector(r=Quantity(1, unit="kpc"),
+    >>> vec = cx.SphericalPosition(r=Quantity(1, unit="kpc"),
     ...                          theta=Quantity(2, unit="deg"),
     ...                          phi=Quantity(3, unit="deg"))
     >>> convert(vec, apyc.PhysicsSphericalRepresentation)
@@ -439,9 +437,9 @@ def sph_to_apysph(obj: SphericalVector, /) -> apyc.PhysicsSphericalRepresentatio
     )
 
 
-@conversion_method(apyc.PhysicsSphericalRepresentation, SphericalVector)  # type: ignore[misc]
-def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVector:
-    """`astropy.PhysicsSphericalRepresentation` -> `coordinax.SphericalVector`.
+@conversion_method(apyc.PhysicsSphericalRepresentation, SphericalPosition)  # type: ignore[misc]
+def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalPosition:
+    """`astropy.PhysicsSphericalRepresentation` -> `coordinax.SphericalPosition`.
 
     Examples
     --------
@@ -451,32 +449,34 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> SphericalVecto
 
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
-    >>> convert(sph, cx.SphericalVector)
-    SphericalVector(
+    >>> convert(sph, cx.SphericalPosition)
+    SphericalPosition(
       r=Distance(value=f32[], unit=Unit("kpc")),
       theta=Quantity[...](value=f32[], unit=Unit("deg")),
       phi=Quantity[...](value=f32[], unit=Unit("deg"))
     )
 
     """
-    return SphericalVector.constructor(obj)
+    return SphericalPosition.constructor(obj)
 
 
 # =====================================
-# LonLatSphericalVector
+# LonLatSphericalPosition
 
 
-@conversion_method(LonLatSphericalVector, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(LonLatSphericalVector, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
-def lonlatsph_to_apysph(obj: LonLatSphericalVector, /) -> apyc.SphericalRepresentation:
-    """`coordinax.LonLatSphericalVector` -> `astropy.SphericalRepresentation`.
+@conversion_method(LonLatSphericalPosition, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(LonLatSphericalPosition, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
+def lonlatsph_to_apysph(
+    obj: LonLatSphericalPosition, /
+) -> apyc.SphericalRepresentation:
+    """`coordinax.LonLatSphericalPosition` -> `astropy.SphericalRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.LonLatSphericalVector(lon=Quantity(2, unit="deg"),
+    >>> vec = cx.LonLatSphericalPosition(lon=Quantity(2, unit="deg"),
     ...                                lat=Quantity(3, unit="deg"),
     ...                                distance=Quantity(1, unit="kpc"))
     >>> convert(vec, apyc.SphericalRepresentation)
@@ -491,9 +491,11 @@ def lonlatsph_to_apysph(obj: LonLatSphericalVector, /) -> apyc.SphericalRepresen
     )
 
 
-@conversion_method(apyc.SphericalRepresentation, LonLatSphericalVector)  # type: ignore[misc]
-def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> LonLatSphericalVector:
-    """`astropy.SphericalRepresentation` -> `coordinax.LonLatSphericalVector`.
+@conversion_method(apyc.SphericalRepresentation, LonLatSphericalPosition)  # type: ignore[misc]
+def apysph_to_lonlatsph(
+    obj: apyc.SphericalRepresentation, /
+) -> LonLatSphericalPosition:
+    """`astropy.SphericalRepresentation` -> `coordinax.LonLatSphericalPosition`.
 
     Examples
     --------
@@ -503,34 +505,32 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> LonLatSpherical
 
     >>> sph = SphericalRepresentation(lon=2 * u.deg, lat=3 * u.deg,
     ...                               distance=1 * u.kpc)
-    >>> convert(sph, cx.LonLatSphericalVector)
-    LonLatSphericalVector(
+    >>> convert(sph, cx.LonLatSphericalPosition)
+    LonLatSphericalPosition(
       lon=Quantity[...](value=f32[], unit=Unit("deg")),
       lat=Quantity[...](value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
     )
 
     """
-    return LonLatSphericalVector.constructor(obj)
+    return LonLatSphericalPosition.constructor(obj)
 
 
 # =====================================
-# CartesianDifferential3D
+# CartesianVelocity3D
 
 
-@conversion_method(CartesianDifferential3D, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(CartesianDifferential3D, apyc.CartesianDifferential)  # type: ignore[misc]
-def diffcart3_to_apycart3(
-    obj: CartesianDifferential3D, /
-) -> apyc.CartesianDifferential:
-    """`coordinax.CartesianDifferential3D` -> `astropy.CartesianDifferential`.
+@conversion_method(CartesianVelocity3D, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(CartesianVelocity3D, apyc.CartesianDifferential)  # type: ignore[misc]
+def diffcart3_to_apycart3(obj: CartesianVelocity3D, /) -> apyc.CartesianDifferential:
+    """`coordinax.CartesianVelocity3D` -> `astropy.CartesianDifferential`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.CartesianDifferential3D.constructor(Quantity([1, 2, 3], unit="km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
     >>> convert(dif, apyc.CartesianDifferential)
     <CartesianDifferential (d_x, d_y, d_z) in km / s
         (1., 2., 3.)>
@@ -544,12 +544,10 @@ def diffcart3_to_apycart3(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.CartesianDifferential, CartesianDifferential3D
+    apyc.CartesianDifferential, CartesianVelocity3D
 )
-def apycart3_to_diffcart3(
-    obj: apyc.CartesianDifferential, /
-) -> CartesianDifferential3D:
-    """`astropy.CartesianDifferential` -> `coordinax.CartesianDifferential3D`.
+def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> CartesianVelocity3D:
+    """`astropy.CartesianDifferential` -> `coordinax.CartesianVelocity3D`.
 
     Examples
     --------
@@ -558,25 +556,25 @@ def apycart3_to_diffcart3(
     >>> from astropy.coordinates import CartesianDifferential
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
-    >>> convert(dcart, cx.CartesianDifferential3D)
-    CartesianDifferential3D(
+    >>> convert(dcart, cx.CartesianVelocity3D)
+    CartesianVelocity3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return CartesianDifferential3D.constructor(obj)
+    return CartesianVelocity3D.constructor(obj)
 
 
 # =====================================
-# CylindricalDifferential
+# CylindricalVelocity
 
 
-@conversion_method(CylindricalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(CylindricalDifferential, apyc.CylindricalDifferential)  # type: ignore[misc]
-def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDifferential:
-    """`coordinax.CylindricalDifferential` -> `astropy.CylindricalDifferential`.
+@conversion_method(CylindricalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(CylindricalVelocity, apyc.CylindricalDifferential)  # type: ignore[misc]
+def diffcyl_to_apycyl(obj: CylindricalVelocity, /) -> apyc.CylindricalDifferential:
+    """`coordinax.CylindricalVelocity` -> `astropy.CylindricalDifferential`.
 
     Examples
     --------
@@ -584,7 +582,7 @@ def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDiffer
     >>> import coordinax as cx
     >>> import astropy.coordinates as apyc
 
-    >>> dif = cx.CylindricalDifferential(d_rho=Quantity(1, unit="km/s"),
+    >>> dif = cx.CylindricalVelocity(d_rho=Quantity(1, unit="km/s"),
     ...                                  d_phi=Quantity(2, unit="mas/yr"),
     ...                                  d_z=Quantity(3, unit="km/s"))
     >>> convert(dif, apyc.CylindricalDifferential)
@@ -604,10 +602,10 @@ def diffcyl_to_apycyl(obj: CylindricalDifferential, /) -> apyc.CylindricalDiffer
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.CylindricalDifferential, CylindricalDifferential
+    apyc.CylindricalDifferential, CylindricalVelocity
 )
-def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalDifferential:
-    """`astropy.CylindricalDifferential` -> `coordinax.CylindricalDifferential`.
+def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalVelocity:
+    """`astropy.CylindricalVelocity` -> `coordinax.CylindricalVelocity`.
 
     Examples
     --------
@@ -617,34 +615,32 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> CylindricalDiffer
 
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> convert(dcyl, cx.CylindricalDifferential)
-    CylindricalDifferential(
+    >>> convert(dcyl, cx.CylindricalVelocity)
+    CylindricalVelocity(
       d_rho=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return CylindricalDifferential.constructor(obj)
+    return CylindricalVelocity.constructor(obj)
 
 
 # =====================================
-# SphericalDifferential
+# SphericalVelocity
 
 
-@conversion_method(SphericalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(SphericalDifferential, apyc.PhysicsSphericalDifferential)  # type: ignore[misc]
-def diffsph_to_apysph(
-    obj: SphericalDifferential, /
-) -> apyc.PhysicsSphericalDifferential:
-    """SphericalDifferential -> `astropy.PhysicsSphericalDifferential`.
+@conversion_method(SphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(SphericalVelocity, apyc.PhysicsSphericalDifferential)  # type: ignore[misc]
+def diffsph_to_apysph(obj: SphericalVelocity, /) -> apyc.PhysicsSphericalDifferential:
+    """SphericalVelocity -> `astropy.PhysicsSphericalDifferential`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.SphericalDifferential(d_r=Quantity(1, unit="km/s"),
+    >>> dif = cx.SphericalVelocity(d_r=Quantity(1, unit="km/s"),
     ...                                d_theta=Quantity(2, unit="mas/yr"),
     ...                                d_phi=Quantity(3, unit="mas/yr"))
     >>> convert(dif, apyc.PhysicsSphericalDifferential)
@@ -664,12 +660,10 @@ def diffsph_to_apysph(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.PhysicsSphericalDifferential, SphericalDifferential
+    apyc.PhysicsSphericalDifferential, SphericalVelocity
 )
-def apysph_to_diffsph(
-    obj: apyc.PhysicsSphericalDifferential, /
-) -> SphericalDifferential:
-    """`astropy.PhysicsSphericalDifferential` -> SphericalDifferential.
+def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> SphericalVelocity:
+    """`astropy.PhysicsSphericalDifferential` -> SphericalVelocity.
 
     Examples
     --------
@@ -679,34 +673,34 @@ def apysph_to_diffsph(
 
     >>> dif = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                    d_phi=3 * u.mas/u.yr)
-    >>> convert(dif, cx.SphericalDifferential)
-    SphericalDifferential(
+    >>> convert(dif, cx.SphericalVelocity)
+    SphericalVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
     )
 
     """
-    return SphericalDifferential.constructor(obj)
+    return SphericalVelocity.constructor(obj)
 
 
 # =====================================
-# LonLatSphericalDifferential
+# LonLatSphericalVelocity
 
 
-@conversion_method(LonLatSphericalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(LonLatSphericalDifferential, apyc.SphericalDifferential)  # type: ignore[misc]
+@conversion_method(LonLatSphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(LonLatSphericalVelocity, apyc.SphericalDifferential)  # type: ignore[misc]
 def difflonlatsph_to_apysph(
-    obj: LonLatSphericalDifferential, /
+    obj: LonLatSphericalVelocity, /
 ) -> apyc.SphericalDifferential:
-    """LonLatSphericalDifferential -> `astropy.SphericalDifferential`.
+    """LonLatSphericalVelocity -> `astropy.SphericalVelocity`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.LonLatSphericalDifferential(d_distance=Quantity(1, unit="km/s"),
+    >>> dif = cx.LonLatSphericalVelocity(d_distance=Quantity(1, unit="km/s"),
     ...                                      d_lat=Quantity(2, unit="mas/yr"),
     ...                                      d_lon=Quantity(3, unit="mas/yr"))
     >>> convert(dif, apyc.SphericalDifferential)
@@ -726,12 +720,12 @@ def difflonlatsph_to_apysph(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.SphericalDifferential, LonLatSphericalDifferential
+    apyc.SphericalDifferential, LonLatSphericalVelocity
 )
 def apysph_to_difflonlatsph(
     obj: apyc.SphericalDifferential, /
-) -> LonLatSphericalDifferential:
-    """`astropy.SphericalDifferential` -> LonLatSphericalDifferential.
+) -> LonLatSphericalVelocity:
+    """`astropy.coordinates.SphericalDifferential` -> LonLatSphericalVelocity.
 
     Examples
     --------
@@ -741,34 +735,34 @@ def apysph_to_difflonlatsph(
 
     >>> dif = SphericalDifferential(d_distance=1 * u.km / u.s, d_lat=2 * u.mas/u.yr,
     ...                             d_lon=3 * u.mas/u.yr)
-    >>> convert(dif, cx.LonLatSphericalDifferential)
-    LonLatSphericalDifferential(
+    >>> convert(dif, cx.LonLatSphericalVelocity)
+    LonLatSphericalVelocity(
       d_lon=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return LonLatSphericalDifferential.constructor(obj)
+    return LonLatSphericalVelocity.constructor(obj)
 
 
 # =====================================
-# LonCosLatSphericalDifferential
+# LonCosLatSphericalVelocity
 
 
-@conversion_method(LonCosLatSphericalDifferential, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(LonCosLatSphericalDifferential, apyc.SphericalCosLatDifferential)  # type: ignore[misc]
+@conversion_method(LonCosLatSphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(LonCosLatSphericalVelocity, apyc.SphericalCosLatDifferential)  # type: ignore[misc]
 def diffloncoslatsph_to_apysph(
-    obj: LonCosLatSphericalDifferential, /
+    obj: LonCosLatSphericalVelocity, /
 ) -> apyc.SphericalCosLatDifferential:
-    """LonCosLatSphericalDifferential -> `astropy.SphericalCosLatDifferential`.
+    """LonCosLatSphericalVelocity -> `astropy.SphericalCosLatDifferential`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.LonCosLatSphericalDifferential(d_distance=Quantity(1, unit="km/s"),
+    >>> dif = cx.LonCosLatSphericalVelocity(d_distance=Quantity(1, unit="km/s"),
     ...                                         d_lat=Quantity(2, unit="mas/yr"),
     ...                                         d_lon_coslat=Quantity(3, unit="mas/yr"))
     >>> convert(dif, apyc.SphericalCosLatDifferential)
@@ -788,12 +782,12 @@ def diffloncoslatsph_to_apysph(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.SphericalCosLatDifferential, LonCosLatSphericalDifferential
+    apyc.SphericalCosLatDifferential, LonCosLatSphericalVelocity
 )
 def apysph_to_diffloncoslatsph(
     obj: apyc.SphericalCosLatDifferential, /
-) -> LonCosLatSphericalDifferential:
-    """`astropy.SphericalCosLatDifferential` -> LonCosLatSphericalDifferential.
+) -> LonCosLatSphericalVelocity:
+    """`astropy.SphericalCosLatDifferential` -> LonCosLatSphericalVelocity.
 
     Examples
     --------
@@ -804,12 +798,12 @@ def apysph_to_diffloncoslatsph(
     >>> dif = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
     ...                                   d_lat=2 * u.mas/u.yr,
     ...                                   d_lon_coslat=3 * u.mas/u.yr)
-    >>> convert(dif, cx.LonCosLatSphericalDifferential)
-    LonCosLatSphericalDifferential(
+    >>> convert(dif, cx.LonCosLatSphericalVelocity)
+    LonCosLatSphericalVelocity(
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return LonCosLatSphericalDifferential.constructor(obj)
+    return LonCosLatSphericalVelocity.constructor(obj)

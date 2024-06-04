@@ -16,10 +16,10 @@ from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from coordinax._base_pos import AbstractPosition
-from coordinax._d1.builtin import Cartesian1DVector
-from coordinax._d2.builtin import Cartesian2DVector
-from coordinax._d3.base import Abstract3DVector
-from coordinax._d3.builtin import Cartesian3DVector
+from coordinax._d1.builtin import CartesianPosition1D
+from coordinax._d2.builtin import CartesianPosition2D
+from coordinax._d3.base import AbstractPosition3D
+from coordinax._d3.builtin import CartesianPosition3D
 from coordinax._d4.spacetime import FourVector
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
 from coordinax.operators._funcs import simplify_op
@@ -40,11 +40,11 @@ def _converter_spatialtranslation(x: Any) -> AbstractPosition:
         shape: tuple[int, ...] = x.shape
         match shape:
             case (1,):
-                out = Cartesian1DVector.constructor(x)
+                out = CartesianPosition1D.constructor(x)
             case (2,):
-                out = Cartesian2DVector.constructor(x)
+                out = CartesianPosition2D.constructor(x)
             case (3,):
-                out = Cartesian3DVector.constructor(x)
+                out = CartesianPosition3D.constructor(x)
             case _:
                 msg = f"Cannot convert {x} to a spatial translation vector."
                 raise TypeError(msg)
@@ -68,12 +68,12 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : :class:`vector.Abstract3DVector`
+    translation : :class:`vector.AbstractPosition3D`
         The spatial translation vector. This parameters accepts either a
-        :class:`vector.Abstract3DVector` instance or uses
-        :meth:`vector.Cartesian3DVector.constructor` to enable a variety of more
+        :class:`vector.AbstractPosition3D` instance or uses
+        :meth:`vector.CartesianPosition3D.constructor` to enable a variety of more
         convenient input types to create a Cartesian vector. See
-        :class:`vector.Cartesian3DVector` for details.
+        :class:`vector.CartesianPosition3D` for details.
 
     Examples
     --------
@@ -88,26 +88,26 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> shift = Quantity([1.0, 2.0, 3.0], "kpc")
     >>> op = cx.operators.GalileanSpatialTranslationOperator(shift)
     >>> op
-    GalileanSpatialTranslationOperator( translation=Cartesian3DVector( ... ) )
+    GalileanSpatialTranslationOperator( translation=CartesianPosition3D( ... ) )
 
-    Note that the translation is a :class:`vector.Cartesian3DVector`, which was
+    Note that the translation is a :class:`vector.CartesianPosition3D`, which was
     constructed from a 1D array, using
-    :meth:`vector.Cartesian3DVector.constructor`. We can also construct it
+    :meth:`vector.CartesianPosition3D.constructor`. We can also construct it
     directly, which allows for other vector types.
 
-    >>> from coordinax import SphericalVector
-    >>> shift = SphericalVector(r=Quantity(1.0, "kpc"),
+    >>> from coordinax import SphericalPosition
+    >>> shift = SphericalPosition(r=Quantity(1.0, "kpc"),
     ...                         theta=Quantity(xp.pi/2, "rad"),
     ...                         phi=Quantity(0, "rad"))
     >>> op = cx.operators.GalileanSpatialTranslationOperator(shift)
     >>> op
-    GalileanSpatialTranslationOperator( translation=SphericalVector( ... ) )
+    GalileanSpatialTranslationOperator( translation=SphericalPosition( ... ) )
 
     Translation operators can be applied to :class:`vector.AbstractPosition`:
 
-    >>> q = cx.Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
+    >>> q = cx.CartesianPosition3D.constructor(Quantity([0, 0, 0], "kpc"))
     >>> op(q)
-    Cartesian3DVector( ... )
+    CartesianPosition3D( ... )
 
     And to :class:`~unxt.Quantity`:
 
@@ -126,9 +126,9 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.Cartesian1DVector.constructor(q).represent_as(cx.RadialVector)
+    >>> vec = cx.CartesianPosition1D.constructor(q).represent_as(cx.RadialPosition)
     >>> op(vec)
-    RadialVector(r=Distance(value=f32[], unit=Unit("kpc")))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("kpc")))
 
     - 2D:
 
@@ -138,9 +138,9 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.Cartesian2DVector.constructor(q).represent_as(cx.PolarVector)
+    >>> vec = cx.CartesianPosition2D.constructor(q).represent_as(cx.PolarPosition)
     >>> op(vec)
-    PolarVector( r=Distance(value=f32[], unit=Unit("kpc")),
+    PolarPosition( r=Distance(value=f32[], unit=Unit("kpc")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )
 
     - 3D:
@@ -151,9 +151,9 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.Cartesian3DVector.constructor(q).represent_as(cx.SphericalVector)
+    >>> vec = cx.CartesianPosition3D.constructor(q).represent_as(cx.SphericalPosition)
     >>> op(vec)
-    SphericalVector( r=Distance(value=f32[], unit=Unit("kpc")),
+    SphericalPosition( r=Distance(value=f32[], unit=Unit("kpc")),
                      theta=Quantity[...](value=f32[], unit=Unit("rad")),
                      phi=Quantity[...](value=f32[], unit=Unit("rad")) )
 
@@ -172,7 +172,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     This parameters accepts either a :class:`vector.AbstracVector` instance or
     uses a Cartesian vector constructor to enable a variety of more convenient
     input types to create a Cartesian vector. See
-    :class:`vector.Cartesian3DVector.constructor` for an example when doing a 3D
+    :class:`vector.CartesianPosition3D.constructor` for an example when doing a 3D
     translation.
     """
 
@@ -185,10 +185,10 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
-        >>> shift = Cartesian3DVector.constructor(Quantity([1, 1, 1], "kpc"))
+        >>> shift = CartesianPosition3D.constructor(Quantity([1, 1, 1], "kpc"))
         >>> op = GalileanSpatialTranslationOperator(shift)
 
         >>> op.is_inertial
@@ -204,14 +204,14 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
-        >>> shift = Cartesian3DVector.constructor(Quantity([1, 1, 1], "kpc"))
+        >>> shift = CartesianPosition3D.constructor(Quantity([1, 1, 1], "kpc"))
         >>> op = GalileanSpatialTranslationOperator(shift)
 
         >>> op.inverse
-        GalileanSpatialTranslationOperator( translation=Cartesian3DVector( ... ) )
+        GalileanSpatialTranslationOperator( translation=CartesianPosition3D( ... ) )
 
         >>> op.inverse.translation.x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
@@ -230,13 +230,13 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
-        >>> shift = Cartesian3DVector.constructor(Quantity([1, 1, 1], "kpc"))
+        >>> shift = CartesianPosition3D.constructor(Quantity([1, 1, 1], "kpc"))
         >>> op = GalileanSpatialTranslationOperator(shift)
 
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> t = Quantity(0, "Gyr")
         >>> newq = op(q)
         >>> newq.x
@@ -257,13 +257,13 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector
+        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
-        >>> shift = Cartesian3DVector.constructor(Quantity([1, 1, 1], "kpc"))
+        >>> shift = CartesianPosition3D.constructor(Quantity([1, 1, 1], "kpc"))
         >>> op = GalileanSpatialTranslationOperator(shift)
 
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> t = Quantity(0, "Gyr")
         >>> newq, newt = op(q, t)
         >>> newq.x
@@ -335,22 +335,23 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
     GalileanTranslationOperator(
       translation=FourVector(
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-        q=Cartesian3DVector( ... ) )
+        q=CartesianPosition3D( ... ) )
     )
 
     Note that the translation is a :class:`vector.FourVector`, which was
     constructed from a 1D array, using :meth:`vector.FourVector.constructor`. We
     can also construct it directly, which allows for other vector types.
 
-    >>> from coordinax import SphericalVector
-    >>> qshift = SphericalVector(r=Quantity(1.0, "kpc"), theta=Quantity(xp.pi/2, "rad"),
-    ...                          phi=Quantity(0, "rad"))
+    >>> from coordinax import SphericalPosition
+    >>> qshift = SphericalPosition(r=Quantity(1.0, "kpc"),
+    ...                            theta=Quantity(xp.pi/2, "rad"),
+    ...                            phi=Quantity(0, "rad"))
     >>> op = GalileanTranslationOperator(FourVector(t=Quantity(1.0, "Gyr"), q=qshift))
     >>> op
     GalileanTranslationOperator(
       translation=FourVector(
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
-        q=SphericalVector( ... ) )
+        q=SphericalPosition( ... ) )
     )
 
     Translation operators can be applied to :class:`vector.FourVector`:
@@ -359,12 +360,12 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
     >>> op(w)
     FourVector(
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-      q=Cartesian3DVector( ... )
+      q=CartesianPosition3D( ... )
     )
 
-    Also to :class:`vector.Abstract3DVector` and :class:`unxt.Quantity`:
+    Also to :class:`vector.AbstractPosition3D` and :class:`unxt.Quantity`:
 
-    >>> q = Cartesian3DVector.constructor(Quantity([0, 0, 0], "kpc"))
+    >>> q = CartesianPosition3D.constructor(Quantity([0, 0, 0], "kpc"))
     >>> t = Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
@@ -410,10 +411,10 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, FourVector
+        >>> from coordinax import CartesianPosition3D, FourVector
         >>> from coordinax.operators import GalileanSpatialTranslationOperator
 
-        >>> qshift = Cartesian3DVector.constructor(Quantity([1, 1, 1], "kpc"))
+        >>> qshift = CartesianPosition3D.constructor(Quantity([1, 1, 1], "kpc"))
         >>> tshift = Quantity(1, "Gyr")
         >>> shift = FourVector(tshift, qshift)
         >>> op = GalileanTranslationOperator(shift)
@@ -436,12 +437,12 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, FourVector
+        >>> from coordinax import CartesianPosition3D, FourVector
         >>> from coordinax.operators import GalileanTranslationOperator
 
         Explicitly construct the translation operator:
 
-        >>> qshift = Cartesian3DVector.constructor(Quantity([1, 1, 1], "kpc"))
+        >>> qshift = CartesianPosition3D.constructor(Quantity([1, 1, 1], "kpc"))
         >>> tshift = Quantity(1, "Gyr")
         >>> shift = FourVector(tshift, qshift)
         >>> op = GalileanTranslationOperator(shift)
@@ -467,26 +468,29 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanTranslationOperator", x: Abstract3DVector, t: Quantity["time"], /
-    ) -> tuple[Abstract3DVector, Quantity["time"]]:
+        self: "GalileanTranslationOperator",
+        x: AbstractPosition3D,
+        t: Quantity["time"],
+        /,
+    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
         """Apply the translation to the coordinates.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, FourVector
+        >>> from coordinax import CartesianPosition3D, FourVector
         >>> from coordinax.operators import GalileanTranslationOperator
 
         Explicitly construct the translation operator:
 
-        >>> qshift = Cartesian3DVector.constructor(Quantity([1, 1, 1], "kpc"))
+        >>> qshift = CartesianPosition3D.constructor(Quantity([1, 1, 1], "kpc"))
         >>> tshift = Quantity(1, "Gyr")
         >>> shift = FourVector(tshift, qshift)
         >>> op = GalileanTranslationOperator(shift)
 
         Construct a vector to translate
 
-        >>> q = Cartesian3DVector.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
         >>> t = Quantity(1, "Gyr")
         >>> newq, newt = op(q, t)
 

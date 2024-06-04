@@ -2,11 +2,11 @@
 
 __all__ = [
     # Position
-    "Cartesian2DVector",
-    "PolarVector",
+    "CartesianPosition2D",
+    "PolarPosition",
     # Differential
-    "CartesianDifferential2D",
-    "PolarDifferential",
+    "CartesianVelocity2D",
+    "PolarVelocity",
 ]
 
 from dataclasses import replace
@@ -20,7 +20,7 @@ import quaxed.array_api as xp
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
-from .base import Abstract2DVector, Abstract2DVectorDifferential
+from .base import AbstractPosition2D, AbstractVelocity2D
 from coordinax._base_pos import AbstractPosition
 from coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._converters import converter_azimuth_to_range
@@ -31,7 +31,7 @@ from coordinax._utils import classproperty
 
 
 @final
-class Cartesian2DVector(Abstract2DVector):
+class CartesianPosition2D(AbstractPosition2D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
@@ -46,8 +46,8 @@ class Cartesian2DVector(Abstract2DVector):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianDifferential2D"]:
-        return CartesianDifferential2D
+    def differential_cls(cls) -> type["CartesianVelocity2D"]:
+        return CartesianVelocity2D
 
     # -----------------------------------------------------
     # Unary operations
@@ -58,9 +58,9 @@ class Cartesian2DVector(Abstract2DVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian2DVector
+        >>> from coordinax import CartesianPosition2D
 
-        >>> q = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
+        >>> q = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
         >>> (-q).x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
 
@@ -70,46 +70,46 @@ class Cartesian2DVector(Abstract2DVector):
     # -----------------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any, /) -> "Cartesian2DVector":
+    def __add__(self, other: Any, /) -> "CartesianPosition2D":
         """Add two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian2DVector, PolarVector
-        >>> cart = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
-        >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> from coordinax import CartesianPosition2D, PolarPosition
+        >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
+        >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
         >>> (cart + polr).x
         Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
         """
         if not isinstance(other, AbstractPosition):
-            msg = f"Cannot add {Cartesian2DVector!r} and {type(other)!r}."
+            msg = f"Cannot add {CartesianPosition2D!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(Cartesian2DVector)
+        cart = other.represent_as(CartesianPosition2D)
         return replace(self, x=self.x + cart.x, y=self.y + cart.y)
 
-    def __sub__(self, other: Any, /) -> "Cartesian2DVector":
+    def __sub__(self, other: Any, /) -> "CartesianPosition2D":
         """Subtract two vectors.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian2DVector, PolarVector
-        >>> cart = Cartesian2DVector.constructor(Quantity([1, 2], "kpc"))
-        >>> polr = PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> from coordinax import CartesianPosition2D, PolarPosition
+        >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
+        >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
         >>> (cart - polr).x
         Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
 
         """
         if not isinstance(other, AbstractPosition):
-            msg = f"Cannot subtract {Cartesian2DVector!r} and {type(other)!r}."
+            msg = f"Cannot subtract {CartesianPosition2D!r} and {type(other)!r}."
             raise TypeError(msg)
 
-        cart = other.represent_as(Cartesian2DVector)
+        cart = other.represent_as(CartesianPosition2D)
         return replace(self, x=self.x - cart.x, y=self.y - cart.y)
 
     @partial(jax.jit)
@@ -119,8 +119,8 @@ class Cartesian2DVector(Abstract2DVector):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian2DVector
-        >>> q = Cartesian2DVector.constructor(Quantity([3, 4], "kpc"))
+        >>> from coordinax import CartesianPosition2D
+        >>> q = CartesianPosition2D.constructor(Quantity([3, 4], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
 
@@ -129,7 +129,7 @@ class Cartesian2DVector(Abstract2DVector):
 
 
 @final
-class PolarVector(Abstract2DVector):
+class PolarPosition(AbstractPosition2D):
     r"""Polar vector representation.
 
     Parameters
@@ -163,8 +163,8 @@ class PolarVector(Abstract2DVector):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarDifferential"]:
-        return PolarDifferential
+    def differential_cls(cls) -> type["PolarVelocity"]:
+        return PolarVelocity
 
     @partial(jax.jit)
     def norm(self) -> ct.BatchableLength:
@@ -174,7 +174,7 @@ class PolarVector(Abstract2DVector):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.PolarVector(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> q = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> q.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -186,7 +186,7 @@ class PolarVector(Abstract2DVector):
 
 
 @final
-class CartesianDifferential2D(Abstract2DVectorDifferential):
+class CartesianVelocity2D(AbstractVelocity2D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -201,18 +201,18 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[Cartesian2DVector]:
-        return Cartesian2DVector
+    def integral_cls(cls) -> type[CartesianPosition2D]:
+        return CartesianPosition2D
 
     @partial(jax.jit)
-    def norm(self, _: Abstract2DVector | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPosition2D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianDifferential2D
-        >>> v = CartesianDifferential2D.constructor(Quantity([3, 4], "km/s"))
+        >>> from coordinax import CartesianVelocity2D
+        >>> v = CartesianVelocity2D.constructor(Quantity([3, 4], "km/s"))
         >>> v.norm()
         Quantity['speed'](Array(5., dtype=float32), unit='km / s')
 
@@ -221,7 +221,7 @@ class CartesianDifferential2D(Abstract2DVectorDifferential):
 
 
 @final
-class PolarDifferential(Abstract2DVectorDifferential):
+class PolarVelocity(AbstractVelocity2D):
     """Polar differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -236,5 +236,5 @@ class PolarDifferential(Abstract2DVectorDifferential):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarVector]:
-        return PolarVector
+    def integral_cls(cls) -> type[PolarPosition]:
+        return PolarPosition

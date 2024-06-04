@@ -15,8 +15,8 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
-from coordinax._d3.base import Abstract3DVector
-from coordinax._d3.builtin import CartesianDifferential3D
+from coordinax._d3.base import AbstractPosition3D
+from coordinax._d3.builtin import CartesianVelocity3D
 from coordinax._d4.spacetime import FourVector
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
 from coordinax.operators._funcs import simplify_op
@@ -37,11 +37,11 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     Parameters
     ----------
-    velocity : :class:`vector.CartesianDifferential3D`
+    velocity : :class:`vector.CartesianVelocity3D`
         The boost velocity. This parameters uses
-        :meth:`vector.CartesianDifferential3D.constructor` to enable a variety
+        :meth:`vector.CartesianVelocity3D.constructor` to enable a variety
         of more convenient input types. See
-        :class:`vector.CartesianDifferential3D` for details.
+        :class:`vector.CartesianVelocity3D` for details.
 
     Examples
     --------
@@ -49,36 +49,34 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     >>> import quaxed.array_api as xp
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianDifferential3D, Cartesian3DVector
+    >>> from coordinax import CartesianVelocity3D, CartesianPosition3D
     >>> import coordinax.operators as co
 
     We can then create a boost operator:
 
     >>> op = co.GalileanBoostOperator(Quantity([1.0, 2.0, 3.0], "m/s"))
     >>> op
-    GalileanBoostOperator( velocity=CartesianDifferential3D( ... ) )
+    GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
 
-    Note that the velocity is a :class:`vector.CartesianDifferential3D`, which
+    Note that the velocity is a :class:`vector.CartesianVelocity3D`, which
     was constructed from a 1D array, using
-    :meth:`vector.CartesianDifferential3D.constructor`. We can also construct it
+    :meth:`vector.CartesianVelocity3D.constructor`. We can also construct it
     directly:
 
-    >>> boost = CartesianDifferential3D(d_x=Quantity(1, "m/s"), d_y=Quantity(2, "m/s"),
+    >>> boost = CartesianVelocity3D(d_x=Quantity(1, "m/s"), d_y=Quantity(2, "m/s"),
     ...                                 d_z=Quantity(3, "m/s"))
     >>> op = co.GalileanBoostOperator(boost)
     >>> op
-    GalileanBoostOperator( velocity=CartesianDifferential3D( ... ) )
+    GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
 
     """
 
-    velocity: CartesianDifferential3D = eqx.field(
-        converter=CartesianDifferential3D.constructor
-    )
+    velocity: CartesianVelocity3D = eqx.field(converter=CartesianVelocity3D.constructor)
     """The boost velocity.
 
-    This parameters uses :meth:`vector.CartesianDifferential3D.constructor` to
+    This parameters uses :meth:`vector.CartesianVelocity3D.constructor` to
     enable a variety of more convenient input types. See
-    :class:`vector.CartesianDifferential3D` for details.
+    :class:`vector.CartesianVelocity3D` for details.
     """
 
     # -----------------------------------------------------
@@ -90,7 +88,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
+        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
         >>> from coordinax.operators import GalileanBoostOperator
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
@@ -107,12 +105,12 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
+        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
         >>> from coordinax.operators import GalileanBoostOperator
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
         >>> op.inverse
-        GalileanBoostOperator( velocity=CartesianDifferential3D( ... ) )
+        GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
 
         >>> op.inverse.velocity.d_x
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
@@ -124,19 +122,19 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanBoostOperator", q: Abstract3DVector, t: Quantity["time"], /
-    ) -> tuple[Abstract3DVector, Quantity["time"]]:
+        self: "GalileanBoostOperator", q: AbstractPosition3D, t: Quantity["time"], /
+    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
         """Apply the boost to the coordinates.
 
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian3DVector, CartesianDifferential3D
+        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
         >>> from coordinax.operators import GalileanBoostOperator
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
 
-        >>> q = Cartesian3DVector.constructor(Quantity([0, 0, 0], "m"))
+        >>> q = CartesianPosition3D.constructor(Quantity([0, 0, 0], "m"))
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newt
