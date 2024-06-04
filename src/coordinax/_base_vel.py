@@ -9,7 +9,6 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
-from plum import dispatch
 
 from unxt import Quantity
 
@@ -82,7 +81,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Binary operations
 
-    @dispatch  # type: ignore[misc]
+    @AbstractVector.__mul__.dispatch  # type: ignore[misc]
     def __mul__(self: "AbstractVelocity", other: Quantity) -> "AbstractPosition":
         """Multiply the vector by a :class:`unxt.Quantity`.
 
@@ -130,6 +129,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 class AdditionMixin(AbstractVector):
     """Mixin for addition operations."""
 
+    # TODO: use dispatch
     def __add__(self: "Self", other: Any, /) -> "Self":
         """Add two differentials.
 
@@ -151,6 +151,7 @@ class AdditionMixin(AbstractVector):
             self, **{k: v + getattr(other, k) for k, v in dataclass_items(self)}
         )
 
+    # TODO: use dispatch
     def __sub__(self: "Self", other: Any, /) -> "Self":
         """Subtract two differentials.
 

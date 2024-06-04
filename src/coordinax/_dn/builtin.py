@@ -9,7 +9,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, final
+from typing import final
 
 import equinox as eqx
 import jax
@@ -20,6 +20,7 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import AbstractPositionND, AbstractPositionNDDifferential
+from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._utils import classproperty
 
@@ -116,7 +117,10 @@ class CartesianPositionND(AbstractPositionND):
     # -----------------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any, /) -> "CartesianPositionND":
+    @AbstractVector.__add__.dispatch  # type: ignore[misc]
+    def __add__(
+        self: "CartesianPositionND", other: AbstractPosition, /
+    ) -> "CartesianPositionND":
         """Add two vectors.
 
         Examples
@@ -132,14 +136,13 @@ class CartesianPositionND(AbstractPositionND):
         Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractPosition):
-            msg = f"Cannot add {self._cartesian_cls!r} and {type(other)!r}."
-            raise TypeError(msg)
-
         cart = other.represent_as(CartesianPositionND)
         return replace(self, q=self.q + cart.q)
 
-    def __sub__(self, other: Any, /) -> "CartesianPositionND":
+    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
+    def __sub__(
+        self: "CartesianPositionND", other: AbstractPosition, /
+    ) -> "CartesianPositionND":
         """Subtract two vectors.
 
         Examples
@@ -155,10 +158,6 @@ class CartesianPositionND(AbstractPositionND):
         Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractPosition):
-            msg = f"Cannot subtract {self._cartesian_cls!r} and {type(other)!r}."
-            raise TypeError(msg)
-
         cart = other.represent_as(CartesianPositionND)
         return replace(self, q=self.q - cart.q)
 

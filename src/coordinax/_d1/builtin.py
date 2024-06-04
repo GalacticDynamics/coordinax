@@ -11,7 +11,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, final
+from typing import final
 
 import equinox as eqx
 import jax
@@ -21,6 +21,7 @@ from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
 from .base import AbstractPosition1D, AbstractVelocity1D
+from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._checks import check_r_non_negative
 from coordinax._utils import classproperty
@@ -65,7 +66,10 @@ class CartesianPosition1D(AbstractPosition1D):
     # -----------------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any, /) -> "CartesianPosition1D":
+    @AbstractVector.__add__.dispatch  # type: ignore[misc]
+    def __add__(
+        self: "CartesianPosition1D", other: AbstractPosition, /
+    ) -> "CartesianPosition1D":
         """Add two vectors.
 
         Examples
@@ -84,14 +88,13 @@ class CartesianPosition1D(AbstractPosition1D):
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractPosition):
-            msg = f"Cannot add {CartesianPosition1D!r} and {type(other)!r}."
-            raise TypeError(msg)
-
         cart = other.represent_as(CartesianPosition1D)
         return replace(self, x=self.x + cart.x)
 
-    def __sub__(self, other: Any, /) -> "CartesianPosition1D":
+    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
+    def __sub__(
+        self: "CartesianPosition1D", other: AbstractPosition, /
+    ) -> "CartesianPosition1D":
         """Subtract two vectors.
 
         Examples
@@ -110,10 +113,6 @@ class CartesianPosition1D(AbstractPosition1D):
         Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractPosition):
-            msg = f"Cannot subtract {CartesianPosition1D!r} and {type(other)!r}."
-            raise TypeError(msg)
-
         cart = other.represent_as(CartesianPosition1D)
         return replace(self, x=self.x - cart.x)
 

@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
 from jaxtyping import ArrayLike
-from plum import dispatch
 
 from unxt import Quantity
 
@@ -77,11 +76,11 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
     # -----------------------------------------------------
     # Binary arithmetic operations
 
-    def __add__(self, other: Any) -> "Self":
+    @AbstractVector.__add__.dispatch  # type: ignore[misc]
+    def __add__(
+        self: "AbstractPosition", other: "AbstractPosition"
+    ) -> "AbstractPosition":  # TODO: use Self
         """Add another object to this vector."""
-        if not isinstance(other, AbstractPosition):
-            return NotImplemented
-
         # The base implementation is to convert to Cartesian and perform the
         # operation.  Cartesian coordinates do not have any branch cuts or
         # singularities or ranges that need to be handled, so this is a safe
@@ -91,11 +90,11 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
             other.represent_as(self._cartesian_cls),
         ).represent_as(type(self))
 
-    def __sub__(self, other: Any) -> "Self":
+    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
+    def __sub__(
+        self: "AbstractPosition", other: "AbstractPosition"
+    ) -> "AbstractPosition":  # TODO: use Self
         """Add another object to this vector."""
-        if not isinstance(other, AbstractPosition):
-            return NotImplemented
-
         # The base implementation is to convert to Cartesian and perform the
         # operation.  Cartesian coordinates do not have any branch cuts or
         # singularities or ranges that need to be handled, so this is a safe
@@ -105,32 +104,23 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
             other.represent_as(self._cartesian_cls),
         ).represent_as(type(self))
 
-    @dispatch
-    def __mul__(self: "AbstractPosition", other: Any) -> Any:
-        return NotImplemented
-
-    @dispatch
-    def __mul__(self: "AbstractPosition", other: ArrayLike) -> Any:
+    @AbstractVector.__mul__.dispatch  # type: ignore[misc]
+    def __mul__(
+        self: "AbstractPosition", other: ArrayLike
+    ) -> "AbstractPosition":  # TODO: use Self
         return replace(self, **{k: v * other for k, v in dataclass_items(self)})
 
-    @dispatch
-    def __truediv__(self: "AbstractPosition", other: Any) -> Any:
-        return NotImplemented
-
-    @dispatch
-    def __truediv__(self: "AbstractPosition", other: ArrayLike) -> Any:
-        return replace(self, **{k: v / other for k, v in dataclass_items(self)})
-
-    # ---------------------------------
-    # Reverse binary operations
-
-    @dispatch
-    def __rmul__(self: "AbstractPosition", other: Any) -> Any:
-        return NotImplemented
-
-    @dispatch
-    def __rmul__(self: "AbstractPosition", other: ArrayLike) -> Any:
+    @AbstractVector.__rmul__.dispatch  # type: ignore[misc]
+    def __rmul__(
+        self: "AbstractPosition", other: ArrayLike
+    ) -> "AbstractPosition":  # TODO: use Self
         return replace(self, **{k: other * v for k, v in dataclass_items(self)})
+
+    @AbstractVector.__truediv__.dispatch  # type: ignore[misc]
+    def __truediv__(
+        self: "AbstractPosition", other: ArrayLike
+    ) -> "AbstractPosition":  # TODO: use Self
+        return replace(self, **{k: v / other for k, v in dataclass_items(self)})
 
     # ===============================================================
     # Convenience methods

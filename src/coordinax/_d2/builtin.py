@@ -11,7 +11,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, final
+from typing import final
 
 import equinox as eqx
 import jax
@@ -21,6 +21,7 @@ from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
 from .base import AbstractPosition2D, AbstractVelocity2D
+from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._converters import converter_azimuth_to_range
@@ -70,7 +71,10 @@ class CartesianPosition2D(AbstractPosition2D):
     # -----------------------------------------------------
     # Binary operations
 
-    def __add__(self, other: Any, /) -> "CartesianPosition2D":
+    @AbstractVector.__add__.dispatch  # type: ignore[misc]
+    def __add__(
+        self: "CartesianPosition2D", other: AbstractPosition, /
+    ) -> "CartesianPosition2D":
         """Add two vectors.
 
         Examples
@@ -84,14 +88,13 @@ class CartesianPosition2D(AbstractPosition2D):
         Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractPosition):
-            msg = f"Cannot add {CartesianPosition2D!r} and {type(other)!r}."
-            raise TypeError(msg)
-
         cart = other.represent_as(CartesianPosition2D)
         return replace(self, x=self.x + cart.x, y=self.y + cart.y)
 
-    def __sub__(self, other: Any, /) -> "CartesianPosition2D":
+    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
+    def __sub__(
+        self: "CartesianPosition2D", other: AbstractPosition, /
+    ) -> "CartesianPosition2D":
         """Subtract two vectors.
 
         Examples
@@ -105,10 +108,6 @@ class CartesianPosition2D(AbstractPosition2D):
         Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
 
         """
-        if not isinstance(other, AbstractPosition):
-            msg = f"Cannot subtract {CartesianPosition2D!r} and {type(other)!r}."
-            raise TypeError(msg)
-
         cart = other.represent_as(CartesianPosition2D)
         return replace(self, x=self.x - cart.x, y=self.y - cart.y)
 
