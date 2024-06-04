@@ -13,7 +13,8 @@ from coordinax._d1.cartesian import CartesianPosition1D
 from coordinax._d1.radial import RadialPosition
 from coordinax._d2.cartesian import CartesianPosition2D
 from coordinax._d2.polar import PolarPosition
-from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
+from coordinax._d3.cartesian import CartesianPosition3D
+from coordinax._d3.cylindrical import CylindricalPosition
 from coordinax._d3.sphere import MathSphericalPosition, SphericalPosition
 
 # =============================================================================

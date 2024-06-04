@@ -18,7 +18,7 @@ from unxt import Quantity
 from .base import AbstractPosition4D
 from coordinax._base import AbstractVector
 from coordinax._d3.base import AbstractPosition3D
-from coordinax._d3.builtin import CartesianPosition3D
+from coordinax._d3.cartesian import CartesianPosition3D
 from coordinax._typing import BatchableLength, BatchableTime, ScalarTime
 from coordinax._utils import classproperty
 
