@@ -6,33 +6,14 @@ from typing import Any
 
 from plum import dispatch
 
-from .base import AbstractPosition1D, AbstractVelocity1D
-from .builtin import (
-    CartesianPosition1D,
-    CartesianVelocity1D,
-    RadialPosition,
-    RadialVelocity,
-)
+from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
+from .cartesian import CartesianAcceleration1D, CartesianPosition1D, CartesianVelocity1D
+from .radial import RadialAcceleration, RadialPosition, RadialVelocity
 from coordinax._base_pos import AbstractPosition
+from coordinax._base_vel import AbstractVelocity
 
 ###############################################################################
 # 1D
-
-
-@dispatch(precedence=1)
-def represent_as(
-    current: CartesianPosition1D, target: type[CartesianPosition1D], /, **kwargs: Any
-) -> CartesianPosition1D:
-    """Self transform of 1D vectors."""
-    return current
-
-
-@dispatch(precedence=1)
-def represent_as(
-    current: RadialPosition, target: type[RadialPosition], /, **kwargs: Any
-) -> RadialPosition:
-    """Self transform of 1D vectors."""
-    return current
 
 
 @dispatch
@@ -47,6 +28,24 @@ def represent_as(
     return represent_as(cart1d, target)
 
 
+# TODO: use multi, with precedence
+@dispatch(precedence=1)
+def represent_as(
+    current: CartesianPosition1D, target: type[CartesianPosition1D], /, **kwargs: Any
+) -> CartesianPosition1D:
+    """Self transform of 1D vectors."""
+    return current
+
+
+# TODO: use multi, with precedence
+@dispatch(precedence=1)
+def represent_as(
+    current: RadialPosition, target: type[RadialPosition], /, **kwargs: Any
+) -> RadialPosition:
+    """Self transform of 1D vectors."""
+    return current
+
+
 @dispatch.multi(
     (CartesianVelocity1D, type[CartesianVelocity1D], AbstractPosition),
     (RadialVelocity, type[RadialVelocity], AbstractPosition),
@@ -58,7 +57,55 @@ def represent_as(
     /,
     **kwargs: Any,
 ) -> AbstractVelocity1D:
-    """Self transform of 1D Differentials."""
+    """Self transform of 1D Velocities."""
+    return current
+
+
+# Special-case where self-transform doesn't need position
+@dispatch.multi(
+    (CartesianVelocity1D, type[CartesianVelocity1D]),
+    (RadialVelocity, type[RadialVelocity]),
+)
+def represent_as(
+    current: AbstractVelocity1D, target: type[AbstractVelocity1D], /, **kwargs: Any
+) -> AbstractVelocity1D:
+    """Self transform of 1D Velocities."""
+    return current
+
+
+@dispatch.multi(
+    (
+        CartesianAcceleration1D,
+        type[CartesianAcceleration1D],
+        AbstractVelocity,
+        AbstractPosition,
+    ),
+    (RadialAcceleration, type[RadialAcceleration], AbstractVelocity, AbstractPosition),
+)
+def represent_as(
+    current: AbstractAcceleration1D,
+    target: type[AbstractAcceleration1D],
+    velocity: AbstractVelocity,
+    position: AbstractPosition,
+    /,
+    **kwargs: Any,
+) -> AbstractAcceleration1D:
+    """Self transform of 1D Accelerations."""
+    return current
+
+
+# Special-case where self-transform doesn't need velocity or position
+@dispatch.multi(
+    (CartesianAcceleration1D, type[CartesianAcceleration1D]),
+    (RadialAcceleration, type[RadialAcceleration]),
+)
+def represent_as(
+    current: AbstractAcceleration1D,
+    target: type[AbstractAcceleration1D],
+    /,
+    **kwargs: Any,
+) -> AbstractAcceleration1D:
+    """Self transform of 1D Accelerations."""
     return current
 
 

@@ -63,10 +63,10 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         >>> from coordinax import RadialPosition, SphericalPosition
 
         >>> RadialPosition._cartesian_cls
-        <class 'coordinax._d1.builtin.CartesianPosition1D'>
+        <class 'coordinax...CartesianPosition1D'>
 
         >>> SphericalPosition._cartesian_cls
-        <class 'coordinax._d3.builtin.CartesianPosition3D'>
+        <class 'coordinax...CartesianPosition3D'>
 
         """
         # TODO: something nicer than this for getting the corresponding class

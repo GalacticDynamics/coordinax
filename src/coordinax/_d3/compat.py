@@ -12,12 +12,8 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractPosition3D
-from .builtin import (
-    CartesianPosition3D,
-    CartesianVelocity3D,
-    CylindricalPosition,
-    CylindricalVelocity,
-)
+from .cartesian import CartesianPosition3D, CartesianVelocity3D
+from .cylindrical import CylindricalPosition, CylindricalVelocity
 from .sphere import (
     LonCosLatSphericalVelocity,
     LonLatSphericalPosition,

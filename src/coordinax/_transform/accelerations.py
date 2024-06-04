@@ -12,11 +12,12 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import AbstractDistance, Quantity
 
+from coordinax._base_acc import AbstractAcceleration
 from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AbstractVelocity
-from coordinax._d1.base import AbstractVelocity1D
-from coordinax._d2.base import AbstractVelocity2D
-from coordinax._d3.base import AbstractVelocity3D
+from coordinax._d1.base import AbstractAcceleration1D
+from coordinax._d2.base import AbstractAcceleration2D
+from coordinax._d3.base import AbstractAcceleration3D
 from coordinax._utils import dataclass_items
 
 
@@ -24,40 +25,46 @@ from coordinax._utils import dataclass_items
 @dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
     (
-        AbstractVelocity1D,
-        type[AbstractVelocity1D],  # type: ignore[misc]
+        AbstractAcceleration1D,
+        type[AbstractAcceleration1D],  # type: ignore[misc]
+        AbstractVelocity | Quantity["speed"],
         AbstractPosition | Quantity["length"],
     ),
     (
-        AbstractVelocity2D,
-        type[AbstractVelocity2D],  # type: ignore[misc]
+        AbstractAcceleration2D,
+        type[AbstractAcceleration2D],  # type: ignore[misc]
+        AbstractVelocity | Quantity["speed"],
         AbstractPosition | Quantity["length"],
     ),
     (
-        AbstractVelocity3D,
-        type[AbstractVelocity3D],  # type: ignore[misc]
+        AbstractAcceleration3D,
+        type[AbstractAcceleration3D],  # type: ignore[misc]
+        AbstractVelocity | Quantity["speed"],
         AbstractPosition | Quantity["length"],
     ),
 )
 def represent_as(
-    current: AbstractVelocity,
-    target: type[AbstractVelocity],
+    current: AbstractAcceleration,
+    target: type[AbstractAcceleration],
+    velocity: AbstractVelocity | Quantity["speed"],
     position: AbstractPosition | Quantity["length"],
     /,
     **kwargs: Any,
-) -> AbstractVelocity:
-    """AbstractVelocity -> Cartesian -> AbstractVelocity.
+) -> AbstractAcceleration:
+    """AbstractAcceleration -> Cartesian -> AbstractAcceleration.
 
-    This is the base case for the transformation of vector differentials.
+    This is the base case for the transformation of accelerations.
 
     Parameters
     ----------
-    current : AbstractVelocity
-        The vector differential to transform.
-    target : type[AbstractVelocity]
-        The target type of the vector differential.
+    current : AbstractAcceleration
+        The vector acceleration to transform.
+    target : type[AbstractAcceleration]
+        The target type of the vector acceleration.
+    velocity : AbstractVelocity
+        The velocity vector used to transform the acceleration.
     position : AbstractPosition
-        The position vector used to transform the differential.
+        The position vector used to transform the acceleration.
     **kwargs : Any
         Additional keyword arguments.
 
@@ -70,39 +77,43 @@ def represent_as(
 
     >>> q = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
     >>> p = cx.CartesianVelocity1D(d_x=Quantity(1.0, "km/s"))
-    >>> cx.represent_as(p, cx.RadialVelocity, q)
-    RadialVelocity( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
+    >>> a = cx.CartesianAcceleration1D(d2_x=Quantity(1.0, "km/s2"))
+    >>> cx.represent_as(a, cx.RadialAcceleration, p, q)
+    RadialAcceleration( d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
 
     Now in 2D:
 
     >>> q = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
     >>> p = cx.CartesianVelocity2D.constructor(Quantity([1.0, 2.0], "km/s"))
-    >>> cx.represent_as(p, cx.PolarVelocity, q)
-    PolarVelocity(
-      d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+    >>> a = cx.CartesianAcceleration2D.constructor(Quantity([1.0, 2.0], "km/s2"))
+    >>> cx.represent_as(a, cx.PolarAcceleration, p, q)
+    PolarAcceleration(
+      d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
+      d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
     )
 
     And in 3D:
 
     >>> q = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
     >>> p = cx.CartesianVelocity3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
-    >>> cx.represent_as(p, cx.SphericalVelocity, q)
-    SphericalVelocity(
-      d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+    >>> a = cx.CartesianAcceleration3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s2"))
+    >>> cx.represent_as(a, cx.SphericalAcceleration, p, q)
+    SphericalAcceleration(
+      d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
+      d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
+      d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
     )
 
     If given a position as a Quantity, it will be converted to the appropriate
     Cartesian vector:
 
-    >>> p = cx.CartesianVelocity3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
-    >>> cx.represent_as(p, cx.SphericalVelocity, Quantity([1.0, 2.0, 3.0], "km"))
-    SphericalVelocity(
-      d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+    >>> cx.represent_as(a, cx.SphericalAcceleration,
+    ...                 Quantity([1.0, 2.0, 3.0], "km/s"),
+    ...                 Quantity([1.0, 2.0, 3.0], "km"))
+    SphericalAcceleration(
+      d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
+      d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
+      d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
     )
 
     """
@@ -114,15 +125,24 @@ def represent_as(
     if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+        posvec = current.integral_cls.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
             position
         )
 
+    # Parse the velocity to an AbstractVelocity
+    if isinstance(velocity, AbstractVelocity):
+        velvec = velocity
+    else:  # Q -> Cart<X>D
+        velvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+            velocity
+        )
+
     posvec = posvec.reshape(flat_shape)  # flattened
+    velvec = velvec.reshape(flat_shape)  # flattened
 
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
-    current_pos = represent_as(posvec, current.integral_cls, **kwargs)
+    current_pos = represent_as(posvec, current.integral_cls.integral_cls, **kwargs)
     # TODO: not need to cast to distance
     current_pos = replace(
         current_pos,
@@ -133,19 +153,23 @@ def represent_as(
         },
     )
 
+    # Start by transforming the velocity to the type required by the
+    # differential to construct the Jacobian.
+    current_vel = represent_as(velvec, current.integral_cls, current_pos, **kwargs)  # noqa: F841  # pylint: disable=unused-variable
+
     # Takes the Jacobian through the representation transformation function.  This
     # returns a representation of the target type, where the value of each field the
     # corresponding row of the Jacobian. The value of the field is a Quantity with
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
-    jac_nested_vecs = jac_rep_as(current_pos, target.integral_cls)
+    jac_nested_vecs = jac_rep_as(current_pos, target.integral_cls.integral_cls)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for
     # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
     jac_rows = {
-        f"d_{k}": {
+        f"d2_{k}": {
             kk: Quantity(vv.value, unit=v.unit / vv.unit)
             for kk, vv in dataclass_items(v.value)
         }
@@ -159,7 +183,7 @@ def represent_as(
             k: xp.sum(  # Doing the dot product.
                 xp.stack(
                     tuple(
-                        j_c * getattr(flat_current, f"d_{kk}")
+                        j_c * getattr(flat_current, f"d2_{kk}")
                         for kk, j_c in j_r.items()
                     )
                 ),
@@ -170,6 +194,7 @@ def represent_as(
     ).reshape(shape)
 
     # TODO: add  df(q)/dt, which is 0 for all current transforms
+    #       This is necessary for the df/dt * vel term in the chain rule.
 
     return newvec  # noqa: RET504
 

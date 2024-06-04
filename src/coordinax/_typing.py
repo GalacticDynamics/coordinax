@@ -20,9 +20,13 @@ ScalarTime = Float[Quantity["time"], ""] | Int[Quantity["time"], ""]
 BatchableAngle = Shaped[Quantity["angle"], "*#batch"]
 BatchableLength = Shaped[Quantity["length"], "*#batch"]
 BatchableDistance = Shaped[AbstractDistance, "*#batch"]
-BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
 BatchableTime = Shaped[Quantity["time"], "*#batch"]
+
+BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
 BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
+
+BatchableAcc = Shaped[Quantity["acceleration"], "*#batch"]
+BatchableAngularAcc = Shaped[Quantity["angular acceleration"], "*#batch"]
 
 
 TimeBatchOrScalar = ScalarTime | BatchableTime
