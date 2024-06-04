@@ -3,15 +3,19 @@
 __all__ = [
     "AbstractSphericalPosition",
     "AbstractSphericalVelocity",
+    "AbstractSphericalAcceleration",
     # Physics conventions
     "SphericalPosition",
     "SphericalVelocity",
+    "SphericalAcceleration",
     # Mathematics conventions
     "MathSphericalPosition",
     "MathSphericalVelocity",
+    "MathSphericalAcceleration",
     # Geographic / Astronomical conventions
     "LonLatSphericalPosition",
     "LonLatSphericalVelocity",
+    "LonLatSphericalAcceleration",
     "LonCosLatSphericalVelocity",
 ]
 
@@ -27,7 +31,7 @@ import quaxed.lax as qlax
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
-from .base import AbstractPosition3D, AbstractVelocity3D
+from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
 from coordinax._checks import (
     check_azimuth_range,
     check_polar_range,
@@ -504,3 +508,90 @@ class LonCosLatSphericalVelocity(AbstractVelocity3D):
     @classmethod
     def integral_cls(cls) -> type[LonLatSphericalPosition]:
         return LonLatSphericalPosition
+
+
+##############################################################################
+
+
+class AbstractSphericalAcceleration(AbstractAcceleration3D):
+    """Spherical acceleration representation."""
+
+    @classproperty
+    @classmethod
+    @abstractmethod
+    def integral_cls(cls) -> type[SphericalVelocity]: ...
+
+
+@final
+class SphericalAcceleration(AbstractAcceleration3D):
+    """Spherical differential representation."""
+
+    d2_r: ct.BatchableAcc = eqx.field(
+        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+    )
+    r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
+
+    d2_theta: ct.BatchableAngularAcc = eqx.field(
+        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+    )
+    r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
+
+    d2_phi: ct.BatchableAngularAcc = eqx.field(
+        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+    )
+    r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
+
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[SphericalVelocity]:
+        return SphericalVelocity
+
+
+@final
+class MathSphericalAcceleration(AbstractAcceleration3D):
+    """Spherical acceleration representation."""
+
+    d2_r: ct.BatchableAcc = eqx.field(
+        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+    )
+    r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
+
+    d2_theta: ct.BatchableAngularAcc = eqx.field(
+        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+    )
+    r"""Azimuthal acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
+
+    d2_phi: ct.BatchableAngularAcc = eqx.field(
+        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+    )
+    r"""Inclination acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
+
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[MathSphericalVelocity]:
+        return MathSphericalVelocity
+
+
+@final
+class LonLatSphericalAcceleration(AbstractAcceleration3D):
+    """Spherical acceleration representation."""
+
+    d2_lon: ct.BatchableAngularAcc = eqx.field(
+        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+    )
+    r"""Longitude acceleration :math:`d^2lon/dt^2 \in [-\infty, \infty]."""
+
+    d2_lat: ct.BatchableAngularAcc = eqx.field(
+        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+    )
+    r"""Latitude acceleration :math:`d^2lat/dt^2 \in [-\infty, \infty]."""
+
+    d2_distance: ct.BatchableAcc = eqx.field(
+        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+    )
+    r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
+
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[LonLatSphericalVelocity]:
+        return LonLatSphericalVelocity

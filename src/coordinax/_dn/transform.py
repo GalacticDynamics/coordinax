@@ -6,10 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .builtin import (
-    CartesianPositionND,
-    CartesianVelocityND,
-)
+from .builtin import CartesianPositionND, CartesianVelocityND
 
 ###############################################################################
 # 3D

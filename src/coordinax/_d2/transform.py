@@ -9,12 +9,8 @@ from plum import dispatch
 import quaxed.array_api as xp
 
 from .base import AbstractPosition2D, AbstractVelocity2D
-from .builtin import (
-    CartesianPosition2D,
-    CartesianVelocity2D,
-    PolarPosition,
-    PolarVelocity,
-)
+from .cartesian import CartesianPosition2D, CartesianVelocity2D
+from .polar import PolarPosition, PolarVelocity
 from coordinax._base_pos import AbstractPosition
 
 
