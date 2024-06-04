@@ -9,7 +9,8 @@ from plum import dispatch
 
 from unxt import Quantity
 
-from coordinax._d1.builtin import CartesianPosition1D, RadialPosition
+from coordinax._d1.cartesian import CartesianPosition1D
+from coordinax._d1.radial import RadialPosition
 from coordinax._d2.builtin import CartesianPosition2D, PolarPosition
 from coordinax._d3.builtin import CartesianPosition3D, CylindricalPosition
 from coordinax._d3.sphere import MathSphericalPosition, SphericalPosition

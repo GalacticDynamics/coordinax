@@ -23,6 +23,7 @@ BatchableDistance = Shaped[AbstractDistance, "*#batch"]
 BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
 BatchableTime = Shaped[Quantity["time"], "*#batch"]
 BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
+BatchableAcc = Shaped[Quantity["acceleration"], "*#batch"]
 
 
 TimeBatchOrScalar = ScalarTime | BatchableTime

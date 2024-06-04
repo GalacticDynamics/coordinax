@@ -1,12 +1,9 @@
 """Carteisan vector."""
 
 __all__ = [
-    # Position
     "CartesianPosition1D",
-    "RadialPosition",
-    # Differential
     "CartesianVelocity1D",
-    "RadialVelocity",
+    "CartesianAcceleration1D",
 ]
 
 from dataclasses import replace
@@ -17,17 +14,13 @@ import equinox as eqx
 import jax
 
 import quaxed.array_api as xp
-from unxt import AbstractDistance, Distance, Quantity
+from unxt import Quantity
 
 import coordinax._typing as ct
-from .base import AbstractPosition1D, AbstractVelocity1D
+from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
 from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
-from coordinax._checks import check_r_non_negative
 from coordinax._utils import classproperty
-
-##############################################################################
-# Position
 
 
 @final
@@ -116,6 +109,9 @@ class CartesianPosition1D(AbstractPosition1D):
         cart = other.represent_as(CartesianPosition1D)
         return replace(self, x=self.x - cart.x)
 
+    # -----------------------------------------------------
+    # Methods
+
     @partial(jax.jit)
     def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
@@ -131,31 +127,6 @@ class CartesianPosition1D(AbstractPosition1D):
 
         """
         return xp.abs(self.x)
-
-
-@final
-class RadialPosition(AbstractPosition1D):
-    """Radial vector representation."""
-
-    r: ct.BatchableDistance = eqx.field(
-        converter=lambda x: x
-        if isinstance(x, AbstractDistance)
-        else Distance.constructor(x, dtype=float)
-    )
-    r"""Radial distance :math:`r \in [0,+\infty)`."""
-
-    def __check_init__(self) -> None:
-        """Check the initialization."""
-        check_r_non_negative(self.r)
-
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["RadialVelocity"]:
-        return RadialVelocity
-
-
-##############################################################################
-# Velocity
 
 
 @final
@@ -187,13 +158,48 @@ class CartesianVelocity1D(AbstractVelocity1D):
 
 
 @final
-class RadialVelocity(AbstractVelocity1D):
-    """Radial differential representation."""
+class CartesianAcceleration1D(AbstractAcceleration1D):
+    """Cartesian differential representation."""
 
-    d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
-    r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
+    d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].constructor)
+    r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[RadialPosition]:
-        return RadialPosition
+    def integral_cls(cls) -> type[CartesianVelocity1D]:
+        return CartesianVelocity1D
+
+    # -----------------------------------------------------
+    # Binary operations
+
+    @AbstractVector.__add__.dispatch  # type: ignore[misc]
+    def __add__(
+        self: "CartesianAcceleration1D", other: "CartesianAcceleration1D", /
+    ) -> "CartesianAcceleration1D":
+        """Add two Cartesian Accelerations."""
+        return replace(self, d2_x=self.d2_x + other.d2_x)
+
+    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
+    def __sub__(
+        self: "CartesianAcceleration1D", other: "CartesianAcceleration1D", /
+    ) -> "CartesianAcceleration1D":
+        """Subtract two accelerations."""
+        return replace(self, d2_x=self.d2_x - other.d2_x)
+
+    # -----------------------------------------------------
+    # Methods
+
+    @partial(jax.jit)
+    def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableAcc:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> from coordinax import CartesianAcceleration1D
+        >>> q = CartesianAcceleration1D.constructor(Quantity([-1], "km/s2"))
+        >>> q.norm()
+        Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
+
+        """
+        return xp.abs(self.d2_x)
