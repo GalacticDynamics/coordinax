@@ -330,7 +330,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         return self.norm()
 
     @dispatch  # type: ignore[misc]
-    def __add__(self: "AbstractVectorBase", other: Any) -> "AbstractVectorBase":
+    def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
         return NotImplemented
 
     def __array_namespace__(self) -> "ArrayAPINamespace":
@@ -347,7 +347,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         Returns
         -------
-        AbstractVectorBase
+        AbstractVector
             The vector with the slice applied.
 
         Examples
@@ -369,7 +369,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
 
     @dispatch  # type: ignore[misc]
-    def __mul__(self: "AbstractVectorBase", other: Any) -> Any:
+    def __mul__(self: "AbstractVector", other: Any) -> Any:
         return NotImplemented
 
     @abstractmethod
@@ -377,7 +377,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         raise NotImplementedError
 
     @dispatch  # type: ignore[misc]
-    def __rmul__(self: "AbstractVectorBase", other: Any) -> Any:
+    def __rmul__(self: "AbstractVector", other: Any) -> Any:
         return NotImplemented
 
     def __setitem__(self, k: Any, v: Any) -> Never:
@@ -385,11 +385,11 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         raise TypeError(msg)
 
     @dispatch  # type: ignore[misc]
-    def __sub__(self: "AbstractVectorBase", other: Any) -> "AbstractVectorBase":
+    def __sub__(self: "AbstractVector", other: Any) -> "AbstractVector":
         raise NotImplementedError
 
     @dispatch  # type: ignore[misc]
-    def __truediv__(self: "AbstractVectorBase", other: Any) -> "AbstractVectorBase":
+    def __truediv__(self: "AbstractVector", other: Any) -> "AbstractVector":
         return NotImplemented
 
     def to_device(self, device: None | Device = None) -> "Self":
