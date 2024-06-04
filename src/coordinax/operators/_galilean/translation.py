@@ -17,7 +17,7 @@ from unxt import Quantity
 from .base import AbstractGalileanOperator
 from coordinax._base_pos import AbstractPosition
 from coordinax._d1.cartesian import CartesianPosition1D
-from coordinax._d2.builtin import CartesianPosition2D
+from coordinax._d2.cartesian import CartesianPosition2D
 from coordinax._d3.base import AbstractPosition3D
 from coordinax._d3.builtin import CartesianPosition3D
 from coordinax._d4.spacetime import FourVector

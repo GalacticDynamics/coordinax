@@ -10,7 +10,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractPosition2D
-from .builtin import CartesianPosition2D, CartesianVelocity2D
+from .cartesian import CartesianPosition2D, CartesianVelocity2D
 from coordinax._utils import dataclass_values, full_shaped
 
 #####################################################################

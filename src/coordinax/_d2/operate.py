@@ -10,7 +10,7 @@ from plum import convert
 
 from unxt import Quantity
 
-from .builtin import CartesianPosition2D
+from .cartesian import CartesianPosition2D
 from coordinax._typing import TimeBatchOrScalar
 from coordinax.operators._base import AbstractOperator, op_call_dispatch
 
