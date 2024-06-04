@@ -355,12 +355,12 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import Cartesian2DVector
+        >>> from coordinax import CartesianPosition2D
 
         We can slice a vector:
 
-        >>> vec = Cartesian2DVector(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                           y=Quantity(0, "m"))
         >>> vec[0].x
         Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
 
