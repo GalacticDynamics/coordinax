@@ -12,7 +12,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractPosition3D
-from .cartesian import CartesianPosition3D, CartesianVelocity3D
+from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
 from .cylindrical import CylindricalPosition, CylindricalVelocity
 from .sphere import (
     LonCosLatSphericalVelocity,
@@ -275,6 +275,7 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
     return xp.stack(tuple(dataclass_values(cart)), axis=-1)
 
 
+@conversion_method(CartesianAcceleration3D, Quantity)  # type: ignore[misc]
 @conversion_method(CartesianVelocity3D, Quantity)  # type: ignore[misc]
 def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*batch 3"]:
     """`coordinax.CartesianVelocity3D` -> `unxt.Quantity`.
@@ -287,6 +288,10 @@ def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*ba
     >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
     >>> convert(dif, Quantity)
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
+
+    >>> dif2 = cx.CartesianAcceleration3D.constructor(Quantity([1, 2, 3], unit="km/s2"))
+    >>> convert(dif2, Quantity)
+    Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
 
     """
     return xp.stack(tuple(dataclass_values(full_shaped(obj))), axis=-1)
