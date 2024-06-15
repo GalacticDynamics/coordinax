@@ -1,13 +1,92 @@
-# coordinax
+<h1 align='center'> coordinax </h1>
+<h2 align="center">Coordinates in JAX</h2>
 
-[![Actions Status][actions-badge]][actions-link]
+Coordinax enables calculations with coordinates in
+[JAX](https://jax.readthedocs.io/en/latest/). Built on
+[Equinox](https://docs.kidger.site/equinox/) and
+[Quax](https://github.com/patrick-kidger/quax).
+
+## Installation
+
+[![PyPI platforms][pypi-platforms]][pypi-link]
+[![PyPI version][pypi-version]][pypi-link]
+
+<!-- [![Conda-Forge][conda-badge]][conda-link] -->
+
+```bash
+pip install coordinax
+```
+
+## Documentation
+
 [![Documentation Status][rtd-badge]][rtd-link]
 
-[![PyPI version][pypi-version]][pypi-link]
-[![Conda-Forge][conda-badge]][conda-link]
-[![PyPI platforms][pypi-platforms]][pypi-link]
+Coming soon. In the meantime, if you've used `astropy.coordinates`, then
+`coordinax` should be fairly intuitive.
+
+## Quick example
+
+```python
+import coordinax as cx
+import jax.numpy as jnp
+from unxt import Quantity
+
+q = cx.CartesianPosition3D(
+    x=Quantity(jnp.arange(0, 10.0), "km"),
+    y=Quantity(jnp.arange(5, 15.0), "km"),
+    z=Quantity(jnp.arange(10, 20.0), "km"),
+)
+print(q)
+# <CartesianPosition3D (x[km], y[km], z[km])
+#     [[ 0.  5. 10.]
+#      [ 1.  6. 11.]
+#      ...
+#      [ 8. 13. 18.]
+#      [ 9. 14. 19.]]>
+
+q2 = cx.represent_as(q, cx.SphericalPosition)
+print(q2)
+# <SphericalPosition (r[km], theta[rad], phi[rad])
+#     [[11.18   0.464  1.571]
+#      [12.57   0.505  1.406]
+#      ...
+#      [23.601  0.703  1.019]
+#      [25.259  0.719  0.999]]>
+
+p = cx.CartesianVelocity3D(
+    d_x=Quantity(jnp.arange(0, 10.0), "m/s"),
+    d_y=Quantity(jnp.arange(5, 15.0), "m/s"),
+    d_z=Quantity(jnp.arange(10, 20.0), "m/s"),
+)
+print(p)
+# <CartesianVelocity3D (d_x[m / s], d_y[m / s], d_z[m / s])
+#     [[ 0.  5. 10.]
+#      [ 1.  6. 11.]
+#      ...
+#      [ 8. 13. 18.]
+#      [ 9. 14. 19.]]>
+
+p2 = cx.represent_as(p, cx.SphericalVelocity, q)
+print(p2)
+# <SphericalVelocity (d_r[m / s], d_theta[m rad / (km s)], d_phi[m rad / (km s)])
+#     [[ 1.118e+01 -3.886e-16  0.000e+00]
+#      [ 1.257e+01 -1.110e-16  0.000e+00]
+#      ...
+#      [ 2.360e+01  0.000e+00  0.000e+00]
+#      [ 2.526e+01 -2.776e-16  0.000e+00]]>
+```
+
+## Citation
 
 [![DOI][zenodo-badge]][zenodo-link]
+
+If you found this library to be useful in academic work, then please cite.
+
+## Development
+
+[![Actions Status][actions-badge]][actions-link]
+
+We welcome contributions!
 
 <!-- [![GitHub Discussion][github-discussions-badge]][github-discussions-link] -->
 
