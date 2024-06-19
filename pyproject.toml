@@ -218,6 +218,7 @@
     "protected-access",           # handled by ruff
     "redefined-builtin",          # handled by ruff
     "too-many-function-args",     # plum-dispatch
+    "unexpected-keyword-arg",     # plum-dispatch
     "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
     "unsubscriptable-object",     # handled by mypy
     "unused-argument",            # handled by ruff
