@@ -28,7 +28,7 @@
     "jax",
     "jaxlib",
     "jaxtyping",
-    "plum-dispatch>=2.3.3",
+    "plum-dispatch>=2.3.3,!=2.4.2",
     "quax>=0.0.3",
     "quaxed >= 0.4",
     "unxt >= 0.10",
@@ -218,6 +218,7 @@
     "protected-access",           # handled by ruff
     "redefined-builtin",          # handled by ruff
     "too-many-function-args",     # plum-dispatch
+    "unexpected-keyword-arg",     # plum-dispatch
     "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
     "unsubscriptable-object",     # handled by mypy
     "unused-argument",            # handled by ruff
