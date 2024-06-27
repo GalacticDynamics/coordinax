@@ -104,7 +104,7 @@ op_call_dispatch = AbstractOperator.__call__.dispatch  # type: ignore[attr-defin
 
 
 # TODO: move to the class in py3.11+
-@AbstractOperator.constructor._f.register  # type: ignore[misc]  # noqa: SLF001
+@AbstractOperator.constructor._f.dispatch  # type: ignore[misc]  # noqa: SLF001
 def constructor(
     cls: type[AbstractOperator], obj: AbstractOperator, /
 ) -> AbstractOperator:

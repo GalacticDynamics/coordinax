@@ -106,9 +106,7 @@ class FourVector(AbstractPosition4D):
     @classmethod
     @AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
     def constructor(
-        cls: "type[FourVector]",
-        obj: Quantity | u.Quantity,
-        /,  # TODO: shape hint
+        cls: "type[FourVector]", obj: Shaped[Quantity, "*batch 4"], /
     ) -> "FourVector":
         """Construct a vector from a Quantity array.
 
@@ -119,11 +117,6 @@ class FourVector(AbstractPosition4D):
         obj : Quantity[Any, (*#batch, 4), "..."]
             The array of components.
             The 4 components are the (c x) time, x, y, z.
-
-        Returns
-        -------
-        FourVector
-            The vector constructed from the array.
 
         Examples
         --------
@@ -157,8 +150,7 @@ class FourVector(AbstractPosition4D):
             f"Cannot construct {cls} from array with shape {obj.shape}.",
         )
         c = cls.__dataclass_fields__["c"].default
-        comps = {"t": obj[..., 0] / c, "q": obj[..., 1:]}
-        return cls(**comps)
+        return cls(t=obj[..., 0] / c, q=obj[..., 1:])
 
     # ===============================================================
 
@@ -302,3 +294,59 @@ class FourVector(AbstractPosition4D):
 
         """
         return xp.sqrt(xp.asarray(self.norm2(), dtype=complex))
+
+
+# -----------------------------------------------
+# Register additional constructors
+
+
+# TODO: move to the class in py3.11+
+@FourVector.constructor._f.dispatch  # type: ignore[misc]  # noqa: SLF001
+def constructor(
+    cls: type[FourVector], obj: Shaped[u.Quantity, "*batch 4"], /
+) -> FourVector:
+    """Construct a vector from a Quantity array.
+
+    The array is expected to have the components as the last dimension.
+
+    Parameters
+    ----------
+    cls : type[FourVector]
+        The class.
+    obj : Quantity[Any, (*#batch, 4), "..."]
+        The array of components.
+        The 4 components are the (c x) time, x, y, z.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from astropy.units import Quantity
+    >>> from coordinax import FourVector
+
+    >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
+    >>> vec = FourVector.constructor(xs)
+    >>> vec
+    FourVector(
+        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
+        q=CartesianPosition3D( ... )
+    )
+
+    >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
+    >>> vec = FourVector.constructor(xs)
+    >>> vec
+    FourVector(
+        t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
+        q=CartesianPosition3D( ... )
+    )
+
+    >>> vec.x
+    Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+
+    """
+    _ = eqx.error_if(
+        obj,
+        obj.shape[-1] != 4,
+        f"Cannot construct {cls} from array with shape {obj.shape}.",
+    )
+    c = cls.__dataclass_fields__["c"].default
+    return cls(t=obj[..., 0] / c, q=obj[..., 1:])
