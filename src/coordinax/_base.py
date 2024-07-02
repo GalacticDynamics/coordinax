@@ -84,7 +84,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         Parameters
         ----------
-        obj : Mapping[str, Any]
+        obj : Mapping[str, `unxt.Quantity`]
             The mapping of components.
 
         Examples
@@ -117,11 +117,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
     @classmethod
     @dispatch
-    def constructor(
-        cls: "type[AbstractVector]",
-        obj: Quantity | u.Quantity,
-        /,  # TODO: shape hint
-    ) -> "AbstractVector":
+    def constructor(cls: "type[AbstractVector]", obj: Quantity, /) -> "AbstractVector":
         """Construct a vector from a Quantity array.
 
         The array is expected to have the components as the last dimension.
@@ -762,7 +758,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVector.constructor._f.dispatch  # noqa: SLF001
 def constructor(  # noqa: D417
     cls: type[AbstractVector], obj: AbstractVector, /
 ) -> AbstractVector:
@@ -802,3 +798,94 @@ def constructor(  # noqa: D417
         return obj
 
     return cls(**dict(dataclass_items(obj)))
+
+
+@AbstractVector.constructor._f.dispatch  # noqa: SLF001
+def constructor(
+    cls: type[AbstractVector], obj: Mapping[str, u.Quantity], /
+) -> AbstractVector:
+    """Construct a vector from a mapping.
+
+    Parameters
+    ----------
+    cls : type[AbstractVector]
+        The vector class.
+    obj : Mapping[str, `astropy.units.Quantity`]
+        The mapping of components.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from astropy.units import Quantity
+    >>> from coordinax import CartesianPosition3D
+
+    >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
+    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec
+    CartesianPosition3D(
+        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+    )
+
+    >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
+    ...       "z": Quantity([5, 6], "m")}
+    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec
+    CartesianPosition3D(
+        x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+        y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+        z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+    )
+
+    """
+    return cls(**obj)
+
+
+# TODO: move to the class in py3.11+
+@AbstractVector.constructor._f.dispatch  # noqa: SLF001
+def constructor(cls: type[AbstractVector], obj: u.Quantity, /) -> AbstractVector:
+    """Construct a vector from an Astropy Quantity array.
+
+    The array is expected to have the components as the last dimension.
+
+    Parameters
+    ----------
+    cls : type[AbstractVector]
+        The vector class.
+    obj : Quantity[Any, (*#batch, N), "..."]
+        The array of components.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from astropy.units import Quantity
+    >>> from coordinax import CartesianPosition3D
+
+    >>> xs = Quantity([1, 2, 3], "meter")
+    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec
+    CartesianPosition3D(
+        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+    )
+
+    >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
+    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec
+    CartesianPosition3D(
+        x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+        y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+        z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+    )
+    >>> vec.x
+    Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+
+    """
+    _ = eqx.error_if(
+        obj,
+        obj.shape[-1] != len(fields(cls)),
+        f"Cannot construct {cls} from array with shape {obj.shape}.",
+    )
+    return cls(**{f.name: obj[..., i] for i, f in enumerate(fields(cls))})

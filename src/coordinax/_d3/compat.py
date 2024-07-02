@@ -27,9 +27,9 @@ from coordinax._utils import dataclass_values, full_shaped
 # Constructors
 
 
-@CartesianPosition3D.constructor._f.register  # noqa: SLF001
+@CartesianPosition3D.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[CartesianPosition3D], obj: apyc.BaseRepresentation
+    cls: type[CartesianPosition3D], obj: apyc.BaseRepresentation, /
 ) -> CartesianPosition3D:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
@@ -48,9 +48,9 @@ def constructor(
     return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
-@CylindricalPosition.constructor._f.register  # noqa: SLF001
+@CylindricalPosition.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalPosition], obj: apyc.BaseRepresentation
+    cls: type[CylindricalPosition], obj: apyc.BaseRepresentation, /
 ) -> CylindricalPosition:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
@@ -71,9 +71,9 @@ def constructor(
     return cls(rho=obj.rho, phi=obj.phi, z=obj.z)
 
 
-@SphericalPosition.constructor._f.register  # noqa: SLF001
+@SphericalPosition.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[SphericalPosition], obj: apyc.BaseRepresentation
+    cls: type[SphericalPosition], obj: apyc.BaseRepresentation, /
 ) -> SphericalPosition:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
@@ -94,9 +94,9 @@ def constructor(
     return cls(r=obj.r, theta=obj.theta, phi=obj.phi)
 
 
-@LonLatSphericalPosition.constructor._f.register  # noqa: SLF001
+@LonLatSphericalPosition.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[LonLatSphericalPosition], obj: apyc.BaseRepresentation
+    cls: type[LonLatSphericalPosition], obj: apyc.BaseRepresentation, /
 ) -> LonLatSphericalPosition:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
@@ -120,9 +120,9 @@ def constructor(
 # -------------------------------------------------------------------
 
 
-@CartesianVelocity3D.constructor._f.register  # noqa: SLF001
+@CartesianVelocity3D.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[CartesianVelocity3D], obj: apyc.CartesianDifferential
+    cls: type[CartesianVelocity3D], obj: apyc.CartesianDifferential, /
 ) -> CartesianVelocity3D:
     """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
 
@@ -141,9 +141,9 @@ def constructor(
     return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
-@CylindricalVelocity.constructor._f.register  # noqa: SLF001
+@CylindricalVelocity.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[CylindricalVelocity], obj: apyc.CylindricalDifferential
+    cls: type[CylindricalVelocity], obj: apyc.CylindricalDifferential, /
 ) -> CylindricalVelocity:
     """Construct from a :class:`astropy.coordinates.CylindricalVelocity`.
 
@@ -163,9 +163,9 @@ def constructor(
     return cls(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
 
 
-@SphericalVelocity.constructor._f.register  # noqa: SLF001
+@SphericalVelocity.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[SphericalVelocity], obj: apyc.PhysicsSphericalDifferential
+    cls: type[SphericalVelocity], obj: apyc.PhysicsSphericalDifferential, /
 ) -> SphericalVelocity:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
 
@@ -185,9 +185,9 @@ def constructor(
     return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
 
 
-@LonLatSphericalVelocity.constructor._f.register  # noqa: SLF001
+@LonLatSphericalVelocity.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[LonLatSphericalVelocity], obj: apyc.SphericalDifferential
+    cls: type[LonLatSphericalVelocity], obj: apyc.SphericalDifferential, /
 ) -> LonLatSphericalVelocity:
     """Construct from a :class:`astropy.coordinates.SphericalVelocity`.
 
@@ -208,9 +208,9 @@ def constructor(
     return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
 
 
-@LonCosLatSphericalVelocity.constructor._f.register  # noqa: SLF001
+@LonCosLatSphericalVelocity.constructor._f.dispatch  # noqa: SLF001
 def constructor(
-    cls: type[LonCosLatSphericalVelocity], obj: apyc.SphericalCosLatDifferential
+    cls: type[LonCosLatSphericalVelocity], obj: apyc.SphericalCosLatDifferential, /
 ) -> LonCosLatSphericalVelocity:
     """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
 

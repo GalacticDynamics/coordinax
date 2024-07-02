@@ -28,7 +28,7 @@
     "jax",
     "jaxlib",
     "jaxtyping",
-    "plum-dispatch>=2.3.3,<2.4.2",
+    "plum-dispatch>=2.4.4",
     "quax>=0.0.3",
     "quaxed >= 0.4",
     "unxt >= 0.10",

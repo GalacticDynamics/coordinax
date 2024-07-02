@@ -37,8 +37,8 @@ class AbstractPosition1D(AbstractPosition):
 # TODO: move to the class in py3.11+
 @AbstractPosition.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
-    cls: "type[AbstractPosition1D]", x: Shaped[Quantity["length"], ""], /
-) -> "AbstractPosition1D":
+    cls: type[AbstractPosition1D], x: Shaped[Quantity["length"], ""], /
+) -> AbstractPosition1D:
     """Construct a 1D vector.
 
     Examples
