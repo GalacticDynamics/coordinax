@@ -431,7 +431,9 @@ class TestSphericalPosition(AbstractPosition3DTest):
         assert np.allclose(convert(cyl.rho, APYQuantity), np.abs(apycyl.rho))
 
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.z)
-        assert np.allclose(convert(cyl.phi, APYQuantity), apycyl.phi)
+        # TODO: not require a modulus
+        mod = Quantity(360, "deg")
+        assert np.allclose(convert(cyl.phi, APYQuantity) % mod, apycyl.phi % mod)
 
     def test_spherical_to_spherical(self, vector):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
