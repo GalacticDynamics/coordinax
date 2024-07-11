@@ -25,6 +25,7 @@
   dependencies = [
     "astropy",
     "equinox",
+    "immutable_map_jax @ git+https://github.com/GalacticDynamics/immutable_map_jax.git",
     "jax",
     "jaxlib",
     "jaxtyping",
