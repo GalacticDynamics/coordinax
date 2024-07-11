@@ -43,6 +43,26 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
+    def _cartesian_cls(cls) -> type["AbstractVector"]:
+        """Return the corresponding Cartesian vector class.
+
+        Examples
+        --------
+        >>> from coordinax import RadialPosition, SphericalPosition
+
+        >>> RadialPosition._cartesian_cls
+        <class 'coordinax...CartesianPosition1D'>
+
+        >>> SphericalPosition._cartesian_cls
+        <class 'coordinax...CartesianPosition3D'>
+
+        """
+        # TODO: something nicer than this for getting the corresponding class
+        raise NotImplementedError
+
+    @classproperty
+    @classmethod
+    @abstractmethod
     def differential_cls(cls) -> type["AbstractVelocity"]:
         """Return the corresponding differential vector class.
 
