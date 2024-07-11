@@ -10,4 +10,4 @@ from plum import dispatch
 @dispatch.abstract  # type: ignore[misc]
 def represent_as(current: Any, target: type[Any], /, **kwargs: Any) -> Any:
     """Transform the current vector to the target vector."""
-    raise NotImplementedError
+    raise NotImplementedError  # pragma: no cover
