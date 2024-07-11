@@ -8,10 +8,10 @@ __all__ = [
 from dataclasses import replace
 from functools import partial
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
-from typing_extensions import override
 
 import quaxed.array_api as xp
 from unxt import Quantity

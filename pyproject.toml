@@ -192,6 +192,7 @@
 
     [tool.ruff.lint.isort]
       combine-as-imports = true
+      extra-standard-library = ["typing_extensions"]
       known-first-party = ["quaxed", "unxt"]
       known-local-folder = ["coordinax"]
 

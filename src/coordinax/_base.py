@@ -13,6 +13,7 @@ from dataclasses import fields
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing_extensions import Never
 
 import astropy.units as u
 import equinox as eqx
@@ -20,7 +21,6 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Device
 from plum import dispatch
-from typing_extensions import Never
 
 import quaxed.array_api as xp
 from unxt import Quantity, unitsystem
@@ -567,7 +567,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         raise NotImplementedError
 
     @dispatch
-    def to_units(self, units: Any) -> "AbstractVector":
+    def to_units(self, units: Any, /) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters

@@ -19,6 +19,7 @@ from . import (
     _dn,
     _exceptions,
     _funcs,
+    _space,
     _transform,
     _typing,
     _utils,
@@ -35,6 +36,7 @@ from ._d4 import *
 from ._dn import *
 from ._exceptions import *
 from ._funcs import *
+from ._space import *
 from ._transform import *
 from ._typing import *
 from ._utils import *
@@ -52,6 +54,7 @@ __all__ += _d2.__all__
 __all__ += _d3.__all__
 __all__ += _d4.__all__
 __all__ += _dn.__all__
+__all__ += _space.__all__
 __all__ += _exceptions.__all__
 __all__ += _transform.__all__
 __all__ += _typing.__all__
@@ -70,6 +73,7 @@ del (
     _base_vel,
     _base_pos,
     _base_acc,
+    _space,
     _exceptions,
     _transform,
     _typing,

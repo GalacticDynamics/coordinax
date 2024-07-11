@@ -4,7 +4,6 @@ __all__ = ["AbstractPosition3D", "AbstractVelocity3D", "AbstractAcceleration3D"]
 
 
 from abc import abstractmethod
-
 from typing_extensions import override
 
 from coordinax._base import AbstractVector
