@@ -18,6 +18,7 @@ from . import (
     _d4,
     _dn,
     _exceptions,
+    _funcs,
     _transform,
     _typing,
     _utils,
@@ -33,6 +34,7 @@ from ._d3 import *
 from ._d4 import *
 from ._dn import *
 from ._exceptions import *
+from ._funcs import *
 from ._transform import *
 from ._typing import *
 from ._utils import *
@@ -40,6 +42,7 @@ from ._version import version as __version__
 from .setup_package import RUNTIME_TYPECHECKER
 
 __all__ = ["__version__", "operators"]
+__all__ += _funcs.__all__
 __all__ += _base.__all__
 __all__ += _base_pos.__all__
 __all__ += _base_vel.__all__
@@ -73,5 +76,6 @@ del (
     _d3,
     _d4,
     _dn,
+    _funcs,
     RUNTIME_TYPECHECKER,
 )
