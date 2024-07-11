@@ -9,6 +9,7 @@ from jaxtyping import install_import_hook
 
 from . import (
     _base,
+    _base_acc,
     _base_pos,
     _base_vel,
     _d1,
@@ -23,6 +24,7 @@ from . import (
     operators,
 )
 from ._base import *
+from ._base_acc import *
 from ._base_pos import *
 from ._base_vel import *
 from ._d1 import *
@@ -41,6 +43,7 @@ __all__ = ["__version__", "operators"]
 __all__ += _base.__all__
 __all__ += _base_pos.__all__
 __all__ += _base_vel.__all__
+__all__ += _base_acc.__all__
 __all__ += _d1.__all__
 __all__ += _d2.__all__
 __all__ += _d3.__all__
@@ -60,6 +63,7 @@ del (
     _base,
     _base_vel,
     _base_pos,
+    _base_acc,
     _exceptions,
     _transform,
     _typing,
