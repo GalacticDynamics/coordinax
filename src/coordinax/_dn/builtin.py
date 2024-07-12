@@ -1,9 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    # Position
     "CartesianPositionND",
-    # Differential
     "CartesianVelocityND",
 ]
 
@@ -250,6 +248,12 @@ class CartesianVelocityND(AbstractPositionNDDifferential):
     @classmethod
     def integral_cls(cls) -> type[CartesianPositionND]:
         return CartesianPositionND
+
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["CartesianAccelerationND"]:
+        msg = "Not yet supported"
+        raise NotImplementedError(msg)  # TODO: Implement this
 
     @partial(jax.jit)
     def norm(self, _: AbstractPositionND | None = None, /) -> ct.BatchableSpeed:

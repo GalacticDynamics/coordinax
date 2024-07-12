@@ -94,6 +94,11 @@ class PolarVelocity(AbstractVelocity2D):
     def integral_cls(cls) -> type[PolarPosition]:
         return PolarPosition
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["PolarAcceleration"]:
+        return PolarAcceleration
+
 
 @final
 class PolarAcceleration(AbstractAcceleration2D):
