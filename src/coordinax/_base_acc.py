@@ -39,6 +39,26 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
+    def _cartesian_cls(cls) -> type["AbstractVector"]:
+        """Return the corresponding Cartesian vector class.
+
+        Examples
+        --------
+        >>> from coordinax import CartesianAcceleration3D, SphericalAcceleration
+
+        >>> CartesianAcceleration3D._cartesian_cls
+        <class 'coordinax...CartesianAcceleration3D'>
+
+        >>> SphericalAcceleration._cartesian_cls
+        <class 'coordinax...CartesianAcceleration3D'>
+
+        """
+        # TODO: something nicer than this for getting the corresponding class
+        raise NotImplementedError
+
+    @classproperty
+    @classmethod
+    @abstractmethod
     def integral_cls(cls) -> type[AbstractVelocity]:
         """Return the corresponding vector class.
 
