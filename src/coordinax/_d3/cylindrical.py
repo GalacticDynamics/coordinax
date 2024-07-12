@@ -98,6 +98,11 @@ class CylindricalVelocity(AbstractVelocity3D):
     def integral_cls(cls) -> type[CylindricalPosition]:
         return CylindricalPosition
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["CylindricalAcceleration"]:
+        return CylindricalAcceleration
+
 
 @final
 class CylindricalAcceleration(AbstractAcceleration3D):

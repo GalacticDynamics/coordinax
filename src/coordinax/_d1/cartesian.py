@@ -141,6 +141,11 @@ class CartesianVelocity1D(AbstractVelocity1D):
     def integral_cls(cls) -> type[CartesianPosition1D]:
         return CartesianPosition1D
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["CartesianAcceleration1D"]:
+        return CartesianAcceleration1D
+
     @partial(jax.jit)
     def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.

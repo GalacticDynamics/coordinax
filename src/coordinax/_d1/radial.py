@@ -51,6 +51,11 @@ class RadialVelocity(AbstractVelocity1D):
     def integral_cls(cls) -> type[RadialPosition]:
         return RadialPosition
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["RadialAcceleration"]:
+        return RadialAcceleration
+
 
 @final
 class RadialAcceleration(AbstractAcceleration1D):

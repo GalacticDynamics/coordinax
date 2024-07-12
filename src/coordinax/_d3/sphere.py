@@ -409,6 +409,11 @@ class AbstractSphericalVelocity(AbstractVelocity3D):
     @abstractmethod
     def integral_cls(cls) -> type[SphericalPosition]: ...
 
+    @classproperty
+    @classmethod
+    @abstractmethod
+    def differential_cls(cls) -> type[AbstractAcceleration]: ...
+
 
 @final
 class SphericalVelocity(AbstractVelocity3D):
@@ -433,6 +438,11 @@ class SphericalVelocity(AbstractVelocity3D):
     @classmethod
     def integral_cls(cls) -> type[SphericalPosition]:
         return SphericalPosition
+
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["SphericalAcceleration"]:
+        return SphericalAcceleration
 
 
 @final
@@ -459,6 +469,11 @@ class MathSphericalVelocity(AbstractVelocity3D):
     def integral_cls(cls) -> type[MathSphericalPosition]:
         return MathSphericalPosition
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["MathSphericalAcceleration"]:
+        return MathSphericalAcceleration
+
 
 @final
 class LonLatSphericalVelocity(AbstractVelocity3D):
@@ -484,6 +499,11 @@ class LonLatSphericalVelocity(AbstractVelocity3D):
     def integral_cls(cls) -> type[LonLatSphericalPosition]:
         return LonLatSphericalPosition
 
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["LonLatSphericalAcceleration"]:
+        return LonLatSphericalAcceleration
+
 
 @final
 class LonCosLatSphericalVelocity(AbstractVelocity3D):
@@ -508,6 +528,11 @@ class LonCosLatSphericalVelocity(AbstractVelocity3D):
     @classmethod
     def integral_cls(cls) -> type[LonLatSphericalPosition]:
         return LonLatSphericalPosition
+
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> type["LonLatSphericalAcceleration"]:
+        return LonLatSphericalAcceleration
 
 
 ##############################################################################

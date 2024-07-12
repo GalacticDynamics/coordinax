@@ -72,6 +72,12 @@ class AbstractVelocity1D(AbstractVelocity):
     def integral_cls(cls) -> type[AbstractPosition1D]:
         raise NotImplementedError
 
+    @classproperty
+    @classmethod
+    @abstractmethod
+    def differential_cls(cls) -> type[AbstractAcceleration]:
+        raise NotImplementedError
+
 
 class AbstractAcceleration1D(AbstractAcceleration):
     """Abstract representation of 1D acceleration in different systems."""

@@ -73,6 +73,25 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         """
         raise NotImplementedError
 
+    @classproperty
+    @classmethod
+    @abstractmethod
+    def differential_cls(cls) -> type["AbstractAcceleration"]:
+        """Return the corresponding differential vector class.
+
+        Examples
+        --------
+        >>> from coordinax import RadialVelocity, SphericalVelocity
+
+        >>> RadialVelocity.differential_cls.__name__
+        'RadialAcceleration'
+
+        >>> SphericalVelocity.differential_cls.__name__
+        'SphericalAcceleration'
+
+        """
+        raise NotImplementedError
+
     # ===============================================================
     # Unary operations
 
