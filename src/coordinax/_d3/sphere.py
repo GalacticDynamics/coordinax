@@ -32,6 +32,7 @@ from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
+from coordinax._base_acc import AbstractAcceleration
 from coordinax._checks import (
     check_azimuth_range,
     check_polar_range,
