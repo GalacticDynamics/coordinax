@@ -57,6 +57,9 @@ __all__ += _transform.__all__
 __all__ += _typing.__all__
 __all__ += _utils.__all__
 
+# Interoperability
+# Astropy
+from ._interop import coordinax_interop_astropy  # noqa: E402
 
 # Runtime Typechecker
 install_import_hook("coordinax", RUNTIME_TYPECHECKER)
@@ -78,4 +81,5 @@ del (
     _dn,
     _funcs,
     RUNTIME_TYPECHECKER,
+    coordinax_interop_astropy,
 )
