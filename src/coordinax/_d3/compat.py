@@ -23,8 +23,9 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
 
     Examples
     --------
-    >>> from unxt import Quantity
     >>> import coordinax as cx
+    >>> from plum import convert
+    >>> from unxt import Quantity
 
     >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
     >>> convert(vec, Quantity)
@@ -56,8 +57,9 @@ def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*ba
 
     Examples
     --------
-    >>> from unxt import Quantity
     >>> import coordinax as cx
+    >>> from plum import convert
+    >>> from unxt import Quantity
 
     >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
     >>> convert(dif, Quantity)
