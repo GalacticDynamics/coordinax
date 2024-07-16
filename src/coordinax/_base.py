@@ -606,7 +606,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
     @dispatch
     def to_units(
-        self, units: Mapping[u.PhysicalType | str, Unit | str], /
+        self: "AbstractVector", units: Mapping[u.PhysicalType | str, Unit | str], /
     ) -> "AbstractVector":
         """Convert the vector to the given units.
 
@@ -653,7 +653,9 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         )
 
     @dispatch
-    def to_units(self, _: Literal[ToUnitsOptions.consistent], /) -> "AbstractVector":
+    def to_units(
+        self: "AbstractVector", _: Literal[ToUnitsOptions.consistent], /
+    ) -> "AbstractVector":
         """Convert the vector to a self-consistent set of units.
 
         Parameters
