@@ -536,27 +536,27 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(cls))
 
     @property
-    def units(self) -> Mapping[str, Unit]:
+    def units(self) -> MappingProxyType[str, Unit]:
         """Get the units of the vector's components."""
         return MappingProxyType({k: v.unit for k, v in dataclass_items(self)})
 
     @property
-    def dtypes(self) -> Mapping[str, jnp.dtype]:
+    def dtypes(self) -> MappingProxyType[str, jnp.dtype]:
         """Get the dtypes of the vector's components."""
         return MappingProxyType({k: v.dtype for k, v in dataclass_items(self)})
 
     @property
-    def devices(self) -> Mapping[str, Device]:
+    def devices(self) -> MappingProxyType[str, Device]:
         """Get the devices of the vector's components."""
         return MappingProxyType({k: v.device for k, v in dataclass_items(self)})
 
     @property
-    def shapes(self) -> Mapping[str, tuple[int, ...]]:
+    def shapes(self) -> MappingProxyType[str, tuple[int, ...]]:
         """Get the shapes of the vector's components."""
         return MappingProxyType({k: v.shape for k, v in dataclass_items(self)})
 
     @property
-    def sizes(self) -> Mapping[str, int]:
+    def sizes(self) -> MappingProxyType[str, int]:
         """Get the sizes of the vector's components."""
         return MappingProxyType({k: v.size for k, v in dataclass_items(self)})
 
