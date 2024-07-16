@@ -3,7 +3,7 @@
 __all__: list[str] = []
 
 from collections.abc import Callable, Iterator
-from dataclasses import dataclass, fields, replace
+from dataclasses import dataclass, fields, replace as _dataclass_replace
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -40,6 +40,12 @@ class DataclassInstance(Protocol):
 
 
 @dispatch  # type: ignore[misc]
+def replace(obj: DataclassInstance, /, **kwargs: Any) -> DataclassInstance:
+    """Replace the fields of a dataclass instance."""
+    return _dataclass_replace(obj, **kwargs)
+
+
+@dispatch  # type: ignore[misc]
 def field_values(obj: DataclassInstance) -> Iterator[Any]:
     """Return the values of a dataclass instance."""
     yield from (getattr(obj, f.name) for f in fields(obj))
@@ -54,7 +60,7 @@ def field_items(obj: DataclassInstance) -> Iterator[tuple[str, Any]]:
 def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
     """Return the vector, fully broadcasting all components."""
     arrays = xp.broadcast_arrays(*field_values(obj))
-    return replace(obj, **dict(zip(obj.components, arrays, strict=True)))
+    return _dataclass_replace(obj, **dict(zip(obj.components, arrays, strict=True)))
 
 
 ################################################################################

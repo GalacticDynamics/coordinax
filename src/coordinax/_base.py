@@ -9,7 +9,7 @@ __all__ = [
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-from dataclasses import fields, replace
+from dataclasses import fields
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
@@ -25,7 +25,7 @@ from typing_extensions import Never
 import quaxed.array_api as xp
 from unxt import Quantity, unitsystem
 
-from ._utils import classproperty, field_items, field_values, full_shaped
+from ._utils import classproperty, field_items, field_values, full_shaped, replace
 from coordinax._typing import Unit
 
 if TYPE_CHECKING:
