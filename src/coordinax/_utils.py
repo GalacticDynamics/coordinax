@@ -14,6 +14,8 @@ from typing import (
     runtime_checkable,
 )
 
+from plum import dispatch
+
 import quaxed.array_api as xp
 
 if TYPE_CHECKING:
@@ -29,20 +31,29 @@ class DataclassInstance(Protocol):
 
     __dataclass_fields__: ClassVar[dict[str, Any]]
 
+    # B/c of https://github.com/python/mypy/issues/3939 just having
+    # `__dataclass_fields__` is insufficient for `issubclass` checks.
+    @classmethod
+    def __subclasshook__(cls: type, c: type) -> bool:
+        """Customize the subclass check."""
+        return hasattr(c, "__dataclass_fields__")
 
-def dataclass_values(obj: "DataclassInstance") -> Iterator[Any]:
+
+@dispatch  # type: ignore[misc]
+def field_values(obj: DataclassInstance) -> Iterator[Any]:
     """Return the values of a dataclass instance."""
     yield from (getattr(obj, f.name) for f in fields(obj))
 
 
-def dataclass_items(obj: "DataclassInstance") -> Iterator[tuple[str, Any]]:
+@dispatch  # type: ignore[misc]
+def field_items(obj: DataclassInstance) -> Iterator[tuple[str, Any]]:
     """Return the field names and values of a dataclass instance."""
     yield from ((f.name, getattr(obj, f.name)) for f in fields(obj))
 
 
 def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
     """Return the vector, fully broadcasting all components."""
-    arrays = xp.broadcast_arrays(*dataclass_values(obj))
+    arrays = xp.broadcast_arrays(*field_values(obj))
     return replace(obj, **dict(zip(obj.components, arrays, strict=True)))
 
 
