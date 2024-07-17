@@ -7,16 +7,29 @@ from typing import Any
 from plum import dispatch
 
 from .builtin import CartesianPositionND, CartesianVelocityND
+from .poincare import PoincarePolarVector
 
 ###############################################################################
-# 3D
+# N-Dimensional
 
 
 @dispatch
 def represent_as(
     current: CartesianPositionND, target: type[CartesianPositionND], /, **kwargs: Any
 ) -> CartesianPositionND:
-    """CartesianPositionND -> CartesianPositionND."""
+    """CartesianPositionND -> CartesianPositionND.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> from unxt import Quantity
+
+    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "kpc"))
+
+    >>> cx.represent_as(q, cx.CartesianPositionND) is q
+    True
+
+    """
     return current
 
 
@@ -28,5 +41,30 @@ def represent_as(
     /,
     **kwargs: Any,
 ) -> CartesianVelocityND:
-    """CartesianVelocityND -> CartesianVelocityND."""
+    """CartesianVelocityND -> CartesianVelocityND.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> from unxt import Quantity
+
+    >>> x = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "km"))
+    >>> v = cx.CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
+
+    >>> cx.represent_as(v, cx.CartesianVelocityND, x) is v
+    True
+
+    """
+    return current
+
+
+###############################################################################
+# Poincare
+
+
+@dispatch
+def represent_as(
+    current: PoincarePolarVector, target: type[PoincarePolarVector], /, **kwargs: Any
+) -> PoincarePolarVector:
+    """PoincarePolarVector -> PoincarePolarVector."""
     return current

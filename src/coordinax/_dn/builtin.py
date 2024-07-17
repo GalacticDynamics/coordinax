@@ -32,12 +32,12 @@ class CartesianPositionND(AbstractPositionND):
 
     Examples
     --------
+    >>> import coordinax as cx
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianPositionND
 
     A 1D vector:
 
-    >>> q = CartesianPositionND(Quantity([[1]], "kpc"))
+    >>> q = cx.CartesianPositionND(Quantity([[1]], "kpc"))
     >>> q.q
     Quantity['length'](Array([[1.]], dtype=float32), unit='kpc')
     >>> q.shape
@@ -45,7 +45,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 2D vector:
 
-    >>> q = CartesianPositionND(Quantity([1, 2], "kpc"))
+    >>> q = cx.CartesianPositionND(Quantity([1, 2], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -53,7 +53,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 3D vector:
 
-    >>> q = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -61,7 +61,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 4D vector:
 
-    >>> q = CartesianPositionND(Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3., 4.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -69,7 +69,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 5D vector:
 
-    >>> q = CartesianPositionND(Quantity([1, 2, 3, 4, 5], "kpc"))
+    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3, 4, 5], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='kpc')
     >>> q.shape
