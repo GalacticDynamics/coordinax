@@ -11,6 +11,7 @@ import pytest
 
 import quaxed.array_api as xp
 import quaxed.numpy as qnp
+from dataclasstools import field_items
 from unxt import AbstractQuantity
 
 from coordinax import (
@@ -38,7 +39,6 @@ from coordinax import (
     SphericalPosition,
     SphericalVelocity,
 )
-from coordinax._utils import field_items
 
 BUILTIN_VECTORS = [
     # 1D

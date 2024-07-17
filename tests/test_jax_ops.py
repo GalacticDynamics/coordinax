@@ -6,11 +6,11 @@ import astropy.units as u
 import jax
 import pytest
 
+from dataclasstools import field_items
 from unxt import AbstractQuantity, Quantity
 
 import coordinax as cx
 from coordinax._base_pos import VECTOR_CLASSES
-from coordinax._utils import field_items
 
 VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.AbstractPosition3D)]
 
