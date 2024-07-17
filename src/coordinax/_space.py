@@ -451,12 +451,32 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         raise NotImplementedError
 
 
+# ===============================================================
+# Related dispatches
+
+
 @dispatch  # type: ignore[misc]
 def represent_as(space: Space, target: type[AbstractVector], /) -> Space:
     """Represent the current vector to the target vector."""
     return type(space)(
         {k: temp_represent_as(v, target, space) for k, v in space.items()}
     )
+
+
+# NOTE: need to set the precedence because `Space` is both a `Mapping` and a
+#       `dataclass`, which are both in the `replace` dispatch table.
+@dispatch(precedence=1)  # type: ignore[misc]
+def replace(obj: Space, /, **kwargs: AbstractVector) -> Space:
+    """Replace the components of the vector."""
+    return type(obj)(**{**obj, **kwargs})
+
+
+# NOTE: need to set the precedence because `Space` is both a `Mapping` and a
+#       `dataclass`, which are both in the `field_items` dispatch table.
+@dispatch(precedence=1)  # type: ignore[misc]
+def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
+    """Return the items from a Space."""
+    return obj.items()
 
 
 # =============================================================== Temporary
@@ -495,15 +515,3 @@ def temp_represent_as(
         space["speed"],
         space["length"],
     )
-
-
-@dispatch  # type: ignore[misc]
-def replace(obj: Space, /, **kwargs: AbstractVector) -> Space:
-    """Replace the components of the vector."""
-    return type(obj)(**{**obj, **kwargs})
-
-
-@dispatch  # type: ignore[misc]
-def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
-    """Return the items from a Space."""
-    return obj.items()
