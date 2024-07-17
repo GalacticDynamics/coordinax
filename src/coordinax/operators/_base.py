@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING, Any
 import equinox as eqx
 from plum import dispatch
 
+from dataclasstools import field_items
 from unxt import Quantity
 
 from coordinax._base_pos import AbstractPosition
-from coordinax._utils import field_items
 
 if TYPE_CHECKING:
     from ._sequential import OperatorSequence

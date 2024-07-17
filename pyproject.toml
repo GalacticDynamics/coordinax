@@ -24,6 +24,7 @@
   ]
   dependencies = [
     "astropy",
+    "dataclasstools @ git+https://github.com/GalacticDynamics/dataclasstools.git",
     "equinox",
     "immutable_map_jax @ git+https://github.com/GalacticDynamics/immutable_map_jax.git",
     "jax",
@@ -193,7 +194,7 @@
     [tool.ruff.lint.isort]
       combine-as-imports = true
       extra-standard-library = ["typing_extensions"]
-      known-first-party = ["quaxed", "unxt"]
+      known-first-party = ["dataclasstools", "quaxed", "unxt"]
       known-local-folder = ["coordinax"]
 
 

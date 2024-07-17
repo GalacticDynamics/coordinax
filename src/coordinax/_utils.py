@@ -2,59 +2,15 @@
 
 __all__: list[str] = []
 
-from collections.abc import Callable, Iterator
-from dataclasses import dataclass, fields, replace as _dataclass_replace
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    ClassVar,
-    Generic,
-    Protocol,
-    TypeVar,
-    runtime_checkable,
-)
-
-from plum import dispatch
+from collections.abc import Callable
+from dataclasses import dataclass, replace as _dataclass_replace
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 import quaxed.array_api as xp
+from dataclasstools import field_values
 
 if TYPE_CHECKING:
     from coordinax._base import AbstractVector
-
-
-################################################################################
-
-
-@runtime_checkable
-class DataclassInstance(Protocol):
-    """Protocol for dataclass instances."""
-
-    __dataclass_fields__: ClassVar[dict[str, Any]]
-
-    # B/c of https://github.com/python/mypy/issues/3939 just having
-    # `__dataclass_fields__` is insufficient for `issubclass` checks.
-    @classmethod
-    def __subclasshook__(cls: type, c: type) -> bool:
-        """Customize the subclass check."""
-        return hasattr(c, "__dataclass_fields__")
-
-
-@dispatch  # type: ignore[misc]
-def replace(obj: DataclassInstance, /, **kwargs: Any) -> DataclassInstance:
-    """Replace the fields of a dataclass instance."""
-    return _dataclass_replace(obj, **kwargs)
-
-
-@dispatch  # type: ignore[misc]
-def field_values(obj: DataclassInstance) -> Iterator[Any]:
-    """Return the values of a dataclass instance."""
-    yield from (getattr(obj, f.name) for f in fields(obj))
-
-
-@dispatch  # type: ignore[misc]
-def field_items(obj: DataclassInstance) -> Iterator[tuple[str, Any]]:
-    """Return the field names and values of a dataclass instance."""
-    yield from ((f.name, getattr(obj, f.name)) for f in fields(obj))
 
 
 def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":

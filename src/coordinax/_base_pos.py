@@ -13,10 +13,11 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import jax
 from jaxtyping import ArrayLike
 
+from dataclasstools import field_items
 from unxt import Quantity
 
 from ._base import AbstractVector
-from ._utils import classproperty, field_items
+from ._utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Self

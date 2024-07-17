@@ -6,18 +6,18 @@ from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 
+from dataclasstools import DataclassInstance
 from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
 from coordinax._base_pos import AbstractPosition
-from coordinax._utils import DataclassInstance
 
 if TYPE_CHECKING:
     from typing_extensions import Self
 
 
 @runtime_checkable
-class HasOperatorsAttr(DataclassInstance, Protocol):
+class HasOperatorsAttr(DataclassInstance, Protocol):  # type: ignore[misc]
     """Protocol for classes with an `operators` attribute."""
 
     operators: tuple[AbstractOperator, ...]

@@ -7,11 +7,12 @@ from jaxtyping import Shaped
 from plum import conversion_method
 
 import quaxed.array_api as xp
+from dataclasstools import field_values
 from unxt import Quantity
 
 from .base import AbstractPosition3D
 from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
-from coordinax._utils import field_values, full_shaped
+from coordinax._utils import full_shaped
 
 #####################################################################
 # Quantity
