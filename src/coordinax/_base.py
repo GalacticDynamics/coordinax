@@ -26,7 +26,7 @@ import quaxed.array_api as xp
 from dataclasstools import field_items, field_values, replace
 from unxt import Quantity, unitsystem
 
-from ._utils import classproperty
+from ._utils import classproperty, full_shaped
 from coordinax._typing import Unit
 
 if TYPE_CHECKING:
