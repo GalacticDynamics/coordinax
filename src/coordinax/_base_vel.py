@@ -14,7 +14,7 @@ from unxt import Quantity
 
 from ._base import AbstractVector
 from ._base_pos import AbstractPosition
-from ._utils import classproperty, dataclass_items
+from ._utils import classproperty, field_items
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -115,7 +115,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Quantity['angular frequency'](Array(-1., dtype=float32), unit='mas / yr')
 
         """
-        return replace(self, **{k: -v for k, v in dataclass_items(self)})
+        return replace(self, **{k: -v for k, v in field_items(self)})
 
     # ===============================================================
     # Binary operations
@@ -138,7 +138,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         """
         return self.integral_cls.constructor(
-            {k[2:]: v * other for k, v in dataclass_items(self)}
+            {k[2:]: v * other for k, v in field_items(self)}
         )
 
     # ===============================================================
@@ -186,9 +186,7 @@ class AdditionMixin(AbstractVector):
             msg = f"Cannot add {type(other)!r} to {self._cartesian_cls!r}."
             raise TypeError(msg)
 
-        return replace(
-            self, **{k: v + getattr(other, k) for k, v in dataclass_items(self)}
-        )
+        return replace(self, **{k: v + getattr(other, k) for k, v in field_items(self)})
 
     # TODO: use dispatch
     def __sub__(self: "Self", other: Any, /) -> "Self":
@@ -208,6 +206,4 @@ class AdditionMixin(AbstractVector):
             msg = f"Cannot subtract {type(other)!r} from {self._cartesian_cls!r}."
             raise TypeError(msg)
 
-        return replace(
-            self, **{k: v - getattr(other, k) for k, v in dataclass_items(self)}
-        )
+        return replace(self, **{k: v - getattr(other, k) for k, v in field_items(self)})

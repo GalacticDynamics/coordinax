@@ -11,7 +11,7 @@ from unxt import Quantity
 
 from .base import AbstractPosition3D
 from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
-from coordinax._utils import dataclass_values, full_shaped
+from coordinax._utils import field_values, full_shaped
 
 #####################################################################
 # Quantity
@@ -47,7 +47,7 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
 
     """
     cart = full_shaped(obj.represent_as(CartesianPosition3D))
-    return xp.stack(tuple(dataclass_values(cart)), axis=-1)
+    return xp.stack(tuple(field_values(cart)), axis=-1)
 
 
 @conversion_method(CartesianAcceleration3D, Quantity)  # type: ignore[misc]
@@ -70,4 +70,4 @@ def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*ba
     Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
 
     """
-    return xp.stack(tuple(dataclass_values(full_shaped(obj))), axis=-1)
+    return xp.stack(tuple(field_values(full_shaped(obj))), axis=-1)

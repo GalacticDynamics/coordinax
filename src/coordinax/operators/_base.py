@@ -12,7 +12,7 @@ from plum import dispatch
 from unxt import Quantity
 
 from coordinax._base_pos import AbstractPosition
-from coordinax._utils import dataclass_items
+from coordinax._utils import field_items
 
 if TYPE_CHECKING:
     from ._sequential import OperatorSequence
@@ -127,4 +127,4 @@ def constructor(
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj
 
-    return cls(**dict(dataclass_items(obj)))
+    return cls(**dict(field_items(obj)))

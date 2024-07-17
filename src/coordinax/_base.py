@@ -9,10 +9,11 @@ __all__ = [
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-from dataclasses import fields, replace
+from dataclasses import fields
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing_extensions import Never
 
 import astropy.units as u
 import equinox as eqx
@@ -20,12 +21,11 @@ import jax.numpy as jnp
 import numpy as np
 from jax import Device
 from plum import dispatch
-from typing_extensions import Never
 
 import quaxed.array_api as xp
 from unxt import Quantity, unitsystem
 
-from ._utils import classproperty, dataclass_items, dataclass_values, full_shaped
+from ._utils import classproperty, field_items, field_values, full_shaped, replace
 from coordinax._typing import Unit
 
 if TYPE_CHECKING:
@@ -169,7 +169,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
                                   [1., 3.]], dtype=float32), unit='m')
 
         """
-        return replace(self, **{k: v.mT for k, v in dataclass_items(self)})
+        return replace(self, **{k: v.mT for k, v in field_items(self)})
 
     @property
     def ndim(self) -> int:
@@ -297,7 +297,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
                                   [1., 3.]], dtype=float32), unit='m')
 
         """
-        return replace(self, **{k: v.T for k, v in dataclass_items(self)})
+        return replace(self, **{k: v.T for k, v in field_items(self)})
 
     # ---------------------------------------------------------------
     # Methods
@@ -342,7 +342,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
-        return replace(full, **{k: v[index] for k, v in dataclass_items(full)})
+        return replace(full, **{k: v[index] for k, v in field_items(full)})
 
     @dispatch  # type: ignore[misc]
     def __mul__(self: "AbstractVector", other: Any) -> Any:
@@ -398,9 +398,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         )
 
         """
-        return replace(
-            self, **{k: v.to_device(device) for k, v in dataclass_items(self)}
-        )
+        return replace(self, **{k: v.to_device(device) for k, v in field_items(self)})
 
     # ===============================================================
     # Further array methods
@@ -426,7 +424,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         )
 
         """
-        return replace(self, **{k: v.flatten() for k, v in dataclass_items(self)})
+        return replace(self, **{k: v.flatten() for k, v in field_items(self)})
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the components of the vector.
@@ -466,7 +464,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         full = full_shaped(self)
         return replace(
             self,
-            **{k: v.reshape(*shape, order=order) for k, v in dataclass_items(full)},
+            **{k: v.reshape(*shape, order=order) for k, v in field_items(full)},
         )
 
     # ===============================================================
@@ -510,7 +508,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
          'y': Quantity['length'](Array(0., dtype=float32), unit='m')}
 
         """
-        return dict_factory(dataclass_items(self))
+        return dict_factory(field_items(self))
 
     @classproperty
     @classmethod
@@ -536,29 +534,29 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         return tuple(f.name for f in fields(cls))
 
     @property
-    def units(self) -> Mapping[str, Unit]:
+    def units(self) -> MappingProxyType[str, Unit]:
         """Get the units of the vector's components."""
-        return MappingProxyType({k: v.unit for k, v in dataclass_items(self)})
+        return MappingProxyType({k: v.unit for k, v in field_items(self)})
 
     @property
-    def dtypes(self) -> Mapping[str, jnp.dtype]:
+    def dtypes(self) -> MappingProxyType[str, jnp.dtype]:
         """Get the dtypes of the vector's components."""
-        return MappingProxyType({k: v.dtype for k, v in dataclass_items(self)})
+        return MappingProxyType({k: v.dtype for k, v in field_items(self)})
 
     @property
-    def devices(self) -> Mapping[str, Device]:
+    def devices(self) -> MappingProxyType[str, Device]:
         """Get the devices of the vector's components."""
-        return MappingProxyType({k: v.device for k, v in dataclass_items(self)})
+        return MappingProxyType({k: v.device for k, v in field_items(self)})
 
     @property
-    def shapes(self) -> Mapping[str, tuple[int, ...]]:
+    def shapes(self) -> MappingProxyType[str, tuple[int, ...]]:
         """Get the shapes of the vector's components."""
-        return MappingProxyType({k: v.shape for k, v in dataclass_items(self)})
+        return MappingProxyType({k: v.shape for k, v in field_items(self)})
 
     @property
-    def sizes(self) -> Mapping[str, int]:
+    def sizes(self) -> MappingProxyType[str, int]:
         """Get the sizes of the vector's components."""
-        return MappingProxyType({k: v.size for k, v in dataclass_items(self)})
+        return MappingProxyType({k: v.size for k, v in field_items(self)})
 
     # ===============================================================
     # Convenience methods
@@ -569,7 +567,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         raise NotImplementedError
 
     @dispatch
-    def to_units(self, units: Any) -> "AbstractVector":
+    def to_units(self, units: Any, /) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters
@@ -598,15 +596,12 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         usys = unitsystem(units)
         return replace(
             self,
-            **{
-                k: v.to_units(usys[v.unit.physical_type])
-                for k, v in dataclass_items(self)
-            },
+            **{k: v.to_units(usys[v.unit.physical_type]) for k, v in field_items(self)},
         )
 
     @dispatch
     def to_units(
-        self, units: Mapping[u.PhysicalType | str, Unit | str], /
+        self: "AbstractVector", units: Mapping[u.PhysicalType | str, Unit | str], /
     ) -> "AbstractVector":
         """Convert the vector to the given units.
 
@@ -648,12 +643,14 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
             self,
             **{
                 k: v.to_units(units_[v.unit.physical_type])
-                for k, v in dataclass_items(self)
+                for k, v in field_items(self)
             },
         )
 
     @dispatch
-    def to_units(self, _: Literal[ToUnitsOptions.consistent], /) -> "AbstractVector":
+    def to_units(
+        self: "AbstractVector", _: Literal[ToUnitsOptions.consistent], /
+    ) -> "AbstractVector":
         """Convert the vector to a self-consistent set of units.
 
         Parameters
@@ -690,7 +687,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         """
         units_ = {}
-        for v in dataclass_values(self):
+        for v in field_values(self):
             pt = v.unit.physical_type
             if pt not in units_:
                 units_[pt] = v.unit
@@ -699,7 +696,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
             self,
             **{
                 k: v.to_units(units_[v.unit.physical_type])
-                for k, v in dataclass_items(self)
+                for k, v in field_items(self)
             },
         )
 
@@ -724,7 +721,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         comps = ", ".join(f"{c}[{units[c]}]" for c in self.components)
         vs = np.array2string(
             xp.stack(
-                tuple(v.value for v in xp.broadcast_arrays(*dataclass_values(self))),
+                tuple(v.value for v in xp.broadcast_arrays(*field_values(self))),
                 axis=-1,
             ),
             precision=3,
@@ -777,7 +774,7 @@ def constructor(  # noqa: D417
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj
 
-    return cls(**dict(dataclass_items(obj)))
+    return cls(**dict(field_items(obj)))
 
 
 @AbstractVector.constructor._f.dispatch  # noqa: SLF001

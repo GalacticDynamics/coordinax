@@ -10,7 +10,7 @@ from unxt import AbstractQuantity, Quantity
 
 import coordinax as cx
 from coordinax._base_pos import VECTOR_CLASSES
-from coordinax._utils import dataclass_items
+from coordinax._utils import field_items
 
 VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.AbstractPosition3D)]
 
@@ -38,5 +38,5 @@ def test_jax_through_representation(
     newq = func(q, target)
 
     assert isinstance(newq, cx.AbstractPosition)
-    for k, f in dataclass_items(newq):
+    for k, f in field_items(newq):
         assert isinstance(f, AbstractQuantity), k

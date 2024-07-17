@@ -16,7 +16,7 @@ from jaxtyping import ArrayLike
 from unxt import Quantity
 
 from ._base import AbstractVector
-from ._utils import classproperty, dataclass_items
+from ._utils import classproperty, field_items
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -128,19 +128,19 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
     def __mul__(
         self: "AbstractPosition", other: ArrayLike
     ) -> "AbstractPosition":  # TODO: use Self
-        return replace(self, **{k: v * other for k, v in dataclass_items(self)})
+        return replace(self, **{k: v * other for k, v in field_items(self)})
 
     @AbstractVector.__rmul__.dispatch  # type: ignore[misc]
     def __rmul__(
         self: "AbstractPosition", other: ArrayLike
     ) -> "AbstractPosition":  # TODO: use Self
-        return replace(self, **{k: other * v for k, v in dataclass_items(self)})
+        return replace(self, **{k: other * v for k, v in field_items(self)})
 
     @AbstractVector.__truediv__.dispatch  # type: ignore[misc]
     def __truediv__(
         self: "AbstractPosition", other: ArrayLike
     ) -> "AbstractPosition":  # TODO: use Self
-        return replace(self, **{k: v / other for k, v in dataclass_items(self)})
+        return replace(self, **{k: v / other for k, v in field_items(self)})
 
     # ===============================================================
     # Convenience methods

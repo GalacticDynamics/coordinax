@@ -17,7 +17,7 @@ from coordinax._base_vel import AbstractVelocity
 from coordinax._d1.base import AbstractVelocity1D
 from coordinax._d2.base import AbstractVelocity2D
 from coordinax._d3.base import AbstractVelocity3D
-from coordinax._utils import dataclass_items
+from coordinax._utils import field_items
 
 
 # TODO: implement for cross-representations
@@ -128,7 +128,7 @@ def represent_as(
         current_pos,
         **{
             k: v.distance
-            for k, v in dataclass_items(current_pos)
+            for k, v in field_items(current_pos)
             if isinstance(v, AbstractDistance)
         },
     )
@@ -147,9 +147,9 @@ def represent_as(
     jac_rows = {
         f"d_{k}": {
             kk: Quantity(vv.value, unit=v.unit / vv.unit)
-            for kk, vv in dataclass_items(v.value)
+            for kk, vv in field_items(v.value)
         }
-        for k, v in dataclass_items(jac_nested_vecs)
+        for k, v in field_items(jac_nested_vecs)
     }
 
     # Now we can use the Jacobian to transform the differential.

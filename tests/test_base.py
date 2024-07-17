@@ -38,7 +38,7 @@ from coordinax import (
     SphericalPosition,
     SphericalVelocity,
 )
-from coordinax._utils import dataclass_items
+from coordinax._utils import field_items
 
 BUILTIN_VECTORS = [
     # 1D
@@ -115,9 +115,7 @@ class AbstractVectorTest:
         # Test an explicitly shaped vector
         vec = replace(
             vector,
-            **{
-                k: replace(v, value=xp.ones((2, 4))) for k, v in dataclass_items(vector)
-            },
+            **{k: replace(v, value=xp.ones((2, 4))) for k, v in field_items(vector)},
         )
         flat = vec.flatten()
         assert isinstance(flat, type(vec))
@@ -138,9 +136,7 @@ class AbstractVectorTest:
         # Test an explicitly shaped vector
         vec = replace(
             vector,
-            **{
-                k: replace(v, value=xp.ones((2, 4))) for k, v in dataclass_items(vector)
-            },
+            **{k: replace(v, value=xp.ones((2, 4))) for k, v in field_items(vector)},
         )
         reshaped = vec.reshape(1, 8)
         assert isinstance(reshaped, type(vec))

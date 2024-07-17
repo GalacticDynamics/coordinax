@@ -16,7 +16,7 @@ from unxt import Quantity
 from ._base import AbstractVector
 from ._base_pos import AbstractPosition
 from ._base_vel import AbstractVelocity
-from ._utils import classproperty, dataclass_items
+from ._utils import classproperty, field_items
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -98,7 +98,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         Quantity['angular frequency'](Array(-1., dtype=float32), unit='mas / yr')
 
         """
-        return replace(self, **{k: -v for k, v in dataclass_items(self)})
+        return replace(self, **{k: -v for k, v in field_items(self)})
 
     # ===============================================================
     # Binary operations
@@ -122,7 +122,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         """
         # TODO: better access to corresponding fields
         return self.integral_cls.constructor(
-            {k.replace("2", ""): v * other for k, v in dataclass_items(self)}
+            {k.replace("2", ""): v * other for k, v in field_items(self)}
         )
 
     # ===============================================================
