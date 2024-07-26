@@ -705,13 +705,13 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> import astropy.units as u
-        >>> from unxt import Quantity, UnitSystem
+        >>> from unxt import Quantity, unitsystem
         >>> import coordinax as cx
 
-        >>> units = UnitSystem(u.m, u.s, u.kg, u.rad)
+        >>> usys = unitsystem(u.m, u.s, u.kg, u.rad)
 
         >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
-        >>> vec.to_units(units)
+        >>> vec.to_units(usys)
         CartesianPosition3D(
             x=Quantity[...](value=f32[], unit=Unit("m")),
             y=Quantity[...](value=f32[], unit=Unit("m")),
