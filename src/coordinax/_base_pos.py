@@ -11,8 +11,10 @@ from inspect import isabstract
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
+from jax import lax
 from jaxtyping import ArrayLike
-from plum import dispatch
+from plum import convert, dispatch
+from quax import quaxify, register
 
 from dataclassish import field_items
 from unxt import Quantity
@@ -80,6 +82,26 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
 
         """
         raise NotImplementedError
+
+    # ===============================================================
+    # Quax
+
+    def aval(self) -> jax.core.ShapedArray:
+        """Return the vector as a JAX array.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> vec.aval()
+        ShapedArray(float32[3])
+
+        """
+        return jax.core.get_aval(
+            convert(self.represent_as(self._cartesian_cls), Quantity).value
+        )
 
     # ===============================================================
     # Array
@@ -241,3 +263,38 @@ def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:
     """
     # TODO: the issue is units! what should the units be?
     raise NotImplementedError  # pragma: no cover
+
+
+@register(lax.reshape_p)  # type: ignore[misc]
+def _reshape_p(
+    operand: AbstractPosition, *, new_sizes: tuple[int, ...], **kwargs: Any
+) -> AbstractPosition:
+    """Reshape the components of the vector.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+    >>> import quaxed.numpy as jnp
+
+    >>> vec = cx.CartesianPosition3D(x=Quantity([1, 2, 3], "m"),
+    ...                              y=Quantity([4, 5, 6], "m"),
+    ...                              z=Quantity([7, 8, 9], "m"))
+    >>> jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
+    CartesianPosition3D(
+      x=Quantity[PhysicalType('length')](value=f32[1,3], unit=Unit("m")),
+      y=Quantity[PhysicalType('length')](value=f32[1,3], unit=Unit("m")),
+      z=Quantity[PhysicalType('length')](value=f32[1,3], unit=Unit("m"))
+    )
+
+    """
+    # Adjust the sizes for the components
+    new_sizes = new_sizes[1:]
+    # Reshape the components
+    return replace(
+        operand,
+        **{
+            k: quaxify(lax.reshape_p.bind)(v, new_sizes=new_sizes, **kwargs)
+            for k, v in field_items(operand)
+        },
+    )

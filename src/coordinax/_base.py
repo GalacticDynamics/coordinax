@@ -17,10 +17,12 @@ from typing_extensions import Never
 
 import astropy.units as u
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Device
 from plum import dispatch
+from quax import ArrayValue
 
 import quaxed.array_api as xp
 from dataclassish import field_items, field_values, replace
@@ -45,7 +47,7 @@ class ToUnitsOptions(Enum):
 # ===================================================================
 
 
-class AbstractVector(eqx.Module):  # type: ignore[misc]
+class AbstractVector(ArrayValue):  # type: ignore[misc]
     """Base class for all vector types.
 
     A vector is a collection of components that can be represented in different
@@ -142,6 +144,18 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         )
         comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
         return cls(**comps)
+
+    # ===============================================================
+    # Quax
+
+    def materialise(self) -> None:
+        msg = "Refusing to materialise `Quantity`."
+        raise RuntimeError(msg)
+
+    @abstractmethod
+    def aval(self) -> jax.core.ShapedArray:
+        """Return the vector as a JAX array."""
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Array API
