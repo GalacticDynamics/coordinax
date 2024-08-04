@@ -12,8 +12,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import fields
 from enum import Enum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
-from typing_extensions import Never
+from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
 
 import astropy.units as u
 import equinox as eqx
@@ -371,7 +370,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     def __rmul__(self: "AbstractVector", other: Any) -> Any:
         return NotImplemented
 
-    def __setitem__(self, k: Any, v: Any) -> Never:
+    def __setitem__(self, k: Any, v: Any) -> NoReturn:
         msg = f"{type(self).__name__} is immutable."
         raise TypeError(msg)
 

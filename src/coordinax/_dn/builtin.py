@@ -12,6 +12,8 @@ from typing_extensions import override
 
 import equinox as eqx
 import jax
+from jaxtyping import ArrayLike
+from quax import register
 
 import quaxed.array_api as xp
 from unxt import Quantity
@@ -178,6 +180,19 @@ class CartesianPositionND(AbstractPositionND):
 
         """
         return xp.linalg.vector_norm(self.q, axis=-1)
+
+
+# ===================================================================
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_p(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionND:
+    """Scale a position by a scalar."""
+    # Validation
+    lhs = eqx.error_if(lhs, not jax.numpy.isscalar(lhs), "must be a scalar")
+
+    # Scale the components
+    return replace(rhs, q=lhs * rhs.q)
 
 
 ##############################################################################

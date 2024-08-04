@@ -25,9 +25,12 @@ from typing import final
 
 import equinox as eqx
 import jax
+from jaxtyping import ArrayLike
+from quax import register
 
 import quaxed.array_api as xp
 import quaxed.lax as qlax
+from dataclassish import replace
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
@@ -105,22 +108,6 @@ class SphericalPosition(AbstractSphericalPosition):
     @classmethod
     def differential_cls(cls) -> type["SphericalVelocity"]:
         return SphericalVelocity
-
-    @partial(jax.jit)
-    def norm(self) -> ct.BatchableDistance:
-        """Return the norm of the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> from coordinax import SphericalPosition
-        >>> s = SphericalPosition(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
-        ...                     phi=Quantity(0, "deg"))
-        >>> s.norm()
-        Distance(Array(3., dtype=float32), unit='kpc')
-
-        """
-        return self.r
 
 
 @final
@@ -621,3 +608,44 @@ class LonLatSphericalAcceleration(AbstractAcceleration3D):
     @classmethod
     def integral_cls(cls) -> type[LonLatSphericalVelocity]:
         return LonLatSphericalVelocity
+
+
+#####################################################################
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_p_vmsph(
+    lhs: ArrayLike, rhs: MathSphericalPosition, /
+) -> MathSphericalPosition:
+    """Scale the polar position by a scalar.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+    >>> import quaxed.array_api as xp
+
+    >>> v = cx.MathSphericalPosition(r=Quantity(3, "kpc"),
+    ...                              theta=Quantity(90, "deg"),
+    ...                              phi=Quantity(0, "deg"))
+
+    >>> xp.linalg.vector_norm(v, axis=-1)
+    Quantity['length'](Array(3., dtype=float32), unit='kpc')
+
+    >>> nv = xp.multiply(2, v)
+    >>> nv
+    MathSphericalPosition(
+      r=Distance(value=f32[], unit=Unit("kpc")),
+      theta=Quantity[...](value=f32[], unit=Unit("deg")),
+      phi=Quantity[...](value=f32[], unit=Unit("deg"))
+    )
+    >>> nv.r
+    Distance(Array(6., dtype=float32), unit='kpc')
+
+    """
+    # Validation
+    lhs = eqx.error_if(
+        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
+    )
+    # Scale the radial distance
+    return replace(rhs, r=lhs * rhs.r)
