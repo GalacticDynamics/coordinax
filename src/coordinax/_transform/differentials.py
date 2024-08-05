@@ -25,17 +25,17 @@ from coordinax._d3.base import AbstractVelocity3D
     # N-D -> N-D
     (
         AbstractVelocity1D,
-        type[AbstractVelocity1D],  # type: ignore[misc]
+        type[AbstractVelocity1D],
         AbstractPosition | Quantity["length"],
     ),
     (
         AbstractVelocity2D,
-        type[AbstractVelocity2D],  # type: ignore[misc]
+        type[AbstractVelocity2D],
         AbstractPosition | Quantity["length"],
     ),
     (
         AbstractVelocity3D,
-        type[AbstractVelocity3D],  # type: ignore[misc]
+        type[AbstractVelocity3D],
         AbstractPosition | Quantity["length"],
     ),
 )
