@@ -170,7 +170,7 @@ class AdditionMixin(AbstractVector):
     """Mixin for addition operations."""
 
     # TODO: use dispatch
-    def __add__(self: "Self", other: Any, /) -> "Self":
+    def __add__(self, other: Any, /) -> "Self":
         """Add two differentials.
 
         Examples
@@ -190,7 +190,7 @@ class AdditionMixin(AbstractVector):
         return replace(self, **{k: v + getattr(other, k) for k, v in field_items(self)})
 
     # TODO: use dispatch
-    def __sub__(self: "Self", other: Any, /) -> "Self":
+    def __sub__(self, other: Any, /) -> "Self":
         """Subtract two differentials.
 
         Examples
