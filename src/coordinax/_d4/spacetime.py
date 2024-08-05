@@ -264,7 +264,7 @@ class FourVector(AbstractPosition4D):
     # -------------------------------------------
 
     @partial(jax.jit)
-    def norm2(self) -> Shaped[Quantity["area"], "*#batch"]:
+    def _norm2(self) -> Shaped[Quantity["area"], "*#batch"]:
         r"""Return the squared vector norm :math:`(ct)^2 - (x^2 + y^2 + z^2)`.
 
         Examples
@@ -273,7 +273,7 @@ class FourVector(AbstractPosition4D):
         >>> from coordinax import FourVector, CartesianPosition3D
 
         >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-        >>> w.norm2()
+        >>> w._norm2()
         Quantity['area'](Array(8.987552e+16, dtype=float32), unit='m2')
 
         """
@@ -293,7 +293,7 @@ class FourVector(AbstractPosition4D):
         Quantity['length'](Array(2.9979248e+08+0.j, dtype=complex64), unit='m')
 
         """
-        return xp.sqrt(xp.asarray(self.norm2(), dtype=complex))
+        return xp.sqrt(xp.asarray(self._norm2(), dtype=complex))
 
 
 # -----------------------------------------------
