@@ -11,7 +11,7 @@ import pytest
 
 import quaxed.array_api as xp
 import quaxed.numpy as qnp
-from dataclasstools import field_items
+from dataclassish import field_items
 from unxt import AbstractQuantity
 
 from coordinax import (

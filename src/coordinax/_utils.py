@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace as _dataclass_replace
 from typing import TYPE_CHECKING, Generic, TypeVar
 
 import quaxed.array_api as xp
-from dataclasstools import field_values
+from dataclassish import field_values
 
 if TYPE_CHECKING:
     from coordinax._base import AbstractVector

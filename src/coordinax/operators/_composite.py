@@ -6,7 +6,7 @@ from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 
-from dataclasstools import DataclassInstance
+from dataclassish import DataclassInstance
 from unxt import Quantity
 
 from ._base import AbstractOperator, op_call_dispatch
