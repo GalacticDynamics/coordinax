@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 import jax
 from plum import dispatch
 
-from dataclasstools import field_items
+from dataclassish import field_items
 from unxt import Quantity
 
 from ._base import AbstractVector

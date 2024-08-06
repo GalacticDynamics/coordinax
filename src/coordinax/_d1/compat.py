@@ -7,7 +7,7 @@ from jaxtyping import Shaped
 from plum import conversion_method
 
 import quaxed.array_api as xp
-from dataclasstools import field_values
+from dataclassish import field_values
 from unxt import Quantity
 
 from .base import AbstractPosition1D

@@ -6,7 +6,7 @@ import astropy.units as u
 import jax
 import pytest
 
-from dataclasstools import field_items
+from dataclassish import field_items
 from unxt import AbstractQuantity, Quantity
 
 import coordinax as cx

@@ -10,7 +10,7 @@ import jax
 from plum import dispatch
 
 import quaxed.array_api as xp
-from dataclasstools import field_items
+from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
 from coordinax._base_pos import AbstractPosition
