@@ -37,11 +37,11 @@ def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N
 
     >>> x = jnp.asarray([2, 0])
     >>> cx.normalize_vector(x)
-    Array([1., 0.], dtype=float64)
+    Array([1., 0.], dtype=float32)
 
     >>> x = jnp.asarray([0, 2])
     >>> cx.normalize_vector(x)
-    Array([0., 1.], dtype=float64)
+    Array([0., 1.], dtype=float32)
 
     """
     return x / xp.linalg.vector_norm(x, axis=-1, keepdims=True)
@@ -61,11 +61,11 @@ def normalize_vector(
 
     >>> x = Quantity(jnp.asarray([2, 0]), "km")
     >>> cx.normalize_vector(x)
-    Quantity['dimensionless'](Array([1., 0.], dtype=float64), unit='')
+    Quantity['dimensionless'](Array([1., 0.], dtype=float32), unit='')
 
     >>> x = Quantity(jnp.asarray([0, 2]), "s")
     >>> cx.normalize_vector(x)
-    Quantity['dimensionless'](Array([0., 1.], dtype=float64), unit='')
+    Quantity['dimensionless'](Array([0., 1.], dtype=float32), unit='')
 
     """
     return x / xp.linalg.vector_norm(x, axis=-1, keepdims=True)
