@@ -94,6 +94,13 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         raise NotImplementedError
 
     # ===============================================================
+    # Quax
+
+    def aval(self) -> jax.core.ShapedArray:
+        """Return the vector as a JAX array."""
+        raise NotImplementedError
+
+    # ===============================================================
     # Unary operations
 
     def __neg__(self) -> "Self":

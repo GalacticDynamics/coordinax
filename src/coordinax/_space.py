@@ -10,6 +10,7 @@ from typing_extensions import override
 
 import astropy.units as u
 import equinox as eqx
+import jax
 from astropy.units import PhysicalType as Dimension, get_physical_type
 from immutable_map_jax import ImmutableMap
 from jax import Device
@@ -134,6 +135,13 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
             key = _get_dimension_name(key)
 
         return super().__getitem__(key)
+
+    # ===============================================================
+    # Quax
+
+    def aval(self) -> jax.core.ShapedArray:
+        """Return the vector as a JAX array."""
+        raise NotImplementedError  # TODO: implement this
 
     # ===============================================================
     # Array API

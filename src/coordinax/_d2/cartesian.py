@@ -12,6 +12,8 @@ from typing import final
 
 import equinox as eqx
 import jax
+from jaxtyping import ArrayLike
+from quax import register
 
 import quaxed.array_api as xp
 from unxt import Quantity
@@ -103,21 +105,6 @@ class CartesianPosition2D(AbstractPosition2D):
         cart = other.represent_as(CartesianPosition2D)
         return replace(self, x=self.x - cart.x, y=self.y - cart.y)
 
-    @partial(jax.jit)
-    def norm(self) -> ct.BatchableLength:
-        """Return the norm of the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D
-        >>> q = CartesianPosition2D.constructor(Quantity([3, 4], "kpc"))
-        >>> q.norm()
-        Quantity['length'](Array(5., dtype=float32), unit='kpc')
-
-        """
-        return xp.sqrt(self.x**2 + self.y**2)
-
 
 @final
 class CartesianVelocity2D(AbstractVelocity2D):
@@ -142,21 +129,6 @@ class CartesianVelocity2D(AbstractVelocity2D):
     @classmethod
     def differential_cls(cls) -> type["CartesianAcceleration2D"]:
         return CartesianAcceleration2D
-
-    @partial(jax.jit)
-    def norm(self, _: AbstractPosition2D | None = None, /) -> ct.BatchableSpeed:
-        """Return the norm of the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> from coordinax import CartesianVelocity2D
-        >>> v = CartesianVelocity2D.constructor(Quantity([3, 4], "km/s"))
-        >>> v.norm()
-        Quantity['speed'](Array(5., dtype=float32), unit='km / s')
-
-        """
-        return xp.sqrt(self.d_x**2 + self.d_y**2)
 
 
 @final
@@ -192,3 +164,30 @@ class CartesianAcceleration2D(AbstractAcceleration2D):
 
         """
         return xp.sqrt(self.d2_x**2 + self.d2_y**2)
+
+
+# ===================================================================
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_vcart(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosition2D:
+    """Scale a cartesian 2D position by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianPosition2D.constructor(Quantity([3, 4], "m"))
+    >>> xp.multiply(5, v).x
+    Quantity['length'](Array(15., dtype=float32), unit='m')
+
+    """
+    # Validation
+    lhs = eqx.error_if(
+        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
+    )
+
+    # Scale the components
+    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)

@@ -12,6 +12,8 @@ from typing import final
 
 import equinox as eqx
 import jax
+from jaxtyping import ArrayLike
+from quax import register
 
 import quaxed.array_api as xp
 from unxt import Quantity
@@ -109,25 +111,6 @@ class CartesianPosition1D(AbstractPosition1D):
         cart = other.represent_as(CartesianPosition1D)
         return replace(self, x=self.x - cart.x)
 
-    # -----------------------------------------------------
-    # Methods
-
-    @partial(jax.jit)
-    def norm(self) -> ct.BatchableLength:
-        """Return the norm of the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D, RadialPosition
-
-        >>> q = CartesianPosition1D.constructor(Quantity([-1], "kpc"))
-        >>> q.norm()
-        Quantity['length'](Array(1., dtype=float32), unit='kpc')
-
-        """
-        return xp.abs(self.x)
-
 
 @final
 class CartesianVelocity1D(AbstractVelocity1D):
@@ -208,3 +191,30 @@ class CartesianAcceleration1D(AbstractAcceleration1D):
 
         """
         return xp.abs(self.d2_x)
+
+
+# ===================================================================
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D:
+    """Scale a position by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianPosition1D(x=Quantity(1, "m"))
+    >>> xp.multiply(2, v).x
+    Quantity['length'](Array(2., dtype=float32), unit='m')
+
+    """
+    # Validation
+    lhs = eqx.error_if(
+        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
+    )
+
+    # Scale the components
+    return replace(rhs, x=lhs * rhs.x)

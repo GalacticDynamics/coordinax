@@ -11,7 +11,10 @@ from typing import final
 
 import equinox as eqx
 import jax
+from jaxtyping import ArrayLike
+from quax import register
 
+from dataclassish import replace
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._typing as ct
@@ -59,21 +62,6 @@ class PolarPosition(AbstractPosition2D):
     def differential_cls(cls) -> type["PolarVelocity"]:
         return PolarVelocity
 
-    @partial(jax.jit)
-    def norm(self) -> ct.BatchableLength:
-        """Return the norm of the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-        >>> q = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
-        >>> q.norm()
-        Distance(Array(3., dtype=float32), unit='kpc')
-
-        """
-        return self.r
-
 
 @final
 class PolarVelocity(AbstractVelocity2D):
@@ -118,3 +106,39 @@ class PolarAcceleration(AbstractAcceleration2D):
     @classmethod
     def integral_cls(cls) -> type[PolarVelocity]:
         return PolarVelocity
+
+
+# ===================================================================
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPosition, /) -> PolarPosition:
+    """Scale the polar position by a scalar.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+    >>> import quaxed.array_api as xp
+
+    >>> v = cx.PolarPosition(r=Quantity(1, "m"), phi=Quantity(90, "deg"))
+
+    >>> xp.linalg.vector_norm(v, axis=-1)
+    Quantity['length'](Array(1., dtype=float32), unit='m')
+
+    >>> nv = xp.multiply(2, v)
+    >>> nv
+    PolarPosition(
+      r=Distance(value=f32[], unit=Unit("m")),
+      phi=Quantity[...](value=f32[], unit=Unit("deg"))
+    )
+    >>> nv.r
+    Distance(Array(2., dtype=float32), unit='m')
+
+    """
+    # Validation
+    lhs = eqx.error_if(
+        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
+    )
+    # Scale the radial distance
+    return replace(rhs, r=lhs * rhs.r)

@@ -12,15 +12,16 @@ from collections.abc import Callable, Mapping
 from dataclasses import fields
 from enum import Enum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
-from typing_extensions import Never
+from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
 
 import astropy.units as u
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Device
 from plum import dispatch
+from quax import ArrayValue
 
 import quaxed.array_api as xp
 from dataclassish import field_items, field_values, replace
@@ -45,7 +46,7 @@ class ToUnitsOptions(Enum):
 # ===================================================================
 
 
-class AbstractVector(eqx.Module):  # type: ignore[misc]
+class AbstractVector(ArrayValue):  # type: ignore[misc]
     """Base class for all vector types.
 
     A vector is a collection of components that can be represented in different
@@ -142,6 +143,18 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
         )
         comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
         return cls(**comps)
+
+    # ===============================================================
+    # Quax
+
+    def materialise(self) -> None:
+        msg = "Refusing to materialise `Quantity`."
+        raise RuntimeError(msg)
+
+    @abstractmethod
+    def aval(self) -> jax.core.ShapedArray:
+        """Return the vector as a JAX array."""
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Array API
@@ -357,7 +370,7 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
     def __rmul__(self: "AbstractVector", other: Any) -> Any:
         return NotImplemented
 
-    def __setitem__(self, k: Any, v: Any) -> Never:
+    def __setitem__(self, k: Any, v: Any) -> NoReturn:
         msg = f"{type(self).__name__} is immutable."
         raise TypeError(msg)
 
@@ -518,17 +531,13 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
         Examples
         --------
-        We assume the following imports:
+        >>> import coordinax as cx
 
-        >>> from coordinax import CartesianPosition2D, SphericalPosition, RadialVelocity
-
-        We can get the components of a vector:
-
-        >>> CartesianPosition2D.components
+        >>> cx.CartesianPosition2D.components
         ('x', 'y')
-        >>> SphericalPosition.components
+        >>> cx.SphericalPosition.components
         ('r', 'theta', 'phi')
-        >>> RadialVelocity.components
+        >>> cx.RadialVelocity.components
         ('d_r',)
 
         """
@@ -556,7 +565,19 @@ class AbstractVector(eqx.Module):  # type: ignore[misc]
 
     @property
     def sizes(self) -> MappingProxyType[str, int]:
-        """Get the sizes of the vector's components."""
+        """Get the sizes of the vector's components.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.CartesianPosition2D.constructor(Quantity([1, 2], "m")).sizes
+        mappingproxy({'x': 1, 'y': 1})
+
+        >>> cx.CartesianPosition2D.constructor(Quantity([[1, 2], [1, 2]], "m")).sizes
+        mappingproxy({'x': 2, 'y': 2})
+
+        """
         return MappingProxyType({k: v.size for k, v in field_items(self)})
 
     # ===============================================================
