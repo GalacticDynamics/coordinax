@@ -19,7 +19,7 @@ import quaxed.lax as qlax
 from dataclassish import field_items
 from unxt import Quantity
 
-from . import _typing as ct
+from . import typing as ct
 from ._base import AbstractVector
 from ._mixins import AvalMixin
 from .utils import classproperty

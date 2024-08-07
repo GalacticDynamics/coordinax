@@ -8,7 +8,7 @@ import equinox as eqx
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from coordinax._coordinax._typing import BatchableAngle, BatchableLength
+from .typing import BatchableAngle, BatchableLength
 
 _0m = Quantity(0, "meter")
 _0d = Quantity(0, "rad")

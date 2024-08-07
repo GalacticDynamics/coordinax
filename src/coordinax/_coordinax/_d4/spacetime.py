@@ -20,7 +20,7 @@ from .base import AbstractPosition4D
 from coordinax._coordinax._base import AbstractVector
 from coordinax._coordinax._d3.base import AbstractPosition3D
 from coordinax._coordinax._d3.cartesian import CartesianPosition3D
-from coordinax._coordinax._typing import BatchableLength, BatchableTime, ScalarTime
+from coordinax._coordinax.typing import BatchableLength, BatchableTime, ScalarTime
 from coordinax._coordinax.utils import classproperty
 
 if TYPE_CHECKING:

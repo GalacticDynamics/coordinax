@@ -22,7 +22,7 @@ from ._coordinax import (
     _funcs,
     _space,
     _transform,
-    _typing,
+    typing,
     utils,
 )
 from ._coordinax._base import *
@@ -38,7 +38,7 @@ from ._coordinax._exceptions import *
 from ._coordinax._funcs import *
 from ._coordinax._space import *
 from ._coordinax._transform import *
-from ._coordinax._typing import *
+from ._coordinax.typing import *
 from ._coordinax.utils import *
 from ._version import version as __version__
 from .setup_package import RUNTIME_TYPECHECKER
@@ -57,7 +57,7 @@ __all__ += _dn.__all__
 __all__ += _space.__all__
 __all__ += _exceptions.__all__
 __all__ += _transform.__all__
-__all__ += _typing.__all__
+__all__ += typing.__all__
 __all__ += utils.__all__
 
 # Interoperability
@@ -76,7 +76,7 @@ del (
     _space,
     _exceptions,
     _transform,
-    _typing,
+    typing,
     utils,
     _d1,
     _d2,

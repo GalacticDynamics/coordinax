@@ -17,7 +17,7 @@ from quax import register
 from dataclassish import replace
 from unxt import AbstractDistance, Distance, Quantity
 
-import coordinax._coordinax._typing as ct
+import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
 from coordinax._coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._coordinax._converters import converter_azimuth_to_range

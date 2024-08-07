@@ -29,7 +29,7 @@ import quaxed.lax as qlax
 from dataclassish import field_items, field_values, replace
 from unxt import Quantity, unitsystem
 
-from ._typing import Unit
+from .typing import Unit
 from .utils import classproperty, full_shaped
 
 if TYPE_CHECKING:

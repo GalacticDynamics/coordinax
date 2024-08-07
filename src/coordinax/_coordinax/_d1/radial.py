@@ -8,7 +8,7 @@ import equinox as eqx
 
 from unxt import AbstractDistance, Distance, Quantity
 
-import coordinax._coordinax._typing as ct
+import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
 from coordinax._coordinax._checks import check_r_non_negative
 from coordinax._coordinax.utils import classproperty

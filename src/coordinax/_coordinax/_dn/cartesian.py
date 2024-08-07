@@ -17,7 +17,7 @@ import quaxed.array_api as xp
 import quaxed.numpy as jnp
 from unxt import Quantity
 
-import coordinax._coordinax._typing as ct
+import coordinax._coordinax.typing as ct
 from .base import AbstractAccelerationND, AbstractPositionND, AbstractVelocityND
 from coordinax._coordinax._base import AbstractVector
 from coordinax._coordinax._base_pos import AbstractPosition

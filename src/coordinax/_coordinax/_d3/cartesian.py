@@ -20,7 +20,7 @@ import quaxed.lax as qlax
 from dataclassish import field_items
 from unxt import Quantity
 
-import coordinax._coordinax._typing as ct
+import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
 from coordinax._coordinax._base_pos import AbstractPosition
 from coordinax._coordinax._mixins import AvalMixin

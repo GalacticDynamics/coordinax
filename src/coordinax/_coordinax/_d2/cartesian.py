@@ -19,7 +19,7 @@ import quaxed.array_api as xp
 from quaxed import lax as qlax
 from unxt import Quantity
 
-import coordinax._coordinax._typing as ct
+import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
 from coordinax._coordinax._base_pos import AbstractPosition
 from coordinax._coordinax._mixins import AvalMixin

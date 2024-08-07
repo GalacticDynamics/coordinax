@@ -5,7 +5,7 @@ __all__: list[str] = []
 
 from unxt import Quantity
 
-from coordinax._coordinax._typing import BatchableAngle
+from .typing import BatchableAngle
 
 _2pid = Quantity(360, "deg")
 
