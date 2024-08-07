@@ -158,15 +158,35 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         ).represent_as(type(self))
 
     @AbstractVector.__mul__.dispatch  # type: ignore[misc]
-    def __mul__(
-        self: "AbstractPosition", other: ArrayLike
-    ) -> "AbstractPosition":  # TODO: use Self
+    def __mul__(self: "AbstractPosition", other: ArrayLike) -> "AbstractPosition":
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> (vec * 2).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
         return qlax.mul(self, other)
 
     @AbstractVector.__rmul__.dispatch  # type: ignore[misc]
-    def __rmul__(
-        self: "AbstractPosition", other: ArrayLike
-    ) -> "AbstractPosition":  # TODO: use Self
+    def __rmul__(self: "AbstractPosition", other: ArrayLike) -> "AbstractPosition":
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> (2 * vec).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
         return qlax.mul(other, self)
 
     @AbstractVector.__truediv__.dispatch  # type: ignore[misc]
@@ -297,7 +317,7 @@ def _mul_p_vq(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> import quaxed.numpy as jnp
+    >>> import quaxed.array_api as jnp
 
     >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
     >>> jnp.multiply(2, vec)
@@ -307,7 +327,67 @@ def _mul_p_vq(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
       z=Quantity[...](value=f32[], unit=Unit("m"))
     )
 
-    """
+    Most of the position classes have specific dispatches for this operation.
+    So let's define a new class and try it out:
+
+    >>> from typing import ClassVar
+    >>> from coordinax._utils import classproperty
+    >>> class MyCartesian(cx.AbstractPosition):
+    ...     x: Quantity
+    ...     y: Quantity
+    ...     z: Quantity
+    ...
+    >>> MyCartesian._cartesian_cls = MyCartesian  # hack
+
+    Add conversion to Quantity:
+
+    >>> from plum import conversion_method
+    >>> @conversion_method(MyCartesian, Quantity)
+    ... def _to_quantity(x: MyCartesian, /) -> Quantity:
+    ...     return xp.stack((x.x, x.y, x.z), axis=-1)
+
+    Add representation transformation
+
+    >>> from plum import dispatch
+    >>> @dispatch
+    ... def represent_as(current: MyCartesian, target: type[MyCartesian], /) -> MyCartesian:
+    ...     return current
+
+    >>> vec = MyCartesian(x=Quantity([1], "m"),
+    ...                   y=Quantity([2], "m"),
+    ...                   z=Quantity([3], "m"))
+
+    First hit the non-scalar error:
+
+    >>> try: jnp.multiply(jnp.asarray([[1, 1, 1]]), vec)
+    ... except Exception as e: print(e)
+    must be a scalar, not <class 'jaxlib.xla_extension.ArrayImpl'>
+
+    Then hit the Cartesian-specific dispatch error:
+
+    >>> try: jnp.multiply(2, vec)
+    ... except Exception as e: print(e)
+    must register a Cartesian-specific dispatch
+
+    Now a real example. For this we need to define the Cartesian-specific
+    dispatches:
+
+    >>> MyCartesian._cartesian_cls = cx.CartesianPosition3D
+    >>> @dispatch
+    ... def represent_as(current: MyCartesian, target: type[cx.CartesianPosition3D], /) -> cx.CartesianPosition3D:
+    ...     return cx.CartesianPosition3D(x=current.x, y=current.y, z=current.z)
+    >>> @dispatch
+    ... def represent_as(current: cx.CartesianPosition3D, target: type[MyCartesian], /) -> MyCartesian:
+    ...     return MyCartesian(x=current.x, y=current.y, z=current.z)
+
+    >>> jnp.multiply(2, vec)
+    MyCartesian(
+      x=Quantity[...](value=f32[1], unit=Unit("m")),
+      y=Quantity[...](value=f32[1], unit=Unit("m")),
+      z=Quantity[...](value=f32[1], unit=Unit("m"))
+    )
+
+    """  # noqa: E501
     # Validation
     lhs = eqx.error_if(
         lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
