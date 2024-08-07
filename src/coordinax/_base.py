@@ -531,17 +531,13 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         Examples
         --------
-        We assume the following imports:
+        >>> import coordinax as cx
 
-        >>> from coordinax import CartesianPosition2D, SphericalPosition, RadialVelocity
-
-        We can get the components of a vector:
-
-        >>> CartesianPosition2D.components
+        >>> cx.CartesianPosition2D.components
         ('x', 'y')
-        >>> SphericalPosition.components
+        >>> cx.SphericalPosition.components
         ('r', 'theta', 'phi')
-        >>> RadialVelocity.components
+        >>> cx.RadialVelocity.components
         ('d_r',)
 
         """
@@ -569,7 +565,19 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
     @property
     def sizes(self) -> MappingProxyType[str, int]:
-        """Get the sizes of the vector's components."""
+        """Get the sizes of the vector's components.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.CartesianPosition2D.constructor(Quantity([1, 2], "m")).sizes
+        mappingproxy({'x': 1, 'y': 1})
+
+        >>> cx.CartesianPosition2D.constructor(Quantity([[1, 2], [1, 2]], "m")).sizes
+        mappingproxy({'x': 2, 'y': 2})
+
+        """
         return MappingProxyType({k: v.size for k, v in field_items(self)})
 
     # ===============================================================

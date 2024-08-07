@@ -12,7 +12,8 @@ from typing_extensions import override
 
 import equinox as eqx
 import jax
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, Shaped
+from plum import conversion_method
 from quax import register
 
 import quaxed.array_api as xp
@@ -185,11 +186,43 @@ class CartesianPositionND(AbstractPositionND):
 # ===================================================================
 
 
+@conversion_method(CartesianPositionND, Quantity)  # type: ignore[misc]
+def vec_to_q(obj: CartesianPositionND, /) -> Shaped[Quantity["length"], "*batch N"]:
+    """`coordinax.AbstractPosition3D` -> `unxt.Quantity`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> from plum import convert
+    >>> from unxt import Quantity
+
+    >>> vec = cx.CartesianPositionND(Quantity([1, 2, 3, 4, 5], unit="kpc"))
+    >>> convert(vec, Quantity)
+    Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='kpc')
+
+    """
+    return obj.q
+
+
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionND:
-    """Scale a position by a scalar."""
+def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionND:
+    """Scale a position by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianPositionND(Quantity([1, 2, 3, 4, 5], "kpc"))
+    >>> xp.multiply(2, v).q
+    Quantity['length'](Array([ 2.,  4.,  6.,  8., 10.], dtype=float32), unit='kpc')
+
+    """
     # Validation
-    lhs = eqx.error_if(lhs, not jax.numpy.isscalar(lhs), "must be a scalar")
+    lhs = eqx.error_if(
+        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
+    )
 
     # Scale the components
     return replace(rhs, q=lhs * rhs.q)
