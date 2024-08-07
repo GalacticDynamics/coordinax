@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
 from jaxtyping import ArrayLike
+from plum import dispatch
 
 from dataclassish import field_items
 from unxt import Quantity
@@ -220,3 +221,23 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
 
         """
         return self.represent_as(self._cartesian_cls).norm()
+
+
+# ===================================================================
+# Register dispatches
+
+
+# from coordinax._funcs
+@dispatch  # type: ignore[misc]
+@partial(jax.jit, inline=True)
+def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:
+    """Return the norm of the vector.
+
+    Returns
+    -------
+    Quantity
+        The norm of the vector.
+
+    """
+    # TODO: the issue is units! what should the units be?
+    raise NotImplementedError  # pragma: no cover
