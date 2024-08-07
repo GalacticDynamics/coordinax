@@ -12,9 +12,9 @@ import astropy.units as u
 import equinox as eqx
 import jax
 from astropy.units import PhysicalType as Dimension, get_physical_type
-from immutable_map_jax import ImmutableMap
 from jax import Device
 from plum import dispatch
+from xmmutablemap import ImmutableMap
 
 import quaxed.numpy as jnp
 from unxt import Quantity
