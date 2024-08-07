@@ -1,4 +1,4 @@
-"""Test :mod:`coordinax._utils`."""
+"""Test :mod:`coordinax.utils`."""
 
 from warnings import warn
 

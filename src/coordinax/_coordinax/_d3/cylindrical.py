@@ -19,7 +19,7 @@ import coordinax._coordinax._typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
 from coordinax._coordinax._checks import check_azimuth_range, check_r_non_negative
 from coordinax._coordinax._converters import converter_azimuth_to_range
-from coordinax._coordinax._utils import classproperty
+from coordinax._coordinax.utils import classproperty
 
 
 @final

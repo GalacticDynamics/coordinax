@@ -12,7 +12,7 @@ from unxt import Quantity
 
 from .base import AbstractPosition1D
 from .cartesian import CartesianAcceleration1D, CartesianPosition1D, CartesianVelocity1D
-from coordinax._coordinax._utils import full_shaped
+from coordinax._coordinax.utils import full_shaped
 
 
 @conversion_method(type_from=AbstractPosition1D, type_to=Quantity)  # type: ignore[misc]

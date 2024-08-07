@@ -15,7 +15,7 @@ from unxt import Quantity
 
 from ._base import AbstractVector
 from ._base_pos import AbstractPosition
-from ._utils import classproperty
+from .utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Self

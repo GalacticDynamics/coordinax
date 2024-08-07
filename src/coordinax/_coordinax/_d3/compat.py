@@ -12,7 +12,7 @@ from unxt import Quantity
 
 from .base import AbstractPosition3D
 from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
-from coordinax._coordinax._utils import full_shaped
+from coordinax._coordinax.utils import full_shaped
 
 #####################################################################
 # Quantity

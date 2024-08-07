@@ -30,7 +30,7 @@ from dataclassish import field_items, field_values, replace
 from unxt import Quantity, unitsystem
 
 from ._typing import Unit
-from ._utils import classproperty, full_shaped
+from .utils import classproperty, full_shaped
 
 if TYPE_CHECKING:
     from typing_extensions import Self

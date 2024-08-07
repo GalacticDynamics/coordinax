@@ -22,7 +22,7 @@ from .base import AbstractAccelerationND, AbstractPositionND, AbstractVelocityND
 from coordinax._coordinax._base import AbstractVector
 from coordinax._coordinax._base_pos import AbstractPosition
 from coordinax._coordinax._mixins import AvalMixin
-from coordinax._coordinax._utils import classproperty
+from coordinax._coordinax.utils import classproperty
 
 ##############################################################################
 # Position

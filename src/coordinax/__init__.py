@@ -23,7 +23,7 @@ from ._coordinax import (
     _space,
     _transform,
     _typing,
-    _utils,
+    utils,
 )
 from ._coordinax._base import *
 from ._coordinax._base_acc import *
@@ -39,7 +39,7 @@ from ._coordinax._funcs import *
 from ._coordinax._space import *
 from ._coordinax._transform import *
 from ._coordinax._typing import *
-from ._coordinax._utils import *
+from ._coordinax.utils import *
 from ._version import version as __version__
 from .setup_package import RUNTIME_TYPECHECKER
 
@@ -58,7 +58,7 @@ __all__ += _space.__all__
 __all__ += _exceptions.__all__
 __all__ += _transform.__all__
 __all__ += _typing.__all__
-__all__ += _utils.__all__
+__all__ += utils.__all__
 
 # Interoperability
 # Astropy
@@ -77,7 +77,7 @@ del (
     _exceptions,
     _transform,
     _typing,
-    _utils,
+    utils,
     _d1,
     _d2,
     _d3,

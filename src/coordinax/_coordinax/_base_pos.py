@@ -22,7 +22,7 @@ from unxt import Quantity
 from . import _typing as ct
 from ._base import AbstractVector
 from ._mixins import AvalMixin
-from ._utils import classproperty
+from .utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Self

@@ -24,7 +24,7 @@ import coordinax._coordinax._typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
 from coordinax._coordinax._base_pos import AbstractPosition
 from coordinax._coordinax._mixins import AvalMixin
-from coordinax._coordinax._utils import classproperty
+from coordinax._coordinax.utils import classproperty
 
 
 @final

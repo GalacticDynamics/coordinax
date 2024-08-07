@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 
 from coordinax._coordinax._base import AbstractVector
 from coordinax._coordinax._base_pos import AbstractPosition
-from coordinax._coordinax._utils import classproperty
+from coordinax._coordinax.utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Never
