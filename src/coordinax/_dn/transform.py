@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .builtin import CartesianPositionND, CartesianVelocityND
+from .cartesian import CartesianPositionND, CartesianVelocityND
 from .poincare import PoincarePolarVector
 
 ###############################################################################
