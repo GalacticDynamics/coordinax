@@ -29,7 +29,7 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
 
     We can then apply the operator to a position:
 
-    >>> pos = cx.FourVector.constructor(Quantity([0, 1.0, 2.0, 3.0], "kpc"))
+    >>> pos = cx.FourVector.constructor([0, 1.0, 2.0, 3.0], "kpc")
     >>> pos
     FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPosition3D( ... ) )
 

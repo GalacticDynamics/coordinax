@@ -44,9 +44,9 @@ def constructor(
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianPosition1D
+    >>> import coordinax as cx
 
-    >>> q = CartesianPosition1D.constructor(Quantity(1, "kpc"))
+    >>> q = cx.CartesianPosition1D.constructor(Quantity(1, "kpc"))
     >>> q
     CartesianPosition1D(
         x=Quantity[PhysicalType('length')](value=f32[1], unit=Unit("kpc"))

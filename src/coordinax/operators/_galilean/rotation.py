@@ -73,6 +73,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     >>> import jax.numpy as jnp
     >>> from unxt import Quantity
+    >>> import coordinax as cx
     >>> import coordinax.operators as co
 
     We can then create a rotation operator:
@@ -111,8 +112,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     Translation operators can be applied to :class:`vector.AbstractPosition3D`:
 
-    >>> from coordinax import CartesianPosition3D
-    >>> q = CartesianPosition3D.constructor(q)  # from the previous example
+    >>> q = cx.CartesianPosition3D.constructor(q)  # from the previous example
     >>> newq, newt = op(q, t)
     >>> newq.x
     Quantity['length'](Array([ 0.70710677, -0.70710677], dtype=float32), unit='m')
@@ -198,7 +198,6 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         --------
         >>> import quaxed.array_api as xp
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
@@ -230,7 +229,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         --------
         >>> import quaxed.array_api as xp
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
+        >>> import coordinax as cx
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
@@ -239,7 +238,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
 
-        >>> q = CartesianPosition3D.constructor(Quantity([1, 0, 0], "m"))
+        >>> q = cx.CartesianPosition3D.constructor([1, 0, 0], "m")
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq.x

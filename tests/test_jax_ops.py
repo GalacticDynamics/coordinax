@@ -2,12 +2,11 @@
 
 from functools import partial
 
-import astropy.units as u
 import jax
 import pytest
 
 from dataclassish import field_items
-from unxt import AbstractQuantity, Quantity
+from unxt import AbstractQuantity
 
 import coordinax as cx
 from coordinax._base_pos import VECTOR_CLASSES
@@ -19,7 +18,7 @@ VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.AbstractPosit
 @pytest.fixture(params=VECTOR_CLASSES_3D)
 def q(request) -> cx.AbstractPosition:
     """Fixture for 3D Vectors."""
-    q = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit=u.kpc))
+    q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
     return q.represent_as(request.param)
 
 

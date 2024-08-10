@@ -104,11 +104,11 @@ class CartesianPositionND(AbstractPositionND):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPositionND
+        >>> import coordinax as cx
 
         A 3D vector:
 
-        >>> q = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> q = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
         >>> (-q).q
         Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
 
@@ -127,12 +127,12 @@ class CartesianPositionND(AbstractPositionND):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPositionND
+        >>> import coordinax as cx
 
         A 3D vector:
 
-        >>> q1 = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
-        >>> q2 = CartesianPositionND(Quantity([2, 3, 4], "kpc"))
+        >>> q1 = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> q2 = cx.CartesianPositionND(Quantity([2, 3, 4], "kpc"))
         >>> (q1 + q2).q
         Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
 
@@ -149,12 +149,12 @@ class CartesianPositionND(AbstractPositionND):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPositionND
+        >>> import coordinax as cx
 
         A 3D vector:
 
-        >>> q1 = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
-        >>> q2 = CartesianPositionND(Quantity([2, 3, 4], "kpc"))
+        >>> q1 = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> q2 = cx.CartesianPositionND(Quantity([2, 3, 4], "kpc"))
         >>> (q1 - q2).q
         Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
 
@@ -171,11 +171,11 @@ class CartesianPositionND(AbstractPositionND):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPositionND
+        >>> import coordinax as cx
 
         A 3D vector:
 
-        >>> q = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> q = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
 
@@ -239,11 +239,11 @@ class CartesianVelocityND(AbstractPositionNDDifferential):
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianVelocityND
+    >>> import coordinax as cx
 
     A 1D vector:
 
-    >>> q = CartesianVelocityND(Quantity([[1]], "km/s"))
+    >>> q = cx.CartesianVelocityND(Quantity([[1]], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([[1.]], dtype=float32), unit='km / s')
     >>> q.shape
@@ -251,7 +251,7 @@ class CartesianVelocityND(AbstractPositionNDDifferential):
 
     A 2D vector:
 
-    >>> q = CartesianVelocityND(Quantity([1, 2], "km/s"))
+    >>> q = cx.CartesianVelocityND(Quantity([1, 2], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -259,7 +259,7 @@ class CartesianVelocityND(AbstractPositionNDDifferential):
 
     A 3D vector:
 
-    >>> q = CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
+    >>> q = cx.CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -267,7 +267,7 @@ class CartesianVelocityND(AbstractPositionNDDifferential):
 
     A 4D vector:
 
-    >>> q = CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
+    >>> q = cx.CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3., 4.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -275,7 +275,7 @@ class CartesianVelocityND(AbstractPositionNDDifferential):
 
     A 5D vector:
 
-    >>> q = CartesianVelocityND(Quantity([1, 2, 3, 4, 5], "km/s"))
+    >>> q = cx.CartesianVelocityND(Quantity([1, 2, 3, 4, 5], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -310,11 +310,11 @@ class CartesianVelocityND(AbstractPositionNDDifferential):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianVelocityND
+        >>> import coordinax as cx
 
         A 3D vector:
 
-        >>> c = CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
+        >>> c = cx.CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
         >>> c.norm()
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 

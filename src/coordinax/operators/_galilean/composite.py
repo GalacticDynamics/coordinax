@@ -106,7 +106,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     Galilean operators can be applied to :class:`vector.FourVector`:
 
-    >>> w = cx.FourVector.constructor(Quantity([0, 0, 0, 0], "kpc"))
+    >>> w = cx.FourVector.constructor([0, 0, 0, 0], "kpc")
     >>> new = op(w)
     >>> new
     FourVector(
@@ -121,7 +121,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Also the Galilean operators can also be applied to
     :class:`vector.AbstractPosition3D` and :class:`unxt.Quantity`:
 
-    >>> q = cx.CartesianPosition3D.constructor(Quantity([0, 0, 0], "kpc"))
+    >>> q = cx.CartesianPosition3D.constructor([0, 0, 0], "kpc")
     >>> t = Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x

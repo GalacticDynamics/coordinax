@@ -55,7 +55,7 @@ def represent_as(
 
     Cartesian to Cartesian:
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
     >>> cx.represent_as(vec, cx.CartesianPosition3D) is vec
     True
 
@@ -120,11 +120,11 @@ def represent_as(
     For these transformations the position does not matter since the
     self-transform returns the differential unchanged.
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
 
     Cartesian to Cartesian differential:
 
-    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], "km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
     >>> cx.represent_as(dif, cx.CartesianVelocity3D, vec) is dif
     True
 
@@ -187,7 +187,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "km"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
     >>> print(cx.represent_as(vec, cx.CylindricalPosition))
     <CylindricalPosition (rho[km], phi[rad], z[km])
         [2.236 1.107 3.   ]>
@@ -209,7 +209,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "km"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
     >>> print(cx.represent_as(vec, cx.SphericalPosition))
     <SphericalPosition (r[km], theta[rad], phi[rad])
         [3.742 0.641 1.107]>
@@ -238,7 +238,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "km"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
 
     >>> print(cx.represent_as(vec, cx.LonLatSphericalPosition))
     <LonLatSphericalPosition (lon[rad], lat[deg], distance[km])
@@ -268,7 +268,7 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> vec = cx.CylindricalPosition(rho=Quantity(1., "kpc"), phi=Quantity(90, "deg"),
-    ...                            z=Quantity(1, "kpc"))
+    ...                              z=Quantity(1, "kpc"))
     >>> print(cx.represent_as(vec, cx.CartesianPosition3D))
     <CartesianPosition3D (x[kpc], y[kpc], z[kpc])
         [-4.371e-08  1.000e+00  1.000e+00]>

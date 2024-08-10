@@ -20,6 +20,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jax import Device
+from jaxtyping import ArrayLike
 from plum import dispatch
 from quax import ArrayValue
 
@@ -73,10 +74,10 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         --------
         >>> import jax.numpy as jnp
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
+        >>> import coordinax as cx
 
         >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
-        >>> vec = CartesianPosition3D.constructor(xs)
+        >>> vec = cx.CartesianPosition3D.constructor(xs)
         >>> vec
         CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
@@ -86,7 +87,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
         ...       "z": Quantity([5, 6], "m")}
-        >>> vec = CartesianPosition3D.constructor(xs)
+        >>> vec = cx.CartesianPosition3D.constructor(xs)
         >>> vec
         CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
@@ -113,10 +114,10 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         --------
         >>> import jax.numpy as jnp
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
+        >>> import coordinax as cx
 
         >>> xs = Quantity([1, 2, 3], "meter")
-        >>> vec = CartesianPosition3D.constructor(xs)
+        >>> vec = cx.CartesianPosition3D.constructor(xs)
         >>> vec
         CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
@@ -125,7 +126,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         )
 
         >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
-        >>> vec = CartesianPosition3D.constructor(xs)
+        >>> vec = cx.CartesianPosition3D.constructor(xs)
         >>> vec
         CartesianPosition3D(
             x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
@@ -143,6 +144,51 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         )
         comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
         return cls(**comps)
+
+    @classmethod
+    @dispatch
+    def constructor(
+        cls: "type[AbstractVector]", obj: ArrayLike | list[Any], unit: Unit | str, /
+    ) -> "AbstractVector":
+        """Construct a vector from an array and unit.
+
+        The array is expected to have the components as the last dimension.
+
+        Parameters
+        ----------
+        obj : ArrayLike[Any, (*#batch, N), "..."]
+            The array of components.
+        unit : Unit | str
+            The unit of the quantity
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "meter")
+        >>> vec
+        CartesianPosition3D(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+
+        >>> xs = jnp.array([[1, 2, 3], [4, 5, 6]])
+        >>> vec = cx.CartesianPosition3D.constructor(xs, "meter")
+        >>> vec
+        CartesianPosition3D(
+            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+        )
+        >>> vec.x
+        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+
+        """
+        obj = Quantity.constructor(xp.asarray(obj), unit)
+        return cls.constructor(obj)  # re-dispatch
 
     # ===============================================================
     # Quax
@@ -171,13 +217,13 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
+        >>> import coordinax as cx
 
         We can transpose a vector:
 
-        >>> vec = CartesianPosition3D(x=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         y=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         z=Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec = cx.CartesianPosition3D(x=Quantity([[0, 1], [2, 3]], "m"),
+        ...                              y=Quantity([[0, 1], [2, 3]], "m"),
+        ...                              z=Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.mT.x
         Quantity['length'](Array([[0., 2.],
                                   [1., 3.]], dtype=float32), unit='m')
@@ -194,15 +240,15 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D
+        >>> import coordinax as cx
 
         We can get the number of dimensions of a vector:
 
-        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPosition1D(Quantity([1, 2], "m"))
         >>> vec.ndim
         1
 
-        >>> vec = CartesianPosition1D(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = cx.CartesianPosition1D(Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.ndim
         2
 
@@ -210,9 +256,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> from coordinax import CartesianPosition2D
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=Quantity(0, "m"))
         >>> vec.ndim
         2
 
@@ -231,15 +276,15 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D
+        >>> import coordinax as cx
 
         We can get the shape of a vector:
 
-        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPosition1D(x=Quantity([1, 2], "m"))
         >>> vec.shape
         (2,)
 
-        >>> vec = CartesianPosition1D(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = cx.CartesianPosition1D(x=Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.shape
         (2, 2)
 
@@ -247,9 +292,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> from coordinax import CartesianPosition2D
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=Quantity(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -265,15 +309,15 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D
+        >>> import coordinax as cx
 
         We can get the size of a vector:
 
-        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPosition1D(Quantity([1, 2], "m"))
         >>> vec.size
         2
 
-        >>> vec = CartesianPosition1D(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = cx.CartesianPosition1D(Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.size
         4
 
@@ -281,9 +325,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> from coordinax import CartesianPosition2D
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=Quantity(0, "m"))
         >>> vec.size
         4
 
@@ -299,13 +342,13 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
+        >>> import coordinax as cx
 
         We can transpose a vector:
 
-        >>> vec = CartesianPosition3D(x=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         y=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         z=Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec = cx.CartesianPosition3D(x=Quantity([[0, 1], [2, 3]], "m"),
+        ...                              y=Quantity([[0, 1], [2, 3]], "m"),
+        ...                              z=Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.T.x
         Quantity['length'](Array([[0., 2.],
                                   [1., 3.]], dtype=float32), unit='m')
@@ -345,12 +388,12 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D
+        >>> import coordinax as cx
 
         We can slice a vector:
 
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                           y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=Quantity(0, "m"))
         >>> vec[0].x
         Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
 
@@ -401,11 +444,11 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         >>> from jax import devices
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D
+        >>> import coordinax as cx
 
         We can move a vector to a new device:
 
-        >>> vec = CartesianPosition1D(x=Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPosition1D(Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
         CartesianPosition1D(
             x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
@@ -425,12 +468,12 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D
+        >>> import coordinax as cx
 
         We can flatten a vector:
 
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=Quantity(0, "m"))
         >>> vec.flatten()
         CartesianPosition2D(
             x=Quantity[PhysicalType('length')](value=f32[4], unit=Unit("m")),
@@ -460,12 +503,12 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D
+        >>> import coordinax as cx
 
         We can reshape a vector:
 
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=Quantity(0, "m"))
 
         >>> vec.reshape(4)
         CartesianPosition2D(
@@ -511,12 +554,12 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D
+        >>> import coordinax as cx
 
         We can get the vector as a mapping:
 
-        >>> vec = CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPosition2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=Quantity(0, "m"))
         >>> vec.asdict()
         {'x': Quantity['length'](Array([[1., 2.], [3., 4.]], dtype=float32), unit='m'),
          'y': Quantity['length'](Array(0., dtype=float32), unit='m')}
@@ -571,10 +614,10 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         --------
         >>> import coordinax as cx
 
-        >>> cx.CartesianPosition2D.constructor(Quantity([1, 2], "m")).sizes
+        >>> cx.CartesianPosition2D.constructor([1, 2], "m").sizes
         mappingproxy({'x': 1, 'y': 1})
 
-        >>> cx.CartesianPosition2D.constructor(Quantity([[1, 2], [1, 2]], "m")).sizes
+        >>> cx.CartesianPosition2D.constructor([[1, 2], [1, 2]], "m").sizes
         mappingproxy({'x': 2, 'y': 2})
 
         """
@@ -606,7 +649,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         >>> units = UnitSystem(u.m, u.s, u.kg, u.rad)
 
-        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "km"))
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
         >>> vec.to_units(units)
         CartesianPosition3D(
             x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -636,11 +679,11 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, SphericalPosition
+        >>> import coordinax as cx
 
         We can convert a vector to the given units:
 
-        >>> cart = CartesianPosition2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
+        >>> cart = cx.CartesianPosition2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
         >>> cart.to_units({"length": "km"})
         CartesianPosition2D(
             x=Quantity[...](value=f32[], unit=Unit("km")),
@@ -649,8 +692,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         This also works for vectors with different units:
 
-        >>> sph = SphericalPosition(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
-        ...                       phi=Quantity(3, "rad"))
+        >>> sph = cx.SphericalPosition(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
+        ...                            phi=Quantity(3, "rad"))
         >>> sph.to_units({"length": "km", "angle": "deg"})
         SphericalPosition(
             r=Distance(value=f32[], unit=Unit("km")),
@@ -685,27 +728,28 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, SphericalPosition
-        >>> from coordinax import ToUnitsOptions
+        >>> import coordinax as cx
 
         We can convert a vector to the given units:
 
-        >>> cart = CartesianPosition2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
+        >>> cart = cx.CartesianPosition2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
 
         If all you want is to convert to consistent units, you can use
         ``"consistent"``:
 
-        >>> cart.to_units(ToUnitsOptions.consistent)
+        >>> cart.to_units(cx.ToUnitsOptions.consistent)
         CartesianPosition2D(
             x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
             y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
         )
 
-        >>> sph.to_units(ToUnitsOptions.consistent)
+        >>> sph = cart.represent_as(cx.SphericalPosition)
+        >>> sph.to_units(cx.ToUnitsOptions.consistent)
         SphericalPosition(
             r=Distance(value=f32[], unit=Unit("m")),
-            theta=Quantity[...](value=f32[], unit=Unit("deg")),
-            phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+            theta=Quantity[...](value=f32[], unit=Unit("rad")),
+            phi=Quantity[...](value=f32[], unit=Unit("rad"))
+        )
 
         """
         units_ = {}
@@ -733,7 +777,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
         >>> str(vec)
         '<CartesianPosition3D (x[m], y[m], z[m])\n    [1. 2. 3.]>'
 
@@ -772,11 +816,11 @@ def constructor(  # noqa: D417
     --------
     >>> import jax.numpy as jnp
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianPosition3D
+    >>> import coordinax as cx
 
     >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-    >>> vec = CartesianPosition3D(x=x, y=y, z=z)
-    >>> cart = CartesianPosition3D.constructor(vec)
+    >>> vec = cx.CartesianPosition3D(x=x, y=y, z=z)
+    >>> cart = cx.CartesianPosition3D.constructor(vec)
     >>> cart
     CartesianPosition3D(
       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
@@ -816,10 +860,10 @@ def constructor(
     --------
     >>> import jax.numpy as jnp
     >>> from astropy.units import Quantity
-    >>> from coordinax import CartesianPosition3D
+    >>> import coordinax as cx
 
     >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
-    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec = cx.CartesianPosition3D.constructor(xs)
     >>> vec
     CartesianPosition3D(
         x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
@@ -829,7 +873,7 @@ def constructor(
 
     >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
     ...       "z": Quantity([5, 6], "m")}
-    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec = cx.CartesianPosition3D.constructor(xs)
     >>> vec
     CartesianPosition3D(
         x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
@@ -859,10 +903,10 @@ def constructor(cls: type[AbstractVector], obj: u.Quantity, /) -> AbstractVector
     --------
     >>> import jax.numpy as jnp
     >>> from astropy.units import Quantity
-    >>> from coordinax import CartesianPosition3D
+    >>> import coordinax as cx
 
     >>> xs = Quantity([1, 2, 3], "meter")
-    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec = cx.CartesianPosition3D.constructor(xs)
     >>> vec
     CartesianPosition3D(
         x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
@@ -871,7 +915,7 @@ def constructor(cls: type[AbstractVector], obj: u.Quantity, /) -> AbstractVector
     )
 
     >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
-    >>> vec = CartesianPosition3D.constructor(xs)
+    >>> vec = cx.CartesianPosition3D.constructor(xs)
     >>> vec
     CartesianPosition3D(
         x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),

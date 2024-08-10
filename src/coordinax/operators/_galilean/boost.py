@@ -49,7 +49,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     >>> import quaxed.array_api as xp
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianVelocity3D, CartesianPosition3D
+    >>> import coordinax as cx
     >>> import coordinax.operators as co
 
     We can then create a boost operator:
@@ -63,8 +63,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
     :meth:`vector.CartesianVelocity3D.constructor`. We can also construct it
     directly:
 
-    >>> boost = CartesianVelocity3D(d_x=Quantity(1, "m/s"), d_y=Quantity(2, "m/s"),
-    ...                                 d_z=Quantity(3, "m/s"))
+    >>> boost = cx.CartesianVelocity3D.constructor([1, 2, 3], "m/s")
     >>> op = co.GalileanBoostOperator(boost)
     >>> op
     GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
@@ -88,7 +87,6 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
         >>> from coordinax.operators import GalileanBoostOperator
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
@@ -105,7 +103,6 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
         >>> from coordinax.operators import GalileanBoostOperator
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
@@ -129,12 +126,11 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
         >>> from coordinax.operators import GalileanBoostOperator
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
 
-        >>> q = CartesianPosition3D.constructor(Quantity([0, 0, 0], "m"))
+        >>> q = cx.CartesianPosition3D.constructor([0, 0, 0], "m")
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newt

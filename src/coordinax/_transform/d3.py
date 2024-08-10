@@ -41,7 +41,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -68,7 +68,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -97,7 +97,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -125,7 +125,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
+    >>> x = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")

@@ -83,9 +83,9 @@ def represent_as(
 
     Now in 2D:
 
-    >>> q = cx.CartesianPosition2D.constructor(Quantity([1.0, 2.0], "km"))
-    >>> p = cx.CartesianVelocity2D.constructor(Quantity([1.0, 2.0], "km/s"))
-    >>> a = cx.CartesianAcceleration2D.constructor(Quantity([1.0, 2.0], "km/s2"))
+    >>> q = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> p = cx.CartesianVelocity2D.constructor([1.0, 2.0], "km/s")
+    >>> a = cx.CartesianAcceleration2D.constructor([1.0, 2.0], "km/s2")
     >>> cx.represent_as(a, cx.PolarAcceleration, p, q)
     PolarAcceleration(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
@@ -94,9 +94,9 @@ def represent_as(
 
     And in 3D:
 
-    >>> q = cx.CartesianPosition3D.constructor(Quantity([1.0, 2.0, 3.0], "km"))
-    >>> p = cx.CartesianVelocity3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s"))
-    >>> a = cx.CartesianAcceleration3D.constructor(Quantity([1.0, 2.0, 3.0], "km/s2"))
+    >>> q = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
+    >>> p = cx.CartesianVelocity3D.constructor([1.0, 2.0, 3.0], "km/s")
+    >>> a = cx.CartesianAcceleration3D.constructor([1.0, 2.0, 3.0], "km/s2")
     >>> cx.represent_as(a, cx.SphericalAcceleration, p, q)
     SphericalAcceleration(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),

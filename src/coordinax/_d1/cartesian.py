@@ -48,8 +48,8 @@ class CartesianPosition1D(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D
-        >>> q = CartesianPosition1D.constructor(Quantity([1], "kpc"))
+        >>> import coordinax as cx
+        >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
         >>> -q
         CartesianPosition1D(
            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
@@ -70,10 +70,10 @@ class CartesianPosition1D(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D, RadialPosition
+        >>> import coordinax as cx
 
-        >>> q = CartesianPosition1D.constructor(Quantity([1], "kpc"))
-        >>> r = RadialPosition.constructor(Quantity([1], "kpc"))
+        >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
+        >>> r = cx.RadialPosition.constructor([1], "kpc")
         >>> qpr = q + r
         >>> qpr
         CartesianPosition1D(
@@ -95,10 +95,10 @@ class CartesianPosition1D(AbstractPosition1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D, RadialPosition
+        >>> import coordinax as cx
 
-        >>> q = CartesianPosition1D.constructor(Quantity([1], "kpc"))
-        >>> r = RadialPosition.constructor(Quantity([1], "kpc"))
+        >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
+        >>> r = cx.RadialPosition.constructor([1], "kpc")
         >>> qmr = q - r
         >>> qmr
         CartesianPosition1D(
@@ -136,8 +136,8 @@ class CartesianVelocity1D(AbstractVelocity1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianVelocity1D
-        >>> q = CartesianVelocity1D.constructor(Quantity([-1], "km/s"))
+        >>> import coordinax as cx
+        >>> q = cx.CartesianVelocity1D.constructor([-1], "km/s")
         >>> q.norm()
         Quantity['speed'](Array(1, dtype=int32), unit='km / s')
 
@@ -184,8 +184,8 @@ class CartesianAcceleration1D(AbstractAcceleration1D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianAcceleration1D
-        >>> q = CartesianAcceleration1D.constructor(Quantity([-1], "km/s2"))
+        >>> import coordinax as cx
+        >>> q = cx.CartesianAcceleration1D.constructor([-1], "km/s2")
         >>> q.norm()
         Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
 

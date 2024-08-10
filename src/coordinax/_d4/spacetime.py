@@ -48,11 +48,11 @@ class FourVector(AbstractPosition4D):
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import FourVector, CartesianPosition3D
+    >>> import coordinax as cx
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
-    >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
     >>> w
     FourVector(
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
@@ -66,9 +66,9 @@ class FourVector(AbstractPosition4D):
 
     We can also create the 3D vector explicitly:
 
-    >>> q = CartesianPosition3D(x=Quantity(1, "m"), y=Quantity(2, "m"),
-    ...                       z=Quantity(3, "m"))
-    >>> w = FourVector(t=Quantity(1, "s"), q=q)
+    >>> q = cx.CartesianPosition3D(x=Quantity(1, "m"), y=Quantity(2, "m"),
+    ...                            z=Quantity(3, "m"))
+    >>> w = cx.FourVector(t=Quantity(1, "s"), q=q)
 
     """
 
@@ -122,10 +122,10 @@ class FourVector(AbstractPosition4D):
         --------
         >>> import jax.numpy as jnp
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector
+        >>> import coordinax as cx
 
         >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
-        >>> vec = FourVector.constructor(xs)
+        >>> vec = cx.FourVector.constructor(xs)
         >>> vec
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
@@ -133,7 +133,7 @@ class FourVector(AbstractPosition4D):
         )
 
         >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
-        >>> vec = FourVector.constructor(xs)
+        >>> vec = cx.FourVector.constructor(xs)
         >>> vec
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
@@ -160,9 +160,9 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, CartesianPosition3D
+        >>> import coordinax as cx
 
-        >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.x
         Quantity['length'](Array(1., dtype=float32), unit='m')
 
@@ -192,9 +192,9 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, CartesianPosition3D
+        >>> import coordinax as cx
 
-        >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> -w
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
@@ -214,10 +214,10 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, CartesianPosition3D
+        >>> import coordinax as cx
 
-        >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-        >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+        >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
         >>> w3 = w1 + w2
         >>> w3
         FourVector(
@@ -241,10 +241,10 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, CartesianPosition3D
+        >>> import coordinax as cx
 
-        >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-        >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+        >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
         >>> w3 = w1 - w2
         >>> w3
         FourVector(
@@ -270,9 +270,9 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, CartesianPosition3D
+        >>> import coordinax as cx
 
-        >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w._norm2()
         Quantity['area'](Array(8.987552e+16, dtype=float32), unit='m2')
 
@@ -286,9 +286,9 @@ class FourVector(AbstractPosition4D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import FourVector, CartesianPosition3D
+        >>> import coordinax as cx
 
-        >>> w = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
         >>> w.norm()
         Quantity['length'](Array(2.9979248e+08+0.j, dtype=complex64), unit='m')
 
@@ -321,10 +321,10 @@ def constructor(
     --------
     >>> import jax.numpy as jnp
     >>> from astropy.units import Quantity
-    >>> from coordinax import FourVector
+    >>> import coordinax as cx
 
     >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
-    >>> vec = FourVector.constructor(xs)
+    >>> vec = cx.FourVector.constructor(xs)
     >>> vec
     FourVector(
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
@@ -332,7 +332,7 @@ def constructor(
     )
 
     >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
-    >>> vec = FourVector.constructor(xs)
+    >>> vec = cx.FourVector.constructor(xs)
     >>> vec
     FourVector(
         t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
