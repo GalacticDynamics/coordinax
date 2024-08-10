@@ -455,9 +455,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         """Subtract an object from this vector."""
         return qlax.sub(self, other)
 
-    @dispatch  # type: ignore[misc]
     def __truediv__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        return NotImplemented
+        return qlax.div(self, other)
 
     def to_device(self, device: None | Device = None) -> "Self":
         """Move the vector to a new device.

@@ -113,15 +113,6 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         cart = self.represent_as(self._cartesian_cls)
         return (-cart).represent_as(type(self))
 
-    # -----------------------------------------------------
-    # Binary arithmetic operations
-
-    @AbstractVector.__truediv__.dispatch  # type: ignore[misc]
-    def __truediv__(
-        self: "AbstractPosition", other: ArrayLike
-    ) -> "AbstractPosition":  # TODO: use Self
-        return replace(self, **{k: v / other for k, v in field_items(self)})
-
     # ===============================================================
     # Convenience methods
 
@@ -397,6 +388,26 @@ def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
     lq = convert(lhs.represent_as(lhs._cartesian_cls), Quantity)  # noqa: SLF001
     rq = convert(rhs.represent_as(rhs._cartesian_cls), Quantity)  # noqa: SLF001
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
+
+
+@register(jax.lax.div_p)  # type: ignore[misc]
+def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
+    """Divide a vector by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as jnp
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> jnp.divide(vec, 2).x
+    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+
+    >>> (vec / 2).x
+    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+
+    """
+    return replace(lhs, **{k: xp.divide(v, rhs) for k, v in field_items(lhs)})
 
 
 # ------------------------------------------------
