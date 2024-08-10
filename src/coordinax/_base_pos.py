@@ -121,6 +121,20 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         """Negate the vector.
 
         The default implementation is to go through Cartesian coordinates.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> -vec
+        CartesianPosition3D(
+            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+        )
+        >>> (-vec).x
+        Quantity['length'](Array(-1., dtype=float32), unit='m')
+
         """
         cart = self.represent_as(self._cartesian_cls)
         return (-cart).represent_as(type(self))
