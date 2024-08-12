@@ -166,9 +166,10 @@ class MathSphericalPosition(AbstractSphericalPosition):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import MathSphericalPosition
-        >>> s = MathSphericalPosition(r=Quantity(3, "kpc"), theta=Quantity(90, "deg"),
-        ...                         phi=Quantity(0, "deg"))
+        >>> import coordinax as cx
+        >>> s = cx.MathSphericalPosition(r=Quantity(3, "kpc"),
+        ...                              theta=Quantity(90, "deg"),
+        ...                              phi=Quantity(0, "deg"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -280,9 +281,10 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import LonLatSphericalPosition
-        >>> s = LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(90, "deg"),
-        ...                           distance=Quantity(3, "kpc"))
+        >>> import coordinax as cx
+        >>> s = cx.LonLatSphericalPosition(lon=Quantity(0, "deg"),
+        ...                                lat=Quantity(90, "deg"),
+        ...                                distance=Quantity(3, "kpc"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 

@@ -64,8 +64,8 @@ class CylindricalPosition(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CylindricalPosition
-        >>> c = CylindricalPosition(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
+        >>> import coordinax as cx
+        >>> c = cx.CylindricalPosition(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
         ...                       z=Quantity(4, "kpc"))
         >>> c.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')

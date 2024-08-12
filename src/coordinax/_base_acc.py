@@ -45,12 +45,12 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import CartesianAcceleration3D, SphericalAcceleration
+        >>> import coordinax as cx
 
-        >>> CartesianAcceleration3D._cartesian_cls
+        >>> cx.CartesianAcceleration3D._cartesian_cls
         <class 'coordinax...CartesianAcceleration3D'>
 
-        >>> SphericalAcceleration._cartesian_cls
+        >>> cx.SphericalAcceleration._cartesian_cls
         <class 'coordinax...CartesianAcceleration3D'>
 
         """
@@ -65,12 +65,12 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialAcceleration, SphericalAcceleration
+        >>> import coordinax as cx
 
-        >>> RadialAcceleration.integral_cls.__name__
+        >>> cx.RadialAcceleration.integral_cls.__name__
         'RadialVelocity'
 
-        >>> SphericalAcceleration.integral_cls.__name__
+        >>> cx.SphericalAcceleration.integral_cls.__name__
         'SphericalVelocity'
 
         """
@@ -92,13 +92,13 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import RadialVelocity
-        >>> dr = RadialVelocity(Quantity(1, "m/s"))
+        >>> import coordinax as cx
+
+        >>> dr = cx.RadialVelocity(Quantity(1, "m/s"))
         >>> -dr
         RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-        >>> from coordinax import PolarVelocity
-        >>> dp = PolarVelocity(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
+        >>> dp = cx.PolarVelocity(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
         >>> neg_dp = -dp
         >>> neg_dp.d_r
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
@@ -118,9 +118,9 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import RadialAcceleration
+        >>> import coordinax as cx
 
-        >>> d2r = RadialAcceleration(Quantity(1, "m/s2"))
+        >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
         >>> vec = d2r * Quantity(2, "s")
         >>> vec
         RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )

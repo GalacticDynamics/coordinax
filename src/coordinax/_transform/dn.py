@@ -22,8 +22,8 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
     >>> from unxt import Quantity
 
     >>> w = cx.Space(
-    ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-    ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+    ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.PoincarePolarVector)
@@ -49,7 +49,7 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
             d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
         )} )
 
-    """  # noqa: E501
+    """
     phi = xp.atan2(w.d_pp_phi, w.pp_phi)
     d_phi = (w.pp_phi**2 + w.d_pp_phi**2) / 2 / w.rho**2  # TODO: note the abs
 

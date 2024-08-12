@@ -55,12 +55,12 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialPosition, SphericalPosition
+        >>> import coordinax as cx
 
-        >>> RadialPosition._cartesian_cls
+        >>> cx.RadialPosition._cartesian_cls
         <class 'coordinax...CartesianPosition1D'>
 
-        >>> SphericalPosition._cartesian_cls
+        >>> cx.SphericalPosition._cartesian_cls
         <class 'coordinax...CartesianPosition3D'>
 
         """
@@ -75,12 +75,12 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from coordinax import RadialPosition, SphericalPosition
+        >>> import coordinax as cx
 
-        >>> RadialPosition.differential_cls.__name__
+        >>> cx.RadialPosition.differential_cls.__name__
         'RadialVelocity'
 
-        >>> SphericalPosition.differential_cls.__name__
+        >>> cx.SphericalPosition.differential_cls.__name__
         'SphericalVelocity'
 
         """
@@ -97,12 +97,11 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.CartesianPosition3D.constructor(
-        ...     Quantity([[1, 2, 3], [4, 5, 6]], "m"))
+        >>> vec = cx.CartesianPosition3D.constructor([[1, 2, 3], [4, 5, 6]], "m")
         >>> vec.aval()
         ConcreteArray([[1. 2. 3.]
                        [4. 5. 6.]], dtype=float32)
@@ -166,7 +165,7 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
         >>> (vec * 2).x
         Quantity['length'](Array(2., dtype=float32), unit='m')
 
@@ -182,7 +181,7 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
         >>> (2 * vec).x
         Quantity['length'](Array(2., dtype=float32), unit='m')
 
@@ -226,13 +225,13 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         We assume the following imports:
 
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, SphericalPosition
+        >>> import coordinax as cx
 
         We can represent a vector as another type:
 
         >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-        >>> vec = CartesianPosition3D(x=x, y=y, z=z)
-        >>> sph = vec.represent_as(SphericalPosition)
+        >>> vec = cx.CartesianPosition3D(x=x, y=y, z=z)
+        >>> sph = vec.represent_as(cx.SphericalPosition)
         >>> sph
         SphericalPosition(
             r=Distance(value=f32[], unit=Unit("m")),
@@ -263,14 +262,11 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition1D, RadialPosition
-
-        >>> v = cx.CartesianPosition1D.constructor(Quantity([-1], "kpc"))
+        >>> v = cx.CartesianPosition1D.constructor([-1], "kpc")
         >>> v.norm()
         Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
-        >>> v = cx.CartesianPosition2D.constructor(Quantity([3, 4], "kpc"))
+        >>> v = cx.CartesianPosition2D.constructor([3, 4], "kpc")
         >>> v.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
 
@@ -278,7 +274,7 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         >>> v.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
-        >>> v = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> v = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
         >>> v.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
 
@@ -319,7 +315,7 @@ def _mul_p_vq(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     >>> import coordinax as cx
     >>> import quaxed.array_api as jnp
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
     >>> jnp.multiply(2, vec)
     CartesianPosition3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -413,7 +409,7 @@ def _mul_p_qv(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
     >>> jnp.multiply(vec, 2)
     CartesianPosition3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),

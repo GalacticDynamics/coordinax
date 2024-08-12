@@ -258,7 +258,7 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[u.Quantity, "*batch 3"]:
     >>> from plum import convert
     >>> from astropy.units import Quantity
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
     >>> convert(vec, Quantity)
     <Quantity [1., 2., 3.] kpc>
 
@@ -289,11 +289,11 @@ def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[u.Quantity, "*batch 3"]
     >>> from plum import convert
     >>> from astropy.units import Quantity
 
-    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
     >>> convert(dif, Quantity)
     <Quantity [1., 2., 3.] km / s>
 
-    >>> dif2 = cx.CartesianAcceleration3D.constructor(Quantity([1, 2, 3], unit="km/s2"))
+    >>> dif2 = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
     >>> convert(dif2, Quantity)
     <Quantity [1., 2., 3.] km / s2>
 
@@ -315,7 +315,7 @@ def cart3_to_apycart3(obj: CartesianPosition3D, /) -> apyc.CartesianRepresentati
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
     >>> convert(vec, apyc.CartesianRepresentation)
     <CartesianRepresentation (x, y, z) in kpc
         (1., 2., 3.)>
@@ -531,7 +531,7 @@ def diffcart3_to_apycart3(obj: CartesianVelocity3D, /) -> apyc.CartesianDifferen
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
     >>> convert(dif, apyc.CartesianDifferential)
     <CartesianDifferential (d_x, d_y, d_z) in km / s
         (1., 2., 3.)>

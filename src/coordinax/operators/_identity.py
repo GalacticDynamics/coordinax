@@ -97,10 +97,10 @@ class IdentityOperator(AbstractOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
+        >>> import coordinax as cx
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
         >>> t = Quantity(0, "Gyr")
         >>> op = IdentityOperator()
         >>> op.is_inertial
@@ -116,7 +116,6 @@ class IdentityOperator(AbstractOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
         >>> from coordinax.operators import IdentityOperator
 
         >>> op = IdentityOperator()
@@ -141,10 +140,10 @@ class IdentityOperator(AbstractOperator):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
+        >>> import coordinax as cx
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
         >>> op = IdentityOperator()
         >>> op(q) is q
         True

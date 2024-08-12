@@ -22,8 +22,8 @@ def represent_as(w: Space, target: type[Space]) -> Space:
     >>> from unxt import Quantity
 
     >>> w = cx.Space(
-    ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-    ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+    ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.Space)
@@ -31,7 +31,7 @@ def represent_as(w: Space, target: type[Space]) -> Space:
         'length': CartesianPosition3D( ... ),
         'speed': CartesianVelocity3D( ... )} )
 
-    """  # noqa: E501
+    """
     return w
 
 
@@ -45,8 +45,8 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     >>> from unxt import Quantity
 
     >>> w = cx.Space(
-    ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-    ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+    ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.PoincarePolarVector)
@@ -59,7 +59,7 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
         d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
     )
 
-    """  # noqa: E501
+    """
     q = w["length"].represent_as(CylindricalPosition)
     p = w["speed"].represent_as(CylindricalVelocity, q)
 

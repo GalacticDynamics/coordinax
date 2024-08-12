@@ -59,8 +59,8 @@ class CartesianPosition3D(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D
-        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
+        >>> import coordinax as cx
+        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
         >>> (-q).x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
 
@@ -79,9 +79,9 @@ class CartesianPosition3D(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, SphericalPosition
-        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        >>> import coordinax as cx
+        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+        >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> (q + s).x
         Quantity['length'](Array(2., dtype=float32), unit='kpc')
@@ -99,9 +99,9 @@ class CartesianPosition3D(AbstractPosition3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition3D, SphericalPosition
-        >>> q = CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
-        >>> s = SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+        >>> import coordinax as cx
+        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+        >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
         ...                     phi=Quantity(0, "deg"))
         >>> (q - s).x
         Quantity['length'](Array(0., dtype=float32), unit='kpc')
@@ -147,10 +147,8 @@ class CartesianVelocity3D(AbstractVelocity3D, AdditionMixin):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianVelocity3D
-        >>> c = CartesianVelocity3D(d_x=Quantity(1, "km/s"),
-        ...                              d_y=Quantity(2, "km/s"),
-        ...                              d_z=Quantity(3, "km/s"))
+        >>> import coordinax as cx
+        >>> c = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
         >>> c.norm()
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 
@@ -219,10 +217,8 @@ class CartesianAcceleration3D(AbstractAcceleration3D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianAcceleration3D
-        >>> c = CartesianAcceleration3D(d2_x=Quantity(1, "km/s2"),
-        ...                             d2_y=Quantity(2, "km/s2"),
-        ...                             d2_z=Quantity(3, "km/s2"))
+        >>> import coordinax as cx
+        >>> c = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
         >>> c.norm()
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
@@ -243,7 +239,7 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPosition3D, /) -> CartesianPosition3D
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "kpc"))
+    >>> v = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
     >>> xp.multiply(2, v).x
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 

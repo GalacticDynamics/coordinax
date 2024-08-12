@@ -53,9 +53,9 @@ class CartesianPosition2D(AbstractPosition2D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D
+        >>> import coordinax as cx
 
-        >>> q = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
+        >>> q = cx.CartesianPosition2D.constructor([1, 2], "kpc")
         >>> (-q).x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
 
@@ -74,9 +74,9 @@ class CartesianPosition2D(AbstractPosition2D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, PolarPosition
-        >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
-        >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> import coordinax as cx
+        >>> cart = cx.CartesianPosition2D.constructor([1, 2], "kpc")
+        >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
         >>> (cart + polr).x
         Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
@@ -94,9 +94,9 @@ class CartesianPosition2D(AbstractPosition2D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianPosition2D, PolarPosition
-        >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
-        >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> import coordinax as cx
+        >>> cart = cx.CartesianPosition2D.constructor([1, 2], "kpc")
+        >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
         >>> (cart - polr).x
         Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
@@ -157,8 +157,8 @@ class CartesianAcceleration2D(AbstractAcceleration2D):
         Examples
         --------
         >>> from unxt import Quantity
-        >>> from coordinax import CartesianAcceleration2D
-        >>> v = CartesianAcceleration2D.constructor(Quantity([3, 4], "km/s2"))
+        >>> import coordinax as cx
+        >>> v = cx.CartesianAcceleration2D.constructor([3, 4], "km/s2")
         >>> v.norm()
         Quantity['acceleration'](Array(5., dtype=float32), unit='km / s2')
 
@@ -179,7 +179,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosition
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition2D.constructor(Quantity([3, 4], "m"))
+    >>> v = cx.CartesianPosition2D.constructor([3, 4], "m")
     >>> xp.multiply(5, v).x
     Quantity['length'](Array(15., dtype=float32), unit='m')
 

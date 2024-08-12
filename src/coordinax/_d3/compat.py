@@ -28,7 +28,7 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
     >>> from plum import convert
     >>> from unxt import Quantity
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], unit="kpc"))
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
     >>> convert(vec, Quantity)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
@@ -40,8 +40,8 @@ def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3
                        unit='kpc')
 
     >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
-    ...                            phi=Quantity(2, unit="deg"),
-    ...                            z=Quantity(3, unit="pc"))
+    ...                              phi=Quantity(2, unit="deg"),
+    ...                              z=Quantity(3, unit="pc"))
     >>> convert(vec, Quantity)
     Quantity['length'](Array([0.99939084, 0.0348995 , 0.003     ], dtype=float32),
                        unit='kpc')
@@ -62,11 +62,11 @@ def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*ba
     >>> from plum import convert
     >>> from unxt import Quantity
 
-    >>> dif = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], unit="km/s"))
+    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
     >>> convert(dif, Quantity)
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
 
-    >>> dif2 = cx.CartesianAcceleration3D.constructor(Quantity([1, 2, 3], unit="km/s2"))
+    >>> dif2 = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
     >>> convert(dif2, Quantity)
     Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
 

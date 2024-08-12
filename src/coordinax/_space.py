@@ -66,9 +66,9 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
     >>> import coordinax as cx
     >>> from unxt import Quantity
 
-    >>> x = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "km"))
-    >>> v = cx.CartesianVelocity3D.constructor(Quantity([4, 5, 6], "km/s"))
-    >>> a = cx.CartesianAcceleration3D.constructor(Quantity([7, 8, 9], "km/s^2"))
+    >>> x = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
+    >>> v = cx.CartesianVelocity3D.constructor([4, 5, 6], "km/s")
+    >>> a = cx.CartesianAcceleration3D.constructor([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> space
@@ -159,8 +159,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
         >>> w.mT
         Space({
@@ -187,8 +187,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s")) )
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s") )
 
         >>> w.ndim
         2
@@ -206,8 +206,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.shape
@@ -226,8 +226,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s")) )
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s") )
 
         >>> w.size
         2
@@ -245,8 +245,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.T
@@ -277,8 +277,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> (-w)["length"].x
@@ -295,8 +295,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> import coordinax as cx
         >>> from unxt import Quantity
 
-        >>> q = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
-        >>> p = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], "m/s"))
+        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> p = cx.CartesianVelocity3D.constructor([1, 2, 3], "m/s")
         >>> w = cx.Space(length=q, speed=p)
         >>> w
         Space({
@@ -369,8 +369,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.dtypes
@@ -390,8 +390,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.devices
@@ -412,8 +412,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.shapes
@@ -432,8 +432,8 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m")),
-        ...     speed=cx.CartesianVelocity3D.constructor(Quantity([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.sizes
