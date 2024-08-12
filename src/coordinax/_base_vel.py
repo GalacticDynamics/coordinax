@@ -110,7 +110,8 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> dr = cx.RadialVelocity(Quantity(1, "m/s"))
+
+        >>> dr = cx.RadialVelocity.constructor([1], "m/s")
         >>> -dr
         RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 

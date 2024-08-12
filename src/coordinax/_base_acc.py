@@ -94,18 +94,19 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> dr = cx.RadialVelocity(Quantity(1, "m/s"))
-        >>> -dr
-        RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+        >>> d2r = cx.RadialAcceleration.constructor([1], "m/s2")
+        >>> -d2r
+        RadialAcceleration(
+            d2_r=Quantity[PhysicalType('acceleration')](value=i32[], unit=Unit("m / s2")) )
 
-        >>> dp = cx.PolarVelocity(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
-        >>> neg_dp = -dp
-        >>> neg_dp.d_r
-        Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
-        >>> neg_dp.d_phi
-        Quantity['angular frequency'](Array(-1., dtype=float32), unit='mas / yr')
+        >>> d2p = cx.PolarAcceleration(Quantity(1, "m/s2"), Quantity(1, "mas/yr2"))
+        >>> neg_d2p = -d2p
+        >>> neg_d2p.d2_r
+        Quantity['acceleration'](Array(-1., dtype=float32), unit='m / s2')
+        >>> neg_d2p.d2_phi
+        Quantity['angular acceleration'](Array(-1., dtype=float32), unit='mas / yr2')
 
-        """
+        """  # noqa: E501
         return replace(self, **{k: -v for k, v in field_items(self)})
 
     # ===============================================================

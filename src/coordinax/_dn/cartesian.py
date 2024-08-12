@@ -108,8 +108,8 @@ class CartesianPositionND(AbstractPositionND):
 
         A 3D vector:
 
-        >>> q = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
-        >>> (-q).q
+        >>> vec = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> (-vec).q
         Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
 
         """
