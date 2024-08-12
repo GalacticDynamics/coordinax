@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPositionND", "AbstractPositionNDDifferential"]
+__all__ = ["AbstractPositionND", "AbstractVelocityND"]
 
 
 from abc import abstractmethod
@@ -82,7 +82,7 @@ class AbstractPositionND(AbstractPosition):
         return replace(self, q=self.q.reshape(*hape, self.q.shape[-1], order=order))
 
 
-class AbstractPositionNDDifferential(AbstractVelocity):
+class AbstractVelocityND(AbstractVelocity):
     """Abstract representation of N-D vector differentials."""
 
     @classproperty

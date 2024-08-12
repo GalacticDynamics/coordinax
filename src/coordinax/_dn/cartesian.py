@@ -20,7 +20,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 import coordinax._typing as ct
-from .base import AbstractPositionND, AbstractPositionNDDifferential
+from .base import AbstractPositionND, AbstractVelocityND
 from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._utils import classproperty
@@ -233,7 +233,7 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionN
 
 
 @final
-class CartesianVelocityND(AbstractPositionNDDifferential):
+class CartesianVelocityND(AbstractVelocityND):
     """Cartesian differential representation.
 
     Examples
