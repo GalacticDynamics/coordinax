@@ -1,13 +1,10 @@
 """Built-in vector classes."""
 
-__all__ = [
-    "CartesianPositionND",
-    "CartesianVelocityND",
-]
+__all__ = ["CartesianPositionND", "CartesianVelocityND", "CartesianAccelerationND"]
 
 from dataclasses import replace
 from functools import partial
-from typing import final
+from typing import NoReturn, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -20,7 +17,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 import coordinax._typing as ct
-from .base import AbstractPositionND, AbstractVelocityND
+from .base import AbstractAccelerationND, AbstractPositionND, AbstractVelocityND
 from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._utils import classproperty
@@ -300,8 +297,7 @@ class CartesianVelocityND(AbstractVelocityND):
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAccelerationND"]:
-        msg = "Not yet supported"
-        raise NotImplementedError(msg)  # TODO: Implement this
+        return CartesianAccelerationND
 
     @partial(jax.jit)
     def norm(self, _: AbstractPositionND | None = None, /) -> ct.BatchableSpeed:
@@ -320,3 +316,121 @@ class CartesianVelocityND(AbstractVelocityND):
 
         """
         return xp.linalg.vector_norm(self.d_q, axis=-1)
+
+
+##############################################################################
+# Acceleration
+
+
+@final
+class CartesianAccelerationND(AbstractAccelerationND):
+    """Cartesian N-dimensional acceleration representation.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    A 1D vector:
+
+    >>> q = cx.CartesianAccelerationND(Quantity([[1]], "km/s2"))
+    >>> q.d2_q
+    Quantity['acceleration'](Array([[1.]], dtype=float32), unit='km / s2')
+    >>> q.shape
+    (1,)
+
+    A 2D vector:
+
+    >>> q = cx.CartesianAccelerationND(Quantity([1, 2], "km/s2"))
+    >>> q.d2_q
+    Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
+    >>> q.shape
+    ()
+
+    A 3D vector:
+
+    >>> q = cx.CartesianAccelerationND(Quantity([1, 2, 3], "km/s2"))
+    >>> q.d2_q
+    Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
+    >>> q.shape
+    ()
+
+    A 4D vector:
+
+    >>> q = cx.CartesianAccelerationND(Quantity([1, 2, 3, 4], "km/s2"))
+    >>> q.d2_q
+    Quantity['acceleration'](Array([1., 2., 3., 4.], dtype=float32), unit='km / s2')
+    >>> q.shape
+    ()
+
+    A 5D vector:
+
+    >>> q = cx.CartesianAccelerationND(Quantity([1, 2, 3, 4, 5], "km/s2"))
+    >>> q.d2_q
+    Quantity['acceleration'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='km / s2')
+    >>> q.shape
+    ()
+
+    """
+
+    d2_q: ct.BatchableAcc = eqx.field(
+        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+    )
+    r"""N-D acceleration :math:`d\vec{x}/dt^2 \in (-\infty, \infty).
+
+    Should have shape (*batch, F) where F is the number of features /
+    dimensions. Arbitrary batch shapes are supported.
+    """
+
+    @classproperty
+    @classmethod
+    def integral_cls(cls) -> type[CartesianVelocityND]:
+        """Return the integral class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.CartesianAccelerationND.integral_cls.__name__
+        'CartesianVelocityND'
+
+        """
+        return CartesianVelocityND
+
+    @classproperty
+    @classmethod
+    def differential_cls(cls) -> NoReturn:
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> try: cx.CartesianAccelerationND.differential_cls
+        ... except NotImplementedError as e: print(e)
+        Not yet supported
+
+        """
+        msg = "Not yet supported"
+        raise NotImplementedError(msg)  # TODO: Implement this
+
+    @partial(jax.jit)
+    def norm(
+        self,
+        velocity: AbstractVelocityND | None = None,  # noqa: ARG002
+        position: AbstractPositionND | None = None,  # noqa: ARG002
+        /,
+    ) -> ct.BatchableSpeed:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        A 3D vector:
+
+        >>> c = cx.CartesianAccelerationND(Quantity([1, 2, 3], "km/s2"))
+        >>> c.norm()
+        Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
+
+        """
+        return xp.linalg.vector_norm(self.d2_q, axis=-1)
