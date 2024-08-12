@@ -58,7 +58,6 @@ class CartesianPosition3D(AbstractPosition3D):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
         >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
         >>> (-q).x

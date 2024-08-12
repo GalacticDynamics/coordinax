@@ -103,11 +103,12 @@ class CartesianPositionND(AbstractPositionND):
 
         Examples
         --------
+        >>> from unxt import Quantity
         >>> import coordinax as cx
 
         A 3D vector:
 
-        >>> vec = cx.CartesianPositionND.constructor([1, 2, 3], "kpc")
+        >>> vec = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
         >>> (-vec).q
         Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
 
