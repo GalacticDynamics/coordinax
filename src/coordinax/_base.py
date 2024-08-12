@@ -193,7 +193,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # ===============================================================
     # Quax
 
-    def materialise(self) -> None:
+    def materialise(self) -> NoReturn:
         msg = "Refusing to materialise `Quantity`."
         raise RuntimeError(msg)
 
