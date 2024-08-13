@@ -688,3 +688,31 @@ def represent_as(
     current = represent_as(current, LonLatSphericalVelocity, posvec)
     # Transform the position to the required type
     return represent_as(current, target, posvec)
+
+
+# =============================================================================
+# CartesianVelocity3D
+
+
+@dispatch
+def represent_as(
+    current: CartesianVelocity3D, target: type[CartesianVelocity3D], /
+) -> CartesianVelocity3D:
+    """CartesianVelocity3D -> CartesianVelocity3D with no position.
+
+    Cartesian coordinates are an affine coordinate system and so the
+    transformation of an n-th order derivative vector in this system do not
+    require lower-order derivatives to be specified. See
+    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
+    information. This mixin provides a corresponding implementation of the
+    `coordinax.represent_as` method for Cartesian velocities.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> v = cx.CartesianVelocity3D.constructor([1, 1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVelocity3D) is v
+    True
+
+    """
+    return current

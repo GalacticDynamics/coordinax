@@ -137,3 +137,31 @@ def represent_as(
     The `r` coordinate is converted to the `x` coordinate of the 1D system.
     """
     return target(x=current.r.distance)
+
+
+# =============================================================================
+# CartesianVelocity1D
+
+
+@dispatch
+def represent_as(
+    current: CartesianVelocity1D, target: type[CartesianVelocity1D], /
+) -> CartesianVelocity1D:
+    """CartesianVelocity1D -> CartesianVelocity1D with no position.
+
+    Cartesian coordinates are an affine coordinate system and so the
+    transformation of an n-th order derivative vector in this system do not
+    require lower-order derivatives to be specified. See
+    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
+    information. This mixin provides a corresponding implementation of the
+    `coordinax.represent_as` method for Cartesian velocities.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> v = cx.CartesianVelocity1D.constructor([1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVelocity1D) is v
+    True
+
+    """
+    return current

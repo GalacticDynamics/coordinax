@@ -630,7 +630,7 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
         assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.array_equal(
             cylindrical.d_rho,
-            Quantity([9.805807, 11.384199, 12.86803, 14.310835], "km/s"),
+            Quantity([9.805806, 11.384199, 12.86803, 14.310835], "km/s"),
         )
         assert qnp.allclose(
             cylindrical.d_phi,

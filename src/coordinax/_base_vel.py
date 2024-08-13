@@ -2,7 +2,6 @@
 
 __all__ = ["AbstractVelocity"]
 
-import warnings
 from abc import abstractmethod
 from dataclasses import replace
 from functools import partial
@@ -20,7 +19,7 @@ from ._utils import classproperty
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-DT = TypeVar("DT", bound="AbstractVelocity")
+VelT = TypeVar("VelT", bound="AbstractVelocity")
 
 DIFFERENTIAL_CLASSES: set[type["AbstractVelocity"]] = set()
 
@@ -152,17 +151,54 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
-    @partial(jax.jit, static_argnums=1)
     def represent_as(
-        self, target: type[DT], position: AbstractPosition, /, *args: Any, **kwargs: Any
-    ) -> DT:
-        """Represent the vector as another type."""
-        if any(args):
-            warnings.warn("Extra arguments are ignored.", UserWarning, stacklevel=2)
+        self,
+        target: type[VelT],
+        /,
+        *args: Any,
+        **kwargs: Any,
+    ) -> VelT:
+        """Represent the vector as another type.
 
+        This just forwards to `coordinax.represent_as`.
+
+        Parameters
+        ----------
+        target : type[`coordinax.AbstractVelocity`]
+            The type to represent the vector as.
+        *args, **kwargs : Any
+            Extra arguments. These are passed to `coordinax.represent_as` and
+            might be used, depending on the dispatched method. Generally the
+            first argument is the position (`coordinax.AbstractPosition`) at
+            which the velocity is defined. In general this is a required
+            argument, though it is not for Cartesian-to-Cartesian transforms --
+            see https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates
+            for more information.
+
+        Returns
+        -------
+        `coordinax.AbstractVelocity`
+            The vector represented as the target type.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> p = cx.CartesianVelocity3D.constructor([4, 5, 6], "m/s")
+        >>> sph = p.represent_as(cx.SphericalVelocity, q)
+        >>> sph
+        SphericalVelocity(
+            d_r=Quantity[...)]( value=f32[], unit=Unit("m / s") ),
+            d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
+            d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+        )
+        >>> sph.d_r
+        Quantity['speed'](Array(8.55236, dtype=float32), unit='m / s')
+
+        """
         from ._transform import represent_as  # pylint: disable=import-outside-toplevel
 
-        return represent_as(self, target, position, **kwargs)
+        return represent_as(self, target, *args, **kwargs)
 
     @partial(jax.jit)
     def norm(self, position: AbstractPosition, /) -> Quantity["speed"]:
