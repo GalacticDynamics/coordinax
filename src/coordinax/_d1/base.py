@@ -8,6 +8,7 @@ from dataclasses import fields
 
 from jaxtyping import Shaped
 
+import quaxed.numpy as jnp
 from unxt import Quantity
 
 from coordinax._base import AbstractVector
@@ -35,9 +36,11 @@ class AbstractPosition1D(AbstractPosition):
 
 
 # TODO: move to the class in py3.11+
-@AbstractPosition.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
-    cls: type[AbstractPosition1D], x: Shaped[Quantity["length"], ""], /
+    cls: type[AbstractPosition1D],
+    x: Shaped[Quantity["length"], "*batch"] | Shaped[Quantity["length"], "*batch 1"],
+    /,
 ) -> AbstractPosition1D:
     """Construct a 1D vector.
 
@@ -46,14 +49,21 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition1D.constructor(Quantity(1, "kpc"))
-    >>> q
+    >>> cx.CartesianPosition1D.constructor(Quantity(1, "meter"))
     CartesianPosition1D(
-        x=Quantity[PhysicalType('length')](value=f32[1], unit=Unit("kpc"))
+        x=Quantity[...](value=f32[], unit=Unit("m"))
+    )
+
+    >>> cx.CartesianPosition1D.constructor(Quantity([1], "meter"))
+    CartesianPosition1D(
+        x=Quantity[...](value=f32[], unit=Unit("m"))
     )
 
     """
-    return cls(**{fields(cls)[0].name: x.reshape(1)})
+    return cls(**{fields(cls)[0].name: jnp.atleast_1d(x)[..., 0]})
+
+
+#####################################################################
 
 
 class AbstractVelocity1D(AbstractVelocity):
@@ -77,6 +87,9 @@ class AbstractVelocity1D(AbstractVelocity):
     @abstractmethod
     def differential_cls(cls) -> type[AbstractAcceleration]:
         raise NotImplementedError
+
+
+#####################################################################
 
 
 class AbstractAcceleration1D(AbstractAcceleration):

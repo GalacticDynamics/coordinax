@@ -103,12 +103,12 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     def constructor(cls: "type[AbstractVector]", obj: Quantity, /) -> "AbstractVector":
         """Construct a vector from a Quantity array.
 
-        The array is expected to have the components as the last dimension.
+        The array is expected to have the components as the last axis.
 
         Parameters
         ----------
         obj : Quantity[Any, (*#batch, N), "..."]
-            The array of components.
+            The array with batches and N components.
 
         Examples
         --------
@@ -116,28 +116,36 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> xs = Quantity([1, 2, 3], "meter")
-        >>> vec = cx.CartesianPosition3D.constructor(xs)
+        (The 1D cases are handled by a different dispatch)
+
+        >>> vec = cx.CartesianPosition2D.constructor(Quantity([1, 2], "meter"))
+        >>> vec
+        CartesianPosition2D(
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m"))
+        )
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "meter"))
         >>> vec
         CartesianPosition3D(
-            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m")),
+            z=Quantity[...](value=f32[], unit=Unit("m"))
         )
 
         >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
         >>> vec = cx.CartesianPosition3D.constructor(xs)
         >>> vec
         CartesianPosition3D(
-            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+            x=Quantity[...](value=f32[2], unit=Unit("m")),
+            y=Quantity[...](value=f32[2], unit=Unit("m")),
+            z=Quantity[...](value=f32[2], unit=Unit("m"))
         )
         >>> vec.x
         Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
 
         """
-        _ = eqx.error_if(
+        obj = eqx.error_if(
             obj,
             obj.shape[-1] != len(fields(cls)),
             f"Cannot construct {cls} from array with shape {obj.shape}.",
@@ -244,13 +252,13 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         We can get the number of dimensions of a vector:
 
-        >>> vec = cx.CartesianPosition1D(Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPosition2D.constructor([1, 2], "m")
+        >>> vec.ndim
+        0
+
+        >>> vec = cx.CartesianPosition2D.constructor([[1, 2], [3, 4]], "m")
         >>> vec.ndim
         1
-
-        >>> vec = cx.CartesianPosition1D(Quantity([[1, 2], [3, 4]], "m"))
-        >>> vec.ndim
-        2
 
         ``ndim`` is calculated from the broadcasted shape. We can
         see this by creating a 2D vector in which the components have
@@ -313,13 +321,13 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         We can get the size of a vector:
 
-        >>> vec = cx.CartesianPosition1D(Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPosition2D.constructor([1, 2], "m")
+        >>> vec.size
+        1
+
+        >>> vec = cx.CartesianPosition2D.constructor([[1, 2], [3, 4]], "m")
         >>> vec.size
         2
-
-        >>> vec = cx.CartesianPosition1D(Quantity([[1, 2], [3, 4]], "m"))
-        >>> vec.size
-        4
 
         ``size`` is calculated from the broadcasted shape. We can
         see this by creating a 2D vector in which the components have

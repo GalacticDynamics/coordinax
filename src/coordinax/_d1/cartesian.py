@@ -27,7 +27,30 @@ from coordinax._utils import classproperty
 
 @final
 class CartesianPosition1D(AbstractPosition1D):
-    """Cartesian vector representation."""
+    """Cartesian vector representation.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianPosition1D.constructor([2], "m")
+    >>> vec
+    CartesianPosition1D(
+      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+    )
+
+    Vectors support the basic math operations:
+
+    >>> (vec + vec).x
+    Quantity['length'](Array(4., dtype=float32), unit='m')
+
+    >>> (vec - vec).x
+    Quantity['length'](Array(0., dtype=float32), unit='m')
+
+    >>> (3 * vec).x
+    Quantity['length'](Array(6., dtype=float32), unit='m')
+
+    """
 
     x: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].constructor, dtype=float)
