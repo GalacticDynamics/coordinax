@@ -10,7 +10,7 @@ import quaxed.array_api as xp
 from unxt import Quantity
 
 from .base import AbstractPosition3D, AbstractVelocity3D
-from .cartesian import CartesianPosition3D, CartesianVelocity3D
+from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
 from .cylindrical import CylindricalPosition, CylindricalVelocity
 from .sphere import (
     AbstractSphericalPosition,
@@ -712,6 +712,34 @@ def represent_as(
     >>> import coordinax as cx
     >>> v = cx.CartesianVelocity3D.constructor([1, 1, 1], "m/s")
     >>> cx.represent_as(v, cx.CartesianVelocity3D) is v
+    True
+
+    """
+    return current
+
+
+# =============================================================================
+# CartesianAcceleration3D
+
+
+@dispatch
+def represent_as(
+    current: CartesianAcceleration3D, target: type[CartesianAcceleration3D], /
+) -> CartesianAcceleration3D:
+    """CartesianAcceleration3D -> CartesianAcceleration3D with no position.
+
+    Cartesian coordinates are an affine coordinate system and so the
+    transformation of an n-th order derivative vector in this system do not
+    require lower-order derivatives to be specified. See
+    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
+    information. This mixin provides a corresponding implementation of the
+    `coordinax.represent_as` method for Cartesian vectors.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> a = cx.CartesianAcceleration3D.constructor([1, 1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAcceleration3D) is a
     True
 
     """
