@@ -78,13 +78,13 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
         spherical = vector.represent_as(
             cx.SphericalPosition,
-            theta=Quantity([4, 5, 6, 7], "rad"),
+            theta=Quantity([4, 15, 60, 170], "deg"),
             phi=Quantity([0, 1, 2, 3], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalPosition)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cartesian1d_to_cylindrical(self, vector):
@@ -164,13 +164,13 @@ class TestRadialPosition(AbstractPosition1DTest):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
         spherical = vector.represent_as(
             cx.SphericalPosition,
-            theta=Quantity([4, 5, 6, 7], "rad"),
+            theta=Quantity([4, 15, 60, 170], "deg"),
             phi=Quantity([0, 1, 2, 3], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalPosition)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_radial_to_cylindrical(self, vector):

@@ -7,6 +7,7 @@ from typing import Any
 import astropy.units as u
 from plum import dispatch
 
+import quaxed.array_api as xp
 from unxt import Quantity
 
 from coordinax._d1.cartesian import CartesianPosition1D
@@ -166,30 +167,31 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.SphericalPosition)
     >>> x2
     SphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
-                     theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                     phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                       theta=Quantity[...](value=f32[], unit=Unit("deg")),
+                       phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Quantity['angle'](Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.SphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Quantity['angle'](Array(0., dtype=float32), unit='deg')
 
     MathSphericalPosition:
+    Note that ``theta`` and ``phi`` have different meanings in this context.
 
     >>> x2 = cx.represent_as(x, cx.MathSphericalPosition)
     >>> x2
     MathSphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
                          theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                         phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                         phi=Quantity[...](value=f32[], unit=Unit("deg")) )
     >>> x2.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Quantity['angle'](Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.MathSphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.theta
@@ -198,7 +200,8 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    return target(r=current.x, theta=theta, phi=phi)
+    x, theta, phi = xp.broadcast_arrays(current.x, theta, phi)
+    return target.constructor(r=x, theta=theta, phi=phi)
 
 
 @dispatch
@@ -391,30 +394,30 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.SphericalPosition)
     >>> x2
     SphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
-                     theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                     phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                       theta=Quantity[...](value=f32[], unit=Unit("deg")),
+                       phi=Quantity[...](value=f32[], unit=Unit("rad")) )
     >>> x2.phi
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Quantity['angle'](Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.SphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.phi
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
     >>> x3.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Quantity['angle'](Array(0., dtype=float32), unit='deg')
 
     MathSphericalPosition:
 
     >>> x2 = cx.represent_as(x, cx.MathSphericalPosition)
     >>> x2
     MathSphericalPosition( r=Distance(value=f32[], unit=Unit("km")),
-                         theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                         phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                           theta=Quantity[...](value=f32[], unit=Unit("rad")),
+                           phi=Quantity[...](value=f32[], unit=Unit("deg")) )
     >>> x2.theta
     Quantity['angle'](Array(0., dtype=float32), unit='rad')
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Quantity['angle'](Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.MathSphericalPosition, phi=Quantity(14, "deg"))
     >>> x3.theta
@@ -423,7 +426,8 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    return target(r=current.r, theta=theta, phi=phi)
+    r, theta, phi = xp.broadcast_arrays(current.r, theta, phi)
+    return target.constructor(r=r, theta=theta, phi=phi)
 
 
 @dispatch
