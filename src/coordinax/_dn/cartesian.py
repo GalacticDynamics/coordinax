@@ -21,6 +21,7 @@ import coordinax._typing as ct
 from .base import AbstractAccelerationND, AbstractPositionND, AbstractVelocityND
 from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
+from coordinax._mixins import AvalMixin
 from coordinax._utils import classproperty
 
 ##############################################################################
@@ -282,7 +283,7 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionN
 
 
 @final
-class CartesianVelocityND(AbstractVelocityND):
+class CartesianVelocityND(AvalMixin, AbstractVelocityND):
     """Cartesian differential representation.
 
     Examples
@@ -429,7 +430,7 @@ def constructor(
 
 
 @final
-class CartesianAccelerationND(AbstractAccelerationND):
+class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
     """Cartesian N-dimensional acceleration representation.
 
     Examples

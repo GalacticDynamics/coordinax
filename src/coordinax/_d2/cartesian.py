@@ -22,6 +22,7 @@ import coordinax._typing as ct
 from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
 from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
+from coordinax._mixins import AvalMixin
 from coordinax._utils import classproperty
 
 
@@ -107,7 +108,7 @@ class CartesianPosition2D(AbstractPosition2D):
 
 
 @final
-class CartesianVelocity2D(AbstractVelocity2D):
+class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -132,7 +133,7 @@ class CartesianVelocity2D(AbstractVelocity2D):
 
 
 @final
-class CartesianAcceleration2D(AbstractAcceleration2D):
+class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
     """Cartesian acceleration representation."""
 
     d2_x: ct.BatchableSpeed = eqx.field(

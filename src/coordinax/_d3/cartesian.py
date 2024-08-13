@@ -23,6 +23,7 @@ from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
 from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._base_vel import AdditionMixin
+from coordinax._mixins import AvalMixin
 from coordinax._utils import classproperty
 
 
@@ -111,7 +112,7 @@ class CartesianPosition3D(AbstractPosition3D):
 
 
 @final
-class CartesianVelocity3D(AbstractVelocity3D, AdditionMixin):
+class CartesianVelocity3D(AvalMixin, AdditionMixin, AbstractVelocity3D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -156,7 +157,7 @@ class CartesianVelocity3D(AbstractVelocity3D, AdditionMixin):
 
 
 @final
-class CartesianAcceleration3D(AbstractAcceleration3D):
+class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableSpeed = eqx.field(
