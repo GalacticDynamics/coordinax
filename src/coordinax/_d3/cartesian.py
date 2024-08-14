@@ -8,7 +8,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import final
+from typing import Any, final
 
 import equinox as eqx
 import jax
@@ -16,13 +16,13 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.array_api as xp
+from dataclassish import field_items
 from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
 from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
-from coordinax._base_vel import AdditionMixin
 from coordinax._mixins import AvalMixin
 from coordinax._utils import classproperty
 
@@ -112,7 +112,7 @@ class CartesianPosition3D(AbstractPosition3D):
 
 
 @final
-class CartesianVelocity3D(AvalMixin, AdditionMixin, AbstractVelocity3D):
+class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -154,6 +154,45 @@ class CartesianVelocity3D(AvalMixin, AdditionMixin, AbstractVelocity3D):
 
         """
         return xp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
+
+    # TODO: use dispatch
+    def __add__(self, other: Any, /) -> "Self":
+        """Add two differentials.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+        >>> q = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+        >>> q2 = q + q
+        >>> q2.d_y
+        Quantity['speed'](Array(4., dtype=float32), unit='km / s')
+
+        """
+        if not isinstance(other, self._cartesian_cls):
+            msg = f"Cannot add {type(other)!r} to {self._cartesian_cls!r}."
+            raise TypeError(msg)
+
+        return replace(self, **{k: v + getattr(other, k) for k, v in field_items(self)})
+
+    # TODO: use dispatch
+    def __sub__(self, other: Any, /) -> "Self":
+        """Subtract two differentials.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> q = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+        >>> q2 = q - q
+        >>> q2.d_y
+        Quantity['speed'](Array(0., dtype=float32), unit='km / s')
+
+        """
+        if not isinstance(other, self._cartesian_cls):
+            msg = f"Cannot subtract {type(other)!r} from {self._cartesian_cls!r}."
+            raise TypeError(msg)
+
+        return replace(self, **{k: v - getattr(other, k) for k, v in field_items(self)})
 
 
 @final
