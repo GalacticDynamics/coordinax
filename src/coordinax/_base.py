@@ -637,7 +637,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     @abstractmethod
     def represent_as(self, target: type[BT], /, *args: Any, **kwargs: Any) -> BT:
         """Represent the vector as another type."""
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @dispatch
     def to_units(self, units: Any, /) -> "AbstractVector":

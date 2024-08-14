@@ -3,7 +3,6 @@
 __all__ = ["AbstractPosition"]
 
 import operator
-import warnings
 from abc import abstractmethod
 from dataclasses import replace
 from functools import partial
@@ -28,7 +27,7 @@ from ._utils import classproperty
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-VT = TypeVar("VT", bound="AbstractPosition")
+PosT = TypeVar("PosT", bound="AbstractPosition")
 
 VECTOR_CLASSES: set[type["AbstractPosition"]] = set()
 
@@ -211,40 +210,28 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
-    @partial(jax.jit, static_argnums=1)
-    def represent_as(self, target: type[VT], /, *args: Any, **kwargs: Any) -> VT:
+    def represent_as(self, target: type[PosT], /, *args: Any, **kwargs: Any) -> PosT:
         """Represent the vector as another type.
+
+        This just forwards to `coordinax.represent_as`.
 
         Parameters
         ----------
-        target : type[AbstractPosition]
+        target : type[`coordinax.AbstractPosition`]
             The type to represent the vector as.
-        *args : Any
-            Extra arguments. Raises a warning if any are given.
-        **kwargs : Any
-            Extra keyword arguments.
+        *args, **kwargs : Any
+            Extra arguments. These are passed to `coordinax.represent_as` and
+            might be used, depending on the dispatched method.
 
         Returns
         -------
-        AbstractPosition
+        `coordinax.AbstractPosition`
             The vector represented as the target type.
-
-        Warns
-        -----
-        UserWarning
-            If extra arguments are given.
 
         Examples
         --------
-        We assume the following imports:
-
-        >>> from unxt import Quantity
         >>> import coordinax as cx
-
-        We can represent a vector as another type:
-
-        >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-        >>> vec = cx.CartesianPosition3D(x=x, y=y, z=z)
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
         >>> sph = vec.represent_as(cx.SphericalPosition)
         >>> sph
         SphericalPosition(
@@ -255,12 +242,9 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
         Distance(Array(3.7416575, dtype=float32), unit='m')
 
         """
-        if any(args):
-            warnings.warn("Extra arguments are ignored.", UserWarning, stacklevel=2)
-
         from ._transform import represent_as  # pylint: disable=import-outside-toplevel
 
-        return represent_as(self, target, **kwargs)
+        return represent_as(self, target, *args, **kwargs)
 
     @partial(jax.jit, inline=True)
     def norm(self) -> ct.BatchableLength:
@@ -316,7 +300,8 @@ def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:
     raise NotImplementedError  # pragma: no cover
 
 
-# ------------------------------------------------
+# ===================================================================
+# Register primitives
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

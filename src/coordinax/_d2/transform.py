@@ -9,7 +9,7 @@ from plum import dispatch
 import quaxed.array_api as xp
 
 from .base import AbstractPosition2D, AbstractVelocity2D
-from .cartesian import CartesianPosition2D, CartesianVelocity2D
+from .cartesian import CartesianAcceleration2D, CartesianPosition2D, CartesianVelocity2D
 from .polar import PolarPosition, PolarVelocity
 from coordinax._base_pos import AbstractPosition
 
@@ -54,9 +54,6 @@ def represent_as(
 # =============================================================================
 # CartesianPosition2D
 
-# -----------------------------------------------
-# 2D
-
 
 @dispatch
 def represent_as(
@@ -75,9 +72,6 @@ def represent_as(
 # =============================================================================
 # PolarPosition
 
-# -----------------------------------------------
-# 2D
-
 
 @dispatch
 def represent_as(
@@ -87,3 +81,59 @@ def represent_as(
     x = current.r.distance * xp.cos(current.phi)
     y = current.r.distance * xp.sin(current.phi)
     return target(x=x, y=y)
+
+
+# =============================================================================
+# CartesianVelocity2D
+
+
+@dispatch
+def represent_as(
+    current: CartesianVelocity2D, target: type[CartesianVelocity2D], /
+) -> CartesianVelocity2D:
+    """CartesianVelocity2D -> CartesianVelocity2D with no position.
+
+    Cartesian coordinates are an affine coordinate system and so the
+    transformation of an n-th order derivative vector in this system do not
+    require lower-order derivatives to be specified. See
+    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
+    information. This mixin provides a corresponding implementation of the
+    `coordinax.represent_as` method for Cartesian velocities.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> v = cx.CartesianVelocity2D.constructor([1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVelocity2D) is v
+    True
+
+    """
+    return current
+
+
+# =============================================================================
+# CartesianAcceleration2D
+
+
+@dispatch
+def represent_as(
+    current: CartesianAcceleration2D, target: type[CartesianAcceleration2D], /
+) -> CartesianAcceleration2D:
+    """CartesianAcceleration2D -> CartesianAcceleration2D with no position.
+
+    Cartesian coordinates are an affine coordinate system and so the
+    transformation of an n-th order derivative vector in this system do not
+    require lower-order derivatives to be specified. See
+    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
+    information. This mixin provides a corresponding implementation of the
+    `coordinax.represent_as` method for Cartesian vectors.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> a = cx.CartesianAcceleration2D.constructor([1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAcceleration2D) is a
+    True
+
+    """
+    return current

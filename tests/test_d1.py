@@ -78,13 +78,13 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
         spherical = vector.represent_as(
             cx.SphericalPosition,
-            theta=Quantity([4, 5, 6, 7], "rad"),
+            theta=Quantity([4, 15, 60, 170], "deg"),
             phi=Quantity([0, 1, 2, 3], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalPosition)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cartesian1d_to_cylindrical(self, vector):
@@ -164,13 +164,13 @@ class TestRadialPosition(AbstractPosition1DTest):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
         spherical = vector.represent_as(
             cx.SphericalPosition,
-            theta=Quantity([4, 5, 6, 7], "rad"),
+            theta=Quantity([4, 15, 60, 170], "deg"),
             phi=Quantity([0, 1, 2, 3], "rad"),
         )
 
         assert isinstance(spherical, cx.SphericalPosition)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_radial_to_cylindrical(self, vector):
@@ -273,14 +273,14 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         spherical = difntl.represent_as(
             cx.SphericalVelocity,
             vector,
-            d_theta=Quantity([4, 5, 6, 7], "rad"),
-            d_phi=Quantity([0, 1, 2, 3], "rad"),
+            d_theta=Quantity([4, 5, 6, 7], "rad/s"),
+            d_phi=Quantity([0, 1, 2, 3], "rad/s"),
         )
 
         assert isinstance(spherical, cx.SphericalVelocity)
         assert qnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "kpc"))
-        assert spherical.d_theta == Quantity([4, 5, 6, 7], "rad")
-        assert qnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad"))
+        assert spherical.d_theta == Quantity([4, 5, 6, 7], "rad/s")
+        assert qnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -289,14 +289,14 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         cylindrical = difntl.represent_as(
             cx.CylindricalVelocity,
             vector,
-            d_phi=Quantity([0, 1, 2, 3], "rad"),
-            d_z=Quantity([4, 5, 6, 7], "m"),
+            d_phi=Quantity([0, 1, 2, 3], "rad/s"),
+            d_z=Quantity([4, 5, 6, 7], "m/s"),
         )
 
         assert isinstance(cylindrical, cx.CylindricalVelocity)
         assert qnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad"))
-        assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m"))
+        assert qnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
+        assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m/s"))
 
 
 class TestRadialVelocity(AbstractVelocity1DTest):

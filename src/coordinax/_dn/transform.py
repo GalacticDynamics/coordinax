@@ -6,11 +6,11 @@ from typing import Any
 
 from plum import dispatch
 
-from .cartesian import CartesianPositionND, CartesianVelocityND
+from .cartesian import CartesianAccelerationND, CartesianPositionND, CartesianVelocityND
 from .poincare import PoincarePolarVector
 
 ###############################################################################
-# N-Dimensional
+# Cartesian
 
 
 @dispatch
@@ -52,6 +52,62 @@ def represent_as(
     >>> v = cx.CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
 
     >>> cx.represent_as(v, cx.CartesianVelocityND, x) is v
+    True
+
+    """
+    return current
+
+
+# =============================================================================
+# CartesianVelocityND
+
+
+@dispatch
+def represent_as(
+    current: CartesianVelocityND, target: type[CartesianVelocityND], /
+) -> CartesianVelocityND:
+    """CartesianVelocityND -> CartesianVelocityND with no position.
+
+    Cartesian coordinates are an affine coordinate system and so the
+    transformation of an n-th order derivative vector in this system do not
+    require lower-order derivatives to be specified. See
+    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
+    information. This mixin provides a corresponding implementation of the
+    `coordinax.represent_as` method for Cartesian velocities.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> v = cx.CartesianVelocityND.constructor([1, 1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVelocityND) is v
+    True
+
+    """
+    return current
+
+
+# =============================================================================
+# CartesianAccelerationND
+
+
+@dispatch
+def represent_as(
+    current: CartesianAccelerationND, target: type[CartesianAccelerationND], /
+) -> CartesianAccelerationND:
+    """CartesianAccelerationND -> CartesianAccelerationND with no position.
+
+    Cartesian coordinates are an affine coordinate system and so the
+    transformation of an n-th order derivative vector in this system do not
+    require lower-order derivatives to be specified. See
+    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
+    information. This mixin provides a corresponding implementation of the
+    `coordinax.represent_as` method for Cartesian vectors.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> a = cx.CartesianAccelerationND.constructor([1, 1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAccelerationND) is a
     True
 
     """

@@ -195,12 +195,12 @@ class TestPolarPosition:
     def test_polar_to_spherical(self, vector):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
         spherical = vector.represent_as(
-            cx.SphericalPosition, theta=Quantity([4, 5, 6, 7], "rad")
+            cx.SphericalPosition, theta=Quantity([4, 15, 60, 170], "deg")
         )
 
         assert isinstance(spherical, cx.SphericalPosition)
         assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.theta, Quantity([4, 5, 6, 7], "rad"))
+        assert qnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
         assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_polar_to_cylindrical(self, vector):

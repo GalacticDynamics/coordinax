@@ -306,7 +306,7 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    return target(r=current.r, theta=theta, phi=current.phi)
+    return target.constructor(r=current.r, theta=theta, phi=current.phi)
 
 
 @dispatch
@@ -335,7 +335,7 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    return target(r=current.r, phi=phi, theta=current.phi)
+    return target.constructor(r=current.r, phi=phi, theta=current.phi)
 
 
 @dispatch
