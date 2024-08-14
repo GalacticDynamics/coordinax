@@ -2,7 +2,6 @@
 
 __all__ = ["AbstractPosition"]
 
-import operator
 from abc import abstractmethod
 from dataclasses import replace
 from functools import partial
@@ -116,20 +115,6 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
     # -----------------------------------------------------
     # Binary arithmetic operations
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(
-        self: "AbstractPosition", other: "AbstractPosition"
-    ) -> "AbstractPosition":  # TODO: use Self
-        """Add another object to this vector."""
-        # The base implementation is to convert to Cartesian and perform the
-        # operation.  Cartesian coordinates do not have any branch cuts or
-        # singularities or ranges that need to be handled, so this is a safe
-        # default.
-        return operator.sub(
-            self.represent_as(self._cartesian_cls),
-            other.represent_as(self._cartesian_cls),
-        ).represent_as(type(self))
 
     @AbstractVector.__truediv__.dispatch  # type: ignore[misc]
     def __truediv__(
@@ -248,6 +233,19 @@ def _add_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> AbstractPosition
     )
     return qlax.add(  # re-dispatch on the Cartesian class
         lhs.represent_as(cart_cls), rhs.represent_as(cart_cls)
+    ).represent_as(type(lhs))
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_qq(lhs: AbstractPosition, rhs: AbstractPosition) -> AbstractPosition:
+    """Add another object to this vector."""
+    # The base implementation is to convert to Cartesian and perform the
+    # operation.  Cartesian coordinates do not have any branch cuts or
+    # singularities or ranges that need to be handled, so this is a safe
+    # default.
+    return qlax.sub(
+        lhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
+        rhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
     ).represent_as(type(lhs))
 
 

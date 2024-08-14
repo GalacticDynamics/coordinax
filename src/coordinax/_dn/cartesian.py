@@ -115,31 +115,6 @@ class CartesianPositionND(AbstractPositionND):
         return replace(self, q=-self.q)
 
     # -----------------------------------------------------
-    # Binary operations
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(
-        self: "CartesianPositionND", other: AbstractPosition, /
-    ) -> "CartesianPositionND":
-        """Subtract two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        A 3D vector:
-
-        >>> q1 = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
-        >>> q2 = cx.CartesianPositionND(Quantity([2, 3, 4], "kpc"))
-        >>> (q1 - q2).q
-        Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPositionND)
-        return replace(self, q=self.q - cart.q)
-
-    # -----------------------------------------------------
 
     @partial(jax.jit)
     def norm(self) -> ct.BatchableLength:
@@ -164,7 +139,7 @@ class CartesianPositionND(AbstractPositionND):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def constructor(
     cls: type[CartesianPositionND],
     x: Shaped[Quantity["length"], ""] | Shaped[Quantity["length"], "*batch N"],
@@ -278,6 +253,29 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionN
     return replace(rhs, q=lhs * rhs.q)
 
 
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_cnd_pos(
+    lhs: CartesianPositionND, rhs: AbstractPosition, /
+) -> CartesianPositionND:
+    """Subtract two vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> from coordinax import CartesianPositionND
+
+    A 3D vector:
+
+    >>> q1 = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+    >>> q2 = CartesianPositionND(Quantity([2, 3, 4], "kpc"))
+    >>> (q1 - q2).q
+    Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
+
+    """
+    cart = rhs.represent_as(CartesianPositionND)
+    return replace(lhs, q=lhs.q - cart.q)
+
+
 ##############################################################################
 # Differential
 
@@ -375,7 +373,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def constructor(
     cls: type[CartesianVelocityND],
     x: Shaped[Quantity["speed"], ""] | Shaped[Quantity["speed"], "*batch N"],
@@ -547,7 +545,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def constructor(
     cls: type[CartesianAccelerationND],
     x: Shaped[Quantity["acceleration"], ""]

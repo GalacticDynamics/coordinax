@@ -451,9 +451,9 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         msg = f"{type(self).__name__} is immutable."
         raise TypeError(msg)
 
-    @dispatch  # type: ignore[misc]
     def __sub__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        raise NotImplementedError
+        """Subtract an object from this vector."""
+        return qlax.sub(self, other)
 
     @dispatch  # type: ignore[misc]
     def __truediv__(self: "AbstractVector", other: Any) -> "AbstractVector":

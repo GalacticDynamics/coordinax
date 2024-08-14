@@ -21,7 +21,6 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
-from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._mixins import AvalMixin
 from coordinax._utils import classproperty
@@ -63,29 +62,6 @@ class CartesianPosition2D(AbstractPosition2D):
 
         """
         return replace(self, x=-self.x, y=-self.y)
-
-    # -----------------------------------------------------
-    # Binary operations
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(
-        self: "CartesianPosition2D", other: AbstractPosition, /
-    ) -> "CartesianPosition2D":
-        """Subtract two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-        >>> cart = cx.CartesianPosition2D.constructor([1, 2], "kpc")
-        >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
-
-        >>> (cart - polr).x
-        Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPosition2D)
-        return replace(self, x=self.x - cart.x, y=self.y - cart.y)
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
@@ -135,6 +111,27 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosit
 
     # Scale the components
     return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_cart2d_pos2d(
+    lhs: CartesianPosition2D, rhs: AbstractPosition, /
+) -> CartesianPosition2D:
+    """Subtract two vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+    >>> cart = cx.CartesianPosition2D.constructor([1, 2], "kpc")
+    >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+
+    >>> (cart - polr).x
+    Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
+
+    """
+    cart = rhs.represent_as(CartesianPosition2D)
+    return jax.tree.map(qlax.sub, lhs, cart)
 
 
 #####################################################################
@@ -305,3 +302,24 @@ def _mul_va(
 
     # Scale the components
     return replace(rhts, d2_x=lhs * rhts.d2_x, d2_y=lhs * rhts.d2_y)
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_cart2d_pos2d(
+    self: CartesianPosition2D, other: AbstractPosition, /
+) -> CartesianPosition2D:
+    """Subtract two vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> from coordinax import CartesianPosition2D, PolarPosition
+    >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
+    >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+
+    >>> (cart - polr).x
+    Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
+
+    """
+    cart = other.represent_as(CartesianPosition2D)
+    return jax.tree.map(qlax.sub, self, cart)

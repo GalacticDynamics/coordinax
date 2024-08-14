@@ -8,7 +8,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, final
+from typing import final
 
 import equinox as eqx
 import jax
@@ -22,7 +22,6 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
-from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._mixins import AvalMixin
 from coordinax._utils import classproperty
@@ -68,29 +67,6 @@ class CartesianPosition3D(AbstractPosition3D):
         """
         return replace(self, x=-self.x, y=-self.y, z=-self.z)
 
-    # -----------------------------------------------------
-    # Binary operations
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(
-        self: "CartesianPosition3D", other: AbstractPosition, /
-    ) -> "CartesianPosition3D":
-        """Subtract two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
-        >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
-        ...                     phi=Quantity(0, "deg"))
-        >>> (q - s).x
-        Quantity['length'](Array(0., dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPosition3D)
-        return replace(self, x=self.x - cart.x, y=self.y - cart.y, z=self.z - cart.z)
-
 
 # -----------------------------------------------------
 # Method dispatches
@@ -117,6 +93,27 @@ def _add_cart3d_pos(
     return replace(
         lhs, **{k: qlax.add(v, getattr(cart, k)) for k, v in field_items(lhs)}
     )
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_cart3d_pos(
+    lhs: CartesianPosition3D, rhs: AbstractPosition, /
+) -> CartesianPosition3D:
+    """Subtract two vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+    ...                          phi=Quantity(0, "deg"))
+    >>> (q - s).x
+    Quantity['length'](Array(0., dtype=float32), unit='kpc')
+
+    """
+    cart = rhs.represent_as(CartesianPosition3D)
+    return jax.tree.map(qlax.sub, lhs, cart)
 
 
 #####################################################################
@@ -166,25 +163,6 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
         """
         return xp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
 
-    # TODO: use dispatch
-    def __sub__(self, other: Any, /) -> "Self":
-        """Subtract two differentials.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> q = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
-        >>> q2 = q - q
-        >>> q2.d_y
-        Quantity['speed'](Array(0., dtype=float32), unit='km / s')
-
-        """
-        if not isinstance(other, self._cartesian_cls):
-            msg = f"Cannot subtract {type(other)!r} from {self._cartesian_cls!r}."
-            raise TypeError(msg)
-
-        return replace(self, **{k: v - getattr(other, k) for k, v in field_items(self)})
-
 
 # -----------------------------------------------------
 # Method dispatches
@@ -206,6 +184,25 @@ def _add_pp(
 
     """
     return jax.tree.map(qlax.add, lhs, rhs)
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_v3_v3(
+    lhs: CartesianVelocity3D, other: CartesianVelocity3D, /
+) -> CartesianVelocity3D:
+    """Subtract two differentials.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
+    >>> q = CartesianVelocity3D.constructor(Quantity([1, 2, 3], "km/s"))
+    >>> q2 = q - q
+    >>> q2.d_y
+    Quantity['speed'](Array(0., dtype=float32), unit='km / s')
+
+    """
+    return jax.tree.map(qlax.sub, lhs, other)
 
 
 #####################################################################
@@ -234,21 +231,6 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
     @classmethod
     def integral_cls(cls) -> type[CartesianVelocity3D]:
         return CartesianVelocity3D
-
-    # -----------------------------------------------------
-    # Binary operations
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(
-        self: "CartesianAcceleration3D", other: "CartesianAcceleration3D", /
-    ) -> "CartesianAcceleration3D":
-        """Subtract two accelerations."""
-        return replace(
-            self,
-            d2_x=self.d2_x - other.d2_x,
-            d2_y=self.d2_y - other.d2_y,
-            d2_z=self.d2_z - other.d2_z,
-        )
 
     # -----------------------------------------------------
     # Methods
@@ -303,3 +285,11 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPosition3D, /) -> CartesianPosition3D
 
     # Scale the components
     return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y, z=lhs * rhs.z)
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_a3_a3(
+    lhs: CartesianAcceleration3D, rhs: CartesianAcceleration3D, /
+) -> CartesianAcceleration3D:
+    """Subtract two accelerations."""
+    return jax.tree.map(qlax.sub, lhs, rhs)

@@ -16,11 +16,11 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.array_api as xp
+from quaxed import lax as qlax
 from unxt import Quantity
 
 import coordinax._typing as ct
 from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
-from coordinax._base import AbstractVector
 from coordinax._base_pos import AbstractPosition
 from coordinax._mixins import AvalMixin
 from coordinax._utils import classproperty
@@ -81,34 +81,6 @@ class CartesianPosition1D(AbstractPosition1D):
         """
         return replace(self, x=-self.x)
 
-    # -----------------------------------------------------
-    # Binary operations
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(
-        self: "CartesianPosition1D", other: AbstractPosition, /
-    ) -> "CartesianPosition1D":
-        """Subtract two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
-        >>> r = cx.RadialPosition.constructor([1], "kpc")
-        >>> qmr = q - r
-        >>> qmr
-        CartesianPosition1D(
-           x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
-        )
-        >>> qmr.x
-        Quantity['length'](Array(0., dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPosition1D)
-        return replace(self, x=self.x - cart.x)
-
 
 @register(jax.lax.add_p)  # type: ignore[misc]
 def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosition1D:
@@ -163,6 +135,37 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D
 
     # Scale the components
     return replace(rhs, x=lhs * rhs.x)
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_q1d_pos(
+    self: CartesianPosition1D, other: AbstractPosition, /
+) -> CartesianPosition1D:
+    """Subtract two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> q = cx.CartesianPosition1D.constructor(Quantity([1], "kpc"))
+    >>> r = cx.RadialPosition.constructor(Quantity([1], "kpc"))
+
+    >>> qmr = xp.subtract(q, r)
+    >>> qmr
+    CartesianPosition1D(
+       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+    )
+    >>> qmr.x
+    Quantity['length'](Array(0., dtype=float32), unit='kpc')
+
+    >>> (q - r).x
+    Quantity['length'](Array(0., dtype=float32), unit='kpc')
+
+    """
+    cart = other.represent_as(CartesianPosition1D)
+    return jax.tree.map(qlax.sub, self, cart)
 
 
 #####################################################################
@@ -278,15 +281,6 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
         return CartesianVelocity1D
 
     # -----------------------------------------------------
-    # Binary operations
-
-    def __sub__(
-        self: "CartesianAcceleration1D", other: "CartesianAcceleration1D", /
-    ) -> "CartesianAcceleration1D":
-        """Subtract two accelerations."""
-        return replace(self, d2_x=self.d2_x - other.d2_x)
-
-    # -----------------------------------------------------
     # Methods
 
     @partial(jax.jit)
@@ -364,3 +358,33 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
 
     # Scale the components
     return replace(rhs, d2_x=lhs * rhs.d2_x)
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_a1_a1(
+    self: CartesianAcceleration1D, other: CartesianAcceleration1D, /
+) -> CartesianAcceleration1D:
+    """Subtract two 1-D cartesian accelerations.
+
+    Examples
+    --------
+    >>> from quaxed import lax
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v1 = cx.CartesianAcceleration1D(d2_x=Quantity(1, "m/s2"))
+    >>> v2 = cx.CartesianAcceleration1D(d2_x=Quantity(2, "m/s2"))
+    >>> vec = lax.sub(v1, v2)
+    >>> vec
+    CartesianAcceleration1D(
+      d2_x=Quantity[...](value=i32[], unit=Unit("m / s2"))
+    )
+
+    >>> vec.d2_x
+    Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')
+
+    >>> (v1 - v2).d2_x
+    Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')
+
+    """
+    return jax.tree.map(qlax.sub, self, other)
