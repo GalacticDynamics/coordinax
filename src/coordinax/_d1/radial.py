@@ -1,10 +1,6 @@
 """Carteisan vector."""
 
-__all__ = [
-    "RadialPosition",
-    "RadialVelocity",
-    "RadialAcceleration",
-]
+__all__ = ["RadialPosition", "RadialVelocity", "RadialAcceleration"]
 
 from typing import final
 

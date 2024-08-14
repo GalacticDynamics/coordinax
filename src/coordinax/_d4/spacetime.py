@@ -331,10 +331,10 @@ def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import FourVector, CartesianPosition3D
+    >>> import coordinax as cx
 
-    >>> w1 = FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-    >>> w2 = FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+    >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+    >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
     >>> w3 = w1 - w2
     >>> w3
     FourVector(

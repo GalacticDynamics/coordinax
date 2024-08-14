@@ -203,6 +203,18 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # Quax
 
     def materialise(self) -> NoReturn:
+        """Materialise the vector for `quax`.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+
+        >>> try: vec.materialise()
+        ... except RuntimeError as e: print(e)
+        Refusing to materialise `Quantity`.
+
+        """
         msg = "Refusing to materialise `Quantity`."
         raise RuntimeError(msg)
 
@@ -369,13 +381,32 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # Methods
 
     def __abs__(self) -> Quantity:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPosition2D.constructor([3, 4], "m")
+        >>> abs(vec)
+        Quantity['length'](Array(5., dtype=float32), unit='m')
+
+        """
         return self.norm()
 
     def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
         return NotImplemented
 
     def __array_namespace__(self) -> "ArrayAPINamespace":
-        """Return the array API namespace."""
+        """Return the array API namespace.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPosition2D.constructor([3, 4], "m")
+        >>> vec.__array_namespace__()
+        <module 'quaxed.array_api' from ...>
+
+        """
         return xp
 
     def __getitem__(self, index: Any) -> "Self":

@@ -82,6 +82,10 @@ class CartesianPosition1D(AbstractPosition1D):
         return replace(self, x=-self.x)
 
 
+# -------------------------------------------------------------------
+# Method dispatches
+
+
 @register(jax.lax.add_p)  # type: ignore[misc]
 def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosition1D:
     """Add a vector to a CartesianPosition1D.
@@ -202,6 +206,10 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
 
         """
         return xp.abs(self.d_x)
+
+
+# -------------------------------------------------------------------
+# Method dispatches
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
