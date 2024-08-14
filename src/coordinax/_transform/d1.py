@@ -4,7 +4,6 @@ __all__ = ["represent_as"]
 
 from typing import Any
 
-import astropy.units as u
 from plum import dispatch
 
 import quaxed.array_api as xp
@@ -32,7 +31,7 @@ def represent_as(
     target: type[CartesianPosition2D],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.m),
+    y: Quantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPosition2D:
     """CartesianPosition1D -> CartesianPosition2D.
@@ -67,7 +66,7 @@ def represent_as(
     target: type[PolarPosition],
     /,
     *,
-    phi: Quantity = Quantity(0.0, u.radian),
+    phi: Quantity = Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> PolarPosition:
     """CartesianPosition1D -> PolarPosition.
@@ -106,8 +105,8 @@ def represent_as(
     target: type[CartesianPosition3D],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.m),
-    z: Quantity = Quantity(0.0, u.m),
+    y: Quantity = Quantity(0.0, "m"),
+    z: Quantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPosition3D:
     """CartesianPosition1D -> CartesianPosition3D.
@@ -147,8 +146,8 @@ def represent_as(
     target: type[SphericalPosition] | type[MathSphericalPosition],
     /,
     *,
-    theta: Quantity = Quantity(0.0, u.radian),
-    phi: Quantity = Quantity(0.0, u.radian),
+    theta: Quantity = Quantity(0.0, "radian"),
+    phi: Quantity = Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> SphericalPosition | MathSphericalPosition:
     """CartesianPosition1D -> SphericalPosition | MathSphericalPosition.
@@ -210,8 +209,8 @@ def represent_as(
     target: type[CylindricalPosition],
     /,
     *,
-    phi: Quantity = Quantity(0.0, u.radian),
-    z: Quantity = Quantity(0.0, u.m),
+    phi: Quantity = Quantity(0.0, "radian"),
+    z: Quantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CylindricalPosition:
     """CartesianPosition1D -> CylindricalPosition.
@@ -258,7 +257,7 @@ def represent_as(
     target: type[CartesianPosition2D],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.m),
+    y: Quantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPosition2D:
     """RadialPosition -> CartesianPosition2D.
@@ -293,7 +292,7 @@ def represent_as(
     target: type[PolarPosition],
     /,
     *,
-    phi: Quantity = Quantity(0.0, u.radian),
+    phi: Quantity = Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> PolarPosition:
     """RadialPosition -> PolarPosition.
@@ -332,8 +331,8 @@ def represent_as(
     target: type[CartesianPosition3D],
     /,
     *,
-    y: Quantity = Quantity(0.0, u.m),
-    z: Quantity = Quantity(0.0, u.m),
+    y: Quantity = Quantity(0.0, "m"),
+    z: Quantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPosition3D:
     """RadialPosition -> CartesianPosition3D.
@@ -373,8 +372,8 @@ def represent_as(
     target: type[SphericalPosition] | type[MathSphericalPosition],
     /,
     *,
-    theta: Quantity = Quantity(0.0, u.radian),
-    phi: Quantity = Quantity(0.0, u.radian),
+    theta: Quantity = Quantity(0.0, "radian"),
+    phi: Quantity = Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> SphericalPosition | MathSphericalPosition:
     """RadialPosition -> SphericalPosition | MathSphericalPosition.
@@ -436,8 +435,8 @@ def represent_as(
     target: type[CylindricalPosition],
     /,
     *,
-    phi: Quantity = Quantity(0.0, u.radian),
-    z: Quantity = Quantity(0.0, u.m),
+    phi: Quantity = Quantity(0.0, "radian"),
+    z: Quantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CylindricalPosition:
     """RadialPosition -> CylindricalPosition.
