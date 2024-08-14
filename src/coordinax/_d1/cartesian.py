@@ -135,6 +135,36 @@ class CartesianPosition1D(AbstractPosition1D):
         return replace(self, x=self.x - cart.x)
 
 
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D:
+    """Scale a position by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianPosition1D(x=Quantity(1, "m"))
+    >>> xp.multiply(2, v).x
+    Quantity['length'](Array(2., dtype=float32), unit='m')
+
+    >>> (2 * v).x
+    Quantity['length'](Array(2., dtype=float32), unit='m')
+
+    """
+    # Validation
+    lhs = eqx.error_if(
+        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
+    )
+
+    # Scale the components
+    return replace(rhs, x=lhs * rhs.x)
+
+
+#####################################################################
+
+
 @final
 class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
     """Cartesian differential representation."""
@@ -166,6 +196,42 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
 
         """
         return xp.abs(self.d_x)
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity1D:
+    """Scale a velocity by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianVelocity1D(d_x=Quantity(1, "m/s"))
+    >>> vec = xp.multiply(2, v)
+    >>> vec
+    CartesianVelocity1D(
+      d_x=Quantity[...]( value=i32[], unit=Unit("m / s") )
+    )
+
+    >>> vec.d_x
+    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+
+    >>> (2 * v).d_x
+    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+
+    """
+    # Validation
+    lhs = eqx.error_if(
+        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
+    )
+
+    # Scale the components
+    return replace(rhs, d_x=lhs * rhs.d_x)
+
+
+#####################################################################
 
 
 @final
@@ -216,12 +282,9 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
         return xp.abs(self.d2_x)
 
 
-# ===================================================================
-
-
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D:
-    """Scale a position by a scalar.
+def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceleration1D:
+    """Scale an acceleration by a scalar.
 
     Examples
     --------
@@ -229,9 +292,18 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition1D(x=Quantity(1, "m"))
-    >>> xp.multiply(2, v).x
-    Quantity['length'](Array(2., dtype=float32), unit='m')
+    >>> v = cx.CartesianAcceleration1D(d2_x=Quantity(1, "m/s2"))
+    >>> vec = xp.multiply(2, v)
+    >>> vec
+    CartesianAcceleration1D(
+      d2_x=Quantity[...](value=i32[], unit=Unit("m / s2"))
+    )
+
+    >>> vec.d2_x
+    Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
+
+    >>> (2 * v).d2_x
+    Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
 
     """
     # Validation
@@ -240,4 +312,4 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x)
+    return replace(rhs, d2_x=lhs * rhs.d2_x)

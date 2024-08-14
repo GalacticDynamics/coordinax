@@ -409,17 +409,39 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
         return replace(full, **{k: v[index] for k, v in field_items(full)})
 
-    @dispatch  # type: ignore[misc]
     def __mul__(self: "AbstractVector", other: Any) -> Any:
-        return NotImplemented
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> (vec * 2).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
+        return qlax.mul(self, other)
 
     @abstractmethod
     def __neg__(self) -> "Self":
         raise NotImplementedError
 
-    @dispatch  # type: ignore[misc]
     def __rmul__(self: "AbstractVector", other: Any) -> Any:
-        return NotImplemented
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> (2 * vec).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
+        return qlax.mul(other, self)
 
     def __setitem__(self, k: Any, v: Any) -> NoReturn:
         msg = f"{type(self).__name__} is immutable."

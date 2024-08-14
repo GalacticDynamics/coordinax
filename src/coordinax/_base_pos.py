@@ -145,38 +145,6 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
             other.represent_as(self._cartesian_cls),
         ).represent_as(type(self))
 
-    @AbstractVector.__mul__.dispatch  # type: ignore[misc]
-    def __mul__(self: "AbstractPosition", other: ArrayLike) -> "AbstractPosition":
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> (vec * 2).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
-
-        """
-        return qlax.mul(self, other)
-
-    @AbstractVector.__rmul__.dispatch  # type: ignore[misc]
-    def __rmul__(self: "AbstractPosition", other: ArrayLike) -> "AbstractPosition":
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> (2 * vec).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
-
-        """
-        return qlax.mul(other, self)
-
     @AbstractVector.__truediv__.dispatch  # type: ignore[misc]
     def __truediv__(
         self: "AbstractPosition", other: ArrayLike
@@ -281,7 +249,7 @@ def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_vq(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
+def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     """Scale a position by a scalar.
 
     Examples
@@ -375,7 +343,7 @@ def _mul_p_vq(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_qv(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
+def _mul_pos_v(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
     """Scale a position by a scalar.
 
     Examples
@@ -397,7 +365,7 @@ def _mul_p_qv(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
+def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -431,7 +399,7 @@ def _mul_p_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
 
 
 @register(jax.lax.reshape_p)  # type: ignore[misc]
-def _reshape_p(
+def _reshape_pos(
     operand: AbstractPosition, *, new_sizes: tuple[int, ...], **kwargs: Any
 ) -> AbstractPosition:
     """Reshape the components of the vector.

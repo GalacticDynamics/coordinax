@@ -8,9 +8,11 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
-from plum import dispatch
+from quax import register
 
+import quaxed.array_api as xp
 from dataclassish import field_items
+from quaxed import lax as qlax
 from unxt import Quantity
 
 from ._base import AbstractVector
@@ -109,31 +111,6 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         return replace(self, **{k: -v for k, v in field_items(self)})
 
     # ===============================================================
-    # Binary operations
-
-    @dispatch  # type: ignore[misc]
-    def __mul__(self: "AbstractAcceleration", other: Quantity) -> "AbstractVector":
-        """Multiply the vector by a :class:`unxt.Quantity`.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
-        >>> vec = d2r * Quantity(2, "s")
-        >>> vec
-        RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
-        >>> vec.d_r
-        Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
-
-        """
-        # TODO: better access to corresponding fields
-        return self.integral_cls.constructor(
-            {k.replace("2", ""): v * other for k, v in field_items(self)}
-        )
-
-    # ===============================================================
     # Convenience methods
 
     def represent_as(self, target: type[AccT], /, *args: Any, **kwargs: Any) -> AccT:
@@ -187,3 +164,102 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
     ) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, velocity, position).norm()
+
+
+# ===============================================================
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractVelocity:
+    """Multiply the vector by a :class:`unxt.Quantity`.
+
+    Examples
+    --------
+    >>> from quaxed import lax
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> vec = lax.mul(d2r, Quantity(2, "s"))
+    >>> vec
+    RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    >>> vec.d_r
+    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+
+    >>> (d2r * Quantity(2, "s")).d_r
+    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+
+    """
+    # TODO: better access to corresponding fields
+    return lhs.integral_cls.constructor(
+        {k.replace("2", ""): xp.multiply(v, rhs) for k, v in field_items(lhs)}
+    )
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractVelocity:
+    """Multiply a scalar by an acceleration.
+
+    Examples
+    --------
+    >>> from quaxed import lax
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> vec = lax.mul(Quantity(2, "s"), d2r)
+    >>> vec
+    RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    >>> vec.d_r
+    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+
+    """
+    return qlax.mul(rhs, lhs)  # pylint: disable=arguments-out-of-order
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_acc_time2(lhs: AbstractAcceleration, rhs: Quantity["s2"]) -> AbstractPosition:
+    """Multiply an acceleration by a scalar.
+
+    Examples
+    --------
+    >>> from quaxed import lax
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> vec = lax.mul(d2r, Quantity(2, "s2"))
+    >>> vec
+    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
+    >>> vec.r
+    Distance(Array(2., dtype=float32), unit='m')
+
+    >>> (d2r * Quantity(2, "s2")).r
+    Distance(Array(2., dtype=float32), unit='m')
+
+    """
+    # TODO: better access to corresponding fields
+    return lhs.integral_cls.integral_cls.constructor(
+        {k.replace("d2_", ""): v * rhs for k, v in field_items(lhs)}
+    )
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_time2_acc(lhs: Quantity["s2"], rhs: AbstractAcceleration) -> AbstractPosition:
+    """Multiply a scalar by an acceleration.
+
+    Examples
+    --------
+    >>> from quaxed import lax
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> vec = lax.mul(Quantity(2, "s2"), d2r)
+    >>> vec
+    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
+    >>> vec.r
+    Distance(Array(2., dtype=float32), unit='m')
+
+    """
+    return qlax.mul(rhs, lhs)  # pylint: disable=arguments-out-of-order

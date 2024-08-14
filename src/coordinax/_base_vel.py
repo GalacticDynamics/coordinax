@@ -8,6 +8,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
+from quax import register
 
 from dataclassish import field_items
 from unxt import Quantity
@@ -125,30 +126,6 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         return replace(self, **{k: -v for k, v in field_items(self)})
 
     # ===============================================================
-    # Binary operations
-
-    @AbstractVector.__mul__.dispatch  # type: ignore[misc]
-    def __mul__(self: "AbstractVelocity", other: Quantity) -> "AbstractPosition":
-        """Multiply the vector by a :class:`unxt.Quantity`.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> dr = cx.RadialVelocity(Quantity(1, "m/s"))
-        >>> vec = dr * Quantity(2, "s")
-        >>> vec
-        RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
-        >>> vec.r
-        Distance(Array(2., dtype=float32), unit='m')
-
-        """
-        return self.integral_cls.constructor(
-            {k[2:]: v * other for k, v in field_items(self)}
-        )
-
-    # ===============================================================
     # Convenience methods
 
     def represent_as(
@@ -204,3 +181,32 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
     def norm(self, position: AbstractPosition, /) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, position).norm()
+
+
+# ---------------------------------------------------------
+
+
+@register(jax.lax.mul_p)  # type: ignore[misc]
+def _mul_vel_q(self: AbstractVelocity, other: Quantity["time"]) -> AbstractPosition:
+    """Multiply the vector by a time :class:`unxt.Quantity` to get a position.
+
+    Examples
+    --------
+    >>> from quaxed import lax
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> dr = cx.RadialVelocity(Quantity(1, "m/s"))
+    >>> vec = dr * Quantity(2, "s")
+    >>> vec
+    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
+    >>> vec.r
+    Distance(Array(2., dtype=float32), unit='m')
+
+    >>> lax.mul(dr, Quantity(2, "s")).r
+    Distance(Array(2., dtype=float32), unit='m')
+
+    """
+    return self.integral_cls.constructor(
+        {k[2:]: v * other for k, v in field_items(self)}
+    )
