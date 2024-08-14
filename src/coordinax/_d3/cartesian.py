@@ -16,6 +16,7 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.array_api as xp
+import quaxed.lax as qlax
 from dataclassish import field_items
 from unxt import Quantity
 
@@ -70,26 +71,6 @@ class CartesianPosition3D(AbstractPosition3D):
     # -----------------------------------------------------
     # Binary operations
 
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "CartesianPosition3D", other: AbstractPosition, /
-    ) -> "CartesianPosition3D":
-        """Add two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
-        >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
-        ...                     phi=Quantity(0, "deg"))
-        >>> (q + s).x
-        Quantity['length'](Array(2., dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPosition3D)
-        return replace(self, x=self.x + cart.x, y=self.y + cart.y, z=self.z + cart.z)
-
     @AbstractVector.__sub__.dispatch  # type: ignore[misc]
     def __sub__(
         self: "CartesianPosition3D", other: AbstractPosition, /
@@ -109,6 +90,36 @@ class CartesianPosition3D(AbstractPosition3D):
         """
         cart = other.represent_as(CartesianPosition3D)
         return replace(self, x=self.x - cart.x, y=self.y - cart.y, z=self.z - cart.z)
+
+
+# -----------------------------------------------------
+# Method dispatches
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_cart3d_pos(
+    lhs: CartesianPosition3D, rhs: AbstractPosition, /
+) -> CartesianPosition3D:
+    """Subtract two vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
+    ...                          phi=Quantity(0, "deg"))
+    >>> (q + s).x
+    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+
+    """
+    cart = rhs.represent_as(CartesianPosition3D)
+    return replace(
+        lhs, **{k: qlax.add(v, getattr(cart, k)) for k, v in field_items(lhs)}
+    )
+
+
+#####################################################################
 
 
 @final
@@ -156,26 +167,6 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
         return xp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
 
     # TODO: use dispatch
-    def __add__(self, other: Any, /) -> "Self":
-        """Add two differentials.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-        >>> q = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
-        >>> q2 = q + q
-        >>> q2.d_y
-        Quantity['speed'](Array(4., dtype=float32), unit='km / s')
-
-        """
-        if not isinstance(other, self._cartesian_cls):
-            msg = f"Cannot add {type(other)!r} to {self._cartesian_cls!r}."
-            raise TypeError(msg)
-
-        return replace(self, **{k: v + getattr(other, k) for k, v in field_items(self)})
-
-    # TODO: use dispatch
     def __sub__(self, other: Any, /) -> "Self":
         """Subtract two differentials.
 
@@ -193,6 +184,31 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
             raise TypeError(msg)
 
         return replace(self, **{k: v - getattr(other, k) for k, v in field_items(self)})
+
+
+# -----------------------------------------------------
+# Method dispatches
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_pp(
+    lhs: CartesianVelocity3D, rhs: CartesianVelocity3D, /
+) -> CartesianVelocity3D:
+    """Add two Cartesian velocities.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> q2 = q + q
+    >>> q2.d_y
+    Quantity['speed'](Array(4., dtype=float32), unit='km / s')
+
+    """
+    return jax.tree.map(qlax.add, lhs, rhs)
+
+
+#####################################################################
 
 
 @final
@@ -221,18 +237,6 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
 
     # -----------------------------------------------------
     # Binary operations
-
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "CartesianAcceleration3D", other: "CartesianAcceleration3D", /
-    ) -> "CartesianAcceleration3D":
-        """Add two accelerations."""
-        return replace(
-            self,
-            d2_x=self.d2_x + other.d2_x,
-            d2_y=self.d2_y + other.d2_y,
-            d2_z=self.d2_z + other.d2_z,
-        )
 
     @AbstractVector.__sub__.dispatch  # type: ignore[misc]
     def __sub__(
@@ -265,7 +269,16 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
         return xp.sqrt(self.d2_x**2 + self.d2_y**2 + self.d2_z**2)
 
 
-# ===================================================================
+# -----------------------------------------------------
+# Method dispatches
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_aa(
+    lhs: CartesianAcceleration3D, rhs: CartesianAcceleration3D, /
+) -> CartesianAcceleration3D:
+    """Add two Cartesian accelerations."""
+    return jax.tree.map(qlax.add, lhs, rhs)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

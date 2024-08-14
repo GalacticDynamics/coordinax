@@ -16,6 +16,7 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.array_api as xp
+from quaxed import lax as qlax
 from unxt import Quantity
 
 import coordinax._typing as ct
@@ -66,26 +67,6 @@ class CartesianPosition2D(AbstractPosition2D):
     # -----------------------------------------------------
     # Binary operations
 
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "CartesianPosition2D", other: AbstractPosition, /
-    ) -> "CartesianPosition2D":
-        """Add two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-        >>> cart = cx.CartesianPosition2D.constructor([1, 2], "kpc")
-        >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
-
-        >>> (cart + polr).x
-        Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPosition2D)
-        return replace(self, x=self.x + cart.x, y=self.y + cart.y)
-
     @AbstractVector.__sub__.dispatch  # type: ignore[misc]
     def __sub__(
         self: "CartesianPosition2D", other: AbstractPosition, /
@@ -105,6 +86,31 @@ class CartesianPosition2D(AbstractPosition2D):
         """
         cart = other.represent_as(CartesianPosition2D)
         return replace(self, x=self.x - cart.x, y=self.y - cart.y)
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_cart2d_pos(
+    lhs: CartesianPosition2D, rhs: AbstractPosition, /
+) -> CartesianPosition2D:
+    """Add two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> cart = cx.CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
+    >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+    >>> (cart + polr).x
+    Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
+
+    >>> xp.add(cart, polr).x
+    Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
+
+    """
+    cart = rhs.represent_as(CartesianPosition2D)
+    return jax.tree.map(qlax.add, lhs, cart)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -159,6 +165,29 @@ class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
         return CartesianAcceleration2D
 
 
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_pp(
+    lhs: CartesianVelocity2D, rhs: CartesianVelocity2D, /
+) -> CartesianVelocity2D:
+    """Add two Cartesian velocities.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianVelocity2D.constructor(Quantity([1, 2], "km/s"))
+    >>> (v + v).d_x
+    Quantity['speed'](Array(2., dtype=float32), unit='km / s')
+
+    >>> xp.add(v, v).d_x
+    Quantity['speed'](Array(2., dtype=float32), unit='km / s')
+
+    """
+    return jax.tree.map(qlax.add, lhs, rhs)
+
+
 @register(jax.lax.mul_p)  # type: ignore[misc]
 def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D:
     """Scale a cartesian 2D velocity by a scalar.
@@ -208,6 +237,8 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
     def integral_cls(cls) -> type[CartesianVelocity2D]:
         return CartesianVelocity2D
 
+    # -----------------------------------------------------
+
     @partial(jax.jit)
     def norm(self, _: AbstractVelocity2D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
@@ -222,6 +253,29 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 
         """
         return xp.sqrt(self.d2_x**2 + self.d2_y**2)
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_aa(
+    lhs: CartesianAcceleration2D, rhs: CartesianAcceleration2D, /
+) -> CartesianAcceleration2D:
+    """Add two Cartesian accelerations.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianAcceleration2D.constructor(Quantity([3, 4], "km/s2"))
+    >>> (v + v).d2_x
+    Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
+
+    >>> xp.add(v, v).d2_x
+    Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
+
+    """
+    return jax.tree.map(qlax.add, lhs, rhs)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

@@ -25,6 +25,7 @@ from plum import dispatch
 from quax import ArrayValue
 
 import quaxed.array_api as xp
+import quaxed.lax as qlax
 from dataclassish import field_items, field_values, replace
 from unxt import Quantity, unitsystem
 
@@ -370,7 +371,6 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     def __abs__(self) -> Quantity:
         return self.norm()
 
-    @dispatch  # type: ignore[misc]
     def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
         return NotImplemented
 
@@ -408,6 +408,10 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
         return replace(full, **{k: v[index] for k, v in field_items(full)})
+
+    def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
+        """Add another object to this vector."""
+        return qlax.add(self, other)
 
     def __mul__(self: "AbstractVector", other: Any) -> Any:
         """Multiply the vector by a scalar.

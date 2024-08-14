@@ -117,20 +117,6 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
     # -----------------------------------------------------
     # Binary arithmetic operations
 
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "AbstractPosition", other: "AbstractPosition"
-    ) -> "AbstractPosition":  # TODO: use Self
-        """Add another object to this vector."""
-        # The base implementation is to convert to Cartesian and perform the
-        # operation.  Cartesian coordinates do not have any branch cuts or
-        # singularities or ranges that need to be handled, so this is a safe
-        # default.
-        return operator.add(
-            self.represent_as(self._cartesian_cls),
-            other.represent_as(self._cartesian_cls),
-        ).represent_as(type(self))
-
     @AbstractVector.__sub__.dispatch  # type: ignore[misc]
     def __sub__(
         self: "AbstractPosition", other: "AbstractPosition"
@@ -246,6 +232,26 @@ def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:
 
 # ===================================================================
 # Register primitives
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> AbstractPosition:
+    # The base implementation is to convert to Cartesian and perform the
+    # operation.  Cartesian coordinates do not have any branch cuts or
+    # singularities or ranges that need to be handled, so this is a safe
+    # default.
+    cart_cls = lhs._cartesian_cls  # noqa: SLF001
+    cart_cls = eqx.error_if(
+        cart_cls,
+        isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
+        "must register a Cartesian-specific dispatch for {cart_cls} addition",
+    )
+    return qlax.add(  # re-dispatch on the Cartesian class
+        lhs.represent_as(cart_cls), rhs.represent_as(cart_cls)
+    ).represent_as(type(lhs))
+
+
+# ------------------------------------------------
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

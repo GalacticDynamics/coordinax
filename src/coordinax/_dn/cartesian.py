@@ -117,28 +117,6 @@ class CartesianPositionND(AbstractPositionND):
     # -----------------------------------------------------
     # Binary operations
 
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "CartesianPositionND", other: AbstractPosition, /
-    ) -> "CartesianPositionND":
-        """Add two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        A 3D vector:
-
-        >>> q1 = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
-        >>> q2 = cx.CartesianPositionND(Quantity([2, 3, 4], "kpc"))
-        >>> (q1 + q2).q
-        Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPositionND)
-        return replace(self, q=self.q + cart.q)
-
     @AbstractVector.__sub__.dispatch  # type: ignore[misc]
     def __sub__(
         self: "CartesianPositionND", other: AbstractPosition, /
@@ -237,7 +215,7 @@ def constructor(
 
 
 @conversion_method(CartesianPositionND, Quantity)  # type: ignore[misc]
-def vec_to_q(obj: CartesianPositionND, /) -> Shaped[Quantity["length"], "*batch N"]:
+def _vec_to_q(obj: CartesianPositionND, /) -> Shaped[Quantity["length"], "*batch N"]:
     """`coordinax.AbstractPosition3D` -> `unxt.Quantity`.
 
     Examples
@@ -252,6 +230,28 @@ def vec_to_q(obj: CartesianPositionND, /) -> Shaped[Quantity["length"], "*batch 
 
     """
     return obj.q
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_vcnd(
+    lhs: CartesianPositionND, rhs: AbstractPosition, /
+) -> CartesianPositionND:
+    """Add two vectors.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    A 3D vector:
+
+    >>> q1 = cx.CartesianPositionND.constructor([1, 2, 3], "kpc")
+    >>> q2 = cx.CartesianPositionND.constructor([2, 3, 4], "kpc")
+    >>> (q1 + q2).q
+    Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
+
+    """
+    cart = rhs.represent_as(CartesianPositionND)
+    return replace(lhs, q=lhs.q + cart.q)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

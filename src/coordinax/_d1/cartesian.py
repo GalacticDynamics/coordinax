@@ -84,31 +84,6 @@ class CartesianPosition1D(AbstractPosition1D):
     # -----------------------------------------------------
     # Binary operations
 
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "CartesianPosition1D", other: AbstractPosition, /
-    ) -> "CartesianPosition1D":
-        """Add two vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
-        >>> r = cx.RadialPosition.constructor([1], "kpc")
-        >>> qpr = q + r
-        >>> qpr
-        CartesianPosition1D(
-           x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
-        )
-        >>> qpr.x
-        Quantity['length'](Array(2., dtype=float32), unit='kpc')
-
-        """
-        cart = other.represent_as(CartesianPosition1D)
-        return replace(self, x=self.x + cart.x)
-
     @AbstractVector.__sub__.dispatch  # type: ignore[misc]
     def __sub__(
         self: "CartesianPosition1D", other: AbstractPosition, /
@@ -133,6 +108,34 @@ class CartesianPosition1D(AbstractPosition1D):
         """
         cart = other.represent_as(CartesianPosition1D)
         return replace(self, x=self.x - cart.x)
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosition1D:
+    """Add a vector to a CartesianPosition1D.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> import coordinax as cx
+
+    >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
+    >>> r = cx.RadialPosition.constructor([1], "kpc")
+
+    >>> qpr = xp.add(q, r)
+    >>> qpr
+    CartesianPosition1D(
+        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+    )
+    >>> qpr.x
+    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+
+    >>> (q + r).x
+    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+
+    """
+    cart = rhs.represent_as(CartesianPosition1D)
+    return jax.tree.map(qlax.add, lhs, cart)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -198,6 +201,34 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
         return xp.abs(self.d_x)
 
 
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_pp(
+    lhs: CartesianVelocity1D, rhs: CartesianVelocity1D, /
+) -> CartesianVelocity1D:
+    """Add two Cartesian velocities.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianVelocity1D.constructor([1], "km/s")
+    >>> vec = xp.add(v, v)
+    >>> vec
+    CartesianVelocity1D(
+       d_x=Quantity[...]( value=i32[], unit=Unit("km / s") )
+    )
+    >>> vec.d_x
+    Quantity['speed'](Array(2, dtype=int32), unit='km / s')
+
+    >>> (v + v).d_x
+    Quantity['speed'](Array(2, dtype=int32), unit='km / s')
+
+    """
+    return jax.tree.map(qlax.add, lhs, rhs)
+
+
 @register(jax.lax.mul_p)  # type: ignore[misc]
 def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity1D:
     """Scale a velocity by a scalar.
@@ -249,14 +280,6 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
     # -----------------------------------------------------
     # Binary operations
 
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "CartesianAcceleration1D", other: "CartesianAcceleration1D", /
-    ) -> "CartesianAcceleration1D":
-        """Add two Cartesian Accelerations."""
-        return replace(self, d2_x=self.d2_x + other.d2_x)
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
     def __sub__(
         self: "CartesianAcceleration1D", other: "CartesianAcceleration1D", /
     ) -> "CartesianAcceleration1D":
@@ -280,6 +303,34 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
 
         """
         return xp.abs(self.d2_x)
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_aa(
+    lhs: CartesianAcceleration1D, rhs: CartesianAcceleration1D, /
+) -> CartesianAcceleration1D:
+    """Add two Cartesian accelerations.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as xp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> v = cx.CartesianAcceleration1D.constructor([1], "km/s2")
+    >>> vec = xp.add(v, v)
+    >>> vec
+    CartesianAcceleration1D(
+        d2_x=Quantity[...](value=i32[], unit=Unit("km / s2"))
+    )
+    >>> vec.d2_x
+    Quantity['acceleration'](Array(2, dtype=int32), unit='km / s2')
+
+    >>> (v + v).d2_x
+    Quantity['acceleration'](Array(2, dtype=int32), unit='km / s2')
+
+    """
+    return jax.tree.map(qlax.add, lhs, rhs)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
