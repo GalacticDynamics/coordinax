@@ -25,6 +25,7 @@ from plum import dispatch
 from quax import ArrayValue
 
 import quaxed.array_api as xp
+import quaxed.lax as qlax
 from dataclassish import field_items, field_values, replace
 from unxt import Quantity, unitsystem
 
@@ -202,6 +203,18 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # Quax
 
     def materialise(self) -> NoReturn:
+        """Materialise the vector for `quax`.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+
+        >>> try: vec.materialise()
+        ... except RuntimeError as e: print(e)
+        Refusing to materialise `Quantity`.
+
+        """
         msg = "Refusing to materialise `Quantity`."
         raise RuntimeError(msg)
 
@@ -368,14 +381,32 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # Methods
 
     def __abs__(self) -> Quantity:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPosition2D.constructor([3, 4], "m")
+        >>> abs(vec)
+        Quantity['length'](Array(5., dtype=float32), unit='m')
+
+        """
         return self.norm()
 
-    @dispatch  # type: ignore[misc]
     def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
         return NotImplemented
 
     def __array_namespace__(self) -> "ArrayAPINamespace":
-        """Return the array API namespace."""
+        """Return the array API namespace.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPosition2D.constructor([3, 4], "m")
+        >>> vec.__array_namespace__()
+        <module 'quaxed.array_api' from ...>
+
+        """
         return xp
 
     def __getitem__(self, index: Any) -> "Self":
@@ -409,29 +440,54 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
         return replace(full, **{k: v[index] for k, v in field_items(full)})
 
-    @dispatch  # type: ignore[misc]
+    def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
+        """Add another object to this vector."""
+        return qlax.add(self, other)
+
     def __mul__(self: "AbstractVector", other: Any) -> Any:
-        return NotImplemented
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> (vec * 2).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
+        return qlax.mul(self, other)
 
     @abstractmethod
     def __neg__(self) -> "Self":
         raise NotImplementedError
 
-    @dispatch  # type: ignore[misc]
     def __rmul__(self: "AbstractVector", other: Any) -> Any:
-        return NotImplemented
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+        >>> (2 * vec).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
+        return qlax.mul(other, self)
 
     def __setitem__(self, k: Any, v: Any) -> NoReturn:
         msg = f"{type(self).__name__} is immutable."
         raise TypeError(msg)
 
-    @dispatch  # type: ignore[misc]
     def __sub__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        raise NotImplementedError
+        """Subtract an object from this vector."""
+        return qlax.sub(self, other)
 
-    @dispatch  # type: ignore[misc]
     def __truediv__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        return NotImplemented
+        return qlax.div(self, other)
 
     def to_device(self, device: None | Device = None) -> "Self":
         """Move the vector to a new device.

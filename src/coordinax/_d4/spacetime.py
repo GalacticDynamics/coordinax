@@ -11,6 +11,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 from jaxtyping import Shaped
+from quax import register
 
 import quaxed.array_api as xp
 from unxt import Quantity
@@ -205,63 +206,6 @@ class FourVector(AbstractPosition4D):
         return replace(self, t=-self.t, q=-self.q)
 
     # -------------------------------------------
-    # Binary operations
-
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(self: "FourVector", other: "FourVector") -> "FourVector":
-        """Add two 4-vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-        >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
-        >>> w3 = w1 + w2
-        >>> w3
-        FourVector(
-            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-            q=CartesianPosition3D( ... )
-        )
-
-        >>> w3.t
-        Quantity['time'](Array(3., dtype=float32), unit='s')
-
-        >>> w3.x
-        Quantity['length'](Array(5., dtype=float32), unit='m')
-
-        """
-        return replace(self, t=self.t + other.t, q=self.q + other.q)
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(self: "FourVector", other: "FourVector") -> "FourVector":
-        """Add two 4-vectors.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-        >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
-        >>> w3 = w1 - w2
-        >>> w3
-        FourVector(
-            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-            q=CartesianPosition3D( ... )
-        )
-
-        >>> w3.t
-        Quantity['time'](Array(-1., dtype=float32), unit='s')
-
-        >>> w3.x
-        Quantity['length'](Array(-3., dtype=float32), unit='m')
-
-        """
-        return replace(self, t=self.t - other.t, q=self.q - other.q)
-
-    # -------------------------------------------
 
     @partial(jax.jit)
     def _norm2(self) -> Shaped[Quantity["area"], "*#batch"]:
@@ -350,3 +294,59 @@ def constructor(
     )
     c = cls.__dataclass_fields__["c"].default
     return cls(t=obj[..., 0] / c, q=obj[..., 1:])
+
+
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_4v4v(self: FourVector, other: FourVector) -> FourVector:
+    """Add two 4-vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+    >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+    >>> w3 = w1 + w2
+    >>> w3
+    FourVector(
+        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
+        q=CartesianPosition3D( ... )
+    )
+
+    >>> w3.t
+    Quantity['time'](Array(3., dtype=float32), unit='s')
+
+    >>> w3.x
+    Quantity['length'](Array(5., dtype=float32), unit='m')
+
+    """
+    return replace(self, t=self.t + other.t, q=self.q + other.q)
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
+    """Add two 4-vectors.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+    >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+    >>> w3 = w1 - w2
+    >>> w3
+    FourVector(
+        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
+        q=CartesianPosition3D( ... )
+    )
+
+    >>> w3.t
+    Quantity['time'](Array(-1., dtype=float32), unit='s')
+
+    >>> w3.x
+    Quantity['length'](Array(-3., dtype=float32), unit='m')
+
+    """
+    return replace(lhs, t=lhs.t - rhs.t, q=lhs.q - rhs.q)

@@ -2,7 +2,6 @@
 
 __all__ = ["AbstractPosition"]
 
-import operator
 from abc import abstractmethod
 from dataclasses import replace
 from functools import partial
@@ -114,75 +113,6 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         cart = self.represent_as(self._cartesian_cls)
         return (-cart).represent_as(type(self))
 
-    # -----------------------------------------------------
-    # Binary arithmetic operations
-
-    @AbstractVector.__add__.dispatch  # type: ignore[misc]
-    def __add__(
-        self: "AbstractPosition", other: "AbstractPosition"
-    ) -> "AbstractPosition":  # TODO: use Self
-        """Add another object to this vector."""
-        # The base implementation is to convert to Cartesian and perform the
-        # operation.  Cartesian coordinates do not have any branch cuts or
-        # singularities or ranges that need to be handled, so this is a safe
-        # default.
-        return operator.add(
-            self.represent_as(self._cartesian_cls),
-            other.represent_as(self._cartesian_cls),
-        ).represent_as(type(self))
-
-    @AbstractVector.__sub__.dispatch  # type: ignore[misc]
-    def __sub__(
-        self: "AbstractPosition", other: "AbstractPosition"
-    ) -> "AbstractPosition":  # TODO: use Self
-        """Add another object to this vector."""
-        # The base implementation is to convert to Cartesian and perform the
-        # operation.  Cartesian coordinates do not have any branch cuts or
-        # singularities or ranges that need to be handled, so this is a safe
-        # default.
-        return operator.sub(
-            self.represent_as(self._cartesian_cls),
-            other.represent_as(self._cartesian_cls),
-        ).represent_as(type(self))
-
-    @AbstractVector.__mul__.dispatch  # type: ignore[misc]
-    def __mul__(self: "AbstractPosition", other: ArrayLike) -> "AbstractPosition":
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> (vec * 2).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
-
-        """
-        return qlax.mul(self, other)
-
-    @AbstractVector.__rmul__.dispatch  # type: ignore[misc]
-    def __rmul__(self: "AbstractPosition", other: ArrayLike) -> "AbstractPosition":
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> (2 * vec).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
-
-        """
-        return qlax.mul(other, self)
-
-    @AbstractVector.__truediv__.dispatch  # type: ignore[misc]
-    def __truediv__(
-        self: "AbstractPosition", other: ArrayLike
-    ) -> "AbstractPosition":  # TODO: use Self
-        return replace(self, **{k: v / other for k, v in field_items(self)})
-
     # ===============================================================
     # Convenience methods
 
@@ -280,8 +210,41 @@ def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:
 # Register primitives
 
 
+@register(jax.lax.add_p)  # type: ignore[misc]
+def _add_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> AbstractPosition:
+    # The base implementation is to convert to Cartesian and perform the
+    # operation.  Cartesian coordinates do not have any branch cuts or
+    # singularities or ranges that need to be handled, so this is a safe
+    # default.
+    cart_cls = lhs._cartesian_cls  # noqa: SLF001
+    cart_cls = eqx.error_if(
+        cart_cls,
+        isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
+        "must register a Cartesian-specific dispatch for {cart_cls} addition",
+    )
+    return qlax.add(  # re-dispatch on the Cartesian class
+        lhs.represent_as(cart_cls), rhs.represent_as(cart_cls)
+    ).represent_as(type(lhs))
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_qq(lhs: AbstractPosition, rhs: AbstractPosition) -> AbstractPosition:
+    """Add another object to this vector."""
+    # The base implementation is to convert to Cartesian and perform the
+    # operation.  Cartesian coordinates do not have any branch cuts or
+    # singularities or ranges that need to be handled, so this is a safe
+    # default.
+    return qlax.sub(
+        lhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
+        rhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
+    ).represent_as(type(lhs))
+
+
+# ------------------------------------------------
+
+
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_vq(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
+def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     """Scale a position by a scalar.
 
     Examples
@@ -375,7 +338,7 @@ def _mul_p_vq(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_qv(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
+def _mul_pos_v(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
     """Scale a position by a scalar.
 
     Examples
@@ -397,7 +360,7 @@ def _mul_p_qv(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
+def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -427,11 +390,31 @@ def _mul_p_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 
+@register(jax.lax.div_p)  # type: ignore[misc]
+def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
+    """Divide a vector by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as jnp
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> jnp.divide(vec, 2).x
+    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+
+    >>> (vec / 2).x
+    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+
+    """
+    return replace(lhs, **{k: xp.divide(v, rhs) for k, v in field_items(lhs)})
+
+
 # ------------------------------------------------
 
 
 @register(jax.lax.reshape_p)  # type: ignore[misc]
-def _reshape_p(
+def _reshape_pos(
     operand: AbstractPosition, *, new_sizes: tuple[int, ...], **kwargs: Any
 ) -> AbstractPosition:
     """Reshape the components of the vector.
