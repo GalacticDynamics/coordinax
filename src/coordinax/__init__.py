@@ -7,7 +7,8 @@ coordinax: Vectors in JAX
 
 from jaxtyping import install_import_hook
 
-from . import (
+from . import operators
+from ._coordinax import (
     _base,
     _base_acc,
     _base_pos,
@@ -23,23 +24,22 @@ from . import (
     _transform,
     _typing,
     _utils,
-    operators,
 )
-from ._base import *
-from ._base_acc import *
-from ._base_pos import *
-from ._base_vel import *
-from ._d1 import *
-from ._d2 import *
-from ._d3 import *
-from ._d4 import *
-from ._dn import *
-from ._exceptions import *
-from ._funcs import *
-from ._space import *
-from ._transform import *
-from ._typing import *
-from ._utils import *
+from ._coordinax._base import *
+from ._coordinax._base_acc import *
+from ._coordinax._base_pos import *
+from ._coordinax._base_vel import *
+from ._coordinax._d1 import *
+from ._coordinax._d2 import *
+from ._coordinax._d3 import *
+from ._coordinax._d4 import *
+from ._coordinax._dn import *
+from ._coordinax._exceptions import *
+from ._coordinax._funcs import *
+from ._coordinax._space import *
+from ._coordinax._transform import *
+from ._coordinax._typing import *
+from ._coordinax._utils import *
 from ._version import version as __version__
 from .setup_package import RUNTIME_TYPECHECKER
 
@@ -62,7 +62,7 @@ __all__ += _utils.__all__
 
 # Interoperability
 # Astropy
-from ._interop import coordinax_interop_astropy  # noqa: E402
+from ._coordinax._interop import coordinax_interop_astropy  # noqa: E402
 
 # Runtime Typechecker
 install_import_hook("coordinax", RUNTIME_TYPECHECKER)
