@@ -49,10 +49,9 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
     """
-    return convert(
-        self(CartesianPosition3D.constructor(q)).represent_as(CartesianPosition3D),
-        Quantity,
-    )
+    cart = CartesianPosition3D.constructor(q)
+    result = self(cart)
+    return convert(result.represent_as(CartesianPosition3D), Quantity)
 
 
 @op_call_dispatch
