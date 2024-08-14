@@ -269,6 +269,90 @@ class MathSphericalPosition(AbstractSphericalPosition):
         return self.r
 
 
+@MathSphericalPosition.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: type[MathSphericalPosition],
+    *,
+    r: AbstractQuantity,
+    theta: AbstractQuantity,
+    phi: AbstractQuantity,
+) -> MathSphericalPosition:
+    """Construct MathSphericalPosition, allowing for out-of-range values.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    Let's start with a valid input:
+
+    >>> cx.MathSphericalPosition.constructor(r=Quantity(3, "kpc"),
+    ...                                      theta=Quantity(90, "deg"),
+    ...                                      phi=Quantity(0, "deg"))
+    MathSphericalPosition(
+      r=Distance(value=f32[], unit=Unit("kpc")),
+      theta=Quantity[...](value=f32[], unit=Unit("deg")),
+      phi=Quantity[...](value=f32[], unit=Unit("deg"))
+    )
+
+    The radial distance can be negative, which wraps the azimuthal angle by 180
+    degrees and flips the polar angle:
+
+    >>> vec = cx.MathSphericalPosition.constructor(r=Quantity(-3, "kpc"),
+    ...                                            theta=Quantity(100, "deg"),
+    ...                                            phi=Quantity(45, "deg"))
+    >>> vec.r
+    Distance(Array(3., dtype=float32), unit='kpc')
+    >>> vec.theta
+    Quantity['angle'](Array(280., dtype=float32), unit='deg')
+    >>> vec.phi
+    Quantity[...](Array(135., dtype=float32), unit='deg')
+
+    The polar angle can be outside the [0, 180] deg range, causing the azimuthal
+    angle to be shifted by 180 degrees:
+
+    >>> vec = cx.MathSphericalPosition.constructor(r=Quantity(3, "kpc"),
+    ...                                            theta=Quantity(0, "deg"),
+    ...                                            phi=Quantity(190, "deg"))
+    >>> vec.r
+    Distance(Array(3., dtype=float32), unit='kpc')
+    >>> vec.theta
+    Quantity['angle'](Array(180., dtype=float32), unit='deg')
+    >>> vec.phi
+    Quantity['angle'](Array(170., dtype=float32), unit='deg')
+
+    The azimuth can be outside the [0, 360) deg range. This is wrapped to the
+    [0, 360) deg range (actually the base constructor does this):
+
+    >>> vec = cx.MathSphericalPosition.constructor(r=Quantity(3, "kpc"),
+    ...                                            theta=Quantity(365, "deg"),
+    ...                                            phi=Quantity(90, "deg"))
+    >>> vec.theta
+    Quantity['angle'](Array(5., dtype=float32), unit='deg')
+
+    """
+    # 1) Convert the inputs
+    fields = SphericalPosition.__dataclass_fields__
+    r = fields["r"].metadata["converter"](r)
+    theta = fields["theta"].metadata["converter"](theta)
+    phi = fields["phi"].metadata["converter"](phi)
+
+    # 2) handle negative distances
+    r_pred = r < xp.zeros_like(r)
+    r = qlax.select(r_pred, -r, r)
+    theta = qlax.select(r_pred, theta + _180d, theta)
+    phi = qlax.select(r_pred, _180d - phi, phi)
+
+    # 3) Handle polar angle outside of [0, 180] degrees
+    phi = jnp.mod(phi, _360d)  # wrap to [0, 360) deg
+    phi_pred = phi < _180d
+    phi = qlax.select(phi_pred, phi, _360d - phi)
+    theta = qlax.select(phi_pred, theta, theta + _180d)
+
+    # 4) Construct. This also handles the azimuthal angle wrapping
+    return cls(r=r, theta=theta, phi=phi)
+
+
 # ============================================================================
 
 
