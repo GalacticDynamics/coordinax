@@ -22,6 +22,7 @@ from unxt import Quantity
 
 import coordinax._typing as ct
 from ._base import AbstractVector
+from ._mixins import AvalMixin
 from ._utils import classproperty
 
 if TYPE_CHECKING:
@@ -32,7 +33,7 @@ PosT = TypeVar("PosT", bound="AbstractPosition")
 VECTOR_CLASSES: set[type["AbstractPosition"]] = set()
 
 
-class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
+class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -84,31 +85,6 @@ class AbstractPosition(AbstractVector):  # pylint: disable=abstract-method
 
         """
         raise NotImplementedError
-
-    # ===============================================================
-    # Quax
-
-    def aval(self) -> jax.core.ShapedArray:
-        """Return the vector as a JAX array.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> vec.aval()
-        ConcreteArray([1. 2. 3.], dtype=float32)
-
-        >>> vec = cx.CartesianPosition3D.constructor([[1, 2, 3], [4, 5, 6]], "m")
-        >>> vec.aval()
-        ConcreteArray([[1. 2. 3.]
-                       [4. 5. 6.]], dtype=float32)
-
-        """
-        return jax.core.get_aval(
-            convert(self.represent_as(self._cartesian_cls), Quantity).value
-        )
 
     # ===============================================================
     # Array
