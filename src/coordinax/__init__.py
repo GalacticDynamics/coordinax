@@ -12,11 +12,11 @@ from ._coordinax import (
     _d1,
     _d2,
     _d3,
-    _d4,
     base,
     base_acc,
     base_pos,
     base_vel,
+    d4,
     dn,
     exceptions,
     funcs,
@@ -28,11 +28,11 @@ from ._coordinax import (
 from ._coordinax._d1 import *
 from ._coordinax._d2 import *
 from ._coordinax._d3 import *
-from ._coordinax._d4 import *
 from ._coordinax.base import *
 from ._coordinax.base_acc import *
 from ._coordinax.base_pos import *
 from ._coordinax.base_vel import *
+from ._coordinax.d4 import *
 from ._coordinax.dn import *
 from ._coordinax.exceptions import *
 from ._coordinax.funcs import *
@@ -52,7 +52,7 @@ __all__ += base_acc.__all__
 __all__ += _d1.__all__
 __all__ += _d2.__all__
 __all__ += _d3.__all__
-__all__ += _d4.__all__
+__all__ += d4.__all__
 __all__ += dn.__all__
 __all__ += space.__all__
 __all__ += exceptions.__all__
@@ -81,7 +81,7 @@ del (
     _d1,
     _d2,
     _d3,
-    _d4,
+    d4,
     dn,
     funcs,
     RUNTIME_TYPECHECKER,
