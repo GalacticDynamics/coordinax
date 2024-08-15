@@ -1,4 +1,4 @@
-"""Test :mod:`coordinax._utils`."""
+"""Test :mod:`coordinax.utils`."""
 
 from collections import UserDict
 from contextlib import AbstractContextManager, nullcontext
