@@ -13,11 +13,11 @@ from ._coordinax import (
     _d2,
     _d3,
     _d4,
-    _dn,
     base,
     base_acc,
     base_pos,
     base_vel,
+    dn,
     exceptions,
     funcs,
     space,
@@ -29,11 +29,11 @@ from ._coordinax._d1 import *
 from ._coordinax._d2 import *
 from ._coordinax._d3 import *
 from ._coordinax._d4 import *
-from ._coordinax._dn import *
 from ._coordinax.base import *
 from ._coordinax.base_acc import *
 from ._coordinax.base_pos import *
 from ._coordinax.base_vel import *
+from ._coordinax.dn import *
 from ._coordinax.exceptions import *
 from ._coordinax.funcs import *
 from ._coordinax.space import *
@@ -53,7 +53,7 @@ __all__ += _d1.__all__
 __all__ += _d2.__all__
 __all__ += _d3.__all__
 __all__ += _d4.__all__
-__all__ += _dn.__all__
+__all__ += dn.__all__
 __all__ += space.__all__
 __all__ += exceptions.__all__
 __all__ += transform.__all__
@@ -82,7 +82,7 @@ del (
     _d2,
     _d3,
     _d4,
-    _dn,
+    dn,
     funcs,
     RUNTIME_TYPECHECKER,
     coordinax_interop_astropy,

@@ -11,7 +11,7 @@ from coordinax._coordinax._d3.cylindrical import (
     CylindricalPosition,
     CylindricalVelocity,
 )
-from coordinax._coordinax._dn.poincare import PoincarePolarVector
+from coordinax._coordinax.dn.poincare import PoincarePolarVector
 from coordinax._coordinax.space import Space
 
 
