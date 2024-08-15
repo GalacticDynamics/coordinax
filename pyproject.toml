@@ -56,8 +56,9 @@
       "hypothesis[numpy]",
       "nox",
       "pytest >=6",
-      "pytest-cov >=3",
       "pytest-arraydiff",
+      "pytest-cov >=3",
+      "pytest-env",
       "sybil",
     ]
 
@@ -98,6 +99,10 @@
   minversion = "6.0"
   testpaths = ["tests"]
   xfail_strict = true
+
+  env = [
+    "COORDINAX_ENABLE_RUNTIME_TYPECHECKS=1",
+  ]
 
 
 [tool.coverage]
