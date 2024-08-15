@@ -21,8 +21,8 @@ from coordinax._coordinax._d2.cartesian import CartesianPosition2D
 from coordinax._coordinax._d3.base import AbstractPosition3D
 from coordinax._coordinax._d3.cartesian import CartesianPosition3D
 from coordinax._coordinax._d4.spacetime import FourVector
-from coordinax._coordinax.operators._base import AbstractOperator, op_call_dispatch
 from coordinax._coordinax.operators._identity import IdentityOperator
+from coordinax._coordinax.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._coordinax.operators.funcs import simplify_op
 
 ##############################################################################

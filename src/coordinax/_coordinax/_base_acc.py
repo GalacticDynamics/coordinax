@@ -15,9 +15,9 @@ from dataclassish import field_items
 from quaxed import lax as qlax
 from unxt import Quantity
 
-from ._base import AbstractVector
 from ._base_pos import AbstractPosition
 from ._base_vel import AbstractVelocity
+from .base import AbstractVector
 from .utils import classproperty
 
 if TYPE_CHECKING:

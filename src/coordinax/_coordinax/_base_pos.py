@@ -20,7 +20,7 @@ from dataclassish import field_items
 from unxt import Quantity
 
 from . import typing as ct
-from ._base import AbstractVector
+from .base import AbstractVector
 from .mixins import AvalMixin
 from .utils import classproperty
 

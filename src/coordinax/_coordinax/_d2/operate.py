@@ -11,7 +11,7 @@ from plum import convert
 from unxt import Quantity
 
 from .cartesian import CartesianPosition2D
-from coordinax._coordinax.operators._base import AbstractOperator, op_call_dispatch
+from coordinax._coordinax.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._coordinax.typing import TimeBatchOrScalar
 
 Q2: TypeAlias = Shaped[Quantity["length"], "*#batch 2"]

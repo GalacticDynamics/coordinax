@@ -4,7 +4,7 @@ __all__ = ["simplify_op"]
 
 from functools import singledispatch
 
-from ._base import AbstractOperator
+from .base import AbstractOperator
 
 
 @singledispatch

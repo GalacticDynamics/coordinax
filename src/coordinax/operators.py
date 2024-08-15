@@ -12,11 +12,11 @@ from ._coordinax.operators import (
     _sequential,
     funcs,
 )
-from ._coordinax.operators._base import *  # noqa: F403
 from ._coordinax.operators._composite import *  # noqa: F403
 from ._coordinax.operators._galilean import *  # noqa: F403
 from ._coordinax.operators._identity import *  # noqa: F403
 from ._coordinax.operators._sequential import *  # noqa: F403
+from ._coordinax.operators.base import *  # noqa: F403
 from ._coordinax.operators.funcs import *  # noqa: F403
 
 __all__: list[str] = []
