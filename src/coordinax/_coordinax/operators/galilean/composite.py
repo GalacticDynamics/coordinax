@@ -15,8 +15,8 @@ from .base import AbstractGalileanOperator
 from .boost import GalileanBoostOperator
 from .rotation import GalileanRotationOperator
 from .translation import GalileanTranslationOperator
-from coordinax._coordinax.operators._composite import AbstractCompositeOperator
 from coordinax._coordinax.operators.base import AbstractOperator
+from coordinax._coordinax.operators.composite import AbstractCompositeOperator
 from coordinax._coordinax.operators.funcs import simplify_op
 from coordinax._coordinax.operators.identity import IdentityOperator
 from coordinax._coordinax.operators.sequential import OperatorSequence

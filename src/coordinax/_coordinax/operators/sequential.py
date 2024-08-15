@@ -7,8 +7,8 @@ from typing import Any, final
 
 import equinox as eqx
 
-from ._composite import AbstractCompositeOperator
 from .base import AbstractOperator
+from .composite import AbstractCompositeOperator
 from .funcs import simplify_op
 from .identity import IdentityOperator
 
