@@ -42,7 +42,7 @@ from coordinax._coordinax._checks import (
     check_polar_range,
     check_r_non_negative,
 )
-from coordinax._coordinax._converters import converter_azimuth_to_range
+from coordinax._coordinax.converters import converter_azimuth_to_range
 from coordinax._coordinax.utils import classproperty
 
 _90d = Quantity(90, "deg")
