@@ -73,7 +73,7 @@ class AbstractCompositeOperator(AbstractOperator):
     @property
     def inverse(self: HasOperatorsAttr) -> "AbstractCompositeOperator":
         """The inverse of the operator."""
-        from ._sequential import OperatorSequence
+        from .sequential import OperatorSequence
 
         return OperatorSequence(tuple(op.inverse for op in reversed(self.operators)))
 

@@ -15,7 +15,7 @@ from unxt import Quantity
 from coordinax._coordinax.base_pos import AbstractPosition
 
 if TYPE_CHECKING:
-    from ._sequential import OperatorSequence
+    from .sequential import OperatorSequence
 
 
 class AbstractOperator(eqx.Module):  # type: ignore[misc]
@@ -93,7 +93,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
     def __or__(self, other: "AbstractOperator") -> "OperatorSequence":
         """Compose with another operator."""
-        from ._sequential import OperatorSequence
+        from .sequential import OperatorSequence
 
         if isinstance(other, OperatorSequence):
             return other.__ror__(self)
