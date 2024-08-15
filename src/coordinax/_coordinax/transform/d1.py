@@ -11,8 +11,8 @@ from unxt import Quantity
 
 from coordinax._coordinax._d1.cartesian import CartesianPosition1D
 from coordinax._coordinax._d1.radial import RadialPosition
-from coordinax._coordinax._d2.cartesian import CartesianPosition2D
-from coordinax._coordinax._d2.polar import PolarPosition
+from coordinax._coordinax.d2.cartesian import CartesianPosition2D
+from coordinax._coordinax.d2.polar import PolarPosition
 from coordinax._coordinax.d3.cartesian import CartesianPosition3D
 from coordinax._coordinax.d3.cylindrical import CylindricalPosition
 from coordinax._coordinax.d3.sphere import MathSphericalPosition, SphericalPosition

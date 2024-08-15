@@ -14,10 +14,10 @@ from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
 from coordinax._coordinax._d1.base import AbstractAcceleration1D
-from coordinax._coordinax._d2.base import AbstractAcceleration2D
 from coordinax._coordinax.base_acc import AbstractAcceleration
 from coordinax._coordinax.base_pos import AbstractPosition
 from coordinax._coordinax.base_vel import AbstractVelocity
+from coordinax._coordinax.d2.base import AbstractAcceleration2D
 from coordinax._coordinax.d3.base import AbstractAcceleration3D
 
 

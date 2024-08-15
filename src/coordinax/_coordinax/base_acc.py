@@ -101,10 +101,10 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
             d2_r=Quantity[PhysicalType('acceleration')](value=i32[], unit=Unit("m / s2")) )
 
         >>> d2p = cx.PolarAcceleration(Quantity(1, "m/s2"), Quantity(1, "mas/yr2"))
-        >>> neg_d2p = -d2p
-        >>> neg_d2p.d2_r
+        >>> negd2p = -d2p
+        >>> negd2p.d2_r
         Quantity['acceleration'](Array(-1., dtype=float32), unit='m / s2')
-        >>> neg_d2p.d2_phi
+        >>> negd2p.d2_phi
         Quantity['angular acceleration'](Array(-1., dtype=float32), unit='mas / yr2')
 
         """  # noqa: E501

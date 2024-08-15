@@ -10,11 +10,11 @@ from jaxtyping import install_import_hook
 from . import operators
 from ._coordinax import (
     _d1,
-    _d2,
     base,
     base_acc,
     base_pos,
     base_vel,
+    d2,
     d3,
     d4,
     dn,
@@ -26,11 +26,11 @@ from ._coordinax import (
     utils,
 )
 from ._coordinax._d1 import *
-from ._coordinax._d2 import *
 from ._coordinax.base import *
 from ._coordinax.base_acc import *
 from ._coordinax.base_pos import *
 from ._coordinax.base_vel import *
+from ._coordinax.d2 import *
 from ._coordinax.d3 import *
 from ._coordinax.d4 import *
 from ._coordinax.dn import *
@@ -50,7 +50,7 @@ __all__ += base_pos.__all__
 __all__ += base_vel.__all__
 __all__ += base_acc.__all__
 __all__ += _d1.__all__
-__all__ += _d2.__all__
+__all__ += d2.__all__
 __all__ += d3.__all__
 __all__ += d4.__all__
 __all__ += dn.__all__
@@ -79,7 +79,7 @@ del (
     typing,
     utils,
     _d1,
-    _d2,
+    d2,
     d3,
     d4,
     dn,
