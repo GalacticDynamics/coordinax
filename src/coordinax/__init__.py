@@ -18,8 +18,8 @@ from ._coordinax import (
     _d3,
     _d4,
     _dn,
-    _exceptions,
     _transform,
+    exceptions,
     funcs,
     space,
     typing,
@@ -34,8 +34,8 @@ from ._coordinax._d2 import *
 from ._coordinax._d3 import *
 from ._coordinax._d4 import *
 from ._coordinax._dn import *
-from ._coordinax._exceptions import *
 from ._coordinax._transform import *
+from ._coordinax.exceptions import *
 from ._coordinax.funcs import *
 from ._coordinax.space import *
 from ._coordinax.typing import *
@@ -55,7 +55,7 @@ __all__ += _d3.__all__
 __all__ += _d4.__all__
 __all__ += _dn.__all__
 __all__ += space.__all__
-__all__ += _exceptions.__all__
+__all__ += exceptions.__all__
 __all__ += _transform.__all__
 __all__ += typing.__all__
 __all__ += utils.__all__
@@ -74,7 +74,7 @@ del (
     _base_pos,
     _base_acc,
     space,
-    _exceptions,
+    exceptions,
     _transform,
     typing,
     utils,

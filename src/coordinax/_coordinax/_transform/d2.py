@@ -20,7 +20,7 @@ from coordinax._coordinax._d3.base import AbstractPosition3D
 from coordinax._coordinax._d3.cartesian import CartesianPosition3D
 from coordinax._coordinax._d3.cylindrical import CylindricalPosition
 from coordinax._coordinax._d3.sphere import MathSphericalPosition, SphericalPosition
-from coordinax._coordinax._exceptions import IrreversibleDimensionChange
+from coordinax._coordinax.exceptions import IrreversibleDimensionChange
 
 
 @dispatch.multi(
