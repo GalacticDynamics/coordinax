@@ -21,7 +21,7 @@ from unxt import Quantity
 
 from . import typing as ct
 from ._base import AbstractVector
-from ._mixins import AvalMixin
+from .mixins import AvalMixin
 from .utils import classproperty
 
 if TYPE_CHECKING:
