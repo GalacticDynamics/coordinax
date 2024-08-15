@@ -15,9 +15,9 @@ from unxt import AbstractDistance, Quantity
 
 from coordinax._coordinax._d1.base import AbstractVelocity1D
 from coordinax._coordinax._d2.base import AbstractVelocity2D
-from coordinax._coordinax._d3.base import AbstractVelocity3D
 from coordinax._coordinax.base_pos import AbstractPosition
 from coordinax._coordinax.base_vel import AbstractVelocity
+from coordinax._coordinax.d3.base import AbstractVelocity3D
 
 
 # TODO: implement for cross-representations

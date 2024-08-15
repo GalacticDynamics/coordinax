@@ -10,17 +10,17 @@ from plum import conversion_method, convert
 
 import unxt as ux
 
-from coordinax._coordinax._d3.base import AbstractPosition3D
-from coordinax._coordinax._d3.cartesian import (
+from coordinax._coordinax.d3.base import AbstractPosition3D
+from coordinax._coordinax.d3.cartesian import (
     CartesianAcceleration3D,
     CartesianPosition3D,
     CartesianVelocity3D,
 )
-from coordinax._coordinax._d3.cylindrical import (
+from coordinax._coordinax.d3.cylindrical import (
     CylindricalPosition,
     CylindricalVelocity,
 )
-from coordinax._coordinax._d3.sphere import (
+from coordinax._coordinax.d3.sphere import (
     LonCosLatSphericalVelocity,
     LonLatSphericalPosition,
     LonLatSphericalVelocity,

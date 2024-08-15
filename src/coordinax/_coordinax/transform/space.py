@@ -7,7 +7,7 @@ from plum import dispatch
 
 import quaxed.array_api as xp
 
-from coordinax._coordinax._d3.cylindrical import (
+from coordinax._coordinax.d3.cylindrical import (
     CylindricalPosition,
     CylindricalVelocity,
 )
