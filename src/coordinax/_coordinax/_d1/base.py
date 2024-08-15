@@ -12,8 +12,8 @@ import quaxed.numpy as jnp
 from unxt import Quantity
 
 from coordinax._coordinax._base_acc import AbstractAcceleration
-from coordinax._coordinax._base_pos import AbstractPosition
 from coordinax._coordinax.base import AbstractVector
+from coordinax._coordinax.base_pos import AbstractPosition
 from coordinax._coordinax.base_vel import AbstractVelocity
 from coordinax._coordinax.utils import classproperty
 

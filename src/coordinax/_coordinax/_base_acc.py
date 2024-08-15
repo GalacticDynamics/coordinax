@@ -15,8 +15,8 @@ from dataclassish import field_items
 from quaxed import lax as qlax
 from unxt import Quantity
 
-from ._base_pos import AbstractPosition
 from .base import AbstractVector
+from .base_pos import AbstractPosition
 from .base_vel import AbstractVelocity
 from .utils import classproperty
 

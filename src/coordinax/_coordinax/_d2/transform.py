@@ -11,7 +11,7 @@ import quaxed.array_api as xp
 from .base import AbstractPosition2D, AbstractVelocity2D
 from .cartesian import CartesianAcceleration2D, CartesianPosition2D, CartesianVelocity2D
 from .polar import PolarPosition, PolarVelocity
-from coordinax._coordinax._base_pos import AbstractPosition
+from coordinax._coordinax.base_pos import AbstractPosition
 
 
 @dispatch

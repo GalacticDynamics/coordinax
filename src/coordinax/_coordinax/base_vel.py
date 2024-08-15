@@ -13,8 +13,8 @@ from quax import register
 from dataclassish import field_items
 from unxt import Quantity
 
-from ._base_pos import AbstractPosition
 from .base import AbstractVector
+from .base_pos import AbstractPosition
 from .utils import classproperty
 
 if TYPE_CHECKING:
