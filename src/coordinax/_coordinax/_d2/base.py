@@ -5,8 +5,8 @@ __all__ = ["AbstractPosition2D", "AbstractVelocity2D", "AbstractAcceleration2D"]
 
 from abc import abstractmethod
 
-from coordinax._coordinax._base_acc import AbstractAcceleration
 from coordinax._coordinax.base import AbstractVector
+from coordinax._coordinax.base_acc import AbstractAcceleration
 from coordinax._coordinax.base_pos import AbstractPosition
 from coordinax._coordinax.base_vel import AbstractVelocity
 from coordinax._coordinax.utils import classproperty

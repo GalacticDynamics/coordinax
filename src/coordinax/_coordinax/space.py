@@ -21,8 +21,8 @@ from xmmutablemap import ImmutableMap
 
 from .typing import Unit
 from .utils import classproperty
-from coordinax._coordinax._base_acc import AbstractAcceleration
 from coordinax._coordinax.base import AbstractVector
+from coordinax._coordinax.base_acc import AbstractAcceleration
 from coordinax._coordinax.base_pos import AbstractPosition
 from coordinax._coordinax.base_vel import AbstractVelocity
 from coordinax._coordinax.funcs import represent_as
