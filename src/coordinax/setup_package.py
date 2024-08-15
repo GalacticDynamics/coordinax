@@ -4,6 +4,6 @@ import os
 
 RUNTIME_TYPECHECKER = (
     "beartype.beartype"
-    if (os.environ.get("VECTOR_ENABLE_RUNTIME_TYPECHECKS", "1") == "1")
+    if (os.environ.get("COORDINAX_ENABLE_RUNTIME_TYPECHECKS", "1") == "0")
     else None
 )
