@@ -393,9 +393,6 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         """
         return self.norm()
 
-    def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        return NotImplemented
-
     def __array_namespace__(self) -> "ArrayAPINamespace":
         """Return the array API namespace.
 

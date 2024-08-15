@@ -18,7 +18,11 @@ from unxt import AbstractQuantity
 
 @dispatch.abstract  # type: ignore[misc]
 def represent_as(current: Any, target: type[Any], /, **kwargs: Any) -> Any:
-    """Transform the current vector to the target vector."""
+    """Transform the current vector to the target vector.
+
+    See the dispatch implementations for more details.
+
+    """
     raise NotImplementedError  # pragma: no cover
 
 

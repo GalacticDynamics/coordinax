@@ -15,7 +15,23 @@ if TYPE_CHECKING:
 
 
 def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
-    """Return the vector, fully broadcasting all components."""
+    """Return the vector, fully broadcasting all components.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+    >>> v = cx.CartesianPosition2D(Quantity([1], "m"), Quantity([3, 4], "m"))
+    >>> v.x.shape
+    (1,)
+    >>> v.y.shape
+    (2,)
+
+    >>> from coordinax._coordinax.utils import full_shaped
+    >>> full_shaped(v).x.shape
+    (2,)
+
+    """
     arrays = xp.broadcast_arrays(*field_values(obj))
     return _dataclass_replace(obj, **dict(zip(obj.components, arrays, strict=True)))
 
