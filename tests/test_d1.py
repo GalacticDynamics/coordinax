@@ -1,4 +1,4 @@
-"""Test :mod:`coordinax._d1`."""
+"""Test :mod:`coordinax.d1`."""
 
 import pytest
 

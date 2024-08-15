@@ -11,8 +11,8 @@ from plum import dispatch
 import quaxed.array_api as xp
 from unxt import Quantity
 
-from coordinax._coordinax._d1.cartesian import CartesianPosition1D
-from coordinax._coordinax._d1.radial import RadialPosition
+from coordinax._coordinax.d1.cartesian import CartesianPosition1D
+from coordinax._coordinax.d1.radial import RadialPosition
 from coordinax._coordinax.d2.base import AbstractPosition2D
 from coordinax._coordinax.d2.cartesian import CartesianPosition2D
 from coordinax._coordinax.d2.polar import PolarPosition
