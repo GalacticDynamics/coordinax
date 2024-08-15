@@ -12,7 +12,7 @@ from unxt import Quantity
 
 import coordinax._coordinax.typing as ct
 from coordinax._coordinax._base_pos import AbstractPosition
-from coordinax._coordinax._base_vel import AbstractVelocity
+from coordinax._coordinax.base_vel import AbstractVelocity
 from coordinax._coordinax.utils import classproperty
 
 

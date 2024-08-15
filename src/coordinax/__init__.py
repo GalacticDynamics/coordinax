@@ -11,7 +11,6 @@ from . import operators
 from ._coordinax import (
     _base_acc,
     _base_pos,
-    _base_vel,
     _d1,
     _d2,
     _d3,
@@ -19,6 +18,7 @@ from ._coordinax import (
     _dn,
     _transform,
     base,
+    base_vel,
     exceptions,
     funcs,
     space,
@@ -27,7 +27,6 @@ from ._coordinax import (
 )
 from ._coordinax._base_acc import *
 from ._coordinax._base_pos import *
-from ._coordinax._base_vel import *
 from ._coordinax._d1 import *
 from ._coordinax._d2 import *
 from ._coordinax._d3 import *
@@ -35,6 +34,7 @@ from ._coordinax._d4 import *
 from ._coordinax._dn import *
 from ._coordinax._transform import *
 from ._coordinax.base import *
+from ._coordinax.base_vel import *
 from ._coordinax.exceptions import *
 from ._coordinax.funcs import *
 from ._coordinax.space import *
@@ -47,7 +47,7 @@ __all__ = ["__version__", "operators"]
 __all__ += funcs.__all__
 __all__ += base.__all__
 __all__ += _base_pos.__all__
-__all__ += _base_vel.__all__
+__all__ += base_vel.__all__
 __all__ += _base_acc.__all__
 __all__ += _d1.__all__
 __all__ += _d2.__all__
@@ -70,7 +70,7 @@ install_import_hook("coordinax", RUNTIME_TYPECHECKER)
 # Cleanup
 del (
     base,
-    _base_vel,
+    base_vel,
     _base_pos,
     _base_acc,
     space,

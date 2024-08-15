@@ -16,8 +16,8 @@ from quaxed import lax as qlax
 from unxt import Quantity
 
 from ._base_pos import AbstractPosition
-from ._base_vel import AbstractVelocity
 from .base import AbstractVector
+from .base_vel import AbstractVelocity
 from .utils import classproperty
 
 if TYPE_CHECKING:
