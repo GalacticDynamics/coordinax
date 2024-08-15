@@ -62,7 +62,7 @@ __all__ += utils.__all__
 
 # Interoperability
 # Astropy
-from ._coordinax._interop import coordinax_interop_astropy  # noqa: E402
+from ._interop import coordinax_interop_astropy  # noqa: E402
 
 # Runtime Typechecker
 install_import_hook("coordinax", RUNTIME_TYPECHECKER)
