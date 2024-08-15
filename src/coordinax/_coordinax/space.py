@@ -5,7 +5,7 @@ __all__ = ["Space"]
 from collections.abc import Callable, ItemsView, Iterable, Mapping
 from textwrap import indent
 from types import MappingProxyType
-from typing import Any, TypeAlias
+from typing import Any, TypeAlias, final
 from typing_extensions import override
 
 import astropy.units as u
@@ -43,9 +43,10 @@ def _can_broadcast_shapes(*shapes: tuple[int, ...]) -> bool:
     return True
 
 
-# TODO: figure out how to make the keys into Dimension objects, not str This is
+# TODO: figure out how to make the keys into Dimension objects, not str. This is
 #       running afoul of Jax's tree flattening, where ImmutableMap and
 #       eqx.Module differ.
+@final
 class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: ignore[misc]
     """A collection of vectors that acts like the primary vector.
 
@@ -129,8 +130,108 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
     # ===============================================================
     # Mapping API
 
-    # TODO: dispatch! and typing
+    @dispatch
     def __getitem__(self, key: Any) -> Any:
+        """Get the vector by key.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> w = cx.Space(length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...              speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+
+        By number:
+
+        >>> w[0]
+        Space({
+            'length': CartesianPosition3D(
+                x=Quantity[...](value=f32[2], unit=Unit("m")),
+                y=Quantity[...](value=f32[2], unit=Unit("m")),
+                z=Quantity[...](value=f32[2], unit=Unit("m")) ),
+            'speed': CartesianVelocity3D(
+                d_x=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=f32[2], unit=Unit("m / s") ) )}
+        )
+
+        By slice:
+
+        >>> w[1:]
+        Space({
+            'length': CartesianPosition3D(
+                x=Quantity[...](value=f32[0,2], unit=Unit("m")),
+                y=Quantity[...](value=f32[0,2], unit=Unit("m")),
+                z=Quantity[...](value=f32[0,2], unit=Unit("m")) ),
+            'speed': CartesianVelocity3D(
+                d_x=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ) )}
+        )
+
+        By Ellipsis:
+
+        >>> w[...]
+        Space({
+            'length': CartesianPosition3D(
+                x=Quantity[...](value=f32[1,2], unit=Unit("m")),
+                y=Quantity[...](value=f32[1,2], unit=Unit("m")),
+                z=Quantity[...](value=f32[1,2], unit=Unit("m")) ),
+            'speed': CartesianVelocity3D(
+                d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ) )}
+        )
+
+        By tuple[int, ...]:
+
+        >>> w[(0, 1)]
+        Space({
+            'length': CartesianPosition3D(
+                x=Quantity[...](value=f32[], unit=Unit("m")),
+                y=Quantity[...](value=f32[], unit=Unit("m")),
+                z=Quantity[...](value=f32[], unit=Unit("m")) ),
+            'speed': CartesianVelocity3D(
+                d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=f32[], unit=Unit("m / s") ) )}
+        )
+
+        This also supports numpy index arrays. But this example section
+        highlights core python indexing.
+
+        """  # noqa: E501
+        return Space(**{k: v[key] for k, v in self.items()})
+
+    @dispatch
+    def __getitem__(self, key: str | Dimension) -> Any:
+        """Get the vector by key.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> w = cx.Space(length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...              speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+
+        By string key:
+
+        >>> w["length"]
+        CartesianPosition3D(
+            x=Quantity[...](value=f32[1,2], unit=Unit("m")),
+            y=Quantity[...](value=f32[1,2], unit=Unit("m")),
+            z=Quantity[...](value=f32[1,2], unit=Unit("m"))
+        )
+
+        By dimension:
+
+        >>> import astropy.units as u
+        >>> w[u.get_physical_type("length")]
+        CartesianPosition3D(
+            x=Quantity[...](value=f32[1,2], unit=Unit("m")),
+            y=Quantity[...](value=f32[1,2], unit=Unit("m")),
+            z=Quantity[...](value=f32[1,2], unit=Unit("m"))
+        )
+
+        """  # noqa: E501
         if isinstance(key, Dimension):
             key = _get_dimension_name(key)
 

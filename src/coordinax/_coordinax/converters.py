@@ -15,5 +15,13 @@ def converter_azimuth_to_range(phi: BatchableAngle) -> BatchableAngle:
 
     It's safe to do this conversion since this is a phase cut, unlike `theta`,
     which is only on half the sphere.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> x = Quantity(370, "deg")
+    >>> converter_azimuth_to_range(x)
+    Quantity['angle'](Array(10, dtype=int32, ...), unit='deg')
+
     """
     return phi % _2pid
