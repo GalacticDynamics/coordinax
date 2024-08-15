@@ -17,6 +17,8 @@ from coordinax._coordinax.base_pos import AbstractPosition
 from coordinax._coordinax.base_vel import AbstractVelocity
 from coordinax._coordinax.utils import classproperty
 
+#####################################################################
+
 
 class AbstractPosition1D(AbstractPosition):
     """Abstract representation of 1D coordinates in different systems."""
