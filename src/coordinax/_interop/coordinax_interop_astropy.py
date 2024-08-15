@@ -20,7 +20,7 @@ from coordinax._coordinax.d3.cylindrical import (
     CylindricalPosition,
     CylindricalVelocity,
 )
-from coordinax._coordinax.d3.sphere import (
+from coordinax._coordinax.d3.spherical import (
     LonCosLatSphericalVelocity,
     LonLatSphericalPosition,
     LonLatSphericalVelocity,

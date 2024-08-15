@@ -15,7 +15,7 @@ from coordinax._coordinax.d2.cartesian import CartesianPosition2D
 from coordinax._coordinax.d2.polar import PolarPosition
 from coordinax._coordinax.d3.cartesian import CartesianPosition3D
 from coordinax._coordinax.d3.cylindrical import CylindricalPosition
-from coordinax._coordinax.d3.sphere import MathSphericalPosition, SphericalPosition
+from coordinax._coordinax.d3.spherical import MathSphericalPosition, SphericalPosition
 
 # =============================================================================
 # CartesianPosition1D

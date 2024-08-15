@@ -12,7 +12,7 @@ from unxt import Quantity
 from .base import AbstractPosition3D, AbstractVelocity3D
 from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
 from .cylindrical import CylindricalPosition, CylindricalVelocity
-from .sphere import (
+from .spherical import (
     AbstractSphericalPosition,
     LonCosLatSphericalVelocity,
     LonLatSphericalPosition,
