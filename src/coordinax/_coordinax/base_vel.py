@@ -173,7 +173,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Quantity['speed'](Array(8.55236, dtype=float32), unit='m / s')
 
         """
-        from ._transform import represent_as  # pylint: disable=import-outside-toplevel
+        from coordinax import represent_as  # pylint: disable=import-outside-toplevel
 
         return represent_as(self, target, *args, **kwargs)
 

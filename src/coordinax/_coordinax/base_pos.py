@@ -148,7 +148,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         Distance(Array(3.7416575, dtype=float32), unit='m')
 
         """
-        from ._transform import represent_as  # pylint: disable=import-outside-toplevel
+        from coordinax import represent_as  # pylint: disable=import-outside-toplevel
 
         return represent_as(self, target, *args, **kwargs)
 

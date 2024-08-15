@@ -154,7 +154,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
 
         """
-        from ._transform import represent_as  # pylint: disable=import-outside-toplevel
+        from coordinax import represent_as  # pylint: disable=import-outside-toplevel
 
         return represent_as(self, target, *args, **kwargs)
 
