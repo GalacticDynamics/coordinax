@@ -12,7 +12,7 @@ from coordinax._coordinax._d3.cylindrical import (
     CylindricalVelocity,
 )
 from coordinax._coordinax._dn.poincare import PoincarePolarVector
-from coordinax._coordinax._space import Space
+from coordinax._coordinax.space import Space
 
 
 @dispatch

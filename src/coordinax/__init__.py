@@ -20,8 +20,8 @@ from ._coordinax import (
     _dn,
     _exceptions,
     _funcs,
-    _space,
     _transform,
+    space,
     typing,
     utils,
 )
@@ -36,8 +36,8 @@ from ._coordinax._d4 import *
 from ._coordinax._dn import *
 from ._coordinax._exceptions import *
 from ._coordinax._funcs import *
-from ._coordinax._space import *
 from ._coordinax._transform import *
+from ._coordinax.space import *
 from ._coordinax.typing import *
 from ._coordinax.utils import *
 from ._version import version as __version__
@@ -54,7 +54,7 @@ __all__ += _d2.__all__
 __all__ += _d3.__all__
 __all__ += _d4.__all__
 __all__ += _dn.__all__
-__all__ += _space.__all__
+__all__ += space.__all__
 __all__ += _exceptions.__all__
 __all__ += _transform.__all__
 __all__ += typing.__all__
@@ -73,7 +73,7 @@ del (
     _base_vel,
     _base_pos,
     _base_acc,
-    _space,
+    space,
     _exceptions,
     _transform,
     typing,
