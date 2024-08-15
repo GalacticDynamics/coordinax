@@ -15,7 +15,7 @@ from unxt import Quantity
 from coordinax._coordinax.base_pos import AbstractPosition
 
 if TYPE_CHECKING:
-    from .sequential import OperatorSequence
+    from coordinax.operators import OperatorSequence
 
 
 class AbstractOperator(eqx.Module):  # type: ignore[misc]

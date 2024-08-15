@@ -10,7 +10,7 @@ import quaxed.array_api as xp
 from dataclassish import field_values
 
 if TYPE_CHECKING:
-    from coordinax._coordinax.base import AbstractVector
+    from coordinax import AbstractVector
 
 
 def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
