@@ -190,7 +190,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 # Register dispatches
 
 
-# from coordinax._funcs
+# from coordinax.funcs
 @dispatch  # type: ignore[misc]
 @partial(jax.jit, inline=True)
 def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:

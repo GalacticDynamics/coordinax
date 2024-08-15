@@ -25,7 +25,7 @@ from coordinax._coordinax._base import AbstractVector
 from coordinax._coordinax._base_acc import AbstractAcceleration
 from coordinax._coordinax._base_pos import AbstractPosition
 from coordinax._coordinax._base_vel import AbstractVelocity
-from coordinax._coordinax._funcs import represent_as
+from coordinax._coordinax.funcs import represent_as
 
 DimensionLike: TypeAlias = Dimension | str
 

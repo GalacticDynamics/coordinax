@@ -22,8 +22,8 @@ from coordinax._coordinax._base import ToUnitsOptions
 from coordinax._coordinax._d3.base import AbstractPosition3D
 from coordinax._coordinax._d3.cartesian import CartesianPosition3D
 from coordinax._coordinax.operators._base import AbstractOperator, op_call_dispatch
-from coordinax._coordinax.operators._funcs import simplify_op
 from coordinax._coordinax.operators._identity import IdentityOperator
+from coordinax._coordinax.operators.funcs import simplify_op
 
 vec_matmul = quaxify(jnp.vectorize(jnp.matmul, signature="(3,3),(3)->(3)"))
 

@@ -9,8 +9,8 @@ import equinox as eqx
 
 from ._base import AbstractOperator
 from ._composite import AbstractCompositeOperator
-from ._funcs import simplify_op
 from ._identity import IdentityOperator
+from .funcs import simplify_op
 
 
 def _converter_seq(inp: Any) -> tuple[AbstractOperator, ...]:

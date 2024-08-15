@@ -19,8 +19,8 @@ from ._coordinax import (
     _d4,
     _dn,
     _exceptions,
-    _funcs,
     _transform,
+    funcs,
     space,
     typing,
     utils,
@@ -35,8 +35,8 @@ from ._coordinax._d3 import *
 from ._coordinax._d4 import *
 from ._coordinax._dn import *
 from ._coordinax._exceptions import *
-from ._coordinax._funcs import *
 from ._coordinax._transform import *
+from ._coordinax.funcs import *
 from ._coordinax.space import *
 from ._coordinax.typing import *
 from ._coordinax.utils import *
@@ -44,7 +44,7 @@ from ._version import version as __version__
 from .setup_package import RUNTIME_TYPECHECKER
 
 __all__ = ["__version__", "operators"]
-__all__ += _funcs.__all__
+__all__ += funcs.__all__
 __all__ += _base.__all__
 __all__ += _base_pos.__all__
 __all__ += _base_vel.__all__
@@ -83,7 +83,7 @@ del (
     _d3,
     _d4,
     _dn,
-    _funcs,
+    funcs,
     RUNTIME_TYPECHECKER,
     coordinax_interop_astropy,
 )

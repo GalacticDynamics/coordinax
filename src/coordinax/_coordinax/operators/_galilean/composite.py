@@ -17,9 +17,9 @@ from .rotation import GalileanRotationOperator
 from .translation import GalileanTranslationOperator
 from coordinax._coordinax.operators._base import AbstractOperator
 from coordinax._coordinax.operators._composite import AbstractCompositeOperator
-from coordinax._coordinax.operators._funcs import simplify_op
 from coordinax._coordinax.operators._identity import IdentityOperator
 from coordinax._coordinax.operators._sequential import OperatorSequence
+from coordinax._coordinax.operators.funcs import simplify_op
 
 if TYPE_CHECKING:
     from typing_extensions import Self
