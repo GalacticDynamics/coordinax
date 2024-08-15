@@ -6,7 +6,7 @@ __all__: list[str] = ["AbstractGalileanOperator"]
 
 from abc import abstractmethod
 
-from coordinax._coordinax.operators._base import AbstractOperator
+from coordinax._coordinax.operators.base import AbstractOperator
 
 
 class AbstractGalileanOperator(AbstractOperator):

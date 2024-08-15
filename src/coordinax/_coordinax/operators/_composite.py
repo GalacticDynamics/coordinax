@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 from dataclassish import DataclassInstance
 from unxt import Quantity
 
-from ._base import AbstractOperator, op_call_dispatch
+from .base import AbstractOperator, op_call_dispatch
 from coordinax._coordinax.base_pos import AbstractPosition
 
 if TYPE_CHECKING:
