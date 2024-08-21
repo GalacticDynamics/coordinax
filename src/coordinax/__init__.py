@@ -61,6 +61,8 @@ __all__ += typing.__all__
 __all__ += utils.__all__
 
 # Interoperability
+from ._coordinax import compat  # noqa: E402
+
 # Astropy
 from ._interop import coordinax_interop_astropy  # noqa: E402
 
@@ -86,4 +88,5 @@ del (
     funcs,
     RUNTIME_TYPECHECKER,
     coordinax_interop_astropy,
+    compat,
 )

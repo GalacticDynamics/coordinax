@@ -698,9 +698,9 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         Parameters
         ----------
-        units : `unxt.AbstractUnitSystem`
+        units : Any
             The units to convert to according to the physical type of the
-            components.
+            components. This is passed to [`unxt.unitsystem`][].
 
         Examples
         --------
