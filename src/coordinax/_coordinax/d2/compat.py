@@ -12,7 +12,6 @@ import quaxed.array_api as xp
 from dataclassish import field_values
 from unxt import AbstractQuantity, Quantity
 
-from .base import AbstractPosition2D
 from .cartesian import CartesianAcceleration2D, CartesianPosition2D, CartesianVelocity2D
 from coordinax._coordinax.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._coordinax.typing import TimeBatchOrScalar
@@ -20,13 +19,6 @@ from coordinax._coordinax.utils import full_shaped
 
 #####################################################################
 # Convert to Quantity
-
-
-@conversion_method(type_from=AbstractPosition2D, type_to=Quantity)  # type: ignore[misc]
-def vec_to_q(obj: AbstractPosition2D, /) -> Shaped[Quantity["length"], "*batch 2"]:
-    """`coordinax.AbstractPosition2D` -> `unxt.Quantity`."""
-    cart = full_shaped(obj.represent_as(CartesianPosition2D))
-    return xp.stack(tuple(field_values(cart)), axis=-1)
 
 
 @conversion_method(type_from=CartesianAcceleration2D, type_to=Quantity)  # type: ignore[misc]

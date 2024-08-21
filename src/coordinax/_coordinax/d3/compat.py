@@ -12,7 +12,6 @@ import quaxed.array_api as xp
 from dataclassish import field_values
 from unxt import Quantity
 
-from .base import AbstractPosition3D
 from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
 from coordinax._coordinax.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._coordinax.typing import TimeBatchOrScalar
@@ -20,39 +19,6 @@ from coordinax._coordinax.utils import full_shaped
 
 #####################################################################
 # Convert to Quantity
-
-
-@conversion_method(AbstractPosition3D, Quantity)  # type: ignore[misc]
-def vec_to_q(obj: AbstractPosition3D, /) -> Shaped[Quantity["length"], "*batch 3"]:
-    """`coordinax.AbstractPosition3D` -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from plum import convert
-    >>> from unxt import Quantity
-
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
-    >>> convert(vec, Quantity)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
-
-    >>> vec = cx.SphericalPosition(r=Quantity(1, unit="kpc"),
-    ...                          theta=Quantity(2, unit="deg"),
-    ...                          phi=Quantity(3, unit="deg"))
-    >>> convert(vec, Quantity)
-    Quantity['length'](Array([0.03485167, 0.0018265 , 0.99939084], dtype=float32),
-                       unit='kpc')
-
-    >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
-    ...                              phi=Quantity(2, unit="deg"),
-    ...                              z=Quantity(3, unit="pc"))
-    >>> convert(vec, Quantity)
-    Quantity['length'](Array([0.99939084, 0.0348995 , 0.003     ], dtype=float32),
-                       unit='kpc')
-
-    """
-    cart = full_shaped(obj.represent_as(CartesianPosition3D))
-    return xp.stack(tuple(field_values(cart)), axis=-1)
 
 
 @conversion_method(CartesianAcceleration3D, Quantity)  # type: ignore[misc]
