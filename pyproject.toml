@@ -33,7 +33,7 @@
     "plum-dispatch>=2.5.1",
     "quax>=0.0.3",
     "quaxed >= 0.4",
-    "unxt >= 0.10",
+    "unxt >= 0.15",
   ]
   description = "Coordinates in JAX"
   dynamic = ["version"]
