@@ -158,7 +158,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
         return represent_as(self, target, *args, **kwargs)
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def norm(
         self, velocity: AbstractVelocity, position: AbstractPosition, /
     ) -> Quantity["speed"]:

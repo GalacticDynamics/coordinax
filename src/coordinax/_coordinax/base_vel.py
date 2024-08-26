@@ -177,7 +177,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         return represent_as(self, target, *args, **kwargs)
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def norm(self, position: AbstractPosition, /) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, position).norm()

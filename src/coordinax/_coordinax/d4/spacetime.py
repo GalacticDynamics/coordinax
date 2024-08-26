@@ -207,7 +207,7 @@ class FourVector(AbstractPosition4D):
 
     # -------------------------------------------
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def _norm2(self) -> Shaped[Quantity["area"], "*#batch"]:
         r"""Return the squared vector norm :math:`(ct)^2 - (x^2 + y^2 + z^2)`.
 
@@ -223,7 +223,7 @@ class FourVector(AbstractPosition4D):
         """
         return -(self.q.norm() ** 2) + (self.c * self.t) ** 2  # for units
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def norm(self) -> BatchableLength:
         r"""Return the vector norm :math:`\sqrt{(ct)^2 - (x^2 + y^2 + z^2)}`.
 

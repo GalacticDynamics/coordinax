@@ -57,7 +57,7 @@ class CylindricalPosition(AbstractPosition3D):
     def differential_cls(cls) -> type["CylindricalVelocity"]:
         return CylindricalVelocity
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
