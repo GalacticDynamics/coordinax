@@ -116,7 +116,7 @@ class CartesianPositionND(AbstractPositionND):
 
     # -----------------------------------------------------
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 
@@ -350,7 +350,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
     def differential_cls(cls) -> type["CartesianAccelerationND"]:
         return CartesianAccelerationND
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def norm(self, _: AbstractPositionND | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
@@ -517,7 +517,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
         msg = "Not yet supported"
         raise NotImplementedError(msg)  # TODO: Implement this
 
-    @partial(jax.jit)
+    @partial(jax.jit, inline=True)
     def norm(
         self,
         velocity: AbstractVelocityND | None = None,  # noqa: ARG002

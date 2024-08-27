@@ -110,7 +110,7 @@ def represent_as(
     /,
     **kwargs: Any,
 ) -> AbstractVelocity3D:
-    """Self transforms for 3D differentials.
+    """Self transforms for 3D velocity.
 
     Examples
     --------
@@ -118,17 +118,17 @@ def represent_as(
     >>> import coordinax as cx
 
     For these transformations the position does not matter since the
-    self-transform returns the differential unchanged.
+    self-transform returns the velocity unchanged.
 
     >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
 
-    Cartesian to Cartesian differential:
+    Cartesian to Cartesian velocity:
 
     >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
     >>> cx.represent_as(dif, cx.CartesianVelocity3D, vec) is dif
     True
 
-    Cylindrical to Cylindrical differential:
+    Cylindrical to Cylindrical velocity:
 
     >>> dif = cx.CylindricalVelocity(d_rho=Quantity(1, "km/s"),
     ...                                  d_phi=Quantity(2, "mas/yr"),
@@ -136,7 +136,7 @@ def represent_as(
     >>> cx.represent_as(dif, cx.CylindricalVelocity, vec) is dif
     True
 
-    Spherical to Spherical differential:
+    Spherical to Spherical velocity:
 
     >>> dif = cx.SphericalVelocity(d_r=Quantity(1, "km/s"),
     ...                                d_theta=Quantity(2, "mas/yr"),
@@ -144,7 +144,7 @@ def represent_as(
     >>> cx.represent_as(dif, cx.SphericalVelocity, vec) is dif
     True
 
-    LonLatSpherical to LonLatSpherical differential:
+    LonLatSpherical to LonLatSpherical velocity:
 
     >>> dif = cx.LonLatSphericalVelocity(d_lon=Quantity(1, "mas/yr"),
     ...                                      d_lat=Quantity(2, "mas/yr"),
@@ -152,7 +152,7 @@ def represent_as(
     >>> cx.represent_as(dif, cx.LonLatSphericalVelocity, vec) is dif
     True
 
-    LonCosLatSpherical to LonCosLatSpherical differential:
+    LonCosLatSpherical to LonCosLatSpherical velocity:
 
     >>> dif = cx.LonCosLatSphericalVelocity(d_lon_coslat=Quantity(1, "mas/yr"),
     ...                                         d_lat=Quantity(2, "mas/yr"),
@@ -160,7 +160,7 @@ def represent_as(
     >>> cx.represent_as(dif, cx.LonCosLatSphericalVelocity, vec) is dif
     True
 
-    MathSpherical to MathSpherical differential:
+    MathSpherical to MathSpherical velocity:
 
     >>> dif = cx.MathSphericalVelocity(d_r=Quantity(1, "km/s"),
     ...                                    d_theta=Quantity(2, "mas/yr"),
