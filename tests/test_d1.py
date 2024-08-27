@@ -2,7 +2,7 @@
 
 import pytest
 
-import quaxed.numpy as qnp
+import quaxed.numpy as jnp
 from unxt import Quantity
 
 import coordinax as cx
@@ -41,7 +41,7 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         radial = vector.represent_as(cx.RadialPosition)
 
         assert isinstance(radial, cx.RadialPosition)
-        assert qnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_cartesian1d_to_cartesian2d(self, vector):
         """Test ``coordinax.represent_as(CartesianPosition2D)``."""
@@ -50,16 +50,16 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         )
 
         assert isinstance(cart2d, cx.CartesianPosition2D)
-        assert qnp.array_equal(cart2d.x, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
+        assert jnp.array_equal(cart2d.x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
 
     def test_cartesian1d_to_polar(self, vector):
         """Test ``coordinax.represent_as(PolarPosition)``."""
         polar = vector.represent_as(cx.PolarPosition, phi=Quantity([0, 1, 2, 3], "rad"))
 
         assert isinstance(polar, cx.PolarPosition)
-        assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cartesian1d_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(CartesianPosition3D)``."""
@@ -70,9 +70,9 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         )
 
         assert isinstance(cart3d, cx.CartesianPosition3D)
-        assert qnp.array_equal(cart3d.x, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cart3d.y, Quantity([5, 6, 7, 8], "km"))
-        assert qnp.array_equal(cart3d.z, Quantity([9, 10, 11, 12], "m"))
+        assert jnp.array_equal(cart3d.x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart3d.y, Quantity([5, 6, 7, 8], "km"))
+        assert jnp.array_equal(cart3d.z, Quantity([9, 10, 11, 12], "m"))
 
     def test_cartesian1d_to_spherical(self, vector):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
@@ -83,9 +83,9 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         )
 
         assert isinstance(spherical, cx.SphericalPosition)
-        assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
-        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
+        assert jnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cartesian1d_to_cylindrical(self, vector):
         """Test ``coordinax.represent_as(CylindricalPosition)``."""
@@ -96,9 +96,9 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         )
 
         assert isinstance(cylindrical, cx.CylindricalPosition)
-        assert qnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
-        assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
+        assert jnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
 
 
 class TestRadialPosition(AbstractPosition1DTest):
@@ -117,7 +117,7 @@ class TestRadialPosition(AbstractPosition1DTest):
         cart1d = vector.represent_as(cx.CartesianPosition1D)
 
         assert isinstance(cart1d, cx.CartesianPosition1D)
-        assert qnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_radial_to_radial(self, vector):
         """Test ``coordinax.represent_as(RadialPosition)``."""
@@ -136,16 +136,16 @@ class TestRadialPosition(AbstractPosition1DTest):
         )
 
         assert isinstance(cart2d, cx.CartesianPosition2D)
-        assert qnp.array_equal(cart2d.x, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
+        assert jnp.array_equal(cart2d.x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart2d.y, Quantity([5, 6, 7, 8], "km"))
 
     def test_radial_to_polar(self, vector):
         """Test ``coordinax.represent_as(PolarPosition)``."""
         polar = vector.represent_as(cx.PolarPosition, phi=Quantity([0, 1, 2, 3], "rad"))
 
         assert isinstance(polar, cx.PolarPosition)
-        assert qnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_radial_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(CartesianPosition3D)``."""
@@ -156,9 +156,9 @@ class TestRadialPosition(AbstractPosition1DTest):
         )
 
         assert isinstance(cart3d, cx.CartesianPosition3D)
-        assert qnp.array_equal(cart3d.x, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cart3d.y, Quantity([5, 6, 7, 8], "km"))
-        assert qnp.array_equal(cart3d.z, Quantity([9, 10, 11, 12], "m"))
+        assert jnp.array_equal(cart3d.x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart3d.y, Quantity([5, 6, 7, 8], "km"))
+        assert jnp.array_equal(cart3d.z, Quantity([9, 10, 11, 12], "m"))
 
     def test_radial_to_spherical(self, vector):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
@@ -169,9 +169,9 @@ class TestRadialPosition(AbstractPosition1DTest):
         )
 
         assert isinstance(spherical, cx.SphericalPosition)
-        assert qnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
-        assert qnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
+        assert jnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_radial_to_cylindrical(self, vector):
         """Test ``coordinax.represent_as(CylindricalPosition)``."""
@@ -182,9 +182,9 @@ class TestRadialPosition(AbstractPosition1DTest):
         )
 
         assert isinstance(cylindrical, cx.CylindricalPosition)
-        assert qnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
-        assert qnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
+        assert jnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(cylindrical.z, Quantity([4, 5, 6, 7], "m"))
 
 
 class AbstractVelocity1DTest(AbstractVelocityTest):
@@ -224,7 +224,7 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         radial = difntl.represent_as(cx.RadialVelocity, vector)
 
         assert isinstance(radial, cx.RadialVelocity)
-        assert qnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(radial.d_r, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -235,8 +235,8 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         )
 
         assert isinstance(cart2d, cx.CartesianVelocity2D)
-        assert qnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], "km/s"))
-        assert qnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], "km/s"))
+        assert jnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -247,8 +247,8 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         )
 
         assert isinstance(polar, cx.PolarVelocity)
-        assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "km/s"))
-        assert qnp.array_equal(polar.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
+        assert jnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(polar.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -262,9 +262,9 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         )
 
         assert isinstance(cart3d, cx.CartesianVelocity3D)
-        assert qnp.array_equal(cart3d.d_x, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cart3d.d_y, Quantity([5, 6, 7, 8], "km"))
-        assert qnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], "m"))
+        assert jnp.array_equal(cart3d.d_x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart3d.d_y, Quantity([5, 6, 7, 8], "km"))
+        assert jnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], "m"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -278,9 +278,9 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         )
 
         assert isinstance(spherical, cx.SphericalVelocity)
-        assert qnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "kpc"))
         assert spherical.d_theta == Quantity([4, 5, 6, 7], "rad/s")
-        assert qnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
+        assert jnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -294,9 +294,9 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         )
 
         assert isinstance(cylindrical, cx.CylindricalVelocity)
-        assert qnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
-        assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m/s"))
+        assert jnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad/s"))
+        assert jnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m/s"))
 
 
 class TestRadialVelocity(AbstractVelocity1DTest):
@@ -321,7 +321,7 @@ class TestRadialVelocity(AbstractVelocity1DTest):
         cart1d = difntl.represent_as(cx.CartesianVelocity1D, vector)
 
         assert isinstance(cart1d, cx.CartesianVelocity1D)
-        assert qnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cart1d.d_x, Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_radial(self, difntl, vector):
@@ -343,8 +343,8 @@ class TestRadialVelocity(AbstractVelocity1DTest):
         )
 
         assert isinstance(cart2d, cx.CartesianVelocity2D)
-        assert qnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], "km"))
+        assert jnp.array_equal(cart2d.d_x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart2d.d_y, Quantity([5, 6, 7, 8], "km"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -355,8 +355,8 @@ class TestRadialVelocity(AbstractVelocity1DTest):
         )
 
         assert isinstance(polar, cx.PolarVelocity)
-        assert qnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(polar.d_phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(polar.d_r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(polar.d_phi, Quantity([0, 1, 2, 3], "rad"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -370,9 +370,9 @@ class TestRadialVelocity(AbstractVelocity1DTest):
         )
 
         assert isinstance(cart3d, cx.CartesianVelocity3D)
-        assert qnp.array_equal(cart3d.d_x, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cart3d.d_y, Quantity([5, 6, 7, 8], "km"))
-        assert qnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], "m"))
+        assert jnp.array_equal(cart3d.d_x, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cart3d.d_y, Quantity([5, 6, 7, 8], "km"))
+        assert jnp.array_equal(cart3d.d_z, Quantity([9, 10, 11, 12], "m"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -386,9 +386,9 @@ class TestRadialVelocity(AbstractVelocity1DTest):
         )
 
         assert isinstance(spherical, cx.SphericalVelocity)
-        assert qnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(spherical.d_r, Quantity([1, 2, 3, 4], "kpc"))
         assert spherical.d_theta == Quantity([4, 5, 6, 7], "rad")
-        assert qnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(spherical.d_phi, Quantity([0, 1, 2, 3], "rad"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -402,6 +402,6 @@ class TestRadialVelocity(AbstractVelocity1DTest):
         )
 
         assert isinstance(cylindrical, cx.CylindricalVelocity)
-        assert qnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "kpc"))
-        assert qnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad"))
-        assert qnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m"))
+        assert jnp.array_equal(cylindrical.d_rho, Quantity([1, 2, 3, 4], "kpc"))
+        assert jnp.array_equal(cylindrical.d_phi, Quantity([0, 1, 2, 3], "rad"))
+        assert jnp.array_equal(cylindrical.d_z, Quantity([4, 5, 6, 7], "m"))

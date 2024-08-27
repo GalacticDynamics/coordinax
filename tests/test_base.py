@@ -6,11 +6,10 @@ from dataclasses import replace
 from types import MappingProxyType
 from typing import Any
 
-import jax.numpy as jnp
 import pytest
 
 import quaxed.array_api as xp
-import quaxed.numpy as qnp
+import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractQuantity
 
@@ -108,7 +107,7 @@ class AbstractVectorTest:
         flat = vector.flatten()
         assert isinstance(flat, type(vector))
         assert all(
-            qnp.array_equal(getattr(flat, c), getattr(vector, c).flatten())
+            jnp.array_equal(getattr(flat, c), getattr(vector, c).flatten())
             for c in vector.components
         )
 
@@ -120,7 +119,7 @@ class AbstractVectorTest:
         flat = vec.flatten()
         assert isinstance(flat, type(vec))
         assert all(
-            qnp.array_equal(getattr(flat, c).value, xp.ones(8)) for c in vec.components
+            jnp.array_equal(getattr(flat, c).value, xp.ones(8)) for c in vec.components
         )
 
     def test_reshape(self, vector):
@@ -129,7 +128,7 @@ class AbstractVectorTest:
         reshaped = vector.reshape(2, -1)
         assert isinstance(reshaped, type(vector))
         assert all(
-            qnp.array_equal(getattr(reshaped, c), getattr(vector, c).reshape(2, -1))
+            jnp.array_equal(getattr(reshaped, c), getattr(vector, c).reshape(2, -1))
             for c in vector.components
         )
 
@@ -141,7 +140,7 @@ class AbstractVectorTest:
         reshaped = vec.reshape(1, 8)
         assert isinstance(reshaped, type(vec))
         assert all(
-            qnp.array_equal(getattr(reshaped, c).value, xp.ones((1, 8)))
+            jnp.array_equal(getattr(reshaped, c).value, xp.ones((1, 8)))
             for c in vec.components
         )
 
@@ -156,12 +155,12 @@ class AbstractVectorTest:
         for k, v in adict.items():
             assert isinstance(k, str)
             assert isinstance(v, AbstractQuantity)
-            assert qnp.array_equal(v, getattr(vector, k))
+            assert jnp.array_equal(v, getattr(vector, k))
 
         # Test with a different dict_factory
         adict = vector.asdict(dict_factory=UserDict)
         assert isinstance(adict, UserDict)
-        assert all(qnp.array_equal(v, getattr(vector, k)) for k, v in adict.items())
+        assert all(jnp.array_equal(v, getattr(vector, k)) for k, v in adict.items())
 
     def test_components(self, vector):
         """Test :meth:`AbstractVector.components`."""

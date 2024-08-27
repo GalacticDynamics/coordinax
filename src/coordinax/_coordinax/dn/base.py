@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 import equinox as eqx
 
 import quaxed.lax as qlax
-import quaxed.numpy as qnp
+import quaxed.numpy as jnp
 
 from coordinax._coordinax.base import AbstractVector
 from coordinax._coordinax.base_acc import AbstractAcceleration
@@ -127,7 +127,7 @@ class AbstractPositionND(AbstractPosition):
         (2,)
 
         """
-        return replace(self, q=qnp.reshape(self.q, (self.size, self.q.shape[-1]), "C"))
+        return replace(self, q=jnp.reshape(self.q, (self.size, self.q.shape[-1]), "C"))
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the N-dimensional position.
@@ -263,7 +263,7 @@ class AbstractVelocityND(AbstractVelocity):
 
         """
         return replace(
-            self, d_q=qnp.reshape(self.d_q, (self.size, self.d_q.shape[-1]), "C")
+            self, d_q=jnp.reshape(self.d_q, (self.size, self.d_q.shape[-1]), "C")
         )
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
@@ -406,7 +406,7 @@ class AbstractAccelerationND(AbstractAcceleration):
 
         """
         return replace(
-            self, d2_q=qnp.reshape(self.d2_q, (self.size, self.d2_q.shape[-1]), "C")
+            self, d2_q=jnp.reshape(self.d2_q, (self.size, self.d2_q.shape[-1]), "C")
         )
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
