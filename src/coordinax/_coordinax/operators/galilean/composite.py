@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, final, overload
 import equinox as eqx
 
 import quaxed.array_api as xp
+from dataclassish.converters import Unless
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
@@ -139,10 +140,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     translation: GalileanTranslationOperator = eqx.field(
         default=GalileanTranslationOperator(Quantity([0, 0, 0, 0], "kpc")),
-        converter=lambda x: (
-            x
-            if isinstance(x, GalileanTranslationOperator)
-            else GalileanTranslationOperator(x)
+        converter=Unless(
+            GalileanTranslationOperator, converter=GalileanTranslationOperator
         ),
     )
     """The temporal + spatial translation.
@@ -156,9 +155,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     velocity: GalileanBoostOperator = eqx.field(
         default=GalileanBoostOperator(Quantity([0, 0, 0], "km/s")),
-        converter=lambda x: (
-            x if isinstance(x, GalileanBoostOperator) else GalileanBoostOperator(x)
-        ),
+        converter=Unless(GalileanBoostOperator, converter=GalileanBoostOperator),
     )
     """The boost to the frame.
 

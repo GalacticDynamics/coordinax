@@ -2,10 +2,12 @@
 
 __all__ = ["RadialPosition", "RadialVelocity", "RadialAcceleration"]
 
+from functools import partial
 from typing import final
 
 import equinox as eqx
 
+from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._coordinax.typing as ct
@@ -19,9 +21,7 @@ class RadialPosition(AbstractPosition1D):
     """Radial vector representation."""
 
     r: ct.BatchableDistance = eqx.field(
-        converter=lambda x: x
-        if isinstance(x, AbstractDistance)
-        else Distance.constructor(x, dtype=float)
+        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 

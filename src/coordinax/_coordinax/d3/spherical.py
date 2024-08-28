@@ -32,6 +32,7 @@ import quaxed.array_api as xp
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish import replace
+from dataclassish.converters import Unless
 from unxt import AbstractDistance, AbstractQuantity, Distance, Quantity
 
 import coordinax._coordinax.typing as ct
@@ -85,9 +86,7 @@ class SphericalPosition(AbstractSphericalPosition):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=lambda x: x
-        if isinstance(x, AbstractDistance)
-        else Distance.constructor(x, dtype=float)
+        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -222,9 +221,7 @@ class MathSphericalPosition(AbstractSphericalPosition):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=lambda x: x
-        if isinstance(x, AbstractDistance)
-        else Distance.constructor(x, dtype=float)
+        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -428,14 +425,12 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
     r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
 
     lat: ct.BatchableAngle = eqx.field(
-        converter=lambda x: Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+        converter=partial(Quantity["angle"].constructor, dtype=float)
     )
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
     distance: ct.BatchableDistance = eqx.field(
-        converter=lambda x: x
-        if isinstance(x, AbstractDistance)
-        else Distance.constructor(x, dtype=float)
+        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
