@@ -14,6 +14,7 @@ from jaxtyping import Shaped
 from quax import register
 
 import quaxed.array_api as xp
+from dataclassish.converters import Unless
 from unxt import Quantity
 
 from .base import AbstractPosition4D
@@ -79,11 +80,7 @@ class FourVector(AbstractPosition4D):
     """Time coordinate."""
 
     q: AbstractPosition3D = eqx.field(
-        converter=lambda q: (
-            q
-            if isinstance(q, AbstractPosition3D)
-            else CartesianPosition3D.constructor(q)
-        )
+        converter=Unless(AbstractPosition3D, CartesianPosition3D.constructor)
     )
     """Spatial coordinates."""
 

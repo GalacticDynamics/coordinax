@@ -15,6 +15,7 @@ from jaxtyping import ArrayLike
 from quax import register
 
 from dataclassish import replace
+from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._coordinax.typing as ct
@@ -39,9 +40,7 @@ class PolarPosition(AbstractPosition2D):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=lambda x: x
-        if isinstance(x, AbstractDistance)
-        else Distance.constructor(x, dtype=float)
+        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
