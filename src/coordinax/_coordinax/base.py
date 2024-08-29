@@ -15,7 +15,6 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
 
 import astropy.units as u
-import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -807,7 +806,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # noqa: SLF001
+@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     """Construct a vector from another vector.
 
@@ -888,94 +887,3 @@ def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVe
         return obj
 
     return cls(**dict(field_items(obj)))
-
-
-@AbstractVector.constructor._f.dispatch  # noqa: SLF001
-def constructor(
-    cls: type[AbstractVector], obj: Mapping[str, u.Quantity], /
-) -> AbstractVector:
-    """Construct a vector from a mapping.
-
-    Parameters
-    ----------
-    cls : type[AbstractVector]
-        The vector class.
-    obj : Mapping[str, `astropy.units.Quantity`]
-        The mapping of components.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> from astropy.units import Quantity
-    >>> import coordinax as cx
-
-    >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
-    >>> vec = cx.CartesianPosition3D.constructor(xs)
-    >>> vec
-    CartesianPosition3D(
-        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-    )
-
-    >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
-    ...       "z": Quantity([5, 6], "m")}
-    >>> vec = cx.CartesianPosition3D.constructor(xs)
-    >>> vec
-    CartesianPosition3D(
-        x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
-    )
-
-    """
-    return cls(**obj)
-
-
-# TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # noqa: SLF001
-def constructor(cls: type[AbstractVector], obj: u.Quantity, /) -> AbstractVector:
-    """Construct a vector from an Astropy Quantity array.
-
-    The array is expected to have the components as the last dimension.
-
-    Parameters
-    ----------
-    cls : type[AbstractVector]
-        The vector class.
-    obj : Quantity[Any, (*#batch, N), "..."]
-        The array of components.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> from astropy.units import Quantity
-    >>> import coordinax as cx
-
-    >>> xs = Quantity([1, 2, 3], "meter")
-    >>> vec = cx.CartesianPosition3D.constructor(xs)
-    >>> vec
-    CartesianPosition3D(
-        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-    )
-
-    >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
-    >>> vec = cx.CartesianPosition3D.constructor(xs)
-    >>> vec
-    CartesianPosition3D(
-        x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
-    )
-    >>> vec.x
-    Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
-
-    """
-    _ = eqx.error_if(
-        obj,
-        obj.shape[-1] != len(fields(cls)),
-        f"Cannot construct {cls} from array with shape {obj.shape}.",
-    )
-    return cls(**{f.name: obj[..., i] for i, f in enumerate(fields(cls))})
