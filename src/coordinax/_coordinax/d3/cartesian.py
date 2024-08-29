@@ -6,19 +6,19 @@ __all__ = [
     "CartesianAcceleration3D",
 ]
 
-from dataclasses import replace
+from dataclasses import fields, replace
 from functools import partial
 from typing import final
 
 import equinox as eqx
 import jax
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, Shaped
 from quax import register
 
 import quaxed.array_api as xp
 import quaxed.lax as qlax
 from dataclassish import field_items
-from unxt import Quantity
+from unxt import AbstractQuantity, Quantity
 
 import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
@@ -66,6 +66,33 @@ class CartesianPosition3D(AbstractPosition3D):
 
         """
         return replace(self, x=-self.x, y=-self.y, z=-self.z)
+
+
+# -----------------------------------------------------
+
+
+@CartesianPosition3D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: type[CartesianPosition3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
+) -> CartesianPosition3D:
+    """Construct a 3D Cartesian position.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+    >>> vec
+    CartesianPosition3D(
+      x=Quantity[...](value=f32[], unit=Unit("m")),
+      y=Quantity[...](value=f32[], unit=Unit("m")),
+      z=Quantity[...](value=f32[], unit=Unit("m"))
+    )
+
+    """
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
 
 
 # -----------------------------------------------------
@@ -165,6 +192,33 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
 
 
 # -----------------------------------------------------
+
+
+@CartesianVelocity3D.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+def constructor(
+    cls: type[CartesianVelocity3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
+) -> CartesianVelocity3D:
+    """Construct a 3D Cartesian velocity.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], "m/s"))
+    >>> vec
+    CartesianVelocity3D(
+      d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
+      d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
+      d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
+    )
+
+    """
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
+
+
+# -----------------------------------------------------
 # Method dispatches
 
 
@@ -249,6 +303,33 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
 
         """
         return xp.sqrt(self.d2_x**2 + self.d2_y**2 + self.d2_z**2)
+
+
+# -----------------------------------------------------
+
+
+@CartesianAcceleration3D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: type[CartesianAcceleration3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
+) -> CartesianAcceleration3D:
+    """Construct a 3D Cartesian acceleration.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianAcceleration3D.constructor(Quantity([1, 2, 3], "m/s2"))
+    >>> vec
+    CartesianAcceleration3D(
+      d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
+      d2_y=Quantity[...](value=f32[], unit=Unit("m / s2")),
+      d2_z=Quantity[...](value=f32[], unit=Unit("m / s2"))
+    )
+
+    """
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
 
 
 # -----------------------------------------------------

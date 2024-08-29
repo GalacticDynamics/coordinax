@@ -97,8 +97,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
         >>> d2r = cx.RadialAcceleration.constructor([1], "m/s2")
         >>> -d2r
-        RadialAcceleration(
-            d2_r=Quantity[PhysicalType('acceleration')](value=i32[], unit=Unit("m / s2")) )
+        RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
         >>> d2p = cx.PolarAcceleration(Quantity(1, "m/s2"), Quantity(1, "mas/yr2"))
         >>> negd2p = -d2p
@@ -107,7 +106,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         >>> negd2p.d2_phi
         Quantity['angular acceleration'](Array(-1., dtype=float32), unit='mas / yr2')
 
-        """  # noqa: E501
+        """
         return replace(self, **{k: -v for k, v in field_items(self)})
 
     # ===============================================================

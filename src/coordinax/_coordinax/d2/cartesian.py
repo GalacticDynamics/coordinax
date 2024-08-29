@@ -6,18 +6,18 @@ __all__ = [
     "CartesianAcceleration2D",
 ]
 
-from dataclasses import replace
+from dataclasses import fields, replace
 from functools import partial
 from typing import final
 
 import equinox as eqx
 import jax
-from jaxtyping import ArrayLike
+from jaxtyping import ArrayLike, Shaped
 from quax import register
 
 import quaxed.array_api as xp
 from quaxed import lax as qlax
-from unxt import Quantity
+from unxt import AbstractQuantity, Quantity
 
 import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
@@ -62,6 +62,35 @@ class CartesianPosition2D(AbstractPosition2D):
 
         """
         return replace(self, x=-self.x, y=-self.y)
+
+
+# -----------------------------------------------------
+
+
+@CartesianPosition2D.constructor._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+def constructor(
+    cls: type[CartesianPosition2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
+) -> CartesianPosition2D:
+    """Construct a 2D Cartesian position.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianPosition2D.constructor(Quantity([1, 2], "m"))
+    >>> vec
+    CartesianPosition2D(
+        x=Quantity[...](value=f32[], unit=Unit("m")),
+        y=Quantity[...](value=f32[], unit=Unit("m"))
+    )
+
+    """
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
+
+
+# -----------------------------------------------------
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
@@ -162,6 +191,35 @@ class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
         return CartesianAcceleration2D
 
 
+# -----------------------------------------------------
+
+
+@CartesianVelocity2D.constructor._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+def constructor(
+    cls: type[CartesianVelocity2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
+) -> CartesianVelocity2D:
+    """Construct a 2D Cartesian velocity.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianVelocity2D.constructor(Quantity([1, 2], "m/s"))
+    >>> vec
+    CartesianVelocity2D(
+      d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
+      d_y=Quantity[...]( value=f32[], unit=Unit("m / s") )
+    )
+
+    """
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
+
+
+# -----------------------------------------------------
+
+
 @register(jax.lax.add_p)  # type: ignore[misc]
 def _add_pp(
     lhs: CartesianVelocity2D, rhs: CartesianVelocity2D, /
@@ -250,6 +308,37 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 
         """
         return xp.sqrt(self.d2_x**2 + self.d2_y**2)
+
+
+# -----------------------------------------------------
+
+
+@CartesianAcceleration2D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: type[CartesianAcceleration2D],
+    obj: Shaped[AbstractQuantity, "*batch 2"],
+    /,
+) -> CartesianAcceleration2D:
+    """Construct a 2D Cartesian velocity.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianAcceleration2D.constructor(Quantity([1, 2], "m/s2"))
+    >>> vec
+    CartesianAcceleration2D(
+      d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
+      d2_y=Quantity[...](value=f32[], unit=Unit("m / s2"))
+    )
+
+    """
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
+
+
+# -----------------------------------------------------
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]

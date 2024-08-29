@@ -2,11 +2,10 @@
 
 __all__ = ["FourVector"]
 
-from dataclasses import KW_ONLY, replace
+from dataclasses import KW_ONLY, fields, replace
 from functools import partial
 from typing import TYPE_CHECKING, Any, final
 
-import astropy.units as u
 import equinox as eqx
 import jax
 import jax.numpy as jnp
@@ -15,7 +14,7 @@ from quax import register
 
 import quaxed.array_api as xp
 from dataclassish.converters import Unless
-from unxt import Quantity
+from unxt import AbstractQuantity, Quantity
 
 from .base import AbstractPosition4D
 from coordinax._coordinax.base import AbstractVector
@@ -102,7 +101,7 @@ class FourVector(AbstractPosition4D):
     # Constructors
 
     @classmethod
-    @AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+    @AbstractPosition4D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
     def constructor(
         cls: "type[FourVector]", obj: Shaped[Quantity, "*batch 4"], /
     ) -> "FourVector":
@@ -241,56 +240,31 @@ class FourVector(AbstractPosition4D):
 # Register additional constructors
 
 
-# TODO: move to the class in py3.11+
 @FourVector.constructor._f.dispatch  # type: ignore[misc]  # noqa: SLF001
 def constructor(
-    cls: type[FourVector], obj: Shaped[u.Quantity, "*batch 4"], /
+    cls: type[FourVector], obj: Shaped[AbstractQuantity, "*batch 3"], /
 ) -> FourVector:
-    """Construct a vector from a Quantity array.
-
-    The array is expected to have the components as the last dimension.
-
-    Parameters
-    ----------
-    cls : type[FourVector]
-        The class.
-    obj : Quantity[Any, (*#batch, 4), "..."]
-        The array of components.
-        The 4 components are the (c x) time, x, y, z.
+    """Construct a 3D Cartesian position.
 
     Examples
     --------
-    >>> import jax.numpy as jnp
-    >>> from astropy.units import Quantity
+    >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
-    >>> vec = cx.FourVector.constructor(xs)
+    >>> vec = cx.FourVector.constructor(Quantity([0, 1, 2, 3], "km"))
     >>> vec
     FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
-        q=CartesianPosition3D( ... )
+      t=Quantity[...](value=f32[], unit=Unit("s")),
+      q=CartesianPosition3D(
+        x=Quantity[...](value=f32[], unit=Unit("km")),
+        y=Quantity[...](value=f32[], unit=Unit("km")),
+        z=Quantity[...](value=f32[], unit=Unit("km"))
+      )
     )
-
-    >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
-    >>> vec = cx.FourVector.constructor(xs)
-    >>> vec
-    FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
-        q=CartesianPosition3D( ... )
-    )
-
-    >>> vec.x
-    Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
 
     """
-    _ = eqx.error_if(
-        obj,
-        obj.shape[-1] != 4,
-        f"Cannot construct {cls} from array with shape {obj.shape}.",
-    )
-    c = cls.__dataclass_fields__["c"].default
-    return cls(t=obj[..., 0] / c, q=obj[..., 1:])
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]

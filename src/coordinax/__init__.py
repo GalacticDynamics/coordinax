@@ -61,10 +61,8 @@ __all__ += typing.__all__
 __all__ += utils.__all__
 
 # Interoperability
+from . import _interop  # noqa: E402
 from ._coordinax import compat  # noqa: E402
-
-# Astropy
-from ._interop import coordinax_interop_astropy  # noqa: E402
 
 # Runtime Typechecker
 install_import_hook("coordinax", RUNTIME_TYPECHECKER)
@@ -87,6 +85,6 @@ del (
     dn,
     funcs,
     RUNTIME_TYPECHECKER,
-    coordinax_interop_astropy,
     compat,
+    _interop,
 )

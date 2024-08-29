@@ -29,6 +29,9 @@ class AbstractPosition2D(AbstractPosition):
         raise NotImplementedError
 
 
+#####################################################################
+
+
 class AbstractVelocity2D(AbstractVelocity):
     """Abstract representation of 2D vector differentials."""
 
@@ -50,6 +53,9 @@ class AbstractVelocity2D(AbstractVelocity):
     @abstractmethod
     def differential_cls(cls) -> type[AbstractAcceleration]:
         raise NotImplementedError
+
+
+#####################################################################
 
 
 class AbstractAcceleration2D(AbstractAcceleration):

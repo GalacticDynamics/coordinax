@@ -19,7 +19,6 @@ from unxt import Quantity
 
 import coordinax._coordinax.typing as ct
 from .base import AbstractAccelerationND, AbstractPositionND, AbstractVelocityND
-from coordinax._coordinax.base import AbstractVector
 from coordinax._coordinax.base_pos import AbstractPosition
 from coordinax._coordinax.mixins import AvalMixin
 from coordinax._coordinax.utils import classproperty
@@ -139,7 +138,7 @@ class CartesianPositionND(AbstractPositionND):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianPositionND.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def constructor(
     cls: type[CartesianPositionND],
     x: Shaped[Quantity["length"], ""] | Shaped[Quantity["length"], "*batch N"],
@@ -373,7 +372,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianVelocityND.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def constructor(
     cls: type[CartesianVelocityND],
     x: Shaped[Quantity["speed"], ""] | Shaped[Quantity["speed"], "*batch N"],
@@ -545,7 +544,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
 
 # TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianAccelerationND.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def constructor(
     cls: type[CartesianAccelerationND],
     x: Shaped[Quantity["acceleration"], ""]
