@@ -37,14 +37,16 @@ class AbstractPosition1D(AbstractPosition):
         raise NotImplementedError
 
 
-# TODO: move to the class in py3.11+
-@AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+# -------------------------------------------------------------------
+
+
+@AbstractPosition1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
     cls: type[AbstractPosition1D],
-    x: Shaped[Quantity["length"], "*batch"] | Shaped[Quantity["length"], "*batch 1"],
+    obj: Shaped[Quantity["length"], "*batch"] | Shaped[Quantity["length"], "*batch 1"],
     /,
 ) -> AbstractPosition1D:
-    """Construct a 1D vector.
+    """Construct a 1D position.
 
     Examples
     --------
@@ -52,17 +54,20 @@ def constructor(
     >>> import coordinax as cx
 
     >>> cx.CartesianPosition1D.constructor(Quantity(1, "meter"))
-    CartesianPosition1D(
-        x=Quantity[...](value=f32[], unit=Unit("m"))
-    )
+    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("m")) )
 
     >>> cx.CartesianPosition1D.constructor(Quantity([1], "meter"))
-    CartesianPosition1D(
-        x=Quantity[...](value=f32[], unit=Unit("m"))
-    )
+    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("m")) )
+
+    >>> cx.RadialPosition.constructor(Quantity(1, "meter"))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
+
+    >>> cx.RadialPosition.constructor(Quantity([1], "meter"))
+    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
 
     """
-    return cls(**{fields(cls)[0].name: jnp.atleast_1d(x)[..., 0]})
+    comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
 
 
 #####################################################################
@@ -91,6 +96,39 @@ class AbstractVelocity1D(AbstractVelocity):
         raise NotImplementedError
 
 
+# -------------------------------------------------------------------
+
+
+@AbstractVelocity1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: type[AbstractVelocity1D],
+    obj: Shaped[Quantity["speed"], "*batch"] | Shaped[Quantity["speed"], "*batch 1"],
+    /,
+) -> AbstractVelocity1D:
+    """Construct a 1D velocity.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> cx.CartesianVelocity1D.constructor(Quantity(1, "m/s"))
+    CartesianVelocity1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+
+    >>> cx.CartesianVelocity1D.constructor(Quantity([1], "m/s"))
+    CartesianVelocity1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+
+    >>> cx.RadialVelocity.constructor(Quantity(1, "m/s"))
+    RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+
+    >>> cx.RadialVelocity.constructor(Quantity([1], "m/s"))
+    RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+
+    """
+    comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)
+
+
 #####################################################################
 
 
@@ -109,3 +147,37 @@ class AbstractAcceleration1D(AbstractAcceleration):
     @abstractmethod
     def integral_cls(cls) -> type[AbstractVelocity1D]:
         raise NotImplementedError
+
+
+# -------------------------------------------------------------------
+
+
+@AbstractAcceleration1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def constructor(
+    cls: type[AbstractAcceleration1D],
+    obj: Shaped[Quantity["acceleration"], "*batch"]
+    | Shaped[Quantity["acceleration"], "*batch 1"],
+    /,
+) -> AbstractAcceleration1D:
+    """Construct a 1D acceleration.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> cx.CartesianAcceleration1D.constructor(Quantity(1, "m/s2"))
+    CartesianAcceleration1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+
+    >>> cx.CartesianAcceleration1D.constructor(Quantity([1], "m/s2"))
+    CartesianAcceleration1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+
+    >>> cx.RadialAcceleration.constructor(Quantity(1, "m/s2"))
+    RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+
+    >>> cx.RadialAcceleration.constructor(Quantity([1], "m/s2"))
+    RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+
+    """
+    comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
+    return cls(**comps)

@@ -27,7 +27,7 @@ from quax import ArrayValue
 import quaxed.array_api as xp
 import quaxed.lax as qlax
 from dataclassish import field_items, field_values, replace
-from unxt import Quantity, unitsystem
+from unxt import AbstractQuantity, Quantity, unitsystem
 
 from .typing import Unit
 from .utils import classproperty, full_shaped
@@ -62,7 +62,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     @classmethod
     @dispatch
     def constructor(
-        cls: "type[AbstractVector]", obj: Mapping[str, Quantity], /
+        cls: "type[AbstractVector]", obj: Mapping[str, AbstractQuantity], /
     ) -> "AbstractVector":
         """Construct a vector from a mapping.
 
@@ -98,61 +98,6 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         """
         return cls(**obj)
-
-    @classmethod
-    @dispatch
-    def constructor(cls: "type[AbstractVector]", obj: Quantity, /) -> "AbstractVector":
-        """Construct a vector from a Quantity array.
-
-        The array is expected to have the components as the last axis.
-
-        Parameters
-        ----------
-        obj : Quantity[Any, (*#batch, N), "..."]
-            The array with batches and N components.
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        (The 1D cases are handled by a different dispatch)
-
-        >>> vec = cx.CartesianPosition2D.constructor(Quantity([1, 2], "meter"))
-        >>> vec
-        CartesianPosition2D(
-            x=Quantity[...](value=f32[], unit=Unit("m")),
-            y=Quantity[...](value=f32[], unit=Unit("m"))
-        )
-
-        >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "meter"))
-        >>> vec
-        CartesianPosition3D(
-            x=Quantity[...](value=f32[], unit=Unit("m")),
-            y=Quantity[...](value=f32[], unit=Unit("m")),
-            z=Quantity[...](value=f32[], unit=Unit("m"))
-        )
-
-        >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
-        >>> vec = cx.CartesianPosition3D.constructor(xs)
-        >>> vec
-        CartesianPosition3D(
-            x=Quantity[...](value=f32[2], unit=Unit("m")),
-            y=Quantity[...](value=f32[2], unit=Unit("m")),
-            z=Quantity[...](value=f32[2], unit=Unit("m"))
-        )
-        >>> vec.x
-        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
-
-        """
-        obj = eqx.error_if(
-            obj,
-            obj.shape[-1] != len(fields(cls)),
-            f"Cannot construct {cls} from array with shape {obj.shape}.",
-        )
-        comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
-        return cls(**comps)
 
     @classmethod
     @dispatch
@@ -863,40 +808,81 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
 # TODO: move to the class in py3.11+
 @AbstractVector.constructor._f.dispatch  # noqa: SLF001
-def constructor(  # noqa: D417
-    cls: type[AbstractVector], obj: AbstractVector, /
-) -> AbstractVector:
+def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     """Construct a vector from another vector.
 
     Parameters
     ----------
-    obj : :class:`coordinax.AbstractVector`
+    cls : type[AbstractVector], positional-only
+        The vector class.
+    obj : :class:`coordinax.AbstractVector`, positional-only
         The vector to construct from.
 
     Examples
     --------
-    >>> import jax.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x, y, z = Quantity(1, "meter"), Quantity(2, "meter"), Quantity(3, "meter")
-    >>> vec = cx.CartesianPosition3D(x=x, y=y, z=z)
-    >>> cart = cx.CartesianPosition3D.constructor(vec)
+    Positions:
+
+    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
+
+    >>> cart = cx.CartesianPosition3D.constructor(q)
     >>> cart
     CartesianPosition3D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
+      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
+      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km"))
     )
-    >>> cart.x
-    Quantity['length'](Array(1., dtype=float32), unit='m')
+
+    >>> cx.AbstractPosition3D.constructor(cart) is cart
+    True
+
+    >>> sph = cart.represent_as(cx.SphericalPosition)
+    >>> cx.AbstractPosition3D.constructor(sph) is sph
+    True
+
+    >>> cyl = cart.represent_as(cx.CylindricalPosition)
+    >>> cx.AbstractPosition3D.constructor(cyl) is cyl
+    True
+
+    Velocities:
+
+    >>> p = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+
+    >>> cart = cx.CartesianVelocity3D.constructor(p)
+    >>> cx.AbstractVelocity3D.constructor(cart) is cart
+    True
+
+    >>> sph = cart.represent_as(cx.SphericalVelocity, q)
+    >>> cx.AbstractVelocity3D.constructor(sph) is sph
+    True
+
+    >>> cyl = cart.represent_as(cx.CylindricalVelocity, q)
+    >>> cx.AbstractVelocity3D.constructor(cyl) is cyl
+    True
+
+    Accelerations:
+
+    >>> p = cx.CartesianVelocity3D.constructor([1, 1, 1], "km/s")
+
+    >>> cart = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
+    >>> cx.AbstractAcceleration3D.constructor(cart) is cart
+    True
+
+    >>> sph = cart.represent_as(cx.SphericalAcceleration, p, q)
+    >>> cx.AbstractAcceleration3D.constructor(sph) is sph
+    True
+
+    >>> cyl = cart.represent_as(cx.CylindricalAcceleration, p, q)
+    >>> cx.AbstractAcceleration3D.constructor(cyl) is cyl
+    True
 
     """
     if not isinstance(obj, cls):
         msg = f"Cannot construct {cls} from {type(obj)}."
         raise TypeError(msg)
 
-    # avoid copying if the types are the same. Isinstance is not strict
+    # Avoid copying if the types are the same. `isinstance` is not strict
     # enough, so we use type() instead.
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj
