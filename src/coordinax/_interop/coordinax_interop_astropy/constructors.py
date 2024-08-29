@@ -14,7 +14,7 @@ import coordinax as cx
 #####################################################################
 
 
-@cx.AbstractPosition3D.constructor._f.dispatch  # noqa: SLF001
+@cx.AbstractPosition3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
 def constructor(
     cls: type[cx.AbstractPosition3D], obj: apyc.CartesianRepresentation, /
 ) -> cx.CartesianPosition3D:
@@ -34,7 +34,7 @@ def constructor(
     return cx.CartesianPosition3D.constructor(obj)
 
 
-@cx.AbstractPosition3D.constructor._f.dispatch  # noqa: SLF001
+@cx.AbstractPosition3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
 def constructor(
     cls: type[cx.AbstractPosition3D], obj: apyc.CylindricalRepresentation, /
 ) -> cx.CylindricalPosition:
@@ -56,7 +56,7 @@ def constructor(
     return cx.CylindricalPosition.constructor(obj)
 
 
-@cx.AbstractPosition3D.constructor._f.dispatch  # noqa: SLF001
+@cx.AbstractPosition3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
 def constructor(
     cls: type[cx.AbstractPosition3D], obj: apyc.PhysicsSphericalRepresentation, /
 ) -> cx.SphericalPosition:
@@ -78,7 +78,7 @@ def constructor(
     return cx.SphericalPosition.constructor(obj)
 
 
-@cx.AbstractPosition3D.constructor._f.dispatch  # noqa: SLF001
+@cx.AbstractPosition3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
 def constructor(
     cls: type[cx.AbstractPosition3D], obj: apyc.SphericalRepresentation, /
 ) -> cx.LonLatSphericalPosition:
