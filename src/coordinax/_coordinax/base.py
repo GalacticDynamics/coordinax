@@ -805,7 +805,6 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 # Register additional constructors
 
 
-# TODO: move to the class in py3.11+
 @AbstractVector.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     """Construct a vector from another vector.
