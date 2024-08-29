@@ -1,4 +1,3 @@
-# pylint: disable=duplicate-code
-"""1-dimensional."""
+"""Interoperability."""
 
 __all__: list[str] = []
