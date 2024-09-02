@@ -101,6 +101,10 @@ class AbstractVectorTest:
             *(getattr(vector, c).shape for c in vector.components)
         )
 
+    def test_dim(self, vector):
+        """Test :meth:`AbstractVector.dim`."""
+        assert f"{vector.dim}D" in vector.__class__.__name__
+
     def test_flatten(self, vector):
         """Test :meth:`AbstractVector.flatten`."""
         # Test input vector
@@ -183,7 +187,7 @@ class AbstractPositionTest(AbstractVectorTest):
     """Test :class:`coordinax.AbstractPosition`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractPosition:  # noqa: PT004
+    def vector(self) -> AbstractPosition:
         """Return a vector."""
         raise NotImplementedError
 
@@ -206,12 +210,12 @@ class AbstractVelocityTest(AbstractVectorTest):
     """Test :class:`coordinax.AbstractVelocity`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractPosition:  # noqa: PT004
+    def vector(self) -> AbstractPosition:
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> AbstractVelocity:  # noqa: PT004
+    def difntl(self) -> AbstractVelocity:
         """Return a vector."""
         raise NotImplementedError
 
