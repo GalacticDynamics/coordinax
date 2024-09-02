@@ -332,6 +332,12 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
+        We can get the dimensionality of a vector:
+
+        >>> vec = cx.CartesianPosition2D.constructor([1, 2], "m")
+        >>> vec.dim
+        2
+
         """
         return len(self.components)
 
