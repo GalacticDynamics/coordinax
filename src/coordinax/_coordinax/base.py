@@ -321,6 +321,20 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         """
         return replace(self, **{k: v.T for k, v in field_items(self)})
 
+    @property
+    def dim(self) -> int:
+        """The dimensionality of the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        """
+        return len(self.components)
+
     # ---------------------------------------------------------------
     # Methods
 
