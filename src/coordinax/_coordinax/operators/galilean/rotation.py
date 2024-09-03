@@ -15,7 +15,7 @@ from plum import convert
 from quax import quaxify
 
 import quaxed.array_api as xp
-from unxt import Quantity
+from unxt import Quantity, ustrip
 
 from .base import AbstractGalileanOperator
 from coordinax._coordinax.base import ToUnitsOptions
@@ -33,7 +33,7 @@ def converter(x: Any) -> Array:
     if isinstance(x, GalileanRotationOperator):
         out = x.rotation
     elif isinstance(x, Quantity):
-        out = x.to_units_value("")
+        out = ustrip("", x)
     else:
         out = x
     return jnp.asarray(out)

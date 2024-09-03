@@ -14,10 +14,10 @@ from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
 
-import astropy.units as u
 import jax
 import jax.numpy as jnp
 import numpy as np
+from astropy.units import PhysicalType as Dimensions
 from jax import Device
 from jaxtyping import ArrayLike
 from plum import dispatch
@@ -26,7 +26,15 @@ from quax import ArrayValue
 import quaxed.array_api as xp
 import quaxed.lax as qlax
 from dataclassish import field_items, field_values, replace
-from unxt import AbstractQuantity, Quantity, unitsystem
+from unxt import (
+    AbstractQuantity,
+    Quantity,
+    dimensions,
+    dimensions_of,
+    uconvert,
+    units_of,
+    unitsystem,
+)
 
 from .typing import Unit
 from .utils import classproperty, full_shaped
@@ -38,7 +46,7 @@ BT = TypeVar("BT", bound="AbstractVector")
 
 
 class ToUnitsOptions(Enum):
-    """Options for the units argument of :meth:`AbstractVector.to_units`."""
+    """Options for the units argument of `AbstractVector.to_units`."""
 
     consistent = "consistent"
     """Convert to consistent units."""
@@ -80,9 +88,9 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> vec = cx.CartesianPosition3D.constructor(xs)
         >>> vec
         CartesianPosition3D(
-            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m")),
+            z=Quantity[...](value=f32[], unit=Unit("m"))
         )
 
         >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
@@ -90,9 +98,9 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> vec = cx.CartesianPosition3D.constructor(xs)
         >>> vec
         CartesianPosition3D(
-            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+            x=Quantity[...](value=f32[2], unit=Unit("m")),
+            y=Quantity[...](value=f32[2], unit=Unit("m")),
+            z=Quantity[...](value=f32[2], unit=Unit("m"))
         )
 
         """
@@ -123,18 +131,18 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "meter")
         >>> vec
         CartesianPosition3D(
-            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m")),
+            z=Quantity[...](value=f32[], unit=Unit("m"))
         )
 
         >>> xs = jnp.array([[1, 2, 3], [4, 5, 6]])
         >>> vec = cx.CartesianPosition3D.constructor(xs, "meter")
         >>> vec
         CartesianPosition3D(
-            x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-            z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
+            x=Quantity[...](value=f32[2], unit=Unit("m")),
+            y=Quantity[...](value=f32[2], unit=Unit("m")),
+            z=Quantity[...](value=f32[2], unit=Unit("m"))
         )
         >>> vec.x
         Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
@@ -481,8 +489,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         ...                              y=Quantity(0, "m"))
         >>> vec.flatten()
         CartesianPosition2D(
-            x=Quantity[PhysicalType('length')](value=f32[4], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[1], unit=Unit("m"))
+            x=Quantity[...](value=f32[4], unit=Unit("m")),
+            y=Quantity[...](value=f32[1], unit=Unit("m"))
         )
 
         """
@@ -517,8 +525,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         >>> vec.reshape(4)
         CartesianPosition2D(
-            x=Quantity[PhysicalType('length')](value=f32[4], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[4], unit=Unit("m"))
+            x=Quantity[...](value=f32[4], unit=Unit("m")),
+            y=Quantity[...](value=f32[4], unit=Unit("m"))
         )
 
         """
@@ -594,7 +602,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     @property
     def units(self) -> MappingProxyType[str, Unit]:
         """Get the units of the vector's components."""
-        return MappingProxyType({k: v.unit for k, v in field_items(self)})
+        return MappingProxyType({k: units_of(v) for k, v in field_items(self)})
 
     @property
     def dtypes(self) -> MappingProxyType[str, jnp.dtype]:
@@ -637,12 +645,12 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         raise NotImplementedError  # pragma: no cover
 
     @dispatch
-    def to_units(self, units: Any, /) -> "AbstractVector":
+    def to_units(self, usys: Any, /) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters
         ----------
-        units : Any
+        usys : Any
             The units to convert to according to the physical type of the
             components. This is passed to [`unxt.unitsystem`][].
 
@@ -663,21 +671,21 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         )
 
         """
-        usys = unitsystem(units)
+        usys = unitsystem(usys)
         return replace(
             self,
-            **{k: v.to_units(usys[v.unit.physical_type]) for k, v in field_items(self)},
+            **{k: uconvert(usys[dimensions_of(v)], v) for k, v in field_items(self)},
         )
 
     @dispatch
     def to_units(
-        self: "AbstractVector", units: Mapping[u.PhysicalType | str, Unit | str], /
+        self: "AbstractVector", usys: Mapping[Dimensions | str, Unit | str], /
     ) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters
         ----------
-        units : Mapping[PhysicalType | str, Unit | str]
+        usys : Mapping[Dimensions | str, Unit | str]
             The units to convert to according to the physical type of the
             components.
 
@@ -707,14 +715,11 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         """
         # Ensure `units_` is PT -> Unit
-        units_ = {u.get_physical_type(k): v for k, v in units.items()}
+        units_ = {dimensions(k): v for k, v in usys.items()}
         # Convert to the given units
         return replace(
             self,
-            **{
-                k: v.to_units(units_[v.unit.physical_type])
-                for k, v in field_items(self)
-            },
+            **{k: uconvert(units_[dimensions_of(v)], v) for k, v in field_items(self)},
         )
 
     @dispatch
@@ -744,8 +749,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         >>> cart.to_units(cx.ToUnitsOptions.consistent)
         CartesianPosition2D(
-            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m"))
         )
 
         >>> sph = cart.represent_as(cx.SphericalPosition)
@@ -757,18 +762,17 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         )
 
         """
+        dim2unit = {}
         units_ = {}
-        for v in field_values(self):
-            pt = v.unit.physical_type
-            if pt not in units_:
-                units_[pt] = v.unit
+        for k, v in field_items(self):
+            pt = dimensions_of(v)
+            if pt not in dim2unit:
+                dim2unit[pt] = units_of(v)
+            units_[k] = dim2unit[pt]
 
         return replace(
             self,
-            **{
-                k: v.to_units(units_[v.unit.physical_type])
-                for k, v in field_items(self)
-            },
+            **{k: uconvert(units_[k], v) for k, v in field_items(self)},
         )
 
     # ===============================================================
@@ -788,8 +792,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         """
         cls_name = type(self).__name__
-        units = self.units
-        comps = ", ".join(f"{c}[{units[c]}]" for c in self.components)
+        units_ = self.units
+        comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
         vs = np.array2string(
             xp.stack(
                 tuple(v.value for v in xp.broadcast_arrays(*field_values(self))),
@@ -827,9 +831,9 @@ def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVe
     >>> cart = cx.CartesianPosition3D.constructor(q)
     >>> cart
     CartesianPosition3D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
-      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km")),
-      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km"))
+      x=Quantity[...](value=f32[], unit=Unit("km")),
+      y=Quantity[...](value=f32[], unit=Unit("km")),
+      z=Quantity[...](value=f32[], unit=Unit("km"))
     )
 
     >>> cx.AbstractPosition3D.constructor(cart) is cart
