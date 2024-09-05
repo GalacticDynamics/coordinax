@@ -73,7 +73,9 @@ class CartesianPosition3D(AbstractPosition3D):
 
 @CartesianPosition3D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
-    cls: type[CartesianPosition3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
+    cls: type[CartesianPosition3D],
+    obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
+    /,
 ) -> CartesianPosition3D:
     """Construct a 3D Cartesian position.
 
@@ -196,7 +198,9 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
 
 @CartesianVelocity3D.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def constructor(
-    cls: type[CartesianVelocity3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
+    cls: type[CartesianVelocity3D],
+    obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
+    /,
 ) -> CartesianVelocity3D:
     """Construct a 3D Cartesian velocity.
 
