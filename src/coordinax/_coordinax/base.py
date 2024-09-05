@@ -321,6 +321,26 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         """
         return replace(self, **{k: v.T for k, v in field_items(self)})
 
+    @property
+    def dim(self) -> int:
+        """The dimensionality of the vector.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        We can get the dimensionality of a vector:
+
+        >>> vec = cx.CartesianPosition2D.constructor([1, 2], "m")
+        >>> vec.dim
+        2
+
+        """
+        return len(self.components)
+
     # ---------------------------------------------------------------
     # Methods
 

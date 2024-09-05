@@ -101,6 +101,10 @@ class AbstractVectorTest:
             *(getattr(vector, c).shape for c in vector.components)
         )
 
+    def test_dim(self, vector):
+        """Test :meth:`AbstractVector.dim`."""
+        assert f"{vector.dim}D" in vector.__class__.__name__
+
     def test_flatten(self, vector):
         """Test :meth:`AbstractVector.flatten`."""
         # Test input vector
