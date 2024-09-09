@@ -2,7 +2,7 @@
 
 __all__: list[str] = []
 
-from . import optional_deps
+from .optional_deps import OptDeps
 
-if optional_deps.HAS_ASTROPY:
+if OptDeps.ASTROPY.is_installed:
     from . import coordinax_interop_astropy  # noqa: F401
