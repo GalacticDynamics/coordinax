@@ -1,7 +1,11 @@
 """Optional dependencies. Internal use only."""
 
-__all__ = ["HAS_ASTROPY"]
+__all__ = ["OptDeps"]
 
-from importlib.util import find_spec
+from optional_dependencies import OptionalDependencyEnum, auto
 
-HAS_ASTROPY: bool = find_spec("astropy") is not None
+
+class OptDeps(OptionalDependencyEnum):  # type: ignore[misc]
+    """Optional dependencies for ``coordinax``."""
+
+    ASTROPY = auto()
