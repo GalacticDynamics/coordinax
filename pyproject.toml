@@ -199,7 +199,7 @@
     [tool.ruff.lint.isort]
       combine-as-imports = true
       extra-standard-library = ["typing_extensions"]
-      known-first-party = ["dataclassish", "quaxed", "unxt", "xmmutablemap"]
+      known-first-party = ["dataclassish", "optional_dependencies", "quaxed", "unxt", "xmmutablemap"]
       known-local-folder = ["coordinax"]
 
 
