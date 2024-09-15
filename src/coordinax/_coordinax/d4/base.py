@@ -6,8 +6,7 @@ __all__ = ["AbstractPosition4D"]
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
-from coordinax._coordinax.base import AbstractVector
-from coordinax._coordinax.base_pos import AbstractPosition
+from coordinax._coordinax.base import AbstractPosition, AbstractVector
 from coordinax._coordinax.utils import classproperty
 
 if TYPE_CHECKING:

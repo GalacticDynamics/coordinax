@@ -22,8 +22,8 @@ from unxt import AbstractQuantity, Quantity
 
 import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
-from coordinax._coordinax.base_pos import AbstractPosition
-from coordinax._coordinax.mixins import AvalMixin
+from coordinax._coordinax.base import AbstractPosition
+from coordinax._coordinax.base.mixins import AvalMixin
 from coordinax._coordinax.utils import classproperty
 
 

@@ -9,7 +9,7 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 from .base import AbstractOperator, op_call_dispatch
-from coordinax._coordinax.base_pos import AbstractPosition
+from coordinax._coordinax.base import AbstractPosition
 
 
 @final

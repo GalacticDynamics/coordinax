@@ -19,10 +19,10 @@ import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import Quantity
 
-from . import typing as ct
 from .base import AbstractVector
 from .mixins import AvalMixin
-from .utils import classproperty
+from coordinax._coordinax import typing as ct
+from coordinax._coordinax.utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -227,17 +227,42 @@ def _add_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> AbstractPosition
     ).represent_as(type(lhs))
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_qq(lhs: AbstractPosition, rhs: AbstractPosition) -> AbstractPosition:
-    """Add another object to this vector."""
-    # The base implementation is to convert to Cartesian and perform the
-    # operation.  Cartesian coordinates do not have any branch cuts or
-    # singularities or ranges that need to be handled, so this is a safe
-    # default.
-    return qlax.sub(
-        lhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
-        rhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
-    ).represent_as(type(lhs))
+# ------------------------------------------------
+
+
+@register(jax.lax.convert_element_type_p)  # type: ignore[misc]
+def _convert_element_type_p(
+    operand: AbstractPosition, **kwargs: Any
+) -> AbstractPosition:
+    """Convert the element type of a quantity."""
+    # TODO: examples
+    return replace(
+        operand,
+        **{k: qlax.convert_element_type(v, **kwargs) for k, v in field_items(operand)},
+    )
+
+
+# ------------------------------------------------
+
+
+@register(jax.lax.div_p)  # type: ignore[misc]
+def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
+    """Divide a vector by a scalar.
+
+    Examples
+    --------
+    >>> import quaxed.array_api as jnp
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> jnp.divide(vec, 2).x
+    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+
+    >>> (vec / 2).x
+    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+
+    """
+    return replace(lhs, **{k: jnp.divide(v, rhs) for k, v in field_items(lhs)})
 
 
 # ------------------------------------------------
@@ -389,26 +414,6 @@ def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 
-@register(jax.lax.div_p)  # type: ignore[misc]
-def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
-    """Divide a vector by a scalar.
-
-    Examples
-    --------
-    >>> import quaxed.array_api as jnp
-    >>> import coordinax as cx
-
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-    >>> jnp.divide(vec, 2).x
-    Quantity['length'](Array(0.5, dtype=float32), unit='m')
-
-    >>> (vec / 2).x
-    Quantity['length'](Array(0.5, dtype=float32), unit='m')
-
-    """
-    return replace(lhs, **{k: jnp.divide(v, rhs) for k, v in field_items(lhs)})
-
-
 # ------------------------------------------------
 
 
@@ -446,3 +451,19 @@ def _reshape_pos(
             for k, v in field_items(operand)
         },
     )
+
+
+# ------------------------------------------------
+
+
+@register(jax.lax.sub_p)  # type: ignore[misc]
+def _sub_qq(lhs: AbstractPosition, rhs: AbstractPosition) -> AbstractPosition:
+    """Add another object to this vector."""
+    # The base implementation is to convert to Cartesian and perform the
+    # operation.  Cartesian coordinates do not have any branch cuts or
+    # singularities or ranges that need to be handled, so this is a safe
+    # default.
+    return qlax.sub(
+        lhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
+        rhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
+    ).represent_as(type(lhs))

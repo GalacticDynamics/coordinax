@@ -10,9 +10,6 @@ from jaxtyping import install_import_hook
 from . import operators
 from ._coordinax import (
     base,
-    base_acc,
-    base_pos,
-    base_vel,
     d1,
     d2,
     d3,
@@ -26,9 +23,6 @@ from ._coordinax import (
     utils,
 )
 from ._coordinax.base import *
-from ._coordinax.base_acc import *
-from ._coordinax.base_pos import *
-from ._coordinax.base_vel import *
 from ._coordinax.d1 import *
 from ._coordinax.d2 import *
 from ._coordinax.d3 import *
@@ -46,9 +40,6 @@ from .setup_package import RUNTIME_TYPECHECKER
 __all__ = ["__version__", "operators"]
 __all__ += funcs.__all__
 __all__ += base.__all__
-__all__ += base_pos.__all__
-__all__ += base_vel.__all__
-__all__ += base_acc.__all__
 __all__ += d1.__all__
 __all__ += d2.__all__
 __all__ += d3.__all__
@@ -70,9 +61,6 @@ install_import_hook("coordinax", RUNTIME_TYPECHECKER)
 # Cleanup
 del (
     base,
-    base_vel,
-    base_pos,
-    base_acc,
     space,
     exceptions,
     transform,

@@ -22,7 +22,7 @@ from .spherical import (
     SphericalPosition,
     SphericalVelocity,
 )
-from coordinax._coordinax.base_pos import AbstractPosition
+from coordinax._coordinax.base import AbstractPosition
 
 ###############################################################################
 # 3D
