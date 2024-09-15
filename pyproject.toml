@@ -92,7 +92,8 @@
   ]
   filterwarnings = [
     "error",
-    "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",
+    "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",  # from Sybil
+    "ignore:Attribute s is deprecated and will be removed in Python 3\\.14:DeprecationWarning",  # from Sybil
     "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available",
     "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
   ]
@@ -199,7 +200,7 @@
     [tool.ruff.lint.isort]
       combine-as-imports = true
       extra-standard-library = ["typing_extensions"]
-      known-first-party = ["dataclassish", "quaxed", "unxt", "xmmutablemap"]
+      known-first-party = ["dataclassish", "optional_dependencies", "quaxed", "unxt", "xmmutablemap"]
       known-local-folder = ["coordinax"]
 
 

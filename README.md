@@ -88,17 +88,11 @@ If you found this library to be useful in academic work, then please cite.
 
 We welcome contributions!
 
-<!-- [![GitHub Discussion][github-discussions-badge]][github-discussions-link] -->
-
-<!-- SPHINX-START -->
-
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/GalacticDynamics/coordinax/workflows/CI/badge.svg
 [actions-link]:             https://github.com/GalacticDynamics/coordinax/actions
 [conda-badge]:              https://img.shields.io/conda/vn/conda-forge/coordinax
 [conda-link]:               https://github.com/conda-forge/coordinax-feedstock
-<!-- [github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
-[github-discussions-link]:  https://github.com/GalacticDynamics/coordinax/discussions -->
 [pypi-link]:                https://pypi.org/project/coordinax/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/coordinax
 [pypi-version]:             https://img.shields.io/pypi/v/coordinax
