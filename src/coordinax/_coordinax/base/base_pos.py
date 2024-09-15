@@ -29,7 +29,8 @@ if TYPE_CHECKING:
 
 PosT = TypeVar("PosT", bound="AbstractPosition")
 
-VECTOR_CLASSES: set[type["AbstractPosition"]] = set()
+# TODO: figure out public API for this
+POSITION_CLASSES: set[type["AbstractPosition"]] = set()
 
 
 class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
@@ -44,7 +45,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         if isabstract(cls) or cls.__name__.startswith("Abstract"):
             return
 
-        VECTOR_CLASSES.add(cls)
+        POSITION_CLASSES.add(cls)
 
     @classproperty
     @classmethod
