@@ -7,7 +7,7 @@ from plum import convert
 
 from unxt import Quantity
 
-from .funcs import represent_as
+from coordinax._coordinax.funcs import represent_as
 
 
 class AvalMixin:

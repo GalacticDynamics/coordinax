@@ -18,7 +18,7 @@ from unxt import Quantity
 from .base import AbstractVector
 from .base_pos import AbstractPosition
 from .base_vel import AbstractVelocity
-from .utils import classproperty
+from coordinax._coordinax.utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Self

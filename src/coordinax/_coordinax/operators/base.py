@@ -12,7 +12,7 @@ from plum import dispatch
 from dataclassish import field_items
 from unxt import Quantity
 
-from coordinax._coordinax.base_pos import AbstractPosition
+from coordinax._coordinax.base import AbstractPosition
 
 if TYPE_CHECKING:
     from coordinax.operators import OperatorSequence

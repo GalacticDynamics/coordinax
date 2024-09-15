@@ -9,13 +9,15 @@ from dataclassish import field_items
 from unxt import AbstractQuantity
 
 import coordinax as cx
-from coordinax._coordinax.base_pos import VECTOR_CLASSES
+from coordinax._coordinax.base.base_pos import POSITION_CLASSES
 
-VECTOR_CLASSES_3D = [c for c in VECTOR_CLASSES if issubclass(c, cx.AbstractPosition3D)]
+POSITION_CLASSES_3D = [
+    c for c in POSITION_CLASSES if issubclass(c, cx.AbstractPosition3D)
+]
 
 
 # TODO: cycle through all representations
-@pytest.fixture(params=VECTOR_CLASSES_3D)
+@pytest.fixture(params=POSITION_CLASSES_3D)
 def q(request) -> cx.AbstractPosition:
     """Fixture for 3D Vectors."""
     q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
@@ -29,7 +31,7 @@ def func(
     return q.represent_as(target)
 
 
-@pytest.mark.parametrize("target", VECTOR_CLASSES_3D)
+@pytest.mark.parametrize("target", POSITION_CLASSES_3D)
 def test_jax_through_representation(
     q: cx.AbstractPosition, target: type[cx.AbstractPosition]
 ) -> None:

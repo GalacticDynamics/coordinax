@@ -10,7 +10,7 @@ from dataclassish import DataclassInstance
 from unxt import Quantity
 
 from .base import AbstractOperator, op_call_dispatch
-from coordinax._coordinax.base_pos import AbstractPosition
+from coordinax._coordinax.base import AbstractPosition
 
 if TYPE_CHECKING:
     from typing_extensions import Self

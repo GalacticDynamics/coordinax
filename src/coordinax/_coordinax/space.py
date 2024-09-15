@@ -19,12 +19,14 @@ import quaxed.numpy as jnp
 from unxt import Quantity, dimensions
 from xmmutablemap import ImmutableMap
 
+from .base import (
+    AbstractAcceleration,
+    AbstractPosition,
+    AbstractVector,
+    AbstractVelocity,
+)
 from .typing import Unit
 from .utils import classproperty
-from coordinax._coordinax.base import AbstractVector
-from coordinax._coordinax.base_acc import AbstractAcceleration
-from coordinax._coordinax.base_pos import AbstractPosition
-from coordinax._coordinax.base_vel import AbstractVelocity
 from coordinax._coordinax.funcs import represent_as
 
 DimensionLike: TypeAlias = Dimension | str

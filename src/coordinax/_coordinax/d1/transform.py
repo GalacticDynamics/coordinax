@@ -9,8 +9,7 @@ from plum import dispatch
 from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
 from .cartesian import CartesianAcceleration1D, CartesianPosition1D, CartesianVelocity1D
 from .radial import RadialAcceleration, RadialPosition, RadialVelocity
-from coordinax._coordinax.base_pos import AbstractPosition
-from coordinax._coordinax.base_vel import AbstractVelocity
+from coordinax._coordinax.base import AbstractPosition, AbstractVelocity
 
 ###############################################################################
 # 1D

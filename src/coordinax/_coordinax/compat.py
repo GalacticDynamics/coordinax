@@ -10,7 +10,7 @@ import quaxed.array_api as xp
 from dataclassish import field_values
 from unxt import AbstractQuantity, Distance, Quantity, UncheckedQuantity
 
-from .base_pos import AbstractPosition
+from .base import AbstractPosition
 from coordinax._coordinax.utils import full_shaped
 
 #####################################################################

@@ -36,8 +36,8 @@ from unxt import (
     unitsystem,
 )
 
-from .typing import Unit
-from .utils import classproperty, full_shaped
+from coordinax._coordinax.typing import Unit
+from coordinax._coordinax.utils import classproperty, full_shaped
 
 if TYPE_CHECKING:
     from typing_extensions import Self
