@@ -13,7 +13,6 @@ from jaxtyping import ArrayLike, Shaped
 from plum import conversion_method
 from quax import register
 
-import quaxed.array_api as xp
 import quaxed.numpy as jnp
 from unxt import Quantity
 
@@ -131,7 +130,7 @@ class CartesianPositionND(AbstractPositionND):
         Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
 
         """
-        return xp.linalg.vector_norm(self.q, axis=-1)
+        return jnp.linalg.vector_norm(self.q, axis=-1)
 
 
 # -------------------------------------------------------------------
@@ -365,7 +364,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 
         """
-        return xp.linalg.vector_norm(self.d_q, axis=-1)
+        return jnp.linalg.vector_norm(self.d_q, axis=-1)
 
 
 # -------------------------------------------------------------------
@@ -537,7 +536,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
         """
-        return xp.linalg.vector_norm(self.d2_q, axis=-1)
+        return jnp.linalg.vector_norm(self.d2_q, axis=-1)
 
 
 # -------------------------------------------------------------------
