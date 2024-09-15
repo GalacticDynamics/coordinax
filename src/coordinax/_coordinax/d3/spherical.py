@@ -797,16 +797,16 @@ def _mul_p_vmsph(
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
 
     >>> v = cx.MathSphericalPosition(r=Quantity(3, "kpc"),
     ...                              theta=Quantity(90, "deg"),
     ...                              phi=Quantity(0, "deg"))
 
-    >>> xp.linalg.vector_norm(v, axis=-1)
+    >>> jnp.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
-    >>> nv = xp.multiply(2, v)
+    >>> nv = jnp.multiply(2, v)
     >>> nv
     MathSphericalPosition(
       r=Distance(value=f32[], unit=Unit("kpc")),

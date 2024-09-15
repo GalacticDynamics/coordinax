@@ -12,7 +12,7 @@ import jax
 from jaxtyping import Array, Shaped
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from unxt import AbstractQuantity
 
 
@@ -48,7 +48,7 @@ def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N
     Array([0., 1.], dtype=float32)
 
     """
-    return x / xp.linalg.vector_norm(x, axis=-1, keepdims=True)
+    return x / jnp.linalg.vector_norm(x, axis=-1, keepdims=True)
 
 
 @dispatch
@@ -72,4 +72,4 @@ def normalize_vector(
     Quantity['dimensionless'](Array([0., 1.], dtype=float32), unit='')
 
     """
-    return x / xp.linalg.vector_norm(x, axis=-1, keepdims=True)
+    return x / jnp.linalg.vector_norm(x, axis=-1, keepdims=True)

@@ -14,8 +14,8 @@ from jaxtyping import ArrayLike
 from plum import convert, dispatch
 from quax import quaxify, register
 
-import quaxed.array_api as xp
 import quaxed.lax as qlax
+import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import Quantity
 
@@ -183,7 +183,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
 
         """
-        return xp.linalg.vector_norm(self, axis=-1)
+        return jnp.linalg.vector_norm(self, axis=-1)
 
 
 # ===================================================================
@@ -251,7 +251,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> import quaxed.array_api as jnp
+    >>> import quaxed.numpy as jnp
 
     >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
     >>> jnp.multiply(2, vec)
@@ -277,7 +277,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     >>> from plum import conversion_method
     >>> @conversion_method(MyCartesian, Quantity)
     ... def _to_quantity(x: MyCartesian, /) -> Quantity:
-    ...     return xp.stack((x.x, x.y, x.z), axis=-1)
+    ...     return jnp.stack((x.x, x.y, x.z), axis=-1)
 
     Add representation transformation
 
@@ -406,7 +406,7 @@ def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
     Quantity['length'](Array(0.5, dtype=float32), unit='m')
 
     """
-    return replace(lhs, **{k: xp.divide(v, rhs) for k, v in field_items(lhs)})
+    return replace(lhs, **{k: jnp.divide(v, rhs) for k, v in field_items(lhs)})
 
 
 # ------------------------------------------------
