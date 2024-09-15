@@ -47,10 +47,10 @@ class AbstractPosition3DTest(AbstractPositionTest):
         # vecsel = convert(-vector[sel], type(apyvector))
         # apyvecsel = -apyvector[sel]
         # for c in vecsel.components:
-        #     unit = getattr(apyvecsel, c).unit
+        #     unit_ = units(getattr(apyvecsel, c))
         #     assert np.allclose(
-        #         getattr(vecsel, c).to_units_value(unit),
-        #         getattr(apyvecsel, c).to_units_value(unit),
+        #         ustrip(unit_, getattr(vecsel, c)),
+        #         ustrip(unit_, getattr(apyvecsel, c)),
         #         atol=5e-7,
         #     )
 

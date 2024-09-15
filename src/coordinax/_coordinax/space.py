@@ -11,12 +11,12 @@ from typing_extensions import override
 import astropy.units as u
 import equinox as eqx
 import jax
-from astropy.units import PhysicalType as Dimension, get_physical_type
+from astropy.units import PhysicalType as Dimension
 from jax import Device
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt import Quantity
+from unxt import Quantity, dimensions
 from xmmutablemap import ImmutableMap
 
 from .typing import Unit
@@ -30,8 +30,8 @@ from coordinax._coordinax.funcs import represent_as
 DimensionLike: TypeAlias = Dimension | str
 
 
-def _get_dimension_name(dimension: DimensionLike) -> str:
-    return get_physical_type(dimension)._physical_type_list[0]  # noqa: SLF001
+def _get_dimension_name(dim: DimensionLike, /) -> str:
+    return dimensions(dim)._physical_type_list[0]  # noqa: SLF001
 
 
 def _can_broadcast_shapes(*shapes: tuple[int, ...]) -> bool:
