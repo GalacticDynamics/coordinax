@@ -12,7 +12,7 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 from jaxtyping import ArrayLike
-from plum import convert, dispatch
+from plum import convert
 from quax import quaxify, register
 
 import quaxed.lax as qlax
@@ -160,26 +160,6 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
         """
         return jnp.linalg.vector_norm(self, axis=-1)
-
-
-# ===================================================================
-# Register dispatches
-
-
-# from coordinax.funcs
-@dispatch  # type: ignore[misc]
-@partial(jax.jit, inline=True)
-def normalize_vector(x: AbstractPosition, /) -> AbstractPosition:
-    """Return the norm of the vector.
-
-    Returns
-    -------
-    Quantity
-        The norm of the vector.
-
-    """
-    # TODO: the issue is units! what should the units be?
-    raise NotImplementedError  # pragma: no cover
 
 
 # ===================================================================

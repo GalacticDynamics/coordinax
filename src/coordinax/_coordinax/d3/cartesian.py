@@ -14,6 +14,7 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 from jaxtyping import ArrayLike, Shaped
+from plum import dispatch
 from quax import register
 
 import quaxed.lax as qlax
@@ -23,6 +24,7 @@ from unxt import AbstractQuantity, Quantity
 
 import coordinax._coordinax.typing as ct
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
+from .generic import CartesianGeneric3D
 from coordinax._coordinax.base import AbstractPosition
 from coordinax._coordinax.base.mixins import AvalMixin
 from coordinax._coordinax.utils import classproperty
@@ -58,7 +60,8 @@ class CartesianPosition3D(AbstractPosition3D):
         return CartesianVelocity3D
 
 
-# -----------------------------------------------------
+# =====================================================
+# Constructors
 
 
 @CartesianPosition3D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
@@ -87,8 +90,8 @@ def constructor(
     return cls(**comps)
 
 
-# -----------------------------------------------------
-# Method dispatches
+# =====================================================
+# Primitives
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
@@ -148,6 +151,45 @@ def _sub_cart3d_pos(
     """
     cart = rhs.represent_as(CartesianPosition3D)
     return jax.tree.map(qlax.sub, lhs, cart)
+
+
+# =====================================================
+# Functions
+
+
+# from coordinax.funcs
+@dispatch  # type: ignore[misc]
+@partial(jax.jit, inline=True)
+def normalize_vector(obj: CartesianPosition3D, /) -> CartesianGeneric3D:
+    """Return the norm of the vector.
+
+    This has length 1.
+
+    .. note::
+
+        The unit vector is dimensionless, even if the input vector has units.
+        This is because the unit vector is a ratio of two quantities: each
+        component and the norm of the vector.
+
+    Returns
+    -------
+    CartesianGeneric3D
+        The norm of the vector.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> cx.normalize_vector(q)
+    CartesianGeneric3D(
+      x=Quantity[...]( value=f32[], unit=Unit(dimensionless) ),
+      y=Quantity[...]( value=f32[], unit=Unit(dimensionless) ),
+      z=Quantity[...]( value=f32[], unit=Unit(dimensionless) )
+    )
+
+    """
+    norm = obj.norm()
+    return CartesianGeneric3D(x=obj.x / norm, y=obj.y / norm, z=obj.z / norm)
 
 
 #####################################################################
