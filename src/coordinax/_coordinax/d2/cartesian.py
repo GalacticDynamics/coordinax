@@ -15,7 +15,7 @@ import jax
 from jaxtyping import ArrayLike, Shaped
 from quax import register
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from quaxed import lax as qlax
 from unxt import AbstractQuantity, Quantity
 
@@ -44,24 +44,6 @@ class CartesianPosition2D(AbstractPosition2D):
     @classmethod
     def differential_cls(cls) -> type["CartesianVelocity2D"]:
         return CartesianVelocity2D
-
-    # -----------------------------------------------------
-    # Unary operations
-
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        >>> q = cx.CartesianPosition2D.constructor([1, 2], "kpc")
-        >>> (-q).x
-        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
-
-        """
-        return replace(self, x=-self.x, y=-self.y)
 
 
 # -----------------------------------------------------
@@ -101,7 +83,7 @@ def _add_cart2d_pos(
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -110,7 +92,7 @@ def _add_cart2d_pos(
     >>> (cart + polr).x
     Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
-    >>> xp.add(cart, polr).x
+    >>> jnp.add(cart, polr).x
     Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
     """
@@ -124,12 +106,12 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosit
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianPosition2D.constructor(Quantity([3, 4], "m"))
-    >>> xp.multiply(5, v).x
+    >>> jnp.multiply(5, v).x
     Quantity['length'](Array(15., dtype=float32), unit='m')
 
     """
@@ -140,6 +122,21 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosit
 
     # Scale the components
     return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
+
+
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_p_cart2d_pos(obj: CartesianPosition2D, /) -> CartesianPosition2D:
+    """Negate the `coordinax.CartesianPosition2D`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianPosition2D.constructor([1, 2], "km")
+    >>> (-q).x
+    Quantity['length'](Array(-1., dtype=float32), unit='km')
+
+    """
+    return jax.tree.map(qlax.neg, obj)
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
@@ -228,7 +225,7 @@ def _add_pp(
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -236,7 +233,7 @@ def _add_pp(
     >>> (v + v).d_x
     Quantity['speed'](Array(2., dtype=float32), unit='km / s')
 
-    >>> xp.add(v, v).d_x
+    >>> jnp.add(v, v).d_x
     Quantity['speed'](Array(2., dtype=float32), unit='km / s')
 
     """
@@ -249,7 +246,7 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -257,7 +254,7 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D
     >>> (5 * v).d_x
     Quantity['speed'](Array(15., dtype=float32), unit='m / s')
 
-    >>> xp.multiply(5, v).d_x
+    >>> jnp.multiply(5, v).d_x
     Quantity['speed'](Array(15., dtype=float32), unit='m / s')
 
     """
@@ -268,6 +265,21 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D
 
     # Scale the components
     return replace(rhts, d_x=lhs * rhts.d_x, d_y=lhs * rhts.d_y)
+
+
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_p_cart2d_vel(obj: CartesianVelocity2D, /) -> CartesianVelocity2D:
+    """Negate the `coordinax.CartesianVelocity2D`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianVelocity2D.constructor([1, 2], "km/s")
+    >>> (-q).d_x
+    Quantity['speed'](Array(-1., dtype=float32), unit='km / s')
+
+    """
+    return jax.tree.map(qlax.neg, obj)
 
 
 #####################################################################
@@ -307,7 +319,7 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
         Quantity['acceleration'](Array(5., dtype=float32), unit='km / s2')
 
         """
-        return xp.sqrt(self.d2_x**2 + self.d2_y**2)
+        return jnp.sqrt(self.d2_x**2 + self.d2_y**2)
 
 
 # -----------------------------------------------------
@@ -316,7 +328,7 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 @CartesianAcceleration2D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
     cls: type[CartesianAcceleration2D],
-    obj: Shaped[AbstractQuantity, "*batch 2"],
+    obj: AbstractQuantity,
     /,
 ) -> CartesianAcceleration2D:
     """Construct a 2D Cartesian velocity.
@@ -349,7 +361,7 @@ def _add_aa(
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -357,7 +369,7 @@ def _add_aa(
     >>> (v + v).d2_x
     Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
 
-    >>> xp.add(v, v).d2_x
+    >>> jnp.add(v, v).d2_x
     Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
 
     """
@@ -372,12 +384,12 @@ def _mul_va(
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianAcceleration2D.constructor(Quantity([3, 4], "m/s2"))
-    >>> xp.multiply(5, v).d2_x
+    >>> jnp.multiply(5, v).d2_x
     Quantity['acceleration'](Array(15., dtype=float32), unit='m / s2')
 
     >>> (5 * v).d2_x
@@ -393,22 +405,16 @@ def _mul_va(
     return replace(rhts, d2_x=lhs * rhts.d2_x, d2_y=lhs * rhts.d2_y)
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_cart2d_pos2d(
-    self: CartesianPosition2D, other: AbstractPosition, /
-) -> CartesianPosition2D:
-    """Subtract two vectors.
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_p_cart2d_acc(obj: CartesianAcceleration2D, /) -> CartesianAcceleration2D:
+    """Negate the `coordinax.CartesianAcceleration2D`.
 
     Examples
     --------
-    >>> from unxt import Quantity
-    >>> from coordinax import CartesianPosition2D, PolarPosition
-    >>> cart = CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
-    >>> polr = PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
-
-    >>> (cart - polr).x
-    Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
+    >>> import coordinax as cx
+    >>> q = cx.CartesianAcceleration2D.constructor([1, 2, 3], "km/s2")
+    >>> (-q).d2_x
+    Quantity['acceleration'](Array(-1., dtype=float32), unit='km / s2')
 
     """
-    cart = other.represent_as(CartesianPosition2D)
-    return jax.tree.map(qlax.sub, self, cart)
+    return jax.tree.map(qlax.neg, obj)

@@ -6,7 +6,8 @@ from abc import abstractmethod
 from dataclasses import replace
 from functools import partial
 from inspect import isabstract
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -22,10 +23,8 @@ from unxt import Quantity
 from .base import AbstractVector
 from .mixins import AvalMixin
 from coordinax._coordinax import typing as ct
+from coordinax._coordinax.funcs import represent_as
 from coordinax._coordinax.utils import classproperty
-
-if TYPE_CHECKING:
-    from typing_extensions import Self
 
 PosT = TypeVar("PosT", bound="AbstractPosition")
 
@@ -87,36 +86,14 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         raise NotImplementedError
 
     # ===============================================================
-    # Array
-
-    # -----------------------------------------------------
     # Unary operations
 
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        The default implementation is to go through Cartesian coordinates.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> -vec
-        CartesianPosition3D(
-            x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-            z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-        )
-        >>> (-vec).x
-        Quantity['length'](Array(-1., dtype=float32), unit='m')
-
-        """
-        cart = self.represent_as(self._cartesian_cls)
-        return (-cart).represent_as(type(self))
+    __neg__ = jnp.negative
 
     # ===============================================================
     # Convenience methods
 
+    @override
     def represent_as(self, target: type[PosT], /, *args: Any, **kwargs: Any) -> PosT:
         """Represent the vector as another type.
 
@@ -149,8 +126,6 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         Distance(Array(3.7416575, dtype=float32), unit='m')
 
         """
-        from coordinax import represent_as  # pylint: disable=import-outside-toplevel
-
         return represent_as(self, target, *args, **kwargs)
 
     @partial(jax.jit, inline=True)
@@ -398,6 +373,34 @@ def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
     lq = convert(lhs.represent_as(lhs._cartesian_cls), Quantity)  # noqa: SLF001
     rq = convert(rhs.represent_as(rhs._cartesian_cls), Quantity)  # noqa: SLF001
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
+
+
+# ------------------------------------------------
+
+
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_pos(obj: AbstractPosition, /) -> AbstractPosition:
+    """Negate the vector.
+
+    The default implementation is to go through Cartesian coordinates.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> -vec
+    CartesianPosition3D(
+        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
+        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
+    )
+    >>> (-vec).x
+    Quantity['length'](Array(-1., dtype=float32), unit='m')
+
+    """
+    cart = represent_as(obj, obj._cartesian_cls)  # noqa: SLF001
+    negcart = jnp.negative(cart)
+    return represent_as(negcart, type(obj))
 
 
 # ------------------------------------------------

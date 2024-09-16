@@ -9,14 +9,15 @@ __all__ = [
 from dataclasses import fields, replace
 from functools import partial
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
 from jaxtyping import ArrayLike, Shaped
 from quax import register
 
-import quaxed.array_api as xp
 import quaxed.lax as qlax
+import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractQuantity, Quantity
 
@@ -25,6 +26,9 @@ from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
 from coordinax._coordinax.base import AbstractPosition
 from coordinax._coordinax.base.mixins import AvalMixin
 from coordinax._coordinax.utils import classproperty
+
+#####################################################################
+# Position
 
 
 @final
@@ -46,26 +50,12 @@ class CartesianPosition3D(AbstractPosition3D):
     )
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianVelocity3D"]:
+        """Return the differential of the class."""
         return CartesianVelocity3D
-
-    # -----------------------------------------------------
-    # Unary operations
-
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
-        >>> (-q).x
-        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
-
-        """
-        return replace(self, x=-self.x, y=-self.y, z=-self.z)
 
 
 # -----------------------------------------------------
@@ -124,6 +114,21 @@ def _add_cart3d_pos(
     )
 
 
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_p_cart3d_pos(obj: CartesianPosition3D, /) -> CartesianPosition3D:
+    """Negate the `coordinax.CartesianPosition3D`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> (-q).x
+    Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+
+    """
+    return jax.tree.map(qlax.neg, obj)
+
+
 @register(jax.lax.sub_p)  # type: ignore[misc]
 def _sub_cart3d_pos(
     lhs: CartesianPosition3D, rhs: AbstractPosition, /
@@ -146,6 +151,7 @@ def _sub_cart3d_pos(
 
 
 #####################################################################
+# Velocity
 
 
 @final
@@ -190,7 +196,7 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 
         """
-        return xp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
+        return jnp.sqrt(self.d_x**2 + self.d_y**2 + self.d_z**2)
 
 
 # -----------------------------------------------------
@@ -244,6 +250,21 @@ def _add_pp(
     return jax.tree.map(qlax.add, lhs, rhs)
 
 
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_p_cart3d_vel(obj: CartesianVelocity3D, /) -> CartesianVelocity3D:
+    """Negate the `coordinax.CartesianVelocity3D`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> (-q).d_x
+    Quantity['speed'](Array(-1., dtype=float32), unit='km / s')
+
+    """
+    return jax.tree.map(qlax.neg, obj)
+
+
 @register(jax.lax.sub_p)  # type: ignore[misc]
 def _sub_v3_v3(
     lhs: CartesianVelocity3D, other: CartesianVelocity3D, /
@@ -264,6 +285,7 @@ def _sub_v3_v3(
 
 
 #####################################################################
+# Acceleration
 
 
 @final
@@ -306,7 +328,7 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
         """
-        return xp.sqrt(self.d2_x**2 + self.d2_y**2 + self.d2_z**2)
+        return jnp.sqrt(self.d2_x**2 + self.d2_y**2 + self.d2_z**2)
 
 
 # -----------------------------------------------------
@@ -354,12 +376,12 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPosition3D, /) -> CartesianPosition3D
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
-    >>> xp.multiply(2, v).x
+    >>> jnp.multiply(2, v).x
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
     """
@@ -370,6 +392,21 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPosition3D, /) -> CartesianPosition3D
 
     # Scale the components
     return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y, z=lhs * rhs.z)
+
+
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_p_cart3d_acc(obj: CartesianAcceleration3D, /) -> CartesianAcceleration3D:
+    """Negate the `coordinax.CartesianAcceleration3D`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
+    >>> (-q).d2_x
+    Quantity['acceleration'](Array(-1., dtype=float32), unit='km / s2')
+
+    """
+    return jax.tree.map(qlax.neg, obj)
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]

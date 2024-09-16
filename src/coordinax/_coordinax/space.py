@@ -451,6 +451,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         """
         return dict_factory(self._data)
 
+    @override
     @classproperty
     @classmethod
     def components(cls) -> tuple[str, ...]:
@@ -462,6 +463,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         """Get the units of the vector's components."""
         raise NotImplementedError  # TODO: implement this
 
+    @override
     @property
     def dtypes(self) -> MappingProxyType[str, MappingProxyType[str, jnp.dtype]]:
         """Get the dtypes of the vector's components.
@@ -483,6 +485,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         """  # noqa: E501
         return MappingProxyType({k: v.dtypes for k, v in self.items()})
 
+    @override
     @property
     def devices(self) -> MappingProxyType[str, MappingProxyType[str, Device]]:
         """Get the devices of the vector's components.

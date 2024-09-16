@@ -3,13 +3,13 @@
 __all__ = ["AbstractVelocity"]
 
 from abc import abstractmethod
-from dataclasses import replace
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
 from quax import register
 
+import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import Quantity
 
@@ -123,7 +123,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Quantity['angular frequency'](Array(-1., dtype=float32), unit='mas / yr')
 
         """
-        return replace(self, **{k: -v for k, v in field_items(self)})
+        return jax.tree.map(jnp.negative, self)
 
     # ===============================================================
     # Convenience methods
