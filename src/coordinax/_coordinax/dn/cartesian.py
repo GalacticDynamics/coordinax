@@ -13,6 +13,7 @@ from jaxtyping import ArrayLike, Shaped
 from plum import conversion_method
 from quax import register
 
+import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from unxt import Quantity
 
@@ -95,22 +96,7 @@ class CartesianPositionND(AbstractPositionND):
     # -----------------------------------------------------
     # Unary operations
 
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        A 3D vector:
-
-        >>> vec = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
-        >>> (-vec).q
-        Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
-
-        """
-        return replace(self, q=-self.q)
+    __neg__ = jnp.negative
 
     # -----------------------------------------------------
 
@@ -249,6 +235,25 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionN
 
     # Scale the components
     return replace(rhs, q=lhs * rhs.q)
+
+
+@register(jax.lax.neg_p)  # type: ignore[misc]
+def _neg_p_cartnd_pos(obj: CartesianPositionND, /) -> CartesianPositionND:
+    """Negate the `coordinax.CartesianPositionND`.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    A 3D vector:
+
+    >>> vec = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+    >>> (-vec).q
+    Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
+
+    """
+    return jax.tree.map(qlax.neg, obj)
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]

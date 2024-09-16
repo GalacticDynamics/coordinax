@@ -3,14 +3,13 @@
 __all__ = ["AbstractAcceleration"]
 
 from abc import abstractmethod
-from dataclasses import replace
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 
 import jax
 from quax import register
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from dataclassish import field_items
 from quaxed import lax as qlax
 from unxt import Quantity
@@ -107,7 +106,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         Quantity['angular acceleration'](Array(-1., dtype=float32), unit='mas / yr2')
 
         """
-        return replace(self, **{k: -v for k, v in field_items(self)})
+        return jax.tree.map(jnp.negative, self)
 
     # ===============================================================
     # Convenience methods
@@ -191,7 +190,7 @@ def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractV
     """
     # TODO: better access to corresponding fields
     return lhs.integral_cls.constructor(
-        {k.replace("2", ""): xp.multiply(v, rhs) for k, v in field_items(lhs)}
+        {k.replace("2", ""): jnp.multiply(v, rhs) for k, v in field_items(lhs)}
     )
 
 

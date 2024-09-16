@@ -60,7 +60,7 @@
       "pytest-arraydiff",
       "pytest-cov >=3",
       "pytest-env",
-      "sybil",
+      "sybil != 7.1.0",
     ]
 
   [project.urls]
