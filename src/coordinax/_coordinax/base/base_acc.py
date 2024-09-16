@@ -5,6 +5,7 @@ __all__ = ["AbstractAcceleration"]
 from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
+from typing_extensions import override
 
 import jax
 from quax import register
@@ -17,6 +18,7 @@ from unxt import Quantity
 from .base import AbstractVector
 from .base_pos import AbstractPosition
 from .base_vel import AbstractVelocity
+from coordinax._coordinax.funcs import represent_as
 from coordinax._coordinax.utils import classproperty
 
 if TYPE_CHECKING:
@@ -111,6 +113,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
+    @override
     def represent_as(self, target: type[AccT], /, *args: Any, **kwargs: Any) -> AccT:
         """Represent the vector as another type.
 
@@ -152,8 +155,6 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
 
         """
-        from coordinax import represent_as  # pylint: disable=import-outside-toplevel
-
         return represent_as(self, target, *args, **kwargs)
 
     @partial(jax.jit, inline=True)

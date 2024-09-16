@@ -42,7 +42,7 @@ from coordinax._coordinax.utils import classproperty, full_shaped
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-BT = TypeVar("BT", bound="AbstractVector")
+VT = TypeVar("VT", bound="AbstractVector")
 
 
 class ToUnitsOptions(Enum):
@@ -640,7 +640,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # Convenience methods
 
     @abstractmethod
-    def represent_as(self, target: type[BT], /, *args: Any, **kwargs: Any) -> BT:
+    def represent_as(self, target: type[VT], /, *args: Any, **kwargs: Any) -> VT:
         """Represent the vector as another type."""
         raise NotImplementedError  # pragma: no cover
 
