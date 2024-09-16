@@ -7,11 +7,11 @@ from typing import TypeAlias
 import astropy.units as u
 from jaxtyping import Float, Int, Shaped
 
-from unxt import AbstractDistance, Quantity
+from unxt import AbstractDistance, AbstractQuantity, Quantity
 
 Unit: TypeAlias = u.Unit | u.UnitBase | u.CompositeUnit
 
-FloatScalarQ = Float[Quantity, ""]
+FloatScalarQ = Float[AbstractQuantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]
 BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]
 
