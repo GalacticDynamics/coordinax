@@ -267,21 +267,6 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D
     return replace(rhts, d_x=lhs * rhts.d_x, d_y=lhs * rhts.d_y)
 
 
-@register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cart2d_vel(obj: CartesianVelocity2D, /) -> CartesianVelocity2D:
-    """Negate the `coordinax.CartesianVelocity2D`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> q = cx.CartesianVelocity2D.constructor([1, 2], "km/s")
-    >>> (-q).d_x
-    Quantity['speed'](Array(-1., dtype=float32), unit='km / s')
-
-    """
-    return jax.tree.map(qlax.neg, obj)
-
-
 #####################################################################
 
 
@@ -403,18 +388,3 @@ def _mul_va(
 
     # Scale the components
     return replace(rhts, d2_x=lhs * rhts.d2_x, d2_y=lhs * rhts.d2_y)
-
-
-@register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cart2d_acc(obj: CartesianAcceleration2D, /) -> CartesianAcceleration2D:
-    """Negate the `coordinax.CartesianAcceleration2D`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> q = cx.CartesianAcceleration2D.constructor([1, 2, 3], "km/s2")
-    >>> (-q).d2_x
-    Quantity['acceleration'](Array(-1., dtype=float32), unit='km / s2')
-
-    """
-    return jax.tree.map(qlax.neg, obj)

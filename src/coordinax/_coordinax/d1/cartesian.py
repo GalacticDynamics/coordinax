@@ -270,21 +270,6 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity
     return replace(rhs, d_x=lhs * rhs.d_x)
 
 
-@register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cart1d_vel(obj: CartesianVelocity1D, /) -> CartesianVelocity1D:
-    """Negate the `coordinax.CartesianVelocity1D`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> q = cx.CartesianVelocity1D.constructor([1], "km/s")
-    >>> (-q).d_x
-    Quantity['speed'](Array(-1, dtype=int32), unit='km / s')
-
-    """
-    return jax.tree.map(qlax.neg, obj)
-
-
 #####################################################################
 
 
@@ -378,21 +363,6 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
 
     # Scale the components
     return replace(rhs, d2_x=lhs * rhs.d2_x)
-
-
-@register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cart1d_acc(obj: CartesianAcceleration1D, /) -> CartesianAcceleration1D:
-    """Negate the `coordinax.CartesianAcceleration1D`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> q = cx.CartesianAcceleration1D.constructor([1], "km/s2")
-    >>> (-q).d2_x
-    Quantity['acceleration'](Array(-1, dtype=int32), unit='km / s2')
-
-    """
-    return jax.tree.map(qlax.neg, obj)
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
