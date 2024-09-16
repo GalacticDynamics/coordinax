@@ -231,21 +231,6 @@ def _add_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> AbstractPosition
 # ------------------------------------------------
 
 
-@register(jax.lax.convert_element_type_p)  # type: ignore[misc]
-def _convert_element_type_p(
-    operand: AbstractPosition, **kwargs: Any
-) -> AbstractPosition:
-    """Convert the element type of a quantity."""
-    # TODO: examples
-    return replace(
-        operand,
-        **{k: qlax.convert_element_type(v, **kwargs) for k, v in field_items(operand)},
-    )
-
-
-# ------------------------------------------------
-
-
 @register(jax.lax.div_p)  # type: ignore[misc]
 def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
     """Divide a vector by a scalar.
