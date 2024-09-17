@@ -4,7 +4,7 @@ E.g. a translation.
 """
 # pylint: disable=unused-wildcard-import,wildcard-import
 
-from ._coordinax.operators import (
+from ._src.operators import (
     base,
     composite,
     funcs,
@@ -12,12 +12,12 @@ from ._coordinax.operators import (
     identity,
     sequential,
 )
-from ._coordinax.operators.base import *  # noqa: F403
-from ._coordinax.operators.composite import *  # noqa: F403
-from ._coordinax.operators.funcs import *  # noqa: F403
-from ._coordinax.operators.galilean import *  # noqa: F403
-from ._coordinax.operators.identity import *  # noqa: F403
-from ._coordinax.operators.sequential import *  # noqa: F403
+from ._src.operators.base import *  # noqa: F403
+from ._src.operators.composite import *  # noqa: F403
+from ._src.operators.funcs import *  # noqa: F403
+from ._src.operators.galilean import *  # noqa: F403
+from ._src.operators.identity import *  # noqa: F403
+from ._src.operators.sequential import *  # noqa: F403
 
 __all__: list[str] = []
 __all__ += base.__all__

@@ -8,7 +8,7 @@ coordinax: Vectors in JAX
 from jaxtyping import install_import_hook
 
 from . import operators
-from ._coordinax import (
+from ._src import (
     base,
     d1,
     d2,
@@ -22,18 +22,18 @@ from ._coordinax import (
     typing,
     utils,
 )
-from ._coordinax.base import *
-from ._coordinax.d1 import *
-from ._coordinax.d2 import *
-from ._coordinax.d3 import *
-from ._coordinax.d4 import *
-from ._coordinax.dn import *
-from ._coordinax.exceptions import *
-from ._coordinax.funcs import *
-from ._coordinax.space import *
-from ._coordinax.transform import *
-from ._coordinax.typing import *
-from ._coordinax.utils import *
+from ._src.base import *
+from ._src.d1 import *
+from ._src.d2 import *
+from ._src.d3 import *
+from ._src.d4 import *
+from ._src.dn import *
+from ._src.exceptions import *
+from ._src.funcs import *
+from ._src.space import *
+from ._src.transform import *
+from ._src.typing import *
+from ._src.utils import *
 from ._version import version as __version__
 from .setup_package import RUNTIME_TYPECHECKER
 
@@ -53,7 +53,7 @@ __all__ += utils.__all__
 
 # Interoperability
 from . import _interop  # noqa: E402
-from ._coordinax import compat  # noqa: E402
+from ._src import compat  # noqa: E402
 
 # Runtime Typechecker
 install_import_hook("coordinax", RUNTIME_TYPECHECKER)
