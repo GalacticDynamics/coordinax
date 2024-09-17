@@ -219,12 +219,12 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionN
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianPositionND(Quantity([1, 2, 3, 4, 5], "kpc"))
-    >>> xp.multiply(2, v).q
+    >>> jnp.multiply(2, v).q
     Quantity['length'](Array([ 2.,  4.,  6.,  8., 10.], dtype=float32), unit='kpc')
 
     """

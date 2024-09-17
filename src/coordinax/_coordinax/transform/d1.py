@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from unxt import Quantity
 
 from coordinax._coordinax.d1.cartesian import CartesianPosition1D
@@ -199,7 +199,7 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    x, theta, phi = xp.broadcast_arrays(current.x, theta, phi)
+    x, theta, phi = jnp.broadcast_arrays(current.x, theta, phi)
     return target.constructor(r=x, theta=theta, phi=phi)
 
 
@@ -425,7 +425,7 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    r, theta, phi = xp.broadcast_arrays(current.r, theta, phi)
+    r, theta, phi = jnp.broadcast_arrays(current.r, theta, phi)
     return target.constructor(r=r, theta=theta, phi=phi)
 
 

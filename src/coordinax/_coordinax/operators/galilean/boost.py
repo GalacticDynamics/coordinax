@@ -11,7 +11,7 @@ import equinox as eqx
 import jax.numpy as jnp
 from plum import convert
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
@@ -47,7 +47,6 @@ class GalileanBoostOperator(AbstractGalileanOperator):
     --------
     We start with the required imports:
 
-    >>> import quaxed.array_api as xp
     >>> from unxt import Quantity
     >>> import coordinax as cx
     >>> import coordinax.operators as co
@@ -151,6 +150,6 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 def _simplify_op_boost(op: GalileanBoostOperator, /, **kwargs: Any) -> AbstractOperator:
     """Simplify a boost operator."""
     # Check if the velocity is zero.
-    if jnp.allclose(convert(op.velocity, Quantity).value, xp.zeros((3,)), **kwargs):
+    if jnp.allclose(convert(op.velocity, Quantity).value, jnp.zeros((3,)), **kwargs):
         return IdentityOperator()
     return op

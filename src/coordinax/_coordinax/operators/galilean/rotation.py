@@ -9,12 +9,12 @@ from dataclasses import replace
 from typing import Any, Literal, final
 
 import equinox as eqx
-import jax.numpy as jnp
+import jax
 from jaxtyping import Array, Shaped
 from plum import convert
 from quax import quaxify
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from unxt import Quantity, ustrip
 
 from .base import AbstractGalileanOperator
@@ -25,7 +25,7 @@ from coordinax._coordinax.operators.base import AbstractOperator, op_call_dispat
 from coordinax._coordinax.operators.funcs import simplify_op
 from coordinax._coordinax.operators.identity import IdentityOperator
 
-vec_matmul = quaxify(jnp.vectorize(jnp.matmul, signature="(3,3),(3)->(3)"))
+vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
 
 
 def converter(x: Any) -> Array:
@@ -147,13 +147,13 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import quaxed.array_api as xp
+        >>> import quaxed.numpy as jnp
         >>> from unxt import Quantity
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
-        >>> Rz = xp.asarray([[xp.cos(theta), -xp.sin(theta), 0],
-        ...                  [xp.sin(theta), xp.cos(theta),  0],
+        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
+        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
         >>> op.is_inertial
@@ -168,13 +168,13 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import quaxed.array_api as xp
+        >>> import quaxed.numpy as jnp
         >>> from unxt import Quantity
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
-        >>> Rz = xp.asarray([[xp.cos(theta), -xp.sin(theta), 0],
-        ...                  [xp.sin(theta), xp.cos(theta),  0],
+        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
+        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
         >>> op.inverse
@@ -196,13 +196,13 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import quaxed.array_api as xp
+        >>> import quaxed.numpy as jnp
         >>> from unxt import Quantity
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
-        >>> Rz = xp.asarray([[xp.cos(theta), -xp.sin(theta), 0],
-        ...                  [xp.sin(theta), xp.cos(theta),  0],
+        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
+        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
 
@@ -227,14 +227,14 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import quaxed.array_api as xp
+        >>> import quaxed.numpy as jnp
         >>> from unxt import Quantity
         >>> import coordinax as cx
         >>> from coordinax.operators import GalileanRotationOperator
 
         >>> theta = Quantity(45, "deg")
-        >>> Rz = xp.asarray([[xp.cos(theta), -xp.sin(theta), 0],
-        ...                  [xp.sin(theta), xp.cos(theta),  0],
+        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
+        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
 
@@ -279,6 +279,6 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 def _simplify_op_rotation(
     op: GalileanRotationOperator, /, **kwargs: Any
 ) -> AbstractOperator:
-    if jnp.allclose(op.rotation, xp.eye(3), **kwargs):
+    if jnp.allclose(op.rotation, jnp.eye(3), **kwargs):
         return IdentityOperator()
     return op

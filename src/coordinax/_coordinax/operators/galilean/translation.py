@@ -8,10 +8,9 @@ from dataclasses import replace
 from typing import Any, Literal, final
 
 import equinox as eqx
-import jax.numpy as jnp
 from plum import convert
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
@@ -79,7 +78,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     --------
     We start with the required imports:
 
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -96,7 +95,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     directly, which allows for other vector types.
 
     >>> shift = cx.SphericalPosition(r=Quantity(1.0, "kpc"),
-    ...                              theta=Quantity(xp.pi/2, "rad"),
+    ...                              theta=Quantity(jnp.pi/2, "rad"),
     ...                              phi=Quantity(0, "rad"))
     >>> op = cx.operators.GalileanSpatialTranslationOperator(shift)
     >>> op
@@ -290,7 +289,7 @@ def _simplify_op_spatialtranslation(
 ) -> AbstractOperator:
     """Simplify a spatial translation operator."""
     # Check if the translation is zero.
-    if jnp.allclose(convert(op.translation, Quantity).value, xp.zeros((3,)), **kwargs):
+    if jnp.allclose(convert(op.translation, Quantity).value, jnp.zeros((3,)), **kwargs):
         return IdentityOperator()
     return op
 
@@ -323,7 +322,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
     --------
     We start with the required imports:
 
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
     >>> import coordinax.operators as co
@@ -343,7 +342,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
     can also construct it directly, which allows for other vector types.
 
     >>> qshift = cx.SphericalPosition(r=Quantity(1.0, "kpc"),
-    ...                               theta=Quantity(xp.pi/2, "rad"),
+    ...                               theta=Quantity(jnp.pi/2, "rad"),
     ...                               phi=Quantity(0, "rad"))
     >>> op = GalileanTranslationOperator(FourVector(t=Quantity(1.0, "Gyr"), q=qshift))
     >>> op
@@ -509,7 +508,7 @@ def _simplify_op_tranlation(
 ) -> AbstractOperator:
     """Simplify a translation operator."""
     # Check if the translation is zero.
-    if jnp.allclose(convert(op.translation, Quantity).value, xp.zeros((4,)), **kwargs):
+    if jnp.allclose(convert(op.translation, Quantity).value, jnp.zeros((4,)), **kwargs):
         return IdentityOperator()
     # Check if the translation is purely spatial.
     if op.translation[0] == 0:

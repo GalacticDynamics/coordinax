@@ -8,7 +8,7 @@ from warnings import warn
 import astropy.units as u
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from unxt import Quantity
 
 from coordinax._coordinax.d1.cartesian import CartesianPosition1D
@@ -175,7 +175,7 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=xp.sqrt(current.x**2 + current.y**2))
+    return target(r=jnp.sqrt(current.x**2 + current.y**2))
 
 
 # -----------------------------------------------
@@ -246,7 +246,7 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(x=current.r * xp.cos(current.phi))
+    return target(x=current.r * jnp.cos(current.phi))
 
 
 @dispatch

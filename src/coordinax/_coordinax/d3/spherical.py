@@ -28,7 +28,6 @@ import jax
 from jaxtyping import ArrayLike
 from quax import register
 
-import quaxed.array_api as xp
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish import replace
@@ -183,7 +182,7 @@ def constructor(
     phi = fields["phi"].metadata["converter"](phi)
 
     # 2) handle negative distances
-    r_pred = r < xp.zeros_like(r)
+    r_pred = r < jnp.zeros_like(r)
     r = qlax.select(r_pred, -r, r)
     phi = qlax.select(r_pred, phi + _180d, phi)
     theta = qlax.select(r_pred, _180d - theta, theta)
@@ -335,7 +334,7 @@ def constructor(
     phi = fields["phi"].metadata["converter"](phi)
 
     # 2) handle negative distances
-    r_pred = r < xp.zeros_like(r)
+    r_pred = r < jnp.zeros_like(r)
     r = qlax.select(r_pred, -r, r)
     theta = qlax.select(r_pred, theta + _180d, theta)
     phi = qlax.select(r_pred, _180d - phi, phi)
@@ -541,7 +540,7 @@ def constructor(
     distance = fields["distance"].metadata["converter"](distance)
 
     # 2) handle negative distances
-    distance_pred = distance < xp.zeros_like(distance)
+    distance_pred = distance < jnp.zeros_like(distance)
     distance = qlax.select(distance_pred, -distance, distance)
     lon = qlax.select(distance_pred, lon + _180d, lon)
     lat = qlax.select(distance_pred, -lat, lat)

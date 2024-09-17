@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as xp
 from unxt import Quantity
 
 from .base import AbstractPosition3D, AbstractVelocity3D
@@ -596,7 +596,7 @@ def represent_as(
 
     Examples
     --------
-    >>> import quaxed.array_api as xp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
@@ -614,7 +614,7 @@ def represent_as(
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
-    >>> newdif.d_lon_coslat / xp.cos(vec.lat)  # float32 imprecision
+    >>> newdif.d_lon_coslat / jnp.cos(vec.lat)  # float32 imprecision
     Quantity['angular frequency'](Array(6.9999995, dtype=float32), unit='mas / yr')
 
     """

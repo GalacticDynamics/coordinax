@@ -15,7 +15,6 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
 
 import jax
-import jax.numpy as jnp
 import numpy as np
 from astropy.units import PhysicalType as Dimensions
 from jax import Device
@@ -23,8 +22,8 @@ from jaxtyping import ArrayLike
 from plum import dispatch
 from quax import ArrayValue, quaxify, register
 
-import quaxed.array_api as xp
 import quaxed.lax as qlax
+import quaxed.numpy as jnp
 from dataclassish import field_items, field_values, replace
 from unxt import (
     AbstractQuantity,
@@ -148,7 +147,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
 
         """
-        obj = Quantity.constructor(xp.asarray(obj), unit)
+        obj = Quantity.constructor(jnp.asarray(obj), unit)
         return cls.constructor(obj)  # re-dispatch
 
     # ===============================================================
@@ -304,7 +303,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         4
 
         """
-        return int(jnp.prod(xp.asarray(self.shape)))
+        return int(jnp.prod(jnp.asarray(self.shape)))
 
     @property
     def T(self) -> "Self":  # noqa: N802
@@ -353,10 +352,10 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> import coordinax as cx
         >>> vec = cx.CartesianPosition2D.constructor([3, 4], "m")
         >>> vec.__array_namespace__()
-        <module 'quaxed.array_api' from ...>
+        <module 'quaxed.numpy' from ...>
 
         """
-        return xp
+        return jnp
 
     def __getitem__(self, index: Any) -> "Self":
         """Return a new object with the given slice applied.
@@ -795,8 +794,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         units_ = self.units
         comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
         vs = np.array2string(
-            xp.stack(
-                tuple(v.value for v in xp.broadcast_arrays(*field_values(self))),
+            jnp.stack(
+                tuple(v.value for v in jnp.broadcast_arrays(*field_values(self))),
                 axis=-1,
             ),
             precision=3,

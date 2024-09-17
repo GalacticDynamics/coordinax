@@ -12,7 +12,7 @@ import jax.numpy as jnp
 from jaxtyping import Shaped
 from quax import register
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from dataclassish.converters import Unless
 from unxt import AbstractQuantity, Quantity
 
@@ -233,7 +233,7 @@ class FourVector(AbstractPosition4D):
         Quantity['length'](Array(2.9979248e+08+0.j, dtype=complex64), unit='m')
 
         """
-        return xp.sqrt(xp.asarray(self._norm2(), dtype=complex))
+        return jnp.sqrt(jnp.asarray(self._norm2(), dtype=complex))
 
 
 # -----------------------------------------------

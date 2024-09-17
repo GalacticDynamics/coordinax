@@ -5,7 +5,7 @@ __all__ = ["represent_as"]
 
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 
 from coordinax._coordinax.d3.cylindrical import (
     CylindricalPosition,
@@ -53,7 +53,7 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
         )} )
 
     """
-    phi = xp.atan2(w.d_pp_phi, w.pp_phi)
+    phi = jnp.atan2(w.d_pp_phi, w.pp_phi)
     d_phi = (w.pp_phi**2 + w.d_pp_phi**2) / 2 / w.rho**2  # TODO: note the abs
 
     return Space(
