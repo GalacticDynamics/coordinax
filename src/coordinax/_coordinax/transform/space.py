@@ -5,7 +5,7 @@ __all__ = ["represent_as"]
 
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 
 from coordinax._coordinax.d3.cylindrical import (
     CylindricalPosition,
@@ -67,9 +67,9 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     p = w["speed"].represent_as(CylindricalVelocity, q)
 
     # pg. 437, Papaphillipou & Laskar (1996)
-    sqrt2theta = xp.sqrt(xp.abs(2 * q.rho**2 * p.d_phi))
-    pp_phi = sqrt2theta * xp.cos(q.phi)
-    pp_phidot = sqrt2theta * xp.sin(q.phi)
+    sqrt2theta = jnp.sqrt(jnp.abs(2 * q.rho**2 * p.d_phi))
+    pp_phi = sqrt2theta * jnp.cos(q.phi)
+    pp_phidot = sqrt2theta * jnp.sin(q.phi)
 
     return PoincarePolarVector(
         rho=q.rho, pp_phi=pp_phi, z=q.z, d_rho=p.d_rho, d_pp_phi=pp_phidot, d_z=p.d_z

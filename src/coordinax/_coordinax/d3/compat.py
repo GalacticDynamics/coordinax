@@ -8,7 +8,7 @@ from typing import TypeAlias
 from jaxtyping import Shaped
 from plum import conversion_method, convert
 
-import quaxed.array_api as xp
+import quaxed.numpy as xp
 from dataclassish import field_values
 from unxt import Quantity
 

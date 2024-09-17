@@ -2,7 +2,6 @@
 
 import pytest
 
-import quaxed.array_api as xp
 import quaxed.numpy as jnp
 from unxt import Quantity
 
@@ -95,7 +94,7 @@ class TestCartesianPosition2D:
             atol=Quantity(1e-8, "rad"),
         )
         assert jnp.array_equal(
-            spherical.theta, Quantity(xp.full(4, fill_value=xp.pi / 2), "rad")
+            spherical.theta, Quantity(jnp.full(4, fill_value=jnp.pi / 2), "rad")
         )
 
     def test_cartesian2d_to_cylindrical(self, vector):
@@ -137,7 +136,7 @@ class TestPolarPosition:
             Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
             atol=Quantity(1e-8, "kpc"),
         )
-        assert jnp.array_equal(cart1d.x, vector.r * xp.cos(vector.phi))
+        assert jnp.array_equal(cart1d.x, vector.r * jnp.cos(vector.phi))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_polar_to_radial(self, vector):
@@ -158,13 +157,13 @@ class TestPolarPosition:
             cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
         )
         assert jnp.allclose(
-            cart2d.x, (vector.r * xp.cos(vector.phi)), atol=Quantity(1e-8, "kpc")
+            cart2d.x, (vector.r * jnp.cos(vector.phi)), atol=Quantity(1e-8, "kpc")
         )
         assert jnp.array_equal(
             cart2d.y, Quantity([0.0, 1.6829419, 2.7278922, 0.56448], "kpc")
         )
         assert jnp.allclose(
-            cart2d.y, (vector.r * xp.sin(vector.phi)), atol=Quantity(1e-8, "kpc")
+            cart2d.y, (vector.r * jnp.sin(vector.phi)), atol=Quantity(1e-8, "kpc")
         )
 
     def test_polar_to_polar(self, vector):

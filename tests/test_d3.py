@@ -7,7 +7,6 @@ from astropy.coordinates.tests.test_representation import representation_equal
 from astropy.units import Quantity as APYQuantity
 from plum import convert
 
-import quaxed.array_api as xp
 import quaxed.numpy as jnp
 from unxt import Quantity
 
@@ -271,7 +270,9 @@ class TestCylindricalPosition(AbstractPosition3DTest):
 
         assert isinstance(spherical, cx.SphericalPosition)
         assert jnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
-        assert jnp.array_equal(spherical.theta, Quantity(xp.full(4, xp.pi / 2), "rad"))
+        assert jnp.array_equal(
+            spherical.theta, Quantity(jnp.full(4, jnp.pi / 2), "rad")
+        )
         assert jnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_cylindrical_to_spherical_astropy(self, vector, apyvector):

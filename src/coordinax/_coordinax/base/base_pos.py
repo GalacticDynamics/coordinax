@@ -192,7 +192,7 @@ def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
 
     Examples
     --------
-    >>> import quaxed.array_api as jnp
+    >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
@@ -332,7 +332,7 @@ def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
 
     Examples
     --------
-    >>> import quaxed.array_api as jnp
+    >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
     >>> import coordinax as cx
 

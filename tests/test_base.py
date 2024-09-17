@@ -8,7 +8,6 @@ from typing import Any
 
 import pytest
 
-import quaxed.array_api as xp
 import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractQuantity
@@ -114,12 +113,12 @@ class AbstractVectorTest:
         # Test an explicitly shaped vector
         vec = replace(
             vector,
-            **{k: replace(v, value=xp.ones((2, 4))) for k, v in field_items(vector)},
+            **{k: replace(v, value=jnp.ones((2, 4))) for k, v in field_items(vector)},
         )
         flat = vec.flatten()
         assert isinstance(flat, type(vec))
         assert all(
-            jnp.array_equal(getattr(flat, c).value, xp.ones(8)) for c in vec.components
+            jnp.array_equal(getattr(flat, c).value, jnp.ones(8)) for c in vec.components
         )
 
     def test_reshape(self, vector):
@@ -135,12 +134,12 @@ class AbstractVectorTest:
         # Test an explicitly shaped vector
         vec = replace(
             vector,
-            **{k: replace(v, value=xp.ones((2, 4))) for k, v in field_items(vector)},
+            **{k: replace(v, value=jnp.ones((2, 4))) for k, v in field_items(vector)},
         )
         reshaped = vec.reshape(1, 8)
         assert isinstance(reshaped, type(vec))
         assert all(
-            jnp.array_equal(getattr(reshaped, c).value, xp.ones((1, 8)))
+            jnp.array_equal(getattr(reshaped, c).value, jnp.ones((1, 8)))
             for c in vec.components
         )
 

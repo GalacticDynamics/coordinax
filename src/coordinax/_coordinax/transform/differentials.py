@@ -9,7 +9,7 @@ from typing import Any
 import jax
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
@@ -155,8 +155,8 @@ def represent_as(
     flat_current = current.reshape(flat_shape)
     newvec = target(
         **{  # Each field is the dot product of the row of the J and the diff column.
-            k: xp.sum(  # Doing the dot product.
-                xp.stack(
+            k: jnp.sum(  # Doing the dot product.
+                jnp.stack(
                     tuple(
                         j_c * getattr(flat_current, f"d_{kk}")
                         for kk, j_c in j_r.items()

@@ -12,7 +12,7 @@ from typing import final
 import equinox as eqx
 import jax
 
-import quaxed.array_api as xp
+import quaxed.numpy as xp
 from unxt import Quantity
 
 import coordinax._coordinax.typing as ct

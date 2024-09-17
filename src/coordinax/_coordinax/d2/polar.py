@@ -70,7 +70,7 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPosition, /) -> PolarPosition:
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> import quaxed.array_api as jnp
+    >>> import quaxed.numpy as jnp
 
     >>> v = cx.PolarPosition(r=Quantity(1, "m"), phi=Quantity(90, "deg"))
 

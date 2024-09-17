@@ -6,7 +6,7 @@ __all__: list[str] = []
 from jaxtyping import Shaped
 from plum import conversion_method, convert
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 from unxt import Quantity
 
 from .spacetime import FourVector
@@ -20,7 +20,7 @@ from coordinax._coordinax.operators.base import AbstractOperator, op_call_dispat
 def vec_to_q(obj: FourVector, /) -> Shaped[Quantity["length"], "*batch 4"]:
     """`coordinax.AbstractPosition3D` -> `unxt.Quantity`."""
     cart = convert(obj.q, Quantity)
-    return xp.concat([obj.c * obj.t[..., None], cart], axis=-1)
+    return jnp.concat([obj.c * obj.t[..., None], cart], axis=-1)
 
 
 #####################################################################

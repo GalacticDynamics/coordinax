@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, final, overload
 
 import equinox as eqx
 
-import quaxed.array_api as xp
+import quaxed.numpy as xp
 from dataclassish.converters import Unless
 from unxt import Quantity
 

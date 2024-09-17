@@ -7,7 +7,7 @@ from warnings import warn
 
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as jnp
 
 from coordinax._coordinax.d1.cartesian import CartesianPosition1D
 from coordinax._coordinax.d1.radial import RadialPosition
@@ -78,7 +78,7 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=xp.sqrt(current.x**2 + current.y**2 + current.z**2))
+    return target(r=jnp.sqrt(current.x**2 + current.y**2 + current.z**2))
 
 
 # -----------------------------------------------
@@ -171,7 +171,7 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(x=current.rho * xp.cos(current.phi))
+    return target(x=current.rho * jnp.cos(current.phi))
 
 
 @dispatch
@@ -228,8 +228,8 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    x = current.rho * xp.cos(current.phi)
-    y = current.rho * xp.sin(current.phi)
+    x = current.rho * jnp.cos(current.phi)
+    y = current.rho * jnp.sin(current.phi)
     return target(x=x, y=y)
 
 
@@ -291,7 +291,7 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(x=current.r * xp.sin(current.theta) * xp.cos(current.phi))
+    return target(x=current.r * jnp.sin(current.theta) * jnp.cos(current.phi))
 
 
 @dispatch
@@ -348,8 +348,8 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    x = current.r * xp.sin(current.theta) * xp.cos(current.phi)
-    y = current.r * xp.sin(current.theta) * xp.sin(current.phi)
+    x = current.r * jnp.sin(current.theta) * jnp.cos(current.phi)
+    y = current.r * jnp.sin(current.theta) * jnp.sin(current.phi)
     return target(x=x, y=y)
 
 
@@ -377,7 +377,7 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=current.r * xp.sin(current.theta), phi=current.phi)
+    return target(r=current.r * jnp.sin(current.theta), phi=current.phi)
 
 
 # =============================================================================
@@ -411,7 +411,7 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(x=current.r * xp.sin(current.phi) * xp.cos(current.theta))
+    return target(x=current.r * jnp.sin(current.phi) * jnp.cos(current.theta))
 
 
 @dispatch
@@ -468,8 +468,8 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    x = current.r * xp.sin(current.phi) * xp.cos(current.theta)
-    y = current.r * xp.sin(current.phi) * xp.sin(current.theta)
+    x = current.r * jnp.sin(current.phi) * jnp.cos(current.theta)
+    y = current.r * jnp.sin(current.phi) * jnp.sin(current.theta)
     return target(x=x, y=y)
 
 
@@ -497,4 +497,4 @@ def represent_as(
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=current.r * xp.sin(current.phi), phi=current.theta)
+    return target(r=current.r * jnp.sin(current.phi), phi=current.theta)

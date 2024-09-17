@@ -5,7 +5,7 @@ __all__: list[str] = []
 
 import equinox as eqx
 
-import quaxed.array_api as xp
+import quaxed.numpy as xp
 from unxt import AbstractQuantity, Quantity, can_convert_unit
 
 from .typing import BatchableAngle, BatchableLength

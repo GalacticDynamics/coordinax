@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-import quaxed.array_api as xp
+import quaxed.numpy as xp
 
 from .base import AbstractPosition2D, AbstractVelocity2D
 from .cartesian import CartesianAcceleration2D, CartesianPosition2D, CartesianVelocity2D

@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace as _dataclass_replace
 from typing import TYPE_CHECKING, Annotated as Ann, Generic, TypeVar
 from typing_extensions import Doc
 
-import quaxed.array_api as xp
+import quaxed.numpy as xp
 from dataclassish import field_values
 
 if TYPE_CHECKING:
