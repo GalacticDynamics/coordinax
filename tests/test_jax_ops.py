@@ -9,7 +9,7 @@ from dataclassish import field_items
 from unxt import AbstractQuantity
 
 import coordinax as cx
-from coordinax._coordinax.base.base_pos import POSITION_CLASSES
+from coordinax._src.base.base_pos import POSITION_CLASSES
 
 POSITION_CLASSES_3D = [
     c for c in POSITION_CLASSES if issubclass(c, cx.AbstractPosition3D)
