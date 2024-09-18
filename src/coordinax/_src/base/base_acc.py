@@ -7,6 +7,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 from typing_extensions import override
 
+import equinox as eqx
 import jax
 from quax import register
 
@@ -157,7 +158,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         """
         return represent_as(self, target, *args, **kwargs)
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(
         self, velocity: AbstractVelocity, position: AbstractPosition, /
     ) -> Quantity["speed"]:

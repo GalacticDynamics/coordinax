@@ -189,7 +189,7 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
     def differential_cls(cls) -> type["CartesianAcceleration1D"]:
         return CartesianAcceleration1D
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
@@ -288,7 +288,7 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
     # -----------------------------------------------------
     # Methods
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
 

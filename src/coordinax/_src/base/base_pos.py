@@ -128,7 +128,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         """
         return represent_as(self, target, *args, **kwargs)
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 

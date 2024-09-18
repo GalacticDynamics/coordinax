@@ -247,7 +247,7 @@ class MathSphericalPosition(AbstractSphericalPosition):
     def differential_cls(cls) -> type["MathSphericalVelocity"]:
         return MathSphericalVelocity
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableDistance:
         """Return the norm of the vector.
 
@@ -444,7 +444,7 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
     def differential_cls(cls) -> type["LonLatSphericalVelocity"]:
         return LonLatSphericalVelocity
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableDistance:
         """Return the norm of the vector.
 
