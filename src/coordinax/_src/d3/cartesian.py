@@ -159,7 +159,7 @@ def _sub_cart3d_pos(
 
 # from coordinax.funcs
 @dispatch  # type: ignore[misc]
-@partial(jax.jit, inline=True)
+@partial(eqx.filter_jit, inline=True)
 def normalize_vector(obj: CartesianPosition3D, /) -> CartesianGeneric3D:
     """Return the norm of the vector.
 
@@ -225,7 +225,7 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
     def differential_cls(cls) -> type["CartesianAcceleration3D"]:
         return CartesianAcceleration3D
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosition3D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
@@ -342,7 +342,7 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
     # -----------------------------------------------------
     # Methods
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractVelocity3D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
 

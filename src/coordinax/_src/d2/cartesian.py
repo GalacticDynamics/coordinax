@@ -291,7 +291,7 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 
     # -----------------------------------------------------
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractVelocity2D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
 

@@ -6,6 +6,7 @@ from dataclasses import replace
 from math import prod
 from typing import Any
 
+import equinox as eqx
 import jax
 from plum import dispatch
 
@@ -202,6 +203,4 @@ def represent_as(
 
 
 # TODO: situate this better to show how represent_as is used
-jac_rep_as = jax.jit(
-    jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None)), static_argnums=(1,)
-)
+jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None)))

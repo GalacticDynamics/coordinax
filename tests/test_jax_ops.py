@@ -1,8 +1,6 @@
 """Test using Jax operations."""
 
-from functools import partial
-
-import jax
+import equinox as eqx
 import pytest
 
 from dataclassish import field_items
@@ -24,7 +22,7 @@ def q(request) -> cx.AbstractPosition:
     return q.represent_as(request.param)
 
 
-@partial(jax.jit, static_argnums=(1,))
+@eqx.filter_jit
 def func(
     q: cx.AbstractPosition, target: type[cx.AbstractPosition]
 ) -> cx.AbstractPosition:

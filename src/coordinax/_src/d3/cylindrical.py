@@ -10,7 +10,6 @@ from functools import partial
 from typing import final
 
 import equinox as eqx
-import jax
 
 import quaxed.numpy as xp
 from unxt import Quantity
@@ -57,7 +56,7 @@ class CylindricalPosition(AbstractPosition3D):
     def differential_cls(cls) -> type["CylindricalVelocity"]:
         return CylindricalVelocity
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.
 

@@ -8,7 +8,7 @@ __all__ = [
 from functools import partial
 from typing import Any
 
-import jax
+import equinox as eqx
 from jaxtyping import Array, Shaped
 from plum import dispatch
 
@@ -30,7 +30,7 @@ def represent_as(current: Any, target: type[Any], /, **kwargs: Any) -> Any:
 
 
 @dispatch
-@partial(jax.jit, inline=True)
+@partial(eqx.filter_jit, inline=True)
 def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N"]:
     """Return the unit vector.
 
@@ -52,7 +52,7 @@ def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N
 
 
 @dispatch
-@partial(jax.jit, inline=True)
+@partial(eqx.filter_jit, inline=True)
 def normalize_vector(
     x: Shaped[AbstractQuantity, "*batch N"], /
 ) -> Shaped[AbstractQuantity, "*batch N"]:

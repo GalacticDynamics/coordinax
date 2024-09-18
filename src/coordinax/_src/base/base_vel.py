@@ -6,6 +6,7 @@ from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 
+import equinox as eqx
 import jax
 from quax import register
 
@@ -177,7 +178,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         return represent_as(self, target, *args, **kwargs)
 
-    @partial(jax.jit, inline=True)
+    @partial(eqx.filter_jit, inline=True)
     def norm(self, position: AbstractPosition, /) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, position).norm()
