@@ -208,6 +208,7 @@
   ignore-paths = [".*/_version.py"]
   messages_control.disable = [
     "abstract-method",            # pylint doesn't like ABC hierarchies
+    "arguments-differ",           # plum-dispatch
     "cyclic-import",              # broken?
     "design",
     "duplicate-code",
