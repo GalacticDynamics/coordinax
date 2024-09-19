@@ -215,11 +215,13 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
     )
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[CartesianPosition3D]:
         return CartesianPosition3D
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAcceleration3D"]:
@@ -342,6 +344,7 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
     # -----------------------------------------------------
     # Methods
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractVelocity3D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.

@@ -9,6 +9,7 @@ __all__ = [
 from dataclasses import fields, replace
 from functools import partial
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -291,6 +292,7 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 
     # -----------------------------------------------------
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractVelocity2D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.

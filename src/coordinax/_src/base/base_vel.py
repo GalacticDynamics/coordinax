@@ -5,6 +5,7 @@ __all__ = ["AbstractVelocity"]
 from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -129,6 +130,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
+    @override
     def represent_as(
         self,
         target: type[VelT],
