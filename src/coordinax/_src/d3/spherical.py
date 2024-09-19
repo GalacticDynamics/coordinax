@@ -22,6 +22,7 @@ __all__ = [
 from abc import abstractmethod
 from functools import partial
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -242,6 +243,7 @@ class MathSphericalPosition(AbstractSphericalPosition):
         check_azimuth_range(self.theta)
         check_polar_range(self.phi)
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["MathSphericalVelocity"]:
@@ -439,11 +441,13 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
         check_polar_range(self.lat, -Quantity(90, "deg"), Quantity(90, "deg"))
         check_r_non_negative(self.distance)
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["LonLatSphericalVelocity"]:
         return LonLatSphericalVelocity
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableDistance:
         """Return the norm of the vector.

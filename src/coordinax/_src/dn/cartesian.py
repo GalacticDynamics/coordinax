@@ -87,9 +87,9 @@ class CartesianPositionND(AbstractPositionND):
     dimensions. Arbitrary batch shapes are supported.
     """
 
+    @override
     @classproperty
     @classmethod
-    @override
     def differential_cls(cls) -> type["CartesianVelocityND"]:  # type: ignore[override]
         return CartesianVelocityND
 
@@ -348,6 +348,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
     def integral_cls(cls) -> type[CartesianPositionND]:
         return CartesianPositionND
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAccelerationND"]:
@@ -490,6 +491,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
     dimensions. Arbitrary batch shapes are supported.
     """
 
+    @override
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[CartesianVelocityND]:
@@ -520,11 +522,12 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
         msg = "Not yet supported"
         raise NotImplementedError(msg)  # TODO: Implement this
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(
         self,
-        velocity: AbstractVelocityND | None = None,  # noqa: ARG002
-        position: AbstractPositionND | None = None,  # noqa: ARG002
+        velocity: AbstractVelocityND | None = None,
+        position: AbstractPositionND | None = None,
         /,
     ) -> ct.BatchableSpeed:
         """Return the norm of the vector.

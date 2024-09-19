@@ -8,6 +8,7 @@ __all__ = [
 
 from functools import partial
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 
@@ -51,11 +52,13 @@ class CylindricalPosition(AbstractPosition3D):
         check_r_non_negative(self.rho)
         check_azimuth_range(self.phi)
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CylindricalVelocity"]:
         return CylindricalVelocity
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableLength:
         """Return the norm of the vector.

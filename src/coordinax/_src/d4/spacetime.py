@@ -5,6 +5,7 @@ __all__ = ["FourVector"]
 from dataclasses import KW_ONLY, fields, replace
 from functools import partial
 from typing import TYPE_CHECKING, Any, final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -168,12 +169,14 @@ class FourVector(AbstractPosition4D):
 
     # -------------------------------------------
 
+    @override
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
         msg = "Not yet implemented"
         raise NotImplementedError(msg)
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> "Never":  # type: ignore[override]
@@ -183,6 +186,7 @@ class FourVector(AbstractPosition4D):
     # -------------------------------------------
     # Unary operations
 
+    @override
     def __neg__(self) -> "FourVector":
         """Negate the vector.
 
@@ -219,6 +223,7 @@ class FourVector(AbstractPosition4D):
         """
         return -(self.q.norm() ** 2) + (self.c * self.t) ** 2  # for units
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> BatchableLength:
         r"""Return the vector norm :math:`\sqrt{(ct)^2 - (x^2 + y^2 + z^2)}`.

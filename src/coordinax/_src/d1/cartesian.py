@@ -9,6 +9,7 @@ __all__ = [
 from dataclasses import replace
 from functools import partial
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -179,16 +180,19 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
     d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
+    @override
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[CartesianPosition1D]:
         return CartesianPosition1D
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAcceleration1D"]:
         return CartesianAcceleration1D
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
@@ -251,7 +255,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianVelocity1D(
-      d_x=Quantity[...]( value=i32[], unit=Unit("m / s") )
+      d_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s") )
     )
 
     >>> vec.d_x
@@ -288,6 +292,7 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
     # -----------------------------------------------------
     # Methods
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
@@ -346,7 +351,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianAcceleration1D(
-      d2_x=Quantity[...](value=i32[], unit=Unit("m / s2"))
+      d2_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s2") )
     )
 
     >>> vec.d2_x
@@ -382,7 +387,7 @@ def _sub_a1_a1(
     >>> vec = lax.sub(v1, v2)
     >>> vec
     CartesianAcceleration1D(
-      d2_x=Quantity[...](value=i32[], unit=Unit("m / s2"))
+      d2_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s2") )
     )
 
     >>> vec.d2_x
