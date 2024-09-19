@@ -6,9 +6,11 @@ __all__ = ["GalileanSpatialTranslationOperator", "GalileanTranslationOperator"]
 
 from dataclasses import replace
 from typing import Any, Literal, final
+from typing_extensions import override
 
 import equinox as eqx
-from plum import convert
+from jaxtyping import ArrayLike
+from plum import convert, dispatch
 
 import quaxed.numpy as jnp
 from unxt import Quantity
@@ -173,6 +175,54 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     :class:`vector.CartesianPosition3D.constructor` for an example when doing a 3D
     translation.
     """
+
+    # -------------------------------------------
+
+    @override
+    @classmethod
+    @dispatch
+    def constructor(
+        cls: "type[GalileanSpatialTranslationOperator]",
+        x: ArrayLike | list[float | int],
+        unit: str,  # TODO: support unit object
+        /,
+    ) -> "GalileanSpatialTranslationOperator":
+        """Construct a spatial translation operator.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> op = cx.operators.GalileanSpatialTranslationOperator.constructor([1, 1, 1], "kpc")
+        >>> op.translation.x
+        Quantity['length'](Array(1., dtype=float32), unit='kpc')
+
+        """  # noqa: E501
+        return cls(Quantity(x, unit))
+
+    @override
+    @classmethod
+    @dispatch
+    def constructor(
+        cls: "type[GalileanSpatialTranslationOperator]",
+        x: ArrayLike | list[float | int],
+        *,
+        unit: Any,
+    ) -> "GalileanSpatialTranslationOperator":
+        """Construct a spatial translation operator.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        >>> op = cx.operators.GalileanSpatialTranslationOperator.constructor([1, 1, 1], "kpc")
+        >>> op.translation.x
+        Quantity['length'](Array(1., dtype=float32), unit='kpc')
+
+        """  # noqa: E501
+        return cls(Quantity(x, unit))
 
     # -------------------------------------------
 
