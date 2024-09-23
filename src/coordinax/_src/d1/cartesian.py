@@ -350,9 +350,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
     >>> v = cx.CartesianAcceleration1D(d2_x=Quantity(1, "m/s2"))
     >>> vec = jnp.multiply(2, v)
     >>> vec
-    CartesianAcceleration1D(
-      d2_x=Quantity[...](value=...i32[], unit=Unit("m / s2"))
-    )
+    CartesianAcceleration1D( d2_x=... )
 
     >>> vec.d2_x
     Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
@@ -386,9 +384,7 @@ def _sub_a1_a1(
     >>> v2 = cx.CartesianAcceleration1D(d2_x=Quantity(2, "m/s2"))
     >>> vec = lax.sub(v1, v2)
     >>> vec
-    CartesianAcceleration1D(
-      d2_x=Quantity[...](value=...i32[], unit=Unit("m / s2"))
-    )
+    CartesianAcceleration1D( d2_x=... )
 
     >>> vec.d2_x
     Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')

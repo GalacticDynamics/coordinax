@@ -169,17 +169,13 @@ def constructor(
     >>> import coordinax as cx
 
     >>> cx.CartesianAcceleration1D.constructor(Quantity(1, "m/s2"))
-    CartesianAcceleration1D(
-      d2_x=Quantity[...](value=...i32[], unit=Unit("m / s2"))
-    )
+    CartesianAcceleration1D( d2_x=... )
 
     >>> cx.CartesianAcceleration1D.constructor(Quantity([1], "m/s2"))
     CartesianAcceleration1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     >>> cx.RadialAcceleration.constructor(Quantity(1, "m/s2"))
-    RadialAcceleration(
-      d2_r=Quantity[...](value=...i32[], unit=Unit("m / s2"))
-    )
+    RadialAcceleration( d2_r=... )
 
     >>> cx.RadialAcceleration.constructor(Quantity([1], "m/s2"))
     RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
