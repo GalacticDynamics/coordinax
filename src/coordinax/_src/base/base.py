@@ -20,7 +20,7 @@ from astropy.units import PhysicalType as Dimensions
 from jax import Device
 from jaxtyping import ArrayLike
 from plum import dispatch
-from quax import ArrayValue, quaxify, register
+from quax import ArrayValue
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
@@ -889,18 +889,3 @@ def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVe
         return obj
 
     return cls(**dict(field_items(obj)))
-
-
-# ===================================================================
-# Dispatches for Primitives
-
-
-@register(jax.lax.convert_element_type_p)  # type: ignore[misc]
-def _convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractVector:
-    """Convert the element type of a quantity."""
-    # TODO: examples
-    convert_p = quaxify(jax.lax.convert_element_type_p.bind)
-    return replace(
-        operand,
-        **{k: convert_p(v, **kwargs) for k, v in field_items(operand)},
-    )
