@@ -6,6 +6,8 @@ from functools import partial
 from typing import final
 
 import equinox as eqx
+import jax
+from plum import convert
 
 from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
@@ -52,6 +54,11 @@ class RadialVelocity(AbstractVelocity1D):
     def differential_cls(cls) -> type["RadialAcceleration"]:
         return RadialAcceleration
 
+    def aval(self) -> jax.core.ShapedArray:
+        """Return the vector as a JAX array."""
+        # TODO: change to UncheckedQuantity
+        return jax.core.get_aval(convert(self, Quantity).value)
+
 
 @final
 class RadialAcceleration(AbstractAcceleration1D):
@@ -64,3 +71,8 @@ class RadialAcceleration(AbstractAcceleration1D):
     @classmethod
     def integral_cls(cls) -> type[RadialVelocity]:
         return RadialVelocity
+
+    def aval(self) -> jax.core.ShapedArray:
+        """Return the vector as a JAX array."""
+        # TODO: change to UncheckedQuantity
+        return jax.core.get_aval(convert(self, Quantity).value)
