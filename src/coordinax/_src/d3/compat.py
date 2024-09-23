@@ -6,43 +6,13 @@ __all__: list[str] = []
 from typing import TypeAlias
 
 from jaxtyping import Shaped
-from plum import conversion_method, convert
+from plum import convert
 
-import quaxed.numpy as xp
-from dataclassish import field_values
 from unxt import Quantity
 
-from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
+from .cartesian import CartesianPosition3D
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._src.typing import TimeBatchOrScalar
-from coordinax._src.utils import full_shaped
-
-#####################################################################
-# Convert to Quantity
-
-
-@conversion_method(CartesianAcceleration3D, Quantity)  # type: ignore[misc]
-@conversion_method(CartesianVelocity3D, Quantity)  # type: ignore[misc]
-def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity["speed"], "*batch 3"]:
-    """`coordinax.CartesianVelocity3D` -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from plum import convert
-    >>> from unxt import Quantity
-
-    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
-    >>> convert(dif, Quantity)
-    Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
-
-    >>> dif2 = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
-    >>> convert(dif2, Quantity)
-    Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
-
-    """
-    return xp.stack(tuple(field_values(full_shaped(obj))), axis=-1)
-
 
 #####################################################################
 # Operators

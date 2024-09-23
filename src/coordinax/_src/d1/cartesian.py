@@ -255,7 +255,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianVelocity1D(
-      d_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s") )
+      d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") )
     )
 
     >>> vec.d_x
@@ -351,7 +351,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianAcceleration1D(
-      d2_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s2") )
+      d2_x=Quantity[...](value=...i32[], unit=Unit("m / s2"))
     )
 
     >>> vec.d2_x
@@ -387,7 +387,7 @@ def _sub_a1_a1(
     >>> vec = lax.sub(v1, v2)
     >>> vec
     CartesianAcceleration1D(
-      d2_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s2") )
+      d2_x=Quantity[...](value=...i32[], unit=Unit("m / s2"))
     )
 
     >>> vec.d2_x

@@ -115,13 +115,13 @@ def constructor(
     >>> import coordinax as cx
 
     >>> cx.CartesianVelocity1D.constructor(Quantity(1, "m/s"))
-    CartesianVelocity1D( d_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s") ) )
+    CartesianVelocity1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
     >>> cx.CartesianVelocity1D.constructor(Quantity([1], "m/s"))
     CartesianVelocity1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     >>> cx.RadialVelocity.constructor(Quantity(1, "m/s"))
-    RadialVelocity( d_r=Quantity[...]( value=weak_i32[], unit=Unit("m / s") ) )
+    RadialVelocity( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
     >>> cx.RadialVelocity.constructor(Quantity([1], "m/s"))
     RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
@@ -170,7 +170,7 @@ def constructor(
 
     >>> cx.CartesianAcceleration1D.constructor(Quantity(1, "m/s2"))
     CartesianAcceleration1D(
-      d2_x=Quantity[...]( value=weak_i32[], unit=Unit("m / s2") )
+      d2_x=Quantity[...](value=...i32[], unit=Unit("m / s2"))
     )
 
     >>> cx.CartesianAcceleration1D.constructor(Quantity([1], "m/s2"))
@@ -178,7 +178,7 @@ def constructor(
 
     >>> cx.RadialAcceleration.constructor(Quantity(1, "m/s2"))
     RadialAcceleration(
-      d2_r=Quantity[...]( value=weak_i32[], unit=Unit("m / s2") )
+      d2_r=Quantity[...](value=...i32[], unit=Unit("m / s2"))
     )
 
     >>> cx.RadialAcceleration.constructor(Quantity([1], "m/s2"))
