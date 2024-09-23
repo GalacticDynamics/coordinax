@@ -18,4 +18,7 @@ from .base_pos import AbstractPosition
 from .base_vel import AbstractVelocity
 
 # isort: split
-from . import register_primitives  # noqa: F401
+from . import (
+    compat,  # noqa: F401
+    register_primitives,  # noqa: F401
+)

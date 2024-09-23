@@ -53,7 +53,6 @@ __all__ += utils.__all__
 
 # Interoperability
 from . import _interop  # noqa: E402
-from ._src import compat  # noqa: E402
 
 # Runtime Typechecker
 install_import_hook("coordinax", RUNTIME_TYPECHECKER)

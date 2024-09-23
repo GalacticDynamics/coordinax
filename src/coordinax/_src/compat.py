@@ -3,182 +3,53 @@
 __all__: list[str] = []
 
 
+from typing import TypeAlias
+
 from jaxtyping import Shaped
 from plum import conversion_method, convert
 
 import quaxed.numpy as xp
 from dataclassish import field_values
-from unxt import AbstractQuantity, Distance, Quantity, UncheckedQuantity
+from unxt import AbstractQuantity, Quantity
 
-from .base import AbstractPosition
+from .cartesian import CartesianAcceleration1D, CartesianPosition1D, CartesianVelocity1D
+from .radial import RadialAcceleration, RadialVelocity
+from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
+from coordinax._src.typing import TimeBatchOrScalar
 from coordinax._src.utils import full_shaped
 
 #####################################################################
 # Convert to Quantity
 
 
-@conversion_method(type_from=AbstractPosition, type_to=AbstractQuantity)  # type: ignore[misc]
-def convert_pos_to_absquantity(obj: AbstractPosition, /) -> AbstractQuantity:
-    """`coordinax.AbstractPosition` -> `unxt.AbstractQuantity`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity
-
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
-
-    >>> pos = cx.PolarPosition(Quantity(1.0, "km"), Quantity(0, "deg"))
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
-
-    >>> pos = cx.SphericalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CylindricalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
-
-    """  # noqa: E501
-    cart = full_shaped(obj.represent_as(obj._cartesian_cls))  # noqa: SLF001
-    return xp.stack(tuple(field_values(cart)), axis=-1)
+@conversion_method(type_from=RadialAcceleration, type_to=AbstractQuantity)  # type: ignore[misc]
+@conversion_method(type_from=RadialVelocity, type_to=AbstractQuantity)  # type: ignore[misc]
+@conversion_method(type_from=CartesianAcceleration1D, type_to=AbstractQuantity)  # type: ignore[misc]
+@conversion_method(type_from=CartesianVelocity1D, type_to=AbstractQuantity)  # type: ignore[misc]
+def vec_diff_to_q(
+    obj: CartesianVelocity1D | CartesianAcceleration1D, /
+) -> Shaped[AbstractQuantity, "*batch 1"]:
+    """`coordinax.CartesianVelocity1D` -> `unxt.Quantity`."""
+    return xp.stack(tuple(field_values(full_shaped(obj))), axis=-1)
 
 
-@conversion_method(type_from=AbstractPosition, type_to=Quantity)  # type: ignore[misc]
-def convert_pos_to_q(obj: AbstractPosition, /) -> Quantity["length"]:
-    """`coordinax.AbstractPosition` -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity
-
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
-
-    >>> pos = cx.PolarPosition(Quantity(1.0, "km"), Quantity(0, "deg"))
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
-
-    >>> pos = cx.SphericalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CylindricalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
-    >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
-
-    """  # noqa: E501
-    return convert(convert(obj, AbstractQuantity), Quantity)
+#####################################################################
+# Operators
 
 
-@conversion_method(type_from=AbstractPosition, type_to=UncheckedQuantity)  # type: ignore[misc]
-def convert_pos_to_uncheckedq(
-    obj: AbstractPosition, /
-) -> Shaped[UncheckedQuantity, "*batch 1"]:
-    """`coordinax.AbstractPosition` -> `unxt.UncheckedQuantity`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity, UncheckedQuantity
-
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
-    >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
-    >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
-    >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 2.], dtype=float32), unit='km')
-
-    >>> pos = cx.PolarPosition(Quantity(1.0, "km"), Quantity(0, "deg"))
-    >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 0.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
-    >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 2., 3.], dtype=float32), unit='km')
-
-    >>> pos = cx.SphericalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
-    >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([0., 0., 1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CylindricalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
-    >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 0., 0.], dtype=float32), unit='km')
-
-    """  # noqa: E501
-    return convert(convert(obj, AbstractQuantity), UncheckedQuantity)
+Q1: TypeAlias = Shaped[Quantity["length"], "*#batch 1"]
 
 
-@conversion_method(type_from=AbstractPosition, type_to=Distance)  # type: ignore[misc]
-def convert_pos_to_distance(obj: AbstractPosition, /) -> Shaped[Distance, "*batch 1"]:
-    """`coordinax.AbstractPosition` -> `unxt.Distance`.
+@op_call_dispatch
+def call(self: AbstractOperator, x: Q1, /) -> Q1:
+    """Dispatch to the operator's `__call__` method."""
+    return self(CartesianPosition1D.constructor(x))
 
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity, Distance
 
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
-    >>> convert(pos, Distance)
-    Distance(Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
-    >>> convert(pos, Distance)
-    Distance(Array([1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
-    >>> convert(pos, Distance)
-    Distance(Array([1., 2.], dtype=float32), unit='km')
-
-    >>> pos = cx.PolarPosition(Quantity(1.0, "km"), Quantity(0, "deg"))
-    >>> convert(pos, Distance)
-    Distance(Array([1., 0.], dtype=float32), unit='km')
-
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
-    >>> convert(pos, Distance)
-    Distance(Array([1., 2., 3.], dtype=float32), unit='km')
-
-    >>> pos = cx.SphericalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
-    >>> convert(pos, Distance)
-    Distance(Array([0., 0., 1.], dtype=float32), unit='km')
-
-    >>> pos = cx.CylindricalPosition(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
-    >>> convert(pos, Distance)
-    Distance(Array([1., 0., 0.], dtype=float32), unit='km')
-
-    """  # noqa: E501
-    return convert(convert(obj, AbstractQuantity), Distance)
+@op_call_dispatch
+def call(
+    self: AbstractOperator, x: Q1, t: TimeBatchOrScalar, /
+) -> tuple[Q1, TimeBatchOrScalar]:
+    """Dispatch to the operator's `__call__` method."""
+    vec, t = self(CartesianPosition1D.constructor(x), t)
+    return convert(vec, Quantity), t
