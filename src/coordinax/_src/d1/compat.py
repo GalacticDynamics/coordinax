@@ -6,36 +6,13 @@ __all__: list[str] = []
 from typing import TypeAlias
 
 from jaxtyping import Shaped
-from plum import conversion_method, convert
+from plum import convert
 
-import quaxed.numpy as xp
-from dataclassish import field_values
-from unxt import AbstractQuantity, Quantity
+from unxt import Quantity
 
-from .cartesian import CartesianAcceleration1D, CartesianPosition1D, CartesianVelocity1D
-from .radial import RadialAcceleration, RadialVelocity
+from .cartesian import CartesianPosition1D
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._src.typing import TimeBatchOrScalar
-from coordinax._src.utils import full_shaped
-
-#####################################################################
-# Convert to Quantity
-
-
-@conversion_method(type_from=RadialAcceleration, type_to=AbstractQuantity)  # type: ignore[misc]
-@conversion_method(type_from=RadialVelocity, type_to=AbstractQuantity)  # type: ignore[misc]
-@conversion_method(type_from=CartesianAcceleration1D, type_to=AbstractQuantity)  # type: ignore[misc]
-@conversion_method(type_from=CartesianVelocity1D, type_to=AbstractQuantity)  # type: ignore[misc]
-def vec_diff_to_q(
-    obj: CartesianVelocity1D | CartesianAcceleration1D, /
-) -> Shaped[AbstractQuantity, "*batch 1"]:
-    """`coordinax.CartesianVelocity1D` -> `unxt.Quantity`."""
-    return xp.stack(tuple(field_values(full_shaped(obj))), axis=-1)
-
-
-#####################################################################
-# Operators
-
 
 Q1: TypeAlias = Shaped[Quantity["length"], "*#batch 1"]
 

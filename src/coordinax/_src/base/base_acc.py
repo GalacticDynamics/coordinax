@@ -182,7 +182,7 @@ def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractV
     >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, Quantity(2, "s"))
     >>> vec
-    RadialVelocity( d_r=Quantity[...]( value=weak_i32[], unit=Unit("m / s") ) )
+    RadialVelocity( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
     >>> vec.d_r
     Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
 
@@ -209,7 +209,7 @@ def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractV
     >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
     >>> vec = lax.mul(Quantity(2, "s"), d2r)
     >>> vec
-    RadialVelocity( d_r=Quantity[...]( value=weak_i32[], unit=Unit("m / s") ) )
+    RadialVelocity( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
     >>> vec.d_r
     Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
 
