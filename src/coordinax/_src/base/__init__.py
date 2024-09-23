@@ -16,3 +16,6 @@ from .base import AbstractVector, ToUnitsOptions
 from .base_acc import AbstractAcceleration
 from .base_pos import AbstractPosition
 from .base_vel import AbstractVelocity
+
+# isort: split
+from . import register_primitives  # noqa: F401

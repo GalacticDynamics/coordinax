@@ -13,6 +13,7 @@ from dataclassish import field_values
 from unxt import AbstractQuantity, Quantity
 
 from .cartesian import CartesianAcceleration1D, CartesianPosition1D, CartesianVelocity1D
+from .radial import RadialAcceleration, RadialVelocity
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._src.typing import TimeBatchOrScalar
 from coordinax._src.utils import full_shaped
@@ -21,6 +22,8 @@ from coordinax._src.utils import full_shaped
 # Convert to Quantity
 
 
+@conversion_method(type_from=RadialAcceleration, type_to=AbstractQuantity)  # type: ignore[misc]
+@conversion_method(type_from=RadialVelocity, type_to=AbstractQuantity)  # type: ignore[misc]
 @conversion_method(type_from=CartesianAcceleration1D, type_to=AbstractQuantity)  # type: ignore[misc]
 @conversion_method(type_from=CartesianVelocity1D, type_to=AbstractQuantity)  # type: ignore[misc]
 def vec_diff_to_q(

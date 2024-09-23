@@ -40,18 +40,16 @@ class AvalMixin:
         ConcreteArray([1], dtype=int32)
 
         >>> vec = cx.RadialVelocity.constructor([1], "m/s")
-        >>> try: vec.aval()
-        ... except NotImplementedError as e: print("nope")
-        nope
+        >>> vec.aval()
+        ConcreteArray([1], dtype=int32)
 
         >>> vec = cx.CartesianAcceleration1D.constructor([1], "m/s2")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
         >>> vec = cx.RadialAcceleration.constructor([1], "m/s2")
-        >>> try: vec.aval()
-        ... except NotImplementedError as e: print("nope")
-        nope
+        >>> vec.aval()
+        ConcreteArray([1], dtype=int32)
 
         2 dimensional vectors:
 
