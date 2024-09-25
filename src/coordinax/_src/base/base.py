@@ -17,10 +17,10 @@ from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
 import jax
 import numpy as np
 from astropy.units import PhysicalType as Dimensions
-from jax import Device
-from jaxtyping import ArrayLike
+from jax import Device, tree
+from jaxtyping import Array, ArrayLike, Bool
 from plum import dispatch
-from quax import ArrayValue
+from quax import ArrayValue, register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
@@ -831,7 +831,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         return f"<{cls_name} ({comps})\n    {vs}>"
 
 
-# -----------------------------------------------
+# ===============================================================
 # Register additional constructors
 
 
@@ -916,3 +916,20 @@ def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVe
         return obj
 
     return cls(**dict(field_items(obj)))
+
+
+# ===============================================================
+# Register primitives
+
+
+@register(jax.lax.eq_p)  # type: ignore[misc]
+def _eq_pos_pos(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
+    """Element-wise equality of two vectors."""
+    # TODO: match the behaviour of `numpy.equal`
+    if type(lhs) is not type(rhs):
+        msg = f"Cannot compare {type(lhs)} with {type(rhs)}."
+        raise TypeError(msg)
+
+    comp_tree = tree.map(jnp.equal, lhs, rhs)
+    comp_leaves = jnp.array(tree.leaves(comp_tree))
+    return jax.numpy.logical_and.reduce(comp_leaves)

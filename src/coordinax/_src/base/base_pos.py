@@ -11,6 +11,7 @@ from typing_extensions import override
 
 import equinox as eqx
 import jax
+from jax import tree
 from jaxtyping import ArrayLike
 from plum import convert
 from quax import quaxify, register
@@ -204,6 +205,30 @@ def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
 
     """
     return replace(lhs, **{k: jnp.divide(v, rhs) for k, v in field_items(lhs)})
+
+
+# ------------------------------------------------
+
+
+@register(jax.lax.eq_p)  # type: ignore[misc]
+def _eq_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> ArrayLike:
+    """Element-wise equality of two positions.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import coordinax as cx
+
+    >>> vec1 = cx.CartesianPosition3D.constructor([[1, 2, 3], [1, 2, 4]], "m")
+    >>> vec2 = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> jnp.equal(vec1, vec2)
+    Array([ True, False], dtype=bool)
+
+    """
+    rhs_ = rhs.represent_as(rhs._cartesian_cls)  # noqa: SLF001
+    comp_tree = tree.map(jnp.equal, lhs, rhs_)
+    comp_leaves = jnp.array(tree.leaves(comp_tree))
+    return jax.numpy.logical_and.reduce(comp_leaves)
 
 
 # ------------------------------------------------
