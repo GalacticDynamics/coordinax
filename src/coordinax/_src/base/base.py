@@ -331,6 +331,33 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # ---------------------------------------------------------------
     # Methods
 
+    def __len__(self) -> int:
+        """Return the length of the vector.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        Scalar vectors have length 0:
+
+        >>> vec = cx.CartesianPosition1D.constructor([1], "m")
+        >>> len(vec)
+        0
+
+        Vectors with certain lengths:
+
+        >>> vec = cx.CartesianPosition1D(Quantity([1], "m"))
+        >>> len(vec)
+        1
+
+        >>> vec = cx.CartesianPosition1D(Quantity([1, 2], "m"))
+        >>> len(vec)
+        2
+
+        """
+        return self.shape[0] if self.ndim > 0 else 0
+
     def __abs__(self) -> Quantity:
         """Return the norm of the vector.
 
