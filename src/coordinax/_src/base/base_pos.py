@@ -11,7 +11,6 @@ from typing_extensions import override
 
 import equinox as eqx
 import jax
-from jax import tree
 from jaxtyping import ArrayLike
 from plum import convert
 from quax import quaxify, register
@@ -90,6 +89,51 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
     # Unary operations
 
     __neg__ = jnp.negative
+
+    # ===============================================================
+    # Binary operations
+
+    def __eq__(self: "AbstractPosition", other: object) -> Any:
+        """Element-wise equality of two positions.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax as cx
+
+        Showing the broadcasting, then element-wise comparison of two vectors:
+
+        >>> vec1 = cx.CartesianPosition3D.constructor([[1, 2, 3], [1, 2, 4]], "m")
+        >>> vec2 = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> jnp.equal(vec1, vec2)
+        Array([ True, False], dtype=bool)
+
+        Showing the change of representation:
+
+        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> vec1 = vec.represent_as(cx.SphericalPosition)
+        >>> vec2 = vec.represent_as(cx.MathSphericalPosition)
+        >>> jnp.equal(vec1, vec2)
+        Array(True, dtype=bool)
+
+        Quick run-through of each dimensionality:
+
+        >>> vec1 = cx.CartesianPosition1D.constructor([1], "m")
+        >>> vec2 = cx.RadialPosition.constructor([1], "m")
+        >>> jnp.equal(vec1, vec2)
+        Array(True, dtype=bool)
+
+        >>> vec1 = cx.CartesianPosition2D.constructor([2, 0], "m")
+        >>> vec2 = cx.PolarPosition(r=Quantity(2, "m"), phi=Quantity(0, "rad"))
+        >>> jnp.equal(vec1, vec2)
+        Array(True, dtype=bool)
+
+        """
+        if not isinstance(other, AbstractPosition):
+            return NotImplemented
+
+        rhs = other.represent_as(type(self))
+        return super().__eq__(rhs)
 
     # ===============================================================
     # Convenience methods
@@ -212,23 +256,8 @@ def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
 
 @register(jax.lax.eq_p)  # type: ignore[misc]
 def _eq_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> ArrayLike:
-    """Element-wise equality of two positions.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-
-    >>> vec1 = cx.CartesianPosition3D.constructor([[1, 2, 3], [1, 2, 4]], "m")
-    >>> vec2 = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-    >>> jnp.equal(vec1, vec2)
-    Array([ True, False], dtype=bool)
-
-    """
-    rhs_ = rhs.represent_as(rhs._cartesian_cls)  # noqa: SLF001
-    comp_tree = tree.map(jnp.equal, lhs, rhs_)
-    comp_leaves = jnp.array(tree.leaves(comp_tree))
-    return jax.numpy.logical_and.reduce(comp_leaves)
+    """Element-wise equality of two positions."""
+    return lhs == rhs
 
 
 # ------------------------------------------------
