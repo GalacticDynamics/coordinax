@@ -118,7 +118,7 @@ class TestCartesianPosition3D(AbstractPosition3DTest):
         """Test ``coordinax.represent_as(CartesianPosition3D)``."""
         # Jit can copy
         newvec = vector.represent_as(cx.CartesianPosition3D)
-        assert newvec == vector
+        assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(vector, cx.CartesianPosition3D)
@@ -287,7 +287,7 @@ class TestCylindricalPosition(AbstractPosition3DTest):
         """Test ``coordinax.represent_as(CylindricalPosition)``."""
         # Jit can copy
         newvec = vector.represent_as(cx.CylindricalPosition)
-        assert newvec == vector
+        assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(vector, cx.CylindricalPosition)
@@ -440,7 +440,7 @@ class TestSphericalPosition(AbstractPosition3DTest):
         """Test ``coordinax.represent_as(SphericalPosition)``."""
         # Jit can copy
         newvec = vector.represent_as(cx.SphericalPosition)
-        assert newvec == vector
+        assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(vector, cx.SphericalPosition)
@@ -571,7 +571,7 @@ class TestCartesianVelocity3D(AbstractVelocity3DTest):
         """Test ``coordinax.represent_as(CartesianPosition3D)``."""
         # Jit can copy
         newvec = difntl.represent_as(cx.CartesianVelocity3D, vector)
-        assert newvec == difntl
+        assert jnp.array_equal(newvec, difntl)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(difntl, cx.CartesianVelocity3D, vector)
@@ -939,7 +939,7 @@ class TestSphericalVelocity(AbstractVelocity3DTest):
         """Test ``coordinax.represent_as(SphericalVelocity)``."""
         # Jit can copy
         newvec = difntl.represent_as(cx.SphericalVelocity, vector)
-        assert newvec == difntl
+        assert all(newvec == difntl)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(difntl, cx.SphericalVelocity, vector)

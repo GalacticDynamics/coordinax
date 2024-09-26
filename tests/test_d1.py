@@ -30,7 +30,7 @@ class TestCartesianPosition1D(AbstractPosition1DTest):
         """Test ``coordinax.represent_as(CartesianPosition1D)``."""
         # Jit can copy
         newvec = vector.represent_as(cx.CartesianPosition1D)
-        assert newvec == vector
+        assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(vector, cx.CartesianPosition1D)
@@ -123,7 +123,7 @@ class TestRadialPosition(AbstractPosition1DTest):
         """Test ``coordinax.represent_as(RadialPosition)``."""
         # Jit can copy
         newvec = vector.represent_as(cx.RadialPosition)
-        assert newvec == vector
+        assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(vector, cx.RadialPosition)
@@ -212,7 +212,7 @@ class TestCartesianVelocity1D(AbstractVelocity1DTest):
         """Test ``difntl.represent_as(CartesianVelocity1D)``."""
         # Jit can copy
         newvec = difntl.represent_as(cx.CartesianVelocity1D, vector)
-        assert newvec == difntl
+        assert jnp.array_equal(newvec, difntl)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(difntl, cx.CartesianVelocity1D, vector)
@@ -328,7 +328,7 @@ class TestRadialVelocity(AbstractVelocity1DTest):
         """Test ``difntl.represent_as(RadialVelocity)``."""
         # Jit can copy
         newvec = difntl.represent_as(cx.RadialVelocity, vector)
-        assert newvec == difntl
+        assert jnp.array_equal(newvec, difntl)
 
         # The normal `represent_as` method should return the same object
         newvec = cx.represent_as(difntl, cx.RadialVelocity, vector)
