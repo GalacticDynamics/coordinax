@@ -163,10 +163,10 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
 
         >>> try: vec.materialise()
         ... except RuntimeError as e: print(e)
-        Refusing to materialise `Quantity`.
+        Refusing to materialise `CartesianPosition3D`.
 
         """
-        msg = "Refusing to materialise `Quantity`."
+        msg = f"Refusing to materialise `{type(self).__name__}`."
         raise RuntimeError(msg)
 
     @abstractmethod
