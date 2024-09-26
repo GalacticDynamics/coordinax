@@ -238,3 +238,4 @@
   py-version = "3.10"
   reports.output-format = "colorized"
   similarities.ignore-imports = "yes"
+  max-module-lines = 1500
