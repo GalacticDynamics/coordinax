@@ -177,6 +177,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
     # ===============================================================
     # Array API
 
+    __eq__ = jnp.equal
+
     # ---------------------------------------------------------------
     # Attributes
 
@@ -923,8 +925,74 @@ def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVe
 
 
 @register(jax.lax.eq_p)  # type: ignore[misc]
-def _eq_pos_pos(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
-    """Element-wise equality of two vectors."""
+def _eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
+    """Element-wise equality of two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    Positions are covered by a separate dispatch. So here we show velocities and
+    accelerations:
+
+    >>> vel1 = cx.CartesianVelocity1D(Quantity([1, 2, 3], "km/s"))
+    >>> vel2 = cx.CartesianVelocity1D(Quantity([1, 0, 3], "km/s"))
+    >>> jnp.equal(vel1, vel2)
+    Array([ True,  False,  True], dtype=bool)
+    >>> vel1 == vel2
+    Array([ True, False,  True], dtype=bool)
+
+    >>> acc1 = cx.CartesianAcceleration1D(Quantity([1, 2, 3], "km/s2"))
+    >>> acc2 = cx.CartesianAcceleration1D(Quantity([1, 0, 3], "km/s2"))
+    >>> jnp.equal(acc1, acc2)
+    Array([ True,  False,  True], dtype=bool)
+    >>> acc1 == acc2
+    Array([ True, False,  True], dtype=bool)
+
+    >>> vel1 = cx.RadialVelocity(Quantity([1, 2, 3], "km/s"))
+    >>> vel2 = cx.RadialVelocity(Quantity([1, 0, 3], "km/s"))
+    >>> jnp.equal(vel1, vel2)
+    Array([ True,  False,  True], dtype=bool)
+    >>> vel1 == vel2
+    Array([ True, False,  True], dtype=bool)
+
+    >>> acc1 = cx.RadialAcceleration(Quantity([1, 2, 3], "km/s2"))
+    >>> acc2 = cx.RadialAcceleration(Quantity([1, 0, 3], "km/s2"))
+    >>> jnp.equal(acc1, acc2)
+    Array([ True,  False,  True], dtype=bool)
+    >>> acc1 == acc2
+    Array([ True, False,  True], dtype=bool)
+
+    >>> vel1 = cx.CartesianVelocity2D.constructor([[1, 3], [2, 4]], "km/s")
+    >>> vel2 = cx.CartesianVelocity2D.constructor([[1, 3], [0, 4]], "km/s")
+    >>> vel1.d_x
+    Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
+    >>> jnp.equal(vel1, vel2)
+    Array([ True, False], dtype=bool)
+    >>> vel1 == vel2
+    Array([ True, False], dtype=bool)
+
+    >>> acc1 = cx.CartesianAcceleration2D.constructor([[1, 3], [2, 4]], "km/s2")
+    >>> acc2 = cx.CartesianAcceleration2D.constructor([[1, 3], [0, 4]], "km/s2")
+    >>> acc1.d2_x
+    Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
+    >>> jnp.equal(acc1, acc2)
+    Array([ True, False], dtype=bool)
+    >>> acc1 == acc2
+    Array([ True, False], dtype=bool)
+
+    >>> vel1 = cx.CartesianVelocity3D.constructor([[1, 4], [2, 5], [3, 6]], "km/s")
+    >>> vel2 = cx.CartesianVelocity3D.constructor([[1, 4], [0, 5], [3, 0]], "km/s")
+    >>> vel1.d_x
+    Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
+    >>> jnp.equal(vel1, vel2)
+    Array([ True, False, False], dtype=bool)
+    >>> vel1 == vel2
+    Array([ True, False, False], dtype=bool)
+
+    """
     # TODO: match the behaviour of `numpy.equal`
     if type(lhs) is not type(rhs):
         msg = f"Cannot compare {type(lhs)} with {type(rhs)}."
