@@ -1,6 +1,6 @@
 """Carteisan vector."""
 
-__all__ = ["RadialPosition", "RadialVelocity", "RadialAcceleration"]
+__all__ = ["RadialPos", "RadialVelocity", "RadialAcceleration"]
 
 from functools import partial
 from typing import final
@@ -13,13 +13,13 @@ from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
+from .base import AbstractAcceleration1D, AbstractPos1D, AbstractVelocity1D
 from coordinax._src.checks import check_r_non_negative
 from coordinax._src.utils import classproperty
 
 
 @final
-class RadialPosition(AbstractPosition1D):
+class RadialPos(AbstractPos1D):
     """Radial vector representation."""
 
     r: ct.BatchableDistance = eqx.field(
@@ -46,8 +46,8 @@ class RadialVelocity(AbstractVelocity1D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[RadialPosition]:
-        return RadialPosition
+    def integral_cls(cls) -> type[RadialPos]:
+        return RadialPos
 
     @classproperty
     @classmethod

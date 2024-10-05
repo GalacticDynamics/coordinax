@@ -37,7 +37,7 @@ def _broadcast_in_dim_p(
 
     Cartesian 1D position, velocity, and acceleration:
 
-    >>> q = cx.CartesianPosition1D.from_([1], "m")
+    >>> q = cx.CartesianPos1D.from_([1], "m")
     >>> q.x
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
@@ -61,7 +61,7 @@ def _broadcast_in_dim_p(
 
     Radial 1D position, velocity, and acceleration:
 
-    >>> q = cx.RadialPosition.from_([1], "m")
+    >>> q = cx.RadialPos.from_([1], "m")
     >>> q.r
     Distance(Array(1., dtype=float32), unit='m')
 
@@ -85,7 +85,7 @@ def _broadcast_in_dim_p(
 
     Cartesian 2D position, velocity, and acceleration:
 
-    >>> q = cx.CartesianPosition2D.from_([1, 2], "m")
+    >>> q = cx.CartesianPos2D.from_([1, 2], "m")
     >>> q.x
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
@@ -109,7 +109,7 @@ def _broadcast_in_dim_p(
 
     Cartesian 3D position, velocity, and acceleration:
 
-    >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> q.x
     Quantity['length'](Array(1., dtype=float32), unit='m')
 

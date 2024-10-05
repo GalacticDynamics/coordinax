@@ -1,28 +1,28 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosition2D", "AbstractVelocity2D", "AbstractAcceleration2D"]
+__all__ = ["AbstractPos2D", "AbstractVelocity2D", "AbstractAcceleration2D"]
 
 
 from abc import abstractmethod
 
 from coordinax._src.base import (
     AbstractAcceleration,
-    AbstractPosition,
+    AbstractPos,
     AbstractVector,
     AbstractVelocity,
 )
 from coordinax._src.utils import classproperty
 
 
-class AbstractPosition2D(AbstractPosition):
+class AbstractPos2D(AbstractPos):
     """Abstract representation of 2D coordinates in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianPosition2D
+        from .cartesian import CartesianPos2D
 
-        return CartesianPosition2D
+        return CartesianPos2D
 
     @classproperty
     @classmethod
@@ -47,7 +47,7 @@ class AbstractVelocity2D(AbstractVelocity):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPosition2D]:
+    def integral_cls(cls) -> type[AbstractPos2D]:
         raise NotImplementedError
 
     @classproperty

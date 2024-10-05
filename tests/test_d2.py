@@ -6,20 +6,20 @@ import quaxed.numpy as jnp
 from unxt import Quantity
 
 import coordinax as cx
-from .test_base import AbstractPositionTest, AbstractVelocityTest
+from .test_base import AbstractPosTest, AbstractVelocityTest
 
 
-class AbstractPosition2DTest(AbstractPositionTest):
-    """Test :class:`coordinax.AbstractPosition2D`."""
+class AbstractPos2DTest(AbstractPosTest):
+    """Test :class:`coordinax.AbstractPos2D`."""
 
 
-class TestCartesianPosition2D:
-    """Test :class:`coordinax.CartesianPosition2D`."""
+class TestCartesianPos2D:
+    """Test :class:`coordinax.CartesianPos2D`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.CartesianPosition2D:
+    def vector(self) -> cx.CartesianPos2D:
         """Return a vector."""
-        return cx.CartesianPosition2D(
+        return cx.CartesianPos2D(
             x=Quantity([1, 2, 3, 4], "kpc"), y=Quantity([5, 6, 7, 8], "kpc")
         )
 
@@ -28,40 +28,40 @@ class TestCartesianPosition2D:
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian2d_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
-        cart1d = vector.represent_as(cx.CartesianPosition1D)
+        """Test ``coordinax.represent_as(CartesianPos1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPos1D)
 
-        assert isinstance(cart1d, cx.CartesianPosition1D)
+        assert isinstance(cart1d, cx.CartesianPos1D)
         assert jnp.array_equal(cart1d.x, Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian2d_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialPosition)``."""
-        radial = vector.represent_as(cx.RadialPosition)
+        """Test ``coordinax.represent_as(RadialPos)``."""
+        radial = vector.represent_as(cx.RadialPos)
 
-        assert isinstance(radial, cx.RadialPosition)
+        assert isinstance(radial, cx.RadialPos)
         assert jnp.array_equal(radial.r, jnp.hypot(vector.x, vector.y))
 
     def test_cartesian2d_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
-        newvec = vector.represent_as(cx.CartesianPosition2D)
+        """Test ``coordinax.represent_as(CartesianPos2D)``."""
+        newvec = vector.represent_as(cx.CartesianPos2D)
         assert newvec is vector
 
     def test_cartesian2d_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
+        """Test ``coordinax.represent_as(CartesianPos2D)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.CartesianPosition2D)
+        newvec = vector.represent_as(cx.CartesianPos2D)
         assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.CartesianPosition2D)
+        newvec = cx.represent_as(vector, cx.CartesianPos2D)
         assert newvec is vector
 
     def test_cartesian2d_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarPosition)``."""
-        polar = vector.represent_as(cx.PolarPosition)
+        """Test ``coordinax.represent_as(PolarPos)``."""
+        polar = vector.represent_as(cx.PolarPos)
 
-        assert isinstance(polar, cx.PolarPosition)
+        assert isinstance(polar, cx.PolarPos)
         assert jnp.array_equal(polar.r, jnp.hypot(vector.x, vector.y))
         assert jnp.allclose(
             polar.phi,
@@ -70,23 +70,23 @@ class TestCartesianPosition2D:
         )
 
     def test_cartesian2d_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
+        """Test ``coordinax.represent_as(CartesianPos3D)``."""
         cart3d = vector.represent_as(
-            cx.CartesianPosition3D, z=Quantity([9, 10, 11, 12], "m")
+            cx.CartesianPos3D, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cart3d, cx.CartesianPosition3D)
+        assert isinstance(cart3d, cx.CartesianPos3D)
         assert jnp.array_equal(cart3d.x, Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cart3d.y, Quantity([5, 6, 7, 8], "kpc"))
         assert jnp.array_equal(cart3d.z, Quantity([9, 10, 11, 12], "m"))
 
     def test_cartesian2d_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalPosition)``."""
+        """Test ``coordinax.represent_as(SphericalPos)``."""
         spherical = vector.represent_as(
-            cx.SphericalPosition, theta=Quantity([4, 5, 6, 7], "rad")
+            cx.SphericalPos, theta=Quantity([4, 5, 6, 7], "rad")
         )
 
-        assert isinstance(spherical, cx.SphericalPosition)
+        assert isinstance(spherical, cx.SphericalPos)
         assert jnp.array_equal(spherical.r, jnp.hypot(vector.x, vector.y))
         assert jnp.allclose(
             spherical.phi,
@@ -98,12 +98,12 @@ class TestCartesianPosition2D:
         )
 
     def test_cartesian2d_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalPosition)``."""
+        """Test ``coordinax.represent_as(CylindricalPos)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalPosition, z=Quantity([9, 10, 11, 12], "m")
+            cx.CylindricalPos, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cylindrical, cx.CylindricalPosition)
+        assert isinstance(cylindrical, cx.CylindricalPos)
         assert jnp.array_equal(cylindrical.rho, jnp.hypot(vector.x, vector.y))
         assert jnp.array_equal(
             cylindrical.phi,
@@ -112,13 +112,13 @@ class TestCartesianPosition2D:
         assert jnp.array_equal(cylindrical.z, Quantity([9, 10, 11, 12], "m"))
 
 
-class TestPolarPosition:
-    """Test :class:`coordinax.PolarPosition`."""
+class TestPolarPos:
+    """Test :class:`coordinax.PolarPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractPosition:
+    def vector(self) -> cx.AbstractPos:
         """Return a vector."""
-        return cx.PolarPosition(
+        return cx.PolarPos(
             r=Quantity([1, 2, 3, 4], "kpc"), phi=Quantity([0, 1, 2, 3], "rad")
         )
 
@@ -127,10 +127,10 @@ class TestPolarPosition:
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_polar_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPosition1D)``."""
-        cart1d = vector.represent_as(cx.CartesianPosition1D)
+        """Test ``coordinax.represent_as(CartesianPos1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPos1D)
 
-        assert isinstance(cart1d, cx.CartesianPosition1D)
+        assert isinstance(cart1d, cx.CartesianPos1D)
         assert jnp.allclose(
             cart1d.x,
             Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
@@ -140,19 +140,17 @@ class TestPolarPosition:
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_polar_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialPosition)``."""
-        radial = vector.represent_as(cx.RadialPosition)
+        """Test ``coordinax.represent_as(RadialPos)``."""
+        radial = vector.represent_as(cx.RadialPos)
 
-        assert isinstance(radial, cx.RadialPosition)
+        assert isinstance(radial, cx.RadialPos)
         assert jnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
 
     def test_polar_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPosition2D)``."""
-        cart2d = vector.represent_as(
-            cx.CartesianPosition2D, y=Quantity([5, 6, 7, 8], "km")
-        )
+        """Test ``coordinax.represent_as(CartesianPos2D)``."""
+        cart2d = vector.represent_as(cx.CartesianPos2D, y=Quantity([5, 6, 7, 8], "km"))
 
-        assert isinstance(cart2d, cx.CartesianPosition2D)
+        assert isinstance(cart2d, cx.CartesianPos2D)
         assert jnp.array_equal(
             cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
         )
@@ -167,22 +165,22 @@ class TestPolarPosition:
         )
 
     def test_polar_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarPosition)``."""
+        """Test ``coordinax.represent_as(PolarPos)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.PolarPosition)
+        newvec = vector.represent_as(cx.PolarPos)
         assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.PolarPosition)
+        newvec = cx.represent_as(vector, cx.PolarPos)
         assert newvec is vector
 
     def test_polar_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPosition3D)``."""
+        """Test ``coordinax.represent_as(CartesianPos3D)``."""
         cart3d = vector.represent_as(
-            cx.CartesianPosition3D, z=Quantity([9, 10, 11, 12], "m")
+            cx.CartesianPos3D, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cart3d, cx.CartesianPosition3D)
+        assert isinstance(cart3d, cx.CartesianPos3D)
         assert jnp.array_equal(
             cart3d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
         )
@@ -192,23 +190,23 @@ class TestPolarPosition:
         assert jnp.array_equal(cart3d.z, Quantity([9, 10, 11, 12], "m"))
 
     def test_polar_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalPosition)``."""
+        """Test ``coordinax.represent_as(SphericalPos)``."""
         spherical = vector.represent_as(
-            cx.SphericalPosition, theta=Quantity([4, 15, 60, 170], "deg")
+            cx.SphericalPos, theta=Quantity([4, 15, 60, 170], "deg")
         )
 
-        assert isinstance(spherical, cx.SphericalPosition)
+        assert isinstance(spherical, cx.SphericalPos)
         assert jnp.array_equal(spherical.r, Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(spherical.theta, Quantity([4, 15, 60, 170], "deg"))
         assert jnp.array_equal(spherical.phi, Quantity([0, 1, 2, 3], "rad"))
 
     def test_polar_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalPosition)``."""
+        """Test ``coordinax.represent_as(CylindricalPos)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalPosition, z=Quantity([9, 10, 11, 12], "m")
+            cx.CylindricalPos, z=Quantity([9, 10, 11, 12], "m")
         )
 
-        assert isinstance(cylindrical, cx.CylindricalPosition)
+        assert isinstance(cylindrical, cx.CylindricalPos)
         assert jnp.array_equal(cylindrical.rho, Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cylindrical.phi, Quantity([0, 1, 2, 3], "rad"))
         assert jnp.array_equal(cylindrical.z, Quantity([9, 10, 11, 12], "m"))
@@ -230,9 +228,9 @@ class TestCartesianVelocity2D(AbstractVelocity2DTest):
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.CartesianPosition2D:
+    def vector(self) -> cx.CartesianPos2D:
         """Return a vector."""
-        return cx.CartesianPosition2D(
+        return cx.CartesianPos2D(
             x=Quantity([1, 2, 3, 4], "kpc"), y=Quantity([5, 6, 7, 8], "km")
         )
 
@@ -332,9 +330,9 @@ class TestPolarVelocity(AbstractVelocity2DTest):
         )
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.PolarPosition:
+    def vector(self) -> cx.PolarPos:
         """Return a vector."""
-        return cx.PolarPosition(
+        return cx.PolarPos(
             r=Quantity([1, 2, 3, 4], "kpc"), phi=Quantity([0, 1, 2, 3], "rad")
         )
 

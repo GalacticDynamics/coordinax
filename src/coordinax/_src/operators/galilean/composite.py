@@ -70,7 +70,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       translation=GalileanTranslationOperator(
         translation=FourVector(
           t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-          q=CartesianPosition3D( ... ) )
+          q=CartesianPos3D( ... ) )
       ),
       velocity=GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
     )
@@ -85,13 +85,11 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> op = cx.operators.GalileanOperator(
     ...     translation=cx.operators.GalileanTranslationOperator(
     ...         cx.FourVector(t=Quantity(2.5, "Gyr"),
-    ...                    q=cx.SphericalPosition(r=Quantity(1, "kpc"),
-    ...                                         theta=Quantity(90, "deg"),
-    ...                                         phi=Quantity(0, "rad") ) ) ),
+    ...                    q=cx.SphericalPos(r=Quantity(1, "kpc"),
+    ...                                      theta=Quantity(90, "deg"),
+    ...                                      phi=Quantity(0, "rad") ) ) ),
     ...     velocity=cx.operators.GalileanBoostOperator(
-    ...         cx.CartesianVelocity3D(d_x=Quantity(1, "km/s"),
-    ...                                    d_y=Quantity(2, "km/s"),
-    ...                                    d_z=Quantity(3, "km/s")))
+    ...         cx.CartesianVelocity3D.from_([1, 2, 3], "km/s") )
     ... )
     >>> op
     GalileanOperator(
@@ -99,7 +97,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       translation=GalileanTranslationOperator(
         translation=FourVector(
           t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
-          q=SphericalPosition( ... )
+          q=SphericalPos( ... )
         )
       ),
       velocity=GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
@@ -112,7 +110,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> new
     FourVector(
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-      q=CartesianPosition3D( ... )
+      q=CartesianPos3D( ... )
     )
     >>> new.t.to_units("Gyr").value.round(2)
     Array(2.5, dtype=float32)
@@ -120,9 +118,9 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
 
     Also the Galilean operators can also be applied to
-    :class:`vector.AbstractPosition3D` and :class:`unxt.Quantity`:
+    :class:`vector.AbstractPos3D` and :class:`unxt.Quantity`:
 
-    >>> q = cx.CartesianPosition3D.from_([0, 0, 0], "kpc")
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "kpc")
     >>> t = Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x

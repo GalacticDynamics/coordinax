@@ -27,11 +27,11 @@ class AvalMixin:
 
         1 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition1D.from_([1], "m")
+        >>> vec = cx.CartesianPos1D.from_([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.RadialPosition.from_([1], "m")
+        >>> vec = cx.RadialPos.from_([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
@@ -53,11 +53,11 @@ class AvalMixin:
 
         2 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition2D.from_([1, 2], "m")
+        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarPosition(r=Quantity(1, "m"), phi=Quantity(0, "rad"))
+        >>> vec = cx.PolarPos(r=Quantity(1, "m"), phi=Quantity(0, "rad"))
         >>> vec.aval()
         ConcreteArray([1. 0.], dtype=float32)
 
@@ -81,16 +81,16 @@ class AvalMixin:
 
         3 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.CartesianPosition3D.from_([[1, 2, 3], [4, 5, 6]], "m")
+        >>> vec = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "m")
         >>> vec.aval()
         ConcreteArray([[1. 2. 3.]
                        [4. 5. 6.]], dtype=float32)
 
-        >>> vec = cx.SphericalPosition(r=Quantity(1, "m"), phi=Quantity(0, "rad"), theta=Quantity(0, "rad"))
+        >>> vec = cx.SphericalPos(r=Quantity(1, "m"), phi=Quantity(0, "rad"), theta=Quantity(0, "rad"))
         >>> vec.aval()
         ConcreteArray([0. 0. 1.], dtype=float32)
 

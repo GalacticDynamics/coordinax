@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosition1D", "AbstractVelocity1D", "AbstractAcceleration1D"]
+__all__ = ["AbstractPos1D", "AbstractVelocity1D", "AbstractAcceleration1D"]
 
 
 from abc import abstractmethod
@@ -13,7 +13,7 @@ from unxt import Quantity
 
 from coordinax._src.base import (
     AbstractAcceleration,
-    AbstractPosition,
+    AbstractPos,
     AbstractVector,
     AbstractVelocity,
 )
@@ -22,15 +22,15 @@ from coordinax._src.utils import classproperty
 #####################################################################
 
 
-class AbstractPosition1D(AbstractPosition):
+class AbstractPos1D(AbstractPos):
     """Abstract representation of 1D coordinates in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianPosition1D
+        from .cartesian import CartesianPos1D
 
-        return CartesianPosition1D
+        return CartesianPos1D
 
     @classproperty
     @classmethod
@@ -42,12 +42,12 @@ class AbstractPosition1D(AbstractPosition):
 # -------------------------------------------------------------------
 
 
-@AbstractPosition1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractPos1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
-    cls: type[AbstractPosition1D],
+    cls: type[AbstractPos1D],
     obj: Shaped[Quantity["length"], "*batch"] | Shaped[Quantity["length"], "*batch 1"],
     /,
-) -> AbstractPosition1D:
+) -> AbstractPos1D:
     """Construct a 1D position.
 
     Examples
@@ -55,17 +55,17 @@ def from_(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.CartesianPosition1D.from_(Quantity(1, "meter"))
-    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("m")) )
+    >>> cx.CartesianPos1D.from_(Quantity(1, "meter"))
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
 
-    >>> cx.CartesianPosition1D.from_(Quantity([1], "meter"))
-    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("m")) )
+    >>> cx.CartesianPos1D.from_(Quantity([1], "meter"))
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
 
-    >>> cx.RadialPosition.from_(Quantity(1, "meter"))
-    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
+    >>> cx.RadialPos.from_(Quantity(1, "meter"))
+    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
 
-    >>> cx.RadialPosition.from_(Quantity([1], "meter"))
-    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
+    >>> cx.RadialPos.from_(Quantity([1], "meter"))
+    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
 
     """
     comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
@@ -88,7 +88,7 @@ class AbstractVelocity1D(AbstractVelocity):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPosition1D]:
+    def integral_cls(cls) -> type[AbstractPos1D]:
         raise NotImplementedError
 
     @classproperty

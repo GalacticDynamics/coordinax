@@ -9,19 +9,19 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 
-from coordinax._src.d1.cartesian import CartesianPosition1D
-from coordinax._src.d1.radial import RadialPosition
-from coordinax._src.d2.base import AbstractPosition2D
-from coordinax._src.d2.cartesian import CartesianPosition2D
-from coordinax._src.d2.polar import PolarPosition
-from coordinax._src.d3.cartesian import CartesianPosition3D
-from coordinax._src.d3.cylindrical import CylindricalPosition
-from coordinax._src.d3.mathspherical import MathSphericalPosition
-from coordinax._src.d3.spherical import SphericalPosition
+from coordinax._src.d1.cartesian import CartesianPos1D
+from coordinax._src.d1.radial import RadialPos
+from coordinax._src.d2.base import AbstractPos2D
+from coordinax._src.d2.cartesian import CartesianPos2D
+from coordinax._src.d2.polar import PolarPos
+from coordinax._src.d3.cartesian import CartesianPos3D
+from coordinax._src.d3.cylindrical import CylindricalPos
+from coordinax._src.d3.mathspherical import MathSphericalPos
+from coordinax._src.d3.spherical import SphericalPos
 from coordinax._src.exceptions import IrreversibleDimensionChange
 
 # =============================================================================
-# CartesianPosition3D
+# CartesianPos3D
 
 
 # -----------------------------------------------
@@ -30,9 +30,9 @@ from coordinax._src.exceptions import IrreversibleDimensionChange
 
 @dispatch
 def represent_as(
-    current: CartesianPosition3D, target: type[CartesianPosition1D], /, **kwargs: Any
-) -> CartesianPosition1D:
-    """CartesianPosition3D -> CartesianPosition1D.
+    current: CartesianPos3D, target: type[CartesianPos1D], /, **kwargs: Any
+) -> CartesianPos1D:
+    """CartesianPos3D -> CartesianPos1D.
 
     The `y` and `z` coordinates are dropped.
 
@@ -42,15 +42,13 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
+    >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos1D)
     >>> x2
-    CartesianPosition1D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("km"))
-    )
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -59,9 +57,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CartesianPosition3D, target: type[RadialPosition], /, **kwargs: Any
-) -> RadialPosition:
-    """CartesianPosition3D -> RadialPosition.
+    current: CartesianPos3D, target: type[RadialPos], /, **kwargs: Any
+) -> RadialPos:
+    """CartesianPos3D -> RadialPos.
 
     Examples
     --------
@@ -69,13 +67,13 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
+    >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialPosition)
+    ...     x2 = cx.represent_as(x, cx.RadialPos)
     >>> x2
-    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -88,9 +86,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CartesianPosition3D, target: type[CartesianPosition2D], /, **kwargs: Any
-) -> CartesianPosition2D:
-    """CartesianPosition3D -> CartesianPosition2D.
+    current: CartesianPos3D, target: type[CartesianPos2D], /, **kwargs: Any
+) -> CartesianPos2D:
+    """CartesianPos3D -> CartesianPos2D.
 
     Examples
     --------
@@ -98,13 +96,13 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
+    >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition2D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
-    CartesianPosition2D( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
@@ -113,12 +111,12 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianPosition3D, type[PolarPosition]),
+    (CartesianPos3D, type[PolarPos]),
 )
 def represent_as(
-    current: CartesianPosition3D, target: type[AbstractPosition2D], /, **kwargs: Any
-) -> AbstractPosition2D:
-    """CartesianPosition3D -> Cartesian2D -> AbstractPosition2D.
+    current: CartesianPos3D, target: type[AbstractPos2D], /, **kwargs: Any
+) -> AbstractPos2D:
+    """CartesianPos3D -> Cartesian2D -> AbstractPos2D.
 
     Examples
     --------
@@ -126,23 +124,23 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
+    >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarPosition)
+    ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
-    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("rad")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    cart2 = represent_as(current, CartesianPosition2D)
+    cart2 = represent_as(current, CartesianPos2D)
     return represent_as(cart2, target)
 
 
 # =============================================================================
-# CylindricalPosition
+# CylindricalPos
 
 
 # -----------------------------------------------
@@ -151,9 +149,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalPosition, target: type[CartesianPosition1D], /, **kwargs: Any
-) -> CartesianPosition1D:
-    """CylindricalPosition -> CartesianPosition1D.
+    current: CylindricalPos, target: type[CartesianPos1D], /, **kwargs: Any
+) -> CartesianPos1D:
+    """CylindricalPos -> CartesianPos1D.
 
     Examples
     --------
@@ -161,14 +159,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos1D)
     >>> x2
-    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -177,9 +175,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalPosition, target: type[RadialPosition], /, **kwargs: Any
-) -> RadialPosition:
-    """CylindricalPosition -> RadialPosition.
+    current: CylindricalPos, target: type[RadialPos], /, **kwargs: Any
+) -> RadialPos:
+    """CylindricalPos -> RadialPos.
 
     Examples
     --------
@@ -187,14 +185,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialPosition)
+    ...     x2 = cx.represent_as(x, cx.RadialPos)
     >>> x2
-    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -207,9 +205,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalPosition, target: type[CartesianPosition2D], /, **kwargs: Any
-) -> CartesianPosition2D:
-    """CylindricalPosition -> CartesianPosition2D.
+    current: CylindricalPos, target: type[CartesianPos2D], /, **kwargs: Any
+) -> CartesianPos2D:
+    """CylindricalPos -> CartesianPos2D.
 
     Examples
     --------
@@ -217,14 +215,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition2D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
-    CartesianPosition2D( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
@@ -236,9 +234,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CylindricalPosition, target: type[PolarPosition], /, **kwargs: Any
-) -> PolarPosition:
-    """CylindricalPosition -> PolarPosition.
+    current: CylindricalPos, target: type[PolarPos], /, **kwargs: Any
+) -> PolarPos:
+    """CylindricalPos -> PolarPos.
 
     Examples
     --------
@@ -246,14 +244,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPosition(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
+    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
     ...                          z=Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarPosition)
+    ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
-    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
     """
@@ -262,7 +260,7 @@ def represent_as(
 
 
 # =============================================================================
-# SphericalPosition
+# SphericalPos
 
 
 # -----------------------------------------------
@@ -271,9 +269,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalPosition, target: type[CartesianPosition1D], /, **kwargs: Any
-) -> CartesianPosition1D:
-    """SphericalPosition -> CartesianPosition1D.
+    current: SphericalPos, target: type[CartesianPos1D], /, **kwargs: Any
+) -> CartesianPos1D:
+    """SphericalPos -> CartesianPos1D.
 
     Examples
     --------
@@ -281,14 +279,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos1D)
     >>> x2
-    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -297,9 +295,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalPosition, target: type[RadialPosition], /, **kwargs: Any
-) -> RadialPosition:
-    """SphericalPosition -> RadialPosition.
+    current: SphericalPos, target: type[RadialPos], /, **kwargs: Any
+) -> RadialPos:
+    """SphericalPos -> RadialPos.
 
     Examples
     --------
@@ -307,14 +305,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialPosition)
+    ...     x2 = cx.represent_as(x, cx.RadialPos)
     >>> x2
-    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -327,9 +325,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalPosition, target: type[CartesianPosition2D], /, **kwargs: Any
-) -> CartesianPosition2D:
-    """SphericalPosition -> CartesianPosition2D.
+    current: SphericalPos, target: type[CartesianPos2D], /, **kwargs: Any
+) -> CartesianPos2D:
+    """SphericalPos -> CartesianPos2D.
 
     Examples
     --------
@@ -337,14 +335,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition2D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
-    CartesianPosition2D( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
@@ -356,9 +354,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: SphericalPosition, target: type[PolarPosition], /, **kwargs: Any
-) -> PolarPosition:
-    """SphericalPosition -> PolarPosition.
+    current: SphericalPos, target: type[PolarPos], /, **kwargs: Any
+) -> PolarPos:
+    """SphericalPos -> PolarPos.
 
     Examples
     --------
@@ -366,14 +364,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
+    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
     ...                        phi=Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarPosition)
+    ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
-    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
     """
@@ -382,7 +380,7 @@ def represent_as(
 
 
 # =============================================================================
-# MathSphericalPosition
+# MathSphericalPos
 
 
 # -----------------------------------------------
@@ -391,9 +389,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalPosition, target: type[CartesianPosition1D], /, **kwargs: Any
-) -> CartesianPosition1D:
-    """MathSphericalPosition -> CartesianPosition1D.
+    current: MathSphericalPos, target: type[CartesianPos1D], /, **kwargs: Any
+) -> CartesianPos1D:
+    """MathSphericalPos -> CartesianPos1D.
 
     Examples
     --------
@@ -401,14 +399,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition1D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos1D)
     >>> x2
-    CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("km")) )
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -417,9 +415,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalPosition, target: type[RadialPosition], /, **kwargs: Any
-) -> RadialPosition:
-    """MathSphericalPosition -> RadialPosition.
+    current: MathSphericalPos, target: type[RadialPos], /, **kwargs: Any
+) -> RadialPos:
+    """MathSphericalPos -> RadialPos.
 
     Examples
     --------
@@ -427,14 +425,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.RadialPosition)
+    ...     x2 = cx.represent_as(x, cx.RadialPos)
     >>> x2
-    RadialPosition(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -447,9 +445,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalPosition, target: type[CartesianPosition2D], /, **kwargs: Any
-) -> CartesianPosition2D:
-    """MathSphericalPosition -> CartesianPosition2D.
+    current: MathSphericalPos, target: type[CartesianPos2D], /, **kwargs: Any
+) -> CartesianPos2D:
+    """MathSphericalPos -> CartesianPos2D.
 
     Examples
     --------
@@ -457,14 +455,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.CartesianPosition2D)
+    ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
-    CartesianPosition2D( x=Quantity[...](value=f32[], unit=Unit("km")),
+    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                        y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
@@ -476,9 +474,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: MathSphericalPosition, target: type[PolarPosition], /, **kwargs: Any
-) -> PolarPosition:
-    """MathSphericalPosition -> PolarPosition.
+    current: MathSphericalPos, target: type[PolarPos], /, **kwargs: Any
+) -> PolarPos:
+    """MathSphericalPos -> PolarPos.
 
     Examples
     --------
@@ -486,14 +484,14 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPosition(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
+    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
     ...                            phi=Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.PolarPosition)
+    ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
-    PolarPosition( r=Distance(value=f32[], unit=Unit("km")),
+    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
                  phi=Quantity[...](value=f32[], unit=Unit("deg")) )
 
     """

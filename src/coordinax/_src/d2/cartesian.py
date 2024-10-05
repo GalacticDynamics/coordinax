@@ -1,7 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "CartesianPosition2D",
+    "CartesianPos2D",
     "CartesianVelocity2D",
     "CartesianAcceleration2D",
 ]
@@ -21,14 +21,14 @@ from quaxed import lax as qlax
 from unxt import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
-from coordinax._src.base import AbstractPosition
+from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVelocity2D
+from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
 
 
 @final
-class CartesianPosition2D(AbstractPosition2D):
+class CartesianPos2D(AbstractPos2D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
@@ -50,10 +50,10 @@ class CartesianPosition2D(AbstractPosition2D):
 # -----------------------------------------------------
 
 
-@CartesianPosition2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+@CartesianPos2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
 def from_(
-    cls: type[CartesianPosition2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
-) -> CartesianPosition2D:
+    cls: type[CartesianPos2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
+) -> CartesianPos2D:
     """Construct a 2D Cartesian position.
 
     Examples
@@ -61,9 +61,9 @@ def from_(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition2D.from_(Quantity([1, 2], "m"))
+    >>> vec = cx.CartesianPos2D.from_(Quantity([1, 2], "m"))
     >>> vec
-    CartesianPosition2D(
+    CartesianPos2D(
         x=Quantity[...](value=f32[], unit=Unit("m")),
         y=Quantity[...](value=f32[], unit=Unit("m"))
     )
@@ -77,9 +77,7 @@ def from_(
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_cart2d_pos(
-    lhs: CartesianPosition2D, rhs: AbstractPosition, /
-) -> CartesianPosition2D:
+def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     """Add two vectors.
 
     Examples
@@ -88,8 +86,8 @@ def _add_cart2d_pos(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cart = cx.CartesianPosition2D.from_(Quantity([1, 2], "kpc"))
-    >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+    >>> cart = cx.CartesianPos2D.from_([1, 2], "kpc")
+    >>> polr = cx.PolarPos(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
     >>> (cart + polr).x
     Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
@@ -97,12 +95,12 @@ def _add_cart2d_pos(
     Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
     """
-    cart = rhs.represent_as(CartesianPosition2D)
+    cart = rhs.represent_as(CartesianPos2D)
     return jax.tree.map(qlax.add, lhs, cart)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosition2D:
+def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
     """Scale a cartesian 2D position by a scalar.
 
     Examples
@@ -111,7 +109,7 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosit
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition2D.from_(Quantity([3, 4], "m"))
+    >>> v = cx.CartesianPos2D.from_([3, 4], "m")
     >>> jnp.multiply(5, v).x
     Quantity['length'](Array(15., dtype=float32), unit='m')
 
@@ -126,13 +124,13 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosit
 
 
 @register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cart2d_pos(obj: CartesianPosition2D, /) -> CartesianPosition2D:
-    """Negate the `coordinax.CartesianPosition2D`.
+def _neg_p_cart2d_pos(obj: CartesianPos2D, /) -> CartesianPos2D:
+    """Negate the `coordinax.CartesianPos2D`.
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition2D.from_([1, 2], "km")
+    >>> q = cx.CartesianPos2D.from_([1, 2], "km")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='km')
 
@@ -141,23 +139,21 @@ def _neg_p_cart2d_pos(obj: CartesianPosition2D, /) -> CartesianPosition2D:
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_cart2d_pos2d(
-    lhs: CartesianPosition2D, rhs: AbstractPosition, /
-) -> CartesianPosition2D:
+def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     """Subtract two vectors.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> cart = cx.CartesianPosition2D.from_([1, 2], "kpc")
-    >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+    >>> cart = cx.CartesianPos2D.from_([1, 2], "kpc")
+    >>> polr = cx.PolarPos(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
     >>> (cart - polr).x
     Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
 
     """
-    cart = rhs.represent_as(CartesianPosition2D)
+    cart = rhs.represent_as(CartesianPos2D)
     return jax.tree.map(qlax.sub, lhs, cart)
 
 
@@ -180,8 +176,8 @@ class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianPosition2D]:
-        return CartesianPosition2D
+    def integral_cls(cls) -> type[CartesianPos2D]:
+        return CartesianPos2D
 
     @classproperty
     @classmethod

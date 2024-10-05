@@ -20,9 +20,9 @@ import coordinax as cx
 # Quantity
 
 
-@conversion_method(cx.AbstractPosition3D, u.Quantity)  # type: ignore[misc]
-def vec_to_q(obj: cx.AbstractPosition3D, /) -> Shaped[u.Quantity, "*batch 3"]:
-    """`coordinax.AbstractPosition3D` -> `astropy.units.Quantity`.
+@conversion_method(cx.AbstractPos3D, u.Quantity)  # type: ignore[misc]
+def vec_to_q(obj: cx.AbstractPos3D, /) -> Shaped[u.Quantity, "*batch 3"]:
+    """`coordinax.AbstractPos3D` -> `astropy.units.Quantity`.
 
     Examples
     --------
@@ -30,17 +30,17 @@ def vec_to_q(obj: cx.AbstractPosition3D, /) -> Shaped[u.Quantity, "*batch 3"]:
     >>> from plum import convert
     >>> from astropy.units import Quantity
 
-    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> convert(vec, Quantity)
     <Quantity [1., 2., 3.] kpc>
 
-    >>> vec = cx.SphericalPosition(r=Quantity(1, unit="kpc"),
+    >>> vec = cx.SphericalPos(r=Quantity(1, unit="kpc"),
     ...                            theta=Quantity(2, unit="deg"),
     ...                            phi=Quantity(3, unit="deg"))
     >>> convert(vec, Quantity)
     <Quantity [0.03485167, 0.0018265 , 0.99939084] kpc>
 
-    >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
+    >>> vec = cx.CylindricalPos(rho=Quantity(1, unit="kpc"),
     ...                              phi=Quantity(2, unit="deg"),
     ...                              z=Quantity(3, unit="pc"))
     >>> convert(vec, Quantity)
@@ -74,20 +74,20 @@ def vec_diff_to_q(obj: cx.CartesianVelocity3D, /) -> Shaped[u.Quantity, "*batch 
 
 
 # =====================================
-# CartesianPosition3D
+# CartesianPos3D
 
 
-@conversion_method(cx.CartesianPosition3D, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.CartesianPosition3D, apyc.CartesianRepresentation)  # type: ignore[misc]
-def cart3_to_apycart3(obj: cx.CartesianPosition3D, /) -> apyc.CartesianRepresentation:
-    """`coordinax.CartesianPosition3D` -> `astropy.CartesianRepresentation`.
+@conversion_method(cx.CartesianPos3D, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(cx.CartesianPos3D, apyc.CartesianRepresentation)  # type: ignore[misc]
+def cart3_to_apycart3(obj: cx.CartesianPos3D, /) -> apyc.CartesianRepresentation:
+    """`coordinax.CartesianPos3D` -> `astropy.CartesianRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> convert(vec, apyc.CartesianRepresentation)
     <CartesianRepresentation (x, y, z) in kpc
         (1., 2., 3.)>
@@ -104,9 +104,9 @@ def cart3_to_apycart3(obj: cx.CartesianPosition3D, /) -> apyc.CartesianRepresent
     )
 
 
-@conversion_method(apyc.CartesianRepresentation, cx.CartesianPosition3D)  # type: ignore[misc]
-def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPosition3D:
-    """`astropy.CartesianRepresentation` -> `coordinax.CartesianPosition3D`.
+@conversion_method(apyc.CartesianRepresentation, cx.CartesianPos3D)  # type: ignore[misc]
+def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D:
+    """`astropy.CartesianRepresentation` -> `coordinax.CartesianPos3D`.
 
     Examples
     --------
@@ -115,34 +115,34 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPosit
     >>> from astropy.coordinates import CartesianRepresentation
 
     >>> vec = CartesianRepresentation(1, 2, 3, unit="kpc")
-    >>> convert(vec, cx.CartesianPosition3D)
-    CartesianPosition3D(
+    >>> convert(vec, cx.CartesianPos3D)
+    CartesianPos3D(
       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
       y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
       z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
     )
 
     """
-    return cx.CartesianPosition3D.from_(obj)
+    return cx.CartesianPos3D.from_(obj)
 
 
 # =====================================
-# CylindricalPosition
+# CylindricalPos
 
 
-@conversion_method(cx.CylindricalPosition, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.CylindricalPosition, apyc.CylindricalRepresentation)  # type: ignore[misc]
-def cyl_to_apycyl(obj: cx.CylindricalPosition, /) -> apyc.CylindricalRepresentation:
-    """`coordinax.CylindricalPosition` -> `astropy.CylindricalRepresentation`.
+@conversion_method(cx.CylindricalPos, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(cx.CylindricalPos, apyc.CylindricalRepresentation)  # type: ignore[misc]
+def cyl_to_apycyl(obj: cx.CylindricalPos, /) -> apyc.CylindricalRepresentation:
+    """`coordinax.CylindricalPos` -> `astropy.CylindricalRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CylindricalPosition(rho=Quantity(1, unit="kpc"),
-    ...                            phi=Quantity(2, unit="deg"),
-    ...                            z=Quantity(3, unit="pc"))
+    >>> vec = cx.CylindricalPos(rho=Quantity(1, unit="kpc"),
+    ...                         phi=Quantity(2, unit="deg"),
+    ...                         z=Quantity(3, unit="pc"))
     >>> convert(vec, apyc.CylindricalRepresentation)
     <CylindricalRepresentation (rho, phi, z) in (kpc, deg, pc)
         (1., 2., 3.)>
@@ -159,9 +159,9 @@ def cyl_to_apycyl(obj: cx.CylindricalPosition, /) -> apyc.CylindricalRepresentat
     )
 
 
-@conversion_method(apyc.CylindricalRepresentation, cx.CylindricalPosition)  # type: ignore[misc]
-def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.CylindricalPosition:
-    """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalPosition`.
+@conversion_method(apyc.CylindricalRepresentation, cx.CylindricalPos)  # type: ignore[misc]
+def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.CylindricalPos:
+    """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalPos`.
 
     Examples
     --------
@@ -170,34 +170,34 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.CylindricalPosit
     >>> from astropy.coordinates import CylindricalRepresentation
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg, z=30 * u.pc)
-    >>> convert(cyl, cx.CylindricalPosition)
-    CylindricalPosition(
+    >>> convert(cyl, cx.CylindricalPos)
+    CylindricalPos(
         rho=Quantity[...](value=f32[], unit=Unit("kpc")),
         phi=Quantity[...](value=f32[], unit=Unit("deg")),
         z=Quantity[...](value=f32[], unit=Unit("pc"))
     )
 
     """
-    return cx.CylindricalPosition.from_(obj)
+    return cx.CylindricalPos.from_(obj)
 
 
 # =====================================
-# SphericalPosition
+# SphericalPos
 
 
-@conversion_method(cx.SphericalPosition, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.SphericalPosition, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
-def sph_to_apysph(obj: cx.SphericalPosition, /) -> apyc.PhysicsSphericalRepresentation:
-    """`coordinax.SphericalPosition` -> `astropy.PhysicsSphericalRepresentation`.
+@conversion_method(cx.SphericalPos, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(cx.SphericalPos, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
+def sph_to_apysph(obj: cx.SphericalPos, /) -> apyc.PhysicsSphericalRepresentation:
+    """`coordinax.SphericalPos` -> `astropy.PhysicsSphericalRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalPosition(r=Quantity(1, unit="kpc"),
-    ...                          theta=Quantity(2, unit="deg"),
-    ...                          phi=Quantity(3, unit="deg"))
+    >>> vec = cx.SphericalPos(r=Quantity(1, unit="kpc"),
+    ...                       theta=Quantity(2, unit="deg"),
+    ...                       phi=Quantity(3, unit="deg"))
     >>> convert(vec, apyc.PhysicsSphericalRepresentation)
     <PhysicsSphericalRepresentation (phi, theta, r) in (deg, deg, kpc)
         (3., 2., 1.)>
@@ -210,9 +210,9 @@ def sph_to_apysph(obj: cx.SphericalPosition, /) -> apyc.PhysicsSphericalRepresen
     )
 
 
-@conversion_method(apyc.PhysicsSphericalRepresentation, cx.SphericalPosition)  # type: ignore[misc]
-def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPosition:
-    """`astropy.PhysicsSphericalRepresentation` -> `coordinax.SphericalPosition`.
+@conversion_method(apyc.PhysicsSphericalRepresentation, cx.SphericalPos)  # type: ignore[misc]
+def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPos:
+    """`astropy.PhysicsSphericalRepresentation` -> `coordinax.SphericalPos`.
 
     Examples
     --------
@@ -222,36 +222,34 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
 
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
-    >>> convert(sph, cx.SphericalPosition)
-    SphericalPosition(
+    >>> convert(sph, cx.SphericalPos)
+    SphericalPos(
       r=Distance(value=f32[], unit=Unit("kpc")),
       theta=Quantity[...](value=f32[], unit=Unit("deg")),
       phi=Quantity[...](value=f32[], unit=Unit("deg"))
     )
 
     """
-    return cx.SphericalPosition.from_(obj)
+    return cx.SphericalPos.from_(obj)
 
 
 # =====================================
-# LonLatSphericalPosition
+# LonLatSphericalPos
 
 
-@conversion_method(cx.LonLatSphericalPosition, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.LonLatSphericalPosition, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
-def lonlatsph_to_apysph(
-    obj: cx.LonLatSphericalPosition, /
-) -> apyc.SphericalRepresentation:
-    """`coordinax.LonLatSphericalPosition` -> `astropy.SphericalRepresentation`.
+@conversion_method(cx.LonLatSphericalPos, apyc.BaseRepresentation)  # type: ignore[misc]
+@conversion_method(cx.LonLatSphericalPos, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
+def lonlatsph_to_apysph(obj: cx.LonLatSphericalPos, /) -> apyc.SphericalRepresentation:
+    """`coordinax.LonLatSphericalPos` -> `astropy.SphericalRepresentation`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.LonLatSphericalPosition(lon=Quantity(2, unit="deg"),
-    ...                                lat=Quantity(3, unit="deg"),
-    ...                                distance=Quantity(1, unit="kpc"))
+    >>> vec = cx.LonLatSphericalPos(lon=Quantity(2, unit="deg"),
+    ...                             lat=Quantity(3, unit="deg"),
+    ...                             distance=Quantity(1, unit="kpc"))
     >>> convert(vec, apyc.SphericalRepresentation)
     <SphericalRepresentation (lon, lat, distance) in (deg, deg, kpc)
         (2., 3., 1.)>
@@ -264,11 +262,9 @@ def lonlatsph_to_apysph(
     )
 
 
-@conversion_method(apyc.SphericalRepresentation, cx.LonLatSphericalPosition)  # type: ignore[misc]
-def apysph_to_lonlatsph(
-    obj: apyc.SphericalRepresentation, /
-) -> cx.LonLatSphericalPosition:
-    """`astropy.SphericalRepresentation` -> `coordinax.LonLatSphericalPosition`.
+@conversion_method(apyc.SphericalRepresentation, cx.LonLatSphericalPos)  # type: ignore[misc]
+def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> cx.LonLatSphericalPos:
+    """`astropy.SphericalRepresentation` -> `coordinax.LonLatSphericalPos`.
 
     Examples
     --------
@@ -278,15 +274,15 @@ def apysph_to_lonlatsph(
 
     >>> sph = SphericalRepresentation(lon=2 * u.deg, lat=3 * u.deg,
     ...                               distance=1 * u.kpc)
-    >>> convert(sph, cx.LonLatSphericalPosition)
-    LonLatSphericalPosition(
+    >>> convert(sph, cx.LonLatSphericalPos)
+    LonLatSphericalPos(
       lon=Quantity[...](value=f32[], unit=Unit("deg")),
       lat=Quantity[...](value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
     )
 
     """
-    return cx.LonLatSphericalPosition.from_(obj)
+    return cx.LonLatSphericalPos.from_(obj)
 
 
 # =====================================

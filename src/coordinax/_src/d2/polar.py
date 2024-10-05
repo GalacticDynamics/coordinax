@@ -1,7 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "PolarPosition",
+    "PolarPos",
     "PolarVelocity",
     "PolarAcceleration",
 ]
@@ -19,14 +19,14 @@ from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
+from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVelocity2D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
 
 @final
-class PolarPosition(AbstractPosition2D):
+class PolarPos(AbstractPos2D):
     r"""Polar vector representation.
 
     Parameters
@@ -63,7 +63,7 @@ class PolarPosition(AbstractPosition2D):
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPosition, /) -> PolarPosition:
+def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
     """Scale the polar position by a scalar.
 
     Examples
@@ -72,14 +72,14 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPosition, /) -> PolarPosition:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> v = cx.PolarPosition(r=Quantity(1, "m"), phi=Quantity(90, "deg"))
+    >>> v = cx.PolarPos(r=Quantity(1, "m"), phi=Quantity(90, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
     >>> nv = jnp.multiply(2, v)
     >>> nv
-    PolarPosition(
+    PolarPos(
       r=Distance(value=f32[], unit=Unit("m")),
       phi=Quantity[...](value=f32[], unit=Unit("deg"))
     )
@@ -114,8 +114,8 @@ class PolarVelocity(AbstractVelocity2D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarPosition]:
-        return PolarPosition
+    def integral_cls(cls) -> type[PolarPos]:
+        return PolarPos
 
     @classproperty
     @classmethod

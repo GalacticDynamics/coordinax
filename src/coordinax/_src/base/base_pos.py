@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosition"]
+__all__ = ["AbstractPos"]
 
 from abc import abstractmethod
 from dataclasses import replace
@@ -26,13 +26,13 @@ from coordinax._src import typing as ct
 from coordinax._src.funcs import represent_as
 from coordinax._src.utils import classproperty
 
-PosT = TypeVar("PosT", bound="AbstractPosition")
+PosT = TypeVar("PosT", bound="AbstractPos")
 
 # TODO: figure out public API for this
-POSITION_CLASSES: set[type["AbstractPosition"]] = set()
+POSITION_CLASSES: set[type["AbstractPos"]] = set()
 
 
-class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
+class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -56,11 +56,11 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialPosition._cartesian_cls
-        <class 'coordinax...CartesianPosition1D'>
+        >>> cx.RadialPos._cartesian_cls
+        <class 'coordinax...CartesianPos1D'>
 
-        >>> cx.SphericalPosition._cartesian_cls
-        <class 'coordinax...CartesianPosition3D'>
+        >>> cx.SphericalPos._cartesian_cls
+        <class 'coordinax...CartesianPos3D'>
 
         """
         # TODO: something nicer than this for getting the corresponding class
@@ -76,10 +76,10 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialPosition.differential_cls.__name__
+        >>> cx.RadialPos.differential_cls.__name__
         'RadialVelocity'
 
-        >>> cx.SphericalPosition.differential_cls.__name__
+        >>> cx.SphericalPos.differential_cls.__name__
         'SphericalVelocity'
 
         """
@@ -93,7 +93,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
     # ===============================================================
     # Binary operations
 
-    def __eq__(self: "AbstractPosition", other: object) -> Any:
+    def __eq__(self: "AbstractPos", other: object) -> Any:
         """Element-wise equality of two positions.
 
         Examples
@@ -103,33 +103,33 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
         Showing the broadcasting, then element-wise comparison of two vectors:
 
-        >>> vec1 = cx.CartesianPosition3D.from_([[1, 2, 3], [1, 2, 4]], "m")
-        >>> vec2 = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+        >>> vec1 = cx.CartesianPos3D.from_([[1, 2, 3], [1, 2, 4]], "m")
+        >>> vec2 = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> jnp.equal(vec1, vec2)
         Array([ True, False], dtype=bool)
 
         Showing the change of representation:
 
-        >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
-        >>> vec1 = vec.represent_as(cx.SphericalPosition)
-        >>> vec2 = vec.represent_as(cx.MathSphericalPosition)
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> vec1 = vec.represent_as(cx.SphericalPos)
+        >>> vec2 = vec.represent_as(cx.MathSphericalPos)
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
         Quick run-through of each dimensionality:
 
-        >>> vec1 = cx.CartesianPosition1D.from_([1], "m")
-        >>> vec2 = cx.RadialPosition.from_([1], "m")
+        >>> vec1 = cx.CartesianPos1D.from_([1], "m")
+        >>> vec2 = cx.RadialPos.from_([1], "m")
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
-        >>> vec1 = cx.CartesianPosition2D.from_([2, 0], "m")
-        >>> vec2 = cx.PolarPosition(r=Quantity(2, "m"), phi=Quantity(0, "rad"))
+        >>> vec1 = cx.CartesianPos2D.from_([2, 0], "m")
+        >>> vec2 = cx.PolarPos(r=Quantity(2, "m"), phi=Quantity(0, "rad"))
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
         """
-        if not isinstance(other, AbstractPosition):
+        if not isinstance(other, AbstractPos):
             return NotImplemented
 
         rhs = other.represent_as(type(self))
@@ -146,7 +146,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
         Parameters
         ----------
-        target : type[`coordinax.AbstractPosition`]
+        target : type[`coordinax.AbstractPos`]
             The type to represent the vector as.
         *args, **kwargs : Any
             Extra arguments. These are passed to `coordinax.represent_as` and
@@ -154,16 +154,16 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
         Returns
         -------
-        `coordinax.AbstractPosition`
+        `coordinax.AbstractPos`
             The vector represented as the target type.
 
         Examples
         --------
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
-        >>> sph = vec.represent_as(cx.SphericalPosition)
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> sph = vec.represent_as(cx.SphericalPos)
         >>> sph
-        SphericalPosition(
+        SphericalPos(
             r=Distance(value=f32[], unit=Unit("m")),
             theta=Quantity[...](value=f32[], unit=Unit("rad")),
             phi=Quantity[...](value=f32[], unit=Unit("rad")) )
@@ -187,19 +187,19 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> v = cx.CartesianPosition1D.from_([-1], "kpc")
+        >>> v = cx.CartesianPos1D.from_([-1], "kpc")
         >>> v.norm()
         Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
-        >>> v = cx.CartesianPosition2D.from_([3, 4], "kpc")
+        >>> v = cx.CartesianPos2D.from_([3, 4], "kpc")
         >>> v.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
 
-        >>> v = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> v = cx.PolarPos(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
         >>> v.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
-        >>> v = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+        >>> v = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> v.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
 
@@ -212,7 +212,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> AbstractPosition:
+def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # The base implementation is to convert to Cartesian and perform the
     # operation.  Cartesian coordinates do not have any branch cuts or
     # singularities or ranges that need to be handled, so this is a safe
@@ -232,7 +232,7 @@ def _add_qq(lhs: AbstractPosition, rhs: AbstractPosition, /) -> AbstractPosition
 
 
 @register(jax.lax.div_p)  # type: ignore[misc]
-def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
+def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
     """Divide a vector by a scalar.
 
     Examples
@@ -240,7 +240,7 @@ def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> jnp.divide(vec, 2).x
     Quantity['length'](Array(0.5, dtype=float32), unit='m')
 
@@ -255,7 +255,7 @@ def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
 
 
 @register(jax.lax.eq_p)  # type: ignore[misc]
-def _eq_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> ArrayLike:
+def _eq_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> ArrayLike:
     """Element-wise equality of two positions."""
     return lhs == rhs
 
@@ -264,7 +264,7 @@ def _eq_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> ArrayLike:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
+def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     """Scale a position by a scalar.
 
     Examples
@@ -273,9 +273,9 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> jnp.multiply(2, vec)
-    CartesianPosition3D(
+    CartesianPos3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),
       y=Quantity[...](value=f32[], unit=Unit("m")),
       z=Quantity[...](value=f32[], unit=Unit("m"))
@@ -285,7 +285,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     So let's define a new class and try it out:
 
     >>> from typing import ClassVar
-    >>> class MyCartesian(cx.AbstractPosition):
+    >>> class MyCartesian(cx.AbstractPos):
     ...     x: Quantity
     ...     y: Quantity
     ...     z: Quantity
@@ -325,12 +325,12 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     Now a real example. For this we need to define the Cartesian-specific
     dispatches:
 
-    >>> MyCartesian._cartesian_cls = cx.CartesianPosition3D
+    >>> MyCartesian._cartesian_cls = cx.CartesianPos3D
     >>> @dispatch
-    ... def represent_as(current: MyCartesian, target: type[cx.CartesianPosition3D], /) -> cx.CartesianPosition3D:
-    ...     return cx.CartesianPosition3D(x=current.x, y=current.y, z=current.z)
+    ... def represent_as(current: MyCartesian, target: type[cx.CartesianPos3D], /) -> cx.CartesianPos3D:
+    ...     return cx.CartesianPos3D(x=current.x, y=current.y, z=current.z)
     >>> @dispatch
-    ... def represent_as(current: cx.CartesianPosition3D, target: type[MyCartesian], /) -> MyCartesian:
+    ... def represent_as(current: cx.CartesianPos3D, target: type[MyCartesian], /) -> MyCartesian:
     ...     return MyCartesian(x=current.x, y=current.y, z=current.z)
 
     >>> jnp.multiply(2, vec)
@@ -357,7 +357,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_pos_v(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
+def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
     """Scale a position by a scalar.
 
     Examples
@@ -366,9 +366,9 @@ def _mul_pos_v(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> jnp.multiply(vec, 2)
-    CartesianPosition3D(
+    CartesianPos3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),
       y=Quantity[...](value=f32[], unit=Unit("m")),
       z=Quantity[...](value=f32[], unit=Unit("m"))
@@ -379,7 +379,7 @@ def _mul_pos_v(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
+def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> Quantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -390,7 +390,7 @@ def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D(
+    >>> vec = cx.CartesianPos3D(
     ...     x=Quantity([1, 2, 3], "m"),
     ...     y=Quantity([4, 5, 6], "m"),
     ...     z=Quantity([7, 8, 9], "m"))
@@ -413,7 +413,7 @@ def _mul_pos_pos(lhs: AbstractPosition, rhs: AbstractPosition, /) -> Quantity:
 
 
 @register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_pos(obj: AbstractPosition, /) -> AbstractPosition:
+def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
     """Negate the vector.
 
     The default implementation is to go through Cartesian coordinates.
@@ -421,9 +421,9 @@ def _neg_pos(obj: AbstractPosition, /) -> AbstractPosition:
     Examples
     --------
     >>> import coordinax as cx
-    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> -vec
-    CartesianPosition3D(
+    CartesianPos3D(
         x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
         y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
         z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
@@ -442,8 +442,8 @@ def _neg_pos(obj: AbstractPosition, /) -> AbstractPosition:
 
 @register(jax.lax.reshape_p)  # type: ignore[misc]
 def _reshape_pos(
-    operand: AbstractPosition, *, new_sizes: tuple[int, ...], **kwargs: Any
-) -> AbstractPosition:
+    operand: AbstractPos, *, new_sizes: tuple[int, ...], **kwargs: Any
+) -> AbstractPos:
     """Reshape the components of the vector.
 
     Examples
@@ -452,11 +452,11 @@ def _reshape_pos(
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPosition3D(x=Quantity([1, 2, 3], "m"),
-    ...                              y=Quantity([4, 5, 6], "m"),
-    ...                              z=Quantity([7, 8, 9], "m"))
+    >>> vec = cx.CartesianPos3D(x=Quantity([1, 2, 3], "m"),
+    ...                         y=Quantity([4, 5, 6], "m"),
+    ...                         z=Quantity([7, 8, 9], "m"))
     >>> jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
-    CartesianPosition3D(
+    CartesianPos3D(
       x=Quantity[PhysicalType('length')](value=f32[1,1,3], unit=Unit("m")),
       y=Quantity[PhysicalType('length')](value=f32[1,1,3], unit=Unit("m")),
       z=Quantity[PhysicalType('length')](value=f32[1,1,3], unit=Unit("m"))
@@ -480,7 +480,7 @@ def _reshape_pos(
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_qq(lhs: AbstractPosition, rhs: AbstractPosition) -> AbstractPosition:
+def _sub_qq(lhs: AbstractPos, rhs: AbstractPos) -> AbstractPos:
     """Add another object to this vector."""
     # The base implementation is to convert to Cartesian and perform the
     # operation.  Cartesian coordinates do not have any branch cuts or

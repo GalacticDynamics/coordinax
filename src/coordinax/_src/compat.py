@@ -15,7 +15,7 @@ from unxt import AbstractQuantity, Quantity, UncheckedQuantity
 from coordinax._src.base.base import AbstractVector
 from coordinax._src.d1.cartesian import (
     CartesianAcceleration1D,
-    CartesianPosition1D,
+    CartesianPos1D,
     CartesianVelocity1D,
 )
 from coordinax._src.d1.radial import RadialAcceleration, RadialVelocity
@@ -224,7 +224,7 @@ Q1: TypeAlias = Shaped[Quantity["length"], "*#batch 1"]
 @op_call_dispatch
 def call(self: AbstractOperator, x: Q1, /) -> Q1:
     """Dispatch to the operator's `__call__` method."""
-    return self(CartesianPosition1D.from_(x))
+    return self(CartesianPos1D.from_(x))
 
 
 @op_call_dispatch
@@ -232,5 +232,5 @@ def call(
     self: AbstractOperator, x: Q1, t: TimeBatchOrScalar, /
 ) -> tuple[Q1, TimeBatchOrScalar]:
     """Dispatch to the operator's `__call__` method."""
-    vec, t = self(CartesianPosition1D.from_(x), t)
+    vec, t = self(CartesianPos1D.from_(x), t)
     return convert(vec, Quantity), t

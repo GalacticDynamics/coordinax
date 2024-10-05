@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = ["CartesianPositionND", "CartesianVelocityND", "CartesianAccelerationND"]
+__all__ = ["CartesianPosND", "CartesianVelocityND", "CartesianAccelerationND"]
 
 from dataclasses import replace
 from functools import partial
@@ -18,17 +18,17 @@ import quaxed.numpy as jnp
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAccelerationND, AbstractPositionND, AbstractVelocityND
-from coordinax._src.base import AbstractPosition
+from .base import AbstractAccelerationND, AbstractPosND, AbstractVelocityND
+from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
 
 ##############################################################################
-# Position
+# Pos
 
 
 @final
-class CartesianPositionND(AbstractPositionND):
+class CartesianPosND(AbstractPosND):
     """N-dimensional Cartesian vector representation.
 
     Examples
@@ -38,7 +38,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 1D vector:
 
-    >>> q = cx.CartesianPositionND(Quantity([[1]], "kpc"))
+    >>> q = cx.CartesianPosND(Quantity([[1]], "kpc"))
     >>> q.q
     Quantity['length'](Array([[1.]], dtype=float32), unit='kpc')
     >>> q.shape
@@ -46,7 +46,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 2D vector:
 
-    >>> q = cx.CartesianPositionND(Quantity([1, 2], "kpc"))
+    >>> q = cx.CartesianPosND(Quantity([1, 2], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -54,7 +54,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 3D vector:
 
-    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+    >>> q = cx.CartesianPosND(Quantity([1, 2, 3], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -62,7 +62,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 4D vector:
 
-    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = cx.CartesianPosND(Quantity([1, 2, 3, 4], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3., 4.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -70,7 +70,7 @@ class CartesianPositionND(AbstractPositionND):
 
     A 5D vector:
 
-    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3, 4, 5], "kpc"))
+    >>> q = cx.CartesianPosND(Quantity([1, 2, 3, 4, 5], "kpc"))
     >>> q.q
     Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='kpc')
     >>> q.shape
@@ -111,7 +111,7 @@ class CartesianPositionND(AbstractPositionND):
 
         A 3D vector:
 
-        >>> q = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+        >>> q = cx.CartesianPosND(Quantity([1, 2, 3], "kpc"))
         >>> q.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
 
@@ -123,12 +123,12 @@ class CartesianPositionND(AbstractPositionND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianPositionND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianPosND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def from_(
-    cls: type[CartesianPositionND],
+    cls: type[CartesianPosND],
     x: Shaped[Quantity["length"], ""] | Shaped[Quantity["length"], "*batch N"],
     /,
-) -> CartesianPositionND:
+) -> CartesianPosND:
     """Construct an N-dimensional position.
 
     Examples
@@ -138,34 +138,34 @@ def from_(
 
     1D vector:
 
-    >>> cx.CartesianPositionND.from_(Quantity(1, "kpc"))
-    CartesianPositionND(
+    >>> cx.CartesianPosND.from_(Quantity(1, "kpc"))
+    CartesianPosND(
       q=Quantity[...](value=f32[1], unit=Unit("kpc"))
     )
 
-    >>> cx.CartesianPositionND.from_(Quantity([1], "kpc"))
-    CartesianPositionND(
+    >>> cx.CartesianPosND.from_(Quantity([1], "kpc"))
+    CartesianPosND(
       q=Quantity[...](value=f32[1], unit=Unit("kpc"))
     )
 
     2D vector:
 
-    >>> cx.CartesianPositionND.from_(Quantity([1, 2], "kpc"))
-    CartesianPositionND(
+    >>> cx.CartesianPosND.from_(Quantity([1, 2], "kpc"))
+    CartesianPosND(
       q=Quantity[...](value=f32[2], unit=Unit("kpc"))
     )
 
     3D vector:
 
-    >>> cx.CartesianPositionND.from_(Quantity([1, 2, 3], "kpc"))
-    CartesianPositionND(
+    >>> cx.CartesianPosND.from_(Quantity([1, 2, 3], "kpc"))
+    CartesianPosND(
       q=Quantity[...](value=f32[3], unit=Unit("kpc"))
     )
 
     4D vector:
 
-    >>> cx.CartesianPositionND.from_(Quantity([1, 2, 3, 4], "kpc"))
-    CartesianPositionND(
+    >>> cx.CartesianPosND.from_(Quantity([1, 2, 3, 4], "kpc"))
+    CartesianPosND(
       q=Quantity[...](value=f32[4], unit=Unit("kpc"))
     )
 
@@ -173,9 +173,9 @@ def from_(
     return cls(jnp.atleast_1d(x))
 
 
-@conversion_method(CartesianPositionND, Quantity)  # type: ignore[misc]
-def _vec_to_q(obj: CartesianPositionND, /) -> Shaped[Quantity["length"], "*batch N"]:
-    """`coordinax.AbstractPosition3D` -> `unxt.Quantity`.
+@conversion_method(CartesianPosND, Quantity)  # type: ignore[misc]
+def _vec_to_q(obj: CartesianPosND, /) -> Shaped[Quantity["length"], "*batch N"]:
+    """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
     Examples
     --------
@@ -183,7 +183,7 @@ def _vec_to_q(obj: CartesianPositionND, /) -> Shaped[Quantity["length"], "*batch
     >>> from plum import convert
     >>> from unxt import Quantity
 
-    >>> vec = cx.CartesianPositionND(Quantity([1, 2, 3, 4, 5], unit="kpc"))
+    >>> vec = cx.CartesianPosND(Quantity([1, 2, 3, 4, 5], unit="kpc"))
     >>> convert(vec, Quantity)
     Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='kpc')
 
@@ -192,9 +192,7 @@ def _vec_to_q(obj: CartesianPositionND, /) -> Shaped[Quantity["length"], "*batch
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_vcnd(
-    lhs: CartesianPositionND, rhs: AbstractPosition, /
-) -> CartesianPositionND:
+def _add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     """Add two vectors.
 
     Examples
@@ -203,18 +201,18 @@ def _add_vcnd(
 
     A 3D vector:
 
-    >>> q1 = cx.CartesianPositionND.from_([1, 2, 3], "kpc")
-    >>> q2 = cx.CartesianPositionND.from_([2, 3, 4], "kpc")
+    >>> q1 = cx.CartesianPosND.from_([1, 2, 3], "kpc")
+    >>> q2 = cx.CartesianPosND.from_([2, 3, 4], "kpc")
     >>> (q1 + q2).q
     Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
 
     """
-    cart = rhs.represent_as(CartesianPositionND)
+    cart = rhs.represent_as(CartesianPosND)
     return replace(lhs, q=lhs.q + cart.q)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionND:
+def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
     """Scale a position by a scalar.
 
     Examples
@@ -223,7 +221,7 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionN
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPositionND(Quantity([1, 2, 3, 4, 5], "kpc"))
+    >>> v = cx.CartesianPosND(Quantity([1, 2, 3, 4, 5], "kpc"))
     >>> jnp.multiply(2, v).q
     Quantity['length'](Array([ 2.,  4.,  6.,  8., 10.], dtype=float32), unit='kpc')
 
@@ -238,8 +236,8 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPositionND, /) -> CartesianPositionN
 
 
 @register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cartnd_pos(obj: CartesianPositionND, /) -> CartesianPositionND:
-    """Negate the `coordinax.CartesianPositionND`.
+def _neg_p_cartnd_pos(obj: CartesianPosND, /) -> CartesianPosND:
+    """Negate the `coordinax.CartesianPosND`.
 
     Examples
     --------
@@ -248,7 +246,7 @@ def _neg_p_cartnd_pos(obj: CartesianPositionND, /) -> CartesianPositionND:
 
     A 3D vector:
 
-    >>> vec = cx.CartesianPositionND(Quantity([1, 2, 3], "kpc"))
+    >>> vec = cx.CartesianPosND(Quantity([1, 2, 3], "kpc"))
     >>> (-vec).q
     Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
 
@@ -257,25 +255,23 @@ def _neg_p_cartnd_pos(obj: CartesianPositionND, /) -> CartesianPositionND:
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_cnd_pos(
-    lhs: CartesianPositionND, rhs: AbstractPosition, /
-) -> CartesianPositionND:
+def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     """Subtract two vectors.
 
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax import CartesianPositionND
+    >>> from coordinax import CartesianPosND
 
     A 3D vector:
 
-    >>> q1 = CartesianPositionND(Quantity([1, 2, 3], "kpc"))
-    >>> q2 = CartesianPositionND(Quantity([2, 3, 4], "kpc"))
+    >>> q1 = CartesianPosND(Quantity([1, 2, 3], "kpc"))
+    >>> q2 = CartesianPosND(Quantity([2, 3, 4], "kpc"))
     >>> (q1 - q2).q
     Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
 
     """
-    cart = rhs.represent_as(CartesianPositionND)
+    cart = rhs.represent_as(CartesianPosND)
     return replace(lhs, q=lhs.q - cart.q)
 
 
@@ -345,8 +341,8 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianPositionND]:
-        return CartesianPositionND
+    def integral_cls(cls) -> type[CartesianPosND]:
+        return CartesianPosND
 
     @override
     @classproperty
@@ -355,7 +351,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
         return CartesianAccelerationND
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPositionND | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPosND | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -527,7 +523,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
     def norm(
         self,
         velocity: AbstractVelocityND | None = None,
-        position: AbstractPositionND | None = None,
+        position: AbstractPosND | None = None,
         /,
     ) -> ct.BatchableSpeed:
         """Return the norm of the vector.

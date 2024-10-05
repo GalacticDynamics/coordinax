@@ -1,7 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "AbstractSphericalPosition",
+    "AbstractSphericalPos",
     "AbstractSphericalVelocity",
     "AbstractSphericalAcceleration",
 ]
@@ -11,7 +11,7 @@ from typing_extensions import override
 
 from unxt import Quantity
 
-from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
+from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVelocity3D
 from coordinax._src.utils import classproperty
 
 _90d = Quantity(90, "deg")
@@ -19,7 +19,7 @@ _180d = Quantity(180, "deg")
 _360d = Quantity(360, "deg")
 
 
-class AbstractSphericalPosition(AbstractPosition3D):
+class AbstractSphericalPos(AbstractPos3D):
     """Abstract spherical vector representation."""
 
     @override
@@ -36,7 +36,7 @@ class AbstractSphericalVelocity(AbstractVelocity3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractSphericalPosition]: ...
+    def integral_cls(cls) -> type[AbstractSphericalPos]: ...
 
     @override
     @classproperty

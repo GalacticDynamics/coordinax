@@ -1,7 +1,7 @@
 """Carteisan vector."""
 
 __all__ = [
-    "CartesianPosition1D",
+    "CartesianPos1D",
     "CartesianVelocity1D",
     "CartesianAcceleration1D",
 ]
@@ -21,25 +21,23 @@ from quaxed import lax as qlax
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
-from coordinax._src.base import AbstractPosition
+from .base import AbstractAcceleration1D, AbstractPos1D, AbstractVelocity1D
+from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
 
 
 @final
-class CartesianPosition1D(AbstractPosition1D):
+class CartesianPos1D(AbstractPos1D):
     """Cartesian vector representation.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition1D.from_([2], "m")
+    >>> vec = cx.CartesianPos1D.from_([2], "m")
     >>> vec
-    CartesianPosition1D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-    )
+    CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")))
 
     Vectors support the basic math operations:
 
@@ -70,20 +68,20 @@ class CartesianPosition1D(AbstractPosition1D):
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosition1D:
-    """Add a vector to a CartesianPosition1D.
+def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
+    """Add a vector to a CartesianPos1D.
 
     Examples
     --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition1D.from_([1], "kpc")
-    >>> r = cx.RadialPosition.from_([1], "kpc")
+    >>> q = cx.CartesianPos1D.from_([1], "kpc")
+    >>> r = cx.RadialPos.from_([1], "kpc")
 
     >>> qpr = jnp.add(q, r)
     >>> qpr
-    CartesianPosition1D(
+    CartesianPos1D(
         x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
     )
     >>> qpr.x
@@ -93,12 +91,12 @@ def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosi
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
     """
-    cart = rhs.represent_as(CartesianPosition1D)
+    cart = rhs.represent_as(CartesianPos1D)
     return jax.tree.map(qlax.add, lhs, cart)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D:
+def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     """Scale a position by a scalar.
 
     Examples
@@ -107,7 +105,7 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition1D(x=Quantity(1, "m"))
+    >>> v = cx.CartesianPos1D(x=Quantity(1, "m"))
     >>> jnp.multiply(2, v).x
     Quantity['length'](Array(2., dtype=float32), unit='m')
 
@@ -125,13 +123,13 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D
 
 
 @register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cart1d_pos(obj: CartesianPosition1D, /) -> CartesianPosition1D:
-    """Negate the `coordinax.CartesianPosition1D`.
+def _neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
+    """Negate the `coordinax.CartesianPos1D`.
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition1D.from_([1], "km")
+    >>> q = cx.CartesianPos1D.from_([1], "km")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='km')
 
@@ -140,23 +138,20 @@ def _neg_p_cart1d_pos(obj: CartesianPosition1D, /) -> CartesianPosition1D:
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_q1d_pos(
-    self: CartesianPosition1D, other: AbstractPosition, /
-) -> CartesianPosition1D:
+def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     """Subtract two vectors.
 
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition1D.from_(Quantity([1], "kpc"))
-    >>> r = cx.RadialPosition.from_(Quantity([1], "kpc"))
+    >>> q = cx.CartesianPos1D.from_([1], "kpc")
+    >>> r = cx.RadialPos.from_([1], "kpc")
 
     >>> qmr = jnp.subtract(q, r)
     >>> qmr
-    CartesianPosition1D(
+    CartesianPos1D(
        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
     )
     >>> qmr.x
@@ -166,7 +161,7 @@ def _sub_q1d_pos(
     Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
     """
-    cart = other.represent_as(CartesianPosition1D)
+    cart = other.represent_as(CartesianPos1D)
     return jax.tree.map(qlax.sub, self, cart)
 
 
@@ -183,8 +178,8 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianPosition1D]:
-        return CartesianPosition1D
+    def integral_cls(cls) -> type[CartesianPos1D]:
+        return CartesianPos1D
 
     @override
     @classproperty
@@ -194,7 +189,7 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -294,7 +289,7 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableAcc:
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
 
         Examples

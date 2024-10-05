@@ -16,7 +16,7 @@ from dataclassish import field_items
 from unxt import Quantity
 
 from .base import AbstractVector
-from .base_pos import AbstractPosition
+from .base_pos import AbstractPos
 from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:
@@ -60,7 +60,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type["AbstractPosition"]:
+    def integral_cls(cls) -> type["AbstractPos"]:
         """Return the corresponding vector class.
 
         Examples
@@ -68,10 +68,10 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         >>> import coordinax as cx
 
         >>> cx.RadialVelocity.integral_cls.__name__
-        'RadialPosition'
+        'RadialPos'
 
         >>> cx.SphericalVelocity.integral_cls.__name__
-        'SphericalPosition'
+        'SphericalPos'
 
         """
         raise NotImplementedError
@@ -149,7 +149,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         *args, **kwargs : Any
             Extra arguments. These are passed to `coordinax.represent_as` and
             might be used, depending on the dispatched method. Generally the
-            first argument is the position (`coordinax.AbstractPosition`) at
+            first argument is the position (`coordinax.AbstractPos`) at
             which the velocity is defined. In general this is a required
             argument, though it is not for Cartesian-to-Cartesian transforms --
             see https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates
@@ -163,7 +163,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> p = cx.CartesianVelocity3D.from_([4, 5, 6], "m/s")
         >>> sph = p.represent_as(cx.SphericalVelocity, q)
         >>> sph
@@ -181,7 +181,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         return represent_as(self, target, *args, **kwargs)
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, position: AbstractPosition, /) -> Quantity["speed"]:
+    def norm(self, position: AbstractPos, /) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, position).norm()
 
@@ -190,7 +190,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_vel_q(self: AbstractVelocity, other: Quantity["time"]) -> AbstractPosition:
+def _mul_vel_q(self: AbstractVelocity, other: Quantity["time"]) -> AbstractPos:
     """Multiply the vector by a time :class:`unxt.Quantity` to get a position.
 
     Examples
@@ -202,7 +202,7 @@ def _mul_vel_q(self: AbstractVelocity, other: Quantity["time"]) -> AbstractPosit
     >>> dr = cx.RadialVelocity(Quantity(1, "m/s"))
     >>> vec = dr * Quantity(2, "s")
     >>> vec
-    RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
+    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
     >>> vec.r
     Distance(Array(2., dtype=float32), unit='m')
 

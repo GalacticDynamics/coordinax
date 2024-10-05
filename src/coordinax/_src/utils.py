@@ -21,7 +21,7 @@ def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> v = cx.CartesianPosition2D(Quantity([1], "m"), Quantity([3, 4], "m"))
+    >>> v = cx.CartesianPos2D(Quantity([1], "m"), Quantity([3, 4], "m"))
     >>> v.x.shape
     (1,)
     >>> v.y.shape

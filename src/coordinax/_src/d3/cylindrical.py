@@ -1,7 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "CylindricalPosition",
+    "CylindricalPos",
     "CylindricalVelocity",
     "CylindricalAcceleration",
 ]
@@ -16,14 +16,14 @@ import quaxed.numpy as xp
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
+from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVelocity3D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
 
 @final
-class CylindricalPosition(AbstractPosition3D):
+class CylindricalPos(AbstractPos3D):
     """Cylindrical vector representation.
 
     This adheres to ISO standard 31-11.
@@ -67,7 +67,7 @@ class CylindricalPosition(AbstractPosition3D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> c = cx.CylindricalPosition(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
+        >>> c = cx.CylindricalPos(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
         ...                       z=Quantity(4, "kpc"))
         >>> c.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
@@ -97,8 +97,8 @@ class CylindricalVelocity(AbstractVelocity3D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CylindricalPosition]:
-        return CylindricalPosition
+    def integral_cls(cls) -> type[CylindricalPos]:
+        return CylindricalPos
 
     @classproperty
     @classmethod

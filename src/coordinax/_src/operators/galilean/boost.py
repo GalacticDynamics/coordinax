@@ -15,7 +15,7 @@ import quaxed.numpy as jnp
 from unxt import Quantity
 
 from .base import AbstractGalileanOperator
-from coordinax._src.d3.base import AbstractPosition3D
+from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianVelocity3D
 from coordinax._src.d4.spacetime import FourVector
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
@@ -118,8 +118,8 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanBoostOperator", q: AbstractPosition3D, t: Quantity["time"], /
-    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
+        self: "GalileanBoostOperator", q: AbstractPos3D, t: Quantity["time"], /
+    ) -> tuple[AbstractPos3D, Quantity["time"]]:
         """Apply the boost to the coordinates.
 
         Examples
@@ -129,7 +129,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
 
-        >>> q = cx.CartesianPosition3D.from_([0, 0, 0], "m")
+        >>> q = cx.CartesianPos3D.from_([0, 0, 0], "m")
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newt

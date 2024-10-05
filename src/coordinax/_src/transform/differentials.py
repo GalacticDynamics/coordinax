@@ -14,7 +14,7 @@ import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
-from coordinax._src.base import AbstractPosition, AbstractVelocity
+from coordinax._src.base import AbstractPos, AbstractVelocity
 from coordinax._src.d1.base import AbstractVelocity1D
 from coordinax._src.d2.base import AbstractVelocity2D
 from coordinax._src.d3.base import AbstractVelocity3D
@@ -26,23 +26,23 @@ from coordinax._src.d3.base import AbstractVelocity3D
     (
         AbstractVelocity1D,
         type[AbstractVelocity1D],
-        AbstractPosition | Quantity["length"],
+        AbstractPos | Quantity["length"],
     ),
     (
         AbstractVelocity2D,
         type[AbstractVelocity2D],
-        AbstractPosition | Quantity["length"],
+        AbstractPos | Quantity["length"],
     ),
     (
         AbstractVelocity3D,
         type[AbstractVelocity3D],
-        AbstractPosition | Quantity["length"],
+        AbstractPos | Quantity["length"],
     ),
 )
 def represent_as(
     current: AbstractVelocity,
     target: type[AbstractVelocity],
-    position: AbstractPosition | Quantity["length"],
+    position: AbstractPos | Quantity["length"],
     /,
     **kwargs: Any,
 ) -> AbstractVelocity:
@@ -56,7 +56,7 @@ def represent_as(
         The vector differential to transform.
     target : type[AbstractVelocity]
         The target type of the vector differential.
-    position : AbstractPosition
+    position : AbstractPos
         The position vector used to transform the differential.
     **kwargs : Any
         Additional keyword arguments.
@@ -68,14 +68,14 @@ def represent_as(
 
     Let's start in 1D:
 
-    >>> q = cx.CartesianPosition1D(x=Quantity(1.0, "km"))
+    >>> q = cx.CartesianPos1D(x=Quantity(1.0, "km"))
     >>> p = cx.CartesianVelocity1D(d_x=Quantity(1.0, "km/s"))
     >>> cx.represent_as(p, cx.RadialVelocity, q)
     RadialVelocity( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 
     Now in 2D:
 
-    >>> q = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
+    >>> q = cx.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> p = cx.CartesianVelocity2D.from_([1.0, 2.0], "km/s")
     >>> cx.represent_as(p, cx.PolarVelocity, q)
     PolarVelocity(
@@ -85,7 +85,7 @@ def represent_as(
 
     And in 3D:
 
-    >>> q = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
+    >>> q = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> p = cx.CartesianVelocity3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> cx.represent_as(p, cx.SphericalVelocity, q)
     SphericalVelocity(
@@ -110,8 +110,8 @@ def represent_as(
     shape = current.shape
     flat_shape = prod(shape)
 
-    # Parse the position to an AbstractPosition
-    if isinstance(position, AbstractPosition):
+    # Parse the position to an AbstractPos
+    if isinstance(position, AbstractPos):
         posvec = position
     else:  # Q -> Cart<X>D
         posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001

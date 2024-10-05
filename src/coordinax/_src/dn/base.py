@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPositionND", "AbstractVelocityND", "AbstractAccelerationND"]
+__all__ = ["AbstractPosND", "AbstractVelocityND", "AbstractAccelerationND"]
 
 
 from abc import abstractmethod
@@ -14,7 +14,7 @@ import quaxed.numpy as jnp
 
 from coordinax._src.base import (
     AbstractAcceleration,
-    AbstractPosition,
+    AbstractPos,
     AbstractVector,
     AbstractVelocity,
 )
@@ -24,15 +24,15 @@ if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class AbstractPositionND(AbstractPosition):
+class AbstractPosND(AbstractPos):
     """Abstract representation of N-D coordinates in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianPositionND
+        from .cartesian import CartesianPosND
 
-        return CartesianPositionND
+        return CartesianPosND
 
     @classproperty
     @classmethod
@@ -55,8 +55,8 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPositionND(Quantity([[[1, 2, 3]],
-        ...                                        [[4, 5, 6]]], "m"))
+        >>> vec = cx.CartesianPosND(Quantity([[[1, 2, 3]],
+        ...                                   [[4, 5, 6]]], "m"))
         >>> vec.shape
         (2, 1)
 
@@ -84,7 +84,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPosND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -99,7 +99,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPosND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -121,7 +121,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPosND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -138,7 +138,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[1, 2], [3, 4]], "m")
+        >>> vec = cx.CartesianPosND.from_([[1, 2], [3, 4]], "m")
         >>> vec.shape
         (2,)
 
@@ -174,7 +174,7 @@ class AbstractVelocityND(AbstractVelocity):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPositionND]:
+    def integral_cls(cls) -> type[AbstractPosND]:
         """Get the integral class."""
         raise NotImplementedError
 
