@@ -10,18 +10,16 @@ import quaxed.numpy as xp
 from unxt import Quantity
 
 from .base import AbstractPosition3D, AbstractVelocity3D
+from .base_spherical import AbstractSphericalPosition
 from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVelocity3D
 from .cylindrical import CylindricalPosition, CylindricalVelocity
-from .spherical import (
-    AbstractSphericalPosition,
+from .lonlatspherical import (
     LonCosLatSphericalVelocity,
     LonLatSphericalPosition,
     LonLatSphericalVelocity,
-    MathSphericalPosition,
-    MathSphericalVelocity,
-    SphericalPosition,
-    SphericalVelocity,
 )
+from .mathspherical import MathSphericalPosition, MathSphericalVelocity
+from .spherical import SphericalPosition, SphericalVelocity
 from coordinax._src.base import AbstractPosition
 
 ###############################################################################
