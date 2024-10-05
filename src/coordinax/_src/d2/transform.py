@@ -8,42 +8,42 @@ from plum import dispatch
 
 import quaxed.numpy as xp
 
-from .base import AbstractPosition2D, AbstractVelocity2D
-from .cartesian import CartesianAcceleration2D, CartesianPosition2D, CartesianVelocity2D
-from .polar import PolarPosition, PolarVelocity
-from coordinax._src.base import AbstractPosition
+from .base import AbstractPos2D, AbstractVelocity2D
+from .cartesian import CartesianAcceleration2D, CartesianPos2D, CartesianVelocity2D
+from .polar import PolarPos, PolarVelocity
+from coordinax._src.base import AbstractPos
 
 
 @dispatch
 def represent_as(
-    current: AbstractPosition2D, target: type[AbstractPosition2D], /, **kwargs: Any
-) -> AbstractPosition2D:
-    """AbstractPosition2D -> Cartesian2D -> AbstractPosition2D.
+    current: AbstractPos2D, target: type[AbstractPos2D], /, **kwargs: Any
+) -> AbstractPos2D:
+    """AbstractPos2D -> Cartesian2D -> AbstractPos2D.
 
     This is the base case for the transformation of 2D vectors.
     """
-    return represent_as(represent_as(current, CartesianPosition2D), target)
+    return represent_as(represent_as(current, CartesianPos2D), target)
 
 
 @dispatch.multi(
-    (CartesianPosition2D, type[CartesianPosition2D]),
-    (PolarPosition, type[PolarPosition]),
+    (CartesianPos2D, type[CartesianPos2D]),
+    (PolarPos, type[PolarPos]),
 )
 def represent_as(
-    current: AbstractPosition2D, target: type[AbstractPosition2D], /, **kwargs: Any
-) -> AbstractPosition2D:
+    current: AbstractPos2D, target: type[AbstractPos2D], /, **kwargs: Any
+) -> AbstractPos2D:
     """Self transform of 2D vectors."""
     return current
 
 
 @dispatch.multi(
-    (CartesianVelocity2D, type[CartesianVelocity2D], AbstractPosition),
-    (PolarVelocity, type[PolarVelocity], AbstractPosition),
+    (CartesianVelocity2D, type[CartesianVelocity2D], AbstractPos),
+    (PolarVelocity, type[PolarVelocity], AbstractPos),
 )
 def represent_as(
     current: AbstractVelocity2D,
     target: type[AbstractVelocity2D],
-    position: AbstractPosition,
+    position: AbstractPos,
     /,
     **kwargs: Any,
 ) -> AbstractVelocity2D:
@@ -52,14 +52,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianPosition2D
+# CartesianPos2D
 
 
 @dispatch
 def represent_as(
-    current: CartesianPosition2D, target: type[PolarPosition], /, **kwargs: Any
-) -> PolarPosition:
-    """CartesianPosition2D -> PolarPosition.
+    current: CartesianPos2D, target: type[PolarPos], /, **kwargs: Any
+) -> PolarPos:
+    """CartesianPos2D -> PolarPos.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r` and
     the angular coordinate `phi`.
@@ -70,14 +70,14 @@ def represent_as(
 
 
 # =============================================================================
-# PolarPosition
+# PolarPos
 
 
 @dispatch
 def represent_as(
-    current: PolarPosition, target: type[CartesianPosition2D], /, **kwargs: Any
-) -> CartesianPosition2D:
-    """PolarPosition -> CartesianPosition2D."""
+    current: PolarPos, target: type[CartesianPos2D], /, **kwargs: Any
+) -> CartesianPos2D:
+    """PolarPos -> CartesianPos2D."""
     x = current.r.distance * xp.cos(current.phi)
     y = current.r.distance * xp.sin(current.phi)
     return target(x=x, y=y)

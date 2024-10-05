@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .cartesian import CartesianAccelerationND, CartesianPositionND, CartesianVelocityND
+from .cartesian import CartesianAccelerationND, CartesianPosND, CartesianVelocityND
 from .poincare import PoincarePolarVector
 
 ###############################################################################
@@ -15,18 +15,18 @@ from .poincare import PoincarePolarVector
 
 @dispatch
 def represent_as(
-    current: CartesianPositionND, target: type[CartesianPositionND], /, **kwargs: Any
-) -> CartesianPositionND:
-    """CartesianPositionND -> CartesianPositionND.
+    current: CartesianPosND, target: type[CartesianPosND], /, **kwargs: Any
+) -> CartesianPosND:
+    """CartesianPosND -> CartesianPosND.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> from unxt import Quantity
 
-    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = cx.CartesianPosND(Quantity([1, 2, 3, 4], "kpc"))
 
-    >>> cx.represent_as(q, cx.CartesianPositionND) is q
+    >>> cx.represent_as(q, cx.CartesianPosND) is q
     True
 
     """
@@ -37,7 +37,7 @@ def represent_as(
 def represent_as(
     current: CartesianVelocityND,
     target: type[CartesianVelocityND],
-    position: CartesianPositionND,
+    position: CartesianPosND,
     /,
     **kwargs: Any,
 ) -> CartesianVelocityND:
@@ -48,7 +48,7 @@ def represent_as(
     >>> import coordinax as cx
     >>> from unxt import Quantity
 
-    >>> x = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "km"))
+    >>> x = cx.CartesianPosND(Quantity([1, 2, 3, 4], "km"))
     >>> v = cx.CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
 
     >>> cx.represent_as(v, cx.CartesianVelocityND, x) is v

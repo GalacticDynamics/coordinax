@@ -1,7 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "TwoSpherePosition",
+    "TwoSpherePos",
     "TwoSphereVelocity",
     "TwoSphereAcceleration",
 ]
@@ -15,16 +15,16 @@ import equinox as eqx
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
+from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVelocity2D
 from coordinax._src.checks import check_azimuth_range, check_polar_range
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
 
-# TODO: should this be named TwoSphericalPosition or S(phere)(ical)2Position
+# TODO: should this be named TwoSphericalPos or S(phere)(ical)2Pos
 @final
-class TwoSpherePosition(AbstractPosition2D):
-    r"""Position on the 2-Sphere.
+class TwoSpherePos(AbstractPos2D):
+    r"""Pos on the 2-Sphere.
 
     The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
     It is a two-dimensional surface embedded in three-dimensional space, defined
@@ -46,7 +46,7 @@ class TwoSpherePosition(AbstractPosition2D):
 
     See Also
     --------
-    `coordinax.SphericalPosition`
+    `coordinax.SphericalPos`
         The counterpart in $R^3$, adding the polar distance coordinate $r$.
 
     Examples
@@ -56,7 +56,7 @@ class TwoSpherePosition(AbstractPosition2D):
 
     We can construct a 2-spherical coordinate:
 
-    >>> s2 = cx.TwoSpherePosition(theta=Quantity(0, "deg"), phi=Quantity(180, "deg"))
+    >>> s2 = cx.TwoSpherePos(theta=Quantity(0, "deg"), phi=Quantity(180, "deg"))
 
     This coordinate has corresponding velocity class:
 
@@ -132,7 +132,7 @@ class TwoSphereVelocity(AbstractVelocity2D):
     This coordinate has corresponding position and acceleration class:
 
     >>> s2.integral_cls
-    <class 'coordinax._src.d2.spherical.TwoSpherePosition'>
+    <class 'coordinax._src.d2.spherical.TwoSpherePos'>
 
     >>> s2.differential_cls
     <class 'coordinax._src.d2.spherical.TwoSphereAcceleration'>
@@ -152,8 +152,8 @@ class TwoSphereVelocity(AbstractVelocity2D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[TwoSpherePosition]:
-        return TwoSpherePosition
+    def integral_cls(cls) -> type[TwoSpherePos]:
+        return TwoSpherePos
 
     @override
     @classproperty

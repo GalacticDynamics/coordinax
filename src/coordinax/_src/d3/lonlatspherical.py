@@ -1,7 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "LonLatSphericalPosition",
+    "LonLatSphericalPos",
     "LonLatSphericalVelocity",
     "LonLatSphericalAcceleration",
     "LonCosLatSphericalVelocity",
@@ -21,7 +21,7 @@ from unxt import AbstractDistance, Distance, Quantity
 import coordinax._src.typing as ct
 from .base_spherical import (
     AbstractSphericalAcceleration,
-    AbstractSphericalPosition,
+    AbstractSphericalPos,
     AbstractSphericalVelocity,
     _90d,
     _180d,
@@ -36,7 +36,7 @@ from coordinax._src.utils import classproperty
 
 
 @final
-class LonLatSphericalPosition(AbstractSphericalPosition):
+class LonLatSphericalPos(AbstractSphericalPos):
     """Spherical vector representation.
 
     .. note::
@@ -57,9 +57,9 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
+    >>> cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
     ...                          distance=Quantity(3, "kpc"))
-    LonLatSphericalPosition(
+    LonLatSphericalPos(
       lon=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       lat=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
@@ -69,7 +69,7 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.LonLatSphericalPosition(lon=Quantity(365, "deg"),
+    >>> vec = cx.LonLatSphericalPos(lon=Quantity(365, "deg"),
     ...                                lat=Quantity(90, "deg"),
     ...                                distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -80,7 +80,7 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(100, "deg"),
+    ...     cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(100, "deg"),
     ...                              distance=Quantity(3, "kpc"))
     ... except Exception as e:
     ...     print(e)
@@ -91,7 +91,7 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPosition(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
+    ...     cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
     ...                              distance=Quantity(-3, "kpc"))
     ... except Exception as e:
     ...     print(e)
@@ -137,7 +137,7 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> s = cx.LonLatSphericalPosition(lon=Quantity(0, "deg"),
+        >>> s = cx.LonLatSphericalPos(lon=Quantity(0, "deg"),
         ...                                lat=Quantity(90, "deg"),
         ...                                distance=Quantity(3, "kpc"))
         >>> s.norm()
@@ -147,15 +147,15 @@ class LonLatSphericalPosition(AbstractSphericalPosition):
         return self.distance
 
 
-@LonLatSphericalPosition.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@LonLatSphericalPos.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
-    cls: type[LonLatSphericalPosition],
+    cls: type[LonLatSphericalPos],
     *,
     lon: Quantity["angle"],
     lat: Quantity["angle"],
     distance: Distance,
-) -> LonLatSphericalPosition:
-    """Construct LonLatSphericalPosition, allowing for out-of-range values.
+) -> LonLatSphericalPos:
+    """Construct LonLatSphericalPos, allowing for out-of-range values.
 
     Examples
     --------
@@ -163,10 +163,10 @@ def constructor(
 
     Let's start with a valid input:
 
-    >>> cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
+    >>> cx.LonLatSphericalPos.constructor(lon=Quantity(0, "deg"),
     ...                                      lat=Quantity(0, "deg"),
     ...                                      distance=Quantity(3, "kpc"))
-    LonLatSphericalPosition(
+    LonLatSphericalPos(
       lon=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       lat=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
@@ -175,7 +175,7 @@ def constructor(
     The distance can be negative, which wraps the longitude by 180 degrees and
     flips the latitude:
 
-    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
+    >>> vec = cx.LonLatSphericalPos.constructor(lon=Quantity(0, "deg"),
     ...                                              lat=Quantity(45, "deg"),
     ...                                              distance=Quantity(-3, "kpc"))
     >>> vec.lon
@@ -188,7 +188,7 @@ def constructor(
     The latitude can be outside the [-90, 90] deg range, causing the longitude
     to be shifted by 180 degrees:
 
-    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
+    >>> vec = cx.LonLatSphericalPos.constructor(lon=Quantity(0, "deg"),
     ...                                              lat=Quantity(-100, "deg"),
     ...                                              distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -198,7 +198,7 @@ def constructor(
     >>> vec.distance
     Distance(Array(3., dtype=float32), unit='kpc')
 
-    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(0, "deg"),
+    >>> vec = cx.LonLatSphericalPos.constructor(lon=Quantity(0, "deg"),
     ...                                              lat=Quantity(100, "deg"),
     ...                                              distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -211,7 +211,7 @@ def constructor(
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cx.LonLatSphericalPosition.constructor(lon=Quantity(365, "deg"),
+    >>> vec = cx.LonLatSphericalPos.constructor(lon=Quantity(365, "deg"),
     ...                                              lat=Quantity(0, "deg"),
     ...                                              distance=Quantity(3, "kpc"))
     >>> vec.lon
@@ -219,7 +219,7 @@ def constructor(
 
     """
     # 1) Convert the inputs
-    fields = LonLatSphericalPosition.__dataclass_fields__
+    fields = LonLatSphericalPos.__dataclass_fields__
     lon = fields["lon"].metadata["converter"](lon)
     lat = fields["lat"].metadata["converter"](lat)
     distance = fields["distance"].metadata["converter"](distance)
@@ -268,8 +268,8 @@ class LonLatSphericalVelocity(AbstractSphericalVelocity):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalPosition]:
-        return LonLatSphericalPosition
+    def integral_cls(cls) -> type[LonLatSphericalPos]:
+        return LonLatSphericalPos
 
     @classproperty
     @classmethod
@@ -298,8 +298,8 @@ class LonCosLatSphericalVelocity(AbstractSphericalVelocity):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalPosition]:
-        return LonLatSphericalPosition
+    def integral_cls(cls) -> type[LonLatSphericalPos]:
+        return LonLatSphericalPos
 
     @classproperty
     @classmethod
