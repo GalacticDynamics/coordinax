@@ -19,7 +19,8 @@ from coordinax._src.d2.polar import PolarPosition
 from coordinax._src.d3.base import AbstractPosition3D
 from coordinax._src.d3.cartesian import CartesianPosition3D
 from coordinax._src.d3.cylindrical import CylindricalPosition
-from coordinax._src.d3.spherical import MathSphericalPosition, SphericalPosition
+from coordinax._src.d3.mathspherical import MathSphericalPosition
+from coordinax._src.d3.spherical import SphericalPosition
 from coordinax._src.exceptions import IrreversibleDimensionChange
 
 
