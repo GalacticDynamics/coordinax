@@ -1,9 +1,10 @@
-[build-system]
-  build-backend = "hatchling.build"
-  requires = ["hatchling", "hatch-vcs"]
-
-
 [project]
+  name = "coordinax"
+  dynamic = ["version"]
+  description = "Coordinates in JAX"
+  readme = "README.md"
+  license.file = "LICENSE"
+  requires-python = ">=3.10"
   authors = [
     { name = "Nathaniel Starkman", email = "nstarman@users.noreply.github.com" },
   ]
@@ -23,25 +24,19 @@
     "Typing :: Typed",
   ]
   dependencies = [
-    "astropy",
-    "dataclassish",
-    "equinox",
-    "xmmutablemap",
-    "jax",
-    "jaxlib",
-    "jaxtyping",
-    "optional_dependencies >= 0.3",
-    "plum-dispatch >= 2.5",
-    "quax >= 0.0.4",
-    "quaxed >= 0.6",
-    "unxt >= 0.16",
+    "astropy>=6.1.4",
+    "dataclassish>=0.3.1",
+    "equinox>=0.11.7",
+    "jax>=0.4.34",
+    "jaxlib>=0.4.34",
+    "jaxtyping>=0.2.34",
+    "optional-dependencies>=0.3.2",
+    "plum-dispatch>=2.5.2",
+    "quax>=0.0.5",
+    "quaxed>=0.6.4",
+    "unxt>=0.17.0",
+    "xmmutablemap>=0.1",
   ]
-  description = "Coordinates in JAX"
-  dynamic = ["version"]
-  license.file = "LICENSE"
-  name = "coordinax"
-  readme = "README.md"
-  requires-python = ">=3.10"
 
   [project.optional-dependencies]
     all = ["coordinax[docs]", "coordinax[dev]", "coordinax[test]"]
@@ -69,42 +64,15 @@
     Discussions = "https://github.com/GalacticDynamics/coordinax/discussions"
     Homepage = "https://github.com/GalacticDynamics/coordinax"
 
+[build-system]
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
 
 [tool.hatch]
   build.hooks.vcs.version-file = "src/coordinax/_version.py"
   metadata.allow-direct-references = true
   version.source = "vcs"
-
-
-  [tool.hatch.env.default]
-    features = ["test"]
-    scripts.test = "pytest {args}"
-
-
-[tool.pytest.ini_options]
-  addopts = [
-    "-ra",
-    "--arraydiff",
-    "--showlocals",
-    "--strict-markers",
-    "--strict-config",
-    "--doctest-glob='*.rst | *.py'",
-  ]
-  filterwarnings = [
-    "error",
-    "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",  # from Sybil
-    "ignore:Attribute s is deprecated and will be removed in Python 3\\.14:DeprecationWarning",  # from Sybil
-    "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available",
-    "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
-  ]
-  log_cli_level = "INFO"
-  minversion = "6.0"
-  testpaths = ["tests"]
-  xfail_strict = true
-
-  env = [
-    "COORDINAX_ENABLE_RUNTIME_TYPECHECKS=1",
-  ]
 
 
 [tool.coverage]
@@ -122,6 +90,7 @@
       '@abc.abstractmethod',
       '@abstractmethod',
     ]
+
 
 [tool.mypy]
   disable_error_code = [
@@ -158,6 +127,68 @@
       "quax.*",
     ]
 
+
+[tool.pylint]
+  ignore-paths = [".*/_version.py"]
+  messages_control.disable = [
+    "abstract-method",            # pylint doesn't like ABC hierarchies
+    "arguments-differ",           # plum-dispatch
+    "cyclic-import",              # broken?
+    "design",
+    "duplicate-code",
+    "import-outside-toplevel",    # handled by ruff
+    "fixme",
+    "function-redefined",         # plum-dispatch
+    "invalid-name",               # handled by ruff
+    "invalid-unary-operand-type", # pylint doesn't understand dataclass fields
+    "isinstance-second-argument-not-valid-type", # pylint doesn't understand _cartesian_cls
+    "line-too-long",
+    "missing-function-docstring", # TODO: resolve
+    "missing-kwoa",               # plum-dispatch
+    "missing-module-docstring",
+    "no-member",                  # handled by mypy
+    "no-value-for-parameter",     # pylint doesn't understand multiple dispatch
+    "not-a-mapping",              # pylint doesn't understand dataclass fields
+    "protected-access",           # handled by ruff
+    "redefined-builtin",          # handled by ruff
+    "too-many-function-args",     # plum-dispatch
+    "unexpected-keyword-arg",     # plum-dispatch
+    "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
+    "unsubscriptable-object",     # handled by mypy
+    "unused-argument",            # handled by ruff
+    "wrong-import-position",
+    "wrong-import-order",         # handled by ruff
+  ]
+  py-version = "3.10"
+  reports.output-format = "colorized"
+  similarities.ignore-imports = "yes"
+  max-module-lines = 1500
+
+
+[tool.pytest.ini_options]
+  addopts = [
+    "-ra",
+    "--arraydiff",
+    "--showlocals",
+    "--strict-markers",
+    "--strict-config",
+    "--doctest-glob='*.rst | *.py'",
+  ]
+  filterwarnings = [
+    "error",
+    "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",  # from Sybil
+    "ignore:Attribute s is deprecated and will be removed in Python 3\\.14:DeprecationWarning",  # from Sybil
+    "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available",
+    "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
+  ]
+  log_cli_level = "INFO"
+  minversion = "6.0"
+  testpaths = ["tests"]
+  xfail_strict = true
+
+  env = [
+    "COORDINAX_ENABLE_RUNTIME_TYPECHECKS=1",
+  ]
 
 [tool.ruff]
   [tool.ruff.lint]
@@ -203,39 +234,10 @@
       known-first-party = ["dataclassish", "optional_dependencies", "quaxed", "unxt", "xmmutablemap"]
       known-local-folder = ["coordinax"]
 
-
-[tool.pylint]
-  ignore-paths = [".*/_version.py"]
-  messages_control.disable = [
-    "abstract-method",            # pylint doesn't like ABC hierarchies
-    "arguments-differ",           # plum-dispatch
-    "cyclic-import",              # broken?
-    "design",
-    "duplicate-code",
-    "import-outside-toplevel",    # handled by ruff
-    "fixme",
-    "function-redefined",         # plum-dispatch
-    "invalid-name",               # handled by ruff
-    "invalid-unary-operand-type", # pylint doesn't understand dataclass fields
-    "isinstance-second-argument-not-valid-type", # pylint doesn't understand _cartesian_cls
-    "line-too-long",
-    "missing-function-docstring", # TODO: resolve
-    "missing-kwoa",               # plum-dispatch
-    "missing-module-docstring",
-    "no-member",                  # handled by mypy
-    "no-value-for-parameter",     # pylint doesn't understand multiple dispatch
-    "not-a-mapping",              # pylint doesn't understand dataclass fields
-    "protected-access",           # handled by ruff
-    "redefined-builtin",          # handled by ruff
-    "too-many-function-args",     # plum-dispatch
-    "unexpected-keyword-arg",     # plum-dispatch
-    "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
-    "unsubscriptable-object",     # handled by mypy
-    "unused-argument",            # handled by ruff
-    "wrong-import-position",
-    "wrong-import-order",         # handled by ruff
-  ]
-  py-version = "3.10"
-  reports.output-format = "colorized"
-  similarities.ignore-imports = "yes"
-  max-module-lines = 1500
+[tool.uv]
+dev-dependencies = [
+    "pytest-arraydiff>=0.6.1",
+    "pytest-env>=1.1.5",
+    "pytest>=8.3.3",
+    "sybil>=8.0.0",
+]
