@@ -8,12 +8,12 @@ __all__ = [
     "AbstractPos",
     # Vel
     "AbstractVel",
-    # Acceleration
-    "AbstractAcceleration",
+    # Acc
+    "AbstractAcc",
 ]
 
 from .base import AbstractVector, ToUnitsOptions
-from .base_acc import AbstractAcceleration
+from .base_acc import AbstractAcc
 from .base_pos import AbstractPos
 from .base_vel import AbstractVel
 

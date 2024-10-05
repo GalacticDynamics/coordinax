@@ -3,7 +3,7 @@
 __all__ = [
     "MathSphericalPos",
     "MathSphericalVel",
-    "MathSphericalAcceleration",
+    "MathSphericalAcc",
 ]
 
 from functools import partial
@@ -23,7 +23,7 @@ from unxt import AbstractDistance, AbstractQuantity, Distance, Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
-    AbstractSphericalAcceleration,
+    AbstractSphericalAcc,
     AbstractSphericalPos,
     AbstractSphericalVel,
     _180d,
@@ -255,15 +255,15 @@ class MathSphericalVel(AbstractSphericalVel):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["MathSphericalAcceleration"]:
-        return MathSphericalAcceleration
+    def differential_cls(cls) -> type["MathSphericalAcc"]:
+        return MathSphericalAcc
 
 
 ##############################################################################
 
 
 @final
-class MathSphericalAcceleration(AbstractSphericalAcceleration):
+class MathSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(

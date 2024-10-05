@@ -3,7 +3,7 @@
 __all__ = [
     "CartesianPos3D",
     "CartesianVel3D",
-    "CartesianAcceleration3D",
+    "CartesianAcc3D",
 ]
 
 from dataclasses import fields, replace
@@ -23,7 +23,7 @@ from dataclassish import field_items
 from unxt import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVel3D
+from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .generic import CartesianGeneric3D
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
@@ -220,8 +220,8 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAcceleration3D"]:
-        return CartesianAcceleration3D
+    def differential_cls(cls) -> type["CartesianAcc3D"]:
+        return CartesianAcc3D
 
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPos3D | None = None, /) -> ct.BatchableSpeed:
@@ -305,11 +305,11 @@ def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
 
 
 #####################################################################
-# Acceleration
+# Acc
 
 
 @final
-class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
+class CartesianAcc3D(AvalMixin, AbstractAcc3D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableSpeed = eqx.field(
@@ -344,7 +344,7 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> c = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
+        >>> c = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
         >>> c.norm()
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
@@ -355,10 +355,10 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
 # -----------------------------------------------------
 
 
-@CartesianAcceleration3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@CartesianAcc3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
-    cls: type[CartesianAcceleration3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
-) -> CartesianAcceleration3D:
+    cls: type[CartesianAcc3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
+) -> CartesianAcc3D:
     """Construct a 3D Cartesian acceleration.
 
     Examples
@@ -366,9 +366,9 @@ def from_(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcceleration3D.from_(Quantity([1, 2, 3], "m/s2"))
+    >>> vec = cx.CartesianAcc3D.from_(Quantity([1, 2, 3], "m/s2"))
     >>> vec
-    CartesianAcceleration3D(
+    CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
       d2_y=Quantity[...](value=f32[], unit=Unit("m / s2")),
       d2_z=Quantity[...](value=f32[], unit=Unit("m / s2"))
@@ -384,9 +384,7 @@ def from_(
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_aa(
-    lhs: CartesianAcceleration3D, rhs: CartesianAcceleration3D, /
-) -> CartesianAcceleration3D:
+def _add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
     """Add two Cartesian accelerations."""
     return jax.tree.map(qlax.add, lhs, rhs)
 
@@ -416,8 +414,6 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_a3_a3(
-    lhs: CartesianAcceleration3D, rhs: CartesianAcceleration3D, /
-) -> CartesianAcceleration3D:
+def _sub_a3_a3(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
     """Subtract two accelerations."""
     return jax.tree.map(qlax.sub, lhs, rhs)

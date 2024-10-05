@@ -3,7 +3,7 @@
 __all__ = [
     "CartesianPos2D",
     "CartesianVel2D",
-    "CartesianAcceleration2D",
+    "CartesianAcc2D",
 ]
 
 from dataclasses import fields, replace
@@ -21,7 +21,7 @@ from quaxed import lax as qlax
 from unxt import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVel2D
+from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
@@ -181,8 +181,8 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAcceleration2D"]:
-        return CartesianAcceleration2D
+    def differential_cls(cls) -> type["CartesianAcc2D"]:
+        return CartesianAcc2D
 
 
 # -----------------------------------------------------
@@ -266,7 +266,7 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
 
 
 @final
-class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
+class CartesianAcc2D(AvalMixin, AbstractAcc2D):
     """Cartesian acceleration representation."""
 
     d2_x: ct.BatchableSpeed = eqx.field(
@@ -295,7 +295,7 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> v = cx.CartesianAcceleration2D.from_([3, 4], "km/s2")
+        >>> v = cx.CartesianAcc2D.from_([3, 4], "km/s2")
         >>> v.norm()
         Quantity['acceleration'](Array(5., dtype=float32), unit='km / s2')
 
@@ -306,12 +306,8 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 # -----------------------------------------------------
 
 
-@CartesianAcceleration2D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def from_(
-    cls: type[CartesianAcceleration2D],
-    obj: AbstractQuantity,
-    /,
-) -> CartesianAcceleration2D:
+@CartesianAcc2D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(cls: type[CartesianAcc2D], obj: AbstractQuantity, /) -> CartesianAcc2D:
     """Construct a 2D Cartesian velocity.
 
     Examples
@@ -319,9 +315,9 @@ def from_(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcceleration2D.from_(Quantity([1, 2], "m/s2"))
+    >>> vec = cx.CartesianAcc2D.from_(Quantity([1, 2], "m/s2"))
     >>> vec
-    CartesianAcceleration2D(
+    CartesianAcc2D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
       d2_y=Quantity[...](value=f32[], unit=Unit("m / s2"))
     )
@@ -335,9 +331,7 @@ def from_(
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_aa(
-    lhs: CartesianAcceleration2D, rhs: CartesianAcceleration2D, /
-) -> CartesianAcceleration2D:
+def _add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     """Add two Cartesian accelerations.
 
     Examples
@@ -346,7 +340,7 @@ def _add_aa(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration2D.from_(Quantity([3, 4], "km/s2"))
+    >>> v = cx.CartesianAcc2D.from_([3, 4], "km/s2")
     >>> (v + v).d2_x
     Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
 
@@ -358,9 +352,7 @@ def _add_aa(
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_va(
-    lhs: ArrayLike, rhts: CartesianAcceleration2D, /
-) -> CartesianAcceleration2D:
+def _mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
     """Scale a cartesian 2D acceleration by a scalar.
 
     Examples
@@ -369,7 +361,7 @@ def _mul_va(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration2D.from_(Quantity([3, 4], "m/s2"))
+    >>> v = cx.CartesianAcc2D.from_([3, 4], "m/s2")
     >>> jnp.multiply(5, v).d2_x
     Quantity['acceleration'](Array(15., dtype=float32), unit='m / s2')
 

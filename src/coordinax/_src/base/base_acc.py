@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractAcceleration"]
+__all__ = ["AbstractAcc"]
 
 from abc import abstractmethod
 from functools import partial
@@ -25,12 +25,12 @@ from coordinax._src.utils import classproperty
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-AccT = TypeVar("AccT", bound="AbstractAcceleration")
+AccT = TypeVar("AccT", bound="AbstractAcc")
 
-ACCELERATION_CLASSES: set[type["AbstractAcceleration"]] = set()
+ACCELERATION_CLASSES: set[type["AbstractAcc"]] = set()
 
 
-class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
+class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -50,11 +50,11 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.CartesianAcceleration3D._cartesian_cls
-        <class 'coordinax...CartesianAcceleration3D'>
+        >>> cx.CartesianAcc3D._cartesian_cls
+        <class 'coordinax...CartesianAcc3D'>
 
-        >>> cx.SphericalAcceleration._cartesian_cls
-        <class 'coordinax...CartesianAcceleration3D'>
+        >>> cx.SphericalAcc._cartesian_cls
+        <class 'coordinax...CartesianAcc3D'>
 
         """
         # TODO: something nicer than this for getting the corresponding class
@@ -70,10 +70,10 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialAcceleration.integral_cls.__name__
+        >>> cx.RadialAcc.integral_cls.__name__
         'RadialVel'
 
-        >>> cx.SphericalAcceleration.integral_cls.__name__
+        >>> cx.SphericalAcc.integral_cls.__name__
         'SphericalVel'
 
         """
@@ -97,11 +97,11 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> d2r = cx.RadialAcceleration.from_([1], "m/s2")
+        >>> d2r = cx.RadialAcc.from_([1], "m/s2")
         >>> -d2r
-        RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+        RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
-        >>> d2p = cx.PolarAcceleration(Quantity(1, "m/s2"), Quantity(1, "mas/yr2"))
+        >>> d2p = cx.PolarAcc(Quantity(1, "m/s2"), Quantity(1, "mas/yr2"))
         >>> negd2p = -d2p
         >>> negd2p.d2_r
         Quantity['acceleration'](Array(-1., dtype=float32), unit='m / s2')
@@ -136,7 +136,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
         Returns
         -------
-        `coordinax.AbstractAcceleration`
+        `coordinax.AbstractAcc`
             The vector represented as the target type.
 
         Examples
@@ -144,10 +144,10 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         >>> import coordinax as cx
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
-        >>> a = cx.CartesianAcceleration3D.from_([7, 8, 9], "m/s2")
-        >>> sph = a.represent_as(cx.SphericalAcceleration, p, q)
+        >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+        >>> sph = a.represent_as(cx.SphericalAcc, p, q)
         >>> sph
-        SphericalAcceleration(
+        SphericalAcc(
             d2_r=Quantity[...](value=f32[], unit=Unit("m / s2")),
             d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
             d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
@@ -170,7 +170,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractVel:
+def _mul_acc_time(lhs: AbstractAcc, rhs: Quantity["time"]) -> AbstractVel:
     """Multiply the vector by a :class:`unxt.Quantity`.
 
     Examples
@@ -179,7 +179,7 @@ def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractV
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> d2r = cx.RadialAcc(Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, Quantity(2, "s"))
     >>> vec
     RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
@@ -197,7 +197,7 @@ def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractV
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractVel:
+def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcc) -> AbstractVel:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -206,7 +206,7 @@ def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractV
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> d2r = cx.RadialAcc(Quantity(1, "m/s2"))
     >>> vec = lax.mul(Quantity(2, "s"), d2r)
     >>> vec
     RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
@@ -218,7 +218,7 @@ def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractV
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_acc_time2(lhs: AbstractAcceleration, rhs: Quantity["s2"]) -> AbstractPos:
+def _mul_acc_time2(lhs: AbstractAcc, rhs: Quantity["s2"]) -> AbstractPos:
     """Multiply an acceleration by a scalar.
 
     Examples
@@ -227,7 +227,7 @@ def _mul_acc_time2(lhs: AbstractAcceleration, rhs: Quantity["s2"]) -> AbstractPo
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> d2r = cx.RadialAcc(Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, Quantity(2, "s2"))
     >>> vec
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))
@@ -245,7 +245,7 @@ def _mul_acc_time2(lhs: AbstractAcceleration, rhs: Quantity["s2"]) -> AbstractPo
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_time2_acc(lhs: Quantity["s2"], rhs: AbstractAcceleration) -> AbstractPos:
+def _mul_time2_acc(lhs: Quantity["s2"], rhs: AbstractAcc) -> AbstractPos:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -254,7 +254,7 @@ def _mul_time2_acc(lhs: Quantity["s2"], rhs: AbstractAcceleration) -> AbstractPo
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
+    >>> d2r = cx.RadialAcc(Quantity(1, "m/s2"))
     >>> vec = lax.mul(Quantity(2, "s2"), d2r)
     >>> vec
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))

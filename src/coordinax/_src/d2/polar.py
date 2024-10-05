@@ -3,7 +3,7 @@
 __all__ = [
     "PolarPos",
     "PolarVel",
-    "PolarAcceleration",
+    "PolarAcc",
 ]
 
 from functools import partial
@@ -19,7 +19,7 @@ from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVel2D
+from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
@@ -119,12 +119,12 @@ class PolarVel(AbstractVel2D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarAcceleration"]:
-        return PolarAcceleration
+    def differential_cls(cls) -> type["PolarAcc"]:
+        return PolarAcc
 
 
 @final
-class PolarAcceleration(AbstractAcceleration2D):
+class PolarAcc(AbstractAcc2D):
     """Polar acceleration representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(

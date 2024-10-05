@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .cartesian import CartesianAccelerationND, CartesianPosND, CartesianVelND
+from .cartesian import CartesianAccND, CartesianPosND, CartesianVelND
 from .poincare import PoincarePolarVector
 
 ###############################################################################
@@ -87,14 +87,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianAccelerationND
+# CartesianAccND
 
 
 @dispatch
 def represent_as(
-    current: CartesianAccelerationND, target: type[CartesianAccelerationND], /
-) -> CartesianAccelerationND:
-    """CartesianAccelerationND -> CartesianAccelerationND with no position.
+    current: CartesianAccND, target: type[CartesianAccND], /
+) -> CartesianAccND:
+    """CartesianAccND -> CartesianAccND with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -106,8 +106,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAccelerationND.from_([1, 1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAccelerationND) is a
+    >>> a = cx.CartesianAccND.from_([1, 1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAccND) is a
     True
 
     """

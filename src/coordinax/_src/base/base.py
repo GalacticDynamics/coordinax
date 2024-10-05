@@ -350,8 +350,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.CartesianAcceleration1D(Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.CartesianAcceleration1D(Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.CartesianAcc1D(Quantity([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.CartesianAcc1D(Quantity([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
@@ -364,8 +364,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.RadialAcceleration(Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.RadialAcceleration(Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.RadialAcc(Quantity([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.RadialAcc(Quantity([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
@@ -380,8 +380,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> vel1 == vel2
         Array([ True, False], dtype=bool)
 
-        >>> acc1 = cx.CartesianAcceleration2D.from_([[1, 3], [2, 4]], "km/s2")
-        >>> acc2 = cx.CartesianAcceleration2D.from_([[1, 3], [0, 4]], "km/s2")
+        >>> acc1 = cx.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
+        >>> acc2 = cx.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
         >>> acc1.d2_x
         Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
         >>> jnp.equal(acc1, acc2)
@@ -919,7 +919,7 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     --------
     >>> import coordinax as cx
 
-    Poss:
+    Positions:
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
 
@@ -962,16 +962,16 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
 
     >>> p = cx.CartesianVel3D.from_([1, 1, 1], "km/s")
 
-    >>> cart = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
-    >>> cx.AbstractAcceleration3D.from_(cart) is cart
+    >>> cart = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> cx.AbstractAcc3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalAcceleration, p, q)
-    >>> cx.AbstractAcceleration3D.from_(sph) is sph
+    >>> sph = cart.represent_as(cx.SphericalAcc, p, q)
+    >>> cx.AbstractAcc3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalAcceleration, p, q)
-    >>> cx.AbstractAcceleration3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.CylindricalAcc, p, q)
+    >>> cx.AbstractAcc3D.from_(cyl) is cyl
     True
 
     """

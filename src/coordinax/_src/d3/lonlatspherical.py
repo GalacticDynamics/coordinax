@@ -3,7 +3,7 @@
 __all__ = [
     "LonLatSphericalPos",
     "LonLatSphericalVel",
-    "LonLatSphericalAcceleration",
+    "LonLatSphericalAcc",
     "LonCosLatSphericalVel",
 ]
 
@@ -20,7 +20,7 @@ from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
-    AbstractSphericalAcceleration,
+    AbstractSphericalAcc,
     AbstractSphericalPos,
     AbstractSphericalVel,
     _90d,
@@ -273,8 +273,8 @@ class LonLatSphericalVel(AbstractSphericalVel):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalAcceleration"]:
-        return LonLatSphericalAcceleration
+    def differential_cls(cls) -> type["LonLatSphericalAcc"]:
+        return LonLatSphericalAcc
 
 
 @final
@@ -303,15 +303,15 @@ class LonCosLatSphericalVel(AbstractSphericalVel):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalAcceleration"]:
-        return LonLatSphericalAcceleration
+    def differential_cls(cls) -> type["LonLatSphericalAcc"]:
+        return LonLatSphericalAcc
 
 
 ##############################################################################
 
 
 @final
-class LonLatSphericalAcceleration(AbstractSphericalAcceleration):
+class LonLatSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
     d2_lon: ct.BatchableAngularAcc = eqx.field(

@@ -19,7 +19,7 @@ import quaxed.numpy as jnp
 from unxt import Quantity, dimensions
 from xmmutablemap import ImmutableMap
 
-from .base import AbstractAcceleration, AbstractPos, AbstractVector, AbstractVel
+from .base import AbstractAcc, AbstractPos, AbstractVector, AbstractVel
 from .typing import Unit
 from .utils import classproperty
 from coordinax._src.funcs import represent_as
@@ -66,14 +66,14 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcceleration3D.from_([7, 8, 9], "km/s^2")
+    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> space
     Space({
         'length': CartesianPos3D( ... ),
         'speed': CartesianVel3D( ... ),
-        'acceleration': CartesianAcceleration3D( ... )}
+        'acceleration': CartesianAcc3D( ... )}
     )
 
     >>> space["length"]
@@ -83,14 +83,14 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
-        'acceleration': SphericalAcceleration( ... )}
+        'acceleration': SphericalAcc( ... )}
     )
 
     >>> cx.represent_as(space, cx.SphericalPos)
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
-        'acceleration': SphericalAcceleration( ... )}
+        'acceleration': SphericalAcc( ... )}
     )
 
     """  # noqa: E501
@@ -613,9 +613,9 @@ def temp_represent_as(
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_represent_as(
-    current: AbstractAcceleration, target: type[AbstractPos], space: Space, /
-) -> AbstractAcceleration:
-    """Transform of Accelerations."""
+    current: AbstractAcc, target: type[AbstractPos], space: Space, /
+) -> AbstractAcc:
+    """Transform of Accs."""
     return represent_as(
         current,
         target.differential_cls.differential_cls,

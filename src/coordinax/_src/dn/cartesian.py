@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = ["CartesianPosND", "CartesianVelND", "CartesianAccelerationND"]
+__all__ = ["CartesianPosND", "CartesianVelND", "CartesianAccND"]
 
 from dataclasses import replace
 from functools import partial
@@ -18,7 +18,7 @@ import quaxed.numpy as jnp
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAccelerationND, AbstractPosND, AbstractVelND
+from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
@@ -347,8 +347,8 @@ class CartesianVelND(AvalMixin, AbstractVelND):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAccelerationND"]:
-        return CartesianAccelerationND
+    def differential_cls(cls) -> type["CartesianAccND"]:
+        return CartesianAccND
 
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosND | None = None, /) -> ct.BatchableSpeed:
@@ -424,11 +424,11 @@ def from_(
 
 
 ##############################################################################
-# Acceleration
+# Acc
 
 
 @final
-class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
+class CartesianAccND(AvalMixin, AbstractAccND):
     """Cartesian N-dimensional acceleration representation.
 
     Examples
@@ -438,7 +438,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
     A 1D vector:
 
-    >>> q = cx.CartesianAccelerationND(Quantity([[1]], "km/s2"))
+    >>> q = cx.CartesianAccND(Quantity([[1]], "km/s2"))
     >>> q.d2_q
     Quantity['acceleration'](Array([[1.]], dtype=float32), unit='km / s2')
     >>> q.shape
@@ -446,7 +446,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
     A 2D vector:
 
-    >>> q = cx.CartesianAccelerationND(Quantity([1, 2], "km/s2"))
+    >>> q = cx.CartesianAccND(Quantity([1, 2], "km/s2"))
     >>> q.d2_q
     Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
     >>> q.shape
@@ -454,7 +454,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
     A 3D vector:
 
-    >>> q = cx.CartesianAccelerationND(Quantity([1, 2, 3], "km/s2"))
+    >>> q = cx.CartesianAccND(Quantity([1, 2, 3], "km/s2"))
     >>> q.d2_q
     Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
     >>> q.shape
@@ -462,7 +462,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
     A 4D vector:
 
-    >>> q = cx.CartesianAccelerationND(Quantity([1, 2, 3, 4], "km/s2"))
+    >>> q = cx.CartesianAccND(Quantity([1, 2, 3, 4], "km/s2"))
     >>> q.d2_q
     Quantity['acceleration'](Array([1., 2., 3., 4.], dtype=float32), unit='km / s2')
     >>> q.shape
@@ -470,7 +470,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
     A 5D vector:
 
-    >>> q = cx.CartesianAccelerationND(Quantity([1, 2, 3, 4, 5], "km/s2"))
+    >>> q = cx.CartesianAccND(Quantity([1, 2, 3, 4, 5], "km/s2"))
     >>> q.d2_q
     Quantity['acceleration'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='km / s2')
     >>> q.shape
@@ -496,7 +496,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
         Examples
         --------
         >>> import coordinax as cx
-        >>> cx.CartesianAccelerationND.integral_cls.__name__
+        >>> cx.CartesianAccND.integral_cls.__name__
         'CartesianVelND'
 
         """
@@ -510,7 +510,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
         Examples
         --------
         >>> import coordinax as cx
-        >>> try: cx.CartesianAccelerationND.differential_cls
+        >>> try: cx.CartesianAccND.differential_cls
         ... except NotImplementedError as e: print(e)
         Not yet supported
 
@@ -535,7 +535,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
         A 3D vector:
 
-        >>> c = cx.CartesianAccelerationND(Quantity([1, 2, 3], "km/s2"))
+        >>> c = cx.CartesianAccND(Quantity([1, 2, 3], "km/s2"))
         >>> c.norm()
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
@@ -547,13 +547,13 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianAccelerationND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianAccND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def from_(
-    cls: type[CartesianAccelerationND],
+    cls: type[CartesianAccND],
     x: Shaped[Quantity["acceleration"], ""]
     | Shaped[Quantity["acceleration"], "*batch N"],
     /,
-) -> CartesianAccelerationND:
+) -> CartesianAccND:
     """Construct an N-dimensional acceleration.
 
     Examples
@@ -563,34 +563,34 @@ def from_(
 
     1D vector:
 
-    >>> cx.CartesianAccelerationND.from_(Quantity(1, "km/s2"))
-    CartesianAccelerationND(
+    >>> cx.CartesianAccND.from_(Quantity(1, "km/s2"))
+    CartesianAccND(
       d2_q=Quantity[...]( value=f32[1], unit=Unit("km / s2") )
     )
 
-    >>> cx.CartesianAccelerationND.from_(Quantity([1], "km/s2"))
-    CartesianAccelerationND(
+    >>> cx.CartesianAccND.from_(Quantity([1], "km/s2"))
+    CartesianAccND(
       d2_q=Quantity[...]( value=f32[1], unit=Unit("km / s2") )
     )
 
     2D vector:
 
-    >>> cx.CartesianAccelerationND.from_(Quantity([1, 2], "km/s2"))
-    CartesianAccelerationND(
+    >>> cx.CartesianAccND.from_(Quantity([1, 2], "km/s2"))
+    CartesianAccND(
       d2_q=Quantity[...]( value=f32[2], unit=Unit("km / s2") )
     )
 
     3D vector:
 
-    >>> cx.CartesianAccelerationND.from_(Quantity([1, 2, 3], "km/s2"))
-    CartesianAccelerationND(
+    >>> cx.CartesianAccND.from_(Quantity([1, 2, 3], "km/s2"))
+    CartesianAccND(
       d2_q=Quantity[...]( value=f32[3], unit=Unit("km / s2") )
     )
 
     4D vector:
 
-    >>> cx.CartesianAccelerationND.from_(Quantity([1, 2, 3, 4], "km/s2"))
-    CartesianAccelerationND(
+    >>> cx.CartesianAccND.from_(Quantity([1, 2, 3, 4], "km/s2"))
+    CartesianAccND(
       d2_q=Quantity[...]( value=f32[4], unit=Unit("km / s2") )
     )
 

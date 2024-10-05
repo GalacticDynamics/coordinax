@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosND", "AbstractVelND", "AbstractAccelerationND"]
+__all__ = ["AbstractPosND", "AbstractVelND", "AbstractAccND"]
 
 
 from abc import abstractmethod
@@ -13,7 +13,7 @@ import quaxed.lax as qlax
 import quaxed.numpy as jnp
 
 from coordinax._src.base import (
-    AbstractAcceleration,
+    AbstractAcc,
     AbstractPos,
     AbstractVector,
     AbstractVel,
@@ -291,7 +291,7 @@ class AbstractVelND(AbstractVel):
 #####################################################################
 
 
-class AbstractAccelerationND(AbstractAcceleration):
+class AbstractAccND(AbstractAcc):
     """Abstract representation of N-D vector differentials."""
 
     @classproperty
@@ -302,13 +302,13 @@ class AbstractAccelerationND(AbstractAcceleration):
         Examples
         --------
         >>> import coordinax as cx
-        >>> cx.CartesianAccelerationND._cartesian_cls
-        <class 'coordinax...CartesianAccelerationND'>
+        >>> cx.CartesianAccND._cartesian_cls
+        <class 'coordinax...CartesianAccND'>
 
         """
-        from .cartesian import CartesianAccelerationND
+        from .cartesian import CartesianAccND
 
-        return CartesianAccelerationND
+        return CartesianAccND
 
     @classproperty
     @classmethod
@@ -330,7 +330,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -359,7 +359,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -375,7 +375,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -398,7 +398,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -418,7 +418,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([1, 2, 3], "m/s2"))
+        >>> vec = cx.CartesianAccND(Quantity([1, 2, 3], "m/s2"))
         >>> vec.shape
         ()
 

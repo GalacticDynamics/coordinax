@@ -3,7 +3,7 @@
 __all__ = [
     "AbstractSphericalPos",
     "AbstractSphericalVel",
-    "AbstractSphericalAcceleration",
+    "AbstractSphericalAcc",
 ]
 
 from abc import abstractmethod
@@ -11,7 +11,7 @@ from typing_extensions import override
 
 from unxt import Quantity
 
-from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVel3D
+from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.utils import classproperty
 
 _90d = Quantity(90, "deg")
@@ -42,10 +42,10 @@ class AbstractSphericalVel(AbstractVel3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> "type[AbstractSphericalAcceleration]": ...
+    def differential_cls(cls) -> "type[AbstractSphericalAcc]": ...
 
 
-class AbstractSphericalAcceleration(AbstractAcceleration3D):
+class AbstractSphericalAcc(AbstractAcc3D):
     """Spherical acceleration representation."""
 
     @override

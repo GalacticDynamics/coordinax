@@ -3,7 +3,7 @@
 __all__ = [
     "TwoSpherePos",
     "TwoSphereVel",
-    "TwoSphereAcceleration",
+    "TwoSphereAcc",
 ]
 
 from functools import partial
@@ -15,7 +15,7 @@ import equinox as eqx
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVel2D
+from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.checks import check_azimuth_range, check_polar_range
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
@@ -135,7 +135,7 @@ class TwoSphereVel(AbstractVel2D):
     <class 'coordinax._src.d2.spherical.TwoSpherePos'>
 
     >>> s2.differential_cls
-    <class 'coordinax._src.d2.spherical.TwoSphereAcceleration'>
+    <class 'coordinax._src.d2.spherical.TwoSphereAcc'>
 
     """
 
@@ -158,12 +158,12 @@ class TwoSphereVel(AbstractVel2D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["TwoSphereAcceleration"]:
-        return TwoSphereAcceleration
+    def differential_cls(cls) -> type["TwoSphereAcc"]:
+        return TwoSphereAcc
 
 
 @final
-class TwoSphereAcceleration(AbstractAcceleration2D):
+class TwoSphereAcc(AbstractAcc2D):
     r"""Vel on the 2-Sphere.
 
     The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
@@ -186,7 +186,7 @@ class TwoSphereAcceleration(AbstractAcceleration2D):
 
     See Also
     --------
-    `coordinax.SphericalAcceleration`
+    `coordinax.SphericalAcc`
         The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
 
     Examples
@@ -196,7 +196,7 @@ class TwoSphereAcceleration(AbstractAcceleration2D):
 
     We can construct a 2-spherical acceleration:
 
-    >>> s2 = cx.TwoSphereAcceleration(d2_theta=Quantity(0, "deg/s2"),
+    >>> s2 = cx.TwoSphereAcc(d2_theta=Quantity(0, "deg/s2"),
     ...                               d2_phi=Quantity(2, "deg/s2"))
 
     This coordinate has corresponding velocity class:

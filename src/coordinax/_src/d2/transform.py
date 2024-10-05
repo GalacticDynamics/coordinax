@@ -9,7 +9,7 @@ from plum import dispatch
 import quaxed.numpy as xp
 
 from .base import AbstractPos2D, AbstractVel2D
-from .cartesian import CartesianAcceleration2D, CartesianPos2D, CartesianVel2D
+from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarPos, PolarVel
 from coordinax._src.base import AbstractPos
 
@@ -112,14 +112,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianAcceleration2D
+# CartesianAcc2D
 
 
 @dispatch
 def represent_as(
-    current: CartesianAcceleration2D, target: type[CartesianAcceleration2D], /
-) -> CartesianAcceleration2D:
-    """CartesianAcceleration2D -> CartesianAcceleration2D with no position.
+    current: CartesianAcc2D, target: type[CartesianAcc2D], /
+) -> CartesianAcc2D:
+    """CartesianAcc2D -> CartesianAcc2D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -131,8 +131,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAcceleration2D.from_([1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAcceleration2D) is a
+    >>> a = cx.CartesianAcc2D.from_([1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAcc2D) is a
     True
 
     """

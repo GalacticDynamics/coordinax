@@ -1,6 +1,6 @@
 """Carteisan vector."""
 
-__all__ = ["RadialPos", "RadialVel", "RadialAcceleration"]
+__all__ = ["RadialPos", "RadialVel", "RadialAcc"]
 
 from functools import partial
 from typing import final
@@ -13,7 +13,7 @@ from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration1D, AbstractPos1D, AbstractVel1D
+from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.checks import check_r_non_negative
 from coordinax._src.utils import classproperty
 
@@ -51,8 +51,8 @@ class RadialVel(AbstractVel1D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["RadialAcceleration"]:
-        return RadialAcceleration
+    def differential_cls(cls) -> type["RadialAcc"]:
+        return RadialAcc
 
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
@@ -61,7 +61,7 @@ class RadialVel(AbstractVel1D):
 
 
 @final
-class RadialAcceleration(AbstractAcceleration1D):
+class RadialAcc(AbstractAcc1D):
     """Radial differential representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)

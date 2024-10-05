@@ -1,10 +1,6 @@
 """Carteisan vector."""
 
-__all__ = [
-    "CartesianPos1D",
-    "CartesianVel1D",
-    "CartesianAcceleration1D",
-]
+__all__ = ["CartesianPos1D", "CartesianVel1D", "CartesianAcc1D"]
 
 from dataclasses import replace
 from functools import partial
@@ -21,7 +17,7 @@ from quaxed import lax as qlax
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration1D, AbstractPos1D, AbstractVel1D
+from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
@@ -184,8 +180,8 @@ class CartesianVel1D(AvalMixin, AbstractVel1D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAcceleration1D"]:
-        return CartesianAcceleration1D
+    def differential_cls(cls) -> type["CartesianAcc1D"]:
+        return CartesianAcc1D
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -271,7 +267,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
 
 
 @final
-class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
+class CartesianAcc1D(AvalMixin, AbstractAcc1D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
@@ -294,7 +290,7 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.CartesianAcceleration1D.from_([-1], "km/s2")
+        >>> q = cx.CartesianAcc1D.from_([-1], "km/s2")
         >>> q.norm()
         Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
 
@@ -303,9 +299,7 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_aa(
-    lhs: CartesianAcceleration1D, rhs: CartesianAcceleration1D, /
-) -> CartesianAcceleration1D:
+def _add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     """Add two Cartesian accelerations.
 
     Examples
@@ -314,10 +308,10 @@ def _add_aa(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration1D.from_([1], "km/s2")
+    >>> v = cx.CartesianAcc1D.from_([1], "km/s2")
     >>> vec = jnp.add(v, v)
     >>> vec
-    CartesianAcceleration1D(
+    CartesianAcc1D(
         d2_x=Quantity[...](value=i32[], unit=Unit("km / s2"))
     )
     >>> vec.d2_x
@@ -331,7 +325,7 @@ def _add_aa(
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceleration1D:
+def _mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     """Scale an acceleration by a scalar.
 
     Examples
@@ -340,10 +334,10 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration1D(d2_x=Quantity(1, "m/s2"))
+    >>> v = cx.CartesianAcc1D(d2_x=Quantity(1, "m/s2"))
     >>> vec = jnp.multiply(2, v)
     >>> vec
-    CartesianAcceleration1D( d2_x=... )
+    CartesianAcc1D( d2_x=... )
 
     >>> vec.d2_x
     Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
@@ -362,9 +356,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_a1_a1(
-    self: CartesianAcceleration1D, other: CartesianAcceleration1D, /
-) -> CartesianAcceleration1D:
+def _sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D:
     """Subtract two 1-D cartesian accelerations.
 
     Examples
@@ -373,11 +365,11 @@ def _sub_a1_a1(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v1 = cx.CartesianAcceleration1D(d2_x=Quantity(1, "m/s2"))
-    >>> v2 = cx.CartesianAcceleration1D(d2_x=Quantity(2, "m/s2"))
+    >>> v1 = cx.CartesianAcc1D(d2_x=Quantity(1, "m/s2"))
+    >>> v2 = cx.CartesianAcc1D(d2_x=Quantity(2, "m/s2"))
     >>> vec = lax.sub(v1, v2)
     >>> vec
-    CartesianAcceleration1D( d2_x=... )
+    CartesianAcc1D( d2_x=... )
 
     >>> vec.d2_x
     Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')

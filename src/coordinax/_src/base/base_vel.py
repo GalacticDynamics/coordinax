@@ -79,7 +79,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractAcceleration"]:
+    def differential_cls(cls) -> type["AbstractAcc"]:
         """Return the corresponding differential vector class.
 
         Examples
@@ -87,10 +87,10 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
         >>> import coordinax as cx
 
         >>> cx.RadialVel.differential_cls.__name__
-        'RadialAcceleration'
+        'RadialAcc'
 
         >>> cx.SphericalVel.differential_cls.__name__
-        'SphericalAcceleration'
+        'SphericalAcc'
 
         """
         raise NotImplementedError

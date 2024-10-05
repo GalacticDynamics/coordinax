@@ -14,51 +14,51 @@ import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
-from coordinax._src.base import AbstractAcceleration, AbstractPos, AbstractVel
-from coordinax._src.d1.base import AbstractAcceleration1D
-from coordinax._src.d2.base import AbstractAcceleration2D
-from coordinax._src.d3.base import AbstractAcceleration3D
+from coordinax._src.base import AbstractAcc, AbstractPos, AbstractVel
+from coordinax._src.d1.base import AbstractAcc1D
+from coordinax._src.d2.base import AbstractAcc2D
+from coordinax._src.d3.base import AbstractAcc3D
 
 
 # TODO: implement for cross-representations
 @dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
     (
-        AbstractAcceleration1D,
-        type[AbstractAcceleration1D],
+        AbstractAcc1D,
+        type[AbstractAcc1D],
         AbstractVel | Quantity["speed"],
         AbstractPos | Quantity["length"],
     ),
     (
-        AbstractAcceleration2D,
-        type[AbstractAcceleration2D],
+        AbstractAcc2D,
+        type[AbstractAcc2D],
         AbstractVel | Quantity["speed"],
         AbstractPos | Quantity["length"],
     ),
     (
-        AbstractAcceleration3D,
-        type[AbstractAcceleration3D],
+        AbstractAcc3D,
+        type[AbstractAcc3D],
         AbstractVel | Quantity["speed"],
         AbstractPos | Quantity["length"],
     ),
 )
 def represent_as(
-    current: AbstractAcceleration,
-    target: type[AbstractAcceleration],
+    current: AbstractAcc,
+    target: type[AbstractAcc],
     velocity: AbstractVel | Quantity["speed"],
     position: AbstractPos | Quantity["length"],
     /,
     **kwargs: Any,
-) -> AbstractAcceleration:
-    """AbstractAcceleration -> Cartesian -> AbstractAcceleration.
+) -> AbstractAcc:
+    """AbstractAcc -> Cartesian -> AbstractAcc.
 
     This is the base case for the transformation of accelerations.
 
     Parameters
     ----------
-    current : AbstractAcceleration
+    current : AbstractAcc
         The vector acceleration to transform.
-    target : type[AbstractAcceleration]
+    target : type[AbstractAcc]
         The target type of the vector acceleration.
     velocity : AbstractVel
         The velocity vector used to transform the acceleration.
@@ -76,17 +76,17 @@ def represent_as(
 
     >>> q = cx.CartesianPos1D(x=Quantity(1.0, "km"))
     >>> p = cx.CartesianVel1D(d_x=Quantity(1.0, "km/s"))
-    >>> a = cx.CartesianAcceleration1D(d2_x=Quantity(1.0, "km/s2"))
-    >>> cx.represent_as(a, cx.RadialAcceleration, p, q)
-    RadialAcceleration( d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
+    >>> a = cx.CartesianAcc1D(d2_x=Quantity(1.0, "km/s2"))
+    >>> cx.represent_as(a, cx.RadialAcc, p, q)
+    RadialAcc( d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
 
     Now in 2D:
 
     >>> q = cx.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> p = cx.CartesianVel2D.from_([1.0, 2.0], "km/s")
-    >>> a = cx.CartesianAcceleration2D.from_([1.0, 2.0], "km/s2")
-    >>> cx.represent_as(a, cx.PolarAcceleration, p, q)
-    PolarAcceleration(
+    >>> a = cx.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
+    >>> cx.represent_as(a, cx.PolarAcc, p, q)
+    PolarAcc(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
     )
@@ -95,9 +95,9 @@ def represent_as(
 
     >>> q = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> a = cx.CartesianAcceleration3D.from_([1.0, 2.0, 3.0], "km/s2")
-    >>> cx.represent_as(a, cx.SphericalAcceleration, p, q)
-    SphericalAcceleration(
+    >>> a = cx.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
+    >>> cx.represent_as(a, cx.SphericalAcc, p, q)
+    SphericalAcc(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
       d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
@@ -106,10 +106,10 @@ def represent_as(
     If given a position as a Quantity, it will be converted to the appropriate
     Cartesian vector:
 
-    >>> cx.represent_as(a, cx.SphericalAcceleration,
+    >>> cx.represent_as(a, cx.SphericalAcc,
     ...                 Quantity([1.0, 2.0, 3.0], "km/s"),
     ...                 Quantity([1.0, 2.0, 3.0], "km"))
-    SphericalAcceleration(
+    SphericalAcc(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
       d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )

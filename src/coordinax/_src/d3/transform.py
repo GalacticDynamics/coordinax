@@ -11,7 +11,7 @@ from unxt import Quantity
 
 from .base import AbstractPos3D, AbstractVel3D
 from .base_spherical import AbstractSphericalPos
-from .cartesian import CartesianAcceleration3D, CartesianPos3D, CartesianVel3D
+from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 from .cylindrical import CylindricalPos, CylindricalVel
 from .lonlatspherical import (
     LonCosLatSphericalVel,
@@ -717,14 +717,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianAcceleration3D
+# CartesianAcc3D
 
 
 @dispatch
 def represent_as(
-    current: CartesianAcceleration3D, target: type[CartesianAcceleration3D], /
-) -> CartesianAcceleration3D:
-    """CartesianAcceleration3D -> CartesianAcceleration3D with no position.
+    current: CartesianAcc3D, target: type[CartesianAcc3D], /
+) -> CartesianAcc3D:
+    """CartesianAcc3D -> CartesianAcc3D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -736,8 +736,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAcceleration3D.from_([1, 1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAcceleration3D) is a
+    >>> a = cx.CartesianAcc3D.from_([1, 1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAcc3D) is a
     True
 
     """
