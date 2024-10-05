@@ -343,8 +343,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         Poss are covered by a separate dispatch. So here we show velocities
         and accelerations:
 
-        >>> vel1 = cx.CartesianVelocity1D(Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.CartesianVelocity1D(Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.CartesianVel1D(Quantity([1, 2, 3], "km/s"))
+        >>> vel2 = cx.CartesianVel1D(Quantity([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
@@ -357,8 +357,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.RadialVelocity(Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.RadialVelocity(Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.RadialVel(Quantity([1, 2, 3], "km/s"))
+        >>> vel2 = cx.RadialVel(Quantity([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
@@ -371,8 +371,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.CartesianVelocity2D.constructor([[1, 3], [2, 4]], "km/s")
-        >>> vel2 = cx.CartesianVelocity2D.constructor([[1, 3], [0, 4]], "km/s")
+        >>> vel1 = cx.CartesianVel2D.constructor([[1, 3], [2, 4]], "km/s")
+        >>> vel2 = cx.CartesianVel2D.constructor([[1, 3], [0, 4]], "km/s")
         >>> vel1.d_x
         Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
@@ -389,8 +389,8 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         >>> acc1 == acc2
         Array([ True, False], dtype=bool)
 
-        >>> vel1 = cx.CartesianVelocity3D.constructor([[1, 4], [2, 5], [3, 6]], "km/s")
-        >>> vel2 = cx.CartesianVelocity3D.constructor([[1, 4], [0, 5], [3, 0]], "km/s")
+        >>> vel1 = cx.CartesianVel3D.constructor([[1, 4], [2, 5], [3, 6]], "km/s")
+        >>> vel2 = cx.CartesianVel3D.constructor([[1, 4], [0, 5], [3, 0]], "km/s")
         >>> vel1.d_x
         Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
@@ -692,7 +692,7 @@ class AbstractVector(ArrayValue):  # type: ignore[misc]
         ('x', 'y')
         >>> cx.SphericalPos.components
         ('r', 'theta', 'phi')
-        >>> cx.RadialVelocity.components
+        >>> cx.RadialVel.components
         ('d_r',)
 
         """
@@ -948,23 +948,23 @@ def constructor(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVe
 
     Velocities:
 
-    >>> p = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> p = cx.CartesianVel3D.constructor([1, 2, 3], "km/s")
 
-    >>> cart = cx.CartesianVelocity3D.constructor(p)
-    >>> cx.AbstractVelocity3D.constructor(cart) is cart
+    >>> cart = cx.CartesianVel3D.constructor(p)
+    >>> cx.AbstractVel3D.constructor(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalVelocity, q)
-    >>> cx.AbstractVelocity3D.constructor(sph) is sph
+    >>> sph = cart.represent_as(cx.SphericalVel, q)
+    >>> cx.AbstractVel3D.constructor(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalVelocity, q)
-    >>> cx.AbstractVelocity3D.constructor(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.CylindricalVel, q)
+    >>> cx.AbstractVel3D.constructor(cyl) is cyl
     True
 
     Accelerations:
 
-    >>> p = cx.CartesianVelocity3D.constructor([1, 1, 1], "km/s")
+    >>> p = cx.CartesianVel3D.constructor([1, 1, 1], "km/s")
 
     >>> cart = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
     >>> cx.AbstractAcceleration3D.constructor(cart) is cart

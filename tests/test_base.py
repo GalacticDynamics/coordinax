@@ -17,25 +17,25 @@ from coordinax import (
     AbstractPos1D,
     AbstractPos2D,
     AbstractPos3D,
-    AbstractVelocity,
-    AbstractVelocity1D,
-    AbstractVelocity2D,
-    AbstractVelocity3D,
+    AbstractVel,
+    AbstractVel1D,
+    AbstractVel2D,
+    AbstractVel3D,
     CartesianPos1D,
     CartesianPos2D,
     CartesianPos3D,
-    CartesianVelocity1D,
-    CartesianVelocity2D,
-    CartesianVelocity3D,
+    CartesianVel1D,
+    CartesianVel2D,
+    CartesianVel3D,
     CylindricalPos,
-    CylindricalVelocity,
+    CylindricalVel,
     IrreversibleDimensionChange,
     PolarPos,
-    PolarVelocity,
+    PolarVel,
     RadialPos,
-    RadialVelocity,
+    RadialVel,
     SphericalPos,
-    SphericalVelocity,
+    SphericalVel,
 )
 
 BUILTIN_VECTORS = [
@@ -53,17 +53,17 @@ BUILTIN_VECTORS = [
 
 BUILTIN_DIFFERENTIALS = [
     # 1D
-    CartesianVelocity1D,
-    RadialVelocity,
+    CartesianVel1D,
+    RadialVel,
     # 2D
-    CartesianVelocity2D,
-    PolarVelocity,
-    # LnPolarVelocity,
-    # Log10PolarVelocity,
+    CartesianVel2D,
+    PolarVel,
+    # LnPolarVel,
+    # Log10PolarVel,
     # 3D
-    CartesianVelocity3D,
-    SphericalVelocity,
-    CylindricalVelocity,
+    CartesianVel3D,
+    SphericalVel,
+    CylindricalVel,
 ]
 
 
@@ -198,8 +198,8 @@ class AbstractPosTest(AbstractVectorTest):
         assert isinstance(newvec, target)
 
 
-class AbstractVelocityTest(AbstractVectorTest):
-    """Test :class:`coordinax.AbstractVelocity`."""
+class AbstractVelTest(AbstractVectorTest):
+    """Test :class:`coordinax.AbstractVel`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> AbstractPos:
@@ -207,7 +207,7 @@ class AbstractVelocityTest(AbstractVectorTest):
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> AbstractVelocity:
+    def difntl(self) -> AbstractVel:
         """Return a vector."""
         raise NotImplementedError
 
@@ -221,16 +221,16 @@ class AbstractVelocityTest(AbstractVectorTest):
         # TODO: have all the conversions
         if (
             (
-                isinstance(difntl, AbstractVelocity1D)
-                and not issubclass(target, AbstractVelocity1D)
+                isinstance(difntl, AbstractVel1D)
+                and not issubclass(target, AbstractVel1D)
             )
             or (
-                isinstance(difntl, AbstractVelocity2D)
-                and not issubclass(target, AbstractVelocity2D)
+                isinstance(difntl, AbstractVel2D)
+                and not issubclass(target, AbstractVel2D)
             )
             or (
-                isinstance(difntl, AbstractVelocity3D)
-                and not issubclass(target, AbstractVelocity3D)
+                isinstance(difntl, AbstractVel3D)
+                and not issubclass(target, AbstractVel3D)
             )
         ):
             pytest.xfail("Not implemented yet")

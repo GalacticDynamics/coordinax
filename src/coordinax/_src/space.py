@@ -23,7 +23,7 @@ from .base import (
     AbstractAcceleration,
     AbstractPos,
     AbstractVector,
-    AbstractVelocity,
+    AbstractVel,
 )
 from .typing import Unit
 from .utils import classproperty
@@ -70,14 +70,14 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
     >>> from unxt import Quantity
 
     >>> x = cx.CartesianPos3D.constructor([1, 2, 3], "km")
-    >>> v = cx.CartesianVelocity3D.constructor([4, 5, 6], "km/s")
+    >>> v = cx.CartesianVel3D.constructor([4, 5, 6], "km/s")
     >>> a = cx.CartesianAcceleration3D.constructor([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> space
     Space({
         'length': CartesianPos3D( ... ),
-        'speed': CartesianVelocity3D( ... ),
+        'speed': CartesianVel3D( ... ),
         'acceleration': CartesianAcceleration3D( ... )}
     )
 
@@ -87,14 +87,14 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
     >>> space.represent_as(cx.SphericalPos)
     Space({
         'length': SphericalPos( ... ),
-        'speed': SphericalVelocity( ... ),
+        'speed': SphericalVel( ... ),
         'acceleration': SphericalAcceleration( ... )}
     )
 
     >>> cx.represent_as(space, cx.SphericalPos)
     Space({
         'length': SphericalPos( ... ),
-        'speed': SphericalVelocity( ... ),
+        'speed': SphericalVel( ... ),
         'acceleration': SphericalAcceleration( ... )}
     )
 
@@ -140,7 +140,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         --------
         >>> import coordinax as cx
         >>> w = cx.Space(length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...              speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...              speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         By number:
 
@@ -150,7 +150,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
                 x=Quantity[...](value=f32[2], unit=Unit("m")),
                 y=Quantity[...](value=f32[2], unit=Unit("m")),
                 z=Quantity[...](value=f32[2], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2], unit=Unit("m / s") ) )}
@@ -164,7 +164,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
                 x=Quantity[...](value=f32[0,2], unit=Unit("m")),
                 y=Quantity[...](value=f32[0,2], unit=Unit("m")),
                 z=Quantity[...](value=f32[0,2], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ) )}
@@ -178,7 +178,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
                 x=Quantity[...](value=f32[1,2], unit=Unit("m")),
                 y=Quantity[...](value=f32[1,2], unit=Unit("m")),
                 z=Quantity[...](value=f32[1,2], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ) )}
@@ -192,7 +192,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
                 x=Quantity[...](value=f32[], unit=Unit("m")),
                 y=Quantity[...](value=f32[], unit=Unit("m")),
                 z=Quantity[...](value=f32[], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[], unit=Unit("m / s") ) )}
@@ -212,7 +212,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         --------
         >>> import coordinax as cx
         >>> w = cx.Space(length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...              speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        ...              speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         By string key:
 
@@ -263,7 +263,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
         >>> w.mT
         Space({
@@ -271,13 +271,13 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
                 x=Quantity[...](value=f32[2,1], unit=Unit("m")),
                 y=Quantity[...](value=f32[2,1], unit=Unit("m")),
                 z=Quantity[...](value=f32[2,1], unit=Unit("m"))
-            ), 'speed': CartesianVelocity3D(
+            ), 'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
             )} )
 
-        """  # noqa: E501
+        """
         return super().mT
 
     @property
@@ -291,12 +291,12 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s") )
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s") )
 
         >>> w.ndim
         2
 
-        """  # noqa: E501
+        """
         return super().ndim
 
     @property
@@ -310,13 +310,13 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.shape
         (1, 2)
 
-        """  # noqa: E501
+        """
         return super().shape
 
     @property
@@ -330,12 +330,12 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s") )
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s") )
 
         >>> w.size
         2
 
-        """  # noqa: E501
+        """
         return super().size
 
     @property
@@ -349,7 +349,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.T
@@ -359,13 +359,13 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
                 y=Quantity[...](value=f32[2,1], unit=Unit("m")),
                 z=Quantity[...](value=f32[2,1], unit=Unit("m"))
             ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
             )} )
 
-        """  # noqa: E501
+        """
         return super().T
 
     # ---------------------------------------------------------------
@@ -381,13 +381,13 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> (-w)["length"].x
         Quantity['length'](Array([[-1., -4.]], dtype=float32), unit='m')
 
-        """  # noqa: E501
+        """
         return type(self)(**{k: -v for k, v in self.items()})
 
     def __repr__(self) -> str:
@@ -399,7 +399,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         >>> from unxt import Quantity
 
         >>> q = cx.CartesianPos3D.constructor([1, 2, 3], "m")
-        >>> p = cx.CartesianVelocity3D.constructor([1, 2, 3], "m/s")
+        >>> p = cx.CartesianVel3D.constructor([1, 2, 3], "m/s")
         >>> w = cx.Space(length=q, speed=p)
         >>> w
         Space({
@@ -408,7 +408,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
                 y=Quantity[...](value=f32[], unit=Unit("m")),
                 z=Quantity[...](value=f32[], unit=Unit("m"))
             ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
@@ -475,7 +475,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.dtypes
@@ -497,7 +497,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.devices
@@ -519,13 +519,13 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.shapes
         mappingproxy({'length': (1, 2), 'speed': (1, 2)})
 
-        """  # noqa: E501
+        """
         return MappingProxyType({k: v.shape for k, v in self.items()})
 
     @property
@@ -539,13 +539,13 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.sizes
         mappingproxy({'length': 2, 'speed': 2})
 
-        """  # noqa: E501
+        """
         return MappingProxyType({k: v.size for k, v in self.items()})
 
     # ===============================================================
@@ -611,8 +611,8 @@ def temp_represent_as(
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_represent_as(
-    current: AbstractVelocity, target: type[AbstractPos], space: Space, /
-) -> AbstractVelocity:
+    current: AbstractVel, target: type[AbstractPos], space: Space, /
+) -> AbstractVel:
     """Transform of Velocities."""
     return represent_as(current, target.differential_cls, space["length"])
 

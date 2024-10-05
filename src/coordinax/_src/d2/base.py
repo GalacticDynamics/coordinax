@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPos2D", "AbstractVelocity2D", "AbstractAcceleration2D"]
+__all__ = ["AbstractPos2D", "AbstractVel2D", "AbstractAcceleration2D"]
 
 
 from abc import abstractmethod
@@ -9,7 +9,7 @@ from coordinax._src.base import (
     AbstractAcceleration,
     AbstractPos,
     AbstractVector,
-    AbstractVelocity,
+    AbstractVel,
 )
 from coordinax._src.utils import classproperty
 
@@ -27,22 +27,22 @@ class AbstractPos2D(AbstractPos):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVelocity2D"]:
+    def differential_cls(cls) -> type["AbstractVel2D"]:
         raise NotImplementedError
 
 
 #####################################################################
 
 
-class AbstractVelocity2D(AbstractVelocity):
+class AbstractVel2D(AbstractVel):
     """Abstract representation of 2D vector differentials."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianVelocity2D
+        from .cartesian import CartesianVel2D
 
-        return CartesianVelocity2D
+        return CartesianVel2D
 
     @classproperty
     @classmethod
@@ -73,5 +73,5 @@ class AbstractAcceleration2D(AbstractAcceleration):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelocity2D]:
+    def integral_cls(cls) -> type[AbstractVel2D]:
         raise NotImplementedError

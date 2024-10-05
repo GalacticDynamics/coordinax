@@ -9,7 +9,7 @@ import quaxed.numpy as jnp
 
 from coordinax._src.d3.cylindrical import (
     CylindricalPos,
-    CylindricalVelocity,
+    CylindricalVel,
 )
 from coordinax._src.dn.poincare import PoincarePolarVector
 from coordinax._src.space import Space
@@ -26,7 +26,7 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
 
     >>> w = cx.Space(
     ...     length=cx.CartesianPos3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+    ...     speed=cx.CartesianVel3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.PoincarePolarVector)
@@ -46,7 +46,7 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
             y=Quantity[...](value=f32[1,2], unit=Unit("m")),
             z=Quantity[...](value=f32[1,2], unit=Unit("m"))
         ),
-        'speed': CartesianVelocity3D(
+        'speed': CartesianVel3D(
             d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
             d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
             d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
@@ -58,5 +58,5 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
 
     return Space(
         length=CylindricalPos(rho=w.rho, z=w.z, phi=phi),
-        speed=CylindricalVelocity(d_rho=w.d_rho, d_z=w.d_z, d_phi=d_phi),
+        speed=CylindricalVel(d_rho=w.d_rho, d_z=w.d_z, d_phi=d_phi),
     )

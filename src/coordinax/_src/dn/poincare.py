@@ -11,7 +11,7 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from coordinax._src.base import AbstractPos, AbstractVelocity
+from coordinax._src.base import AbstractPos, AbstractVel
 from coordinax._src.utils import classproperty
 
 
@@ -53,6 +53,6 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type[AbstractVelocity]:
+    def differential_cls(cls) -> type[AbstractVel]:
         """Return the corresponding differential vector class."""
         raise NotImplementedError

@@ -3,7 +3,7 @@
 __all__ = [
     # Physics conventions
     "SphericalPos",
-    "SphericalVelocity",
+    "SphericalVel",
     "SphericalAcceleration",
 ]
 
@@ -21,7 +21,7 @@ import coordinax._src.typing as ct
 from .base_spherical import (
     AbstractSphericalAcceleration,
     AbstractSphericalPos,
-    AbstractSphericalVelocity,
+    AbstractSphericalVel,
     _180d,
     _360d,
 )
@@ -82,8 +82,8 @@ class SphericalPos(AbstractSphericalPos):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["SphericalVelocity"]:
-        return SphericalVelocity
+    def differential_cls(cls) -> type["SphericalVel"]:
+        return SphericalVel
 
 
 @SphericalPos.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
@@ -174,7 +174,7 @@ def constructor(
 
 
 @final
-class SphericalVelocity(AbstractSphericalVelocity):
+class SphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -227,5 +227,5 @@ class SphericalAcceleration(AbstractSphericalAcceleration):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[SphericalVelocity]:
-        return SphericalVelocity
+    def integral_cls(cls) -> type[SphericalVel]:
+        return SphericalVel
