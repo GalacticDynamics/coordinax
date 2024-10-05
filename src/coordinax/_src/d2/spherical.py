@@ -49,6 +49,20 @@ class TwoSpherePosition(AbstractPosition2D):
     `coordinax.SphericalPosition`
         The counterpart in $R^3$, adding the polar distance coordinate $r$.
 
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    We can construct a 2-spherical coordinate:
+
+    >>> s2 = cx.TwoSpherePosition(theta=Quantity(0, "deg"), phi=Quantity(180, "deg"))
+
+    This coordinate has corresponding velocity class:
+
+    >>> s2.differential_cls
+    <class 'coordinax._src.d2.spherical.TwoSphereVelocity'>
+
     """
 
     theta: ct.BatchableAngle = eqx.field(
@@ -105,6 +119,24 @@ class TwoSphereVelocity(AbstractVelocity2D):
     `coordinax.SphericalVelocity`
         The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
 
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    We can construct a 2-spherical velocity:
+
+    >>> s2 = cx.TwoSphereVelocity(d_theta=Quantity(0, "deg/s"),
+    ...                           d_phi=Quantity(2, "deg/s"))
+
+    This coordinate has corresponding position and acceleration class:
+
+    >>> s2.integral_cls
+    <class 'coordinax._src.d2.spherical.TwoSpherePosition'>
+
+    >>> s2.differential_cls
+    <class 'coordinax._src.d2.spherical.TwoSphereAcceleration'>
+
     """
 
     d_theta: ct.BatchableAngularSpeed = eqx.field(
@@ -156,6 +188,21 @@ class TwoSphereAcceleration(AbstractAcceleration2D):
     --------
     `coordinax.SphericalAcceleration`
         The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    We can construct a 2-spherical acceleration:
+
+    >>> s2 = cx.TwoSphereAcceleration(d2_theta=Quantity(0, "deg/s2"),
+    ...                               d2_phi=Quantity(2, "deg/s2"))
+
+    This coordinate has corresponding velocity class:
+
+    >>> s2.integral_cls
+    <class 'coordinax._src.d2.spherical.TwoSphereVelocity'>
 
     """
 
