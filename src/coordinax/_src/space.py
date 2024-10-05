@@ -20,7 +20,7 @@ from unxt import Quantity, dimensions
 from xmmutablemap import ImmutableMap
 
 from .base import (
-    AbstractAcceleration,
+    AbstractAcc,
     AbstractPos,
     AbstractVector,
     AbstractVel,
@@ -71,14 +71,14 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
     >>> x = cx.CartesianPos3D.constructor([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.constructor([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcceleration3D.constructor([7, 8, 9], "km/s^2")
+    >>> a = cx.CartesianAcc3D.constructor([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> space
     Space({
         'length': CartesianPos3D( ... ),
         'speed': CartesianVel3D( ... ),
-        'acceleration': CartesianAcceleration3D( ... )}
+        'acceleration': CartesianAcc3D( ... )}
     )
 
     >>> space["length"]
@@ -88,14 +88,14 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
-        'acceleration': SphericalAcceleration( ... )}
+        'acceleration': SphericalAcc( ... )}
     )
 
     >>> cx.represent_as(space, cx.SphericalPos)
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
-        'acceleration': SphericalAcceleration( ... )}
+        'acceleration': SphericalAcc( ... )}
     )
 
     """  # noqa: E501
@@ -620,9 +620,9 @@ def temp_represent_as(
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_represent_as(
-    current: AbstractAcceleration, target: type[AbstractPos], space: Space, /
-) -> AbstractAcceleration:
-    """Transform of Accelerations."""
+    current: AbstractAcc, target: type[AbstractPos], space: Space, /
+) -> AbstractAcc:
+    """Transform of Accs."""
     return represent_as(
         current,
         target.differential_cls.differential_cls,

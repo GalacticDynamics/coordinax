@@ -5,8 +5,8 @@ __all__: list[str] = []
 
 from typing import Any
 
-from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVel3D
-from .cartesian import CartesianAcceleration3D, CartesianPos3D, CartesianVel3D
+from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
+from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 
 #####################################################################
 
@@ -109,10 +109,8 @@ def constructor(cls: type[AbstractVel3D], obj: AbstractVel3D, /) -> AbstractVel3
 #####################################################################
 
 
-@AbstractAcceleration3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
-def constructor(
-    cls: type[AbstractAcceleration3D], obj: Any, /
-) -> CartesianAcceleration3D:
+@AbstractAcc3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
+def constructor(cls: type[AbstractAcc3D], obj: Any, /) -> CartesianAcc3D:
     """Try to construct a 3D Cartesian velocity from an object.
 
     Examples
@@ -121,25 +119,19 @@ def constructor(
     >>> import coordinax as cx
 
     >>> x = Quantity([1, 2, 3], "km / s2")
-    >>> cx.AbstractAcceleration3D.constructor(x)
-    CartesianAcceleration3D(
+    >>> cx.AbstractAcc3D.constructor(x)
+    CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_y=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_z=Quantity[...](value=f32[], unit=Unit("km / s2"))
     )
 
     """
-    return (
-        obj
-        if isinstance(obj, CartesianAcceleration3D)
-        else CartesianAcceleration3D.constructor(obj)
-    )
+    return obj if isinstance(obj, CartesianAcc3D) else CartesianAcc3D.constructor(obj)
 
 
-@AbstractAcceleration3D.constructor._f.dispatch(precedence=1)  # noqa: SLF001
-def constructor(
-    cls: type[AbstractAcceleration3D], obj: AbstractAcceleration3D, /
-) -> AbstractAcceleration3D:
+@AbstractAcc3D.constructor._f.dispatch(precedence=1)  # noqa: SLF001
+def constructor(cls: type[AbstractAcc3D], obj: AbstractAcc3D, /) -> AbstractAcc3D:
     """Construct from a 3D velocity.
 
     Examples
@@ -149,16 +141,16 @@ def constructor(
     >>> q = cx.CartesianPos3D.constructor([1, 1, 1], "km")
     >>> p = cx.CartesianVel3D.constructor([1, 1, 1], "km/s")
 
-    >>> cart = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
-    >>> cx.AbstractAcceleration3D.constructor(cart) is cart
+    >>> cart = cx.CartesianAcc3D.constructor([1, 2, 3], "km/s2")
+    >>> cx.AbstractAcc3D.constructor(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalAcceleration, p, q)
-    >>> cx.AbstractAcceleration3D.constructor(sph) is sph
+    >>> sph = cart.represent_as(cx.SphericalAcc, p, q)
+    >>> cx.AbstractAcc3D.constructor(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalAcceleration, p, q)
-    >>> cx.AbstractAcceleration3D.constructor(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.CylindricalAcc, p, q)
+    >>> cx.AbstractAcc3D.constructor(cyl) is cyl
     True
 
     """

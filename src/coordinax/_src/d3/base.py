@@ -1,13 +1,13 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPos3D", "AbstractVel3D", "AbstractAcceleration3D"]
+__all__ = ["AbstractPos3D", "AbstractVel3D", "AbstractAcc3D"]
 
 
 from abc import abstractmethod
 from typing_extensions import override
 
 from coordinax._src.base import (
-    AbstractAcceleration,
+    AbstractAcc,
     AbstractPos,
     AbstractVector,
     AbstractVel,
@@ -52,19 +52,19 @@ class AbstractVel3D(AbstractVel):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcceleration]:
+    def differential_cls(cls) -> type[AbstractAcc]:
         raise NotImplementedError
 
 
-class AbstractAcceleration3D(AbstractAcceleration):
+class AbstractAcc3D(AbstractAcc):
     """Abstract representation of 3D vector accelerations."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianAcceleration3D
+        from .cartesian import CartesianAcc3D
 
-        return CartesianAcceleration3D
+        return CartesianAcc3D
 
     @classproperty
     @classmethod

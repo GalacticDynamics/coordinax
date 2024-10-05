@@ -532,9 +532,9 @@ def constructor(cls: type[cx.AbstractVector], obj: u.Quantity, /) -> cx.Abstract
       d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
     )
 
-    >>> vec = cx.CartesianAcceleration3D.constructor(Quantity([1, 2, 3], "m/s2"))
+    >>> vec = cx.CartesianAcc3D.constructor(Quantity([1, 2, 3], "m/s2"))
     >>> vec
-    CartesianAcceleration3D(
+    CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
       d2_y=Quantity[...](value=f32[], unit=Unit("m / s2")),
       d2_z=Quantity[...](value=f32[], unit=Unit("m / s2"))

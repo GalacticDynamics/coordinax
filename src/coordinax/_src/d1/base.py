@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPos1D", "AbstractVel1D", "AbstractAcceleration1D"]
+__all__ = ["AbstractPos1D", "AbstractVel1D", "AbstractAcc1D"]
 
 
 from abc import abstractmethod
@@ -12,7 +12,7 @@ import quaxed.numpy as jnp
 from unxt import Quantity
 
 from coordinax._src.base import (
-    AbstractAcceleration,
+    AbstractAcc,
     AbstractPos,
     AbstractVector,
     AbstractVel,
@@ -94,7 +94,7 @@ class AbstractVel1D(AbstractVel):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcceleration]:
+    def differential_cls(cls) -> type[AbstractAcc]:
         raise NotImplementedError
 
 
@@ -134,15 +134,15 @@ def constructor(
 #####################################################################
 
 
-class AbstractAcceleration1D(AbstractAcceleration):
+class AbstractAcc1D(AbstractAcc):
     """Abstract representation of 1D acceleration in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianAcceleration1D
+        from .cartesian import CartesianAcc1D
 
-        return CartesianAcceleration1D
+        return CartesianAcc1D
 
     @classproperty
     @classmethod
@@ -154,13 +154,13 @@ class AbstractAcceleration1D(AbstractAcceleration):
 # -------------------------------------------------------------------
 
 
-@AbstractAcceleration1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractAcc1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def constructor(
-    cls: type[AbstractAcceleration1D],
+    cls: type[AbstractAcc1D],
     obj: Shaped[Quantity["acceleration"], "*batch"]
     | Shaped[Quantity["acceleration"], "*batch 1"],
     /,
-) -> AbstractAcceleration1D:
+) -> AbstractAcc1D:
     """Construct a 1D acceleration.
 
     Examples
@@ -168,17 +168,17 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.CartesianAcceleration1D.constructor(Quantity(1, "m/s2"))
-    CartesianAcceleration1D( d2_x=... )
+    >>> cx.CartesianAcc1D.constructor(Quantity(1, "m/s2"))
+    CartesianAcc1D( d2_x=... )
 
-    >>> cx.CartesianAcceleration1D.constructor(Quantity([1], "m/s2"))
-    CartesianAcceleration1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+    >>> cx.CartesianAcc1D.constructor(Quantity([1], "m/s2"))
+    CartesianAcc1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
-    >>> cx.RadialAcceleration.constructor(Quantity(1, "m/s2"))
-    RadialAcceleration( d2_r=... )
+    >>> cx.RadialAcc.constructor(Quantity(1, "m/s2"))
+    RadialAcc( d2_r=... )
 
-    >>> cx.RadialAcceleration.constructor(Quantity([1], "m/s2"))
-    RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+    >>> cx.RadialAcc.constructor(Quantity([1], "m/s2"))
+    RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     """
     comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
