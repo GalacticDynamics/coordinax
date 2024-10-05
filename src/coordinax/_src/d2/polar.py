@@ -2,7 +2,7 @@
 
 __all__ = [
     "PolarPos",
-    "PolarVelocity",
+    "PolarVel",
     "PolarAcceleration",
 ]
 
@@ -19,7 +19,7 @@ from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVelocity2D
+from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
@@ -58,8 +58,8 @@ class PolarPos(AbstractPos2D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarVelocity"]:
-        return PolarVelocity
+    def differential_cls(cls) -> type["PolarVel"]:
+        return PolarVel
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -99,7 +99,7 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
 
 
 @final
-class PolarVelocity(AbstractVelocity2D):
+class PolarVel(AbstractVel2D):
     """Polar differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -139,5 +139,5 @@ class PolarAcceleration(AbstractAcceleration2D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarVelocity]:
-        return PolarVelocity
+    def integral_cls(cls) -> type[PolarVel]:
+        return PolarVel

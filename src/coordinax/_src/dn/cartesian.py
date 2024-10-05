@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = ["CartesianPosND", "CartesianVelocityND", "CartesianAccelerationND"]
+__all__ = ["CartesianPosND", "CartesianVelND", "CartesianAccelerationND"]
 
 from dataclasses import replace
 from functools import partial
@@ -18,7 +18,7 @@ import quaxed.numpy as jnp
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAccelerationND, AbstractPosND, AbstractVelocityND
+from .base import AbstractAccelerationND, AbstractPosND, AbstractVelND
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
@@ -90,8 +90,8 @@ class CartesianPosND(AbstractPosND):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianVelocityND"]:  # type: ignore[override]
-        return CartesianVelocityND
+    def differential_cls(cls) -> type["CartesianVelND"]:  # type: ignore[override]
+        return CartesianVelND
 
     # -----------------------------------------------------
     # Unary operations
@@ -276,11 +276,11 @@ def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 
 
 ##############################################################################
-# Velocity
+# Vel
 
 
 @final
-class CartesianVelocityND(AvalMixin, AbstractVelocityND):
+class CartesianVelND(AvalMixin, AbstractVelND):
     """Cartesian differential representation.
 
     Examples
@@ -290,7 +290,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
     A 1D vector:
 
-    >>> q = cx.CartesianVelocityND(Quantity([[1]], "km/s"))
+    >>> q = cx.CartesianVelND(Quantity([[1]], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([[1.]], dtype=float32), unit='km / s')
     >>> q.shape
@@ -298,7 +298,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
     A 2D vector:
 
-    >>> q = cx.CartesianVelocityND(Quantity([1, 2], "km/s"))
+    >>> q = cx.CartesianVelND(Quantity([1, 2], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -306,7 +306,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
     A 3D vector:
 
-    >>> q = cx.CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
+    >>> q = cx.CartesianVelND(Quantity([1, 2, 3], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -314,7 +314,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
     A 4D vector:
 
-    >>> q = cx.CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
+    >>> q = cx.CartesianVelND(Quantity([1, 2, 3, 4], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3., 4.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -322,7 +322,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
     A 5D vector:
 
-    >>> q = cx.CartesianVelocityND(Quantity([1, 2, 3, 4, 5], "km/s"))
+    >>> q = cx.CartesianVelND(Quantity([1, 2, 3, 4, 5], "km/s"))
     >>> q.d_q
     Quantity['speed'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='km / s')
     >>> q.shape
@@ -361,7 +361,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
         A 3D vector:
 
-        >>> c = cx.CartesianVelocityND(Quantity([1, 2, 3], "km/s"))
+        >>> c = cx.CartesianVelND(Quantity([1, 2, 3], "km/s"))
         >>> c.norm()
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 
@@ -373,12 +373,12 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianVelocityND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianVelND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def from_(
-    cls: type[CartesianVelocityND],
+    cls: type[CartesianVelND],
     x: Shaped[Quantity["speed"], ""] | Shaped[Quantity["speed"], "*batch N"],
     /,
-) -> CartesianVelocityND:
+) -> CartesianVelND:
     """Construct an N-dimensional velocity.
 
     Examples
@@ -388,34 +388,34 @@ def from_(
 
     1D vector:
 
-    >>> cx.CartesianVelocityND.from_(Quantity(1, "km/s"))
-    CartesianVelocityND(
+    >>> cx.CartesianVelND.from_(Quantity(1, "km/s"))
+    CartesianVelND(
       d_q=Quantity[...]( value=f32[1], unit=Unit("km / s") )
     )
 
-    >>> cx.CartesianVelocityND.from_(Quantity([1], "km/s"))
-    CartesianVelocityND(
+    >>> cx.CartesianVelND.from_(Quantity([1], "km/s"))
+    CartesianVelND(
       d_q=Quantity[...]( value=f32[1], unit=Unit("km / s") )
     )
 
     2D vector:
 
-    >>> cx.CartesianVelocityND.from_(Quantity([1, 2], "km/s"))
-    CartesianVelocityND(
+    >>> cx.CartesianVelND.from_(Quantity([1, 2], "km/s"))
+    CartesianVelND(
       d_q=Quantity[...]( value=f32[2], unit=Unit("km / s") )
     )
 
     3D vector:
 
-    >>> cx.CartesianVelocityND.from_(Quantity([1, 2, 3], "km/s"))
-    CartesianVelocityND(
+    >>> cx.CartesianVelND.from_(Quantity([1, 2, 3], "km/s"))
+    CartesianVelND(
       d_q=Quantity[...]( value=f32[3], unit=Unit("km / s") )
     )
 
     4D vector:
 
-    >>> cx.CartesianVelocityND.from_(Quantity([1, 2, 3, 4], "km/s"))
-    CartesianVelocityND(
+    >>> cx.CartesianVelND.from_(Quantity([1, 2, 3, 4], "km/s"))
+    CartesianVelND(
       d_q=Quantity[...]( value=f32[4], unit=Unit("km / s") )
     )
 
@@ -490,17 +490,17 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVelocityND]:
+    def integral_cls(cls) -> type[CartesianVelND]:
         """Return the integral class.
 
         Examples
         --------
         >>> import coordinax as cx
         >>> cx.CartesianAccelerationND.integral_cls.__name__
-        'CartesianVelocityND'
+        'CartesianVelND'
 
         """
-        return CartesianVelocityND
+        return CartesianVelND
 
     @classproperty
     @classmethod
@@ -522,7 +522,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
     @partial(eqx.filter_jit, inline=True)
     def norm(
         self,
-        velocity: AbstractVelocityND | None = None,
+        velocity: AbstractVelND | None = None,
         position: AbstractPosND | None = None,
         /,
     ) -> ct.BatchableSpeed:

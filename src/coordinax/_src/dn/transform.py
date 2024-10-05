@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .cartesian import CartesianAccelerationND, CartesianPosND, CartesianVelocityND
+from .cartesian import CartesianAccelerationND, CartesianPosND, CartesianVelND
 from .poincare import PoincarePolarVector
 
 ###############################################################################
@@ -35,13 +35,13 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CartesianVelocityND,
-    target: type[CartesianVelocityND],
+    current: CartesianVelND,
+    target: type[CartesianVelND],
     position: CartesianPosND,
     /,
     **kwargs: Any,
-) -> CartesianVelocityND:
-    """CartesianVelocityND -> CartesianVelocityND.
+) -> CartesianVelND:
+    """CartesianVelND -> CartesianVelND.
 
     Examples
     --------
@@ -49,9 +49,9 @@ def represent_as(
     >>> from unxt import Quantity
 
     >>> x = cx.CartesianPosND(Quantity([1, 2, 3, 4], "km"))
-    >>> v = cx.CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
+    >>> v = cx.CartesianVelND(Quantity([1, 2, 3, 4], "km/s"))
 
-    >>> cx.represent_as(v, cx.CartesianVelocityND, x) is v
+    >>> cx.represent_as(v, cx.CartesianVelND, x) is v
     True
 
     """
@@ -59,14 +59,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianVelocityND
+# CartesianVelND
 
 
 @dispatch
 def represent_as(
-    current: CartesianVelocityND, target: type[CartesianVelocityND], /
-) -> CartesianVelocityND:
-    """CartesianVelocityND -> CartesianVelocityND with no position.
+    current: CartesianVelND, target: type[CartesianVelND], /
+) -> CartesianVelND:
+    """CartesianVelND -> CartesianVelND with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -78,8 +78,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocityND.from_([1, 1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVelocityND) is v
+    >>> v = cx.CartesianVelND.from_([1, 1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVelND) is v
     True
 
     """

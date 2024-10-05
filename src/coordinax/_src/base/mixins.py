@@ -35,11 +35,11 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity1D.from_([1], "m/s")
+        >>> vec = cx.CartesianVel1D.from_([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.RadialVelocity.from_([1], "m/s")
+        >>> vec = cx.RadialVel.from_([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
@@ -61,11 +61,11 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1. 0.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity2D.from_([1, 2], "m/s")
+        >>> vec = cx.CartesianVel2D.from_([1, 2], "m/s")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarVelocity(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"))
+        >>> vec = cx.PolarVel(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
@@ -94,11 +94,11 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([0. 0. 1.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity3D.from_([1,2,3], "m/s")
+        >>> vec = cx.CartesianVel3D.from_([1,2,3], "m/s")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.SphericalVelocity(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"), d_theta=Quantity(0, "rad/s"))
+        >>> vec = cx.SphericalVel(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"), d_theta=Quantity(0, "rad/s"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope

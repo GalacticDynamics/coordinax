@@ -2,7 +2,7 @@
 
 __all__ = [
     "TwoSpherePos",
-    "TwoSphereVelocity",
+    "TwoSphereVel",
     "TwoSphereAcceleration",
 ]
 
@@ -15,7 +15,7 @@ import equinox as eqx
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVelocity2D
+from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.checks import check_azimuth_range, check_polar_range
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
@@ -61,7 +61,7 @@ class TwoSpherePos(AbstractPos2D):
     This coordinate has corresponding velocity class:
 
     >>> s2.differential_cls
-    <class 'coordinax._src.d2.spherical.TwoSphereVelocity'>
+    <class 'coordinax._src.d2.spherical.TwoSphereVel'>
 
     """
 
@@ -85,16 +85,16 @@ class TwoSpherePos(AbstractPos2D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["TwoSphereVelocity"]:
-        return TwoSphereVelocity
+    def differential_cls(cls) -> type["TwoSphereVel"]:
+        return TwoSphereVel
 
 
 #####################################################################
 
 
 @final
-class TwoSphereVelocity(AbstractVelocity2D):
-    r"""Velocity on the 2-Sphere.
+class TwoSphereVel(AbstractVel2D):
+    r"""Vel on the 2-Sphere.
 
     The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
     It is a two-dimensional surface embedded in three-dimensional space, defined
@@ -116,7 +116,7 @@ class TwoSphereVelocity(AbstractVelocity2D):
 
     See Also
     --------
-    `coordinax.SphericalVelocity`
+    `coordinax.SphericalVel`
         The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
 
     Examples
@@ -126,7 +126,7 @@ class TwoSphereVelocity(AbstractVelocity2D):
 
     We can construct a 2-spherical velocity:
 
-    >>> s2 = cx.TwoSphereVelocity(d_theta=Quantity(0, "deg/s"),
+    >>> s2 = cx.TwoSphereVel(d_theta=Quantity(0, "deg/s"),
     ...                           d_phi=Quantity(2, "deg/s"))
 
     This coordinate has corresponding position and acceleration class:
@@ -164,7 +164,7 @@ class TwoSphereVelocity(AbstractVelocity2D):
 
 @final
 class TwoSphereAcceleration(AbstractAcceleration2D):
-    r"""Velocity on the 2-Sphere.
+    r"""Vel on the 2-Sphere.
 
     The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
     It is a two-dimensional surface embedded in three-dimensional space, defined
@@ -202,7 +202,7 @@ class TwoSphereAcceleration(AbstractAcceleration2D):
     This coordinate has corresponding velocity class:
 
     >>> s2.integral_cls
-    <class 'coordinax._src.d2.spherical.TwoSphereVelocity'>
+    <class 'coordinax._src.d2.spherical.TwoSphereVel'>
 
     """
 
@@ -219,5 +219,5 @@ class TwoSphereAcceleration(AbstractAcceleration2D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[TwoSphereVelocity]:
-        return TwoSphereVelocity
+    def integral_cls(cls) -> type[TwoSphereVel]:
+        return TwoSphereVel

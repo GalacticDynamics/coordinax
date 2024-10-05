@@ -2,7 +2,7 @@
 
 __all__ = [
     "CartesianPos1D",
-    "CartesianVelocity1D",
+    "CartesianVel1D",
     "CartesianAcceleration1D",
 ]
 
@@ -21,7 +21,7 @@ from quaxed import lax as qlax
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration1D, AbstractPos1D, AbstractVelocity1D
+from .base import AbstractAcceleration1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
@@ -59,8 +59,8 @@ class CartesianPos1D(AbstractPos1D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianVelocity1D"]:
-        return CartesianVelocity1D
+    def differential_cls(cls) -> type["CartesianVel1D"]:
+        return CartesianVel1D
 
 
 # -------------------------------------------------------------------
@@ -169,7 +169,7 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
 
 
 @final
-class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
+class CartesianVel1D(AvalMixin, AbstractVel1D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
@@ -196,7 +196,7 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.CartesianVelocity1D.from_([-1], "km/s")
+        >>> q = cx.CartesianVel1D.from_([-1], "km/s")
         >>> q.norm()
         Quantity['speed'](Array(1, dtype=int32), unit='km / s')
 
@@ -209,9 +209,7 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_pp(
-    lhs: CartesianVelocity1D, rhs: CartesianVelocity1D, /
-) -> CartesianVelocity1D:
+def _add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     """Add two Cartesian velocities.
 
     Examples
@@ -220,10 +218,10 @@ def _add_pp(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity1D.from_([1], "km/s")
+    >>> v = cx.CartesianVel1D.from_([1], "km/s")
     >>> vec = jnp.add(v, v)
     >>> vec
-    CartesianVelocity1D(
+    CartesianVel1D(
        d_x=Quantity[...]( value=i32[], unit=Unit("km / s") )
     )
     >>> vec.d_x
@@ -237,7 +235,7 @@ def _add_pp(
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity1D:
+def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     """Scale a velocity by a scalar.
 
     Examples
@@ -246,10 +244,10 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity1D(d_x=Quantity(1, "m/s"))
+    >>> v = cx.CartesianVel1D(d_x=Quantity(1, "m/s"))
     >>> vec = jnp.multiply(2, v)
     >>> vec
-    CartesianVelocity1D(
+    CartesianVel1D(
       d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") )
     )
 
@@ -281,8 +279,8 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVelocity1D]:
-        return CartesianVelocity1D
+    def integral_cls(cls) -> type[CartesianVel1D]:
+        return CartesianVel1D
 
     # -----------------------------------------------------
     # Methods

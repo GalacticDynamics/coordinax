@@ -2,7 +2,7 @@
 
 __all__ = [
     "CartesianPos3D",
-    "CartesianVelocity3D",
+    "CartesianVel3D",
     "CartesianAcceleration3D",
 ]
 
@@ -23,7 +23,7 @@ from dataclassish import field_items
 from unxt import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVelocity3D
+from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVel3D
 from .generic import CartesianGeneric3D
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
@@ -55,9 +55,9 @@ class CartesianPos3D(AbstractPos3D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianVelocity3D"]:
+    def differential_cls(cls) -> type["CartesianVel3D"]:
         """Return the differential of the class."""
-        return CartesianVelocity3D
+        return CartesianVel3D
 
 
 # =====================================================
@@ -189,11 +189,11 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
 
 
 #####################################################################
-# Velocity
+# Vel
 
 
 @final
-class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
+class CartesianVel3D(AvalMixin, AbstractVel3D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -231,7 +231,7 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> c = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
+        >>> c = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
         >>> c.norm()
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 
@@ -242,12 +242,12 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
 # -----------------------------------------------------
 
 
-@CartesianVelocity3D.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianVel3D.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
 def from_(
-    cls: type[CartesianVelocity3D],
+    cls: type[CartesianVel3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
     /,
-) -> CartesianVelocity3D:
+) -> CartesianVel3D:
     """Construct a 3D Cartesian velocity.
 
     Examples
@@ -255,9 +255,9 @@ def from_(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianVelocity3D.from_(Quantity([1, 2, 3], "m/s"))
+    >>> vec = cx.CartesianVel3D.from_(Quantity([1, 2, 3], "m/s"))
     >>> vec
-    CartesianVelocity3D(
+    CartesianVel3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
@@ -273,15 +273,13 @@ def from_(
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_pp(
-    lhs: CartesianVelocity3D, rhs: CartesianVelocity3D, /
-) -> CartesianVelocity3D:
+def _add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
     """Add two Cartesian velocities.
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
+    >>> q = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> q2 = q + q
     >>> q2.d_y
     Quantity['speed'](Array(4., dtype=float32), unit='km / s')
@@ -291,16 +289,13 @@ def _add_pp(
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_v3_v3(
-    lhs: CartesianVelocity3D, other: CartesianVelocity3D, /
-) -> CartesianVelocity3D:
+def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
     """Subtract two differentials.
 
     Examples
     --------
-    >>> from unxt import Quantity
-    >>> from coordinax import CartesianPos3D, CartesianVelocity3D
-    >>> q = CartesianVelocity3D.from_(Quantity([1, 2, 3], "km/s"))
+    >>> from coordinax import CartesianPos3D, CartesianVel3D
+    >>> q = CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> q2 = q - q
     >>> q2.d_y
     Quantity['speed'](Array(0., dtype=float32), unit='km / s')
@@ -334,15 +329,15 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVelocity3D]:
-        return CartesianVelocity3D
+    def integral_cls(cls) -> type[CartesianVel3D]:
+        return CartesianVel3D
 
     # -----------------------------------------------------
     # Methods
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractVelocity3D | None = None, /) -> ct.BatchableAcc:
+    def norm(self, _: AbstractVel3D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
 
         Examples

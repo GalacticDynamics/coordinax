@@ -8,9 +8,9 @@ from plum import dispatch
 
 import quaxed.numpy as xp
 
-from .base import AbstractPos2D, AbstractVelocity2D
-from .cartesian import CartesianAcceleration2D, CartesianPos2D, CartesianVelocity2D
-from .polar import PolarPos, PolarVelocity
+from .base import AbstractPos2D, AbstractVel2D
+from .cartesian import CartesianAcceleration2D, CartesianPos2D, CartesianVel2D
+from .polar import PolarPos, PolarVel
 from coordinax._src.base import AbstractPos
 
 
@@ -37,16 +37,16 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianVelocity2D, type[CartesianVelocity2D], AbstractPos),
-    (PolarVelocity, type[PolarVelocity], AbstractPos),
+    (CartesianVel2D, type[CartesianVel2D], AbstractPos),
+    (PolarVel, type[PolarVel], AbstractPos),
 )
 def represent_as(
-    current: AbstractVelocity2D,
-    target: type[AbstractVelocity2D],
+    current: AbstractVel2D,
+    target: type[AbstractVel2D],
     position: AbstractPos,
     /,
     **kwargs: Any,
-) -> AbstractVelocity2D:
+) -> AbstractVel2D:
     """Self transform of 2D Differentials."""
     return current
 
@@ -84,14 +84,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianVelocity2D
+# CartesianVel2D
 
 
 @dispatch
 def represent_as(
-    current: CartesianVelocity2D, target: type[CartesianVelocity2D], /
-) -> CartesianVelocity2D:
-    """CartesianVelocity2D -> CartesianVelocity2D with no position.
+    current: CartesianVel2D, target: type[CartesianVel2D], /
+) -> CartesianVel2D:
+    """CartesianVel2D -> CartesianVel2D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -103,8 +103,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocity2D.from_([1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVelocity2D) is v
+    >>> v = cx.CartesianVel2D.from_([1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVel2D) is v
     True
 
     """

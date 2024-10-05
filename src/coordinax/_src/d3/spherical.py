@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = ["SphericalPos", "SphericalVelocity", "SphericalAcceleration"]
+__all__ = ["SphericalPos", "SphericalVel", "SphericalAcceleration"]
 
 from functools import partial
 from typing import final
@@ -16,7 +16,7 @@ import coordinax._src.typing as ct
 from .base_spherical import (
     AbstractSphericalAcceleration,
     AbstractSphericalPos,
-    AbstractSphericalVelocity,
+    AbstractSphericalVel,
     _180d,
     _360d,
 )
@@ -77,8 +77,8 @@ class SphericalPos(AbstractSphericalPos):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["SphericalVelocity"]:
-        return SphericalVelocity
+    def differential_cls(cls) -> type["SphericalVel"]:
+        return SphericalVel
 
 
 @SphericalPos.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
@@ -169,7 +169,7 @@ def from_(
 
 
 @final
-class SphericalVelocity(AbstractSphericalVelocity):
+class SphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -222,5 +222,5 @@ class SphericalAcceleration(AbstractSphericalAcceleration):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[SphericalVelocity]:
-        return SphericalVelocity
+    def integral_cls(cls) -> type[SphericalVel]:
+        return SphericalVel

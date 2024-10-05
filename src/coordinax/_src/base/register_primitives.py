@@ -44,7 +44,7 @@ def _broadcast_in_dim_p(
     >>> jnp.broadcast_to(q, (1, 1)).x
     Quantity['length'](Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.CartesianVelocity1D.from_([1], "m/s")
+    >>> p = cx.CartesianVel1D.from_([1], "m/s")
     >>> p.d_x
     Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
@@ -68,7 +68,7 @@ def _broadcast_in_dim_p(
     >>> jnp.broadcast_to(q, (1, 1)).r
     Distance(Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.RadialVelocity.from_([1], "m/s")
+    >>> p = cx.RadialVel.from_([1], "m/s")
     >>> p.d_r
     Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
@@ -92,7 +92,7 @@ def _broadcast_in_dim_p(
     >>> jnp.broadcast_to(q, (1, 2)).x
     Quantity['length'](Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.CartesianVelocity2D.from_([1, 2], "m/s")
+    >>> p = cx.CartesianVel2D.from_([1, 2], "m/s")
     >>> p.d_x
     Quantity['speed'](Array(1., dtype=float32), unit='m / s')
 
@@ -116,7 +116,7 @@ def _broadcast_in_dim_p(
     >>> jnp.broadcast_to(q, (1, 3)).x
     Quantity['length'](Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.CartesianVelocity3D.from_([1, 2, 3], "m/s")
+    >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
     >>> p.d_x
     Quantity['speed'](Array(1., dtype=float32), unit='m / s')
 

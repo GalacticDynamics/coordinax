@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPos1D", "AbstractVelocity1D", "AbstractAcceleration1D"]
+__all__ = ["AbstractPos1D", "AbstractVel1D", "AbstractAcceleration1D"]
 
 
 from abc import abstractmethod
@@ -15,7 +15,7 @@ from coordinax._src.base import (
     AbstractAcceleration,
     AbstractPos,
     AbstractVector,
-    AbstractVelocity,
+    AbstractVel,
 )
 from coordinax._src.utils import classproperty
 
@@ -35,7 +35,7 @@ class AbstractPos1D(AbstractPos):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVelocity1D"]:
+    def differential_cls(cls) -> type["AbstractVel1D"]:
         raise NotImplementedError
 
 
@@ -75,15 +75,15 @@ def from_(
 #####################################################################
 
 
-class AbstractVelocity1D(AbstractVelocity):
+class AbstractVel1D(AbstractVel):
     """Abstract representation of 1D differentials in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianVelocity1D
+        from .cartesian import CartesianVel1D
 
-        return CartesianVelocity1D
+        return CartesianVel1D
 
     @classproperty
     @classmethod
@@ -101,12 +101,12 @@ class AbstractVelocity1D(AbstractVelocity):
 # -------------------------------------------------------------------
 
 
-@AbstractVelocity1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVel1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
-    cls: type[AbstractVelocity1D],
+    cls: type[AbstractVel1D],
     obj: Shaped[Quantity["speed"], "*batch"] | Shaped[Quantity["speed"], "*batch 1"],
     /,
-) -> AbstractVelocity1D:
+) -> AbstractVel1D:
     """Construct a 1D velocity.
 
     Examples
@@ -114,17 +114,17 @@ def from_(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.CartesianVelocity1D.from_(Quantity(1, "m/s"))
-    CartesianVelocity1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    >>> cx.CartesianVel1D.from_(Quantity(1, "m/s"))
+    CartesianVel1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.CartesianVelocity1D.from_(Quantity([1], "m/s"))
-    CartesianVelocity1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    >>> cx.CartesianVel1D.from_(Quantity([1], "m/s"))
+    CartesianVel1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVelocity.from_(Quantity(1, "m/s"))
-    RadialVelocity( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    >>> cx.RadialVel.from_(Quantity(1, "m/s"))
+    RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVelocity.from_(Quantity([1], "m/s"))
-    RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    >>> cx.RadialVel.from_(Quantity([1], "m/s"))
+    RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     """
     comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
@@ -147,7 +147,7 @@ class AbstractAcceleration1D(AbstractAcceleration):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelocity1D]:
+    def integral_cls(cls) -> type[AbstractVel1D]:
         raise NotImplementedError
 
 

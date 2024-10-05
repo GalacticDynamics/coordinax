@@ -51,9 +51,9 @@ def vec_to_q(obj: cx.AbstractPos3D, /) -> Shaped[u.Quantity, "*batch 3"]:
 
 
 @conversion_method(cx.CartesianAcceleration3D, u.Quantity)  # type: ignore[misc]
-@conversion_method(cx.CartesianVelocity3D, u.Quantity)  # type: ignore[misc]
-def vec_diff_to_q(obj: cx.CartesianVelocity3D, /) -> Shaped[u.Quantity, "*batch 3"]:
-    """`coordinax.CartesianVelocity3D` -> `astropy.units.Quantity`.
+@conversion_method(cx.CartesianVel3D, u.Quantity)  # type: ignore[misc]
+def vec_diff_to_q(obj: cx.CartesianVel3D, /) -> Shaped[u.Quantity, "*batch 3"]:
+    """`coordinax.CartesianVel3D` -> `astropy.units.Quantity`.
 
     Examples
     --------
@@ -61,7 +61,7 @@ def vec_diff_to_q(obj: cx.CartesianVelocity3D, /) -> Shaped[u.Quantity, "*batch 
     >>> from plum import convert
     >>> from astropy.units import Quantity
 
-    >>> dif = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
+    >>> dif = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(dif, Quantity)
     <Quantity [1., 2., 3.] km / s>
 
@@ -286,20 +286,20 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> cx.LonLatSpheri
 
 
 # =====================================
-# CartesianVelocity3D
+# CartesianVel3D
 
 
-@conversion_method(cx.CartesianVelocity3D, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.CartesianVelocity3D, apyc.CartesianDifferential)  # type: ignore[misc]
-def diffcart3_to_apycart3(obj: cx.CartesianVelocity3D, /) -> apyc.CartesianDifferential:
-    """`coordinax.CartesianVelocity3D` -> `astropy.CartesianDifferential`.
+@conversion_method(cx.CartesianVel3D, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(cx.CartesianVel3D, apyc.CartesianDifferential)  # type: ignore[misc]
+def diffcart3_to_apycart3(obj: cx.CartesianVel3D, /) -> apyc.CartesianDifferential:
+    """`coordinax.CartesianVel3D` -> `astropy.CartesianDifferential`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
+    >>> dif = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(dif, apyc.CartesianDifferential)
     <CartesianDifferential (d_x, d_y, d_z) in km / s
         (1., 2., 3.)>
@@ -313,10 +313,10 @@ def diffcart3_to_apycart3(obj: cx.CartesianVelocity3D, /) -> apyc.CartesianDiffe
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.CartesianDifferential, cx.CartesianVelocity3D
+    apyc.CartesianDifferential, cx.CartesianVel3D
 )
-def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVelocity3D:
-    """`astropy.CartesianDifferential` -> `coordinax.CartesianVelocity3D`.
+def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel3D:
+    """`astropy.CartesianDifferential` -> `coordinax.CartesianVel3D`.
 
     Examples
     --------
@@ -325,25 +325,25 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
     >>> from astropy.coordinates import CartesianDifferential
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
-    >>> convert(dcart, cx.CartesianVelocity3D)
-    CartesianVelocity3D(
+    >>> convert(dcart, cx.CartesianVel3D)
+    CartesianVel3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return cx.CartesianVelocity3D.from_(obj)
+    return cx.CartesianVel3D.from_(obj)
 
 
 # =====================================
-# CylindricalVelocity
+# CylindricalVel
 
 
-@conversion_method(cx.CylindricalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.CylindricalVelocity, apyc.CylindricalDifferential)  # type: ignore[misc]
-def diffcyl_to_apycyl(obj: cx.CylindricalVelocity, /) -> apyc.CylindricalDifferential:
-    """`coordinax.CylindricalVelocity` -> `astropy.CylindricalDifferential`.
+@conversion_method(cx.CylindricalVel, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(cx.CylindricalVel, apyc.CylindricalDifferential)  # type: ignore[misc]
+def diffcyl_to_apycyl(obj: cx.CylindricalVel, /) -> apyc.CylindricalDifferential:
+    """`coordinax.CylindricalVel` -> `astropy.CylindricalDifferential`.
 
     Examples
     --------
@@ -351,7 +351,7 @@ def diffcyl_to_apycyl(obj: cx.CylindricalVelocity, /) -> apyc.CylindricalDiffere
     >>> import coordinax as cx
     >>> import astropy.coordinates as apyc
 
-    >>> dif = cx.CylindricalVelocity(d_rho=Quantity(1, unit="km/s"),
+    >>> dif = cx.CylindricalVel(d_rho=Quantity(1, unit="km/s"),
     ...                                  d_phi=Quantity(2, unit="mas/yr"),
     ...                                  d_z=Quantity(3, unit="km/s"))
     >>> convert(dif, apyc.CylindricalDifferential)
@@ -371,10 +371,10 @@ def diffcyl_to_apycyl(obj: cx.CylindricalVelocity, /) -> apyc.CylindricalDiffere
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.CylindricalDifferential, cx.CylindricalVelocity
+    apyc.CylindricalDifferential, cx.CylindricalVel
 )
-def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.CylindricalVelocity:
-    """`astropy.CylindricalVelocity` -> `coordinax.CylindricalVelocity`.
+def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.CylindricalVel:
+    """`astropy.CylindricalVel` -> `coordinax.CylindricalVel`.
 
     Examples
     --------
@@ -384,34 +384,32 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.CylindricalVel
 
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> convert(dcyl, cx.CylindricalVelocity)
-    CylindricalVelocity(
+    >>> convert(dcyl, cx.CylindricalVel)
+    CylindricalVel(
       d_rho=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return cx.CylindricalVelocity.from_(obj)
+    return cx.CylindricalVel.from_(obj)
 
 
 # =====================================
-# SphericalVelocity
+# SphericalVel
 
 
-@conversion_method(cx.SphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.SphericalVelocity, apyc.PhysicsSphericalDifferential)  # type: ignore[misc]
-def diffsph_to_apysph(
-    obj: cx.SphericalVelocity, /
-) -> apyc.PhysicsSphericalDifferential:
-    """SphericalVelocity -> `astropy.PhysicsSphericalDifferential`.
+@conversion_method(cx.SphericalVel, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(cx.SphericalVel, apyc.PhysicsSphericalDifferential)  # type: ignore[misc]
+def diffsph_to_apysph(obj: cx.SphericalVel, /) -> apyc.PhysicsSphericalDifferential:
+    """SphericalVel -> `astropy.PhysicsSphericalDifferential`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.SphericalVelocity(d_r=Quantity(1, unit="km/s"),
+    >>> dif = cx.SphericalVel(d_r=Quantity(1, unit="km/s"),
     ...                                d_theta=Quantity(2, unit="mas/yr"),
     ...                                d_phi=Quantity(3, unit="mas/yr"))
     >>> convert(dif, apyc.PhysicsSphericalDifferential)
@@ -431,12 +429,10 @@ def diffsph_to_apysph(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.PhysicsSphericalDifferential, cx.SphericalVelocity
+    apyc.PhysicsSphericalDifferential, cx.SphericalVel
 )
-def apysph_to_diffsph(
-    obj: apyc.PhysicsSphericalDifferential, /
-) -> cx.SphericalVelocity:
-    """`astropy.PhysicsSphericalDifferential` -> SphericalVelocity.
+def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.SphericalVel:
+    """`astropy.PhysicsSphericalDifferential` -> SphericalVel.
 
     Examples
     --------
@@ -446,34 +442,34 @@ def apysph_to_diffsph(
 
     >>> dif = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                    d_phi=3 * u.mas/u.yr)
-    >>> convert(dif, cx.SphericalVelocity)
-    SphericalVelocity(
+    >>> convert(dif, cx.SphericalVel)
+    SphericalVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
     )
 
     """
-    return cx.SphericalVelocity.from_(obj)
+    return cx.SphericalVel.from_(obj)
 
 
 # =====================================
-# LonLatSphericalVelocity
+# LonLatSphericalVel
 
 
-@conversion_method(cx.LonLatSphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.LonLatSphericalVelocity, apyc.SphericalDifferential)  # type: ignore[misc]
+@conversion_method(cx.LonLatSphericalVel, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(cx.LonLatSphericalVel, apyc.SphericalDifferential)  # type: ignore[misc]
 def difflonlatsph_to_apysph(
-    obj: cx.LonLatSphericalVelocity, /
+    obj: cx.LonLatSphericalVel, /
 ) -> apyc.SphericalDifferential:
-    """LonLatSphericalVelocity -> `astropy.SphericalVelocity`.
+    """LonLatSphericalVel -> `astropy.SphericalVel`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.LonLatSphericalVelocity(d_distance=Quantity(1, unit="km/s"),
+    >>> dif = cx.LonLatSphericalVel(d_distance=Quantity(1, unit="km/s"),
     ...                                      d_lat=Quantity(2, unit="mas/yr"),
     ...                                      d_lon=Quantity(3, unit="mas/yr"))
     >>> convert(dif, apyc.SphericalDifferential)
@@ -493,12 +489,12 @@ def difflonlatsph_to_apysph(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.SphericalDifferential, cx.LonLatSphericalVelocity
+    apyc.SphericalDifferential, cx.LonLatSphericalVel
 )
 def apysph_to_difflonlatsph(
     obj: apyc.SphericalDifferential, /
-) -> cx.LonLatSphericalVelocity:
-    """`astropy.coordinates.SphericalDifferential` -> LonLatSphericalVelocity.
+) -> cx.LonLatSphericalVel:
+    """`astropy.coordinates.SphericalDifferential` -> LonLatSphericalVel.
 
     Examples
     --------
@@ -508,34 +504,34 @@ def apysph_to_difflonlatsph(
 
     >>> dif = SphericalDifferential(d_distance=1 * u.km / u.s, d_lat=2 * u.mas/u.yr,
     ...                             d_lon=3 * u.mas/u.yr)
-    >>> convert(dif, cx.LonLatSphericalVelocity)
-    LonLatSphericalVelocity(
+    >>> convert(dif, cx.LonLatSphericalVel)
+    LonLatSphericalVel(
       d_lon=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return cx.LonLatSphericalVelocity.from_(obj)
+    return cx.LonLatSphericalVel.from_(obj)
 
 
 # =====================================
-# LonCosLatSphericalVelocity
+# LonCosLatSphericalVel
 
 
-@conversion_method(cx.LonCosLatSphericalVelocity, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.LonCosLatSphericalVelocity, apyc.SphericalCosLatDifferential)  # type: ignore[misc]
+@conversion_method(cx.LonCosLatSphericalVel, apyc.BaseDifferential)  # type: ignore[misc]
+@conversion_method(cx.LonCosLatSphericalVel, apyc.SphericalCosLatDifferential)  # type: ignore[misc]
 def diffloncoslatsph_to_apysph(
-    obj: cx.LonCosLatSphericalVelocity, /
+    obj: cx.LonCosLatSphericalVel, /
 ) -> apyc.SphericalCosLatDifferential:
-    """LonCosLatSphericalVelocity -> `astropy.SphericalCosLatDifferential`.
+    """LonCosLatSphericalVel -> `astropy.SphericalCosLatDifferential`.
 
     Examples
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.LonCosLatSphericalVelocity(d_distance=Quantity(1, unit="km/s"),
+    >>> dif = cx.LonCosLatSphericalVel(d_distance=Quantity(1, unit="km/s"),
     ...                                         d_lat=Quantity(2, unit="mas/yr"),
     ...                                         d_lon_coslat=Quantity(3, unit="mas/yr"))
     >>> convert(dif, apyc.SphericalCosLatDifferential)
@@ -555,12 +551,12 @@ def diffloncoslatsph_to_apysph(
 
 
 @conversion_method(  # type: ignore[misc]
-    apyc.SphericalCosLatDifferential, cx.LonCosLatSphericalVelocity
+    apyc.SphericalCosLatDifferential, cx.LonCosLatSphericalVel
 )
 def apysph_to_diffloncoslatsph(
     obj: apyc.SphericalCosLatDifferential, /
-) -> cx.LonCosLatSphericalVelocity:
-    """`astropy.SphericalCosLatDifferential` -> LonCosLatSphericalVelocity.
+) -> cx.LonCosLatSphericalVel:
+    """`astropy.SphericalCosLatDifferential` -> LonCosLatSphericalVel.
 
     Examples
     --------
@@ -571,12 +567,12 @@ def apysph_to_diffloncoslatsph(
     >>> dif = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
     ...                                   d_lat=2 * u.mas/u.yr,
     ...                                   d_lon_coslat=3 * u.mas/u.yr)
-    >>> convert(dif, cx.LonCosLatSphericalVelocity)
-    LonCosLatSphericalVelocity(
+    >>> convert(dif, cx.LonCosLatSphericalVel)
+    LonCosLatSphericalVel(
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return cx.LonCosLatSphericalVelocity.from_(obj)
+    return cx.LonCosLatSphericalVel.from_(obj)

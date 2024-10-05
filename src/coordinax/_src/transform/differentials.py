@@ -14,47 +14,35 @@ import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
-from coordinax._src.base import AbstractPos, AbstractVelocity
-from coordinax._src.d1.base import AbstractVelocity1D
-from coordinax._src.d2.base import AbstractVelocity2D
-from coordinax._src.d3.base import AbstractVelocity3D
+from coordinax._src.base import AbstractPos, AbstractVel
+from coordinax._src.d1.base import AbstractVel1D
+from coordinax._src.d2.base import AbstractVel2D
+from coordinax._src.d3.base import AbstractVel3D
 
 
 # TODO: implement for cross-representations
 @dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
-    (
-        AbstractVelocity1D,
-        type[AbstractVelocity1D],
-        AbstractPos | Quantity["length"],
-    ),
-    (
-        AbstractVelocity2D,
-        type[AbstractVelocity2D],
-        AbstractPos | Quantity["length"],
-    ),
-    (
-        AbstractVelocity3D,
-        type[AbstractVelocity3D],
-        AbstractPos | Quantity["length"],
-    ),
+    (AbstractVel1D, type[AbstractVel1D], AbstractPos | Quantity["length"]),
+    (AbstractVel2D, type[AbstractVel2D], AbstractPos | Quantity["length"]),
+    (AbstractVel3D, type[AbstractVel3D], AbstractPos | Quantity["length"]),
 )
 def represent_as(
-    current: AbstractVelocity,
-    target: type[AbstractVelocity],
+    current: AbstractVel,
+    target: type[AbstractVel],
     position: AbstractPos | Quantity["length"],
     /,
     **kwargs: Any,
-) -> AbstractVelocity:
-    """AbstractVelocity -> Cartesian -> AbstractVelocity.
+) -> AbstractVel:
+    """AbstractVel -> Cartesian -> AbstractVel.
 
     This is the base case for the transformation of vector differentials.
 
     Parameters
     ----------
-    current : AbstractVelocity
+    current : AbstractVel
         The vector differential to transform.
-    target : type[AbstractVelocity]
+    target : type[AbstractVel]
         The target type of the vector differential.
     position : AbstractPos
         The position vector used to transform the differential.
@@ -69,16 +57,16 @@ def represent_as(
     Let's start in 1D:
 
     >>> q = cx.CartesianPos1D(x=Quantity(1.0, "km"))
-    >>> p = cx.CartesianVelocity1D(d_x=Quantity(1.0, "km/s"))
-    >>> cx.represent_as(p, cx.RadialVelocity, q)
-    RadialVelocity( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
+    >>> p = cx.CartesianVel1D(d_x=Quantity(1.0, "km/s"))
+    >>> cx.represent_as(p, cx.RadialVel, q)
+    RadialVel( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 
     Now in 2D:
 
     >>> q = cx.CartesianPos2D.from_([1.0, 2.0], "km")
-    >>> p = cx.CartesianVelocity2D.from_([1.0, 2.0], "km/s")
-    >>> cx.represent_as(p, cx.PolarVelocity, q)
-    PolarVelocity(
+    >>> p = cx.CartesianVel2D.from_([1.0, 2.0], "km/s")
+    >>> cx.represent_as(p, cx.PolarVel, q)
+    PolarVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
@@ -86,9 +74,9 @@ def represent_as(
     And in 3D:
 
     >>> q = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
-    >>> p = cx.CartesianVelocity3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> cx.represent_as(p, cx.SphericalVelocity, q)
-    SphericalVelocity(
+    >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
+    >>> cx.represent_as(p, cx.SphericalVel, q)
+    SphericalVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
@@ -97,9 +85,9 @@ def represent_as(
     If given a position as a Quantity, it will be converted to the appropriate
     Cartesian vector:
 
-    >>> p = cx.CartesianVelocity3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> cx.represent_as(p, cx.SphericalVelocity, Quantity([1.0, 2.0, 3.0], "km"))
-    SphericalVelocity(
+    >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
+    >>> cx.represent_as(p, cx.SphericalVel, Quantity([1.0, 2.0, 3.0], "km"))
+    SphericalVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )

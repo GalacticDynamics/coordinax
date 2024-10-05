@@ -14,7 +14,7 @@ import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
-from coordinax._src.base import AbstractAcceleration, AbstractPos, AbstractVelocity
+from coordinax._src.base import AbstractAcceleration, AbstractPos, AbstractVel
 from coordinax._src.d1.base import AbstractAcceleration1D
 from coordinax._src.d2.base import AbstractAcceleration2D
 from coordinax._src.d3.base import AbstractAcceleration3D
@@ -26,26 +26,26 @@ from coordinax._src.d3.base import AbstractAcceleration3D
     (
         AbstractAcceleration1D,
         type[AbstractAcceleration1D],
-        AbstractVelocity | Quantity["speed"],
+        AbstractVel | Quantity["speed"],
         AbstractPos | Quantity["length"],
     ),
     (
         AbstractAcceleration2D,
         type[AbstractAcceleration2D],
-        AbstractVelocity | Quantity["speed"],
+        AbstractVel | Quantity["speed"],
         AbstractPos | Quantity["length"],
     ),
     (
         AbstractAcceleration3D,
         type[AbstractAcceleration3D],
-        AbstractVelocity | Quantity["speed"],
+        AbstractVel | Quantity["speed"],
         AbstractPos | Quantity["length"],
     ),
 )
 def represent_as(
     current: AbstractAcceleration,
     target: type[AbstractAcceleration],
-    velocity: AbstractVelocity | Quantity["speed"],
+    velocity: AbstractVel | Quantity["speed"],
     position: AbstractPos | Quantity["length"],
     /,
     **kwargs: Any,
@@ -60,7 +60,7 @@ def represent_as(
         The vector acceleration to transform.
     target : type[AbstractAcceleration]
         The target type of the vector acceleration.
-    velocity : AbstractVelocity
+    velocity : AbstractVel
         The velocity vector used to transform the acceleration.
     position : AbstractPos
         The position vector used to transform the acceleration.
@@ -75,7 +75,7 @@ def represent_as(
     Let's start in 1D:
 
     >>> q = cx.CartesianPos1D(x=Quantity(1.0, "km"))
-    >>> p = cx.CartesianVelocity1D(d_x=Quantity(1.0, "km/s"))
+    >>> p = cx.CartesianVel1D(d_x=Quantity(1.0, "km/s"))
     >>> a = cx.CartesianAcceleration1D(d2_x=Quantity(1.0, "km/s2"))
     >>> cx.represent_as(a, cx.RadialAcceleration, p, q)
     RadialAcceleration( d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
@@ -83,7 +83,7 @@ def represent_as(
     Now in 2D:
 
     >>> q = cx.CartesianPos2D.from_([1.0, 2.0], "km")
-    >>> p = cx.CartesianVelocity2D.from_([1.0, 2.0], "km/s")
+    >>> p = cx.CartesianVel2D.from_([1.0, 2.0], "km/s")
     >>> a = cx.CartesianAcceleration2D.from_([1.0, 2.0], "km/s2")
     >>> cx.represent_as(a, cx.PolarAcceleration, p, q)
     PolarAcceleration(
@@ -94,7 +94,7 @@ def represent_as(
     And in 3D:
 
     >>> q = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
-    >>> p = cx.CartesianVelocity3D.from_([1.0, 2.0, 3.0], "km/s")
+    >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> a = cx.CartesianAcceleration3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> cx.represent_as(a, cx.SphericalAcceleration, p, q)
     SphericalAcceleration(
@@ -128,8 +128,8 @@ def represent_as(
             position
         )
 
-    # Parse the velocity to an AbstractVelocity
-    if isinstance(velocity, AbstractVelocity):
+    # Parse the velocity to an AbstractVel
+    if isinstance(velocity, AbstractVel):
         velvec = velocity
     else:  # Q -> Cart<X>D
         velvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001

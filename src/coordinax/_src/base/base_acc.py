@@ -18,7 +18,7 @@ from unxt import Quantity
 
 from .base import AbstractVector
 from .base_pos import AbstractPos
-from .base_vel import AbstractVelocity
+from .base_vel import AbstractVel
 from coordinax._src.funcs import represent_as
 from coordinax._src.utils import classproperty
 
@@ -63,7 +63,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelocity]:
+    def integral_cls(cls) -> type[AbstractVel]:
         """Return the corresponding vector class.
 
         Examples
@@ -71,10 +71,10 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         >>> import coordinax as cx
 
         >>> cx.RadialAcceleration.integral_cls.__name__
-        'RadialVelocity'
+        'RadialVel'
 
         >>> cx.SphericalAcceleration.integral_cls.__name__
-        'SphericalVelocity'
+        'SphericalVel'
 
         """
         raise NotImplementedError
@@ -122,12 +122,12 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
         Parameters
         ----------
-        target : type[`coordinax.AbstractVelocity`]
+        target : type[`coordinax.AbstractVel`]
             The type to represent the vector as.
         *args, **kwargs : Any
             Extra arguments. These are passed to `coordinax.represent_as` and
             might be used, depending on the dispatched method. Generally the
-            first argument is the velocity (`coordinax.AbstractVelocity`)
+            first argument is the velocity (`coordinax.AbstractVel`)
             followed by the position (`coordinax.AbstractPos`) at which the
             acceleration is defined. In general this is a required argument,
             though it is not for Cartesian-to-Cartesian transforms -- see
@@ -143,7 +143,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> p = cx.CartesianVelocity3D.from_([4, 5, 6], "m/s")
+        >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
         >>> a = cx.CartesianAcceleration3D.from_([7, 8, 9], "m/s2")
         >>> sph = a.represent_as(cx.SphericalAcceleration, p, q)
         >>> sph
@@ -160,7 +160,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
     @partial(eqx.filter_jit, inline=True)
     def norm(
-        self, velocity: AbstractVelocity, position: AbstractPos, /
+        self, velocity: AbstractVel, position: AbstractPos, /
     ) -> Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, velocity, position).norm()
@@ -170,7 +170,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractVelocity:
+def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractVel:
     """Multiply the vector by a :class:`unxt.Quantity`.
 
     Examples
@@ -182,7 +182,7 @@ def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractV
     >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, Quantity(2, "s"))
     >>> vec
-    RadialVelocity( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
     >>> vec.d_r
     Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
 
@@ -197,7 +197,7 @@ def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractV
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractVelocity:
+def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractVel:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -209,7 +209,7 @@ def _mul_time_acc(lhs: Quantity["time"], rhs: AbstractAcceleration) -> AbstractV
     >>> d2r = cx.RadialAcceleration(Quantity(1, "m/s2"))
     >>> vec = lax.mul(Quantity(2, "s"), d2r)
     >>> vec
-    RadialVelocity( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
     >>> vec.d_r
     Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
 

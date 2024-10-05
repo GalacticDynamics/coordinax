@@ -9,17 +9,17 @@ from plum import dispatch
 import quaxed.numpy as xp
 from unxt import Quantity
 
-from .base import AbstractPos3D, AbstractVelocity3D
+from .base import AbstractPos3D, AbstractVel3D
 from .base_spherical import AbstractSphericalPos
-from .cartesian import CartesianAcceleration3D, CartesianPos3D, CartesianVelocity3D
-from .cylindrical import CylindricalPos, CylindricalVelocity
+from .cartesian import CartesianAcceleration3D, CartesianPos3D, CartesianVel3D
+from .cylindrical import CylindricalPos, CylindricalVel
 from .lonlatspherical import (
-    LonCosLatSphericalVelocity,
+    LonCosLatSphericalVel,
     LonLatSphericalPos,
-    LonLatSphericalVelocity,
+    LonLatSphericalVel,
 )
-from .mathspherical import MathSphericalPos, MathSphericalVelocity
-from .spherical import SphericalPos, SphericalVelocity
+from .mathspherical import MathSphericalPos, MathSphericalVel
+from .spherical import SphericalPos, SphericalVel
 from coordinax._src.base import AbstractPos
 
 ###############################################################################
@@ -90,24 +90,24 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianVelocity3D, type[CartesianVelocity3D], AbstractPos),
-    (CylindricalVelocity, type[CylindricalVelocity], AbstractPos),
-    (SphericalVelocity, type[SphericalVelocity], AbstractPos),
-    (LonLatSphericalVelocity, type[LonLatSphericalVelocity], AbstractPos),
+    (CartesianVel3D, type[CartesianVel3D], AbstractPos),
+    (CylindricalVel, type[CylindricalVel], AbstractPos),
+    (SphericalVel, type[SphericalVel], AbstractPos),
+    (LonLatSphericalVel, type[LonLatSphericalVel], AbstractPos),
     (
-        LonCosLatSphericalVelocity,
-        type[LonCosLatSphericalVelocity],
+        LonCosLatSphericalVel,
+        type[LonCosLatSphericalVel],
         AbstractPos,
     ),
-    (MathSphericalVelocity, type[MathSphericalVelocity], AbstractPos),
+    (MathSphericalVel, type[MathSphericalVel], AbstractPos),
 )
 def represent_as(
-    current: AbstractVelocity3D,
-    target: type[AbstractVelocity3D],
+    current: AbstractVel3D,
+    target: type[AbstractVel3D],
     position: AbstractPos,
     /,
     **kwargs: Any,
-) -> AbstractVelocity3D:
+) -> AbstractVel3D:
     """Self transforms for 3D velocity.
 
     Examples
@@ -122,48 +122,48 @@ def represent_as(
 
     Cartesian to Cartesian velocity:
 
-    >>> dif = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
-    >>> cx.represent_as(dif, cx.CartesianVelocity3D, vec) is dif
+    >>> dif = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
+    >>> cx.represent_as(dif, cx.CartesianVel3D, vec) is dif
     True
 
     Cylindrical to Cylindrical velocity:
 
-    >>> dif = cx.CylindricalVelocity(d_rho=Quantity(1, "km/s"),
-    ...                              d_phi=Quantity(2, "mas/yr"),
-    ...                              d_z=Quantity(3, "km/s"))
-    >>> cx.represent_as(dif, cx.CylindricalVelocity, vec) is dif
+    >>> dif = cx.CylindricalVel(d_rho=Quantity(1, "km/s"),
+    ...                         d_phi=Quantity(2, "mas/yr"),
+    ...                         d_z=Quantity(3, "km/s"))
+    >>> cx.represent_as(dif, cx.CylindricalVel, vec) is dif
     True
 
     Spherical to Spherical velocity:
 
-    >>> dif = cx.SphericalVelocity(d_r=Quantity(1, "km/s"),
-    ...                            d_theta=Quantity(2, "mas/yr"),
-    ...                            d_phi=Quantity(3, "mas/yr"))
-    >>> cx.represent_as(dif, cx.SphericalVelocity, vec) is dif
+    >>> dif = cx.SphericalVel(d_r=Quantity(1, "km/s"),
+    ...                       d_theta=Quantity(2, "mas/yr"),
+    ...                       d_phi=Quantity(3, "mas/yr"))
+    >>> cx.represent_as(dif, cx.SphericalVel, vec) is dif
     True
 
     LonLatSpherical to LonLatSpherical velocity:
 
-    >>> dif = cx.LonLatSphericalVelocity(d_lon=Quantity(1, "mas/yr"),
-    ...                                  d_lat=Quantity(2, "mas/yr"),
-    ...                                  d_distance=Quantity(3, "km/s"))
-    >>> cx.represent_as(dif, cx.LonLatSphericalVelocity, vec) is dif
+    >>> dif = cx.LonLatSphericalVel(d_lon=Quantity(1, "mas/yr"),
+    ...                             d_lat=Quantity(2, "mas/yr"),
+    ...                             d_distance=Quantity(3, "km/s"))
+    >>> cx.represent_as(dif, cx.LonLatSphericalVel, vec) is dif
     True
 
     LonCosLatSpherical to LonCosLatSpherical velocity:
 
-    >>> dif = cx.LonCosLatSphericalVelocity(d_lon_coslat=Quantity(1, "mas/yr"),
-    ...                                     d_lat=Quantity(2, "mas/yr"),
-    ...                                     d_distance=Quantity(3, "km/s"))
-    >>> cx.represent_as(dif, cx.LonCosLatSphericalVelocity, vec) is dif
+    >>> dif = cx.LonCosLatSphericalVel(d_lon_coslat=Quantity(1, "mas/yr"),
+    ...                                d_lat=Quantity(2, "mas/yr"),
+    ...                                d_distance=Quantity(3, "km/s"))
+    >>> cx.represent_as(dif, cx.LonCosLatSphericalVel, vec) is dif
     True
 
     MathSpherical to MathSpherical velocity:
 
-    >>> dif = cx.MathSphericalVelocity(d_r=Quantity(1, "km/s"),
-    ...                                d_theta=Quantity(2, "mas/yr"),
-    ...                                d_phi=Quantity(3, "mas/yr"))
-    >>> cx.represent_as(dif, cx.MathSphericalVelocity, vec) is dif
+    >>> dif = cx.MathSphericalVel(d_r=Quantity(1, "km/s"),
+    ...                           d_theta=Quantity(2, "mas/yr"),
+    ...                           d_phi=Quantity(3, "mas/yr"))
+    >>> cx.represent_as(dif, cx.MathSphericalVel, vec) is dif
     True
 
     """
@@ -579,18 +579,18 @@ def represent_as(
 
 
 # =============================================================================
-# LonLatSphericalVelocity
+# LonLatSphericalVel
 
 
 @dispatch
 def represent_as(
-    current: AbstractVelocity3D,
-    target: type[LonCosLatSphericalVelocity],
+    current: AbstractVel3D,
+    target: type[LonCosLatSphericalVel],
     position: AbstractPos | Quantity["length"],
     /,
     **kwargs: Any,
-) -> LonCosLatSphericalVelocity:
-    """AbstractVelocity3D -> LonCosLatSphericalVelocity.
+) -> LonCosLatSphericalVel:
+    """AbstractVel3D -> LonCosLatSphericalVel.
 
     Examples
     --------
@@ -601,12 +601,12 @@ def represent_as(
     >>> vec = cx.LonLatSphericalPos(lon=Quantity(15, "deg"),
     ...                             lat=Quantity(10, "deg"),
     ...                             distance=Quantity(1.5, "kpc"))
-    >>> dif = cx.LonLatSphericalVelocity(d_lon=Quantity(7, "mas/yr"),
-    ...                                  d_lat=Quantity(0, "deg/Gyr"),
-    ...                                  d_distance=Quantity(-5, "km/s"))
-    >>> newdif = cx.represent_as(dif, cx.LonCosLatSphericalVelocity, vec)
+    >>> dif = cx.LonLatSphericalVel(d_lon=Quantity(7, "mas/yr"),
+    ...                             d_lat=Quantity(0, "deg/Gyr"),
+    ...                             d_distance=Quantity(-5, "km/s"))
+    >>> newdif = cx.represent_as(dif, cx.LonCosLatSphericalVel, vec)
     >>> newdif
-    LonCosLatSphericalVelocity(
+    LonCosLatSphericalVel(
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_lat=Quantity[...]( value=f32[], unit=Unit("deg / Gyr") ),
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
@@ -624,8 +624,8 @@ def represent_as(
             position
         )
 
-    # Transform the differential to LonLatSphericalVelocity
-    current = represent_as(current, LonLatSphericalVelocity, posvec)
+    # Transform the differential to LonLatSphericalVel
+    current = represent_as(current, LonLatSphericalVel, posvec)
 
     # Transform the position to the required type
     posvec = represent_as(posvec, current.integral_cls)
@@ -640,13 +640,13 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: LonCosLatSphericalVelocity,
-    target: type[LonLatSphericalVelocity],
+    current: LonCosLatSphericalVel,
+    target: type[LonLatSphericalVel],
     position: AbstractPos | Quantity["length"],
     /,
     **kwargs: Any,
-) -> LonLatSphericalVelocity:
-    """LonCosLatSphericalVelocity -> LonLatSphericalVelocity."""
+) -> LonLatSphericalVel:
+    """LonCosLatSphericalVel -> LonLatSphericalVel."""
     # Parse the position to an AbstractPos
     if isinstance(position, AbstractPos):
         posvec = position
@@ -668,13 +668,13 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: LonCosLatSphericalVelocity,
-    target: type[AbstractVelocity3D],
+    current: LonCosLatSphericalVel,
+    target: type[AbstractVel3D],
     position: AbstractPos | Quantity["length"],
     /,
     **kwargs: Any,
-) -> AbstractVelocity3D:
-    """LonCosLatSphericalVelocity -> AbstractVelocity3D."""
+) -> AbstractVel3D:
+    """LonCosLatSphericalVel -> AbstractVel3D."""
     # Parse the position to an AbstractPos
     if isinstance(position, AbstractPos):
         posvec = position
@@ -682,21 +682,21 @@ def represent_as(
         posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
             position
         )
-    # Transform the differential to LonLatSphericalVelocity
-    current = represent_as(current, LonLatSphericalVelocity, posvec)
+    # Transform the differential to LonLatSphericalVel
+    current = represent_as(current, LonLatSphericalVel, posvec)
     # Transform the position to the required type
     return represent_as(current, target, posvec)
 
 
 # =============================================================================
-# CartesianVelocity3D
+# CartesianVel3D
 
 
 @dispatch
 def represent_as(
-    current: CartesianVelocity3D, target: type[CartesianVelocity3D], /
-) -> CartesianVelocity3D:
-    """CartesianVelocity3D -> CartesianVelocity3D with no position.
+    current: CartesianVel3D, target: type[CartesianVel3D], /
+) -> CartesianVel3D:
+    """CartesianVel3D -> CartesianVel3D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -708,8 +708,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocity3D.from_([1, 1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVelocity3D) is v
+    >>> v = cx.CartesianVel3D.from_([1, 1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVel3D) is v
     True
 
     """

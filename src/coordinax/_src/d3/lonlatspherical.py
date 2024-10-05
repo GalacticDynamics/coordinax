@@ -2,9 +2,9 @@
 
 __all__ = [
     "LonLatSphericalPos",
-    "LonLatSphericalVelocity",
+    "LonLatSphericalVel",
     "LonLatSphericalAcceleration",
-    "LonCosLatSphericalVelocity",
+    "LonCosLatSphericalVel",
 ]
 
 from functools import partial
@@ -22,7 +22,7 @@ import coordinax._src.typing as ct
 from .base_spherical import (
     AbstractSphericalAcceleration,
     AbstractSphericalPos,
-    AbstractSphericalVelocity,
+    AbstractSphericalVel,
     _90d,
     _180d,
 )
@@ -125,8 +125,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalVelocity"]:
-        return LonLatSphericalVelocity
+    def differential_cls(cls) -> type["LonLatSphericalVel"]:
+        return LonLatSphericalVel
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -248,7 +248,7 @@ def from_(
 
 
 @final
-class LonLatSphericalVelocity(AbstractSphericalVelocity):
+class LonLatSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_lon: ct.BatchableAngularSpeed = eqx.field(
@@ -278,7 +278,7 @@ class LonLatSphericalVelocity(AbstractSphericalVelocity):
 
 
 @final
-class LonCosLatSphericalVelocity(AbstractSphericalVelocity):
+class LonCosLatSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_lon_coslat: ct.BatchableAngularSpeed = eqx.field(
@@ -331,5 +331,5 @@ class LonLatSphericalAcceleration(AbstractSphericalAcceleration):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalVelocity]:
-        return LonLatSphericalVelocity
+    def integral_cls(cls) -> type[LonLatSphericalVel]:
+        return LonLatSphericalVel

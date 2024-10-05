@@ -1,6 +1,6 @@
 """Representation of velocities in different systems."""
 
-__all__ = ["AbstractVelocity"]
+__all__ = ["AbstractVel"]
 
 from abc import abstractmethod
 from functools import partial
@@ -22,12 +22,12 @@ from coordinax._src.utils import classproperty
 if TYPE_CHECKING:
     from typing_extensions import Self
 
-VelT = TypeVar("VelT", bound="AbstractVelocity")
+VelT = TypeVar("VelT", bound="AbstractVel")
 
-DIFFERENTIAL_CLASSES: set[type["AbstractVelocity"]] = set()
+DIFFERENTIAL_CLASSES: set[type["AbstractVel"]] = set()
 
 
-class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
+class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -47,11 +47,11 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialVelocity._cartesian_cls
-        <class 'coordinax...CartesianVelocity1D'>
+        >>> cx.RadialVel._cartesian_cls
+        <class 'coordinax...CartesianVel1D'>
 
-        >>> cx.SphericalVelocity._cartesian_cls
-        <class 'coordinax...CartesianVelocity3D'>
+        >>> cx.SphericalVel._cartesian_cls
+        <class 'coordinax...CartesianVel3D'>
 
         """
         # TODO: something nicer than this for getting the corresponding class
@@ -67,10 +67,10 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialVelocity.integral_cls.__name__
+        >>> cx.RadialVel.integral_cls.__name__
         'RadialPos'
 
-        >>> cx.SphericalVelocity.integral_cls.__name__
+        >>> cx.SphericalVel.integral_cls.__name__
         'SphericalPos'
 
         """
@@ -86,10 +86,10 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialVelocity.differential_cls.__name__
+        >>> cx.RadialVel.differential_cls.__name__
         'RadialAcceleration'
 
-        >>> cx.SphericalVelocity.differential_cls.__name__
+        >>> cx.SphericalVel.differential_cls.__name__
         'SphericalAcceleration'
 
         """
@@ -113,11 +113,11 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> dr = cx.RadialVelocity.from_([1], "m/s")
+        >>> dr = cx.RadialVel.from_([1], "m/s")
         >>> -dr
-        RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+        RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-        >>> dp = cx.PolarVelocity(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
+        >>> dp = cx.PolarVel(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
         >>> neg_dp = -dp
         >>> neg_dp.d_r
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
@@ -144,7 +144,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         Parameters
         ----------
-        target : type[`coordinax.AbstractVelocity`]
+        target : type[`coordinax.AbstractVel`]
             The type to represent the vector as.
         *args, **kwargs : Any
             Extra arguments. These are passed to `coordinax.represent_as` and
@@ -157,17 +157,17 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
         Returns
         -------
-        `coordinax.AbstractVelocity`
+        `coordinax.AbstractVel`
             The vector represented as the target type.
 
         Examples
         --------
         >>> import coordinax as cx
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> p = cx.CartesianVelocity3D.from_([4, 5, 6], "m/s")
-        >>> sph = p.represent_as(cx.SphericalVelocity, q)
+        >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
+        >>> sph = p.represent_as(cx.SphericalVel, q)
         >>> sph
-        SphericalVelocity(
+        SphericalVel(
             d_r=Quantity[...)]( value=f32[], unit=Unit("m / s") ),
             d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
             d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
@@ -190,7 +190,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_vel_q(self: AbstractVelocity, other: Quantity["time"]) -> AbstractPos:
+def _mul_vel_q(self: AbstractVel, other: Quantity["time"]) -> AbstractPos:
     """Multiply the vector by a time :class:`unxt.Quantity` to get a position.
 
     Examples
@@ -199,7 +199,7 @@ def _mul_vel_q(self: AbstractVelocity, other: Quantity["time"]) -> AbstractPos:
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dr = cx.RadialVelocity(Quantity(1, "m/s"))
+    >>> dr = cx.RadialVel(Quantity(1, "m/s"))
     >>> vec = dr * Quantity(2, "s")
     >>> vec
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))

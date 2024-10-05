@@ -16,7 +16,7 @@ from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from coordinax._src.d3.base import AbstractPos3D
-from coordinax._src.d3.cartesian import CartesianVelocity3D
+from coordinax._src.d3.cartesian import CartesianVel3D
 from coordinax._src.d4.spacetime import FourVector
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._src.operators.funcs import simplify_op
@@ -37,11 +37,10 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     Parameters
     ----------
-    velocity : :class:`vector.CartesianVelocity3D`
+    velocity : :class:`vector.CartesianVel3D`
         The boost velocity. This parameters uses
-        :meth:`vector.CartesianVelocity3D.from_` to enable a variety
-        of more convenient input types. See
-        :class:`vector.CartesianVelocity3D` for details.
+        :meth:`vector.CartesianVel3D.from_` to enable a variety of more
+        convenient input types. See :class:`vector.CartesianVel3D` for details.
 
     Examples
     --------
@@ -55,26 +54,25 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     >>> op = co.GalileanBoostOperator(Quantity([1.0, 2.0, 3.0], "m/s"))
     >>> op
-    GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
+    GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
 
-    Note that the velocity is a :class:`vector.CartesianVelocity3D`, which
-    was constructed from a 1D array, using
-    :meth:`vector.CartesianVelocity3D.from_`. We can also construct it
-    directly:
+    Note that the velocity is a :class:`vector.CartesianVel3D`, which was
+    constructed from a 1D array, using :meth:`vector.CartesianVel3D.from_`. We
+    can also construct it directly:
 
-    >>> boost = cx.CartesianVelocity3D.from_([1, 2, 3], "m/s")
+    >>> boost = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
     >>> op = co.GalileanBoostOperator(boost)
     >>> op
-    GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
+    GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
 
     """
 
-    velocity: CartesianVelocity3D = eqx.field(converter=CartesianVelocity3D.from_)
+    velocity: CartesianVel3D = eqx.field(converter=CartesianVel3D.from_)
     """The boost velocity.
 
-    This parameters uses :meth:`vector.CartesianVelocity3D.from_` to
-    enable a variety of more convenient input types. See
-    :class:`vector.CartesianVelocity3D` for details.
+    This parameters uses :meth:`vector.CartesianVel3D.from_` to enable a variety
+    of more convenient input types. See :class:`vector.CartesianVel3D` for
+    details.
     """
 
     # -----------------------------------------------------
@@ -106,7 +104,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
         >>> op = GalileanBoostOperator(Quantity([1, 2, 3], "m/s"))
         >>> op.inverse
-        GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
+        GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
 
         >>> op.inverse.velocity.d_x
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')

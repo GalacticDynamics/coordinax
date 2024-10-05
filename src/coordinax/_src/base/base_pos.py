@@ -69,7 +69,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVelocity"]:
+    def differential_cls(cls) -> type["AbstractVel"]:
         """Return the corresponding differential vector class.
 
         Examples
@@ -77,10 +77,10 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> import coordinax as cx
 
         >>> cx.RadialPos.differential_cls.__name__
-        'RadialVelocity'
+        'RadialVel'
 
         >>> cx.SphericalPos.differential_cls.__name__
-        'SphericalVelocity'
+        'SphericalVel'
 
         """
         raise NotImplementedError

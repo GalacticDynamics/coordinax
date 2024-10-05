@@ -2,7 +2,7 @@
 
 __all__ = [
     "MathSphericalPos",
-    "MathSphericalVelocity",
+    "MathSphericalVel",
     "MathSphericalAcceleration",
 ]
 
@@ -25,7 +25,7 @@ import coordinax._src.typing as ct
 from .base_spherical import (
     AbstractSphericalAcceleration,
     AbstractSphericalPos,
-    AbstractSphericalVelocity,
+    AbstractSphericalVel,
     _180d,
     _360d,
 )
@@ -83,8 +83,8 @@ class MathSphericalPos(AbstractSphericalPos):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["MathSphericalVelocity"]:
-        return MathSphericalVelocity
+    def differential_cls(cls) -> type["MathSphericalVel"]:
+        return MathSphericalVel
 
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableDistance:
@@ -228,7 +228,7 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
 
 
 @final
-class MathSphericalVelocity(AbstractSphericalVelocity):
+class MathSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -284,5 +284,5 @@ class MathSphericalAcceleration(AbstractSphericalAcceleration):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[MathSphericalVelocity]:
-        return MathSphericalVelocity
+    def integral_cls(cls) -> type[MathSphericalVel]:
+        return MathSphericalVel

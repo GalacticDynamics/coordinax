@@ -5,8 +5,8 @@ __all__: list[str] = []
 
 from typing import Any
 
-from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVelocity3D
-from .cartesian import CartesianAcceleration3D, CartesianPos3D, CartesianVelocity3D
+from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVel3D
+from .cartesian import CartesianAcceleration3D, CartesianPos3D, CartesianVel3D
 
 #####################################################################
 
@@ -59,8 +59,8 @@ def from_(cls: type[AbstractPos3D], obj: AbstractPos3D, /) -> AbstractPos3D:
 #####################################################################
 
 
-@AbstractVelocity3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
-def from_(cls: type[AbstractVelocity3D], obj: Any, /) -> CartesianVelocity3D:
+@AbstractVel3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+def from_(cls: type[AbstractVel3D], obj: Any, /) -> CartesianVel3D:
     """Try to construct a 3D Cartesian velocity from an object.
 
     Examples
@@ -69,23 +69,19 @@ def from_(cls: type[AbstractVelocity3D], obj: Any, /) -> CartesianVelocity3D:
     >>> import coordinax as cx
 
     >>> x = Quantity([1, 2, 3], "km / s")
-    >>> cx.AbstractVelocity3D.from_(x)
-    CartesianVelocity3D(
+    >>> cx.AbstractVel3D.from_(x)
+    CartesianVel3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_z=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
     """
-    return (
-        obj if isinstance(obj, CartesianVelocity3D) else CartesianVelocity3D.from_(obj)
-    )
+    return obj if isinstance(obj, CartesianVel3D) else CartesianVel3D.from_(obj)
 
 
-@AbstractVelocity3D.from_._f.dispatch(precedence=1)  # noqa: SLF001
-def from_(
-    cls: type[AbstractVelocity3D], obj: AbstractVelocity3D, /
-) -> AbstractVelocity3D:
+@AbstractVel3D.from_._f.dispatch(precedence=1)  # noqa: SLF001
+def from_(cls: type[AbstractVel3D], obj: AbstractVel3D, /) -> AbstractVel3D:
     """Construct from a 3D velocity.
 
     Examples
@@ -94,16 +90,16 @@ def from_(
 
     >>> q = cx.CartesianPos3D.from_([1, 1, 1], "km")
 
-    >>> cart = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
-    >>> cx.AbstractVelocity3D.from_(cart) is cart
+    >>> cart = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
+    >>> cx.AbstractVel3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalVelocity, q)
-    >>> cx.AbstractVelocity3D.from_(sph) is sph
+    >>> sph = cart.represent_as(cx.SphericalVel, q)
+    >>> cx.AbstractVel3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalVelocity, q)
-    >>> cx.AbstractVelocity3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.CylindricalVel, q)
+    >>> cx.AbstractVel3D.from_(cyl) is cyl
     True
 
     """
@@ -149,7 +145,7 @@ def from_(
     >>> import coordinax as cx
 
     >>> q = cx.CartesianPos3D.from_([1, 1, 1], "km")
-    >>> p = cx.CartesianVelocity3D.from_([1, 1, 1], "km/s")
+    >>> p = cx.CartesianVel3D.from_([1, 1, 1], "km/s")
 
     >>> cart = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
     >>> cx.AbstractAcceleration3D.from_(cart) is cart

@@ -2,7 +2,7 @@
 
 __all__ = [
     "CartesianPos2D",
-    "CartesianVelocity2D",
+    "CartesianVel2D",
     "CartesianAcceleration2D",
 ]
 
@@ -21,7 +21,7 @@ from quaxed import lax as qlax
 from unxt import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVelocity2D
+from .base import AbstractAcceleration2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
@@ -43,8 +43,8 @@ class CartesianPos2D(AbstractPos2D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianVelocity2D"]:
-        return CartesianVelocity2D
+    def differential_cls(cls) -> type["CartesianVel2D"]:
+        return CartesianVel2D
 
 
 # -----------------------------------------------------
@@ -161,7 +161,7 @@ def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2
 
 
 @final
-class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
+class CartesianVel2D(AvalMixin, AbstractVel2D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
@@ -188,10 +188,10 @@ class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
 # -----------------------------------------------------
 
 
-@CartesianVelocity2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+@CartesianVel2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
 def from_(
-    cls: type[CartesianVelocity2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
-) -> CartesianVelocity2D:
+    cls: type[CartesianVel2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
+) -> CartesianVel2D:
     """Construct a 2D Cartesian velocity.
 
     Examples
@@ -199,9 +199,9 @@ def from_(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianVelocity2D.from_(Quantity([1, 2], "m/s"))
+    >>> vec = cx.CartesianVel2D.from_(Quantity([1, 2], "m/s"))
     >>> vec
-    CartesianVelocity2D(
+    CartesianVel2D(
       d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("m / s") )
     )
@@ -215,9 +215,7 @@ def from_(
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_pp(
-    lhs: CartesianVelocity2D, rhs: CartesianVelocity2D, /
-) -> CartesianVelocity2D:
+def _add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
     """Add two Cartesian velocities.
 
     Examples
@@ -226,7 +224,7 @@ def _add_pp(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity2D.from_(Quantity([1, 2], "km/s"))
+    >>> v = cx.CartesianVel2D.from_([1, 2], "km/s")
     >>> (v + v).d_x
     Quantity['speed'](Array(2., dtype=float32), unit='km / s')
 
@@ -238,7 +236,7 @@ def _add_pp(
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D:
+def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
     """Scale a cartesian 2D velocity by a scalar.
 
     Examples
@@ -247,7 +245,7 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity2D.from_(Quantity([3, 4], "m/s"))
+    >>> v = cx.CartesianVel2D.from_([3, 4], "m/s")
     >>> (5 * v).d_x
     Quantity['speed'](Array(15., dtype=float32), unit='m / s')
 
@@ -283,14 +281,14 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVelocity2D]:
-        return CartesianVelocity2D
+    def integral_cls(cls) -> type[CartesianVel2D]:
+        return CartesianVel2D
 
     # -----------------------------------------------------
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractVelocity2D | None = None, /) -> ct.BatchableAcc:
+    def norm(self, _: AbstractVel2D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
 
         Examples

@@ -2,7 +2,7 @@
 
 __all__ = [
     "CylindricalPos",
-    "CylindricalVelocity",
+    "CylindricalVel",
     "CylindricalAcceleration",
 ]
 
@@ -16,7 +16,7 @@ import quaxed.numpy as xp
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVelocity3D
+from .base import AbstractAcceleration3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
@@ -55,8 +55,8 @@ class CylindricalPos(AbstractPos3D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CylindricalVelocity"]:
-        return CylindricalVelocity
+    def differential_cls(cls) -> type["CylindricalVel"]:
+        return CylindricalVel
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -77,7 +77,7 @@ class CylindricalPos(AbstractPos3D):
 
 
 @final
-class CylindricalVelocity(AbstractVelocity3D):
+class CylindricalVel(AbstractVel3D):
     """Cylindrical differential representation."""
 
     d_rho: ct.BatchableSpeed = eqx.field(
@@ -127,5 +127,5 @@ class CylindricalAcceleration(AbstractAcceleration3D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CylindricalVelocity]:
-        return CylindricalVelocity
+    def integral_cls(cls) -> type[CylindricalVel]:
+        return CylindricalVel
