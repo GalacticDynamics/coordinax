@@ -12,7 +12,6 @@ from typing_extensions import override
 from unxt import Quantity
 
 from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
-from coordinax._src.base import AbstractAcceleration
 from coordinax._src.utils import classproperty
 
 _90d = Quantity(90, "deg")
@@ -27,7 +26,7 @@ class AbstractSphericalPosition(AbstractPosition3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractSphericalVelocity"]: ...
+    def differential_cls(cls) -> "type[AbstractSphericalVelocity]": ...
 
 
 class AbstractSphericalVelocity(AbstractVelocity3D):
@@ -37,13 +36,13 @@ class AbstractSphericalVelocity(AbstractVelocity3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[SphericalPosition]: ...
+    def integral_cls(cls) -> type[AbstractSphericalPosition]: ...
 
     @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcceleration]: ...
+    def differential_cls(cls) -> "type[AbstractSphericalAcceleration]": ...
 
 
 class AbstractSphericalAcceleration(AbstractAcceleration3D):
@@ -53,4 +52,4 @@ class AbstractSphericalAcceleration(AbstractAcceleration3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[SphericalVelocity]: ...
+    def integral_cls(cls) -> type[AbstractSphericalVelocity]: ...
