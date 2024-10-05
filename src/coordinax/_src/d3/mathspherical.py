@@ -167,7 +167,7 @@ def constructor(
 
     """
     # 1) Convert the inputs
-    fields = SphericalPosition.__dataclass_fields__
+    fields = MathSphericalPosition.__dataclass_fields__
     r = fields["r"].metadata["converter"](r)
     theta = fields["theta"].metadata["converter"](theta)
     phi = fields["phi"].metadata["converter"](phi)
@@ -248,11 +248,13 @@ class MathSphericalVelocity(AbstractSphericalVelocity):
     )
     r"""Inclination speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[MathSphericalPosition]:
         return MathSphericalPosition
 
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["MathSphericalAcceleration"]:
@@ -281,6 +283,7 @@ class MathSphericalAcceleration(AbstractSphericalAcceleration):
     )
     r"""Inclination acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[MathSphericalVelocity]:
