@@ -12,7 +12,7 @@ from plum import dispatch
 from dataclassish import field_items
 from unxt import Quantity
 
-from coordinax._src.base import AbstractPosition
+from coordinax._src.base import AbstractPos
 
 if TYPE_CHECKING:
     from coordinax.operators import OperatorSequence
@@ -56,9 +56,9 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     @dispatch.abstract
     def __call__(
         self: "AbstractOperator",
-        x: AbstractPosition,  # noqa: ARG002
+        x: AbstractPos,  # noqa: ARG002
         /,
-    ) -> AbstractPosition:
+    ) -> AbstractPos:
         """Apply the operator to the coordinates `x`."""
         msg = "implement this method in the subclass"
         raise TypeError(msg)
@@ -66,10 +66,10 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     @dispatch.abstract
     def __call__(
         self: "AbstractOperator",
-        x: AbstractPosition,  # noqa: ARG002
+        x: AbstractPos,  # noqa: ARG002
         t: Quantity["time"],  # noqa: ARG002
         /,
-    ) -> AbstractPosition:
+    ) -> AbstractPos:
         """Apply the operator to the coordinates `x` at a time `t`."""
         msg = "implement this method in the subclass"
         raise TypeError(msg)

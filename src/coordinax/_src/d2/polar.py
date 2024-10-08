@@ -1,9 +1,9 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "PolarPosition",
-    "PolarVelocity",
-    "PolarAcceleration",
+    "PolarPos",
+    "PolarVel",
+    "PolarAcc",
 ]
 
 from functools import partial
@@ -19,14 +19,14 @@ from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration2D, AbstractPosition2D, AbstractVelocity2D
+from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
 
 @final
-class PolarPosition(AbstractPosition2D):
+class PolarPos(AbstractPos2D):
     r"""Polar vector representation.
 
     Parameters
@@ -58,12 +58,12 @@ class PolarPosition(AbstractPosition2D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarVelocity"]:
-        return PolarVelocity
+    def differential_cls(cls) -> type["PolarVel"]:
+        return PolarVel
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPosition, /) -> PolarPosition:
+def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
     """Scale the polar position by a scalar.
 
     Examples
@@ -72,14 +72,14 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPosition, /) -> PolarPosition:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> v = cx.PolarPosition(r=Quantity(1, "m"), phi=Quantity(90, "deg"))
+    >>> v = cx.PolarPos(r=Quantity(1, "m"), phi=Quantity(90, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
     >>> nv = jnp.multiply(2, v)
     >>> nv
-    PolarPosition(
+    PolarPos(
       r=Distance(value=f32[], unit=Unit("m")),
       phi=Quantity[...](value=f32[], unit=Unit("deg"))
     )
@@ -99,7 +99,7 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPosition, /) -> PolarPosition:
 
 
 @final
-class PolarVelocity(AbstractVelocity2D):
+class PolarVel(AbstractVel2D):
     """Polar differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -114,17 +114,17 @@ class PolarVelocity(AbstractVelocity2D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarPosition]:
-        return PolarPosition
+    def integral_cls(cls) -> type[PolarPos]:
+        return PolarPos
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarAcceleration"]:
-        return PolarAcceleration
+    def differential_cls(cls) -> type["PolarAcc"]:
+        return PolarAcc
 
 
 @final
-class PolarAcceleration(AbstractAcceleration2D):
+class PolarAcc(AbstractAcc2D):
     """Polar acceleration representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(
@@ -139,5 +139,5 @@ class PolarAcceleration(AbstractAcceleration2D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarVelocity]:
-        return PolarVelocity
+    def integral_cls(cls) -> type[PolarVel]:
+        return PolarVel

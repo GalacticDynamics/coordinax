@@ -1,9 +1,9 @@
 """Carteisan vector."""
 
 __all__ = [
-    "CartesianPosition1D",
-    "CartesianVelocity1D",
-    "CartesianAcceleration1D",
+    "CartesianPos1D",
+    "CartesianVel1D",
+    "CartesianAcc1D",
 ]
 
 from dataclasses import replace
@@ -21,25 +21,23 @@ from quaxed import lax as qlax
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
-from coordinax._src.base import AbstractPosition
+from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
+from coordinax._src.base import AbstractPos
 from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
 
 
 @final
-class CartesianPosition1D(AbstractPosition1D):
+class CartesianPos1D(AbstractPos1D):
     """Cartesian vector representation.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition1D.constructor([2], "m")
+    >>> vec = cx.CartesianPos1D.constructor([2], "m")
     >>> vec
-    CartesianPosition1D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-    )
+    CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")))
 
     Vectors support the basic math operations:
 
@@ -61,8 +59,8 @@ class CartesianPosition1D(AbstractPosition1D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianVelocity1D"]:
-        return CartesianVelocity1D
+    def differential_cls(cls) -> type["CartesianVel1D"]:
+        return CartesianVel1D
 
 
 # -------------------------------------------------------------------
@@ -70,20 +68,20 @@ class CartesianPosition1D(AbstractPosition1D):
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosition1D:
-    """Add a vector to a CartesianPosition1D.
+def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
+    """Add a vector to a CartesianPos1D.
 
     Examples
     --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
-    >>> r = cx.RadialPosition.constructor([1], "kpc")
+    >>> q = cx.CartesianPos1D.constructor([1], "kpc")
+    >>> r = cx.RadialPos.constructor([1], "kpc")
 
     >>> qpr = jnp.add(q, r)
     >>> qpr
-    CartesianPosition1D(
+    CartesianPos1D(
         x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
     )
     >>> qpr.x
@@ -93,12 +91,12 @@ def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosi
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
     """
-    cart = rhs.represent_as(CartesianPosition1D)
+    cart = rhs.represent_as(CartesianPos1D)
     return jax.tree.map(qlax.add, lhs, cart)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D:
+def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     """Scale a position by a scalar.
 
     Examples
@@ -107,7 +105,7 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition1D(x=Quantity(1, "m"))
+    >>> v = cx.CartesianPos1D(x=Quantity(1, "m"))
     >>> jnp.multiply(2, v).x
     Quantity['length'](Array(2., dtype=float32), unit='m')
 
@@ -125,13 +123,13 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPosition1D, /) -> CartesianPosition1D
 
 
 @register(jax.lax.neg_p)  # type: ignore[misc]
-def _neg_p_cart1d_pos(obj: CartesianPosition1D, /) -> CartesianPosition1D:
-    """Negate the `coordinax.CartesianPosition1D`.
+def _neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
+    """Negate the `coordinax.CartesianPos1D`.
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition1D.constructor([1], "km")
+    >>> q = cx.CartesianPos1D.constructor([1], "km")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='km')
 
@@ -140,9 +138,7 @@ def _neg_p_cart1d_pos(obj: CartesianPosition1D, /) -> CartesianPosition1D:
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_q1d_pos(
-    self: CartesianPosition1D, other: AbstractPosition, /
-) -> CartesianPosition1D:
+def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     """Subtract two vectors.
 
     Examples
@@ -151,12 +147,12 @@ def _sub_q1d_pos(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition1D.constructor(Quantity([1], "kpc"))
-    >>> r = cx.RadialPosition.constructor(Quantity([1], "kpc"))
+    >>> q = cx.CartesianPos1D.constructor(Quantity([1], "kpc"))
+    >>> r = cx.RadialPos.constructor(Quantity([1], "kpc"))
 
     >>> qmr = jnp.subtract(q, r)
     >>> qmr
-    CartesianPosition1D(
+    CartesianPos1D(
        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
     )
     >>> qmr.x
@@ -166,7 +162,7 @@ def _sub_q1d_pos(
     Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
     """
-    cart = other.represent_as(CartesianPosition1D)
+    cart = other.represent_as(CartesianPos1D)
     return jax.tree.map(qlax.sub, self, cart)
 
 
@@ -174,7 +170,7 @@ def _sub_q1d_pos(
 
 
 @final
-class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
+class CartesianVel1D(AvalMixin, AbstractVel1D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
@@ -183,25 +179,25 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianPosition1D]:
-        return CartesianPosition1D
+    def integral_cls(cls) -> type[CartesianPos1D]:
+        return CartesianPos1D
 
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAcceleration1D"]:
-        return CartesianAcceleration1D
+    def differential_cls(cls) -> type["CartesianAcc1D"]:
+        return CartesianAcc1D
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
         Examples
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.CartesianVelocity1D.constructor([-1], "km/s")
+        >>> q = cx.CartesianVel1D.constructor([-1], "km/s")
         >>> q.norm()
         Quantity['speed'](Array(1, dtype=int32), unit='km / s')
 
@@ -214,9 +210,7 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_pp(
-    lhs: CartesianVelocity1D, rhs: CartesianVelocity1D, /
-) -> CartesianVelocity1D:
+def _add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     """Add two Cartesian velocities.
 
     Examples
@@ -225,10 +219,10 @@ def _add_pp(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity1D.constructor([1], "km/s")
+    >>> v = cx.CartesianVel1D.constructor([1], "km/s")
     >>> vec = jnp.add(v, v)
     >>> vec
-    CartesianVelocity1D(
+    CartesianVel1D(
        d_x=Quantity[...]( value=i32[], unit=Unit("km / s") )
     )
     >>> vec.d_x
@@ -242,7 +236,7 @@ def _add_pp(
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity1D:
+def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     """Scale a velocity by a scalar.
 
     Examples
@@ -251,10 +245,10 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity1D(d_x=Quantity(1, "m/s"))
+    >>> v = cx.CartesianVel1D(d_x=Quantity(1, "m/s"))
     >>> vec = jnp.multiply(2, v)
     >>> vec
-    CartesianVelocity1D(
+    CartesianVel1D(
       d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") )
     )
 
@@ -278,7 +272,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity
 
 
 @final
-class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
+class CartesianAcc1D(AvalMixin, AbstractAcc1D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].constructor)
@@ -286,22 +280,22 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVelocity1D]:
-        return CartesianVelocity1D
+    def integral_cls(cls) -> type[CartesianVel1D]:
+        return CartesianVel1D
 
     # -----------------------------------------------------
     # Methods
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPosition1D | None = None, /) -> ct.BatchableAcc:
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableAcc:
         """Return the norm of the vector.
 
         Examples
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.CartesianAcceleration1D.constructor([-1], "km/s2")
+        >>> q = cx.CartesianAcc1D.constructor([-1], "km/s2")
         >>> q.norm()
         Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
 
@@ -310,9 +304,7 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
-def _add_aa(
-    lhs: CartesianAcceleration1D, rhs: CartesianAcceleration1D, /
-) -> CartesianAcceleration1D:
+def _add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     """Add two Cartesian accelerations.
 
     Examples
@@ -321,10 +313,10 @@ def _add_aa(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration1D.constructor([1], "km/s2")
+    >>> v = cx.CartesianAcc1D.constructor([1], "km/s2")
     >>> vec = jnp.add(v, v)
     >>> vec
-    CartesianAcceleration1D(
+    CartesianAcc1D(
         d2_x=Quantity[...](value=i32[], unit=Unit("km / s2"))
     )
     >>> vec.d2_x
@@ -338,7 +330,7 @@ def _add_aa(
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceleration1D:
+def _mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     """Scale an acceleration by a scalar.
 
     Examples
@@ -347,10 +339,10 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration1D(d2_x=Quantity(1, "m/s2"))
+    >>> v = cx.CartesianAcc1D(d2_x=Quantity(1, "m/s2"))
     >>> vec = jnp.multiply(2, v)
     >>> vec
-    CartesianAcceleration1D( d2_x=... )
+    CartesianAcc1D( d2_x=... )
 
     >>> vec.d2_x
     Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
@@ -369,9 +361,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcceleration1D, /) -> CartesianAcceler
 
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
-def _sub_a1_a1(
-    self: CartesianAcceleration1D, other: CartesianAcceleration1D, /
-) -> CartesianAcceleration1D:
+def _sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D:
     """Subtract two 1-D cartesian accelerations.
 
     Examples
@@ -380,11 +370,11 @@ def _sub_a1_a1(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v1 = cx.CartesianAcceleration1D(d2_x=Quantity(1, "m/s2"))
-    >>> v2 = cx.CartesianAcceleration1D(d2_x=Quantity(2, "m/s2"))
+    >>> v1 = cx.CartesianAcc1D(d2_x=Quantity(1, "m/s2"))
+    >>> v2 = cx.CartesianAcc1D(d2_x=Quantity(2, "m/s2"))
     >>> vec = lax.sub(v1, v2)
     >>> vec
-    CartesianAcceleration1D( d2_x=... )
+    CartesianAcc1D( d2_x=... )
 
     >>> vec.d2_x
     Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')

@@ -27,87 +27,87 @@ class AvalMixin:
 
         1 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition1D.constructor([1], "m")
+        >>> vec = cx.CartesianPos1D.constructor([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.RadialPosition.constructor([1], "m")
+        >>> vec = cx.RadialPos.constructor([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity1D.constructor([1], "m/s")
+        >>> vec = cx.CartesianVel1D.constructor([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.RadialVelocity.constructor([1], "m/s")
+        >>> vec = cx.RadialVel.constructor([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.CartesianAcceleration1D.constructor([1], "m/s2")
+        >>> vec = cx.CartesianAcc1D.constructor([1], "m/s2")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.RadialAcceleration.constructor([1], "m/s2")
+        >>> vec = cx.RadialAcc.constructor([1], "m/s2")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
         2 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition2D.constructor([1, 2], "m")
+        >>> vec = cx.CartesianPos2D.constructor([1, 2], "m")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarPosition(r=Quantity(1, "m"), phi=Quantity(0, "rad"))
+        >>> vec = cx.PolarPos(r=Quantity(1, "m"), phi=Quantity(0, "rad"))
         >>> vec.aval()
         ConcreteArray([1. 0.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity2D.constructor([1, 2], "m/s")
+        >>> vec = cx.CartesianVel2D.constructor([1, 2], "m/s")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarVelocity(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"))
+        >>> vec = cx.PolarVel(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
 
-        >>> vec = cx.CartesianAcceleration2D.constructor([1,2], "m/s2")
+        >>> vec = cx.CartesianAcc2D.constructor([1,2], "m/s2")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarAcceleration(d2_r=Quantity(1, "m/s2"), d2_phi=Quantity(0, "rad/s2"))
+        >>> vec = cx.PolarAcc(d2_r=Quantity(1, "m/s2"), d2_phi=Quantity(0, "rad/s2"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
 
         3 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> vec = cx.CartesianPos3D.constructor([1, 2, 3], "m")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.CartesianPosition3D.constructor([[1, 2, 3], [4, 5, 6]], "m")
+        >>> vec = cx.CartesianPos3D.constructor([[1, 2, 3], [4, 5, 6]], "m")
         >>> vec.aval()
         ConcreteArray([[1. 2. 3.]
                        [4. 5. 6.]], dtype=float32)
 
-        >>> vec = cx.SphericalPosition(r=Quantity(1, "m"), phi=Quantity(0, "rad"), theta=Quantity(0, "rad"))
+        >>> vec = cx.SphericalPos(r=Quantity(1, "m"), phi=Quantity(0, "rad"), theta=Quantity(0, "rad"))
         >>> vec.aval()
         ConcreteArray([0. 0. 1.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity3D.constructor([1,2,3], "m/s")
+        >>> vec = cx.CartesianVel3D.constructor([1,2,3], "m/s")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.SphericalVelocity(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"), d_theta=Quantity(0, "rad/s"))
+        >>> vec = cx.SphericalVel(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"), d_theta=Quantity(0, "rad/s"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
 
-        >>> vec = cx.CartesianAcceleration3D.constructor([1,2,3], "m/s2")
+        >>> vec = cx.CartesianAcc3D.constructor([1,2,3], "m/s2")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.SphericalAcceleration(d2_r=Quantity(1, "m/s2"), d2_phi=Quantity(0, "rad/s2"), d2_theta=Quantity(0, "rad/s2"))
+        >>> vec = cx.SphericalAcc(d2_r=Quantity(1, "m/s2"), d2_phi=Quantity(0, "rad/s2"), d2_theta=Quantity(0, "rad/s2"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope

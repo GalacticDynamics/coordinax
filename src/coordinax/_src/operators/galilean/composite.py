@@ -70,26 +70,26 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       translation=GalileanTranslationOperator(
         translation=FourVector(
           t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-          q=CartesianPosition3D( ... ) )
+          q=CartesianPos3D( ... ) )
       ),
-      velocity=GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
+      velocity=GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
     )
 
     Note that the translation is a
     :class:`coordinax.operators.GalileanTranslationOperator` with a
     :class:`vector.FourVector` translation, and the velocity is a
     :class:`coordinax.operators.GalileanBoostOperator` with a
-    :class:`vector.CartesianVelocity3D` velocity. We can also construct them
+    :class:`vector.CartesianVel3D` velocity. We can also construct them
     directly, which allows for other vector types.
 
     >>> op = cx.operators.GalileanOperator(
     ...     translation=cx.operators.GalileanTranslationOperator(
     ...         cx.FourVector(t=Quantity(2.5, "Gyr"),
-    ...                    q=cx.SphericalPosition(r=Quantity(1, "kpc"),
+    ...                    q=cx.SphericalPos(r=Quantity(1, "kpc"),
     ...                                         theta=Quantity(90, "deg"),
     ...                                         phi=Quantity(0, "rad") ) ) ),
     ...     velocity=cx.operators.GalileanBoostOperator(
-    ...         cx.CartesianVelocity3D(d_x=Quantity(1, "km/s"),
+    ...         cx.CartesianVel3D(d_x=Quantity(1, "km/s"),
     ...                                    d_y=Quantity(2, "km/s"),
     ...                                    d_z=Quantity(3, "km/s")))
     ... )
@@ -99,10 +99,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       translation=GalileanTranslationOperator(
         translation=FourVector(
           t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
-          q=SphericalPosition( ... )
+          q=SphericalPos( ... )
         )
       ),
-      velocity=GalileanBoostOperator( velocity=CartesianVelocity3D( ... ) )
+      velocity=GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
     )
 
     Galilean operators can be applied to :class:`vector.FourVector`:
@@ -112,7 +112,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> new
     FourVector(
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-      q=CartesianPosition3D( ... )
+      q=CartesianPos3D( ... )
     )
     >>> new.t.to_units("Gyr").value.round(2)
     Array(2.5, dtype=float32)
@@ -120,9 +120,9 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
 
     Also the Galilean operators can also be applied to
-    :class:`vector.AbstractPosition3D` and :class:`unxt.Quantity`:
+    :class:`vector.AbstractPos3D` and :class:`unxt.Quantity`:
 
-    >>> q = cx.CartesianPosition3D.constructor([0, 0, 0], "kpc")
+    >>> q = cx.CartesianPos3D.constructor([0, 0, 0], "kpc")
     >>> t = Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
@@ -162,9 +162,9 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     This parameters accepts either a
     :class:`coordinax.operators.GalileanBoostOperator` instance or any
     input that can be used to construct a
-    :class:`vector.CartesianVelocity3D`, using
-    :meth:`vector.CartesianVelocity3D.constructor`. See
-    :class:`vector.CartesianVelocity3D` for details.
+    :class:`vector.CartesianVel3D`, using
+    :meth:`vector.CartesianVel3D.constructor`. See
+    :class:`vector.CartesianVel3D` for details.
     """
 
     @property
