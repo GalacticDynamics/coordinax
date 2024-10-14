@@ -196,7 +196,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         This also supports numpy index arrays. But this example section
         highlights core python indexing.
 
-        """  # noqa: E501
+        """
         return Space(**{k: v[key] for k, v in self.items()})
 
     @dispatch
@@ -228,7 +228,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
             z=Quantity[...](value=f32[1,2], unit=Unit("m"))
         )
 
-        """  # noqa: E501
+        """
         if isinstance(key, Dimension):
             key = _get_dimension_name(key)
 
