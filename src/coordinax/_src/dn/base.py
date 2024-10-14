@@ -84,7 +84,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.constructor([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -99,7 +99,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.constructor([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -121,7 +121,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.constructor([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -138,7 +138,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.constructor([[1, 2], [3, 4]], "m")
+        >>> vec = cx.CartesianPositionND.from_([[1, 2], [3, 4]], "m")
         >>> vec.shape
         (2,)
 
@@ -192,7 +192,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.constructor([[[1, 2]], [[3, 4]]], "m/s")
+        >>> vec = cx.CartesianVelocityND.from_([[[1, 2]], [[3, 4]]], "m/s")
         >>> vec.shape
         (2, 1)
 
@@ -220,7 +220,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.constructor([[1, 2], [3, 4]], "m/s")
+        >>> vec = cx.CartesianVelocityND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.shape
         (2,)
 
@@ -235,7 +235,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.constructor([[[1, 2]], [[3, 4]]], "m/s")
+        >>> vec = cx.CartesianVelocityND.from_([[[1, 2]], [[3, 4]]], "m/s")
         >>> vec.shape
         (2, 1)
 
@@ -257,7 +257,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.constructor([[1, 2], [3, 4]], "m/s")
+        >>> vec = cx.CartesianVelocityND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.flatten()
         CartesianVelocityND(
             d_q=Quantity[...]( value=f32[2,2], unit=Unit("m / s") )

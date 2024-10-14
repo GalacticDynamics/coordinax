@@ -20,7 +20,7 @@ class PoincarePolarVector(AbstractPosition):  # TODO: better name
     """Poincare vector + differential."""
 
     rho: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
@@ -28,12 +28,12 @@ class PoincarePolarVector(AbstractPosition):  # TODO: better name
     r"""Poincare phi-like variable."""
 
     z: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
     d_rho: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
@@ -41,7 +41,7 @@ class PoincarePolarVector(AbstractPosition):  # TODO: better name
     r"""Poincare phi-like velocity variable."""
 
     d_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 

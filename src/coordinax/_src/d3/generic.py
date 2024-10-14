@@ -32,7 +32,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianGeneric3D.constructor([1, 2, 3], "kg m /s")
+    >>> vec = cx.CartesianGeneric3D.from_([1, 2, 3], "kg m /s")
     >>> vec
     CartesianGeneric3D(
       x=Quantity[...]( value=f32[], unit=Unit("kg m / s") ),
@@ -43,15 +43,15 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
     """
 
     x: ct.BatchableFloatScalarQ = eqx.field(
-        converter=partial(Quantity.constructor, dtype=float)
+        converter=partial(Quantity.from_, dtype=float)
     )
 
     y: ct.BatchableFloatScalarQ = eqx.field(
-        converter=partial(Quantity.constructor, dtype=float)
+        converter=partial(Quantity.from_, dtype=float)
     )
 
     z: ct.BatchableFloatScalarQ = eqx.field(
-        converter=partial(Quantity.constructor, dtype=float)
+        converter=partial(Quantity.from_, dtype=float)
     )
 
     # -----------------------------------------------------
@@ -63,7 +63,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.CartesianGeneric3D.constructor([1, 2, 3], "kpc")
+        >>> q = cx.CartesianGeneric3D.from_([1, 2, 3], "kpc")
         >>> (-q).x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
 
@@ -82,8 +82,8 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 # Constructors
 
 
-@CartesianGeneric3D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@CartesianGeneric3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianGeneric3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
     /,
@@ -95,7 +95,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianGeneric3D.constructor(Quantity([1, 2, 3], "m"))
+    >>> vec = cx.CartesianGeneric3D.from_(Quantity([1, 2, 3], "m"))
     >>> vec
     CartesianGeneric3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),

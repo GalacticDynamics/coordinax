@@ -26,15 +26,15 @@ def convert_pos_to_absquantity(obj: AbstractPosition, /) -> AbstractQuantity:
     >>> import coordinax as cx
     >>> from unxt import AbstractQuantity, Quantity
 
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
+    >>> pos = cx.CartesianPosition1D.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
+    >>> pos = cx.RadialPosition.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> pos = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
@@ -42,7 +42,7 @@ def convert_pos_to_absquantity(obj: AbstractPosition, /) -> AbstractQuantity:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
+    >>> pos = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
 
@@ -68,15 +68,15 @@ def convert_pos_to_q(obj: AbstractPosition, /) -> Quantity["length"]:
     >>> import coordinax as cx
     >>> from unxt import AbstractQuantity, Quantity
 
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
+    >>> pos = cx.CartesianPosition1D.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
+    >>> pos = cx.RadialPosition.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> pos = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
@@ -84,7 +84,7 @@ def convert_pos_to_q(obj: AbstractPosition, /) -> Quantity["length"]:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
+    >>> pos = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
 
@@ -111,15 +111,15 @@ def convert_pos_to_uncheckedq(
     >>> import coordinax as cx
     >>> from unxt import AbstractQuantity, Quantity, UncheckedQuantity
 
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
+    >>> pos = cx.CartesianPosition1D.from_([1.0], "km")
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
+    >>> pos = cx.RadialPosition.from_([1.0], "km")
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> pos = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2.], dtype=float32), unit='km')
 
@@ -127,7 +127,7 @@ def convert_pos_to_uncheckedq(
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 0.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
+    >>> pos = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2., 3.], dtype=float32), unit='km')
 
@@ -152,15 +152,15 @@ def convert_pos_to_distance(obj: AbstractPosition, /) -> Shaped[Distance, "*batc
     >>> import coordinax as cx
     >>> from unxt import AbstractQuantity, Quantity, Distance
 
-    >>> pos = cx.CartesianPosition1D.constructor([1.0], "km")
+    >>> pos = cx.CartesianPosition1D.from_([1.0], "km")
     >>> convert(pos, Distance)
     Distance(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPosition.constructor([1.0], "km")
+    >>> pos = cx.RadialPosition.from_([1.0], "km")
     >>> convert(pos, Distance)
     Distance(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> pos = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
     >>> convert(pos, Distance)
     Distance(Array([1., 2.], dtype=float32), unit='km')
 
@@ -168,7 +168,7 @@ def convert_pos_to_distance(obj: AbstractPosition, /) -> Shaped[Distance, "*batc
     >>> convert(pos, Distance)
     Distance(Array([1., 0.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
+    >>> pos = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, Distance)
     Distance(Array([1., 2., 3.], dtype=float32), unit='km')
 

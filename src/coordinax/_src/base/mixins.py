@@ -27,33 +27,33 @@ class AvalMixin:
 
         1 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition1D.constructor([1], "m")
+        >>> vec = cx.CartesianPosition1D.from_([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.RadialPosition.constructor([1], "m")
+        >>> vec = cx.RadialPosition.from_([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity1D.constructor([1], "m/s")
+        >>> vec = cx.CartesianVelocity1D.from_([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.RadialVelocity.constructor([1], "m/s")
+        >>> vec = cx.RadialVelocity.from_([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.CartesianAcceleration1D.constructor([1], "m/s2")
+        >>> vec = cx.CartesianAcceleration1D.from_([1], "m/s2")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.RadialAcceleration.constructor([1], "m/s2")
+        >>> vec = cx.RadialAcceleration.from_([1], "m/s2")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
         2 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition2D.constructor([1, 2], "m")
+        >>> vec = cx.CartesianPosition2D.from_([1, 2], "m")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
@@ -61,7 +61,7 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1. 0.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity2D.constructor([1, 2], "m/s")
+        >>> vec = cx.CartesianVelocity2D.from_([1, 2], "m/s")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
@@ -70,7 +70,7 @@ class AvalMixin:
         ... except NotImplementedError as e: print("nope")
         nope
 
-        >>> vec = cx.CartesianAcceleration2D.constructor([1,2], "m/s2")
+        >>> vec = cx.CartesianAcceleration2D.from_([1,2], "m/s2")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
@@ -81,11 +81,11 @@ class AvalMixin:
 
         3 dimensional vectors:
 
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.CartesianPosition3D.constructor([[1, 2, 3], [4, 5, 6]], "m")
+        >>> vec = cx.CartesianPosition3D.from_([[1, 2, 3], [4, 5, 6]], "m")
         >>> vec.aval()
         ConcreteArray([[1. 2. 3.]
                        [4. 5. 6.]], dtype=float32)
@@ -94,7 +94,7 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([0. 0. 1.], dtype=float32)
 
-        >>> vec = cx.CartesianVelocity3D.constructor([1,2,3], "m/s")
+        >>> vec = cx.CartesianVelocity3D.from_([1,2,3], "m/s")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
@@ -103,7 +103,7 @@ class AvalMixin:
         ... except NotImplementedError as e: print("nope")
         nope
 
-        >>> vec = cx.CartesianAcceleration3D.constructor([1,2,3], "m/s2")
+        >>> vec = cx.CartesianAcceleration3D.from_([1,2,3], "m/s2")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 

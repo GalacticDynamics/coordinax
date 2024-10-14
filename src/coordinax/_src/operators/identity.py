@@ -35,7 +35,7 @@ class IdentityOperator(AbstractOperator):
     And the common objects we will use:
 
     >>> q = Quantity([1, 2, 3], "kpc")
-    >>> vec = cx.CartesianPosition3D.constructor(q)
+    >>> vec = cx.CartesianPosition3D.from_(q)
 
     The first call signature is for the case where the input is a vector:
 
@@ -52,28 +52,28 @@ class IdentityOperator(AbstractOperator):
     - 1D:
 
     >>> q = Quantity([1], "kpc")
-    >>> vec = cx.CartesianPosition1D.constructor(q)
+    >>> vec = cx.CartesianPosition1D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 2D:
 
     >>> q = Quantity([1, 2], "kpc")
-    >>> vec = cx.CartesianPosition2D.constructor(q)
+    >>> vec = cx.CartesianPosition2D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 3D (not using a `~coordinax.CartesianPosition3D` instance):
 
     >>> q = Quantity([1, 2, 3], "kpc")
-    >>> vec = cx.CartesianPosition3D.constructor(q).represent_as(cx.SphericalPosition)
+    >>> vec = cx.CartesianPosition3D.from_(q).represent_as(cx.SphericalPosition)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 4D:
 
     >>> q = Quantity([1, 2, 3, 4], "kpc")  # 0th elt is ct
-    >>> vec4 = cx.FourVector.constructor(q)
+    >>> vec4 = cx.FourVector.from_(q)
     >>> op(vec4) is vec4 and op(q) is q
     True
 
@@ -100,7 +100,7 @@ class IdentityOperator(AbstractOperator):
         >>> import coordinax as cx
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
         >>> t = Quantity(0, "Gyr")
         >>> op = IdentityOperator()
         >>> op.is_inertial
@@ -143,7 +143,7 @@ class IdentityOperator(AbstractOperator):
         >>> import coordinax as cx
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
         >>> op = IdentityOperator()
         >>> op(q) is q
         True

@@ -40,13 +40,13 @@ class PolarPosition(AbstractPosition2D):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
+        converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     phi: ct.BatchableAngle = eqx.field(
         converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Polar angle :math:`\phi \in [0,2\pi)`."""
@@ -103,12 +103,12 @@ class PolarVelocity(AbstractVelocity2D):
     """Polar differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+        converter=partial(Quantity["angular speed"].from_, dtype=float)
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
@@ -128,12 +128,12 @@ class PolarAcceleration(AbstractAcceleration2D):
     """Polar acceleration representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty,+\infty]`."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""
 

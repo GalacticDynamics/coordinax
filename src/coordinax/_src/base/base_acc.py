@@ -97,7 +97,7 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> d2r = cx.RadialAcceleration.constructor([1], "m/s2")
+        >>> d2r = cx.RadialAcceleration.from_([1], "m/s2")
         >>> -d2r
         RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
@@ -142,9 +142,9 @@ class AbstractAcceleration(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> p = cx.CartesianVelocity3D.constructor([4, 5, 6], "m/s")
-        >>> a = cx.CartesianAcceleration3D.constructor([7, 8, 9], "m/s2")
+        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+        >>> p = cx.CartesianVelocity3D.from_([4, 5, 6], "m/s")
+        >>> a = cx.CartesianAcceleration3D.from_([7, 8, 9], "m/s2")
         >>> sph = a.represent_as(cx.SphericalAcceleration, p, q)
         >>> sph
         SphericalAcceleration(
@@ -191,7 +191,7 @@ def _mul_acc_time(lhs: AbstractAcceleration, rhs: Quantity["time"]) -> AbstractV
 
     """
     # TODO: better access to corresponding fields
-    return lhs.integral_cls.constructor(
+    return lhs.integral_cls.from_(
         {k.replace("2", ""): jnp.multiply(v, rhs) for k, v in field_items(lhs)}
     )
 
@@ -239,7 +239,7 @@ def _mul_acc_time2(lhs: AbstractAcceleration, rhs: Quantity["s2"]) -> AbstractPo
 
     """
     # TODO: better access to corresponding fields
-    return lhs.integral_cls.integral_cls.constructor(
+    return lhs.integral_cls.integral_cls.from_(
         {k.replace("d2_", ""): v * rhs for k, v in field_items(lhs)}
     )
 

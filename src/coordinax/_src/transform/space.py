@@ -25,8 +25,8 @@ def represent_as(w: Space, target: type[Space]) -> Space:
     >>> from unxt import Quantity
 
     >>> w = cx.Space(
-    ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+    ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.Space)
@@ -48,8 +48,8 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     >>> from unxt import Quantity
 
     >>> w = cx.Space(
-    ...     length=cx.CartesianPosition3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVelocity3D.constructor([[[1, 2, 3], [4, 5, 6]]], "m/s")
+    ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.PoincarePolarVector)

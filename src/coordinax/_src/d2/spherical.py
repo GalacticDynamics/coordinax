@@ -66,13 +66,13 @@ class TwoSpherePosition(AbstractPosition2D):
     """
 
     theta: ct.BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
+        converter=partial(Quantity["angle"].from_, dtype=float)
     )
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: ct.BatchableAngle = eqx.field(
         converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
@@ -140,12 +140,12 @@ class TwoSphereVelocity(AbstractVelocity2D):
     """
 
     d_theta: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+        converter=partial(Quantity["angular speed"].from_, dtype=float)
     )
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+        converter=partial(Quantity["angular speed"].from_, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
@@ -207,12 +207,12 @@ class TwoSphereAcceleration(AbstractAcceleration2D):
     """
 
     d2_theta: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 

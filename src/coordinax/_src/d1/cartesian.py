@@ -35,7 +35,7 @@ class CartesianPosition1D(AbstractPosition1D):
     --------
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition1D.constructor([2], "m")
+    >>> vec = cx.CartesianPosition1D.from_([2], "m")
     >>> vec
     CartesianPosition1D(
       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
@@ -55,7 +55,7 @@ class CartesianPosition1D(AbstractPosition1D):
     """
 
     x: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
@@ -78,8 +78,8 @@ def _add_qq(lhs: CartesianPosition1D, rhs: AbstractPosition, /) -> CartesianPosi
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition1D.constructor([1], "kpc")
-    >>> r = cx.RadialPosition.constructor([1], "kpc")
+    >>> q = cx.CartesianPosition1D.from_([1], "kpc")
+    >>> r = cx.RadialPosition.from_([1], "kpc")
 
     >>> qpr = jnp.add(q, r)
     >>> qpr
@@ -131,7 +131,7 @@ def _neg_p_cart1d_pos(obj: CartesianPosition1D, /) -> CartesianPosition1D:
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition1D.constructor([1], "km")
+    >>> q = cx.CartesianPosition1D.from_([1], "km")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='km')
 
@@ -151,8 +151,8 @@ def _sub_q1d_pos(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition1D.constructor(Quantity([1], "kpc"))
-    >>> r = cx.RadialPosition.constructor(Quantity([1], "kpc"))
+    >>> q = cx.CartesianPosition1D.from_(Quantity([1], "kpc"))
+    >>> r = cx.RadialPosition.from_(Quantity([1], "kpc"))
 
     >>> qmr = jnp.subtract(q, r)
     >>> qmr
@@ -177,7 +177,7 @@ def _sub_q1d_pos(
 class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
     """Cartesian differential representation."""
 
-    d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
+    d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
@@ -201,7 +201,7 @@ class CartesianVelocity1D(AvalMixin, AbstractVelocity1D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.CartesianVelocity1D.constructor([-1], "km/s")
+        >>> q = cx.CartesianVelocity1D.from_([-1], "km/s")
         >>> q.norm()
         Quantity['speed'](Array(1, dtype=int32), unit='km / s')
 
@@ -225,7 +225,7 @@ def _add_pp(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity1D.constructor([1], "km/s")
+    >>> v = cx.CartesianVelocity1D.from_([1], "km/s")
     >>> vec = jnp.add(v, v)
     >>> vec
     CartesianVelocity1D(
@@ -281,7 +281,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVelocity1D, /) -> CartesianVelocity
 class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
     """Cartesian differential representation."""
 
-    d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].constructor)
+    d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @classproperty
@@ -301,7 +301,7 @@ class CartesianAcceleration1D(AvalMixin, AbstractAcceleration1D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> q = cx.CartesianAcceleration1D.constructor([-1], "km/s2")
+        >>> q = cx.CartesianAcceleration1D.from_([-1], "km/s2")
         >>> q.norm()
         Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
 
@@ -321,7 +321,7 @@ def _add_aa(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration1D.constructor([1], "km/s2")
+    >>> v = cx.CartesianAcceleration1D.from_([1], "km/s2")
     >>> vec = jnp.add(v, v)
     >>> vec
     CartesianAcceleration1D(

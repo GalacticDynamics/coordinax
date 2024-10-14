@@ -30,7 +30,7 @@ def vec_to_q(obj: cx.AbstractPosition3D, /) -> Shaped[u.Quantity, "*batch 3"]:
     >>> from plum import convert
     >>> from astropy.units import Quantity
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> convert(vec, Quantity)
     <Quantity [1., 2., 3.] kpc>
 
@@ -61,11 +61,11 @@ def vec_diff_to_q(obj: cx.CartesianVelocity3D, /) -> Shaped[u.Quantity, "*batch 
     >>> from plum import convert
     >>> from astropy.units import Quantity
 
-    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> dif = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
     >>> convert(dif, Quantity)
     <Quantity [1., 2., 3.] km / s>
 
-    >>> dif2 = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
+    >>> dif2 = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
     >>> convert(dif2, Quantity)
     <Quantity [1., 2., 3.] km / s2>
 
@@ -87,7 +87,7 @@ def cart3_to_apycart3(obj: cx.CartesianPosition3D, /) -> apyc.CartesianRepresent
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> convert(vec, apyc.CartesianRepresentation)
     <CartesianRepresentation (x, y, z) in kpc
         (1., 2., 3.)>
@@ -123,7 +123,7 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPosit
     )
 
     """
-    return cx.CartesianPosition3D.constructor(obj)
+    return cx.CartesianPosition3D.from_(obj)
 
 
 # =====================================
@@ -178,7 +178,7 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.CylindricalPosit
     )
 
     """
-    return cx.CylindricalPosition.constructor(obj)
+    return cx.CylindricalPosition.from_(obj)
 
 
 # =====================================
@@ -230,7 +230,7 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
     )
 
     """
-    return cx.SphericalPosition.constructor(obj)
+    return cx.SphericalPosition.from_(obj)
 
 
 # =====================================
@@ -286,7 +286,7 @@ def apysph_to_lonlatsph(
     )
 
     """
-    return cx.LonLatSphericalPosition.constructor(obj)
+    return cx.LonLatSphericalPosition.from_(obj)
 
 
 # =====================================
@@ -303,7 +303,7 @@ def diffcart3_to_apycart3(obj: cx.CartesianVelocity3D, /) -> apyc.CartesianDiffe
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> dif = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
     >>> convert(dif, apyc.CartesianDifferential)
     <CartesianDifferential (d_x, d_y, d_z) in km / s
         (1., 2., 3.)>
@@ -337,7 +337,7 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
     )
 
     """
-    return cx.CartesianVelocity3D.constructor(obj)
+    return cx.CartesianVelocity3D.from_(obj)
 
 
 # =====================================
@@ -396,7 +396,7 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.CylindricalVel
     )
 
     """
-    return cx.CylindricalVelocity.constructor(obj)
+    return cx.CylindricalVelocity.from_(obj)
 
 
 # =====================================
@@ -458,7 +458,7 @@ def apysph_to_diffsph(
     )
 
     """
-    return cx.SphericalVelocity.constructor(obj)
+    return cx.SphericalVelocity.from_(obj)
 
 
 # =====================================
@@ -520,7 +520,7 @@ def apysph_to_difflonlatsph(
     )
 
     """
-    return cx.LonLatSphericalVelocity.constructor(obj)
+    return cx.LonLatSphericalVelocity.from_(obj)
 
 
 # =====================================
@@ -583,4 +583,4 @@ def apysph_to_diffloncoslatsph(
     )
 
     """
-    return cx.LonCosLatSphericalVelocity.constructor(obj)
+    return cx.LonCosLatSphericalVelocity.from_(obj)

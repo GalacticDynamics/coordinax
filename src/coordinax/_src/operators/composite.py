@@ -39,7 +39,7 @@ class AbstractCompositeOperator(AbstractOperator):
     # Operator
 
     # TODO: how to have the `operators` attribute in a way that allows for both
-    # writeable (in the constructor) and read-only (as a property) subclasses.
+    # writeable (in the from_) and read-only (as a property) subclasses.
 
     @op_call_dispatch(precedence=1)
     def __call__(

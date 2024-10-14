@@ -46,7 +46,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> x = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
 
     >>> x2 = cx.represent_as(x, cx.CylindricalPosition, z=Quantity(14, "km"))
     >>> x2
@@ -136,7 +136,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> x = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -164,7 +164,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> x = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -202,7 +202,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
+    >>> x = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
 
     >>> x2 = cx.represent_as(x, cx.CartesianPosition3D, z=Quantity(14, "km"))
     >>> x2
@@ -307,7 +307,7 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    return target.constructor(r=current.r, theta=theta, phi=current.phi)
+    return target.from_(r=current.r, theta=theta, phi=current.phi)
 
 
 @dispatch
@@ -336,7 +336,7 @@ def represent_as(
     Quantity['angle'](Array(14., dtype=float32), unit='deg')
 
     """
-    return target.constructor(r=current.r, phi=phi, theta=current.phi)
+    return target.from_(r=current.r, phi=phi, theta=current.phi)
 
 
 @dispatch

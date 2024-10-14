@@ -42,8 +42,8 @@ class AbstractPosition1D(AbstractPosition):
 # -------------------------------------------------------------------
 
 
-@AbstractPosition1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@AbstractPosition1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[AbstractPosition1D],
     obj: Shaped[Quantity["length"], "*batch"] | Shaped[Quantity["length"], "*batch 1"],
     /,
@@ -55,16 +55,16 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.CartesianPosition1D.constructor(Quantity(1, "meter"))
+    >>> cx.CartesianPosition1D.from_(Quantity(1, "meter"))
     CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("m")) )
 
-    >>> cx.CartesianPosition1D.constructor(Quantity([1], "meter"))
+    >>> cx.CartesianPosition1D.from_(Quantity([1], "meter"))
     CartesianPosition1D( x=Quantity[...](value=f32[], unit=Unit("m")) )
 
-    >>> cx.RadialPosition.constructor(Quantity(1, "meter"))
+    >>> cx.RadialPosition.from_(Quantity(1, "meter"))
     RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
 
-    >>> cx.RadialPosition.constructor(Quantity([1], "meter"))
+    >>> cx.RadialPosition.from_(Quantity([1], "meter"))
     RadialPosition(r=Distance(value=f32[], unit=Unit("m")))
 
     """
@@ -101,8 +101,8 @@ class AbstractVelocity1D(AbstractVelocity):
 # -------------------------------------------------------------------
 
 
-@AbstractVelocity1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@AbstractVelocity1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[AbstractVelocity1D],
     obj: Shaped[Quantity["speed"], "*batch"] | Shaped[Quantity["speed"], "*batch 1"],
     /,
@@ -114,16 +114,16 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.CartesianVelocity1D.constructor(Quantity(1, "m/s"))
+    >>> cx.CartesianVelocity1D.from_(Quantity(1, "m/s"))
     CartesianVelocity1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.CartesianVelocity1D.constructor(Quantity([1], "m/s"))
+    >>> cx.CartesianVelocity1D.from_(Quantity([1], "m/s"))
     CartesianVelocity1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVelocity.constructor(Quantity(1, "m/s"))
+    >>> cx.RadialVelocity.from_(Quantity(1, "m/s"))
     RadialVelocity( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVelocity.constructor(Quantity([1], "m/s"))
+    >>> cx.RadialVelocity.from_(Quantity([1], "m/s"))
     RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     """
@@ -154,8 +154,8 @@ class AbstractAcceleration1D(AbstractAcceleration):
 # -------------------------------------------------------------------
 
 
-@AbstractAcceleration1D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@AbstractAcceleration1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[AbstractAcceleration1D],
     obj: Shaped[Quantity["acceleration"], "*batch"]
     | Shaped[Quantity["acceleration"], "*batch 1"],
@@ -168,16 +168,16 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cx.CartesianAcceleration1D.constructor(Quantity(1, "m/s2"))
+    >>> cx.CartesianAcceleration1D.from_(Quantity(1, "m/s2"))
     CartesianAcceleration1D( d2_x=... )
 
-    >>> cx.CartesianAcceleration1D.constructor(Quantity([1], "m/s2"))
+    >>> cx.CartesianAcceleration1D.from_(Quantity([1], "m/s2"))
     CartesianAcceleration1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
-    >>> cx.RadialAcceleration.constructor(Quantity(1, "m/s2"))
+    >>> cx.RadialAcceleration.from_(Quantity(1, "m/s2"))
     RadialAcceleration( d2_r=... )
 
-    >>> cx.RadialAcceleration.constructor(Quantity([1], "m/s2"))
+    >>> cx.RadialAcceleration.from_(Quantity([1], "m/s2"))
     RadialAcceleration( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     """

@@ -23,7 +23,7 @@ class RadialPosition(AbstractPosition1D):
     """Radial vector representation."""
 
     r: ct.BatchableDistance = eqx.field(
-        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
+        converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -41,7 +41,7 @@ class RadialPosition(AbstractPosition1D):
 class RadialVelocity(AbstractVelocity1D):
     """Radial differential representation."""
 
-    d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].constructor)
+    d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
     @classproperty
@@ -64,7 +64,7 @@ class RadialVelocity(AbstractVelocity1D):
 class RadialAcceleration(AbstractAcceleration1D):
     """Radial differential representation."""
 
-    d2_r: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].constructor)
+    d2_r: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in (-\infty,+\infty)`."""
 
     @classproperty

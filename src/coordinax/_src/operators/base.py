@@ -26,7 +26,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
     @classmethod
     @dispatch  # type: ignore[misc]
-    def constructor(
+    def from_(
         cls: "type[AbstractOperator]", obj: Mapping[str, Any], /
     ) -> "AbstractOperator":
         """Construct from a mapping.
@@ -45,7 +45,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         --------
         >>> import coordinax.operators as co
         >>> operators = co.IdentityOperator() | co.IdentityOperator()
-        >>> co.OperatorSequence.constructor({"operators": operators})
+        >>> co.OperatorSequence.from_({"operators": operators})
         OperatorSequence(operators=(IdentityOperator(), IdentityOperator()))
 
         """
@@ -104,10 +104,8 @@ op_call_dispatch = AbstractOperator.__call__.dispatch  # type: ignore[attr-defin
 
 
 # TODO: move to the class in py3.11+
-@AbstractOperator.constructor._f.dispatch  # type: ignore[misc]  # noqa: SLF001
-def constructor(
-    cls: type[AbstractOperator], obj: AbstractOperator, /
-) -> AbstractOperator:
+@AbstractOperator.from_._f.dispatch  # type: ignore[misc]  # noqa: SLF001
+def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOperator:
     """Construct an operator from another operator.
 
     Parameters

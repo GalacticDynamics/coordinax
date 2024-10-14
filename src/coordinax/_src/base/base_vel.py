@@ -113,7 +113,7 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> dr = cx.RadialVelocity.constructor([1], "m/s")
+        >>> dr = cx.RadialVelocity.from_([1], "m/s")
         >>> -dr
         RadialVelocity( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
@@ -163,8 +163,8 @@ class AbstractVelocity(AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
-        >>> p = cx.CartesianVelocity3D.constructor([4, 5, 6], "m/s")
+        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "m")
+        >>> p = cx.CartesianVelocity3D.from_([4, 5, 6], "m/s")
         >>> sph = p.represent_as(cx.SphericalVelocity, q)
         >>> sph
         SphericalVelocity(
@@ -210,6 +210,4 @@ def _mul_vel_q(self: AbstractVelocity, other: Quantity["time"]) -> AbstractPosit
     Distance(Array(2., dtype=float32), unit='m')
 
     """
-    return self.integral_cls.constructor(
-        {k[2:]: v * other for k, v in field_items(self)}
-    )
+    return self.integral_cls.from_({k[2:]: v * other for k, v in field_items(self)})

@@ -11,8 +11,8 @@ from .cartesian import CartesianAcceleration3D, CartesianPosition3D, CartesianVe
 #####################################################################
 
 
-@AbstractPosition3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
-def constructor(cls: type[AbstractPosition3D], obj: Any, /) -> CartesianPosition3D:
+@AbstractPosition3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+def from_(cls: type[AbstractPosition3D], obj: Any, /) -> CartesianPosition3D:
     """Try to construct a 3D Cartesian position from an object.
 
     Examples
@@ -21,7 +21,7 @@ def constructor(cls: type[AbstractPosition3D], obj: Any, /) -> CartesianPosition
     >>> import coordinax as cx
 
     >>> x = Quantity([1, 2, 3], "km")
-    >>> cx.AbstractPosition3D.constructor(x)
+    >>> cx.AbstractPosition3D.from_(x)
     CartesianPosition3D(
       x=Quantity[...](value=f32[], unit=Unit("km")),
       y=Quantity[...](value=f32[], unit=Unit("km")),
@@ -30,14 +30,12 @@ def constructor(cls: type[AbstractPosition3D], obj: Any, /) -> CartesianPosition
 
     """
     return (
-        obj
-        if isinstance(obj, CartesianPosition3D)
-        else CartesianPosition3D.constructor(obj)
+        obj if isinstance(obj, CartesianPosition3D) else CartesianPosition3D.from_(obj)
     )
 
 
-@AbstractPosition3D.constructor._f.dispatch(precedence=1)  # noqa: SLF001
-def constructor(
+@AbstractPosition3D.from_._f.dispatch(precedence=1)  # noqa: SLF001
+def from_(
     cls: type[AbstractPosition3D], obj: AbstractPosition3D, /
 ) -> AbstractPosition3D:
     """Construct from a 3D position.
@@ -46,16 +44,16 @@ def constructor(
     --------
     >>> import coordinax as cx
 
-    >>> cart = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
-    >>> cx.AbstractPosition3D.constructor(cart) is cart
+    >>> cart = cx.CartesianPosition3D.from_([1, 2, 3], "km")
+    >>> cx.AbstractPosition3D.from_(cart) is cart
     True
 
     >>> sph = cart.represent_as(cx.SphericalPosition)
-    >>> cx.AbstractPosition3D.constructor(sph) is sph
+    >>> cx.AbstractPosition3D.from_(sph) is sph
     True
 
     >>> cyl = cart.represent_as(cx.CylindricalPosition)
-    >>> cx.AbstractPosition3D.constructor(cyl) is cyl
+    >>> cx.AbstractPosition3D.from_(cyl) is cyl
     True
 
     """
@@ -65,8 +63,8 @@ def constructor(
 #####################################################################
 
 
-@AbstractVelocity3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
-def constructor(cls: type[AbstractVelocity3D], obj: Any, /) -> CartesianVelocity3D:
+@AbstractVelocity3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+def from_(cls: type[AbstractVelocity3D], obj: Any, /) -> CartesianVelocity3D:
     """Try to construct a 3D Cartesian velocity from an object.
 
     Examples
@@ -75,7 +73,7 @@ def constructor(cls: type[AbstractVelocity3D], obj: Any, /) -> CartesianVelocity
     >>> import coordinax as cx
 
     >>> x = Quantity([1, 2, 3], "km / s")
-    >>> cx.AbstractVelocity3D.constructor(x)
+    >>> cx.AbstractVelocity3D.from_(x)
     CartesianVelocity3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("km / s") ),
@@ -84,14 +82,12 @@ def constructor(cls: type[AbstractVelocity3D], obj: Any, /) -> CartesianVelocity
 
     """
     return (
-        obj
-        if isinstance(obj, CartesianVelocity3D)
-        else CartesianVelocity3D.constructor(obj)
+        obj if isinstance(obj, CartesianVelocity3D) else CartesianVelocity3D.from_(obj)
     )
 
 
-@AbstractVelocity3D.constructor._f.dispatch(precedence=1)  # noqa: SLF001
-def constructor(
+@AbstractVelocity3D.from_._f.dispatch(precedence=1)  # noqa: SLF001
+def from_(
     cls: type[AbstractVelocity3D], obj: AbstractVelocity3D, /
 ) -> AbstractVelocity3D:
     """Construct from a 3D velocity.
@@ -100,18 +96,18 @@ def constructor(
     --------
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition3D.constructor([1, 1, 1], "km")
+    >>> q = cx.CartesianPosition3D.from_([1, 1, 1], "km")
 
-    >>> cart = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
-    >>> cx.AbstractVelocity3D.constructor(cart) is cart
+    >>> cart = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
+    >>> cx.AbstractVelocity3D.from_(cart) is cart
     True
 
     >>> sph = cart.represent_as(cx.SphericalVelocity, q)
-    >>> cx.AbstractVelocity3D.constructor(sph) is sph
+    >>> cx.AbstractVelocity3D.from_(sph) is sph
     True
 
     >>> cyl = cart.represent_as(cx.CylindricalVelocity, q)
-    >>> cx.AbstractVelocity3D.constructor(cyl) is cyl
+    >>> cx.AbstractVelocity3D.from_(cyl) is cyl
     True
 
     """
@@ -121,10 +117,8 @@ def constructor(
 #####################################################################
 
 
-@AbstractAcceleration3D.constructor._f.dispatch(precedence=-1)  # noqa: SLF001
-def constructor(
-    cls: type[AbstractAcceleration3D], obj: Any, /
-) -> CartesianAcceleration3D:
+@AbstractAcceleration3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+def from_(cls: type[AbstractAcceleration3D], obj: Any, /) -> CartesianAcceleration3D:
     """Try to construct a 3D Cartesian velocity from an object.
 
     Examples
@@ -133,7 +127,7 @@ def constructor(
     >>> import coordinax as cx
 
     >>> x = Quantity([1, 2, 3], "km / s2")
-    >>> cx.AbstractAcceleration3D.constructor(x)
+    >>> cx.AbstractAcceleration3D.from_(x)
     CartesianAcceleration3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_y=Quantity[...](value=f32[], unit=Unit("km / s2")),
@@ -144,12 +138,12 @@ def constructor(
     return (
         obj
         if isinstance(obj, CartesianAcceleration3D)
-        else CartesianAcceleration3D.constructor(obj)
+        else CartesianAcceleration3D.from_(obj)
     )
 
 
-@AbstractAcceleration3D.constructor._f.dispatch(precedence=1)  # noqa: SLF001
-def constructor(
+@AbstractAcceleration3D.from_._f.dispatch(precedence=1)  # noqa: SLF001
+def from_(
     cls: type[AbstractAcceleration3D], obj: AbstractAcceleration3D, /
 ) -> AbstractAcceleration3D:
     """Construct from a 3D velocity.
@@ -158,19 +152,19 @@ def constructor(
     --------
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPosition3D.constructor([1, 1, 1], "km")
-    >>> p = cx.CartesianVelocity3D.constructor([1, 1, 1], "km/s")
+    >>> q = cx.CartesianPosition3D.from_([1, 1, 1], "km")
+    >>> p = cx.CartesianVelocity3D.from_([1, 1, 1], "km/s")
 
-    >>> cart = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
-    >>> cx.AbstractAcceleration3D.constructor(cart) is cart
+    >>> cart = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
+    >>> cx.AbstractAcceleration3D.from_(cart) is cart
     True
 
     >>> sph = cart.represent_as(cx.SphericalAcceleration, p, q)
-    >>> cx.AbstractAcceleration3D.constructor(sph) is sph
+    >>> cx.AbstractAcceleration3D.from_(sph) is sph
     True
 
     >>> cyl = cart.represent_as(cx.CylindricalAcceleration, p, q)
-    >>> cx.AbstractAcceleration3D.constructor(cyl) is cyl
+    >>> cx.AbstractAcceleration3D.from_(cyl) is cyl
     True
 
     """

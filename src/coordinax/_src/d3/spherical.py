@@ -58,18 +58,18 @@ class SphericalPosition(AbstractSphericalPosition):
     """
 
     r: ct.BatchableDistance = eqx.field(
-        converter=Unless(AbstractDistance, partial(Distance.constructor, dtype=float))
+        converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     theta: ct.BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].constructor, dtype=float)
+        converter=partial(Quantity["angle"].from_, dtype=float)
     )
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: ct.BatchableAngle = eqx.field(
         converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
@@ -86,8 +86,8 @@ class SphericalPosition(AbstractSphericalPosition):
         return SphericalVelocity
 
 
-@SphericalPosition.constructor._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@SphericalPosition.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[SphericalPosition],
     *,
     r: AbstractQuantity,
@@ -103,7 +103,7 @@ def constructor(
 
     Let's start with a valid input:
 
-    >>> cx.SphericalPosition.constructor(r=Quantity(3, "kpc"),
+    >>> cx.SphericalPosition.from_(r=Quantity(3, "kpc"),
     ...                                 theta=Quantity(90, "deg"),
     ...                                 phi=Quantity(0, "deg"))
     SphericalPosition(
@@ -115,7 +115,7 @@ def constructor(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cx.SphericalPosition.constructor(r=Quantity(-3, "kpc"),
+    >>> vec = cx.SphericalPosition.from_(r=Quantity(-3, "kpc"),
     ...                                        theta=Quantity(45, "deg"),
     ...                                        phi=Quantity(0, "deg"))
     >>> vec.r
@@ -128,7 +128,7 @@ def constructor(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cx.SphericalPosition.constructor(r=Quantity(3, "kpc"),
+    >>> vec = cx.SphericalPosition.from_(r=Quantity(3, "kpc"),
     ...                                        theta=Quantity(190, "deg"),
     ...                                        phi=Quantity(0, "deg"))
     >>> vec.r
@@ -139,9 +139,9 @@ def constructor(
     Quantity['angle'](Array(180., dtype=float32), unit='deg')
 
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
-    [0, 360) deg range (actually the base constructor does this):
+    [0, 360) deg range (actually the base from_ does this):
 
-    >>> vec = cx.SphericalPosition.constructor(r=Quantity(3, "kpc"),
+    >>> vec = cx.SphericalPosition.from_(r=Quantity(3, "kpc"),
     ...                                        theta=Quantity(90, "deg"),
     ...                                        phi=Quantity(365, "deg"))
     >>> vec.phi
@@ -178,17 +178,17 @@ class SphericalVelocity(AbstractSphericalVelocity):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
     d_theta: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+        converter=partial(Quantity["angular speed"].from_, dtype=float)
     )
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+        converter=partial(Quantity["angular speed"].from_, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
@@ -211,17 +211,17 @@ class SphericalAcceleration(AbstractSphericalAcceleration):
     """Spherical differential representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
 
     d2_theta: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
