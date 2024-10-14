@@ -198,7 +198,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         >>> op.translation.x
         Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
-        """  # noqa: E501
+        """
         return cls(Quantity(x, unit))
 
     @override
@@ -221,7 +221,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         >>> op.translation.x
         Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
-        """  # noqa: E501
+        """
         return cls(Quantity(x, unit))
 
     # -------------------------------------------
