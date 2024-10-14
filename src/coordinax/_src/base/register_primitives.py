@@ -37,21 +37,21 @@ def _broadcast_in_dim_p(
 
     Cartesian 1D position, velocity, and acceleration:
 
-    >>> q = cx.CartesianPosition1D.constructor([1], "m")
+    >>> q = cx.CartesianPosition1D.from_([1], "m")
     >>> q.x
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 1)).x
     Quantity['length'](Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.CartesianVelocity1D.constructor([1], "m/s")
+    >>> p = cx.CartesianVelocity1D.from_([1], "m/s")
     >>> p.d_x
     Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).d_x
     Quantity['speed'](Array([1], dtype=int32), unit='m / s')
 
-    >>> a = cx.CartesianAcceleration1D.constructor([1], "m/s2")
+    >>> a = cx.CartesianAcceleration1D.from_([1], "m/s2")
     >>> a.d2_x
      Quantity['acceleration'](Array(1, dtype=int32), unit='m / s2')
 
@@ -61,21 +61,21 @@ def _broadcast_in_dim_p(
 
     Radial 1D position, velocity, and acceleration:
 
-    >>> q = cx.RadialPosition.constructor([1], "m")
+    >>> q = cx.RadialPosition.from_([1], "m")
     >>> q.r
     Distance(Array(1., dtype=float32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 1)).r
     Distance(Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.RadialVelocity.constructor([1], "m/s")
+    >>> p = cx.RadialVelocity.from_([1], "m/s")
     >>> p.d_r
     Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).d_r
     Quantity['speed'](Array([1], dtype=int32), unit='m / s')
 
-    >>> a = cx.RadialAcceleration.constructor([1], "m/s2")
+    >>> a = cx.RadialAcceleration.from_([1], "m/s2")
     >>> a.d2_r
     Quantity['acceleration'](Array(1, dtype=int32), unit='m / s2')
 
@@ -85,21 +85,21 @@ def _broadcast_in_dim_p(
 
     Cartesian 2D position, velocity, and acceleration:
 
-    >>> q = cx.CartesianPosition2D.constructor([1, 2], "m")
+    >>> q = cx.CartesianPosition2D.from_([1, 2], "m")
     >>> q.x
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 2)).x
     Quantity['length'](Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.CartesianVelocity2D.constructor([1, 2], "m/s")
+    >>> p = cx.CartesianVelocity2D.from_([1, 2], "m/s")
     >>> p.d_x
     Quantity['speed'](Array(1., dtype=float32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 2)).d_x
     Quantity['speed'](Array([1.], dtype=float32), unit='m / s')
 
-    >>> a = cx.CartesianAcceleration2D.constructor([1, 2], "m/s2")
+    >>> a = cx.CartesianAcceleration2D.from_([1, 2], "m/s2")
     >>> a.d2_x
     Quantity['acceleration'](Array(1., dtype=float32), unit='m / s2')
 
@@ -109,21 +109,21 @@ def _broadcast_in_dim_p(
 
     Cartesian 3D position, velocity, and acceleration:
 
-    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "m")
     >>> q.x
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 3)).x
     Quantity['length'](Array([1.], dtype=float32), unit='m')
 
-    >>> p = cx.CartesianVelocity3D.constructor([1, 2, 3], "m/s")
+    >>> p = cx.CartesianVelocity3D.from_([1, 2, 3], "m/s")
     >>> p.d_x
     Quantity['speed'](Array(1., dtype=float32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 3)).d_x
     Quantity['speed'](Array([1.], dtype=float32), unit='m / s')
 
-    >>> a = cx.CartesianAcceleration3D.constructor([1, 2, 3], "m/s2")
+    >>> a = cx.CartesianAcceleration3D.from_([1, 2, 3], "m/s2")
     >>> a.d2_x
     Quantity['acceleration'](Array(1., dtype=float32), unit='m / s2')
 

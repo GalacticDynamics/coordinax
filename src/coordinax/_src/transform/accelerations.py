@@ -86,9 +86,9 @@ def represent_as(
 
     Now in 2D:
 
-    >>> q = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
-    >>> p = cx.CartesianVelocity2D.constructor([1.0, 2.0], "km/s")
-    >>> a = cx.CartesianAcceleration2D.constructor([1.0, 2.0], "km/s2")
+    >>> q = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
+    >>> p = cx.CartesianVelocity2D.from_([1.0, 2.0], "km/s")
+    >>> a = cx.CartesianAcceleration2D.from_([1.0, 2.0], "km/s2")
     >>> cx.represent_as(a, cx.PolarAcceleration, p, q)
     PolarAcceleration(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
@@ -97,9 +97,9 @@ def represent_as(
 
     And in 3D:
 
-    >>> q = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
-    >>> p = cx.CartesianVelocity3D.constructor([1.0, 2.0, 3.0], "km/s")
-    >>> a = cx.CartesianAcceleration3D.constructor([1.0, 2.0, 3.0], "km/s2")
+    >>> q = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
+    >>> p = cx.CartesianVelocity3D.from_([1.0, 2.0, 3.0], "km/s")
+    >>> a = cx.CartesianAcceleration3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> cx.represent_as(a, cx.SphericalAcceleration, p, q)
     SphericalAcceleration(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
@@ -128,7 +128,7 @@ def represent_as(
     if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+        posvec = current.integral_cls.integral_cls._cartesian_cls.from_(  # noqa: SLF001
             position
         )
 
@@ -136,7 +136,7 @@ def represent_as(
     if isinstance(velocity, AbstractVelocity):
         velvec = velocity
     else:  # Q -> Cart<X>D
-        velvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+        velvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
             velocity
         )
 

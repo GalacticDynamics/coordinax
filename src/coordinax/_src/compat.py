@@ -57,19 +57,19 @@ def vec_diff1d_to_uncheckedq(
     >>> from unxt import UncheckedQuantity
     >>> import coordinax as cx
 
-    >>> cart_vel = cx.CartesianVelocity1D.constructor([1], "km/s")
+    >>> cart_vel = cx.CartesianVelocity1D.from_([1], "km/s")
     >>> convert(cart_vel, UncheckedQuantity)
     UncheckedQuantity(Array([1], dtype=int32), unit='km / s')
 
-    >>> cart_acc = cx.CartesianAcceleration1D.constructor([1], "km/s2")
+    >>> cart_acc = cx.CartesianAcceleration1D.from_([1], "km/s2")
     >>> convert(cart_acc, UncheckedQuantity)
     UncheckedQuantity(Array([1], dtype=int32), unit='km / s2')
 
-    >>> rad_vel = cx.RadialVelocity.constructor([1], "km/s")
+    >>> rad_vel = cx.RadialVelocity.from_([1], "km/s")
     >>> convert(rad_vel, UncheckedQuantity)
     UncheckedQuantity(Array([1], dtype=int32), unit='km / s')
 
-    >>> rad_acc = cx.RadialAcceleration.constructor([1], "km/s2")
+    >>> rad_acc = cx.RadialAcceleration.from_([1], "km/s2")
     >>> convert(rad_acc, UncheckedQuantity)
     UncheckedQuantity(Array([1], dtype=int32), unit='km / s2')
 
@@ -90,19 +90,19 @@ def vec_diff1d_to_uncheckedq(obj: QConvertible1D, /) -> Shaped[Quantity, "*batch
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cart_vel = cx.CartesianVelocity1D.constructor([1], "km/s")
+    >>> cart_vel = cx.CartesianVelocity1D.from_([1], "km/s")
     >>> convert(cart_vel, Quantity)
     Quantity['speed'](Array([1], dtype=int32), unit='km / s')
 
-    >>> cart_acc = cx.CartesianAcceleration1D.constructor([1], "km/s2")
+    >>> cart_acc = cx.CartesianAcceleration1D.from_([1], "km/s2")
     >>> convert(cart_acc, Quantity)
     Quantity['acceleration'](Array([1], dtype=int32), unit='km / s2')
 
-    >>> rad_vel = cx.RadialVelocity.constructor([1], "km/s")
+    >>> rad_vel = cx.RadialVelocity.from_([1], "km/s")
     >>> convert(rad_vel, Quantity)
     Quantity['speed'](Array([1], dtype=int32), unit='km / s')
 
-    >>> rad_acc = cx.RadialAcceleration.constructor([1], "km/s2")
+    >>> rad_acc = cx.RadialAcceleration.from_([1], "km/s2")
     >>> convert(rad_acc, Quantity)
     Quantity['acceleration'](Array([1], dtype=int32), unit='km / s2')
 
@@ -127,11 +127,11 @@ def vec_diff_to_q(obj: QConvertible2D, /) -> Shaped[UncheckedQuantity, "*batch 2
     >>> from unxt import UncheckedQuantity
     >>> import coordinax as cx
 
-    >>> vel = cx.CartesianVelocity2D.constructor([1, 2], "km/s")
+    >>> vel = cx.CartesianVelocity2D.from_([1, 2], "km/s")
     >>> convert(vel, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2.], dtype=float32), unit='km / s')
 
-    >>> acc = cx.CartesianAcceleration2D.constructor([1, 2], "km/s2")
+    >>> acc = cx.CartesianAcceleration2D.from_([1, 2], "km/s2")
     >>> convert(acc, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2.], dtype=float32), unit='km / s2')
 
@@ -150,11 +150,11 @@ def vec_diff_to_q(obj: QConvertible2D, /) -> Shaped[Quantity, "*batch 2"]:
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vel = cx.CartesianVelocity2D.constructor([1, 2], "km/s")
+    >>> vel = cx.CartesianVelocity2D.from_([1, 2], "km/s")
     >>> convert(vel, Quantity)
     Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
 
-    >>> acc = cx.CartesianAcceleration2D.constructor([1, 2], "km/s2")
+    >>> acc = cx.CartesianAcceleration2D.from_([1, 2], "km/s2")
     >>> convert(acc, Quantity)
     Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
 
@@ -179,11 +179,11 @@ def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[UncheckedQuantity, "*ba
     >>> from plum import convert
     >>> from unxt import UncheckedQuantity
 
-    >>> vel = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> vel = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2., 3.], dtype=float32), unit='km / s')
 
-    >>> acc = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
+    >>> acc = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2., 3.], dtype=float32), unit='km / s2')
 
@@ -202,11 +202,11 @@ def vec_diff_to_q(obj: CartesianVelocity3D, /) -> Shaped[Quantity, "*batch 3"]:
     >>> from plum import convert
     >>> from unxt import Quantity
 
-    >>> vel = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> vel = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, Quantity)
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
 
-    >>> acc = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
+    >>> acc = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, Quantity)
     Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
 
@@ -224,7 +224,7 @@ Q1: TypeAlias = Shaped[Quantity["length"], "*#batch 1"]
 @op_call_dispatch
 def call(self: AbstractOperator, x: Q1, /) -> Q1:
     """Dispatch to the operator's `__call__` method."""
-    return self(CartesianPosition1D.constructor(x))
+    return self(CartesianPosition1D.from_(x))
 
 
 @op_call_dispatch
@@ -232,5 +232,5 @@ def call(
     self: AbstractOperator, x: Q1, t: TimeBatchOrScalar, /
 ) -> tuple[Q1, TimeBatchOrScalar]:
     """Dispatch to the operator's `__call__` method."""
-    vec, t = self(CartesianPosition1D.constructor(x), t)
+    vec, t = self(CartesianPosition1D.from_(x), t)
     return convert(vec, Quantity), t

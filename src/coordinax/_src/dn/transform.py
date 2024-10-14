@@ -78,7 +78,7 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocityND.constructor([1, 1, 1], "m/s")
+    >>> v = cx.CartesianVelocityND.from_([1, 1, 1], "m/s")
     >>> cx.represent_as(v, cx.CartesianVelocityND) is v
     True
 
@@ -106,7 +106,7 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAccelerationND.constructor([1, 1, 1], "m/s2")
+    >>> a = cx.CartesianAccelerationND.from_([1, 1, 1], "m/s2")
     >>> cx.represent_as(a, cx.CartesianAccelerationND) is a
     True
 

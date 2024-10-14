@@ -103,14 +103,14 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
         Showing the broadcasting, then element-wise comparison of two vectors:
 
-        >>> vec1 = cx.CartesianPosition3D.constructor([[1, 2, 3], [1, 2, 4]], "m")
-        >>> vec2 = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> vec1 = cx.CartesianPosition3D.from_([[1, 2, 3], [1, 2, 4]], "m")
+        >>> vec2 = cx.CartesianPosition3D.from_([1, 2, 3], "m")
         >>> jnp.equal(vec1, vec2)
         Array([ True, False], dtype=bool)
 
         Showing the change of representation:
 
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
         >>> vec1 = vec.represent_as(cx.SphericalPosition)
         >>> vec2 = vec.represent_as(cx.MathSphericalPosition)
         >>> jnp.equal(vec1, vec2)
@@ -118,12 +118,12 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
 
         Quick run-through of each dimensionality:
 
-        >>> vec1 = cx.CartesianPosition1D.constructor([1], "m")
-        >>> vec2 = cx.RadialPosition.constructor([1], "m")
+        >>> vec1 = cx.CartesianPosition1D.from_([1], "m")
+        >>> vec2 = cx.RadialPosition.from_([1], "m")
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
-        >>> vec1 = cx.CartesianPosition2D.constructor([2, 0], "m")
+        >>> vec1 = cx.CartesianPosition2D.from_([2, 0], "m")
         >>> vec2 = cx.PolarPosition(r=Quantity(2, "m"), phi=Quantity(0, "rad"))
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
@@ -160,7 +160,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         Examples
         --------
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
         >>> sph = vec.represent_as(cx.SphericalPosition)
         >>> sph
         SphericalPosition(
@@ -187,11 +187,11 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         >>> from unxt import Quantity
         >>> import coordinax as cx
 
-        >>> v = cx.CartesianPosition1D.constructor([-1], "kpc")
+        >>> v = cx.CartesianPosition1D.from_([-1], "kpc")
         >>> v.norm()
         Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
-        >>> v = cx.CartesianPosition2D.constructor([3, 4], "kpc")
+        >>> v = cx.CartesianPosition2D.from_([3, 4], "kpc")
         >>> v.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
 
@@ -199,7 +199,7 @@ class AbstractPosition(AvalMixin, AbstractVector):  # pylint: disable=abstract-m
         >>> v.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
-        >>> v = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+        >>> v = cx.CartesianPosition3D.from_([1, 2, 3], "m")
         >>> v.norm()
         Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
 
@@ -240,7 +240,7 @@ def _div_pos_v(lhs: AbstractPosition, rhs: ArrayLike) -> AbstractPosition:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
     >>> jnp.divide(vec, 2).x
     Quantity['length'](Array(0.5, dtype=float32), unit='m')
 
@@ -273,7 +273,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPosition, /) -> AbstractPosition:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
     >>> jnp.multiply(2, vec)
     CartesianPosition3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -366,7 +366,7 @@ def _mul_pos_v(lhs: AbstractPosition, rhs: ArrayLike, /) -> AbstractPosition:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
     >>> jnp.multiply(vec, 2)
     CartesianPosition3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -421,7 +421,7 @@ def _neg_pos(obj: AbstractPosition, /) -> AbstractPosition:
     Examples
     --------
     >>> import coordinax as cx
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
     >>> -vec
     CartesianPosition3D(
         x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),

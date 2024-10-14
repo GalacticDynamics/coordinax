@@ -53,7 +53,7 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
     """
-    cart = CartesianPosition3D.constructor(q)
+    cart = CartesianPosition3D.from_(q)
     result = self(cart)
     return convert(result.represent_as(CartesianPosition3D), Quantity)
 
@@ -92,5 +92,5 @@ def call(
         Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
 
     """
-    vec, t = self(CartesianPosition3D.constructor(x), t)
+    vec, t = self(CartesianPosition3D.from_(x), t)
     return convert(vec, Quantity), t

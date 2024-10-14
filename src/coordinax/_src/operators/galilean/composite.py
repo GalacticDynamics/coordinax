@@ -107,7 +107,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     Galilean operators can be applied to :class:`vector.FourVector`:
 
-    >>> w = cx.FourVector.constructor([0, 0, 0, 0], "kpc")
+    >>> w = cx.FourVector.from_([0, 0, 0, 0], "kpc")
     >>> new = op(w)
     >>> new
     FourVector(
@@ -122,7 +122,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Also the Galilean operators can also be applied to
     :class:`vector.AbstractPosition3D` and :class:`unxt.Quantity`:
 
-    >>> q = cx.CartesianPosition3D.constructor([0, 0, 0], "kpc")
+    >>> q = cx.CartesianPosition3D.from_([0, 0, 0], "kpc")
     >>> t = Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
@@ -149,7 +149,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     The translation vector [T, Q].  This parameters accetps either a
     :class:`coordinax.operators.GalileanTranslationOperator` instance or
     any input that can be used to construct a :meth:`vector.FourVector`, using
-    :meth:`vector.FourVector.constructor`. See :class:`vector.FourVector` for
+    :meth:`vector.FourVector.from_`. See :class:`vector.FourVector` for
     details.
     """
 
@@ -163,7 +163,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     :class:`coordinax.operators.GalileanBoostOperator` instance or any
     input that can be used to construct a
     :class:`vector.CartesianVelocity3D`, using
-    :meth:`vector.CartesianVelocity3D.constructor`. See
+    :meth:`vector.CartesianVelocity3D.from_`. See
     :class:`vector.CartesianVelocity3D` for details.
     """
 

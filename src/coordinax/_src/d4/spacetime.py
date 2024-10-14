@@ -64,7 +64,7 @@ class FourVector(AbstractPosition4D):
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
     3)`` array to the `q` argument. This assumes that `q` is a
     :class:`coordinax.CartesianPosition3D` and uses the
-    :meth:`coordinax.CartesianPosition3D.constructor` method to create the 3D vector.
+    :meth:`coordinax.CartesianPosition3D.from_` method to create the 3D vector.
 
     We can also create the 3D vector explicitly:
 
@@ -75,12 +75,12 @@ class FourVector(AbstractPosition4D):
     """
 
     t: BatchableTime | ScalarTime = eqx.field(
-        converter=partial(Quantity["time"].constructor, dtype=float)
+        converter=partial(Quantity["time"].from_, dtype=float)
     )
     """Time coordinate."""
 
     q: AbstractPosition3D = eqx.field(
-        converter=Unless(AbstractPosition3D, CartesianPosition3D.constructor)
+        converter=Unless(AbstractPosition3D, CartesianPosition3D.from_)
     )
     """Spatial coordinates."""
 
@@ -102,8 +102,8 @@ class FourVector(AbstractPosition4D):
     # Constructors
 
     @classmethod
-    @AbstractPosition4D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-    def constructor(
+    @AbstractPosition4D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+    def from_(
         cls: "type[FourVector]", obj: Shaped[Quantity, "*batch 4"], /
     ) -> "FourVector":
         """Construct a vector from a Quantity array.
@@ -123,7 +123,7 @@ class FourVector(AbstractPosition4D):
         >>> import coordinax as cx
 
         >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
-        >>> vec = cx.FourVector.constructor(xs)
+        >>> vec = cx.FourVector.from_(xs)
         >>> vec
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
@@ -131,7 +131,7 @@ class FourVector(AbstractPosition4D):
         )
 
         >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
-        >>> vec = cx.FourVector.constructor(xs)
+        >>> vec = cx.FourVector.from_(xs)
         >>> vec
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
@@ -242,11 +242,11 @@ class FourVector(AbstractPosition4D):
 
 
 # -----------------------------------------------
-# Register additional constructors
+# Register additional from_s
 
 
-@FourVector.constructor._f.dispatch  # type: ignore[misc]  # noqa: SLF001
-def constructor(
+@FourVector.from_._f.dispatch  # type: ignore[misc]  # noqa: SLF001
+def from_(
     cls: type[FourVector], obj: Shaped[AbstractQuantity, "*batch 3"], /
 ) -> FourVector:
     """Construct a 3D Cartesian position.
@@ -256,7 +256,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.FourVector.constructor(Quantity([0, 1, 2, 3], "km"))
+    >>> vec = cx.FourVector.from_(Quantity([0, 1, 2, 3], "km"))
     >>> vec
     FourVector(
       t=Quantity[...](value=f32[], unit=Unit("s")),

@@ -32,12 +32,12 @@ class CartesianPosition2D(AbstractPosition2D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
     y: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
@@ -50,8 +50,8 @@ class CartesianPosition2D(AbstractPosition2D):
 # -----------------------------------------------------
 
 
-@CartesianPosition2D.constructor._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
-def constructor(
+@CartesianPosition2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+def from_(
     cls: type[CartesianPosition2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
 ) -> CartesianPosition2D:
     """Construct a 2D Cartesian position.
@@ -61,7 +61,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition2D.constructor(Quantity([1, 2], "m"))
+    >>> vec = cx.CartesianPosition2D.from_(Quantity([1, 2], "m"))
     >>> vec
     CartesianPosition2D(
         x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -88,7 +88,7 @@ def _add_cart2d_pos(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> cart = cx.CartesianPosition2D.constructor(Quantity([1, 2], "kpc"))
+    >>> cart = cx.CartesianPosition2D.from_(Quantity([1, 2], "kpc"))
     >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
     >>> (cart + polr).x
     Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
@@ -111,7 +111,7 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPosition2D, /) -> CartesianPosit
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition2D.constructor(Quantity([3, 4], "m"))
+    >>> v = cx.CartesianPosition2D.from_(Quantity([3, 4], "m"))
     >>> jnp.multiply(5, v).x
     Quantity['length'](Array(15., dtype=float32), unit='m')
 
@@ -132,7 +132,7 @@ def _neg_p_cart2d_pos(obj: CartesianPosition2D, /) -> CartesianPosition2D:
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition2D.constructor([1, 2], "km")
+    >>> q = cx.CartesianPosition2D.from_([1, 2], "km")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='km')
 
@@ -150,7 +150,7 @@ def _sub_cart2d_pos2d(
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> cart = cx.CartesianPosition2D.constructor([1, 2], "kpc")
+    >>> cart = cx.CartesianPosition2D.from_([1, 2], "kpc")
     >>> polr = cx.PolarPosition(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
 
     >>> (cart - polr).x
@@ -169,12 +169,12 @@ class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
 
     d_y: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
@@ -192,8 +192,8 @@ class CartesianVelocity2D(AvalMixin, AbstractVelocity2D):
 # -----------------------------------------------------
 
 
-@CartesianVelocity2D.constructor._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
-def constructor(
+@CartesianVelocity2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+def from_(
     cls: type[CartesianVelocity2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
 ) -> CartesianVelocity2D:
     """Construct a 2D Cartesian velocity.
@@ -203,7 +203,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianVelocity2D.constructor(Quantity([1, 2], "m/s"))
+    >>> vec = cx.CartesianVelocity2D.from_(Quantity([1, 2], "m/s"))
     >>> vec
     CartesianVelocity2D(
       d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
@@ -230,7 +230,7 @@ def _add_pp(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity2D.constructor(Quantity([1, 2], "km/s"))
+    >>> v = cx.CartesianVelocity2D.from_(Quantity([1, 2], "km/s"))
     >>> (v + v).d_x
     Quantity['speed'](Array(2., dtype=float32), unit='km / s')
 
@@ -251,7 +251,7 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVelocity2D, /) -> CartesianVelocity2D
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVelocity2D.constructor(Quantity([3, 4], "m/s"))
+    >>> v = cx.CartesianVelocity2D.from_(Quantity([3, 4], "m/s"))
     >>> (5 * v).d_x
     Quantity['speed'](Array(15., dtype=float32), unit='m / s')
 
@@ -276,12 +276,12 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
     """Cartesian acceleration representation."""
 
     d2_x: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""X coordinate acceleration :math:`\frac{d^2 x}{dt^2} \in (-\infty,+\infty)`."""
 
     d2_y: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""
 
@@ -301,7 +301,7 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> v = cx.CartesianAcceleration2D.constructor([3, 4], "km/s2")
+        >>> v = cx.CartesianAcceleration2D.from_([3, 4], "km/s2")
         >>> v.norm()
         Quantity['acceleration'](Array(5., dtype=float32), unit='km / s2')
 
@@ -312,8 +312,8 @@ class CartesianAcceleration2D(AvalMixin, AbstractAcceleration2D):
 # -----------------------------------------------------
 
 
-@CartesianAcceleration2D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@CartesianAcceleration2D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianAcceleration2D],
     obj: AbstractQuantity,
     /,
@@ -325,7 +325,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcceleration2D.constructor(Quantity([1, 2], "m/s2"))
+    >>> vec = cx.CartesianAcceleration2D.from_(Quantity([1, 2], "m/s2"))
     >>> vec
     CartesianAcceleration2D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
@@ -352,7 +352,7 @@ def _add_aa(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration2D.constructor(Quantity([3, 4], "km/s2"))
+    >>> v = cx.CartesianAcceleration2D.from_(Quantity([3, 4], "km/s2"))
     >>> (v + v).d2_x
     Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
 
@@ -375,7 +375,7 @@ def _mul_va(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcceleration2D.constructor(Quantity([3, 4], "m/s2"))
+    >>> v = cx.CartesianAcceleration2D.from_(Quantity([3, 4], "m/s2"))
     >>> jnp.multiply(5, v).d2_x
     Quantity['acceleration'](Array(15., dtype=float32), unit='m / s2')
 

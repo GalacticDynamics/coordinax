@@ -38,17 +38,17 @@ class CartesianPosition3D(AbstractPosition3D):
     """Cartesian vector representation."""
 
     x: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
     y: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
     z: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
 
@@ -64,8 +64,8 @@ class CartesianPosition3D(AbstractPosition3D):
 # Constructors
 
 
-@CartesianPosition3D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@CartesianPosition3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianPosition3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
     /,
@@ -77,7 +77,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor(Quantity([1, 2, 3], "m"))
+    >>> vec = cx.CartesianPosition3D.from_(Quantity([1, 2, 3], "m"))
     >>> vec
     CartesianPosition3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -104,7 +104,7 @@ def _add_cart3d_pos(
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
     ...                          phi=Quantity(0, "deg"))
     >>> (q + s).x
@@ -124,7 +124,7 @@ def _neg_p_cart3d_pos(obj: CartesianPosition3D, /) -> CartesianPosition3D:
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='kpc')
 
@@ -142,7 +142,7 @@ def _sub_cart3d_pos(
     --------
     >>> from unxt import Quantity
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> s = cx.SphericalPosition(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
     ...                          phi=Quantity(0, "deg"))
     >>> (q - s).x
@@ -179,7 +179,7 @@ def normalize_vector(obj: CartesianPosition3D, /) -> CartesianGeneric3D:
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> cx.normalize_vector(q)
     CartesianGeneric3D(
       x=Quantity[...]( value=f32[], unit=Unit(dimensionless) ),
@@ -201,17 +201,17 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""X speed :math:`dx/dt \in [-\infty, \infty]."""
 
     d_y: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Y speed :math:`dy/dt \in [-\infty, \infty]."""
 
     d_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
@@ -235,7 +235,7 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> c = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+        >>> c = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
         >>> c.norm()
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 
@@ -246,8 +246,8 @@ class CartesianVelocity3D(AvalMixin, AbstractVelocity3D):
 # -----------------------------------------------------
 
 
-@CartesianVelocity3D.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
-def constructor(
+@CartesianVelocity3D.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianVelocity3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
     /,
@@ -259,7 +259,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianVelocity3D.constructor(Quantity([1, 2, 3], "m/s"))
+    >>> vec = cx.CartesianVelocity3D.from_(Quantity([1, 2, 3], "m/s"))
     >>> vec
     CartesianVelocity3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
@@ -285,7 +285,7 @@ def _add_pp(
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> q = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
     >>> q2 = q + q
     >>> q2.d_y
     Quantity['speed'](Array(4., dtype=float32), unit='km / s')
@@ -304,7 +304,7 @@ def _sub_v3_v3(
     --------
     >>> from unxt import Quantity
     >>> from coordinax import CartesianPosition3D, CartesianVelocity3D
-    >>> q = CartesianVelocity3D.constructor(Quantity([1, 2, 3], "km/s"))
+    >>> q = CartesianVelocity3D.from_(Quantity([1, 2, 3], "km/s"))
     >>> q2 = q - q
     >>> q2.d_y
     Quantity['speed'](Array(0., dtype=float32), unit='km / s')
@@ -322,17 +322,17 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""X acceleration :math:`d^2x/dt^2 \in [-\infty, \infty]."""
 
     d2_y: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Y acceleration :math:`d^2y/dt^2 \in [-\infty, \infty]."""
 
     d2_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
@@ -353,7 +353,7 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> c = cx.CartesianAcceleration3D.constructor([1, 2, 3], "km/s2")
+        >>> c = cx.CartesianAcceleration3D.from_([1, 2, 3], "km/s2")
         >>> c.norm()
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
@@ -364,8 +364,8 @@ class CartesianAcceleration3D(AvalMixin, AbstractAcceleration3D):
 # -----------------------------------------------------
 
 
-@CartesianAcceleration3D.constructor._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
-def constructor(
+@CartesianAcceleration3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianAcceleration3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
 ) -> CartesianAcceleration3D:
     """Construct a 3D Cartesian acceleration.
@@ -375,7 +375,7 @@ def constructor(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcceleration3D.constructor(Quantity([1, 2, 3], "m/s2"))
+    >>> vec = cx.CartesianAcceleration3D.from_(Quantity([1, 2, 3], "m/s2"))
     >>> vec
     CartesianAcceleration3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
@@ -410,7 +410,7 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPosition3D, /) -> CartesianPosition3D
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> v = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> jnp.multiply(2, v).x
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 

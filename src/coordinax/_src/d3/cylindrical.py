@@ -31,19 +31,19 @@ class CylindricalPosition(AbstractPosition3D):
     """
 
     rho: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     phi: ct.BatchableAngle = eqx.field(
         converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].constructor(x, dtype=float)  # pylint: disable=E1120
+            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
     z: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
@@ -81,17 +81,17 @@ class CylindricalVelocity(AbstractVelocity3D):
     """Cylindrical differential representation."""
 
     d_rho: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].constructor, dtype=float)
+        converter=partial(Quantity["angular speed"].from_, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
     d_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
@@ -111,17 +111,17 @@ class CylindricalAcceleration(AbstractAcceleration3D):
     """Cylindrical acceleration representation."""
 
     d2_rho: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
     d2_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 

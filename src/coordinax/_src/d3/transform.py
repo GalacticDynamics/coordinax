@@ -53,7 +53,7 @@ def represent_as(
 
     Cartesian to Cartesian:
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     >>> cx.represent_as(vec, cx.CartesianPosition3D) is vec
     True
 
@@ -118,11 +118,11 @@ def represent_as(
     For these transformations the position does not matter since the
     self-transform returns the velocity unchanged.
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
 
     Cartesian to Cartesian velocity:
 
-    >>> dif = cx.CartesianVelocity3D.constructor([1, 2, 3], "km/s")
+    >>> dif = cx.CartesianVelocity3D.from_([1, 2, 3], "km/s")
     >>> cx.represent_as(dif, cx.CartesianVelocity3D, vec) is dif
     True
 
@@ -185,7 +185,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "km")
     >>> print(cx.represent_as(vec, cx.CylindricalPosition))
     <CylindricalPosition (rho[km], phi[rad], z[km])
         [2.236 1.107 3.   ]>
@@ -207,7 +207,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "km")
     >>> print(cx.represent_as(vec, cx.SphericalPosition))
     <SphericalPosition (r[km], theta[rad], phi[rad])
         [3.742 0.641 1.107]>
@@ -236,7 +236,7 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "km")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "km")
 
     >>> print(cx.represent_as(vec, cx.LonLatSphericalPosition))
     <LonLatSphericalPosition (lon[rad], lat[deg], distance[km])
@@ -620,7 +620,7 @@ def represent_as(
     if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
             position
         )
 
@@ -651,7 +651,7 @@ def represent_as(
     if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
             position
         )
 
@@ -679,7 +679,7 @@ def represent_as(
     if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
             position
         )
     # Transform the differential to LonLatSphericalVelocity
@@ -708,7 +708,7 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocity3D.constructor([1, 1, 1], "m/s")
+    >>> v = cx.CartesianVelocity3D.from_([1, 1, 1], "m/s")
     >>> cx.represent_as(v, cx.CartesianVelocity3D) is v
     True
 
@@ -736,7 +736,7 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAcceleration3D.constructor([1, 1, 1], "m/s2")
+    >>> a = cx.CartesianAcceleration3D.from_([1, 1, 1], "m/s2")
     >>> cx.represent_as(a, cx.CartesianAcceleration3D) is a
     True
 

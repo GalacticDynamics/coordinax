@@ -112,7 +112,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     Translation operators can be applied to :class:`vector.AbstractPosition3D`:
 
-    >>> q = cx.CartesianPosition3D.constructor(q)  # from the previous example
+    >>> q = cx.CartesianPosition3D.from_(q)  # from the previous example
     >>> newq, newt = op(q, t)
     >>> newq.x
     Quantity['length'](Array([ 0.70710677, -0.70710677], dtype=float32), unit='m')
@@ -238,7 +238,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
 
-        >>> q = cx.CartesianPosition3D.constructor([1, 0, 0], "m")
+        >>> q = cx.CartesianPosition3D.from_([1, 0, 0], "m")
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq.x
@@ -253,7 +253,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
             q.represent_as(CartesianPosition3D).to_units(ToUnitsOptions.consistent),
             Quantity,
         )
-        rcart = CartesianPosition3D.constructor(vec_matmul(self.rotation, vec))
+        rcart = CartesianPosition3D.from_(vec_matmul(self.rotation, vec))
         return rcart.represent_as(type(q))
 
     @op_call_dispatch(precedence=1)

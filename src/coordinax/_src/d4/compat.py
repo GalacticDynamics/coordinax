@@ -44,7 +44,7 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
 
     We can then apply the operator to a position:
 
-    >>> pos = cx.FourVector.constructor([0, 1.0, 2.0, 3.0], "kpc")
+    >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "kpc")
     >>> pos
     FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPosition3D( ... ) )
 
@@ -87,4 +87,4 @@ def call(
     Quantity['length'](Array([0., 2., 4., 6.], dtype=float32), unit='kpc')
 
     """
-    return convert(self(FourVector.constructor(x)), Quantity)
+    return convert(self(FourVector.from_(x)), Quantity)

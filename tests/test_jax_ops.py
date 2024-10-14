@@ -18,7 +18,7 @@ POSITION_CLASSES_3D = [
 @pytest.fixture(params=POSITION_CLASSES_3D)
 def q(request) -> cx.AbstractPosition:
     """Fixture for 3D Vectors."""
-    q = cx.CartesianPosition3D.constructor([1, 2, 3], "kpc")
+    q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
     return q.represent_as(request.param)
 
 

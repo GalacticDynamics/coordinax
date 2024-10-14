@@ -79,7 +79,7 @@ class CartesianPositionND(AbstractPositionND):
     """
 
     q: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].constructor, dtype=float)
+        converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""N-D coordinate :math:`\vec{x} \in (-\infty,+\infty)`.
 
@@ -123,8 +123,8 @@ class CartesianPositionND(AbstractPositionND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianPositionND.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
-def constructor(
+@CartesianPositionND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianPositionND],
     x: Shaped[Quantity["length"], ""] | Shaped[Quantity["length"], "*batch N"],
     /,
@@ -138,33 +138,33 @@ def constructor(
 
     1D vector:
 
-    >>> cx.CartesianPositionND.constructor(Quantity(1, "kpc"))
+    >>> cx.CartesianPositionND.from_(Quantity(1, "kpc"))
     CartesianPositionND(
       q=Quantity[...](value=f32[1], unit=Unit("kpc"))
     )
 
-    >>> cx.CartesianPositionND.constructor(Quantity([1], "kpc"))
+    >>> cx.CartesianPositionND.from_(Quantity([1], "kpc"))
     CartesianPositionND(
       q=Quantity[...](value=f32[1], unit=Unit("kpc"))
     )
 
     2D vector:
 
-    >>> cx.CartesianPositionND.constructor(Quantity([1, 2], "kpc"))
+    >>> cx.CartesianPositionND.from_(Quantity([1, 2], "kpc"))
     CartesianPositionND(
       q=Quantity[...](value=f32[2], unit=Unit("kpc"))
     )
 
     3D vector:
 
-    >>> cx.CartesianPositionND.constructor(Quantity([1, 2, 3], "kpc"))
+    >>> cx.CartesianPositionND.from_(Quantity([1, 2, 3], "kpc"))
     CartesianPositionND(
       q=Quantity[...](value=f32[3], unit=Unit("kpc"))
     )
 
     4D vector:
 
-    >>> cx.CartesianPositionND.constructor(Quantity([1, 2, 3, 4], "kpc"))
+    >>> cx.CartesianPositionND.from_(Quantity([1, 2, 3, 4], "kpc"))
     CartesianPositionND(
       q=Quantity[...](value=f32[4], unit=Unit("kpc"))
     )
@@ -203,8 +203,8 @@ def _add_vcnd(
 
     A 3D vector:
 
-    >>> q1 = cx.CartesianPositionND.constructor([1, 2, 3], "kpc")
-    >>> q2 = cx.CartesianPositionND.constructor([2, 3, 4], "kpc")
+    >>> q1 = cx.CartesianPositionND.from_([1, 2, 3], "kpc")
+    >>> q2 = cx.CartesianPositionND.from_([2, 3, 4], "kpc")
     >>> (q1 + q2).q
     Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
 
@@ -335,7 +335,7 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
     """
 
     d_q: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].constructor, dtype=float)
+        converter=partial(Quantity["speed"].from_, dtype=float)
     )
     r"""N-D speed :math:`d\vec{x}/dt \in (-\infty, \infty).
 
@@ -377,8 +377,8 @@ class CartesianVelocityND(AvalMixin, AbstractVelocityND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianVelocityND.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
-def constructor(
+@CartesianVelocityND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianVelocityND],
     x: Shaped[Quantity["speed"], ""] | Shaped[Quantity["speed"], "*batch N"],
     /,
@@ -392,33 +392,33 @@ def constructor(
 
     1D vector:
 
-    >>> cx.CartesianVelocityND.constructor(Quantity(1, "km/s"))
+    >>> cx.CartesianVelocityND.from_(Quantity(1, "km/s"))
     CartesianVelocityND(
       d_q=Quantity[...]( value=f32[1], unit=Unit("km / s") )
     )
 
-    >>> cx.CartesianVelocityND.constructor(Quantity([1], "km/s"))
+    >>> cx.CartesianVelocityND.from_(Quantity([1], "km/s"))
     CartesianVelocityND(
       d_q=Quantity[...]( value=f32[1], unit=Unit("km / s") )
     )
 
     2D vector:
 
-    >>> cx.CartesianVelocityND.constructor(Quantity([1, 2], "km/s"))
+    >>> cx.CartesianVelocityND.from_(Quantity([1, 2], "km/s"))
     CartesianVelocityND(
       d_q=Quantity[...]( value=f32[2], unit=Unit("km / s") )
     )
 
     3D vector:
 
-    >>> cx.CartesianVelocityND.constructor(Quantity([1, 2, 3], "km/s"))
+    >>> cx.CartesianVelocityND.from_(Quantity([1, 2, 3], "km/s"))
     CartesianVelocityND(
       d_q=Quantity[...]( value=f32[3], unit=Unit("km / s") )
     )
 
     4D vector:
 
-    >>> cx.CartesianVelocityND.constructor(Quantity([1, 2, 3, 4], "km/s"))
+    >>> cx.CartesianVelocityND.from_(Quantity([1, 2, 3, 4], "km/s"))
     CartesianVelocityND(
       d_q=Quantity[...]( value=f32[4], unit=Unit("km / s") )
     )
@@ -483,7 +483,7 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
     """
 
     d2_q: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].constructor, dtype=float)
+        converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""N-D acceleration :math:`d\vec{x}/dt^2 \in (-\infty, \infty).
 
@@ -551,8 +551,8 @@ class CartesianAccelerationND(AvalMixin, AbstractAccelerationND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianAccelerationND.constructor._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
-def constructor(
+@CartesianAccelerationND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+def from_(
     cls: type[CartesianAccelerationND],
     x: Shaped[Quantity["acceleration"], ""]
     | Shaped[Quantity["acceleration"], "*batch N"],
@@ -567,33 +567,33 @@ def constructor(
 
     1D vector:
 
-    >>> cx.CartesianAccelerationND.constructor(Quantity(1, "km/s2"))
+    >>> cx.CartesianAccelerationND.from_(Quantity(1, "km/s2"))
     CartesianAccelerationND(
       d2_q=Quantity[...]( value=f32[1], unit=Unit("km / s2") )
     )
 
-    >>> cx.CartesianAccelerationND.constructor(Quantity([1], "km/s2"))
+    >>> cx.CartesianAccelerationND.from_(Quantity([1], "km/s2"))
     CartesianAccelerationND(
       d2_q=Quantity[...]( value=f32[1], unit=Unit("km / s2") )
     )
 
     2D vector:
 
-    >>> cx.CartesianAccelerationND.constructor(Quantity([1, 2], "km/s2"))
+    >>> cx.CartesianAccelerationND.from_(Quantity([1, 2], "km/s2"))
     CartesianAccelerationND(
       d2_q=Quantity[...]( value=f32[2], unit=Unit("km / s2") )
     )
 
     3D vector:
 
-    >>> cx.CartesianAccelerationND.constructor(Quantity([1, 2, 3], "km/s2"))
+    >>> cx.CartesianAccelerationND.from_(Quantity([1, 2, 3], "km/s2"))
     CartesianAccelerationND(
       d2_q=Quantity[...]( value=f32[3], unit=Unit("km / s2") )
     )
 
     4D vector:
 
-    >>> cx.CartesianAccelerationND.constructor(Quantity([1, 2, 3, 4], "km/s2"))
+    >>> cx.CartesianAccelerationND.from_(Quantity([1, 2, 3, 4], "km/s2"))
     CartesianAccelerationND(
       d2_q=Quantity[...]( value=f32[4], unit=Unit("km / s2") )
     )

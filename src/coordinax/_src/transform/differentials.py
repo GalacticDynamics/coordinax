@@ -75,8 +75,8 @@ def represent_as(
 
     Now in 2D:
 
-    >>> q = cx.CartesianPosition2D.constructor([1.0, 2.0], "km")
-    >>> p = cx.CartesianVelocity2D.constructor([1.0, 2.0], "km/s")
+    >>> q = cx.CartesianPosition2D.from_([1.0, 2.0], "km")
+    >>> p = cx.CartesianVelocity2D.from_([1.0, 2.0], "km/s")
     >>> cx.represent_as(p, cx.PolarVelocity, q)
     PolarVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
@@ -85,8 +85,8 @@ def represent_as(
 
     And in 3D:
 
-    >>> q = cx.CartesianPosition3D.constructor([1.0, 2.0, 3.0], "km")
-    >>> p = cx.CartesianVelocity3D.constructor([1.0, 2.0, 3.0], "km/s")
+    >>> q = cx.CartesianPosition3D.from_([1.0, 2.0, 3.0], "km")
+    >>> p = cx.CartesianVelocity3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> cx.represent_as(p, cx.SphericalVelocity, q)
     SphericalVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
@@ -97,7 +97,7 @@ def represent_as(
     If given a position as a Quantity, it will be converted to the appropriate
     Cartesian vector:
 
-    >>> p = cx.CartesianVelocity3D.constructor([1.0, 2.0, 3.0], "km/s")
+    >>> p = cx.CartesianVelocity3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> cx.represent_as(p, cx.SphericalVelocity, Quantity([1.0, 2.0, 3.0], "km"))
     SphericalVelocity(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
@@ -114,7 +114,7 @@ def represent_as(
     if isinstance(position, AbstractPosition):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.constructor(  # noqa: SLF001
+        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
             position
         )
 

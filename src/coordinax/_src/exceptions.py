@@ -15,7 +15,7 @@ class IrreversibleDimensionChange(UserWarning):
     >>> import warnings
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPosition3D.constructor([1, 2, 3], "m")
+    >>> vec = cx.CartesianPosition3D.from_([1, 2, 3], "m")
     >>> with warnings.catch_warnings(record=True) as w:
     ...     warnings.simplefilter("always")
     ...     _ = vec.represent_as(cx.CartesianPosition2D)

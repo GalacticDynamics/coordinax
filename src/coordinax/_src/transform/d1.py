@@ -201,7 +201,7 @@ def represent_as(
 
     """
     x, theta, phi = jnp.broadcast_arrays(current.x, theta, phi)
-    return target.constructor(r=x, theta=theta, phi=phi)
+    return target.from_(r=x, theta=theta, phi=phi)
 
 
 @dispatch
@@ -427,7 +427,7 @@ def represent_as(
 
     """
     r, theta, phi = jnp.broadcast_arrays(current.r, theta, phi)
-    return target.constructor(r=r, theta=theta, phi=phi)
+    return target.from_(r=r, theta=theta, phi=phi)
 
 
 @dispatch
