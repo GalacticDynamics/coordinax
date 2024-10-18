@@ -202,7 +202,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.11.1.dev0+g08864e2.d20241018"
+version = "0.11.1.dev2+gb258f0b.d20241018"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -272,7 +272,7 @@ dev = [
 requires-dist = [
     { name = "astropy", specifier = ">=6.1.4" },
     { name = "dataclassish", specifier = ">=0.3.1" },
-    { name = "equinox", specifier = ">=0.11.7" },
+    { name = "equinox", specifier = "==0.11.7" },
     { name = "furo", marker = "extra == 'all'", specifier = ">=2023.8.17" },
     { name = "furo", marker = "extra == 'docs'", specifier = ">=2023.8.17" },
     { name = "hypothesis", extras = ["numpy"], marker = "extra == 'all'" },
