@@ -1,6 +1,6 @@
 """Transformations between representations."""
 
-__all__ = ["represent_as"]
+__all__: list[str] = []
 
 from dataclasses import replace
 from math import prod

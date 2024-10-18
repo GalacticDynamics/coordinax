@@ -1,6 +1,6 @@
 """Transformations from 1D."""
 
-__all__ = ["represent_as"]
+__all__: list[str] = []
 
 from typing import Any
 
