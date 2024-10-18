@@ -1,9 +1,9 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "CylindricalPosition",
-    "CylindricalVelocity",
-    "CylindricalAcceleration",
+    "CylindricalPos",
+    "CylindricalVel",
+    "CylindricalAcc",
 ]
 
 from functools import partial
@@ -16,14 +16,14 @@ import quaxed.numpy as xp
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration3D, AbstractPosition3D, AbstractVelocity3D
+from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
 
 @final
-class CylindricalPosition(AbstractPosition3D):
+class CylindricalPos(AbstractPos3D):
     """Cylindrical vector representation.
 
     This adheres to ISO standard 31-11.
@@ -55,8 +55,8 @@ class CylindricalPosition(AbstractPosition3D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CylindricalVelocity"]:
-        return CylindricalVelocity
+    def differential_cls(cls) -> type["CylindricalVel"]:
+        return CylindricalVel
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -67,7 +67,7 @@ class CylindricalPosition(AbstractPosition3D):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> c = cx.CylindricalPosition(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
+        >>> c = cx.CylindricalPos(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
         ...                       z=Quantity(4, "kpc"))
         >>> c.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
@@ -77,7 +77,7 @@ class CylindricalPosition(AbstractPosition3D):
 
 
 @final
-class CylindricalVelocity(AbstractVelocity3D):
+class CylindricalVel(AbstractVel3D):
     """Cylindrical differential representation."""
 
     d_rho: ct.BatchableSpeed = eqx.field(
@@ -97,17 +97,17 @@ class CylindricalVelocity(AbstractVelocity3D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CylindricalPosition]:
-        return CylindricalPosition
+    def integral_cls(cls) -> type[CylindricalPos]:
+        return CylindricalPos
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CylindricalAcceleration"]:
-        return CylindricalAcceleration
+    def differential_cls(cls) -> type["CylindricalAcc"]:
+        return CylindricalAcc
 
 
 @final
-class CylindricalAcceleration(AbstractAcceleration3D):
+class CylindricalAcc(AbstractAcc3D):
     """Cylindrical acceleration representation."""
 
     d2_rho: ct.BatchableSpeed = eqx.field(
@@ -127,5 +127,5 @@ class CylindricalAcceleration(AbstractAcceleration3D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CylindricalVelocity]:
-        return CylindricalVelocity
+    def integral_cls(cls) -> type[CylindricalVel]:
+        return CylindricalVel

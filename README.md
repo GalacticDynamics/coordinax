@@ -31,44 +31,44 @@ import coordinax as cx
 import jax.numpy as jnp
 from unxt import Quantity
 
-q = cx.CartesianPosition3D(
+q = cx.CartesianPos3D(
     x=Quantity(jnp.arange(0, 10.0), "km"),
     y=Quantity(jnp.arange(5, 15.0), "km"),
     z=Quantity(jnp.arange(10, 20.0), "km"),
 )
 print(q)
-# <CartesianPosition3D (x[km], y[km], z[km])
+# <CartesianPos3D (x[km], y[km], z[km])
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
 #      [ 8. 13. 18.]
 #      [ 9. 14. 19.]]>
 
-q2 = cx.represent_as(q, cx.SphericalPosition)
+q2 = cx.represent_as(q, cx.SphericalPos)
 print(q2)
-# <SphericalPosition (r[km], theta[rad], phi[rad])
+# <SphericalPos (r[km], theta[rad], phi[rad])
 #     [[11.18   0.464  1.571]
 #      [12.57   0.505  1.406]
 #      ...
 #      [23.601  0.703  1.019]
 #      [25.259  0.719  0.999]]>
 
-p = cx.CartesianVelocity3D(
+p = cx.CartesianVel3D(
     d_x=Quantity(jnp.arange(0, 10.0), "m/s"),
     d_y=Quantity(jnp.arange(5, 15.0), "m/s"),
     d_z=Quantity(jnp.arange(10, 20.0), "m/s"),
 )
 print(p)
-# <CartesianVelocity3D (d_x[m / s], d_y[m / s], d_z[m / s])
+# <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
 #      [ 8. 13. 18.]
 #      [ 9. 14. 19.]]>
 
-p2 = cx.represent_as(p, cx.SphericalVelocity, q)
+p2 = cx.represent_as(p, cx.SphericalVel, q)
 print(p2)
-# <SphericalVelocity (d_r[m / s], d_theta[m rad / (km s)], d_phi[m rad / (km s)])
+# <SphericalVel (d_r[m / s], d_theta[m rad / (km s)], d_phi[m rad / (km s)])
 #     [[ 1.118e+01 -3.886e-16  0.000e+00]
 #      [ 1.257e+01 -1.110e-16  0.000e+00]
 #      ...

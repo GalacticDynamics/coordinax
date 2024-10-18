@@ -13,71 +13,68 @@ from dataclassish import field_items
 from unxt import AbstractQuantity
 
 from coordinax import (
-    AbstractPosition,
-    AbstractPosition1D,
-    AbstractPosition2D,
-    AbstractPosition3D,
-    AbstractVelocity,
-    AbstractVelocity1D,
-    AbstractVelocity2D,
-    AbstractVelocity3D,
-    CartesianPosition1D,
-    CartesianPosition2D,
-    CartesianPosition3D,
-    CartesianVelocity1D,
-    CartesianVelocity2D,
-    CartesianVelocity3D,
-    CylindricalPosition,
-    CylindricalVelocity,
+    AbstractPos,
+    AbstractPos1D,
+    AbstractPos2D,
+    AbstractPos3D,
+    AbstractVel,
+    AbstractVel1D,
+    AbstractVel2D,
+    AbstractVel3D,
+    CartesianPos1D,
+    CartesianPos2D,
+    CartesianPos3D,
+    CartesianVel1D,
+    CartesianVel2D,
+    CartesianVel3D,
+    CylindricalPos,
+    CylindricalVel,
     IrreversibleDimensionChange,
-    PolarPosition,
-    PolarVelocity,
-    RadialPosition,
-    RadialVelocity,
-    SphericalPosition,
-    SphericalVelocity,
+    PolarPos,
+    PolarVel,
+    RadialPos,
+    RadialVel,
+    SphericalPos,
+    SphericalVel,
 )
 
 BUILTIN_VECTORS = [
     # 1D
-    CartesianPosition1D,
-    RadialPosition,
+    CartesianPos1D,
+    RadialPos,
     # 2D
-    CartesianPosition2D,
-    PolarPosition,
+    CartesianPos2D,
+    PolarPos,
     # 3D
-    CartesianPosition3D,
-    SphericalPosition,
-    CylindricalPosition,
+    CartesianPos3D,
+    SphericalPos,
+    CylindricalPos,
 ]
 
 BUILTIN_DIFFERENTIALS = [
     # 1D
-    CartesianVelocity1D,
-    RadialVelocity,
+    CartesianVel1D,
+    RadialVel,
     # 2D
-    CartesianVelocity2D,
-    PolarVelocity,
-    # LnPolarVelocity,
-    # Log10PolarVelocity,
+    CartesianVel2D,
+    PolarVel,
+    # LnPolarVel,
+    # Log10PolarVel,
     # 3D
-    CartesianVelocity3D,
-    SphericalVelocity,
-    CylindricalVelocity,
+    CartesianVel3D,
+    SphericalVel,
+    CylindricalVel,
 ]
 
 
 def context_dimension_reduction(
-    vector: AbstractPosition, target: type[AbstractPosition]
+    vector: AbstractPos, target: type[AbstractPos]
 ) -> AbstractContextManager[Any]:
     """Return a context manager that checks for dimensionality reduction."""
     context: AbstractContextManager[Any]
-    if (
-        isinstance(vector, AbstractPosition2D)
-        and issubclass(target, AbstractPosition1D)
-    ) or (
-        isinstance(vector, AbstractPosition3D)
-        and issubclass(target, AbstractPosition2D | AbstractPosition1D)
+    if (isinstance(vector, AbstractPos2D) and issubclass(target, AbstractPos1D)) or (
+        isinstance(vector, AbstractPos3D)
+        and issubclass(target, AbstractPos2D | AbstractPos1D)
     ):
         context = pytest.warns(IrreversibleDimensionChange)
     else:
@@ -178,17 +175,17 @@ class AbstractVectorTest:
         assert all(v == getattr(vector, k).shape for k, v in shapes.items())
 
 
-class AbstractPositionTest(AbstractVectorTest):
-    """Test :class:`coordinax.AbstractPosition`."""
+class AbstractPosTest(AbstractVectorTest):
+    """Test :class:`coordinax.AbstractPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractPosition:
+    def vector(self) -> AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.mark.parametrize("target", BUILTIN_VECTORS)
     def test_represent_as(self, vector, target):
-        """Test :meth:`AbstractPosition.represent_as`.
+        """Test :meth:`AbstractPos.represent_as`.
 
         This just tests that the machiner works.
         """
@@ -201,39 +198,39 @@ class AbstractPositionTest(AbstractVectorTest):
         assert isinstance(newvec, target)
 
 
-class AbstractVelocityTest(AbstractVectorTest):
-    """Test :class:`coordinax.AbstractVelocity`."""
+class AbstractVelTest(AbstractVectorTest):
+    """Test :class:`coordinax.AbstractVel`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractPosition:
+    def vector(self) -> AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> AbstractVelocity:
+    def difntl(self) -> AbstractVel:
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.mark.parametrize("target", BUILTIN_DIFFERENTIALS)
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_represent_as(self, difntl, target, vector):
-        """Test :meth:`AbstractPosition.represent_as`.
+        """Test :meth:`AbstractPos.represent_as`.
 
         This just tests that the machiner works.
         """
         # TODO: have all the conversions
         if (
             (
-                isinstance(difntl, AbstractVelocity1D)
-                and not issubclass(target, AbstractVelocity1D)
+                isinstance(difntl, AbstractVel1D)
+                and not issubclass(target, AbstractVel1D)
             )
             or (
-                isinstance(difntl, AbstractVelocity2D)
-                and not issubclass(target, AbstractVelocity2D)
+                isinstance(difntl, AbstractVel2D)
+                and not issubclass(target, AbstractVel2D)
             )
             or (
-                isinstance(difntl, AbstractVelocity3D)
-                and not issubclass(target, AbstractVelocity3D)
+                isinstance(difntl, AbstractVel3D)
+                and not issubclass(target, AbstractVel3D)
             )
         ):
             pytest.xfail("Not implemented yet")

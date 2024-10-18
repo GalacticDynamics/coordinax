@@ -11,12 +11,12 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from coordinax._src.base import AbstractPosition, AbstractVelocity
+from coordinax._src.base import AbstractPos, AbstractVel
 from coordinax._src.utils import classproperty
 
 
 @final
-class PoincarePolarVector(AbstractPosition):  # TODO: better name
+class PoincarePolarVector(AbstractPos):  # TODO: better name
     """Poincare vector + differential."""
 
     rho: ct.BatchableLength = eqx.field(
@@ -47,12 +47,12 @@ class PoincarePolarVector(AbstractPosition):  # TODO: better name
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractPosition]:
+    def _cartesian_cls(cls) -> type[AbstractPos]:
         """Return the corresponding Cartesian vector class."""
         raise NotImplementedError
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type[AbstractVelocity]:
+    def differential_cls(cls) -> type[AbstractVel]:
         """Return the corresponding differential vector class."""
         raise NotImplementedError

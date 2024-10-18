@@ -7,7 +7,7 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 
-from coordinax._src.d3.cylindrical import CylindricalPosition, CylindricalVelocity
+from coordinax._src.d3.cylindrical import CylindricalPos, CylindricalVel
 from coordinax._src.dn.poincare import PoincarePolarVector
 from coordinax._src.space import Space
 
@@ -22,14 +22,14 @@ def represent_as(w: Space, target: type[Space]) -> Space:
     >>> from unxt import Quantity
 
     >>> w = cx.Space(
-    ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+    ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.Space)
     Space({
-        'length': CartesianPosition3D( ... ),
-        'speed': CartesianVelocity3D( ... )} )
+        'length': CartesianPos3D( ... ),
+        'speed': CartesianVel3D( ... )} )
 
     """
     return w
@@ -45,8 +45,8 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     >>> from unxt import Quantity
 
     >>> w = cx.Space(
-    ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-    ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+    ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> cx.represent_as(w, cx.PoincarePolarVector)
@@ -60,8 +60,8 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     )
 
     """
-    q = w["length"].represent_as(CylindricalPosition)
-    p = w["speed"].represent_as(CylindricalVelocity, q)
+    q = w["length"].represent_as(CylindricalPos)
+    p = w["speed"].represent_as(CylindricalVel, q)
 
     # pg. 437, Papaphillipou & Laskar (1996)
     sqrt2theta = jnp.sqrt(jnp.abs(2 * q.rho**2 * p.d_phi))

@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPositionND", "AbstractVelocityND", "AbstractAccelerationND"]
+__all__ = ["AbstractPosND", "AbstractVelND", "AbstractAccND"]
 
 
 from abc import abstractmethod
@@ -13,10 +13,10 @@ import quaxed.lax as qlax
 import quaxed.numpy as jnp
 
 from coordinax._src.base import (
-    AbstractAcceleration,
-    AbstractPosition,
+    AbstractAcc,
+    AbstractPos,
     AbstractVector,
-    AbstractVelocity,
+    AbstractVel,
 )
 from coordinax._src.utils import classproperty
 
@@ -24,15 +24,15 @@ if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class AbstractPositionND(AbstractPosition):
+class AbstractPosND(AbstractPos):
     """Abstract representation of N-D coordinates in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianPositionND
+        from .cartesian import CartesianPosND
 
-        return CartesianPositionND
+        return CartesianPosND
 
     @classproperty
     @classmethod
@@ -55,8 +55,8 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPositionND(Quantity([[[1, 2, 3]],
-        ...                                        [[4, 5, 6]]], "m"))
+        >>> vec = cx.CartesianPosND(Quantity([[[1, 2, 3]],
+        ...                                   [[4, 5, 6]]], "m"))
         >>> vec.shape
         (2, 1)
 
@@ -84,7 +84,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPosND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -99,7 +99,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPosND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -121,7 +121,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[[1, 2]], [[3, 4]]], "m")
+        >>> vec = cx.CartesianPosND.from_([[[1, 2]], [[3, 4]]], "m")
         >>> vec.shape
         (2, 1)
 
@@ -138,7 +138,7 @@ class AbstractPositionND(AbstractPosition):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPositionND.from_([[1, 2], [3, 4]], "m")
+        >>> vec = cx.CartesianPosND.from_([[1, 2], [3, 4]], "m")
         >>> vec.shape
         (2,)
 
@@ -152,7 +152,7 @@ class AbstractPositionND(AbstractPosition):
 #####################################################################
 
 
-class AbstractVelocityND(AbstractVelocity):
+class AbstractVelND(AbstractVel):
     """Abstract representation of N-D vector differentials."""
 
     @classproperty
@@ -163,18 +163,18 @@ class AbstractVelocityND(AbstractVelocity):
         Examples
         --------
         >>> import coordinax as cx
-        >>> cx.CartesianVelocityND._cartesian_cls
-        <class 'coordinax...CartesianVelocityND'>
+        >>> cx.CartesianVelND._cartesian_cls
+        <class 'coordinax...CartesianVelND'>
 
         """
-        from .cartesian import CartesianVelocityND
+        from .cartesian import CartesianVelND
 
-        return CartesianVelocityND
+        return CartesianVelND
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPositionND]:
+    def integral_cls(cls) -> type[AbstractPosND]:
         """Get the integral class."""
         raise NotImplementedError
 
@@ -192,7 +192,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.from_([[[1, 2]], [[3, 4]]], "m/s")
+        >>> vec = cx.CartesianVelND.from_([[[1, 2]], [[3, 4]]], "m/s")
         >>> vec.shape
         (2, 1)
 
@@ -220,7 +220,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.from_([[1, 2], [3, 4]], "m/s")
+        >>> vec = cx.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.shape
         (2,)
 
@@ -235,7 +235,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.from_([[[1, 2]], [[3, 4]]], "m/s")
+        >>> vec = cx.CartesianVelND.from_([[[1, 2]], [[3, 4]]], "m/s")
         >>> vec.shape
         (2, 1)
 
@@ -257,9 +257,9 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianVelocityND.from_([[1, 2], [3, 4]], "m/s")
+        >>> vec = cx.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.flatten()
-        CartesianVelocityND(
+        CartesianVelND(
             d_q=Quantity[...]( value=f32[2,2], unit=Unit("m / s") )
         )
 
@@ -275,7 +275,7 @@ class AbstractVelocityND(AbstractVelocity):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianVelocityND(Quantity([1, 2, 3], "m/s"))
+        >>> vec = cx.CartesianVelND(Quantity([1, 2, 3], "m/s"))
         >>> vec.shape
         ()
 
@@ -291,7 +291,7 @@ class AbstractVelocityND(AbstractVelocity):
 #####################################################################
 
 
-class AbstractAccelerationND(AbstractAcceleration):
+class AbstractAccND(AbstractAcc):
     """Abstract representation of N-D vector differentials."""
 
     @classproperty
@@ -302,18 +302,18 @@ class AbstractAccelerationND(AbstractAcceleration):
         Examples
         --------
         >>> import coordinax as cx
-        >>> cx.CartesianAccelerationND._cartesian_cls
-        <class 'coordinax...CartesianAccelerationND'>
+        >>> cx.CartesianAccND._cartesian_cls
+        <class 'coordinax...CartesianAccND'>
 
         """
-        from .cartesian import CartesianAccelerationND
+        from .cartesian import CartesianAccND
 
-        return CartesianAccelerationND
+        return CartesianAccND
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelocityND]:
+    def integral_cls(cls) -> type[AbstractVelND]:
         raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
@@ -330,7 +330,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -359,7 +359,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -375,7 +375,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -398,7 +398,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([[[1, 2, 3]],
+        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
         ...                                            [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
@@ -418,7 +418,7 @@ class AbstractAccelerationND(AbstractAcceleration):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccelerationND(Quantity([1, 2, 3], "m/s2"))
+        >>> vec = cx.CartesianAccND(Quantity([1, 2, 3], "m/s2"))
         >>> vec.shape
         ()
 

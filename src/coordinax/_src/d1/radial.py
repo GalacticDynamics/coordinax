@@ -1,6 +1,6 @@
 """Carteisan vector."""
 
-__all__ = ["RadialPosition", "RadialVelocity", "RadialAcceleration"]
+__all__ = ["RadialPos", "RadialVel", "RadialAcc"]
 
 from functools import partial
 from typing import final
@@ -13,13 +13,13 @@ from dataclassish.converters import Unless
 from unxt import AbstractDistance, Distance, Quantity
 
 import coordinax._src.typing as ct
-from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
+from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.checks import check_r_non_negative
 from coordinax._src.utils import classproperty
 
 
 @final
-class RadialPosition(AbstractPosition1D):
+class RadialPos(AbstractPos1D):
     """Radial vector representation."""
 
     r: ct.BatchableDistance = eqx.field(
@@ -33,12 +33,12 @@ class RadialPosition(AbstractPosition1D):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["RadialVelocity"]:
-        return RadialVelocity
+    def differential_cls(cls) -> type["RadialVel"]:
+        return RadialVel
 
 
 @final
-class RadialVelocity(AbstractVelocity1D):
+class RadialVel(AbstractVel1D):
     """Radial differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
@@ -46,13 +46,13 @@ class RadialVelocity(AbstractVelocity1D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[RadialPosition]:
-        return RadialPosition
+    def integral_cls(cls) -> type[RadialPos]:
+        return RadialPos
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["RadialAcceleration"]:
-        return RadialAcceleration
+    def differential_cls(cls) -> type["RadialAcc"]:
+        return RadialAcc
 
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
@@ -61,7 +61,7 @@ class RadialVelocity(AbstractVelocity1D):
 
 
 @final
-class RadialAcceleration(AbstractAcceleration1D):
+class RadialAcc(AbstractAcc1D):
     """Radial differential representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
@@ -69,8 +69,8 @@ class RadialAcceleration(AbstractAcceleration1D):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[RadialVelocity]:
-        return RadialVelocity
+    def integral_cls(cls) -> type[RadialVel]:
+        return RadialVel
 
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""

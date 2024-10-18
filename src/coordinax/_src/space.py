@@ -19,12 +19,7 @@ import quaxed.numpy as jnp
 from unxt import Quantity, dimensions
 from xmmutablemap import ImmutableMap
 
-from .base import (
-    AbstractAcceleration,
-    AbstractPosition,
-    AbstractVector,
-    AbstractVelocity,
-)
+from .base import AbstractAcc, AbstractPos, AbstractVector, AbstractVel
 from .typing import Unit
 from .utils import classproperty
 from coordinax._src.funcs import represent_as
@@ -69,33 +64,33 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     >>> import coordinax as cx
     >>> from unxt import Quantity
 
-    >>> x = cx.CartesianPosition3D.from_([1, 2, 3], "km")
-    >>> v = cx.CartesianVelocity3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcceleration3D.from_([7, 8, 9], "km/s^2")
+    >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
+    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> space
     Space({
-        'length': CartesianPosition3D( ... ),
-        'speed': CartesianVelocity3D( ... ),
-        'acceleration': CartesianAcceleration3D( ... )}
+        'length': CartesianPos3D( ... ),
+        'speed': CartesianVel3D( ... ),
+        'acceleration': CartesianAcc3D( ... )}
     )
 
     >>> space["length"]
-    CartesianPosition3D( ... )
+    CartesianPos3D( ... )
 
-    >>> space.represent_as(cx.SphericalPosition)
+    >>> space.represent_as(cx.SphericalPos)
     Space({
-        'length': SphericalPosition( ... ),
-        'speed': SphericalVelocity( ... ),
-        'acceleration': SphericalAcceleration( ... )}
+        'length': SphericalPos( ... ),
+        'speed': SphericalVel( ... ),
+        'acceleration': SphericalAcc( ... )}
     )
 
-    >>> cx.represent_as(space, cx.SphericalPosition)
+    >>> cx.represent_as(space, cx.SphericalPos)
     Space({
-        'length': SphericalPosition( ... ),
-        'speed': SphericalVelocity( ... ),
-        'acceleration': SphericalAcceleration( ... )}
+        'length': SphericalPos( ... ),
+        'speed': SphericalVel( ... ),
+        'acceleration': SphericalAcc( ... )}
     )
 
     """  # noqa: E501
@@ -139,18 +134,18 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> w = cx.Space(length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...              speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        >>> w = cx.Space(length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...              speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         By number:
 
         >>> w[0]
         Space({
-            'length': CartesianPosition3D(
+            'length': CartesianPos3D(
                 x=Quantity[...](value=f32[2], unit=Unit("m")),
                 y=Quantity[...](value=f32[2], unit=Unit("m")),
                 z=Quantity[...](value=f32[2], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2], unit=Unit("m / s") ) )}
@@ -160,11 +155,11 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         >>> w[1:]
         Space({
-            'length': CartesianPosition3D(
+            'length': CartesianPos3D(
                 x=Quantity[...](value=f32[0,2], unit=Unit("m")),
                 y=Quantity[...](value=f32[0,2], unit=Unit("m")),
                 z=Quantity[...](value=f32[0,2], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ) )}
@@ -174,11 +169,11 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         >>> w[...]
         Space({
-            'length': CartesianPosition3D(
+            'length': CartesianPos3D(
                 x=Quantity[...](value=f32[1,2], unit=Unit("m")),
                 y=Quantity[...](value=f32[1,2], unit=Unit("m")),
                 z=Quantity[...](value=f32[1,2], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ) )}
@@ -188,11 +183,11 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         >>> w[(0, 1)]
         Space({
-            'length': CartesianPosition3D(
+            'length': CartesianPos3D(
                 x=Quantity[...](value=f32[], unit=Unit("m")),
                 y=Quantity[...](value=f32[], unit=Unit("m")),
                 z=Quantity[...](value=f32[], unit=Unit("m")) ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[], unit=Unit("m / s") ) )}
@@ -201,7 +196,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         This also supports numpy index arrays. But this example section
         highlights core python indexing.
 
-        """  # noqa: E501
+        """
         return Space(**{k: v[key] for k, v in self.items()})
 
     @dispatch
@@ -211,13 +206,13 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> w = cx.Space(length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...              speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        >>> w = cx.Space(length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...              speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         By string key:
 
         >>> w["length"]
-        CartesianPosition3D(
+        CartesianPos3D(
             x=Quantity[...](value=f32[1,2], unit=Unit("m")),
             y=Quantity[...](value=f32[1,2], unit=Unit("m")),
             z=Quantity[...](value=f32[1,2], unit=Unit("m"))
@@ -227,13 +222,13 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         >>> import astropy.units as u
         >>> w[u.get_physical_type("length")]
-        CartesianPosition3D(
+        CartesianPos3D(
             x=Quantity[...](value=f32[1,2], unit=Unit("m")),
             y=Quantity[...](value=f32[1,2], unit=Unit("m")),
             z=Quantity[...](value=f32[1,2], unit=Unit("m"))
         )
 
-        """  # noqa: E501
+        """
         if isinstance(key, Dimension):
             key = _get_dimension_name(key)
 
@@ -259,19 +254,18 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
         >>> w.mT
         Space({
-            'length': CartesianPosition3D(
+            'length': CartesianPos3D(
                 x=Quantity[...](value=f32[2,1], unit=Unit("m")),
                 y=Quantity[...](value=f32[2,1], unit=Unit("m")),
                 z=Quantity[...](value=f32[2,1], unit=Unit("m"))
-            ), 'speed': CartesianVelocity3D(
+            ), 'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
@@ -287,11 +281,10 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s") )
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s") )
 
         >>> w.ndim
         2
@@ -309,8 +302,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.shape
@@ -329,8 +322,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s") )
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s") )
 
         >>> w.size
         2
@@ -348,18 +341,18 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.T
         Space({
-            'length': CartesianPosition3D(
+            'length': CartesianPos3D(
                 x=Quantity[...](value=f32[2,1], unit=Unit("m")),
                 y=Quantity[...](value=f32[2,1], unit=Unit("m")),
                 z=Quantity[...](value=f32[2,1], unit=Unit("m"))
             ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
@@ -380,8 +373,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> (-w)["length"].x
@@ -398,17 +391,17 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> import coordinax as cx
         >>> from unxt import Quantity
 
-        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "m")
-        >>> p = cx.CartesianVelocity3D.from_([1, 2, 3], "m/s")
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
         >>> w = cx.Space(length=q, speed=p)
         >>> w
         Space({
-            'length': CartesianPosition3D(
+            'length': CartesianPos3D(
                 x=Quantity[...](value=f32[], unit=Unit("m")),
                 y=Quantity[...](value=f32[], unit=Unit("m")),
                 z=Quantity[...](value=f32[], unit=Unit("m"))
             ),
-            'speed': CartesianVelocity3D(
+            'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
@@ -474,8 +467,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.dtypes
@@ -496,8 +489,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.devices
@@ -518,8 +511,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.shapes
@@ -538,8 +531,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> from unxt import Quantity
 
         >>> w = cx.Space(
-        ...     length=cx.CartesianPosition3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVelocity3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
         >>> w.sizes
@@ -602,17 +595,17 @@ def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_represent_as(
-    current: AbstractPosition, target: type[AbstractPosition], space: Space, /
-) -> AbstractPosition:
-    """Transform of Positions."""
+    current: AbstractPos, target: type[AbstractPos], space: Space, /
+) -> AbstractPos:
+    """Transform of Poss."""
     return represent_as(current, target)  # space is unnecessary
 
 
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_represent_as(
-    current: AbstractVelocity, target: type[AbstractPosition], space: Space, /
-) -> AbstractVelocity:
+    current: AbstractVel, target: type[AbstractPos], space: Space, /
+) -> AbstractVel:
     """Transform of Velocities."""
     return represent_as(current, target.differential_cls, space["length"])
 
@@ -620,9 +613,9 @@ def temp_represent_as(
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_represent_as(
-    current: AbstractAcceleration, target: type[AbstractPosition], space: Space, /
-) -> AbstractAcceleration:
-    """Transform of Accelerations."""
+    current: AbstractAcc, target: type[AbstractPos], space: Space, /
+) -> AbstractAcc:
+    """Transform of Accs."""
     return represent_as(
         current,
         target.differential_cls.differential_cls,

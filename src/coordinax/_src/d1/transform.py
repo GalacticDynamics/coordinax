@@ -6,10 +6,10 @@ from typing import Any
 
 from plum import dispatch
 
-from .base import AbstractAcceleration1D, AbstractPosition1D, AbstractVelocity1D
-from .cartesian import CartesianAcceleration1D, CartesianPosition1D, CartesianVelocity1D
-from .radial import RadialAcceleration, RadialPosition, RadialVelocity
-from coordinax._src.base import AbstractPosition, AbstractVelocity
+from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
+from .cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D
+from .radial import RadialAcc, RadialPos, RadialVel
+from coordinax._src.base import AbstractPos, AbstractVel
 
 ###############################################################################
 # 1D
@@ -17,21 +17,21 @@ from coordinax._src.base import AbstractPosition, AbstractVelocity
 
 @dispatch
 def represent_as(
-    current: AbstractPosition1D, target: type[AbstractPosition1D], /, **kwargs: Any
-) -> AbstractPosition1D:
-    """AbstractPosition1D -> Cartesian1D -> AbstractPosition1D.
+    current: AbstractPos1D, target: type[AbstractPos1D], /, **kwargs: Any
+) -> AbstractPos1D:
+    """AbstractPos1D -> Cartesian1D -> AbstractPos1D.
 
     This is the base case for the transformation of 1D vectors.
     """
-    cart1d = represent_as(current, CartesianPosition1D)
+    cart1d = represent_as(current, CartesianPos1D)
     return represent_as(cart1d, target)
 
 
 # TODO: use multi, with precedence
 @dispatch(precedence=1)
 def represent_as(
-    current: CartesianPosition1D, target: type[CartesianPosition1D], /, **kwargs: Any
-) -> CartesianPosition1D:
+    current: CartesianPos1D, target: type[CartesianPos1D], /, **kwargs: Any
+) -> CartesianPos1D:
     """Self transform of 1D vectors."""
     return current
 
@@ -39,84 +39,84 @@ def represent_as(
 # TODO: use multi, with precedence
 @dispatch(precedence=1)
 def represent_as(
-    current: RadialPosition, target: type[RadialPosition], /, **kwargs: Any
-) -> RadialPosition:
+    current: RadialPos, target: type[RadialPos], /, **kwargs: Any
+) -> RadialPos:
     """Self transform of 1D vectors."""
     return current
 
 
 @dispatch.multi(
-    (CartesianVelocity1D, type[CartesianVelocity1D], AbstractPosition),
-    (RadialVelocity, type[RadialVelocity], AbstractPosition),
+    (CartesianVel1D, type[CartesianVel1D], AbstractPos),
+    (RadialVel, type[RadialVel], AbstractPos),
 )
 def represent_as(
-    current: AbstractVelocity1D,
-    target: type[AbstractVelocity1D],
-    position: AbstractPosition,
+    current: AbstractVel1D,
+    target: type[AbstractVel1D],
+    position: AbstractPos,
     /,
     **kwargs: Any,
-) -> AbstractVelocity1D:
+) -> AbstractVel1D:
     """Self transform of 1D Velocities."""
     return current
 
 
 # Special-case where self-transform doesn't need position
 @dispatch.multi(
-    (CartesianVelocity1D, type[CartesianVelocity1D]),
-    (RadialVelocity, type[RadialVelocity]),
+    (CartesianVel1D, type[CartesianVel1D]),
+    (RadialVel, type[RadialVel]),
 )
 def represent_as(
-    current: AbstractVelocity1D, target: type[AbstractVelocity1D], /, **kwargs: Any
-) -> AbstractVelocity1D:
+    current: AbstractVel1D, target: type[AbstractVel1D], /, **kwargs: Any
+) -> AbstractVel1D:
     """Self transform of 1D Velocities."""
     return current
 
 
 @dispatch.multi(
     (
-        CartesianAcceleration1D,
-        type[CartesianAcceleration1D],
-        AbstractVelocity,
-        AbstractPosition,
+        CartesianAcc1D,
+        type[CartesianAcc1D],
+        AbstractVel,
+        AbstractPos,
     ),
-    (RadialAcceleration, type[RadialAcceleration], AbstractVelocity, AbstractPosition),
+    (RadialAcc, type[RadialAcc], AbstractVel, AbstractPos),
 )
 def represent_as(
-    current: AbstractAcceleration1D,
-    target: type[AbstractAcceleration1D],
-    velocity: AbstractVelocity,
-    position: AbstractPosition,
+    current: AbstractAcc1D,
+    target: type[AbstractAcc1D],
+    velocity: AbstractVel,
+    position: AbstractPos,
     /,
     **kwargs: Any,
-) -> AbstractAcceleration1D:
-    """Self transform of 1D Accelerations."""
+) -> AbstractAcc1D:
+    """Self transform of 1D Accs."""
     return current
 
 
 # Special-case where self-transform doesn't need velocity or position
 @dispatch.multi(
-    (CartesianAcceleration1D, type[CartesianAcceleration1D]),
-    (RadialAcceleration, type[RadialAcceleration]),
+    (CartesianAcc1D, type[CartesianAcc1D]),
+    (RadialAcc, type[RadialAcc]),
 )
 def represent_as(
-    current: AbstractAcceleration1D,
-    target: type[AbstractAcceleration1D],
+    current: AbstractAcc1D,
+    target: type[AbstractAcc1D],
     /,
     **kwargs: Any,
-) -> AbstractAcceleration1D:
-    """Self transform of 1D Accelerations."""
+) -> AbstractAcc1D:
+    """Self transform of 1D Accs."""
     return current
 
 
 # =============================================================================
-# CartesianPosition1D
+# CartesianPos1D
 
 
 @dispatch
 def represent_as(
-    current: CartesianPosition1D, target: type[RadialPosition], /, **kwargs: Any
-) -> RadialPosition:
-    """CartesianPosition1D -> RadialPosition.
+    current: CartesianPos1D, target: type[RadialPos], /, **kwargs: Any
+) -> RadialPos:
+    """CartesianPos1D -> RadialPos.
 
     The `x` coordinate is converted to the radial coordinate `r`.
     """
@@ -124,14 +124,14 @@ def represent_as(
 
 
 # =============================================================================
-# RadialPosition
+# RadialPos
 
 
 @dispatch
 def represent_as(
-    current: RadialPosition, target: type[CartesianPosition1D], /, **kwargs: Any
-) -> CartesianPosition1D:
-    """RadialPosition -> CartesianPosition1D.
+    current: RadialPos, target: type[CartesianPos1D], /, **kwargs: Any
+) -> CartesianPos1D:
+    """RadialPos -> CartesianPos1D.
 
     The `r` coordinate is converted to the `x` coordinate of the 1D system.
     """
@@ -139,14 +139,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianVelocity1D
+# CartesianVel1D
 
 
 @dispatch
 def represent_as(
-    current: CartesianVelocity1D, target: type[CartesianVelocity1D], /
-) -> CartesianVelocity1D:
-    """CartesianVelocity1D -> CartesianVelocity1D with no position.
+    current: CartesianVel1D, target: type[CartesianVel1D], /
+) -> CartesianVel1D:
+    """CartesianVel1D -> CartesianVel1D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -158,8 +158,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocity1D.from_([1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVelocity1D) is v
+    >>> v = cx.CartesianVel1D.from_([1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVel1D) is v
     True
 
     """
@@ -167,14 +167,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianAcceleration1D
+# CartesianAcc1D
 
 
 @dispatch
 def represent_as(
-    current: CartesianAcceleration1D, target: type[CartesianAcceleration1D], /
-) -> CartesianAcceleration1D:
-    """CartesianAcceleration1D -> CartesianAcceleration1D with no position.
+    current: CartesianAcc1D, target: type[CartesianAcc1D], /
+) -> CartesianAcc1D:
+    """CartesianAcc1D -> CartesianAcc1D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -186,8 +186,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAcceleration1D.from_([1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAcceleration1D) is a
+    >>> a = cx.CartesianAcc1D.from_([1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAcc1D) is a
     True
 
     """

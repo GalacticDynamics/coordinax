@@ -18,7 +18,7 @@ from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 
 @conversion_method(type_from=FourVector, type_to=Quantity)  # type: ignore[misc]
 def vec_to_q(obj: FourVector, /) -> Shaped[Quantity["length"], "*batch 4"]:
-    """`coordinax.AbstractPosition3D` -> `unxt.Quantity`."""
+    """`coordinax.AbstractPos3D` -> `unxt.Quantity`."""
     cart = convert(obj.q, Quantity)
     return jnp.concat([obj.c * obj.t[..., None], cart], axis=-1)
 
@@ -40,17 +40,17 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
 
     >>> op = cx.operators.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
     >>> op
-    GalileanSpatialTranslationOperator( translation=CartesianPosition3D( ... ) )
+    GalileanSpatialTranslationOperator( translation=CartesianPos3D( ... ) )
 
     We can then apply the operator to a position:
 
     >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "kpc")
     >>> pos
-    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPosition3D( ... ) )
+    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPos3D( ... ) )
 
     >>> newpos = op(pos)
     >>> newpos
-    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPosition3D( ... ) )
+    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPos3D( ... ) )
     >>> newpos.q.x
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
@@ -74,7 +74,7 @@ def call(
 
     >>> op = cx.operators.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
     >>> op
-    GalileanSpatialTranslationOperator( translation=CartesianPosition3D( ... ) )
+    GalileanSpatialTranslationOperator( translation=CartesianPos3D( ... ) )
 
     We can then apply the operator to a position:
 

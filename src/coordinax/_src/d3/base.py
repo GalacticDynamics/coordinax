@@ -1,73 +1,73 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosition3D", "AbstractVelocity3D", "AbstractAcceleration3D"]
+__all__ = ["AbstractPos3D", "AbstractVel3D", "AbstractAcc3D"]
 
 
 from abc import abstractmethod
 from typing_extensions import override
 
 from coordinax._src.base import (
-    AbstractAcceleration,
-    AbstractPosition,
+    AbstractAcc,
+    AbstractPos,
     AbstractVector,
-    AbstractVelocity,
+    AbstractVel,
 )
 from coordinax._src.utils import classproperty
 
 
-class AbstractPosition3D(AbstractPosition):
+class AbstractPos3D(AbstractPos):
     """Abstract representation of 3D coordinates in different systems."""
 
     @override
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianPosition3D
+        from .cartesian import CartesianPos3D
 
-        return CartesianPosition3D
+        return CartesianPos3D
 
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVelocity3D"]:
+    def differential_cls(cls) -> type["AbstractVel3D"]:
         raise NotImplementedError
 
 
-class AbstractVelocity3D(AbstractVelocity):
+class AbstractVel3D(AbstractVel):
     """Abstract representation of 3D vector differentials."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianVelocity3D
+        from .cartesian import CartesianVel3D
 
-        return CartesianVelocity3D
+        return CartesianVel3D
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPosition3D]:
+    def integral_cls(cls) -> type[AbstractPos3D]:
         raise NotImplementedError
 
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcceleration]:
+    def differential_cls(cls) -> type[AbstractAcc]:
         raise NotImplementedError
 
 
-class AbstractAcceleration3D(AbstractAcceleration):
+class AbstractAcc3D(AbstractAcc):
     """Abstract representation of 3D vector accelerations."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianAcceleration3D
+        from .cartesian import CartesianAcc3D
 
-        return CartesianAcceleration3D
+        return CartesianAcc3D
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelocity3D]:
+    def integral_cls(cls) -> type[AbstractVel3D]:
         raise NotImplementedError

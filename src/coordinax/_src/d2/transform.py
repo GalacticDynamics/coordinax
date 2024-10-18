@@ -8,58 +8,58 @@ from plum import dispatch
 
 import quaxed.numpy as xp
 
-from .base import AbstractPosition2D, AbstractVelocity2D
-from .cartesian import CartesianAcceleration2D, CartesianPosition2D, CartesianVelocity2D
-from .polar import PolarPosition, PolarVelocity
-from coordinax._src.base import AbstractPosition
+from .base import AbstractPos2D, AbstractVel2D
+from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
+from .polar import PolarPos, PolarVel
+from coordinax._src.base import AbstractPos
 
 
 @dispatch
 def represent_as(
-    current: AbstractPosition2D, target: type[AbstractPosition2D], /, **kwargs: Any
-) -> AbstractPosition2D:
-    """AbstractPosition2D -> Cartesian2D -> AbstractPosition2D.
+    current: AbstractPos2D, target: type[AbstractPos2D], /, **kwargs: Any
+) -> AbstractPos2D:
+    """AbstractPos2D -> Cartesian2D -> AbstractPos2D.
 
     This is the base case for the transformation of 2D vectors.
     """
-    return represent_as(represent_as(current, CartesianPosition2D), target)
+    return represent_as(represent_as(current, CartesianPos2D), target)
 
 
 @dispatch.multi(
-    (CartesianPosition2D, type[CartesianPosition2D]),
-    (PolarPosition, type[PolarPosition]),
+    (CartesianPos2D, type[CartesianPos2D]),
+    (PolarPos, type[PolarPos]),
 )
 def represent_as(
-    current: AbstractPosition2D, target: type[AbstractPosition2D], /, **kwargs: Any
-) -> AbstractPosition2D:
+    current: AbstractPos2D, target: type[AbstractPos2D], /, **kwargs: Any
+) -> AbstractPos2D:
     """Self transform of 2D vectors."""
     return current
 
 
 @dispatch.multi(
-    (CartesianVelocity2D, type[CartesianVelocity2D], AbstractPosition),
-    (PolarVelocity, type[PolarVelocity], AbstractPosition),
+    (CartesianVel2D, type[CartesianVel2D], AbstractPos),
+    (PolarVel, type[PolarVel], AbstractPos),
 )
 def represent_as(
-    current: AbstractVelocity2D,
-    target: type[AbstractVelocity2D],
-    position: AbstractPosition,
+    current: AbstractVel2D,
+    target: type[AbstractVel2D],
+    position: AbstractPos,
     /,
     **kwargs: Any,
-) -> AbstractVelocity2D:
+) -> AbstractVel2D:
     """Self transform of 2D Differentials."""
     return current
 
 
 # =============================================================================
-# CartesianPosition2D
+# CartesianPos2D
 
 
 @dispatch
 def represent_as(
-    current: CartesianPosition2D, target: type[PolarPosition], /, **kwargs: Any
-) -> PolarPosition:
-    """CartesianPosition2D -> PolarPosition.
+    current: CartesianPos2D, target: type[PolarPos], /, **kwargs: Any
+) -> PolarPos:
+    """CartesianPos2D -> PolarPos.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r` and
     the angular coordinate `phi`.
@@ -70,28 +70,28 @@ def represent_as(
 
 
 # =============================================================================
-# PolarPosition
+# PolarPos
 
 
 @dispatch
 def represent_as(
-    current: PolarPosition, target: type[CartesianPosition2D], /, **kwargs: Any
-) -> CartesianPosition2D:
-    """PolarPosition -> CartesianPosition2D."""
+    current: PolarPos, target: type[CartesianPos2D], /, **kwargs: Any
+) -> CartesianPos2D:
+    """PolarPos -> CartesianPos2D."""
     x = current.r.distance * xp.cos(current.phi)
     y = current.r.distance * xp.sin(current.phi)
     return target(x=x, y=y)
 
 
 # =============================================================================
-# CartesianVelocity2D
+# CartesianVel2D
 
 
 @dispatch
 def represent_as(
-    current: CartesianVelocity2D, target: type[CartesianVelocity2D], /
-) -> CartesianVelocity2D:
-    """CartesianVelocity2D -> CartesianVelocity2D with no position.
+    current: CartesianVel2D, target: type[CartesianVel2D], /
+) -> CartesianVel2D:
+    """CartesianVel2D -> CartesianVel2D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -103,8 +103,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocity2D.from_([1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVelocity2D) is v
+    >>> v = cx.CartesianVel2D.from_([1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVel2D) is v
     True
 
     """
@@ -112,14 +112,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianAcceleration2D
+# CartesianAcc2D
 
 
 @dispatch
 def represent_as(
-    current: CartesianAcceleration2D, target: type[CartesianAcceleration2D], /
-) -> CartesianAcceleration2D:
-    """CartesianAcceleration2D -> CartesianAcceleration2D with no position.
+    current: CartesianAcc2D, target: type[CartesianAcc2D], /
+) -> CartesianAcc2D:
+    """CartesianAcc2D -> CartesianAcc2D with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -131,8 +131,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAcceleration2D.from_([1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAcceleration2D) is a
+    >>> a = cx.CartesianAcc2D.from_([1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAcc2D) is a
     True
 
     """
