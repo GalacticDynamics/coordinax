@@ -6,7 +6,7 @@ __all__: list[str] = []
 import equinox as eqx
 
 import quaxed.numpy as xp
-from unxt import AbstractQuantity, Quantity, can_convert_unit
+from unxt import AbstractQuantity, Quantity, is_unit_convertible
 
 from .typing import BatchableAngle, BatchableLength
 
@@ -72,7 +72,7 @@ def check_azimuth_range(
     """
     azimuth = eqx.error_if(
         azimuth,
-        not can_convert_unit(azimuth, "deg"),
+        not is_unit_convertible("deg", azimuth),
         "The azimuthal angle must be in angular units.",
     )
     # TODO: enable integer support
@@ -113,7 +113,7 @@ def check_polar_range(
     """
     polar = eqx.error_if(
         polar,
-        not can_convert_unit(polar, "deg"),
+        not is_unit_convertible("deg", polar),
         "The polar angle must be in angular units.",
     )
     return eqx.error_if(
