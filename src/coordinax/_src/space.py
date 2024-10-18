@@ -49,7 +49,7 @@ def _can_broadcast_shapes(*shapes: tuple[int, ...]) -> bool:
 #       running afoul of Jax's tree flattening, where ImmutableMap and
 #       eqx.Module differ.
 @final
-class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: ignore[misc]
+class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: ignore[misc]
     """A collection of vectors that acts like the primary vector.
 
     Parameters
@@ -100,7 +100,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
 
     """  # noqa: E501
 
-    _data: dict[Dimension, AbstractVector]
+    _data: dict[Dimension, AbstractVector] = eqx.field(init=False)
 
     def __init__(  # pylint: disable=super-init-not-called  # TODO: resolve this
         self,
@@ -127,7 +127,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
             "vector shapes are not broadcastable.",
         )
 
-        super().__init__(dict(zip(keys, raw.values(), strict=True)))
+        ImmutableMap.__init__(self, dict(zip(keys, raw.values(), strict=True)))
 
     # ===============================================================
     # Mapping API
@@ -237,7 +237,7 @@ class Space(ImmutableMap[Dimension, AbstractVector], AbstractVector):  # type: i
         if isinstance(key, Dimension):
             key = _get_dimension_name(key)
 
-        return super().__getitem__(key)
+        return ImmutableMap.__getitem__(self, key)
 
     # ===============================================================
     # Quax
