@@ -1,6 +1,6 @@
 """Transformations between representations."""
 
-__all__ = ["represent_as"]
+__all__: list[str] = []
 
 from dataclasses import replace
 from math import prod
@@ -14,11 +14,7 @@ import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import AbstractDistance, Quantity
 
-from coordinax._src.base import (
-    AbstractAcceleration,
-    AbstractPosition,
-    AbstractVelocity,
-)
+from coordinax._src.base import AbstractAcceleration, AbstractPosition, AbstractVelocity
 from coordinax._src.d1.base import AbstractAcceleration1D
 from coordinax._src.d2.base import AbstractAcceleration2D
 from coordinax._src.d3.base import AbstractAcceleration3D

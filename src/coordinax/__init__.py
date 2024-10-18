@@ -18,7 +18,6 @@ from ._src import (
     exceptions,
     funcs,
     space,
-    transform,
     typing,
     utils,
 )
@@ -31,7 +30,6 @@ from ._src.dn import *
 from ._src.exceptions import *
 from ._src.funcs import *
 from ._src.space import *
-from ._src.transform import *
 from ._src.typing import *
 from ._src.utils import *
 from ._version import version as __version__
@@ -47,10 +45,14 @@ __all__ += d4.__all__
 __all__ += dn.__all__
 __all__ += space.__all__
 __all__ += exceptions.__all__
-__all__ += transform.__all__
 __all__ += typing.__all__
 __all__ += utils.__all__
 
+# isort: split
+# Register vector transformations
+from ._src import transform  # noqa: E402
+
+# isort: split
 # Interoperability
 from . import _interop  # noqa: E402
 from ._src import compat  # noqa: E402
