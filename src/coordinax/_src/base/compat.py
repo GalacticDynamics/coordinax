@@ -8,9 +8,10 @@ from plum import conversion_method, convert
 
 import quaxed.numpy as xp
 from dataclassish import field_values
-from unxt import AbstractQuantity, Distance, Quantity, UncheckedQuantity
+from unxt import AbstractQuantity, Quantity, UncheckedQuantity
 
 from .base_pos import AbstractPos
+from coordinax._src.distance import Distance
 from coordinax._src.utils import full_shaped
 
 #####################################################################
@@ -145,12 +146,13 @@ def convert_pos_to_uncheckedq(
 
 @conversion_method(type_from=AbstractPos, type_to=Distance)  # type: ignore[misc]
 def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch 1"]:
-    """`coordinax.AbstractPos` -> `unxt.Distance`.
+    """`coordinax.AbstractPos` -> `coordinax.d.Distance`.
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity, Distance
+    >>> from unxt import AbstractQuantity, Quantity
+    >>> from coordinax.d import Distance
 
     >>> pos = cx.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, Distance)
