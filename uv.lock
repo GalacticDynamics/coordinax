@@ -202,7 +202,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.10.2.dev1+gaf28143.d20241005"
+version = "0.11.1.dev2+gb258f0b.d20241018"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -272,14 +272,14 @@ dev = [
 requires-dist = [
     { name = "astropy", specifier = ">=6.1.4" },
     { name = "dataclassish", specifier = ">=0.3.1" },
-    { name = "equinox", specifier = ">=0.11.7" },
+    { name = "equinox", specifier = "==0.11.7" },
     { name = "furo", marker = "extra == 'all'", specifier = ">=2023.8.17" },
     { name = "furo", marker = "extra == 'docs'", specifier = ">=2023.8.17" },
     { name = "hypothesis", extras = ["numpy"], marker = "extra == 'all'" },
     { name = "hypothesis", extras = ["numpy"], marker = "extra == 'dev'" },
     { name = "hypothesis", extras = ["numpy"], marker = "extra == 'test'" },
-    { name = "jax", specifier = ">=0.4.34" },
-    { name = "jaxlib", specifier = ">=0.4.34" },
+    { name = "jax", specifier = ">=0.4.33" },
+    { name = "jaxlib", specifier = ">=0.4.33" },
     { name = "jaxtyping", specifier = ">=0.2.34" },
     { name = "myst-parser", marker = "extra == 'all'", specifier = ">=0.13" },
     { name = "myst-parser", marker = "extra == 'docs'", specifier = ">=0.13" },
@@ -311,7 +311,7 @@ requires-dist = [
     { name = "sybil", marker = "extra == 'all'", specifier = "!=7.1.0" },
     { name = "sybil", marker = "extra == 'dev'", specifier = "!=7.1.0" },
     { name = "sybil", marker = "extra == 'test'", specifier = "!=7.1.0" },
-    { name = "unxt", specifier = ">=0.17.0" },
+    { name = "unxt", specifier = ">=0.18.0" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
 
@@ -1261,7 +1261,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "0.17.0"
+version = "0.19.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -1277,9 +1277,9 @@ dependencies = [
     { name = "quaxed" },
     { name = "xmmutablemap" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2d/d4/9e777366de6de6697dd518529adf5af637876a1005b0480dbc5c8342cf59/unxt-0.17.0.tar.gz", hash = "sha256:965ae80eafe8b7dfe157f953a672c7728a2af0064bcdc17796487d7e7d030ed8", size = 540293 }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/98/e618fb6632283b4ddd7f6b9f061b2b4c454d269d04b002efb5b58f8e27ab/unxt-0.19.0.tar.gz", hash = "sha256:bad19d0c655cf413a587a9df64b26036f7e4f702fc2ebe81dbbbde12d3c80481", size = 654771 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/74/d9948977b28189d7b2a86eb634315f594adae30d817455ae0ce0be28cd88/unxt-0.17.0-py3-none-any.whl", hash = "sha256:4e3974b1e8cd7503c12584635e8138190b4ee32991ebf3ece7864043758e3b31", size = 49955 },
+    { url = "https://files.pythonhosted.org/packages/28/e8/890c57f079633a192b06c64b1d15adbe3449dad26ceb19886fb1ce17083b/unxt-0.19.0-py3-none-any.whl", hash = "sha256:2540e86df4e70183ea8dc083b3ca3ad841928b43b1792dd6462828ccadcdf076", size = 55015 },
 ]
 
 [[package]]
