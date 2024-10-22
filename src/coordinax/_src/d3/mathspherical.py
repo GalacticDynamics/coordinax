@@ -49,7 +49,7 @@ class MathSphericalPos(AbstractSphericalPos):
 
     Parameters
     ----------
-    r : `coordinax.d.Distance`
+    r : `coordinax.Distance`
         Radial distance r (slant distance to origin),
     theta : Quantity['angle']
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.

@@ -146,13 +146,13 @@ def convert_pos_to_uncheckedq(
 
 @conversion_method(type_from=AbstractPos, type_to=Distance)  # type: ignore[misc]
 def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch 1"]:
-    """`coordinax.AbstractPos` -> `coordinax.d.Distance`.
+    """`coordinax.AbstractPos` -> `coordinax.Distance`.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> from unxt import AbstractQuantity, Quantity
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
 
     >>> pos = cx.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, Distance)

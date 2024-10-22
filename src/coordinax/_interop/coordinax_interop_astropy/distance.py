@@ -6,7 +6,7 @@ __all__: list[str] = []
 from astropy.units import Quantity as AstropyQuantity
 from plum import conversion_method
 
-from coordinax.d import Distance, DistanceModulus, Parallax
+from coordinax.distance import Distance, DistanceModulus, Parallax
 
 # ============================================================================
 # Distance
@@ -14,15 +14,15 @@ from coordinax.d import Distance, DistanceModulus, Parallax
 
 @conversion_method(type_from=AstropyQuantity, type_to=Distance)  # type: ignore[misc]
 def convert_astropy_quantity_to_unxt_distance(q: AstropyQuantity, /) -> Distance:
-    """Convert a `astropy.units.Quantity` to a `coordinax.d.Distance`.
+    """Convert a `astropy.units.Quantity` to a `coordinax.Distance`.
 
     Examples
     --------
     >>> from astropy.units import Quantity as AstropyQuantity
     >>> from plum import convert
-    >>> from coordinax.d import Distance
+    >>> import coordinax as cx
 
-    >>> convert(AstropyQuantity(1.0, "cm"), Distance)
+    >>> convert(AstropyQuantity(1.0, "cm"), cx.Distance)
     Distance(Array(1., dtype=float32), unit='cm')
 
     """
@@ -35,13 +35,13 @@ def convert_astropy_quantity_to_unxt_distance(q: AstropyQuantity, /) -> Distance
 
 @conversion_method(type_from=AstropyQuantity, type_to=Parallax)  # type: ignore[misc]
 def convert_astropy_quantity_to_unxt_parallax(q: AstropyQuantity, /) -> Parallax:
-    """Convert a `astropy.units.Quantity` to a `coordinax.d.Parallax`.
+    """Convert a `astropy.units.Quantity` to a `coordinax.distance.Parallax`.
 
     Examples
     --------
     >>> from astropy.units import Quantity as AstropyQuantity
     >>> from plum import convert
-    >>> from coordinax.d import Parallax
+    >>> from coordinax.distance import Parallax
 
     >>> convert(AstropyQuantity(1.0, "radian"), Parallax)
     Parallax(Array(1., dtype=float32), unit='rad')
@@ -56,13 +56,13 @@ def convert_astropy_quantity_to_unxt_parallax(q: AstropyQuantity, /) -> Parallax
 
 @conversion_method(type_from=AstropyQuantity, type_to=DistanceModulus)  # type: ignore[misc]
 def convert_astropy_quantity_to_unxt_distmod(q: AstropyQuantity, /) -> DistanceModulus:
-    """Convert a `astropy.units.Quantity` to a `coordinax.d.DistanceModulus`.
+    """Convert a `astropy.units.Quantity` to a `coordinax.distance.DistanceModulus`.
 
     Examples
     --------
     >>> from astropy.units import Quantity as AstropyQuantity
     >>> from plum import convert
-    >>> from coordinax.d import DistanceModulus
+    >>> from coordinax.distance import DistanceModulus
 
     >>> convert(AstropyQuantity(1.0, "mag"), DistanceModulus)
     DistanceModulus(Array(1., dtype=float32), unit='mag')

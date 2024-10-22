@@ -44,7 +44,7 @@ class SphericalPos(AbstractSphericalPos):
 
     Parameters
     ----------
-    r : `coordinax.d.Distance`
+    r : `coordinax.Distance`
         Radial distance r (slant distance to origin),
     theta : Quantity['angle']
         Polar angle [0, 180] [deg] where 0 is the z-axis.

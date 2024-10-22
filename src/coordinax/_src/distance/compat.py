@@ -20,7 +20,7 @@ def _quantity_to_distance(q: AbstractQuantity, /) -> Distance:
     --------
     >>> from plum import convert
     >>> from unxt import Quantity, UncheckedQuantity
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
     >>> q = UncheckedQuantity(1, "m")
     >>> q
     UncheckedQuantity(Array(1, dtype=int32, ...), unit='m')
@@ -48,7 +48,7 @@ def _quantity_to_parallax(q: AbstractQuantity, /) -> Parallax:
     --------
     >>> from plum import convert
     >>> from unxt import Quantity
-    >>> from coordinax.d import Parallax
+    >>> from coordinax.distance import Parallax
     >>> q = Quantity(1, "mas")
     >>> q
     Quantity['angle'](Array(1, dtype=int32, ...), unit='mas')
@@ -76,7 +76,7 @@ def _quantity_to_distmod(q: AbstractQuantity, /) -> DistanceModulus:
     --------
     >>> from plum import convert
     >>> from unxt import Quantity
-    >>> from coordinax.d import DistanceModulus
+    >>> from coordinax.distance import DistanceModulus
     >>> q = Quantity(1, "mag")
     >>> q
     Quantity['dex'](Array(1, dtype=int32, ...), unit='mag')

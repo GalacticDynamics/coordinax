@@ -39,7 +39,7 @@ def _cbrt_p_d(x: AbstractDistance) -> Quantity:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
     >>> d = Distance(8, "m")
     >>> jnp.cbrt(d)
     Quantity['m1/3'](Array(2., dtype=float32, ...), unit='m(1/3)')
@@ -62,7 +62,7 @@ def _dot_general_dd(
     This is a dot product of two Distances.
 
     >>> import quaxed.numpy as jnp
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
 
     >>> q1 = Distance([1, 2, 3], "m")
     >>> q2 = Distance([4, 5, 6], "m")
@@ -101,7 +101,7 @@ def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> Quantity:
 
     Examples
     --------
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
     Quantity['volume'](Array(8, dtype=int32, ...), unit='m3')
@@ -120,7 +120,7 @@ def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> Quantity:
     Examples
     --------
     >>> import math
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
 
     >>> q1 = Distance(10.0, "m")
     >>> y = 3.0
@@ -142,12 +142,12 @@ def _sqrt_p_d(x: AbstractDistance) -> Quantity:
     --------
     >>> import quaxed.numpy as jnp
 
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
     >>> q = Distance(9, "m")
     >>> jnp.sqrt(q)
     Quantity['m0.5'](Array(3., dtype=float32, ...), unit='m(1/2)')
 
-    >>> from coordinax.d import Parallax
+    >>> from coordinax.distance import Parallax
     >>> q = Parallax(9, "mas")
     >>> jnp.sqrt(q)
     Quantity['rad0.5'](Array(3., dtype=float32, ...), unit='mas(1/2)')

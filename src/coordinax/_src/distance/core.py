@@ -31,7 +31,7 @@ class Distance(AbstractDistance):
 
     Examples
     --------
-    >>> from coordinax.d import Distance
+    >>> from coordinax.distance import Distance
     >>> Distance(10, "pc")
     Distance(Array(10, dtype=int32, ...), unit='pc')
 
@@ -55,7 +55,7 @@ class Distance(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import Distance
+        >>> from coordinax.distance import Distance
         >>> d = Distance(10, "pc")
         >>> d.distance is d
         True
@@ -74,7 +74,7 @@ class Distance(AbstractDistance):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from coordinax.d import Distance
+        >>> from coordinax.distance import Distance
         >>> d = Distance(1, "pc")
         >>> jnp.round(d.parallax.to("arcsec"), 2)
         Parallax(Array(1., dtype=float32, ...), unit='arcsec')
@@ -91,7 +91,7 @@ class Distance(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import Distance
+        >>> from coordinax.distance import Distance
         >>> d = Distance(10, "pc")
         >>> d.distance_modulus
         DistanceModulus(Array(0., dtype=float32), unit='mag')
@@ -109,7 +109,7 @@ class Parallax(AbstractDistance):
 
     Examples
     --------
-    >>> from coordinax.d import Parallax
+    >>> from coordinax.distance import Parallax
     >>> Parallax(1, "mas")
     Parallax(Array(1, dtype=int32, ...), unit='mas')
 
@@ -163,7 +163,7 @@ class Parallax(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import Parallax
+        >>> from coordinax.distance import Parallax
         >>> p = Parallax(1, "mas")
         >>> p.distance.to("kpc")
         Distance(Array(1., dtype=float32, ...), unit='kpc')
@@ -178,7 +178,7 @@ class Parallax(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import Parallax
+        >>> from coordinax.distance import Parallax
         >>> p = Parallax(1, "mas")
         >>> p.parallax is p
         True
@@ -192,7 +192,7 @@ class Parallax(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import Parallax
+        >>> from coordinax.distance import Parallax
         >>> Parallax(1, "mas").distance_modulus
         DistanceModulus(Array(10., dtype=float32), unit='mag')
 
@@ -209,7 +209,7 @@ class DistanceModulus(AbstractDistance):
 
     Examples
     --------
-    >>> from coordinax.d import DistanceModulus
+    >>> from coordinax.distance import DistanceModulus
     >>> DistanceModulus(10, "mag")
     DistanceModulus(Array(10, dtype=int32, ...), unit='mag')
 
@@ -235,7 +235,7 @@ class DistanceModulus(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import DistanceModulus
+        >>> from coordinax.distance import DistanceModulus
         >>> DistanceModulus(10, "mag").distance
         Distance(Array(1000., dtype=float32, ...), unit='pc')
 
@@ -248,7 +248,7 @@ class DistanceModulus(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import DistanceModulus
+        >>> from coordinax.distance import DistanceModulus
         >>> DistanceModulus(10, "mag").parallax.to("mas")
         Parallax(Array(0.99999994, dtype=float32, ...), unit='mas')
 
@@ -261,7 +261,7 @@ class DistanceModulus(AbstractDistance):
 
         Examples
         --------
-        >>> from coordinax.d import DistanceModulus
+        >>> from coordinax.distance import DistanceModulus
         >>> DistanceModulus(10, "mag").distance_modulus
         DistanceModulus(Array(10, dtype=int32, ...), unit='mag')
 
@@ -277,12 +277,12 @@ class DistanceModulus(AbstractDistance):
 def from_(
     cls: type[Distance], value: Parallax | Quantity["angle"], /, *, dtype: Any = None
 ) -> Distance:
-    """Construct a `coordinax.d.Distance` from an angle through the parallax.
+    """Construct a `coordinax.Distance` from an angle through the parallax.
 
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax.d import Distance, Parallax
+    >>> from coordinax.distance import Distance, Parallax
 
     >>> Distance.from_(Parallax(1, "mas")).to("kpc")
     Distance(Array(1., dtype=float32, ...), unit='kpc')
@@ -308,7 +308,7 @@ def from_(
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax.d import Distance, DistanceModulus
+    >>> from coordinax.distance import Distance, DistanceModulus
 
     >>> Distance.from_(DistanceModulus(10, "mag")).to("pc")
     Distance(Array(1000., dtype=float32, ...), unit='pc')
@@ -331,7 +331,7 @@ def from_(
     --------
     >>> import quaxed.numpy as jnp
     >>> from unxt import Quantity
-    >>> from coordinax.d import Parallax, Distance
+    >>> from coordinax.distance import Parallax, Distance
 
     >>> jnp.round(Parallax.from_(Distance(1, "pc")).to("mas"))
     Parallax(Array(1000., dtype=float32, ...), unit='mas')
