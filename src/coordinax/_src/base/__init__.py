@@ -4,11 +4,11 @@ __all__ = [
     # Base
     "AbstractVector",
     "ToUnitsOptions",
-    # Pos
+    # Position
     "AbstractPos",
-    # Vel
+    # Velocity
     "AbstractVel",
-    # Acc
+    # Acceleration
     "AbstractAcc",
 ]
 

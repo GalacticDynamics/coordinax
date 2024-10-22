@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from typing_extensions import Never
 
 ##############################################################################
-# Pos
+# Position
 
 
 @final

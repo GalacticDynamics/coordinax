@@ -24,7 +24,7 @@ from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
 
 ##############################################################################
-# Pos
+# Position
 
 
 @final
@@ -276,7 +276,7 @@ def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 
 
 ##############################################################################
-# Vel
+# Velocity
 
 
 @final
@@ -424,7 +424,7 @@ def from_(
 
 
 ##############################################################################
-# Acc
+# Acceleration
 
 
 @final

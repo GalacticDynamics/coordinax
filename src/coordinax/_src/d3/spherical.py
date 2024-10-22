@@ -29,7 +29,7 @@ from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
 ##############################################################################
-# Pos
+# Position
 
 
 # TODO: make this an alias for SphericalPolarPos, the more correct description?

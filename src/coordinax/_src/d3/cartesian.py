@@ -30,7 +30,7 @@ from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
 
 #####################################################################
-# Pos
+# Position
 
 
 @final
@@ -189,7 +189,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
 
 
 #####################################################################
-# Vel
+# Velocity
 
 
 @final
@@ -305,7 +305,7 @@ def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
 
 
 #####################################################################
-# Acc
+# Acceleration
 
 
 @final
