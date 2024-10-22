@@ -10,7 +10,7 @@ import equinox as eqx
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish.converters import Unless
-from unxt import AbstractDistance, AbstractQuantity, Distance, Quantity
+from unxt import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
@@ -26,6 +26,7 @@ from coordinax._src.checks import (
     check_r_non_negative,
 )
 from coordinax._src.converters import converter_azimuth_to_range
+from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
 
 ##############################################################################
@@ -43,7 +44,7 @@ class SphericalPos(AbstractSphericalPos):
 
     Parameters
     ----------
-    r : Distance
+    r : `coordinax.Distance`
         Radial distance r (slant distance to origin),
     theta : Quantity['angle']
         Polar angle [0, 180] [deg] where 0 is the z-axis.

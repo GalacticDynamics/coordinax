@@ -7,7 +7,7 @@ coordinax: Vectors in JAX
 
 from jaxtyping import install_import_hook
 
-from . import operators
+from . import distance, operators
 from ._src import (
     base,
     d1,
@@ -33,9 +33,10 @@ from ._src.space import *
 from ._src.typing import *
 from ._src.utils import *
 from ._version import version as __version__
+from .distance import Distance
 from .setup_package import RUNTIME_TYPECHECKER
 
-__all__ = ["__version__", "operators"]
+__all__ = ["__version__", "operators", "distance", "Distance"]
 __all__ += funcs.__all__
 __all__ += base.__all__
 __all__ += d1.__all__

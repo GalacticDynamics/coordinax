@@ -149,6 +149,7 @@ build-backend = "hatchling.build"
     "no-member",                  # handled by mypy
     "no-value-for-parameter",     # pylint doesn't understand multiple dispatch
     "not-a-mapping",              # pylint doesn't understand dataclass fields
+    "property-with-parameters",   # Cannot have defined parameters for properties
     "protected-access",           # handled by ruff
     "redefined-builtin",          # handled by ruff
     "too-many-function-args",     # plum-dispatch
