@@ -1,77 +1,77 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosition2D", "AbstractVelocity2D", "AbstractAcceleration2D"]
+__all__ = ["AbstractPos2D", "AbstractVel2D", "AbstractAcc2D"]
 
 
 from abc import abstractmethod
 
 from coordinax._src.base import (
-    AbstractAcceleration,
-    AbstractPosition,
+    AbstractAcc,
+    AbstractPos,
     AbstractVector,
-    AbstractVelocity,
+    AbstractVel,
 )
 from coordinax._src.utils import classproperty
 
 
-class AbstractPosition2D(AbstractPosition):
+class AbstractPos2D(AbstractPos):
     """Abstract representation of 2D coordinates in different systems."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianPosition2D
+        from .cartesian import CartesianPos2D
 
-        return CartesianPosition2D
+        return CartesianPos2D
 
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVelocity2D"]:
+    def differential_cls(cls) -> type["AbstractVel2D"]:
         raise NotImplementedError
 
 
 #####################################################################
 
 
-class AbstractVelocity2D(AbstractVelocity):
+class AbstractVel2D(AbstractVel):
     """Abstract representation of 2D vector differentials."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianVelocity2D
+        from .cartesian import CartesianVel2D
 
-        return CartesianVelocity2D
+        return CartesianVel2D
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPosition2D]:
+    def integral_cls(cls) -> type[AbstractPos2D]:
         raise NotImplementedError
 
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcceleration]:
+    def differential_cls(cls) -> type[AbstractAcc]:
         raise NotImplementedError
 
 
 #####################################################################
 
 
-class AbstractAcceleration2D(AbstractAcceleration):
+class AbstractAcc2D(AbstractAcc):
     """Abstract representation of 2D vector accelerations."""
 
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        from .cartesian import CartesianAcceleration2D
+        from .cartesian import CartesianAcc2D
 
-        return CartesianAcceleration2D
+        return CartesianAcc2D
 
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelocity2D]:
+    def integral_cls(cls) -> type[AbstractVel2D]:
         raise NotImplementedError

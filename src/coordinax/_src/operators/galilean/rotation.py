@@ -19,8 +19,8 @@ from unxt import Quantity, ustrip
 
 from .base import AbstractGalileanOperator
 from coordinax._src.base import ToUnitsOptions
-from coordinax._src.d3.base import AbstractPosition3D
-from coordinax._src.d3.cartesian import CartesianPosition3D
+from coordinax._src.d3.base import AbstractPos3D
+from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._src.operators.funcs import simplify_op
 from coordinax._src.operators.identity import IdentityOperator
@@ -110,9 +110,9 @@ class GalileanRotationOperator(AbstractGalileanOperator):
                               [-0.70710677,  0.70710677,  0.        ]], dtype=float32),
                        unit='m')
 
-    Translation operators can be applied to :class:`vector.AbstractPosition3D`:
+    Translation operators can be applied to :class:`vector.AbstractPos3D`:
 
-    >>> q = cx.CartesianPosition3D.from_(q)  # from the previous example
+    >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
     >>> newq, newt = op(q, t)
     >>> newq.x
     Quantity['length'](Array([ 0.70710677, -0.70710677], dtype=float32), unit='m')
@@ -221,8 +221,8 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotationOperator", q: AbstractPosition3D, /
-    ) -> AbstractPosition3D:
+        self: "GalileanRotationOperator", q: AbstractPos3D, /
+    ) -> AbstractPos3D:
         """Apply the boost to the coordinates.
 
         Examples
@@ -238,7 +238,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
 
-        >>> q = cx.CartesianPosition3D.from_([1, 0, 0], "m")
+        >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
         >>> t = Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq.x
@@ -250,28 +250,22 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         """
         vec = convert(  # Array[float, (N, 3)]
-            q.represent_as(CartesianPosition3D).to_units(ToUnitsOptions.consistent),
+            q.represent_as(CartesianPos3D).to_units(ToUnitsOptions.consistent),
             Quantity,
         )
-        rcart = CartesianPosition3D.from_(vec_matmul(self.rotation, vec))
+        rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
         return rcart.represent_as(type(q))
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotationOperator",
-        q: AbstractPosition3D,
-        t: Quantity["time"],
-        /,
-    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
+        self: "GalileanRotationOperator", q: AbstractPos3D, t: Quantity["time"], /
+    ) -> tuple[AbstractPos3D, Quantity["time"]]:
         return self(q), t
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotationOperator",
-        q: AbstractPosition3D,
-        t: Quantity["time"],
-        /,
-    ) -> tuple[AbstractPosition3D, Quantity["time"]]:
+        self: "GalileanRotationOperator", q: AbstractPos3D, t: Quantity["time"], /
+    ) -> tuple[AbstractPos3D, Quantity["time"]]:
         return self(q), t
 
 

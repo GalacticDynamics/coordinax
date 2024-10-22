@@ -9,7 +9,7 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 from .base import AbstractOperator, op_call_dispatch
-from coordinax._src.base import AbstractPosition
+from coordinax._src.base import AbstractPos
 
 
 @final
@@ -35,7 +35,7 @@ class IdentityOperator(AbstractOperator):
     And the common objects we will use:
 
     >>> q = Quantity([1, 2, 3], "kpc")
-    >>> vec = cx.CartesianPosition3D.from_(q)
+    >>> vec = cx.CartesianPos3D.from_(q)
 
     The first call signature is for the case where the input is a vector:
 
@@ -52,21 +52,21 @@ class IdentityOperator(AbstractOperator):
     - 1D:
 
     >>> q = Quantity([1], "kpc")
-    >>> vec = cx.CartesianPosition1D.from_(q)
+    >>> vec = cx.CartesianPos1D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 2D:
 
     >>> q = Quantity([1, 2], "kpc")
-    >>> vec = cx.CartesianPosition2D.from_(q)
+    >>> vec = cx.CartesianPos2D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
-    - 3D (not using a `~coordinax.CartesianPosition3D` instance):
+    - 3D (not using a `~coordinax.CartesianPos3D` instance):
 
     >>> q = Quantity([1, 2, 3], "kpc")
-    >>> vec = cx.CartesianPosition3D.from_(q).represent_as(cx.SphericalPosition)
+    >>> vec = cx.CartesianPos3D.from_(q).represent_as(cx.SphericalPos)
     >>> op(vec) is vec and op(q) is q
     True
 
@@ -100,7 +100,7 @@ class IdentityOperator(AbstractOperator):
         >>> import coordinax as cx
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
         >>> t = Quantity(0, "Gyr")
         >>> op = IdentityOperator()
         >>> op.is_inertial
@@ -132,7 +132,7 @@ class IdentityOperator(AbstractOperator):
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
     @op_call_dispatch(precedence=1)
-    def __call__(self: "IdentityOperator", x: AbstractPosition, /) -> AbstractPosition:
+    def __call__(self: "IdentityOperator", x: AbstractPos, /) -> AbstractPos:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.
@@ -143,7 +143,7 @@ class IdentityOperator(AbstractOperator):
         >>> import coordinax as cx
         >>> from coordinax.operators import IdentityOperator
 
-        >>> q = cx.CartesianPosition3D.from_([1, 2, 3], "kpc")
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
         >>> op = IdentityOperator()
         >>> op(q) is q
         True
@@ -174,8 +174,8 @@ class IdentityOperator(AbstractOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "IdentityOperator", x: AbstractPosition, t: Quantity["time"], /
-    ) -> tuple[AbstractPosition, Quantity["time"]]:
+        self: "IdentityOperator", x: AbstractPos, t: Quantity["time"], /
+    ) -> tuple[AbstractPos, Quantity["time"]]:
         """Apply the Identity operation."""  # TODO: docstring
         return x, t
 

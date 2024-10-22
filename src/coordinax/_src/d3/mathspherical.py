@@ -1,9 +1,9 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "MathSphericalPosition",
-    "MathSphericalVelocity",
-    "MathSphericalAcceleration",
+    "MathSphericalPos",
+    "MathSphericalVel",
+    "MathSphericalAcc",
 ]
 
 from functools import partial
@@ -23,9 +23,9 @@ from unxt import AbstractDistance, AbstractQuantity, Distance, Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
-    AbstractSphericalAcceleration,
-    AbstractSphericalPosition,
-    AbstractSphericalVelocity,
+    AbstractSphericalAcc,
+    AbstractSphericalPos,
+    AbstractSphericalVel,
     _180d,
     _360d,
 )
@@ -39,7 +39,7 @@ from coordinax._src.utils import classproperty
 
 
 @final
-class MathSphericalPosition(AbstractSphericalPosition):
+class MathSphericalPos(AbstractSphericalPos):
     """Spherical vector representation.
 
     .. note::
@@ -83,8 +83,8 @@ class MathSphericalPosition(AbstractSphericalPosition):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["MathSphericalVelocity"]:
-        return MathSphericalVelocity
+    def differential_cls(cls) -> type["MathSphericalVel"]:
+        return MathSphericalVel
 
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableDistance:
@@ -94,7 +94,7 @@ class MathSphericalPosition(AbstractSphericalPosition):
         --------
         >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> s = cx.MathSphericalPosition(r=Quantity(3, "kpc"),
+        >>> s = cx.MathSphericalPos(r=Quantity(3, "kpc"),
         ...                              theta=Quantity(90, "deg"),
         ...                              phi=Quantity(0, "deg"))
         >>> s.norm()
@@ -104,15 +104,15 @@ class MathSphericalPosition(AbstractSphericalPosition):
         return self.r
 
 
-@MathSphericalPosition.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@MathSphericalPos.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
-    cls: type[MathSphericalPosition],
+    cls: type[MathSphericalPos],
     *,
     r: AbstractQuantity,
     theta: AbstractQuantity,
     phi: AbstractQuantity,
-) -> MathSphericalPosition:
-    """Construct MathSphericalPosition, allowing for out-of-range values.
+) -> MathSphericalPos:
+    """Construct MathSphericalPos, allowing for out-of-range values.
 
     Examples
     --------
@@ -121,10 +121,10 @@ def from_(
 
     Let's start with a valid input:
 
-    >>> cx.MathSphericalPosition.from_(r=Quantity(3, "kpc"),
-    ...                                      theta=Quantity(90, "deg"),
-    ...                                      phi=Quantity(0, "deg"))
-    MathSphericalPosition(
+    >>> cx.MathSphericalPos.from_(r=Quantity(3, "kpc"),
+    ...                           theta=Quantity(90, "deg"),
+    ...                           phi=Quantity(0, "deg"))
+    MathSphericalPos(
       r=Distance(value=f32[], unit=Unit("kpc")),
       theta=Quantity[...](value=f32[], unit=Unit("deg")),
       phi=Quantity[...](value=f32[], unit=Unit("deg"))
@@ -133,9 +133,9 @@ def from_(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cx.MathSphericalPosition.from_(r=Quantity(-3, "kpc"),
-    ...                                            theta=Quantity(100, "deg"),
-    ...                                            phi=Quantity(45, "deg"))
+    >>> vec = cx.MathSphericalPos.from_(r=Quantity(-3, "kpc"),
+    ...                                 theta=Quantity(100, "deg"),
+    ...                                 phi=Quantity(45, "deg"))
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
@@ -146,9 +146,9 @@ def from_(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cx.MathSphericalPosition.from_(r=Quantity(3, "kpc"),
-    ...                                            theta=Quantity(0, "deg"),
-    ...                                            phi=Quantity(190, "deg"))
+    >>> vec = cx.MathSphericalPos.from_(r=Quantity(3, "kpc"),
+    ...                                 theta=Quantity(0, "deg"),
+    ...                                 phi=Quantity(190, "deg"))
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
@@ -159,15 +159,15 @@ def from_(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cx.MathSphericalPosition.from_(r=Quantity(3, "kpc"),
-    ...                                            theta=Quantity(365, "deg"),
-    ...                                            phi=Quantity(90, "deg"))
+    >>> vec = cx.MathSphericalPos.from_(r=Quantity(3, "kpc"),
+    ...                                 theta=Quantity(365, "deg"),
+    ...                                 phi=Quantity(90, "deg"))
     >>> vec.theta
     Quantity['angle'](Array(5., dtype=float32), unit='deg')
 
     """
     # 1) Convert the inputs
-    fields = MathSphericalPosition.__dataclass_fields__
+    fields = MathSphericalPos.__dataclass_fields__
     r = fields["r"].metadata["converter"](r)
     theta = fields["theta"].metadata["converter"](theta)
     phi = fields["phi"].metadata["converter"](phi)
@@ -189,9 +189,7 @@ def from_(
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_p_vmsph(
-    lhs: ArrayLike, rhs: MathSphericalPosition, /
-) -> MathSphericalPosition:
+def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
     """Scale the polar position by a scalar.
 
     Examples
@@ -200,16 +198,16 @@ def _mul_p_vmsph(
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> v = cx.MathSphericalPosition(r=Quantity(3, "kpc"),
-    ...                              theta=Quantity(90, "deg"),
-    ...                              phi=Quantity(0, "deg"))
+    >>> v = cx.MathSphericalPos(r=Quantity(3, "kpc"),
+    ...                         theta=Quantity(90, "deg"),
+    ...                         phi=Quantity(0, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
     >>> nv = jnp.multiply(2, v)
     >>> nv
-    MathSphericalPosition(
+    MathSphericalPos(
       r=Distance(value=f32[], unit=Unit("kpc")),
       theta=Quantity[...](value=f32[], unit=Unit("deg")),
       phi=Quantity[...](value=f32[], unit=Unit("deg"))
@@ -230,7 +228,7 @@ def _mul_p_vmsph(
 
 
 @final
-class MathSphericalVelocity(AbstractSphericalVelocity):
+class MathSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -251,21 +249,21 @@ class MathSphericalVelocity(AbstractSphericalVelocity):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[MathSphericalPosition]:
-        return MathSphericalPosition
+    def integral_cls(cls) -> type[MathSphericalPos]:
+        return MathSphericalPos
 
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["MathSphericalAcceleration"]:
-        return MathSphericalAcceleration
+    def differential_cls(cls) -> type["MathSphericalAcc"]:
+        return MathSphericalAcc
 
 
 ##############################################################################
 
 
 @final
-class MathSphericalAcceleration(AbstractSphericalAcceleration):
+class MathSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(
@@ -286,5 +284,5 @@ class MathSphericalAcceleration(AbstractSphericalAcceleration):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[MathSphericalVelocity]:
-        return MathSphericalVelocity
+    def integral_cls(cls) -> type[MathSphericalVel]:
+        return MathSphericalVel

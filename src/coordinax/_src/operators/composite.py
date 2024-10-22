@@ -10,7 +10,7 @@ from dataclassish import DataclassInstance
 from unxt import Quantity
 
 from .base import AbstractOperator, op_call_dispatch
-from coordinax._src.base import AbstractPosition
+from coordinax._src.base import AbstractPos
 
 if TYPE_CHECKING:
     from typing_extensions import Self
@@ -42,9 +42,7 @@ class AbstractCompositeOperator(AbstractOperator):
     # writeable (in the from_) and read-only (as a property) subclasses.
 
     @op_call_dispatch(precedence=1)
-    def __call__(
-        self: "AbstractCompositeOperator", x: AbstractPosition, /
-    ) -> AbstractPosition:
+    def __call__(self: "AbstractCompositeOperator", x: AbstractPos, /) -> AbstractPos:
         """Apply the operator to the coordinates.
 
         This is the default implementation, which applies the operators in
@@ -57,8 +55,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "AbstractCompositeOperator", x: AbstractPosition, t: Quantity["time"], /
-    ) -> tuple[AbstractPosition, Quantity["time"]]:
+        self: "AbstractCompositeOperator", x: AbstractPos, t: Quantity["time"], /
+    ) -> tuple[AbstractPos, Quantity["time"]]:
         """Apply the operator to the coordinates."""
         # TODO: with lax.scan?
         for op in self.operators:

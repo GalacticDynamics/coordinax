@@ -1,11 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = [
-    # Physics conventions
-    "SphericalPosition",
-    "SphericalVelocity",
-    "SphericalAcceleration",
-]
+__all__ = ["SphericalPos", "SphericalVel", "SphericalAcc"]
 
 from functools import partial
 from typing import final
@@ -19,9 +14,9 @@ from unxt import AbstractDistance, AbstractQuantity, Distance, Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
-    AbstractSphericalAcceleration,
-    AbstractSphericalPosition,
-    AbstractSphericalVelocity,
+    AbstractSphericalAcc,
+    AbstractSphericalPos,
+    AbstractSphericalVel,
     _180d,
     _360d,
 )
@@ -37,9 +32,9 @@ from coordinax._src.utils import classproperty
 # Position
 
 
-# TODO: make this an alias for SphericalPolarPosition, the more correct description?
+# TODO: make this an alias for SphericalPolarPos, the more correct description?
 @final
-class SphericalPosition(AbstractSphericalPosition):
+class SphericalPos(AbstractSphericalPos):
     """Spherical-Polar coordinates.
 
     .. note::
@@ -82,19 +77,19 @@ class SphericalPosition(AbstractSphericalPosition):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["SphericalVelocity"]:
-        return SphericalVelocity
+    def differential_cls(cls) -> type["SphericalVel"]:
+        return SphericalVel
 
 
-@SphericalPosition.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@SphericalPos.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
-    cls: type[SphericalPosition],
+    cls: type[SphericalPos],
     *,
     r: AbstractQuantity,
     theta: AbstractQuantity,
     phi: AbstractQuantity,
-) -> SphericalPosition:
-    """Construct SphericalPosition, allowing for out-of-range values.
+) -> SphericalPos:
+    """Construct SphericalPos, allowing for out-of-range values.
 
     Examples
     --------
@@ -103,10 +98,10 @@ def from_(
 
     Let's start with a valid input:
 
-    >>> cx.SphericalPosition.from_(r=Quantity(3, "kpc"),
-    ...                                 theta=Quantity(90, "deg"),
-    ...                                 phi=Quantity(0, "deg"))
-    SphericalPosition(
+    >>> cx.SphericalPos.from_(r=Quantity(3, "kpc"),
+    ...                       theta=Quantity(90, "deg"),
+    ...                       phi=Quantity(0, "deg"))
+    SphericalPos(
       r=Distance(value=f32[], unit=Unit("kpc")),
       theta=Quantity[...](value=f32[], unit=Unit("deg")),
       phi=Quantity[...](value=f32[], unit=Unit("deg"))
@@ -115,9 +110,9 @@ def from_(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cx.SphericalPosition.from_(r=Quantity(-3, "kpc"),
-    ...                                        theta=Quantity(45, "deg"),
-    ...                                        phi=Quantity(0, "deg"))
+    >>> vec = cx.SphericalPos.from_(r=Quantity(-3, "kpc"),
+    ...                             theta=Quantity(45, "deg"),
+    ...                             phi=Quantity(0, "deg"))
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
@@ -128,9 +123,9 @@ def from_(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cx.SphericalPosition.from_(r=Quantity(3, "kpc"),
-    ...                                        theta=Quantity(190, "deg"),
-    ...                                        phi=Quantity(0, "deg"))
+    >>> vec = cx.SphericalPos.from_(r=Quantity(3, "kpc"),
+    ...                             theta=Quantity(190, "deg"),
+    ...                             phi=Quantity(0, "deg"))
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
@@ -141,15 +136,15 @@ def from_(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base from_ does this):
 
-    >>> vec = cx.SphericalPosition.from_(r=Quantity(3, "kpc"),
-    ...                                        theta=Quantity(90, "deg"),
-    ...                                        phi=Quantity(365, "deg"))
+    >>> vec = cx.SphericalPos.from_(r=Quantity(3, "kpc"),
+    ...                             theta=Quantity(90, "deg"),
+    ...                             phi=Quantity(365, "deg"))
     >>> vec.phi
     Quantity['angle'](Array(5., dtype=float32), unit='deg')
 
     """
     # 1) Convert the inputs
-    fields = SphericalPosition.__dataclass_fields__
+    fields = SphericalPos.__dataclass_fields__
     r = fields["r"].metadata["converter"](r)
     theta = fields["theta"].metadata["converter"](theta)
     phi = fields["phi"].metadata["converter"](phi)
@@ -174,7 +169,7 @@ def from_(
 
 
 @final
-class SphericalVelocity(AbstractSphericalVelocity):
+class SphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
@@ -194,20 +189,20 @@ class SphericalVelocity(AbstractSphericalVelocity):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[SphericalPosition]:
-        return SphericalPosition
+    def integral_cls(cls) -> type[SphericalPos]:
+        return SphericalPos
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["SphericalAcceleration"]:
-        return SphericalAcceleration
+    def differential_cls(cls) -> type["SphericalAcc"]:
+        return SphericalAcc
 
 
 ##############################################################################
 
 
 @final
-class SphericalAcceleration(AbstractSphericalAcceleration):
+class SphericalAcc(AbstractSphericalAcc):
     """Spherical differential representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(
@@ -227,5 +222,5 @@ class SphericalAcceleration(AbstractSphericalAcceleration):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[SphericalVelocity]:
-        return SphericalVelocity
+    def integral_cls(cls) -> type[SphericalVel]:
+        return SphericalVel

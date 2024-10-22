@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .cartesian import CartesianAccelerationND, CartesianPositionND, CartesianVelocityND
+from .cartesian import CartesianAccND, CartesianPosND, CartesianVelND
 from .poincare import PoincarePolarVector
 
 ###############################################################################
@@ -15,18 +15,18 @@ from .poincare import PoincarePolarVector
 
 @dispatch
 def represent_as(
-    current: CartesianPositionND, target: type[CartesianPositionND], /, **kwargs: Any
-) -> CartesianPositionND:
-    """CartesianPositionND -> CartesianPositionND.
+    current: CartesianPosND, target: type[CartesianPosND], /, **kwargs: Any
+) -> CartesianPosND:
+    """CartesianPosND -> CartesianPosND.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> from unxt import Quantity
 
-    >>> q = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = cx.CartesianPosND(Quantity([1, 2, 3, 4], "kpc"))
 
-    >>> cx.represent_as(q, cx.CartesianPositionND) is q
+    >>> cx.represent_as(q, cx.CartesianPosND) is q
     True
 
     """
@@ -35,23 +35,23 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CartesianVelocityND,
-    target: type[CartesianVelocityND],
-    position: CartesianPositionND,
+    current: CartesianVelND,
+    target: type[CartesianVelND],
+    position: CartesianPosND,
     /,
     **kwargs: Any,
-) -> CartesianVelocityND:
-    """CartesianVelocityND -> CartesianVelocityND.
+) -> CartesianVelND:
+    """CartesianVelND -> CartesianVelND.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> from unxt import Quantity
 
-    >>> x = cx.CartesianPositionND(Quantity([1, 2, 3, 4], "km"))
-    >>> v = cx.CartesianVelocityND(Quantity([1, 2, 3, 4], "km/s"))
+    >>> x = cx.CartesianPosND(Quantity([1, 2, 3, 4], "km"))
+    >>> v = cx.CartesianVelND(Quantity([1, 2, 3, 4], "km/s"))
 
-    >>> cx.represent_as(v, cx.CartesianVelocityND, x) is v
+    >>> cx.represent_as(v, cx.CartesianVelND, x) is v
     True
 
     """
@@ -59,14 +59,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianVelocityND
+# CartesianVelND
 
 
 @dispatch
 def represent_as(
-    current: CartesianVelocityND, target: type[CartesianVelocityND], /
-) -> CartesianVelocityND:
-    """CartesianVelocityND -> CartesianVelocityND with no position.
+    current: CartesianVelND, target: type[CartesianVelND], /
+) -> CartesianVelND:
+    """CartesianVelND -> CartesianVelND with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -78,8 +78,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelocityND.from_([1, 1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVelocityND) is v
+    >>> v = cx.CartesianVelND.from_([1, 1, 1], "m/s")
+    >>> cx.represent_as(v, cx.CartesianVelND) is v
     True
 
     """
@@ -87,14 +87,14 @@ def represent_as(
 
 
 # =============================================================================
-# CartesianAccelerationND
+# CartesianAccND
 
 
 @dispatch
 def represent_as(
-    current: CartesianAccelerationND, target: type[CartesianAccelerationND], /
-) -> CartesianAccelerationND:
-    """CartesianAccelerationND -> CartesianAccelerationND with no position.
+    current: CartesianAccND, target: type[CartesianAccND], /
+) -> CartesianAccND:
+    """CartesianAccND -> CartesianAccND with no position.
 
     Cartesian coordinates are an affine coordinate system and so the
     transformation of an n-th order derivative vector in this system do not
@@ -106,8 +106,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAccelerationND.from_([1, 1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAccelerationND) is a
+    >>> a = cx.CartesianAccND.from_([1, 1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.CartesianAccND) is a
     True
 
     """

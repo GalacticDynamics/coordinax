@@ -1,19 +1,19 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosition4D"]
+__all__ = ["AbstractPos4D"]
 
 
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
-from coordinax._src.base import AbstractPosition, AbstractVector
+from coordinax._src.base import AbstractPos, AbstractVector
 from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Never
 
 
-class AbstractPosition4D(AbstractPosition):
+class AbstractPos4D(AbstractPos):
     """Abstract representation of 4D coordinates in different systems."""
 
     @classproperty

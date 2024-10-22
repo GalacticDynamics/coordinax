@@ -5,17 +5,17 @@ __all__ = [
     "AbstractVector",
     "ToUnitsOptions",
     # Position
-    "AbstractPosition",
+    "AbstractPos",
     # Velocity
-    "AbstractVelocity",
+    "AbstractVel",
     # Acceleration
-    "AbstractAcceleration",
+    "AbstractAcc",
 ]
 
 from .base import AbstractVector, ToUnitsOptions
-from .base_acc import AbstractAcceleration
-from .base_pos import AbstractPosition
-from .base_vel import AbstractVelocity
+from .base_acc import AbstractAcc
+from .base_pos import AbstractPos
+from .base_vel import AbstractVel
 
 # isort: split
 from . import (
