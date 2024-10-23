@@ -16,7 +16,7 @@ import equinox as eqx
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish.converters import Unless
-from unxt import AbstractDistance, Distance, Quantity
+from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
@@ -26,12 +26,9 @@ from .base_spherical import (
     _90d,
     _180d,
 )
-from coordinax._src.checks import (
-    check_azimuth_range,
-    check_polar_range,
-    check_r_non_negative,
-)
+from coordinax._src import checks
 from coordinax._src.converters import converter_azimuth_to_range
+from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
 
 
@@ -118,9 +115,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        check_azimuth_range(self.lon)
-        check_polar_range(self.lat, -Quantity(90, "deg"), Quantity(90, "deg"))
-        check_r_non_negative(self.distance)
+        checks.check_azimuth_range(self.lon)
+        checks.check_polar_range(self.lat, -Quantity(90, "deg"), Quantity(90, "deg"))
+        checks.check_r_non_negative(self.distance)
 
     @override
     @classproperty

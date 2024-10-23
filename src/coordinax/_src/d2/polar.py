@@ -16,12 +16,13 @@ from quax import register
 
 from dataclassish import replace
 from dataclassish.converters import Unless
-from unxt import AbstractDistance, Distance, Quantity
+from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
+from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
 
 
