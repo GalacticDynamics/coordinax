@@ -188,9 +188,9 @@ class IPythonReprMixin:
         """  # noqa: E501
         # TODO: better latex representation of the components
         ks = (r"\mathrm{ " + k.replace("_", "") + r" }" for k in field_keys(self))
-        vs = (v._repr_latex_()[1:-1] for v in field_values(self))
-
         latex_ks = r"\left( \begin{matrix}" + r" \\ ".join(ks) + r"\end{matrix} \right)"
+
+        vs = (v._repr_latex_()[1:-1] for v in field_values(self))
         latex_vs = r"\left( \begin{matrix}" + r" \\ ".join(vs) + r"\end{matrix} \right)"
 
         return r"$" + latex_ks + "=" + latex_vs + r"$"
