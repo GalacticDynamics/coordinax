@@ -35,6 +35,7 @@ from unxt import (
     unitsystem,
 )
 
+from .mixins import IPythonReprMixin
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty, full_shaped
 
@@ -54,7 +55,7 @@ class ToUnitsOptions(Enum):
 # ===================================================================
 
 
-class AbstractVector(ArrayValue):  # type: ignore[misc]
+class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     """Base class for all vector types.
 
     A vector is a collection of components that can be represented in different
