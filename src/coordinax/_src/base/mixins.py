@@ -157,6 +157,12 @@ class IPythonReprMixin:
         {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)',
          'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'}
 
+        >>> vec._repr_mimebundle_(include=["text/plain"])
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)'}
+
+        >>> vec._repr_mimebundle_(exclude=["text/latex"])
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)'}
+
         """  # noqa: E501
         # Determine the set of keys to include in the MIME bundle
         keys: Sequence[str]
