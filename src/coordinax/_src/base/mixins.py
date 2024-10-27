@@ -192,7 +192,8 @@ class IPythonReprMixin:
         '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'
 
         """  # noqa: E501
-        # TODO: better latex representation of the components
+        # TODO: better latex representation of the components. Currently
+        # velocities are shown as `dx` and accelerations as `d2x`.
         ks = (r"\mathrm{ " + k.replace("_", "") + r" }" for k in field_keys(self))
         latex_ks = r"\left( \begin{matrix}" + r" \\ ".join(ks) + r"\end{matrix} \right)"
 
