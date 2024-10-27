@@ -2,9 +2,13 @@
 
 __all__: list[str] = []
 
+from collections.abc import Sequence
+from typing import cast
+
 import jax
 from plum import convert
 
+from dataclassish import field_keys, field_values
 from unxt import Quantity
 
 from coordinax._src.funcs import represent_as
@@ -116,3 +120,84 @@ class AvalMixin:
         # TODO: change to UncheckedQuantity
         target = self._cartesian_cls  # type: ignore[attr-defined]
         return jax.core.get_aval(convert(represent_as(self, target), Quantity).value)
+
+
+##############################################################################
+
+SUPPORTED_IPYTHON_REPR_FORMATS: dict[str, str] = {
+    "text/plain": "__repr__",
+    "text/latex": "_repr_latex_",
+}
+
+
+class IPythonReprMixin:
+    """Mixin class for IPython string representations."""
+
+    def _repr_mimebundle_(
+        self,
+        *,
+        include: Sequence[str] | None = None,
+        exclude: Sequence[str] | None = None,
+    ) -> dict[str, str]:
+        r"""Return a MIME bundle representation of the Quantity.
+
+        Parameters
+        ----------
+        include, exclude : Sequence[str] | None, optional
+            The set of keys to include / exclude in the MIME bundle. If not
+            provided, all supported formats are included. 'include' has
+            precedence over 'exclude'.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
+        >>> vec._repr_mimebundle_()
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)',
+         'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'}
+
+        >>> vec._repr_mimebundle_(include=["text/plain"])
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)'}
+
+        >>> vec._repr_mimebundle_(exclude=["text/latex"])
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)'}
+
+        """  # noqa: E501
+        # Determine the set of keys to include in the MIME bundle
+        keys: Sequence[str]
+        if include is None and exclude is None:
+            keys = tuple(SUPPORTED_IPYTHON_REPR_FORMATS)
+        elif include is not None:
+            keys = [key for key in include if key in SUPPORTED_IPYTHON_REPR_FORMATS]
+        else:
+            keys = [
+                k for k in SUPPORTED_IPYTHON_REPR_FORMATS if k not in cast(str, exclude)
+            ]
+
+        # Create the MIME bundle
+        return {
+            key: getattr(self, SUPPORTED_IPYTHON_REPR_FORMATS[key])() for key in keys
+        }
+
+    def _repr_latex_(self) -> str:
+        r"""Return a LaTeX representation of the Quantity.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
+        >>> vec._repr_latex_()
+        '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'
+
+        """  # noqa: E501
+        # TODO: better latex representation of the components. Currently
+        # velocities are shown as `dx` and accelerations as `d2x`.
+        ks = (r"\mathrm{ " + k.replace("_", "") + r" }" for k in field_keys(self))
+        latex_ks = r"\left( \begin{matrix}" + r" \\ ".join(ks) + r"\end{matrix} \right)"
+
+        vs = (v._repr_latex_()[1:-1] for v in field_values(self))
+        latex_vs = r"\left( \begin{matrix}" + r" \\ ".join(vs) + r"\end{matrix} \right)"
+
+        return r"$" + latex_ks + "=" + latex_vs + r"$"
