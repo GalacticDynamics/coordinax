@@ -165,8 +165,8 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> sph
         SphericalPos(
             r=Distance(value=f32[], unit=Unit("m")),
-            theta=Quantity[...](value=f32[], unit=Unit("rad")),
-            phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+            theta=Angle(value=f32[], unit=Unit("rad")),
+            phi=Angle(value=f32[], unit=Unit("rad")) )
         >>> sph.r
         Distance(Array(3.7416575, dtype=float32), unit='m')
 

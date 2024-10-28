@@ -16,6 +16,7 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
+from coordinax._src.angle import Angle
 from coordinax._src.checks import check_azimuth_range, check_polar_range
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
@@ -39,9 +40,9 @@ class TwoSpherePos(AbstractPos2D):
 
     Parameters
     ----------
-    theta : Quantity['angle']
+    theta : `coordinax.angle.Angle`
         Polar angle [0, 180] [deg] where 0 is the z-axis.
-    phi : Quantity['angle']
+    phi : `coordinax.angle.Angle`
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
 
     See Also
@@ -65,15 +66,11 @@ class TwoSpherePos(AbstractPos2D):
 
     """
 
-    theta: ct.BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].from_, dtype=float)
-    )
+    theta: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
-        )
+        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 

@@ -804,8 +804,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         >>> sph.to_units({"length": "km", "angle": "deg"})
         SphericalPos(
             r=Distance(value=f32[], unit=Unit("km")),
-            theta=Quantity[...](value=f32[], unit=Unit("deg")),
-            phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+            theta=Angle(value=f32[], unit=Unit("deg")),
+            phi=Angle(value=f32[], unit=Unit("deg")) )
 
         """
         # Ensure `units_` is PT -> Unit
@@ -851,8 +851,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         >>> sph.to_units(cx.ToUnitsOptions.consistent)
         SphericalPos(
             r=Distance(value=f32[], unit=Unit("m")),
-            theta=Quantity[...](value=f32[], unit=Unit("rad")),
-            phi=Quantity[...](value=f32[], unit=Unit("rad"))
+            theta=Angle(value=f32[], unit=Unit("rad")),
+            phi=Angle(value=f32[], unit=Unit("rad"))
         )
 
         """

@@ -20,6 +20,7 @@ from .base_spherical import (
     _180d,
     _360d,
 )
+from coordinax._src.angle import Angle
 from coordinax._src.checks import (
     check_azimuth_range,
     check_polar_range,
@@ -46,9 +47,9 @@ class SphericalPos(AbstractSphericalPos):
     ----------
     r : `coordinax.Distance`
         Radial distance r (slant distance to origin),
-    theta : Quantity['angle']
+    theta : `coordinax.angle.Angle`
         Polar angle [0, 180] [deg] where 0 is the z-axis.
-    phi : Quantity['angle']
+    phi : `coordinax.angle.Angle`
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
 
     """
@@ -58,15 +59,11 @@ class SphericalPos(AbstractSphericalPos):
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    theta: ct.BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].from_, dtype=float)
-    )
+    theta: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
-        )
+        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
@@ -104,8 +101,8 @@ def from_(
     ...                       phi=Quantity(0, "deg"))
     SphericalPos(
       r=Distance(value=f32[], unit=Unit("kpc")),
-      theta=Quantity[...](value=f32[], unit=Unit("deg")),
-      phi=Quantity[...](value=f32[], unit=Unit("deg"))
+      theta=Angle(value=f32[], unit=Unit("deg")),
+      phi=Angle(value=f32[], unit=Unit("deg"))
     )
 
     The radial distance can be negative, which wraps the azimuthal angle by 180
@@ -117,9 +114,9 @@ def from_(
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
-    Quantity['angle'](Array(135., dtype=float32), unit='deg')
+    Angle(Array(135., dtype=float32), unit='deg')
     >>> vec.phi
-    Quantity[...](Array(180., dtype=float32), unit='deg')
+    Angle(Array(180., dtype=float32), unit='deg')
 
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
@@ -130,9 +127,9 @@ def from_(
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
-    Quantity['angle'](Array(170., dtype=float32), unit='deg')
+    Angle(Array(170., dtype=float32), unit='deg')
     >>> vec.phi
-    Quantity['angle'](Array(180., dtype=float32), unit='deg')
+    Angle(Array(180., dtype=float32), unit='deg')
 
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base from_ does this):
@@ -141,7 +138,7 @@ def from_(
     ...                             theta=Quantity(90, "deg"),
     ...                             phi=Quantity(365, "deg"))
     >>> vec.phi
-    Quantity['angle'](Array(5., dtype=float32), unit='deg')
+    Angle(Array(5., dtype=float32), unit='deg')
 
     """
     # 1) Convert the inputs

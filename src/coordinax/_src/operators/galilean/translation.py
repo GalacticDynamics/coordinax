@@ -140,7 +140,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> vec = cx.CartesianPos2D.from_(q).represent_as(cx.PolarPos)
     >>> op(vec)
     PolarPos( r=Distance(value=f32[], unit=Unit("kpc")),
-                 phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+              phi=Angle(value=f32[], unit=Unit("rad")) )
 
     - 3D:
 
@@ -153,8 +153,8 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
     >>> vec = cx.CartesianPos3D.from_(q).represent_as(cx.SphericalPos)
     >>> op(vec)
     SphericalPos( r=Distance(value=f32[], unit=Unit("kpc")),
-                     theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                     phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                  theta=Angle(value=f32[], unit=Unit("rad")),
+                  phi=Angle(value=f32[], unit=Unit("rad")) )
 
     Many operators are time dependent and require a time argument. This operator
     is time independent and will pass through the time argument:

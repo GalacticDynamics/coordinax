@@ -131,7 +131,7 @@ def represent_as(
     ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-                 phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+              phi=Angle(value=f32[], unit=Unit("rad")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -252,7 +252,7 @@ def represent_as(
     ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-                 phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+              phi=Angle(value=f32[], unit=Unit("deg")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -343,7 +343,7 @@ def represent_as(
     ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("km")) )
+                    y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -372,7 +372,7 @@ def represent_as(
     ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-                 phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+              phi=Angle(value=f32[], unit=Unit("deg")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -463,7 +463,7 @@ def represent_as(
     ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("km")) )
+                    y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -492,7 +492,7 @@ def represent_as(
     ...     x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-                 phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+              phi=Angle(value=f32[], unit=Unit("deg")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)

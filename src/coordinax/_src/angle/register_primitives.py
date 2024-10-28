@@ -50,6 +50,26 @@ def _cbrt_p_a(x: AbstractAngle) -> Quantity:
 # ==============================================================================
 
 
+@register(lax.cos_p)
+def _cos_p(x: AbstractAngle) -> Quantity:
+    """Cosine of an Angle.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> from coordinax.angle import Angle
+
+    >>> q = Angle(0, "deg")
+    >>> jnp.cos(q)
+    Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
+
+    """
+    return Quantity(qlax.cos(ustrip(radian, x)), unit=one)
+
+
+# ==============================================================================
+
+
 @register(lax.dot_general_p)
 def _dot_general_aa(
     lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any
