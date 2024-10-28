@@ -98,7 +98,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     """
 
     lon: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        converter=Unless(
+            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        )
     )
     r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
 
