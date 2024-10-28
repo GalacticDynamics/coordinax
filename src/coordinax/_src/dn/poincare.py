@@ -24,7 +24,7 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
-    pp_phi: Shaped[Quantity["m / s(1/2)"], "*#batch"] = eqx.field()
+    pp_phi: Shaped[Quantity, "*#batch"] = eqx.field()  # TODO: dimension annotation
     r"""Poincare phi-like variable."""
 
     z: ct.BatchableLength = eqx.field(
@@ -37,7 +37,7 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
     )
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
-    d_pp_phi: Shaped[Quantity["m / s(1/2)"], "*#batch"] = eqx.field()
+    d_pp_phi: Shaped[Quantity, "*#batch"] = eqx.field()  # TODO: dimension annotation
     r"""Poincare phi-like velocity variable."""
 
     d_z: ct.BatchableSpeed = eqx.field(

@@ -164,7 +164,7 @@ QConvertible3D: TypeAlias = CartesianVel3D | CartesianAcc3D
 
 @conversion_method(CartesianAcc3D, UncheckedQuantity)
 @conversion_method(CartesianVel3D, UncheckedQuantity)
-def vec_diff_to_q(obj: CartesianVel3D, /) -> Shaped[UncheckedQuantity, "*batch 3"]:
+def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[UncheckedQuantity, "*batch 3"]:
     """3D Differentials -> `unxt.UncheckedQuantity`.
 
     Examples
@@ -187,7 +187,7 @@ def vec_diff_to_q(obj: CartesianVel3D, /) -> Shaped[UncheckedQuantity, "*batch 3
 
 @conversion_method(CartesianAcc3D, Quantity)
 @conversion_method(CartesianVel3D, Quantity)
-def vec_diff_to_q(obj: CartesianVel3D, /) -> Shaped[Quantity, "*batch 3"]:
+def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[Quantity, "*batch 3"]:
     """3D Differentials -> `unxt.Quantity`.
 
     Examples
@@ -218,7 +218,7 @@ Q1: TypeAlias = Shaped[Quantity["length"], "*#batch 1"]
 @op_call_dispatch
 def call(self: AbstractOperator, x: Q1, /) -> Q1:
     """Dispatch to the operator's `__call__` method."""
-    return self(CartesianPos1D.from_(x))
+    return convert(self(CartesianPos1D.from_(x)), Quantity)
 
 
 @op_call_dispatch

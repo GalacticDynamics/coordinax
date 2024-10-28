@@ -525,7 +525,7 @@ class CartesianAccND(AvalMixin, AbstractAccND):
         velocity: AbstractVelND | None = None,
         position: AbstractPosND | None = None,
         /,
-    ) -> ct.BatchableSpeed:
+    ) -> ct.BatchableAcc:
         """Return the norm of the vector.
 
         Examples

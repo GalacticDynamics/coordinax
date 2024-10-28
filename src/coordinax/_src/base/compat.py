@@ -104,7 +104,7 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
 @conversion_method(type_from=AbstractPos, type_to=UncheckedQuantity)  # type: ignore[misc]
 def convert_pos_to_uncheckedq(
     obj: AbstractPos, /
-) -> Shaped[UncheckedQuantity, "*batch 1"]:
+) -> Shaped[UncheckedQuantity, "*batch dims"]:
     """`coordinax.AbstractPos` -> `unxt.UncheckedQuantity`.
 
     Examples
@@ -145,7 +145,7 @@ def convert_pos_to_uncheckedq(
 
 
 @conversion_method(type_from=AbstractPos, type_to=Distance)  # type: ignore[misc]
-def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch 1"]:
+def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dims"]:
     """`coordinax.AbstractPos` -> `coordinax.Distance`.
 
     Examples

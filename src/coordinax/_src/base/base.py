@@ -637,10 +637,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     # Collection
 
     def asdict(
-        self,
-        *,
-        dict_factory: Callable[[Any], Mapping[str, Quantity]] = dict,  # TODO: full hint
-    ) -> Mapping[str, Quantity]:
+        self, *, dict_factory: Callable[[Any], Mapping[str, AbstractQuantity]] = dict
+    ) -> Mapping[str, AbstractQuantity]:
         """Return the vector as a Mapping.
 
         Parameters

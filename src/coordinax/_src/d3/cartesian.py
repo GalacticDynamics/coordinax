@@ -312,17 +312,17 @@ def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
 class CartesianAcc3D(AvalMixin, AbstractAcc3D):
     """Cartesian differential representation."""
 
-    d2_x: ct.BatchableSpeed = eqx.field(
+    d2_x: ct.BatchableAcc = eqx.field(
         converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""X acceleration :math:`d^2x/dt^2 \in [-\infty, \infty]."""
 
-    d2_y: ct.BatchableSpeed = eqx.field(
+    d2_y: ct.BatchableAcc = eqx.field(
         converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Y acceleration :math:`d^2y/dt^2 \in [-\infty, \infty]."""
 
-    d2_z: ct.BatchableSpeed = eqx.field(
+    d2_z: ct.BatchableAcc = eqx.field(
         converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""

@@ -16,7 +16,7 @@ import equinox as eqx
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish.converters import Unless
-from unxt import Quantity
+from unxt import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
@@ -150,7 +150,7 @@ def from_(
     *,
     lon: Quantity["angle"],
     lat: Quantity["angle"],
-    distance: Distance,
+    distance: AbstractQuantity,
 ) -> LonLatSphericalPos:
     """Construct LonLatSphericalPos, allowing for out-of-range values.
 
