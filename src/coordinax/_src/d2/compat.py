@@ -19,8 +19,20 @@ Q2: TypeAlias = Shaped[Quantity["length"], "*#batch 2"]
 
 @op_call_dispatch
 def call(self: AbstractOperator, x: Q2, /) -> Q2:
-    """Dispatch to the operator's `__call__` method."""
-    return self(CartesianPos2D.from_(x))
+    """Dispatch to the operator's `__call__` method.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax.operators as cxo
+
+    >>> q = Quantity([1, 2], "m")
+    >>> op = cxo.GalileanSpatialTranslationOperator(Quantity([-1, -1], "m"))
+    >>> op(q)
+    Quantity['length'](Array([0., 1.], dtype=float32), unit='m')
+
+    """
+    return convert(self(CartesianPos2D.from_(x)), Quantity)
 
 
 @op_call_dispatch

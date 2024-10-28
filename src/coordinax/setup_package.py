@@ -1,9 +1,27 @@
-"""Copyright (c) 2023 coordinax maintainers. All rights reserved."""
+"""Package setup information.
+
+Note that this module is NOT public API nor are any of its contents.
+Stability is NOT guaranteed.
+This module exposes package setup information for the `unxt` package.
+
+"""
+
+__all__: list[str] = []
 
 import os
+from typing import Final
 
-RUNTIME_TYPECHECKER = (
-    "beartype.beartype"
-    if (os.environ.get("COORDINAX_ENABLE_RUNTIME_TYPECHECKS", "1") == "0")
+RUNTIME_TYPECHECKER: Final[str | None] = (
+    v
+    if (v := os.environ.get("COORDINAX_ENABLE_RUNTIME_TYPECHECKING", None)) != "None"
     else None
 )
+"""Runtime type checking variable "COORDINAX_ENABLE_RUNTIME_TYPECHECKING".
+
+Set to "None" to disable runtime typechecking (default). Set to
+"beartype.beartype" to enable runtime typechecking.
+
+See https://docs.kidger.site/jaxtyping/api/runtime-type-checking for more
+information on options.
+
+"""

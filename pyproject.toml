@@ -188,7 +188,7 @@ build-backend = "hatchling.build"
   xfail_strict = true
 
   env = [
-    "COORDINAX_ENABLE_RUNTIME_TYPECHECKS=1",
+    "COORDINAX_ENABLE_RUNTIME_TYPECHECKING=beartype.beartype",
   ]
 
 [tool.ruff]

@@ -269,12 +269,12 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
 class CartesianAcc2D(AvalMixin, AbstractAcc2D):
     """Cartesian acceleration representation."""
 
-    d2_x: ct.BatchableSpeed = eqx.field(
+    d2_x: ct.BatchableAcc = eqx.field(
         converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""X coordinate acceleration :math:`\frac{d^2 x}{dt^2} \in (-\infty,+\infty)`."""
 
-    d2_y: ct.BatchableSpeed = eqx.field(
+    d2_y: ct.BatchableAcc = eqx.field(
         converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""

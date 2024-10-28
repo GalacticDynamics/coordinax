@@ -110,17 +110,17 @@ class CylindricalVel(AbstractVel3D):
 class CylindricalAcc(AbstractAcc3D):
     """Cylindrical acceleration representation."""
 
-    d2_rho: ct.BatchableSpeed = eqx.field(
+    d2_rho: ct.BatchableAcc = eqx.field(
         converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
-    d2_phi: ct.BatchableAngularSpeed = eqx.field(
+    d2_phi: ct.BatchableAngularAcc = eqx.field(
         converter=partial(Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
-    d2_z: ct.BatchableSpeed = eqx.field(
+    d2_z: ct.BatchableAcc = eqx.field(
         converter=partial(Quantity["acceleration"].from_, dtype=float)
     )
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""

@@ -8,17 +8,18 @@ import equinox as eqx
 import quaxed.numpy as xp
 from unxt import AbstractQuantity, Quantity, is_unit_convertible
 
-from .typing import BatchableAngle, BatchableLength
+from .distance import Distance
+from .typing import BatchableAngle
 
-_0m = Quantity(0, "meter")
+_0m = Distance(0, "meter")
 _0d = Quantity(0, "rad")
 _pid = Quantity(180, "deg")
 _2pid = Quantity(360, "deg")
 
 
 def check_r_non_negative(
-    r: BatchableLength, /, _l: AbstractQuantity = _0m
-) -> BatchableLength:
+    r: AbstractQuantity, /, _l: Distance = _0m
+) -> AbstractQuantity:
     """Check that the radial distance is non-negative.
 
     Examples
@@ -59,10 +60,10 @@ def check_azimuth_range(
 
     Raise an error if anything is outside the range.
 
-    >>> x = Quantity([0., 1, 2], "m")
+    >>> x = Quantity([0., 1, 20], "rad")
     >>> try: check_azimuth_range(x)
-    ... except Exception as e: print(e)
-    The azimuthal angle must be in angular units...
+    ... except Exception as e: print("azimuthal angle must be in the range")
+    azimuthal angle must be in the range
 
     >>> x = Quantity([-1., 1, 2], "deg")
     >>> try: check_azimuth_range(x)
@@ -99,12 +100,12 @@ def check_polar_range(
     >>> check_polar_range(x)
     Quantity['angle'](Array([0., 1., 2.], dtype=float32), unit='deg')
 
-    Raise an error if anything is outside thr range.
+    Raise an error if anything is outside the range.
 
     >>> x = Quantity([0., 1, 2], "m")
     >>> try: check_polar_range(x)
-    ... except Exception as e: print(e)
-    The polar angle must be in angular units...
+    ... except Exception as e: print("wrong units")
+    wrong units
 
     >>> x = Quantity([-1., 1, 2], "deg")
     >>> try: check_polar_range(x)

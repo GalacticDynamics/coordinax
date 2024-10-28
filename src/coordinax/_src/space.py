@@ -95,7 +95,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     """  # noqa: E501
 
-    _data: dict[Dimension, AbstractVector] = eqx.field(init=False)
+    _data: dict[str, AbstractVector] = eqx.field(init=False)
 
     def __init__(  # pylint: disable=super-init-not-called  # TODO: resolve this
         self,

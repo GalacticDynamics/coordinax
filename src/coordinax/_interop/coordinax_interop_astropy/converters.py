@@ -52,7 +52,9 @@ def vec_to_q(obj: cx.AbstractPos3D, /) -> Shaped[u.Quantity, "*batch 3"]:
 
 @conversion_method(cx.CartesianAcc3D, u.Quantity)  # type: ignore[misc]
 @conversion_method(cx.CartesianVel3D, u.Quantity)  # type: ignore[misc]
-def vec_diff_to_q(obj: cx.CartesianVel3D, /) -> Shaped[u.Quantity, "*batch 3"]:
+def vec_diff_to_q(
+    obj: cx.CartesianVel3D | cx.CartesianAcc3D, /
+) -> Shaped[u.Quantity, "*batch 3"]:
     """`coordinax.CartesianVel3D` -> `astropy.units.Quantity`.
 
     Examples
