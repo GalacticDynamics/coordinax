@@ -27,6 +27,7 @@ from .base_spherical import (
     _180d,
 )
 from coordinax._src import checks
+from coordinax._src.angle import Angle
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
@@ -42,9 +43,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     Parameters
     ----------
-    lon : Quantity['angle']
+    lon : `coordinax.angle.Angle`
         The longitude (azimuthal) angle [0, 360) [deg] where 0 is the x-axis.
-    lat : Quantity['angle']
+    lat : `coordinax.angle.Angle`
         The latitude (polar angle) [-90, 90] [deg] where 90 is the z-axis.
     distance : Distance
         Radial distance r (slant distance to origin),
@@ -57,8 +58,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
     ...                       distance=Quantity(3, "kpc"))
     LonLatSphericalPos(
-      lon=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
-      lat=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
+      lon=Angle(value=f32[], unit=Unit("deg")),
+      lat=Angle(value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
     )
 
@@ -70,7 +71,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     ...                             lat=Quantity(90, "deg"),
     ...                             distance=Quantity(3, "kpc"))
     >>> vec.lon
-    Quantity['angle'](Array(5., dtype=float32), unit='deg')
+    Angle(Array(5., dtype=float32), unit='deg')
 
     The latitude is not wrapped, but it is checked to be in the [-90, 90] degrees range.
 
@@ -97,15 +98,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
     """
 
     lon: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
-        )
+        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
     )
     r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
 
-    lat: ct.BatchableAngle = eqx.field(
-        converter=partial(Quantity["angle"].from_, dtype=float)
-    )
+    lat: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
     distance: ct.BatchableDistance = eqx.field(
@@ -116,7 +113,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         checks.check_azimuth_range(self.lon)
-        checks.check_polar_range(self.lat, -Quantity(90, "deg"), Quantity(90, "deg"))
+        checks.check_polar_range(self.lat, -Angle(90, "deg"), Angle(90, "deg"))
         checks.check_r_non_negative(self.distance)
 
     @override
@@ -148,8 +145,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
 def from_(
     cls: type[LonLatSphericalPos],
     *,
-    lon: Quantity["angle"],
-    lat: Quantity["angle"],
+    lon: AbstractQuantity,
+    lat: AbstractQuantity,
     distance: AbstractQuantity,
 ) -> LonLatSphericalPos:
     """Construct LonLatSphericalPos, allowing for out-of-range values.
@@ -164,8 +161,8 @@ def from_(
     ...                             lat=Quantity(0, "deg"),
     ...                             distance=Quantity(3, "kpc"))
     LonLatSphericalPos(
-      lon=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
-      lat=Quantity[PhysicalType('angle')](value=f32[], unit=Unit("deg")),
+      lon=Angle(value=f32[], unit=Unit("deg")),
+      lat=Angle(value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
     )
 
@@ -176,9 +173,9 @@ def from_(
     ...                                   lat=Quantity(45, "deg"),
     ...                                   distance=Quantity(-3, "kpc"))
     >>> vec.lon
-    Quantity['angle'](Array(180., dtype=float32), unit='deg')
+    Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
-    Quantity['angle'](Array(-45., dtype=float32), unit='deg')
+    Angle(Array(-45., dtype=float32), unit='deg')
     >>> vec.distance
     Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -189,9 +186,9 @@ def from_(
     ...                                   lat=Quantity(-100, "deg"),
     ...                                   distance=Quantity(3, "kpc"))
     >>> vec.lon
-    Quantity['angle'](Array(180., dtype=float32), unit='deg')
+    Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
-    Quantity['angle'](Array(-80., dtype=float32), unit='deg')
+    Angle(Array(-80., dtype=float32), unit='deg')
     >>> vec.distance
     Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -199,9 +196,9 @@ def from_(
     ...                                   lat=Quantity(100, "deg"),
     ...                                   distance=Quantity(3, "kpc"))
     >>> vec.lon
-    Quantity['angle'](Array(180., dtype=float32), unit='deg')
+    Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
-    Quantity['angle'](Array(80., dtype=float32), unit='deg')
+    Angle(Array(80., dtype=float32), unit='deg')
     >>> vec.distance
     Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -212,7 +209,7 @@ def from_(
     ...                                   lat=Quantity(0, "deg"),
     ...                                   distance=Quantity(3, "kpc"))
     >>> vec.lon
-    Quantity['angle'](Array(5., dtype=float32), unit='deg')
+    Angle(Array(5., dtype=float32), unit='deg')
 
     """
     # 1) Convert the inputs

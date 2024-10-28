@@ -131,7 +131,7 @@ SUPPORTED_IPYTHON_REPR_FORMATS: dict[str, str] = {
 
 
 class IPythonReprMixin:
-    """Mixin class for IPython string representations."""
+    """Mixin class to add IPython rich display methods."""
 
     def _repr_mimebundle_(
         self,

@@ -84,13 +84,13 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-                 phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+              phi=Angle(value=f32[], unit=Unit("rad")) )
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
 
     >>> x3 = cx.represent_as(x, cx.PolarPos, phi=Quantity(14, "deg"))
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
 
     """
     return target(r=current.x, phi=phi)
@@ -167,18 +167,18 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.SphericalPos)
     >>> x2
     SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                       theta=Quantity[...](value=f32[], unit=Unit("deg")),
-                       phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                  theta=Angle(value=f32[], unit=Unit("deg")),
+                  phi=Angle(value=f32[], unit=Unit("rad")) )
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='deg')
+    Angle(Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.SphericalPos, phi=Quantity(14, "deg"))
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='deg')
+    Angle(Array(0., dtype=float32), unit='deg')
 
     MathSphericalPos:
     Note that ``theta`` and ``phi`` have different meanings in this context.
@@ -186,18 +186,18 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.MathSphericalPos)
     >>> x2
     MathSphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                         theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                         phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+                      theta=Angle(value=f32[], unit=Unit("rad")),
+                      phi=Angle(value=f32[], unit=Unit("deg")) )
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='deg')
+    Angle(Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.MathSphericalPos, phi=Quantity(14, "deg"))
     >>> x3.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
 
     """
     x, theta, phi = jnp.broadcast_arrays(current.x, theta, phi)
@@ -228,16 +228,16 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.CylindricalPos)
     >>> x2
     CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
-                       phi=Quantity[...](value=f32[], unit=Unit("rad")),
-                       z=Quantity[...](value=f32[], unit=Unit("m")) )
+                    phi=Angle(value=f32[], unit=Unit("rad")),
+                    z=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
     >>> x3 = cx.represent_as(x, cx.CylindricalPos, phi=Quantity(14, "deg"))
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
     >>> x3.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
@@ -310,13 +310,13 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-                 phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                 phi=Angle(value=f32[], unit=Unit("rad")) )
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
 
     >>> x3 = cx.represent_as(x, cx.PolarPos, phi=Quantity(14, "deg"))
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
 
     """
     return target(r=current.r, phi=phi)
@@ -394,36 +394,36 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.SphericalPos)
     >>> x2
     SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                       theta=Quantity[...](value=f32[], unit=Unit("deg")),
-                       phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                  theta=Angle(value=f32[], unit=Unit("deg")),
+                  phi=Angle(value=f32[], unit=Unit("rad")) )
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='deg')
+    Angle(Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.SphericalPos, phi=Quantity(14, "deg"))
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
     >>> x3.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='deg')
+    Angle(Array(0., dtype=float32), unit='deg')
 
     MathSphericalPos:
 
     >>> x2 = cx.represent_as(x, cx.MathSphericalPos)
     >>> x2
     MathSphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                           theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                           phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+                      theta=Angle(value=f32[], unit=Unit("rad")),
+                      phi=Angle(value=f32[], unit=Unit("deg")) )
     >>> x2.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='deg')
+    Angle(Array(0., dtype=float32), unit='deg')
 
     >>> x3 = cx.represent_as(x, cx.MathSphericalPos, phi=Quantity(14, "deg"))
     >>> x3.theta
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
 
     """
     r, theta, phi = jnp.broadcast_arrays(current.r, theta, phi)
@@ -454,16 +454,16 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.CylindricalPos)
     >>> x2
     CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
-                       phi=Quantity[...](value=f32[], unit=Unit("rad")),
-                       z=Quantity[...](value=f32[], unit=Unit("m")) )
+                    phi=Angle(value=f32[], unit=Unit("rad")),
+                    z=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.phi
-    Quantity['angle'](Array(0., dtype=float32), unit='rad')
+    Angle(Array(0., dtype=float32), unit='rad')
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
     >>> x3 = cx.represent_as(x, cx.CylindricalPos, phi=Quantity(14, "deg"))
     >>> x3.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
     >>> x3.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 

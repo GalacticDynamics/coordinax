@@ -9,7 +9,7 @@ import astropy.units as u
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt import Quantity
+from unxt import AbstractQuantity, Quantity
 
 from coordinax._src.d1.cartesian import CartesianPos1D
 from coordinax._src.d1.radial import RadialPos
@@ -33,7 +33,7 @@ def represent_as(
     current: AbstractPos2D,
     target: type[AbstractPos3D],
     /,
-    z: Quantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> Cartesian2D -> Cartesian3D -> AbstractPos3D.
@@ -51,24 +51,24 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.CylindricalPos, z=Quantity(14, "km"))
     >>> x2
     CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
-                       phi=Quantity[...](value=f32[], unit=Unit("rad")),
-                       z=Quantity[...](value=f32[], unit=Unit("km")) )
+                    phi=Angle(value=f32[], unit=Unit("rad")),
+                    z=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.z
     Quantity['length'](Array(14., dtype=float32), unit='km')
 
     >>> x3 = cx.represent_as(x, cx.SphericalPos, z=Quantity(14, "km"))
     >>> x3
     SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                     theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                     phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                  theta=Angle(value=f32[], unit=Unit("rad")),
+                  phi=Angle(value=f32[], unit=Unit("rad")) )
     >>> x3.r
     Distance(Array(14.177447, dtype=float32), unit='km')
 
     >>> x3 = cx.represent_as(x, cx.MathSphericalPos, z=Quantity(14, "km"))
     >>> x3
     MathSphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                         theta=Quantity[...](value=f32[], unit=Unit("rad")),
-                         phi=Quantity[...](value=f32[], unit=Unit("rad")) )
+                      theta=Angle(value=f32[], unit=Unit("rad")),
+                      phi=Angle(value=f32[], unit=Unit("rad")) )
     >>> x3.r
     Distance(Array(14.177447, dtype=float32), unit='km')
 
@@ -85,7 +85,7 @@ def represent_as(
     current: AbstractPos2D,
     target: type[AbstractPos3D],
     /,
-    z: Quantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> PolarPos -> Cylindrical -> AbstractPos3D.
@@ -189,7 +189,7 @@ def represent_as(
     target: type[CartesianPos3D],
     /,
     *,
-    z: Quantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """CartesianPos2D -> CartesianPos3D.
@@ -207,8 +207,8 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.CartesianPos3D, z=Quantity(14, "km"))
     >>> x2
     CartesianPos3D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("km")),
-                       z=Quantity[...](value=f32[], unit=Unit("km")) )
+                    y=Quantity[...](value=f32[], unit=Unit("km")),
+                    z=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.z
     Quantity['length'](Array(14., dtype=float32), unit='km')
 
@@ -301,10 +301,10 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.SphericalPos, theta=Quantity(14, "deg"))
     >>> x2
     SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                     theta=Quantity[...](value=f32[], unit=Unit("deg")),
-                     phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+                  theta=Angle(value=f32[], unit=Unit("deg")),
+                  phi=Angle(value=f32[], unit=Unit("deg")) )
     >>> x2.theta
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
 
     """
     return target.from_(r=current.r, theta=theta, phi=current.phi)
@@ -330,10 +330,10 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.MathSphericalPos, phi=Quantity(14, "deg"))
     >>> x2
     MathSphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                         theta=Quantity[...](value=f32[], unit=Unit("deg")),
-                         phi=Quantity[...](value=f32[], unit=Unit("deg")) )
+                      theta=Angle(value=f32[], unit=Unit("deg")),
+                      phi=Angle(value=f32[], unit=Unit("deg")) )
     >>> x2.phi
-    Quantity['angle'](Array(14., dtype=float32), unit='deg')
+    Angle(Array(14., dtype=float32), unit='deg')
 
     """
     return target.from_(r=current.r, phi=phi, theta=current.phi)
@@ -360,8 +360,8 @@ def represent_as(
     >>> x2 = cx.represent_as(x, cx.CylindricalPos, z=Quantity(14, "km"))
     >>> x2
     CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
-                       phi=Quantity[...](value=f32[], unit=Unit("deg")),
-                       z=Quantity[...](value=f32[], unit=Unit("km")) )
+                    phi=Angle(value=f32[], unit=Unit("deg")),
+                    z=Quantity[...](value=f32[], unit=Unit("km")) )
     >>> x2.z
     Quantity['length'](Array(14., dtype=float32), unit='km')
 

@@ -35,8 +35,8 @@ def vec_to_q(obj: cx.AbstractPos3D, /) -> Shaped[u.Quantity, "*batch 3"]:
     <Quantity [1., 2., 3.] kpc>
 
     >>> vec = cx.SphericalPos(r=Quantity(1, unit="kpc"),
-    ...                            theta=Quantity(2, unit="deg"),
-    ...                            phi=Quantity(3, unit="deg"))
+    ...                       theta=Quantity(2, unit="deg"),
+    ...                       phi=Quantity(3, unit="deg"))
     >>> convert(vec, Quantity)
     <Quantity [0.03485167, 0.0018265 , 0.99939084] kpc>
 
@@ -175,7 +175,7 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.CylindricalPos:
     >>> convert(cyl, cx.CylindricalPos)
     CylindricalPos(
         rho=Quantity[...](value=f32[], unit=Unit("kpc")),
-        phi=Quantity[...](value=f32[], unit=Unit("deg")),
+        phi=Angle(value=f32[], unit=Unit("deg")),
         z=Quantity[...](value=f32[], unit=Unit("pc"))
     )
 
@@ -227,8 +227,8 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
     >>> convert(sph, cx.SphericalPos)
     SphericalPos(
       r=Distance(value=f32[], unit=Unit("kpc")),
-      theta=Quantity[...](value=f32[], unit=Unit("deg")),
-      phi=Quantity[...](value=f32[], unit=Unit("deg"))
+      theta=Angle(value=f32[], unit=Unit("deg")),
+      phi=Angle(value=f32[], unit=Unit("deg"))
     )
 
     """
@@ -278,8 +278,8 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> cx.LonLatSpheri
     ...                               distance=1 * u.kpc)
     >>> convert(sph, cx.LonLatSphericalPos)
     LonLatSphericalPos(
-      lon=Quantity[...](value=f32[], unit=Unit("deg")),
-      lat=Quantity[...](value=f32[], unit=Unit("deg")),
+      lon=Angle(value=f32[], unit=Unit("deg")),
+      lat=Angle(value=f32[], unit=Unit("deg")),
       distance=Distance(value=f32[], unit=Unit("kpc"))
     )
 

@@ -20,6 +20,7 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
+from coordinax._src.angle import Angle
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.distance import AbstractDistance, Distance
@@ -46,8 +47,8 @@ class PolarPos(AbstractPos2D):
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
+        converter=Unless(
+            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
     r"""Polar angle :math:`\phi \in [0,2\pi)`."""
@@ -82,7 +83,7 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
     >>> nv
     PolarPos(
       r=Distance(value=f32[], unit=Unit("m")),
-      phi=Quantity[...](value=f32[], unit=Unit("deg"))
+      phi=Angle(value=f32[], unit=Unit("deg"))
     )
     >>> nv.r
     Distance(Array(2., dtype=float32), unit='m')

@@ -2,16 +2,17 @@
 
 __all__: list[str] = []
 
+from unxt import AbstractQuantity
 
-from unxt import Quantity
+from .angle import Angle
 
-from .typing import BatchableAngle
-
-_2pid = Quantity(360, "deg")
+_2pid = Angle(360, "deg")
 
 
-def converter_azimuth_to_range(phi: BatchableAngle) -> BatchableAngle:
-    """Wrap the polar angle to the range [0, 2pi).
+def converter_azimuth_to_range(
+    phi: AbstractQuantity,
+) -> AbstractQuantity:
+    """Wrap a polar angle to the range [0, 2pi).
 
     It's safe to do this conversion since this is a phase cut, unlike `theta`,
     which is only on half the sphere.

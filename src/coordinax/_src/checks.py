@@ -6,15 +6,16 @@ __all__: list[str] = []
 import equinox as eqx
 
 import quaxed.numpy as xp
-from unxt import AbstractQuantity, Quantity, is_unit_convertible
+from unxt import AbstractQuantity, is_unit_convertible
 
+from .angle import Angle
 from .distance import Distance
-from .typing import BatchableAngle
+from .typing import BatchableAngle, BatchableAngleQ
 
 _0m = Distance(0, "meter")
-_0d = Quantity(0, "rad")
-_pid = Quantity(180, "deg")
-_2pid = Quantity(360, "deg")
+_0d = Angle(0, "rad")
+_pid = Angle(180, "deg")
+_2pid = Angle(360, "deg")
 
 
 def check_r_non_negative(
@@ -43,8 +44,8 @@ def check_r_non_negative(
 
 
 def check_azimuth_range(
-    azimuth: BatchableAngle, /, _l: AbstractQuantity = _0d, _u: AbstractQuantity = _2pid
-) -> BatchableAngle:
+    azimuth: BatchableAngle | BatchableAngleQ, /, _l: Angle = _0d, _u: Angle = _2pid
+) -> BatchableAngle | BatchableAngleQ:
     """Check that the azimuthal angle is in the range.
 
     Examples
@@ -85,8 +86,8 @@ def check_azimuth_range(
 
 
 def check_polar_range(
-    polar: BatchableAngle, /, _l: AbstractQuantity = _0d, _u: AbstractQuantity = _pid
-) -> BatchableAngle:
+    polar: BatchableAngle | BatchableAngleQ, /, _l: Angle = _0d, _u: Angle = _pid
+) -> BatchableAngle | BatchableAngleQ:
     """Check that the polar angle is in the range.
 
     Examples

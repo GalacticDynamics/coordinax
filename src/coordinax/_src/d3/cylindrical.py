@@ -13,10 +13,12 @@ from typing_extensions import override
 import equinox as eqx
 
 import quaxed.numpy as xp
+from dataclassish.converters import Unless
 from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
+from coordinax._src.angle import Angle
 from coordinax._src.checks import check_azimuth_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
@@ -36,8 +38,8 @@ class CylindricalPos(AbstractPos3D):
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(
-            Quantity["angle"].from_(x, dtype=float)  # pylint: disable=E1120
+        converter=Unless(
+            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
