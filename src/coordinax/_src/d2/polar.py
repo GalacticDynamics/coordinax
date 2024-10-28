@@ -47,7 +47,9 @@ class PolarPos(AbstractPos2D):
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        converter=Unless(
+            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        )
     )
     r"""Polar angle :math:`\phi \in [0,2\pi)`."""
 

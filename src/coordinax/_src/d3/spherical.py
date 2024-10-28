@@ -63,7 +63,9 @@ class SphericalPos(AbstractSphericalPos):
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        converter=Unless(
+            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 

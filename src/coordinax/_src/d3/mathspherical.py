@@ -65,9 +65,11 @@ class MathSphericalPos(AbstractSphericalPos):
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     theta: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        converter=Unless(
+            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        )
     )
-    r"""Azimuthal angle :math:`\theta \in [0,360)`."""
+    r"""Azimuthal angle, generally :math:`\theta \in [0,360)`."""
 
     phi: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Inclination angle :math:`\phi \in [0,180]`."""

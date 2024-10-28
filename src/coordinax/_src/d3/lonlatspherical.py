@@ -145,8 +145,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
 def from_(
     cls: type[LonLatSphericalPos],
     *,
-    lon: Quantity["angle"],
-    lat: Quantity["angle"],
+    lon: AbstractQuantity,
+    lat: AbstractQuantity,
     distance: AbstractQuantity,
 ) -> LonLatSphericalPos:
     """Construct LonLatSphericalPos, allowing for out-of-range values.

@@ -9,7 +9,7 @@ import astropy.units as u
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt import Quantity
+from unxt import AbstractQuantity, Quantity
 
 from coordinax._src.d1.cartesian import CartesianPos1D
 from coordinax._src.d1.radial import RadialPos
@@ -33,7 +33,7 @@ def represent_as(
     current: AbstractPos2D,
     target: type[AbstractPos3D],
     /,
-    z: Quantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> Cartesian2D -> Cartesian3D -> AbstractPos3D.
@@ -85,7 +85,7 @@ def represent_as(
     current: AbstractPos2D,
     target: type[AbstractPos3D],
     /,
-    z: Quantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> PolarPos -> Cylindrical -> AbstractPos3D.
@@ -189,7 +189,7 @@ def represent_as(
     target: type[CartesianPos3D],
     /,
     *,
-    z: Quantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, u.m),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """CartesianPos2D -> CartesianPos3D.

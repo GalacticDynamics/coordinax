@@ -12,6 +12,7 @@ from typing_extensions import override
 
 import equinox as eqx
 
+from dataclassish.converters import Unless
 from unxt import Quantity
 
 import coordinax._src.typing as ct
@@ -70,7 +71,9 @@ class TwoSpherePos(AbstractPos2D):
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: ct.BatchableAngle = eqx.field(
-        converter=lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        converter=Unless(
+            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
+        )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
