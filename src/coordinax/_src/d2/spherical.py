@@ -18,7 +18,7 @@ from unxt import Quantity
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angle import Angle
-from coordinax._src.checks import check_azimuth_range, check_polar_range
+from coordinax._src.checks import check_polar_range
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
@@ -80,7 +80,6 @@ class TwoSpherePos(AbstractPos2D):
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         check_polar_range(self.theta)
-        check_azimuth_range(self.phi)
 
     @override
     @classproperty

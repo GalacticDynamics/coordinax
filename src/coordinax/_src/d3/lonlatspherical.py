@@ -114,7 +114,6 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        checks.check_azimuth_range(self.lon)
         checks.check_polar_range(self.lat, -Angle(90, "deg"), Angle(90, "deg"))
         checks.check_r_non_negative(self.distance)
 
