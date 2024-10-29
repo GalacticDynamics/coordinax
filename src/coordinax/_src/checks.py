@@ -43,48 +43,6 @@ def check_r_non_negative(
     return eqx.error_if(r, xp.any(r < _l), "The radial distance must be non-negative.")
 
 
-def check_azimuth_range(
-    azimuth: BatchableAngle | BatchableAngleQ, /, _l: Angle = _0d, _u: Angle = _2pid
-) -> BatchableAngle | BatchableAngleQ:
-    """Check that the azimuthal angle is in the range.
-
-    Examples
-    --------
-    >>> from unxt import Quantity
-    >>> from coordinax._src.checks import check_azimuth_range
-
-    Pass through the input if it's in the range.
-
-    >>> x = Quantity([0., 1, 2], "deg")
-    >>> check_azimuth_range(x)
-    Quantity['angle'](Array([0., 1., 2.], dtype=float32), unit='deg')
-
-    Raise an error if anything is outside the range.
-
-    >>> x = Quantity([0., 1, 20], "rad")
-    >>> try: check_azimuth_range(x)
-    ... except Exception as e: print("azimuthal angle must be in the range")
-    azimuthal angle must be in the range
-
-    >>> x = Quantity([-1., 1, 2], "deg")
-    >>> try: check_azimuth_range(x)
-    ... except Exception: pass
-    ... except Exception: pass
-
-    """
-    azimuth = eqx.error_if(
-        azimuth,
-        not is_unit_convertible("deg", azimuth),
-        "The azimuthal angle must be in angular units.",
-    )
-    # TODO: enable integer support
-    return eqx.error_if(
-        azimuth,
-        xp.any(xp.logical_or(xp.less(azimuth, _l), xp.greater_equal(azimuth, _u))),
-        "The azimuthal angle must be in the range [0, 2pi).",
-    )
-
-
 def check_polar_range(
     polar: BatchableAngle | BatchableAngleQ, /, _l: Angle = _0d, _u: Angle = _pid
 ) -> BatchableAngle | BatchableAngleQ:

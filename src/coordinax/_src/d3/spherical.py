@@ -21,11 +21,7 @@ from .base_spherical import (
     _360d,
 )
 from coordinax._src.angle import Angle
-from coordinax._src.checks import (
-    check_azimuth_range,
-    check_polar_range,
-    check_r_non_negative,
-)
+from coordinax._src.checks import check_polar_range, check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
@@ -67,13 +63,12 @@ class SphericalPos(AbstractSphericalPos):
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
-    r"""Azimuthal angle :math:`\phi \in [0,360)`."""
+    r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         check_r_non_negative(self.r)
         check_polar_range(self.theta)
-        check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod

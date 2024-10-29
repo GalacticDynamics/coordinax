@@ -21,7 +21,7 @@ from unxt import Quantity
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angle import Angle
-from coordinax._src.checks import check_azimuth_range, check_r_non_negative
+from coordinax._src.checks import check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
@@ -51,12 +51,11 @@ class PolarPos(AbstractPos2D):
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
-    r"""Polar angle :math:`\phi \in [0,2\pi)`."""
+    r"""Polar angle, generally :math:`\phi \in [0,2\pi)`."""
 
     def __check_init__(self) -> None:
         """Check the initialization."""
         check_r_non_negative(self.r)
-        check_azimuth_range(self.phi)
 
     @classproperty
     @classmethod

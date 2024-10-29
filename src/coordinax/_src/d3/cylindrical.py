@@ -19,7 +19,7 @@ from unxt import Quantity
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angle import Angle
-from coordinax._src.checks import check_azimuth_range, check_r_non_negative
+from coordinax._src.checks import check_r_non_negative
 from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
 
@@ -42,7 +42,7 @@ class CylindricalPos(AbstractPos3D):
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
-    r"""Azimuthal angle :math:`\phi \in [0,360)`."""
+    r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     z: ct.BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
@@ -52,7 +52,6 @@ class CylindricalPos(AbstractPos3D):
     def __check_init__(self) -> None:
         """Check the validity of the initialisation."""
         check_r_non_negative(self.rho)
-        check_azimuth_range(self.phi)
 
     @override
     @classproperty
