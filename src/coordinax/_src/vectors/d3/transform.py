@@ -20,6 +20,8 @@ from .lonlatspherical import (
 )
 from .mathspherical import MathSphericalPos, MathSphericalVel
 from .spherical import SphericalPos, SphericalVel
+from .spheroidal import ProlateSpheroidalPos, ProlateSpheroidalVel
+from coordinax._src.distance import AbstractDistance
 from coordinax._src.vectors.base import AbstractPos
 
 ###############################################################################
@@ -100,6 +102,7 @@ def represent_as(
         AbstractPos,
     ),
     (MathSphericalVel, type[MathSphericalVel], AbstractPos),
+    (ProlateSpheroidalVel, type[ProlateSpheroidalVel], AbstractPos),
 )
 def represent_as(
     current: AbstractVel3D,
@@ -573,6 +576,157 @@ def represent_as(
 
     """
     return target(r=current.r, theta=current.phi, phi=current.theta)
+
+
+# =============================================================================
+# ProlateSpheroidalPos
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos, target: type[CylindricalPos], /, **kwargs: Any
+) -> CylindricalPos:
+    """ProlateSpheroidalPos -> CylindricalPos.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(1., "kpc2"),
+    ...     nu=Quantity(0.2, "kpc2"),
+    ...     phi=Quantity(90, "deg"),
+    ...     Delta=Quantity(0.5, "kpc")
+    ... )
+    >>> print(cx.represent_as(vec, cx.CylindricalPos))
+    TODO: add
+
+    """
+    Delta2 = current.Delta**2
+    absnu = xp.abs(current.nu)
+
+    mu_minus_delta = current.mu - Delta2
+    # nu_minus_delta = absnu - Delta2
+
+    R = xp.sqrt(mu_minus_delta * (1 - absnu / Delta2))
+    z = xp.sqrt(current.mu * absnu / Delta2) * xp.sign(current.nu)
+
+    return target(rho=R, phi=current.phi, z=z)
+
+
+@dispatch
+def represent_as(
+    current: CylindricalPos,
+    target: type[ProlateSpheroidalPos],
+    *,
+    Delta: AbstractDistance | Quantity["length"],  # noqa: N803
+    **kwargs: Any,
+) -> ProlateSpheroidalPos:
+    """CylindricalPos -> ProlateSpheroidalPos.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.CylindricalPos(
+    ...     rho=Quantity(1., "kpc"),
+    ...     phi=Quantity(90, "deg"),
+    ...     z=Quantity(1, "kpc")
+    ... )
+    >>> print(vec.represent_as(cx.ProlateSpheroidalPos, Delta=Quantity(0.5, "kpc")))
+    <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[deg], Delta[kpc])
+        [ 2.133  0.117 90.     0.5  ]>
+
+    """
+    R2 = current.rho**2
+    z2 = current.z**2
+    Delta2 = Delta**2
+
+    sum_ = R2 + z2 + Delta2
+    diff_ = R2 + z2 - Delta2
+
+    # compute D = sqrt((R² + z² - Δ²)² + 4R²Δ²)
+    D = xp.sqrt(diff_**2 + 4 * R2 * Delta2)
+
+    # handle special cases for R=0 or z=0
+    # TODO: quaxed.numpy.select doesn't work with Quantity's?
+    # D = xp.select(
+    #     [current.z == 0, current.rho == 0, xp.full(current.rho.shape, 1, dtype=bool)],
+    #     [
+    #         sum_,  # z=0 case
+    #         xp.abs(diff_),  # R=0 case
+    #         D,  # otherwise
+    #     ],
+    # )
+    D = xp.where(current.z == 0, sum_, D)
+    D = xp.where(current.rho == 0, xp.abs(diff_), D)
+
+    # compute mu and nu depending on sign of diff_ - avoids dividing by a small number
+    pos_mu_minus_delta = 0.5 * (D + diff_)
+    pos_delta_minus_nu = Delta2 * R2 / pos_mu_minus_delta
+
+    neg_delta_minus_nu = 0.5 * (D - diff_)
+    neg_mu_minus_delta = Delta2 * R2 / neg_delta_minus_nu
+
+    # Select based on condition
+    mu_minus_delta = xp.where(diff_ >= 0, pos_mu_minus_delta, neg_mu_minus_delta)
+    delta_minus_nu = xp.where(diff_ >= 0, pos_delta_minus_nu, neg_delta_minus_nu)
+
+    # compute mu and nu:
+    mu = Delta2 + mu_minus_delta
+    abs_nu = 2 * Delta2 / (sum_ + D) * z2
+
+    # for numerical stability when Delta^2-|nu| is small
+    abs_nu = xp.where(abs_nu * 2 > Delta2, Delta2 - delta_minus_nu, abs_nu)
+
+    nu = abs_nu * xp.sign(current.z)
+
+    return target(mu=mu, nu=nu, phi=current.phi, Delta=Delta)
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos, target: type[CartesianPos3D], /, **kwargs: Any
+) -> CartesianPos3D:
+    """ProlateSpheroidalPos -> CartesianPos3D."""
+    cyl = represent_as(current, CylindricalPos)
+    return represent_as(cyl, target)
+
+
+@dispatch
+def represent_as(
+    current: CartesianPos3D,
+    target: type[ProlateSpheroidalPos],
+    *,
+    Delta: AbstractDistance | Quantity["length"],  # noqa: N803
+    **kwargs: Any,
+) -> ProlateSpheroidalPos:
+    """CartesianPos3D -> ProlateSpheroidalPos."""
+    cyl = represent_as(current, CylindricalPos)
+    return represent_as(cyl, target, Delta=Delta)
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos, target: type[ProlateSpheroidalPos], /
+) -> ProlateSpheroidalPos:
+    """ProlateSpheroidalPos -> ProlateSpheroidalPos."""
+    return current
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos,
+    target: type[ProlateSpheroidalPos],
+    *,
+    Delta: AbstractDistance | Quantity["length"],  # noqa: N803
+    **kwargs: Any,
+) -> ProlateSpheroidalPos:
+    """ProlateSpheroidalPos -> ProlateSpheroidalPos."""
+    cyl = represent_as(current, CylindricalPos)
+    return represent_as(cyl, target, Delta=Delta)
 
 
 # =============================================================================

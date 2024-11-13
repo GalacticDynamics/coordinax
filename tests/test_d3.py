@@ -486,6 +486,136 @@ class TestSphericalPos(AbstractPos3DTest):
         assert np.allclose(convert(llsph.lat, APYQuantity), apycart3.lat)
 
 
+class TestProlateSpheroidalPos(AbstractPos3DTest):
+    """Test :class:`coordinax.ProlateSpheroidalPos`."""
+
+    @pytest.fixture(scope="class")
+    def vector(self) -> cx.AbstractPos:
+        """Return a vector."""
+        return cx.ProlateSpheroidalPos(
+            mu=Quantity([1, 2, 3, 4], "kpc2"),
+            nu=Quantity([0.1, 0.2, 0.3, 0.4], "kpc2"),
+            phi=Quantity([0, 1, 2, 3], "rad"),
+            Delta=Quantity(1.0, "kpc"),
+        )
+
+    @pytest.mark.skip("No astropy equivalent")
+    def test_neg_compare_apy(
+        self, vector: cx.AbstractPos, apyvector: apyc.BaseRepresentation
+    ):
+        """Skip."""
+
+    # ==========================================================================
+    # represent_as
+
+    # TODO: do we enable these for ProlateSpheroidal?
+    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    # def test_cylindrical_to_cartesian1d(self, vector):
+    #     """Test ``coordinax.represent_as(CartesianPos1D)``."""
+    #     cart1d = vector.represent_as(cx.CartesianPos1D)
+
+    #     assert isinstance(cart1d, cx.CartesianPos1D)
+    #     assert jnp.allclose(
+    #         cart1d.x,
+    #         Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
+    #         atol=Quantity(1e-8, "kpc"),
+    #     )
+
+    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    # def test_cylindrical_to_radial(self, vector):
+    #     """Test ``coordinax.represent_as(RadialPos)``."""
+    #     radial = vector.represent_as(cx.RadialPos)
+
+    #     assert isinstance(radial, cx.RadialPos)
+    #     assert jnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
+
+    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    # def test_cylindrical_to_cartesian2d(self, vector):
+    #     """Test ``coordinax.represent_as(CartesianPos2D)``."""
+    #     cart2d = vector.represent_as(cx.CartesianPos2D)
+
+    #     assert isinstance(cart2d, cx.CartesianPos2D)
+    #     assert jnp.array_equal(
+    #         cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
+    #     )
+    #     assert jnp.array_equal(
+    #         cart2d.y, Quantity([0.0, 1.6829419, 2.7278922, 0.56448], "kpc")
+    #     )
+
+    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    # def test_cylindrical_to_polar(self, vector):
+    #     """Test ``coordinax.represent_as(PolarPos)``."""
+    #     polar = vector.represent_as(cx.PolarPos)
+
+    #     assert isinstance(polar, cx.PolarPos)
+    #     assert jnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
+    #     assert jnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
+
+    def test_prolatespheroidal_to_cartesian3d(self, vector):
+        """Test ``coordinax.represent_as(CartesianPos3D)``."""
+        cart3d = vector.represent_as(cx.CartesianPos3D)
+
+        assert isinstance(cart3d, cx.CartesianPos3D)
+        assert jnp.array_equal(
+            cart3d.x, Quantity([0.0, 0.48326105, -0.4923916, -1.3282144], "kpc")
+        )
+        assert jnp.array_equal(
+            cart3d.y, Quantity([0.0, 0.75263447, 1.0758952, 0.18933235], "kpc")
+        )
+        assert jnp.array_equal(
+            cart3d.z, Quantity([0.31622776, 0.6324555, 0.9486833, 1.264911], "kpc")
+        )
+
+    def test_prolatespheroidal_to_cylindrical(self, vector):
+        """Test ``coordinax.represent_as(CylindricalPos)``."""
+        cyl = vector.represent_as(cx.CylindricalPos)
+
+        assert isinstance(cyl, cx.CylindricalPos)
+        assert jnp.array_equal(
+            cyl.rho, Quantity([0.0, 0.8944272, 1.183216, 1.3416408], "kpc")
+        )
+        assert jnp.array_equal(cyl.phi, vector.phi)
+        assert jnp.array_equal(
+            cyl.z, Quantity([0.31622776, 0.6324555, 0.9486833, 1.264911], "kpc")
+        )
+
+    def test_prolatespheroidal_to_spherical(self, vector):
+        """Test ``coordinax.represent_as(SphericalPos)``."""
+        spherical = vector.represent_as(cx.SphericalPos)
+
+        assert isinstance(spherical, cx.SphericalPos)
+        assert jnp.array_equal(
+            spherical.r, Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
+        )
+        assert jnp.array_equal(spherical.phi, vector.phi)
+        assert jnp.array_equal(
+            spherical.theta, Quantity([0.0, 0.95531654, 0.89496875, 0.8148269], "rad")
+        )
+
+    def test_prolatespheroidal_to_prolatespheroidal(self, vector):
+        """Test ``coordinax.represent_as(ProlateSpheroidalPos)``."""
+        # Jit can copy
+        newvec = vector.represent_as(cx.ProlateSpheroidalPos, Delta=vector.Delta)
+        assert jnp.array_equal(newvec.mu, vector.mu)
+        assert jnp.allclose(newvec.nu.value, vector.nu.value)
+        assert jnp.array_equal(newvec.phi, vector.phi)
+
+        # With a different focal length, should not be the same:
+        newvec = vector.represent_as(
+            cx.ProlateSpheroidalPos, Delta=Quantity(0.7, "kpc")
+        )
+        # assert not jnp.array_equal(newvec.mu, vector.mu)
+        assert not jnp.array_equal(newvec.nu, vector.nu)
+        # assert not jnp.array_equal(newvec.phi, vector.phi)
+
+        # The normal `represent_as` method should return the same object
+        # TODO: this fails because (I think) the output gets wrapped in a call of the
+        # initializer cx.ProlateSpheroidalPos(...), which then does not have the
+        # Delta=... argument
+        # newvec = cx.represent_as(vector, cx.ProlateSpheroidalPos)
+        # assert newvec is vector
+
+
 class AbstractVel3DTest(AbstractVelTest):
     """Test :class:`coordinax.AbstractVel2D`."""
 

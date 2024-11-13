@@ -84,3 +84,43 @@ def check_polar_range(
         xp.any(xp.logical_or((polar < _l), (polar > _u))),
         "The inclination angle must be in the range [0, pi].",
     )
+
+
+def check_less_than_equal(
+    x: AbstractQuantity, max_val: AbstractQuantity
+) -> AbstractQuantity:
+    """Check that the input value is less than or equal to the input maximum value.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+
+    Raise an error if the input is larger than the maximum value.
+
+    >>> x = Quantity([-1, 1, 2], "m")
+    >>> try: check_less_than(x, 1.5)
+    ... except Exception: pass
+
+    """
+    msg = "The input must be less than or equal to the specified maximum value."
+    return eqx.error_if(x, xp.any(x > max_val), msg)
+
+
+def check_greater_than_equal(
+    x: AbstractQuantity, min_val: AbstractQuantity
+) -> AbstractQuantity:
+    """Check that the input value is greater than or equal to the input minimum value.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+
+    Raise an error if the input is smaller than the minimum value.
+
+    >>> x = Quantity([-1, 1, 2], "m")
+    >>> try: check_greater_than(x, 1.0)
+    ... except Exception: pass
+
+    """
+    msg = "The input must be greater than or equal to the specified minimum value."
+    return eqx.error_if(x, xp.any(x < min_val), msg)
