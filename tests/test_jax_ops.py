@@ -4,7 +4,7 @@ import equinox as eqx
 import pytest
 
 from dataclassish import field_items
-from unxt import AbstractQuantity
+from unxt.quantity import AbstractQuantity
 
 import coordinax as cx
 from coordinax._src.base.base_pos import POSITION_CLASSES

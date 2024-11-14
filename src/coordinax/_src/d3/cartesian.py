@@ -20,7 +20,7 @@ from quax import register
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish import field_items
-from unxt import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D

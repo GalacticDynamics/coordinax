@@ -12,7 +12,7 @@ import equinox as eqx
 import jax
 
 import quaxed.numpy as jnp
-from unxt import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from coordinax._src.base import AbstractVector

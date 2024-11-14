@@ -6,7 +6,8 @@ __all__: list[str] = []
 import equinox as eqx
 
 import quaxed.numpy as xp
-from unxt import AbstractQuantity, is_unit_convertible
+from unxt import is_unit_convertible
+from unxt.quantity import AbstractQuantity
 
 from .angle import Angle
 from .distance import Distance

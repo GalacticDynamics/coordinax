@@ -5,7 +5,8 @@ __all__: list[str] = []
 import astropy.units as u
 from plum import add_promotion_rule, conversion_method
 
-from unxt import AbstractQuantity, Quantity, dimensions_of
+from unxt import Quantity, dimensions_of
+from unxt.quantity import AbstractQuantity
 
 angle_dimension = u.get_physical_type("angle")
 

@@ -10,73 +10,51 @@ import pytest
 
 import quaxed.numpy as jnp
 from dataclassish import field_items
-from unxt import AbstractQuantity
+from unxt.quantity import AbstractQuantity
 
-from coordinax import (
-    AbstractPos,
-    AbstractPos1D,
-    AbstractPos2D,
-    AbstractPos3D,
-    AbstractVel,
-    AbstractVel1D,
-    AbstractVel2D,
-    AbstractVel3D,
-    CartesianPos1D,
-    CartesianPos2D,
-    CartesianPos3D,
-    CartesianVel1D,
-    CartesianVel2D,
-    CartesianVel3D,
-    CylindricalPos,
-    CylindricalVel,
-    IrreversibleDimensionChange,
-    PolarPos,
-    PolarVel,
-    RadialPos,
-    RadialVel,
-    SphericalPos,
-    SphericalVel,
-)
+import coordinax as cx
 
 BUILTIN_VECTORS = [
     # 1D
-    CartesianPos1D,
-    RadialPos,
+    cx.CartesianPos1D,
+    cx.RadialPos,
     # 2D
-    CartesianPos2D,
-    PolarPos,
+    cx.CartesianPos2D,
+    cx.PolarPos,
     # 3D
-    CartesianPos3D,
-    SphericalPos,
-    CylindricalPos,
+    cx.CartesianPos3D,
+    cx.SphericalPos,
+    cx.CylindricalPos,
 ]
 
 BUILTIN_DIFFERENTIALS = [
     # 1D
-    CartesianVel1D,
-    RadialVel,
+    cx.CartesianVel1D,
+    cx.RadialVel,
     # 2D
-    CartesianVel2D,
-    PolarVel,
+    cx.CartesianVel2D,
+    cx.PolarVel,
     # LnPolarVel,
     # Log10PolarVel,
     # 3D
-    CartesianVel3D,
-    SphericalVel,
-    CylindricalVel,
+    cx.CartesianVel3D,
+    cx.SphericalVel,
+    cx.CylindricalVel,
 ]
 
 
 def context_dimension_reduction(
-    vector: AbstractPos, target: type[AbstractPos]
+    vector: cx.AbstractPos, target: type[cx.AbstractPos]
 ) -> AbstractContextManager[Any]:
     """Return a context manager that checks for dimensionality reduction."""
     context: AbstractContextManager[Any]
-    if (isinstance(vector, AbstractPos2D) and issubclass(target, AbstractPos1D)) or (
-        isinstance(vector, AbstractPos3D)
-        and issubclass(target, AbstractPos2D | AbstractPos1D)
+    if (
+        isinstance(vector, cx.AbstractPos2D) and issubclass(target, cx.AbstractPos1D)
+    ) or (
+        isinstance(vector, cx.AbstractPos3D)
+        and issubclass(target, cx.AbstractPos2D | cx.AbstractPos1D)
     ):
-        context = pytest.warns(IrreversibleDimensionChange)
+        context = pytest.warns(cx.IrreversibleDimensionChange)
     else:
         context = nullcontext()
     return context
@@ -179,7 +157,7 @@ class AbstractPosTest(AbstractVectorTest):
     """Test :class:`coordinax.AbstractPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractPos:
+    def vector(self) -> cx.AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
@@ -202,12 +180,12 @@ class AbstractVelTest(AbstractVectorTest):
     """Test :class:`coordinax.AbstractVel`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> AbstractPos:
+    def vector(self) -> cx.AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> AbstractVel:
+    def difntl(self) -> cx.AbstractVel:
         """Return a vector."""
         raise NotImplementedError
 
@@ -221,16 +199,16 @@ class AbstractVelTest(AbstractVectorTest):
         # TODO: have all the conversions
         if (
             (
-                isinstance(difntl, AbstractVel1D)
-                and not issubclass(target, AbstractVel1D)
+                isinstance(difntl, cx.AbstractVel1D)
+                and not issubclass(target, cx.AbstractVel1D)
             )
             or (
-                isinstance(difntl, AbstractVel2D)
-                and not issubclass(target, AbstractVel2D)
+                isinstance(difntl, cx.AbstractVel2D)
+                and not issubclass(target, cx.AbstractVel2D)
             )
             or (
-                isinstance(difntl, AbstractVel3D)
-                and not issubclass(target, AbstractVel3D)
+                isinstance(difntl, cx.AbstractVel3D)
+                and not issubclass(target, cx.AbstractVel3D)
             )
         ):
             pytest.xfail("Not implemented yet")

@@ -9,7 +9,7 @@ import astropy.units as u
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 from coordinax._src.d1.cartesian import CartesianPos1D
 from coordinax._src.d1.radial import RadialPos

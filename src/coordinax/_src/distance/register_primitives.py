@@ -15,7 +15,8 @@ from jax.core import Primitive
 from jaxtyping import ArrayLike
 from quax import register as register_
 
-from unxt import AbstractQuantity, Quantity, is_unit_convertible, ustrip
+from unxt import Quantity, is_unit_convertible, ustrip
+from unxt.quantity import AbstractQuantity
 
 from .base import AbstractDistance
 

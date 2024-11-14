@@ -2,7 +2,7 @@
 
 __all__: list[str] = []
 
-from unxt import AbstractQuantity
+from unxt.quantity import AbstractQuantity
 
 from .angle import Angle
 

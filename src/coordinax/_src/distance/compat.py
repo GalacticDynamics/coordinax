@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 from plum import conversion_method
 
-from unxt import AbstractQuantity
+from unxt.quantity import AbstractQuantity
 
 from .core import Distance, DistanceModulus, Parallax
 
@@ -19,7 +19,7 @@ def _quantity_to_distance(q: AbstractQuantity, /) -> Distance:
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import Quantity, UncheckedQuantity
+    >>> from unxt.quantity import Quantity, UncheckedQuantity
     >>> from coordinax.distance import Distance
     >>> q = UncheckedQuantity(1, "m")
     >>> q
