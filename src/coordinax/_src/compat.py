@@ -10,7 +10,7 @@ from plum import conversion_method, convert
 
 import quaxed.numpy as xp
 from dataclassish import field_values
-from unxt import AbstractQuantity, Quantity, UncheckedQuantity
+from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
 from coordinax._src.base.base import AbstractVector
 from coordinax._src.d1.cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D
@@ -48,7 +48,7 @@ def vec_diff1d_to_uncheckedq(
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import UncheckedQuantity
+    >>> from unxt.quantity import UncheckedQuantity
     >>> import coordinax as cx
 
     >>> cart_vel = cx.CartesianVel1D.from_([1], "km/s")
@@ -118,7 +118,7 @@ def vec_diff_to_q(obj: QConvertible2D, /) -> Shaped[UncheckedQuantity, "*batch 2
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import UncheckedQuantity
+    >>> from unxt.quantity import UncheckedQuantity
     >>> import coordinax as cx
 
     >>> vel = cx.CartesianVel2D.from_([1, 2], "km/s")
@@ -171,7 +171,7 @@ def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[UncheckedQuantity, "*batch 3
     --------
     >>> import coordinax as cx
     >>> from plum import convert
-    >>> from unxt import UncheckedQuantity
+    >>> from unxt.quantity import UncheckedQuantity
 
     >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, UncheckedQuantity)

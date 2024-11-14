@@ -13,7 +13,7 @@ from jaxtyping import Array, Shaped
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt import AbstractQuantity
+from unxt.quantity import AbstractQuantity
 
 
 @dispatch.abstract  # type: ignore[misc]

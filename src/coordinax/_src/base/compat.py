@@ -8,7 +8,7 @@ from plum import conversion_method, convert
 
 import quaxed.numpy as xp
 from dataclassish import field_values
-from unxt import AbstractQuantity, Quantity, UncheckedQuantity
+from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
 from .base_pos import AbstractPos
 from coordinax._src.distance import Distance
@@ -25,7 +25,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity
+    >>> from unxt.quantity import AbstractQuantity, Quantity
 
     >>> pos = cx.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
@@ -67,7 +67,7 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity
+    >>> from unxt.quantity import AbstractQuantity, Quantity
 
     >>> pos = cx.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
@@ -110,7 +110,7 @@ def convert_pos_to_uncheckedq(
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity, UncheckedQuantity
+    >>> from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
     >>> pos = cx.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, UncheckedQuantity)
@@ -151,7 +151,7 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import AbstractQuantity, Quantity
+    >>> from unxt.quantity import AbstractQuantity, Quantity
     >>> from coordinax.distance import Distance
 
     >>> pos = cx.CartesianPos1D.from_([1.0], "km")

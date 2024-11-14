@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 from plum import conversion_method
 
-from unxt import AbstractQuantity
+from unxt.quantity import AbstractQuantity
 
 from .core import Angle
 
@@ -16,7 +16,7 @@ def _quantity_to_angle(q: AbstractQuantity, /) -> Angle:
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import Quantity, UncheckedQuantity
+    >>> from unxt.quantity import Quantity, UncheckedQuantity
     >>> from coordinax.angle import Angle
     >>> q = UncheckedQuantity(1, "rad")
     >>> q

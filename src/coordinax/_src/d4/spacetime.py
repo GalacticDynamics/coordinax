@@ -15,7 +15,7 @@ from quax import register
 
 import quaxed.numpy as jnp
 from dataclassish.converters import Unless
-from unxt import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractPos4D
 from coordinax._src.base import AbstractVector

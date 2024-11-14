@@ -18,7 +18,7 @@ from quax import register
 
 import quaxed.numpy as jnp
 from quaxed import lax as qlax
-from unxt import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D

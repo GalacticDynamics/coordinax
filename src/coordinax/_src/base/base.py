@@ -26,7 +26,6 @@ import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish import field_items, field_values, replace
 from unxt import (
-    AbstractQuantity,
     Quantity,
     dimensions,
     dimensions_of,
@@ -34,6 +33,7 @@ from unxt import (
     units_of,
     unitsystem,
 )
+from unxt.quantity import AbstractQuantity
 
 from .mixins import IPythonReprMixin
 from coordinax._src.typing import Unit

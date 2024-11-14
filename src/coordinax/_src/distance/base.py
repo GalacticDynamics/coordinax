@@ -6,7 +6,7 @@ from abc import abstractmethod
 
 from plum import add_promotion_rule, conversion_method
 
-from unxt import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 
 class AbstractDistance(AbstractQuantity):  # type: ignore[misc]

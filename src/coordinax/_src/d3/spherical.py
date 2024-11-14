@@ -10,7 +10,7 @@ import equinox as eqx
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish.converters import Unless
-from unxt import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base_spherical import (
