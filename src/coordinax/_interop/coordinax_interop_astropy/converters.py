@@ -6,11 +6,11 @@ __all__: list[str] = []
 
 
 import astropy.coordinates as apyc
-import astropy.units as u
+import astropy.units as apyu
 from jaxtyping import Shaped
 from plum import conversion_method, convert
 
-import unxt as ux
+import unxt as u
 
 import coordinax as cx
 
@@ -20,59 +20,59 @@ import coordinax as cx
 # Quantity
 
 
-@conversion_method(cx.AbstractPos3D, u.Quantity)  # type: ignore[misc]
-def vec_to_q(obj: cx.AbstractPos3D, /) -> Shaped[u.Quantity, "*batch 3"]:
+@conversion_method(cx.AbstractPos3D, apyu.Quantity)  # type: ignore[misc]
+def vec_to_q(obj: cx.AbstractPos3D, /) -> Shaped[apyu.Quantity, "*batch 3"]:
     """`coordinax.AbstractPos3D` -> `astropy.units.Quantity`.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> from plum import convert
-    >>> from astropy.units import Quantity
+    >>> import astropy.units as apyu
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> convert(vec, Quantity)
+    >>> convert(vec, apyu.Quantity)
     <Quantity [1., 2., 3.] kpc>
 
-    >>> vec = cx.SphericalPos(r=Quantity(1, unit="kpc"),
-    ...                       theta=Quantity(2, unit="deg"),
-    ...                       phi=Quantity(3, unit="deg"))
-    >>> convert(vec, Quantity)
+    >>> vec = cx.SphericalPos(r=apyu.Quantity(1, unit="kpc"),
+    ...                       theta=apyu.Quantity(2, unit="deg"),
+    ...                       phi=apyu.Quantity(3, unit="deg"))
+    >>> convert(vec, apyu.Quantity)
     <Quantity [0.03485167, 0.0018265 , 0.99939084] kpc>
 
-    >>> vec = cx.CylindricalPos(rho=Quantity(1, unit="kpc"),
-    ...                              phi=Quantity(2, unit="deg"),
-    ...                              z=Quantity(3, unit="pc"))
-    >>> convert(vec, Quantity)
+    >>> vec = cx.CylindricalPos(rho=apyu.Quantity(1, unit="kpc"),
+    ...                         phi=apyu.Quantity(2, unit="deg"),
+    ...                         z=apyu.Quantity(3, unit="pc"))
+    >>> convert(vec, apyu.Quantity)
     <Quantity [0.99939084, 0.0348995 , 0.003     ] kpc>
 
     """
-    return convert(convert(obj, ux.Quantity), u.Quantity)
+    return convert(convert(obj, u.Quantity), apyu.Quantity)
 
 
-@conversion_method(cx.CartesianAcc3D, u.Quantity)  # type: ignore[misc]
-@conversion_method(cx.CartesianVel3D, u.Quantity)  # type: ignore[misc]
+@conversion_method(cx.CartesianAcc3D, apyu.Quantity)  # type: ignore[misc]
+@conversion_method(cx.CartesianVel3D, apyu.Quantity)  # type: ignore[misc]
 def vec_diff_to_q(
     obj: cx.CartesianVel3D | cx.CartesianAcc3D, /
-) -> Shaped[u.Quantity, "*batch 3"]:
+) -> Shaped[apyu.Quantity, "*batch 3"]:
     """`coordinax.CartesianVel3D` -> `astropy.units.Quantity`.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> from plum import convert
-    >>> from astropy.units import Quantity
+    >>> from astropy.units import Quantity as AstropyQuantity
 
     >>> dif = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> convert(dif, Quantity)
+    >>> convert(dif, AstropyQuantity)
     <Quantity [1., 2., 3.] km / s>
 
     >>> dif2 = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> convert(dif2, Quantity)
+    >>> convert(dif2, AstropyQuantity)
     <Quantity [1., 2., 3.] km / s2>
 
     """
-    return convert(convert(obj, ux.Quantity), u.Quantity)
+    return convert(convert(obj, u.Quantity), apyu.Quantity)
 
 
 # =====================================
@@ -100,9 +100,9 @@ def cart3_to_apycart3(obj: cx.CartesianPos3D, /) -> apyc.CartesianRepresentation
 
     """
     return apyc.CartesianRepresentation(
-        x=convert(obj.x, u.Quantity),
-        y=convert(obj.y, u.Quantity),
-        z=convert(obj.z, u.Quantity),
+        x=convert(obj.x, apyu.Quantity),
+        y=convert(obj.y, apyu.Quantity),
+        z=convert(obj.z, apyu.Quantity),
     )
 
 
@@ -112,7 +112,6 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D
 
     Examples
     --------
-    >>> import astropy.units as u
     >>> import coordinax as cx
     >>> from astropy.coordinates import CartesianRepresentation
 
@@ -155,9 +154,9 @@ def cyl_to_apycyl(obj: cx.CylindricalPos, /) -> apyc.CylindricalRepresentation:
 
     """
     return apyc.CylindricalRepresentation(
-        rho=convert(obj.rho, u.Quantity),
-        phi=convert(obj.phi, u.Quantity),
-        z=convert(obj.z, u.Quantity),
+        rho=convert(obj.rho, apyu.Quantity),
+        phi=convert(obj.phi, apyu.Quantity),
+        z=convert(obj.z, apyu.Quantity),
     )
 
 
@@ -206,9 +205,9 @@ def sph_to_apysph(obj: cx.SphericalPos, /) -> apyc.PhysicsSphericalRepresentatio
 
     """
     return apyc.PhysicsSphericalRepresentation(
-        r=convert(obj.r, u.Quantity),
-        phi=convert(obj.phi, u.Quantity),
-        theta=convert(obj.theta, u.Quantity),
+        r=convert(obj.r, apyu.Quantity),
+        phi=convert(obj.phi, apyu.Quantity),
+        theta=convert(obj.theta, apyu.Quantity),
     )
 
 
@@ -258,9 +257,9 @@ def lonlatsph_to_apysph(obj: cx.LonLatSphericalPos, /) -> apyc.SphericalRepresen
 
     """
     return apyc.SphericalRepresentation(
-        lon=convert(obj.lon, u.Quantity),
-        lat=convert(obj.lat, u.Quantity),
-        distance=convert(obj.distance, u.Quantity),
+        lon=convert(obj.lon, apyu.Quantity),
+        lat=convert(obj.lat, apyu.Quantity),
+        distance=convert(obj.distance, apyu.Quantity),
     )
 
 
@@ -308,9 +307,9 @@ def diffcart3_to_apycart3(obj: cx.CartesianVel3D, /) -> apyc.CartesianDifferenti
 
     """
     return apyc.CartesianDifferential(
-        d_x=convert(obj.d_x, u.Quantity),
-        d_y=convert(obj.d_y, u.Quantity),
-        d_z=convert(obj.d_z, u.Quantity),
+        d_x=convert(obj.d_x, apyu.Quantity),
+        d_y=convert(obj.d_y, apyu.Quantity),
+        d_z=convert(obj.d_z, apyu.Quantity),
     )
 
 
@@ -322,7 +321,6 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
 
     Examples
     --------
-    >>> import astropy.units as u
     >>> import coordinax as cx
     >>> from astropy.coordinates import CartesianDifferential
 
@@ -366,9 +364,9 @@ def diffcyl_to_apycyl(obj: cx.CylindricalVel, /) -> apyc.CylindricalDifferential
 
     """
     return apyc.CylindricalDifferential(
-        d_rho=convert(obj.d_rho, u.Quantity),
-        d_phi=convert(obj.d_phi, u.Quantity),
-        d_z=convert(obj.d_z, u.Quantity),
+        d_rho=convert(obj.d_rho, apyu.Quantity),
+        d_phi=convert(obj.d_phi, apyu.Quantity),
+        d_z=convert(obj.d_z, apyu.Quantity),
     )
 
 
@@ -424,9 +422,9 @@ def diffsph_to_apysph(obj: cx.SphericalVel, /) -> apyc.PhysicsSphericalDifferent
 
     """
     return apyc.PhysicsSphericalDifferential(
-        d_r=convert(obj.d_r, u.Quantity),
-        d_theta=convert(obj.d_theta, u.Quantity),
-        d_phi=convert(obj.d_phi, u.Quantity),
+        d_r=convert(obj.d_r, apyu.Quantity),
+        d_theta=convert(obj.d_theta, apyu.Quantity),
+        d_phi=convert(obj.d_phi, apyu.Quantity),
     )
 
 
@@ -484,9 +482,9 @@ def difflonlatsph_to_apysph(
 
     """
     return apyc.SphericalDifferential(
-        d_distance=convert(obj.d_distance, u.Quantity),
-        d_lon=convert(obj.d_lon, u.Quantity),
-        d_lat=convert(obj.d_lat, u.Quantity),
+        d_distance=convert(obj.d_distance, apyu.Quantity),
+        d_lon=convert(obj.d_lon, apyu.Quantity),
+        d_lat=convert(obj.d_lat, apyu.Quantity),
     )
 
 
@@ -546,9 +544,9 @@ def diffloncoslatsph_to_apysph(
 
     """  # noqa: E501
     return apyc.SphericalCosLatDifferential(
-        d_distance=convert(obj.d_distance, u.Quantity),
-        d_lon_coslat=convert(obj.d_lon_coslat, u.Quantity),
-        d_lat=convert(obj.d_lat, u.Quantity),
+        d_distance=convert(obj.d_distance, apyu.Quantity),
+        d_lon_coslat=convert(obj.d_lon_coslat, apyu.Quantity),
+        d_lat=convert(obj.d_lat, apyu.Quantity),
     )
 
 

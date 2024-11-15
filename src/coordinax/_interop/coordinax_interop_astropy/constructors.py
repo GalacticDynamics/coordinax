@@ -6,10 +6,10 @@ __all__: list[str] = []
 from collections.abc import Mapping
 
 import astropy.coordinates as apyc
-import astropy.units as u
+import astropy.units as apyu
 from plum import convert
 
-from unxt import Quantity
+import unxt as u
 
 import coordinax as cx
 
@@ -18,7 +18,7 @@ import coordinax as cx
 
 @cx.AbstractVector.from_._f.dispatch  # noqa: SLF001
 def from_(
-    cls: type[cx.AbstractVector], obj: Mapping[str, u.Quantity], /
+    cls: type[cx.AbstractVector], obj: Mapping[str, apyu.Quantity], /
 ) -> cx.AbstractVector:
     """Construct a vector from a mapping.
 
@@ -486,7 +486,7 @@ def from_(
 
 
 @cx.AbstractVector.from_._f.dispatch  # noqa: SLF001
-def from_(cls: type[cx.AbstractVector], obj: u.Quantity, /) -> cx.AbstractVector:
+def from_(cls: type[cx.AbstractVector], obj: apyu.Quantity, /) -> cx.AbstractVector:
     """Construct a vector from an Astropy Quantity array.
 
     The array is expected to have the components as the last dimension.
@@ -559,4 +559,4 @@ def from_(cls: type[cx.AbstractVector], obj: u.Quantity, /) -> cx.AbstractVector
     Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
 
     """
-    return cls.from_(convert(obj, Quantity))
+    return cls.from_(convert(obj, u.Quantity))

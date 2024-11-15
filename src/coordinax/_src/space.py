@@ -8,7 +8,6 @@ from types import MappingProxyType
 from typing import Any, TypeAlias, final
 from typing_extensions import override
 
-import astropy.units as u
 import equinox as eqx
 import jax
 from astropy.units import PhysicalType as Dimension
@@ -16,7 +15,7 @@ from jax import Device
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt import Quantity, dimensions
+import unxt as u
 from xmmutablemap import ImmutableMap
 
 from .base import AbstractAcc, AbstractPos, AbstractVector, AbstractVel
@@ -28,7 +27,7 @@ DimensionLike: TypeAlias = Dimension | str
 
 
 def _get_dimension_name(dim: DimensionLike, /) -> str:
-    return dimensions(dim)._physical_type_list[0]  # noqa: SLF001
+    return u.dimension(dim)._physical_type_list[0]  # noqa: SLF001
 
 
 def _can_broadcast_shapes(*shapes: tuple[int, ...]) -> bool:
@@ -62,7 +61,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import Quantity
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
@@ -220,8 +218,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         By dimension:
 
-        >>> import astropy.units as u
-        >>> w[u.get_physical_type("length")]
+        >>> import unxt as u
+        >>> w[u.dimension("length")]
         CartesianPos3D(
             x=Quantity[...](value=f32[1,2], unit=Unit("m")),
             y=Quantity[...](value=f32[1,2], unit=Unit("m")),
@@ -276,7 +274,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     @property
     def ndim(self) -> int:
-        """Number of array dimensions (axes).
+        """Number of array dimension (axes).
 
         Examples
         --------
@@ -299,7 +297,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -319,7 +316,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -338,7 +334,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -370,7 +365,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -389,7 +383,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
@@ -422,8 +415,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     def asdict(
         self,
         *,
-        dict_factory: Callable[[Any], Mapping[str, Quantity]] = dict,
-    ) -> Mapping[str, Quantity]:
+        dict_factory: Callable[[Any], Mapping[str, u.Quantity]] = dict,
+    ) -> Mapping[str, u.Quantity]:
         """Return the vector as a Mapping.
 
         Parameters
@@ -464,7 +457,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -486,7 +478,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -508,7 +499,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -528,7 +518,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Examples
         --------
         >>> import coordinax as cx
-        >>> from unxt import Quantity
 
         >>> w = cx.Space(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
@@ -552,7 +541,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     @dispatch  # type: ignore[misc]
     @override
     def to_units(
-        self: "Space", units: Mapping[u.PhysicalType | str, Unit | str], /
+        self: "Space", units: Mapping[Dimension | str, Unit | str], /
     ) -> "Space":
         """Convert the vector to the given units."""
         raise NotImplementedError
