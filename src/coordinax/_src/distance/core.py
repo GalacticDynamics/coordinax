@@ -5,19 +5,19 @@ __all__ = ["Distance", "Parallax", "DistanceModulus"]
 from dataclasses import KW_ONLY
 from typing import Any, final
 
-import astropy.units as u
 import equinox as eqx
 import jax.numpy as jnp
 
 import quaxed.numpy as jnp
-from unxt import Quantity, dimensions_of, ustrip
+import unxt as u
+from unxt import Quantity, dimension, dimension_of, ustrip
 
 from .base import AbstractDistance
 
-parallax_base_length = Quantity(1, "AU")
-distance_modulus_base_distance = Quantity(10, "pc")
-angle_dimension = u.get_physical_type("angle")
-length_dimension = u.get_physical_type("length")
+parallax_base_length = u.Quantity(1, "AU")
+distance_modulus_base_distance = u.Quantity(10, "pc")
+angle_dimension = dimension("angle")
+length_dimension = dimension("length")
 
 
 ##############################################################################
@@ -45,7 +45,7 @@ class Distance(AbstractDistance):
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        if dimensions_of(self) != length_dimension:
+        if dimension_of(self) != length_dimension:
             msg = "Distance must have dimensions length."
             raise ValueError(msg)
 
@@ -65,7 +65,7 @@ class Distance(AbstractDistance):
 
     @property
     def parallax(  # noqa: PLR0206  (needed for quax boundary)
-        self, base_length: Quantity["length"] = parallax_base_length
+        self, base_length: u.Quantity["length"] = parallax_base_length
     ) -> "Parallax":
         r"""The parallax of the distance.
 
@@ -142,7 +142,7 @@ class Parallax(AbstractDistance):
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        if dimensions_of(self) != angle_dimension:
+        if dimension_of(self) != angle_dimension:
             msg = "Parallax must have angular dimensions."
             raise ValueError(msg)
 
@@ -223,7 +223,7 @@ class DistanceModulus(AbstractDistance):
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        if self.unit != u.mag:
+        if self.unit != u.unit("mag"):
             msg = "Distance modulus must have units of magnitude."
             raise ValueError(msg)
 

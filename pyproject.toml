@@ -34,7 +34,7 @@
     "plum-dispatch>=2.5.2",
     "quax>=0.0.5",
     "quaxed>=0.6.4",
-    "unxt>=0.21",
+    "unxt>=0.22",
     "xmmutablemap>=0.1",
 ]
 

@@ -72,7 +72,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     We start with the required imports:
 
     >>> import jax.numpy as jnp
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> import coordinax.operators as co
 
@@ -88,8 +88,8 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     Translation operators can be applied to a Quantity[float, (N, 3), "...]:
 
-    >>> q = Quantity([1, 0, 0], "m")
-    >>> t = Quantity(1, "s")
+    >>> q = u.Quantity([1, 0, 0], "m")
+    >>> t = u.Quantity(1, "s")
     >>> newq, newt = op(q, t)
     >>> newq
     Quantity['length'](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')
@@ -101,8 +101,8 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     This also works for a batch of vectors:
 
-    >>> q = Quantity([[1, 0, 0], [0, 1, 0]], "m")
-    >>> t = Quantity(0, "s")
+    >>> q = u.Quantity([[1, 0, 0], [0, 1, 0]], "m")
+    >>> t = u.Quantity(0, "s")
 
     >>> newq, newt = op(q, t)
     >>> newq
@@ -197,17 +197,17 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> from coordinax.operators import GalileanRotationOperator
 
-        >>> theta = Quantity(45, "deg")
+        >>> theta = u.Quantity(45, "deg")
         >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
         ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
         >>> op = GalileanRotationOperator(Rz)
 
-        >>> q = Quantity([1, 0, 0], "m")
-        >>> t = Quantity(1, "s")
+        >>> q = u.Quantity([1, 0, 0], "m")
+        >>> t = u.Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq
         Quantity[...](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')

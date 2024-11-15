@@ -5,7 +5,6 @@ __all__: list[str] = []
 from typing import Any
 from warnings import warn
 
-import astropy.units as u
 from plum import dispatch
 
 import quaxed.numpy as jnp
@@ -33,7 +32,7 @@ def represent_as(
     current: AbstractPos2D,
     target: type[AbstractPos3D],
     /,
-    z: AbstractQuantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> Cartesian2D -> Cartesian3D -> AbstractPos3D.
@@ -85,7 +84,7 @@ def represent_as(
     current: AbstractPos2D,
     target: type[AbstractPos3D],
     /,
-    z: AbstractQuantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> PolarPos -> Cylindrical -> AbstractPos3D.
@@ -189,7 +188,7 @@ def represent_as(
     target: type[CartesianPos3D],
     /,
     *,
-    z: AbstractQuantity = Quantity(0.0, u.m),
+    z: AbstractQuantity = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """CartesianPos2D -> CartesianPos3D.
@@ -286,7 +285,7 @@ def represent_as(
     current: PolarPos,
     target: type[SphericalPos],
     /,
-    theta: Quantity["angle"] = Quantity(0.0, u.radian),  # type: ignore[name-defined]
+    theta: Quantity["angle"] = Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> SphericalPos:
     """PolarPos -> SphericalPos.
@@ -315,7 +314,7 @@ def represent_as(
     current: PolarPos,
     target: type[MathSphericalPos],
     /,
-    phi: Quantity["angle"] = Quantity(0.0, u.radian),  # type: ignore[name-defined]
+    phi: Quantity["angle"] = Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> MathSphericalPos:
     """PolarPos -> MathSphericalPos.
@@ -345,7 +344,7 @@ def represent_as(
     target: type[CylindricalPos],
     /,
     *,
-    z: Quantity["length"] = Quantity(0.0, u.m),  # type: ignore[name-defined]
+    z: Quantity["length"] = Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CylindricalPos:
     """PolarPos -> CylindricalPos.

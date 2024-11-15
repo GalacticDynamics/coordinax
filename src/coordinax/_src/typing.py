@@ -4,7 +4,11 @@ __all__: list[str] = []
 
 from typing import TypeAlias
 
-import astropy.units as u
+from astropy.units import (
+    CompositeUnit as AstropyCompositeUnit,
+    Unit as AstropyUnit,
+    UnitBase as AstropyUnitBase,
+)
 from jaxtyping import Float, Int, Shaped
 
 from unxt.quantity import AbstractQuantity, Quantity
@@ -12,7 +16,7 @@ from unxt.quantity import AbstractQuantity, Quantity
 from .angle.base import AbstractAngle
 from .distance.base import AbstractDistance
 
-Unit: TypeAlias = u.Unit | u.UnitBase | u.CompositeUnit
+Unit: TypeAlias = AstropyUnit | AstropyUnitBase | AstropyCompositeUnit
 
 FloatScalarQ = Float[AbstractQuantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]

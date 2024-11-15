@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
 
 import jax
 import numpy as np
-from astropy.units import PhysicalType as Dimensions
+from astropy.units import PhysicalType as Dimension
 from jax import Device, tree
 from jaxtyping import Array, ArrayLike, Bool
 from plum import dispatch
@@ -24,15 +24,8 @@ from quax import ArrayValue, register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items, field_values, replace
-from unxt import (
-    Quantity,
-    dimensions,
-    dimensions_of,
-    uconvert,
-    units_of,
-    unitsystem,
-)
 from unxt.quantity import AbstractQuantity
 
 from .mixins import IPythonReprMixin
@@ -81,10 +74,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
+        >>> xs = {"x": u.Quantity(1, "m"), "y": u.Quantity(2, "m"),
+        ...       "z": u.Quantity(3, "m")}
         >>> vec = cx.CartesianPos3D.from_(xs)
         >>> vec
         CartesianPos3D(
@@ -93,8 +87,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
             z=Quantity[...](value=f32[], unit=Unit("m"))
         )
 
-        >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
-        ...       "z": Quantity([5, 6], "m")}
+        >>> xs = {"x": u.Quantity([1, 2], "m"), "y": u.Quantity([3, 4], "m"),
+        ...       "z": u.Quantity([5, 6], "m")}
         >>> vec = cx.CartesianPos3D.from_(xs)
         >>> vec
         CartesianPos3D(
@@ -148,7 +142,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
 
         """
-        obj = Quantity.from_(jnp.asarray(obj), unit)
+        obj = u.Quantity.from_(jnp.asarray(obj), unit)
         return cls.from_(obj)  # re-dispatch
 
     # ===============================================================
@@ -434,7 +428,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         """
         return self.shape[0] if self.ndim > 0 else 0
 
-    def __abs__(self) -> Quantity:
+    def __abs__(self) -> u.Quantity:
         """Return the norm of the vector.
 
         Examples
@@ -696,7 +690,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     @property
     def units(self) -> MappingProxyType[str, Unit]:
         """Get the units of the vector's components."""
-        return MappingProxyType({k: units_of(v) for k, v in field_items(self)})
+        return MappingProxyType({k: u.unit_of(v) for k, v in field_items(self)})
 
     @property
     def dtypes(self) -> MappingProxyType[str, jnp.dtype]:
@@ -750,11 +744,10 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         Examples
         --------
-        >>> import astropy.units as u
         >>> from unxt import Quantity, unitsystem
         >>> import coordinax as cx
 
-        >>> usys = unitsystem(u.m, u.s, u.kg, u.rad)
+        >>> usys = unitsystem("m", "s", "kg", "rad")
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> vec.to_units(usys)
@@ -765,21 +758,21 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         )
 
         """
-        usys = unitsystem(usys)
+        usys = u.unitsystem(usys)
         return replace(
             self,
-            **{k: uconvert(usys[dimensions_of(v)], v) for k, v in field_items(self)},
+            **{k: u.uconvert(usys[u.dimension_of(v)], v) for k, v in field_items(self)},
         )
 
     @dispatch
     def to_units(
-        self: "AbstractVector", usys: Mapping[Dimensions | str, Unit | str], /
+        self: "AbstractVector", usys: Mapping[Dimension | str, Unit | str], /
     ) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters
         ----------
-        usys : Mapping[Dimensions | str, Unit | str]
+        usys : Mapping[Dimension | str, Unit | str]
             The units to convert to according to the physical type of the
             components.
 
@@ -809,11 +802,14 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         """
         # Ensure `units_` is PT -> Unit
-        units_ = {dimensions(k): v for k, v in usys.items()}
+        units_ = {u.dimension(k): v for k, v in usys.items()}
         # Convert to the given units
         return replace(
             self,
-            **{k: uconvert(units_[dimensions_of(v)], v) for k, v in field_items(self)},
+            **{
+                k: u.uconvert(units_[u.dimension_of(v)], v)
+                for k, v in field_items(self)
+            },
         )
 
     @dispatch
@@ -859,14 +855,14 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         dim2unit = {}
         units_ = {}
         for k, v in field_items(self):
-            pt = dimensions_of(v)
+            pt = u.dimension_of(v)
             if pt not in dim2unit:
-                dim2unit[pt] = units_of(v)
+                dim2unit[pt] = u.unit_of(v)
             units_[k] = dim2unit[pt]
 
         return replace(
             self,
-            **{k: uconvert(units_[k], v) for k, v in field_items(self)},
+            **{k: u.uconvert(units_[k], v) for k, v in field_items(self)},
         )
 
     # ===============================================================

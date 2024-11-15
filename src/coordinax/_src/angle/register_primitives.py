@@ -6,18 +6,20 @@ __all__: list[str] = []
 from collections.abc import Callable
 from typing import Any, TypeVar
 
-from astropy.units import dimensionless_unscaled as one, radian  # pylint: disable=E0611
 from jax import lax
 from jax.core import Primitive
 from jaxtyping import ArrayLike
 from quax import register as register_
 
+import unxt as u
 from quaxed import lax as qlax
-from unxt import Quantity, ustrip
 
 from .base import AbstractAngle
 
 T = TypeVar("T")
+
+one = u.unit("")
+radian = u.unit("radian")
 
 
 def register(primitive: Primitive, **kwargs: Any) -> Callable[[T], T]:
@@ -31,7 +33,7 @@ def register(primitive: Primitive, **kwargs: Any) -> Callable[[T], T]:
 
 # TODO: can this be done with promotion/conversion instead?
 @register(lax.cbrt_p)
-def _cbrt_p_a(x: AbstractAngle) -> Quantity:
+def _cbrt_p_a(x: AbstractAngle) -> u.Quantity:
     """Cube root of an angle.
 
     Examples
@@ -44,14 +46,14 @@ def _cbrt_p_a(x: AbstractAngle) -> Quantity:
     Quantity['rad1/3'](Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
 
     """
-    return Quantity(lax.cbrt(x.value), unit=x.unit ** (1 / 3))
+    return u.Quantity(lax.cbrt(x.value), unit=x.unit ** (1 / 3))
 
 
 # ==============================================================================
 
 
 @register(lax.cos_p)
-def _cos_p(x: AbstractAngle) -> Quantity:
+def _cos_p(x: AbstractAngle) -> u.Quantity:
     """Cosine of an Angle.
 
     Examples
@@ -64,7 +66,7 @@ def _cos_p(x: AbstractAngle) -> Quantity:
     Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
 
     """
-    return Quantity(qlax.cos(ustrip(radian, x)), unit=one)
+    return u.Quantity(qlax.cos(u.ustrip(radian, x)), unit=one)
 
 
 # ==============================================================================
@@ -73,7 +75,7 @@ def _cos_p(x: AbstractAngle) -> Quantity:
 @register(lax.dot_general_p)
 def _dot_general_aa(
     lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any
-) -> Quantity:
+) -> u.Quantity:
     """Dot product of two Angles.
 
     Examples
@@ -90,7 +92,7 @@ def _dot_general_aa(
     Quantity['solid angle'](Array(32, dtype=int32), unit='deg2')
 
     """
-    return Quantity(
+    return u.Quantity(
         lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs),
         unit=lhs.unit * rhs.unit,
     )
@@ -100,7 +102,7 @@ def _dot_general_aa(
 
 
 @register(lax.integer_pow_p)
-def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> Quantity:
+def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> u.Quantity:
     """Integer power of an Angle.
 
     Examples
@@ -112,14 +114,14 @@ def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> Quantity:
     Quantity['rad3'](Array(8, dtype=int32, weak_type=True), unit='deg3')
 
     """
-    return Quantity(value=lax.integer_pow(x.value, y), unit=x.unit**y)
+    return u.Quantity(value=lax.integer_pow(x.value, y), unit=x.unit**y)
 
 
 # ==============================================================================
 
 
 @register(lax.pow_p)
-def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> Quantity:
+def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> u.Quantity:
     """Power of an Angle by redispatching to Quantity.
 
     Examples
@@ -133,14 +135,14 @@ def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> Quantity:
     Quantity['rad3'](Array(1000., dtype=float32, ...), unit='deg3')
 
     """
-    return Quantity(x.value, x.unit) ** y  # TODO: better call to power
+    return u.Quantity(x.value, x.unit) ** y  # TODO: better call to power
 
 
 # ==============================================================================
 
 
 @register(lax.sin_p)
-def _sin_p(x: AbstractAngle) -> Quantity:
+def _sin_p(x: AbstractAngle) -> u.Quantity:
     """Sine of an Angle.
 
     Examples
@@ -153,14 +155,14 @@ def _sin_p(x: AbstractAngle) -> Quantity:
     Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
 
     """
-    return Quantity(qlax.sin(ustrip(radian, x)), unit=one)
+    return u.Quantity(qlax.sin(u.ustrip(radian, x)), unit=one)
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def _sqrt_p_a(x: AbstractAngle) -> Quantity:
+def _sqrt_p_a(x: AbstractAngle) -> u.Quantity:
     """Square root of an Angle.
 
     Examples
@@ -174,4 +176,4 @@ def _sqrt_p_a(x: AbstractAngle) -> Quantity:
 
     """
     # Promote to something that supports sqrt units.
-    return Quantity(lax.sqrt(x.value), unit=x.unit ** (1 / 2))
+    return u.Quantity(lax.sqrt(x.value), unit=x.unit ** (1 / 2))

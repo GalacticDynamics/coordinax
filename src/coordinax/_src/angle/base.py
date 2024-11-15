@@ -2,13 +2,12 @@
 
 __all__: list[str] = []
 
-import astropy.units as u
 from plum import add_promotion_rule, conversion_method
 
-from unxt import Quantity, dimensions_of
+from unxt import Quantity, dimension, dimension_of
 from unxt.quantity import AbstractQuantity
 
-angle_dimension = u.get_physical_type("angle")
+angle_dimension = dimension("angle")
 
 
 class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
@@ -39,7 +38,7 @@ class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        if dimensions_of(self) != angle_dimension:
+        if dimension_of(self) != angle_dimension:
             msg = "Angle must have dimensions angle."
             raise ValueError(msg)
 
