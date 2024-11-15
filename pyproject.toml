@@ -71,7 +71,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch]
   build.hooks.vcs.version-file = "src/coordinax/_version.py"
-  metadata.allow-direct-references = true
   version.source = "vcs"
 
 
