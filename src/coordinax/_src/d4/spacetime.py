@@ -18,7 +18,7 @@ from dataclassish.converters import Unless
 from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractPos4D
-from coordinax._src.base import AbstractVector
+from coordinax._src.base import AbstractVector, VectorAttribute
 from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.typing import BatchableLength, BatchableTime, ScalarTime
@@ -84,7 +84,7 @@ class FourVector(AbstractPos4D):
 
     _: KW_ONLY
     c: Shaped[Quantity["speed"], ""] = eqx.field(
-        default=Quantity(299_792.458, "km/s"), repr=False
+        default=VectorAttribute(default=Quantity(299_792.458, "km/s")), repr=False
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
@@ -145,8 +145,8 @@ class FourVector(AbstractPos4D):
             obj.shape[-1] != 4,
             f"Cannot construct {cls} from array with shape {obj.shape}.",
         )
-        c = cls.__dataclass_fields__["c"].default
-        return cls(t=obj[..., 0] / c, q=obj[..., 1:])
+        c = cls.__dataclass_fields__["c"].default.default
+        return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
 
     # ===============================================================
 
@@ -237,6 +237,14 @@ class FourVector(AbstractPos4D):
 
         """
         return jnp.sqrt(jnp.asarray(self._norm2(), dtype=complex))
+
+    # -------------------------------------------
+    # misc
+
+    def __str__(self) -> str:
+        r"""Return a string representation of the spacetime vector."""
+        cls_name = type(self).__name__
+        return f"<{cls_name} ()\n    >"
 
 
 # -----------------------------------------------

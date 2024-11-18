@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace as _dataclass_replace
 from typing import TYPE_CHECKING, Annotated as Ann, Generic, TypeVar
 from typing_extensions import Doc
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 from dataclassish import field_values
 
 if TYPE_CHECKING:
@@ -32,7 +32,7 @@ def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
     (2,)
 
     """
-    arrays = xp.broadcast_arrays(*field_values(obj))
+    arrays = jnp.broadcast_arrays(*field_values(obj))
     return _dataclass_replace(obj, **dict(zip(obj.components, arrays, strict=True)))
 
 

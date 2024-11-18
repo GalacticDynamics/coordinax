@@ -21,6 +21,7 @@ from dataclassish import field_items
 from unxt import Quantity
 
 from .base import AbstractVector
+from .flags import AttrFilter
 from .mixins import AvalMixin
 from coordinax._src import typing as ct
 from coordinax._src.funcs import represent_as
@@ -248,7 +249,9 @@ def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
     Quantity['length'](Array(0.5, dtype=float32), unit='m')
 
     """
-    return replace(lhs, **{k: jnp.divide(v, rhs) for k, v in field_items(lhs)})
+    return replace(
+        lhs, **{k: jnp.divide(v, rhs) for k, v in field_items(AttrFilter, lhs)}
+    )
 
 
 # ------------------------------------------------

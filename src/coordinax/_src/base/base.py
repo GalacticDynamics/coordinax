@@ -9,7 +9,6 @@ __all__ = [
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-from dataclasses import fields
 from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
@@ -25,9 +24,10 @@ from quax import ArrayValue, register
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
-from dataclassish import field_items, field_values, replace
+from dataclassish import field_items, field_values, fields, replace
 from unxt.quantity import AbstractQuantity
 
+from .flags import AttrFilter
 from .mixins import IPythonReprMixin
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty, full_shaped
@@ -54,6 +54,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     A vector is a collection of components that can be represented in different
     coordinate systems. This class provides a common interface for all vector
     types. All fields of the vector are expected to be components of the vector.
+
     """
 
     # ---------------------------------------------------------------
@@ -196,7 +197,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
                                   [1., 3.]], dtype=float32), unit='m')
 
         """
-        return replace(self, **{k: v.mT for k, v in field_items(self)})
+        return replace(self, **{k: v.mT for k, v in field_items(AttrFilter, self)})
 
     @property
     def ndim(self) -> int:
@@ -321,7 +322,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
                                   [1., 3.]], dtype=float32), unit='m')
 
         """
-        return replace(self, **{k: v.T for k, v in field_items(self)})
+        return replace(self, **{k: v.T for k, v in field_items(AttrFilter, self)})
 
     # ---------------------------------------------------------------
     # Methods
@@ -483,7 +484,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
-        return replace(full, **{k: v[index] for k, v in field_items(full)})
+        return replace(full, **{k: v[index] for k, v in field_items(AttrFilter, full)})
 
     def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
         """Add another object to this vector."""
@@ -584,7 +585,9 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         )
 
         """
-        return replace(self, **{k: v.flatten() for k, v in field_items(self)})
+        return replace(
+            self, **{k: v.flatten() for k, v in field_items(AttrFilter, self)}
+        )
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the components of the vector.
@@ -624,7 +627,10 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         full = full_shaped(self)
         return replace(
             self,
-            **{k: v.reshape(*shape, order=order) for k, v in field_items(full)},
+            **{
+                k: v.reshape(*shape, order=order)
+                for k, v in field_items(AttrFilter, full)
+            },
         )
 
     # ===============================================================
@@ -685,27 +691,67 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         ('d_r',)
 
         """
-        return tuple(f.name for f in fields(cls))
+        return tuple(f.name for f in fields(AttrFilter, cls))
 
     @property
     def units(self) -> MappingProxyType[str, Unit]:
-        """Get the units of the vector's components."""
-        return MappingProxyType({k: u.unit_of(v) for k, v in field_items(self)})
+        """Get the units of the vector's components.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> vec.units
+        mappingproxy({'x': Unit("km"), 'y': Unit("km"), 'z': Unit("km")})
+
+        """
+        return MappingProxyType(
+            {k: u.unit_of(v) for k, v in field_items(AttrFilter, self)}
+        )
 
     @property
     def dtypes(self) -> MappingProxyType[str, jnp.dtype]:
-        """Get the dtypes of the vector's components."""
-        return MappingProxyType({k: v.dtype for k, v in field_items(self)})
+        """Get the dtypes of the vector's components.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> vec.dtypes
+        mappingproxy({'x': dtype('float32'), 'y': dtype('float32'),
+                      'z': dtype('float32')})
+
+        """
+        return MappingProxyType({k: v.dtype for k, v in field_items(AttrFilter, self)})
 
     @property
     def devices(self) -> MappingProxyType[str, Device]:
-        """Get the devices of the vector's components."""
-        return MappingProxyType({k: v.device for k, v in field_items(self)})
+        """Get the devices of the vector's components.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> vec.devices
+        mappingproxy({'x': CpuDevice(id=0), 'y': CpuDevice(id=0),
+                      'z': CpuDevice(id=0)})
+
+        """
+        return MappingProxyType({k: v.device for k, v in field_items(AttrFilter, self)})
 
     @property
     def shapes(self) -> MappingProxyType[str, tuple[int, ...]]:
-        """Get the shapes of the vector's components."""
-        return MappingProxyType({k: v.shape for k, v in field_items(self)})
+        """Get the shapes of the vector's components.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> vec.shapes
+        mappingproxy({'x': (), 'y': (), 'z': ()})
+
+        """
+        return MappingProxyType({k: v.shape for k, v in field_items(AttrFilter, self)})
 
     @property
     def sizes(self) -> MappingProxyType[str, int]:
@@ -722,7 +768,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         mappingproxy({'x': 2, 'y': 2})
 
         """
-        return MappingProxyType({k: v.size for k, v in field_items(self)})
+        return MappingProxyType({k: v.size for k, v in field_items(AttrFilter, self)})
 
     # ===============================================================
     # Convenience methods
@@ -761,7 +807,10 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         usys = u.unitsystem(usys)
         return replace(
             self,
-            **{k: u.uconvert(usys[u.dimension_of(v)], v) for k, v in field_items(self)},
+            **{
+                k: u.uconvert(usys[u.dimension_of(v)], v)
+                for k, v in field_items(AttrFilter, self)
+            },
         )
 
     @dispatch
@@ -808,7 +857,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
             self,
             **{
                 k: u.uconvert(units_[u.dimension_of(v)], v)
-                for k, v in field_items(self)
+                for k, v in field_items(AttrFilter, self)
             },
         )
 
@@ -854,7 +903,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         """
         dim2unit = {}
         units_ = {}
-        for k, v in field_items(self):
+        for k, v in field_items(AttrFilter, self):
             pt = u.dimension_of(v)
             if pt not in dim2unit:
                 dim2unit[pt] = u.unit_of(v)
@@ -862,7 +911,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         return replace(
             self,
-            **{k: u.uconvert(units_[k], v) for k, v in field_items(self)},
+            **{k: u.uconvert(units_[k], v) for k, v in field_items(AttrFilter, self)},
         )
 
     # ===============================================================
@@ -884,9 +933,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         cls_name = type(self).__name__
         units_ = self.units
         comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
+        # TODO: add the VectorAttr, which are filtered out.
         vs = np.array2string(
             jnp.stack(
-                tuple(v.value for v in jnp.broadcast_arrays(*field_values(self))),
+                tuple(
+                    v.value
+                    for v in jnp.broadcast_arrays(*field_values(AttrFilter, self))
+                ),
                 axis=-1,
             ),
             precision=3,

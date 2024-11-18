@@ -27,14 +27,14 @@ Coming soon. In the meantime, if you've used `astropy.coordinates`, then
 ## Quick example
 
 ```python
-import coordinax as cx
 import jax.numpy as jnp
-from unxt import Quantity
+import unxt as u
+import coordinax as cx
 
 q = cx.CartesianPos3D(
-    x=Quantity(jnp.arange(0, 10.0), "km"),
-    y=Quantity(jnp.arange(5, 15.0), "km"),
-    z=Quantity(jnp.arange(10, 20.0), "km"),
+    x=u.Quantity(jnp.arange(0, 10.0), "km"),
+    y=u.Quantity(jnp.arange(5, 15.0), "km"),
+    z=u.Quantity(jnp.arange(10, 20.0), "km"),
 )
 print(q)
 # <CartesianPos3D (x[km], y[km], z[km])
@@ -54,9 +54,9 @@ print(q2)
 #      [25.259  0.719  0.999]]>
 
 p = cx.CartesianVel3D(
-    d_x=Quantity(jnp.arange(0, 10.0), "m/s"),
-    d_y=Quantity(jnp.arange(5, 15.0), "m/s"),
-    d_z=Quantity(jnp.arange(10, 20.0), "m/s"),
+    d_x=u.Quantity(jnp.arange(0, 10.0), "m/s"),
+    d_y=u.Quantity(jnp.arange(5, 15.0), "m/s"),
+    d_z=u.Quantity(jnp.arange(10, 20.0), "m/s"),
 )
 print(p)
 # <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
@@ -91,8 +91,6 @@ We welcome contributions!
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/GalacticDynamics/coordinax/workflows/CI/badge.svg
 [actions-link]:             https://github.com/GalacticDynamics/coordinax/actions
-[conda-badge]:              https://img.shields.io/conda/vn/conda-forge/coordinax
-[conda-link]:               https://github.com/conda-forge/coordinax-feedstock
 [pypi-link]:                https://pypi.org/project/coordinax/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/coordinax
 [pypi-version]:             https://img.shields.io/pypi/v/coordinax

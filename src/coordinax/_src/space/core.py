@@ -2,7 +2,7 @@
 
 __all__ = ["Space"]
 
-from collections.abc import Callable, ItemsView, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from textwrap import indent
 from types import MappingProxyType
 from typing import Any, TypeAlias, final
@@ -18,10 +18,10 @@ import quaxed.numpy as jnp
 import unxt as u
 from xmmutablemap import ImmutableMap
 
-from .base import AbstractAcc, AbstractPos, AbstractVector, AbstractVel
-from .typing import Unit
-from .utils import classproperty
+from coordinax._src.base import AbstractAcc, AbstractPos, AbstractVector, AbstractVel
 from coordinax._src.funcs import represent_as
+from coordinax._src.typing import Unit
+from coordinax._src.utils import classproperty
 
 DimensionLike: TypeAlias = Dimension | str
 
@@ -557,22 +557,6 @@ def represent_as(space: Space, target: type[AbstractVector], /) -> Space:
     return type(space)(
         {k: temp_represent_as(v, target, space) for k, v in space.items()}
     )
-
-
-# NOTE: need to set the precedence because `Space` is both a `Mapping` and a
-#       `dataclass`, which are both in the `replace` dispatch table.
-@dispatch(precedence=1)  # type: ignore[misc]
-def replace(obj: Space, /, **kwargs: AbstractVector) -> Space:
-    """Replace the components of the vector."""
-    return type(obj)(**{**obj, **kwargs})
-
-
-# NOTE: need to set the precedence because `Space` is both a `Mapping` and a
-#       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)  # type: ignore[misc]
-def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
-    """Return the items from a Space."""
-    return obj.items()
 
 
 # =============================================================== Temporary
