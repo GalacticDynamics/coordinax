@@ -16,7 +16,7 @@ from coordinax._src.base import AbstractVector
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
 @dispatch(precedence=1)  # type: ignore[misc]
-def fields(obj: Space, /) -> tuple[Field[Any], ...]:
+def fields(obj: Space, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
     """Return the items from a Space."""
     return fields.invoke(Mapping[str, Any])(obj)
 

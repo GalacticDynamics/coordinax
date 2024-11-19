@@ -206,7 +206,7 @@ def _is_attr(obj_cls: type[AbstractVector], name: str) -> bool:
 
 
 @dispatch
-def fields(flag: type[AttrFilter], obj: object) -> tuple[Field[Any], ...]:
+def fields(flag: type[AttrFilter], obj: object) -> tuple[Field, ...]:  # type: ignore[type-arg]
     """Return the fields of an object, filtering out `VectorAttribute`s.
 
     Examples
@@ -227,7 +227,7 @@ def fields(flag: type[AttrFilter], obj: object) -> tuple[Field[Any], ...]:
 
 
 @dispatch
-def fields(flag: type[AttrFilter], obj_cls: type[object]) -> tuple[Field[Any], ...]:
+def fields(flag: type[AttrFilter], obj_cls: type[object]) -> tuple[Field, ...]:  # type: ignore[type-arg]
     """Return the fields of an object, filtering out `VectorAttribute`s.
 
     Examples
