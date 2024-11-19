@@ -10,15 +10,17 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jaxtyping import Shaped
 from quax import register
 
 import quaxed.numpy as jnp
+from dataclassish import field_values
 from dataclassish.converters import Unless
 from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractPos4D
-from coordinax._src.base import AbstractVector, VectorAttribute
+from coordinax._src.base import AbstractVector, AttrFilter, VectorAttribute
 from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.typing import BatchableLength, BatchableTime, ScalarTime
@@ -242,9 +244,35 @@ class FourVector(AbstractPos4D):
     # misc
 
     def __str__(self) -> str:
-        r"""Return a string representation of the spacetime vector."""
+        r"""Return a string representation of the spacetime vector.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+        >>> w = cx.FourVector(t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> print(w)
+        <FourVector (t[s], q=(x[m], y[m], z[m]))
+            [0.5 1.  2.  3. ]>
+
+        """
         cls_name = type(self).__name__
-        return f"<{cls_name} ()\n    >"
+        qcomps = ", ".join(f"{c}[{self.q.units[c]}]" for c in self.q.components)
+        comps = f"t[{self.units['t']}], q=({qcomps})"
+        vs = np.array2string(
+            jnp.stack(
+                tuple(
+                    v.value
+                    for v in jnp.broadcast_arrays(
+                        self.t, *field_values(AttrFilter, self.q)
+                    )
+                ),
+                axis=-1,
+            ),
+            precision=3,
+            prefix="    ",
+        )
+        return f"<{cls_name} ({comps})\n    {vs}>"
 
 
 # -----------------------------------------------
