@@ -20,7 +20,7 @@ Q1: TypeAlias = Shaped[Quantity["length"], "*#batch 1"]
 @op_call_dispatch
 def call(self: AbstractOperator, x: Q1, /) -> Q1:
     """Dispatch to the operator's `__call__` method."""
-    return self(CartesianPos1D.from_(x))
+    return convert(self(CartesianPos1D.from_(x)), Quantity)
 
 
 @op_call_dispatch

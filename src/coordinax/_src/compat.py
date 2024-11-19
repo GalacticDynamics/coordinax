@@ -13,12 +13,10 @@ from dataclassish import field_values
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
 from coordinax._src.base.base import AbstractVector
-from coordinax._src.d1.cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D
+from coordinax._src.d1.cartesian import CartesianAcc1D, CartesianVel1D
 from coordinax._src.d1.radial import RadialAcc, RadialVel
 from coordinax._src.d2.cartesian import CartesianAcc2D, CartesianVel2D
 from coordinax._src.d3.cartesian import CartesianAcc3D, CartesianVel3D
-from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
-from coordinax._src.typing import TimeBatchOrScalar
 from coordinax._src.utils import full_shaped
 
 #####################################################################
@@ -206,25 +204,3 @@ def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[Quantity, "*batch 3"]:
 
     """
     return convert(_vec_diff_to_q(obj), Quantity)
-
-
-#####################################################################
-# Operators
-
-
-Q1: TypeAlias = Shaped[Quantity["length"], "*#batch 1"]
-
-
-@op_call_dispatch
-def call(self: AbstractOperator, x: Q1, /) -> Q1:
-    """Dispatch to the operator's `__call__` method."""
-    return convert(self(CartesianPos1D.from_(x)), Quantity)
-
-
-@op_call_dispatch
-def call(
-    self: AbstractOperator, x: Q1, t: TimeBatchOrScalar, /
-) -> tuple[Q1, TimeBatchOrScalar]:
-    """Dispatch to the operator's `__call__` method."""
-    vec, t = self(CartesianPos1D.from_(x), t)
-    return convert(vec, Quantity), t
