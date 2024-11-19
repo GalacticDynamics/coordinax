@@ -10,7 +10,7 @@ from jaxtyping import install_import_hook
 from .setup_package import RUNTIME_TYPECHECKER
 
 with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
-    from . import angle, distance, operators
+    from . import angle, distance, frames, operators
     from ._src import (
         base,
         d1,
@@ -47,7 +47,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from . import _interop
     from ._src import compat
 
-__all__ = ["__version__", "operators", "distance", "angle", "Distance"]
+__all__ = ["__version__", "operators", "distance", "angle", "frames", "Distance"]
 __all__ += funcs.__all__
 __all__ += base.__all__
 __all__ += d1.__all__
