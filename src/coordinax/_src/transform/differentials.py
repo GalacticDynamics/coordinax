@@ -53,7 +53,6 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import Quantity
 
     Let's start in 1D:
 

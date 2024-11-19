@@ -10,15 +10,17 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jaxtyping import Shaped
 from quax import register
 
 import quaxed.numpy as jnp
+from dataclassish import field_values
 from dataclassish.converters import Unless
 from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractPos4D
-from coordinax._src.base import AbstractVector
+from coordinax._src.base import AbstractVector, AttrFilter, VectorAttribute
 from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.typing import BatchableLength, BatchableTime, ScalarTime
@@ -84,7 +86,7 @@ class FourVector(AbstractPos4D):
 
     _: KW_ONLY
     c: Shaped[Quantity["speed"], ""] = eqx.field(
-        default=Quantity(299_792.458, "km/s"), repr=False
+        default=VectorAttribute(default=Quantity(299_792.458, "km/s")), repr=False
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
@@ -145,8 +147,8 @@ class FourVector(AbstractPos4D):
             obj.shape[-1] != 4,
             f"Cannot construct {cls} from array with shape {obj.shape}.",
         )
-        c = cls.__dataclass_fields__["c"].default
-        return cls(t=obj[..., 0] / c, q=obj[..., 1:])
+        c = cls.__dataclass_fields__["c"].default.default
+        return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
 
     # ===============================================================
 
@@ -237,6 +239,40 @@ class FourVector(AbstractPos4D):
 
         """
         return jnp.sqrt(jnp.asarray(self._norm2(), dtype=complex))
+
+    # -------------------------------------------
+    # misc
+
+    def __str__(self) -> str:
+        r"""Return a string representation of the spacetime vector.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+        >>> w = cx.FourVector(t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> print(w)
+        <FourVector (t[s], q=(x[m], y[m], z[m]))
+            [0.5 1.  2.  3. ]>
+
+        """
+        cls_name = type(self).__name__
+        qcomps = ", ".join(f"{c}[{self.q.units[c]}]" for c in self.q.components)
+        comps = f"t[{self.units['t']}], q=({qcomps})"
+        vs = np.array2string(
+            jnp.stack(
+                tuple(
+                    v.value
+                    for v in jnp.broadcast_arrays(
+                        self.t, *field_values(AttrFilter, self.q)
+                    )
+                ),
+                axis=-1,
+            ),
+            precision=3,
+            prefix="    ",
+        )
+        return f"<{cls_name} ({comps})\n    {vs}>"
 
 
 # -----------------------------------------------

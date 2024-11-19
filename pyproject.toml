@@ -25,7 +25,7 @@
   ]
   dependencies = [
     "astropy>=6.1.4",
-    "dataclassish>=0.3.1",
+    "dataclassish>=0.4.0",
     "equinox>=0.11.8",
     "jax>=0.4.33",
     "jaxlib>=0.4.33",

@@ -19,7 +19,6 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
     Examples
     --------
     >>> import coordinax as cx
-    >>> from unxt import Quantity
 
     >>> w = cx.Space(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
