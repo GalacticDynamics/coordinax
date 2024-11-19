@@ -22,10 +22,16 @@ if TYPE_CHECKING:
 class AbstractOperator(eqx.Module):  # type: ignore[misc]
     """Abstract base class for operators on coordinates and potentials.
 
-    An operator is an object that defines a transformation on coordinates.
-    It can be applied to a set of coordinates to produce a new set of
-    coordinates. Operators can be composed together to form a sequence of
-    transformations.
+    An operator is an object that defines a transformation on coordinates. It
+    can be applied to a set of coordinates to produce a new set of coordinates.
+    Operators can be composed together to form a sequence of transformations.
+
+    When defining a new operator, it should be able to work on
+    `coordinax.AbstractVector` objects. If it is a spatial operator, it should
+    also be able to work on (`coordinax.AbstractPos`, `unxt.Quantity['time']`)
+    pairs (and then also `coordinax.FourVector` objects). If the vector can be
+    created from a `unxt.Quantity` object, then the operator should also be able
+    to work on `unxt.Quantity` object.
 
     """
 
