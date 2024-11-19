@@ -156,7 +156,9 @@ build-backend = "hatchling.build"
     "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
     "unsubscriptable-object",     # handled by mypy
     "unused-argument",            # handled by ruff
-    "wrong-import-position",
+    "unused-wildcard-import",     # handled by ruff
+    "wildcard-import",            # handled by ruff
+    "wrong-import-position",      # handled by ruff
     "wrong-import-order",         # handled by ruff
   ]
   py-version = "3.10"
