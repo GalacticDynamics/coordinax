@@ -19,12 +19,19 @@ class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
     # ---------------------------------------------------------------
     # Constructors
 
+    @classmethod
+    @dispatch.abstract
+    def from_(
+        cls: "type[AbstractReferenceFrame]", obj: Any, /
+    ) -> "AbstractReferenceFrame":
+        """Construct a reference frame."""
+
     # TODO: examples
     @classmethod
-    @dispatch  # type: ignore[misc]
+    @dispatch
     def from_(
         cls: "type[AbstractReferenceFrame]", obj: Mapping[str, Any], /
-    ) -> Antd["AbstractReferenceFrame", Doc("frame constructed from mapping")]:
+    ) -> "AbstractReferenceFrame":
         """Construct a reference frame from a mapping."""
         return cls(**obj)
 
