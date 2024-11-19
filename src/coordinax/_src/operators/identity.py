@@ -2,14 +2,9 @@
 
 __all__ = ["IdentityOperator"]
 
-from typing import Literal, final
-
-from jaxtyping import Shaped
-
-from unxt import Quantity
+from typing import Any, Literal, final
 
 from .base import AbstractOperator, op_call_dispatch
-from coordinax._src.base import AbstractPos
 
 
 @final
@@ -25,7 +20,7 @@ class IdentityOperator(AbstractOperator):
 
     First, we make an instance of the operator:
 
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> op = cx.operators.IdentityOperator()
@@ -34,7 +29,7 @@ class IdentityOperator(AbstractOperator):
 
     And the common objects we will use:
 
-    >>> q = Quantity([1, 2, 3], "kpc")
+    >>> q = u.Quantity([1, 2, 3], "kpc")
     >>> vec = cx.CartesianPos3D.from_(q)
 
     The first call signature is for the case where the input is a vector:
@@ -51,28 +46,28 @@ class IdentityOperator(AbstractOperator):
 
     - 1D:
 
-    >>> q = Quantity([1], "kpc")
+    >>> q = u.Quantity([1], "kpc")
     >>> vec = cx.CartesianPos1D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 2D:
 
-    >>> q = Quantity([1, 2], "kpc")
+    >>> q = u.Quantity([1, 2], "kpc")
     >>> vec = cx.CartesianPos2D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 3D (not using a `~coordinax.CartesianPos3D` instance):
 
-    >>> q = Quantity([1, 2, 3], "kpc")
+    >>> q = u.Quantity([1, 2, 3], "kpc")
     >>> vec = cx.CartesianPos3D.from_(q).represent_as(cx.SphericalPos)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 4D:
 
-    >>> q = Quantity([1, 2, 3, 4], "kpc")  # 0th elt is ct
+    >>> q = u.Quantity([1, 2, 3, 4], "kpc")  # 0th elt is ct
     >>> vec4 = cx.FourVector.from_(q)
     >>> op(vec4) is vec4 and op(q) is q
     True
@@ -80,11 +75,11 @@ class IdentityOperator(AbstractOperator):
     Lastly, many operators are time dependent and support a time argument. The`
     `Identity` operator will also pass through the time argument:
 
-    >>> t = Quantity(0, "Gyr")
+    >>> t = u.Quantity(0, "Gyr")
     >>> op(vec, t) == (vec, t)
     True
 
-    >>> q = Quantity([1, 2, 3], "kpc")
+    >>> q = u.Quantity([1, 2, 3], "kpc")
     >>> op(q, t) == (q, t)
     True
 
@@ -96,13 +91,10 @@ class IdentityOperator(AbstractOperator):
 
         Examples
         --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-        >>> from coordinax.operators import IdentityOperator
+        >>> import unxt as u
+        >>> import coordinax.operators as cxo
 
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-        >>> t = Quantity(0, "Gyr")
-        >>> op = IdentityOperator()
+        >>> op = cxo.IdentityOperator()
         >>> op.is_inertial
         True
 
@@ -115,10 +107,9 @@ class IdentityOperator(AbstractOperator):
 
         Examples
         --------
-        >>> from unxt import Quantity
-        >>> from coordinax.operators import IdentityOperator
+        >>> import coordinax.operators as cxo
 
-        >>> op = IdentityOperator()
+        >>> op = cxo.IdentityOperator()
         >>> op.inverse
         IdentityOperator()
         >>> op.inverse is op
@@ -132,56 +123,51 @@ class IdentityOperator(AbstractOperator):
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
     @op_call_dispatch(precedence=1)
-    def __call__(self: "IdentityOperator", x: AbstractPos, /) -> AbstractPos:
+    def __call__(self: "IdentityOperator", arg: Any) -> Any:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> from coordinax.operators import IdentityOperator
 
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-        >>> op = IdentityOperator()
+        >>> op = cx.operators.IdentityOperator()
+
+        >>> q = u.Quantity([1, 2, 3], "kpc")
         >>> op(q) is q
         True
 
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> op(vec) is vec
+        True
+
         """
-        return x
+        return arg
 
     @op_call_dispatch(precedence=1)
-    def __call__(
-        self: "IdentityOperator", x: Shaped[Quantity, "*shape"], /
-    ) -> Shaped[Quantity, "*shape"]:
+    def __call__(self: "IdentityOperator", *args: Any) -> tuple[Any, ...]:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.
 
         Examples
         --------
-        >>> from unxt import Quantity
-        >>> from coordinax.operators import IdentityOperator
+        >>> import unxt as u
+        >>> import coordinax as cx
 
-        >>> q = Quantity([1, 2, 3], "kpc")
-        >>> op = IdentityOperator()
-        >>> op(q) is q
+        >>> op = cx.operators.IdentityOperator()
+
+        >>> q = u.Quantity([1, 2, 3], "kpc")
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> t = u.Quantity(10, "Gyr")
+
+        >>> op(q, t) == (q, t)
+        True
+
+        >>> op(vec, t) == (vec, t)
         True
 
         """
-        return x
-
-    @op_call_dispatch(precedence=1)
-    def __call__(
-        self: "IdentityOperator", x: AbstractPos, t: Quantity["time"], /
-    ) -> tuple[AbstractPos, Quantity["time"]]:
-        """Apply the Identity operation."""  # TODO: docstring
-        return x, t
-
-    @op_call_dispatch(precedence=1)
-    def __call__(
-        self: "IdentityOperator", x: Shaped[Quantity, "*shape"], t: Quantity["time"], /
-    ) -> tuple[Shaped[Quantity, "*shape"], Quantity["time"]]:
-        """Apply the Identity operation."""  # TODO: docstring
-        return x, t
+        return args
