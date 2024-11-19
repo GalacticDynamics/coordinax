@@ -11,18 +11,17 @@ from typing import Any, Literal, final
 import equinox as eqx
 import jax
 from jaxtyping import Array, Shaped
-from plum import convert
+from plum import convert, dispatch
 from quax import quaxify
 
 import quaxed.numpy as jnp
-from unxt import Quantity, ustrip
+import unxt as u
 
 from .base import AbstractGalileanOperator
 from coordinax._src.base import ToUnitsOptions
 from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
-from coordinax._src.operators.funcs import simplify_op
 from coordinax._src.operators.identity import IdentityOperator
 
 vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
@@ -32,8 +31,8 @@ def converter(x: Any) -> Array:
     """Convert the input to a rotation matrix."""
     if isinstance(x, GalileanRotationOperator):
         out = x.rotation
-    elif isinstance(x, Quantity):
-        out = ustrip("", x)
+    elif isinstance(x, u.Quantity):
+        out = u.ustrip("", x)
     else:
         out = x
     return jnp.asarray(out)
@@ -74,7 +73,6 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> import coordinax.operators as co
 
     We can then create a rotation operator:
 
@@ -82,7 +80,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
     >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
     ...                   [jnp.sin(theta), jnp.cos(theta),  0],
     ...                   [0,              0,               1]])
-    >>> op = co.GalileanRotationOperator(Rz)
+    >>> op = cx.operators.GalileanRotationOperator(Rz)
     >>> op
     GalileanRotationOperator(rotation=f32[3,3])
 
@@ -148,14 +146,14 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from unxt import Quantity
-        >>> from coordinax.operators import GalileanRotationOperator
+        >>> import unxt as u
+        >>> import coordinax.operators as cxo
 
-        >>> theta = Quantity(45, "deg")
+        >>> theta = u.Quantity(45, "deg")
         >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
         ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
-        >>> op = GalileanRotationOperator(Rz)
+        >>> op = cxo.GalileanRotationOperator(Rz)
         >>> op.is_inertial
         True
 
@@ -169,14 +167,14 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from unxt import Quantity
-        >>> from coordinax.operators import GalileanRotationOperator
+        >>> import unxt as u
+        >>> import coordinax.operators as cxo
 
-        >>> theta = Quantity(45, "deg")
+        >>> theta = u.Quantity(45, "deg")
         >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
         ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
-        >>> op = GalileanRotationOperator(Rz)
+        >>> op = cxo.GalileanRotationOperator(Rz)
         >>> op.inverse
         GalileanRotationOperator(rotation=f32[3,3])
 
@@ -190,21 +188,21 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotationOperator", q: Shaped[Quantity["length"], "*batch 3"], /
-    ) -> Shaped[Quantity["length"], "*batch 3"]:
+        self: "GalileanRotationOperator", q: Shaped[u.Quantity["length"], "*batch 3"], /
+    ) -> Shaped[u.Quantity["length"], "*batch 3"]:
         """Apply the boost to the coordinates.
 
         Examples
         --------
         >>> import quaxed.numpy as jnp
         >>> import unxt as u
-        >>> from coordinax.operators import GalileanRotationOperator
+        >>> import coordinax.operators as cxo
 
         >>> theta = u.Quantity(45, "deg")
         >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
         ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
-        >>> op = GalileanRotationOperator(Rz)
+        >>> op = cxo.GalileanRotationOperator(Rz)
 
         >>> q = u.Quantity([1, 0, 0], "m")
         >>> t = u.Quantity(1, "s")
@@ -228,18 +226,17 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> from coordinax.operators import GalileanRotationOperator
 
-        >>> theta = Quantity(45, "deg")
+        >>> theta = u.Quantity(45, "deg")
         >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
         ...                  [jnp.sin(theta), jnp.cos(theta),  0],
         ...                  [0,             0,              1]])
-        >>> op = GalileanRotationOperator(Rz)
+        >>> op = cx.operators.GalileanRotationOperator(Rz)
 
         >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
-        >>> t = Quantity(1, "s")
+        >>> t = u.Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq.x
         Quantity['length'](Array(0.70710677, dtype=float32), unit='m')
@@ -251,28 +248,51 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         """
         vec = convert(  # Array[float, (N, 3)]
             q.represent_as(CartesianPos3D).to_units(ToUnitsOptions.consistent),
-            Quantity,
+            u.Quantity,
         )
         rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
         return rcart.represent_as(type(q))
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotationOperator", q: AbstractPos3D, t: Quantity["time"], /
-    ) -> tuple[AbstractPos3D, Quantity["time"]]:
+        self: "GalileanRotationOperator", q: AbstractPos3D, t: u.Quantity["time"], /
+    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
         return self(q), t
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotationOperator", q: AbstractPos3D, t: Quantity["time"], /
-    ) -> tuple[AbstractPos3D, Quantity["time"]]:
+        self: "GalileanRotationOperator", q: AbstractPos3D, t: u.Quantity["time"], /
+    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
         return self(q), t
 
 
-@simplify_op.register
-def _simplify_op_rotation(
-    op: GalileanRotationOperator, /, **kwargs: Any
-) -> AbstractOperator:
+@dispatch  # type: ignore[misc]
+def simplify_op(op: GalileanRotationOperator, /, **kwargs: Any) -> AbstractOperator:
+    """Simplify the Galilean rotation operator.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.operators as cxo
+
+    An operator with a non-identity rotation matrix is not simplified:
+
+    >>> theta = u.Quantity(45, "deg")
+    >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
+    ...                  [jnp.sin(theta), jnp.cos(theta),  0],
+    ...                  [0,             0,              1]])
+    >>> op = cxo.GalileanRotationOperator(Rz)
+    >>> cxo.simplify_op(op)
+    GalileanRotationOperator(rotation=f32[3,3])
+
+    An operator with an identity rotation matrix is simplified:
+
+    >>> op = cxo.GalileanRotationOperator(jnp.eye(3))
+    >>> cxo.simplify_op(op)
+    IdentityOperator()
+
+    """
     if jnp.allclose(op.rotation, jnp.eye(3), **kwargs):
         return IdentityOperator()
     return op

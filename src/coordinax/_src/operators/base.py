@@ -7,10 +7,11 @@ from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 import equinox as eqx
+from jaxtyping import ArrayLike
 from plum import dispatch
 
+import unxt as u
 from dataclassish import field_items
-from unxt import Quantity
 
 from coordinax._src.base import AbstractPos
 
@@ -19,27 +20,38 @@ if TYPE_CHECKING:
 
 
 class AbstractOperator(eqx.Module):  # type: ignore[misc]
-    """Abstract base class for operators on coordinates and potentials."""
+    """Abstract base class for operators on coordinates and potentials.
+
+    An operator is an object that defines a transformation on coordinates.
+    It can be applied to a set of coordinates to produce a new set of
+    coordinates. Operators can be composed together to form a sequence of
+    transformations.
+
+    """
 
     # ---------------------------------------------------------------
     # Constructors
 
     @classmethod
-    @dispatch  # type: ignore[misc]
+    @dispatch(precedence=-1)
+    def from_(
+        cls: "type[AbstractOperator]", *args: object, **kwargs: object
+    ) -> "AbstractOperator":
+        """Construct from a set of arguments.
+
+        This is a low-priority dispatch that will be called if no other
+        dispatch is found. It just tries to pass the arguments to the
+        constructor.
+
+        """
+        return cls(*args, **kwargs)
+
+    @classmethod
+    @dispatch
     def from_(
         cls: "type[AbstractOperator]", obj: Mapping[str, Any], /
     ) -> "AbstractOperator":
         """Construct from a mapping.
-
-        Parameters
-        ----------
-        obj : Mapping[str, Any]
-            The object to construct from.
-
-        Returns
-        -------
-        AbstractOperator
-            The constructed operator.
 
         Examples
         --------
@@ -50,6 +62,38 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
         """
         return cls(**obj)
+
+    @classmethod
+    @dispatch
+    def from_(
+        cls: "type[AbstractOperator]",
+        x: ArrayLike | list[float | int],
+        unit: str,  # TODO: support unit object
+        /,
+    ) -> "AbstractOperator":
+        """Construct from a Quantity's value and unit.
+
+        Examples
+        --------
+        >>> import coordinax.operators as cxo
+
+        >>> op = cxo.GalileanSpatialTranslationOperator.from_([1, 1, 1], "kpc")
+        >>> print(op.translation)
+        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            [1. 1. 1.]>
+
+        >>> op = cxo.GalileanTranslationOperator.from_([3e5, 1, 1, 1], "kpc")
+        >>> print(op.translation)
+        <FourVector (t[kpc s / km], q=(x[kpc], y[kpc], z[kpc]))
+            [1.001 1.    1.    1.   ]>
+
+        >>> op = cxo.GalileanBoostOperator.from_([1, 1, 1], "km/s")
+        >>> print(op.velocity)
+        <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+            [1. 1. 1.]>
+
+        """
+        return cls(u.Quantity(x, unit))
 
     # -------------------------------------------
 
@@ -67,7 +111,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     def __call__(
         self: "AbstractOperator",
         x: AbstractPos,  # noqa: ARG002
-        t: Quantity["time"],  # noqa: ARG002
+        t: u.Quantity["time"],  # noqa: ARG002
         /,
     ) -> AbstractPos:
         """Apply the operator to the coordinates `x` at a time `t`."""
@@ -104,7 +148,7 @@ op_call_dispatch = AbstractOperator.__call__.dispatch  # type: ignore[attr-defin
 
 
 # TODO: move to the class in py3.11+
-@AbstractOperator.from_._f.dispatch  # type: ignore[misc]  # noqa: SLF001
+@AbstractOperator.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOperator:
     """Construct an operator from another operator.
 

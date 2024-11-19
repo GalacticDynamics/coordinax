@@ -6,8 +6,8 @@ from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 
+import unxt as u
 from dataclassish import DataclassInstance
-from unxt import Quantity
 
 from .base import AbstractOperator, op_call_dispatch
 from coordinax._src.base import AbstractPos
@@ -55,8 +55,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
     @op_call_dispatch(precedence=1)
     def __call__(
-        self: "AbstractCompositeOperator", x: AbstractPos, t: Quantity["time"], /
-    ) -> tuple[AbstractPos, Quantity["time"]]:
+        self: "AbstractCompositeOperator", x: AbstractPos, t: u.Quantity["time"], /
+    ) -> tuple[AbstractPos, u.Quantity["time"]]:
         """Apply the operator to the coordinates."""
         # TODO: with lax.scan?
         for op in self.operators:

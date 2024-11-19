@@ -71,7 +71,7 @@ class FourVector(AbstractPos4D):
     We can also create the 3D vector explicitly:
 
     >>> q = cx.CartesianPos3D(x=Quantity(1, "m"), y=Quantity(2, "m"),
-    ...                            z=Quantity(3, "m"))
+    ...                       z=Quantity(3, "m"))
     >>> w = cx.FourVector(t=Quantity(1, "s"), q=q)
 
     """

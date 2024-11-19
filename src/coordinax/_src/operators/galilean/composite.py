@@ -7,10 +7,11 @@ __all__ = ["GalileanOperator"]
 from typing import TYPE_CHECKING, Any, final, overload
 
 import equinox as eqx
+from plum import dispatch
 
 import quaxed.numpy as xp
+import unxt as u
 from dataclassish.converters import Unless
-from unxt import Quantity
 
 from .base import AbstractGalileanOperator
 from .boost import GalileanBoostOperator
@@ -18,8 +19,6 @@ from .rotation import GalileanRotationOperator
 from .translation import GalileanTranslationOperator
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
-from coordinax._src.operators.funcs import simplify_op
-from coordinax._src.operators.identity import IdentityOperator
 from coordinax._src.operators.sequential import OperatorSequence
 
 if TYPE_CHECKING:
@@ -54,22 +53,19 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     Examples
     --------
-    We start with the required imports:
-
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
+    >>> import coordinax.operators as cxo
 
-    We can then create a Galilean operator:
-
-    >>> op = cx.operators.GalileanOperator(
-    ...     translation=Quantity([0., 2., 3., 4.], "kpc"),
-    ...     velocity=Quantity([1., 2., 3.], "km/s"))
+    >>> op = cxo.GalileanOperator(
+    ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+    ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
       rotation=GalileanRotationOperator(rotation=f32[3,3]),
       translation=GalileanTranslationOperator(
         translation=FourVector(
-          t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
+          t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
           q=CartesianPos3D( ... ) )
       ),
       velocity=GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
@@ -82,13 +78,13 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     :class:`vector.CartesianVel3D` velocity. We can also construct them
     directly, which allows for other vector types.
 
-    >>> op = cx.operators.GalileanOperator(
-    ...     translation=cx.operators.GalileanTranslationOperator(
-    ...         cx.FourVector(t=Quantity(2.5, "Gyr"),
-    ...                    q=cx.SphericalPos(r=Quantity(1, "kpc"),
-    ...                                      theta=Quantity(90, "deg"),
-    ...                                      phi=Quantity(0, "rad") ) ) ),
-    ...     velocity=cx.operators.GalileanBoostOperator(
+    >>> op = cxo.GalileanOperator(
+    ...     translation=cxo.GalileanTranslationOperator(
+    ...         cx.FourVector(t=u.Quantity(2.5, "Gyr"),
+    ...                       q=cx.SphericalPos(r=u.Quantity(1, "kpc"),
+    ...                                         theta=u.Quantity(90, "deg"),
+    ...                                         phi=u.Quantity(0, "rad") ) ) ),
+    ...     velocity=cxo.GalileanBoostOperator(
     ...         cx.CartesianVel3D.from_([1, 2, 3], "km/s") )
     ... )
     >>> op
@@ -96,7 +92,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       rotation=GalileanRotationOperator(rotation=f32[3,3]),
       translation=GalileanTranslationOperator(
         translation=FourVector(
-          t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
+          t=Quantity[...)](value=f32[], unit=Unit("Gyr")),
           q=SphericalPos( ... )
         )
       ),
@@ -109,7 +105,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> new = op(w)
     >>> new
     FourVector(
-      t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
+      t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
       q=CartesianPos3D( ... )
     )
     >>> new.t.to_units("Gyr").value.round(2)
@@ -121,7 +117,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     :class:`vector.AbstractPos3D` and :class:`unxt.Quantity`:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "kpc")
-    >>> t = Quantity(0, "Gyr")
+    >>> t = u.Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
     Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
@@ -132,14 +128,14 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     rotation: GalileanRotationOperator = eqx.field(
         default=GalileanRotationOperator(xp.eye(3)),
-        converter=GalileanRotationOperator,
+        converter=GalileanRotationOperator.from_,
     )
     """The in-frame spatial rotation."""
 
     translation: GalileanTranslationOperator = eqx.field(
-        default=GalileanTranslationOperator(Quantity([0, 0, 0, 0], "kpc")),
+        default=GalileanTranslationOperator(u.Quantity([0, 0, 0, 0], "kpc")),
         converter=Unless(
-            GalileanTranslationOperator, converter=GalileanTranslationOperator
+            GalileanTranslationOperator, converter=GalileanTranslationOperator.from_
         ),
     )
     """The temporal + spatial translation.
@@ -152,8 +148,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """
 
     velocity: GalileanBoostOperator = eqx.field(
-        default=GalileanBoostOperator(Quantity([0, 0, 0], "km/s")),
-        converter=Unless(GalileanBoostOperator, converter=GalileanBoostOperator),
+        default=GalileanBoostOperator(u.Quantity([0, 0, 0], "km/s")),
+        converter=Unless(GalileanBoostOperator, converter=GalileanBoostOperator.from_),
     )
     """The boost to the frame.
 
@@ -170,7 +166,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ) -> tuple[
         GalileanRotationOperator, GalileanTranslationOperator, GalileanBoostOperator
     ]:
-        """Rotation -> translateion -> boost."""
+        """Rotation -> translation -> boost."""
         return (self.rotation, self.translation, self.velocity)
 
     @overload
@@ -185,13 +181,52 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         return OperatorSequence(self.operators[key])
 
 
-@simplify_op.register
-def _simplify_op_galilean(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
-    """Simplify a Galilean operator."""
-    # Check if all the sub-operators can be simplified to the identity.
-    if all(
-        isinstance(simplify_op(x, **kwargs), IdentityOperator) for x in op.operators
+@dispatch  # type: ignore[misc]
+def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
+    """Simplify a Galilean operator.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.operators as cxo
+
+    This Galilean operator cannot be simplified:
+
+    >>> op = cxo.GalileanOperator(
+    ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+    ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
+    ...     rotation=jnp.eye(3).at[0, 2].set(1),
+    ... )
+    >>> op
+    GalileanOperator(
+      rotation=GalileanRotationOperator(rotation=f32[3,3]),
+      translation=GalileanTranslationOperator(
+        translation=FourVector(
+          t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
+          q=CartesianPos3D( ... ) )
+      ),
+      velocity=GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
+    )
+
+    >>> cxo.simplify_op(op) is op
+    True
+
+    This Galilean operator can be simplified in all its components except the
+    translation:
+
+    >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "kpc"))
+    >>> cxo.simplify_op(op)
+    OperatorSequence(
+      operators=( GalileanTranslationOperator( translation=FourVector( ... ) ), )
+    )
+
+    """
+    simple_ops = [simplify_op(x, **kwargs) for x in op.operators]
+    if any(
+        not isinstance(x, type(orig))
+        for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return IdentityOperator()
+        return simplify_op(OperatorSequence(simple_ops))
 
     return op

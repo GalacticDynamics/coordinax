@@ -2,35 +2,22 @@
 
 __all__ = ["simplify_op"]
 
-from functools import singledispatch
+from plum import dispatch
 
 from .base import AbstractOperator
 
 
-@singledispatch
+@dispatch(precedence=-1)  # type: ignore[misc]  # very low priority
 def simplify_op(op: AbstractOperator, /) -> AbstractOperator:
-    """Simplify an operator.
+    """Return the operator unchanged.
 
     Examples
     --------
-    >>> from unxt import Quantity
-    >>> import coordinax.operators as co
+    >>> import coordinax.operators as cxo
 
-    An operator with real effect cannot be simplified:
-
-    >>> shift = Quantity([1, 0, 0], "m")  # no shift
-    >>> op = co.GalileanSpatialTranslationOperator(shift)
-    >>> co.simplify_op(op)
-    GalileanSpatialTranslationOperator(
-      translation=CartesianPos3D( ... )
-    )
-
-    An operator with no effect can be simplified:
-
-    >>> shift = Quantity([0, 0, 0], "m")  # no shift
-    >>> op = co.GalileanSpatialTranslationOperator(shift)
-    >>> co.simplify_op(op)
-    IdentityOperator()
+    >>> op = cxo.GalileanSpatialTranslationOperator.from_([1, 0, 0], "m")
+    >>> cxo.simplify_op(op) is op
+    True
 
     """
     return op

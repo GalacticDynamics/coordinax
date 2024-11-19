@@ -6,16 +6,18 @@ from dataclasses import replace
 from typing import Any, final
 
 import equinox as eqx
+from plum import dispatch
 
 from .base import AbstractOperator
 from .composite import AbstractCompositeOperator
-from .funcs import simplify_op
 from .identity import IdentityOperator
 
 
 def _converter_seq(inp: Any) -> tuple[AbstractOperator, ...]:
     if isinstance(inp, tuple):
         return inp
+    if isinstance(inp, list):
+        return tuple(inp)
     if isinstance(inp, OperatorSequence):
         return inp.operators
     if isinstance(inp, AbstractOperator):
@@ -38,11 +40,11 @@ class OperatorSequence(AbstractCompositeOperator):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax.operators as co
 
-    >>> shift = co.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
-    >>> boost = co.GalileanBoostOperator(Quantity([10, 20, 30], "km/s"))
+    >>> shift = co.GalileanSpatialTranslationOperator(u.Quantity([1, 2, 3], "kpc"))
+    >>> boost = co.GalileanBoostOperator(u.Quantity([10, 20, 30], "km/s"))
     >>> seq = co.OperatorSequence((shift, boost))
     >>> seq
     OperatorSequence(
@@ -94,12 +96,35 @@ class OperatorSequence(AbstractCompositeOperator):
 # Functions
 
 
-@simplify_op.register
-def _simplify_op(seq: OperatorSequence, /) -> OperatorSequence:
+@dispatch  # type: ignore[misc]
+def simplify_op(seq: OperatorSequence, /) -> OperatorSequence:
     """Simplify a sequence of Operators.
 
     This simplifies the sequence of operators by removing any that reduce to
     the Identity operator.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.operators as co
+
+    >>> shift = co.GalileanSpatialTranslationOperator(u.Quantity([1, 2, 3], "kpc"))
+    >>> boost = co.GalileanBoostOperator(u.Quantity([10, 20, 30], "km/s"))
+
+    >>> seq = shift | co.IdentityOperator() | boost
+    >>> seq
+    OperatorSequence(
+      operators=( GalileanSpatialTranslationOperator( ... ),
+                  IdentityOperator(),
+                  GalileanBoostOperator( ... ) )
+    )
+
+    >>> co.simplify_op(seq3)
+    OperatorSequence(
+      operators=( GalileanSpatialTranslationOperator( ... ),
+                  GalileanBoostOperator( ... ) )
+    )
+
     """
     # Iterate through the operators, simplifying that operator, then filtering
     # out any that reduce to the Identity.
