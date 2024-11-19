@@ -1,25 +1,23 @@
 """Astronomy reference frames."""
 # ruff:noqa: N806
 
-__all__ = ["ICRS", "Galactocentric"]
+__all__: list[str] = []
 
 
-from typing import ClassVar, Literal, TypeAlias, final
+from typing import Literal, TypeAlias
 
-import astropy.coordinates as apyc
-import equinox as eqx
 from jaxtyping import Array, Shaped
 from plum import convert, dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
 
-from .base import AbstractReferenceFrame
+from .galactocentric import Galactocentric
+from .icrs import ICRS
 from coordinax._src.angle import Angle
 from coordinax._src.base import AbstractVel
 from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianPos3D, CartesianVel3D
-from coordinax._src.d3.lonlatspherical import LonLatSphericalPos
 from coordinax._src.distance import Distance
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import IdentityOperator
@@ -29,151 +27,6 @@ ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
 LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]
 VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
-
-
-#####################################################################
-# Reference Frames
-
-
-@final
-class ICRS(AbstractReferenceFrame):
-    """The International Celestial Reference System (ICRS).
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> frame = cx.frames.ICRS()
-    >>> frame
-    ICRS()
-
-    """
-
-    # TODO: register `from_(astropy.coordinates.ICRS)`
-
-    @classmethod
-    @dispatch  # type: ignore[misc]
-    def from_(cls: "type[ICRS]", obj: apyc.ICRS, /) -> "ICRS":
-        """Construct from a `astropy.coordinates.ICRS`.
-
-        Examples
-        --------
-        >>> import astropy.coordinates as apyc
-        >>> import coordinax.frames as cxf
-
-        >>> apy_icrs = apyc.ICRS()
-        >>> cxf.ICRS.from_(apy_icrs)
-        ICRS()
-
-        """
-        obj = eqx.error_if(obj, obj.has_data, "Astropy frame must not have data.")
-        return cls()
-
-
-@final
-class Galactocentric(AbstractReferenceFrame):
-    """Reference frame centered at the Galactic center.
-
-    Based on the Astropy implementation of the Galactocentric frame.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> frame = cx.frames.Galactocentric()
-    >>> frame
-    Galactocentric(
-      galcen=LonLatSphericalPos( ... ),
-      roll=Quantity[...](value=weak_i32[], unit=Unit("deg")),
-      z_sun=Quantity[...](value=weak_f32[], unit=Unit("pc")),
-      galcen_v_sun=CartesianVel3D( ... )
-    )
-
-    """
-
-    #: RA, Dec, and distance of the Galactic center from an ICRS origin.
-    #: ra, dec: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
-    #: distance: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
-    galcen: LonLatSphericalPos = eqx.field(
-        converter=LonLatSphericalPos.from_,
-        default_factory=lambda: LonLatSphericalPos(
-            lon=Angle(266.4051, "deg"),
-            lat=Angle(-28.936175, "degree"),
-            distance=Distance(8.122, "kpc"),
-        ),
-    )
-
-    #: Rotation angle of the Galactic center from the ICRS x-axis.
-    roll: u.Quantity["angle"] = eqx.field(
-        converter=u.Quantity["angle"].from_, default=u.Quantity(0, "deg")
-    )
-
-    #: Distance from the Sun to the Galactic center.
-    #: https://ui.adsabs.harvard.edu/abs/2019MNRAS.482.1417B
-    z_sun: u.Quantity["length"] = eqx.field(
-        converter=u.Quantity["length"].from_, default=u.Quantity(20.8, "pc")
-    )
-
-    #: Velocity of the Sun in the Galactic center frame.
-    #: https://ui.adsabs.harvard.edu/abs/2018RNAAS...2..210D
-    #: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
-    #: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
-    galcen_v_sun: CartesianVel3D = eqx.field(
-        converter=CartesianVel3D.from_,
-        default_factory=lambda: CartesianVel3D.from_([12.9, 245.6, 7.78], "km/s"),
-    )
-
-    # --------
-
-    #: The angle between the Galactic center and the ICRS x-axis.
-    roll0: ClassVar[ScalarAngle] = u.Quantity(58.5986320306, "degree")
-
-    @classmethod
-    @dispatch  # type: ignore[misc]
-    def from_(
-        cls: "type[Galactocentric]", obj: apyc.Galactocentric, /
-    ) -> "Galactocentric":
-        """Construct from a `astropy.coordinates.Galactocentric`.
-
-        Examples
-        --------
-        >>> import astropy.coordinates as apyc
-        >>> import coordinax.frames as cxf
-
-        >>> apy_gcf = apyc.Galactocentric()
-        >>> apy_gcf
-        <Galactocentric Frame (galcen_coord=<ICRS Coordinate: (ra, dec) in deg
-        (266.4051, -28.936175)>, galcen_distance=8.122 kpc, galcen_v_sun=(12.9, 245.6, 7.78) km / s, z_sun=20.8 pc, roll=0.0 deg)>
-
-        >>> gcf = cxf.Galactocentric.from_(apy_gcf)
-        >>> gcf
-        Galactocentric(
-            galcen=LonLatSphericalPos( ... ),
-            roll=Quantity[...](value=f32[], unit=Unit("deg")),
-            z_sun=Quantity[...](value=f32[], unit=Unit("pc")),
-            galcen_v_sun=CartesianVel3D( ... )
-        )
-
-        Checking equality
-
-        >>> (gcf.galcen.lon.to_value("deg") == apy_gcf.galcen_coord.ra.to_value("deg")
-        ...  and gcf.galcen.lat.to_value("deg") == apy_gcf.galcen_coord.dec.to_value("deg")
-        ...  and gcf.galcen.distance.to_value("kpc") == apy_gcf.galcen_distance.to_value("kpc") )
-        Array(True, dtype=bool)
-
-
-        """  # noqa: E501
-        obj = eqx.error_if(obj, obj.has_data, "Astropy frame must not have data.")
-        galcen = LonLatSphericalPos(
-            lon=obj.galcen_coord.ra,
-            lat=obj.galcen_coord.dec,
-            distance=obj.galcen_distance,
-        )
-        return cls(
-            galcen, roll=obj.roll, z_sun=obj.z_sun, galcen_v_sun=obj.galcen_v_sun
-        )
-
-
-#####################################################################
-# Register frame transformations
 
 
 @dispatch
