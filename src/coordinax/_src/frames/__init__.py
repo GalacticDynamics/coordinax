@@ -9,9 +9,12 @@ __all__ = [
     "NoFrame",
     "frame_transform_op",
     "FrameTransformError",
+    "AbstractCoordinate",
+    "Coordinate",
 ]
 
 from .api import frame_transform_op
 from .base import AbstractReferenceFrame
+from .core import AbstractCoordinate, Coordinate
 from .errors import FrameTransformError
 from .null import NoFrame
