@@ -24,6 +24,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from ._src.vectors.space import *
     from ._version import version as __version__
     from .distance import Distance
+    from .frames import Coordinate
 
     # isort: split
     # Register vector transformations
@@ -34,7 +35,15 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from . import _interop
     from ._src.vectors import compat
 
-__all__ = ["__version__", "operators", "distance", "angle", "frames", "Distance"]
+__all__ = [
+    "__version__",
+    "operators",
+    "distance",
+    "angle",
+    "frames",
+    "Distance",
+    "Coordinate",
+]
 __all__ += vectors.funcs.__all__
 __all__ += vectors.base.__all__
 __all__ += vectors.d1.__all__
