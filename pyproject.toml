@@ -244,3 +244,6 @@ dev-dependencies = [
     "pytest>=8.3.3",
     "sybil>=8.0.0",
 ]
+
+[tool.uv.sources]
+unxt = { git = "https://github.com/GalacticDynamics/unxt" }

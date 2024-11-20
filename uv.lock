@@ -292,7 +292,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.13.5.dev2+gd832a32.d20241118"
+version = "0.13.5.dev6+g199dde3.d20241120"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -402,7 +402,7 @@ requires-dist = [
     { name = "sybil", marker = "extra == 'all'", specifier = "!=7.1.0" },
     { name = "sybil", marker = "extra == 'dev'", specifier = "!=7.1.0" },
     { name = "sybil", marker = "extra == 'test'", specifier = "!=7.1.0" },
-    { name = "unxt", specifier = ">=0.22" },
+    { name = "unxt", git = "https://github.com/GalacticDynamics/unxt" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
 
@@ -1734,8 +1734,8 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "0.22.0"
-source = { registry = "https://pypi.org/simple" }
+version = "0.22.2.dev1+g5c92af6"
+source = { git = "https://github.com/GalacticDynamics/unxt#5c92af606620667c1e00bacfa3df73d0010d14c8" }
 dependencies = [
     { name = "astropy" },
     { name = "dataclassish" },
@@ -1750,10 +1750,6 @@ dependencies = [
     { name = "quaxed" },
     { name = "xmmutablemap" },
     { name = "zeroth" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/75/11/a66511eb9b6e8510378d59c9c3a5f75c68da33d1ef5fdaff2b22078d7388/unxt-0.22.0.tar.gz", hash = "sha256:6f49cd0621d6a512a17bc89321f2b315de5f839c2d202498376b46f6a3605666", size = 659642 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8e/af/82046f24cd6c66a8167af7b8d7cd078e725bde4e37047dfc564326e66b71/unxt-0.22.0-py3-none-any.whl", hash = "sha256:21ea3e0288b2d9a3286a889895bc80e181ae1f637034cfca3a87fba40cbe9ad7", size = 56961 },
 ]
 
 [[package]]

@@ -38,8 +38,8 @@ class AbstractPos3DTest(AbstractPosTest):
 
         # # Try finding the poles
         # if hasattr(vector, "theta"):
-        #     sel = (vector.theta.to_units_value("deg") != 0) & (
-        #         vector.theta.to_units_value("deg") != 180
+        #     sel = (ustrip("deg", vector.theta) != 0) & (
+        #         ustrip("deg", vector.theta) != 180
         #     )
         # else:
         #     sel = slice(None)
