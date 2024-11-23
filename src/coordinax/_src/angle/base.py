@@ -2,9 +2,8 @@
 
 __all__: list[str] = []
 
-from plum import add_promotion_rule, conversion_method
 
-from unxt import Quantity, dimension, dimension_of
+from unxt import dimension, dimension_of
 from unxt.quantity import AbstractQuantity
 
 angle_dimension = dimension("angle")
@@ -41,31 +40,3 @@ class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
         if dimension_of(self) != angle_dimension:
             msg = "Angle must have dimensions angle."
             raise ValueError(msg)
-
-
-# ============================================================================
-# Conversion and Promotion
-
-# Add a rule that when a AbstractAngle interacts with a Quantity, the
-# angle degrades to a Quantity. This is necessary for many operations, e.g.
-# division of an angle by non-dimensionless quantity where the resulting units
-# are not those of an angle.
-add_promotion_rule(AbstractAngle, Quantity, Quantity)
-
-
-@conversion_method(type_from=AbstractAngle, type_to=Quantity)  # type: ignore[misc]
-def _convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
-    """Convert a distance to a quantity.
-
-    Examples
-    --------
-    >>> from unxt import Quantity
-    >>> from coordinax.angle import Angle
-    >>> from plum import convert
-
-    >>> a = Angle(90, "deg")
-    >>> convert(a, Quantity)
-    Quantity['angle'](Array(90, dtype=int32, weak_type=True), unit='deg')
-
-    """
-    return Quantity(x.value, x.unit)
