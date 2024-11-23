@@ -547,17 +547,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         """
         return MappingProxyType({k: v.size for k, v in self.items()})
 
-    # ===============================================================
-    # Convenience methods
-
-    @dispatch  # type: ignore[misc]
-    @override
-    def to_units(
-        self: "Space", units: Mapping[Dimension | str, Unit | str], /
-    ) -> "Space":
-        """Convert the vector to the given units."""
-        raise NotImplementedError
-
 
 # ===============================================================
 

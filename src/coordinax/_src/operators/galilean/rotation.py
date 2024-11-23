@@ -247,7 +247,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
         """
         vec = convert(  # Array[float, (N, 3)]
-            q.represent_as(CartesianPos3D).to_units(ToUnitsOptions.consistent),
+            q.represent_as(CartesianPos3D).uconvert(ToUnitsOptions.consistent),
             u.Quantity,
         )
         rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
