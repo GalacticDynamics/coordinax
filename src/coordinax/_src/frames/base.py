@@ -60,3 +60,31 @@ class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
 
         """
         return frame_transform_op(self, to_frame)
+
+
+@AbstractReferenceFrame.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+def from_(
+    cls: type[AbstractReferenceFrame], obj: AbstractReferenceFrame, /
+) -> AbstractReferenceFrame:
+    """Construct a reference frame from another reference frame.
+
+    Examples
+    --------
+    >>> import coordinax.frames as cxf
+
+    >>> icrs = cxf.ICRS()
+    >>> cxf.AbstractReferenceFrame.from_(icrs) is icrs
+    True
+
+    >>> try:
+    ...     cxf.Galactocentric.from_(icrs)
+    ... except TypeError as e:
+    ...     print(e)
+    Cannot construct 'Galactocentric' from ICRS()
+
+    """
+    if not isinstance(obj, cls):
+        msg = f"Cannot construct {cls.__qualname__!r} from {obj}"
+        raise TypeError(msg)
+
+    return obj
