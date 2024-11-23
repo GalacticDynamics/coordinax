@@ -122,6 +122,23 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         ImmutableMap.__init__(self, dict(zip(keys, raw.values(), strict=True)))
 
+    @classmethod
+    @dispatch  # type: ignore[misc]
+    def from_(cls: "type[Space]", obj: AbstractPos, /) -> "Space":
+        """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> w = cx.Space.from_(q)
+        >>> w
+        Space({ 'length': CartesianPos3D( ... )} )
+
+        """
+        return cls(length=obj)
+
     # ===============================================================
     # Mapping API
 
