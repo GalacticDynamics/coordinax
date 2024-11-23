@@ -26,9 +26,8 @@ def represent_as(w: Space, target: type[Space]) -> Space:
     ... )
 
     >>> cx.represent_as(w, cx.Space)
-    Space({
-        'length': CartesianPos3D( ... ),
-        'speed': CartesianVel3D( ... )} )
+    Space({ 'length': CartesianPos3D( ... ),
+             'speed': CartesianVel3D( ... ) })
 
     """
     return w

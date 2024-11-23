@@ -71,8 +71,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     Space({
         'length': CartesianPos3D( ... ),
         'speed': CartesianVel3D( ... ),
-        'acceleration': CartesianAcc3D( ... )}
-    )
+        'acceleration': CartesianAcc3D( ... )
+    })
 
     >>> space["length"]
     CartesianPos3D( ... )
@@ -81,15 +81,15 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
-        'acceleration': SphericalAcc( ... )}
-    )
+        'acceleration': SphericalAcc( ... )
+    })
 
     >>> cx.represent_as(space, cx.SphericalPos)
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
-        'acceleration': SphericalAcc( ... )}
-    )
+        'acceleration': SphericalAcc( ... )
+    })
 
     """  # noqa: E501
 
@@ -134,7 +134,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> w = cx.Space.from_(q)
         >>> w
-        Space({ 'length': CartesianPos3D( ... )} )
+        Space({ 'length': CartesianPos3D( ... ) })
 
         """
         return cls(length=obj)
@@ -163,8 +163,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
             'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[2], unit=Unit("m / s") ) )}
-        )
+                d_z=Quantity[...]( value=f32[2], unit=Unit("m / s") ) )
+        })
 
         By slice:
 
@@ -177,8 +177,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
             'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ) )}
-        )
+                d_z=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ) )
+        })
 
         By Ellipsis:
 
@@ -191,8 +191,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
             'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ) )}
-        )
+                d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ) )
+        })
 
         By tuple[int, ...]:
 
@@ -205,8 +205,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
             'speed': CartesianVel3D(
                 d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[], unit=Unit("m / s") ) )}
-        )
+                d_z=Quantity[...]( value=f32[], unit=Unit("m / s") ) )
+        })
 
         This also supports numpy index arrays. But this example section
         highlights core python indexing.
@@ -284,7 +284,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
-            )} )
+            ) })
 
         """
         return super().mT
@@ -368,7 +368,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
-            )} )
+            ) })
 
         """
         return super().T
@@ -415,12 +415,12 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
                 d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
-            )} )
+            ) })
 
         """
         cls_name = self.__class__.__name__
-        data = "{\n" + indent(repr(self._data)[1:], "    ")
-        return f"{cls_name}({data}\n)"
+        data = "{\n" + indent(repr(self._data)[1:-1], "    ")
+        return cls_name + "(" + data + "\n})"
 
     def __str__(self) -> str:
         """Return the string representation."""

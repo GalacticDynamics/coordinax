@@ -46,7 +46,8 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
             d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
             d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
             d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
-        )} )
+        )
+    })
 
     """
     phi = jnp.atan2(w.d_pp_phi, w.pp_phi)
