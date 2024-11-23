@@ -11,11 +11,10 @@ from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from enum import Enum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, NoReturn, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
 import jax
 import numpy as np
-from astropy.units import PhysicalType as Dimension
 from jax import Device, tree
 from jaxtyping import Array, ArrayLike, Bool
 from plum import dispatch
@@ -40,7 +39,7 @@ VT = TypeVar("VT", bound="AbstractVector")
 
 
 class ToUnitsOptions(Enum):
-    """Options for the units argument of `AbstractVector.to_units`."""
+    """Options for the units argument of `AbstractVector.uconvert`."""
 
     consistent = "consistent"
     """Convert to consistent units."""
@@ -207,8 +206,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
     # TODO: should this be named `uconvert`, and then registered w/ `uconvert?
 
+    @dispatch(precedence=-1)
+    def uconvert(self, *args: Any, **kwargs: Any) -> "AbstractVector":
+        """Convert the vector to the given units."""
+        return u.uconvert(*args, self, **kwargs)
+
     @dispatch
-    def to_units(self, usys: Any, /) -> "AbstractVector":
+    def uconvert(self, usys: Any, /) -> "AbstractVector":
         """Convert the vector to the given units.
 
         Parameters
@@ -219,13 +223,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from unxt import Quantity, unitsystem
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> usys = unitsystem("m", "s", "kg", "rad")
+        >>> usys = u.unitsystem("m", "s", "kg", "rad")
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> vec.to_units(usys)
+        >>> vec.uconvert(usys)
         CartesianPos3D(
             x=Quantity[...](value=f32[], unit=Unit("m")),
             y=Quantity[...](value=f32[], unit=Unit("m")),
@@ -233,115 +237,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         )
 
         """
-        usys = u.unitsystem(usys)
-        return replace(
-            self,
-            **{
-                k: u.uconvert(usys[u.dimension_of(v)], v)
-                for k, v in field_items(AttrFilter, self)
-            },
-        )
-
-    @dispatch
-    def to_units(
-        self: "AbstractVector", usys: Mapping[Dimension | str, Unit | str], /
-    ) -> "AbstractVector":
-        """Convert the vector to the given units.
-
-        Parameters
-        ----------
-        usys : Mapping[Dimension | str, Unit | str]
-            The units to convert to according to the physical type of the
-            components.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        We can convert a vector to the given units:
-
-        >>> cart = cx.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
-        >>> cart.to_units({"length": "km"})
-        CartesianPos2D(
-            x=Quantity[...](value=f32[], unit=Unit("km")),
-            y=Quantity[...](value=f32[], unit=Unit("km"))
-        )
-
-        This also works for vectors with different units:
-
-        >>> sph = cx.SphericalPos(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
-        ...                       phi=Quantity(3, "rad"))
-        >>> sph.to_units({"length": "km", "angle": "deg"})
-        SphericalPos(
-            r=Distance(value=f32[], unit=Unit("km")),
-            theta=Angle(value=f32[], unit=Unit("deg")),
-            phi=Angle(value=f32[], unit=Unit("deg")) )
-
-        """
-        # Ensure `units_` is PT -> Unit
-        units_ = {u.dimension(k): v for k, v in usys.items()}
-        # Convert to the given units
-        return replace(
-            self,
-            **{
-                k: u.uconvert(units_[u.dimension_of(v)], v)
-                for k, v in field_items(AttrFilter, self)
-            },
-        )
-
-    @dispatch
-    def to_units(
-        self: "AbstractVector", _: Literal[ToUnitsOptions.consistent], /
-    ) -> "AbstractVector":
-        """Convert the vector to a self-consistent set of units.
-
-        Parameters
-        ----------
-        units : Literal[ToUnitsOptions.consistent]
-            The vector is converted to consistent units by looking for the first
-            quantity with each physical type and converting all components to
-            the units of that quantity.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        We can convert a vector to the given units:
-
-        >>> cart = cx.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
-
-        If all you want is to convert to consistent units, you can use
-        ``"consistent"``:
-
-        >>> cart.to_units(cx.ToUnitsOptions.consistent)
-        CartesianPos2D(
-            x=Quantity[...](value=f32[], unit=Unit("m")),
-            y=Quantity[...](value=f32[], unit=Unit("m"))
-        )
-
-        >>> sph = cart.represent_as(cx.SphericalPos)
-        >>> sph.to_units(cx.ToUnitsOptions.consistent)
-        SphericalPos(
-            r=Distance(value=f32[], unit=Unit("m")),
-            theta=Angle(value=f32[], unit=Unit("rad")),
-            phi=Angle(value=f32[], unit=Unit("rad"))
-        )
-
-        """
-        dim2unit = {}
-        units_ = {}
-        for k, v in field_items(AttrFilter, self):
-            pt = u.dimension_of(v)
-            if pt not in dim2unit:
-                dim2unit[pt] = u.unit_of(v)
-            units_[k] = dim2unit[pt]
-
-        return replace(
-            self,
-            **{k: u.uconvert(units_[k], v) for k, v in field_items(AttrFilter, self)},
-        )
+        return u.uconvert(usys, self)
 
     # ===============================================================
     # Quax API
@@ -839,11 +735,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
         ...                         y=u.Quantity(0, "m"))
-        >>> vec.flatten()
-        CartesianPos2D(
-            x=Quantity[...](value=f32[4], unit=Unit("m")),
-            y=Quantity[...](value=f32[1], unit=Unit("m"))
-        )
+        >>> vec.shape
+        (2, 2)
+
+        >>> vec.flatten().shape
+        (4,)
 
         """
         return replace(
@@ -860,8 +756,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
         ...                         y=u.Quantity(0, "m"))
-        >>> vec.ravel()
-        CartesianPos2D( ... )
+        >>> vec.shape
+        (2, 2)
+
+        >>> vec.ravel().shape
+        (4,)
 
         """
         return replace(self, **{k: v.ravel() for k, v in field_items(AttrFilter, self)})
