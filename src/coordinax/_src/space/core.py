@@ -565,6 +565,25 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
 
 # ===============================================================
+
+
+@Space.from_._f.dispatch  # type: ignore[misc]  # noqa: SLF001
+def from_(cls: type[Space], obj: Space, /) -> Space:
+    """Construct a Space, returning the Space.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.Space.from_(cx.CartesianPos3D.from_([1, 2, 3], "m"))
+    >>> cx.Space.from_(q) is q
+    True
+
+    """
+    return obj
+
+
+# ===============================================================
 # Related dispatches
 
 
