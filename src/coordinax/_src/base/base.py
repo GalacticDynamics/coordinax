@@ -30,6 +30,7 @@ from unxt.quantity import AbstractQuantity
 from .flags import AttrFilter
 from .mixins import IPythonReprMixin
 from coordinax._src.typing import Unit
+from coordinax._src.funcs import represent_as
 from coordinax._src.utils import classproperty, full_shaped
 
 if TYPE_CHECKING:
@@ -147,7 +148,60 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         return cls.from_(obj)  # re-dispatch
 
     # ===============================================================
-    # Quax
+    # Vector API
+
+    def represent_as(self, target: type, *args: Any, **kwargs: Any) -> "AbstractVector":
+        """Represent the vector as another type.
+
+        This just forwards to `coordinax.represent_as`.
+
+        Parameters
+        ----------
+        target : type[`coordinax.AbstractVel`]
+            The type to represent the vector as.
+        *args, **kwargs : Any
+            Extra arguments. These are passed to `coordinax.represent_as` and
+            might be used, depending on the dispatched method. E.g. for
+            transforming an acceleration, generally the first argument is the
+            velocity (`coordinax.AbstractVel`) followed by the position
+            (`coordinax.AbstractPos`) at which the acceleration is defined. In
+            general this is a required argument, though it is not for
+            Cartesian-to-Cartesian transforms -- see
+            https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for
+            more information.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        Transforming a Position:
+
+        >>> q_cart = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> q_sph = q_cart.represent_as(cx.SphericalPos)
+        >>> q_sph
+        SphericalPos( ... )
+        >>> q_sph.r
+        Distance(Array(3.7416575, dtype=float32), unit='m')
+
+        Transforming a Velocity:
+
+        >>> v_cart = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
+        >>> v_sph = v_cart.represent_as(cx.SphericalVel, q_cart)
+        >>> v_sph
+        SphericalVel( ... )
+
+        Transforming an Acceleration:
+
+        >>> a_cart = cx.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+        >>> a_sph = a_cart.represent_as(cx.SphericalAcc, v_cart, q_cart)
+        >>> a_sph
+        SphericalAcc( ... )
+        >>> a_sph.d2_r
+        Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
+
+        """
+        return represent_as(self, target, *args, **kwargs)
+
 
     def materialise(self) -> NoReturn:
         """Materialise the vector for `quax`.
@@ -772,11 +826,6 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
     # ===============================================================
     # Convenience methods
-
-    @abstractmethod
-    def represent_as(self, target: type[VT], /, *args: Any, **kwargs: Any) -> VT:
-        """Represent the vector as another type."""
-        raise NotImplementedError  # pragma: no cover
 
     @dispatch
     def to_units(self, usys: Any, /) -> "AbstractVector":

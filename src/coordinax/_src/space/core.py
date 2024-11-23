@@ -550,11 +550,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     # ===============================================================
     # Convenience methods
 
-    # TODO: correctly type annotate this method.
-    def represent_as(self, target: type[AbstractVector], /) -> "Space":  # pylint: disable=W0221
-        """Represent the vector as another type."""
-        return represent_as(self, target)
-
     @dispatch  # type: ignore[misc]
     @override
     def to_units(

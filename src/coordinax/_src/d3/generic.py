@@ -6,7 +6,7 @@ __all__ = [
 
 from dataclasses import fields
 from functools import partial
-from typing import Any, TypeVar, final
+from typing import TypeVar, final
 
 import equinox as eqx
 import jax
@@ -69,13 +69,6 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 
         """
         return jax.tree.map(jnp.negative, self)
-
-    # ===============================================================
-    # Convenience methods
-
-    def represent_as(self, target: type[VT], /, *args: Any, **kwargs: Any) -> VT:
-        """Represent the vector as another type."""
-        raise NotImplementedError  # pragma: no cover
 
 
 # =====================================================

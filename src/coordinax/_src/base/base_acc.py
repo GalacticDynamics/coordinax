@@ -5,7 +5,6 @@ __all__ = ["AbstractAcc"]
 from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
-from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -19,7 +18,6 @@ from unxt import Quantity
 from .base import AbstractVector
 from .base_pos import AbstractPos
 from .base_vel import AbstractVel
-from coordinax._src.funcs import represent_as
 from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:
@@ -113,50 +111,6 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
 
     # ===============================================================
     # Convenience methods
-
-    @override
-    def represent_as(self, target: type[AccT], /, *args: Any, **kwargs: Any) -> AccT:
-        """Represent the vector as another type.
-
-        This just forwards to `coordinax.represent_as`.
-
-        Parameters
-        ----------
-        target : type[`coordinax.AbstractVel`]
-            The type to represent the vector as.
-        *args, **kwargs : Any
-            Extra arguments. These are passed to `coordinax.represent_as` and
-            might be used, depending on the dispatched method. Generally the
-            first argument is the velocity (`coordinax.AbstractVel`)
-            followed by the position (`coordinax.AbstractPos`) at which the
-            acceleration is defined. In general this is a required argument,
-            though it is not for Cartesian-to-Cartesian transforms -- see
-            https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for
-            more information.
-
-        Returns
-        -------
-        `coordinax.AbstractAcc`
-            The vector represented as the target type.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
-        >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "m/s2")
-        >>> sph = a.represent_as(cx.SphericalAcc, p, q)
-        >>> sph
-        SphericalAcc(
-            d2_r=Quantity[...](value=f32[], unit=Unit("m / s2")),
-            d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
-            d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
-        )
-        >>> sph.d2_r
-        Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
-
-        """
-        return represent_as(self, target, *args, **kwargs)
 
     @partial(eqx.filter_jit, inline=True)
     def norm(

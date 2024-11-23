@@ -5,7 +5,6 @@ __all__ = ["AbstractVel"]
 from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
-from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -129,56 +128,6 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
 
     # ===============================================================
     # Convenience methods
-
-    @override
-    def represent_as(
-        self,
-        target: type[VelT],
-        /,
-        *args: Any,
-        **kwargs: Any,
-    ) -> VelT:
-        """Represent the vector as another type.
-
-        This just forwards to `coordinax.represent_as`.
-
-        Parameters
-        ----------
-        target : type[`coordinax.AbstractVel`]
-            The type to represent the vector as.
-        *args, **kwargs : Any
-            Extra arguments. These are passed to `coordinax.represent_as` and
-            might be used, depending on the dispatched method. Generally the
-            first argument is the position (`coordinax.AbstractPos`) at
-            which the velocity is defined. In general this is a required
-            argument, though it is not for Cartesian-to-Cartesian transforms --
-            see https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates
-            for more information.
-
-        Returns
-        -------
-        `coordinax.AbstractVel`
-            The vector represented as the target type.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
-        >>> sph = p.represent_as(cx.SphericalVel, q)
-        >>> sph
-        SphericalVel(
-            d_r=Quantity[...)]( value=f32[], unit=Unit("m / s") ),
-            d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-            d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
-        )
-        >>> sph.d_r
-        Quantity['speed'](Array(8.55236, dtype=float32), unit='m / s')
-
-        """
-        from coordinax import represent_as  # pylint: disable=import-outside-toplevel
-
-        return represent_as(self, target, *args, **kwargs)
 
     @partial(eqx.filter_jit, inline=True)
     def norm(self, position: AbstractPos, /) -> Quantity["speed"]:
