@@ -346,6 +346,42 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     # ===============================================================
     # Quax API
 
+    @property
+    def shape(self) -> Any:
+        """Get the shape of the vector's components.
+
+        When represented as a single array, the vector has an additional
+        dimension at the end for the components.
+
+        Examples
+        --------
+        We assume the following imports:
+
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        We can get the shape of a vector:
+
+        >>> vec = cx.CartesianPos1D(x=Quantity([1, 2], "m"))
+        >>> vec.shape
+        (2,)
+
+        >>> vec = cx.CartesianPos1D(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec.shape
+        (2, 2)
+
+        ``shape`` is calculated from the broadcasted shape. We can
+        see this by creating a 2D vector in which the components have
+        different shapes:
+
+        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=Quantity(0, "m"))
+        >>> vec.shape
+        (2, 2)
+
+        """
+        return jnp.broadcast_shapes(*self.shapes.values())
+
     def materialise(self) -> NoReturn:
         """Materialise the vector for `quax`.
 
@@ -370,8 +406,29 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     # ===============================================================
     # Array API
 
+    def __array_namespace__(self) -> "ArrayAPINamespace":
+        """Return the array API namespace.
+
+        Here we return the `quaxed.numpy` module, which is a drop-in replacement
+        for `jax.numpy`, but allows for array-ish objects to be used in place of
+        `jax` arrays. See `quax` for more information.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPos2D.from_([3, 4], "m")
+        >>> vec.__array_namespace__()
+        <module 'quaxed.numpy' from ...>
+
+        """
+        return jnp
+
     # ---------------------------------------------------------------
-    # Attributes
+    # attributes
+
+    # Missing attributes:
+    # - dtype
+    # - device
 
     @property
     def mT(self) -> "Self":  # noqa: N802
@@ -430,42 +487,6 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         return len(self.shape)
 
     @property
-    def shape(self) -> Any:
-        """Get the shape of the vector's components.
-
-        When represented as a single array, the vector has an additional
-        dimension at the end for the components.
-
-        Examples
-        --------
-        We assume the following imports:
-
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        We can get the shape of a vector:
-
-        >>> vec = cx.CartesianPos1D(x=Quantity([1, 2], "m"))
-        >>> vec.shape
-        (2,)
-
-        >>> vec = cx.CartesianPos1D(x=Quantity([[1, 2], [3, 4]], "m"))
-        >>> vec.shape
-        (2, 2)
-
-        ``shape`` is calculated from the broadcasted shape. We can
-        see this by creating a 2D vector in which the components have
-        different shapes:
-
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
-        >>> vec.shape
-        (2, 2)
-
-        """
-        return jnp.broadcast_shapes(*self.shapes.values())
-
-    @property
     def size(self) -> int:
         """Total number of elements in the vector.
 
@@ -522,7 +543,108 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         return replace(self, **{k: v.T for k, v in field_items(AttrFilter, self)})
 
     # ---------------------------------------------------------------
-    # Methods
+    # arithmetic operators
+
+    def __pos__(self) -> "AbstractVector":
+        """Return the plus of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> +vec
+        CartesianPos3D(
+            x=Quantity[...](value=f32[], unit=Unit("m")),
+            y=Quantity[...](value=f32[], unit=Unit("m")),
+            z=Quantity[...](value=f32[], unit=Unit("m"))
+        )
+
+        """
+        return replace(self, **{k: +v for k, v in field_items(AttrFilter, self)})
+
+    @abstractmethod
+    def __neg__(self) -> "Self":
+        raise NotImplementedError
+
+    __add__ = qlax.add
+    # TODO: __radd__
+
+    __sub__ = qlax.sub
+    # TODO: __rsub__
+
+    def __mul__(self: "AbstractVector", other: Any) -> Any:
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> (vec * 2).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
+        return qlax.mul(self, other)
+
+    def __rmul__(self: "AbstractVector", other: Any) -> Any:
+        """Multiply the vector by a scalar.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> (2 * vec).x
+        Quantity['length'](Array(2., dtype=float32), unit='m')
+
+        """
+        return qlax.mul(other, self)
+
+    def __truediv__(self: "AbstractVector", other: Any) -> "AbstractVector":
+        return qlax.div(self, other)
+
+    # TODO: __rtruediv__
+
+    # TODO: __floordiv__
+    # TODO: __rfloordiv__
+
+    # TODO: __mod__
+    # TODO: __rmod__
+
+    # TODO: __pow__
+    # TODO: __rpow__
+
+    # ---------------------------------------------------------------
+    # array operators
+
+    # TODO: __matmul__
+    # TODO: __rmatmul__
+
+    # ---------------------------------------------------------------
+    # bitwise operators
+    # TODO: handle edge cases, e.g. boolean Quantity, not in Astropy
+
+    # TODO: __invert__
+    # TODO: __and__
+    # TODO: __rand__
+    # TODO: __or__
+    # TODO: __ror__
+    # TODO: __xor__
+    # TODO: __rxor__
+    # TODO: __lshift__
+    # TODO: __rlshift__
+    # TODO: __rshift__
+    # TODO: __rrshift__
+
+    # ---------------------------------------------------------------
+    # comparison operators
+
+    # TODO: __lt__
+    # TODO: __le__
+    # TODO: __eq__
+    # TODO: __ge__
+    # TODO: __gt__
+    # TODO: __ne__
 
     def __eq__(self: "AbstractVector", other: object) -> Any:
         """Check if the vector is equal to another object.
@@ -599,32 +721,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         comp_leaves = jnp.array(tree.leaves(comp_tree))
         return jax.numpy.logical_and.reduce(comp_leaves)
 
-    def __len__(self) -> int:
-        """Return the length of the vector.
-
-        Examples
-        --------
-        >>> from unxt import Quantity
-        >>> import coordinax as cx
-
-        Scalar vectors have length 0:
-
-        >>> vec = cx.CartesianPos1D.from_([1], "m")
-        >>> len(vec)
-        0
-
-        Vectors with certain lengths:
-
-        >>> vec = cx.CartesianPos1D(Quantity([1], "m"))
-        >>> len(vec)
-        1
-
-        >>> vec = cx.CartesianPos1D(Quantity([1, 2], "m"))
-        >>> len(vec)
-        2
-
-        """
-        return self.shape[0] if self.ndim > 0 else 0
+    # ---------------------------------------------------------------
+    # methods
 
     def __abs__(self) -> u.Quantity:
         """Return the norm of the vector.
@@ -639,18 +737,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         """
         return self.norm()
 
-    def __array_namespace__(self) -> "ArrayAPINamespace":
-        """Return the array API namespace.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> vec = cx.CartesianPos2D.from_([3, 4], "m")
-        >>> vec.__array_namespace__()
-        <module 'quaxed.numpy' from ...>
-
-        """
-        return jnp
+    # TODO: __bool__
+    # TODO: __complex__
+    # TODO: __dlpack__
+    # TODO: __dlpack_device__
+    # TODO: __float__
 
     def __getitem__(self, index: Any) -> "Self":
         """Return a new object with the given slice applied.
@@ -683,65 +774,15 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
         return replace(full, **{k: v[index] for k, v in field_items(AttrFilter, full)})
 
-    def __add__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        """Add another object to this vector."""
-        return qlax.add(self, other)
-
-    def __mul__(self: "AbstractVector", other: Any) -> Any:
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> (vec * 2).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
-
-        """
-        return qlax.mul(self, other)
-
-    @abstractmethod
-    def __neg__(self) -> "Self":
-        raise NotImplementedError
-
-    def __rmul__(self: "AbstractVector", other: Any) -> Any:
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> (2 * vec).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
-
-        """
-        return qlax.mul(other, self)
+    # TODO: __index__
+    # TODO: __int__
 
     def __setitem__(self, k: Any, v: Any) -> NoReturn:
         msg = f"{type(self).__name__} is immutable."
         raise TypeError(msg)
 
-    def __sub__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        """Subtract an object from this vector."""
-        return qlax.sub(self, other)
-
-    def __truediv__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        return qlax.div(self, other)
-
     def to_device(self, device: None | Device = None) -> "Self":
         """Move the vector to a new device.
-
-        Parameters
-        ----------
-        device : None, Device
-            The device to move the vector to.
-
-        Returns
-        -------
-        AbstractVector
-            The vector moved to the new device.
 
         Examples
         --------
@@ -759,22 +800,45 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         return replace(self, **{k: v.to_device(device) for k, v in field_items(self)})
 
     # ===============================================================
-    # Further array methods
+    # JAX API
+
+    def __len__(self) -> int:
+        """Return the length of the vector.
+
+        Examples
+        --------
+        >>> from unxt import Quantity
+        >>> import coordinax as cx
+
+        Scalar vectors have length 0:
+
+        >>> vec = cx.CartesianPos1D.from_([1], "m")
+        >>> len(vec)
+        0
+
+        Vectors with certain lengths:
+
+        >>> vec = cx.CartesianPos1D(Quantity([1], "m"))
+        >>> len(vec)
+        1
+
+        >>> vec = cx.CartesianPos1D(Quantity([1, 2], "m"))
+        >>> len(vec)
+        2
+
+        """
+        return self.shape[0] if self.ndim > 0 else 0
 
     def flatten(self) -> "Self":
         """Flatten the vector.
 
         Examples
         --------
-        We assume the following imports:
-
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        We can flatten a vector:
-
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
         >>> vec.flatten()
         CartesianPos2D(
             x=Quantity[...](value=f32[4], unit=Unit("m")),
@@ -785,6 +849,22 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         return replace(
             self, **{k: v.flatten() for k, v in field_items(AttrFilter, self)}
         )
+
+    def ravel(self) -> "Self":
+        """Ravel the vector.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
+        >>> vec.ravel()
+        CartesianPos2D( ... )
+
+        """
+        return replace(self, **{k: v.ravel() for k, v in field_items(AttrFilter, self)})
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the components of the vector.
@@ -968,7 +1048,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         return MappingProxyType({k: v.size for k, v in field_items(AttrFilter, self)})
 
     # ===============================================================
-    # Misc
+    # Python API
 
     def __str__(self) -> str:
         r"""Return a string representation of the vector.
