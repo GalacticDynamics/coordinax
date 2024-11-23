@@ -7,7 +7,6 @@ from dataclasses import replace
 from functools import partial
 from inspect import isabstract
 from typing import Any, TypeVar
-from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -138,41 +137,6 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
     # ===============================================================
     # Convenience methods
-
-    @override
-    def represent_as(self, target: type[PosT], /, *args: Any, **kwargs: Any) -> PosT:
-        """Represent the vector as another type.
-
-        This just forwards to `coordinax.represent_as`.
-
-        Parameters
-        ----------
-        target : type[`coordinax.AbstractPos`]
-            The type to represent the vector as.
-        *args, **kwargs : Any
-            Extra arguments. These are passed to `coordinax.represent_as` and
-            might be used, depending on the dispatched method.
-
-        Returns
-        -------
-        `coordinax.AbstractPos`
-            The vector represented as the target type.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> sph = vec.represent_as(cx.SphericalPos)
-        >>> sph
-        SphericalPos(
-            r=Distance(value=f32[], unit=Unit("m")),
-            theta=Angle(value=f32[], unit=Unit("rad")),
-            phi=Angle(value=f32[], unit=Unit("rad")) )
-        >>> sph.r
-        Distance(Array(3.7416575, dtype=float32), unit='m')
-
-        """
-        return represent_as(self, target, *args, **kwargs)
 
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> ct.BatchableLength:
