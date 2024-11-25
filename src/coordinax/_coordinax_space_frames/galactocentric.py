@@ -11,10 +11,9 @@ from jaxtyping import Array, Shaped
 import unxt as u
 
 from coordinax._src.angle import Angle
-from coordinax._src.d3.cartesian import CartesianVel3D
-from coordinax._src.d3.lonlatspherical import LonLatSphericalPos
 from coordinax._src.distance import Distance
 from coordinax._src.frames.base import AbstractReferenceFrame
+from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
 
 ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]

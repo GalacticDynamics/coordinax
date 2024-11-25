@@ -1,6 +1,5 @@
-# pylint: disable=invalid-name
-
 """Sphinx configuration."""
+# pylint: disable=invalid-name
 
 import importlib.metadata
 

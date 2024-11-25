@@ -4,14 +4,7 @@ E.g. a translation.
 """
 # pylint: disable=unused-wildcard-import,wildcard-import
 
-from ._src.operators import (
-    base,
-    composite,
-    funcs,
-    galilean,
-    identity,
-    sequential,
-)
+from ._src.operators import base, composite, funcs, galilean, identity, sequential
 from ._src.operators.base import *  # noqa: F403
 from ._src.operators.composite import *  # noqa: F403
 from ._src.operators.funcs import *  # noqa: F403
