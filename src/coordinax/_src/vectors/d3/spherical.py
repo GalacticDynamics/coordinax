@@ -22,9 +22,9 @@ from .base_spherical import (
 )
 from coordinax._src.angle import Angle
 from coordinax._src.checks import check_polar_range, check_r_non_negative
-from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 ##############################################################################
 # Position

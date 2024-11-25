@@ -28,9 +28,9 @@ from .base_spherical import (
 )
 from coordinax._src import checks
 from coordinax._src.angle import Angle
-from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
 @final

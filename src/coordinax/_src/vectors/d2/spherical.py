@@ -15,8 +15,8 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angle import Angle
 from coordinax._src.checks import check_polar_range
-from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
 # TODO: should this be named TwoSphericalPos or S(phere)(ical)2Pos
