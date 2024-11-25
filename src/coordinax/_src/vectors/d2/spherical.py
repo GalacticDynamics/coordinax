@@ -1,10 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = [
-    "TwoSpherePos",
-    "TwoSphereVel",
-    "TwoSphereAcc",
-]
+__all__ = ["TwoSpherePos", "TwoSphereVel", "TwoSphereAcc"]
 
 from functools import partial
 from typing import final
@@ -63,7 +59,7 @@ class TwoSpherePos(AbstractPos2D):
     This coordinate has corresponding velocity class:
 
     >>> s2.differential_cls
-    <class 'coordinax._src.d2.spherical.TwoSphereVel'>
+    <class 'coordinax...TwoSphereVel'>
 
     """
 
@@ -131,10 +127,10 @@ class TwoSphereVel(AbstractVel2D):
     This coordinate has corresponding position and acceleration class:
 
     >>> s2.integral_cls
-    <class 'coordinax._src.d2.spherical.TwoSpherePos'>
+    <class 'coordinax...TwoSpherePos'>
 
     >>> s2.differential_cls
-    <class 'coordinax._src.d2.spherical.TwoSphereAcc'>
+    <class 'coordinax...TwoSphereAcc'>
 
     """
 
@@ -201,7 +197,7 @@ class TwoSphereAcc(AbstractAcc2D):
     This coordinate has corresponding velocity class:
 
     >>> s2.integral_cls
-    <class 'coordinax._src.d2.spherical.TwoSphereVel'>
+    <class 'coordinax...TwoSphereVel'>
 
     """
 

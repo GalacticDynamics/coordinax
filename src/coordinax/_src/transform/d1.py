@@ -9,13 +9,12 @@ from plum import dispatch
 import quaxed.numpy as jnp
 from unxt import Quantity
 
-from coordinax._src.d2.cartesian import CartesianPos2D
-from coordinax._src.d2.polar import PolarPos
 from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.d3.cylindrical import CylindricalPos
 from coordinax._src.d3.mathspherical import MathSphericalPos
 from coordinax._src.d3.spherical import SphericalPos
 from coordinax._src.vectors.d1 import CartesianPos1D, RadialPos
+from coordinax._src.vectors.d2 import CartesianPos2D, PolarPos
 
 # =============================================================================
 # CartesianPos1D
