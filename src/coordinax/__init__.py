@@ -27,7 +27,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
 
     # isort: split
     # Register vector transformations
-    from ._src import transform
+    from ._src.vectors import transform
 
     # isort: split
     # Interoperability
