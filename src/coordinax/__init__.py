@@ -12,7 +12,6 @@ from .setup_package import RUNTIME_TYPECHECKER
 with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from . import angle, distance, frames, operators
     from ._src import (
-        d1,
         d2,
         d3,
         d4,
@@ -24,7 +23,6 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
         utils,
         vectors,
     )
-    from ._src.d1 import *
     from ._src.d2 import *
     from ._src.d3 import *
     from ._src.d4 import *
@@ -35,6 +33,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from ._src.typing import *
     from ._src.utils import *
     from ._src.vectors.base import *
+    from ._src.vectors.d1 import *
     from ._version import version as __version__
     from .distance import Distance
 
@@ -50,7 +49,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
 __all__ = ["__version__", "operators", "distance", "angle", "frames", "Distance"]
 __all__ += funcs.__all__
 __all__ += vectors.base.__all__
-__all__ += d1.__all__
+__all__ += vectors.d1.__all__
 __all__ += d2.__all__
 __all__ += d3.__all__
 __all__ += d4.__all__
@@ -69,7 +68,6 @@ del (
     transform,
     typing,
     utils,
-    d1,
     d2,
     d3,
     d4,

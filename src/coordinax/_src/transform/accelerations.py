@@ -14,11 +14,11 @@ import quaxed.numpy as jnp
 from dataclassish import field_items
 from unxt import Quantity
 
-from coordinax._src.d1.base import AbstractAcc1D
 from coordinax._src.d2.base import AbstractAcc2D
 from coordinax._src.d3.base import AbstractAcc3D
 from coordinax._src.distance.base import AbstractDistance
 from coordinax._src.vectors.base import AbstractAcc, AbstractPos, AbstractVel
+from coordinax._src.vectors.d1 import AbstractAcc1D
 
 
 # TODO: implement for cross-representations

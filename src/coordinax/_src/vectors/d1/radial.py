@@ -1,4 +1,4 @@
-"""Carteisan vector."""
+"""Radial 1D vectors."""
 
 __all__ = ["RadialPos", "RadialVel", "RadialAcc"]
 
