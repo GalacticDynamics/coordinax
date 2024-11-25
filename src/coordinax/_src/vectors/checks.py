@@ -128,6 +128,27 @@ def check_less_than_equal(
     return eqx.error_if(x, xp.any(x > max_val), msg)
 
 
+def check_greater_than(
+    x: AbstractQuantity, min_val: AbstractQuantity, /, name: str = ""
+) -> AbstractQuantity:
+    """Check that the input value is greater than the input minimum value.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+
+    Raise an error if the input is smaller than the minimum value.
+
+    >>> x = Quantity([-1, 1, 2], "m")
+    >>> try: check_greater_than(x, 1.0)
+    ... except Exception: pass
+
+    """
+    name = f" {name}" if name else name
+    msg = f"The input{name} must be greater than the specified minimum value."
+    return eqx.error_if(x, xp.any(x <= min_val), msg)
+
+
 def check_greater_than_equal(
     x: AbstractQuantity, min_val: AbstractQuantity, /, name: str = ""
 ) -> AbstractQuantity:

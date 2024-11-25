@@ -19,9 +19,9 @@ from coordinax._src.angle import Angle
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import VectorAttribute
 from coordinax._src.vectors.checks import (
+    check_greater_than,
     check_greater_than_equal,
     check_less_than_equal,
-    check_non_negative,
 )
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -29,6 +29,11 @@ from coordinax._src.vectors.converters import converter_azimuth_to_range
 @final
 class ProlateSpheroidalPos(AbstractPos3D):
     """Prolate spheroidal coordinates as defined by Dejonghe & de Zeeuw 1988.
+
+    Note that valid coordinates have:
+    - mu >= Delta^2
+    - |nu| <= Delta^2
+    - Delta > 0
 
     Parameters
     ----------
@@ -40,6 +45,10 @@ class ProlateSpheroidalPos(AbstractPos3D):
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
     Delta : `coordinax.distance.Distance`
         The focal length of the coordinate system.
+
+    Examples
+    --------
+    TODO: add valid and invalid examples
 
     """
 
@@ -69,10 +78,9 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        check_non_negative(self.Delta, name="Delta")
-        check_non_negative(self.mu, name="mu")
-        check_greater_than_equal(self.mu, self.Delta**2)
-        check_less_than_equal(jnp.abs(self.nu), self.Delta**2)
+        check_greater_than(self.Delta, 0.0, name="Delta")
+        check_greater_than_equal(self.mu, self.Delta**2, name="mu")
+        check_less_than_equal(jnp.abs(self.nu), self.Delta**2, name="nu")
 
     @classproperty
     @classmethod
