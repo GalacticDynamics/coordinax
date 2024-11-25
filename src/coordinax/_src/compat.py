@@ -12,7 +12,6 @@ import quaxed.numpy as xp
 from dataclassish import field_values
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
-from coordinax._src.d3.cartesian import CartesianAcc3D, CartesianVel3D
 from coordinax._src.utils import full_shaped
 from coordinax._src.vectors.base.base import AbstractVector
 from coordinax._src.vectors.d1 import (
@@ -22,6 +21,7 @@ from coordinax._src.vectors.d1 import (
     RadialVel,
 )
 from coordinax._src.vectors.d2 import CartesianAcc2D, CartesianVel2D
+from coordinax._src.vectors.d3 import CartesianAcc3D, CartesianVel3D
 
 #####################################################################
 # Convert to Quantity

@@ -6,7 +6,7 @@ import astropy.coordinates as apyc
 import equinox as eqx
 
 from coordinax._coordinax_space_frames import ICRS, Galactocentric
-from coordinax._src.d3.lonlatspherical import LonLatSphericalPos
+from coordinax._src.vectors.d3 import LonLatSphericalPos
 
 
 @ICRS.from_._f.register  # noqa: SLF001

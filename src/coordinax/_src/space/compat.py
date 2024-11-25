@@ -31,11 +31,11 @@ def fields(obj: Space, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
 
     >>> fields(space)
-    (Field(name='length',type=<class 'coordinax._src.d3.cartesian.CartesianPos3D'>,...),
-     Field(name='speed',type=<class 'coordinax._src.d3.cartesian.CartesianVel3D'>,...),
-     Field(name='acceleration',type=<class 'coordinax._src.d3.cartesian.CartesianAcc3D'>,...))
+    (Field(name='length',type=<class 'coordinax...CartesianPos3D'>,...),
+     Field(name='speed',type=<class 'coordinax...CartesianVel3D'>,...),
+     Field(name='acceleration',type=<class 'coordinax...CartesianAcc3D'>,...))
 
-    """  # noqa: E501
+    """
     return fields.invoke(Mapping[str, Any])(obj)
 
 

@@ -7,9 +7,9 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 
-from coordinax._src.d3.cylindrical import CylindricalPos, CylindricalVel
 from coordinax._src.dn.poincare import PoincarePolarVector
 from coordinax._src.space import Space
+from coordinax._src.vectors.d3 import CylindricalPos, CylindricalVel
 
 
 @dispatch  # type: ignore[misc]
