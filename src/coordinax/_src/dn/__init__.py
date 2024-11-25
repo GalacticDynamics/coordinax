@@ -1,5 +1,5 @@
-# pylint: disable=duplicate-code
 """N-dimensional."""
+# pylint: disable=duplicate-code
 
 from . import base, cartesian, poincare, transform
 from .base import *

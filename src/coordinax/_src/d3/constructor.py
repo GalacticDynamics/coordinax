@@ -1,5 +1,5 @@
-# pylint: disable=duplicate-code
 """3-dimensional constructors."""
+# pylint: disable=duplicate-code
 
 __all__: list[str] = []
 

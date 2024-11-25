@@ -1,5 +1,5 @@
-# pylint: disable=duplicate-code
 """4-dimensional."""
+# pylint: disable=duplicate-code
 
 from . import base, compat, spacetime
 from .base import *

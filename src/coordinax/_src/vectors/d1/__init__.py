@@ -1,5 +1,5 @@
-# pylint: disable=duplicate-code
 """1-dimensional."""
+# pylint: disable=duplicate-code
 
 __all__ = [
     # Base

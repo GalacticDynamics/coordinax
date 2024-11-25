@@ -1,6 +1,5 @@
-# pylint: disable=import-error
-
 """Nox sessions."""
+# pylint: disable=import-error
 
 import argparse
 import shutil
