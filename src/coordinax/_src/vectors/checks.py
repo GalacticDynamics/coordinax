@@ -107,6 +107,59 @@ def check_non_negative(x: AbstractQuantity, /, name: str = "") -> AbstractQuanti
     return eqx.error_if(x, xp.any(x < 0), "The input{name} must be non-negative.")
 
 
+def check_non_negative_non_zero(
+    x: AbstractQuantity, /, name: str = ""
+) -> AbstractQuantity:
+    """Check that the input is non-negative and non-zero.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+
+    Pass through the input if the value is non-negative.
+
+    >>> x = Quantity([1, 2, 3], "m")
+    >>> check_non_negative_non_zero(x)
+    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+
+    Raise an error if any value is negative or zero.
+
+    >>> x = Quantity([-1, 1, 2], "m")
+    >>> try: check_non_negative_non_zero(x)
+    ... except Exception: pass
+
+    >>> x = Quantity([0, 1, 2], "m")
+    >>> try: check_non_negative_non_zero(x)
+    ... except Exception: pass
+
+    """
+    name = f" {name}" if name else name
+    return eqx.error_if(
+        x, xp.any(x <= 0), "The input{name} must be non-negative and non-zero."
+    )
+
+
+def check_less_than(
+    x: AbstractQuantity, max_val: AbstractQuantity, /, name: str = ""
+) -> AbstractQuantity:
+    """Check that the input value is less than the input maximum value.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+
+    Raise an error if the input is larger than the maximum value.
+
+    >>> x = Quantity([-1, 1, 2], "m")
+    >>> try: check_less_than(x, 1.5)
+    ... except Exception: pass
+
+    """
+    name = f" {name}" if name else name
+    msg = f"The input{name} must be less than the specified maximum value."
+    return eqx.error_if(x, xp.any(x >= max_val), msg)
+
+
 def check_less_than_equal(
     x: AbstractQuantity, max_val: AbstractQuantity, /, name: str = ""
 ) -> AbstractQuantity:
