@@ -508,48 +508,51 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
     # ==========================================================================
     # represent_as
 
-    # TODO: do we enable these for ProlateSpheroidal?
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cylindrical_to_cartesian1d(self, vector):
-    #     """Test ``coordinax.represent_as(CartesianPos1D)``."""
-    #     cart1d = vector.represent_as(cx.CartesianPos1D)
+    @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    def test_cylindrical_to_cartesian1d(self, vector):
+        """Test ``coordinax.represent_as(CartesianPos1D)``."""
+        cart1d = vector.represent_as(cx.CartesianPos1D)
 
-    #     assert isinstance(cart1d, cx.CartesianPos1D)
-    #     assert jnp.allclose(
-    #         cart1d.x,
-    #         Quantity([1.0, 1.0806047, -1.2484405, -3.95997], "kpc"),
-    #         atol=Quantity(1e-8, "kpc"),
-    #     )
+        assert isinstance(cart1d, cx.CartesianPos1D)
+        assert jnp.allclose(
+            cart1d.x,
+            u.Quantity([0.0, 0.48326105, -0.4923916, -1.3282144], "kpc"),
+            atol=u.Quantity(1e-8, "kpc"),
+        )
 
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cylindrical_to_radial(self, vector):
-    #     """Test ``coordinax.represent_as(RadialPos)``."""
-    #     radial = vector.represent_as(cx.RadialPos)
+    @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    def test_cylindrical_to_radial(self, vector):
+        """Test ``coordinax.represent_as(RadialPos)``."""
+        radial = vector.represent_as(cx.RadialPos)
 
-    #     assert isinstance(radial, cx.RadialPos)
-    #     assert jnp.array_equal(radial.r, Quantity([1, 2, 3, 4], "kpc"))
+        assert isinstance(radial, cx.RadialPos)
+        assert jnp.array_equal(
+            radial.r, u.Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
+        )
 
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cylindrical_to_cartesian2d(self, vector):
-    #     """Test ``coordinax.represent_as(CartesianPos2D)``."""
-    #     cart2d = vector.represent_as(cx.CartesianPos2D)
+    @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    def test_cylindrical_to_cartesian2d(self, vector):
+        """Test ``coordinax.represent_as(CartesianPos2D)``."""
+        cart2d = vector.represent_as(cx.CartesianPos2D)
 
-    #     assert isinstance(cart2d, cx.CartesianPos2D)
-    #     assert jnp.array_equal(
-    #         cart2d.x, Quantity([1.0, 1.0806046, -1.2484405, -3.95997], "kpc")
-    #     )
-    #     assert jnp.array_equal(
-    #         cart2d.y, Quantity([0.0, 1.6829419, 2.7278922, 0.56448], "kpc")
-    #     )
+        assert isinstance(cart2d, cx.CartesianPos2D)
+        assert jnp.array_equal(
+            cart2d.x, u.Quantity([0.0, 0.48326105, -0.4923916, -1.3282144], "kpc")
+        )
+        assert jnp.array_equal(
+            cart2d.y, u.Quantity([0.0, 0.75263447, 1.0758952, 0.18933235], "kpc")
+        )
 
-    # @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
-    # def test_cylindrical_to_polar(self, vector):
-    #     """Test ``coordinax.represent_as(PolarPos)``."""
-    #     polar = vector.represent_as(cx.PolarPos)
+    @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
+    def test_cylindrical_to_polar(self, vector):
+        """Test ``coordinax.represent_as(PolarPos)``."""
+        polar = vector.represent_as(cx.PolarPos)
 
-    #     assert isinstance(polar, cx.PolarPos)
-    #     assert jnp.array_equal(polar.r, Quantity([1, 2, 3, 4], "kpc"))
-    #     assert jnp.array_equal(polar.phi, Quantity([0, 1, 2, 3], "rad"))
+        assert isinstance(polar, cx.PolarPos)
+        assert jnp.array_equal(
+            polar.r, u.Quantity([0.0, 0.8944271, 1.183216, 1.3416408], "kpc")
+        )
+        assert jnp.array_equal(polar.phi, u.Quantity([0, 1, 2, 3], "rad"))
 
     def test_prolatespheroidal_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(CartesianPos3D)``."""
