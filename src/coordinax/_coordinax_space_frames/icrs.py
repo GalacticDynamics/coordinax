@@ -10,7 +10,7 @@ from jaxtyping import Array, Shaped
 import unxt as u
 
 from coordinax._src.distance import Distance
-from coordinax._src.frames.base import AbstractReferenceFrame
+from coordinax._src.frames import AbstractReferenceFrame
 
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
 LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]

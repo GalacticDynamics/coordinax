@@ -12,7 +12,7 @@ import unxt as u
 
 from coordinax._src.angle import Angle
 from coordinax._src.distance import Distance
-from coordinax._src.frames.base import AbstractReferenceFrame
+from coordinax._src.frames import AbstractReferenceFrame
 from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
 
 ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | Angle, ""]

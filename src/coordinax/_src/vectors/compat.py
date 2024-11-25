@@ -12,7 +12,7 @@ import quaxed.numpy as xp
 from dataclassish import field_values
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
-from coordinax._src.vectors.base.base import AbstractVector
+from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.d1 import (
     CartesianAcc1D,
     CartesianVel1D,
