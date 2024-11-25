@@ -26,10 +26,10 @@ from .base_spherical import (
     _90d,
     _180d,
 )
-from coordinax._src import checks
 from coordinax._src.angle import Angle
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 

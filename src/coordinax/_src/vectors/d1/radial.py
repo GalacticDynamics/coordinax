@@ -14,9 +14,9 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
-from coordinax._src.checks import check_r_non_negative
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.checks import check_r_non_negative
 
 
 @final

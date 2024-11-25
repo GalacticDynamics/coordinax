@@ -9,9 +9,9 @@ import quaxed.numpy as xp
 from unxt import is_unit_convertible
 from unxt.quantity import AbstractQuantity
 
-from .angle import Angle
-from .distance import Distance
-from .typing import BatchableAngle, BatchableAngleQ
+from coordinax._src.angle import Angle
+from coordinax._src.distance import Distance
+from coordinax._src.typing import BatchableAngle, BatchableAngleQ
 
 _0m = Distance(0, "meter")
 _0d = Angle(0, "rad")
@@ -52,7 +52,7 @@ def check_polar_range(
     Examples
     --------
     >>> from unxt import Quantity
-    >>> from coordinax._src.checks import check_polar_range
+    >>> from coordinax._src.vectors.checks import check_polar_range
 
     Pass through the input if it's in the range.
 
