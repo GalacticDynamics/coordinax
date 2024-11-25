@@ -18,10 +18,15 @@ import quaxed.numpy as jnp
 import unxt as u
 from xmmutablemap import ImmutableMap
 
-from coordinax._src.base import AbstractAcc, AbstractPos, AbstractVector, AbstractVel
 from coordinax._src.funcs import represent_as
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import (
+    AbstractAcc,
+    AbstractPos,
+    AbstractVector,
+    AbstractVel,
+)
 
 DimensionLike: TypeAlias = Dimension | str
 

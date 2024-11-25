@@ -20,11 +20,11 @@ from dataclassish.converters import Unless
 from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractPos4D
-from coordinax._src.base import AbstractVector, AttrFilter, VectorAttribute
 from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.typing import BatchableLength, BatchableTime, ScalarTime
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import AbstractVector, AttrFilter, VectorAttribute
 
 if TYPE_CHECKING:
     from typing_extensions import Never

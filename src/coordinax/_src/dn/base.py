@@ -12,13 +12,13 @@ import equinox as eqx
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 
-from coordinax._src.base import (
+from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import (
     AbstractAcc,
     AbstractPos,
     AbstractVector,
     AbstractVel,
 )
-from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:
     from typing_extensions import Never

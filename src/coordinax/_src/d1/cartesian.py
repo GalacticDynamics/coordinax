@@ -18,9 +18,9 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
-from coordinax._src.base import AbstractPos
-from coordinax._src.base.mixins import AvalMixin
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base.mixins import AvalMixin
 
 
 @final

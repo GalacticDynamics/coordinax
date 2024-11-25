@@ -6,13 +6,13 @@ __all__ = ["AbstractPos3D", "AbstractVel3D", "AbstractAcc3D"]
 from abc import abstractmethod
 from typing_extensions import override
 
-from coordinax._src.base import (
+from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import (
     AbstractAcc,
     AbstractPos,
     AbstractVector,
     AbstractVel,
 )
-from coordinax._src.utils import classproperty
 
 
 class AbstractPos3D(AbstractPos):

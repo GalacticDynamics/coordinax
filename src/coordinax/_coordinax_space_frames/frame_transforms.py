@@ -15,13 +15,13 @@ import unxt as u
 from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.angle import Angle
-from coordinax._src.base import AbstractVel
 from coordinax._src.d3.base import AbstractPos3D
 from coordinax._src.d3.cartesian import CartesianPos3D, CartesianVel3D
 from coordinax._src.distance import Distance
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import IdentityOperator
 from coordinax._src.operators.sequential import OperatorSequence
+from coordinax._src.vectors.base import AbstractVel
 
 ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]

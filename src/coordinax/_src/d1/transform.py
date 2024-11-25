@@ -9,7 +9,7 @@ from plum import dispatch
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from .cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D
 from .radial import RadialAcc, RadialPos, RadialVel
-from coordinax._src.base import AbstractPos, AbstractVel
+from coordinax._src.vectors.base import AbstractPos, AbstractVel
 
 ###############################################################################
 # 1D

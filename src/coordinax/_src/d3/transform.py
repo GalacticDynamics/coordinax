@@ -20,7 +20,7 @@ from .lonlatspherical import (
 )
 from .mathspherical import MathSphericalPos, MathSphericalVel
 from .spherical import SphericalPos, SphericalVel
-from coordinax._src.base import AbstractPos
+from coordinax._src.vectors.base import AbstractPos
 
 ###############################################################################
 # 3D

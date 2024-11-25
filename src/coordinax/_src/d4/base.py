@@ -6,8 +6,8 @@ __all__ = ["AbstractPos4D"]
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
-from coordinax._src.base import AbstractPos, AbstractVector
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import AbstractPos, AbstractVector
 
 if TYPE_CHECKING:
     from typing_extensions import Never

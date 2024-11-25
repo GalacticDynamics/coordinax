@@ -11,8 +11,13 @@ from jaxtyping import Shaped
 import quaxed.numpy as jnp
 from unxt import Quantity
 
-from coordinax._src.base import AbstractAcc, AbstractPos, AbstractVector, AbstractVel
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import (
+    AbstractAcc,
+    AbstractPos,
+    AbstractVector,
+    AbstractVel,
+)
 
 #####################################################################
 

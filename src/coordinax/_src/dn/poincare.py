@@ -11,8 +11,8 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 import coordinax._src.typing as ct
-from coordinax._src.base import AbstractPos, AbstractVel
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import AbstractPos, AbstractVel
 
 
 @final

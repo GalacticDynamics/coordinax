@@ -14,7 +14,6 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
-from coordinax._src.base import AbstractPos
 from coordinax._src.d1.cartesian import CartesianPos1D
 from coordinax._src.d2.cartesian import CartesianPos2D
 from coordinax._src.d3.base import AbstractPos3D
@@ -22,6 +21,7 @@ from coordinax._src.d3.cartesian import CartesianPos3D
 from coordinax._src.d4.spacetime import FourVector
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._src.operators.identity import IdentityOperator
+from coordinax._src.vectors.base import AbstractPos
 
 ##############################################################################
 # Spatial Translations

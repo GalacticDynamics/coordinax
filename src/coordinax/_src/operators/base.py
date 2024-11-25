@@ -13,7 +13,7 @@ from plum import dispatch
 import unxt as u
 from dataclassish import field_items
 
-from coordinax._src.base import AbstractPos
+from coordinax._src.vectors.base import AbstractPos
 
 if TYPE_CHECKING:
     from coordinax.operators import OperatorSequence

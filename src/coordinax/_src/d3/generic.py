@@ -15,8 +15,8 @@ import quaxed.numpy as jnp
 from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
-from coordinax._src.base import AbstractVector
-from coordinax._src.base.mixins import AvalMixin
+from coordinax._src.vectors.base import AbstractVector
+from coordinax._src.vectors.base.mixins import AvalMixin
 
 VT = TypeVar("VT", bound="CartesianGeneric3D")
 

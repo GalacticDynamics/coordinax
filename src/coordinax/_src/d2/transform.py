@@ -11,7 +11,7 @@ import quaxed.numpy as xp
 from .base import AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarPos, PolarVel
-from coordinax._src.base import AbstractPos
+from coordinax._src.vectors.base import AbstractPos
 
 
 @dispatch

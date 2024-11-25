@@ -10,7 +10,7 @@ from typing import Any
 from plum import dispatch
 
 from .core import Space
-from coordinax._src.base import AbstractVector
+from coordinax._src.vectors.base import AbstractVector
 
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
