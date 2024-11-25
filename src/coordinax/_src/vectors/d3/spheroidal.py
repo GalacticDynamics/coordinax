@@ -48,7 +48,42 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     Examples
     --------
-    TODO: add valid and invalid examples
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(3.0, "kpc2"),
+    ...     nu=Quantity(0.5, "kpc2"),
+    ...     phi=Quantity(0.25, "rad"),
+    ...     Delta=Quantity(1.5, "kpc"),
+    ... )
+    >>> vec
+    ProlateSpheroidalPos(
+      mu=Quantity[PhysicalType('area')](value=f32[], unit=Unit("kpc2")),
+      nu=Quantity[PhysicalType('area')](value=f32[], unit=Unit("kpc2")),
+      phi=Angle(value=f32[], unit=Unit("rad")),
+      Delta=Quantity[PhysicalType('length')](value=weak_f32[], unit=Unit("kpc"))
+    )
+
+    This fails with a zero or negative Delta:
+
+    >>> try: vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(3.0, "kpc2"),
+    ...     nu=Quantity(0.5, "kpc2"),
+    ...     phi=Quantity(0.25, "rad"),
+    ...     Delta=Quantity(0.0, "kpc"),
+    ... )
+    ... except Exception as e: pass
+
+    Or with invalid mu and nu:
+
+    >>> try: vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(0.5, "kpc2"),
+    ...     nu=Quantity(0.5, "kpc2"),
+    ...     phi=Quantity(0.25, "rad"),
+    ...     Delta=Quantity(1.5, "kpc"),
+    ... )
+    ... except Exception as e: pass
 
     """
 
@@ -77,8 +112,12 @@ class ProlateSpheroidalPos(AbstractPos3D):
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         check_non_negative_non_zero(self.Delta, name="Delta")
-        check_greater_than_equal(self.mu, self.Delta**2, name="mu")
-        check_less_than_equal(jnp.abs(self.nu), self.Delta**2, name="nu")
+        check_greater_than_equal(
+            self.mu, self.Delta**2, name="mu", comparison_name="Delta^2"
+        )
+        check_less_than_equal(
+            jnp.abs(self.nu), self.Delta**2, name="nu", comparison_name="Delta^2"
+        )
 
     @classproperty
     @classmethod

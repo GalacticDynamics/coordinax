@@ -140,7 +140,11 @@ def check_non_negative_non_zero(
 
 
 def check_less_than(
-    x: AbstractQuantity, max_val: AbstractQuantity, /, name: str = ""
+    x: AbstractQuantity,
+    max_val: AbstractQuantity,
+    /,
+    name: str = "",
+    comparison_name: str = "the specified maximum value",
 ) -> AbstractQuantity:
     """Check that the input value is less than the input maximum value.
 
@@ -156,12 +160,16 @@ def check_less_than(
 
     """
     name = f" {name}" if name else name
-    msg = f"The input{name} must be less than the specified maximum value."
+    msg = f"The input{name} must be less than {comparison_name}."
     return eqx.error_if(x, xp.any(x >= max_val), msg)
 
 
 def check_less_than_equal(
-    x: AbstractQuantity, max_val: AbstractQuantity, /, name: str = ""
+    x: AbstractQuantity,
+    max_val: AbstractQuantity,
+    /,
+    name: str = "",
+    comparison_name: str = "the specified maximum value",
 ) -> AbstractQuantity:
     """Check that the input value is less than or equal to the input maximum value.
 
@@ -177,12 +185,16 @@ def check_less_than_equal(
 
     """
     name = f" {name}" if name else name
-    msg = f"The input{name} must be less than or equal to the specified maximum value."
+    msg = f"The input{name} must be less than or equal to {comparison_name}."
     return eqx.error_if(x, xp.any(x > max_val), msg)
 
 
 def check_greater_than(
-    x: AbstractQuantity, min_val: AbstractQuantity, /, name: str = ""
+    x: AbstractQuantity,
+    min_val: AbstractQuantity,
+    /,
+    name: str = "",
+    comparison_name: str = "the specified minimum value",
 ) -> AbstractQuantity:
     """Check that the input value is greater than the input minimum value.
 
@@ -198,12 +210,16 @@ def check_greater_than(
 
     """
     name = f" {name}" if name else name
-    msg = f"The input{name} must be greater than the specified minimum value."
+    msg = f"The input{name} must be greater than {comparison_name}."
     return eqx.error_if(x, xp.any(x <= min_val), msg)
 
 
 def check_greater_than_equal(
-    x: AbstractQuantity, min_val: AbstractQuantity, /, name: str = ""
+    x: AbstractQuantity,
+    min_val: AbstractQuantity,
+    /,
+    name: str = "",
+    comparison_name: str = "the specified minimum value",
 ) -> AbstractQuantity:
     """Check that the input value is greater than or equal to the input minimum value.
 
@@ -214,13 +230,10 @@ def check_greater_than_equal(
     Raise an error if the input is smaller than the minimum value.
 
     >>> x = Quantity([-1, 1, 2], "m")
-    >>> try: check_greater_than(x, 1.0)
+    >>> try: check_greater_than_equal(x, 1.0)
     ... except Exception: pass
 
     """
     name = f" {name}" if name else name
-    msg = (
-        f"The input{name} must be greater than or equal to the specified minimum "
-        "value."
-    )
+    msg = f"The input{name} must be greater than or equal to {comparison_name}."
     return eqx.error_if(x, xp.any(x < min_val), msg)
