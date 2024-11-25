@@ -30,5 +30,7 @@ def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
     (2,)
 
     """
-    arrays = jnp.broadcast_arrays(*field_values(obj))
+    from .base import AttrFilter
+
+    arrays = jnp.broadcast_arrays(*field_values(AttrFilter, obj))
     return _dataclass_replace(obj, **dict(zip(obj.components, arrays, strict=True)))
