@@ -1,12 +1,13 @@
 """Built-in vector classes."""
 
-__all__ = ["ProlateSpheroidalPos", "ProlateSpheroidalVel", "ProlateSpheroidalAcc"]
+__all__ = ["ProlateSpheroidalAcc", "ProlateSpheroidalPos", "ProlateSpheroidalVel"]
 
 from dataclasses import KW_ONLY
 from functools import partial
 from typing import final
 
 import equinox as eqx
+from jaxtyping import Shaped
 
 import quaxed.numpy as xp
 from dataclassish.converters import Unless
@@ -15,14 +16,15 @@ from unxt import Quantity
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angle import Angle
-from coordinax._src.checks import (
+from coordinax._src.distance import AbstractDistance, Distance
+from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base import VectorAttribute
+from coordinax._src.vectors.checks import (
     check_greater_than_equal,
     check_less_than_equal,
     check_r_non_negative,
 )
-from coordinax._src.converters import converter_azimuth_to_range
-from coordinax._src.distance import AbstractDistance, Distance
-from coordinax._src.utils import classproperty
+from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
 @final
@@ -61,11 +63,12 @@ class ProlateSpheroidalPos(AbstractPos3D):
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     _: KW_ONLY
-    Delta: ct.BatchableDistance = eqx.field(
-        converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float)),
-        repr=False,  # TODO: this still seems to appear in __str__ and latex repr
+    Delta: Shaped[Quantity["length"], ""] = eqx.field(
+        default=VectorAttribute(
+            converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
+        ),
+        repr=False,
     )
-
     """Focal length of the coordinate system."""
 
     def __check_init__(self) -> None:
