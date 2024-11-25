@@ -9,20 +9,19 @@ from typing import final
 import equinox as eqx
 from jaxtyping import Shaped
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 from dataclassish.converters import Unless
 from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angle import Angle
-from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import VectorAttribute
 from coordinax._src.vectors.checks import (
     check_greater_than_equal,
     check_less_than_equal,
-    check_r_non_negative,
+    check_non_negative,
 )
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -64,18 +63,17 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     _: KW_ONLY
     Delta: Shaped[Quantity["length"], ""] = eqx.field(
-        default=VectorAttribute(
-            converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
-        ),
+        default=VectorAttribute(),
         repr=False,
     )
     """Focal length of the coordinate system."""
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        check_r_non_negative(self.mu)
+        check_non_negative(self.Delta, name="Delta")
+        check_non_negative(self.mu, name="mu")
         check_greater_than_equal(self.mu, self.Delta**2)
-        check_less_than_equal(xp.abs(self.nu), self.Delta**2)
+        check_less_than_equal(jnp.abs(self.nu), self.Delta**2)
 
     @classproperty
     @classmethod

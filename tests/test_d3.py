@@ -493,10 +493,10 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
     def vector(self) -> cx.AbstractPos:
         """Return a vector."""
         return cx.ProlateSpheroidalPos(
-            mu=Quantity([1, 2, 3, 4], "kpc2"),
-            nu=Quantity([0.1, 0.2, 0.3, 0.4], "kpc2"),
-            phi=Quantity([0, 1, 2, 3], "rad"),
-            Delta=Quantity(1.0, "kpc"),
+            mu=u.Quantity([1, 2, 3, 4], "kpc2"),
+            nu=u.Quantity([0.1, 0.2, 0.3, 0.4], "kpc2"),
+            phi=u.Quantity([0, 1, 2, 3], "rad"),
+            Delta=u.Quantity(1.0, "kpc"),
         )
 
     @pytest.mark.skip("No astropy equivalent")
@@ -557,13 +557,13 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
         assert isinstance(cart3d, cx.CartesianPos3D)
         assert jnp.array_equal(
-            cart3d.x, Quantity([0.0, 0.48326105, -0.4923916, -1.3282144], "kpc")
+            cart3d.x, u.Quantity([0.0, 0.48326105, -0.4923916, -1.3282144], "kpc")
         )
         assert jnp.array_equal(
-            cart3d.y, Quantity([0.0, 0.75263447, 1.0758952, 0.18933235], "kpc")
+            cart3d.y, u.Quantity([0.0, 0.75263447, 1.0758952, 0.18933235], "kpc")
         )
         assert jnp.array_equal(
-            cart3d.z, Quantity([0.31622776, 0.6324555, 0.9486833, 1.264911], "kpc")
+            cart3d.z, u.Quantity([0.31622776, 0.6324555, 0.9486833, 1.264911], "kpc")
         )
 
     def test_prolatespheroidal_to_cylindrical(self, vector):
@@ -572,11 +572,11 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
         assert isinstance(cyl, cx.CylindricalPos)
         assert jnp.array_equal(
-            cyl.rho, Quantity([0.0, 0.8944272, 1.183216, 1.3416408], "kpc")
+            cyl.rho, u.Quantity([0.0, 0.8944272, 1.183216, 1.3416408], "kpc")
         )
         assert jnp.array_equal(cyl.phi, vector.phi)
         assert jnp.array_equal(
-            cyl.z, Quantity([0.31622776, 0.6324555, 0.9486833, 1.264911], "kpc")
+            cyl.z, u.Quantity([0.31622776, 0.6324555, 0.9486833, 1.264911], "kpc")
         )
 
     def test_prolatespheroidal_to_spherical(self, vector):
@@ -585,11 +585,11 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
         assert isinstance(spherical, cx.SphericalPos)
         assert jnp.array_equal(
-            spherical.r, Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
+            spherical.r, u.Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
         )
         assert jnp.array_equal(spherical.phi, vector.phi)
         assert jnp.array_equal(
-            spherical.theta, Quantity([0.0, 0.95531654, 0.89496875, 0.8148269], "rad")
+            spherical.theta, u.Quantity([0.0, 0.95531654, 0.89496875, 0.8148269], "rad")
         )
 
     def test_prolatespheroidal_to_prolatespheroidal(self, vector):
@@ -602,7 +602,7 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
         # With a different focal length, should not be the same:
         newvec = vector.represent_as(
-            cx.ProlateSpheroidalPos, Delta=Quantity(0.7, "kpc")
+            cx.ProlateSpheroidalPos, Delta=u.Quantity(0.7, "kpc")
         )
         # assert not jnp.array_equal(newvec.mu, vector.mu)
         assert not jnp.array_equal(newvec.nu, vector.nu)
