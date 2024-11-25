@@ -9,18 +9,15 @@ import quaxed.numpy as xp
 import unxt as u
 from unxt.quantity import AbstractQuantity
 
-from coordinax._src.angle import Angle, BatchableAngleQ
-from coordinax._src.distance import Distance
+from coordinax._src.angle import Angle
+from coordinax._src.typing import BatchableAngleQ
 
-_0m = Distance(0, "meter")
 _0d = Angle(0, "rad")
 _pid = Angle(180, "deg")
 _2pid = Angle(360, "deg")
 
 
-def check_r_non_negative(
-    r: AbstractQuantity, /, _l: Distance = _0m
-) -> AbstractQuantity:
+def check_r_non_negative(r: AbstractQuantity) -> AbstractQuantity:
     """Check that the radial distance is non-negative.
 
     Examples
@@ -40,7 +37,7 @@ def check_r_non_negative(
     ... except Exception: pass
 
     """
-    return eqx.error_if(r, xp.any(r < _l), "The radial distance must be non-negative.")
+    return check_non_negative(r, "radial distance")
 
 
 def check_polar_range(
@@ -86,8 +83,32 @@ def check_polar_range(
     )
 
 
+def check_non_negative(x: AbstractQuantity, /, name: str = "") -> AbstractQuantity:
+    """Check that the input is non-negative.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+
+    Pass through the input if the value is non-negative.
+
+    >>> x = Quantity([0, 1, 2], "m")
+    >>> check_non_negative(x)
+    Quantity['length'](Array([0, 1, 2], dtype=int32), unit='m')
+
+    Raise an error if any value is negative.
+
+    >>> x = Quantity([-1, 1, 2], "m")
+    >>> try: check_non_negative(x)
+    ... except Exception: pass
+
+    """
+    name = f" {name}" if name else name
+    return eqx.error_if(x, xp.any(x < 0), "The input{name} must be non-negative.")
+
+
 def check_less_than_equal(
-    x: AbstractQuantity, max_val: AbstractQuantity
+    x: AbstractQuantity, max_val: AbstractQuantity, /, name: str = ""
 ) -> AbstractQuantity:
     """Check that the input value is less than or equal to the input maximum value.
 
@@ -102,12 +123,13 @@ def check_less_than_equal(
     ... except Exception: pass
 
     """
-    msg = "The input must be less than or equal to the specified maximum value."
+    name = f" {name}" if name else name
+    msg = f"The input{name} must be less than or equal to the specified maximum value."
     return eqx.error_if(x, xp.any(x > max_val), msg)
 
 
 def check_greater_than_equal(
-    x: AbstractQuantity, min_val: AbstractQuantity
+    x: AbstractQuantity, min_val: AbstractQuantity, /, name: str = ""
 ) -> AbstractQuantity:
     """Check that the input value is greater than or equal to the input minimum value.
 
@@ -122,5 +144,9 @@ def check_greater_than_equal(
     ... except Exception: pass
 
     """
-    msg = "The input must be greater than or equal to the specified minimum value."
+    name = f" {name}" if name else name
+    msg = (
+        f"The input{name} must be greater than or equal to the specified minimum "
+        "value."
+    )
     return eqx.error_if(x, xp.any(x < min_val), msg)
