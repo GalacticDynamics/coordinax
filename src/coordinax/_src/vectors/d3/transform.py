@@ -21,7 +21,6 @@ from .lonlatspherical import (
 from .mathspherical import MathSphericalPos, MathSphericalVel
 from .spherical import SphericalPos, SphericalVel
 from .spheroidal import ProlateSpheroidalPos, ProlateSpheroidalVel
-from coordinax._src.distance import AbstractDistance
 from coordinax._src.vectors.base import AbstractPos
 
 ###############################################################################
@@ -600,7 +599,8 @@ def represent_as(
     ...     Delta=Quantity(0.5, "kpc")
     ... )
     >>> print(cx.represent_as(vec, cx.CylindricalPos))
-    TODO: add
+    <CylindricalPos (rho[kpc], phi[deg], z[kpc])
+        [ 0.387 90.     0.894]>
 
     """
     Delta2 = current.Delta**2
@@ -619,9 +619,7 @@ def represent_as(
 def represent_as(
     current: CylindricalPos,
     target: type[ProlateSpheroidalPos],
-    *,
-    Delta: AbstractDistance | Quantity["length"],  # noqa: N803
-    **kwargs: Any,
+    Delta: Quantity["length"],  # noqa: N803
 ) -> ProlateSpheroidalPos:
     """CylindricalPos -> ProlateSpheroidalPos.
 
@@ -636,8 +634,8 @@ def represent_as(
     ...     z=Quantity(1, "kpc")
     ... )
     >>> print(vec.represent_as(cx.ProlateSpheroidalPos, Delta=Quantity(0.5, "kpc")))
-    <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[deg], Delta[kpc])
-        [ 2.133  0.117 90.     0.5  ]>
+    <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[deg])
+        [ 2.133  0.117 90.   ]>
 
     """
     R2 = current.rho**2
@@ -690,7 +688,24 @@ def represent_as(
 def represent_as(
     current: ProlateSpheroidalPos, target: type[CartesianPos3D], /, **kwargs: Any
 ) -> CartesianPos3D:
-    """ProlateSpheroidalPos -> CartesianPos3D."""
+    """ProlateSpheroidalPos -> CartesianPos3D.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(1., "kpc2"),
+    ...     nu=Quantity(0.2, "kpc2"),
+    ...     phi=Quantity(90, "deg"),
+    ...     Delta=Quantity(0.5, "kpc")
+    ... )
+    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        [-1.693e-08  3.873e-01  8.944e-01]>
+
+    """
     cyl = represent_as(current, CylindricalPos)
     return represent_as(cyl, target)
 
@@ -699,20 +714,34 @@ def represent_as(
 def represent_as(
     current: CartesianPos3D,
     target: type[ProlateSpheroidalPos],
-    *,
-    Delta: AbstractDistance | Quantity["length"],  # noqa: N803
-    **kwargs: Any,
+    Delta: Quantity["length"],  # noqa: N803
 ) -> ProlateSpheroidalPos:
     """CartesianPos3D -> ProlateSpheroidalPos."""
     cyl = represent_as(current, CylindricalPos)
-    return represent_as(cyl, target, Delta=Delta)
+    return represent_as(cyl, target, Delta)
 
 
 @dispatch
 def represent_as(
-    current: ProlateSpheroidalPos, target: type[ProlateSpheroidalPos], /
+    current: ProlateSpheroidalPos, target: type[ProlateSpheroidalPos]
 ) -> ProlateSpheroidalPos:
-    """ProlateSpheroidalPos -> ProlateSpheroidalPos."""
+    """ProlateSpheroidalPos -> ProlateSpheroidalPos.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(1., "kpc2"),
+    ...     nu=Quantity(0.2, "kpc2"),
+    ...     phi=Quantity(90, "deg"),
+    ...     Delta=Quantity(0.5, "kpc")
+    ... )
+    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos))
+    <ProlateSpheroidalPos...>
+
+    """
     return current
 
 
@@ -720,13 +749,29 @@ def represent_as(
 def represent_as(
     current: ProlateSpheroidalPos,
     target: type[ProlateSpheroidalPos],
-    *,
-    Delta: AbstractDistance | Quantity["length"],  # noqa: N803
+    Delta: Quantity["length"],  # noqa: N803
+    /,
     **kwargs: Any,
 ) -> ProlateSpheroidalPos:
-    """ProlateSpheroidalPos -> ProlateSpheroidalPos."""
+    """ProlateSpheroidalPos -> ProlateSpheroidalPos.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(1., "kpc2"),
+    ...     nu=Quantity(0.2, "kpc2"),
+    ...     phi=Quantity(90, "deg"),
+    ...     Delta=Quantity(0.5, "kpc")
+    ... )
+    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Delta=Quantity(0.5, "kpc")))
+    <ProlateSpheroidalPos...>
+
+    """
     cyl = represent_as(current, CylindricalPos)
-    return represent_as(cyl, target, Delta=Delta)
+    return represent_as(cyl, target, Delta)
 
 
 # =============================================================================

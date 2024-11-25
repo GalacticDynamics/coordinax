@@ -598,25 +598,20 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
     def test_prolatespheroidal_to_prolatespheroidal(self, vector):
         """Test ``coordinax.represent_as(ProlateSpheroidalPos)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.ProlateSpheroidalPos, Delta=vector.Delta)
-        assert jnp.array_equal(newvec.mu, vector.mu)
+        newvec = vector.represent_as(cx.ProlateSpheroidalPos, vector.Delta)
+        assert jnp.allclose(newvec.mu.value, vector.mu.value)
         assert jnp.allclose(newvec.nu.value, vector.nu.value)
         assert jnp.array_equal(newvec.phi, vector.phi)
 
         # With a different focal length, should not be the same:
-        newvec = vector.represent_as(
-            cx.ProlateSpheroidalPos, Delta=u.Quantity(0.7, "kpc")
-        )
-        # assert not jnp.array_equal(newvec.mu, vector.mu)
-        assert not jnp.array_equal(newvec.nu, vector.nu)
-        # assert not jnp.array_equal(newvec.phi, vector.phi)
+        newvec = vector.represent_as(cx.ProlateSpheroidalPos, u.Quantity(0.5, "kpc"))
+        assert not jnp.allclose(newvec.mu.value, vector.mu.value)
+        assert not jnp.allclose(newvec.nu.value, vector.nu.value)
+        assert jnp.array_equal(newvec.phi, vector.phi)
 
         # The normal `represent_as` method should return the same object
-        # TODO: this fails because (I think) the output gets wrapped in a call of the
-        # initializer cx.ProlateSpheroidalPos(...), which then does not have the
-        # Delta=... argument
-        # newvec = cx.represent_as(vector, cx.ProlateSpheroidalPos)
-        # assert newvec is vector
+        newvec = cx.represent_as(vector, cx.ProlateSpheroidalPos)
+        assert newvec is vector
 
 
 class AbstractVel3DTest(AbstractVelTest):
