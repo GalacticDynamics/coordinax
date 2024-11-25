@@ -104,7 +104,7 @@ def check_non_negative(x: AbstractQuantity, /, name: str = "") -> AbstractQuanti
 
     """
     name = f" {name}" if name else name
-    return eqx.error_if(x, xp.any(x < 0), "The input{name} must be non-negative.")
+    return eqx.error_if(x, xp.any(x < 0), f"The input{name} must be non-negative.")
 
 
 def check_non_negative_non_zero(
@@ -135,7 +135,7 @@ def check_non_negative_non_zero(
     """
     name = f" {name}" if name else name
     return eqx.error_if(
-        x, xp.any(x <= 0), "The input{name} must be non-negative and non-zero."
+        x, xp.any(x <= 0), f"The input{name} must be non-negative and non-zero."
     )
 
 
