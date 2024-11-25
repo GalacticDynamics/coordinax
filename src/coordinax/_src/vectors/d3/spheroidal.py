@@ -63,8 +63,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     _: KW_ONLY
     Delta: Shaped[Quantity["length"], ""] = eqx.field(
-        default=VectorAttribute(),
-        repr=False,
+        default=VectorAttribute(), repr=False
     )
     """Focal length of the coordinate system."""
 
