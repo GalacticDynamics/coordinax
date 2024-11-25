@@ -32,7 +32,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     # isort: split
     # Interoperability
     from . import _interop
-    from ._src import compat
+    from ._src.vectors import compat
 
 __all__ = ["__version__", "operators", "distance", "angle", "frames", "Distance"]
 __all__ += funcs.__all__
