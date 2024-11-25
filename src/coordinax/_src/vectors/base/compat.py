@@ -22,7 +22,7 @@ from .base_pos import AbstractPos
 from .flags import AttrFilter
 from coordinax._src.distance import Distance
 from coordinax._src.typing import Unit
-from coordinax._src.utils import full_shaped
+from coordinax._src.vectors.utils import full_shaped
 
 #####################################################################
 # Convert to Quantity

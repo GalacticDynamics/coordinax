@@ -21,10 +21,10 @@ from .base_spherical import (
     _360d,
 )
 from coordinax._src.angle import Angle
-from coordinax._src.checks import check_polar_range, check_r_non_negative
-from coordinax._src.converters import converter_azimuth_to_range
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors import checks
+from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 ##############################################################################
 # Position
@@ -67,8 +67,8 @@ class SphericalPos(AbstractSphericalPos):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        check_r_non_negative(self.r)
-        check_polar_range(self.theta)
+        checks.check_r_non_negative(self.r)
+        checks.check_polar_range(self.theta)
 
     @classproperty
     @classmethod

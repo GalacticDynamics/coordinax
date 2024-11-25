@@ -28,9 +28,10 @@ from unxt.quantity import AbstractQuantity
 
 from .flags import AttrFilter
 from .mixins import IPythonReprMixin
-from coordinax._src.funcs import represent_as
 from coordinax._src.typing import Unit
-from coordinax._src.utils import classproperty, full_shaped
+from coordinax._src.utils import classproperty
+from coordinax._src.vectors.funcs import represent_as
+from coordinax._src.vectors.utils import full_shaped
 
 if TYPE_CHECKING:
     from typing_extensions import Self

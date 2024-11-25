@@ -4,7 +4,7 @@ from warnings import warn
 
 import pytest
 
-from coordinax._src.exceptions import IrreversibleDimensionChange
+from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
 
 
 def test_warning_irreversibledimensionchange():
