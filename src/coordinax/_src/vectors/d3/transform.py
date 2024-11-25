@@ -633,7 +633,7 @@ def represent_as(
     ...     phi=Quantity(90, "deg"),
     ...     z=Quantity(1, "kpc")
     ... )
-    >>> print(vec.represent_as(cx.ProlateSpheroidalPos, Delta=Quantity(0.5, "kpc")))
+    >>> print(vec.represent_as(cx.ProlateSpheroidalPos, Quantity(0.5, "kpc")))
     <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[deg])
         [ 2.133  0.117 90.   ]>
 
@@ -766,7 +766,7 @@ def represent_as(
     ...     phi=Quantity(90, "deg"),
     ...     Delta=Quantity(0.5, "kpc")
     ... )
-    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Delta=Quantity(0.5, "kpc")))
+    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Quantity(0.5, "kpc")))
     <ProlateSpheroidalPos...>
 
     """
