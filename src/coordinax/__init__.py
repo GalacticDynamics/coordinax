@@ -10,8 +10,7 @@ from .setup_package import RUNTIME_TYPECHECKER
 
 with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from . import angle, distance, frames, operators
-    from ._src import exceptions, funcs, typing, utils, vectors
-    from ._src.exceptions import *
+    from ._src import funcs, typing, utils, vectors
     from ._src.funcs import *
     from ._src.typing import *
     from ._src.utils import *
@@ -21,6 +20,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from ._src.vectors.d3 import *
     from ._src.vectors.d4 import *
     from ._src.vectors.dn import *
+    from ._src.vectors.exceptions import *
     from ._src.vectors.space import *
     from ._version import version as __version__
     from .distance import Distance
@@ -43,20 +43,10 @@ __all__ += vectors.d3.__all__
 __all__ += vectors.d4.__all__
 __all__ += vectors.dn.__all__
 __all__ += vectors.space.__all__
-__all__ += exceptions.__all__
+__all__ += vectors.exceptions.__all__
 __all__ += typing.__all__
 __all__ += utils.__all__
 
 
 # Cleanup
-del (
-    vectors,
-    exceptions,
-    transform,
-    typing,
-    utils,
-    funcs,
-    RUNTIME_TYPECHECKER,
-    compat,
-    _interop,
-)
+del (vectors, transform, typing, utils, funcs, RUNTIME_TYPECHECKER, compat, _interop)
