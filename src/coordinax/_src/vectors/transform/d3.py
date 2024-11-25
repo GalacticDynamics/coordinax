@@ -15,6 +15,7 @@ from coordinax._src.vectors.d3 import (
     CartesianPos3D,
     CylindricalPos,
     MathSphericalPos,
+    ProlateSpheroidalPos,
     SphericalPos,
 )
 from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
@@ -494,3 +495,137 @@ def represent_as(
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
     return target(r=current.r * jnp.sin(current.phi), phi=current.theta)
+
+
+# =============================================================================
+# ProlateSpheroidalPos
+
+
+# -----------------------------------------------
+# 1D
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos, target: type[CartesianPos1D], /, **kwargs: Any
+) -> CartesianPos1D:
+    """ProlateSpheroidalPos -> CartesianPos1D.
+
+    Examples
+    --------
+    >>> import warnings
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> x = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(2.0, "kpc2"),
+    ...     nu=Quantity(0.5, "kpc2"),
+    ...     phi=Quantity(0.5, "rad"),
+    ...     Delta=Quantity(1.0, "kpc"),
+    ... )
+
+    >>> with warnings.catch_warnings():
+    ...     warnings.simplefilter("ignore")
+    ...     x2 = cx.represent_as(x, cx.CartesianPos1D)
+    >>> x2
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("kpc")))
+
+    """
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    return represent_as(represent_as(current, CartesianPos3D), target)
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos, target: type[RadialPos], /, **kwargs: Any
+) -> RadialPos:
+    """ProlateSpheroidalPos -> RadialPos.
+
+    Examples
+    --------
+    >>> import warnings
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> x = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(2.0, "kpc2"),
+    ...     nu=Quantity(0.5, "kpc2"),
+    ...     phi=Quantity(0.5, "rad"),
+    ...     Delta=Quantity(1.0, "kpc"),
+    ... )
+
+    >>> with warnings.catch_warnings():
+    ...     warnings.simplefilter("ignore")
+    ...     x2 = cx.represent_as(x, cx.RadialPos)
+    >>> x2
+    RadialPos(r=Distance(value=f32[], unit=Unit("kpc")))
+
+    """
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    return represent_as(represent_as(current, CartesianPos3D), target)
+
+
+# -----------------------------------------------
+# 2D
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos, target: type[CartesianPos2D], /, **kwargs: Any
+) -> CartesianPos2D:
+    """ProlateSpheroidalPos -> CartesianPos2D.
+
+    Examples
+    --------
+    >>> import warnings
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> x = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(2.0, "kpc2"),
+    ...     nu=Quantity(0.5, "kpc2"),
+    ...     phi=Quantity(0.5, "rad"),
+    ...     Delta=Quantity(1.0, "kpc"),
+    ... )
+
+    >>> with warnings.catch_warnings():
+    ...     warnings.simplefilter("ignore")
+    ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
+    >>> x2
+    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("kpc")),
+                       y=Quantity[...](value=f32[], unit=Unit("kpc")) )
+
+    """
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    return represent_as(represent_as(current, CartesianPos3D), target)
+
+
+@dispatch
+def represent_as(
+    current: ProlateSpheroidalPos, target: type[PolarPos], /, **kwargs: Any
+) -> PolarPos:
+    """ProlateSpheroidalPos -> PolarPos.
+
+    Examples
+    --------
+    >>> import warnings
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> x = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(2.0, "kpc2"),
+    ...     nu=Quantity(0.5, "kpc2"),
+    ...     phi=Quantity(0.5, "rad"),
+    ...     Delta=Quantity(1.0, "kpc"),
+    ... )
+
+    >>> with warnings.catch_warnings():
+    ...     warnings.simplefilter("ignore")
+    ...     x2 = cx.represent_as(x, cx.PolarPos)
+    >>> x2
+    PolarPos( r=Distance(value=f32[], unit=Unit("kpc")),
+              phi=Angle(value=f32[], unit=Unit("rad")) )
+
+    """
+    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
+    return represent_as(represent_as(current, CartesianPos3D), target)

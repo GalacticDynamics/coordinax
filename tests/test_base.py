@@ -171,7 +171,7 @@ class AbstractPosTest(AbstractVectorTest):
     def test_represent_as(self, vector, target):
         """Test :meth:`AbstractPos.represent_as`.
 
-        This just tests that the machiner works.
+        This just tests that the machinery works.
         """
         # Perform the conversion.
         # Detecting whether the conversion reduces the dimensionality.
