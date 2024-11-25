@@ -14,13 +14,13 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
-from coordinax._src.d4.spacetime import FourVector
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
 from coordinax._src.operators.identity import IdentityOperator
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
+from coordinax._src.vectors.d4 import FourVector
 
 ##############################################################################
 # Spatial Translations
