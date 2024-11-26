@@ -8,7 +8,7 @@ from typing import TypeAlias
 from jaxtyping import Shaped
 from plum import convert
 
-from unxt import Quantity
+import unxt as u
 
 from .cartesian import CartesianPos3D
 from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
@@ -18,7 +18,7 @@ from coordinax._src.typing import TimeBatchOrScalar
 # Operators
 
 
-Q3: TypeAlias = Shaped[Quantity["length"], "*#batch 3"]
+Q3: TypeAlias = Shaped[u.Quantity["length"], "*#batch 3"]
 
 
 @op_call_dispatch
@@ -35,14 +35,14 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> import coordinax.operators as cxo
 
-    >>> shift = Quantity([1.0, 2.0, 3.0], "kpc")
+    >>> shift = u.Quantity([1.0, 2.0, 3.0], "kpc")
     >>> op = cxo.GalileanSpatialTranslationOperator(shift)
 
-    >>> q = Quantity([0.0, 0, 0], "kpc")
+    >>> q = u.Quantity([0.0, 0, 0], "kpc")
     >>> op(q)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
@@ -55,7 +55,7 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     """
     cart = CartesianPos3D.from_(q)
     result = self(cart)
-    return convert(result.represent_as(CartesianPos3D), Quantity)
+    return convert(result.represent_as(CartesianPos3D), u.Quantity)
 
 
 @op_call_dispatch
@@ -66,19 +66,19 @@ def call(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.operators.GalileanSpatialTranslationOperator(Quantity([1, 2, 3], "kpc"))
+    >>> op = cx.operators.GalileanSpatialTranslationOperator.from_([1, 2, 3], "kpc")
     >>> op
     GalileanSpatialTranslationOperator( translation=CartesianPos3D( ... ) )
 
     We can then apply the operator to a position:
 
-    >>> q = Quantity([1.0, 2.0, 3.0], "kpc")
-    >>> t = Quantity(0.0, "Gyr")
+    >>> q = u.Quantity([1.0, 2.0, 3.0], "kpc")
+    >>> t = u.Quantity(0.0, "Gyr")
 
     >>> op(q, t)
     (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='kpc'),
@@ -93,4 +93,4 @@ def call(
 
     """
     vec, t = self(CartesianPos3D.from_(x), t)
-    return convert(vec, Quantity), t
+    return convert(vec, u.Quantity), t

@@ -52,11 +52,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
-    ...                       distance=Quantity(3, "kpc"))
+    >>> cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(0, "deg"),
+    ...                       distance=u.Quantity(3, "kpc"))
     LonLatSphericalPos(
       lon=Angle(value=f32[], unit=Unit("deg")),
       lat=Angle(value=f32[], unit=Unit("deg")),
@@ -67,9 +67,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.LonLatSphericalPos(lon=Quantity(365, "deg"),
-    ...                             lat=Quantity(90, "deg"),
-    ...                             distance=Quantity(3, "kpc"))
+    >>> vec = cx.LonLatSphericalPos(lon=u.Quantity(365, "deg"),
+    ...                             lat=u.Quantity(90, "deg"),
+    ...                             distance=u.Quantity(3, "kpc"))
     >>> vec.lon
     Angle(Array(5., dtype=float32), unit='deg')
 
@@ -78,8 +78,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(100, "deg"),
-    ...                           distance=Quantity(3, "kpc"))
+    ...     cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(100, "deg"),
+    ...                           distance=u.Quantity(3, "kpc"))
     ... except Exception as e:
     ...     print(e)
     The inclination angle must be in the range [0, pi]...
@@ -89,8 +89,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
-    ...                           distance=Quantity(-3, "kpc"))
+    ...     cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(0, "deg"),
+    ...                           distance=u.Quantity(-3, "kpc"))
     ... except Exception as e:
     ...     print(e)
     The radial distance must be non-negative...
@@ -130,11 +130,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.LonLatSphericalPos(lon=Quantity(0, "deg"),
-        ...                           lat=Quantity(90, "deg"),
-        ...                            distance=Quantity(3, "kpc"))
+        >>> s = cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+        ...                           lat=u.Quantity(90, "deg"),
+        ...                            distance=u.Quantity(3, "kpc"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 

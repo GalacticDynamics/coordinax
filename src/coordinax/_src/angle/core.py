@@ -34,8 +34,8 @@ class Angle(AbstractAngle):
     >>> 2 * q
     Angle(Array([2, 4, 6], dtype=int32), unit='deg')
 
-    >>> from unxt import Quantity
-    >>> q % Quantity(4, "deg")
+    >>> import unxt as u
+    >>> q % u.Quantity(4, "deg")
     Angle(Array([1, 2, 3], dtype=int32), unit='deg')
 
     """

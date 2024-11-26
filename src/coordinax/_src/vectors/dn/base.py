@@ -53,10 +53,10 @@ class AbstractPosND(AbstractPos):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPosND(Quantity([[[1, 2, 3]],
-        ...                                   [[4, 5, 6]]], "m"))
+        >>> vec = cx.CartesianPosND(u.Quantity([[[1, 2, 3]],
+        ...                                     [[4, 5, 6]]], "m"))
         >>> vec.shape
         (2, 1)
 
@@ -273,9 +273,9 @@ class AbstractVelND(AbstractVel):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.CartesianVelND(Quantity([1, 2, 3], "m/s"))
+        >>> vec = cx.CartesianVelND(u.Quantity([1, 2, 3], "m/s"))
         >>> vec.shape
         ()
 
@@ -328,10 +328,10 @@ class AbstractAccND(AbstractAcc):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
-        ...                                            [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.CartesianAccND(u.Quantity([[[1, 2, 3]],
+        ...                                     [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
 
@@ -357,10 +357,10 @@ class AbstractAccND(AbstractAcc):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
-        ...                                            [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.CartesianAccND(u.Quantity([[[1, 2, 3]],
+        ...                                     [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
 
@@ -373,10 +373,8 @@ class AbstractAccND(AbstractAcc):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
-        ...                                            [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.CartesianAccND.from_([[[1, 2, 3]], [[4, 5, 6]]], "m/s2")
         >>> vec.shape
         (2, 1)
         >>> vec.T.shape
@@ -396,10 +394,8 @@ class AbstractAccND(AbstractAcc):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccND(Quantity([[[1, 2, 3]],
-        ...                                            [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.CartesianAccND.from_([[[1, 2, 3]], [[4, 5, 6]]], "m/s2")
         >>> vec.shape
         (2, 1)
 
@@ -416,9 +412,8 @@ class AbstractAccND(AbstractAcc):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
-        >>> vec = cx.CartesianAccND(Quantity([1, 2, 3], "m/s2"))
+        >>> vec = cx.CartesianAccND.from_([1, 2, 3], "m/s2")
         >>> vec.shape
         ()
 

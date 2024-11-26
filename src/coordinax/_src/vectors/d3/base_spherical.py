@@ -9,14 +9,14 @@ __all__ = [
 from abc import abstractmethod
 from typing_extensions import override
 
-from unxt import Quantity
+import unxt as u
 
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.utils import classproperty
 
-_90d = Quantity(90, "deg")
-_180d = Quantity(180, "deg")
-_360d = Quantity(360, "deg")
+_90d = u.Quantity(90, "deg")
+_180d = u.Quantity(180, "deg")
+_360d = u.Quantity(360, "deg")
 
 
 class AbstractSphericalPos(AbstractPos3D):

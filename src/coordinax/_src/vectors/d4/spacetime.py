@@ -15,6 +15,7 @@ from jaxtyping import Shaped
 from quax import register
 
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_values
 from dataclassish.converters import Unless
 from unxt.quantity import AbstractQuantity, Quantity
@@ -52,12 +53,12 @@ class FourVector(AbstractPos4D):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
-    >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> w
     FourVector(
       t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
@@ -71,14 +72,14 @@ class FourVector(AbstractPos4D):
 
     We can also create the 3D vector explicitly:
 
-    >>> q = cx.CartesianPos3D(x=Quantity(1, "m"), y=Quantity(2, "m"),
-    ...                       z=Quantity(3, "m"))
-    >>> w = cx.FourVector(t=Quantity(1, "s"), q=q)
+    >>> q = cx.CartesianPos3D(x=u.Quantity(1, "m"), y=u.Quantity(2, "m"),
+    ...                       z=u.Quantity(3, "m"))
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=q)
 
     """
 
     t: ct.BatchableTime | ct.ScalarTime = eqx.field(
-        converter=partial(Quantity["time"].from_, dtype=float)
+        converter=partial(u.Quantity["time"].from_, dtype=float)
     )
     """Time coordinate."""
 
@@ -86,8 +87,8 @@ class FourVector(AbstractPos4D):
     """Spatial coordinates."""
 
     _: KW_ONLY
-    c: Shaped[Quantity["speed"], ""] = eqx.field(
-        default=VectorAttribute(default=Quantity(299_792.458, "km/s")), repr=False
+    c: Shaped[u.Quantity["speed"], ""] = eqx.field(
+        default=VectorAttribute(default=u.Quantity(299_792.458, "km/s")), repr=False
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
@@ -105,7 +106,7 @@ class FourVector(AbstractPos4D):
     @classmethod
     @AbstractPos4D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
     def from_(
-        cls: "type[FourVector]", obj: Shaped[Quantity, "*batch 4"], /
+        cls: "type[FourVector]", obj: Shaped[u.Quantity, "*batch 4"], /
     ) -> "FourVector":
         """Construct a vector from a Quantity array.
 
@@ -120,10 +121,10 @@ class FourVector(AbstractPos4D):
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
+        >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
         >>> vec = cx.FourVector.from_(xs)
         >>> vec
         FourVector(
@@ -158,10 +159,10 @@ class FourVector(AbstractPos4D):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.x
         Quantity['length'](Array(1., dtype=float32), unit='m')
 
@@ -193,10 +194,10 @@ class FourVector(AbstractPos4D):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> -w
         FourVector(
             t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
@@ -214,10 +215,10 @@ class FourVector(AbstractPos4D):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w._norm2()
         Quantity['area'](Array(8.987552e+16, dtype=float32), unit='m2')
 
@@ -231,10 +232,10 @@ class FourVector(AbstractPos4D):
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.norm()
         Quantity['length'](Array(2.9979248e+08+0.j, dtype=complex64), unit='m')
 
@@ -288,10 +289,10 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.FourVector.from_(Quantity([0, 1, 2, 3], "km"))
+    >>> vec = cx.FourVector.from_(u.Quantity([0, 1, 2, 3], "km"))
     >>> vec
     FourVector(
       t=Quantity[...](value=f32[], unit=Unit("s")),
@@ -313,11 +314,11 @@ def _add_4v4v(self: FourVector, other: FourVector) -> FourVector:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+    >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 + w2
     >>> w3
     FourVector(
@@ -341,11 +342,11 @@ def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w1 = cx.FourVector(t=Quantity(1, "s"), q=Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector(t=Quantity(2, "s"), q=Quantity([4, 5, 6], "m"))
+    >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 - w2
     >>> w3
     FourVector(

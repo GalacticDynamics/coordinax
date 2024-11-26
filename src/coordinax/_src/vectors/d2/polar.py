@@ -10,9 +10,9 @@ import jax
 from jaxtyping import ArrayLike
 from quax import register
 
+import unxt as u
 from dataclassish import replace
 from dataclassish.converters import Unless
-from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
@@ -65,11 +65,11 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> v = cx.PolarPos(r=Quantity(1, "m"), phi=Quantity(90, "deg"))
+    >>> v = cx.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(1., dtype=float32), unit='m')
@@ -100,12 +100,12 @@ class PolarVel(AbstractVel2D):
     """Polar differential representation."""
 
     d_r: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
@@ -125,12 +125,12 @@ class PolarAcc(AbstractAcc2D):
     """Polar acceleration representation."""
 
     d2_r: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
     )
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty,+\infty]`."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""
 

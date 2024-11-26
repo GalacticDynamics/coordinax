@@ -60,9 +60,9 @@ def _quantity_to_parallax(q: AbstractQuantity, /) -> Parallax:
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> from coordinax.distance import Parallax
-    >>> q = Quantity(1, "mas")
+    >>> q = u.Quantity(1, "mas")
     >>> q
     Quantity['angle'](Array(1, dtype=int32, ...), unit='mas')
 
@@ -88,9 +88,9 @@ def _quantity_to_distmod(q: AbstractQuantity, /) -> DistanceModulus:
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> from coordinax.distance import DistanceModulus
-    >>> q = Quantity(1, "mag")
+    >>> q = u.Quantity(1, "mag")
     >>> q
     Quantity['dex'](Array(1, dtype=int32, ...), unit='mag')
 

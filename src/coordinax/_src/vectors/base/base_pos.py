@@ -16,8 +16,8 @@ from quax import quaxify, register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items
-from unxt import Quantity
 
 from .base import AbstractVector
 from .flags import AttrFilter
@@ -99,6 +99,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         Examples
         --------
         >>> import quaxed.numpy as jnp
+        >>> import unxt as u
         >>> import coordinax as cx
 
         Showing the broadcasting, then element-wise comparison of two vectors:
@@ -124,7 +125,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         Array(True, dtype=bool)
 
         >>> vec1 = cx.CartesianPos2D.from_([2, 0], "m")
-        >>> vec2 = cx.PolarPos(r=Quantity(2, "m"), phi=Quantity(0, "rad"))
+        >>> vec2 = cx.PolarPos(r=u.Quantity(2, "m"), phi=u.Quantity(0, "rad"))
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
@@ -149,7 +150,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         >>> v = cx.CartesianPos1D.from_([-1], "kpc")
@@ -160,7 +161,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> v.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
 
-        >>> v = cx.PolarPos(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+        >>> v = cx.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
         >>> v.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
@@ -236,9 +237,9 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     Examples
     --------
-    >>> from unxt import Quantity
-    >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> jnp.multiply(2, vec)
@@ -253,17 +254,17 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> from typing import ClassVar
     >>> class MyCartesian(cx.AbstractPos):
-    ...     x: Quantity
-    ...     y: Quantity
-    ...     z: Quantity
+    ...     x: u.Quantity
+    ...     y: u.Quantity
+    ...     z: u.Quantity
     ...
     >>> MyCartesian._cartesian_cls = MyCartesian  # hack
 
     Add conversion to Quantity:
 
     >>> from plum import conversion_method
-    >>> @conversion_method(MyCartesian, Quantity)
-    ... def _to_quantity(x: MyCartesian, /) -> Quantity:
+    >>> @conversion_method(MyCartesian, u.Quantity)
+    ... def _to_quantity(x: MyCartesian, /) -> u.Quantity:
     ...     return jnp.stack((x.x, x.y, x.z), axis=-1)
 
     Add representation transformation
@@ -273,9 +274,9 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     ... def represent_as(current: MyCartesian, target: type[MyCartesian], /) -> MyCartesian:
     ...     return current
 
-    >>> vec = MyCartesian(x=Quantity([1], "m"),
-    ...                   y=Quantity([2], "m"),
-    ...                   z=Quantity([3], "m"))
+    >>> vec = MyCartesian(x=u.Quantity([1], "m"),
+    ...                   y=u.Quantity([2], "m"),
+    ...                   z=u.Quantity([3], "m"))
 
     First hit the non-scalar error:
 
@@ -329,9 +330,9 @@ def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
 
     Examples
     --------
-    >>> from unxt import Quantity
-    >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> jnp.multiply(vec, 2)
@@ -346,7 +347,7 @@ def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> Quantity:
+def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -354,13 +355,13 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> Quantity:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D(
-    ...     x=Quantity([1, 2, 3], "m"),
-    ...     y=Quantity([4, 5, 6], "m"),
-    ...     z=Quantity([7, 8, 9], "m"))
+    ...     x=u.Quantity([1, 2, 3], "m"),
+    ...     y=u.Quantity([4, 5, 6], "m"),
+    ...     z=u.Quantity([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
     Quantity['area'](Array([[ 1., 16., 49.],
@@ -371,8 +372,8 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> Quantity:
     Quantity['length'](Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
     """  # noqa: E501
-    lq = convert(lhs.represent_as(lhs._cartesian_cls), Quantity)  # noqa: SLF001
-    rq = convert(rhs.represent_as(rhs._cartesian_cls), Quantity)  # noqa: SLF001
+    lq = convert(lhs.represent_as(lhs._cartesian_cls), u.Quantity)  # noqa: SLF001
+    rq = convert(rhs.represent_as(rhs._cartesian_cls), u.Quantity)  # noqa: SLF001
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 
@@ -415,13 +416,13 @@ def _reshape_pos(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPos3D(x=Quantity([1, 2, 3], "m"),
-    ...                         y=Quantity([4, 5, 6], "m"),
-    ...                         z=Quantity([7, 8, 9], "m"))
+    >>> vec = cx.CartesianPos3D(x=u.Quantity([1, 2, 3], "m"),
+    ...                         y=u.Quantity([4, 5, 6], "m"),
+    ...                         z=u.Quantity([7, 8, 9], "m"))
     >>> jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
     CartesianPos3D(
       x=Quantity[PhysicalType('length')](value=f32[1,1,3], unit=Unit("m")),

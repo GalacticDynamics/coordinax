@@ -38,7 +38,6 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
@@ -63,7 +62,7 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
@@ -92,7 +91,7 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
@@ -102,7 +101,7 @@ def represent_as(
     ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("km")) )
+                    y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -120,7 +119,6 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
@@ -155,11 +153,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                          z=Quantity(14, "km"))
+    >>> x = cx.CylindricalPos(rho=u.Quantity(1.0, "km"), phi=u.Quantity(10.0, "deg"),
+    ...                       z=u.Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -181,11 +179,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                          z=Quantity(14, "km"))
+    >>> x = cx.CylindricalPos(rho=u.Quantity(1.0, "km"), phi=u.Quantity(10.0, "deg"),
+    ...                        z=u.Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -211,18 +209,18 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                          z=Quantity(14, "km"))
+    >>> x = cx.CylindricalPos(rho=u.Quantity(1.0, "km"), phi=u.Quantity(10.0, "deg"),
+    ...                       z=u.Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("km")) )
+                    y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -240,11 +238,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CylindricalPos(rho=Quantity(1.0, "km"), phi=Quantity(10.0, "deg"),
-    ...                          z=Quantity(14, "km"))
+    >>> x = cx.CylindricalPos(rho=u.Quantity(1.0, "km"), phi=u.Quantity(10.0, "deg"),
+    ...                       z=u.Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -275,11 +273,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
-    ...                        phi=Quantity(10.0, "deg"))
+    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(14, "deg"),
+    ...                     phi=u.Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -301,11 +299,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
-    ...                        phi=Quantity(10.0, "deg"))
+    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(14, "deg"),
+    ...                     phi=u.Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -331,11 +329,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
-    ...                        phi=Quantity(10.0, "deg"))
+    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(14, "deg"),
+    ...                     phi=u.Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -360,11 +358,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=Quantity(1.0, "km"), theta=Quantity(14, "deg"),
-    ...                        phi=Quantity(10.0, "deg"))
+    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(14, "deg"),
+    ...                     phi=u.Quantity(10.0, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -395,11 +393,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
-    ...                            phi=Quantity(14, "deg"))
+    >>> x = cx.MathSphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(10.0, "deg"),
+    ...                         phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -421,11 +419,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
-    ...                            phi=Quantity(14, "deg"))
+    >>> x = cx.MathSphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(10.0, "deg"),
+    ...                         phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -451,11 +449,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
-    ...                            phi=Quantity(14, "deg"))
+    >>> x = cx.MathSphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(10.0, "deg"),
+    ...                         phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
@@ -480,11 +478,11 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.MathSphericalPos(r=Quantity(1.0, "km"), theta=Quantity(10.0, "deg"),
-    ...                            phi=Quantity(14, "deg"))
+    >>> x = cx.MathSphericalPos(r=u.Quantity(1.0, "km"), theta=u.Quantity(10.0, "deg"),
+    ...                         phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")

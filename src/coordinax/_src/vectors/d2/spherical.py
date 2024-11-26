@@ -8,8 +8,8 @@ from typing_extensions import override
 
 import equinox as eqx
 
+import unxt as u
 from dataclassish.converters import Unless
-from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
@@ -49,12 +49,12 @@ class TwoSpherePos(AbstractPos2D):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     We can construct a 2-spherical coordinate:
 
-    >>> s2 = cx.TwoSpherePos(theta=Quantity(0, "deg"), phi=Quantity(180, "deg"))
+    >>> s2 = cx.TwoSpherePos(theta=u.Quantity(0, "deg"), phi=u.Quantity(180, "deg"))
 
     This coordinate has corresponding velocity class:
 
@@ -116,13 +116,13 @@ class TwoSphereVel(AbstractVel2D):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     We can construct a 2-spherical velocity:
 
-    >>> s2 = cx.TwoSphereVel(d_theta=Quantity(0, "deg/s"),
-    ...                           d_phi=Quantity(2, "deg/s"))
+    >>> s2 = cx.TwoSphereVel(d_theta=u.Quantity(0, "deg/s"),
+    ...                      d_phi=u.Quantity(2, "deg/s"))
 
     This coordinate has corresponding position and acceleration class:
 
@@ -135,12 +135,12 @@ class TwoSphereVel(AbstractVel2D):
     """
 
     d_theta: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
     )
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
@@ -186,13 +186,13 @@ class TwoSphereAcc(AbstractAcc2D):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     We can construct a 2-spherical acceleration:
 
-    >>> s2 = cx.TwoSphereAcc(d2_theta=Quantity(0, "deg/s2"),
-    ...                               d2_phi=Quantity(2, "deg/s2"))
+    >>> s2 = cx.TwoSphereAcc(d2_theta=u.Quantity(0, "deg/s2"),
+    ...                      d2_phi=u.Quantity(2, "deg/s2"))
 
     This coordinate has corresponding velocity class:
 
@@ -202,12 +202,12 @@ class TwoSphereAcc(AbstractAcc2D):
     """
 
     d2_theta: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 

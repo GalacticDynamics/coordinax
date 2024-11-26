@@ -11,8 +11,8 @@ import jax
 from plum import dispatch
 
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items
-from unxt import Quantity
 
 from coordinax._src.distance import AbstractDistance
 from coordinax._src.vectors.base import AbstractPos, AbstractVel
@@ -24,14 +24,14 @@ from coordinax._src.vectors.d3 import AbstractVel3D
 # TODO: implement for cross-representations
 @dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
-    (AbstractVel1D, type[AbstractVel1D], AbstractPos | Quantity["length"]),
-    (AbstractVel2D, type[AbstractVel2D], AbstractPos | Quantity["length"]),
-    (AbstractVel3D, type[AbstractVel3D], AbstractPos | Quantity["length"]),
+    (AbstractVel1D, type[AbstractVel1D], AbstractPos | u.Quantity["length"]),
+    (AbstractVel2D, type[AbstractVel2D], AbstractPos | u.Quantity["length"]),
+    (AbstractVel3D, type[AbstractVel3D], AbstractPos | u.Quantity["length"]),
 )
 def represent_as(
     current: AbstractVel,
     target: type[AbstractVel],
-    position: AbstractPos | Quantity["length"],
+    position: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
 ) -> AbstractVel:
@@ -52,12 +52,13 @@ def represent_as(
 
     Examples
     --------
+    >>> import unxt as u
     >>> import coordinax as cx
 
     Let's start in 1D:
 
-    >>> q = cx.CartesianPos1D(x=Quantity(1.0, "km"))
-    >>> p = cx.CartesianVel1D(d_x=Quantity(1.0, "km/s"))
+    >>> q = cx.CartesianPos1D.from_(1.0, "km")
+    >>> p = cx.CartesianVel1D.from_(1.0, "km/s")
     >>> cx.represent_as(p, cx.RadialVel, q)
     RadialVel( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 
@@ -86,7 +87,7 @@ def represent_as(
     Cartesian vector:
 
     >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> cx.represent_as(p, cx.SphericalVel, Quantity([1.0, 2.0, 3.0], "km"))
+    >>> cx.represent_as(p, cx.SphericalVel, u.Quantity([1.0, 2.0, 3.0], "km"))
     SphericalVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
@@ -134,7 +135,7 @@ def represent_as(
     # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
     jac_rows = {
         f"d_{k}": {
-            kk: Quantity(vv.value, unit=v.unit / vv.unit)
+            kk: u.Quantity(vv.value, unit=v.unit / vv.unit)
             for kk, vv in field_items(v.value)
         }
         for k, v in field_items(jac_nested_vecs)

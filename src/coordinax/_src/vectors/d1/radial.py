@@ -9,8 +9,8 @@ import equinox as eqx
 import jax
 from plum import convert
 
+import unxt as u
 from dataclassish.converters import Unless
-from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
@@ -42,7 +42,7 @@ class RadialPos(AbstractPos1D):
 class RadialVel(AbstractVel1D):
     """Radial differential representation."""
 
-    d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
+    d_r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
     @classproperty
@@ -58,14 +58,14 @@ class RadialVel(AbstractVel1D):
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
         # TODO: change to UncheckedQuantity
-        return jax.core.get_aval(convert(self, Quantity).value)
+        return jax.core.get_aval(convert(self, u.Quantity).value)
 
 
 @final
 class RadialAcc(AbstractAcc1D):
     """Radial differential representation."""
 
-    d2_r: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
+    d2_r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in (-\infty,+\infty)`."""
 
     @classproperty
@@ -76,4 +76,4 @@ class RadialAcc(AbstractAcc1D):
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
         # TODO: change to UncheckedQuantity
-        return jax.core.get_aval(convert(self, Quantity).value)
+        return jax.core.get_aval(convert(self, u.Quantity).value)
