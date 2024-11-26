@@ -26,7 +26,7 @@ from .base_spherical import (
     _90d,
     _180d,
 )
-from coordinax._src.angle import Angle
+from coordinax._src.angle import Angle, BatchableAngle
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
@@ -97,14 +97,14 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     """
 
-    lon: ct.BatchableAngle = eqx.field(
+    lon: BatchableAngle = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
     r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
 
-    lat: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    lat: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
     distance: ct.BatchableDistance = eqx.field(

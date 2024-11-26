@@ -1,4 +1,4 @@
-"""Angles."""
+"""`coordinax.angle` module."""
 
 __all__ = ["AbstractAngle", "Angle"]
 

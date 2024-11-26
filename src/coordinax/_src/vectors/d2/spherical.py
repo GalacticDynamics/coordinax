@@ -13,7 +13,7 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
-from coordinax._src.angle import Angle
+from coordinax._src.angle import Angle, BatchableAngle
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_polar_range
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -63,10 +63,10 @@ class TwoSpherePos(AbstractPos2D):
 
     """
 
-    theta: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    theta: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
-    phi: ct.BatchableAngle = eqx.field(
+    phi: BatchableAngle = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )

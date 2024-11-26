@@ -13,7 +13,6 @@ from jaxtyping import Float, Int, Shaped
 
 from unxt.quantity import AbstractQuantity, Quantity
 
-from .angle.base import AbstractAngle
 from .distance.base import AbstractDistance
 
 Unit: TypeAlias = AstropyUnit | AstropyUnitBase | AstropyCompositeUnit
@@ -24,8 +23,6 @@ BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]
 
 ScalarTime = Float[Quantity["time"], ""] | Int[Quantity["time"], ""]
 
-BatchableAngleQ = Shaped[Quantity["angle"], "*#batch"]
-BatchableAngle = Shaped[AbstractAngle, "*#batch"]
 BatchableLength = Shaped[Quantity["length"], "*#batch"]
 BatchableDistance = Shaped[AbstractDistance, "*#batch"]
 BatchableTime = Shaped[Quantity["time"], "*#batch"]

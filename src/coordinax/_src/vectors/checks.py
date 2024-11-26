@@ -9,9 +9,8 @@ import quaxed.numpy as xp
 from unxt import is_unit_convertible
 from unxt.quantity import AbstractQuantity
 
-from coordinax._src.angle import Angle
+from coordinax._src.angle import Angle, BatchableAngleQ
 from coordinax._src.distance import Distance
-from coordinax._src.typing import BatchableAngle, BatchableAngleQ
 
 _0m = Distance(0, "meter")
 _0d = Angle(0, "rad")
@@ -45,8 +44,11 @@ def check_r_non_negative(
 
 
 def check_polar_range(
-    polar: BatchableAngle | BatchableAngleQ, /, _l: Angle = _0d, _u: Angle = _pid
-) -> BatchableAngle | BatchableAngleQ:
+    polar: BatchableAngleQ,
+    /,
+    _l: Angle = _0d,
+    _u: Angle = _pid,
+) -> BatchableAngleQ:
     """Check that the polar angle is in the range.
 
     Examples

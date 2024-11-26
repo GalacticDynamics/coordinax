@@ -18,7 +18,7 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from coordinax._src.angle import Angle
+from coordinax._src.angle import Angle, BatchableAngle
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -37,7 +37,7 @@ class CylindricalPos(AbstractPos3D):
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
-    phi: ct.BatchableAngle = eqx.field(
+    phi: BatchableAngle = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )

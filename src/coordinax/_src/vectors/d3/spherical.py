@@ -20,7 +20,7 @@ from .base_spherical import (
     _180d,
     _360d,
 )
-from coordinax._src.angle import Angle
+from coordinax._src.angle import Angle, BatchableAngle
 from coordinax._src.distance import AbstractDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
@@ -55,10 +55,10 @@ class SphericalPos(AbstractSphericalPos):
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    theta: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    theta: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
-    phi: ct.BatchableAngle = eqx.field(
+    phi: BatchableAngle = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
