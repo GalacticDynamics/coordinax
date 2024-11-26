@@ -30,7 +30,7 @@ from .base_spherical import (
     _360d,
 )
 from coordinax._src.angle import Angle, BatchableAngle
-from coordinax._src.distance import AbstractDistance, Distance
+from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -55,7 +55,7 @@ class MathSphericalPos(AbstractSphericalPos):
 
     """
 
-    r: ct.BatchableDistance = eqx.field(
+    r: BatchableDistance = eqx.field(
         converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
@@ -82,7 +82,7 @@ class MathSphericalPos(AbstractSphericalPos):
         return MathSphericalVel
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableDistance:
+    def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
 
         Examples

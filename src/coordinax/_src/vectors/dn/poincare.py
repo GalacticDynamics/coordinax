@@ -11,6 +11,7 @@ from jaxtyping import Shaped
 from unxt import Quantity
 
 import coordinax._src.typing as ct
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos, AbstractVel
 
@@ -19,7 +20,7 @@ from coordinax._src.vectors.base import AbstractPos, AbstractVel
 class PoincarePolarVector(AbstractPos):  # TODO: better name
     """Poincare vector + differential."""
 
-    rho: ct.BatchableLength = eqx.field(
+    rho: BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
@@ -27,7 +28,7 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
     pp_phi: Shaped[Quantity, "*#batch"] = eqx.field()  # TODO: dimension annotation
     r"""Poincare phi-like variable."""
 
-    z: ct.BatchableLength = eqx.field(
+    z: BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Height :math:`z \in (-\infty,+\infty)`."""

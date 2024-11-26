@@ -19,8 +19,9 @@ from dataclassish import field_values
 from dataclassish.converters import Unless
 from unxt.quantity import AbstractQuantity, Quantity
 
+import coordinax._src.typing as ct
 from .base import AbstractPos4D
-from coordinax._src.typing import BatchableLength, BatchableTime, ScalarTime
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector, AttrFilter, VectorAttribute
 from coordinax._src.vectors.d3.base import AbstractPos3D
@@ -76,7 +77,7 @@ class FourVector(AbstractPos4D):
 
     """
 
-    t: BatchableTime | ScalarTime = eqx.field(
+    t: ct.BatchableTime | ct.ScalarTime = eqx.field(
         converter=partial(Quantity["time"].from_, dtype=float)
     )
     """Time coordinate."""

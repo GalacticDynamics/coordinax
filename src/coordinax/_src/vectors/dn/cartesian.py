@@ -19,6 +19,7 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
@@ -78,7 +79,7 @@ class CartesianPosND(AbstractPosND):
 
     """
 
-    q: ct.BatchableLength = eqx.field(
+    q: BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""N-D coordinate :math:`\vec{x} \in (-\infty,+\infty)`.
@@ -101,7 +102,7 @@ class CartesianPosND(AbstractPosND):
     # -----------------------------------------------------
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableLength:
+    def norm(self) -> BatchableLength:
         """Return the norm of the vector.
 
         Examples

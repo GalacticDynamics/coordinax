@@ -19,6 +19,7 @@ from unxt import Quantity
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angle import Angle, BatchableAngle
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -32,7 +33,7 @@ class CylindricalPos(AbstractPos3D):
 
     """
 
-    rho: ct.BatchableLength = eqx.field(
+    rho: BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
@@ -44,7 +45,7 @@ class CylindricalPos(AbstractPos3D):
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
-    z: ct.BatchableLength = eqx.field(
+    z: BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Height :math:`z \in (-\infty,+\infty)`."""
@@ -61,7 +62,7 @@ class CylindricalPos(AbstractPos3D):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableLength:
+    def norm(self) -> BatchableLength:
         """Return the norm of the vector.
 
         Examples

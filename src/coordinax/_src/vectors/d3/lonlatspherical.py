@@ -27,7 +27,7 @@ from .base_spherical import (
     _180d,
 )
 from coordinax._src.angle import Angle, BatchableAngle
-from coordinax._src.distance import AbstractDistance, Distance
+from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -107,7 +107,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     lat: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
-    distance: ct.BatchableDistance = eqx.field(
+    distance: BatchableDistance = eqx.field(
         converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
@@ -125,7 +125,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableDistance:
+    def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
 
         Examples

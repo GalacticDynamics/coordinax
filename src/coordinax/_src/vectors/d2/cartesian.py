@@ -22,6 +22,7 @@ from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
@@ -31,12 +32,12 @@ from coordinax._src.vectors.base.mixins import AvalMixin
 class CartesianPos2D(AbstractPos2D):
     """Cartesian vector representation."""
 
-    x: ct.BatchableLength = eqx.field(
+    x: BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: ct.BatchableLength = eqx.field(
+    y: BatchableLength = eqx.field(
         converter=partial(Quantity["length"].from_, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""

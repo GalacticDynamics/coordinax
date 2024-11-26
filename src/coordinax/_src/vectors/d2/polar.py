@@ -17,7 +17,7 @@ from unxt import Quantity
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angle import Angle, BatchableAngle
-from coordinax._src.distance import AbstractDistance, Distance
+from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -37,7 +37,7 @@ class PolarPos(AbstractPos2D):
 
     """
 
-    r: ct.BatchableDistance = eqx.field(
+    r: BatchableDistance = eqx.field(
         converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""

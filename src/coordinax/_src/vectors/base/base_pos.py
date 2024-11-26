@@ -22,7 +22,7 @@ from unxt import Quantity
 from .base import AbstractVector
 from .flags import AttrFilter
 from .mixins import AvalMixin
-from coordinax._src import typing as ct
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.funcs import represent_as
 
@@ -139,7 +139,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # Convenience methods
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableLength:
+    def norm(self) -> BatchableLength:
         """Return the norm of the vector.
 
         Returns
