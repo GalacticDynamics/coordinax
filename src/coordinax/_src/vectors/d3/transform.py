@@ -712,11 +712,11 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: CartesianPos3D,
+    current: AbstractPos3D,
     target: type[ProlateSpheroidalPos],
     Delta: Quantity["length"],  # noqa: N803
 ) -> ProlateSpheroidalPos:
-    """CartesianPos3D -> ProlateSpheroidalPos."""
+    """AbstractPos3D -> ProlateSpheroidalPos."""
     cyl = represent_as(current, CylindricalPos)
     return represent_as(cyl, target, Delta)
 

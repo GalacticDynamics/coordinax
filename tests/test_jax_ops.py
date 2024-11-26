@@ -4,7 +4,7 @@ import equinox as eqx
 import pytest
 
 from dataclassish import field_items
-from unxt.quantity import AbstractQuantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax as cx
 from coordinax._src.vectors.base.base_pos import POSITION_CLASSES
@@ -17,12 +17,23 @@ POSITION_CLASSES_3D = [c for c in POSITION_CLASSES if issubclass(c, cx.AbstractP
 def q(request) -> cx.AbstractPos:
     """Fixture for 3D Vectors."""
     q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    return q.represent_as(request.param)
+
+    # Special case ProlateSpheroidalPos, which requires a value of Delta to define the
+    # coordinate system
+    args = (
+        () if request.param is not cx.ProlateSpheroidalPos else (Quantity(1.0, "kpc"),)
+    )
+
+    return q.represent_as(request.param, *args)
 
 
 @eqx.filter_jit
 def func(q: cx.AbstractPos, target: type[cx.AbstractPos]) -> cx.AbstractPos:
-    return q.represent_as(target)
+    # Special case ProlateSpheroidalPos, which requires a value of Delta to define the
+    # coordinate system
+    args = () if target is not cx.ProlateSpheroidalPos else (Quantity(1.0, "kpc"),)
+
+    return q.represent_as(target, *args)
 
 
 @pytest.mark.parametrize("target", POSITION_CLASSES_3D)
