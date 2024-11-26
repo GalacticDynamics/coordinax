@@ -8,6 +8,8 @@ from typing import TYPE_CHECKING
 import quaxed.numpy as jnp
 from dataclassish import field_values
 
+from .base.flags import AttrFilter
+
 if TYPE_CHECKING:
     from coordinax import AbstractVector
 
@@ -30,7 +32,5 @@ def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
     (2,)
 
     """
-    from .base import AttrFilter
-
     arrays = jnp.broadcast_arrays(*field_values(AttrFilter, obj))
     return _dataclass_replace(obj, **dict(zip(obj.components, arrays, strict=True)))
