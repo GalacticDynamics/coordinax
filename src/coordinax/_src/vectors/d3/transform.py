@@ -723,6 +723,19 @@ def represent_as(
 
 @dispatch
 def represent_as(
+    current: CartesianPos3D, target: type[ProlateSpheroidalPos]
+) -> ProlateSpheroidalPos:
+    """CartesianPos3D -> ProlateSpheroidalPos.
+
+    This exists to catch the (invalid) case where the Delta is not provided, so that a
+    recursion error is not raised.
+    """
+    msg = "Delta must be provided for ProlateSpheroidalPos."
+    raise ValueError(msg)
+
+
+@dispatch
+def represent_as(
     current: ProlateSpheroidalPos, target: type[ProlateSpheroidalPos]
 ) -> ProlateSpheroidalPos:
     """ProlateSpheroidalPos -> ProlateSpheroidalPos.
