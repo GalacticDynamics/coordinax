@@ -1,9 +1,12 @@
+# ruff: noqa: N803, N806
 """Representation of coordinates in different systems."""
 
 __all__: list[str] = []
 
 from typing import Any
 
+import equinox as eqx
+import jax
 from plum import dispatch
 
 import quaxed.numpy as xp
@@ -619,7 +622,8 @@ def represent_as(
 def represent_as(
     current: CylindricalPos,
     target: type[ProlateSpheroidalPos],
-    Delta: Quantity["length"],  # noqa: N803
+    /,
+    **kwargs: Any,
 ) -> ProlateSpheroidalPos:
     """CylindricalPos -> ProlateSpheroidalPos.
 
@@ -638,6 +642,11 @@ def represent_as(
         [ 2.133  0.117 90.   ]>
 
     """
+    Delta = eqx.error_if(
+        kwargs.get("Delta"),
+        "Delta" not in kwargs,
+        "Delta must be provided for ProlateSpheroidalPos.",
+    )
     R2 = current.rho**2
     z2 = current.z**2
     Delta2 = Delta**2
@@ -686,9 +695,9 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: ProlateSpheroidalPos, target: type[CartesianPos3D], /, **kwargs: Any
-) -> CartesianPos3D:
-    """ProlateSpheroidalPos -> CartesianPos3D.
+    current: ProlateSpheroidalPos, target: type[AbstractPos3D], /, **kwargs: Any
+) -> AbstractPos3D:
+    """ProlateSpheroidalPos -> AbstractPos3D.
 
     Examples
     --------
@@ -712,57 +721,8 @@ def represent_as(
 
 @dispatch
 def represent_as(
-    current: AbstractPos3D,
-    target: type[ProlateSpheroidalPos],
-    Delta: Quantity["length"],  # noqa: N803
-) -> ProlateSpheroidalPos:
-    """AbstractPos3D -> ProlateSpheroidalPos."""
-    cyl = represent_as(current, CylindricalPos)
-    return represent_as(cyl, target, Delta)
-
-
-@dispatch
-def represent_as(
-    current: CartesianPos3D, target: type[ProlateSpheroidalPos]
-) -> ProlateSpheroidalPos:
-    """CartesianPos3D -> ProlateSpheroidalPos.
-
-    This exists to catch the (invalid) case where the Delta is not provided, so that a
-    recursion error is not raised.
-    """
-    msg = "Delta must be provided for ProlateSpheroidalPos."
-    raise ValueError(msg)
-
-
-@dispatch
-def represent_as(
-    current: ProlateSpheroidalPos, target: type[ProlateSpheroidalPos]
-) -> ProlateSpheroidalPos:
-    """ProlateSpheroidalPos -> ProlateSpheroidalPos.
-
-    Examples
-    --------
-    >>> from unxt import Quantity
-    >>> import coordinax as cx
-
-    >>> vec = cx.ProlateSpheroidalPos(
-    ...     mu=Quantity(1., "kpc2"),
-    ...     nu=Quantity(0.2, "kpc2"),
-    ...     phi=Quantity(90, "deg"),
-    ...     Delta=Quantity(0.5, "kpc")
-    ... )
-    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos))
-    <ProlateSpheroidalPos...>
-
-    """
-    return current
-
-
-@dispatch
-def represent_as(
     current: ProlateSpheroidalPos,
     target: type[ProlateSpheroidalPos],
-    Delta: Quantity["length"],  # noqa: N803
     /,
     **kwargs: Any,
 ) -> ProlateSpheroidalPos:
@@ -773,18 +733,78 @@ def represent_as(
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
+    Self-transforms can change the focal length:
+
     >>> vec = cx.ProlateSpheroidalPos(
     ...     mu=Quantity(1., "kpc2"),
     ...     nu=Quantity(0.2, "kpc2"),
     ...     phi=Quantity(90, "deg"),
     ...     Delta=Quantity(0.5, "kpc")
     ... )
-    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Quantity(0.5, "kpc")))
+    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Quantity(0.8, "kpc")))
+    <ProlateSpheroidalPos...>
+
+    Without changing the focal length, no transform is done:
+
+    >>> vec2 = cx.represent_as(vec, cx.ProlateSpheroidalPos)
+    >>> vec == vec2
+    True
+
+    """
+    Delta = kwargs.get("Delta", current.Delta)
+    return jax.lax.cond(
+        "Delta" in kwargs,
+        lambda Delta: represent_as(
+            represent_as(current, CylindricalPos), target, Delta=Delta
+        ),
+        lambda _: current,
+        Delta,
+    )
+
+
+@dispatch
+def represent_as(
+    current: AbstractPos3D,
+    target: type[ProlateSpheroidalPos],
+    /,
+    **kwargs: Any,
+) -> ProlateSpheroidalPos:
+    """AbstractPos3D -> ProlateSpheroidalPos.
+
+    Examples
+    --------
+    >>> from unxt import Quantity
+    >>> import coordinax as cx
+
+    >>> vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(1., "kpc2"),
+    ...     nu=Quantity(0.2, "kpc2"),
+    ...     phi=Quantity(90, "deg"),
+    ...     Delta=Quantity(0.5, "kpc")
+    ... )
+    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        [-1.693e-08  3.873e-01  8.944e-01]>
+
+    Self-transforms also work to change the focal length:
+
+    >>> vec = cx.ProlateSpheroidalPos(
+    ...     mu=Quantity(1., "kpc2"),
+    ...     nu=Quantity(0.2, "kpc2"),
+    ...     phi=Quantity(90, "deg"),
+    ...     Delta=Quantity(0.5, "kpc")
+    ... )
+    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Quantity(0.8, "kpc")))
     <ProlateSpheroidalPos...>
 
     """
+    Delta = eqx.error_if(
+        kwargs.get("Delta"),
+        "Delta" not in kwargs,
+        "Delta must be provided for ProlateSpheroidalPos.",
+    )
     cyl = represent_as(current, CylindricalPos)
-    return represent_as(cyl, target, Delta)
+    return represent_as(cyl, target, Delta=Delta)
 
 
 # =============================================================================
