@@ -528,7 +528,9 @@ def represent_as(
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.represent_as(x, cx.CartesianPos1D)
     >>> x2
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("kpc")))
+    CartesianPos1D(
+      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+    )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)

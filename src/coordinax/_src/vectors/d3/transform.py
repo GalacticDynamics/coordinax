@@ -637,7 +637,7 @@ def represent_as(
     ...     phi=Quantity(90, "deg"),
     ...     z=Quantity(1, "kpc")
     ... )
-    >>> print(vec.represent_as(cx.ProlateSpheroidalPos, Quantity(0.5, "kpc")))
+    >>> print(vec.represent_as(cx.ProlateSpheroidalPos, Delta=Quantity(0.5, "kpc")))
     <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[deg])
         [ 2.133  0.117 90.   ]>
 
@@ -741,14 +741,14 @@ def represent_as(
     ...     phi=Quantity(90, "deg"),
     ...     Delta=Quantity(0.5, "kpc")
     ... )
-    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Quantity(0.8, "kpc")))
+    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Delta=Quantity(0.8, "kpc")))
     <ProlateSpheroidalPos...>
 
     Without changing the focal length, no transform is done:
 
     >>> vec2 = cx.represent_as(vec, cx.ProlateSpheroidalPos)
     >>> vec == vec2
-    True
+    Array(True, dtype=bool)
 
     """
     Delta = kwargs.get("Delta", current.Delta)
@@ -794,7 +794,7 @@ def represent_as(
     ...     phi=Quantity(90, "deg"),
     ...     Delta=Quantity(0.5, "kpc")
     ... )
-    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Quantity(0.8, "kpc")))
+    >>> print(cx.represent_as(vec, cx.ProlateSpheroidalPos, Delta=Quantity(0.8, "kpc")))
     <ProlateSpheroidalPos...>
 
     """
