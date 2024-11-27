@@ -20,20 +20,24 @@ def q(request) -> cx.AbstractPos:
 
     # Special case ProlateSpheroidalPos, which requires a value of Delta to define the
     # coordinate system
-    args = (
-        () if request.param is not cx.ProlateSpheroidalPos else (Quantity(1.0, "kpc"),)
+    kwargs = (
+        {}
+        if request.param is not cx.ProlateSpheroidalPos
+        else {"Delta": Quantity(1.0, "kpc")}
     )
 
-    return q.represent_as(request.param, *args)
+    return q.represent_as(request.param, **kwargs)
 
 
 @eqx.filter_jit
 def func(q: cx.AbstractPos, target: type[cx.AbstractPos]) -> cx.AbstractPos:
     # Special case ProlateSpheroidalPos, which requires a value of Delta to define the
     # coordinate system
-    args = () if target is not cx.ProlateSpheroidalPos else (Quantity(1.0, "kpc"),)
+    kwargs = (
+        {} if target is not cx.ProlateSpheroidalPos else {"Delta": Quantity(1.0, "kpc")}
+    )
 
-    return q.represent_as(target, *args)
+    return q.represent_as(target, **kwargs)
 
 
 @pytest.mark.parametrize("target", POSITION_CLASSES_3D)
