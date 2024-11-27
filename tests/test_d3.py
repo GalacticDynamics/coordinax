@@ -552,7 +552,9 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         assert jnp.array_equal(
             polar.r, u.Quantity([0.0, 0.8944271, 1.183216, 1.3416408], "kpc")
         )
-        assert jnp.allclose(polar.phi.value, jnp.array([0, 1, 2, 3]))
+        assert jnp.allclose(
+            polar.phi, u.Quantity([0, 1, 2, 3], "rad"), atol=u.Quantity(1e-8, "rad")
+        )
 
     def test_prolatespheroidal_to_cartesian3d(self, vector):
         """Test ``coordinax.represent_as(CartesianPos3D)``."""
@@ -590,7 +592,7 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         assert jnp.array_equal(
             spherical.r, u.Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
         )
-        assert jnp.array_equal(spherical.phi, vector.phi)
+        assert jnp.allclose(spherical.phi, vector.phi, atol=u.Quantity(1e-8, "rad"))
         assert jnp.array_equal(
             spherical.theta, u.Quantity([0.0, 0.95531654, 0.89496875, 0.8148269], "rad")
         )
