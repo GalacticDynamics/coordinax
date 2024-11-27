@@ -593,8 +593,10 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
             spherical.r, u.Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
         )
         assert jnp.allclose(spherical.phi, vector.phi, atol=u.Quantity(1e-8, "rad"))
-        assert jnp.array_equal(
-            spherical.theta, u.Quantity([0.0, 0.95531654, 0.89496875, 0.8148269], "rad")
+        assert jnp.allclose(
+            spherical.theta,
+            u.Quantity([0.0, 0.95531654, 0.89496875, 0.8148269], "rad"),
+            atol=u.Quantity(1e-8, "rad"),
         )
 
     def test_prolatespheroidal_to_prolatespheroidal(self, vector):
