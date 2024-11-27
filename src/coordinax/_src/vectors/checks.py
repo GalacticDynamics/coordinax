@@ -37,7 +37,7 @@ def check_r_non_negative(r: AbstractQuantity) -> AbstractQuantity:
     ... except Exception: pass
 
     """
-    return check_non_negative(r, "radial distance")
+    return check_non_negative(r, "radial distance r")
 
 
 def check_polar_range(
@@ -152,10 +152,15 @@ def check_less_than(
     --------
     >>> from unxt import Quantity
 
+    Pass through the input if the value is less than the max value:
+
+    >>> x = Quantity([1, 2, 3], "m")
+    >>> check_less_than(x, Quantity(4, "m"))
+    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+
     Raise an error if the input is larger than the maximum value.
 
-    >>> x = Quantity([-1, 1, 2], "m")
-    >>> try: check_less_than(x, 1.5)
+    >>> try: check_less_than(x, Quantity(1.5, "m"))
     ... except Exception: pass
 
     """
@@ -177,10 +182,15 @@ def check_less_than_equal(
     --------
     >>> from unxt import Quantity
 
+    Pass through the input if the value is less than or equal to the max value:
+
+    >>> x = Quantity([1, 2, 3], "m")
+    >>> check_less_than_equal(x, Quantity(3, "m"))
+    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+
     Raise an error if the input is larger than the maximum value.
 
-    >>> x = Quantity([-1, 1, 2], "m")
-    >>> try: check_less_than(x, 1.5)
+    >>> try: check_less_than_equal(x, Quantity(2, "m"))
     ... except Exception: pass
 
     """
@@ -202,10 +212,15 @@ def check_greater_than(
     --------
     >>> from unxt import Quantity
 
+    Pass through the input if the value is greater than the min value:
+
+    >>> x = Quantity([1, 2, 3], "m")
+    >>> check_greater_than(x, Quantity(0, "m"))
+    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+
     Raise an error if the input is smaller than the minimum value.
 
-    >>> x = Quantity([-1, 1, 2], "m")
-    >>> try: check_greater_than(x, 1.0)
+    >>> try: check_greater_than(x, Quantity(4, "m"))
     ... except Exception: pass
 
     """
@@ -227,10 +242,15 @@ def check_greater_than_equal(
     --------
     >>> from unxt import Quantity
 
+    Pass through the input if the value is greater than or equal to the min value:
+
+    >>> x = Quantity([1, 2, 3], "m")
+    >>> check_greater_than_equal(x, Quantity(1, "m"))
+    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+
     Raise an error if the input is smaller than the minimum value.
 
-    >>> x = Quantity([-1, 1, 2], "m")
-    >>> try: check_greater_than_equal(x, 1.0)
+    >>> try: check_greater_than_equal(x, Quantity(2, "m"))
     ... except Exception: pass
 
     """
