@@ -37,9 +37,9 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     Parameters
     ----------
-    mu : `coordinax.distance.Distance`
+    mu : Quantity["area"]
         The spheroidal mu coordinate. This is called `lambda` by Dejonghe & de Zeeuw.
-    nu : `coordinax.distance.Distance`
+    nu : Quantity["area"]
         The spheroidal nu coordinate.
     phi : `coordinax.angle.Angle`
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
@@ -106,7 +106,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     _: KW_ONLY
-    Delta: Shaped[Quantity["length"], ""] = VectorAttribute()
+    Delta: Shaped[Quantity["length"], ""] = VectorAttribute(converter=Quantity["length"].from_)
     """Focal length of the coordinate system."""
 
     def __check_init__(self) -> None:

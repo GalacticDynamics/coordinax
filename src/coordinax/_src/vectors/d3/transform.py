@@ -1,5 +1,5 @@
-# ruff: noqa: N803, N806
 """Representation of coordinates in different systems."""
+# ruff: noqa: N803, N806
 
 __all__: list[str] = []
 
@@ -607,13 +607,10 @@ def represent_as(
 
     """
     Delta2 = current.Delta**2
-    absnu = xp.abs(current.nu)
+    nu_D2 = xp.abs(current.nu) / Delta2
 
-    mu_minus_delta = current.mu - Delta2
-    # nu_minus_delta = absnu - Delta2
-
-    R = xp.sqrt(mu_minus_delta * (1 - absnu / Delta2))
-    z = xp.sqrt(current.mu * absnu / Delta2) * xp.sign(current.nu)
+    R = xp.sqrt((current.mu - Delta2) * (1 - nu_D2))
+    z = xp.sqrt(current.mu * nu_D2 * xp.sign(current.nu)
 
     return target(rho=R, phi=current.phi, z=z)
 

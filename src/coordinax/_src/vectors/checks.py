@@ -83,7 +83,7 @@ def check_polar_range(
     )
 
 
-def check_non_negative(x: AbstractQuantity, /, name: str = "") -> AbstractQuantity:
+def check_non_negative(x: AbstractQuantity, /, *, name: str = "") -> AbstractQuantity:
     """Check that the input is non-negative.
 
     Examples
@@ -108,7 +108,7 @@ def check_non_negative(x: AbstractQuantity, /, name: str = "") -> AbstractQuanti
 
 
 def check_non_negative_non_zero(
-    x: AbstractQuantity, /, name: str = ""
+    x: AbstractQuantity, /, *, name: str = ""
 ) -> AbstractQuantity:
     """Check that the input is non-negative and non-zero.
 
@@ -143,6 +143,7 @@ def check_less_than(
     x: AbstractQuantity,
     max_val: AbstractQuantity,
     /,
+    *,
     name: str = "",
     comparison_name: str = "the specified maximum value",
 ) -> AbstractQuantity:
@@ -173,6 +174,7 @@ def check_less_than_equal(
     x: AbstractQuantity,
     max_val: AbstractQuantity,
     /,
+    *,
     name: str = "",
     comparison_name: str = "the specified maximum value",
 ) -> AbstractQuantity:
@@ -203,6 +205,7 @@ def check_greater_than(
     x: AbstractQuantity,
     min_val: AbstractQuantity,
     /,
+    *,
     name: str = "",
     comparison_name: str = "the specified minimum value",
 ) -> AbstractQuantity:
@@ -233,6 +236,7 @@ def check_greater_than_equal(
     x: AbstractQuantity,
     min_val: AbstractQuantity,
     /,
+    *,
     name: str = "",
     comparison_name: str = "the specified minimum value",
 ) -> AbstractQuantity:
