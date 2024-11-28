@@ -37,7 +37,7 @@ def check_r_non_negative(r: AbstractQuantity) -> AbstractQuantity:
     ... except Exception: pass
 
     """
-    return check_non_negative(r, "radial distance r")
+    return check_non_negative(r, name="radial distance r")
 
 
 def check_polar_range(

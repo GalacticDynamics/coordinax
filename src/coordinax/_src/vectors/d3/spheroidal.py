@@ -43,8 +43,8 @@ class ProlateSpheroidalPos(AbstractPos3D):
         The spheroidal nu coordinate.
     phi : `coordinax.angle.Angle`
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
-    Delta : `coordinax.distance.Distance`
-        The focal length of the coordinate system.
+    Delta : Quantity["length"]
+        The focal length of the coordinate system. Must be > 0.
 
     Examples
     --------

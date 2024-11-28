@@ -610,7 +610,7 @@ def represent_as(
     nu_D2 = xp.abs(current.nu) / Delta2
 
     R = xp.sqrt((current.mu - Delta2) * (1 - nu_D2))
-    z = xp.sqrt(current.mu * nu_D2 * xp.sign(current.nu)
+    z = xp.sqrt(current.mu * nu_D2) * xp.sign(current.nu)
 
     return target(rho=R, phi=current.phi, z=z)
 
