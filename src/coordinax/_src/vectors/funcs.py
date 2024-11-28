@@ -60,14 +60,14 @@ def normalize_vector(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = Quantity(jnp.asarray([2, 0]), "km")
+    >>> x = u.Quantity(jnp.asarray([2, 0]), "km")
     >>> cx.normalize_vector(x)
     Quantity['dimensionless'](Array([1., 0.], dtype=float32), unit='')
 
-    >>> x = Quantity(jnp.asarray([0, 2]), "s")
+    >>> x = u.Quantity(jnp.asarray([0, 2]), "s")
     >>> cx.normalize_vector(x)
     Quantity['dimensionless'](Array([0., 1.], dtype=float32), unit='')
 

@@ -10,14 +10,13 @@ import jax.numpy as jnp
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt import Quantity, dimension, dimension_of, ustrip
 
 from .base import AbstractDistance
 
 parallax_base_length = u.Quantity(1, "AU")
 distance_modulus_base_distance = u.Quantity(10, "pc")
-angle_dimension = dimension("angle")
-length_dimension = dimension("length")
+angle_dimension = u.dimension("angle")
+length_dimension = u.dimension("length")
 
 
 ##############################################################################
@@ -45,7 +44,7 @@ class Distance(AbstractDistance):
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        if dimension_of(self) != length_dimension:
+        if u.dimension_of(self) != length_dimension:
             msg = "Distance must have dimensions length."
             raise ValueError(msg)
 
@@ -85,7 +84,7 @@ class Distance(AbstractDistance):
 
     @property
     def distance_modulus(  # noqa: PLR0206  (needed for quax boundary)
-        self, base_length: Quantity["length"] = distance_modulus_base_distance
+        self, base_length: u.Quantity["length"] = distance_modulus_base_distance
     ) -> "DistanceModulus":
         """The distance modulus.
 
@@ -142,7 +141,7 @@ class Parallax(AbstractDistance):
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        if dimension_of(self) != angle_dimension:
+        if u.dimension_of(self) != angle_dimension:
             msg = "Parallax must have angular dimensions."
             raise ValueError(msg)
 
@@ -155,7 +154,7 @@ class Parallax(AbstractDistance):
 
     @property
     def distance(  # noqa: PLR0206  (needed for quax boundary)
-        self, base_length: Quantity["length"] = parallax_base_length
+        self, base_length: u.Quantity["length"] = parallax_base_length
     ) -> Distance:
         r"""The distance.
 
@@ -275,19 +274,19 @@ class DistanceModulus(AbstractDistance):
 
 @Distance.from_._f.register  # noqa: SLF001
 def from_(
-    cls: type[Distance], value: Parallax | Quantity["angle"], /, *, dtype: Any = None
+    cls: type[Distance], value: Parallax | u.Quantity["angle"], /, *, dtype: Any = None
 ) -> Distance:
     """Construct a `coordinax.Distance` from an angle through the parallax.
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> from coordinax.distance import Distance, Parallax
 
     >>> Distance.from_(Parallax(1, "mas")).to("kpc")
     Distance(Array(1., dtype=float32, ...), unit='kpc')
 
-    >>> Distance.from_(Quantity(1, "mas")).to("kpc")
+    >>> Distance.from_(u.Quantity(1, "mas")).to("kpc")
     Distance(Array(1., dtype=float32, ...), unit='kpc')
 
     """
@@ -298,7 +297,7 @@ def from_(
 @Distance.from_._f.register  # type: ignore[no-redef]  # noqa: SLF001
 def from_(
     cls: type[Distance],
-    value: DistanceModulus | Quantity["mag"],
+    value: DistanceModulus | u.Quantity["mag"],
     /,
     *,
     dtype: Any = None,
@@ -307,36 +306,36 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> from coordinax.distance import Distance, DistanceModulus
 
     >>> Distance.from_(DistanceModulus(10, "mag")).to("pc")
     Distance(Array(1000., dtype=float32, ...), unit='pc')
 
-    >>> Distance.from_(Quantity(10, "mag")).to("pc")
+    >>> Distance.from_(u.Quantity(10, "mag")).to("pc")
     Distance(Array(1000., dtype=float32, ...), unit='pc')
 
     """
-    d = 10 ** (ustrip("mag", value) / 5 + 1)
+    d = 10 ** (u.ustrip("mag", value) / 5 + 1)
     return cls(jnp.asarray(d, dtype=dtype), "pc")
 
 
 @Parallax.from_._f.register  # type: ignore[no-redef]  # noqa: SLF001
 def from_(
-    cls: type[Parallax], value: Distance | Quantity["length"], /, *, dtype: Any = None
+    cls: type[Parallax], value: Distance | u.Quantity["length"], /, *, dtype: Any = None
 ) -> Parallax:
     """Construct a `Parallax` from a distance.
 
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> from coordinax.distance import Parallax, Distance
 
     >>> jnp.round(Parallax.from_(Distance(1, "pc")).to("mas"))
     Parallax(Array(1000., dtype=float32, ...), unit='mas')
 
-    >>> jnp.round(Parallax.from_(Quantity(1, "pc")).to("mas"), 2)
+    >>> jnp.round(Parallax.from_(u.Quantity(1, "pc")).to("mas"), 2)
     Parallax(Array(1000., dtype=float32, ...), unit='mas')
 
     """

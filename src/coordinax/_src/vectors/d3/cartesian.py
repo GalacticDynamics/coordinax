@@ -19,12 +19,14 @@ from quax import register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items
-from unxt.quantity import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .generic import CartesianGeneric3D
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
@@ -37,18 +39,18 @@ from coordinax._src.vectors.base.mixins import AvalMixin
 class CartesianPos3D(AbstractPos3D):
     """Cartesian vector representation."""
 
-    x: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    x: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    y: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
-    z: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    z: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
 
@@ -74,10 +76,10 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos3D.from_(Quantity([1, 2, 3], "m"))
+    >>> vec = cx.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> vec
     CartesianPos3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -100,11 +102,11 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> s = cx.SphericalPos(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
-    ...                          phi=Quantity(0, "deg"))
+    >>> s = cx.SphericalPos(r=u.Quantity(1, "kpc"), theta=u.Quantity(90, "deg"),
+    ...                     phi=u.Quantity(0, "deg"))
     >>> (q + s).x
     Quantity['length'](Array(2., dtype=float32), unit='kpc')
 
@@ -136,11 +138,11 @@ def _sub_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> s = cx.SphericalPos(r=Quantity(1, "kpc"), theta=Quantity(90, "deg"),
-    ...                          phi=Quantity(0, "deg"))
+    >>> s = cx.SphericalPos(r=u.Quantity(1, "kpc"), theta=u.Quantity(90, "deg"),
+    ...                     phi=u.Quantity(0, "deg"))
     >>> (q - s).x
     Quantity['length'](Array(0., dtype=float32), unit='kpc')
 
@@ -197,17 +199,17 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""X speed :math:`dx/dt \in [-\infty, \infty]."""
 
     d_y: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""Y speed :math:`dy/dt \in [-\infty, \infty]."""
 
     d_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
@@ -229,7 +231,6 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
         >>> c = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
         >>> c.norm()
@@ -252,10 +253,10 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianVel3D.from_(Quantity([1, 2, 3], "m/s"))
+    >>> vec = cx.CartesianVel3D.from_(u.Quantity([1, 2, 3], "m/s"))
     >>> vec
     CartesianVel3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
@@ -313,17 +314,17 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
     )
     r"""X acceleration :math:`d^2x/dt^2 \in [-\infty, \infty]."""
 
     d2_y: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
     )
     r"""Y acceleration :math:`d^2y/dt^2 \in [-\infty, \infty]."""
 
     d2_z: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
     )
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
@@ -342,7 +343,6 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
         >>> c = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
         >>> c.norm()
@@ -363,10 +363,10 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcc3D.from_(Quantity([1, 2, 3], "m/s2"))
+    >>> vec = cx.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
     >>> vec
     CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
@@ -396,7 +396,6 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianPos3D.from_([1, 2, 3], "kpc")

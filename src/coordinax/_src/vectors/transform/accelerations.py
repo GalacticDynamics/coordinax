@@ -11,8 +11,8 @@ import jax
 from plum import dispatch
 
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items
-from unxt import Quantity
 
 from coordinax._src.distance import AbstractDistance
 from coordinax._src.vectors.base import AbstractAcc, AbstractPos, AbstractVel
@@ -27,27 +27,27 @@ from coordinax._src.vectors.d3 import AbstractAcc3D
     (
         AbstractAcc1D,
         type[AbstractAcc1D],
-        AbstractVel | Quantity["speed"],
-        AbstractPos | Quantity["length"],
+        AbstractVel | u.Quantity["speed"],
+        AbstractPos | u.Quantity["length"],
     ),
     (
         AbstractAcc2D,
         type[AbstractAcc2D],
-        AbstractVel | Quantity["speed"],
-        AbstractPos | Quantity["length"],
+        AbstractVel | u.Quantity["speed"],
+        AbstractPos | u.Quantity["length"],
     ),
     (
         AbstractAcc3D,
         type[AbstractAcc3D],
-        AbstractVel | Quantity["speed"],
-        AbstractPos | Quantity["length"],
+        AbstractVel | u.Quantity["speed"],
+        AbstractPos | u.Quantity["length"],
     ),
 )
 def represent_as(
     current: AbstractAcc,
     target: type[AbstractAcc],
-    velocity: AbstractVel | Quantity["speed"],
-    position: AbstractPos | Quantity["length"],
+    velocity: AbstractVel | u.Quantity["speed"],
+    position: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
 ) -> AbstractAcc:
@@ -70,14 +70,14 @@ def represent_as(
 
     Examples
     --------
+    >>> import unxt as u
     >>> import coordinax as cx
-    >>> from unxt import Quantity
 
     Let's start in 1D:
 
-    >>> q = cx.CartesianPos1D(x=Quantity(1.0, "km"))
-    >>> p = cx.CartesianVel1D(d_x=Quantity(1.0, "km/s"))
-    >>> a = cx.CartesianAcc1D(d2_x=Quantity(1.0, "km/s2"))
+    >>> q = cx.CartesianPos1D(x=u.Quantity(1.0, "km"))
+    >>> p = cx.CartesianVel1D(d_x=u.Quantity(1.0, "km/s"))
+    >>> a = cx.CartesianAcc1D(d2_x=u.Quantity(1.0, "km/s2"))
     >>> cx.represent_as(a, cx.RadialAcc, p, q)
     RadialAcc( d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
 
@@ -108,8 +108,8 @@ def represent_as(
     Cartesian vector:
 
     >>> cx.represent_as(a, cx.SphericalAcc,
-    ...                 Quantity([1.0, 2.0, 3.0], "km/s"),
-    ...                 Quantity([1.0, 2.0, 3.0], "km"))
+    ...                 u.Quantity([1.0, 2.0, 3.0], "km/s"),
+    ...                 u.Quantity([1.0, 2.0, 3.0], "km"))
     SphericalAcc(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
@@ -170,7 +170,7 @@ def represent_as(
     # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
     jac_rows = {
         f"d2_{k}": {
-            kk: Quantity(vv.value, unit=v.unit / vv.unit)
+            kk: u.Quantity(vv.value, unit=v.unit / vv.unit)
             for kk, vv in field_items(v.value)
         }
         for k, v in field_items(jac_nested_vecs)

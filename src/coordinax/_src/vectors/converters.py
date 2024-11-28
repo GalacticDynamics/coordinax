@@ -19,8 +19,8 @@ def converter_azimuth_to_range(
 
     Examples
     --------
-    >>> from unxt import Quantity
-    >>> x = Quantity(370, "deg")
+    >>> import unxt as u
+    >>> x = u.Quantity(370, "deg")
     >>> converter_azimuth_to_range(x)
     Quantity['angle'](Array(10, dtype=int32, ...), unit='deg')
 

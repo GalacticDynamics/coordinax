@@ -13,11 +13,12 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.numpy as jnp
+import unxt as u
 from quaxed import lax as qlax
-from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
@@ -48,8 +49,8 @@ class CartesianPos1D(AbstractPos1D):
 
     """
 
-    x: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    x: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
@@ -98,10 +99,9 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPos1D(x=Quantity(1, "m"))
+    >>> v = cx.CartesianPos1D.from_(1, "m")
     >>> jnp.multiply(2, v).x
     Quantity['length'](Array(2., dtype=float32), unit='m')
 
@@ -168,7 +168,7 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
 class CartesianVel1D(AvalMixin, AbstractVel1D):
     """Cartesian differential representation."""
 
-    d_x: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
+    d_x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
@@ -190,7 +190,6 @@ class CartesianVel1D(AvalMixin, AbstractVel1D):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
         >>> q = cx.CartesianVel1D.from_([-1], "km/s")
         >>> q.norm()
@@ -211,7 +210,6 @@ def _add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianVel1D.from_([1], "km/s")
@@ -237,10 +235,9 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVel1D(d_x=Quantity(1, "m/s"))
+    >>> v = cx.CartesianVel1D.from_(1, "m/s")
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianVel1D(
@@ -270,7 +267,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
 class CartesianAcc1D(AvalMixin, AbstractAcc1D):
     """Cartesian differential representation."""
 
-    d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
+    d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @classproperty
@@ -288,7 +285,6 @@ class CartesianAcc1D(AvalMixin, AbstractAcc1D):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
         >>> q = cx.CartesianAcc1D.from_([-1], "km/s2")
         >>> q.norm()
@@ -305,7 +301,6 @@ def _add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianAcc1D.from_([1], "km/s2")
@@ -331,10 +326,9 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcc1D(d2_x=Quantity(1, "m/s2"))
+    >>> v = cx.CartesianAcc1D.from_(1, "m/s2")
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianAcc1D( d2_x=... )
@@ -362,11 +356,10 @@ def _sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D
     Examples
     --------
     >>> from quaxed import lax
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> v1 = cx.CartesianAcc1D(d2_x=Quantity(1, "m/s2"))
-    >>> v2 = cx.CartesianAcc1D(d2_x=Quantity(2, "m/s2"))
+    >>> v1 = cx.CartesianAcc1D.from_(1, "m/s2")
+    >>> v2 = cx.CartesianAcc1D.from_(2, "m/s2")
     >>> vec = lax.sub(v1, v2)
     >>> vec
     CartesianAcc1D( d2_x=... )

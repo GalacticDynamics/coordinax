@@ -9,7 +9,7 @@ from dataclasses import fields
 from jaxtyping import Shaped
 
 import quaxed.numpy as jnp
-from unxt import Quantity
+import unxt as u
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import (
@@ -45,26 +45,27 @@ class AbstractPos1D(AbstractPos):
 @AbstractPos1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
     cls: type[AbstractPos1D],
-    obj: Shaped[Quantity["length"], "*batch"] | Shaped[Quantity["length"], "*batch 1"],
+    obj: Shaped[u.Quantity["length"], "*batch"]
+    | Shaped[u.Quantity["length"], "*batch 1"],
     /,
 ) -> AbstractPos1D:
     """Construct a 1D position.
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.CartesianPos1D.from_(Quantity(1, "meter"))
+    >>> cx.CartesianPos1D.from_(u.Quantity(1, "meter"))
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
 
-    >>> cx.CartesianPos1D.from_(Quantity([1], "meter"))
+    >>> cx.CartesianPos1D.from_(u.Quantity([1], "meter"))
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
 
-    >>> cx.RadialPos.from_(Quantity(1, "meter"))
+    >>> cx.RadialPos.from_(u.Quantity(1, "meter"))
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))
 
-    >>> cx.RadialPos.from_(Quantity([1], "meter"))
+    >>> cx.RadialPos.from_(u.Quantity([1], "meter"))
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))
 
     """
@@ -104,26 +105,27 @@ class AbstractVel1D(AbstractVel):
 @AbstractVel1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
     cls: type[AbstractVel1D],
-    obj: Shaped[Quantity["speed"], "*batch"] | Shaped[Quantity["speed"], "*batch 1"],
+    obj: Shaped[u.Quantity["speed"], "*batch"]
+    | Shaped[u.Quantity["speed"], "*batch 1"],
     /,
 ) -> AbstractVel1D:
     """Construct a 1D velocity.
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.CartesianVel1D.from_(Quantity(1, "m/s"))
+    >>> cx.CartesianVel1D.from_(u.Quantity(1, "m/s"))
     CartesianVel1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.CartesianVel1D.from_(Quantity([1], "m/s"))
+    >>> cx.CartesianVel1D.from_(u.Quantity([1], "m/s"))
     CartesianVel1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVel.from_(Quantity(1, "m/s"))
+    >>> cx.RadialVel.from_(u.Quantity(1, "m/s"))
     RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVel.from_(Quantity([1], "m/s"))
+    >>> cx.RadialVel.from_(u.Quantity([1], "m/s"))
     RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     """
@@ -157,27 +159,27 @@ class AbstractAcc1D(AbstractAcc):
 @AbstractAcc1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
 def from_(
     cls: type[AbstractAcc1D],
-    obj: Shaped[Quantity["acceleration"], "*batch"]
-    | Shaped[Quantity["acceleration"], "*batch 1"],
+    obj: Shaped[u.Quantity["acceleration"], "*batch"]
+    | Shaped[u.Quantity["acceleration"], "*batch 1"],
     /,
 ) -> AbstractAcc1D:
     """Construct a 1D acceleration.
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.CartesianAcc1D.from_(Quantity(1, "m/s2"))
+    >>> cx.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
     CartesianAcc1D( d2_x=... )
 
-    >>> cx.CartesianAcc1D.from_(Quantity([1], "m/s2"))
+    >>> cx.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
     CartesianAcc1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
-    >>> cx.RadialAcc.from_(Quantity(1, "m/s2"))
+    >>> cx.RadialAcc.from_(u.Quantity(1, "m/s2"))
     RadialAcc( d2_r=... )
 
-    >>> cx.RadialAcc.from_(Quantity([1], "m/s2"))
+    >>> cx.RadialAcc.from_(u.Quantity([1], "m/s2"))
     RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     """

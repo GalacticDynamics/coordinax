@@ -22,12 +22,12 @@ def _convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> from coordinax.angle import Angle
     >>> from plum import convert
 
     >>> a = Angle(90, "deg")
-    >>> convert(a, Quantity)
+    >>> convert(a, u.Quantity)
     Quantity['angle'](Array(90, dtype=int32, weak_type=True), unit='deg')
 
     """

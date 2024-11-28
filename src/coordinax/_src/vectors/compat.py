@@ -83,23 +83,23 @@ def vec_diff1d_to_uncheckedq(obj: QConvertible1D, /) -> Shaped[Quantity, "*batch
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> cart_vel = cx.CartesianVel1D.from_([1], "km/s")
-    >>> convert(cart_vel, Quantity)
+    >>> convert(cart_vel, u.Quantity)
     Quantity['speed'](Array([1], dtype=int32), unit='km / s')
 
     >>> cart_acc = cx.CartesianAcc1D.from_([1], "km/s2")
-    >>> convert(cart_acc, Quantity)
+    >>> convert(cart_acc, u.Quantity)
     Quantity['acceleration'](Array([1], dtype=int32), unit='km / s2')
 
     >>> rad_vel = cx.RadialVel.from_([1], "km/s")
-    >>> convert(rad_vel, Quantity)
+    >>> convert(rad_vel, u.Quantity)
     Quantity['speed'](Array([1], dtype=int32), unit='km / s')
 
     >>> rad_acc = cx.RadialAcc.from_([1], "km/s2")
-    >>> convert(rad_acc, Quantity)
+    >>> convert(rad_acc, u.Quantity)
     Quantity['acceleration'](Array([1], dtype=int32), unit='km / s2')
 
     """
@@ -143,15 +143,15 @@ def vec_diff_to_q(obj: QConvertible2D, /) -> Shaped[Quantity, "*batch 2"]:
     Examples
     --------
     >>> from plum import convert
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> vel = cx.CartesianVel2D.from_([1, 2], "km/s")
-    >>> convert(vel, Quantity)
+    >>> convert(vel, u.Quantity)
     Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
 
     >>> acc = cx.CartesianAcc2D.from_([1, 2], "km/s2")
-    >>> convert(acc, Quantity)
+    >>> convert(acc, u.Quantity)
     Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
 
     """
@@ -196,14 +196,14 @@ def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[Quantity, "*batch 3"]:
     --------
     >>> import coordinax as cx
     >>> from plum import convert
-    >>> from unxt import Quantity
+    >>> import unxt as u
 
     >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> convert(vel, Quantity)
+    >>> convert(vel, u.Quantity)
     Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
 
     >>> acc = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> convert(acc, Quantity)
+    >>> convert(acc, u.Quantity)
     Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
 
     """

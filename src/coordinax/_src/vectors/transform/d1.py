@@ -7,7 +7,7 @@ from typing import Any
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt import Quantity
+import unxt as u
 
 from coordinax._src.vectors.d1 import CartesianPos1D, RadialPos
 from coordinax._src.vectors.d2 import CartesianPos2D, PolarPos
@@ -32,7 +32,7 @@ def represent_as(
     target: type[CartesianPos2D],
     /,
     *,
-    y: Quantity = Quantity(0.0, "m"),
+    y: u.Quantity = u.Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPos2D:
     """CartesianPos1D -> CartesianPos2D.
@@ -42,10 +42,10 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPos1D(x=Quantity(1.0, "km"))
+    >>> x = cx.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
@@ -53,7 +53,7 @@ def represent_as(
     >>> x2.y
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CartesianPos3D, y=Quantity(14, "km"))
+    >>> x3 = cx.represent_as(x, cx.CartesianPos3D, y=u.Quantity(14, "km"))
     >>> x3.y
     Quantity['length'](Array(14., dtype=float32), unit='km')
 
@@ -67,7 +67,7 @@ def represent_as(
     target: type[PolarPos],
     /,
     *,
-    phi: Quantity = Quantity(0.0, "radian"),
+    phi: u.Quantity = u.Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> PolarPos:
     """CartesianPos1D -> PolarPos.
@@ -77,10 +77,10 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPos1D(x=Quantity(1.0, "km"))
+    >>> x = cx.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
@@ -88,7 +88,7 @@ def represent_as(
     >>> x2.phi
     Angle(Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.PolarPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.PolarPos, phi=u.Quantity(14, "deg"))
     >>> x3.phi
     Angle(Array(14., dtype=float32), unit='deg')
 
@@ -106,8 +106,8 @@ def represent_as(
     target: type[CartesianPos3D],
     /,
     *,
-    y: Quantity = Quantity(0.0, "m"),
-    z: Quantity = Quantity(0.0, "m"),
+    y: u.Quantity = u.Quantity(0.0, "m"),
+    z: u.Quantity = u.Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """CartesianPos1D -> CartesianPos3D.
@@ -117,21 +117,21 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPos1D(x=Quantity(1.0, "km"))
+    >>> x = cx.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.CartesianPos3D)
     >>> x2
     CartesianPos3D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("m")),
-                       z=Quantity[...](value=f32[], unit=Unit("m")) )
+                    y=Quantity[...](value=f32[], unit=Unit("m")),
+                    z=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.y
     Quantity['length'](Array(0., dtype=float32), unit='m')
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CartesianPos3D, y=Quantity(14, "km"))
+    >>> x3 = cx.represent_as(x, cx.CartesianPos3D, y=u.Quantity(14, "km"))
     >>> x3.y
     Quantity['length'](Array(14., dtype=float32), unit='km')
     >>> x3.z
@@ -147,8 +147,8 @@ def represent_as(
     target: type[SphericalPos] | type[MathSphericalPos],
     /,
     *,
-    theta: Quantity = Quantity(0.0, "radian"),
-    phi: Quantity = Quantity(0.0, "radian"),
+    theta: u.Quantity = u.Quantity(0.0, "radian"),
+    phi: u.Quantity = u.Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> SphericalPos | MathSphericalPos:
     """CartesianPos1D -> SphericalPos | MathSphericalPos.
@@ -158,12 +158,12 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     SphericalPos:
 
-    >>> x = cx.CartesianPos1D(x=Quantity(1.0, "km"))
+    >>> x = cx.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.SphericalPos)
     >>> x2
     SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
@@ -174,7 +174,7 @@ def represent_as(
     >>> x2.theta
     Angle(Array(0., dtype=float32), unit='deg')
 
-    >>> x3 = cx.represent_as(x, cx.SphericalPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.SphericalPos, phi=u.Quantity(14, "deg"))
     >>> x3.phi
     Angle(Array(14., dtype=float32), unit='deg')
     >>> x2.theta
@@ -193,7 +193,7 @@ def represent_as(
     >>> x2.phi
     Angle(Array(0., dtype=float32), unit='deg')
 
-    >>> x3 = cx.represent_as(x, cx.MathSphericalPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.MathSphericalPos, phi=u.Quantity(14, "deg"))
     >>> x3.theta
     Angle(Array(0., dtype=float32), unit='rad')
     >>> x3.phi
@@ -210,8 +210,8 @@ def represent_as(
     target: type[CylindricalPos],
     /,
     *,
-    phi: Quantity = Quantity(0.0, "radian"),
-    z: Quantity = Quantity(0.0, "m"),
+    phi: u.Quantity = u.Quantity(0.0, "radian"),
+    z: u.Quantity = u.Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CylindricalPos:
     """CartesianPos1D -> CylindricalPos.
@@ -221,10 +221,10 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPos1D(x=Quantity(1.0, "km"))
+    >>> x = cx.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.CylindricalPos)
     >>> x2
     CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
@@ -235,7 +235,7 @@ def represent_as(
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CylindricalPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.CylindricalPos, phi=u.Quantity(14, "deg"))
     >>> x3.phi
     Angle(Array(14., dtype=float32), unit='deg')
     >>> x3.z
@@ -258,7 +258,7 @@ def represent_as(
     target: type[CartesianPos2D],
     /,
     *,
-    y: Quantity = Quantity(0.0, "m"),
+    y: u.Quantity = u.Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPos2D:
     """RadialPos -> CartesianPos2D.
@@ -268,18 +268,18 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.RadialPos(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPos(r=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.CartesianPos2D)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("m")) )
+                    y=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.y
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CartesianPos2D, y=Quantity(14, "km"))
+    >>> x3 = cx.represent_as(x, cx.CartesianPos2D, y=u.Quantity(14, "km"))
     >>> x3.y
     Quantity['length'](Array(14., dtype=float32), unit='km')
 
@@ -293,7 +293,7 @@ def represent_as(
     target: type[PolarPos],
     /,
     *,
-    phi: Quantity = Quantity(0.0, "radian"),
+    phi: u.Quantity = u.Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> PolarPos:
     """RadialPos -> PolarPos.
@@ -303,10 +303,10 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.RadialPos(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPos(r=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.PolarPos)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
@@ -314,7 +314,7 @@ def represent_as(
     >>> x2.phi
     Angle(Array(0., dtype=float32), unit='rad')
 
-    >>> x3 = cx.represent_as(x, cx.PolarPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.PolarPos, phi=u.Quantity(14, "deg"))
     >>> x3.phi
     Angle(Array(14., dtype=float32), unit='deg')
 
@@ -332,8 +332,8 @@ def represent_as(
     target: type[CartesianPos3D],
     /,
     *,
-    y: Quantity = Quantity(0.0, "m"),
-    z: Quantity = Quantity(0.0, "m"),
+    y: u.Quantity = u.Quantity(0.0, "m"),
+    z: u.Quantity = u.Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """RadialPos -> CartesianPos3D.
@@ -343,21 +343,21 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.RadialPos(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPos(r=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.CartesianPos3D)
     >>> x2
     CartesianPos3D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                       y=Quantity[...](value=f32[], unit=Unit("m")),
-                       z=Quantity[...](value=f32[], unit=Unit("m")) )
+                    y=Quantity[...](value=f32[], unit=Unit("m")),
+                    z=Quantity[...](value=f32[], unit=Unit("m")) )
     >>> x2.y
     Quantity['length'](Array(0., dtype=float32), unit='m')
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CartesianPos3D, y=Quantity(14, "km"))
+    >>> x3 = cx.represent_as(x, cx.CartesianPos3D, y=u.Quantity(14, "km"))
     >>> x3.y
     Quantity['length'](Array(14., dtype=float32), unit='km')
     >>> x3.z
@@ -373,8 +373,8 @@ def represent_as(
     target: type[SphericalPos] | type[MathSphericalPos],
     /,
     *,
-    theta: Quantity = Quantity(0.0, "radian"),
-    phi: Quantity = Quantity(0.0, "radian"),
+    theta: u.Quantity = u.Quantity(0.0, "radian"),
+    phi: u.Quantity = u.Quantity(0.0, "radian"),
     **kwargs: Any,
 ) -> SphericalPos | MathSphericalPos:
     """RadialPos -> SphericalPos | MathSphericalPos.
@@ -384,10 +384,10 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.RadialPos(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPos(r=u.Quantity(1.0, "km"))
 
     SphericalPos:
 
@@ -401,7 +401,7 @@ def represent_as(
     >>> x2.theta
     Angle(Array(0., dtype=float32), unit='deg')
 
-    >>> x3 = cx.represent_as(x, cx.SphericalPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.SphericalPos, phi=u.Quantity(14, "deg"))
     >>> x3.phi
     Angle(Array(14., dtype=float32), unit='deg')
     >>> x3.theta
@@ -419,7 +419,7 @@ def represent_as(
     >>> x2.phi
     Angle(Array(0., dtype=float32), unit='deg')
 
-    >>> x3 = cx.represent_as(x, cx.MathSphericalPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.MathSphericalPos, phi=u.Quantity(14, "deg"))
     >>> x3.theta
     Angle(Array(0., dtype=float32), unit='rad')
     >>> x3.phi
@@ -436,8 +436,8 @@ def represent_as(
     target: type[CylindricalPos],
     /,
     *,
-    phi: Quantity = Quantity(0.0, "radian"),
-    z: Quantity = Quantity(0.0, "m"),
+    phi: u.Quantity = u.Quantity(0.0, "radian"),
+    z: u.Quantity = u.Quantity(0.0, "m"),
     **kwargs: Any,
 ) -> CylindricalPos:
     """RadialPos -> CylindricalPos.
@@ -447,10 +447,10 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.RadialPos(r=Quantity(1.0, "km"))
+    >>> x = cx.RadialPos(r=u.Quantity(1.0, "km"))
     >>> x2 = cx.represent_as(x, cx.CylindricalPos)
     >>> x2
     CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
@@ -461,7 +461,7 @@ def represent_as(
     >>> x2.z
     Quantity['length'](Array(0., dtype=float32), unit='m')
 
-    >>> x3 = cx.represent_as(x, cx.CylindricalPos, phi=Quantity(14, "deg"))
+    >>> x3 = cx.represent_as(x, cx.CylindricalPos, phi=u.Quantity(14, "deg"))
     >>> x3.phi
     Angle(Array(14., dtype=float32), unit='deg')
     >>> x3.z

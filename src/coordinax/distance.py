@@ -1,4 +1,4 @@
-"""Distances."""
+"""`coordinax.distance` module."""
 
 __all__ = ["AbstractDistance", "Distance", "Parallax", "DistanceModulus"]
 

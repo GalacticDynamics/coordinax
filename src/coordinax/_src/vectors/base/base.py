@@ -121,7 +121,6 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> from unxt import Quantity
         >>> import coordinax as cx
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "meter")
@@ -254,16 +253,16 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can get the shape of a vector:
 
-        >>> vec = cx.CartesianPos1D(x=Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPos1D(x=u.Quantity([1, 2], "m"))
         >>> vec.shape
         (2,)
 
-        >>> vec = cx.CartesianPos1D(x=Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = cx.CartesianPos1D(x=u.Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.shape
         (2, 2)
 
@@ -271,8 +270,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -335,14 +334,14 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can transpose a vector:
 
-        >>> vec = cx.CartesianPos3D(x=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         y=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         z=Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec = cx.CartesianPos3D(x=u.Quantity([[0, 1], [2, 3]], "m"),
+        ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
+        ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.mT.x
         Quantity['length'](Array([[0., 2.],
                                   [1., 3.]], dtype=float32), unit='m')
@@ -358,7 +357,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can get the number of dimensions of a vector:
@@ -375,8 +374,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
         >>> vec.ndim
         2
 
@@ -391,7 +390,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can get the size of a vector:
@@ -408,8 +407,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
         >>> vec.size
         4
 
@@ -424,14 +423,14 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can transpose a vector:
 
-        >>> vec = cx.CartesianPos3D(x=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         y=Quantity([[0, 1], [2, 3]], "m"),
-        ...                         z=Quantity([[0, 1], [2, 3]], "m"))
+        >>> vec = cx.CartesianPos3D(x=u.Quantity([[0, 1], [2, 3]], "m"),
+        ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
+        ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.T.x
         Quantity['length'](Array([[0., 2.],
                                   [1., 3.]], dtype=float32), unit='m')
@@ -549,35 +548,35 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         Positions are covered by a separate dispatch. So here we show velocities
         and accelerations:
 
-        >>> vel1 = cx.CartesianVel1D(Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.CartesianVel1D(Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.CartesianVel1D(u.Quantity([1, 2, 3], "km/s"))
+        >>> vel2 = cx.CartesianVel1D(u.Quantity([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.CartesianAcc1D(Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.CartesianAcc1D(Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.CartesianAcc1D(u.Quantity([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.CartesianAcc1D(u.Quantity([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.RadialVel(Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.RadialVel(Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.RadialVel(u.Quantity([1, 2, 3], "km/s"))
+        >>> vel2 = cx.RadialVel(u.Quantity([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.RadialAcc(Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.RadialAcc(Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.RadialAcc(u.Quantity([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.RadialAcc(u.Quantity([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
@@ -657,13 +656,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can slice a vector:
 
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
         >>> vec[0].x
         Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
 
@@ -684,12 +683,12 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> from jax import devices
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can move a vector to a new device:
 
-        >>> vec = cx.CartesianPos1D(Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
         CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")))
 
@@ -704,7 +703,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         Scalar vectors have length 0:
@@ -715,11 +714,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         Vectors with certain lengths:
 
-        >>> vec = cx.CartesianPos1D(Quantity([1], "m"))
+        >>> vec = cx.CartesianPos1D(u.Quantity([1], "m"))
         >>> len(vec)
         1
 
-        >>> vec = cx.CartesianPos1D(Quantity([1, 2], "m"))
+        >>> vec = cx.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> len(vec)
         2
 
@@ -785,13 +784,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can reshape a vector:
 
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
 
         >>> vec.reshape(4)
         CartesianPos2D(
@@ -837,13 +836,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         We assume the following imports:
 
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         We can get the vector as a mapping:
 
-        >>> vec = cx.CartesianPos2D(x=Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=Quantity(0, "m"))
+        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                         y=u.Quantity(0, "m"))
         >>> vec.asdict()
         {'x': Quantity['length'](Array([[1., 2.], [3., 4.]], dtype=float32), unit='m'),
          'y': Quantity['length'](Array(0., dtype=float32), unit='m')}
@@ -955,7 +954,6 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")

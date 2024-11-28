@@ -1,9 +1,14 @@
-"""Angles package."""
+"""`coordinax.angle` private module.
 
-__all__ = ["AbstractAngle", "Angle"]
+Note that this module is private. Users should use the public API.
+
+"""
+
+__all__ = ["AbstractAngle", "Angle", "BatchableAngle", "BatchableAngleQ"]
 
 from .base import AbstractAngle
 from .core import Angle
+from .typing import BatchableAngle, BatchableAngleQ
 
 # isort: split
 # Register the dispatching

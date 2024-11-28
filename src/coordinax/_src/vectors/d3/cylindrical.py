@@ -13,12 +13,13 @@ from typing_extensions import override
 import equinox as eqx
 
 import quaxed.numpy as xp
+import unxt as u
 from dataclassish.converters import Unless
-from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from coordinax._src.angle import Angle
+from coordinax._src.angle import Angle, BatchableAngle
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -32,20 +33,20 @@ class CylindricalPos(AbstractPos3D):
 
     """
 
-    rho: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    rho: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
-    phi: ct.BatchableAngle = eqx.field(
+    phi: BatchableAngle = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
-    z: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    z: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
@@ -61,15 +62,15 @@ class CylindricalPos(AbstractPos3D):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableLength:
+    def norm(self) -> BatchableLength:
         """Return the norm of the vector.
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> c = cx.CylindricalPos(rho=Quantity(3, "kpc"), phi=Quantity(0, "deg"),
-        ...                       z=Quantity(4, "kpc"))
+        >>> c = cx.CylindricalPos(rho=u.Quantity(3, "kpc"), phi=u.Quantity(0, "deg"),
+        ...                       z=u.Quantity(4, "kpc"))
         >>> c.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
 
@@ -82,17 +83,17 @@ class CylindricalVel(AbstractVel3D):
     """Cylindrical differential representation."""
 
     d_rho: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
     d_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
@@ -112,17 +113,17 @@ class CylindricalAcc(AbstractAcc3D):
     """Cylindrical acceleration representation."""
 
     d2_rho: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
     )
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
     d2_z: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
     )
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 

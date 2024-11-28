@@ -26,8 +26,8 @@ from .base_spherical import (
     _90d,
     _180d,
 )
-from coordinax._src.angle import Angle
-from coordinax._src.distance import AbstractDistance, Distance
+from coordinax._src.angle import Angle, BatchableAngle
+from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -52,11 +52,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
-    ...                       distance=Quantity(3, "kpc"))
+    >>> cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(0, "deg"),
+    ...                       distance=u.Quantity(3, "kpc"))
     LonLatSphericalPos(
       lon=Angle(value=f32[], unit=Unit("deg")),
       lat=Angle(value=f32[], unit=Unit("deg")),
@@ -67,9 +67,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.LonLatSphericalPos(lon=Quantity(365, "deg"),
-    ...                             lat=Quantity(90, "deg"),
-    ...                             distance=Quantity(3, "kpc"))
+    >>> vec = cx.LonLatSphericalPos(lon=u.Quantity(365, "deg"),
+    ...                             lat=u.Quantity(90, "deg"),
+    ...                             distance=u.Quantity(3, "kpc"))
     >>> vec.lon
     Angle(Array(5., dtype=float32), unit='deg')
 
@@ -78,8 +78,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(100, "deg"),
-    ...                           distance=Quantity(3, "kpc"))
+    ...     cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(100, "deg"),
+    ...                           distance=u.Quantity(3, "kpc"))
     ... except Exception as e:
     ...     print(e)
     The inclination angle must be in the range [0, pi]...
@@ -89,25 +89,25 @@ class LonLatSphericalPos(AbstractSphericalPos):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPos(lon=Quantity(0, "deg"), lat=Quantity(0, "deg"),
-    ...                           distance=Quantity(-3, "kpc"))
+    ...     cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(0, "deg"),
+    ...                           distance=u.Quantity(-3, "kpc"))
     ... except Exception as e:
     ...     print(e)
     The radial distance must be non-negative...
 
     """
 
-    lon: ct.BatchableAngle = eqx.field(
+    lon: BatchableAngle = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
     r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
 
-    lat: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    lat: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
-    distance: ct.BatchableDistance = eqx.field(
+    distance: BatchableDistance = eqx.field(
         converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
@@ -125,16 +125,16 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableDistance:
+    def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.LonLatSphericalPos(lon=Quantity(0, "deg"),
-        ...                           lat=Quantity(90, "deg"),
-        ...                            distance=Quantity(3, "kpc"))
+        >>> s = cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+        ...                           lat=u.Quantity(90, "deg"),
+        ...                            distance=u.Quantity(3, "kpc"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 

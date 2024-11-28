@@ -29,8 +29,8 @@ from .base_spherical import (
     _180d,
     _360d,
 )
-from coordinax._src.angle import Angle
-from coordinax._src.distance import AbstractDistance, Distance
+from coordinax._src.angle import Angle, BatchableAngle
+from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -55,19 +55,19 @@ class MathSphericalPos(AbstractSphericalPos):
 
     """
 
-    r: ct.BatchableDistance = eqx.field(
+    r: BatchableDistance = eqx.field(
         converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    theta: ct.BatchableAngle = eqx.field(
+    theta: BatchableAngle = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
     )
     r"""Azimuthal angle, generally :math:`\theta \in [0,360)`."""
 
-    phi: ct.BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    phi: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
     r"""Inclination angle :math:`\phi \in [0,180]`."""
 
     def __check_init__(self) -> None:
@@ -82,16 +82,16 @@ class MathSphericalPos(AbstractSphericalPos):
         return MathSphericalVel
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> ct.BatchableDistance:
+    def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.MathSphericalPos(r=Quantity(3, "kpc"),
-        ...                              theta=Quantity(90, "deg"),
-        ...                              phi=Quantity(0, "deg"))
+        >>> s = cx.MathSphericalPos(r=u.Quantity(3, "kpc"),
+        ...                         theta=u.Quantity(90, "deg"),
+        ...                         phi=u.Quantity(0, "deg"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -111,14 +111,14 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     Let's start with a valid input:
 
-    >>> cx.MathSphericalPos.from_(r=Quantity(3, "kpc"),
-    ...                           theta=Quantity(90, "deg"),
-    ...                           phi=Quantity(0, "deg"))
+    >>> cx.MathSphericalPos.from_(r=u.Quantity(3, "kpc"),
+    ...                           theta=u.Quantity(90, "deg"),
+    ...                           phi=u.Quantity(0, "deg"))
     MathSphericalPos(
       r=Distance(value=f32[], unit=Unit("kpc")),
       theta=Angle(value=f32[], unit=Unit("deg")),
@@ -128,9 +128,9 @@ def from_(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cx.MathSphericalPos.from_(r=Quantity(-3, "kpc"),
-    ...                                 theta=Quantity(100, "deg"),
-    ...                                 phi=Quantity(45, "deg"))
+    >>> vec = cx.MathSphericalPos.from_(r=u.Quantity(-3, "kpc"),
+    ...                                 theta=u.Quantity(100, "deg"),
+    ...                                 phi=u.Quantity(45, "deg"))
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
@@ -141,9 +141,9 @@ def from_(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cx.MathSphericalPos.from_(r=Quantity(3, "kpc"),
-    ...                                 theta=Quantity(0, "deg"),
-    ...                                 phi=Quantity(190, "deg"))
+    >>> vec = cx.MathSphericalPos.from_(r=u.Quantity(3, "kpc"),
+    ...                                 theta=u.Quantity(0, "deg"),
+    ...                                 phi=u.Quantity(190, "deg"))
     >>> vec.r
     Distance(Array(3., dtype=float32), unit='kpc')
     >>> vec.theta
@@ -154,9 +154,9 @@ def from_(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cx.MathSphericalPos.from_(r=Quantity(3, "kpc"),
-    ...                                 theta=Quantity(365, "deg"),
-    ...                                 phi=Quantity(90, "deg"))
+    >>> vec = cx.MathSphericalPos.from_(r=u.Quantity(3, "kpc"),
+    ...                                 theta=u.Quantity(365, "deg"),
+    ...                                 phi=u.Quantity(90, "deg"))
     >>> vec.theta
     Angle(Array(5., dtype=float32), unit='deg')
 
@@ -189,13 +189,13 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> v = cx.MathSphericalPos(r=Quantity(3, "kpc"),
-    ...                         theta=Quantity(90, "deg"),
-    ...                         phi=Quantity(0, "deg"))
+    >>> v = cx.MathSphericalPos(r=u.Quantity(3, "kpc"),
+    ...                         theta=u.Quantity(90, "deg"),
+    ...                         phi=u.Quantity(0, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(3., dtype=float32), unit='kpc')

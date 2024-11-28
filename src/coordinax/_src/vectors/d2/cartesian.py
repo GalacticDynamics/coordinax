@@ -17,11 +17,13 @@ from jaxtyping import ArrayLike, Shaped
 from quax import register
 
 import quaxed.numpy as jnp
+import unxt as u
 from quaxed import lax as qlax
 from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
+from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
@@ -31,13 +33,13 @@ from coordinax._src.vectors.base.mixins import AvalMixin
 class CartesianPos2D(AbstractPos2D):
     """Cartesian vector representation."""
 
-    x: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    x: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: ct.BatchableLength = eqx.field(
-        converter=partial(Quantity["length"].from_, dtype=float)
+    y: BatchableLength = eqx.field(
+        converter=partial(u.Quantity["length"].from_, dtype=float)
     )
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
@@ -58,10 +60,10 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos2D.from_(Quantity([1, 2], "m"))
+    >>> vec = cx.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
     >>> vec
     CartesianPos2D(
         x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -83,11 +85,11 @@ def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> cart = cx.CartesianPos2D.from_([1, 2], "kpc")
-    >>> polr = cx.PolarPos(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+    >>> polr = cx.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
     >>> (cart + polr).x
     Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
@@ -106,7 +108,6 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianPos2D.from_([3, 4], "m")
@@ -144,10 +145,10 @@ def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
     >>> cart = cx.CartesianPos2D.from_([1, 2], "kpc")
-    >>> polr = cx.PolarPos(r=Quantity(3, "kpc"), phi=Quantity(90, "deg"))
+    >>> polr = cx.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
 
     >>> (cart - polr).x
     Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
@@ -165,12 +166,12 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
 
     d_y: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
+        converter=partial(u.Quantity["speed"].from_, dtype=float)
     )
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
@@ -196,10 +197,10 @@ def from_(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianVel2D.from_(Quantity([1, 2], "m/s"))
+    >>> vec = cx.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
     >>> vec
     CartesianVel2D(
       d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
@@ -221,7 +222,6 @@ def _add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianVel2D.from_([1, 2], "km/s")
@@ -242,7 +242,6 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianVel2D.from_([3, 4], "m/s")
@@ -293,7 +292,6 @@ class CartesianAcc2D(AvalMixin, AbstractAcc2D):
 
         Examples
         --------
-        >>> from unxt import Quantity
         >>> import coordinax as cx
         >>> v = cx.CartesianAcc2D.from_([3, 4], "km/s2")
         >>> v.norm()
@@ -312,10 +310,10 @@ def from_(cls: type[CartesianAcc2D], obj: AbstractQuantity, /) -> CartesianAcc2D
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcc2D.from_(Quantity([1, 2], "m/s2"))
+    >>> vec = cx.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
     >>> vec
     CartesianAcc2D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
@@ -337,7 +335,6 @@ def _add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianAcc2D.from_([3, 4], "km/s2")
@@ -358,7 +355,6 @@ def _mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from unxt import Quantity
     >>> import coordinax as cx
 
     >>> v = cx.CartesianAcc2D.from_([3, 4], "m/s2")

@@ -8,8 +8,8 @@ from typing import cast
 import jax
 from plum import convert
 
+import unxt as u
 from dataclassish import field_keys, field_values
-from unxt import Quantity
 
 from coordinax._src.vectors.funcs import represent_as
 
@@ -26,7 +26,7 @@ class AvalMixin:
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         1 dimensional vectors:
@@ -61,7 +61,7 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarPos(r=Quantity(1, "m"), phi=Quantity(0, "rad"))
+        >>> vec = cx.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"))
         >>> vec.aval()
         ConcreteArray([1. 0.], dtype=float32)
 
@@ -69,7 +69,7 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarVel(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"))
+        >>> vec = cx.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
@@ -78,7 +78,7 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarAcc(d2_r=Quantity(1, "m/s2"), d2_phi=Quantity(0, "rad/s2"))
+        >>> vec = cx.PolarAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
@@ -94,7 +94,7 @@ class AvalMixin:
         ConcreteArray([[1. 2. 3.]
                        [4. 5. 6.]], dtype=float32)
 
-        >>> vec = cx.SphericalPos(r=Quantity(1, "m"), phi=Quantity(0, "rad"), theta=Quantity(0, "rad"))
+        >>> vec = cx.SphericalPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"), theta=u.Quantity(0, "rad"))
         >>> vec.aval()
         ConcreteArray([0. 0. 1.], dtype=float32)
 
@@ -102,7 +102,7 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.SphericalVel(d_r=Quantity(1, "m/s"), d_phi=Quantity(0, "rad/s"), d_theta=Quantity(0, "rad/s"))
+        >>> vec = cx.SphericalVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"), d_theta=u.Quantity(0, "rad/s"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
@@ -111,7 +111,7 @@ class AvalMixin:
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.SphericalAcc(d2_r=Quantity(1, "m/s2"), d2_phi=Quantity(0, "rad/s2"), d2_theta=Quantity(0, "rad/s2"))
+        >>> vec = cx.SphericalAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"), d2_theta=u.Quantity(0, "rad/s2"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
@@ -119,7 +119,7 @@ class AvalMixin:
         """  # noqa: E501
         # TODO: change to UncheckedQuantity
         target = self._cartesian_cls  # type: ignore[attr-defined]
-        return jax.core.get_aval(convert(represent_as(self, target), Quantity).value)
+        return jax.core.get_aval(convert(represent_as(self, target), u.Quantity).value)
 
 
 ##############################################################################

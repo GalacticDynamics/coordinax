@@ -17,10 +17,10 @@ def from_(cls: type[AbstractPos3D], obj: Any, /) -> CartesianPos3D:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = Quantity([1, 2, 3], "km")
+    >>> x = u.Quantity([1, 2, 3], "km")
     >>> cx.AbstractPos3D.from_(x)
     CartesianPos3D(
       x=Quantity[...](value=f32[], unit=Unit("km")),
@@ -65,10 +65,10 @@ def from_(cls: type[AbstractVel3D], obj: Any, /) -> CartesianVel3D:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = Quantity([1, 2, 3], "km / s")
+    >>> x = u.Quantity([1, 2, 3], "km / s")
     >>> cx.AbstractVel3D.from_(x)
     CartesianVel3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
@@ -115,10 +115,10 @@ def from_(cls: type[AbstractAcc3D], obj: Any, /) -> CartesianAcc3D:
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = Quantity([1, 2, 3], "km / s2")
+    >>> x = u.Quantity([1, 2, 3], "km / s2")
     >>> cx.AbstractAcc3D.from_(x)
     CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("km / s2")),

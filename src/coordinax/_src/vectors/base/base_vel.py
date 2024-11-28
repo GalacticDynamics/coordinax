@@ -11,8 +11,8 @@ import jax
 from quax import register
 
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items
-from unxt import Quantity
 
 from .base import AbstractVector
 from .base_pos import AbstractPos
@@ -109,14 +109,14 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> from unxt import Quantity
+        >>> import unxt as u
         >>> import coordinax as cx
 
         >>> dr = cx.RadialVel.from_([1], "m/s")
         >>> -dr
         RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-        >>> dp = cx.PolarVel(Quantity(1, "m/s"), Quantity(1, "mas/yr"))
+        >>> dp = cx.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
         >>> neg_dp = -dp
         >>> neg_dp.d_r
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
@@ -130,7 +130,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
     # Convenience methods
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, position: AbstractPos, /) -> Quantity["speed"]:
+    def norm(self, position: AbstractPos, /) -> u.Quantity["speed"]:
         """Return the norm of the vector."""
         return self.represent_as(self._cartesian_cls, position).norm()
 
@@ -139,23 +139,23 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
-def _mul_vel_q(self: AbstractVel, other: Quantity["time"]) -> AbstractPos:
+def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
     """Multiply the vector by a time :class:`unxt.Quantity` to get a position.
 
     Examples
     --------
     >>> from quaxed import lax
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> dr = cx.RadialVel(Quantity(1, "m/s"))
-    >>> vec = dr * Quantity(2, "s")
+    >>> dr = cx.RadialVel(u.Quantity(1, "m/s"))
+    >>> vec = dr * u.Quantity(2, "s")
     >>> vec
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))
     >>> vec.r
     Distance(Array(2., dtype=float32), unit='m')
 
-    >>> lax.mul(dr, Quantity(2, "s")).r
+    >>> lax.mul(dr, u.Quantity(2, "s")).r
     Distance(Array(2., dtype=float32), unit='m')
 
     """

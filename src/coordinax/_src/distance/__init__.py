@@ -1,9 +1,22 @@
-"""Distance package."""
+"""`coordinax.distance` private module.
 
-__all__ = ["AbstractDistance", "Distance", "DistanceModulus", "Parallax"]
+Note that this module is private. Users should use the public API.
+
+"""
+
+__all__ = [
+    "AbstractDistance",
+    "Distance",
+    "DistanceModulus",
+    "Parallax",
+    # Typing
+    "BatchableLength",
+    "BatchableDistance",
+]
 
 from .base import AbstractDistance
 from .core import Distance, DistanceModulus, Parallax
+from .typing import BatchableDistance, BatchableLength
 
 # isort: split
 # Register the dispatching

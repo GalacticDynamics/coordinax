@@ -3,10 +3,10 @@
 __all__: list[str] = []
 
 
-from unxt import dimension, dimension_of
+import unxt as u
 from unxt.quantity import AbstractQuantity
 
-angle_dimension = dimension("angle")
+angle_dimension = u.dimension("angle")
 
 
 class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
@@ -37,6 +37,6 @@ class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
 
     def __check_init__(self) -> None:
         """Check the initialization."""
-        if dimension_of(self) != angle_dimension:
+        if u.dimension_of(self) != angle_dimension:
             msg = "Angle must have dimensions angle."
             raise ValueError(msg)
