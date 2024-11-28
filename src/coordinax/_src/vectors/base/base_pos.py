@@ -88,6 +88,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Unary operations
 
+    #: Negate the vector.
     __neg__ = jnp.negative
 
     # ===============================================================

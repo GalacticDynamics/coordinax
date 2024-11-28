@@ -255,7 +255,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         return ImmutableMap.__getitem__(self, key)
 
     # ===============================================================
-    # Quax
+    # Quax API
 
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""

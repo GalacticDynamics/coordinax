@@ -204,8 +204,6 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     # ===============================================================
     # Quantity API
 
-    # TODO: should this be named `uconvert`, and then registered w/ `uconvert?
-
     @dispatch(precedence=-1)
     def uconvert(self, *args: Any, **kwargs: Any) -> "AbstractVector":
         """Convert the vector to the given units."""

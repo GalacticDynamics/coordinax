@@ -1,7 +1,9 @@
 """Reference frames and transformations between them."""
 
 from ._src.frames import (
+    AbstractCoordinate,
     AbstractReferenceFrame,
+    Coordinate,
     FrameTransformError,
     NoFrame,
     frame_transform_op,
@@ -21,6 +23,8 @@ __all__ = [
     "AbstractReferenceFrame",
     "NoFrame",
     "FrameTransformError",
+    "Coordinate",
+    "AbstractCoordinate",
 ]
 __all__ += _coordinax_space_frames.__all__
 
