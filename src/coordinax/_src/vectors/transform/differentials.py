@@ -16,6 +16,7 @@ from dataclassish import field_items
 
 from coordinax._src.distance import AbstractDistance
 from coordinax._src.vectors.base import AbstractPos, AbstractVel
+from coordinax._src.vectors.base.flags import AttrFilter
 from coordinax._src.vectors.d1 import AbstractVel1D
 from coordinax._src.vectors.d2 import AbstractVel2D
 from coordinax._src.vectors.d3 import AbstractVel3D
@@ -117,7 +118,7 @@ def represent_as(
         current_pos,
         **{
             k: v.distance
-            for k, v in field_items(current_pos)
+            for k, v in field_items(AttrFilter, current_pos)
             if isinstance(v, AbstractDistance)
         },
     )
@@ -136,9 +137,9 @@ def represent_as(
     jac_rows = {
         f"d_{k}": {
             kk: u.Quantity(vv.value, unit=v.unit / vv.unit)
-            for kk, vv in field_items(v.value)
+            for kk, vv in field_items(AttrFilter, v.value)
         }
-        for k, v in field_items(jac_nested_vecs)
+        for k, v in field_items(AttrFilter, jac_nested_vecs)
     }
 
     # Now we can use the Jacobian to transform the differential.
