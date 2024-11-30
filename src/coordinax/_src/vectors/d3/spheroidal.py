@@ -106,9 +106,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     _: KW_ONLY
-    Delta: Shaped[Quantity["length"], ""] = VectorAttribute(
-        converter=Quantity["length"].from_
-    )
+    Delta: Shaped[Quantity["length"], ""] = VectorAttribute()
     """Focal length of the coordinate system."""
 
     def __check_init__(self) -> None:
