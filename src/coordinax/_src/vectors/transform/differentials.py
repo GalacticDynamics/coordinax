@@ -3,6 +3,7 @@
 __all__: list[str] = []
 
 from dataclasses import replace
+from functools import partial
 from math import prod
 from typing import Any
 
@@ -129,6 +130,8 @@ def represent_as(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
+    tmp = partial(represent_as, **kwargs)
+    jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(tmp), in_axes=(0, None)))
     jac_nested_vecs = jac_rep_as(current_pos, target.integral_cls)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
@@ -162,7 +165,3 @@ def represent_as(
     # TODO: add  df(q)/dt, which is 0 for all current transforms
 
     return newvec  # noqa: RET504
-
-
-# TODO: situate this better to show how represent_as is used
-jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None)))
