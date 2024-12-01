@@ -88,7 +88,10 @@ class AbstractVectorTest:
         # Test an explicitly shaped vector
         vec = replace(
             vector,
-            **{k: replace(v, value=jnp.ones((2, 4))) for k, v in field_items(vector)},
+            **{
+                k: replace(v, value=jnp.ones((2, 4)))
+                for k, v in field_items(cx.AttrFilter, vector)
+            },
         )
         flat = vec.flatten()
         assert isinstance(flat, type(vec))
@@ -109,7 +112,10 @@ class AbstractVectorTest:
         # Test an explicitly shaped vector
         vec = replace(
             vector,
-            **{k: replace(v, value=jnp.ones((2, 4))) for k, v in field_items(vector)},
+            **{
+                k: replace(v, value=jnp.ones((2, 4)))
+                for k, v in field_items(cx.AttrFilter, vector)
+            },
         )
         reshaped = vec.reshape(1, 8)
         assert isinstance(reshaped, type(vec))
@@ -165,7 +171,7 @@ class AbstractPosTest(AbstractVectorTest):
     def test_represent_as(self, vector, target):
         """Test :meth:`AbstractPos.represent_as`.
 
-        This just tests that the machiner works.
+        This just tests that the machinery works.
         """
         # Perform the conversion.
         # Detecting whether the conversion reduces the dimensionality.

@@ -3,6 +3,7 @@
 __all__: list[str] = []
 
 from dataclasses import replace
+from functools import partial
 from math import prod
 from typing import Any
 
@@ -16,6 +17,7 @@ from dataclassish import field_items
 
 from coordinax._src.distance import AbstractDistance
 from coordinax._src.vectors.base import AbstractPos, AbstractVel
+from coordinax._src.vectors.base.flags import AttrFilter
 from coordinax._src.vectors.d1 import AbstractVel1D
 from coordinax._src.vectors.d2 import AbstractVel2D
 from coordinax._src.vectors.d3 import AbstractVel3D
@@ -117,7 +119,7 @@ def represent_as(
         current_pos,
         **{
             k: v.distance
-            for k, v in field_items(current_pos)
+            for k, v in field_items(AttrFilter, current_pos)
             if isinstance(v, AbstractDistance)
         },
     )
@@ -128,6 +130,8 @@ def represent_as(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
+    tmp = partial(represent_as, **kwargs)
+    jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(tmp), in_axes=(0, None)))
     jac_nested_vecs = jac_rep_as(current_pos, target.integral_cls)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
@@ -136,9 +140,9 @@ def represent_as(
     jac_rows = {
         f"d_{k}": {
             kk: u.Quantity(vv.value, unit=v.unit / vv.unit)
-            for kk, vv in field_items(v.value)
+            for kk, vv in field_items(AttrFilter, v.value)
         }
-        for k, v in field_items(jac_nested_vecs)
+        for k, v in field_items(AttrFilter, jac_nested_vecs)
     }
 
     # Now we can use the Jacobian to transform the differential.
@@ -161,7 +165,3 @@ def represent_as(
     # TODO: add  df(q)/dt, which is 0 for all current transforms
 
     return newvec  # noqa: RET504
-
-
-# TODO: situate this better to show how represent_as is used
-jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(represent_as), in_axes=(0, None)))

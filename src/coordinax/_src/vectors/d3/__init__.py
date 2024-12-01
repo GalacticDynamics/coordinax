@@ -31,6 +31,10 @@ __all__ = [
     "LonLatSphericalVel",
     "LonLatSphericalAcc",
     "LonCosLatSphericalVel",
+    # Prolate Spheroidal
+    "ProlateSpheroidalPos",
+    "ProlateSpheroidalVel",
+    "ProlateSpheroidalAcc",
     # Generic
     "CartesianGeneric3D",
 ]
@@ -52,6 +56,7 @@ from .lonlatspherical import (
 )
 from .mathspherical import MathSphericalAcc, MathSphericalPos, MathSphericalVel
 from .spherical import SphericalAcc, SphericalPos, SphericalVel
+from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpheroidalVel
 
 # isort: split
 from . import (

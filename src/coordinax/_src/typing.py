@@ -23,6 +23,10 @@ ScalarTime = Float[Quantity["time"], ""] | Int[Quantity["time"], ""]
 
 BatchableTime = Shaped[Quantity["time"], "*#batch"]
 
+BatchableArea = Shaped[Quantity["area"], "*#batch"]
+BatchableDiffusivity = Shaped[Quantity["diffusivity"], "*#batch"]
+BatchableSpecificEnergy = Shaped[Quantity["specific energy"], "*#batch"]
+
 BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
 BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
 
