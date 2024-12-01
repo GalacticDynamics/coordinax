@@ -9,8 +9,7 @@ import quaxed.numpy as xp
 import unxt as u
 from unxt.quantity import AbstractQuantity
 
-from coordinax._src.angle import Angle
-from coordinax._src.typing import BatchableAngleQ
+from coordinax._src.angle import Angle, BatchableAngleQ
 
 _0d = Angle(0, "rad")
 _pid = Angle(180, "deg")

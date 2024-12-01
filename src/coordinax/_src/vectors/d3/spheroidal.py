@@ -15,7 +15,7 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from coordinax._src.angle import Angle
+from coordinax._src.angle import Angle, BatchableAngleQ
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import VectorAttribute
 from coordinax._src.vectors.checks import (
@@ -98,7 +98,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     )
     r"""Spheroidal nu coordinate :math:`\lambda \in [-\infty,+\infty)`."""
 
-    phi: ct.BatchableAngle = eqx.field(
+    phi: BatchableAngleQ = eqx.field(
         converter=Unless(
             Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
         )
