@@ -1,9 +1,9 @@
 """Built-in vector classes."""
 
 __all__ = [
+    "AbstractSphericalAcc",
     "AbstractSphericalPos",
     "AbstractSphericalVel",
-    "AbstractSphericalAcc",
 ]
 
 from abc import abstractmethod

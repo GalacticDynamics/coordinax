@@ -1,8 +1,8 @@
 """Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
 __all__ = [
-    "represent_as",
     "normalize_vector",
+    "represent_as",
 ]
 
 from functools import partial

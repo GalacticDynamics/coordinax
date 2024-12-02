@@ -17,10 +17,10 @@ from . import _coordinax_space_frames
 from ._coordinax_space_frames import *  # noqa: F403
 
 __all__ = [
-    "frame_transform_op",
     "AbstractReferenceFrame",
-    "NoFrame",
     "FrameTransformError",
+    "NoFrame",
+    "frame_transform_op",
 ]
 __all__ += _coordinax_space_frames.__all__
 

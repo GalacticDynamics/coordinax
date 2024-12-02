@@ -1,9 +1,9 @@
 """Built-in vector classes."""
 
 __all__ = [
+    "MathSphericalAcc",
     "MathSphericalPos",
     "MathSphericalVel",
-    "MathSphericalAcc",
 ]
 
 from functools import partial

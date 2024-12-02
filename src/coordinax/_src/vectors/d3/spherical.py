@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = ["SphericalPos", "SphericalVel", "SphericalAcc"]
+__all__ = ["SphericalAcc", "SphericalPos", "SphericalVel"]
 
 from functools import partial
 from typing import final
