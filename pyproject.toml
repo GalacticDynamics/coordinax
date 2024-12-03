@@ -39,24 +39,7 @@
 ]
 
   [project.optional-dependencies]
-    all = ["coordinax[docs]", "coordinax[dev]", "coordinax[test]"]
-    dev = ["coordinax[test]"]
-    docs = [
-      "furo>=2023.08.17",
-      "myst_parser>=0.13",
-      "sphinx>=7.0",
-      "sphinx_copybutton",
-      "sphinx_autodoc_typehints",
-    ]
-    test = [
-      "hypothesis[numpy]",
-      "nox",
-      "pytest >=6",
-      "pytest-arraydiff",
-      "pytest-cov >=3",
-      "pytest-env",
-      "sybil != 7.1.0",
-    ]
+    all = ["coordinax"]
 
   [project.urls]
     "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
@@ -67,6 +50,31 @@
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+
+[dependency-groups]
+  dev = [
+      "cz-conventional-gitmoji>=0.6.1",
+      { include-group = "docs" },
+      { include-group = "test" },
+  ]
+  docs = [
+    "furo>=2023.08.17",
+    "myst_parser>=0.13",
+    "sphinx>=7.0",
+    "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
+  ]
+  nox = ["nox>=2024.10.9"]
+  test = [
+    "hypothesis[numpy]>=6.112.2",
+    "pytest>=8.3.3",
+    "pytest-arraydiff>=0.6.1",
+    "pytest-cov >=3",
+    "pytest-env",
+    "pytest-github-actions-annotate-failures",
+    "sybil>=8.0.0",
+  ]
 
 
 [tool.hatch]
@@ -184,7 +192,7 @@ build-backend = "hatchling.build"
     "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
   ]
   log_cli_level = "INFO"
-  minversion = "6.0"
+  minversion = "8.3"
   testpaths = ["tests"]
   xfail_strict = true
 
