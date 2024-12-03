@@ -82,6 +82,10 @@ build-backend = "hatchling.build"
   version.source = "vcs"
 
 
+[tool.commitizen]
+  name = "cz_gitmoji"
+
+
 [tool.coverage]
   run.source = ["coordinax"]
 
