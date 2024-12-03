@@ -10,7 +10,7 @@ from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos, AbstractVector
 
 if TYPE_CHECKING:
-    from typing_extensions import Never
+    from typing import Never
 
 
 class AbstractPos4D(AbstractPos):

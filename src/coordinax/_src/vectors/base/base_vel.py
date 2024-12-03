@@ -19,7 +19,7 @@ from .base_pos import AbstractPos
 from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 VelT = TypeVar("VelT", bound="AbstractVel")
 
