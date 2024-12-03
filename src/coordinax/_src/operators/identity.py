@@ -4,7 +4,7 @@ __all__ = ["IdentityOperator"]
 
 from typing import Any, Literal, final
 
-from .base import AbstractOperator, op_call_dispatch
+from .base import AbstractOperator
 
 
 @final
@@ -122,7 +122,7 @@ class IdentityOperator(AbstractOperator):
     # Dispatched call signatures
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(self: "IdentityOperator", arg: Any) -> Any:
         """Apply the Identity operation.
 
@@ -146,7 +146,7 @@ class IdentityOperator(AbstractOperator):
         """
         return arg
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(self: "IdentityOperator", *args: Any) -> tuple[Any, ...]:
         """Apply the Identity operation.
 

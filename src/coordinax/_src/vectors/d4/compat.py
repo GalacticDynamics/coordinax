@@ -10,7 +10,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .spacetime import FourVector
-from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
+from coordinax._src.operators.base import AbstractOperator
 
 #####################################################################
 # Convert to Quantity
@@ -27,7 +27,7 @@ def vec_to_q(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*batch 4"]:
 # Operators
 
 
-@op_call_dispatch
+@AbstractOperator.__call__.dispatch
 def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
     """Dispatch to the operator's `__call__` method.
 
@@ -58,7 +58,7 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
     return FourVector(t=t, q=q)
 
 
-@op_call_dispatch
+@AbstractOperator.__call__.dispatch
 def call(
     self: AbstractOperator, x: Shaped[u.Quantity["length"], "*batch 4"], /
 ) -> Shaped[u.Quantity["length"], "*batch 4"]:

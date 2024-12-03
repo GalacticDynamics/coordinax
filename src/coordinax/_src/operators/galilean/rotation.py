@@ -18,7 +18,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
-from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
+from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import IdentityOperator
 from coordinax._src.vectors.base import ToUnitsOptions
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
@@ -185,7 +185,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
 
     # -----------------------------------------------------
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanRotationOperator", q: Shaped[u.Quantity["length"], "*batch 3"], /
     ) -> Shaped[u.Quantity["length"], "*batch 3"]:
@@ -216,7 +216,7 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         """
         return vec_matmul(self.rotation, q)
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanRotationOperator", q: AbstractPos3D, /
     ) -> AbstractPos3D:
@@ -252,13 +252,13 @@ class GalileanRotationOperator(AbstractGalileanOperator):
         rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
         return rcart.represent_as(type(q))
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanRotationOperator", q: AbstractPos3D, t: u.Quantity["time"], /
     ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
         return self(q), t
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanRotationOperator", q: AbstractPos3D, t: u.Quantity["time"], /
     ) -> tuple[AbstractPos3D, u.Quantity["time"]]:

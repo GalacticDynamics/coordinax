@@ -11,7 +11,7 @@ from plum import convert
 import unxt as u
 
 from .cartesian import CartesianPos3D
-from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
+from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.typing import TimeBatchOrScalar
 
 #####################################################################
@@ -21,7 +21,7 @@ from coordinax._src.typing import TimeBatchOrScalar
 Q3: TypeAlias = Shaped[u.Quantity["length"], "*#batch 3"]
 
 
-@op_call_dispatch
+@AbstractOperator.__call__.dispatch
 def call(self: AbstractOperator, q: Q3, /) -> Q3:
     r"""Operate on a 3D Quantity.
 
@@ -58,7 +58,7 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     return convert(result.represent_as(CartesianPos3D), u.Quantity)
 
 
-@op_call_dispatch
+@AbstractOperator.__call__.dispatch
 def call(
     self: AbstractOperator, x: Q3, t: TimeBatchOrScalar, /
 ) -> tuple[Q3, TimeBatchOrScalar]:

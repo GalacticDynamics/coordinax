@@ -15,7 +15,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
-from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
+from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import IdentityOperator
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianVel3D
 from coordinax._src.vectors.d4 import FourVector
@@ -99,7 +99,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
 
     # -----------------------------------------------------
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanBoostOperator", q: AbstractPos3D, t: u.Quantity["time"], /
     ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
@@ -124,7 +124,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         """
         return q + self.velocity * t, t
 
-    @op_call_dispatch
+    @AbstractOperator.__call__.dispatch
     def __call__(self: "GalileanBoostOperator", v4: FourVector, /) -> FourVector:
         """Apply the boost to the coordinates."""  # TODO: add example
         return replace(v4, q=v4.q + self.velocity * v4.t)

@@ -11,13 +11,13 @@ from plum import convert
 import unxt as u
 
 from .cartesian import CartesianPos2D
-from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
+from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.typing import TimeBatchOrScalar
 
 Q2: TypeAlias = Shaped[u.Quantity["length"], "*#batch 2"]
 
 
-@op_call_dispatch
+@AbstractOperator.__call__.dispatch
 def call(self: AbstractOperator, x: Q2, /) -> Q2:
     """Dispatch to the operator's `__call__` method.
 
@@ -35,7 +35,7 @@ def call(self: AbstractOperator, x: Q2, /) -> Q2:
     return convert(self(CartesianPos2D.from_(x)), u.Quantity)
 
 
-@op_call_dispatch
+@AbstractOperator.__call__.dispatch
 def call(
     self: AbstractOperator, x: Q2, t: TimeBatchOrScalar, /
 ) -> tuple[Q2, TimeBatchOrScalar]:

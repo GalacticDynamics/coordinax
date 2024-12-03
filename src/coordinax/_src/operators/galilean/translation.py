@@ -14,7 +14,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
-from coordinax._src.operators.base import AbstractOperator, op_call_dispatch
+from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import IdentityOperator
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.d1 import CartesianPos1D
@@ -207,7 +207,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
 
     # -------------------------------------------
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanSpatialTranslationOperator", q: AbstractPos, /
     ) -> AbstractPos:
@@ -232,7 +232,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         """
         return q + self.translation
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanSpatialTranslationOperator",
         q: AbstractPos,
@@ -265,7 +265,7 @@ class GalileanSpatialTranslationOperator(AbstractGalileanOperator):
         """
         return q + self.translation, t
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanSpatialTranslationOperator", v4: FourVector, /
     ) -> AbstractPos:
@@ -439,7 +439,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
 
     # -------------------------------------------
 
-    @op_call_dispatch
+    @AbstractOperator.__call__.dispatch
     def __call__(self: "GalileanTranslationOperator", x: FourVector, /) -> FourVector:
         """Apply the translation to the coordinates.
 
@@ -474,7 +474,7 @@ class GalileanTranslationOperator(AbstractGalileanOperator):
         """
         return x + self.translation
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "GalileanTranslationOperator",
         x: AbstractPos3D,
