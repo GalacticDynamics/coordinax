@@ -11,7 +11,7 @@ DIR = Path(__file__).parent.resolve()
 
 nox.needs_version = ">=2024.3.2"
 nox.options.sessions = ["lint", "pylint", "tests"]
-nox.options.default_venv_backend = "uv|virtualenv"
+nox.options.default_venv_backend = "uv"
 
 
 @nox.session
@@ -32,7 +32,7 @@ def pylint(session: nox.Session) -> None:
     """Run PyLint."""
     # This needs to be installed into the package environment, and is slower
     # than a pre-commit check
-    session.install(".", "pylint")
+    session.run("uv", "sync", "--group", "lint")
     session.run("pylint", "coordinax", *session.posargs)
 
 

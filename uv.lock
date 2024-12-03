@@ -34,6 +34,15 @@ wheels = [
 ]
 
 [[package]]
+name = "astroid"
+version = "3.3.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/38/1e/326fb1d3d83a3bb77c9f9be29d31f2901e35acb94b0605c3f2e5085047f9/astroid-3.3.5.tar.gz", hash = "sha256:5cfc40ae9f68311075d27ef68a4841bdc5cc7f6cf86671b49f00607d30188e2d", size = 397229 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/30/624365383fa4a40329c0f0bbbc151abc4a64e30dfc110fc8f6e2afcd02bb/astroid-3.3.5-py3-none-any.whl", hash = "sha256:a9d1c946ada25098d790e079ba2a1b112157278f3fb7e718ae6a9252f5835dc8", size = 274586 },
+]
+
+[[package]]
 name = "astropy"
 version = "7.0.0"
 source = { registry = "https://pypi.org/simple" }
@@ -278,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.14.1.dev8+g6a9f5ed.d20241203"
+version = "0.14.1.dev10+g22308a9.d20241203"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -319,6 +328,9 @@ docs = [
     { name = "sphinx-autodoc-typehints" },
     { name = "sphinx-copybutton" },
 ]
+lint = [
+    { name = "pylint" },
+]
 nox = [
     { name = "nox" },
 ]
@@ -334,7 +346,7 @@ test = [
 
 [package.metadata]
 requires-dist = [
-    { name = "astropy", specifier = ">=7.0" },
+    { name = "astropy", specifier = ">=7.0.0" },
     { name = "dataclassish", specifier = ">=0.4.0" },
     { name = "equinox", specifier = ">=0.11.8" },
     { name = "jax", specifier = ">=0.4.33" },
@@ -373,6 +385,7 @@ docs = [
     { name = "sphinx-autodoc-typehints" },
     { name = "sphinx-copybutton" },
 ]
+lint = [{ name = "pylint", specifier = ">=3.3.2" }]
 nox = [{ name = "nox", specifier = ">=2024.10.9" }]
 test = [
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
@@ -500,6 +513,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/66/0c/8d907af351aa16b42caae42f9d6aa37b900c67308052d10fdce809f8d952/decorator-5.1.1.tar.gz", hash = "sha256:637996211036b6385ef91435e4fae22989472f9d571faba8927ba8253acbc330", size = 35016 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d5/50/83c593b07763e1161326b3b8c6686f0f4b0f24d5526546bee538c89837d6/decorator-5.1.1-py3-none-any.whl", hash = "sha256:b8c3f85900b9dc423225913c5aace94729fe1fa9763b38939a95226f02d37186", size = 9073 },
+]
+
+[[package]]
+name = "dill"
+version = "0.3.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/70/43/86fe3f9e130c4137b0f1b50784dd70a5087b911fe07fa81e53e0c4c47fea/dill-0.3.9.tar.gz", hash = "sha256:81aa267dddf68cbfe8029c42ca9ec6a4ab3b22371d1c450abc54422577b4512c", size = 187000 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/d1/e73b6ad76f0b1fb7f23c35c6d95dbc506a9c8804f43dda8cb5b0fa6331fd/dill-0.3.9-py3-none-any.whl", hash = "sha256:468dff3b89520b474c0397703366b7b95eebe6303f108adf9b19da1f702be87a", size = 119418 },
 ]
 
 [[package]]
@@ -669,6 +691,15 @@ wheels = [
 ]
 
 [[package]]
+name = "isort"
+version = "5.13.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/87/f9/c1eb8635a24e87ade2efce21e3ce8cd6b8630bb685ddc9cdaca1349b2eb5/isort-5.13.2.tar.gz", hash = "sha256:48fdfcb9face5d58a4f6dde2e72a1fb8dcaf8ab26f95ab49fab84c2ddefb0109", size = 175303 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d1/b3/8def84f539e7d2289a02f0524b944b15d7c75dab7628bedf1c4f0992029c/isort-5.13.2-py3-none-any.whl", hash = "sha256:8ca5e72a8d85860d5a3fa69b8745237f2939afe12dbf656afbcb47fe72d947a6", size = 92310 },
+]
+
+[[package]]
 name = "jax"
 version = "0.4.34"
 source = { registry = "https://pypi.org/simple" }
@@ -827,6 +858,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/99/5b/a36a337438a14116b16480db471ad061c36c3694df7c2084a0da7ba538b7/matplotlib_inline-0.1.7.tar.gz", hash = "sha256:8423b23ec666be3d16e16b60bdd8ac4e86e840ebd1dd11a30b9f117f2fa0ab90", size = 8159 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/8f/8e/9ad090d3553c280a8060fbf6e24dc1c0c29704ee7d1c372f0c174aa59285/matplotlib_inline-0.1.7-py3-none-any.whl", hash = "sha256:df192d39a4ff8f21b1895d72e6a13f5fcc5099f00fa84384e0ea28c2cc0653ca", size = 9899 },
+]
+
+[[package]]
+name = "mccabe"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/e7/ff/0ffefdcac38932a54d2b5eed4e0ba8a408f215002cd178ad1df0f2806ff8/mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325", size = 9658 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/27/1a/1f68f9ba0c207934b35b86a8ca3aad8395a3d6dd7921c0686e23853ff5a9/mccabe-0.7.0-py2.py3-none-any.whl", hash = "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e", size = 7350 },
 ]
 
 [[package]]
@@ -1122,6 +1162,24 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/8e/62/8336eff65bcbc8e4cb5d05b55faf041285951b6e80f33e2bff2024788f31/pygments-2.18.0.tar.gz", hash = "sha256:786ff802f32e91311bff3889f6e9a86e81505fe99f2735bb6d60ae0c5004f199", size = 4891905 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f7/3f/01c8b82017c199075f8f788d0d906b9ffbbc5a47dc9918a945e13d5a2bda/pygments-2.18.0-py3-none-any.whl", hash = "sha256:b8e6aca0523f3ab76fee51799c488e38782ac06eafcf95e7ba832985c8e7b13a", size = 1205513 },
+]
+
+[[package]]
+name = "pylint"
+version = "3.3.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astroid" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "dill" },
+    { name = "isort" },
+    { name = "mccabe" },
+    { name = "platformdirs" },
+    { name = "tomlkit" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/81/d8/4471b2cb4ad18b4af717918c468209bd2bd5a02c52f60be5ee8a71b5af2c/pylint-3.3.2.tar.gz", hash = "sha256:9ec054ec992cd05ad30a6df1676229739a73f8feeabf3912c995d17601052b01", size = 1516485 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/61/55/5eaf6c415f6ddb09b9b039278823a8e27fb81ea7a34ec80c6d9223b17f2e/pylint-3.3.2-py3-none-any.whl", hash = "sha256:77f068c287d49b8683cd7c6e624243c74f92890f767f106ffa1ddf3c0a54cb7a", size = 521873 },
 ]
 
 [[package]]

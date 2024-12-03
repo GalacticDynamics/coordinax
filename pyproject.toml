@@ -53,7 +53,7 @@ build-backend = "hatchling.build"
 
 
 [dependency-groups]
-  dev = [
+dev = [
       "cz-conventional-gitmoji>=0.6.1",
       { include-group = "docs" },
       { include-group = "test" },
@@ -64,6 +64,9 @@ build-backend = "hatchling.build"
     "sphinx>=7.0",
     "sphinx_copybutton",
     "sphinx_autodoc_typehints",
+  ]
+  lint = [
+      "pylint>=3.3.2",
   ]
   nox = ["nox>=2024.10.9"]
   test = [
@@ -80,6 +83,10 @@ build-backend = "hatchling.build"
 [tool.hatch]
   build.hooks.vcs.version-file = "src/coordinax/_version.py"
   version.source = "vcs"
+
+
+[tool.codespell]
+skip = ["uv.lock"]
 
 
 [tool.commitizen]
