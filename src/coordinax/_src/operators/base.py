@@ -142,7 +142,18 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     # Sequence
 
     def __or__(self, other: "AbstractOperator") -> "OperatorSequence":
-        """Compose with another operator."""
+        """Compose with another operator.
+
+        Examples
+        --------
+        >>> import coordinax.operators as cxo
+
+        >>> op1 = cxo.IdentityOperator()
+        >>> op2 = cxo.IdentityOperator()
+        >>> op1 | op2
+        OperatorSequence(operators=(IdentityOperator(), IdentityOperator()))
+
+        """
         from .sequential import OperatorSequence
 
         if isinstance(other, OperatorSequence):
