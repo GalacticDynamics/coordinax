@@ -16,7 +16,7 @@ import coordinax as cx
 #####################################################################
 
 
-@cx.AbstractVector.from_._f.dispatch  # noqa: SLF001
+@cx.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.AbstractVector], obj: Mapping[str, apyu.Quantity], /
 ) -> cx.AbstractVector:
@@ -61,7 +61,7 @@ def from_(
 #####################################################################
 
 
-@cx.AbstractPos3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+@cx.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.AbstractPos3D], obj: apyc.CartesianRepresentation, /
 ) -> cx.CartesianPos3D:
@@ -81,7 +81,7 @@ def from_(
     return cx.CartesianPos3D.from_(obj)
 
 
-@cx.AbstractPos3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+@cx.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.AbstractPos3D], obj: apyc.CylindricalRepresentation, /
 ) -> cx.CylindricalPos:
@@ -103,7 +103,7 @@ def from_(
     return cx.CylindricalPos.from_(obj)
 
 
-@cx.AbstractPos3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+@cx.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.AbstractPos3D], obj: apyc.PhysicsSphericalRepresentation, /
 ) -> cx.SphericalPos:
@@ -125,7 +125,7 @@ def from_(
     return cx.SphericalPos.from_(obj)
 
 
-@cx.AbstractPos3D.from_._f.dispatch(precedence=-1)  # noqa: SLF001
+@cx.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.AbstractPos3D], obj: apyc.SphericalRepresentation, /
 ) -> cx.LonLatSphericalPos:
@@ -150,7 +150,7 @@ def from_(
 # -------------------------------------------------------------------
 
 
-@cx.CartesianPos3D.from_._f.dispatch  # noqa: SLF001
+@cx.CartesianPos3D.from_.dispatch
 def from_(
     cls: type[cx.CartesianPos3D], obj: apyc.BaseRepresentation, /
 ) -> cx.CartesianPos3D:
@@ -171,7 +171,7 @@ def from_(
     return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
-@cx.CylindricalPos.from_._f.dispatch  # noqa: SLF001
+@cx.CylindricalPos.from_.dispatch
 def from_(
     cls: type[cx.CylindricalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.CylindricalPos:
@@ -194,7 +194,7 @@ def from_(
     return cls(rho=obj.rho, phi=obj.phi, z=obj.z)
 
 
-@cx.SphericalPos.from_._f.dispatch  # noqa: SLF001
+@cx.SphericalPos.from_.dispatch
 def from_(
     cls: type[cx.SphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.SphericalPos:
@@ -217,7 +217,7 @@ def from_(
     return cls(r=obj.r, theta=obj.theta, phi=obj.phi)
 
 
-@cx.LonLatSphericalPos.from_._f.dispatch  # noqa: SLF001
+@cx.LonLatSphericalPos.from_.dispatch
 def from_(
     cls: type[cx.LonLatSphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.LonLatSphericalPos:
@@ -243,7 +243,7 @@ def from_(
 #####################################################################
 
 
-@cx.AbstractVel3D.from_._f.dispatch  # noqa: SLF001
+@cx.AbstractVel3D.from_.dispatch
 def from_(
     cls: type[cx.AbstractVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
@@ -264,7 +264,7 @@ def from_(
     return cx.CartesianVel3D.from_(obj)
 
 
-@cx.AbstractVel3D.from_._f.dispatch  # noqa: SLF001
+@cx.AbstractVel3D.from_.dispatch
 def from_(
     cls: type[cx.AbstractVel3D], obj: apyc.CylindricalDifferential, /
 ) -> cx.CylindricalVel:
@@ -286,7 +286,7 @@ def from_(
     return cx.CylindricalVel.from_(obj)
 
 
-@cx.AbstractVel3D.from_._f.dispatch  # noqa: SLF001
+@cx.AbstractVel3D.from_.dispatch
 def from_(
     cls: type[cx.AbstractVel3D], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
@@ -308,7 +308,7 @@ def from_(
     return cx.SphericalVel.from_(obj)
 
 
-@cx.AbstractVel3D.from_._f.dispatch  # noqa: SLF001
+@cx.AbstractVel3D.from_.dispatch
 def from_(
     cls: type[cx.AbstractVel3D], obj: apyc.SphericalDifferential, /
 ) -> cx.LonLatSphericalVel:
@@ -331,7 +331,7 @@ def from_(
     return cx.LonLatSphericalVel.from_(obj)
 
 
-@cx.AbstractVel3D.from_._f.dispatch  # noqa: SLF001
+@cx.AbstractVel3D.from_.dispatch
 def from_(
     cls: type[cx.AbstractVel3D], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.LonCosLatSphericalVel:
@@ -363,7 +363,7 @@ def from_(
 # -------------------------------------------------------------------
 
 
-@cx.CartesianVel3D.from_._f.dispatch  # noqa: SLF001
+@cx.CartesianVel3D.from_.dispatch
 def from_(
     cls: type[cx.CartesianVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
@@ -384,7 +384,7 @@ def from_(
     return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
-@cx.CylindricalVel.from_._f.dispatch  # noqa: SLF001
+@cx.CylindricalVel.from_.dispatch
 def from_(
     cls: type[cx.CylindricalVel], obj: apyc.CylindricalDifferential, /
 ) -> cx.CylindricalVel:
@@ -406,7 +406,7 @@ def from_(
     return cls(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
 
 
-@cx.SphericalVel.from_._f.dispatch  # noqa: SLF001
+@cx.SphericalVel.from_.dispatch
 def from_(
     cls: type[cx.SphericalVel], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
@@ -428,7 +428,7 @@ def from_(
     return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
 
 
-@cx.LonLatSphericalVel.from_._f.dispatch  # noqa: SLF001
+@cx.LonLatSphericalVel.from_.dispatch
 def from_(
     cls: type[cx.LonLatSphericalVel], obj: apyc.SphericalDifferential, /
 ) -> cx.LonLatSphericalVel:
@@ -451,7 +451,7 @@ def from_(
     return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
 
 
-@cx.LonCosLatSphericalVel.from_._f.dispatch  # noqa: SLF001
+@cx.LonCosLatSphericalVel.from_.dispatch
 def from_(
     cls: type[cx.LonCosLatSphericalVel], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.LonCosLatSphericalVel:
@@ -485,7 +485,7 @@ def from_(
 #####################################################################
 
 
-@cx.AbstractVector.from_._f.dispatch  # noqa: SLF001
+@cx.AbstractVector.from_.dispatch
 def from_(cls: type[cx.AbstractVector], obj: apyu.Quantity, /) -> cx.AbstractVector:
     """Construct a vector from an Astropy Quantity array.
 

@@ -104,7 +104,7 @@ class FourVector(AbstractPos4D):
     # Constructors
 
     @classmethod
-    @AbstractPos4D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+    @AbstractPos4D.from_.dispatch  # type: ignore[attr-defined, misc]
     def from_(
         cls: "type[FourVector]", obj: Shaped[u.Quantity, "*batch 4"], /
     ) -> "FourVector":
@@ -281,7 +281,7 @@ class FourVector(AbstractPos4D):
 # Register additional from_s
 
 
-@FourVector.from_._f.dispatch  # type: ignore[misc]  # noqa: SLF001
+@FourVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[FourVector], obj: Shaped[AbstractQuantity, "*batch 3"], /
 ) -> FourVector:

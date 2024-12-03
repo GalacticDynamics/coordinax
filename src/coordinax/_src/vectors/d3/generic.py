@@ -73,7 +73,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 # Constructors
 
 
-@CartesianGeneric3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@CartesianGeneric3D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[CartesianGeneric3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]

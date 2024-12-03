@@ -62,7 +62,7 @@ class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
         return frame_transform_op(self, to_frame)
 
 
-@AbstractReferenceFrame.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractReferenceFrame.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[AbstractReferenceFrame], obj: AbstractReferenceFrame, /
 ) -> AbstractReferenceFrame:

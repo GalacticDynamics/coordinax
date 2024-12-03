@@ -287,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.14.1.dev13+ga2a8748.d20241203"
+version = "0.14.1.dev5+ga5a5e20.d20241203"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -364,7 +364,7 @@ requires-dist = [
     { name = "jaxlib", specifier = ">=0.4.33" },
     { name = "jaxtyping", specifier = ">=0.2.34" },
     { name = "optional-dependencies", specifier = ">=0.3.2" },
-    { name = "plum-dispatch", specifier = ">=2.5.2" },
+    { name = "plum-dispatch", specifier = ">=2.5.4" },
     { name = "quax", specifier = ">=0.0.5" },
     { name = "quaxed", specifier = ">=0.6.7" },
     { name = "unxt", specifier = ">=1.0.0" },

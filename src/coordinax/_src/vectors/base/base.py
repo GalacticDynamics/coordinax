@@ -983,7 +983,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 # Register additional constructors
 
 
-@AbstractVector.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVector.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     """Construct a vector from another vector.
 

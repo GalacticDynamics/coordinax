@@ -42,7 +42,7 @@ class AbstractPos1D(AbstractPos):
 # -------------------------------------------------------------------
 
 
-@AbstractPos1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractPos1D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[AbstractPos1D],
     obj: Shaped[u.Quantity["length"], "*batch"]
@@ -102,7 +102,7 @@ class AbstractVel1D(AbstractVel):
 # -------------------------------------------------------------------
 
 
-@AbstractVel1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractVel1D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[AbstractVel1D],
     obj: Shaped[u.Quantity["speed"], "*batch"]
@@ -156,7 +156,7 @@ class AbstractAcc1D(AbstractAcc):
 # -------------------------------------------------------------------
 
 
-@AbstractAcc1D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractAcc1D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[AbstractAcc1D],
     obj: Shaped[u.Quantity["acceleration"], "*batch"]
