@@ -556,7 +556,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 # ===============================================================
 
 
-@Space.from_._f.dispatch  # type: ignore[misc]  # noqa: SLF001
+@Space.from_.dispatch  # type: ignore[misc]
 def from_(cls: type[Space], obj: Space, /) -> Space:
     """Construct a Space, returning the Space.
 

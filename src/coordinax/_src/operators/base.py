@@ -154,7 +154,7 @@ op_call_dispatch = AbstractOperator.__call__.dispatch  # type: ignore[attr-defin
 
 
 # TODO: move to the class in py3.11+
-@AbstractOperator.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@AbstractOperator.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOperator:
     """Construct an operator from another operator.
 

@@ -124,7 +124,7 @@ class CartesianPosND(AbstractPosND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianPosND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianPosND.from_.dispatch  # type: ignore[attr-defined,misc]
 def from_(
     cls: type[CartesianPosND],
     x: Shaped[u.Quantity["length"], ""] | Shaped[u.Quantity["length"], "*batch N"],
@@ -374,7 +374,7 @@ class CartesianVelND(AvalMixin, AbstractVelND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianVelND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianVelND.from_.dispatch  # type: ignore[attr-defined,misc]
 def from_(
     cls: type[CartesianVelND],
     x: Shaped[u.Quantity["speed"], ""] | Shaped[u.Quantity["speed"], "*batch N"],
@@ -548,7 +548,7 @@ class CartesianAccND(AvalMixin, AbstractAccND):
 
 
 # TODO: move to the class in py3.11+
-@CartesianAccND.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianAccND.from_.dispatch  # type: ignore[attr-defined,misc]
 def from_(
     cls: type[CartesianAccND],
     x: Shaped[u.Quantity["acceleration"], ""]

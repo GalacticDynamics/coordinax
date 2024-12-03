@@ -52,7 +52,7 @@ class CartesianPos2D(AbstractPos2D):
 # -----------------------------------------------------
 
 
-@CartesianPos2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+@CartesianPos2D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[CartesianPos2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
 ) -> CartesianPos2D:
@@ -189,7 +189,7 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
 # -----------------------------------------------------
 
 
-@CartesianVel2D.from_._f.dispatch  # type: ignore[attr-defined, misc] # noqa: SLF001
+@CartesianVel2D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[CartesianVel2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
 ) -> CartesianVel2D:
@@ -304,7 +304,7 @@ class CartesianAcc2D(AvalMixin, AbstractAcc2D):
 # -----------------------------------------------------
 
 
-@CartesianAcc2D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@CartesianAcc2D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(cls: type[CartesianAcc2D], obj: AbstractQuantity, /) -> CartesianAcc2D:
     """Construct a 2D Cartesian velocity.
 

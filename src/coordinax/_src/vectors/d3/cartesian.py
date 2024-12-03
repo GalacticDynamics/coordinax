@@ -66,7 +66,7 @@ class CartesianPos3D(AbstractPos3D):
 # Constructors
 
 
-@CartesianPos3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@CartesianPos3D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[CartesianPos3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
@@ -243,7 +243,7 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
 # -----------------------------------------------------
 
 
-@CartesianVel3D.from_._f.dispatch  # type: ignore[attr-defined,misc]  # noqa: SLF001
+@CartesianVel3D.from_.dispatch  # type: ignore[attr-defined,misc]
 def from_(
     cls: type[CartesianVel3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
@@ -355,7 +355,7 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
 # -----------------------------------------------------
 
 
-@CartesianAcc3D.from_._f.dispatch  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@CartesianAcc3D.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[CartesianAcc3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
 ) -> CartesianAcc3D:
