@@ -4,7 +4,7 @@
   description = "Coordinates in JAX"
   readme = "README.md"
   license.file = "LICENSE"
-  requires-python = ">=3.10"
+  requires-python = ">=3.11"
   authors = [
     { name = "Nathaniel Starkman", email = "nstarman@users.noreply.github.com" },
   ]
@@ -17,14 +17,14 @@
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
     "Typing :: Typed",
   ]
   dependencies = [
-    "astropy>=6.1.4",
+    "astropy>=7.0.0",
     "dataclassish>=0.4.0",
     "equinox>=0.11.8",
     "jax>=0.4.33",
@@ -112,7 +112,7 @@ build-backend = "hatchling.build"
   disallow_untyped_defs = false
   enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
   files = ["src", "tests"]
-  python_version = "3.10"
+  python_version = "3.11"
   strict = true
   warn_return_any = false
   warn_unreachable = true
@@ -173,7 +173,7 @@ build-backend = "hatchling.build"
     "wrong-import-position",      # handled by ruff
     "wrong-import-order",         # handled by ruff
   ]
-  py-version = "3.10"
+  py-version = "3.11"
   reports.output-format = "colorized"
   similarities.ignore-imports = "yes"
   max-module-lines = 1500
