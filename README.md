@@ -1,5 +1,5 @@
 <h1 align='center'> coordinax </h1>
-<h2 align="center">Coordinates in JAX</h2>
+<h3 align="center">Coordinates in JAX</h3>
 
 <p align="center">
     <a href="https://pypi.org/project/coordinax/"> <img alt="PyPI: coordinax" src="https://img.shields.io/pypi/v/coordinax?style=flat" /> </a>
@@ -36,7 +36,7 @@ pip install coordinax
 
 ## Documentation
 
-[![Documentation Status][rtd-badge]][rtd-link]
+[![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://unxt.readthedocs.io/en/)
 
 Coming soon. In the meantime, if you've used `astropy.coordinates`, then
 `coordinax` should be fairly intuitive.
@@ -102,17 +102,30 @@ If you found this library to be useful in academic work, then please cite.
 ## Development
 
 [![Actions Status][actions-badge]][actions-link]
+[![Documentation Status][rtd-badge]][rtd-link]
+[![codecov][codecov-badge]][codecov-link]
+[![SPEC 0 — Minimum Supported Dependencies][spec0-badge]][spec0-link]
+[![pre-commit][pre-commit-badge]][pre-commit-link]
+[![ruff][ruff-badge]][ruff-link]
 
 We welcome contributions!
 
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/GalacticDynamics/coordinax/workflows/CI/badge.svg
 [actions-link]:             https://github.com/GalacticDynamics/coordinax/actions
+[codecov-badge]:            https://codecov.io/gh/GalacticDynamics/unxt/graph/badge.svg
+[codecov-link]:             https://codecov.io/gh/GalacticDynamics/unxt
+[pre-commit-badge]:         https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit
+[pre-commit-link]:          https://pre-commit.com
 [pypi-link]:                https://pypi.org/project/coordinax/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/coordinax
 [pypi-version]:             https://img.shields.io/pypi/v/coordinax
 [rtd-badge]:                https://readthedocs.org/projects/coordinax/badge/?version=latest
 [rtd-link]:                 https://coordinax.readthedocs.io/en/latest/?badge=latest
+[ruff-badge]:               https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json
+[ruff-link]:                https://docs.astral.sh/ruff/
+[spec0-badge]:              https://img.shields.io/badge/SPEC-0-green?labelColor=%23004811&color=%235CA038
+[spec0-link]:               https://scientific-python.org/specs/spec-0000/
 [zenodo-badge]:             https://zenodo.org/badge/755708966.svg
 [zenodo-link]:              https://zenodo.org/doi/10.5281/zenodo.10850557
 
