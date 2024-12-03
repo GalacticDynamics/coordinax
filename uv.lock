@@ -287,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.14.1.dev10+g22308a9.d20241203"
+version = "0.14.1.dev13+ga2a8748.d20241203"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -311,6 +311,8 @@ dev = [
     { name = "hypothesis", extra = ["numpy"] },
     { name = "ipykernel" },
     { name = "myst-parser" },
+    { name = "nox" },
+    { name = "pylint" },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
     { name = "pytest-cov" },
@@ -343,6 +345,15 @@ test = [
     { name = "pytest-github-actions-annotate-failures" },
     { name = "sybil" },
 ]
+test-all = [
+    { name = "hypothesis", extra = ["numpy"] },
+    { name = "pytest" },
+    { name = "pytest-arraydiff" },
+    { name = "pytest-cov" },
+    { name = "pytest-env" },
+    { name = "pytest-github-actions-annotate-failures" },
+    { name = "sybil" },
+]
 
 [package.metadata]
 requires-dist = [
@@ -367,6 +378,8 @@ dev = [
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "myst-parser", specifier = ">=0.13" },
+    { name = "nox", specifier = ">=2024.10.9" },
+    { name = "pylint", specifier = ">=3.3.2" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
     { name = "pytest-cov", specifier = ">=3" },
@@ -388,6 +401,15 @@ docs = [
 lint = [{ name = "pylint", specifier = ">=3.3.2" }]
 nox = [{ name = "nox", specifier = ">=2024.10.9" }]
 test = [
+    { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
+    { name = "pytest", specifier = ">=8.3.3" },
+    { name = "pytest-arraydiff", specifier = ">=0.6.1" },
+    { name = "pytest-cov", specifier = ">=3" },
+    { name = "pytest-env" },
+    { name = "pytest-github-actions-annotate-failures" },
+    { name = "sybil", specifier = ">=8.0.0" },
+]
+test-all = [
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },

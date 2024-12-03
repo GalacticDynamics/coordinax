@@ -53,10 +53,12 @@ build-backend = "hatchling.build"
 
 
 [dependency-groups]
-dev = [
+  dev = [
       "cz-conventional-gitmoji>=0.6.1",
       { include-group = "docs" },
-      { include-group = "test" },
+      { include-group = "lint" },
+      { include-group = "nox" },
+      { include-group = "test-all" },
   ]
   docs = [
     "furo>=2023.08.17",
@@ -78,6 +80,7 @@ dev = [
     "pytest-github-actions-annotate-failures",
     "sybil>=8.0.0",
   ]
+  test-all = [{ include-group = "test" }]
 
 
 [tool.hatch]
