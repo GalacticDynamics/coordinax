@@ -1,6 +1,6 @@
 """Carteisan vector."""
 
-__all__ = ["CartesianPos1D", "CartesianVel1D", "CartesianAcc1D"]
+__all__ = ["CartesianAcc1D", "CartesianPos1D", "CartesianVel1D"]
 
 from dataclasses import replace
 from functools import partial

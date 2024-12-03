@@ -1,9 +1,9 @@
 """Built-in vector classes."""
 
 __all__ = [
+    "CylindricalAcc",
     "CylindricalPos",
     "CylindricalVel",
-    "CylindricalAcc",
 ]
 
 from functools import partial

@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = ["CartesianPosND", "CartesianVelND", "CartesianAccND"]
+__all__ = ["CartesianAccND", "CartesianPosND", "CartesianVelND"]
 
 from dataclasses import replace
 from functools import partial

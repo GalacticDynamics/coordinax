@@ -1,6 +1,6 @@
 """Radial 1D vectors."""
 
-__all__ = ["RadialPos", "RadialVel", "RadialAcc"]
+__all__ = ["RadialAcc", "RadialPos", "RadialVel"]
 
 from functools import partial
 from typing import final

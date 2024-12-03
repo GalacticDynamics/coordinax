@@ -1,6 +1,6 @@
 """Distance quantities."""
 
-__all__ = ["Distance", "Parallax", "DistanceModulus"]
+__all__ = ["Distance", "DistanceModulus", "Parallax"]
 
 from dataclasses import KW_ONLY
 from typing import Any, final

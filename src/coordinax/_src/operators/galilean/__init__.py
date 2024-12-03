@@ -6,8 +6,8 @@ __all__ = [
     "GalileanBoostOperator",
     "GalileanOperator",
     "GalileanRotationOperator",
-    "GalileanTranslationOperator",
     "GalileanSpatialTranslationOperator",
+    "GalileanTranslationOperator",
 ]
 
 from .base import AbstractGalileanOperator

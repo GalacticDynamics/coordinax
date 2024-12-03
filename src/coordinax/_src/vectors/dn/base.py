@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPosND", "AbstractVelND", "AbstractAccND"]
+__all__ = ["AbstractAccND", "AbstractPosND", "AbstractVelND"]
 
 
 from abc import abstractmethod

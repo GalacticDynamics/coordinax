@@ -1,10 +1,10 @@
 """Built-in vector classes."""
 
 __all__ = [
+    "LonCosLatSphericalVel",
+    "LonLatSphericalAcc",
     "LonLatSphericalPos",
     "LonLatSphericalVel",
-    "LonLatSphericalAcc",
-    "LonCosLatSphericalVel",
 ]
 
 from functools import partial

@@ -6,9 +6,9 @@ This is the private implementation of the frames sub-package.
 
 __all__ = [
     "AbstractReferenceFrame",
+    "FrameTransformError",
     "NoFrame",
     "frame_transform_op",
-    "FrameTransformError",
 ]
 
 from .api import frame_transform_op

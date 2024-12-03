@@ -34,7 +34,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from . import _interop
     from ._src.vectors import compat
 
-__all__ = ["__version__", "operators", "distance", "angle", "frames", "Distance"]
+__all__ = ["Distance", "__version__", "angle", "distance", "frames", "operators"]
 __all__ += vectors.funcs.__all__
 __all__ += vectors.base.__all__
 __all__ += vectors.d1.__all__

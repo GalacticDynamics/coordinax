@@ -1,9 +1,9 @@
 """Built-in vector classes."""
 
 __all__ = [
+    "CartesianAcc3D",
     "CartesianPos3D",
     "CartesianVel3D",
-    "CartesianAcc3D",
 ]
 
 from dataclasses import fields, replace
