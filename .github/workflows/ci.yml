@@ -22,16 +22,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
         with:
-          python-version: "3.x"
-      - uses: pre-commit/action@v3.0.1
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
         with:
-          extra_args: --hook-stage manual --all-files
+          python-version-file: ".python-version"
+      - name: Install the project
+        run: uv sync --group nox
+      #     - uses: pre-commit/action@v3.0.1
+      #       with:
+      #         extra_args: --hook-stage manual --all-files
       - name: Run PyLint
-        run: |
-          echo "::add-matcher::$GITHUB_WORKSPACE/.github/matchers/pylint.json"
-          pipx run nox -s pylint
+        run: uv run nox -s pylint -- --output-format=github
 
   checks:
     name: Check Python ${{ matrix.python-version }} on ${{ matrix.runs-on }}
