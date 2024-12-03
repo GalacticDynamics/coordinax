@@ -29,7 +29,7 @@ from coordinax._src.vectors.d3.base import AbstractPos3D
 from coordinax._src.vectors.d3.cartesian import CartesianPos3D
 
 if TYPE_CHECKING:
-    from typing_extensions import Never
+    from typing import Never
 
 ##############################################################################
 # Position

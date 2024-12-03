@@ -21,7 +21,7 @@ from coordinax._src.vectors.base import (
 )
 
 if TYPE_CHECKING:
-    from typing_extensions import Never
+    from typing import Never
 
 
 class AbstractPosND(AbstractPos):

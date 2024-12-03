@@ -4,7 +4,7 @@
   description = "Coordinates in JAX"
   readme = "README.md"
   license.file = "LICENSE"
-  requires-python = ">=3.10"
+  requires-python = ">=3.11"
   authors = [
     { name = "Nathaniel Starkman", email = "nstarman@users.noreply.github.com" },
   ]
@@ -17,14 +17,14 @@
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
     "Typing :: Typed",
   ]
   dependencies = [
-    "astropy>=6.1.4",
+    "astropy>=7.0.0",
     "dataclassish>=0.4.0",
     "equinox>=0.11.8",
     "jax>=0.4.33",
@@ -33,30 +33,13 @@
     "optional-dependencies>=0.3.2",
     "plum-dispatch>=2.5.2",
     "quax>=0.0.5",
-    "quaxed>=0.6.4",
-    "unxt>=0.23.2",
+    "quaxed>=0.6.7",
+    "unxt>=1.0.0",
     "xmmutablemap>=0.1",
 ]
 
   [project.optional-dependencies]
-    all = ["coordinax[docs]", "coordinax[dev]", "coordinax[test]"]
-    dev = ["coordinax[test]"]
-    docs = [
-      "furo>=2023.08.17",
-      "myst_parser>=0.13",
-      "sphinx>=7.0",
-      "sphinx_copybutton",
-      "sphinx_autodoc_typehints",
-    ]
-    test = [
-      "hypothesis[numpy]",
-      "nox",
-      "pytest >=6",
-      "pytest-arraydiff",
-      "pytest-cov >=3",
-      "pytest-env",
-      "sybil != 7.1.0",
-    ]
+    all = ["coordinax"]
 
   [project.urls]
     "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
@@ -69,9 +52,48 @@ requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
 
 
+[dependency-groups]
+  dev = [
+      "cz-conventional-gitmoji>=0.6.1",
+      { include-group = "docs" },
+      { include-group = "lint" },
+      { include-group = "nox" },
+      { include-group = "test-all" },
+  ]
+  docs = [
+    "furo>=2023.08.17",
+    "myst_parser>=0.13",
+    "sphinx>=7.0",
+    "sphinx_copybutton",
+    "sphinx_autodoc_typehints",
+  ]
+  lint = [
+      "pylint>=3.3.2",
+  ]
+  nox = ["nox>=2024.10.9"]
+  test = [
+    "hypothesis[numpy]>=6.112.2",
+    "pytest>=8.3.3",
+    "pytest-arraydiff>=0.6.1",
+    "pytest-cov >=3",
+    "pytest-env",
+    "pytest-github-actions-annotate-failures",
+    "sybil>=8.0.0",
+  ]
+  test-all = [{ include-group = "test" }]
+
+
 [tool.hatch]
   build.hooks.vcs.version-file = "src/coordinax/_version.py"
   version.source = "vcs"
+
+
+[tool.codespell]
+skip = ["uv.lock"]
+
+
+[tool.commitizen]
+  name = "cz_gitmoji"
 
 
 [tool.coverage]
@@ -100,7 +122,7 @@ build-backend = "hatchling.build"
   disallow_untyped_defs = false
   enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
   files = ["src", "tests"]
-  python_version = "3.10"
+  python_version = "3.11"
   strict = true
   warn_return_any = false
   warn_unreachable = true
@@ -161,7 +183,7 @@ build-backend = "hatchling.build"
     "wrong-import-position",      # handled by ruff
     "wrong-import-order",         # handled by ruff
   ]
-  py-version = "3.10"
+  py-version = "3.11"
   reports.output-format = "colorized"
   similarities.ignore-imports = "yes"
   max-module-lines = 1500
@@ -184,7 +206,7 @@ build-backend = "hatchling.build"
     "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
   ]
   log_cli_level = "INFO"
-  minversion = "6.0"
+  minversion = "8.3"
   testpaths = ["tests"]
   xfail_strict = true
 

@@ -22,7 +22,7 @@ from coordinax._src.operators.composite import AbstractCompositeOperator
 from coordinax._src.operators.sequential import OperatorSequence
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 
 @final

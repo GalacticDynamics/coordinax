@@ -21,7 +21,7 @@ from .base_vel import AbstractVel
 from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:
-    from typing_extensions import Self
+    from typing import Self
 
 AccT = TypeVar("AccT", bound="AbstractAcc")
 
