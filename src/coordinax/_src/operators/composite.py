@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 import unxt as u
 from dataclassish import DataclassInstance
 
-from .base import AbstractOperator, op_call_dispatch
+from .base import AbstractOperator
 from coordinax._src.vectors.base import AbstractPos
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class AbstractCompositeOperator(AbstractOperator):
     # TODO: how to have the `operators` attribute in a way that allows for both
     # writeable (in the from_) and read-only (as a property) subclasses.
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(self: "AbstractCompositeOperator", x: AbstractPos, /) -> AbstractPos:
         """Apply the operator to the coordinates.
 
@@ -53,7 +53,7 @@ class AbstractCompositeOperator(AbstractOperator):
             x = op(x)
         return x
 
-    @op_call_dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
         self: "AbstractCompositeOperator", x: AbstractPos, t: u.Quantity["time"], /
     ) -> tuple[AbstractPos, u.Quantity["time"]]:

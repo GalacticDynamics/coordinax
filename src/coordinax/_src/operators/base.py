@@ -150,22 +150,43 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         return OperatorSequence((self, other))
 
 
-op_call_dispatch = AbstractOperator.__call__.dispatch  # type: ignore[attr-defined]
-
-
 # TODO: move to the class in py3.11+
 @AbstractOperator.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOperator:
     """Construct an operator from another operator.
 
-    Parameters
-    ----------
-    cls : type[AbstractOperator]
-        The operator class.
-    obj : :class:`coordinax.operators.AbstractOperator`
-        The object to construct from.
+    Examples
+    --------
+    >>> import coordinax.operators as cxo
 
-    """  # pylint: disable=R0801
+    If the object is the same type, it should return the object itself.
+
+    >>> op = cxo.IdentityOperator()
+    >>> cxo.IdentityOperator.from_(op) is op
+    True
+
+    If the object is a different type, it will error.
+
+    >>> try:
+    ...     cxo.GalileanBoostOperator.from_(op)
+    ... except TypeError as e:
+    ...     print(e)
+    Cannot construct <class 'coordinax...GalileanBoostOperator'> from <class 'coordinax...IdentityOperator'>.
+
+    Unless the object is a subclass of the target class.
+
+    >>> class MyOperator(cxo.IdentityOperator):
+    ...     pass
+
+    >>> op = MyOperator()
+    >>> op
+    MyOperator()
+
+    >>> newop = cxo.IdentityOperator.from_(op)
+    >>> newop is op, isinstance(newop, cxo.IdentityOperator)
+    (False, True)
+
+    """  # noqa: E501
     if not isinstance(obj, cls):
         msg = f"Cannot construct {cls} from {type(obj)}."
         raise TypeError(msg)
