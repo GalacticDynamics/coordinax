@@ -27,7 +27,7 @@ def call(self: AbstractOperator, x: Q2, /) -> Q2:
     >>> import coordinax.operators as cxo
 
     >>> q = u.Quantity([1, 2], "m")
-    >>> op = cxo.GalileanSpatialTranslationOperator(u.Quantity([-1, -1], "m"))
+    >>> op = cxo.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(q)
     Quantity['length'](Array([0., 1.], dtype=float32), unit='m')
 
@@ -47,7 +47,7 @@ def call(
     >>> import coordinax.operators as cxo
 
     >>> q = u.Quantity([1, 2], "m")
-    >>> op = cxo.GalileanSpatialTranslationOperator(u.Quantity([-1, -1], "m"))
+    >>> op = cxo.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(q, u.Quantity(0, "s"))
     (Quantity['length'](Array([0., 1.], dtype=float32), unit='m'),
      Quantity['time'](Array(0, dtype=int32, ...), unit='s'))

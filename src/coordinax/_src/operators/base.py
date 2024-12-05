@@ -16,7 +16,7 @@ from dataclassish import field_items
 from coordinax._src.vectors.base import AbstractPos
 
 if TYPE_CHECKING:
-    from coordinax.operators import OperatorSequence
+    from coordinax.operators import Sequence
 
 
 class AbstractOperator(eqx.Module):  # type: ignore[misc]
@@ -62,9 +62,9 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> import coordinax.operators as co
-        >>> operators = co.IdentityOperator() | co.IdentityOperator()
-        >>> co.OperatorSequence.from_({"operators": operators})
-        OperatorSequence(operators=(IdentityOperator(), IdentityOperator()))
+        >>> operators = co.Identity() | co.Identity()
+        >>> co.Sequence.from_({"operators": operators})
+        Sequence(operators=(Identity(), Identity()))
 
         """
         return cls(**obj)
@@ -83,17 +83,17 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         --------
         >>> import coordinax.operators as cxo
 
-        >>> op = cxo.GalileanSpatialTranslationOperator.from_([1, 1, 1], "kpc")
+        >>> op = cxo.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
         >>> print(op.translation)
         <CartesianPos3D (x[kpc], y[kpc], z[kpc])
             [1. 1. 1.]>
 
-        >>> op = cxo.GalileanTranslationOperator.from_([3e5, 1, 1, 1], "kpc")
+        >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "kpc")
         >>> print(op.translation)
         <FourVector (t[kpc s / km], q=(x[kpc], y[kpc], z[kpc]))
             [1.001 1.    1.    1.   ]>
 
-        >>> op = cxo.GalileanBoostOperator.from_([1, 1, 1], "km/s")
+        >>> op = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
         >>> print(op.velocity)
         <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
             [1. 1. 1.]>
@@ -141,24 +141,24 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     # ===========================================
     # Sequence
 
-    def __or__(self, other: "AbstractOperator") -> "OperatorSequence":
+    def __or__(self, other: "AbstractOperator") -> "Sequence":
         """Compose with another operator.
 
         Examples
         --------
         >>> import coordinax.operators as cxo
 
-        >>> op1 = cxo.IdentityOperator()
-        >>> op2 = cxo.IdentityOperator()
+        >>> op1 = cxo.Identity()
+        >>> op2 = cxo.Identity()
         >>> op1 | op2
-        OperatorSequence(operators=(IdentityOperator(), IdentityOperator()))
+        Sequence(operators=(Identity(), Identity()))
 
         """
-        from .sequential import OperatorSequence
+        from .sequential import Sequence
 
-        if isinstance(other, OperatorSequence):
+        if isinstance(other, Sequence):
             return other.__ror__(self)
-        return OperatorSequence((self, other))
+        return Sequence((self, other))
 
 
 # TODO: move to the class in py3.11+
@@ -172,29 +172,29 @@ def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOper
 
     If the object is the same type, it should return the object itself.
 
-    >>> op = cxo.IdentityOperator()
-    >>> cxo.IdentityOperator.from_(op) is op
+    >>> op = cxo.Identity()
+    >>> cxo.Identity.from_(op) is op
     True
 
     If the object is a different type, it will error.
 
     >>> try:
-    ...     cxo.GalileanBoostOperator.from_(op)
+    ...     cxo.GalileanBoost.from_(op)
     ... except TypeError as e:
     ...     print(e)
-    Cannot construct <class 'coordinax...GalileanBoostOperator'> from <class 'coordinax...IdentityOperator'>.
+    Cannot construct <class 'coordinax...GalileanBoost'> from <class 'coordinax...Identity'>.
 
     Unless the object is a subclass of the target class.
 
-    >>> class MyOperator(cxo.IdentityOperator):
+    >>> class MyOperator(cxo.Identity):
     ...     pass
 
     >>> op = MyOperator()
     >>> op
     MyOperator()
 
-    >>> newop = cxo.IdentityOperator.from_(op)
-    >>> newop is op, isinstance(newop, cxo.IdentityOperator)
+    >>> newop = cxo.Identity.from_(op)
+    >>> newop is op, isinstance(newop, cxo.Identity)
     (False, True)
 
     """  # noqa: E501

@@ -15,7 +15,7 @@ def simplify_op(op: AbstractOperator, /) -> AbstractOperator:
     --------
     >>> import coordinax.operators as cxo
 
-    >>> op = cxo.GalileanSpatialTranslationOperator.from_([1, 0, 0], "m")
+    >>> op = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "m")
     >>> cxo.simplify_op(op) is op
     True
 

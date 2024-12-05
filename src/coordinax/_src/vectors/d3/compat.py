@@ -40,7 +40,7 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     >>> import coordinax.operators as cxo
 
     >>> shift = u.Quantity([1.0, 2.0, 3.0], "kpc")
-    >>> op = cxo.GalileanSpatialTranslationOperator(shift)
+    >>> op = cxo.GalileanSpatialTranslation(shift)
 
     >>> q = u.Quantity([0.0, 0, 0], "kpc")
     >>> op(q)
@@ -65,9 +65,9 @@ def call(
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.operators.GalileanSpatialTranslationOperator.from_([1, 2, 3], "kpc")
+    >>> op = cx.operators.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
     >>> op
-    GalileanSpatialTranslationOperator( translation=CartesianPos3D( ... ) )
+    GalileanSpatialTranslation( translation=CartesianPos3D( ... ) )
 
     We can then apply the operator to a position:
 

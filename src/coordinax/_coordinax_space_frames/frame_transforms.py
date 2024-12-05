@@ -17,8 +17,8 @@ from .icrs import ICRS
 from coordinax._src.angle import Angle
 from coordinax._src.distance import Distance
 from coordinax._src.operators.base import AbstractOperator
-from coordinax._src.operators.identity import IdentityOperator
-from coordinax._src.operators.sequential import OperatorSequence
+from coordinax._src.operators.identity import Identity
+from coordinax._src.operators.sequential import Sequence
 from coordinax._src.vectors.base import AbstractVel
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D, CartesianVel3D
 
@@ -29,7 +29,7 @@ VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
 
 
 @dispatch
-def frame_transform_op(from_frame: ICRS, to_frame: ICRS, /) -> IdentityOperator:
+def frame_transform_op(from_frame: ICRS, to_frame: ICRS, /) -> Identity:
     """Return an identity operator for the ICRS->ICRS transformation.
 
     Examples
@@ -38,10 +38,10 @@ def frame_transform_op(from_frame: ICRS, to_frame: ICRS, /) -> IdentityOperator:
     >>> icrs_frame = cxf.ICRS()
     >>> frame_op = cxf.frame_transform_op(icrs_frame, icrs_frame)
     >>> frame_op
-    IdentityOperator()
+    Identity()
 
     """
-    return IdentityOperator()
+    return Identity()
 
 
 # ---------------------------------------------------------------
@@ -50,7 +50,7 @@ def frame_transform_op(from_frame: ICRS, to_frame: ICRS, /) -> IdentityOperator:
 @dispatch
 def frame_transform_op(
     from_frame: Galactocentric, to_frame: Galactocentric, /
-) -> OperatorSequence:
+) -> Sequence:
     """Return a sequence of operators for the Galactocentric frame self transformation.
 
     Examples
@@ -61,18 +61,18 @@ def frame_transform_op(
     >>> gcf_frame = cxf.Galactocentric()
     >>> frame_op = cxf.frame_transform_op(gcf_frame, gcf_frame)
     >>> frame_op
-    OperatorSequence(operators=(IdentityOperator(),))
+    Sequence(operators=(Identity(),))
 
     >>> gcf_frame2 = cxf.Galactocentric(roll=u.Quantity(10, "deg"))
     >>> frame_op2 = cxf.frame_transform_op(gcf_frame, gcf_frame2)
     >>> frame_op2
-    OperatorSequence(
+    Sequence(
       operators=( _GCF2ICRSOperator( ... ), _ICRS2GCFOperator( ... ) )
     )
 
     """
     if from_frame == to_frame:
-        return OperatorSequence((IdentityOperator(),))
+        return Sequence((Identity(),))
 
     # TODO: not go through ICRS for the self-transformation
     return _GCF2ICRSOperator(from_frame) | _ICRS2GCFOperator(to_frame)

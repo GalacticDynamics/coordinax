@@ -1,7 +1,7 @@
 # ruff: noqa: ERA001
 """Galilean coordinate transformations."""
 
-__all__ = ["GalileanBoostOperator"]
+__all__ = ["GalileanBoost"]
 
 
 from dataclasses import replace
@@ -16,13 +16,13 @@ import unxt as u
 
 from .base import AbstractGalileanOperator
 from coordinax._src.operators.base import AbstractOperator
-from coordinax._src.operators.identity import IdentityOperator
+from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianVel3D
 from coordinax._src.vectors.d4 import FourVector
 
 
 @final
-class GalileanBoostOperator(AbstractGalileanOperator):
+class GalileanBoost(AbstractGalileanOperator):
     r"""Operator for Galilean boosts.
 
     The coordinate transform is given by:
@@ -44,9 +44,9 @@ class GalileanBoostOperator(AbstractGalileanOperator):
     --------
     >>> import coordinax.operators as cxo
 
-    >>> op = cxo.GalileanBoostOperator.from_([1.0, 2.0, 3.0], "m/s")
+    >>> op = cxo.GalileanBoost.from_([1.0, 2.0, 3.0], "m/s")
     >>> op
-    GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
+    GalileanBoost( velocity=CartesianVel3D( ... ) )
 
     Note that the velocity is a :class:`vector.CartesianVel3D`, which was
     constructed from an array, using :meth:`vector.CartesianVel3D.from_`.
@@ -71,7 +71,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         --------
         >>> import coordinax.operators as cxo
 
-        >>> op = cxo.GalileanBoostOperator.from_([1, 2, 3], "m/s")
+        >>> op = cxo.GalileanBoost.from_([1, 2, 3], "m/s")
         >>> op.is_inertial
         True
 
@@ -79,29 +79,29 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         return True
 
     @property
-    def inverse(self) -> "GalileanBoostOperator":
+    def inverse(self) -> "GalileanBoost":
         """The inverse of the operator.
 
         Examples
         --------
         >>> import coordinax.operators as cxo
 
-        >>> op = cxo.GalileanBoostOperator.from_([1, 2, 3], "m/s")
+        >>> op = cxo.GalileanBoost.from_([1, 2, 3], "m/s")
         >>> op.inverse
-        GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
+        GalileanBoost( velocity=CartesianVel3D( ... ) )
 
         >>> print(op.inverse.velocity)
         <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
             [-1. -2. -3.]>
 
         """
-        return GalileanBoostOperator(-self.velocity)
+        return GalileanBoost(-self.velocity)
 
     # -----------------------------------------------------
 
     @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
-        self: "GalileanBoostOperator", q: AbstractPos3D, t: u.Quantity["time"], /
+        self: "GalileanBoost", q: AbstractPos3D, t: u.Quantity["time"], /
     ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
         """Apply the boost to the coordinates.
 
@@ -110,7 +110,7 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.operators.GalileanBoostOperator.from_([1, 2, 3], "m/s")
+        >>> op = cx.operators.GalileanBoost.from_([1, 2, 3], "m/s")
 
         >>> q = cx.CartesianPos3D.from_([0, 0, 0], "m")
         >>> t = u.Quantity(1, "s")
@@ -125,13 +125,13 @@ class GalileanBoostOperator(AbstractGalileanOperator):
         return q + self.velocity * t, t
 
     @AbstractOperator.__call__.dispatch
-    def __call__(self: "GalileanBoostOperator", v4: FourVector, /) -> FourVector:
+    def __call__(self: "GalileanBoost", v4: FourVector, /) -> FourVector:
         """Apply the boost to the coordinates."""  # TODO: add example
         return replace(v4, q=v4.q + self.velocity * v4.t)
 
 
 @dispatch  # type: ignore[misc]
-def simplify_op(op: GalileanBoostOperator, /, **kwargs: Any) -> AbstractOperator:
+def simplify_op(op: GalileanBoost, /, **kwargs: Any) -> AbstractOperator:
     """Simplify a boost operator.
 
     Examples
@@ -141,20 +141,20 @@ def simplify_op(op: GalileanBoostOperator, /, **kwargs: Any) -> AbstractOperator
 
     An operator with real effect cannot be simplified:
 
-    >>> op = cxo.GalileanBoostOperator.from_([1, 0, 0], "m/s")
+    >>> op = cxo.GalileanBoost.from_([1, 0, 0], "m/s")
     >>> cxo.simplify_op(op)
-    GalileanBoostOperator(
+    GalileanBoost(
       velocity=CartesianVel3D( ... )
     )
 
     An operator with no effect can be simplified:
 
-    >>> op = cxo.GalileanBoostOperator.from_([0, 0, 0], "m/s")
+    >>> op = cxo.GalileanBoost.from_([0, 0, 0], "m/s")
     >>> cxo.simplify_op(op)
-    IdentityOperator()
+    Identity()
 
     """
     # Check if the velocity is zero.
     if jnp.allclose(convert(op.velocity, u.Quantity).value, jnp.zeros((3,)), **kwargs):
-        return IdentityOperator()
+        return Identity()
     return op
