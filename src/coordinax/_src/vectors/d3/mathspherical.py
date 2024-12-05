@@ -30,7 +30,7 @@ from .base_spherical import (
     _360d,
 )
 from coordinax._src.angles import Angle, BatchableAngle
-from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
+from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range

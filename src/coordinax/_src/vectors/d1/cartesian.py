@@ -18,7 +18,7 @@ from quaxed import lax as qlax
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
-from coordinax._src.distance import BatchableLength
+from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin

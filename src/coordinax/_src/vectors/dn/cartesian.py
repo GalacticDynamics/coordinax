@@ -19,7 +19,7 @@ import unxt as u
 
 import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
-from coordinax._src.distance import BatchableLength
+from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
