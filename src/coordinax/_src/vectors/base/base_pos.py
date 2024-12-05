@@ -24,7 +24,7 @@ from .flags import AttrFilter
 from .mixins import AvalMixin
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.funcs import represent_as
+from coordinax._src.vectors.api import represent_as
 
 PosT = TypeVar("PosT", bound="AbstractPos")
 

@@ -2,11 +2,9 @@
 
 __all__ = [
     "normalize_vector",
-    "represent_as",
 ]
 
 from functools import partial
-from typing import Any
 
 import equinox as eqx
 from jaxtyping import Array, Shaped
@@ -14,19 +12,6 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 from unxt.quantity import AbstractQuantity
-
-
-@dispatch.abstract  # type: ignore[misc]
-def represent_as(current: Any, target: type[Any], /, **kwargs: Any) -> Any:
-    """Transform the current vector to the target vector.
-
-    See the dispatch implementations for more details.
-
-    """
-    raise NotImplementedError  # pragma: no cover
-
-
-# ===================================================================
 
 
 @dispatch
