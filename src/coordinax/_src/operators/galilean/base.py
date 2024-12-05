@@ -10,11 +10,7 @@ from coordinax._src.operators.base import AbstractOperator
 
 
 class AbstractGalileanOperator(AbstractOperator):
-    """Abstract base class for Galilean operators on potentials.
-
-    A potential wrapper is a class that wraps another potential.
-    The wrapped potential can be accessed through the `__wrapped__` attribute.
-    """
+    """Abstract base class for Galilean operators on potentials."""
 
     @property
     @abstractmethod
