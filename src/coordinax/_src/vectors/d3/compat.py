@@ -46,12 +46,6 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     >>> op(q)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
 
-    Since :meth:`AbstractOperator.__call__` uses multiple dispatch, we
-    explicitly call this registered method.
-
-    >>> op.__call__._f.resolve_method((op, q))[0](op, q)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
-
     """
     cart = CartesianPos3D.from_(q)
     result = self(cart)
@@ -82,14 +76,7 @@ def call(
 
     >>> op(q, t)
     (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='kpc'),
-        Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
-
-    Since :meth:`AbstractOperator.__call__` uses multiple dispatch, we
-    explicitly call this registered method.
-
-    >>> op.__call__._f.resolve_method((op, q, t))[0](op, q, t)
-    (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='kpc'),
-        Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
+     Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
 
     """
     vec, t = self(CartesianPos3D.from_(x), t)
