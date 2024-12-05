@@ -26,7 +26,7 @@ def call(self: AbstractOperator, x: Q1, /) -> Q1:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.operators.GalileanSpatialTranslationOperator.from_([1], "kpc")
+    >>> op = cx.operators.GalileanSpatialTranslation.from_([1], "kpc")
     >>> q = u.Quantity([0], "kpc")
     >>> op(q)
     Quantity['length'](Array([1.], dtype=float32), unit='kpc')
@@ -47,7 +47,7 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.operators.GalileanSpatialTranslationOperator.from_([1], "kpc")
+    >>> op = cx.operators.GalileanSpatialTranslation.from_([1], "kpc")
     >>> q = u.Quantity([0], "kpc")
     >>> op(q, u.Quantity(0, "s"))
     (Quantity['length'](Array([1.], dtype=float32), unit='kpc'),

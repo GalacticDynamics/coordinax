@@ -1,6 +1,6 @@
 """Base classes for operators on coordinates and potentials."""
 
-__all__ = ["IdentityOperator"]
+__all__ = ["Identity"]
 
 from typing import Any, Literal, final
 
@@ -8,7 +8,7 @@ from .base import AbstractOperator
 
 
 @final
-class IdentityOperator(AbstractOperator):
+class Identity(AbstractOperator):
     """Identity operation.
 
     This is the identity operation, which does nothing to the input.
@@ -16,16 +16,16 @@ class IdentityOperator(AbstractOperator):
     Examples
     --------
     We will work through many of the registered call signatures for the
-    `IdentityOperator` class. Note that more call signatures may be registered.
+    `Identity` class. Note that more call signatures may be registered.
 
     First, we make an instance of the operator:
 
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.operators.IdentityOperator()
+    >>> op = cx.operators.Identity()
     >>> op
-    IdentityOperator()
+    Identity()
 
     And the common objects we will use:
 
@@ -94,7 +94,7 @@ class IdentityOperator(AbstractOperator):
         >>> import unxt as u
         >>> import coordinax.operators as cxo
 
-        >>> op = cxo.IdentityOperator()
+        >>> op = cxo.Identity()
         >>> op.is_inertial
         True
 
@@ -102,16 +102,16 @@ class IdentityOperator(AbstractOperator):
         return True
 
     @property
-    def inverse(self) -> "IdentityOperator":
+    def inverse(self) -> "Identity":
         """The inverse of the operator.
 
         Examples
         --------
         >>> import coordinax.operators as cxo
 
-        >>> op = cxo.IdentityOperator()
+        >>> op = cxo.Identity()
         >>> op.inverse
-        IdentityOperator()
+        Identity()
         >>> op.inverse is op
         True
 
@@ -123,7 +123,7 @@ class IdentityOperator(AbstractOperator):
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "IdentityOperator", arg: Any, /) -> Any:
+    def __call__(self: "Identity", arg: Any, /) -> Any:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.
@@ -133,7 +133,7 @@ class IdentityOperator(AbstractOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.operators.IdentityOperator()
+        >>> op = cx.operators.Identity()
 
         >>> q = u.Quantity([1, 2, 3], "kpc")
         >>> op(q) is q
@@ -147,7 +147,7 @@ class IdentityOperator(AbstractOperator):
         return arg
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "IdentityOperator", *args: Any) -> tuple[Any, ...]:
+    def __call__(self: "Identity", *args: Any) -> tuple[Any, ...]:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.
@@ -157,7 +157,7 @@ class IdentityOperator(AbstractOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.operators.IdentityOperator()
+        >>> op = cx.operators.Identity()
 
         >>> q = u.Quantity([1, 2, 3], "kpc")
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")

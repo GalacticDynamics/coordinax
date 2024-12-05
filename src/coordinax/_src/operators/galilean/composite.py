@@ -14,12 +14,12 @@ import unxt as u
 from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
-from .boost import GalileanBoostOperator
-from .rotation import GalileanRotationOperator
-from .translation import GalileanTranslationOperator
+from .boost import GalileanBoost
+from .rotation import GalileanRotation
+from .translation import GalileanTranslation
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
-from coordinax._src.operators.sequential import OperatorSequence
+from coordinax._src.operators.sequential import Sequence
 
 if TYPE_CHECKING:
     from typing import Self
@@ -42,13 +42,13 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : `coordinax.operators.GalileanTranslationOperator`
+    translation : `coordinax.operators.GalileanTranslation`
         The spatial translation of the frame. See
-        :class:`coordinax.operators.GalileanTranslationOperator` for alternative
+        :class:`coordinax.operators.GalileanTranslation` for alternative
         inputs to construct this parameter.
-    velocity : :class:`coordinax.operators.GalileanBoostOperator`
+    velocity : :class:`coordinax.operators.GalileanBoost`
         The boost to the frame. See
-        :class:`coordinax.operators.GalileanBoostOperator` for alternative
+        :class:`coordinax.operators.GalileanBoost` for alternative
         inputs to construct this parameter.
 
     Examples
@@ -62,41 +62,41 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
-      rotation=GalileanRotationOperator(rotation=f32[3,3]),
-      translation=GalileanTranslationOperator(
+      rotation=GalileanRotation(rotation=f32[3,3]),
+      translation=GalileanTranslation(
         translation=FourVector(
           t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
           q=CartesianPos3D( ... ) )
       ),
-      velocity=GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
+      velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
     )
 
     Note that the translation is a
-    :class:`coordinax.operators.GalileanTranslationOperator` with a
+    :class:`coordinax.operators.GalileanTranslation` with a
     :class:`vector.FourVector` translation, and the velocity is a
-    :class:`coordinax.operators.GalileanBoostOperator` with a
+    :class:`coordinax.operators.GalileanBoost` with a
     :class:`vector.CartesianVel3D` velocity. We can also construct them
     directly, which allows for other vector types.
 
     >>> op = cxo.GalileanOperator(
-    ...     translation=cxo.GalileanTranslationOperator(
+    ...     translation=cxo.GalileanTranslation(
     ...         cx.FourVector(t=u.Quantity(2.5, "Gyr"),
     ...                       q=cx.SphericalPos(r=u.Quantity(1, "kpc"),
     ...                                         theta=u.Quantity(90, "deg"),
     ...                                         phi=u.Quantity(0, "rad") ) ) ),
-    ...     velocity=cxo.GalileanBoostOperator(
+    ...     velocity=cxo.GalileanBoost(
     ...         cx.CartesianVel3D.from_([1, 2, 3], "km/s") )
     ... )
     >>> op
     GalileanOperator(
-      rotation=GalileanRotationOperator(rotation=f32[3,3]),
-      translation=GalileanTranslationOperator(
+      rotation=GalileanRotation(rotation=f32[3,3]),
+      translation=GalileanTranslation(
         translation=FourVector(
           t=Quantity[...)](value=f32[], unit=Unit("Gyr")),
           q=SphericalPos( ... )
         )
       ),
-      velocity=GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
+      velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
     )
 
     Galilean operators can be applied to :class:`vector.FourVector`:
@@ -126,35 +126,33 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     """
 
-    rotation: GalileanRotationOperator = eqx.field(
-        default=GalileanRotationOperator(xp.eye(3)),
-        converter=GalileanRotationOperator.from_,
+    rotation: GalileanRotation = eqx.field(
+        default=GalileanRotation(xp.eye(3)),
+        converter=GalileanRotation.from_,
     )
     """The in-frame spatial rotation."""
 
-    translation: GalileanTranslationOperator = eqx.field(
-        default=GalileanTranslationOperator(u.Quantity([0, 0, 0, 0], "kpc")),
-        converter=Unless(
-            GalileanTranslationOperator, converter=GalileanTranslationOperator.from_
-        ),
+    translation: GalileanTranslation = eqx.field(
+        default=GalileanTranslation(u.Quantity([0, 0, 0, 0], "kpc")),
+        converter=Unless(GalileanTranslation, converter=GalileanTranslation.from_),
     )
     """The temporal + spatial translation.
 
     The translation vector [T, Q].  This parameters accetps either a
-    :class:`coordinax.operators.GalileanTranslationOperator` instance or
+    :class:`coordinax.operators.GalileanTranslation` instance or
     any input that can be used to construct a :meth:`vector.FourVector`, using
     :meth:`vector.FourVector.from_`. See :class:`vector.FourVector` for
     details.
     """
 
-    velocity: GalileanBoostOperator = eqx.field(
-        default=GalileanBoostOperator(u.Quantity([0, 0, 0], "km/s")),
-        converter=Unless(GalileanBoostOperator, converter=GalileanBoostOperator.from_),
+    velocity: GalileanBoost = eqx.field(
+        default=GalileanBoost(u.Quantity([0, 0, 0], "km/s")),
+        converter=Unless(GalileanBoost, converter=GalileanBoost.from_),
     )
     """The boost to the frame.
 
     This parameters accepts either a
-    :class:`coordinax.operators.GalileanBoostOperator` instance or any input
+    :class:`coordinax.operators.GalileanBoost` instance or any input
     that can be used to construct a :class:`vector.CartesianVel3D`, using
     :meth:`vector.CartesianVel3D.from_`. See :class:`vector.CartesianVel3D` for
     details.
@@ -163,9 +161,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     @property
     def operators(
         self,
-    ) -> tuple[
-        GalileanRotationOperator, GalileanTranslationOperator, GalileanBoostOperator
-    ]:
+    ) -> tuple[GalileanRotation, GalileanTranslation, GalileanBoost]:
         """Rotation -> translation -> boost."""
         return (self.rotation, self.translation, self.velocity)
 
@@ -178,7 +174,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     def __getitem__(self, key: int | slice) -> "AbstractOperator | Self":
         if isinstance(key, int):
             return self.operators[key]
-        return OperatorSequence(self.operators[key])
+        return Sequence(self.operators[key])
 
 
 @dispatch  # type: ignore[misc]
@@ -200,13 +196,13 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
     ... )
     >>> op
     GalileanOperator(
-      rotation=GalileanRotationOperator(rotation=f32[3,3]),
-      translation=GalileanTranslationOperator(
+      rotation=GalileanRotation(rotation=f32[3,3]),
+      translation=GalileanTranslation(
         translation=FourVector(
           t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
           q=CartesianPos3D( ... ) )
       ),
-      velocity=GalileanBoostOperator( velocity=CartesianVel3D( ... ) )
+      velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
     )
 
     >>> cxo.simplify_op(op) is op
@@ -217,9 +213,7 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
 
     >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "kpc"))
     >>> cxo.simplify_op(op)
-    OperatorSequence(
-      operators=( GalileanTranslationOperator( translation=FourVector( ... ) ), )
-    )
+    Sequence(( GalileanTranslation( translation=FourVector( ... ) ), ))
 
     """
     simple_ops = [simplify_op(x, **kwargs) for x in op.operators]
@@ -227,6 +221,6 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
         not isinstance(x, type(orig))
         for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return simplify_op(OperatorSequence(simple_ops))
+        return simplify_op(Sequence(simple_ops))
 
     return op

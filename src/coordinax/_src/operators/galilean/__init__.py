@@ -3,15 +3,15 @@
 
 __all__ = [
     "AbstractGalileanOperator",
-    "GalileanBoostOperator",
+    "GalileanBoost",
     "GalileanOperator",
-    "GalileanRotationOperator",
-    "GalileanSpatialTranslationOperator",
-    "GalileanTranslationOperator",
+    "GalileanRotation",
+    "GalileanSpatialTranslation",
+    "GalileanTranslation",
 ]
 
 from .base import AbstractGalileanOperator
-from .boost import GalileanBoostOperator
+from .boost import GalileanBoost
 from .composite import GalileanOperator
-from .rotation import GalileanRotationOperator
-from .translation import GalileanSpatialTranslationOperator, GalileanTranslationOperator
+from .rotation import GalileanRotation
+from .translation import GalileanSpatialTranslation, GalileanTranslation

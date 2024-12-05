@@ -30,7 +30,7 @@ class AbstractCompositeOperator(AbstractOperator):
 
     See Also
     --------
-    :class:`coordinax.operators.OperatorSequence`
+    :class:`coordinax.operators.Sequence`
     :class:`coordinax.operators.GalileanOperator`
 
     """
@@ -71,9 +71,9 @@ class AbstractCompositeOperator(AbstractOperator):
     @property
     def inverse(self: HasOperatorsAttr) -> "AbstractCompositeOperator":
         """The inverse of the operator."""
-        from .sequential import OperatorSequence
+        from .sequential import Sequence
 
-        return OperatorSequence(tuple(op.inverse for op in reversed(self.operators)))
+        return Sequence(tuple(op.inverse for op in reversed(self.operators)))
 
     # ===========================================
     # Sequence
