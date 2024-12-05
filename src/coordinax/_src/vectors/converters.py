@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 from unxt.quantity import AbstractQuantity
 
-from coordinax._src.angle import Angle
+from coordinax._src.angles import Angle
 
 _2pid = Angle(360, "deg")
 

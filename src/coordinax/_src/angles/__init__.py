@@ -2,6 +2,10 @@
 
 Note that this module is private. Users should use the public API.
 
+This module depends on the following modules:
+
+- utils & typing
+
 """
 
 __all__ = ["AbstractAngle", "Angle", "BatchableAngle", "BatchableAngleQ"]

@@ -21,7 +21,7 @@ from .base_spherical import (
     _180d,
     _360d,
 )
-from coordinax._src.angle import Angle, BatchableAngle
+from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks

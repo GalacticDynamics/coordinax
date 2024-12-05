@@ -18,7 +18,7 @@ from dataclassish.converters import Unless
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from coordinax._src.angle import Angle, BatchableAngle
+from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distance import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative

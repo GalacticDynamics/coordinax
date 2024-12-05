@@ -10,7 +10,7 @@ from jaxtyping import Array, Shaped
 
 import unxt as u
 
-from coordinax._src.angle import Angle
+from coordinax._src.angles import Angle
 from coordinax._src.distance import Distance
 from coordinax._src.frames import AbstractReferenceFrame
 from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
