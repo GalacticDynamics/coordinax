@@ -61,14 +61,12 @@ def frame_transform_op(
     >>> gcf_frame = cxf.Galactocentric()
     >>> frame_op = cxf.frame_transform_op(gcf_frame, gcf_frame)
     >>> frame_op
-    Sequence(operators=(Identity(),))
+    Sequence((Identity(),))
 
     >>> gcf_frame2 = cxf.Galactocentric(roll=u.Quantity(10, "deg"))
     >>> frame_op2 = cxf.frame_transform_op(gcf_frame, gcf_frame2)
     >>> frame_op2
-    Sequence(
-      operators=( _GCF2ICRSOperator( ... ), _ICRS2GCFOperator( ... ) )
-    )
+    Sequence(( _GCF2ICRSOperator( ... ), _ICRS2GCFOperator( ... ) ))
 
     """
     if from_frame == to_frame:

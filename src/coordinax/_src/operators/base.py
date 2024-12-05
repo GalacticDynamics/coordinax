@@ -64,7 +64,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         >>> import coordinax.operators as co
         >>> operators = co.Identity() | co.Identity()
         >>> co.Sequence.from_({"operators": operators})
-        Sequence(operators=(Identity(), Identity()))
+        Sequence((Identity(), Identity()))
 
         """
         return cls(**obj)
@@ -151,7 +151,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         >>> op1 = cxo.Identity()
         >>> op2 = cxo.Identity()
         >>> op1 | op2
-        Sequence(operators=(Identity(), Identity()))
+        Sequence((Identity(), Identity()))
 
         """
         from .sequential import Sequence

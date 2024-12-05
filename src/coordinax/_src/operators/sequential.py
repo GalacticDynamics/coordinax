@@ -2,6 +2,7 @@
 
 __all__ = ["Sequence"]
 
+import textwrap
 from dataclasses import replace
 from typing import Any, final
 
@@ -47,36 +48,25 @@ class Sequence(AbstractCompositeOperator):
     >>> boost = co.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
     >>> seq = co.Sequence((shift, boost))
     >>> seq
-    Sequence(
-      operators=( GalileanSpatialTranslation( ... ),
-                  GalileanBoost( ... ) )
-    )
+    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost( ... ) ))
 
     A sequence of operators can also be constructed by ``|``:
 
     >>> seq2 = shift | boost
     >>> seq2
-    Sequence(
-      operators=( GalileanSpatialTranslation( ... ),
-                  GalileanBoost( ... ) )
-    )
+    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost( ... ) ))
 
     The sequence of operators can be simplified. For this example, we
     add an identity operator to the sequence:
 
     >>> seq3 = seq2 | co.Identity()
     >>> seq3
-    Sequence(
-      operators=( GalileanSpatialTranslation( ... ),
-                  GalileanBoost( ... ),
-                  Identity() )
-    )
+    Sequence((
+        GalileanSpatialTranslation( ... ), GalileanBoost( ... ), Identity()
+    ))
 
     >>> co.simplify_op(seq3)
-    Sequence(
-      operators=( GalileanSpatialTranslation( ... ),
-                  GalileanBoost( ... ) )
-    )
+    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost( ... ) ))
 
     """
 
@@ -90,6 +80,12 @@ class Sequence(AbstractCompositeOperator):
 
     def __ror__(self, other: AbstractOperator) -> "Sequence":
         return replace(self, operators=(other, *self))
+
+    def __repr__(self) -> str:
+        ops = repr(self.operators)
+        if "\n" in ops:
+            ops = "(\n" + textwrap.indent(ops[1:-1], "    ") + "\n)"
+        return f"{self.__class__.__name__}({ops})"
 
 
 #####################################################################
@@ -113,17 +109,12 @@ def simplify_op(seq: Sequence, /) -> Sequence:
 
     >>> seq = shift | co.Identity() | boost
     >>> seq
-    Sequence(
-      operators=( GalileanSpatialTranslation( ... ),
-                  Identity(),
-                  GalileanBoost( ... ) )
-    )
+    Sequence((
+        GalileanSpatialTranslation( ... ), Identity(), GalileanBoost( ... )
+    ))
 
     >>> co.simplify_op(seq3)
-    Sequence(
-      operators=( GalileanSpatialTranslation( ... ),
-                  GalileanBoost( ... ) )
-    )
+    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost( ... ) ))
 
     """
     # Iterate through the operators, simplifying that operator, then filtering
