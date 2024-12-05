@@ -172,6 +172,25 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     def __getitem__(self, key: slice) -> "Self": ...
 
     def __getitem__(self, key: int | slice) -> "AbstractOperator | Self":
+        """Getitem from the operators.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        >>> op = cxo.GalileanOperator(
+        ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+        ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
+
+        >>> op[0]
+        GalileanRotation(rotation=f32[3,3])
+
+        >>> op[1:]
+        Sequence(( GalileanTranslation( translation=FourVector( ... ) ),
+                   GalileanBoost( velocity=CartesianVel3D( ... ) ) ))
+
+        """
         if isinstance(key, int):
             return self.operators[key]
         return Sequence(self.operators[key])
