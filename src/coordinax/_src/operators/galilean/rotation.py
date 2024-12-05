@@ -189,7 +189,7 @@ class GalileanRotation(AbstractGalileanOperator):
     def __call__(
         self: "GalileanRotation", q: Shaped[u.Quantity["length"], "*batch 3"], /
     ) -> Shaped[u.Quantity["length"], "*batch 3"]:
-        """Apply the boost to the coordinates.
+        """Apply the rotation to the coordinates.
 
         Examples
         --------
@@ -204,6 +204,11 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> op = cxo.GalileanRotation(Rz)
 
         >>> q = u.Quantity([1, 0, 0], "m")
+        >>> op(q)
+        Quantity[...](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')
+
+        THere's a related dispatch that also takes a time argument:
+
         >>> t = u.Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq
@@ -218,7 +223,38 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(self: "GalileanRotation", q: AbstractPos3D, /) -> AbstractPos3D:
-        """Apply the boost to the coordinates.
+        """Apply the rotation to the coordinates.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        >>> theta = u.Quantity(45, "deg")
+        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
+        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
+        ...                  [0,             0,              1]])
+        >>> op = cx.operators.GalileanRotation(Rz)
+
+        >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
+        >>> newq = op(q)
+        >>> newq.x
+        Quantity['length'](Array(0.70710677, dtype=float32), unit='m')
+
+        """
+        vec = convert(  # Array[float, (N, 3)]
+            q.represent_as(CartesianPos3D).uconvert(ToUnitsOptions.consistent),
+            u.Quantity,
+        )
+        rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
+        return rcart.represent_as(type(q))
+
+    @AbstractOperator.__call__.dispatch(precedence=1)
+    def __call__(
+        self: "GalileanRotation", q: AbstractPos3D, t: u.Quantity["time"], /
+    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
+        """Apply the rotation to the coordinates.
 
         Examples
         --------
@@ -243,23 +279,6 @@ class GalileanRotation(AbstractGalileanOperator):
         Quantity['time'](Array(1, dtype=int32, ...), unit='s')
 
         """
-        vec = convert(  # Array[float, (N, 3)]
-            q.represent_as(CartesianPos3D).uconvert(ToUnitsOptions.consistent),
-            u.Quantity,
-        )
-        rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
-        return rcart.represent_as(type(q))
-
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(
-        self: "GalileanRotation", q: AbstractPos3D, t: u.Quantity["time"], /
-    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
-        return self(q), t
-
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(
-        self: "GalileanRotation", q: AbstractPos3D, t: u.Quantity["time"], /
-    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
         return self(q), t
 
 
