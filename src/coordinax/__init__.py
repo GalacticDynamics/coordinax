@@ -9,7 +9,7 @@ from jaxtyping import install_import_hook
 from .setup_package import RUNTIME_TYPECHECKER
 
 with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
-    from . import angle, distance, frames, operators
+    from . import angle, distance, frames, ops
     from ._src import typing, utils, vectors
     from ._src.typing import *
     from ._src.utils import *
@@ -34,7 +34,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from . import _interop
     from ._src.vectors import compat
 
-__all__ = ["Distance", "__version__", "angle", "distance", "frames", "operators"]
+__all__ = ["Distance", "__version__", "angle", "distance", "ops", "frames"]
 __all__ += vectors.api.__all__
 __all__ += vectors.base.__all__
 __all__ += vectors.d1.__all__

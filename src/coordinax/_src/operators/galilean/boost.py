@@ -45,9 +45,8 @@ class GalileanBoost(AbstractGalileanOperator):
     Examples
     --------
     >>> import coordinax as cx
-    >>> import coordinax.operators as cxo
 
-    >>> op = cxo.GalileanBoost.from_([1.0, 2.0, 3.0], "m/s")
+    >>> op = cx.ops.GalileanBoost.from_([1.0, 2.0, 3.0], "m/s")
     >>> op
     GalileanBoost(CartesianVel3D( ... ))
 
@@ -98,9 +97,9 @@ class GalileanBoost(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.GalileanBoost.from_([1, 2, 3], "m/s")
+        >>> op = cx.ops.GalileanBoost.from_([1, 2, 3], "m/s")
         >>> op.is_inertial
         True
 
@@ -113,9 +112,9 @@ class GalileanBoost(AbstractGalileanOperator):
 
         Examples
         --------
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.GalileanBoost.from_([1, 2, 3], "m/s")
+        >>> op = cx.ops.GalileanBoost.from_([1, 2, 3], "m/s")
         >>> op.inverse
         GalileanBoost(CartesianVel3D( ... ))
 
@@ -145,7 +144,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
         Define a boost operator and the time interval to apply it:
 
-        >>> op = cx.operators.GalileanBoost.from_([1, 2, 3], "m/s")
+        >>> op = cx.ops.GalileanBoost.from_([1, 2, 3], "m/s")
         >>> dt = u.Quantity(1, "s")
 
         >>> newq, _ = op(q, dt)
@@ -196,18 +195,18 @@ def simplify_op(op: GalileanBoost, /, **kwargs: Any) -> GalileanBoost | Identity
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
     An operator with real effect cannot be simplified:
 
-    >>> op = cxo.GalileanBoost.from_([1, 0, 0], "m/s")
-    >>> cxo.simplify_op(op)
+    >>> op = cx.ops.GalileanBoost.from_([1, 0, 0], "m/s")
+    >>> cx.ops.simplify_op(op)
     GalileanBoost(CartesianVel3D( ... ))
 
     An operator with no effect can be simplified:
 
-    >>> op = cxo.GalileanBoost.from_([0, 0, 0], "m/s")
-    >>> cxo.simplify_op(op)
+    >>> op = cx.ops.GalileanBoost.from_([0, 0, 0], "m/s")
+    >>> cx.ops.simplify_op(op)
     Identity()
 
     """
@@ -224,7 +223,7 @@ def simplify_op(op1: GalileanBoost, op2: GalileanBoost) -> GalileanBoost:
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.operators as cxo
+    >>> import coordinax.ops as cxo
 
     >>> op1 = cxo.GalileanBoost.from_([1, 0, 0], "m/s")
     >>> op2 = cxo.GalileanBoost.from_([0, 1, 0], "m/s")

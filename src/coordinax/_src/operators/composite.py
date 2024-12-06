@@ -52,10 +52,9 @@ class AbstractCompositeOperator(AbstractOperator):
         Examples
         --------
         >>> import coordinax as cx
-        >>> import coordinax.operators as cxo
 
-        >>> ops = cxo.Sequence((cxo.Identity(), cxo.Identity()))
-        >>> ops(1, 2, 3)
+        >>> op = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
+        >>> op(1, 2, 3)
         (1, 2, 3)
 
         """
@@ -74,11 +73,10 @@ class AbstractCompositeOperator(AbstractOperator):
         Examples
         --------
         >>> import coordinax as cx
-        >>> import coordinax.operators as cxo
 
-        >>> ops = cxo.Sequence((cxo.Identity(), cxo.Identity()))
+        >>> op = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> ops(vec)
+        >>> op(vec)
         CartesianPos3D( ... )
 
         """

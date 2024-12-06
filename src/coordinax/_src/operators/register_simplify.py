@@ -17,10 +17,10 @@ def simplify_op(op: AbstractOperator, /) -> AbstractOperator:
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
-    >>> op = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "m")
-    >>> cxo.simplify_op(op) is op
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> cx.ops.simplify_op(op) is op
     True
 
     """
@@ -33,10 +33,10 @@ def simplify_op(op: Identity, /) -> Identity:
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
-    >>> op = cxo.Identity()
-    >>> cxo.simplify_op(op) is op
+    >>> op = cx.ops.Identity()
+    >>> cx.ops.simplify_op(op) is op
     True
 
     """
@@ -53,18 +53,18 @@ def simplify_op(seq: Sequence, /) -> AbstractOperator:
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.operators as co
+    >>> import coordinax as cx
 
-    >>> shift = co.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "kpc"))
-    >>> boost = co.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
+    >>> shift = cx.ops.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "kpc"))
+    >>> boost = cx.ops.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
 
-    >>> seq = shift | co.Identity() | boost
+    >>> seq = shift | cx.ops.Identity() | boost
     >>> seq
     Sequence((
         GalileanSpatialTranslation(...), Identity(), GalileanBoost(...)
     ))
 
-    >>> co.simplify_op(seq)
+    >>> cx.ops.simplify_op(seq)
     Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
     """
@@ -83,11 +83,11 @@ def simplify_op(op1: AbstractOperator, op2: AbstractOperator, /) -> Sequence:
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
-    >>> op1 = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "m")
-    >>> op2 = cxo.GalileanBoost.from_([0, 1, 0], "m/s")
-    >>> cxo.simplify_op(op1, op2)
+    >>> op1 = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> op2 = cx.ops.GalileanBoost.from_([0, 1, 0], "m/s")
+    >>> cx.ops.simplify_op(op1, op2)
     Sequence((
         GalileanSpatialTranslation(CartesianPos3D( ... )),
         GalileanBoost(CartesianVel3D( ... ))
@@ -103,10 +103,10 @@ def simplify_op(op1: AbstractOperator, op2: Identity) -> AbstractOperator:
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
-    >>> op = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "m")
-    >>> cxo.simplify_op(op, cxo.Identity())
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> cx.ops.simplify_op(op, cx.ops.Identity())
     GalileanSpatialTranslation(...)
 
     """
@@ -119,10 +119,10 @@ def simplify_op(op1: Identity, op2: AbstractOperator) -> AbstractOperator:
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
-    >>> op = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "m")
-    >>> cxo.simplify_op(cxo.Identity(), op)
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> cx.ops.simplify_op(cx.ops.Identity(), op)
     GalileanSpatialTranslation(...)
 
     """
@@ -135,11 +135,11 @@ def simplify_op(op1: Sequence, op2: AbstractOperator) -> Sequence:
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
-    >>> sop1 = cxo.Sequence((cxo.Identity(), cxo.Identity()))
-    >>> sop2 = cxo.Sequence((cxo.Identity(),))
-    >>> cxo.simplify_op(sop1, sop2)
+    >>> sop1 = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
+    >>> sop2 = cx.ops.Sequence((cx.ops.Identity(),))
+    >>> cx.ops.simplify_op(sop1, sop2)
     Sequence((Identity(), Identity(), Identity()))
 
     """
@@ -152,11 +152,11 @@ def simplify_op(op1: Sequence, op2: Sequence) -> Sequence:
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
-    >>> sop1 = cxo.Sequence((cxo.Identity(), cxo.Identity()))
-    >>> sop2 = cxo.Sequence((cxo.Identity(),))
-    >>> cxo.simplify_op(sop1, sop2)
+    >>> sop1 = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
+    >>> sop2 = cx.ops.Sequence((cx.ops.Identity(),))
+    >>> cx.ops.simplify_op(sop1, sop2)
     Sequence((Identity(), Identity(), Identity()))
 
     """

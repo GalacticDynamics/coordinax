@@ -1,8 +1,6 @@
 """Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
-__all__ = [
-    "normalize_vector",
-]
+__all__: list[str] = []
 
 from functools import partial
 

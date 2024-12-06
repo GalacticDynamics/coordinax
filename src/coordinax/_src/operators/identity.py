@@ -23,7 +23,7 @@ class Identity(AbstractOperator):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.operators.Identity()
+    >>> op = cx.ops.Identity()
     >>> op
     Identity()
 
@@ -92,9 +92,9 @@ class Identity(AbstractOperator):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.Identity()
+        >>> op = cx.ops.Identity()
         >>> op.is_inertial
         True
 
@@ -107,9 +107,9 @@ class Identity(AbstractOperator):
 
         Examples
         --------
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.Identity()
+        >>> op = cx.ops.Identity()
         >>> op.inverse
         Identity()
         >>> op.inverse is op
@@ -133,7 +133,7 @@ class Identity(AbstractOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.operators.Identity()
+        >>> op = cx.ops.Identity()
 
         >>> q = u.Quantity([1, 2, 3], "kpc")
         >>> op(q) is q
@@ -157,7 +157,7 @@ class Identity(AbstractOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.operators.Identity()
+        >>> op = cx.ops.Identity()
 
         >>> q = u.Quantity([1, 2, 3], "kpc")
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")

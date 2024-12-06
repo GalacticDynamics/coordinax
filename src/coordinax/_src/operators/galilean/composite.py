@@ -56,9 +56,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     --------
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> import coordinax.operators as cxo
 
-    >>> op = cxo.GalileanOperator(
+    >>> op = cx.ops.GalileanOperator(
     ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
@@ -79,13 +78,13 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     :class:`vector.CartesianVel3D` velocity. We can also construct them
     directly, which allows for other vector types.
 
-    >>> op = cxo.GalileanOperator(
-    ...     translation=cxo.GalileanTranslation(
+    >>> op = cx.ops.GalileanOperator(
+    ...     translation=cx.ops.GalileanTranslation(
     ...         cx.FourVector(t=u.Quantity(2.5, "Gyr"),
     ...                       q=cx.SphericalPos(r=u.Quantity(1, "kpc"),
     ...                                         theta=u.Quantity(90, "deg"),
     ...                                         phi=u.Quantity(0, "rad") ) ) ),
-    ...     velocity=cxo.GalileanBoost(
+    ...     velocity=cx.ops.GalileanBoost(
     ...         cx.CartesianVel3D.from_([1, 2, 3], "km/s") )
     ... )
     >>> op
@@ -180,7 +179,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cxo.GalileanOperator(
+        >>> op = cx.ops.GalileanOperator(
         ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
         ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
 
@@ -215,11 +214,11 @@ def simplify_op(
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
     This Galilean operator cannot be simplified:
 
-    >>> op = cxo.GalileanOperator(
+    >>> op = cx.ops.GalileanOperator(
     ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
     ...     rotation=jnp.eye(3).at[0, 2].set(1),
@@ -235,14 +234,14 @@ def simplify_op(
       velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
     )
 
-    >>> cxo.simplify_op(op) is op
+    >>> cx.ops.simplify_op(op) is op
     True
 
     This Galilean operator can be simplified in all its components except the
     translation:
 
-    >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "kpc"))
-    >>> cxo.simplify_op(op)
+    >>> op = cx.ops.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "kpc"))
+    >>> cx.ops.simplify_op(op)
     GalileanTranslation(FourVector( ... ))
 
     """
