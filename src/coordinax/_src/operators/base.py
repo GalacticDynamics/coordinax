@@ -2,6 +2,7 @@
 
 __all__ = ["AbstractOperator"]
 
+import textwrap
 from abc import abstractmethod
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
@@ -11,7 +12,7 @@ from jaxtyping import ArrayLike
 from plum import dispatch
 
 import unxt as u
-from dataclassish import field_items
+from dataclassish import field_items, flags
 
 from .api import simplify_op
 from coordinax._src.vectors.base import AbstractPos
@@ -102,7 +103,8 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         """
         return cls(u.Quantity(x, unit))
 
-    # -------------------------------------------
+    # ===========================================
+    # Operator API
 
     @dispatch.abstract
     def __call__(
@@ -164,6 +166,50 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
         """
         return simplify_op(self)
+
+    # ===========================================
+    # Python stuff
+
+    def __str__(self) -> str:
+        """Return a string representation of the operator.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import coordinax.operators as cxo
+
+        >>> op = cxo.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> print(op)
+        GalileanRotation([[1 0 0]
+         [0 1 0]
+         [0 0 1]])
+
+        >>> op = cxo.GalileanOperator(
+        ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+        ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
+        ...     rotation=jnp.eye(3).at[0, 2].set(1),
+        ... )
+        >>> print(op)
+        GalileanOperator(
+            rotation=GalileanRotation([[1. 0. 1.]
+                [0. 1. 0.]
+                [0. 0. 1.]]),
+            translation=GalileanTranslation(<FourVector (t[kpc s / km], q=(x[kpc], y[kpc], z[kpc]))
+                    [0. 2. 3. 4.]>),
+            velocity=GalileanBoost(<CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+                    [1. 2. 3.]>)
+        )
+
+        """  # noqa: E501
+        name = self.__class__.__name__
+        fitems = field_items(flags.FilterRepr, self)
+        if len(fitems) == 1:
+            fs = str(fitems[0][1]).replace("\n", "\n    ")
+        else:
+            fs = ",\n".join(textwrap.indent(f"{k}={v}", "    ") for k, v in fitems)
+            fs = "\n" + fs + "\n"
+
+        return f"{name}({fs})"
 
     # ===========================================
     # Sequence
