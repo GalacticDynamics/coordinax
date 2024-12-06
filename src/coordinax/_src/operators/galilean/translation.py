@@ -84,7 +84,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> shift = u.Quantity([1.0, 2.0, 3.0], "kpc")
     >>> op = cxo.GalileanSpatialTranslation(shift)
     >>> op
-    GalileanSpatialTranslation( translation=CartesianPos3D( ... ) )
+    GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     Note that the translation is a :class:`vector.CartesianPos3D`, which was
     constructed from a 1D array, using :meth:`vector.CartesianPos3D.from_`. We
@@ -95,7 +95,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     ...                         phi=u.Quantity(0, "rad"))
     >>> op = cxo.GalileanSpatialTranslation(shift)
     >>> op
-    GalileanSpatialTranslation( translation=SphericalPos( ... ) )
+    GalileanSpatialTranslation(SphericalPos( ... ))
 
     Translation operators can be applied to :class:`vector.AbstractPos`:
 
@@ -196,7 +196,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> op = cxo.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
 
         >>> op.inverse
-        GalileanSpatialTranslation( translation=CartesianPos3D( ... ) )
+        GalileanSpatialTranslation(CartesianPos3D( ... ))
 
         >>> print(op.inverse.translation)
         <CartesianPos3D (x[kpc], y[kpc], z[kpc])
@@ -268,6 +268,12 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         """Apply the translation to the coordinates."""  # TODO: docstring
         return replace(v4, q=v4.q + self.translation)
 
+    # -------------------------------------------
+    # Python special methods
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.translation!r})"
+
 
 @dispatch  # type: ignore[misc]
 def simplify_op(op: GalileanSpatialTranslation, /, **kwargs: Any) -> AbstractOperator:
@@ -281,9 +287,7 @@ def simplify_op(op: GalileanSpatialTranslation, /, **kwargs: Any) -> AbstractOpe
 
     >>> op = co.GalileanSpatialTranslation.from_([1, 0, 0], "m")
     >>> co.simplify_op(op)
-    GalileanSpatialTranslation(
-      translation=CartesianPos3D( ... )
-    )
+    GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     An operator with no effect can be simplified:
 
@@ -337,11 +341,9 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     >>> op = cxo.GalileanTranslation.from_([1.0, 2.0, 3.0, 4.0], "kpc")
     >>> op
-    GalileanTranslation(
-      translation=FourVector(
+    GalileanTranslation(FourVector(
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
-        q=CartesianPos3D( ... ) )
-    )
+        q=CartesianPos3D( ... ) ))
 
     Note that the translation is a :class:`vector.FourVector`, which was
     constructed from a 1D array, using :meth:`vector.FourVector.from_`. We
@@ -353,11 +355,9 @@ class GalileanTranslation(AbstractGalileanOperator):
     >>> shift = cx.FourVector(u.Quantity(1.0, "Gyr"), qshift)
     >>> op = cxo.GalileanTranslation(shift)
     >>> op
-    GalileanTranslation(
-      translation=FourVector(
+    GalileanTranslation(FourVector(
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
-        q=SphericalPos( ... ) )
-    )
+        q=SphericalPos( ... ) ))
 
     Translation operators can be applied to :class:`vector.FourVector`:
 
@@ -423,7 +423,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         >>> op = cxo.GalileanTranslation(shift)
 
         >>> op.inverse
-        GalileanTranslation( translation=FourVector( ... ) )
+        GalileanTranslation(FourVector( ... ))
 
         >>> op.inverse.translation.q.x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
@@ -505,6 +505,12 @@ class GalileanTranslation(AbstractGalileanOperator):
         """
         return (x + self.translation.q, t + self.translation.t)
 
+    # -------------------------------------------
+    # Python special methods
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.translation!r})"
+
 
 @dispatch  # type: ignore[misc]
 def simplify_op(op: GalileanTranslation, /, **kwargs: Any) -> AbstractOperator:
@@ -518,9 +524,7 @@ def simplify_op(op: GalileanTranslation, /, **kwargs: Any) -> AbstractOperator:
 
     >>> op = co.GalileanTranslation.from_([3e8, 1, 0, 0], "m")
     >>> co.simplify_op(op)
-    GalileanTranslation(
-      translation=FourVector( ... )
-    )
+    GalileanTranslation(FourVector( ... ))
 
     An operator with no effect can be simplified:
 
