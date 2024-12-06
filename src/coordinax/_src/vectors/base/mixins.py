@@ -11,7 +11,7 @@ from plum import convert
 import unxt as u
 from dataclassish import field_keys, field_values
 
-from coordinax._src.vectors.funcs import represent_as
+from coordinax._src.vectors.api import represent_as
 
 
 class AvalMixin:

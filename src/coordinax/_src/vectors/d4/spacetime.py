@@ -22,7 +22,7 @@ from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractPos4D
-from coordinax._src.distance import BatchableLength
+from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector, AttrFilter, VectorAttribute
 from coordinax._src.vectors.d3.base import AbstractPos3D

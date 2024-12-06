@@ -60,7 +60,6 @@ from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpher
 
 # isort: split
 from . import (
-    compat,  # noqa: F401
     constructor,  # noqa: F401
     transform,  # noqa: F401
 )

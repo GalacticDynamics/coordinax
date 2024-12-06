@@ -15,7 +15,7 @@ from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from coordinax._src.angle import Angle, BatchableAngleQ
+from coordinax._src.angles import Angle, BatchableAngleQ
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import VectorAttribute
 from coordinax._src.vectors.checks import (

@@ -2,4 +2,4 @@
 
 __all__ = ["AbstractDistance", "Distance", "DistanceModulus", "Parallax"]
 
-from ._src.distance import AbstractDistance, Distance, DistanceModulus, Parallax
+from ._src.distances import AbstractDistance, Distance, DistanceModulus, Parallax

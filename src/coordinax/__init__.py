@@ -13,6 +13,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from ._src import typing, utils, vectors
     from ._src.typing import *
     from ._src.utils import *
+    from ._src.vectors.api import *  # functional API
     from ._src.vectors.base import *
     from ._src.vectors.d1 import *
     from ._src.vectors.d2 import *
@@ -20,14 +21,13 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from ._src.vectors.d4 import *
     from ._src.vectors.dn import *
     from ._src.vectors.exceptions import *
-    from ._src.vectors.funcs import *
     from ._src.vectors.space import *
     from ._version import version as __version__
     from .distance import Distance
 
     # isort: split
-    # Register vector transformations
-    from ._src.vectors import transform
+    # Register vector transformations, functions, etc.
+    from ._src.vectors import funcs, transform
 
     # isort: split
     # Interoperability
@@ -35,7 +35,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from ._src.vectors import compat
 
 __all__ = ["Distance", "__version__", "angle", "distance", "frames", "operators"]
-__all__ += vectors.funcs.__all__
+__all__ += vectors.api.__all__
 __all__ += vectors.base.__all__
 __all__ += vectors.d1.__all__
 __all__ += vectors.d2.__all__
@@ -49,4 +49,4 @@ __all__ += utils.__all__
 
 
 # Cleanup
-del vectors, transform, typing, utils, RUNTIME_TYPECHECKER, compat, _interop
+del RUNTIME_TYPECHECKER, _interop, compat, funcs, transform, typing, utils, vectors

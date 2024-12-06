@@ -10,7 +10,7 @@ import equinox as eqx
 from plum import dispatch
 
 from .api import frame_transform_op
-from coordinax._src.operators.base import AbstractOperator
+from coordinax._src.operators import AbstractOperator
 
 
 class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]

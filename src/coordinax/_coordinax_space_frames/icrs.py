@@ -9,7 +9,7 @@ from jaxtyping import Array, Shaped
 
 import unxt as u
 
-from coordinax._src.distance import Distance
+from coordinax._src.distances import Distance
 from coordinax._src.frames import AbstractReferenceFrame
 
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]

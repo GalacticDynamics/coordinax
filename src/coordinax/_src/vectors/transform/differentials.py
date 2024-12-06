@@ -15,7 +15,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
 
-from coordinax._src.distance import AbstractDistance
+from coordinax._src.distances import AbstractDistance
 from coordinax._src.vectors.base import AbstractPos, AbstractVel
 from coordinax._src.vectors.base.flags import AttrFilter
 from coordinax._src.vectors.d1 import AbstractVel1D

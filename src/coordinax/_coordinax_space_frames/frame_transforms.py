@@ -14,8 +14,8 @@ import unxt as u
 
 from .galactocentric import Galactocentric
 from .icrs import ICRS
-from coordinax._src.angle import Angle
-from coordinax._src.distance import Distance
+from coordinax._src.angles import Angle
+from coordinax._src.distances import Distance
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.operators.sequential import Sequence

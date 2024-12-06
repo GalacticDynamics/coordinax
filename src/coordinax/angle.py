@@ -2,4 +2,4 @@
 
 __all__ = ["AbstractAngle", "Angle"]
 
-from ._src.angle import AbstractAngle, Angle
+from ._src.angles import AbstractAngle, Angle

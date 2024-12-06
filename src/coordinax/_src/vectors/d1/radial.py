@@ -14,7 +14,7 @@ from dataclassish.converters import Unless
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
-from coordinax._src.distance import AbstractDistance, BatchableDistance, Distance
+from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 
