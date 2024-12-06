@@ -32,7 +32,7 @@ def call(self: AbstractOperator, x: Q1, /) -> Q1:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.operators.GalileanSpatialTranslation.from_([1], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "kpc")
     >>> q = u.Quantity([0], "kpc")
     >>> op(q)
     Quantity['length'](Array([1.], dtype=float32), unit='kpc')
@@ -53,7 +53,7 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.operators.GalileanSpatialTranslation.from_([1], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "kpc")
     >>> q = u.Quantity([0], "kpc")
     >>> op(q, u.Quantity(0, "s"))
     (Quantity['length'](Array([1.], dtype=float32), unit='kpc'),
@@ -78,10 +78,10 @@ def call(self: AbstractOperator, x: Q2, /) -> Q2:
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
     >>> q = u.Quantity([1, 2], "m")
-    >>> op = cxo.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
+    >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(q)
     Quantity['length'](Array([0., 1.], dtype=float32), unit='m')
 
@@ -98,10 +98,10 @@ def call(
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
     >>> q = u.Quantity([1, 2], "m")
-    >>> op = cxo.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
+    >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(q, u.Quantity(0, "s"))
     (Quantity['length'](Array([0., 1.], dtype=float32), unit='m'),
      Quantity['time'](Array(0, dtype=int32, ...), unit='s'))
@@ -134,10 +134,9 @@ def call(self: AbstractOperator, q: Q3, /) -> Q3:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> import coordinax.operators as cxo
 
     >>> shift = u.Quantity([1.0, 2.0, 3.0], "kpc")
-    >>> op = cxo.GalileanSpatialTranslation(shift)
+    >>> op = cx.ops.GalileanSpatialTranslation(shift)
 
     >>> q = u.Quantity([0.0, 0, 0], "kpc")
     >>> op(q)
@@ -162,7 +161,7 @@ def call(
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.operators.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
@@ -194,7 +193,7 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.operators.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
@@ -228,7 +227,7 @@ def call(
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.operators.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 

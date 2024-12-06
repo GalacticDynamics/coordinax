@@ -40,11 +40,11 @@ class Sequence(AbstractCompositeOperator):
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.operators as co
+    >>> import coordinax as cx
 
-    >>> shift = co.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "kpc"))
-    >>> boost = co.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
-    >>> seq = co.Sequence((shift, boost))
+    >>> shift = cx.ops.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "kpc"))
+    >>> boost = cx.ops.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
+    >>> seq = cx.ops.Sequence((shift, boost))
     >>> seq
     Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
@@ -57,13 +57,13 @@ class Sequence(AbstractCompositeOperator):
     The sequence of operators can be simplified. For this example, we
     add an identity operator to the sequence:
 
-    >>> seq3 = seq2 | co.Identity()
+    >>> seq3 = seq2 | cx.ops.Identity()
     >>> seq3
     Sequence((
         GalileanSpatialTranslation(...), GalileanBoost(...), Identity()
     ))
 
-    >>> co.simplify_op(seq3)
+    >>> cx.ops.simplify_op(seq3)
     Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
     """

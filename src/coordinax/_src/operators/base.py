@@ -63,9 +63,9 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
         Examples
         --------
-        >>> import coordinax.operators as co
-        >>> operators = co.Identity() | co.Identity()
-        >>> co.Sequence.from_({"operators": operators})
+        >>> import coordinax as cx
+        >>> operators = cx.ops.Identity() | cx.ops.Identity()
+        >>> cx.ops.Sequence.from_({"operators": operators})
         Sequence((Identity(), Identity()))
 
         """
@@ -83,19 +83,19 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
         Examples
         --------
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
         >>> print(op.translation)
         <CartesianPos3D (x[kpc], y[kpc], z[kpc])
             [1. 1. 1.]>
 
-        >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "kpc")
+        >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "kpc")
         >>> print(op.translation)
         <FourVector (t[kpc s / km], q=(x[kpc], y[kpc], z[kpc]))
             [1.001 1.    1.    1.   ]>
 
-        >>> op = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
+        >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
         >>> print(op.velocity)
         <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
             [1. 1. 1.]>
@@ -150,17 +150,17 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.Identity()
+        >>> op = cx.ops.Identity()
         >>> op.simplify() is op
         True
 
-        >>> op = cxo.Sequence((cxo.Identity(), cxo.Identity()))
+        >>> op = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
         >>> op.simplify()
         Identity()
 
-        >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
+        >>> op = cx.ops.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
         >>> op.simplify()
         GalileanTranslation(FourVector( ... ))
 
@@ -176,15 +176,15 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> op = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> print(op)
         GalileanRotation([[1 0 0]
          [0 1 0]
          [0 0 1]])
 
-        >>> op = cxo.GalileanOperator(
+        >>> op = cx.ops.GalileanOperator(
         ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
         ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
@@ -219,10 +219,10 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
         Examples
         --------
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op1 = cxo.Identity()
-        >>> op2 = cxo.Identity()
+        >>> op1 = cx.ops.Identity()
+        >>> op2 = cx.ops.Identity()
         >>> op1 | op2
         Sequence((Identity(), Identity()))
 
@@ -241,33 +241,33 @@ def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOper
 
     Examples
     --------
-    >>> import coordinax.operators as cxo
+    >>> import coordinax as cx
 
     If the object is the same type, it should return the object itself.
 
-    >>> op = cxo.Identity()
-    >>> cxo.Identity.from_(op) is op
+    >>> op = cx.ops.Identity()
+    >>> cx.ops.Identity.from_(op) is op
     True
 
     If the object is a different type, it will error.
 
     >>> try:
-    ...     cxo.GalileanBoost.from_(op)
+    ...     cx.ops.GalileanBoost.from_(op)
     ... except TypeError as e:
     ...     print(e)
     Cannot construct <class 'coordinax...GalileanBoost'> from <class 'coordinax...Identity'>.
 
     Unless the object is a subclass of the target class.
 
-    >>> class MyOperator(cxo.Identity):
+    >>> class MyOperator(cx.ops.Identity):
     ...     pass
 
     >>> op = MyOperator()
     >>> op
     MyOperator()
 
-    >>> newop = cxo.Identity.from_(op)
-    >>> newop is op, isinstance(newop, cxo.Identity)
+    >>> newop = cx.ops.Identity.from_(op)
+    >>> newop is op, isinstance(newop, cx.ops.Identity)
     (False, True)
 
     """  # noqa: E501
