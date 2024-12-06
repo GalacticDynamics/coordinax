@@ -75,13 +75,10 @@ class GalileanRotation(AbstractGalileanOperator):
 
     We can then create a rotation operator:
 
-    >>> theta = jnp.pi / 4  # 45 degrees
-    >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
-    ...                   [jnp.sin(theta), jnp.cos(theta),  0],
-    ...                   [0,              0,               1]])
+    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
     >>> op = cx.operators.GalileanRotation(Rz)
     >>> op
-    GalileanRotation(rotation=f32[3,3])
+    GalileanRotation(rotation=i32[3,3])
 
     Translation operators can be applied to a Quantity[float, (N, 3), "...]:
 
@@ -89,7 +86,7 @@ class GalileanRotation(AbstractGalileanOperator):
     >>> t = u.Quantity(1, "s")
     >>> newq, newt = op(q, t)
     >>> newq
-    Quantity['length'](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')
+    Quantity['length'](Array([0., 1., 0.], dtype=float32), unit='m')
 
     The time is not affected by the rotation.
 
@@ -103,16 +100,15 @@ class GalileanRotation(AbstractGalileanOperator):
 
     >>> newq, newt = op(q, t)
     >>> newq
-    Quantity['length'](Array([[ 0.70710677,  0.70710677,  0.        ],
-                              [-0.70710677,  0.70710677,  0.        ]], dtype=float32),
-                       unit='m')
+    Quantity['length'](Array([[ 0.,  1.,  0.],
+                              [-1.,  0.,  0.]], dtype=float32), unit='m')
 
     Translation operators can be applied to :class:`vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array([ 0.70710677, -0.70710677], dtype=float32), unit='m')
+    Quantity['length'](Array([ 0., -1.], dtype=float32), unit='m')
     >>> newq.norm().value.round(2)
     Array([1., 1.], dtype=float32)
 
@@ -259,20 +255,16 @@ class GalileanRotation(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> theta = u.Quantity(45, "deg")
-        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
-        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
-        ...                  [0,             0,              1]])
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cx.operators.GalileanRotation(Rz)
 
         >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
         >>> t = u.Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq.x
-        Quantity['length'](Array(0.70710677, dtype=float32), unit='m')
+        Quantity['length'](Array(0., dtype=float32), unit='m')
 
         The time is not affected by the rotation.
         >>> newt
