@@ -63,7 +63,7 @@ def from_(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
+    >>> vec = cx.vecs.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
     >>> vec
     CartesianPos2D(
         x=Quantity[...](value=f32[], unit=Unit("m")),
@@ -88,8 +88,8 @@ def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cart = cx.CartesianPos2D.from_([1, 2], "kpc")
-    >>> polr = cx.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
+    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "kpc")
+    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
     >>> (cart + polr).x
     Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
 
@@ -110,7 +110,7 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPos2D.from_([3, 4], "m")
+    >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "m")
     >>> jnp.multiply(5, v).x
     Quantity['length'](Array(15., dtype=float32), unit='m')
 
@@ -126,12 +126,12 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
 
 @register(jax.lax.neg_p)  # type: ignore[misc]
 def _neg_p_cart2d_pos(obj: CartesianPos2D, /) -> CartesianPos2D:
-    """Negate the `coordinax.CartesianPos2D`.
+    """Negate the `coordinax.vecs.CartesianPos2D`.
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPos2D.from_([1, 2], "km")
+    >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='km')
 
@@ -147,8 +147,8 @@ def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2
     --------
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> cart = cx.CartesianPos2D.from_([1, 2], "kpc")
-    >>> polr = cx.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
+    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "kpc")
+    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
 
     >>> (cart - polr).x
     Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
@@ -200,7 +200,7 @@ def from_(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
+    >>> vec = cx.vecs.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
     >>> vec
     CartesianVel2D(
       d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
@@ -224,7 +224,7 @@ def _add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVel2D.from_([1, 2], "km/s")
+    >>> v = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
     >>> (v + v).d_x
     Quantity['speed'](Array(2., dtype=float32), unit='km / s')
 
@@ -244,7 +244,7 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVel2D.from_([3, 4], "m/s")
+    >>> v = cx.vecs.CartesianVel2D.from_([3, 4], "m/s")
     >>> (5 * v).d_x
     Quantity['speed'](Array(15., dtype=float32), unit='m / s')
 
@@ -293,7 +293,7 @@ class CartesianAcc2D(AvalMixin, AbstractAcc2D):
         Examples
         --------
         >>> import coordinax as cx
-        >>> v = cx.CartesianAcc2D.from_([3, 4], "km/s2")
+        >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "km/s2")
         >>> v.norm()
         Quantity['acceleration'](Array(5., dtype=float32), unit='km / s2')
 
@@ -313,7 +313,7 @@ def from_(cls: type[CartesianAcc2D], obj: AbstractQuantity, /) -> CartesianAcc2D
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
+    >>> vec = cx.vecs.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
     >>> vec
     CartesianAcc2D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
@@ -337,7 +337,7 @@ def _add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcc2D.from_([3, 4], "km/s2")
+    >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "km/s2")
     >>> (v + v).d2_x
     Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
 
@@ -357,7 +357,7 @@ def _mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcc2D.from_([3, 4], "m/s2")
+    >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "m/s2")
     >>> jnp.multiply(5, v).d2_x
     Quantity['acceleration'](Array(15., dtype=float32), unit='m / s2')
 

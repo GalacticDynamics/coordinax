@@ -37,19 +37,19 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     >>> import coordinax as cx
     >>> from unxt.quantity import AbstractQuantity, Quantity
 
-    >>> pos = cx.CartesianPos1D.from_([1.0], "km")
+    >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPos.from_([1.0], "km")
+    >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
 
@@ -61,7 +61,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
 
@@ -79,19 +79,19 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     >>> import coordinax as cx
     >>> from unxt.quantity import AbstractQuantity, Quantity
 
-    >>> pos = cx.CartesianPos1D.from_([1.0], "km")
+    >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPos.from_([1.0], "km")
+    >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
 
@@ -103,7 +103,7 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
 
@@ -122,19 +122,19 @@ def convert_pos_to_uncheckedq(
     >>> import coordinax as cx
     >>> from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
-    >>> pos = cx.CartesianPos1D.from_([1.0], "km")
+    >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPos.from_([1.0], "km")
+    >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 0.], dtype=float32), unit='km')
 
@@ -146,7 +146,7 @@ def convert_pos_to_uncheckedq(
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 0., 0.], dtype=float32), unit='km')
 
@@ -164,19 +164,19 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     >>> from unxt.quantity import AbstractQuantity, Quantity
     >>> from coordinax.distance import Distance
 
-    >>> pos = cx.CartesianPos1D.from_([1.0], "km")
+    >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, Distance)
     Distance(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.RadialPos.from_([1.0], "km")
+    >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
     >>> convert(pos, Distance)
     Distance(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> convert(pos, Distance)
     Distance(Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
     >>> convert(pos, Distance)
     Distance(Array([1., 0.], dtype=float32), unit='km')
 
@@ -188,7 +188,7 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     >>> convert(pos, Distance)
     Distance(Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, Distance)
     Distance(Array([1., 0., 0.], dtype=float32), unit='km')
 
@@ -243,7 +243,7 @@ def uconvert(
 
     We can convert a vector to the given units:
 
-    >>> cart = cx.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
+    >>> cart = cx.vecs.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
     >>> cart.uconvert({"length": "km"})
     CartesianPos2D(
         x=Quantity[...](value=f32[], unit=Unit("km")),
@@ -295,19 +295,19 @@ def uconvert(
 
     We can convert a vector to the given units:
 
-    >>> cart = cx.CartesianPos2D.from_([1, 2], "m")
+    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "m")
 
     If all you want is to convert to consistent units, you can use
     ``"consistent"``:
 
-    >>> cart.uconvert(cx.ToUnitsOptions.consistent)
+    >>> cart.uconvert(cx.vecs.ToUnitsOptions.consistent)
     CartesianPos2D(
         x=Quantity[...](value=f32[], unit=Unit("m")),
         y=Quantity[...](value=f32[], unit=Unit("m"))
     )
 
     >>> sph = cart.represent_as(cx.SphericalPos)
-    >>> sph.uconvert(cx.ToUnitsOptions.consistent)
+    >>> sph.uconvert(cx.vecs.ToUnitsOptions.consistent)
     SphericalPos(
         r=Distance(value=f32[], unit=Unit("m")),
         theta=Angle(value=f32[], unit=Unit("rad")),
@@ -351,10 +351,10 @@ def fields(flag: type[AttrFilter], obj: object) -> tuple[Field, ...]:  # type: i
 
     >>> from dataclassish import fields
     >>> import unxt as u
-    >>> from coordinax import FourVector, AttrFilter
+    >>> import coordinax as cx
 
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> [f.name for f in fields(AttrFilter, w)]
+    >>> [f.name for f in fields(cx.vecs.AttrFilter, w)]
     ['t', 'q']
 
     """
@@ -371,9 +371,9 @@ def fields(flag: type[AttrFilter], obj_cls: type[object]) -> tuple[Field, ...]: 
     An example vector class with a `VectorAttribute` field is `FourVector`.
 
     >>> from dataclassish import fields
-    >>> from coordinax import FourVector, AttrFilter
+    >>> import coordinax as cx
 
-    >>> [f.name for f in fields(AttrFilter, cx.FourVector)]
+    >>> [f.name for f in fields(cx.vecs.AttrFilter, cx.FourVector)]
     ['t', 'q']
 
     """
@@ -401,10 +401,10 @@ def asdict(
 
     >>> from dataclassish import asdict
     >>> import unxt as u
-    >>> from coordinax import FourVector, AttrFilter
+    >>> import coordinax as cx
 
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> asdict(AttrFilter, w).keys()
+    >>> asdict(cx.vecs.AttrFilter, w).keys()
     dict_keys(['t', 'q'])
 
     """
@@ -427,10 +427,10 @@ def field_keys(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[str, ...
 
     >>> from dataclassish import field_keys
     >>> import unxt as u
-    >>> from coordinax import FourVector, AttrFilter
+    >>> import coordinax as cx
 
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> field_keys(AttrFilter, w)
+    >>> field_keys(cx.vecs.AttrFilter, w)
     ('t', 'q')
 
     """
@@ -448,9 +448,9 @@ def field_keys(
     An example vector class with a `VectorAttribute` field is `FourVector`.
 
     >>> from dataclassish import field_keys
-    >>> from coordinax import FourVector, AttrFilter
+    >>> import coordinax as cx
 
-    >>> field_keys(AttrFilter, cx.FourVector)
+    >>> field_keys(cx.vecs.AttrFilter, cx.FourVector)
     ('t', 'q')
 
     """
@@ -470,10 +470,10 @@ def field_values(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[Any, .
 
     >>> from dataclassish import asdict
     >>> import unxt as u
-    >>> from coordinax import FourVector, AttrFilter
+    >>> import coordinax as cx
 
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> field_keys(AttrFilter, w)
+    >>> field_keys(cx.vecs.AttrFilter, w)
     ('t', 'q')
 
     """
@@ -496,10 +496,10 @@ def field_items(
 
     >>> from dataclassish import field_items
     >>> import unxt as u
-    >>> from coordinax import FourVector, AttrFilter
+    >>> import coordinax as cx
 
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> [(f[0], type(f[1]).__name__) for f in field_items(AttrFilter, w)]
+    >>> [(f[0], type(f[1]).__name__) for f in field_items(cx.vecs.AttrFilter, w)]
     [('t', "Quantity[PhysicalType('time')]"), ('q', 'CartesianPos3D')]
 
     """

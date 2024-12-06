@@ -56,16 +56,16 @@ def from_(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.CartesianPos1D.from_(u.Quantity(1, "meter"))
+    >>> cx.vecs.CartesianPos1D.from_(u.Quantity(1, "meter"))
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
 
-    >>> cx.CartesianPos1D.from_(u.Quantity([1], "meter"))
+    >>> cx.vecs.CartesianPos1D.from_(u.Quantity([1], "meter"))
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
 
-    >>> cx.RadialPos.from_(u.Quantity(1, "meter"))
+    >>> cx.vecs.RadialPos.from_(u.Quantity(1, "meter"))
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))
 
-    >>> cx.RadialPos.from_(u.Quantity([1], "meter"))
+    >>> cx.vecs.RadialPos.from_(u.Quantity([1], "meter"))
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))
 
     """
@@ -116,16 +116,16 @@ def from_(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.CartesianVel1D.from_(u.Quantity(1, "m/s"))
+    >>> cx.vecs.CartesianVel1D.from_(u.Quantity(1, "m/s"))
     CartesianVel1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.CartesianVel1D.from_(u.Quantity([1], "m/s"))
+    >>> cx.vecs.CartesianVel1D.from_(u.Quantity([1], "m/s"))
     CartesianVel1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVel.from_(u.Quantity(1, "m/s"))
+    >>> cx.vecs.RadialVel.from_(u.Quantity(1, "m/s"))
     RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
-    >>> cx.RadialVel.from_(u.Quantity([1], "m/s"))
+    >>> cx.vecs.RadialVel.from_(u.Quantity([1], "m/s"))
     RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     """
@@ -170,16 +170,16 @@ def from_(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
+    >>> cx.vecs.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
     CartesianAcc1D( d2_x=... )
 
-    >>> cx.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
+    >>> cx.vecs.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
     CartesianAcc1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
-    >>> cx.RadialAcc.from_(u.Quantity(1, "m/s2"))
+    >>> cx.vecs.RadialAcc.from_(u.Quantity(1, "m/s2"))
     RadialAcc( d2_r=... )
 
-    >>> cx.RadialAcc.from_(u.Quantity([1], "m/s2"))
+    >>> cx.vecs.RadialAcc.from_(u.Quantity([1], "m/s2"))
     RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     """

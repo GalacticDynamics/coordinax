@@ -16,10 +16,10 @@ import coordinax as cx
 #####################################################################
 
 
-@cx.AbstractVector.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
-    cls: type[cx.AbstractVector], obj: Mapping[str, apyu.Quantity], /
-) -> cx.AbstractVector:
+    cls: type[cx.vecs.AbstractVector], obj: Mapping[str, apyu.Quantity], /
+) -> cx.vecs.AbstractVector:
     """Construct a vector from a mapping.
 
     Parameters
@@ -61,9 +61,9 @@ def from_(
 #####################################################################
 
 
-@cx.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
-    cls: type[cx.AbstractPos3D], obj: apyc.CartesianRepresentation, /
+    cls: type[cx.vecs.AbstractPos3D], obj: apyc.CartesianRepresentation, /
 ) -> cx.CartesianPos3D:
     """Construct from a :class:`astropy.coordinates.CartesianRepresentation`.
 
@@ -73,7 +73,7 @@ def from_(
     >>> from astropy.coordinates import CartesianRepresentation
 
     >>> cart = CartesianRepresentation(1, 2, 3, unit="kpc")
-    >>> vec = cx.AbstractPos3D.from_(cart)
+    >>> vec = cx.vecs.AbstractPos3D.from_(cart)
     >>> vec.x
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
@@ -81,10 +81,10 @@ def from_(
     return cx.CartesianPos3D.from_(obj)
 
 
-@cx.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
-    cls: type[cx.AbstractPos3D], obj: apyc.CylindricalRepresentation, /
-) -> cx.CylindricalPos:
+    cls: type[cx.vecs.AbstractPos3D], obj: apyc.CylindricalRepresentation, /
+) -> cx.vecs.CylindricalPos:
     """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`.
 
     Examples
@@ -95,17 +95,17 @@ def from_(
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg,
     ...                                 z=30 * u.pc)
-    >>> vec = cx.AbstractPos3D.from_(cyl)
+    >>> vec = cx.vecs.AbstractPos3D.from_(cyl)
     >>> vec.rho
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
     """
-    return cx.CylindricalPos.from_(obj)
+    return cx.vecs.CylindricalPos.from_(obj)
 
 
-@cx.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
-    cls: type[cx.AbstractPos3D], obj: apyc.PhysicsSphericalRepresentation, /
+    cls: type[cx.vecs.AbstractPos3D], obj: apyc.PhysicsSphericalRepresentation, /
 ) -> cx.SphericalPos:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`.
 
@@ -117,7 +117,7 @@ def from_(
 
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
-    >>> vec = cx.AbstractPos3D.from_(sph)
+    >>> vec = cx.vecs.AbstractPos3D.from_(sph)
     >>> vec.r
     Distance(Array(1., dtype=float32), unit='kpc')
 
@@ -125,10 +125,10 @@ def from_(
     return cx.SphericalPos.from_(obj)
 
 
-@cx.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
 def from_(
-    cls: type[cx.AbstractPos3D], obj: apyc.SphericalRepresentation, /
-) -> cx.LonLatSphericalPos:
+    cls: type[cx.vecs.AbstractPos3D], obj: apyc.SphericalRepresentation, /
+) -> cx.vecs.LonLatSphericalPos:
     """Construct from a :class:`astropy.coordinates.SphericalRepresentation`.
 
     Examples
@@ -139,12 +139,12 @@ def from_(
 
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
     ...                               distance=1 * u.kpc)
-    >>> vec = cx.AbstractPos3D.from_(sph)
+    >>> vec = cx.vecs.AbstractPos3D.from_(sph)
     >>> vec.distance
     Distance(Array(1., dtype=float32), unit='kpc')
 
     """
-    return cx.LonLatSphericalPos.from_(obj)
+    return cx.vecs.LonLatSphericalPos.from_(obj)
 
 
 # -------------------------------------------------------------------
@@ -171,10 +171,10 @@ def from_(
     return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
-@cx.CylindricalPos.from_.dispatch
+@cx.vecs.CylindricalPos.from_.dispatch
 def from_(
-    cls: type[cx.CylindricalPos], obj: apyc.BaseRepresentation, /
-) -> cx.CylindricalPos:
+    cls: type[cx.vecs.CylindricalPos], obj: apyc.BaseRepresentation, /
+) -> cx.vecs.CylindricalPos:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -185,7 +185,7 @@ def from_(
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg,
     ...                                 z=30 * u.pc)
-    >>> vec = cx.CylindricalPos.from_(cyl)
+    >>> vec = cx.vecs.CylindricalPos.from_(cyl)
     >>> vec.rho
     Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
@@ -217,10 +217,10 @@ def from_(
     return cls(r=obj.r, theta=obj.theta, phi=obj.phi)
 
 
-@cx.LonLatSphericalPos.from_.dispatch
+@cx.vecs.LonLatSphericalPos.from_.dispatch
 def from_(
-    cls: type[cx.LonLatSphericalPos], obj: apyc.BaseRepresentation, /
-) -> cx.LonLatSphericalPos:
+    cls: type[cx.vecs.LonLatSphericalPos], obj: apyc.BaseRepresentation, /
+) -> cx.vecs.LonLatSphericalPos:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -231,7 +231,7 @@ def from_(
 
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
     ...                               distance=1 * u.kpc)
-    >>> vec = cx.LonLatSphericalPos.from_(sph)
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(sph)
     >>> vec.distance
     Distance(Array(1., dtype=float32), unit='kpc')
 
@@ -243,9 +243,9 @@ def from_(
 #####################################################################
 
 
-@cx.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVel3D.from_.dispatch
 def from_(
-    cls: type[cx.AbstractVel3D], obj: apyc.CartesianDifferential, /
+    cls: type[cx.vecs.AbstractVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
     """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
 
@@ -256,7 +256,7 @@ def from_(
     >>> from astropy.coordinates import CartesianDifferential
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
-    >>> dif = cx.AbstractVel3D.from_(dcart)
+    >>> dif = cx.vecs.AbstractVel3D.from_(dcart)
     >>> dif.d_x
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -264,10 +264,10 @@ def from_(
     return cx.CartesianVel3D.from_(obj)
 
 
-@cx.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVel3D.from_.dispatch
 def from_(
-    cls: type[cx.AbstractVel3D], obj: apyc.CylindricalDifferential, /
-) -> cx.CylindricalVel:
+    cls: type[cx.vecs.AbstractVel3D], obj: apyc.CylindricalDifferential, /
+) -> cx.vecs.CylindricalVel:
     """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
 
     Examples
@@ -278,17 +278,17 @@ def from_(
 
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> dif = cx.AbstractVel3D.from_(dcyl)
+    >>> dif = cx.vecs.AbstractVel3D.from_(dcyl)
     >>> dif.d_rho
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
     """
-    return cx.CylindricalVel.from_(obj)
+    return cx.vecs.CylindricalVel.from_(obj)
 
 
-@cx.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVel3D.from_.dispatch
 def from_(
-    cls: type[cx.AbstractVel3D], obj: apyc.PhysicsSphericalDifferential, /
+    cls: type[cx.vecs.AbstractVel3D], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
 
@@ -300,7 +300,7 @@ def from_(
 
     >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                     d_phi=3 * u.mas/u.yr)
-    >>> dif = cx.AbstractVel3D.from_(dsph)
+    >>> dif = cx.vecs.AbstractVel3D.from_(dsph)
     >>> dif.d_r
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -308,10 +308,10 @@ def from_(
     return cx.SphericalVel.from_(obj)
 
 
-@cx.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVel3D.from_.dispatch
 def from_(
-    cls: type[cx.AbstractVel3D], obj: apyc.SphericalDifferential, /
-) -> cx.LonLatSphericalVel:
+    cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalDifferential, /
+) -> cx.vecs.LonLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalDifferential`.
 
     Examples
@@ -323,18 +323,18 @@ def from_(
     >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
     ...                              d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.AbstractVel3D.from_(dsph)
+    >>> dif = cx.vecs.AbstractVel3D.from_(dsph)
     >>> dif.d_distance
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
     """
-    return cx.LonLatSphericalVel.from_(obj)
+    return cx.vecs.LonLatSphericalVel.from_(obj)
 
 
-@cx.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVel3D.from_.dispatch
 def from_(
-    cls: type[cx.AbstractVel3D], obj: apyc.SphericalCosLatDifferential, /
-) -> cx.LonCosLatSphericalVel:
+    cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalCosLatDifferential, /
+) -> cx.vecs.LonCosLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
 
     Examples
@@ -346,7 +346,7 @@ def from_(
     >>> dsph = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
     ...                                    d_lon_coslat=2 * u.mas/u.yr,
     ...                                    d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.AbstractVel3D.from_(dsph)
+    >>> dif = cx.vecs.AbstractVel3D.from_(dsph)
     >>> dif
     LonCosLatSphericalVel(
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
@@ -357,7 +357,7 @@ def from_(
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
     """
-    return cx.LonCosLatSphericalVel.from_(obj)
+    return cx.vecs.LonCosLatSphericalVel.from_(obj)
 
 
 # -------------------------------------------------------------------
@@ -384,10 +384,10 @@ def from_(
     return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
-@cx.CylindricalVel.from_.dispatch
+@cx.vecs.CylindricalVel.from_.dispatch
 def from_(
-    cls: type[cx.CylindricalVel], obj: apyc.CylindricalDifferential, /
-) -> cx.CylindricalVel:
+    cls: type[cx.vecs.CylindricalVel], obj: apyc.CylindricalDifferential, /
+) -> cx.vecs.CylindricalVel:
     """Construct from a :class:`astropy.coordinates.CylindricalVel`.
 
     Examples
@@ -398,7 +398,7 @@ def from_(
 
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> dif = cx.CylindricalVel.from_(dcyl)
+    >>> dif = cx.vecs.CylindricalVel.from_(dcyl)
     >>> dif.d_rho
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -428,10 +428,10 @@ def from_(
     return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
 
 
-@cx.LonLatSphericalVel.from_.dispatch
+@cx.vecs.LonLatSphericalVel.from_.dispatch
 def from_(
-    cls: type[cx.LonLatSphericalVel], obj: apyc.SphericalDifferential, /
-) -> cx.LonLatSphericalVel:
+    cls: type[cx.vecs.LonLatSphericalVel], obj: apyc.SphericalDifferential, /
+) -> cx.vecs.LonLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalVel`.
 
     Examples
@@ -443,7 +443,7 @@ def from_(
     >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
     ...                              d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.LonLatSphericalVel.from_(dsph)
+    >>> dif = cx.vecs.LonLatSphericalVel.from_(dsph)
     >>> dif.d_distance
     Quantity['speed'](Array(1., dtype=float32), unit='km / s')
 
@@ -451,10 +451,10 @@ def from_(
     return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
 
 
-@cx.LonCosLatSphericalVel.from_.dispatch
+@cx.vecs.LonCosLatSphericalVel.from_.dispatch
 def from_(
-    cls: type[cx.LonCosLatSphericalVel], obj: apyc.SphericalCosLatDifferential, /
-) -> cx.LonCosLatSphericalVel:
+    cls: type[cx.vecs.LonCosLatSphericalVel], obj: apyc.SphericalCosLatDifferential, /
+) -> cx.vecs.LonCosLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
 
     Examples
@@ -466,7 +466,7 @@ def from_(
     >>> dsph = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
     ...                                    d_lon_coslat=2 * u.mas/u.yr,
     ...                                    d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.LonCosLatSphericalVel.from_(dsph)
+    >>> dif = cx.vecs.LonCosLatSphericalVel.from_(dsph)
     >>> dif
     LonCosLatSphericalVel(
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
@@ -485,8 +485,10 @@ def from_(
 #####################################################################
 
 
-@cx.AbstractVector.from_.dispatch
-def from_(cls: type[cx.AbstractVector], obj: apyu.Quantity, /) -> cx.AbstractVector:
+@cx.vecs.AbstractVector.from_.dispatch
+def from_(
+    cls: type[cx.vecs.AbstractVector], obj: apyu.Quantity, /
+) -> cx.vecs.AbstractVector:
     """Construct a vector from an Astropy Quantity array.
 
     The array is expected to have the components as the last dimension.
@@ -532,7 +534,7 @@ def from_(cls: type[cx.AbstractVector], obj: apyu.Quantity, /) -> cx.AbstractVec
       d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
     )
 
-    >>> vec = cx.CartesianAcc3D.from_(Quantity([1, 2, 3], "m/s2"))
+    >>> vec = cx.vecs.CartesianAcc3D.from_(Quantity([1, 2, 3], "m/s2"))
     >>> vec
     CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),

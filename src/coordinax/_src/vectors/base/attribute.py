@@ -29,11 +29,11 @@ class VectorAttribute(Generic[Return]):
 
     Examples
     --------
-    >>> from coordinax import VectorAttribute, AbstractPos
+    >>> import coordinax as cx
 
-    >>> class TestPos(AbstractPos):
+    >>> class TestPos(cx.vecs.AbstractPos):
     ...     x: int
-    ...     attr: float = VectorAttribute(default=2.0)
+    ...     attr: float = cx.vecs.VectorAttribute(default=2.0)
 
     vector-attributes are used to define fields on a vector that are not one of
     the coordinates.

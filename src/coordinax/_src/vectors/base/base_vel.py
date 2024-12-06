@@ -46,7 +46,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialVel._cartesian_cls
+        >>> cx.vecs.RadialVel._cartesian_cls
         <class 'coordinax...CartesianVel1D'>
 
         >>> cx.SphericalVel._cartesian_cls
@@ -66,7 +66,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialVel.integral_cls.__name__
+        >>> cx.vecs.RadialVel.integral_cls.__name__
         'RadialPos'
 
         >>> cx.SphericalVel.integral_cls.__name__
@@ -85,7 +85,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialVel.differential_cls.__name__
+        >>> cx.vecs.RadialVel.differential_cls.__name__
         'RadialAcc'
 
         >>> cx.SphericalVel.differential_cls.__name__
@@ -112,11 +112,11 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> dr = cx.RadialVel.from_([1], "m/s")
+        >>> dr = cx.vecs.RadialVel.from_([1], "m/s")
         >>> -dr
         RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
-        >>> dp = cx.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
+        >>> dp = cx.vecs.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
         >>> neg_dp = -dp
         >>> neg_dp.d_r
         Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
@@ -148,7 +148,7 @@ def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> dr = cx.RadialVel(u.Quantity(1, "m/s"))
+    >>> dr = cx.vecs.RadialVel(u.Quantity(1, "m/s"))
     >>> vec = dr * u.Quantity(2, "s")
     >>> vec
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))

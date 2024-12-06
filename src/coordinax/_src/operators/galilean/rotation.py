@@ -141,13 +141,9 @@ class GalileanRotation(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> theta = u.Quantity(45, "deg")
-        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
-        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
-        ...                  [0,             0,              1]])
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cx.ops.GalileanRotation(Rz)
         >>> op.is_inertial
         True
@@ -162,16 +158,12 @@ class GalileanRotation(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> theta = u.Quantity(45, "deg")
-        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
-        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
-        ...                  [0,             0,              1]])
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cx.ops.GalileanRotation(Rz)
         >>> op.inverse
-        GalileanRotation(rotation=f32[3,3])
+        GalileanRotation(rotation=i32[3,3])
 
         >>> jnp.allclose(op.rotation, op.inverse.rotation.T)
         Array(True, dtype=bool)
@@ -193,22 +185,19 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> theta = u.Quantity(45, "deg")
-        >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
-        ...                  [jnp.sin(theta), jnp.cos(theta),  0],
-        ...                  [0,             0,              1]])
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cx.ops.GalileanRotation(Rz)
 
         >>> q = u.Quantity([1, 0, 0], "m")
         >>> op(q)
-        Quantity[...](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')
+        Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
 
         THere's a related dispatch that also takes a time argument:
 
         >>> t = u.Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq
-        Quantity[...](Array([0.70710677, 0.70710677, 0. ], dtype=float32), unit='m')
+        Quantity['length'](Array([0., 1., 0.], dtype=float32), unit='m')
 
         The time is not affected by the rotation.
         >>> newt
@@ -227,7 +216,6 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> theta = u.Quantity(45, "deg")
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cx.ops.GalileanRotation(Rz)
 
@@ -290,13 +278,10 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
 
     An operator with a non-identity rotation matrix is not simplified:
 
-    >>> theta = u.Quantity(45, "deg")
-    >>> Rz = jnp.asarray([[jnp.cos(theta), -jnp.sin(theta), 0],
-    ...                  [jnp.sin(theta), jnp.cos(theta),  0],
-    ...                  [0,             0,              1]])
+    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
     >>> op = cx.ops.GalileanRotation(Rz)
     >>> cx.ops.simplify_op(op)
-    GalileanRotation(rotation=f32[3,3])
+    GalileanRotation(rotation=i32[3,3])
 
     An operator with an identity rotation matrix is simplified:
 

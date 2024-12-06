@@ -15,11 +15,11 @@ class AttrFilter:
     --------
     >>> import dataclasses
     >>> from dataclassish import field_items
-    >>> from coordinax import VectorAttribute, AttrFilter, AbstractPos
+    >>> import coordinax as cx
 
-    >>> class TestPos(AbstractPos):
+    >>> class TestPos(cx.vecs.AbstractPos):
     ...    x: int
-    ...    attr: float = VectorAttribute(default=2.0)
+    ...    attr: float = cx.vecs.VectorAttribute(default=2.0)
 
     >>> obj = TestPos(x=1)
 
@@ -29,7 +29,7 @@ class AttrFilter:
     >>> field_items(obj)
     (('x', 1), ('attr', 2.0))
 
-    >>> field_items(AttrFilter, obj)
+    >>> field_items(cx.vecs.AttrFilter, obj)
     (('x', 1),)
 
     """

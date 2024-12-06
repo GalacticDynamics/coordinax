@@ -55,8 +55,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(0, "deg"),
-    ...                       distance=u.Quantity(3, "kpc"))
+    >>> cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+    ...                            lat=u.Quantity(0, "deg"),
+    ...                            distance=u.Quantity(3, "kpc"))
     LonLatSphericalPos(
       lon=Angle(value=f32[], unit=Unit("deg")),
       lat=Angle(value=f32[], unit=Unit("deg")),
@@ -67,9 +68,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.LonLatSphericalPos(lon=u.Quantity(365, "deg"),
-    ...                             lat=u.Quantity(90, "deg"),
-    ...                             distance=u.Quantity(3, "kpc"))
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(365, "deg"),
+    ...                                  lat=u.Quantity(90, "deg"),
+    ...                                  distance=u.Quantity(3, "kpc"))
     >>> vec.lon
     Angle(Array(5., dtype=float32), unit='deg')
 
@@ -78,8 +79,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(100, "deg"),
-    ...                           distance=u.Quantity(3, "kpc"))
+    ...     cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+    ...                                lat=u.Quantity(100, "deg"),
+    ...                                distance=u.Quantity(3, "kpc"))
     ... except Exception as e:
     ...     print(e)
     The inclination angle must be in the range [0, pi]...
@@ -89,8 +91,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
     .. skip: next
 
     >>> try:
-    ...     cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"), lat=u.Quantity(0, "deg"),
-    ...                           distance=u.Quantity(-3, "kpc"))
+    ...     cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+    ...                                lat=u.Quantity(0, "deg"),
+    ...                                distance=u.Quantity(-3, "kpc"))
     ... except Exception as e:
     ...     print(e)
     The radial distance must be non-negative...
@@ -132,9 +135,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-        ...                           lat=u.Quantity(90, "deg"),
-        ...                            distance=u.Quantity(3, "kpc"))
+        >>> s = cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+        ...                                lat=u.Quantity(90, "deg"),
+        ...                                distance=u.Quantity(3, "kpc"))
         >>> s.norm()
         Distance(Array(3., dtype=float32), unit='kpc')
 
@@ -158,9 +161,9 @@ def from_(
 
     Let's start with a valid input:
 
-    >>> cx.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
-    ...                             lat=Quantity(0, "deg"),
-    ...                             distance=Quantity(3, "kpc"))
+    >>> cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
+    ...                                  lat=Quantity(0, "deg"),
+    ...                                  distance=Quantity(3, "kpc"))
     LonLatSphericalPos(
       lon=Angle(value=f32[], unit=Unit("deg")),
       lat=Angle(value=f32[], unit=Unit("deg")),
@@ -170,9 +173,9 @@ def from_(
     The distance can be negative, which wraps the longitude by 180 degrees and
     flips the latitude:
 
-    >>> vec = cx.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
-    ...                                   lat=Quantity(45, "deg"),
-    ...                                   distance=Quantity(-3, "kpc"))
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
+    ...                                        lat=Quantity(45, "deg"),
+    ...                                        distance=Quantity(-3, "kpc"))
     >>> vec.lon
     Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
@@ -183,9 +186,9 @@ def from_(
     The latitude can be outside the [-90, 90] deg range, causing the longitude
     to be shifted by 180 degrees:
 
-    >>> vec = cx.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
-    ...                                   lat=Quantity(-100, "deg"),
-    ...                                   distance=Quantity(3, "kpc"))
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
+    ...                                        lat=Quantity(-100, "deg"),
+    ...                                        distance=Quantity(3, "kpc"))
     >>> vec.lon
     Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
@@ -193,9 +196,9 @@ def from_(
     >>> vec.distance
     Distance(Array(3., dtype=float32), unit='kpc')
 
-    >>> vec = cx.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
-    ...                                   lat=Quantity(100, "deg"),
-    ...                                   distance=Quantity(3, "kpc"))
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
+    ...                                        lat=Quantity(100, "deg"),
+    ...                                        distance=Quantity(3, "kpc"))
     >>> vec.lon
     Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
@@ -206,9 +209,9 @@ def from_(
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cx.LonLatSphericalPos.from_(lon=Quantity(365, "deg"),
-    ...                                   lat=Quantity(0, "deg"),
-    ...                                   distance=Quantity(3, "kpc"))
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(365, "deg"),
+    ...                                        lat=Quantity(0, "deg"),
+    ...                                        distance=Quantity(3, "kpc"))
     >>> vec.lon
     Angle(Array(5., dtype=float32), unit='deg')
 

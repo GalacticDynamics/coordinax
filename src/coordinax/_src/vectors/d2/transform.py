@@ -103,8 +103,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVel2D.from_([1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVel2D) is v
+    >>> v = cx.vecs.CartesianVel2D.from_([1, 1], "m/s")
+    >>> cx.represent_as(v, cx.vecs.CartesianVel2D) is v
     True
 
     """
@@ -131,8 +131,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAcc2D.from_([1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAcc2D) is a
+    >>> a = cx.vecs.CartesianAcc2D.from_([1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.vecs.CartesianAcc2D) is a
     True
 
     """

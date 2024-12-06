@@ -19,9 +19,9 @@ class TestCartesianPos1D(AbstractPos1DTest):
     """Test :class:`coordinax.CartesianPos1D`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractPos:
+    def vector(self) -> cx.vecs.AbstractPos:
         """Return a vector."""
-        return cx.CartesianPos1D(x=u.Quantity([1, 2, 3, 4], "kpc"))
+        return cx.vecs.CartesianPos1D(x=u.Quantity([1, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
@@ -29,35 +29,37 @@ class TestCartesianPos1D(AbstractPos1DTest):
     def test_cartesian1d_to_cartesian1d(self, vector):
         """Test ``coordinax.represent_as(CartesianPos1D)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.CartesianPos1D)
+        newvec = vector.represent_as(cx.vecs.CartesianPos1D)
         assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.CartesianPos1D)
+        newvec = cx.represent_as(vector, cx.vecs.CartesianPos1D)
         assert newvec is vector
 
     def test_cartesian1d_to_radial(self, vector):
         """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = vector.represent_as(cx.RadialPos)
+        radial = vector.represent_as(cx.vecs.RadialPos)
 
-        assert isinstance(radial, cx.RadialPos)
+        assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(radial.r, u.Quantity([1, 2, 3, 4], "kpc"))
 
     def test_cartesian1d_to_cartesian2d(self, vector):
         """Test ``coordinax.represent_as(CartesianPos2D)``."""
         cart2d = vector.represent_as(
-            cx.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
+            cx.vecs.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.CartesianPos2D)
+        assert isinstance(cart2d, cx.vecs.CartesianPos2D)
         assert jnp.array_equal(cart2d.x, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cart2d.y, u.Quantity([5, 6, 7, 8], "km"))
 
     def test_cartesian1d_to_polar(self, vector):
         """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = vector.represent_as(cx.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad"))
+        polar = vector.represent_as(
+            cx.vecs.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad")
+        )
 
-        assert isinstance(polar, cx.PolarPos)
+        assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(polar.r, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(polar.phi, u.Quantity([0, 1, 2, 3], "rad"))
 
@@ -90,12 +92,12 @@ class TestCartesianPos1D(AbstractPos1DTest):
     def test_cartesian1d_to_cylindrical(self, vector):
         """Test ``coordinax.represent_as(CylindricalPos)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalPos,
+            cx.vecs.CylindricalPos,
             phi=u.Quantity([0, 1, 2, 3], "rad"),
             z=u.Quantity([4, 5, 6, 7], "m"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalPos)
+        assert isinstance(cylindrical, cx.vecs.CylindricalPos)
         assert jnp.array_equal(cylindrical.rho, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cylindrical.phi, u.Quantity([0, 1, 2, 3], "rad"))
         assert jnp.array_equal(cylindrical.z, u.Quantity([4, 5, 6, 7], "m"))
@@ -105,45 +107,47 @@ class TestRadialPos(AbstractPos1DTest):
     """Test :class:`coordinax.RadialPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.AbstractPos:
+    def vector(self) -> cx.vecs.AbstractPos:
         """Return a vector."""
-        return cx.RadialPos(r=u.Quantity([1, 2, 3, 4], "kpc"))
+        return cx.vecs.RadialPos(r=u.Quantity([1, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
 
     def test_radial_to_cartesian1d(self, vector):
         """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = vector.represent_as(cx.CartesianPos1D)
+        cart1d = vector.represent_as(cx.vecs.CartesianPos1D)
 
-        assert isinstance(cart1d, cx.CartesianPos1D)
+        assert isinstance(cart1d, cx.vecs.CartesianPos1D)
         assert jnp.array_equal(cart1d.x, u.Quantity([1, 2, 3, 4], "kpc"))
 
     def test_radial_to_radial(self, vector):
         """Test ``coordinax.represent_as(RadialPos)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.RadialPos)
+        newvec = vector.represent_as(cx.vecs.RadialPos)
         assert jnp.array_equal(newvec, vector)
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.RadialPos)
+        newvec = cx.represent_as(vector, cx.vecs.RadialPos)
         assert newvec is vector
 
     def test_radial_to_cartesian2d(self, vector):
         """Test ``coordinax.represent_as(CartesianPos2D)``."""
         cart2d = vector.represent_as(
-            cx.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
+            cx.vecs.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.CartesianPos2D)
+        assert isinstance(cart2d, cx.vecs.CartesianPos2D)
         assert jnp.array_equal(cart2d.x, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cart2d.y, u.Quantity([5, 6, 7, 8], "km"))
 
     def test_radial_to_polar(self, vector):
         """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = vector.represent_as(cx.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad"))
+        polar = vector.represent_as(
+            cx.vecs.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad")
+        )
 
-        assert isinstance(polar, cx.PolarPos)
+        assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(polar.r, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(polar.phi, u.Quantity([0, 1, 2, 3], "rad"))
 
@@ -176,12 +180,12 @@ class TestRadialPos(AbstractPos1DTest):
     def test_radial_to_cylindrical(self, vector):
         """Test ``coordinax.represent_as(CylindricalPos)``."""
         cylindrical = vector.represent_as(
-            cx.CylindricalPos,
+            cx.vecs.CylindricalPos,
             phi=u.Quantity([0, 1, 2, 3], "rad"),
             z=u.Quantity([4, 5, 6, 7], "m"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalPos)
+        assert isinstance(cylindrical, cx.vecs.CylindricalPos)
         assert jnp.array_equal(cylindrical.rho, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cylindrical.phi, u.Quantity([0, 1, 2, 3], "rad"))
         assert jnp.array_equal(cylindrical.z, u.Quantity([4, 5, 6, 7], "m"))
@@ -195,14 +199,14 @@ class TestCartesianVel1D(AbstractVel1DTest):
     """Test :class:`coordinax.CartesianVel1D`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.CartesianVel1D:
+    def difntl(self) -> cx.vecs.CartesianVel1D:
         """Return a vector."""
-        return cx.CartesianVel1D(d_x=u.Quantity([1.0, 2, 3, 4], "km/s"))
+        return cx.vecs.CartesianVel1D(d_x=u.Quantity([1.0, 2, 3, 4], "km/s"))
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.CartesianPos1D:
+    def vector(self) -> cx.vecs.CartesianPos1D:
         """Return a vector."""
-        return cx.CartesianPos1D(x=u.Quantity([1.0, 2, 3, 4], "kpc"))
+        return cx.vecs.CartesianPos1D(x=u.Quantity([1.0, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
@@ -211,19 +215,19 @@ class TestCartesianVel1D(AbstractVel1DTest):
     def test_cartesian1d_to_cartesian1d(self, difntl, vector):
         """Test ``difntl.represent_as(CartesianVel1D)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.CartesianVel1D, vector)
+        newvec = difntl.represent_as(cx.vecs.CartesianVel1D, vector)
         assert jnp.array_equal(newvec, difntl)
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.CartesianVel1D, vector)
+        newvec = cx.represent_as(difntl, cx.vecs.CartesianVel1D, vector)
         assert newvec is difntl
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian1d_to_radial(self, difntl, vector):
         """Test ``difntl.represent_as(RadialVel)``."""
-        radial = difntl.represent_as(cx.RadialVel, vector)
+        radial = difntl.represent_as(cx.vecs.RadialVel, vector)
 
-        assert isinstance(radial, cx.RadialVel)
+        assert isinstance(radial, cx.vecs.RadialVel)
         assert jnp.array_equal(radial.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -231,10 +235,10 @@ class TestCartesianVel1D(AbstractVel1DTest):
     def test_cartesian1d_to_cartesian2d(self, difntl, vector):
         """Test ``difntl.represent_as(CartesianVel2D)``."""
         cart2d = difntl.represent_as(
-            cx.CartesianVel2D, vector, d_y=u.Quantity([5, 6, 7, 8], "km")
+            cx.vecs.CartesianVel2D, vector, d_y=u.Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.CartesianVel2D)
+        assert isinstance(cart2d, cx.vecs.CartesianVel2D)
         assert jnp.array_equal(cart2d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(cart2d.d_y, u.Quantity([5, 6, 7, 8], "km/s"))
 
@@ -243,10 +247,10 @@ class TestCartesianVel1D(AbstractVel1DTest):
     def test_cartesian1d_to_polar(self, difntl, vector):
         """Test ``difntl.represent_as(PolarVel)``."""
         polar = difntl.represent_as(
-            cx.PolarVel, vector, d_phi=u.Quantity([0, 1, 2, 3], "rad")
+            cx.vecs.PolarVel, vector, d_phi=u.Quantity([0, 1, 2, 3], "rad")
         )
 
-        assert isinstance(polar, cx.PolarVel)
+        assert isinstance(polar, cx.vecs.PolarVel)
         assert jnp.array_equal(polar.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(polar.d_phi, u.Quantity([0, 1, 2, 3], "rad/s"))
 
@@ -287,13 +291,13 @@ class TestCartesianVel1D(AbstractVel1DTest):
     def test_cartesian1d_to_cylindrical(self, difntl, vector):
         """Test ``difntl.represent_as(CylindricalVel)``."""
         cylindrical = difntl.represent_as(
-            cx.CylindricalVel,
+            cx.vecs.CylindricalVel,
             vector,
             d_phi=u.Quantity([0, 1, 2, 3], "rad/s"),
             d_z=u.Quantity([4, 5, 6, 7], "m/s"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalVel)
+        assert isinstance(cylindrical, cx.vecs.CylindricalVel)
         assert jnp.array_equal(cylindrical.d_rho, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cylindrical.d_phi, u.Quantity([0, 1, 2, 3], "rad/s"))
         assert jnp.array_equal(cylindrical.d_z, u.Quantity([4, 5, 6, 7], "m/s"))
@@ -303,14 +307,14 @@ class TestRadialVel(AbstractVel1DTest):
     """Test :class:`coordinax.RadialVel`."""
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.RadialVel:
+    def difntl(self) -> cx.vecs.RadialVel:
         """Return a vector."""
-        return cx.RadialVel(d_r=u.Quantity([1, 2, 3, 4], "km/s"))
+        return cx.vecs.RadialVel(d_r=u.Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.RadialPos:
+    def vector(self) -> cx.vecs.RadialPos:
         """Return a vector."""
-        return cx.RadialPos(r=u.Quantity([1, 2, 3, 4], "kpc"))
+        return cx.vecs.RadialPos(r=u.Quantity([1, 2, 3, 4], "kpc"))
 
     # ==========================================================================
     # represent_as
@@ -318,20 +322,20 @@ class TestRadialVel(AbstractVel1DTest):
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_cartesian1d(self, difntl, vector):
         """Test ``difntl.represent_as(CartesianVel1D)``."""
-        cart1d = difntl.represent_as(cx.CartesianVel1D, vector)
+        cart1d = difntl.represent_as(cx.vecs.CartesianVel1D, vector)
 
-        assert isinstance(cart1d, cx.CartesianVel1D)
+        assert isinstance(cart1d, cx.vecs.CartesianVel1D)
         assert jnp.array_equal(cart1d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_radial_to_radial(self, difntl, vector):
         """Test ``difntl.represent_as(RadialVel)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.RadialVel, vector)
+        newvec = difntl.represent_as(cx.vecs.RadialVel, vector)
         assert jnp.array_equal(newvec, difntl)
 
         # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.RadialVel, vector)
+        newvec = cx.represent_as(difntl, cx.vecs.RadialVel, vector)
         assert newvec is difntl
 
     @pytest.mark.xfail(reason="Not implemented")
@@ -339,10 +343,10 @@ class TestRadialVel(AbstractVel1DTest):
     def test_radial_to_cartesian2d(self, difntl, vector):
         """Test ``difntl.represent_as(CartesianVel2D)``."""
         cart2d = difntl.represent_as(
-            cx.CartesianVel2D, vector, d_y=u.Quantity([5, 6, 7, 8], "km")
+            cx.vecs.CartesianVel2D, vector, d_y=u.Quantity([5, 6, 7, 8], "km")
         )
 
-        assert isinstance(cart2d, cx.CartesianVel2D)
+        assert isinstance(cart2d, cx.vecs.CartesianVel2D)
         assert jnp.array_equal(cart2d.d_x, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cart2d.d_y, u.Quantity([5, 6, 7, 8], "km"))
 
@@ -351,10 +355,10 @@ class TestRadialVel(AbstractVel1DTest):
     def test_radial_to_polar(self, difntl, vector):
         """Test ``difntl.represent_as(PolarVel)``."""
         polar = difntl.represent_as(
-            cx.PolarVel, vector, d_phi=u.Quantity([0, 1, 2, 3], "rad")
+            cx.vecs.PolarVel, vector, d_phi=u.Quantity([0, 1, 2, 3], "rad")
         )
 
-        assert isinstance(polar, cx.PolarVel)
+        assert isinstance(polar, cx.vecs.PolarVel)
         assert jnp.array_equal(polar.d_r, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(polar.d_phi, u.Quantity([0, 1, 2, 3], "rad"))
 
@@ -395,13 +399,13 @@ class TestRadialVel(AbstractVel1DTest):
     def test_radial_to_cylindrical(self, difntl, vector):
         """Test ``difntl.represent_as(CylindricalVel)``."""
         cylindrical = difntl.represent_as(
-            cx.CylindricalVel,
+            cx.vecs.CylindricalVel,
             vector,
             d_phi=u.Quantity([0, 1, 2, 3], "rad"),
             d_z=u.Quantity([4, 5, 6, 7], "m"),
         )
 
-        assert isinstance(cylindrical, cx.CylindricalVel)
+        assert isinstance(cylindrical, cx.vecs.CylindricalVel)
         assert jnp.array_equal(cylindrical.d_rho, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(cylindrical.d_phi, u.Quantity([0, 1, 2, 3], "rad"))
         assert jnp.array_equal(cylindrical.d_z, u.Quantity([4, 5, 6, 7], "m"))

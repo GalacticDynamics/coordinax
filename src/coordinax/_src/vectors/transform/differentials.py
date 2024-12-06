@@ -59,16 +59,16 @@ def represent_as(
 
     Let's start in 1D:
 
-    >>> q = cx.CartesianPos1D.from_(1.0, "km")
-    >>> p = cx.CartesianVel1D.from_(1.0, "km/s")
-    >>> cx.represent_as(p, cx.RadialVel, q)
+    >>> q = cx.vecs.CartesianPos1D.from_(1.0, "km")
+    >>> p = cx.vecs.CartesianVel1D.from_(1.0, "km/s")
+    >>> cx.represent_as(p, cx.vecs.RadialVel, q)
     RadialVel( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 
     Now in 2D:
 
-    >>> q = cx.CartesianPos2D.from_([1.0, 2.0], "km")
-    >>> p = cx.CartesianVel2D.from_([1.0, 2.0], "km/s")
-    >>> cx.represent_as(p, cx.PolarVel, q)
+    >>> q = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> p = cx.vecs.CartesianVel2D.from_([1.0, 2.0], "km/s")
+    >>> cx.represent_as(p, cx.vecs.PolarVel, q)
     PolarVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )

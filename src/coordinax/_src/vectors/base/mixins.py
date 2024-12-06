@@ -31,54 +31,54 @@ class AvalMixin:
 
         1 dimensional vectors:
 
-        >>> vec = cx.CartesianPos1D.from_([1], "m")
+        >>> vec = cx.vecs.CartesianPos1D.from_([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.RadialPos.from_([1], "m")
+        >>> vec = cx.vecs.RadialPos.from_([1], "m")
         >>> vec.aval()
         ConcreteArray([1.], dtype=float32)
 
-        >>> vec = cx.CartesianVel1D.from_([1], "m/s")
+        >>> vec = cx.vecs.CartesianVel1D.from_([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.RadialVel.from_([1], "m/s")
+        >>> vec = cx.vecs.RadialVel.from_([1], "m/s")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.CartesianAcc1D.from_([1], "m/s2")
+        >>> vec = cx.vecs.CartesianAcc1D.from_([1], "m/s2")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
-        >>> vec = cx.RadialAcc.from_([1], "m/s2")
+        >>> vec = cx.vecs.RadialAcc.from_([1], "m/s2")
         >>> vec.aval()
         ConcreteArray([1], dtype=int32)
 
         2 dimensional vectors:
 
-        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"))
+        >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"))
         >>> vec.aval()
         ConcreteArray([1. 0.], dtype=float32)
 
-        >>> vec = cx.CartesianVel2D.from_([1, 2], "m/s")
+        >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"))
+        >>> vec = cx.vecs.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
 
-        >>> vec = cx.CartesianAcc2D.from_([1,2], "m/s2")
+        >>> vec = cx.vecs.CartesianAcc2D.from_([1,2], "m/s2")
         >>> vec.aval()
         ConcreteArray([1. 2.], dtype=float32)
 
-        >>> vec = cx.PolarAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.PolarAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
@@ -107,11 +107,11 @@ class AvalMixin:
         ... except NotImplementedError as e: print("nope")
         nope
 
-        >>> vec = cx.CartesianAcc3D.from_([1,2,3], "m/s2")
+        >>> vec = cx.vecs.CartesianAcc3D.from_([1,2,3], "m/s2")
         >>> vec.aval()
         ConcreteArray([1. 2. 3.], dtype=float32)
 
-        >>> vec = cx.SphericalAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"), d2_theta=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.SphericalAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"), d2_theta=u.Quantity(0, "rad/s2"))
         >>> try: vec.aval()
         ... except NotImplementedError as e: print("nope")
         nope
@@ -152,7 +152,7 @@ class IPythonReprMixin:
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec._repr_mimebundle_()
         {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)',
          'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'}
@@ -187,7 +187,7 @@ class IPythonReprMixin:
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec._repr_latex_()
         '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'
 

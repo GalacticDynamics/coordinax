@@ -24,9 +24,9 @@ def represent_as(
     >>> import coordinax as cx
     >>> import unxt as u
 
-    >>> q = cx.CartesianPosND(u.Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "kpc"))
 
-    >>> cx.represent_as(q, cx.CartesianPosND) is q
+    >>> cx.represent_as(q, cx.vecs.CartesianPosND) is q
     True
 
     """
@@ -47,10 +47,10 @@ def represent_as(
     --------
     >>> import coordinax as cx
 
-    >>> x = cx.CartesianPosND.from_([1, 2, 3, 4], "km")
-    >>> v = cx.CartesianVelND.from_([1, 2, 3, 4], "km/s")
+    >>> x = cx.vecs.CartesianPosND.from_([1, 2, 3, 4], "km")
+    >>> v = cx.vecs.CartesianVelND.from_([1, 2, 3, 4], "km/s")
 
-    >>> cx.represent_as(v, cx.CartesianVelND, x) is v
+    >>> cx.represent_as(v, cx.vecs.CartesianVelND, x) is v
     True
 
     """
@@ -77,8 +77,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> v = cx.CartesianVelND.from_([1, 1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVelND) is v
+    >>> v = cx.vecs.CartesianVelND.from_([1, 1, 1], "m/s")
+    >>> cx.represent_as(v, cx.vecs.CartesianVelND) is v
     True
 
     """
@@ -105,8 +105,8 @@ def represent_as(
     Examples
     --------
     >>> import coordinax as cx
-    >>> a = cx.CartesianAccND.from_([1, 1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.CartesianAccND) is a
+    >>> a = cx.vecs.CartesianAccND.from_([1, 1, 1], "m/s2")
+    >>> cx.represent_as(a, cx.vecs.CartesianAccND) is a
     True
 
     """
