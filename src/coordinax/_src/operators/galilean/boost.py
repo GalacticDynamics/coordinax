@@ -189,8 +189,8 @@ class GalileanBoost(AbstractGalileanOperator):
 # -----------------------------------------------------
 
 
-@dispatch  # type: ignore[misc]
-def simplify_op(op: GalileanBoost, /, **kwargs: Any) -> AbstractOperator:
+@dispatch
+def simplify_op(op: GalileanBoost, /, **kwargs: Any) -> GalileanBoost | Identity:
     """Simplify a boost operator.
 
     Examples
@@ -215,3 +215,26 @@ def simplify_op(op: GalileanBoost, /, **kwargs: Any) -> AbstractOperator:
     if jnp.allclose(convert(op.velocity, u.Quantity).value, jnp.zeros((3,)), **kwargs):
         return Identity()
     return op
+
+
+@dispatch
+def simplify_op(op1: GalileanBoost, op2: GalileanBoost) -> GalileanBoost:
+    """Combine two boosts into a single boost.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.operators as cxo
+
+    >>> op1 = cxo.GalileanBoost.from_([1, 0, 0], "m/s")
+    >>> op2 = cxo.GalileanBoost.from_([0, 1, 0], "m/s")
+
+    >>> op3 = cxo.simplify_op(op1, op2)
+    >>> op3
+    GalileanBoost(CartesianVel3D( ... ))
+
+    >>> op3.velocity == op1.velocity + op2.velocity
+    Array(True, dtype=bool)
+
+    """
+    return GalileanBoost(op1.velocity + op2.velocity)
