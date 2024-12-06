@@ -1,4 +1,35 @@
 """Coordinax Operator package."""
 # ruff: noqa: F401
 
-from . import base, composite, funcs, galilean, identity, sequential
+__all__ = [
+    "simplify_op",
+    # Classes
+    "AbstractOperator",
+    "Identity",
+    "AbstractCompositeOperator",
+    "Sequence",
+    # Galilean
+    "AbstractGalileanOperator",
+    "GalileanBoost",
+    "GalileanOperator",
+    "GalileanRotation",
+    "GalileanSpatialTranslation",
+    "GalileanTranslation",
+]
+
+from . import galilean
+from .api import simplify_op
+from .base import AbstractOperator
+from .composite import AbstractCompositeOperator
+from .galilean.base import AbstractGalileanOperator
+from .galilean.boost import GalileanBoost
+from .galilean.composite import GalileanOperator
+from .galilean.rotation import GalileanRotation
+from .galilean.translation import GalileanSpatialTranslation, GalileanTranslation
+from .identity import Identity
+from .sequential import Sequence
+
+# isort: split
+from . import compat, funcs
+
+del funcs, compat
