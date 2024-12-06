@@ -156,11 +156,11 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 
         >>> op = cxo.Sequence((cxo.Identity(), cxo.Identity()))
         >>> op.simplify()
-        Sequence(())
+        Identity()
 
         >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
         >>> op.simplify()
-        Sequence(( GalileanTranslation(FourVector( ... )), ))
+        GalileanTranslation(FourVector( ... ))
 
         """
         return simplify_op(self)
@@ -181,7 +181,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         Sequence((Identity(), Identity()))
 
         """
-        from .sequential import Sequence
+        from .sequence import Sequence
 
         if isinstance(other, Sequence):
             return other.__ror__(self)

@@ -19,7 +19,7 @@ from .rotation import GalileanRotation
 from .translation import GalileanTranslation
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
-from coordinax._src.operators.sequential import Sequence
+from coordinax._src.operators.sequence import Sequence
 
 if TYPE_CHECKING:
     from typing import Self
@@ -232,7 +232,7 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
 
     >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "kpc"))
     >>> cxo.simplify_op(op)
-    Sequence(( GalileanTranslation(FourVector( ... )), ))
+    GalileanTranslation(FourVector( ... ))
 
     """
     simple_ops = [simplify_op(x, **kwargs) for x in op.operators]

@@ -27,9 +27,9 @@ from .galilean.composite import GalileanOperator
 from .galilean.rotation import GalileanRotation
 from .galilean.translation import GalileanSpatialTranslation, GalileanTranslation
 from .identity import Identity
-from .sequential import Sequence
+from .sequence import Sequence
 
 # isort: split
-from . import compat, funcs
+from . import compat, register_simplify
 
-del funcs, compat
+del register_simplify, compat

@@ -16,9 +16,7 @@ from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
-from coordinax._src.operators.base import AbstractOperator
-from coordinax._src.operators.identity import Identity
-from coordinax._src.operators.sequential import Sequence
+from coordinax._src.operators import AbstractOperator, Identity, Sequence
 from coordinax._src.vectors.base import AbstractVel
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D, CartesianVel3D
 
