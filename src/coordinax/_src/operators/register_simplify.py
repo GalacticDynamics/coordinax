@@ -130,6 +130,23 @@ def simplify_op(op1: Identity, op2: AbstractOperator) -> AbstractOperator:
 
 
 @dispatch
+def simplify_op(op1: Sequence, op2: AbstractOperator) -> Sequence:
+    """Simplify two sequences of operators by concatenating them.
+
+    Examples
+    --------
+    >>> import coordinax.operators as cxo
+
+    >>> sop1 = cxo.Sequence((cxo.Identity(), cxo.Identity()))
+    >>> sop2 = cxo.Sequence((cxo.Identity(),))
+    >>> cxo.simplify_op(sop1, sop2)
+    Sequence((Identity(), Identity(), Identity()))
+
+    """
+    return op1 | op2
+
+
+@dispatch
 def simplify_op(op1: Sequence, op2: Sequence) -> Sequence:
     """Simplify two sequences of operators by concatenating them.
 
