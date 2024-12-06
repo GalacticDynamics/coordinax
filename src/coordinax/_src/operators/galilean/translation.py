@@ -275,8 +275,10 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         return f"{self.__class__.__name__}({self.translation!r})"
 
 
-@dispatch  # type: ignore[misc]
-def simplify_op(op: GalileanSpatialTranslation, /, **kwargs: Any) -> AbstractOperator:
+@dispatch
+def simplify_op(
+    op: GalileanSpatialTranslation, /, **kwargs: Any
+) -> GalileanSpatialTranslation | Identity:
     """Simplify a Galilean spatial translation operator.
 
     Examples
@@ -302,6 +304,32 @@ def simplify_op(op: GalileanSpatialTranslation, /, **kwargs: Any) -> AbstractOpe
     ):
         return Identity()
     return op
+
+
+@dispatch
+def simplify_op(
+    op1: GalileanSpatialTranslation, op2: GalileanSpatialTranslation, /
+) -> GalileanSpatialTranslation:
+    """Combine two spatial translations into a single translation.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> import coordinax.operators as cxo
+
+    >>> op1 = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
+    >>> op2 = cxo.GalileanSpatialTranslation.from_([0, 1, 0], "kpc")
+
+    >>> op3 = cxo.simplify_op(op1, op2)
+    >>> op3
+    GalileanSpatialTranslation(CartesianPos3D( ... ))
+
+    >>> op3.translation == op1.translation + op2.translation
+    Array(True, dtype=bool)
+
+    """
+    return GalileanSpatialTranslation(op1.translation + op2.translation)
 
 
 ##############################################################################
@@ -512,8 +540,10 @@ class GalileanTranslation(AbstractGalileanOperator):
         return f"{self.__class__.__name__}({self.translation!r})"
 
 
-@dispatch  # type: ignore[misc]
-def simplify_op(op: GalileanTranslation, /, **kwargs: Any) -> AbstractOperator:
+@dispatch
+def simplify_op(
+    op: GalileanTranslation, /, **kwargs: Any
+) -> GalileanTranslation | Identity:
     """Simplify a Galilean translation operator.
 
     Examples
@@ -541,3 +571,32 @@ def simplify_op(op: GalileanTranslation, /, **kwargs: Any) -> AbstractOperator:
     # TODO: Check if the translation is purely spatial.
 
     return op
+
+
+# TODO: show op3.translation = op1.translation + op2.translation
+@dispatch
+def simplify_op(
+    op1: GalileanTranslation, op2: GalileanTranslation, /
+) -> GalileanTranslation:
+    """Combine two translations into a single translation.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> import coordinax.operators as cxo
+
+    >>> qshift = cx.CartesianPos3D.from_([1, 0, 0], "kpc")
+    >>> tshift = u.Quantity(1, "Gyr")
+    >>> op1 = cxo.GalileanTranslation(FourVector(tshift, qshift))
+
+    >>> qshift = cx.CartesianPos3D.from_([0, 1, 0], "kpc")
+    >>> tshift = u.Quantity(1, "Gyr")
+    >>> op2 = cxo.GalileanTranslation(FourVector(tshift, qshift))
+
+    >>> op3 = cxo.simplify_op(op1, op2)
+    >>> op3
+    GalileanTranslation(FourVector( ... ))
+
+    """
+    return GalileanTranslation(op1.translation + op2.translation)
