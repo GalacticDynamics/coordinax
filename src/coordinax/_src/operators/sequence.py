@@ -7,11 +7,9 @@ from dataclasses import replace
 from typing import Any, final
 
 import equinox as eqx
-from plum import dispatch
 
 from .base import AbstractOperator
 from .composite import AbstractCompositeOperator
-from .identity import Identity
 
 
 def _converter_seq(inp: Any) -> tuple[AbstractOperator, ...]:
@@ -74,8 +72,10 @@ class Sequence(AbstractCompositeOperator):
 
     def __or__(self, other: AbstractOperator) -> "Sequence":
         """Compose with another operator."""
+        # Concatenate sequences
         if isinstance(other, type(self)):
-            return replace(self, operators=(*self, *other.operators))
+            return replace(self, operators=self.operators + other.operators)
+        # Append single operators
         return replace(self, operators=(*self, other))
 
     def __ror__(self, other: AbstractOperator) -> "Sequence":
@@ -86,46 +86,3 @@ class Sequence(AbstractCompositeOperator):
         if "\n" in ops:
             ops = "(\n" + textwrap.indent(ops[1:-1], "    ") + "\n)"
         return f"{self.__class__.__name__}({ops})"
-
-
-#####################################################################
-# Functions
-
-
-@dispatch  # type: ignore[misc]
-def simplify_op(seq: Sequence, /) -> Sequence:
-    """Simplify a sequence of Operators.
-
-    This simplifies the sequence of operators by removing any that reduce to
-    the Identity operator.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax.operators as co
-
-    >>> shift = co.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "kpc"))
-    >>> boost = co.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
-
-    >>> seq = shift | co.Identity() | boost
-    >>> seq
-    Sequence((
-        GalileanSpatialTranslation(...), Identity(), GalileanBoost(...)
-    ))
-
-    >>> co.simplify_op(seq3)
-    Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
-
-    """
-    # Iterate through the operators, simplifying that operator, then filtering
-    # out any that reduce to the Identity.
-    # TODO: this doesn't do any type of operator fusion, e.g. a
-    # ``GalileanRotation | GalileanTranslation |
-    # GalileanBoost => GalileanOperator``
-    return Sequence(
-        tuple(
-            sop
-            for op in seq.operators
-            if not isinstance((sop := simplify_op(op)), Identity)
-        )
-    )
