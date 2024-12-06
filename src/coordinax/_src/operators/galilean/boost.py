@@ -13,11 +13,13 @@ from plum import convert, dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
+from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.d3 import AbstractPos3D, CartesianVel3D
+from coordinax._src.vectors.base import AbstractPos, AbstractVel
+from coordinax._src.vectors.d3 import CartesianVel3D
 from coordinax._src.vectors.d4 import FourVector
 
 
@@ -25,7 +27,7 @@ from coordinax._src.vectors.d4 import FourVector
 class GalileanBoost(AbstractGalileanOperator):
     r"""Operator for Galilean boosts.
 
-    The coordinate transform is given by:
+    The operation is given by:
 
     .. math::
 
@@ -42,6 +44,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     Examples
     --------
+    >>> import coordinax as cx
     >>> import coordinax.operators as cxo
 
     >>> op = cxo.GalileanBoost.from_([1.0, 2.0, 3.0], "m/s")
@@ -51,13 +54,39 @@ class GalileanBoost(AbstractGalileanOperator):
     Note that the velocity is a :class:`vector.CartesianVel3D`, which was
     constructed from an array, using :meth:`vector.CartesianVel3D.from_`.
 
+    >>> vec = cx.CartesianPos3D.from_([0.0, 0.0, 0.0], "m")
+
+    >>> delta_t = u.Quantity(1.0, "s")
+    >>> newvec, _ = op(vec, delta_t)
+    >>> print(newvec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1. 2. 3.]>
+
+    In the context of frame transformations, a Galilean boost is treated as the
+    velocity of the new frame relative to the old frame. This means that the
+    transformation is the same as the inverse of the boost velocity. In other words,
+
+    .. math::
+
+        (t,\mathbf{x}) \mapsto (t, \mathbf{x} - \mathbf{v} t)
+
+    This can be applied using the ``.inverse`` property.
+
+    >>> vec_in_newframe, _ = op.inverse(vec, delta_t)
+    >>> print(vec_in_newframe)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [-1. -2. -3.]>
+
     """
 
-    velocity: CartesianVel3D = eqx.field(converter=CartesianVel3D.from_)
+    velocity: AbstractVel = eqx.field(
+        converter=Unless(AbstractVel, CartesianVel3D.from_)
+    )
     """The boost velocity.
 
-    This parameters uses :meth:`vector.CartesianVel3D.from_` to enable a variety
-    of more convenient input types. See :class:`vector.CartesianVel3D` for
+    Unless given a :class:`coordinax.AbstractVel`, this parameter uses This
+    parameters uses :meth:`coordinax.CartesianVel3D.from_` to enable a variety
+    of more convenient input types. See :class:`coordinax.CartesianVel3D` for
     details.
     """
 
@@ -101,8 +130,8 @@ class GalileanBoost(AbstractGalileanOperator):
 
     @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
-        self: "GalileanBoost", q: AbstractPos3D, t: u.Quantity["time"], /
-    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
+        self: "GalileanBoost", q: AbstractPos, delta_t: u.Quantity["time"], /
+    ) -> tuple[AbstractPos, u.Quantity["time"]]:
         """Apply the boost to the coordinates.
 
         Examples
@@ -110,24 +139,48 @@ class GalileanBoost(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.operators.GalileanBoost.from_([1, 2, 3], "m/s")
+        Define a position:
 
         >>> q = cx.CartesianPos3D.from_([0, 0, 0], "m")
-        >>> t = u.Quantity(1, "s")
-        >>> newq, newt = op(q, t)
-        >>> newt
-        Quantity['time'](Array(1, dtype=int32, ...), unit='s')
+
+        Define a boost operator and the time interval to apply it:
+
+        >>> op = cx.operators.GalileanBoost.from_([1, 2, 3], "m/s")
+        >>> dt = u.Quantity(1, "s")
+
+        >>> newq, _ = op(q, dt)
+
+        The position is updated by the boost velocity times the time interval:
+
         >>> print(newq)
         <CartesianPos3D (x[m], y[m], z[m])
             [1. 2. 3.]>
 
         """
-        return q + self.velocity * t, t
+        return q + self.velocity * delta_t, delta_t
 
     @AbstractOperator.__call__.dispatch
     def __call__(self: "GalileanBoost", v4: FourVector, /) -> FourVector:
-        """Apply the boost to the coordinates."""  # TODO: add example
-        return replace(v4, q=v4.q + self.velocity * v4.t)
+        r"""Apply the boost to the coordinates.
+
+        Recall that this is spatial-only, the time is invariant.
+
+        The operation is given by:
+
+        .. math::
+
+            (t,\mathbf{x}) \mapsto (t, \mathbf{x} + \mathbf{v} t)
+
+        Examples
+        --------
+        >>> import unxt as u
+
+        """
+        q, _ = self(v4.q, v4.t)
+        return replace(v4, q=q)
+
+
+# -----------------------------------------------------
 
 
 @dispatch  # type: ignore[misc]
