@@ -13,6 +13,7 @@ from plum import dispatch
 import unxt as u
 from dataclassish import field_items
 
+from .api import simplify_op
 from coordinax._src.vectors.base import AbstractPos
 
 if TYPE_CHECKING:
@@ -137,6 +138,32 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     def inverse(self) -> "AbstractOperator":
         """The inverse of the operator."""
         ...
+
+    def simplify(self) -> "AbstractOperator":
+        """Simplify the operator.
+
+        This method calls `coordinax.operators.simplify_op` to simplify the
+        operator.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.operators as cxo
+
+        >>> op = cxo.Identity()
+        >>> op.simplify() is op
+        True
+
+        >>> op = cxo.Sequence((cxo.Identity(), cxo.Identity()))
+        >>> op.simplify()
+        Sequence(())
+
+        >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
+        >>> op.simplify()
+        Sequence(( GalileanTranslation(FourVector( ... )), ))
+
+        """
+        return simplify_op(self)
 
     # ===========================================
     # Sequence
