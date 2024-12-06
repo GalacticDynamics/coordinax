@@ -287,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.14.1.dev5+ga5a5e20.d20241203"
+version = "0.15.1.dev4+g7ae58d7.d20241206"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -358,7 +358,7 @@ test-all = [
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
-    { name = "dataclassish", specifier = ">=0.4.0" },
+    { name = "dataclassish", specifier = ">=0.5" },
     { name = "equinox", specifier = ">=0.11.8" },
     { name = "jax", specifier = ">=0.4.33" },
     { name = "jaxlib", specifier = ">=0.4.33" },
@@ -487,15 +487,15 @@ wheels = [
 
 [[package]]
 name = "dataclassish"
-version = "0.4.0"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "plum-dispatch" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e2/ca/43f3a6b2de1cb62217771d71b9531890d41e53e16486d506bd167103a78b/dataclassish-0.4.0.tar.gz", hash = "sha256:9bb875d5525d601265c9184c59c9829f518dca6b2e90d622aa21b3a21ebc87a5", size = 28939 }
+sdist = { url = "https://files.pythonhosted.org/packages/40/6c/a10faf1bc6e0b3d92d827ed610f2153b11b5b38078d4e1baed1507a221ba/dataclassish-0.5.0.tar.gz", hash = "sha256:f54c1bb1f4c824e235dba2ce1cb2a5d8e57cdd93e0b612908025bb6fa8d8902d", size = 48265 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/63/a7378ed17163b044ff1b51828a052098bbc9697589b0b473adc806e8cc2d/dataclassish-0.4.0-py3-none-any.whl", hash = "sha256:16bea5f72a80133897715524edee6bfc65125f8f0cb519598614a0baa6d7ba7d", size = 14323 },
+    { url = "https://files.pythonhosted.org/packages/fa/fe/f5aa55fe288fc564bfe1f8ec6c22d6d82596170849b12b8fd83c81d6e20e/dataclassish-0.5.0-py3-none-any.whl", hash = "sha256:2ea3e9d667c54e0395a552ff0e343dea16cdd220aef485b5fd0b6c8e4fb4b0b7", size = 20440 },
 ]
 
 [[package]]
