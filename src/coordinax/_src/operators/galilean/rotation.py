@@ -281,6 +281,12 @@ class GalileanRotation(AbstractGalileanOperator):
         """
         return self(q), t
 
+    # -----------------------------------------------------
+    # Convenience methods
+
+    @dispatch.abstract  # type: ignore[misc]
+    def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
+
 
 @dispatch  # type: ignore[misc]
 def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
@@ -312,3 +318,38 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     if jnp.allclose(op.rotation, jnp.eye(3), **kwargs):
         return Identity()
     return op
+
+
+@GalileanRotation.__matmul__.dispatch  # type: ignore[misc]
+def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
+    """Combine two Galilean rotations.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.operators as cxo
+
+    Two rotations can be combined:
+
+    >>> theta1 = u.Quantity(45, "deg")
+    >>> Rz1 = jnp.asarray([[jnp.cos(theta1), -jnp.sin(theta1), 0],
+    ...                   [jnp.sin(theta1), jnp.cos(theta1),  0],
+    ...                   [0,             0,              1]])
+    >>> op1 = cxo.GalileanRotation(Rz1)
+
+    >>> theta2 = u.Quantity(90, "deg")
+    >>> Rz2 = jnp.asarray([[jnp.cos(theta2), -jnp.sin(theta2), 0],
+    ...                   [jnp.sin(theta2), jnp.cos(theta2),  0],
+    ...                   [0,             0,              1]])
+    >>> op2 = cxo.GalileanRotation(Rz2)
+
+    >>> op3 = op1 @ op2
+    >>> op3
+    GalileanRotation(rotation=f32[3,3])
+
+    >>> jnp.allclose(op3.rotation, op1.rotation @ op2.rotation)
+    Array(True, dtype=bool)
+
+    """
+    return GalileanRotation(rotation=self.rotation @ other.rotation)
