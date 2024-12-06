@@ -6,7 +6,6 @@ from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
 
-import unxt as u
 from dataclassish import DataclassInstance
 
 from .base import AbstractOperator
@@ -41,27 +40,52 @@ class AbstractCompositeOperator(AbstractOperator):
     # TODO: how to have the `operators` attribute in a way that allows for both
     # writeable (in the from_) and read-only (as a property) subclasses.
 
+    @AbstractOperator.__call__.dispatch
+    def __call__(
+        self: "AbstractCompositeOperator", *args: object
+    ) -> tuple[object, ...]:
+        """Apply the operators to the coordinates.
+
+        This is the default implementation, which applies the operators in
+        sequence, passing along the arguments.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> import coordinax.operators as cxo
+
+        >>> ops = cxo.Sequence((cxo.Identity(), cxo.Identity()))
+        >>> ops(1, 2, 3)
+        (1, 2, 3)
+
+        """
+        # TODO: with lax.for_i
+        for op in self.operators:
+            args = op(*args)
+        return args
+
     @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(self: "AbstractCompositeOperator", x: AbstractPos, /) -> AbstractPos:
         """Apply the operator to the coordinates.
 
         This is the default implementation, which applies the operators in
         sequence.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> import coordinax.operators as cxo
+
+        >>> ops = cxo.Sequence((cxo.Identity(), cxo.Identity()))
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> ops(vec)
+        CartesianPos3D( ... )
+
         """
-        # TODO: with lax.scan?
+        # TODO: with lax.for_i
         for op in self.operators:
             x = op(x)
         return x
-
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(
-        self: "AbstractCompositeOperator", x: AbstractPos, t: u.Quantity["time"], /
-    ) -> tuple[AbstractPos, u.Quantity["time"]]:
-        """Apply the operator to the coordinates."""
-        # TODO: with lax.scan?
-        for op in self.operators:
-            x, t = op(x, t)
-        return x, t
 
     @property
     def is_inertial(self: HasOperatorsAttr) -> bool:
