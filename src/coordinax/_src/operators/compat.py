@@ -164,7 +164,7 @@ def call(
 
     >>> op = cx.operators.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
     >>> op
-    GalileanSpatialTranslation( translation=CartesianPos3D( ... ) )
+    GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     We can then apply the operator to a position:
 
@@ -196,7 +196,7 @@ def call(self: AbstractOperator, v4: FourVector, /) -> FourVector:
 
     >>> op = cx.operators.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
     >>> op
-    GalileanSpatialTranslation( translation=CartesianPos3D( ... ) )
+    GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     We can then apply the operator to a position:
 
@@ -230,7 +230,7 @@ def call(
 
     >>> op = cx.operators.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
     >>> op
-    GalileanSpatialTranslation( translation=CartesianPos3D( ... ) )
+    GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     We can then apply the operator to a position:
 

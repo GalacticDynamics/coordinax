@@ -48,13 +48,13 @@ class Sequence(AbstractCompositeOperator):
     >>> boost = co.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
     >>> seq = co.Sequence((shift, boost))
     >>> seq
-    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost(...) ))
+    Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
     A sequence of operators can also be constructed by ``|``:
 
     >>> seq2 = shift | boost
     >>> seq2
-    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost(...) ))
+    Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
     The sequence of operators can be simplified. For this example, we
     add an identity operator to the sequence:
@@ -62,11 +62,11 @@ class Sequence(AbstractCompositeOperator):
     >>> seq3 = seq2 | co.Identity()
     >>> seq3
     Sequence((
-        GalileanSpatialTranslation( ... ), GalileanBoost(...), Identity()
+        GalileanSpatialTranslation(...), GalileanBoost(...), Identity()
     ))
 
     >>> co.simplify_op(seq3)
-    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost(...) ))
+    Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
     """
 
@@ -110,11 +110,11 @@ def simplify_op(seq: Sequence, /) -> Sequence:
     >>> seq = shift | co.Identity() | boost
     >>> seq
     Sequence((
-        GalileanSpatialTranslation( ... ), Identity(), GalileanBoost(...)
+        GalileanSpatialTranslation(...), Identity(), GalileanBoost(...)
     ))
 
     >>> co.simplify_op(seq3)
-    Sequence(( GalileanSpatialTranslation( ... ), GalileanBoost(...) ))
+    Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
     """
     # Iterate through the operators, simplifying that operator, then filtering
