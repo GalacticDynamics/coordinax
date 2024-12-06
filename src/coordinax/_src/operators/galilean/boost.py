@@ -49,7 +49,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     >>> op = cxo.GalileanBoost.from_([1.0, 2.0, 3.0], "m/s")
     >>> op
-    GalileanBoost( velocity=CartesianVel3D( ... ) )
+    GalileanBoost(CartesianVel3D( ... ))
 
     Note that the velocity is a :class:`vector.CartesianVel3D`, which was
     constructed from an array, using :meth:`vector.CartesianVel3D.from_`.
@@ -117,7 +117,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
         >>> op = cxo.GalileanBoost.from_([1, 2, 3], "m/s")
         >>> op.inverse
-        GalileanBoost( velocity=CartesianVel3D( ... ) )
+        GalileanBoost(CartesianVel3D( ... ))
 
         >>> print(op.inverse.velocity)
         <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
@@ -179,6 +179,12 @@ class GalileanBoost(AbstractGalileanOperator):
         q, _ = self(v4.q, v4.t)
         return replace(v4, q=q)
 
+    # -----------------------------------------------------
+    # Python
+
+    def __repr__(self) -> str:
+        return f"GalileanBoost({self.velocity!r})"
+
 
 # -----------------------------------------------------
 
@@ -196,9 +202,7 @@ def simplify_op(op: GalileanBoost, /, **kwargs: Any) -> AbstractOperator:
 
     >>> op = cxo.GalileanBoost.from_([1, 0, 0], "m/s")
     >>> cxo.simplify_op(op)
-    GalileanBoost(
-      velocity=CartesianVel3D( ... )
-    )
+    GalileanBoost(CartesianVel3D( ... ))
 
     An operator with no effect can be simplified:
 

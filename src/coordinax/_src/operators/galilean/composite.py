@@ -188,7 +188,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
         >>> op[1:]
         Sequence(( GalileanTranslation( translation=FourVector( ... ) ),
-                   GalileanBoost( velocity=CartesianVel3D( ... ) ) ))
+                   GalileanBoost(CartesianVel3D( ... )) ))
 
         """
         if isinstance(key, int):
