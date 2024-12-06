@@ -187,7 +187,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         GalileanRotation(rotation=f32[3,3])
 
         >>> op[1:]
-        Sequence(( GalileanTranslation( translation=FourVector( ... ) ),
+        Sequence(( GalileanTranslation(FourVector( ... )),
                    GalileanBoost(CartesianVel3D( ... )) ))
 
         """
@@ -232,7 +232,7 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
 
     >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "kpc"))
     >>> cxo.simplify_op(op)
-    Sequence(( GalileanTranslation( translation=FourVector( ... ) ), ))
+    Sequence(( GalileanTranslation(FourVector( ... )), ))
 
     """
     simple_ops = [simplify_op(x, **kwargs) for x in op.operators]
