@@ -16,9 +16,10 @@ from dataclassish.converters import Unless
 from .base import AbstractGalileanOperator
 from .boost import GalileanBoost
 from .rotation import GalileanRotation
-from .translation import GalileanTranslation
+from .translation import GalileanSpatialTranslation, GalileanTranslation
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
+from coordinax._src.operators.identity import Identity
 from coordinax._src.operators.sequence import Sequence
 
 if TYPE_CHECKING:
@@ -197,7 +198,17 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
 
 @dispatch  # type: ignore[misc]
-def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> AbstractOperator:
+def simplify_op(
+    op: GalileanOperator, /, **kwargs: Any
+) -> (
+    GalileanOperator
+    | Sequence
+    | GalileanBoost
+    | GalileanRotation
+    | GalileanTranslation
+    | GalileanSpatialTranslation
+    | Identity
+):
     """Simplify a Galilean operator.
 
     Examples
