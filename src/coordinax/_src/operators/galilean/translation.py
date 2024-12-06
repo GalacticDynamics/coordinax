@@ -266,6 +266,25 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         return replace(v4, q=v4.q + self.translation)
 
     # -------------------------------------------
+    # Arithmetic operations
+
+    def __neg__(self: "GalileanSpatialTranslation") -> "GalileanSpatialTranslation":
+        """Negate the rotation.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax.operators as cxo
+
+        >>> op = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
+        >>> print((-op).translation)
+        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            [-1. -0. -0.]>
+
+        """
+        return replace(self, translation=-self.translation)
+
+    # -------------------------------------------
     # Python special methods
 
     def __repr__(self) -> str:

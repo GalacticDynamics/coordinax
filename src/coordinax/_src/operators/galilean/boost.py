@@ -178,6 +178,25 @@ class GalileanBoost(AbstractGalileanOperator):
         q, _ = self(v4.q, v4.t)
         return replace(v4, q=q)
 
+    # -------------------------------------------
+    # Arithmetic operations
+
+    def __neg__(self: "GalileanBoost") -> "GalileanBoost":
+        """Negate the rotation.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax.operators as cxo
+
+        >>> op = cx.ops.GalileanBoost.from_([1, 0, 0], "m/s")
+        >>> print((-op).velocity)
+        <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+            [-1. -0. -0.]>
+
+        """
+        return replace(self, velocity=-self.velocity)
+
     # -----------------------------------------------------
     # Python
 
