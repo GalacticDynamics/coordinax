@@ -16,7 +16,12 @@ from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
-from coordinax._src.operators import AbstractOperator, Identity, Sequence
+from coordinax._src.operators import (
+    AbstractOperator,
+    GalileanRotation,
+    Identity,
+    Sequence,
+)
 from coordinax._src.vectors.base import AbstractVel
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D, CartesianVel3D
 
@@ -77,36 +82,15 @@ def frame_transform_op(
 # ---------------------------------------------------------------
 
 
-def rotation_matrix_x(angle: ScalarAngle) -> RotationMatrix:
-    """Active rotation matrix about the x-axis."""
-    c = jnp.cos(u.ustrip("rad", angle))
-    s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[1.0, 0, 0], [0, c, -s], [0, s, c]])
-
-
-def rotation_matrix_y(angle: ScalarAngle) -> RotationMatrix:
-    """Active rotation matrix about the y-axis."""
-    c = jnp.cos(u.ustrip("rad", angle))
-    s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[c, 0, s], [0, 1.0, 0], [-s, 0, c]])
-
-
-def rotation_matrix_z(angle: ScalarAngle) -> RotationMatrix:
-    """Active rotation matrix about the z-axis."""
-    c = jnp.cos(u.ustrip("rad", angle))
-    s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[c, -s, 0], [s, c, 0], [0, 0, 1.0]])
-
-
 def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
     frame: Galactocentric, /
 ) -> tuple[RotationMatrix, LengthVector, VelocityVector]:
     """ICRS->GCF transformation matrices and offsets."""
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
-    mat1 = rotation_matrix_y(frame.galcen.lat)
-    mat2 = rotation_matrix_z(-frame.galcen.lon)
+    mat1 = GalileanRotation.from_euler("y", frame.galcen.lat).rotation
+    mat2 = GalileanRotation.from_euler("z", -frame.galcen.lon).rotation
     # extra roll away from the Galactic x-z plane
-    mat0 = rotation_matrix_x(frame.roll - frame.roll0)
+    mat0 = GalileanRotation.from_euler("x", frame.roll - frame.roll0).rotation
 
     # construct transformation matrix and use it
     R = mat0 @ mat1 @ mat2
@@ -114,7 +98,7 @@ def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
     # Now need to translate by Sun-Galactic center distance around x' and
     # rotate about y' to account for tilt due to Sun's height above the plane
     z_d = u.ustrip("", frame.z_sun / frame.galcen.distance)  # [radian]
-    H = rotation_matrix_y(u.Quantity(jnp.asin(z_d), "rad"))
+    H = GalileanRotation.from_euler("y", u.Quantity(jnp.asin(z_d), "rad")).rotation
 
     # compute total matrices
     A = H @ R
