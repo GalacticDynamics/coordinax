@@ -8,7 +8,7 @@ from plum import dispatch
 
 from .base import AbstractOperator
 from .identity import Identity
-from .sequence import Sequence
+from .pipe import Pipe
 
 
 @dispatch(precedence=-1)  # very low priority
@@ -44,7 +44,7 @@ def simplify_op(op: Identity, /) -> Identity:
 
 
 @dispatch
-def simplify_op(seq: Sequence, /) -> AbstractOperator:
+def simplify_op(seq: Pipe, /) -> AbstractOperator:
     """Simplify a sequence of Operators.
 
     This simplifies the sequence of operators by removing any that reduce to
@@ -60,12 +60,12 @@ def simplify_op(seq: Sequence, /) -> AbstractOperator:
 
     >>> seq = shift | cx.ops.Identity() | boost
     >>> seq
-    Sequence((
+    Pipe((
         GalileanSpatialTranslation(...), Identity(), GalileanBoost(...)
     ))
 
     >>> cx.ops.simplify_op(seq)
-    Sequence(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
 
     """
     # TODO: more sophisticated operator fusion. This just applies pair-wise
@@ -78,7 +78,7 @@ def simplify_op(seq: Sequence, /) -> AbstractOperator:
 
 
 @dispatch(precedence=-1)
-def simplify_op(op1: AbstractOperator, op2: AbstractOperator, /) -> Sequence:
+def simplify_op(op1: AbstractOperator, op2: AbstractOperator, /) -> Pipe:
     """Simplify two operators into a sequence.
 
     Examples
@@ -88,13 +88,13 @@ def simplify_op(op1: AbstractOperator, op2: AbstractOperator, /) -> Sequence:
     >>> op1 = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
     >>> op2 = cx.ops.GalileanBoost.from_([0, 1, 0], "m/s")
     >>> cx.ops.simplify_op(op1, op2)
-    Sequence((
+    Pipe((
         GalileanSpatialTranslation(CartesianPos3D( ... )),
         GalileanBoost(CartesianVel3D( ... ))
     ))
 
     """
-    return Sequence((op1, op2))
+    return Pipe((op1, op2))
 
 
 @dispatch(precedence=1)
@@ -130,34 +130,34 @@ def simplify_op(op1: Identity, op2: AbstractOperator) -> AbstractOperator:
 
 
 @dispatch
-def simplify_op(op1: Sequence, op2: AbstractOperator) -> Sequence:
+def simplify_op(op1: Pipe, op2: AbstractOperator) -> Pipe:
     """Simplify two sequences of operators by concatenating them.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> sop1 = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
-    >>> sop2 = cx.ops.Sequence((cx.ops.Identity(),))
+    >>> sop1 = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
+    >>> sop2 = cx.ops.Pipe((cx.ops.Identity(),))
     >>> cx.ops.simplify_op(sop1, sop2)
-    Sequence((Identity(), Identity(), Identity()))
+    Pipe((Identity(), Identity(), Identity()))
 
     """
     return op1 | op2
 
 
 @dispatch
-def simplify_op(op1: Sequence, op2: Sequence) -> Sequence:
+def simplify_op(op1: Pipe, op2: Pipe) -> Pipe:
     """Simplify two sequences of operators by concatenating them.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> sop1 = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
-    >>> sop2 = cx.ops.Sequence((cx.ops.Identity(),))
+    >>> sop1 = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
+    >>> sop2 = cx.ops.Pipe((cx.ops.Identity(),))
     >>> cx.ops.simplify_op(sop1, sop2)
-    Sequence((Identity(), Identity(), Identity()))
+    Pipe((Identity(), Identity(), Identity()))
 
     """
-    return Sequence(op1.operators + op2.operators)
+    return Pipe(op1.operators + op2.operators)

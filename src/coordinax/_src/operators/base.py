@@ -18,7 +18,7 @@ from .api import simplify_op
 from coordinax._src.vectors.base import AbstractPos
 
 if TYPE_CHECKING:
-    from coordinax.operators import Sequence
+    from coordinax.ops import Pipe
 
 
 class AbstractOperator(eqx.Module):  # type: ignore[misc]
@@ -64,9 +64,9 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         Examples
         --------
         >>> import coordinax as cx
-        >>> operators = cx.ops.Identity() | cx.ops.Identity()
-        >>> cx.ops.Sequence.from_({"operators": operators})
-        Sequence((Identity(), Identity()))
+        >>> pipe = cx.ops.Identity() | cx.ops.Identity()
+        >>> cx.ops.Pipe.from_({"operators": pipe})
+        Pipe((Identity(), Identity()))
 
         """
         return cls(**obj)
@@ -144,7 +144,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     def simplify(self) -> "AbstractOperator":
         """Simplify the operator.
 
-        This method calls `coordinax.operators.simplify_op` to simplify the
+        This method calls `coordinax.ops.simplify_op` to simplify the
         operator.
 
         Examples
@@ -156,7 +156,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         >>> op.simplify() is op
         True
 
-        >>> op = cx.ops.Sequence((cx.ops.Identity(), cx.ops.Identity()))
+        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
         >>> op.simplify()
         Identity()
 
@@ -214,7 +214,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
     # ===========================================
     # Operator Composition
 
-    def __or__(self, other: "AbstractOperator") -> "Sequence":
+    def __or__(self, other: "AbstractOperator") -> "Pipe":
         """Compose with another operator.
 
         Examples
@@ -224,14 +224,14 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         >>> op1 = cx.ops.Identity()
         >>> op2 = cx.ops.Identity()
         >>> op1 | op2
-        Sequence((Identity(), Identity()))
+        Pipe((Identity(), Identity()))
 
         """
-        from .sequence import Sequence
+        from .pipe import Pipe
 
-        if isinstance(other, Sequence):
+        if isinstance(other, Pipe):
             return other.__ror__(self)
-        return Sequence((self, other))
+        return Pipe((self, other))
 
 
 # TODO: move to the class in py3.11+

@@ -7,7 +7,7 @@ __all__ = [
     "AbstractOperator",
     "Identity",
     "AbstractCompositeOperator",
-    "Sequence",
+    "Pipe",
     # Galilean
     "AbstractGalileanOperator",
     "GalileanBoost",
@@ -27,7 +27,7 @@ from .galilean.composite import GalileanOperator
 from .galilean.rotation import GalileanRotation
 from .galilean.translation import GalileanSpatialTranslation, GalileanTranslation
 from .identity import Identity
-from .sequence import Sequence
+from .pipe import Pipe
 
 # isort: split
 from . import compat, register_simplify
