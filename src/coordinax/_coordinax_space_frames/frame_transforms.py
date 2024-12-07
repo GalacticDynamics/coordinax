@@ -77,25 +77,25 @@ def frame_transform_op(
 # ---------------------------------------------------------------
 
 
-def passive_rotation_matrix_x(angle: ScalarAngle) -> RotationMatrix:
-    """Passive rotation matrix about the x-axis."""
+def rotation_matrix_x(angle: ScalarAngle) -> RotationMatrix:
+    """Active rotation matrix about the x-axis."""
     c = jnp.cos(u.ustrip("rad", angle))
     s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[1.0, 0, 0], [0, c, s], [0, -s, c]])
+    return jnp.asarray([[1.0, 0, 0], [0, c, -s], [0, s, c]])
 
 
-def passive_rotation_matrix_y(angle: ScalarAngle) -> RotationMatrix:
-    """Passive rotation matrix about the y-axis."""
+def rotation_matrix_y(angle: ScalarAngle) -> RotationMatrix:
+    """Active rotation matrix about the y-axis."""
     c = jnp.cos(u.ustrip("rad", angle))
     s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[c, 0, -s], [0, 1.0, 0], [s, 0, c]])
+    return jnp.asarray([[c, 0, s], [0, 1.0, 0], [-s, 0, c]])
 
 
-def passive_rotation_matrix_z(angle: ScalarAngle) -> RotationMatrix:
-    """Passive rotation matrix about the z-axis."""
+def rotation_matrix_z(angle: ScalarAngle) -> RotationMatrix:
+    """Active rotation matrix about the z-axis."""
     c = jnp.cos(u.ustrip("rad", angle))
     s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[c, s, 0], [-s, c, 0], [0, 0, 1.0]])
+    return jnp.asarray([[c, -s, 0], [s, c, 0], [0, 0, 1.0]])
 
 
 def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
@@ -103,10 +103,10 @@ def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
 ) -> tuple[RotationMatrix, LengthVector, VelocityVector]:
     """ICRS->GCF transformation matrices and offsets."""
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
-    mat1 = passive_rotation_matrix_y(-frame.galcen.lat)
-    mat2 = passive_rotation_matrix_z(frame.galcen.lon)
+    mat1 = rotation_matrix_y(frame.galcen.lat)
+    mat2 = rotation_matrix_z(-frame.galcen.lon)
     # extra roll away from the Galactic x-z plane
-    mat0 = passive_rotation_matrix_x(frame.roll0 - frame.roll)
+    mat0 = rotation_matrix_x(frame.roll - frame.roll0)
 
     # construct transformation matrix and use it
     R = mat0 @ mat1 @ mat2
@@ -114,7 +114,7 @@ def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
     # Now need to translate by Sun-Galactic center distance around x' and
     # rotate about y' to account for tilt due to Sun's height above the plane
     z_d = u.ustrip("", frame.z_sun / frame.galcen.distance)  # [radian]
-    H = passive_rotation_matrix_y(-u.Quantity(jnp.asin(z_d), "rad"))
+    H = rotation_matrix_y(u.Quantity(jnp.asin(z_d), "rad"))
 
     # compute total matrices
     A = H @ R
