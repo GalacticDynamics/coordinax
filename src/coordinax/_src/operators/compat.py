@@ -11,6 +11,7 @@ from plum import convert
 import unxt as u
 
 from .base import AbstractOperator
+from .sequence import Sequence
 from coordinax._src.typing import TimeBatchOrScalar
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
@@ -118,7 +119,10 @@ def call(
 Q3: TypeAlias = Shaped[u.Quantity["length"], "*#batch 3"]
 
 
-@AbstractOperator.__call__.dispatch
+@AbstractOperator.__call__.dispatch_multi(
+    (AbstractOperator, Q3),
+    (Sequence, Q3),
+)
 def call(self: AbstractOperator, q: Q3, /) -> Q3:
     r"""Operate on a 3D Quantity.
 
