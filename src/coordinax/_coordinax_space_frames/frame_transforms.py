@@ -16,7 +16,12 @@ from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
-from coordinax._src.operators import AbstractOperator, Identity, Sequence
+from coordinax._src.operators import (
+    AbstractOperator,
+    GalileanRotation,
+    Identity,
+    Sequence,
+)
 from coordinax._src.vectors.base import AbstractVel
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D, CartesianVel3D
 
@@ -77,36 +82,15 @@ def frame_transform_op(
 # ---------------------------------------------------------------
 
 
-def passive_rotation_matrix_x(angle: ScalarAngle) -> RotationMatrix:
-    """Passive rotation matrix about the x-axis."""
-    c = jnp.cos(u.ustrip("rad", angle))
-    s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[1.0, 0, 0], [0, c, s], [0, -s, c]])
-
-
-def passive_rotation_matrix_y(angle: ScalarAngle) -> RotationMatrix:
-    """Passive rotation matrix about the y-axis."""
-    c = jnp.cos(u.ustrip("rad", angle))
-    s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[c, 0, -s], [0, 1.0, 0], [s, 0, c]])
-
-
-def passive_rotation_matrix_z(angle: ScalarAngle) -> RotationMatrix:
-    """Passive rotation matrix about the z-axis."""
-    c = jnp.cos(u.ustrip("rad", angle))
-    s = jnp.sin(u.ustrip("rad", angle))
-    return jnp.asarray([[c, s, 0], [-s, c, 0], [0, 0, 1.0]])
-
-
 def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
     frame: Galactocentric, /
 ) -> tuple[RotationMatrix, LengthVector, VelocityVector]:
     """ICRS->GCF transformation matrices and offsets."""
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
-    mat1 = passive_rotation_matrix_y(-frame.galcen.lat)
-    mat2 = passive_rotation_matrix_z(frame.galcen.lon)
+    mat1 = GalileanRotation.from_euler("y", frame.galcen.lat).rotation
+    mat2 = GalileanRotation.from_euler("z", -frame.galcen.lon).rotation
     # extra roll away from the Galactic x-z plane
-    mat0 = passive_rotation_matrix_x(frame.roll0 - frame.roll)
+    mat0 = GalileanRotation.from_euler("x", frame.roll - frame.roll0).rotation
 
     # construct transformation matrix and use it
     R = mat0 @ mat1 @ mat2
@@ -114,7 +98,7 @@ def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
     # Now need to translate by Sun-Galactic center distance around x' and
     # rotate about y' to account for tilt due to Sun's height above the plane
     z_d = u.ustrip("", frame.z_sun / frame.galcen.distance)  # [radian]
-    H = passive_rotation_matrix_y(-u.Quantity(jnp.asin(z_d), "rad"))
+    H = GalileanRotation.from_euler("y", u.Quantity(jnp.asin(z_d), "rad")).rotation
 
     # compute total matrices
     A = H @ R
@@ -223,13 +207,43 @@ class _ICRS2GCFOperator(AbstractOperator):
 
     @dispatch
     def __call__(self, q: LengthVector, /) -> LengthVector:
+        """Transform q from ICRS Cartesian -> GCF Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.ICRS(), cxf.Galactocentric())
+
+        >>> q = u.Quantity([0, 0, 0], "pc")
+        >>> frame_op(q)
+        Quantity[...](Array([-8121.973, 0. , 20.8 ], dtype=float32), unit='pc')
+
+        """
         return self._call_q(q)
 
     @dispatch
     def __call__(
         self, q: LengthVector, p: VelocityVector, /
     ) -> tuple[LengthVector, VelocityVector]:
-        """Transform q and p from ICRS Cartesian -> GCF Cartesian."""
+        """Transform q and p from ICRS Cartesian -> GCF Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.ICRS(), cxf.Galactocentric())
+
+        >>> q = u.Quantity([0., 0, 0], "pc")
+        >>> p = u.Quantity([0., 0, 0], "km/s")
+
+        >>> frame_op(q, p)
+        (Quantity['length'](Array([-8121.973, 0. , 20.8 ], dtype=float32), unit='pc'),
+         Quantity['speed'](Array([ 12.9 , 245.6 , 7.78], dtype=float32), unit='km / s'))
+
+        """
         # Compute the transformation matrix and offsets
         A, offset, offset_v = _icrs_cartesian_to_gcf_cartesian_matrix_vectors(self.gcf)
 
@@ -246,6 +260,26 @@ class _ICRS2GCFOperator(AbstractOperator):
     def __call__(
         self, qvec: AbstractPos3D, pvec: AbstractVel
     ) -> tuple[AbstractPos3D, AbstractVel]:
+        r"""Transform q and p from ICRS Cartesian -> GCF Cartesian.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.ICRS(), cxf.Galactocentric())
+
+        >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
+        >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
+
+        >>> newq, newp = frame_op(q, p)
+        >>> print(newq, newp, sep="\n")
+        <CartesianPos3D (x[pc], y[pc], z[pc])
+            [-8121.973     0.       20.8  ]>
+        <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+            [ 12.9  245.6    7.78]>
+
+        """
         p = convert(pvec.represent_as(CartesianVel3D, qvec), u.Quantity)
 
         qp, pp = self(convert(qvec, u.Quantity), p)
@@ -404,13 +438,44 @@ class _GCF2ICRSOperator(AbstractOperator):
 
     @dispatch
     def __call__(self, q: LengthVector, /) -> LengthVector:
+        """Transform q from GCF Cartesian -> ICRS Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.Galactocentric(), cxf.ICRS())
+
+        >>> q = u.Quantity([0, 0, 0], "pc")
+        >>> frame_op(q).round(0)
+        Quantity['length'](Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
+
+        """
         return self._call_q(q)
 
     @dispatch
     def __call__(
         self, q: LengthVector, p: VelocityVector, /
     ) -> tuple[LengthVector, VelocityVector]:
-        """Transform q and p from GCF Cartesian -> ICRS Cartesian."""
+        r"""Transform q and p from GCF Cartesian -> ICRS Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.Galactocentric(), cxf.ICRS())
+
+        >>> q = u.Quantity([0., 0, 0], "pc")
+        >>> p = u.Quantity([0., 0, 0], "km/s")
+
+        >>> newq, newp = frame_op(q, p)
+        >>> print(newq.round(0), newp.round(0), sep="\n")
+        Quantity['length'](Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
+        Quantity['speed'](Array([-114., 122., -181.], dtype=float32), unit='km / s')
+
+        """
         # Compute the transformation matrix and offsets
         A, offset, offset_v = _gcf_cartesian_to_icrs_cartesian_matrix_vectors(self.gcf)
 
@@ -427,6 +492,26 @@ class _GCF2ICRSOperator(AbstractOperator):
     def __call__(
         self, qvec: AbstractPos3D, pvec: AbstractVel
     ) -> tuple[AbstractPos3D, AbstractVel]:
+        r"""Transform q and p from GCF Cartesian -> ICRS Cartesian.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.Galactocentric(), cxf.ICRS())
+
+        >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
+        >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
+
+        >>> newq, newp = frame_op(q, p)
+        >>> print(newq, newp, sep="\n")
+        <CartesianPos3D (x[pc], y[pc], z[pc])
+            [ -445.689 -7094.056 -3929.708]>
+        <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+            [-113.868  122.047 -180.79 ]>
+
+        """
         q = convert(qvec, u.Quantity)
         p = convert(pvec.represent_as(CartesianVel3D, qvec), u.Quantity)
 

@@ -1,15 +1,16 @@
-# ruff: noqa: ERA001
 """Galilean coordinate transformations."""
+# ruff: noqa: ERA001, N806
 
 __all__ = ["GalileanRotation"]
 
 
 from collections.abc import Mapping
 from dataclasses import replace
-from typing import Any, Literal, final
+from typing import Any, Literal, TypeAlias, final
 
 import equinox as eqx
 import jax
+from jax.scipy.spatial.transform import Rotation
 from jaxtyping import Array, Shaped
 from plum import convert, dispatch
 from quax import quaxify
@@ -18,12 +19,15 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
+from coordinax._src.angles import Angle
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base import ToUnitsOptions
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
 vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
+
+RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
 
 
 def converter(x: Any) -> Array:
@@ -131,6 +135,53 @@ class GalileanRotation(AbstractGalileanOperator):
     #         ),
     #         "The rotation matrix must be orthogonal.",
     #     )
+
+    # -----------------------------------------------------
+
+    @classmethod
+    def from_euler(
+        cls: "type[GalileanRotation]", seq: str, angles: u.Quantity["angle"] | Angle, /
+    ) -> "GalileanRotation":
+        """Initialize from Euler angles.
+
+        See `jax.scipy.spatial.transform.Rotation.from_euler`.
+        `XYZ` are intrinsic rotations, `xyz` are extrinsic rotations.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        >>> op = cx.ops.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+        >>> op.rotation.round(2)
+        Array([[ 0., -1.,  0.],
+               [ 1.,  0.,  0.],
+               [ 0.,  0.,  1.]], dtype=float32)
+
+        """
+        R = Rotation.from_euler(seq, u.ustrip("deg", angles), degrees=True).as_matrix()
+
+        return cls(rotation=R)
+
+    @classmethod
+    @AbstractOperator.from_.dispatch  # type: ignore[attr-defined, misc]
+    def from_(cls: "type[GalileanRotation]", obj: Rotation, /) -> "GalileanRotation":
+        """Initialize from a `jax.scipy.spatial.transform.Rotation`.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> from jax.scipy.spatial.transform import Rotation
+        >>> import coordinax as cx
+
+        >>> R = Rotation.from_euler("z", 90, degrees=True)
+        >>> op = cx.ops.GalileanRotation.from_(R)
+
+        >>> jnp.allclose(op.rotation, R.as_matrix())
+        Array(True, dtype=bool)
+
+        """
+        return cls(rotation=obj.as_matrix())
 
     # -----------------------------------------------------
 
