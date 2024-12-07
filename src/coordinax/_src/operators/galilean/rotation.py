@@ -268,10 +268,10 @@ class GalileanRotation(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cxo.GalileanRotation(Rz)
+        >>> op = cx.ops.GalileanRotation(Rz)
         >>> print((-op).rotation)
         [[ 0  1  0]
          [-1  0  0]

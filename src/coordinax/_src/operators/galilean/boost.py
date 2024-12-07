@@ -187,7 +187,7 @@ class GalileanBoost(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
         >>> op = cx.ops.GalileanBoost.from_([1, 0, 0], "m/s")
         >>> print((-op).velocity)

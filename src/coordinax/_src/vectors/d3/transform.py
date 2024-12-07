@@ -606,14 +606,14 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(1., "kpc2"),
-    ...     nu=Quantity(0.2, "kpc2"),
-    ...     phi=Quantity(90, "deg"),
-    ...     Delta=Quantity(0.5, "kpc")
+    ...     mu=u.Quantity(1., "kpc2"),
+    ...     nu=u.Quantity(0.2, "kpc2"),
+    ...     phi=u.Quantity(90, "deg"),
+    ...     Delta=u.Quantity(0.5, "kpc")
     ... )
     >>> print(cx.represent_as(vec, cx.vecs.CylindricalPos))
     <CylindricalPos (rho[kpc], phi[deg], z[kpc])
@@ -640,16 +640,16 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.CylindricalPos(
-    ...     rho=Quantity(1., "kpc"),
-    ...     phi=Quantity(90, "deg"),
-    ...     z=Quantity(1, "kpc")
+    ...     rho=u.Quantity(1., "kpc"),
+    ...     phi=u.Quantity(90, "deg"),
+    ...     z=u.Quantity(1, "kpc")
     ... )
     >>> print(vec.represent_as(cx.vecs.ProlateSpheroidalPos,
-    ...                        Delta=Quantity(0.5, "kpc")))
+    ...                        Delta=u.Quantity(0.5, "kpc")))
     <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[deg])
         [ 2.133  0.117 90.   ]>
 
@@ -713,14 +713,14 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(1., "kpc2"),
-    ...     nu=Quantity(0.2, "kpc2"),
-    ...     phi=Quantity(90, "deg"),
-    ...     Delta=Quantity(0.5, "kpc")
+    ...     mu=u.Quantity(1., "kpc2"),
+    ...     nu=u.Quantity(0.2, "kpc2"),
+    ...     phi=u.Quantity(90, "deg"),
+    ...     Delta=u.Quantity(0.5, "kpc")
     ... )
     >>> print(cx.represent_as(vec, cx.CartesianPos3D))
     <CartesianPos3D (x[kpc], y[kpc], z[kpc])
@@ -742,19 +742,19 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     Self-transforms can change the focal length:
 
     >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(1., "kpc2"),
-    ...     nu=Quantity(0.2, "kpc2"),
-    ...     phi=Quantity(90, "deg"),
-    ...     Delta=Quantity(0.5, "kpc")
+    ...     mu=u.Quantity(1., "kpc2"),
+    ...     nu=u.Quantity(0.2, "kpc2"),
+    ...     phi=u.Quantity(90, "deg"),
+    ...     Delta=u.Quantity(0.5, "kpc")
     ... )
     >>> print(cx.represent_as(vec, cx.vecs.ProlateSpheroidalPos,
-    ...                       Delta=Quantity(0.8, "kpc")))
+    ...                       Delta=u.Quantity(0.8, "kpc")))
     <ProlateSpheroidalPos...>
 
     Without changing the focal length, no transform is done:
@@ -786,14 +786,14 @@ def represent_as(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(1., "kpc2"),
-    ...     nu=Quantity(0.2, "kpc2"),
-    ...     phi=Quantity(90, "deg"),
-    ...     Delta=Quantity(0.5, "kpc")
+    ...     mu=u.Quantity(1., "kpc2"),
+    ...     nu=u.Quantity(0.2, "kpc2"),
+    ...     phi=u.Quantity(90, "deg"),
+    ...     Delta=u.Quantity(0.5, "kpc")
     ... )
     >>> print(cx.represent_as(vec, cx.CartesianPos3D))
     <CartesianPos3D (x[kpc], y[kpc], z[kpc])
@@ -802,13 +802,13 @@ def represent_as(
     Self-transforms also work to change the focal length:
 
     >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(1., "kpc2"),
-    ...     nu=Quantity(0.2, "kpc2"),
-    ...     phi=Quantity(90, "deg"),
-    ...     Delta=Quantity(0.5, "kpc")
+    ...     mu=u.Quantity(1., "kpc2"),
+    ...     nu=u.Quantity(0.2, "kpc2"),
+    ...     phi=u.Quantity(90, "deg"),
+    ...     Delta=u.Quantity(0.5, "kpc")
     ... )
     >>> print(cx.represent_as(vec, cx.vecs.ProlateSpheroidalPos,
-    ...                       Delta=Quantity(0.8, "kpc")))
+    ...                       Delta=u.Quantity(0.8, "kpc")))
     <ProlateSpheroidalPos...>
 
     """
@@ -842,11 +842,11 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(15, "deg"),
-    ...                             lat=u.Quantity(10, "deg"),
-    ...                             distance=u.Quantity(1.5, "kpc"))
+    ...                                  lat=u.Quantity(10, "deg"),
+    ...                                  distance=u.Quantity(1.5, "kpc"))
     >>> dif = cx.vecs.LonLatSphericalVel(d_lon=u.Quantity(7, "mas/yr"),
-    ...                             d_lat=u.Quantity(0, "deg/Gyr"),
-    ...                             d_distance=u.Quantity(-5, "km/s"))
+    ...                                  d_lat=u.Quantity(0, "deg/Gyr"),
+    ...                                  d_distance=u.Quantity(-5, "km/s"))
     >>> newdif = cx.represent_as(dif, cx.vecs.LonCosLatSphericalVel, vec)
     >>> newdif
     LonCosLatSphericalVel(

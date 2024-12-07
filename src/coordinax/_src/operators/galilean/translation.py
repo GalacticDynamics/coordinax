@@ -274,9 +274,9 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> import coordinax.operators as cxo
+        >>> import coordinax as cx
 
-        >>> op = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
         >>> print((-op).translation)
         <CartesianPos3D (x[kpc], y[kpc], z[kpc])
             [-1. -0. -0.]>
