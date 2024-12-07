@@ -8,6 +8,7 @@ from dataclasses import replace
 from typing import Any, Literal, final
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 from plum import convert, dispatch
 
@@ -83,10 +84,15 @@ class GalileanBoost(AbstractGalileanOperator):
     )
     """The boost velocity.
 
-    Unless given a :class:`coordinax.AbstractVel`, this parameter uses This
-    parameters uses :meth:`coordinax.CartesianVel3D.from_` to enable a variety
-    of more convenient input types. See :class:`coordinax.CartesianVel3D` for
-    details.
+    Unless given a :class:`coordinax.AbstractVel`, this parameter uses
+    :meth:`coordinax.CartesianVel3D.from_` to enable a variety of more
+    convenient input types. See :class:`coordinax.CartesianVel3D` for details.
+
+    Cartesian velocities are in a Euclidean space and do not require a reference
+    position to be applied. More general affine velocities do. When applying the
+    boost the velocity is assumed to be defined at the reference point (before
+    the boost).
+
     """
 
     # -----------------------------------------------------
@@ -127,7 +133,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     # -----------------------------------------------------
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanBoost", q: AbstractPos, delta_t: u.Quantity["time"], /
     ) -> tuple[AbstractPos, u.Quantity["time"]]:
@@ -177,6 +183,36 @@ class GalileanBoost(AbstractGalileanOperator):
         """
         q, _ = self(v4.q, v4.t)
         return replace(v4, q=q)
+
+    @jax.jit
+    @AbstractOperator.__call__.dispatch
+    def __call__(
+        self: "GalileanBoost", qvec: AbstractPos, pvec: AbstractVel, /
+    ) -> tuple[AbstractPos, AbstractVel]:
+        """Apply the translation to the coordinates."""
+        # Translate the position.
+        newqvec = self(qvec)
+
+        # TODO: figure out how to do this in general, then all these dispatches
+        # can be consolidated.
+        #
+        # Translate the velocity (this operator will have no effect on the
+        # velocity).
+        # 1. convert to a Quantity in Cartesian coordinates.
+        q = convert(qvec.represent_as(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
+        p = convert(pvec.represent_as(pvec._cartesian_cls, q), u.Quantity)  # noqa: SLF001
+        # 2. create the Jacobian of the operation on the position
+        jac = u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,))(q)
+        # 3. apply the Jacobian to the velocity
+        newp = jac @ p
+        # 4. convert the Quantity back to a Cartesian vector
+        newpvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
+        # 5. apply the boost to the velocity
+        newpvec = newpvec + self.velocity.represent_as(pvec._cartesian_cls, qvec)  # noqa: SLF001
+        # 6. represent back as the original vector type
+        newpvec = newpvec.represent_as(type(pvec), newqvec)
+
+        return newqvec, newpvec
 
     # -------------------------------------------
     # Arithmetic operations

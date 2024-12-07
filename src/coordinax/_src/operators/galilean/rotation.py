@@ -22,7 +22,7 @@ from .base import AbstractGalileanOperator
 from coordinax._src.angles import Angle
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.base import ToUnitsOptions
+from coordinax._src.vectors.base import AbstractPos, AbstractVel, ToUnitsOptions
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
 vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
@@ -257,7 +257,7 @@ class GalileanRotation(AbstractGalileanOperator):
         """
         return vec_matmul(self.rotation, q)
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(self: "GalileanRotation", q: AbstractPos3D, /) -> AbstractPos3D:
         """Apply the rotation to the coordinates.
 
@@ -283,7 +283,7 @@ class GalileanRotation(AbstractGalileanOperator):
         rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
         return rcart.represent_as(type(q))
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanRotation", q: AbstractPos3D, t: u.Quantity["time"], /
     ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
@@ -309,6 +309,34 @@ class GalileanRotation(AbstractGalileanOperator):
 
         """
         return self(q), t
+
+    @jax.jit
+    @AbstractOperator.__call__.dispatch
+    def __call__(
+        self: "GalileanRotation", qvec: AbstractPos, pvec: AbstractVel, /
+    ) -> tuple[AbstractPos, AbstractVel]:
+        """Apply the translation to the coordinates."""
+        # Translate the position.
+        newqvec = self(qvec)
+
+        # TODO: figure out how to do this in general, then all these dispatches
+        # can be consolidated.
+        #
+        # Translate the velocity (this operator will have no effect on the
+        # velocity).
+        # 1. convert to a Quantity in Cartesian coordinates.
+        q = convert(qvec.represent_as(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
+        p = convert(pvec.represent_as(pvec._cartesian_cls, q), u.Quantity)  # noqa: SLF001
+        # 2. create the Jacobian of the operation on the position
+        jac = u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,))(q)
+        # 3. apply the Jacobian to the velocity
+        newp = jac @ p
+        # 4. convert the Quantity back to a Cartesian vector
+        newpvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
+        # 5. represent back as the original vector type
+        newpvec = newpvec.represent_as(type(pvec), newqvec)
+
+        return newqvec, newpvec
 
     # -----------------------------------------------------
     # Arithmetic operations
