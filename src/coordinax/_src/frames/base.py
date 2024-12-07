@@ -52,11 +52,11 @@ class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
         >>> gcf = cxf.Galactocentric()
         >>> op = icrs.transform_op(gcf)  # ICRS to Galactocentric
         >>> op
-        _ICRS2GCFOperator( gcf=Galactocentric( ... ) )
+        Pipe(( ... ))
 
         >>> op = gcf.transform_op(icrs)  # Galactocentric to ICRS
         >>> op
-        _GCF2ICRSOperator( gcf=Galactocentric( ... ) )
+        Pipe(( ... ))
 
         """
         return frame_transform_op(self, to_frame)
