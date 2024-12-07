@@ -32,7 +32,7 @@ class CartesianPos1D(AbstractPos1D):
     --------
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos1D.from_([2], "m")
+    >>> vec = cx.vecs.CartesianPos1D.from_([2], "m")
     >>> vec
     CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")))
 
@@ -73,8 +73,8 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPos1D.from_([1], "kpc")
-    >>> r = cx.RadialPos.from_([1], "kpc")
+    >>> q = cx.vecs.CartesianPos1D.from_([1], "kpc")
+    >>> r = cx.vecs.RadialPos.from_([1], "kpc")
 
     >>> qpr = jnp.add(q, r)
     >>> qpr
@@ -101,7 +101,7 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPos1D.from_(1, "m")
+    >>> v = cx.vecs.CartesianPos1D.from_(1, "m")
     >>> jnp.multiply(2, v).x
     Quantity['length'](Array(2., dtype=float32), unit='m')
 
@@ -125,7 +125,7 @@ def _neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPos1D.from_([1], "km")
+    >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> (-q).x
     Quantity['length'](Array(-1., dtype=float32), unit='km')
 
@@ -142,8 +142,8 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> q = cx.CartesianPos1D.from_([1], "kpc")
-    >>> r = cx.RadialPos.from_([1], "kpc")
+    >>> q = cx.vecs.CartesianPos1D.from_([1], "kpc")
+    >>> r = cx.vecs.RadialPos.from_([1], "kpc")
 
     >>> qmr = jnp.subtract(q, r)
     >>> qmr
@@ -191,7 +191,7 @@ class CartesianVel1D(AvalMixin, AbstractVel1D):
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.CartesianVel1D.from_([-1], "km/s")
+        >>> q = cx.vecs.CartesianVel1D.from_([-1], "km/s")
         >>> q.norm()
         Quantity['speed'](Array(1, dtype=int32), unit='km / s')
 
@@ -212,7 +212,7 @@ def _add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVel1D.from_([1], "km/s")
+    >>> v = cx.vecs.CartesianVel1D.from_([1], "km/s")
     >>> vec = jnp.add(v, v)
     >>> vec
     CartesianVel1D(
@@ -237,7 +237,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianVel1D.from_(1, "m/s")
+    >>> v = cx.vecs.CartesianVel1D.from_(1, "m/s")
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianVel1D(
@@ -286,7 +286,7 @@ class CartesianAcc1D(AvalMixin, AbstractAcc1D):
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.CartesianAcc1D.from_([-1], "km/s2")
+        >>> q = cx.vecs.CartesianAcc1D.from_([-1], "km/s2")
         >>> q.norm()
         Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
 
@@ -303,7 +303,7 @@ def _add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcc1D.from_([1], "km/s2")
+    >>> v = cx.vecs.CartesianAcc1D.from_([1], "km/s2")
     >>> vec = jnp.add(v, v)
     >>> vec
     CartesianAcc1D(
@@ -328,7 +328,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianAcc1D.from_(1, "m/s2")
+    >>> v = cx.vecs.CartesianAcc1D.from_(1, "m/s2")
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianAcc1D( d2_x=... )
@@ -358,8 +358,8 @@ def _sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D
     >>> from quaxed import lax
     >>> import coordinax as cx
 
-    >>> v1 = cx.CartesianAcc1D.from_(1, "m/s2")
-    >>> v2 = cx.CartesianAcc1D.from_(2, "m/s2")
+    >>> v1 = cx.vecs.CartesianAcc1D.from_(1, "m/s2")
+    >>> v2 = cx.vecs.CartesianAcc1D.from_(2, "m/s2")
     >>> vec = lax.sub(v1, v2)
     >>> vec
     CartesianAcc1D( d2_x=... )

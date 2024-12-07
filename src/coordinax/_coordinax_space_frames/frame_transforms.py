@@ -164,8 +164,8 @@ class _ICRS2GCFOperator(AbstractOperator):
 
     Now we can use the `_ICRS2GCFOperator` to perform the same transformation:
 
-    >>> vega_q = cx.LonLatSphericalPos.from_(vega.icrs.data)
-    >>> vega_p = cx.LonCosLatSphericalVel.from_(vega.icrs.data.differentials["s"])
+    >>> vega_q = cx.vecs.LonLatSphericalPos.from_(vega.icrs.data)
+    >>> vega_p = cx.vecs.LonCosLatSphericalVel.from_(vega.icrs.data.differentials["s"])
 
     >>> icrs_frame = cx.frames.ICRS()
     >>> gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
@@ -350,12 +350,12 @@ class _GCF2ICRSOperator(AbstractOperator):
     >>> frame_op = cx.frames.frame_transform_op(gcf_frame, icrs_frame)
     >>> vega_icrs_q, vega_icrs_p = frame_op(vega_q, vega_p)
 
-    >>> vega_icrs_q = vega_icrs_q.represent_as(cx.LonLatSphericalPos)
+    >>> vega_icrs_q = vega_icrs_q.represent_as(cx.vecs.LonLatSphericalPos)
     >>> print(vega_icrs_q.uconvert({"angle": "deg", "length": "pc"}))
     <LonLatSphericalPos (lon[deg], lat[deg], distance[pc])
         [279.235  38.785  25.   ]>
 
-    >>> vega_icrs_p = vega_icrs_p.represent_as(cx.LonCosLatSphericalVel, vega_icrs_q)
+    >>> vega_icrs_p = vega_icrs_p.represent_as(cx.vecs.LonCosLatSphericalVel, vega_icrs_q)
     >>> print(vega_icrs_p.uconvert({"angular speed": "mas / yr", "speed": "km/s"}))
     <LonCosLatSphericalVel (d_lon_coslat[mas / yr], d_lat[mas / yr], d_distance[km / s])
         [ 200.002 -286.002  -13.9  ]>

@@ -56,7 +56,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialPos._cartesian_cls
+        >>> cx.vecs.RadialPos._cartesian_cls
         <class 'coordinax...CartesianPos1D'>
 
         >>> cx.SphericalPos._cartesian_cls
@@ -76,7 +76,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialPos.differential_cls.__name__
+        >>> cx.vecs.RadialPos.differential_cls.__name__
         'RadialVel'
 
         >>> cx.SphericalPos.differential_cls.__name__
@@ -113,19 +113,19 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> vec1 = vec.represent_as(cx.SphericalPos)
-        >>> vec2 = vec.represent_as(cx.MathSphericalPos)
+        >>> vec2 = vec.represent_as(cx.vecs.MathSphericalPos)
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
         Quick run-through of each dimensionality:
 
-        >>> vec1 = cx.CartesianPos1D.from_([1], "m")
-        >>> vec2 = cx.RadialPos.from_([1], "m")
+        >>> vec1 = cx.vecs.CartesianPos1D.from_([1], "m")
+        >>> vec2 = cx.vecs.RadialPos.from_([1], "m")
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
-        >>> vec1 = cx.CartesianPos2D.from_([2, 0], "m")
-        >>> vec2 = cx.PolarPos(r=u.Quantity(2, "m"), phi=u.Quantity(0, "rad"))
+        >>> vec1 = cx.vecs.CartesianPos2D.from_([2, 0], "m")
+        >>> vec2 = cx.vecs.PolarPos(r=u.Quantity(2, "m"), phi=u.Quantity(0, "rad"))
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
@@ -153,15 +153,15 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> v = cx.CartesianPos1D.from_([-1], "kpc")
+        >>> v = cx.vecs.CartesianPos1D.from_([-1], "kpc")
         >>> v.norm()
         Quantity['length'](Array(1., dtype=float32), unit='kpc')
 
-        >>> v = cx.CartesianPos2D.from_([3, 4], "kpc")
+        >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "kpc")
         >>> v.norm()
         Quantity['length'](Array(5., dtype=float32), unit='kpc')
 
-        >>> v = cx.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
+        >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
         >>> v.norm()
         Quantity['length'](Array(3., dtype=float32), unit='kpc')
 
@@ -253,7 +253,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     So let's define a new class and try it out:
 
     >>> from typing import ClassVar
-    >>> class MyCartesian(cx.AbstractPos):
+    >>> class MyCartesian(cx.vecs.AbstractPos):
     ...     x: u.Quantity
     ...     y: u.Quantity
     ...     z: u.Quantity

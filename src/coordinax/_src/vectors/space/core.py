@@ -69,7 +69,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> space

@@ -21,7 +21,7 @@ def from_(cls: type[AbstractPos3D], obj: Any, /) -> CartesianPos3D:
     >>> import coordinax as cx
 
     >>> x = u.Quantity([1, 2, 3], "km")
-    >>> cx.AbstractPos3D.from_(x)
+    >>> cx.vecs.AbstractPos3D.from_(x)
     CartesianPos3D(
       x=Quantity[...](value=f32[], unit=Unit("km")),
       y=Quantity[...](value=f32[], unit=Unit("km")),
@@ -41,15 +41,15 @@ def from_(cls: type[AbstractPos3D], obj: AbstractPos3D, /) -> AbstractPos3D:
     >>> import coordinax as cx
 
     >>> cart = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> cx.AbstractPos3D.from_(cart) is cart
+    >>> cx.vecs.AbstractPos3D.from_(cart) is cart
     True
 
     >>> sph = cart.represent_as(cx.SphericalPos)
-    >>> cx.AbstractPos3D.from_(sph) is sph
+    >>> cx.vecs.AbstractPos3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalPos)
-    >>> cx.AbstractPos3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.vecs.CylindricalPos)
+    >>> cx.vecs.AbstractPos3D.from_(cyl) is cyl
     True
 
     """
@@ -69,7 +69,7 @@ def from_(cls: type[AbstractVel3D], obj: Any, /) -> CartesianVel3D:
     >>> import coordinax as cx
 
     >>> x = u.Quantity([1, 2, 3], "km / s")
-    >>> cx.AbstractVel3D.from_(x)
+    >>> cx.vecs.AbstractVel3D.from_(x)
     CartesianVel3D(
       d_x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_y=Quantity[...]( value=f32[], unit=Unit("km / s") ),
@@ -91,15 +91,15 @@ def from_(cls: type[AbstractVel3D], obj: AbstractVel3D, /) -> AbstractVel3D:
     >>> q = cx.CartesianPos3D.from_([1, 1, 1], "km")
 
     >>> cart = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> cx.AbstractVel3D.from_(cart) is cart
+    >>> cx.vecs.AbstractVel3D.from_(cart) is cart
     True
 
     >>> sph = cart.represent_as(cx.SphericalVel, q)
-    >>> cx.AbstractVel3D.from_(sph) is sph
+    >>> cx.vecs.AbstractVel3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalVel, q)
-    >>> cx.AbstractVel3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.vecs.CylindricalVel, q)
+    >>> cx.vecs.AbstractVel3D.from_(cyl) is cyl
     True
 
     """
@@ -119,7 +119,7 @@ def from_(cls: type[AbstractAcc3D], obj: Any, /) -> CartesianAcc3D:
     >>> import coordinax as cx
 
     >>> x = u.Quantity([1, 2, 3], "km / s2")
-    >>> cx.AbstractAcc3D.from_(x)
+    >>> cx.vecs.AbstractAcc3D.from_(x)
     CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_y=Quantity[...](value=f32[], unit=Unit("km / s2")),
@@ -141,16 +141,16 @@ def from_(cls: type[AbstractAcc3D], obj: AbstractAcc3D, /) -> AbstractAcc3D:
     >>> q = cx.CartesianPos3D.from_([1, 1, 1], "km")
     >>> p = cx.CartesianVel3D.from_([1, 1, 1], "km/s")
 
-    >>> cart = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> cx.AbstractAcc3D.from_(cart) is cart
+    >>> cart = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> cx.vecs.AbstractAcc3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalAcc, p, q)
-    >>> cx.AbstractAcc3D.from_(sph) is sph
+    >>> sph = cart.represent_as(cx.vecs.SphericalAcc, p, q)
+    >>> cx.vecs.AbstractAcc3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalAcc, p, q)
-    >>> cx.AbstractAcc3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.vecs.CylindricalAcc, p, q)
+    >>> cx.vecs.AbstractAcc3D.from_(cyl) is cyl
     True
 
     """

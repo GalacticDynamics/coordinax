@@ -51,7 +51,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     >>> from unxt import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.ProlateSpheroidalPos(
+    >>> vec = cx.vecs.ProlateSpheroidalPos(
     ...     mu=Quantity(3.0, "kpc2"),
     ...     nu=Quantity(0.5, "kpc2"),
     ...     phi=Quantity(0.25, "rad"),
@@ -67,7 +67,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     This fails with a zero or negative Delta:
 
-    >>> try: vec = cx.ProlateSpheroidalPos(
+    >>> try: vec = cx.vecs.ProlateSpheroidalPos(
     ...     mu=Quantity(3.0, "kpc2"),
     ...     nu=Quantity(0.5, "kpc2"),
     ...     phi=Quantity(0.25, "rad"),
@@ -77,7 +77,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     Or with invalid mu and nu:
 
-    >>> try: vec = cx.ProlateSpheroidalPos(
+    >>> try: vec = cx.vecs.ProlateSpheroidalPos(
     ...     mu=Quantity(0.5, "kpc2"),
     ...     nu=Quantity(0.5, "kpc2"),
     ...     phi=Quantity(0.25, "rad"),

@@ -74,9 +74,7 @@ def _dot_general_dd(
 
     This rule is also used by `jnp.matmul` for quantities.
 
-    >>> Rz = jnp.asarray([[0, -1,  0],
-    ...                   [1,  0,  0],
-    ...                   [0,  0,  1]])
+    >>> Rz = jnp.asarray([[0, -1,  0], [1,  0,  0], [0,  0,  1]])
     >>> q = u.Quantity([1, 0, 0], "m")
     >>> Rz @ q
     Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')

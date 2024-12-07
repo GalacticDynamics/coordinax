@@ -46,7 +46,7 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
-    >>> cx.represent_as(w, cx.PoincarePolarVector)
+    >>> cx.represent_as(w, cx.vecs.PoincarePolarVector)
     PoincarePolarVector(
         rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
         pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),

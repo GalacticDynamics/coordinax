@@ -118,7 +118,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.CartesianPos1D.from_(q).represent_as(cx.RadialPos)
+    >>> vec = cx.vecs.CartesianPos1D.from_(q).represent_as(cx.vecs.RadialPos)
     >>> op(vec)
     RadialPos(r=Distance(value=f32[], unit=Unit("kpc")))
 
@@ -129,7 +129,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
 
-    >>> vec = cx.CartesianPos2D.from_(q).represent_as(cx.PolarPos)
+    >>> vec = cx.vecs.CartesianPos2D.from_(q).represent_as(cx.vecs.PolarPos)
     >>> op(vec)
     PolarPos( r=Distance(value=f32[], unit=Unit("kpc")),
               phi=Angle(value=f32[], unit=Unit("rad")) )

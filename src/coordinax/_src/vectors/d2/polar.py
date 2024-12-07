@@ -69,7 +69,7 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> v = cx.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
+    >>> v = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(1., dtype=float32), unit='m')

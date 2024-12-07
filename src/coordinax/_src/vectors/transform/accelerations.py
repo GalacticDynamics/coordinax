@@ -75,18 +75,18 @@ def represent_as(
 
     Let's start in 1D:
 
-    >>> q = cx.CartesianPos1D(x=u.Quantity(1.0, "km"))
-    >>> p = cx.CartesianVel1D(d_x=u.Quantity(1.0, "km/s"))
-    >>> a = cx.CartesianAcc1D(d2_x=u.Quantity(1.0, "km/s2"))
-    >>> cx.represent_as(a, cx.RadialAcc, p, q)
+    >>> q = cx.vecs.CartesianPos1D(x=u.Quantity(1.0, "km"))
+    >>> p = cx.vecs.CartesianVel1D(d_x=u.Quantity(1.0, "km/s"))
+    >>> a = cx.vecs.CartesianAcc1D(d2_x=u.Quantity(1.0, "km/s2"))
+    >>> cx.represent_as(a, cx.vecs.RadialAcc, p, q)
     RadialAcc( d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
 
     Now in 2D:
 
-    >>> q = cx.CartesianPos2D.from_([1.0, 2.0], "km")
-    >>> p = cx.CartesianVel2D.from_([1.0, 2.0], "km/s")
-    >>> a = cx.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
-    >>> cx.represent_as(a, cx.PolarAcc, p, q)
+    >>> q = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> p = cx.vecs.CartesianVel2D.from_([1.0, 2.0], "km/s")
+    >>> a = cx.vecs.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
+    >>> cx.represent_as(a, cx.vecs.PolarAcc, p, q)
     PolarAcc(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
@@ -96,8 +96,8 @@ def represent_as(
 
     >>> q = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> a = cx.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
-    >>> cx.represent_as(a, cx.SphericalAcc, p, q)
+    >>> a = cx.vecs.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
+    >>> cx.represent_as(a, cx.vecs.SphericalAcc, p, q)
     SphericalAcc(
       d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
       d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
@@ -107,7 +107,7 @@ def represent_as(
     If given a position as a Quantity, it will be converted to the appropriate
     Cartesian vector:
 
-    >>> cx.represent_as(a, cx.SphericalAcc,
+    >>> cx.represent_as(a, cx.vecs.SphericalAcc,
     ...                 u.Quantity([1.0, 2.0, 3.0], "km/s"),
     ...                 u.Quantity([1.0, 2.0, 3.0], "km"))
     SphericalAcc(

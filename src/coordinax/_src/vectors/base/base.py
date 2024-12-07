@@ -191,8 +191,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         Transforming an Acceleration:
 
-        >>> a_cart = cx.CartesianAcc3D.from_([7, 8, 9], "m/s2")
-        >>> a_sph = a_cart.represent_as(cx.SphericalAcc, v_cart, q_cart)
+        >>> a_cart = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+        >>> a_sph = a_cart.represent_as(cx.vecs.SphericalAcc, v_cart, q_cart)
         >>> a_sph
         SphericalAcc( ... )
         >>> a_sph.d2_r
@@ -258,11 +258,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         We can get the shape of a vector:
 
-        >>> vec = cx.CartesianPos1D(x=u.Quantity([1, 2], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(x=u.Quantity([1, 2], "m"))
         >>> vec.shape
         (2,)
 
-        >>> vec = cx.CartesianPos1D(x=u.Quantity([[1, 2], [3, 4]], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(x=u.Quantity([[1, 2], [3, 4]], "m"))
         >>> vec.shape
         (2, 2)
 
@@ -270,8 +270,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Quantity(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -312,7 +312,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPos2D.from_([3, 4], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
         >>> vec.__array_namespace__()
         <module 'quaxed.numpy' from ...>
 
@@ -362,11 +362,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         We can get the number of dimensions of a vector:
 
-        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec.ndim
         0
 
-        >>> vec = cx.CartesianPos2D.from_([[1, 2], [3, 4]], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([[1, 2], [3, 4]], "m")
         >>> vec.ndim
         1
 
@@ -374,8 +374,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Quantity(0, "m"))
         >>> vec.ndim
         2
 
@@ -395,11 +395,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         We can get the size of a vector:
 
-        >>> vec = cx.CartesianPos2D.from_([1, 2], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec.size
         1
 
-        >>> vec = cx.CartesianPos2D.from_([[1, 2], [3, 4]], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([[1, 2], [3, 4]], "m")
         >>> vec.size
         2
 
@@ -407,8 +407,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         see this by creating a 2D vector in which the components have
         different shapes:
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Quantity(0, "m"))
         >>> vec.size
         4
 
@@ -554,36 +554,36 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Positions are covered by a separate dispatch. So here we show velocities
         and accelerations:
 
-        >>> vel1 = cx.CartesianVel1D(u.Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.CartesianVel1D(u.Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.vecs.CartesianVel1D(u.Quantity([1, 2, 3], "km/s"))
+        >>> vel2 = cx.vecs.CartesianVel1D(u.Quantity([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.CartesianAcc1D(u.Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.CartesianAcc1D(u.Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.vecs.CartesianAcc1D(u.Quantity([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.vecs.CartesianAcc1D(u.Quantity([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.RadialVel(u.Quantity([1, 2, 3], "km/s"))
-        >>> vel2 = cx.RadialVel(u.Quantity([1, 0, 3], "km/s"))
+        >>> vel1 = cx.vecs.RadialVel(u.Quantity([1, 2, 3], "km/s"))
+        >>> vel2 = cx.vecs.RadialVel(u.Quantity([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.RadialAcc(u.Quantity([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.RadialAcc(u.Quantity([1, 0, 3], "km/s2"))
+        >>> acc1 = cx.vecs.RadialAcc(u.Quantity([1, 2, 3], "km/s2"))
+        >>> acc2 = cx.vecs.RadialAcc(u.Quantity([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
-        >>> vel2 = cx.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
+        >>> vel1 = cx.vecs.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
+        >>> vel2 = cx.vecs.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
         >>> vel1.d_x
         Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
@@ -591,8 +591,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         >>> vel1 == vel2
         Array([ True, False], dtype=bool)
 
-        >>> acc1 = cx.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
-        >>> acc2 = cx.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
+        >>> acc1 = cx.vecs.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
+        >>> acc2 = cx.vecs.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
         >>> acc1.d2_x
         Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
         >>> jnp.equal(acc1, acc2)
@@ -626,7 +626,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Examples
         --------
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPos2D.from_([3, 4], "m")
+        >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
         >>> abs(vec)
         Quantity['length'](Array(5., dtype=float32), unit='m')
 
@@ -661,7 +661,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         We can slice a vector:
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
         ...                         y=u.Quantity(0, "m"))
         >>> vec[0].x
         Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
@@ -688,7 +688,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         We can move a vector to a new device:
 
-        >>> vec = cx.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
         CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")))
 
@@ -708,17 +708,17 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         Scalar vectors have length 0:
 
-        >>> vec = cx.CartesianPos1D.from_([1], "m")
+        >>> vec = cx.vecs.CartesianPos1D.from_([1], "m")
         >>> len(vec)
         0
 
         Vectors with certain lengths:
 
-        >>> vec = cx.CartesianPos1D(u.Quantity([1], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1], "m"))
         >>> len(vec)
         1
 
-        >>> vec = cx.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> len(vec)
         2
 
@@ -733,8 +733,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Quantity(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -754,8 +754,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Quantity(0, "m"))
         >>> vec.shape
         (2, 2)
 
@@ -789,8 +789,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         We can reshape a vector:
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Quantity(0, "m"))
 
         >>> vec.reshape(4)
         CartesianPos2D(
@@ -841,8 +841,8 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
         We can get the vector as a mapping:
 
-        >>> vec = cx.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
+        ...                              y=u.Quantity(0, "m"))
         >>> vec.asdict()
         {'x': Quantity['length'](Array([[1., 2.], [3., 4.]], dtype=float32), unit='m'),
          'y': Quantity['length'](Array(0., dtype=float32), unit='m')}
@@ -859,11 +859,11 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         >>> import coordinax as cx
 
-        >>> cx.CartesianPos2D.components
+        >>> cx.vecs.CartesianPos2D.components
         ('x', 'y')
         >>> cx.SphericalPos.components
         ('r', 'theta', 'phi')
-        >>> cx.RadialVel.components
+        >>> cx.vecs.RadialVel.components
         ('d_r',)
 
         """
@@ -937,10 +937,10 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         --------
         >>> import coordinax as cx
 
-        >>> cx.CartesianPos2D.from_([1, 2], "m").sizes
+        >>> cx.vecs.CartesianPos2D.from_([1, 2], "m").sizes
         mappingproxy({'x': 1, 'y': 1})
 
-        >>> cx.CartesianPos2D.from_([[1, 2], [1, 2]], "m").sizes
+        >>> cx.vecs.CartesianPos2D.from_([[1, 2], [1, 2]], "m").sizes
         mappingproxy({'x': 2, 'y': 2})
 
         """
@@ -1010,15 +1010,15 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
       z=Quantity[...](value=f32[], unit=Unit("km"))
     )
 
-    >>> cx.AbstractPos3D.from_(cart) is cart
+    >>> cx.vecs.AbstractPos3D.from_(cart) is cart
     True
 
     >>> sph = cart.represent_as(cx.SphericalPos)
-    >>> cx.AbstractPos3D.from_(sph) is sph
+    >>> cx.vecs.AbstractPos3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalPos)
-    >>> cx.AbstractPos3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.vecs.CylindricalPos)
+    >>> cx.vecs.AbstractPos3D.from_(cyl) is cyl
     True
 
     Velocities:
@@ -1026,31 +1026,31 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     >>> p = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
 
     >>> cart = cx.CartesianVel3D.from_(p)
-    >>> cx.AbstractVel3D.from_(cart) is cart
+    >>> cx.vecs.AbstractVel3D.from_(cart) is cart
     True
 
     >>> sph = cart.represent_as(cx.SphericalVel, q)
-    >>> cx.AbstractVel3D.from_(sph) is sph
+    >>> cx.vecs.AbstractVel3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalVel, q)
-    >>> cx.AbstractVel3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.vecs.CylindricalVel, q)
+    >>> cx.vecs.AbstractVel3D.from_(cyl) is cyl
     True
 
     Accelerations:
 
     >>> p = cx.CartesianVel3D.from_([1, 1, 1], "km/s")
 
-    >>> cart = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> cx.AbstractAcc3D.from_(cart) is cart
+    >>> cart = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> cx.vecs.AbstractAcc3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalAcc, p, q)
-    >>> cx.AbstractAcc3D.from_(sph) is sph
+    >>> sph = cart.represent_as(cx.vecs.SphericalAcc, p, q)
+    >>> cx.vecs.AbstractAcc3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.CylindricalAcc, p, q)
-    >>> cx.AbstractAcc3D.from_(cyl) is cyl
+    >>> cyl = cart.represent_as(cx.vecs.CylindricalAcc, p, q)
+    >>> cx.vecs.AbstractAcc3D.from_(cyl) is cyl
     True
 
     """

@@ -26,7 +26,7 @@ def fields(obj: Space, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
 
@@ -52,7 +52,7 @@ def field_keys(obj: Space, /) -> KeysView[str]:
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
 
@@ -76,7 +76,7 @@ def field_values(obj: Space, /) -> ValuesView[AbstractVector]:
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
 
@@ -100,7 +100,7 @@ def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
 
@@ -127,7 +127,7 @@ def replace(obj: Space, /, **kwargs: AbstractVector) -> Space:
 
     >>> x = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
-    >>> a = cx.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> newspace = replace(space, length=cx.CartesianPos3D.from_([3, 2, 1], "km"))

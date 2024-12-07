@@ -47,14 +47,14 @@ class Identity(AbstractOperator):
     - 1D:
 
     >>> q = u.Quantity([1], "kpc")
-    >>> vec = cx.CartesianPos1D.from_(q)
+    >>> vec = cx.vecs.CartesianPos1D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 2D:
 
     >>> q = u.Quantity([1, 2], "kpc")
-    >>> vec = cx.CartesianPos2D.from_(q)
+    >>> vec = cx.vecs.CartesianPos2D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 

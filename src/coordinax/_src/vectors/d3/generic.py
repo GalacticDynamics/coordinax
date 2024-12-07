@@ -30,7 +30,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
     Examples
     --------
     >>> import coordinax as cx
-    >>> vec = cx.CartesianGeneric3D.from_([1, 2, 3], "kg m /s")
+    >>> vec = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "kg m /s")
     >>> vec
     CartesianGeneric3D(
       x=Quantity[...]( value=f32[], unit=Unit("kg m / s") ),
@@ -61,7 +61,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.CartesianGeneric3D.from_([1, 2, 3], "kpc")
+        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "kpc")
         >>> (-q).x
         Quantity['length'](Array(-1., dtype=float32), unit='kpc')
 
@@ -86,7 +86,7 @@ def from_(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianGeneric3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> vec = cx.vecs.CartesianGeneric3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> vec
     CartesianGeneric3D(
       x=Quantity[...](value=f32[], unit=Unit("m")),

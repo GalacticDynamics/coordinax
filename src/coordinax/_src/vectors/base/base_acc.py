@@ -48,10 +48,10 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.CartesianAcc3D._cartesian_cls
+        >>> cx.vecs.CartesianAcc3D._cartesian_cls
         <class 'coordinax...CartesianAcc3D'>
 
-        >>> cx.SphericalAcc._cartesian_cls
+        >>> cx.vecs.SphericalAcc._cartesian_cls
         <class 'coordinax...CartesianAcc3D'>
 
         """
@@ -68,10 +68,10 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
         --------
         >>> import coordinax as cx
 
-        >>> cx.RadialAcc.integral_cls.__name__
+        >>> cx.vecs.RadialAcc.integral_cls.__name__
         'RadialVel'
 
-        >>> cx.SphericalAcc.integral_cls.__name__
+        >>> cx.vecs.SphericalAcc.integral_cls.__name__
         'SphericalVel'
 
         """
@@ -95,11 +95,11 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> d2r = cx.RadialAcc.from_([1], "m/s2")
+        >>> d2r = cx.vecs.RadialAcc.from_([1], "m/s2")
         >>> -d2r
         RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
-        >>> d2p = cx.PolarAcc(u.Quantity(1, "m/s2"), u.Quantity(1, "mas/yr2"))
+        >>> d2p = cx.vecs.PolarAcc(u.Quantity(1, "m/s2"), u.Quantity(1, "mas/yr2"))
         >>> negd2p = -d2p
         >>> negd2p.d2_r
         Quantity['acceleration'](Array(-1., dtype=float32), unit='m / s2')
@@ -133,7 +133,7 @@ def _mul_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"]) -> AbstractVel:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcc(u.Quantity(1, "m/s2"))
+    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, u.Quantity(2, "s"))
     >>> vec
     RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
@@ -160,7 +160,7 @@ def _mul_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc) -> AbstractVel:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcc(u.Quantity(1, "m/s2"))
+    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(u.Quantity(2, "s"), d2r)
     >>> vec
     RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
@@ -181,7 +181,7 @@ def _mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcc(u.Quantity(1, "m/s2"))
+    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, u.Quantity(2, "s2"))
     >>> vec
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))
@@ -208,7 +208,7 @@ def _mul_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.RadialAcc(u.Quantity(1, "m/s2"))
+    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(u.Quantity(2, "s2"), d2r)
     >>> vec
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))

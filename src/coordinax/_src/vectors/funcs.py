@@ -23,11 +23,11 @@ def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N
     >>> import coordinax as cx
 
     >>> x = jnp.asarray([2, 0])
-    >>> cx.normalize_vector(x)
+    >>> cx.vecs.normalize_vector(x)
     Array([1., 0.], dtype=float32)
 
     >>> x = jnp.asarray([0, 2])
-    >>> cx.normalize_vector(x)
+    >>> cx.vecs.normalize_vector(x)
     Array([0., 1.], dtype=float32)
 
     """
@@ -47,11 +47,11 @@ def normalize_vector(
     >>> import coordinax as cx
 
     >>> x = u.Quantity(jnp.asarray([2, 0]), "km")
-    >>> cx.normalize_vector(x)
+    >>> cx.vecs.normalize_vector(x)
     Quantity['dimensionless'](Array([1., 0.], dtype=float32), unit='')
 
     >>> x = u.Quantity(jnp.asarray([0, 2]), "s")
-    >>> cx.normalize_vector(x)
+    >>> cx.vecs.normalize_vector(x)
     Quantity['dimensionless'](Array([0., 1.], dtype=float32), unit='')
 
     """

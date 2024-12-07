@@ -178,7 +178,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
     --------
     >>> import coordinax as cx
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> cx.normalize_vector(q)
+    >>> cx.vecs.normalize_vector(q)
     CartesianGeneric3D(
       x=Quantity[...]( value=f32[], unit=Unit(dimensionless) ),
       y=Quantity[...]( value=f32[], unit=Unit(dimensionless) ),
@@ -344,7 +344,7 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
         Examples
         --------
         >>> import coordinax as cx
-        >>> c = cx.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+        >>> c = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
         >>> c.norm()
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
@@ -366,7 +366,7 @@ def from_(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
+    >>> vec = cx.vecs.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
     >>> vec
     CartesianAcc3D(
       d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
