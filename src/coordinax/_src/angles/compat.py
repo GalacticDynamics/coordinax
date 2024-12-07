@@ -1,4 +1,4 @@
-"""Compatibility for Quantity."""
+"""Compatibility for Angles."""
 
 __all__: list[str] = []
 
@@ -17,7 +17,7 @@ add_promotion_rule(AbstractAngle, Quantity, Quantity)
 
 
 @conversion_method(type_from=AbstractAngle, type_to=Quantity)  # type: ignore[misc]
-def _convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
+def convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
     """Convert a distance to a quantity.
 
     Examples
@@ -35,7 +35,7 @@ def _convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
 
 
 @conversion_method(type_from=AbstractAngle, type_to=UncheckedQuantity)  # type: ignore[misc]
-def _convert_angle_to_uncheckedquantity(x: AbstractAngle) -> UncheckedQuantity:
+def convert_angle_to_uncheckedquantity(x: AbstractAngle) -> UncheckedQuantity:
     """Convert a distance to a quantity.
 
     Examples
@@ -53,7 +53,7 @@ def _convert_angle_to_uncheckedquantity(x: AbstractAngle) -> UncheckedQuantity:
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=Angle)  # type: ignore[misc]
-def _convert_quantity_to_angle(q: AbstractQuantity, /) -> Angle:
+def convert_quantity_to_angle(q: AbstractQuantity, /) -> Angle:
     """Convert any quantity to an Angle.
 
     Examples
@@ -75,6 +75,4 @@ def _convert_quantity_to_angle(q: AbstractQuantity, /) -> Angle:
     True
 
     """
-    if isinstance(q, Angle):
-        return q
-    return Angle(q.value, q.unit)
+    return q if isinstance(q, Angle) else Angle(q.value, q.unit)
