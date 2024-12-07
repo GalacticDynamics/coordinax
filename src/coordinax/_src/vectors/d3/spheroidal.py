@@ -10,8 +10,8 @@ import equinox as eqx
 from jaxtyping import Shaped
 
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish.converters import Unless
-from unxt import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
@@ -48,14 +48,14 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(3.0, "kpc2"),
-    ...     nu=Quantity(0.5, "kpc2"),
-    ...     phi=Quantity(0.25, "rad"),
-    ...     Delta=Quantity(1.5, "kpc"),
+    ...     mu=u.Quantity(3.0, "kpc2"),
+    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     phi=u.Quantity(0.25, "rad"),
+    ...     Delta=u.Quantity(1.5, "kpc"),
     ... )
     >>> vec
     ProlateSpheroidalPos(
@@ -68,33 +68,33 @@ class ProlateSpheroidalPos(AbstractPos3D):
     This fails with a zero or negative Delta:
 
     >>> try: vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(3.0, "kpc2"),
-    ...     nu=Quantity(0.5, "kpc2"),
-    ...     phi=Quantity(0.25, "rad"),
-    ...     Delta=Quantity(0.0, "kpc"),
+    ...     mu=u.Quantity(3.0, "kpc2"),
+    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     phi=u.Quantity(0.25, "rad"),
+    ...     Delta=u.Quantity(0.0, "kpc"),
     ... )
     ... except Exception as e: pass
 
     Or with invalid mu and nu:
 
     >>> try: vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(0.5, "kpc2"),
-    ...     nu=Quantity(0.5, "kpc2"),
-    ...     phi=Quantity(0.25, "rad"),
-    ...     Delta=Quantity(1.5, "kpc"),
+    ...     mu=u.Quantity(0.5, "kpc2"),
+    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     phi=u.Quantity(0.25, "rad"),
+    ...     Delta=u.Quantity(1.5, "kpc"),
     ... )
     ... except Exception as e: pass
 
     """
 
     mu: ct.BatchableArea = eqx.field(
-        converter=partial(Quantity["area"].from_, dtype=float)
+        converter=partial(u.Quantity["area"].from_, dtype=float)
     )
     r"""Spheroidal mu coordinate :math:`\mu \in [0,+\infty)` (called :math:`\lambda` in
      some Galactic dynamics contexts)."""
 
     nu: ct.BatchableArea = eqx.field(
-        converter=partial(Quantity["area"].from_, dtype=float)
+        converter=partial(u.Quantity["area"].from_, dtype=float)
     )
     r"""Spheroidal nu coordinate :math:`\lambda \in [-\infty,+\infty)`."""
 
@@ -106,7 +106,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     _: KW_ONLY
-    Delta: Shaped[Quantity["length"], ""] = VectorAttribute()
+    Delta: Shaped[u.Quantity["length"], ""] = VectorAttribute()
     """Focal length of the coordinate system."""
 
     def __check_init__(self) -> None:
@@ -130,17 +130,17 @@ class ProlateSpheroidalVel(AbstractVel3D):
     """Prolate spheroidal differential representation."""
 
     d_mu: ct.BatchableDiffusivity = eqx.field(
-        converter=partial(Quantity["diffusivity"].from_, dtype=float)
+        converter=partial(u.Quantity["diffusivity"].from_, dtype=float)
     )
     r"""Prolate spheroidal mu speed :math:`d\mu/dt \in [-\infty, \infty]."""
 
     d_nu: ct.BatchableDiffusivity = eqx.field(
-        converter=partial(Quantity["diffusivity"].from_, dtype=float)
+        converter=partial(u.Quantity["diffusivity"].from_, dtype=float)
     )
     r"""Prolate spheroidal nu speed :math:`d\nu/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
@@ -160,17 +160,17 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
     """Prolate spheroidal acceleration representation."""
 
     d2_mu: ct.BatchableSpecificEnergy = eqx.field(
-        converter=partial(Quantity["specific energy"].from_, dtype=float)
+        converter=partial(u.Quantity["specific energy"].from_, dtype=float)
     )
     r"""Prolate spheroidal mu acceleration :math:`d^2\mu/dt^2 \in [-\infty, \infty]."""
 
     d2_nu: ct.BatchableSpecificEnergy = eqx.field(
-        converter=partial(Quantity["specific energy"].from_, dtype=float)
+        converter=partial(u.Quantity["specific energy"].from_, dtype=float)
     )
     r"""Prolate spheroidal nu acceleration :math:`d^2\nu/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 

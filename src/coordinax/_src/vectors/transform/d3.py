@@ -526,14 +526,14 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> x = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(2.0, "kpc2"),
-    ...     nu=Quantity(0.5, "kpc2"),
-    ...     phi=Quantity(0.5, "rad"),
-    ...     Delta=Quantity(1.0, "kpc"),
+    ...     mu=u.Quantity(2.0, "kpc2"),
+    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     phi=u.Quantity(0.5, "rad"),
+    ...     Delta=u.Quantity(1.0, "kpc"),
     ... )
 
     >>> with warnings.catch_warnings():
@@ -568,14 +568,14 @@ def represent_as(
     Examples
     --------
     >>> import warnings
-    >>> from unxt import Quantity
+    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> x = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=Quantity(2.0, "kpc2"),
-    ...     nu=Quantity(0.5, "kpc2"),
-    ...     phi=Quantity(0.5, "rad"),
-    ...     Delta=Quantity(1.0, "kpc"),
+    ...     mu=u.Quantity(2.0, "kpc2"),
+    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     phi=u.Quantity(0.5, "rad"),
+    ...     Delta=u.Quantity(1.0, "kpc"),
     ... )
 
     >>> with warnings.catch_warnings():

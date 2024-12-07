@@ -260,7 +260,25 @@ class GalileanRotation(AbstractGalileanOperator):
         return self(q), t
 
     # -----------------------------------------------------
-    # Convenience methods
+    # Arithmetic operations
+
+    def __neg__(self: "GalileanRotation") -> "GalileanRotation":
+        """Negate the rotation.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax as cx
+
+        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
+        >>> op = cx.ops.GalileanRotation(Rz)
+        >>> print((-op).rotation)
+        [[ 0  1  0]
+         [-1  0  0]
+         [ 0  0 -1]]
+
+        """
+        return replace(self, rotation=-self.rotation)
 
     @dispatch.abstract  # type: ignore[misc]
     def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...

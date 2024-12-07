@@ -87,17 +87,17 @@ def check_non_negative(x: AbstractQuantity, /, *, name: str = "") -> AbstractQua
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
 
     Pass through the input if the value is non-negative.
 
-    >>> x = Quantity([0, 1, 2], "m")
+    >>> x = u.Quantity([0, 1, 2], "m")
     >>> check_non_negative(x)
     Quantity['length'](Array([0, 1, 2], dtype=int32), unit='m')
 
     Raise an error if any value is negative.
 
-    >>> x = Quantity([-1, 1, 2], "m")
+    >>> x = u.Quantity([-1, 1, 2], "m")
     >>> try: check_non_negative(x)
     ... except Exception: pass
 
@@ -113,21 +113,21 @@ def check_non_negative_non_zero(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
 
     Pass through the input if the value is non-negative.
 
-    >>> x = Quantity([1, 2, 3], "m")
+    >>> x = u.Quantity([1, 2, 3], "m")
     >>> check_non_negative_non_zero(x)
     Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if any value is negative or zero.
 
-    >>> x = Quantity([-1, 1, 2], "m")
+    >>> x = u.Quantity([-1, 1, 2], "m")
     >>> try: check_non_negative_non_zero(x)
     ... except Exception: pass
 
-    >>> x = Quantity([0, 1, 2], "m")
+    >>> x = u.Quantity([0, 1, 2], "m")
     >>> try: check_non_negative_non_zero(x)
     ... except Exception: pass
 
@@ -150,17 +150,17 @@ def check_less_than(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
 
     Pass through the input if the value is less than the max value:
 
-    >>> x = Quantity([1, 2, 3], "m")
-    >>> check_less_than(x, Quantity(4, "m"))
+    >>> x = u.Quantity([1, 2, 3], "m")
+    >>> check_less_than(x, u.Quantity(4, "m"))
     Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is larger than the maximum value.
 
-    >>> try: check_less_than(x, Quantity(1.5, "m"))
+    >>> try: check_less_than(x, u.Quantity(1.5, "m"))
     ... except Exception: pass
 
     """
@@ -181,17 +181,17 @@ def check_less_than_equal(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
 
     Pass through the input if the value is less than or equal to the max value:
 
-    >>> x = Quantity([1, 2, 3], "m")
-    >>> check_less_than_equal(x, Quantity(3, "m"))
+    >>> x = u.Quantity([1, 2, 3], "m")
+    >>> check_less_than_equal(x, u.Quantity(3, "m"))
     Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is larger than the maximum value.
 
-    >>> try: check_less_than_equal(x, Quantity(2, "m"))
+    >>> try: check_less_than_equal(x, u.Quantity(2, "m"))
     ... except Exception: pass
 
     """
@@ -212,17 +212,17 @@ def check_greater_than(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
 
     Pass through the input if the value is greater than the min value:
 
-    >>> x = Quantity([1, 2, 3], "m")
-    >>> check_greater_than(x, Quantity(0, "m"))
+    >>> x = u.Quantity([1, 2, 3], "m")
+    >>> check_greater_than(x, u.Quantity(0, "m"))
     Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is smaller than the minimum value.
 
-    >>> try: check_greater_than(x, Quantity(4, "m"))
+    >>> try: check_greater_than(x, u.Quantity(4, "m"))
     ... except Exception: pass
 
     """
@@ -243,17 +243,17 @@ def check_greater_than_equal(
 
     Examples
     --------
-    >>> from unxt import Quantity
+    >>> import unxt as u
 
     Pass through the input if the value is greater than or equal to the min value:
 
-    >>> x = Quantity([1, 2, 3], "m")
-    >>> check_greater_than_equal(x, Quantity(1, "m"))
+    >>> x = u.Quantity([1, 2, 3], "m")
+    >>> check_greater_than_equal(x, u.Quantity(1, "m"))
     Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is smaller than the minimum value.
 
-    >>> try: check_greater_than_equal(x, Quantity(2, "m"))
+    >>> try: check_greater_than_equal(x, u.Quantity(2, "m"))
     ... except Exception: pass
 
     """
