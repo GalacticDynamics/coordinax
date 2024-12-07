@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 from plum import add_promotion_rule, conversion_method
 
-from unxt.quantity import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
 from .base import AbstractAngle
 from .core import Angle
@@ -32,6 +32,24 @@ def _convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
 
     """
     return Quantity(x.value, x.unit)
+
+
+@conversion_method(type_from=AbstractAngle, type_to=UncheckedQuantity)  # type: ignore[misc]
+def _convert_angle_to_uncheckedquantity(x: AbstractAngle) -> UncheckedQuantity:
+    """Convert a distance to a quantity.
+
+    Examples
+    --------
+    >>> from unxt.quantity import UncheckedQuantity
+    >>> from coordinax.angle import Angle
+    >>> from plum import convert
+
+    >>> a = Angle(90, "deg")
+    >>> convert(a, UncheckedQuantity)
+    UncheckedQuantity(Array(90, dtype=int32, weak_type=True), unit='deg')
+
+    """
+    return UncheckedQuantity(x.value, x.unit)
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=Angle)  # type: ignore[misc]
