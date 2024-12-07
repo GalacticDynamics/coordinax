@@ -223,13 +223,43 @@ class _ICRS2GCFOperator(AbstractOperator):
 
     @dispatch
     def __call__(self, q: LengthVector, /) -> LengthVector:
+        """Transform q from ICRS Cartesian -> GCF Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.ICRS(), cxf.Galactocentric())
+
+        >>> q = u.Quantity([0, 0, 0], "pc")
+        >>> frame_op(q)
+        Quantity[...](Array([-8121.973, 0. , 20.8 ], dtype=float32), unit='pc')
+
+        """
         return self._call_q(q)
 
     @dispatch
     def __call__(
         self, q: LengthVector, p: VelocityVector, /
     ) -> tuple[LengthVector, VelocityVector]:
-        """Transform q and p from ICRS Cartesian -> GCF Cartesian."""
+        """Transform q and p from ICRS Cartesian -> GCF Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.ICRS(), cxf.Galactocentric())
+
+        >>> q = u.Quantity([0., 0, 0], "pc")
+        >>> p = u.Quantity([0., 0, 0], "km/s")
+
+        >>> frame_op(q, p)
+        (Quantity['length'](Array([-8121.973, 0. , 20.8 ], dtype=float32), unit='pc'),
+         Quantity['speed'](Array([ 12.9 , 245.6 , 7.78], dtype=float32), unit='km / s'))
+
+        """
         # Compute the transformation matrix and offsets
         A, offset, offset_v = _icrs_cartesian_to_gcf_cartesian_matrix_vectors(self.gcf)
 
@@ -246,6 +276,26 @@ class _ICRS2GCFOperator(AbstractOperator):
     def __call__(
         self, qvec: AbstractPos3D, pvec: AbstractVel
     ) -> tuple[AbstractPos3D, AbstractVel]:
+        r"""Transform q and p from ICRS Cartesian -> GCF Cartesian.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.ICRS(), cxf.Galactocentric())
+
+        >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
+        >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
+
+        >>> newq, newp = frame_op(q, p)
+        >>> print(newq, newp, sep="\n")
+        <CartesianPos3D (x[pc], y[pc], z[pc])
+            [-8121.973     0.       20.8  ]>
+        <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+            [ 12.9  245.6    7.78]>
+
+        """
         p = convert(pvec.represent_as(CartesianVel3D, qvec), u.Quantity)
 
         qp, pp = self(convert(qvec, u.Quantity), p)
@@ -404,13 +454,44 @@ class _GCF2ICRSOperator(AbstractOperator):
 
     @dispatch
     def __call__(self, q: LengthVector, /) -> LengthVector:
+        """Transform q from GCF Cartesian -> ICRS Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.Galactocentric(), cxf.ICRS())
+
+        >>> q = u.Quantity([0, 0, 0], "pc")
+        >>> frame_op(q).round(0)
+        Quantity['length'](Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
+
+        """
         return self._call_q(q)
 
     @dispatch
     def __call__(
         self, q: LengthVector, p: VelocityVector, /
     ) -> tuple[LengthVector, VelocityVector]:
-        """Transform q and p from GCF Cartesian -> ICRS Cartesian."""
+        r"""Transform q and p from GCF Cartesian -> ICRS Cartesian.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.Galactocentric(), cxf.ICRS())
+
+        >>> q = u.Quantity([0., 0, 0], "pc")
+        >>> p = u.Quantity([0., 0, 0], "km/s")
+
+        >>> newq, newp = frame_op(q, p)
+        >>> print(newq.round(0), newp.round(0), sep="\n")
+        Quantity['length'](Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
+        Quantity['speed'](Array([-114., 122., -181.], dtype=float32), unit='km / s')
+
+        """
         # Compute the transformation matrix and offsets
         A, offset, offset_v = _gcf_cartesian_to_icrs_cartesian_matrix_vectors(self.gcf)
 
@@ -427,6 +508,26 @@ class _GCF2ICRSOperator(AbstractOperator):
     def __call__(
         self, qvec: AbstractPos3D, pvec: AbstractVel
     ) -> tuple[AbstractPos3D, AbstractVel]:
+        r"""Transform q and p from GCF Cartesian -> ICRS Cartesian.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> import coordinax.frames as cxf
+
+        >>> frame_op = cxf.frame_transform_op(cxf.Galactocentric(), cxf.ICRS())
+
+        >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
+        >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
+
+        >>> newq, newp = frame_op(q, p)
+        >>> print(newq, newp, sep="\n")
+        <CartesianPos3D (x[pc], y[pc], z[pc])
+            [ -445.689 -7094.056 -3929.708]>
+        <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+            [-113.868  122.047 -180.79 ]>
+
+        """
         q = convert(qvec, u.Quantity)
         p = convert(pvec.represent_as(CartesianVel3D, qvec), u.Quantity)
 
