@@ -109,7 +109,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op(q).value.round(2)
     Array([ 1.,  0., -0.], dtype=float32)
 
-    :class:`coordinax.operators.GalileanSpatialTranslation` can be used
+    :class:`coordinax.ops.GalileanSpatialTranslation` can be used
     for other dimensional vectors as well:
 
     - 1D:

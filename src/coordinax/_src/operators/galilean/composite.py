@@ -20,7 +20,7 @@ from .translation import GalileanSpatialTranslation, GalileanTranslation
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.operators.sequence import Sequence
+from coordinax._src.operators.pipe import Pipe
 
 if TYPE_CHECKING:
     from typing import Self
@@ -43,13 +43,13 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : `coordinax.operators.GalileanTranslation`
+    translation : `coordinax.ops.GalileanTranslation`
         The spatial translation of the frame. See
-        :class:`coordinax.operators.GalileanTranslation` for alternative
+        :class:`coordinax.ops.GalileanTranslation` for alternative
         inputs to construct this parameter.
-    velocity : :class:`coordinax.operators.GalileanBoost`
+    velocity : :class:`coordinax.ops.GalileanBoost`
         The boost to the frame. See
-        :class:`coordinax.operators.GalileanBoost` for alternative
+        :class:`coordinax.ops.GalileanBoost` for alternative
         inputs to construct this parameter.
 
     Examples
@@ -72,9 +72,9 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     )
 
     Note that the translation is a
-    :class:`coordinax.operators.GalileanTranslation` with a
+    :class:`coordinax.ops.GalileanTranslation` with a
     :class:`vector.FourVector` translation, and the velocity is a
-    :class:`coordinax.operators.GalileanBoost` with a
+    :class:`coordinax.ops.GalileanBoost` with a
     :class:`vector.CartesianVel3D` velocity. We can also construct them
     directly, which allows for other vector types.
 
@@ -139,7 +139,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """The temporal + spatial translation.
 
     The translation vector [T, Q].  This parameters accetps either a
-    :class:`coordinax.operators.GalileanTranslation` instance or
+    :class:`coordinax.ops.GalileanTranslation` instance or
     any input that can be used to construct a :meth:`vector.FourVector`, using
     :meth:`vector.FourVector.from_`. See :class:`vector.FourVector` for
     details.
@@ -152,7 +152,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """The boost to the frame.
 
     This parameters accepts either a
-    :class:`coordinax.operators.GalileanBoost` instance or any input
+    :class:`coordinax.ops.GalileanBoost` instance or any input
     that can be used to construct a :class:`vector.CartesianVel3D`, using
     :meth:`vector.CartesianVel3D.from_`. See :class:`vector.CartesianVel3D` for
     details.
@@ -187,13 +187,13 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         GalileanRotation(rotation=f32[3,3])
 
         >>> op[1:]
-        Sequence(( GalileanTranslation(FourVector( ... )),
+        Pipe(( GalileanTranslation(FourVector( ... )),
                    GalileanBoost(CartesianVel3D( ... )) ))
 
         """
         if isinstance(key, int):
             return self.operators[key]
-        return Sequence(self.operators[key])
+        return Pipe(self.operators[key])
 
 
 @dispatch  # type: ignore[misc]
@@ -201,7 +201,7 @@ def simplify_op(
     op: GalileanOperator, /, **kwargs: Any
 ) -> (
     GalileanOperator
-    | Sequence
+    | Pipe
     | GalileanBoost
     | GalileanRotation
     | GalileanTranslation
@@ -250,6 +250,6 @@ def simplify_op(
         not isinstance(x, type(orig))
         for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return simplify_op(Sequence(simple_ops))
+        return Pipe(simple_ops).simplify()
 
     return op

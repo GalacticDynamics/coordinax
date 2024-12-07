@@ -16,12 +16,7 @@ from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
-from coordinax._src.operators import (
-    AbstractOperator,
-    GalileanRotation,
-    Identity,
-    Sequence,
-)
+from coordinax._src.operators import AbstractOperator, GalileanRotation, Identity, Pipe
 from coordinax._src.vectors.base import AbstractVel
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D, CartesianVel3D
 
@@ -51,9 +46,7 @@ def frame_transform_op(from_frame: ICRS, to_frame: ICRS, /) -> Identity:
 
 
 @dispatch
-def frame_transform_op(
-    from_frame: Galactocentric, to_frame: Galactocentric, /
-) -> Sequence:
+def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) -> Pipe:
     """Return a sequence of operators for the Galactocentric frame self transformation.
 
     Examples
@@ -64,16 +57,16 @@ def frame_transform_op(
     >>> gcf_frame = cxf.Galactocentric()
     >>> frame_op = cxf.frame_transform_op(gcf_frame, gcf_frame)
     >>> frame_op
-    Sequence((Identity(),))
+    Pipe((Identity(),))
 
     >>> gcf_frame2 = cxf.Galactocentric(roll=u.Quantity(10, "deg"))
     >>> frame_op2 = cxf.frame_transform_op(gcf_frame, gcf_frame2)
     >>> frame_op2
-    Sequence(( _GCF2ICRSOperator( ... ), _ICRS2GCFOperator( ... ) ))
+    Pipe(( _GCF2ICRSOperator( ... ), _ICRS2GCFOperator( ... ) ))
 
     """
     if from_frame == to_frame:
-        return Sequence((Identity(),))
+        return Pipe((Identity(),))
 
     # TODO: not go through ICRS for the self-transformation
     return _GCF2ICRSOperator(from_frame) | _ICRS2GCFOperator(to_frame)
@@ -112,7 +105,7 @@ class _ICRS2GCFOperator(AbstractOperator):
 
     .. warning::
 
-        This operator is temporary and will be replaced as an operator Sequence
+        This operator is temporary and will be replaced as an operator Pipe
         of the individual transformations.
 
     Examples
@@ -338,7 +331,7 @@ class _GCF2ICRSOperator(AbstractOperator):
 
     .. warning::
 
-        This operator is temporary and will be replaced as an operator Sequence
+        This operator is temporary and will be replaced as an operator Pipe
         of the individual transformations.
 
     Examples
