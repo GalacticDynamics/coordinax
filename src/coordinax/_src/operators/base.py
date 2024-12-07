@@ -212,7 +212,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         return f"{name}({fs})"
 
     # ===========================================
-    # Sequence
+    # Operator Composition
 
     def __or__(self, other: "AbstractOperator") -> "Sequence":
         """Compose with another operator.
