@@ -14,6 +14,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
+from coordinax._src.distances import AbstractDistance
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base import AbstractPos
@@ -33,7 +34,7 @@ def _converter_spatialtranslation(x: Any) -> AbstractPos:
         out = x.translation
     elif isinstance(x, AbstractPos):
         out = x
-    elif isinstance(x, u.Quantity):
+    elif isinstance(x, u.Quantity | AbstractDistance):
         shape: tuple[int, ...] = x.shape
         match shape:
             case (1,):
