@@ -104,11 +104,11 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> s = cx.SphericalPos(r=u.Quantity(1, "kpc"), theta=u.Quantity(90, "deg"),
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> s = cx.SphericalPos(r=u.Quantity(1, "km"), theta=u.Quantity(90, "deg"),
     ...                     phi=u.Quantity(0, "deg"))
     >>> (q + s).x
-    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+    Quantity['length'](Array(2., dtype=float32), unit='km')
 
     """
     cart = rhs.represent_as(CartesianPos3D)
@@ -124,9 +124,9 @@ def _neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> (-q).x
-    Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+    Quantity['length'](Array(-1., dtype=float32), unit='km')
 
     """
     return jax.tree.map(qlax.neg, obj)
@@ -140,11 +140,11 @@ def _sub_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> s = cx.SphericalPos(r=u.Quantity(1, "kpc"), theta=u.Quantity(90, "deg"),
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> s = cx.SphericalPos(r=u.Quantity(1, "km"), theta=u.Quantity(90, "deg"),
     ...                     phi=u.Quantity(0, "deg"))
     >>> (q - s).x
-    Quantity['length'](Array(0., dtype=float32), unit='kpc')
+    Quantity['length'](Array(0., dtype=float32), unit='km')
 
     """
     cart = rhs.represent_as(CartesianPos3D)
@@ -177,7 +177,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> cx.vecs.normalize_vector(q)
     CartesianGeneric3D(
       x=Quantity[...]( value=f32[], unit=Unit(dimensionless) ),
@@ -398,9 +398,9 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> v = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> v = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> jnp.multiply(2, v).x
-    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+    Quantity['length'](Array(2., dtype=float32), unit='km')
 
     """
     # Validation

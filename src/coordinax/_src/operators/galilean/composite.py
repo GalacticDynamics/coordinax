@@ -58,14 +58,14 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> import coordinax as cx
 
     >>> op = cx.ops.GalileanOperator(
-    ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+    ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
       rotation=GalileanRotation(rotation=f32[3,3]),
       translation=GalileanTranslation(
         translation=FourVector(
-          t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
+          t=Quantity[...](value=f32[], unit=Unit("s")),
           q=CartesianPos3D( ... ) )
       ),
       velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
@@ -81,7 +81,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> op = cx.ops.GalileanOperator(
     ...     translation=cx.ops.GalileanTranslation(
     ...         cx.FourVector(t=u.Quantity(2.5, "Gyr"),
-    ...                       q=cx.SphericalPos(r=u.Quantity(1, "kpc"),
+    ...                       q=cx.SphericalPos(r=u.Quantity(1, "km"),
     ...                                         theta=u.Quantity(90, "deg"),
     ...                                         phi=u.Quantity(0, "rad") ) ) ),
     ...     velocity=cx.ops.GalileanBoost(
@@ -101,28 +101,31 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     Galilean operators can be applied to :class:`vector.FourVector`:
 
-    >>> w = cx.FourVector.from_([0, 0, 0, 0], "kpc")
+    >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> new = op(w)
     >>> new
     FourVector(
-      t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
+      t=Quantity[...](value=f32[], unit=Unit("s")),
       q=CartesianPos3D( ... )
     )
     >>> new.t.ustrip("Gyr").round(2)
     Array(2.5, dtype=float32)
-    >>> new.q.x
-    Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
+    >>> print(new.q)
+    <CartesianPos3D (x[km], y[km], z[km])
+        [7.889e+16 1.578e+17 2.367e+17]>
 
     Also the Galilean operators can also be applied to
     :class:`vector.AbstractPos3D` and :class:`unxt.Quantity`:
 
-    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "kpc")
-    >>> t = u.Quantity(0, "Gyr")
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
+    >>> t = u.Quantity(0, "s")
     >>> newq, newt = op(q, t)
-    >>> newq.x
-    Quantity['length'](Array(3.5567803, dtype=float32), unit='kpc')
+    >>> print(newq)
+    <CartesianPos3D (x[km], y[km], z[km])
+        [7.889e+16 1.578e+17 2.367e+17]>
+
     >>> newt
-    Quantity['time'](Array(2.5, dtype=float32), unit='Gyr')
+    Quantity['time'](Array(7.8894005e+16, dtype=float32), unit='s')
 
     """
 
@@ -133,7 +136,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """The in-frame spatial rotation."""
 
     translation: GalileanTranslation = eqx.field(
-        default=GalileanTranslation.from_([0, 0, 0, 0], "kpc"),
+        default=GalileanTranslation.from_([0, 0, 0, 0], "km"),
         converter=Unless(GalileanTranslation, converter=GalileanTranslation.from_),
     )
     """The temporal + spatial translation.
@@ -178,7 +181,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+        ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
         ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
 
         >>> op[0]
@@ -217,7 +220,7 @@ def simplify_op(
     This Galilean operator cannot be simplified:
 
     >>> op = cx.ops.GalileanOperator(
-    ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+    ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
     ...     rotation=jnp.eye(3).at[0, 2].set(1),
     ... )
@@ -226,7 +229,7 @@ def simplify_op(
       rotation=GalileanRotation(rotation=f32[3,3]),
       translation=GalileanTranslation(
         translation=FourVector(
-          t=Quantity[...](value=f32[], unit=Unit("kpc s / km")),
+          t=Quantity[...](value=f32[], unit=Unit("s")),
           q=CartesianPos3D( ... ) )
       ),
       velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
@@ -238,7 +241,7 @@ def simplify_op(
     This Galilean operator can be simplified in all its components except the
     translation:
 
-    >>> op = cx.ops.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "kpc"))
+    >>> op = cx.ops.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
     >>> cx.ops.simplify_op(op)
     GalileanTranslation(FourVector( ... ))
 

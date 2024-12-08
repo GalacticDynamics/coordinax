@@ -69,11 +69,11 @@ class CylindricalPos(AbstractPos3D):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> c = cx.vecs.CylindricalPos(rho=u.Quantity(3, "kpc"),
+        >>> c = cx.vecs.CylindricalPos(rho=u.Quantity(3, "km"),
         ...                            phi=u.Quantity(0, "deg"),
-        ...                            z=u.Quantity(4, "kpc"))
+        ...                            z=u.Quantity(4, "km"))
         >>> c.norm()
-        Quantity['length'](Array(5., dtype=float32), unit='kpc')
+        Quantity['length'](Array(5., dtype=float32), unit='km')
 
         """
         return xp.sqrt(self.rho**2 + self.z**2)

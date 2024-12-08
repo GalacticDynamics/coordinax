@@ -82,7 +82,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1.0, 2.0, 3.0], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1.0, 2.0, 3.0], "km")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
@@ -90,7 +90,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     constructed from a 1D array, using :meth:`vector.CartesianPos3D.from_`. We
     can also construct it directly, which allows for other vector types.
 
-    >>> shift = cx.SphericalPos(r=u.Quantity(1.0, "kpc"),
+    >>> shift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
     ...                         theta=u.Quantity(jnp.pi/2, "rad"),
     ...                         phi=u.Quantity(0, "rad"))
     >>> op = cx.ops.GalileanSpatialTranslation(shift)
@@ -99,13 +99,13 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     Translation operators can be applied to :class:`vector.AbstractPos`:
 
-    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "kpc")
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> op(q)
     CartesianPos3D( ... )
 
     And to :class:`~unxt.Quantity`:
 
-    >>> q = u.Quantity([0, 0, 0], "kpc")
+    >>> q = u.Quantity([0, 0, 0], "km")
     >>> op(q).value.round(2)
     Array([ 1.,  0., -0.], dtype=float32)
 
@@ -114,37 +114,37 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     - 1D:
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "kpc")
-    >>> q = u.Quantity([0], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
+    >>> q = u.Quantity([0], "km")
     >>> op(q)
-    Quantity['length'](Array([1.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1.], dtype=float32), unit='km')
 
     >>> vec = cx.vecs.CartesianPos1D.from_(q).represent_as(cx.vecs.RadialPos)
     >>> op(vec)
-    RadialPos(r=Distance(value=f32[], unit=Unit("kpc")))
+    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
     - 2D:
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2], "kpc")
-    >>> q = u.Quantity([0, 0], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2], "km")
+    >>> q = u.Quantity([0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
     >>> vec = cx.vecs.CartesianPos2D.from_(q).represent_as(cx.vecs.PolarPos)
     >>> op(vec)
-    PolarPos( r=Distance(value=f32[], unit=Unit("kpc")),
+    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("rad")) )
 
     - 3D:
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
-    >>> q = u.Quantity([0, 0, 0], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
+    >>> q = u.Quantity([0, 0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
 
     >>> vec = cx.CartesianPos3D.from_(q).represent_as(cx.SphericalPos)
     >>> op(vec)
-    SphericalPos( r=Distance(value=f32[], unit=Unit("kpc")),
+    SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
                   theta=Angle(value=f32[], unit=Unit("rad")),
                   phi=Angle(value=f32[], unit=Unit("rad")) )
 
@@ -177,7 +177,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         --------
         >>> import coordinax.ops as cxo
 
-        >>> op = GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+        >>> op = GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
         >>> op.is_inertial
         True
@@ -193,13 +193,13 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         --------
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
         >>> op.inverse
         GalileanSpatialTranslation(CartesianPos3D( ... ))
 
         >>> print(op.inverse.translation)
-        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        <CartesianPos3D (x[km], y[km], z[km])
             [-1. -1. -1.]>
 
         """
@@ -218,13 +218,13 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> t = u.Quantity(0, "Gyr")
         >>> newq = op(q)
         >>> print(newq)
-        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        <CartesianPos3D (x[km], y[km], z[km])
             [2. 3. 4.]>
 
         """
@@ -241,9 +241,9 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> import quaxed.numpy as jnp
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "km")
         >>> print((-op).translation)
-        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        <CartesianPos3D (x[km], y[km], z[km])
             [-1. -0. -0.]>
 
         """
@@ -275,13 +275,13 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
-    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> t = u.Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> print(newq)
-    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+    <CartesianPos3D (x[km], y[km], z[km])
         [2. 3. 4.]>
 
     This spatial translation is time independent.
@@ -301,12 +301,12 @@ def call(self: GalileanSpatialTranslation, v4: FourVector, /, **__: Any) -> Abst
     --------
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
-    >>> v4 = cx.FourVector.from_([0, 1, 2, 3], "kpc")
+    >>> v4 = cx.FourVector.from_([0, 1, 2, 3], "km")
     >>> newv4 = op(v4)
     >>> print(newv4)
-    <FourVector (t[kpc s / km], q=(x[kpc], y[kpc], z[kpc]))
+    <FourVector (t[s], q=(x[km], y[km], z[km]))
         [0. 2. 3. 4.]>
 
     """
@@ -325,15 +325,15 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
-    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "kpc")
-    >>> p = cx.CartesianVel3D.from_([1, 2, 3], "kpc/s")
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
+    >>> p = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> newq, newp = op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+    <CartesianPos3D (x[km], y[km], z[km])
         [1. 1. 1.]>
-    <CartesianVel3D (d_x[kpc / s], d_y[kpc / s], d_z[kpc / s])
+    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
         [1. 2. 3.]>
 
     """
@@ -406,8 +406,8 @@ def simplify_op(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op1 = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
-    >>> op2 = cx.ops.GalileanSpatialTranslation.from_([0, 1, 0], "kpc")
+    >>> op1 = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "km")
+    >>> op2 = cx.ops.GalileanSpatialTranslation.from_([0, 1, 0], "km")
 
     >>> op3 = cx.ops.simplify_op(op1, op2)
     >>> op3

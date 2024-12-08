@@ -85,14 +85,14 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         --------
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
         >>> print(op.translation)
-        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        <CartesianPos3D (x[km], y[km], z[km])
             [1. 1. 1.]>
 
-        >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "kpc")
+        >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
         >>> print(op.translation)
-        <FourVector (t[kpc s / km], q=(x[kpc], y[kpc], z[kpc]))
+        <FourVector (t[s], q=(x[km], y[km], z[km]))
             [1.001 1.    1.    1.   ]>
 
         >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
@@ -187,7 +187,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
          [0 0 1]])
 
         >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Quantity([0., 2., 3., 4.], "kpc"),
+        ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
         ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
         ... )
@@ -196,7 +196,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
             rotation=GalileanRotation([[1. 0. 1.]
                 [0. 1. 0.]
                 [0. 0. 1.]]),
-            translation=GalileanTranslation(<FourVector (t[kpc s / km], q=(x[kpc], y[kpc], z[kpc]))
+            translation=GalileanTranslation(<FourVector (t[s], q=(x[km], y[km], z[km]))
                     [0. 2. 3. 4.]>),
             velocity=GalileanBoost(<CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
                     [1. 2. 3.]>)

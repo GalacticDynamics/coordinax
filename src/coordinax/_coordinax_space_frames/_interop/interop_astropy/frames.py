@@ -52,9 +52,9 @@ def from_(cls: type[Galactocentric], obj: apyc.Galactocentric, /) -> Galactocent
 
     Checking equality
 
-    >>> (gcf.galcen.lon.to_value("deg") == apy_gcf.galcen_coord.ra.to_value("deg")
-    ...  and gcf.galcen.lat.to_value("deg") == apy_gcf.galcen_coord.dec.to_value("deg")
-    ...  and gcf.galcen.distance.to_value("kpc") == apy_gcf.galcen_distance.to_value("kpc") )
+    >>> (gcf.galcen.lon.ustrip("deg") == apy_gcf.galcen_coord.ra.to_value("deg")
+    ...  and gcf.galcen.lat.ustrip("deg") == apy_gcf.galcen_coord.dec.to_value("deg")
+    ...  and gcf.galcen.distance.ustrip("kpc") == apy_gcf.galcen_distance.to_value("kpc") )
     Array(True, dtype=bool)
 
 

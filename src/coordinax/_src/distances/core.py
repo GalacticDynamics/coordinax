@@ -31,8 +31,8 @@ class Distance(AbstractDistance):
     Examples
     --------
     >>> from coordinax.distance import Distance
-    >>> Distance(10, "pc")
-    Distance(Array(10, dtype=int32, ...), unit='pc')
+    >>> Distance(10, "km")
+    Distance(Array(10, dtype=int32, ...), unit='km')
 
     The units are checked to have length dimensions.
 
@@ -55,7 +55,7 @@ class Distance(AbstractDistance):
         Examples
         --------
         >>> from coordinax.distance import Distance
-        >>> d = Distance(10, "pc")
+        >>> d = Distance(10, "km")
         >>> d.distance is d
         True
 

@@ -72,10 +72,10 @@ def from_(
     >>> import coordinax as cx
     >>> from astropy.coordinates import CartesianRepresentation
 
-    >>> cart = CartesianRepresentation(1, 2, 3, unit="kpc")
+    >>> cart = CartesianRepresentation(1, 2, 3, unit="m")
     >>> vec = cx.vecs.AbstractPos3D.from_(cart)
     >>> vec.x
-    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+    Quantity['length'](Array(1., dtype=float32), unit='m')
 
     """
     return cx.CartesianPos3D.from_(obj)
@@ -93,11 +93,11 @@ def from_(
     >>> import coordinax as cx
     >>> from astropy.coordinates import CylindricalRepresentation
 
-    >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg,
-    ...                                 z=30 * u.pc)
+    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg,
+    ...                                 z=30 * u.m)
     >>> vec = cx.vecs.AbstractPos3D.from_(cyl)
     >>> vec.rho
-    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+    Quantity['length'](Array(1., dtype=float32), unit='km')
 
     """
     return cx.vecs.CylindricalPos.from_(obj)
@@ -115,11 +115,11 @@ def from_(
     >>> import coordinax as cx
     >>> from astropy.coordinates import PhysicsSphericalRepresentation
 
-    >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
+    >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
     >>> vec = cx.vecs.AbstractPos3D.from_(sph)
     >>> vec.r
-    Distance(Array(1., dtype=float32), unit='kpc')
+    Distance(Array(1., dtype=float32), unit='km')
 
     """
     return cx.SphericalPos.from_(obj)
@@ -138,10 +138,10 @@ def from_(
     >>> from astropy.coordinates import SphericalRepresentation
 
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
-    ...                               distance=1 * u.kpc)
+    ...                               distance=1 * u.km)
     >>> vec = cx.vecs.AbstractPos3D.from_(sph)
     >>> vec.distance
-    Distance(Array(1., dtype=float32), unit='kpc')
+    Distance(Array(1., dtype=float32), unit='km')
 
     """
     return cx.vecs.LonLatSphericalPos.from_(obj)
@@ -161,10 +161,10 @@ def from_(
     >>> import coordinax as cx
     >>> from astropy.coordinates import CartesianRepresentation
 
-    >>> cart = CartesianRepresentation(1, 2, 3, unit="kpc")
+    >>> cart = CartesianRepresentation(1, 2, 3, unit="km")
     >>> vec = cx.CartesianPos3D.from_(cart)
     >>> vec.x
-    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+    Quantity['length'](Array(1., dtype=float32), unit='km')
 
     """
     obj = obj.represent_as(apyc.CartesianRepresentation)
@@ -183,11 +183,11 @@ def from_(
     >>> import coordinax as cx
     >>> from astropy.coordinates import CylindricalRepresentation
 
-    >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg,
-    ...                                 z=30 * u.pc)
+    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg,
+    ...                                 z=30 * u.m)
     >>> vec = cx.vecs.CylindricalPos.from_(cyl)
     >>> vec.rho
-    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+    Quantity['length'](Array(1., dtype=float32), unit='km')
 
     """
     obj = obj.represent_as(apyc.CylindricalRepresentation)
@@ -206,11 +206,11 @@ def from_(
     >>> import coordinax as cx
     >>> from astropy.coordinates import PhysicsSphericalRepresentation
 
-    >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
+    >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
     >>> vec = cx.SphericalPos.from_(sph)
     >>> vec.r
-    Distance(Array(1., dtype=float32), unit='kpc')
+    Distance(Array(1., dtype=float32), unit='km')
 
     """
     obj = obj.represent_as(apyc.PhysicsSphericalRepresentation)
@@ -230,10 +230,10 @@ def from_(
     >>> from astropy.coordinates import SphericalRepresentation
 
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
-    ...                               distance=1 * u.kpc)
+    ...                               distance=1 * u.km)
     >>> vec = cx.vecs.LonLatSphericalPos.from_(sph)
     >>> vec.distance
-    Distance(Array(1., dtype=float32), unit='kpc')
+    Distance(Array(1., dtype=float32), unit='km')
 
     """
     obj = obj.represent_as(apyc.SphericalRepresentation)

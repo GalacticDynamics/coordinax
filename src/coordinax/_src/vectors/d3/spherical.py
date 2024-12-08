@@ -94,11 +94,11 @@ def from_(
 
     Let's start with a valid input:
 
-    >>> cx.SphericalPos.from_(r=u.Quantity(3, "kpc"),
+    >>> cx.SphericalPos.from_(r=u.Quantity(3, "km"),
     ...                       theta=u.Quantity(90, "deg"),
     ...                       phi=u.Quantity(0, "deg"))
     SphericalPos(
-      r=Distance(value=f32[], unit=Unit("kpc")),
+      r=Distance(value=f32[], unit=Unit("km")),
       theta=Angle(value=f32[], unit=Unit("deg")),
       phi=Angle(value=f32[], unit=Unit("deg"))
     )
@@ -106,11 +106,11 @@ def from_(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cx.SphericalPos.from_(r=u.Quantity(-3, "kpc"),
+    >>> vec = cx.SphericalPos.from_(r=u.Quantity(-3, "km"),
     ...                             theta=u.Quantity(45, "deg"),
     ...                             phi=u.Quantity(0, "deg"))
     >>> vec.r
-    Distance(Array(3., dtype=float32), unit='kpc')
+    Distance(Array(3., dtype=float32), unit='km')
     >>> vec.theta
     Angle(Array(135., dtype=float32), unit='deg')
     >>> vec.phi
@@ -119,11 +119,11 @@ def from_(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "kpc"),
+    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
     ...                             theta=u.Quantity(190, "deg"),
     ...                             phi=u.Quantity(0, "deg"))
     >>> vec.r
-    Distance(Array(3., dtype=float32), unit='kpc')
+    Distance(Array(3., dtype=float32), unit='km')
     >>> vec.theta
     Angle(Array(170., dtype=float32), unit='deg')
     >>> vec.phi
@@ -132,7 +132,7 @@ def from_(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base from_ does this):
 
-    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "kpc"),
+    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
     ...                             theta=u.Quantity(90, "deg"),
     ...                             phi=u.Quantity(365, "deg"))
     >>> vec.phi

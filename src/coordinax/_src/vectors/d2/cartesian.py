@@ -88,13 +88,13 @@ def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "kpc")
-    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
+    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
+    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
     >>> (cart + polr).x
-    Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
+    Quantity['length'](Array(0.9999999, dtype=float32), unit='km')
 
     >>> jnp.add(cart, polr).x
-    Quantity['length'](Array(0.9999999, dtype=float32), unit='kpc')
+    Quantity['length'](Array(0.9999999, dtype=float32), unit='km')
 
     """
     cart = rhs.represent_as(CartesianPos2D)
@@ -147,11 +147,11 @@ def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2
     --------
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "kpc")
-    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
+    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
+    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
 
     >>> (cart - polr).x
-    Quantity['length'](Array(1.0000001, dtype=float32), unit='kpc')
+    Quantity['length'](Array(1.0000001, dtype=float32), unit='km')
 
     """
     cart = rhs.represent_as(CartesianPos2D)

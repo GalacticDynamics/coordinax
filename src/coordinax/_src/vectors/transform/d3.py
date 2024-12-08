@@ -530,25 +530,23 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(2.0, "kpc2"),
-    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     mu=u.Quantity(2.0, "km2"),
+    ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.5, "rad"),
-    ...     Delta=u.Quantity(1.0, "kpc"),
+    ...     Delta=u.Quantity(1.0, "km"),
     ... )
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos1D)
     >>> x2
-    CartesianPos1D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
-    )
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.represent_as(x, cx.vecs.RadialPos)
     >>> x2
-    RadialPos(r=Distance(value=f32[], unit=Unit("kpc")))
+    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -572,24 +570,24 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> x = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(2.0, "kpc2"),
-    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     mu=u.Quantity(2.0, "km2"),
+    ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.5, "rad"),
-    ...     Delta=u.Quantity(1.0, "kpc"),
+    ...     Delta=u.Quantity(1.0, "km"),
     ... )
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos2D)
     >>> x2
-    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("kpc")),
-                    y=Quantity[...](value=f32[], unit=Unit("kpc")) )
+    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
+                    y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.represent_as(x, cx.vecs.PolarPos)
     >>> x2
-    PolarPos( r=Distance(value=f32[], unit=Unit("kpc")),
+    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("rad")) )
 
     """

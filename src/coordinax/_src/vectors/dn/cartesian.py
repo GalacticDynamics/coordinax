@@ -39,41 +39,41 @@ class CartesianPosND(AbstractPosND):
 
     A 1D vector:
 
-    >>> q = cx.vecs.CartesianPosND.from_([[1]], "kpc")
+    >>> q = cx.vecs.CartesianPosND.from_([[1]], "km")
     >>> q.q
-    Quantity['length'](Array([[1.]], dtype=float32), unit='kpc')
+    Quantity['length'](Array([[1.]], dtype=float32), unit='km')
     >>> q.shape
     (1,)
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2], "kpc"))
+    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2], "km"))
     >>> q.q
-    Quantity['length'](Array([1., 2.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
     >>> q.shape
     ()
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "kpc"))
+    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
     >>> q.q
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
     >>> q.shape
     ()
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "km"))
     >>> q.q
-    Quantity['length'](Array([1., 2., 3., 4.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2., 3., 4.], dtype=float32), unit='km')
     >>> q.shape
     ()
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "kpc"))
+    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "km"))
     >>> q.q
-    Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='km')
     >>> q.shape
     ()
 
@@ -112,9 +112,9 @@ class CartesianPosND(AbstractPosND):
 
         A 3D vector:
 
-        >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "kpc"))
+        >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
         >>> q.norm()
-        Quantity['length'](Array(3.7416575, dtype=float32), unit='kpc')
+        Quantity['length'](Array(3.7416575, dtype=float32), unit='km')
 
         """
         return jnp.linalg.vector_norm(self.q, axis=-1)
@@ -139,35 +139,35 @@ def from_(
 
     1D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity(1, "kpc"))
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity(1, "km"))
     CartesianPosND(
-      q=Quantity[...](value=f32[1], unit=Unit("kpc"))
+      q=Quantity[...](value=f32[1], unit=Unit("km"))
     )
 
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1], "kpc"))
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1], "km"))
     CartesianPosND(
-      q=Quantity[...](value=f32[1], unit=Unit("kpc"))
+      q=Quantity[...](value=f32[1], unit=Unit("km"))
     )
 
     2D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2], "kpc"))
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2], "km"))
     CartesianPosND(
-      q=Quantity[...](value=f32[2], unit=Unit("kpc"))
+      q=Quantity[...](value=f32[2], unit=Unit("km"))
     )
 
     3D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3], "kpc"))
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3], "km"))
     CartesianPosND(
-      q=Quantity[...](value=f32[3], unit=Unit("kpc"))
+      q=Quantity[...](value=f32[3], unit=Unit("km"))
     )
 
     4D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3, 4], "kpc"))
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3, 4], "km"))
     CartesianPosND(
-      q=Quantity[...](value=f32[4], unit=Unit("kpc"))
+      q=Quantity[...](value=f32[4], unit=Unit("km"))
     )
 
     """
@@ -184,9 +184,9 @@ def _vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Quantity["length"], "*batch N"
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], unit="kpc"))
+    >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], unit="km"))
     >>> convert(vec, u.Quantity)
-    Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2., 3., 4., 5.], dtype=float32), unit='km')
 
     """
     return obj.q
@@ -202,10 +202,10 @@ def _add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 
     A 3D vector:
 
-    >>> q1 = cx.vecs.CartesianPosND.from_([1, 2, 3], "kpc")
-    >>> q2 = cx.vecs.CartesianPosND.from_([2, 3, 4], "kpc")
+    >>> q1 = cx.vecs.CartesianPosND.from_([1, 2, 3], "km")
+    >>> q2 = cx.vecs.CartesianPosND.from_([2, 3, 4], "km")
     >>> (q1 + q2).q
-    Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='km')
 
     """
     cart = rhs.represent_as(CartesianPosND)
@@ -222,9 +222,9 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> v = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "kpc"))
+    >>> v = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "km"))
     >>> jnp.multiply(2, v).q
-    Quantity['length'](Array([ 2.,  4.,  6.,  8., 10.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([ 2.,  4.,  6.,  8., 10.], dtype=float32), unit='km')
 
     """
     # Validation
@@ -247,9 +247,9 @@ def _neg_p_cartnd_pos(obj: CartesianPosND, /) -> CartesianPosND:
 
     A 3D vector:
 
-    >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "kpc"))
+    >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
     >>> (-vec).q
-    Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([-1., -2., -3.], dtype=float32), unit='km')
 
     """
     return jax.tree.map(qlax.neg, obj)
@@ -266,10 +266,10 @@ def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 
     A 3D vector:
 
-    >>> q1 = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "kpc"))
-    >>> q2 = cx.vecs.CartesianPosND(u.Quantity([2, 3, 4], "kpc"))
+    >>> q1 = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
+    >>> q2 = cx.vecs.CartesianPosND(u.Quantity([2, 3, 4], "km"))
     >>> (q1 - q2).q
-    Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='km')
 
     """
     cart = rhs.represent_as(CartesianPosND)

@@ -30,21 +30,21 @@ def vec_to_q(obj: cx.vecs.AbstractPos3D, /) -> Shaped[apyu.Quantity, "*batch 3"]
     >>> from plum import convert
     >>> import astropy.units as apyu
 
-    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> convert(vec, apyu.Quantity)
-    <Quantity [1., 2., 3.] kpc>
+    <Quantity [1., 2., 3.] km>
 
-    >>> vec = cx.SphericalPos(r=apyu.Quantity(1, unit="kpc"),
+    >>> vec = cx.SphericalPos(r=apyu.Quantity(1, unit="km"),
     ...                       theta=apyu.Quantity(2, unit="deg"),
     ...                       phi=apyu.Quantity(3, unit="deg"))
     >>> convert(vec, apyu.Quantity)
-    <Quantity [0.03485167, 0.0018265 , 0.99939084] kpc>
+    <Quantity [0.03485167, 0.0018265 , 0.99939084] km>
 
-    >>> vec = cx.vecs.CylindricalPos(rho=apyu.Quantity(1, unit="kpc"),
-    ...                         phi=apyu.Quantity(2, unit="deg"),
-    ...                         z=apyu.Quantity(3, unit="pc"))
+    >>> vec = cx.vecs.CylindricalPos(rho=apyu.Quantity(1, unit="km"),
+    ...                              phi=apyu.Quantity(2, unit="deg"),
+    ...                              z=apyu.Quantity(3, unit="m"))
     >>> convert(vec, apyu.Quantity)
-    <Quantity [0.99939084, 0.0348995 , 0.003     ] kpc>
+    <Quantity [0.99939084, 0.0348995 , 0.003     ] km>
 
     """
     return convert(convert(obj, u.Quantity), apyu.Quantity)
@@ -88,13 +88,13 @@ def cart3_to_apycart3(obj: cx.CartesianPos3D, /) -> apyc.CartesianRepresentation
     --------
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> convert(vec, apyc.CartesianRepresentation)
-    <CartesianRepresentation (x, y, z) in kpc
+    <CartesianRepresentation (x, y, z) in km
         (1., 2., 3.)>
 
     >>> convert(vec, apyc.BaseRepresentation)
-    <CartesianRepresentation (x, y, z) in kpc
+    <CartesianRepresentation (x, y, z) in km
         (1., 2., 3.)>
 
     """
@@ -114,12 +114,12 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D
     >>> import coordinax as cx
     >>> from astropy.coordinates import CartesianRepresentation
 
-    >>> vec = CartesianRepresentation(1, 2, 3, unit="kpc")
+    >>> vec = CartesianRepresentation(1, 2, 3, unit="km")
     >>> convert(vec, cx.CartesianPos3D)
     CartesianPos3D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
-      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc")),
-      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
+      x=Quantity[...](value=f32[], unit=Unit("km")),
+      y=Quantity[...](value=f32[], unit=Unit("km")),
+      z=Quantity[...](value=f32[], unit=Unit("km"))
     )
 
     """
@@ -140,15 +140,15 @@ def cyl_to_apycyl(obj: cx.vecs.CylindricalPos, /) -> apyc.CylindricalRepresentat
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1, unit="kpc"),
+    >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1, unit="km"),
     ...                              phi=u.Quantity(2, unit="deg"),
-    ...                              z=u.Quantity(3, unit="pc"))
+    ...                              z=u.Quantity(3, unit="m"))
     >>> convert(vec, apyc.CylindricalRepresentation)
-    <CylindricalRepresentation (rho, phi, z) in (kpc, deg, pc)
+    <CylindricalRepresentation (rho, phi, z) in (km, deg, m)
         (1., 2., 3.)>
 
     >>> convert(vec, apyc.BaseRepresentation)
-    <CylindricalRepresentation (rho, phi, z) in (kpc, deg, pc)
+    <CylindricalRepresentation (rho, phi, z) in (km, deg, m)
         (1., 2., 3.)>
 
     """
@@ -169,12 +169,12 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.Cylindrical
     >>> import coordinax as cx
     >>> from astropy.coordinates import CylindricalRepresentation
 
-    >>> cyl = CylindricalRepresentation(rho=1 * u.kpc, phi=2 * u.deg, z=30 * u.pc)
+    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
     >>> convert(cyl, cx.vecs.CylindricalPos)
     CylindricalPos(
-        rho=Quantity[...](value=f32[], unit=Unit("kpc")),
+        rho=Quantity[...](value=f32[], unit=Unit("km")),
         phi=Angle(value=f32[], unit=Unit("deg")),
-        z=Quantity[...](value=f32[], unit=Unit("pc"))
+        z=Quantity[...](value=f32[], unit=Unit("m"))
     )
 
     """
@@ -195,11 +195,11 @@ def sph_to_apysph(obj: cx.SphericalPos, /) -> apyc.PhysicsSphericalRepresentatio
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalPos(r=u.Quantity(1, unit="kpc"),
+    >>> vec = cx.SphericalPos(r=u.Quantity(1, unit="m"),
     ...                       theta=u.Quantity(2, unit="deg"),
     ...                       phi=u.Quantity(3, unit="deg"))
     >>> convert(vec, apyc.PhysicsSphericalRepresentation)
-    <PhysicsSphericalRepresentation (phi, theta, r) in (deg, deg, kpc)
+    <PhysicsSphericalRepresentation (phi, theta, r) in (deg, deg, m)
         (3., 2., 1.)>
 
     """
@@ -220,11 +220,11 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
     >>> import coordinax as cx
     >>> from astropy.coordinates import PhysicsSphericalRepresentation
 
-    >>> sph = PhysicsSphericalRepresentation(r=1 * u.kpc, theta=2 * u.deg,
+    >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
     >>> convert(sph, cx.SphericalPos)
     SphericalPos(
-      r=Distance(value=f32[], unit=Unit("kpc")),
+      r=Distance(value=f32[], unit=Unit("km")),
       theta=Angle(value=f32[], unit=Unit("deg")),
       phi=Angle(value=f32[], unit=Unit("deg"))
     )
@@ -251,9 +251,9 @@ def lonlatsph_to_apysph(
 
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(2, unit="deg"),
     ...                                  lat=u.Quantity(3, unit="deg"),
-    ...                                  distance=u.Quantity(1, unit="kpc"))
+    ...                                  distance=u.Quantity(1, unit="km"))
     >>> convert(vec, apyc.SphericalRepresentation)
-    <SphericalRepresentation (lon, lat, distance) in (deg, deg, kpc)
+    <SphericalRepresentation (lon, lat, distance) in (deg, deg, km)
         (2., 3., 1.)>
 
     """
@@ -277,12 +277,12 @@ def apysph_to_lonlatsph(
     >>> from astropy.coordinates import SphericalRepresentation
 
     >>> sph = SphericalRepresentation(lon=2 * u.deg, lat=3 * u.deg,
-    ...                               distance=1 * u.kpc)
+    ...                               distance=1 * u.km)
     >>> convert(sph, cx.vecs.LonLatSphericalPos)
     LonLatSphericalPos(
       lon=Angle(value=f32[], unit=Unit("deg")),
       lat=Angle(value=f32[], unit=Unit("deg")),
-      distance=Distance(value=f32[], unit=Unit("kpc"))
+      distance=Distance(value=f32[], unit=Unit("km"))
     )
 
     """

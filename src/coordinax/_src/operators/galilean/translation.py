@@ -50,17 +50,17 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     We can then create a translation operator:
 
-    >>> op = cx.ops.GalileanTranslation.from_([1.0, 2.0, 3.0, 4.0], "kpc")
+    >>> op = cx.ops.GalileanTranslation.from_([1.0, 2.0, 3.0, 4.0], "km")
     >>> op
     GalileanTranslation(FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
+        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
         q=CartesianPos3D( ... ) ))
 
     Note that the translation is a :class:`vector.FourVector`, which was
     constructed from a 1D array, using :meth:`vector.FourVector.from_`. We
     can also construct it directly, which allows for other vector types.
 
-    >>> qshift = cx.SphericalPos(r=u.Quantity(1.0, "kpc"),
+    >>> qshift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
     ...                          theta=u.Quantity(jnp.pi/2, "rad"),
     ...                          phi=u.Quantity(0, "rad"))
     >>> shift = cx.FourVector(u.Quantity(1.0, "Gyr"), qshift)
@@ -72,20 +72,20 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     Translation operators can be applied to :class:`vector.FourVector`:
 
-    >>> w = cx.FourVector.from_([0, 0, 0, 0], "kpc")
+    >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> op(w)
     FourVector(
-      t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("kpc s / km")),
+      t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
       q=CartesianPos3D( ... )
     )
 
     Also to :class:`vector.AbstractPos3D` and :class:`unxt.Quantity`:
 
-    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "kpc")
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> t = u.Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array(1., dtype=float32), unit='kpc')
+    Quantity['length'](Array(1., dtype=float32), unit='km')
     >>> newt
     Quantity['time'](Array(1., dtype=float32), unit='Gyr')
 
@@ -109,7 +109,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         --------
         >>> import coordinax as cx
 
-        >>> shift = cx.FourVector.from_([0, 1, 1, 1], "kpc")
+        >>> shift = cx.FourVector.from_([0, 1, 1, 1], "km")
         >>> op = cx.ops.GalileanTranslation(shift)
 
         >>> op.is_inertial
@@ -127,7 +127,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "kpc")
+        >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
         >>> shift = FourVector(u.Quantity(1, "Gyr"), qshift)
         >>> op = cx.ops.GalileanTranslation(shift)
 
@@ -135,7 +135,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         GalileanTranslation(FourVector( ... ))
 
         >>> op.inverse.translation.q.x
-        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+        Quantity['length'](Array(-1., dtype=float32), unit='km')
 
         """
         return GalileanTranslation(-self.translation)
@@ -156,25 +156,25 @@ class GalileanTranslation(AbstractGalileanOperator):
 
         Explicitly construct the translation operator:
 
-        >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "kpc")
+        >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
         >>> shift = FourVector(u.Quantity(1, "Gyr"), qshift)
         >>> op = cx.ops.GalileanTranslation(shift)
 
         Construct a vector to translate, using the convenience from_ (the
         0th component is :math:`c * t`, the rest are spatial components):
 
-        >>> w = cx.FourVector.from_([0, 1, 2, 3], "kpc")
+        >>> w = cx.FourVector.from_([0, 1, 2, 3], "km")
         >>> w.t
-        Quantity['time'](Array(0., dtype=float32), unit='kpc s / km')
+        Quantity['time'](Array(0., dtype=float32), unit='s')
 
         Apply the translation operator:
 
         >>> new = op(w)
         >>> new.x
-        Quantity['length'](Array(2., dtype=float32), unit='kpc')
+        Quantity['length'](Array(2., dtype=float32), unit='km')
 
         >>> new.t.uconvert("Gyr")
-        Quantity['time'](Array(0.99999994, dtype=float32), unit='Gyr')
+        Quantity['time'](Array(1., dtype=float32), unit='Gyr')
 
         """
         return x + self.translation
@@ -197,19 +197,19 @@ class GalileanTranslation(AbstractGalileanOperator):
 
         Explicitly construct the translation operator:
 
-        >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "kpc")
+        >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
         >>> tshift = u.Quantity(1, "Gyr")
         >>> shift = cx.FourVector(tshift, qshift)
         >>> op = cx.ops.GalileanTranslation(shift)
 
         Construct a vector to translate
 
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> t = u.Quantity(1, "Gyr")
         >>> newq, newt = op(q, t)
 
         >>> newq.x
-        Quantity['length'](Array(2., dtype=float32), unit='kpc')
+        Quantity['length'](Array(2., dtype=float32), unit='km')
 
         >>> newt
         Quantity['time'](Array(2., dtype=float32), unit='Gyr')
@@ -269,11 +269,11 @@ def simplify_op(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> qshift = cx.CartesianPos3D.from_([1, 0, 0], "kpc")
+    >>> qshift = cx.CartesianPos3D.from_([1, 0, 0], "km")
     >>> tshift = u.Quantity(1, "Gyr")
     >>> op1 = cx.ops.GalileanTranslation(FourVector(tshift, qshift))
 
-    >>> qshift = cx.CartesianPos3D.from_([0, 1, 0], "kpc")
+    >>> qshift = cx.CartesianPos3D.from_([0, 1, 0], "km")
     >>> tshift = u.Quantity(1, "Gyr")
     >>> op2 = cx.ops.GalileanTranslation(FourVector(tshift, qshift))
 

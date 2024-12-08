@@ -52,36 +52,36 @@ class ProlateSpheroidalPos(AbstractPos3D):
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(3.0, "kpc2"),
-    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     mu=u.Quantity(3.0, "km2"),
+    ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(1.5, "kpc"),
+    ...     Delta=u.Quantity(1.5, "km"),
     ... )
     >>> vec
     ProlateSpheroidalPos(
-      mu=Quantity[PhysicalType('area')](value=f32[], unit=Unit("kpc2")),
-      nu=Quantity[PhysicalType('area')](value=f32[], unit=Unit("kpc2")),
+      mu=Quantity[PhysicalType('area')](value=f32[], unit=Unit("km2")),
+      nu=Quantity[PhysicalType('area')](value=f32[], unit=Unit("km2")),
       phi=Angle(value=f32[], unit=Unit("rad")),
-      Delta=Quantity[PhysicalType('length')](value=weak_f32[], unit=Unit("kpc"))
+      Delta=Quantity[PhysicalType('length')](value=weak_f32[], unit=Unit("km"))
     )
 
     This fails with a zero or negative Delta:
 
     >>> try: vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(3.0, "kpc2"),
-    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     mu=u.Quantity(3.0, "km2"),
+    ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(0.0, "kpc"),
+    ...     Delta=u.Quantity(0.0, "km"),
     ... )
     ... except Exception as e: pass
 
     Or with invalid mu and nu:
 
     >>> try: vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(0.5, "kpc2"),
-    ...     nu=u.Quantity(0.5, "kpc2"),
+    ...     mu=u.Quantity(0.5, "km2"),
+    ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(1.5, "kpc"),
+    ...     Delta=u.Quantity(1.5, "km"),
     ... )
     ... except Exception as e: pass
 
