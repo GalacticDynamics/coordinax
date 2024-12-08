@@ -8,6 +8,7 @@ from dataclasses import replace
 from typing import Any, Literal, final
 
 import equinox as eqx
+import jax
 from plum import convert, dispatch
 
 import quaxed.numpy as jnp
@@ -17,7 +18,7 @@ from .base import AbstractGalileanOperator
 from coordinax._src.distances import AbstractDistance
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base import AbstractPos, AbstractVel
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
@@ -81,8 +82,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     We can then create a spatial translation operator:
 
-    >>> shift = u.Quantity([1.0, 2.0, 3.0], "kpc")
-    >>> op = cx.ops.GalileanSpatialTranslation(shift)
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1.0, 2.0, 3.0], "kpc")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
@@ -218,8 +218,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> shift = cx.CartesianPos3D.from_([1, 1, 1], "kpc")
-        >>> op = cx.ops.GalileanSpatialTranslation(shift)
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
 
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
         >>> t = u.Quantity(0, "Gyr")
@@ -276,8 +275,7 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> shift = cx.CartesianPos3D.from_([1, 1, 1], "kpc")
-    >>> op = cx.ops.GalileanSpatialTranslation(shift)
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> t = u.Quantity(0, "Gyr")
@@ -313,6 +311,53 @@ def call(self: GalileanSpatialTranslation, v4: FourVector, /, **__: Any) -> Abst
 
     """
     return replace(v4, q=v4.q + self.translation)
+
+
+@jax.jit
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanSpatialTranslation, qvec: AbstractPos, pvec: AbstractVel, /, **__: Any
+) -> tuple[AbstractPos, AbstractVel]:
+    r"""Apply the translation to the coordinates.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
+
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "kpc")
+    >>> p = cx.CartesianVel3D.from_([1, 2, 3], "kpc/s")
+    >>> newq, newp = op(q, p)
+    >>> print(newq, newp, sep="\n")
+    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        [1. 1. 1.]>
+    <CartesianVel3D (d_x[kpc / s], d_y[kpc / s], d_z[kpc / s])
+        [1. 2. 3.]>
+
+    """
+    # Translate the position.
+    newqvec = self(qvec)
+
+    # TODO: figure out how to do this in general, then all these dispatches
+    # can be consolidated. And do it on vectors, not the quantities.
+    #
+    # Translate the velocity (this operator will have no effect on the
+    # velocity).
+    # 1. convert to a Quantity in Cartesian coordinates.
+    q = convert(qvec.represent_as(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
+    p = convert(pvec.represent_as(pvec._cartesian_cls, q), u.Quantity)  # noqa: SLF001
+    # 2. create the Jacobian of the operation on the position
+    jac = u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,))(q)
+    # 3. apply the Jacobian to the velocity
+    newp = jac @ p
+    # 4. convert the Quantity back to a Cartesian vector
+    newpvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
+    # 5. convert the Quantity to the original vector type
+    newpvec = newpvec.represent_as(type(pvec), newqvec)
+
+    return newqvec, newpvec
 
 
 # ======================================================================
