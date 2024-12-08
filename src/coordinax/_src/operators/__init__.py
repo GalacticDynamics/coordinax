@@ -28,7 +28,8 @@ from .galilean.base import AbstractGalileanOperator
 from .galilean.boost import GalileanBoost
 from .galilean.composite import GalileanOperator
 from .galilean.rotation import GalileanRotation
-from .galilean.translation import GalileanSpatialTranslation, GalileanTranslation
+from .galilean.spatial_translation import GalileanSpatialTranslation
+from .galilean.translation import GalileanTranslation
 from .identity import Identity
 from .pipe import Pipe
 

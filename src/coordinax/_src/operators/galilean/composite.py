@@ -15,7 +15,8 @@ from dataclassish.converters import Unless
 from .base import AbstractGalileanOperator
 from .boost import GalileanBoost
 from .rotation import GalileanRotation
-from .translation import GalileanSpatialTranslation, GalileanTranslation
+from .spatial_translation import GalileanSpatialTranslation
+from .translation import GalileanTranslation
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
 from coordinax._src.operators.identity import Identity
