@@ -57,11 +57,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     >>> cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
     ...                            lat=u.Quantity(0, "deg"),
-    ...                            distance=u.Quantity(3, "kpc"))
+    ...                            distance=u.Quantity(3, "km"))
     LonLatSphericalPos(
       lon=Angle(value=f32[], unit=Unit("deg")),
       lat=Angle(value=f32[], unit=Unit("deg")),
-      distance=Distance(value=f32[], unit=Unit("kpc"))
+      distance=Distance(value=f32[], unit=Unit("km"))
     )
 
     The longitude and latitude angles are in the range [0, 360) and [-90, 90] degrees,
@@ -70,7 +70,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(365, "deg"),
     ...                                  lat=u.Quantity(90, "deg"),
-    ...                                  distance=u.Quantity(3, "kpc"))
+    ...                                  distance=u.Quantity(3, "km"))
     >>> vec.lon
     Angle(Array(5., dtype=float32), unit='deg')
 
@@ -81,7 +81,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> try:
     ...     cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
     ...                                lat=u.Quantity(100, "deg"),
-    ...                                distance=u.Quantity(3, "kpc"))
+    ...                                distance=u.Quantity(3, "km"))
     ... except Exception as e:
     ...     print(e)
     The inclination angle must be in the range [0, pi]...
@@ -93,7 +93,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> try:
     ...     cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
     ...                                lat=u.Quantity(0, "deg"),
-    ...                                distance=u.Quantity(-3, "kpc"))
+    ...                                distance=u.Quantity(-3, "km"))
     ... except Exception as e:
     ...     print(e)
     The radial distance must be non-negative...
@@ -137,9 +137,9 @@ class LonLatSphericalPos(AbstractSphericalPos):
         >>> import coordinax as cx
         >>> s = cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
         ...                                lat=u.Quantity(90, "deg"),
-        ...                                distance=u.Quantity(3, "kpc"))
+        ...                                distance=u.Quantity(3, "km"))
         >>> s.norm()
-        Distance(Array(3., dtype=float32), unit='kpc')
+        Distance(Array(3., dtype=float32), unit='km')
 
         """
         return self.distance
@@ -163,11 +163,11 @@ def from_(
 
     >>> cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
     ...                                  lat=Quantity(0, "deg"),
-    ...                                  distance=Quantity(3, "kpc"))
+    ...                                  distance=Quantity(3, "km"))
     LonLatSphericalPos(
       lon=Angle(value=f32[], unit=Unit("deg")),
       lat=Angle(value=f32[], unit=Unit("deg")),
-      distance=Distance(value=f32[], unit=Unit("kpc"))
+      distance=Distance(value=f32[], unit=Unit("km"))
     )
 
     The distance can be negative, which wraps the longitude by 180 degrees and
@@ -175,43 +175,43 @@ def from_(
 
     >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
     ...                                        lat=Quantity(45, "deg"),
-    ...                                        distance=Quantity(-3, "kpc"))
+    ...                                        distance=Quantity(-3, "km"))
     >>> vec.lon
     Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
     Angle(Array(-45., dtype=float32), unit='deg')
     >>> vec.distance
-    Distance(Array(3., dtype=float32), unit='kpc')
+    Distance(Array(3., dtype=float32), unit='km')
 
     The latitude can be outside the [-90, 90] deg range, causing the longitude
     to be shifted by 180 degrees:
 
     >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
     ...                                        lat=Quantity(-100, "deg"),
-    ...                                        distance=Quantity(3, "kpc"))
+    ...                                        distance=Quantity(3, "km"))
     >>> vec.lon
     Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
     Angle(Array(-80., dtype=float32), unit='deg')
     >>> vec.distance
-    Distance(Array(3., dtype=float32), unit='kpc')
+    Distance(Array(3., dtype=float32), unit='km')
 
     >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
     ...                                        lat=Quantity(100, "deg"),
-    ...                                        distance=Quantity(3, "kpc"))
+    ...                                        distance=Quantity(3, "km"))
     >>> vec.lon
     Angle(Array(180., dtype=float32), unit='deg')
     >>> vec.lat
     Angle(Array(80., dtype=float32), unit='deg')
     >>> vec.distance
-    Distance(Array(3., dtype=float32), unit='kpc')
+    Distance(Array(3., dtype=float32), unit='km')
 
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
     >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(365, "deg"),
     ...                                        lat=Quantity(0, "deg"),
-    ...                                        distance=Quantity(3, "kpc"))
+    ...                                        distance=Quantity(3, "km"))
     >>> vec.lon
     Angle(Array(5., dtype=float32), unit='deg')
 

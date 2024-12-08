@@ -55,7 +55,7 @@ def simplify_op(seq: Pipe, /) -> AbstractOperator:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> shift = cx.ops.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "kpc"))
+    >>> shift = cx.ops.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "km"))
     >>> boost = cx.ops.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
 
     >>> seq = shift | cx.ops.Identity() | boost

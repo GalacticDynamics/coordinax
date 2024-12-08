@@ -29,7 +29,7 @@ class Identity(AbstractOperator):
 
     And the common objects we will use:
 
-    >>> q = u.Quantity([1, 2, 3], "kpc")
+    >>> q = u.Quantity([1, 2, 3], "km")
     >>> vec = cx.CartesianPos3D.from_(q)
 
     The first call signature is for the case where the input is a vector:
@@ -46,28 +46,28 @@ class Identity(AbstractOperator):
 
     - 1D:
 
-    >>> q = u.Quantity([1], "kpc")
+    >>> q = u.Quantity([1], "km")
     >>> vec = cx.vecs.CartesianPos1D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 2D:
 
-    >>> q = u.Quantity([1, 2], "kpc")
+    >>> q = u.Quantity([1, 2], "km")
     >>> vec = cx.vecs.CartesianPos2D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 3D (not using a `~coordinax.CartesianPos3D` instance):
 
-    >>> q = u.Quantity([1, 2, 3], "kpc")
+    >>> q = u.Quantity([1, 2, 3], "km")
     >>> vec = cx.CartesianPos3D.from_(q).represent_as(cx.SphericalPos)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 4D:
 
-    >>> q = u.Quantity([1, 2, 3, 4], "kpc")  # 0th elt is ct
+    >>> q = u.Quantity([1, 2, 3, 4], "km")  # 0th elt is ct
     >>> vec4 = cx.FourVector.from_(q)
     >>> op(vec4) is vec4 and op(q) is q
     True
@@ -79,7 +79,7 @@ class Identity(AbstractOperator):
     >>> op(vec, t) == (vec, t)
     True
 
-    >>> q = u.Quantity([1, 2, 3], "kpc")
+    >>> q = u.Quantity([1, 2, 3], "km")
     >>> op(q, t) == (q, t)
     True
 
@@ -135,11 +135,11 @@ class Identity(AbstractOperator):
 
         >>> op = cx.ops.Identity()
 
-        >>> q = u.Quantity([1, 2, 3], "kpc")
+        >>> q = u.Quantity([1, 2, 3], "km")
         >>> op(q) is q
         True
 
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> op(vec) is vec
         True
 
@@ -159,8 +159,8 @@ class Identity(AbstractOperator):
 
         >>> op = cx.ops.Identity()
 
-        >>> q = u.Quantity([1, 2, 3], "kpc")
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> q = u.Quantity([1, 2, 3], "km")
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> t = u.Quantity(10, "Gyr")
 
         >>> op(q, t) == (q, t)

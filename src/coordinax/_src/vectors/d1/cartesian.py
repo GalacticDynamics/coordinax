@@ -73,19 +73,17 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> q = cx.vecs.CartesianPos1D.from_([1], "kpc")
-    >>> r = cx.vecs.RadialPos.from_([1], "kpc")
+    >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
+    >>> r = cx.vecs.RadialPos.from_([1], "km")
 
     >>> qpr = jnp.add(q, r)
     >>> qpr
-    CartesianPos1D(
-        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
-    )
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
     >>> qpr.x
-    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+    Quantity['length'](Array(2., dtype=float32), unit='km')
 
     >>> (q + r).x
-    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+    Quantity['length'](Array(2., dtype=float32), unit='km')
 
     """
     cart = rhs.represent_as(CartesianPos1D)
@@ -142,19 +140,17 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
 
-    >>> q = cx.vecs.CartesianPos1D.from_([1], "kpc")
-    >>> r = cx.vecs.RadialPos.from_([1], "kpc")
+    >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
+    >>> r = cx.vecs.RadialPos.from_([1], "km")
 
     >>> qmr = jnp.subtract(q, r)
     >>> qmr
-    CartesianPos1D(
-       x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("kpc"))
-    )
+    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
     >>> qmr.x
-    Quantity['length'](Array(0., dtype=float32), unit='kpc')
+    Quantity['length'](Array(0., dtype=float32), unit='km')
 
     >>> (q - r).x
-    Quantity['length'](Array(0., dtype=float32), unit='kpc')
+    Quantity['length'](Array(0., dtype=float32), unit='km')
 
     """
     cart = other.represent_as(CartesianPos1D)
