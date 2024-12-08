@@ -51,7 +51,7 @@ class AbstractCompositeOperator(AbstractOperator):
         --------
         >>> import coordinax as cx
 
-        >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
+        >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
         >>> boost = cx.ops.GalileanBoost.from_([1, 2, 3], "km/s")
         >>> pipe = cx.ops.Pipe((shift, boost))
         >>> pipe.inverse

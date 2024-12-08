@@ -61,9 +61,9 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "kpc")
+        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
         >>> (-q).x
-        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+        Quantity['length'](Array(-1., dtype=float32), unit='km')
 
         """
         return jax.tree.map(jnp.negative, self)

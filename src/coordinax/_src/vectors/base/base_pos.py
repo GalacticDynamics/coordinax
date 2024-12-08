@@ -153,17 +153,17 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> v = cx.vecs.CartesianPos1D.from_([-1], "kpc")
+        >>> v = cx.vecs.CartesianPos1D.from_([-1], "km")
         >>> v.norm()
-        Quantity['length'](Array(1., dtype=float32), unit='kpc')
+        Quantity['length'](Array(1., dtype=float32), unit='km')
 
-        >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "kpc")
+        >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "km")
         >>> v.norm()
-        Quantity['length'](Array(5., dtype=float32), unit='kpc')
+        Quantity['length'](Array(5., dtype=float32), unit='km')
 
-        >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "kpc"), phi=u.Quantity(90, "deg"))
+        >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
         >>> v.norm()
-        Quantity['length'](Array(3., dtype=float32), unit='kpc')
+        Quantity['length'](Array(3., dtype=float32), unit='km')
 
         >>> v = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> v.norm()

@@ -33,10 +33,10 @@ def call(self: AbstractOperator, x: Q1, /, **kwargs: Any) -> Q1:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "kpc")
-    >>> q = u.Quantity([0], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
+    >>> q = u.Quantity([0], "km")
     >>> op(q)
-    Quantity['length'](Array([1.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1.], dtype=float32), unit='km')
 
     """
     # Quantity -> CartesianPos1D -> [Operator] -> Quantity
@@ -54,10 +54,10 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "kpc")
-    >>> q = u.Quantity([0], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
+    >>> q = u.Quantity([0], "km")
     >>> op(q, u.Quantity(0, "s"))
-    (Quantity['length'](Array([1.], dtype=float32), unit='kpc'),
+    (Quantity['length'](Array([1.], dtype=float32), unit='km'),
      Quantity['time'](Array(0, dtype=int32, ...), unit='s'))
 
     """
@@ -139,12 +139,12 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> shift = u.Quantity([1.0, 2.0, 3.0], "kpc")
+    >>> shift = u.Quantity([1.0, 2.0, 3.0], "km")
     >>> op = cx.ops.GalileanSpatialTranslation(shift)
 
-    >>> q = u.Quantity([0.0, 0, 0], "kpc")
+    >>> q = u.Quantity([0.0, 0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
 
     """
     cart = CartesianPos3D.from_(q)
@@ -165,17 +165,17 @@ def call(
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     We can then apply the operator to a position:
 
-    >>> q = u.Quantity([1.0, 2.0, 3.0], "kpc")
+    >>> q = u.Quantity([1.0, 2.0, 3.0], "km")
     >>> t = u.Quantity(0.0, "Gyr")
 
     >>> op(q, t)
-    (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='kpc'),
+    (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='km'),
      Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
 
     """
@@ -197,13 +197,13 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     We can then apply the operator to a position:
 
-    >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "kpc")
+    >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "km")
     >>> pos
     FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPos3D( ... ) )
 
@@ -211,7 +211,7 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
     >>> newpos
     FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPos3D( ... ) )
     >>> newpos.q.x
-    Quantity['length'](Array(2., dtype=float32), unit='kpc')
+    Quantity['length'](Array(2., dtype=float32), unit='km')
 
     """
     q, t = self(v4.q, v4.t, **kwargs)
@@ -234,19 +234,19 @@ def call(
 
     We can then create a spatial translation operator:
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "kpc")
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
     We can then apply the operator to a position:
 
-    >>> pos = u.Quantity([0, 1.0, 2.0, 3.0], "kpc")
+    >>> pos = u.Quantity([0, 1.0, 2.0, 3.0], "km")
     >>> pos
-    Quantity['length'](Array([0., 1., 2., 3.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([0., 1., 2., 3.], dtype=float32), unit='km')
 
     >>> newpos = op(pos)
     >>> newpos
-    Quantity['length'](Array([0., 2., 4., 6.], dtype=float32), unit='kpc')
+    Quantity['length'](Array([0., 2., 4., 6.], dtype=float32), unit='km')
 
     """
     return convert(self(FourVector.from_(x), **kwargs), u.Quantity)

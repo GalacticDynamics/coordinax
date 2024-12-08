@@ -24,7 +24,7 @@ def represent_as(
     >>> import coordinax as cx
     >>> import unxt as u
 
-    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "kpc"))
+    >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "km"))
 
     >>> cx.represent_as(q, cx.vecs.CartesianPosND) is q
     True
