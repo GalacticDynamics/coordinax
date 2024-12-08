@@ -81,8 +81,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     We can then create a spatial translation operator:
 
-    >>> shift = u.Quantity([1.0, 2.0, 3.0], "kpc")
-    >>> op = cx.ops.GalileanSpatialTranslation(shift)
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1.0, 2.0, 3.0], "kpc")
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
@@ -218,8 +217,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> shift = cx.CartesianPos3D.from_([1, 1, 1], "kpc")
-        >>> op = cx.ops.GalileanSpatialTranslation(shift)
+        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
 
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
         >>> t = u.Quantity(0, "Gyr")
@@ -276,8 +274,7 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> shift = cx.CartesianPos3D.from_([1, 1, 1], "kpc")
-    >>> op = cx.ops.GalileanSpatialTranslation(shift)
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "kpc")
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> t = u.Quantity(0, "Gyr")
