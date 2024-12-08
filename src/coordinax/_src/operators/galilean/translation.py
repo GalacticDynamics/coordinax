@@ -208,7 +208,9 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     # -------------------------------------------
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "GalileanSpatialTranslation", q: AbstractPos, /) -> AbstractPos:
+    def __call__(
+        self: "GalileanSpatialTranslation", q: AbstractPos, /, **__: Any
+    ) -> AbstractPos:
         """Apply the translation to the coordinates.
 
         Examples
@@ -235,6 +237,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         q: AbstractPos,
         t: u.Quantity["time"],
         /,
+        **__: Any,
     ) -> tuple[AbstractPos, u.Quantity["time"]]:
         """Apply the translation to the coordinates.
 
@@ -262,7 +265,9 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         return q + self.translation, t
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "GalileanSpatialTranslation", v4: FourVector, /) -> AbstractPos:
+    def __call__(
+        self: "GalileanSpatialTranslation", v4: FourVector, /, **__: Any
+    ) -> AbstractPos:
         """Apply the translation to the coordinates."""  # TODO: docstring
         return replace(v4, q=v4.q + self.translation)
 
@@ -475,7 +480,9 @@ class GalileanTranslation(AbstractGalileanOperator):
     # -------------------------------------------
 
     @AbstractOperator.__call__.dispatch
-    def __call__(self: "GalileanTranslation", x: FourVector, /) -> FourVector:
+    def __call__(
+        self: "GalileanTranslation", x: FourVector, /, **__: Any
+    ) -> FourVector:
         """Apply the translation to the coordinates.
 
         Examples
@@ -515,6 +522,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         x: AbstractPos3D,
         t: u.Quantity["time"],
         /,
+        **__: Any,
     ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
         """Apply the translation to the coordinates.
 

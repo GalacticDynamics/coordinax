@@ -123,7 +123,7 @@ class Identity(AbstractOperator):
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", arg: Any, /) -> Any:
+    def __call__(self: "Identity", arg: Any, /, **__: Any) -> Any:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.
@@ -147,7 +147,7 @@ class Identity(AbstractOperator):
         return arg
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", *args: Any) -> tuple[Any, ...]:
+    def __call__(self: "Identity", *args: Any, **__: Any) -> tuple[Any, ...]:
         """Apply the Identity operation.
 
         This is the identity operation, which does nothing to the input.

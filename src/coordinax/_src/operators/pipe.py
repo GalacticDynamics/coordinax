@@ -84,9 +84,11 @@ class Pipe(AbstractCompositeOperator):
 
     operators: tuple[AbstractOperator, ...] = eqx.field(converter=_converter_seq)
 
+    # ---------------------------------------------------------------
+
     @AbstractOperator.__call__.dispatch
     def __call__(
-        self: "AbstractCompositeOperator", *args: object
+        self: "AbstractCompositeOperator", *args: object, **kwargs: Any
     ) -> tuple[object, ...]:
         """Apply the operators to the coordinates.
 
@@ -103,11 +105,13 @@ class Pipe(AbstractCompositeOperator):
 
         """
         for op in self.operators:
-            args = op(*args)
+            args = op(*args, **kwargs)
         return args
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "AbstractCompositeOperator", x: AbstractPos, /) -> AbstractPos:
+    def __call__(
+        self: "AbstractCompositeOperator", x: AbstractPos, /, **kwargs: Any
+    ) -> AbstractPos:
         """Apply the operator to the coordinates.
 
         This is the default implementation, which applies the operators in
@@ -125,8 +129,10 @@ class Pipe(AbstractCompositeOperator):
         """
         # TODO: with lax.for_i
         for op in self.operators:
-            x = op(x)
+            x = op(x, **kwargs)
         return x
+
+    # ---------------------------------------------------------------
 
     def __or__(self, other: AbstractOperator) -> "Pipe":
         """Compose with another operator.

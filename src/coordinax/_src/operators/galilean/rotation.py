@@ -226,7 +226,10 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotation", q: Shaped[u.Quantity["length"], "*batch 3"], /
+        self: "GalileanRotation",
+        q: Shaped[u.Quantity["length"], "*batch 3"],
+        /,
+        **__: Any,
     ) -> Shaped[u.Quantity["length"], "*batch 3"]:
         """Apply the rotation to the coordinates.
 
@@ -258,7 +261,9 @@ class GalileanRotation(AbstractGalileanOperator):
         return vec_matmul(self.rotation, q)
 
     @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "GalileanRotation", q: AbstractPos3D, /) -> AbstractPos3D:
+    def __call__(
+        self: "GalileanRotation", q: AbstractPos3D, /, **__: Any
+    ) -> AbstractPos3D:
         """Apply the rotation to the coordinates.
 
         Examples
