@@ -127,7 +127,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     # -----------------------------------------------------
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanBoost", q: AbstractPos, delta_t: u.Quantity["time"], /
     ) -> tuple[AbstractPos, u.Quantity["time"]]:
@@ -159,7 +159,7 @@ class GalileanBoost(AbstractGalileanOperator):
         return q + self.velocity * delta_t, delta_t
 
     @AbstractOperator.__call__.dispatch
-    def __call__(self: "GalileanBoost", v4: FourVector, /) -> FourVector:
+    def __call__(self: "GalileanBoost", v4: FourVector, /, **__: Any) -> FourVector:
         r"""Apply the boost to the coordinates.
 
         Recall that this is spatial-only, the time is invariant.

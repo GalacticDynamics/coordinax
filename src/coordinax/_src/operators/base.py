@@ -111,6 +111,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         self: "AbstractOperator",
         x: AbstractPos,  # noqa: ARG002
         /,
+        **kwargs: Any,  # noqa: ARG002
     ) -> AbstractPos:
         """Apply the operator to the coordinates `x`."""
         msg = "implement this method in the subclass"
@@ -122,6 +123,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         x: AbstractPos,  # noqa: ARG002
         t: u.Quantity["time"],  # noqa: ARG002
         /,
+        **kwargs: Any,  # noqa: ARG002
     ) -> AbstractPos:
         """Apply the operator to the coordinates `x` at a time `t`."""
         msg = "implement this method in the subclass"

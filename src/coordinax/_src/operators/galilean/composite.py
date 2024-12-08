@@ -10,7 +10,6 @@ import equinox as eqx
 from plum import dispatch
 
 import quaxed.numpy as xp
-import unxt as u
 from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
@@ -133,7 +132,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """The in-frame spatial rotation."""
 
     translation: GalileanTranslation = eqx.field(
-        default=GalileanTranslation(u.Quantity([0, 0, 0, 0], "kpc")),
+        default=GalileanTranslation.from_([0, 0, 0, 0], "kpc"),
         converter=Unless(GalileanTranslation, converter=GalileanTranslation.from_),
     )
     """The temporal + spatial translation.
@@ -146,7 +145,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """
 
     velocity: GalileanBoost = eqx.field(
-        default=GalileanBoost(u.Quantity([0, 0, 0], "km/s")),
+        default=GalileanBoost.from_([0, 0, 0], "km/s"),
         converter=Unless(GalileanBoost, converter=GalileanBoost.from_),
     )
     """The boost to the frame.
