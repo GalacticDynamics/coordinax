@@ -37,10 +37,10 @@ class GalileanBoost(AbstractGalileanOperator):
 
     Parameters
     ----------
-    velocity : :class:`vector.CartesianVel3D`
+    velocity : :class:`coordinax.vecs.AbstractVel`
         The boost velocity. This parameters uses
-        :meth:`vector.CartesianVel3D.from_` to enable a variety of more
-        convenient input types. See :class:`vector.CartesianVel3D` for details.
+        :meth:`coordinax.vecs.CartesianVel3D.from_` to enable a variety of more
+        convenient input types.
 
     Examples
     --------
@@ -49,9 +49,6 @@ class GalileanBoost(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanBoost.from_([1.0, 2.0, 3.0], "m/s")
     >>> op
     GalileanBoost(CartesianVel3D( ... ))
-
-    Note that the velocity is a :class:`vector.CartesianVel3D`, which was
-    constructed from an array, using :meth:`vector.CartesianVel3D.from_`.
 
     >>> vec = cx.CartesianPos3D.from_([0.0, 0.0, 0.0], "m")
 
@@ -63,7 +60,8 @@ class GalileanBoost(AbstractGalileanOperator):
 
     In the context of frame transformations, a Galilean boost is treated as the
     velocity of the new frame relative to the old frame. This means that the
-    transformation is the same as the inverse of the boost velocity. In other words,
+    transformation is the same as the inverse of the boost velocity. In other
+    words,
 
     .. math::
 
@@ -83,10 +81,9 @@ class GalileanBoost(AbstractGalileanOperator):
     )
     """The boost velocity.
 
-    Unless given a :class:`coordinax.AbstractVel`, this parameter uses This
-    parameters uses :meth:`coordinax.CartesianVel3D.from_` to enable a variety
-    of more convenient input types. See :class:`coordinax.CartesianVel3D` for
-    details.
+    Unless given a :class:`coordinax.AbstractVel`, this parameter uses
+    :meth:`coordinax.CartesianVel3D.from_` to enable a variety of more
+    convenient input types. See :class:`coordinax.CartesianVel3D` for details.
     """
 
     # -----------------------------------------------------

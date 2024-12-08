@@ -15,11 +15,14 @@ __all__ = [
     "GalileanRotation",
     "GalileanSpatialTranslation",
     "GalileanTranslation",
+    # Misc
+    "VelocityBoost",
 ]
 
 from . import galilean
 from .api import simplify_op
 from .base import AbstractOperator
+from .boost import VelocityBoost
 from .composite import AbstractCompositeOperator
 from .galilean.base import AbstractGalileanOperator
 from .galilean.boost import GalileanBoost
