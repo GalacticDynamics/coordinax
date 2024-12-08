@@ -74,7 +74,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     :class:`coordinax.ops.GalileanTranslation` with a
     :class:`vector.FourVector` translation, and the velocity is a
     :class:`coordinax.ops.GalileanBoost` with a
-    :class:`vector.CartesianVel3D` velocity. We can also construct them
+    :class:`coordinax.vecs.AbstractVel` velocity. We can also construct them
     directly, which allows for other vector types.
 
     >>> op = cx.ops.GalileanOperator(
@@ -150,11 +150,9 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     )
     """The boost to the frame.
 
-    This parameters accepts either a
-    :class:`coordinax.ops.GalileanBoost` instance or any input
-    that can be used to construct a :class:`vector.CartesianVel3D`, using
-    :meth:`vector.CartesianVel3D.from_`. See :class:`vector.CartesianVel3D` for
-    details.
+    This parameters accepts either a :class:`coordinax.ops.GalileanBoost`
+    instance or any input that can be used to construct one. See
+    :class:`coordinax.ops.GalileanBoost.from_` for details.
     """
 
     @property

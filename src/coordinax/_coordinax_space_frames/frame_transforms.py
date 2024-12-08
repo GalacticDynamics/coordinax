@@ -16,7 +16,13 @@ from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
-from coordinax._src.operators import AbstractOperator, GalileanRotation, Identity, Pipe
+from coordinax._src.operators import (
+    AbstractOperator,
+    GalileanRotation,
+    GalileanSpatialTranslation,
+    Identity,
+    Pipe,
+)
 from coordinax._src.vectors.base import AbstractVel
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D, CartesianVel3D
 
@@ -77,13 +83,13 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) 
 
 def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
     frame: Galactocentric, /
-) -> tuple[RotationMatrix, LengthVector, VelocityVector]:
+) -> tuple[GalileanRotation, GalileanSpatialTranslation, VelocityVector]:
     """ICRS->GCF transformation matrices and offsets."""
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
-    mat1 = GalileanRotation.from_euler("y", frame.galcen.lat).rotation
-    mat2 = GalileanRotation.from_euler("z", -frame.galcen.lon).rotation
+    mat1 = GalileanRotation.from_euler("y", frame.galcen.lat)
+    mat2 = GalileanRotation.from_euler("z", -frame.galcen.lon)
     # extra roll away from the Galactic x-z plane
-    mat0 = GalileanRotation.from_euler("x", frame.roll - frame.roll0).rotation
+    mat0 = GalileanRotation.from_euler("x", frame.roll - frame.roll0)
 
     # construct transformation matrix and use it
     R = mat0 @ mat1 @ mat2
@@ -91,11 +97,13 @@ def _icrs_cartesian_to_gcf_cartesian_matrix_vectors(
     # Now need to translate by Sun-Galactic center distance around x' and
     # rotate about y' to account for tilt due to Sun's height above the plane
     z_d = u.ustrip("", frame.z_sun / frame.galcen.distance)  # [radian]
-    H = GalileanRotation.from_euler("y", u.Quantity(jnp.asin(z_d), "rad")).rotation
+    H = GalileanRotation.from_euler("y", u.Quantity(jnp.asin(z_d), "rad"))
 
     # compute total matrices
     A = H @ R
-    offset = -H @ (frame.galcen.distance * jnp.asarray([1.0, 0.0, 0.0]))
+    offset = GalileanSpatialTranslation(
+        -H.rotation @ (frame.galcen.distance * jnp.asarray([1.0, 0.0, 0.0]))
+    )
 
     return A, offset, convert(frame.galcen_v_sun, u.Quantity)
 
@@ -196,7 +204,7 @@ class _ICRS2GCFOperator(AbstractOperator):
     def _call_q(self, q: LengthVector, /) -> LengthVector:
         A, offset, _ = _icrs_cartesian_to_gcf_cartesian_matrix_vectors(self.gcf)
 
-        return A @ q + offset
+        return offset(A(q))
 
     @dispatch
     def __call__(self, q: LengthVector, /) -> LengthVector:
@@ -241,7 +249,7 @@ class _ICRS2GCFOperator(AbstractOperator):
         A, offset, offset_v = _icrs_cartesian_to_gcf_cartesian_matrix_vectors(self.gcf)
 
         # Apply the transformation to the position
-        qp = A @ q + offset
+        qp = offset(A(q))
 
         # Apply the transformation to the velocity
         jac = u.experimental.jacfwd(self._call_q, argnums=0, units=(q.unit,))(q)
@@ -313,15 +321,15 @@ def frame_transform_op(
 
 def _gcf_cartesian_to_icrs_cartesian_matrix_vectors(
     frame: Galactocentric, /
-) -> tuple[RotationMatrix, LengthVector, VelocityVector]:
+) -> tuple[GalileanRotation, GalileanSpatialTranslation, VelocityVector]:
     """GCF->ICRS transformation matrices and offsets."""
     # ICRS -> GCF
     A, offset, offset_v = _icrs_cartesian_to_gcf_cartesian_matrix_vectors(frame)
 
     # GCF -> ICRS
-    A = A.T  # (A^-1 = A^T)
-    offset = A @ (-offset)
-    offset_v = A @ (-offset_v)
+    A = A.inverse  # (A^-1 = A^T)
+    offset = GalileanSpatialTranslation(A(-offset.translation))
+    offset_v = A.rotation @ (-offset_v)
 
     return A, offset, offset_v
 
@@ -427,7 +435,7 @@ class _GCF2ICRSOperator(AbstractOperator):
     def _call_q(self, q: LengthVector, /) -> LengthVector:
         A, offset, _ = _gcf_cartesian_to_icrs_cartesian_matrix_vectors(self.gcf)
 
-        return A @ q + offset
+        return offset(A(q))
 
     @dispatch
     def __call__(self, q: LengthVector, /) -> LengthVector:
@@ -473,7 +481,7 @@ class _GCF2ICRSOperator(AbstractOperator):
         A, offset, offset_v = _gcf_cartesian_to_icrs_cartesian_matrix_vectors(self.gcf)
 
         # Apply the transformation to the position
-        qp = A @ q + offset
+        qp = offset(A(q))
 
         # Apply the transformation to the velocity
         jac = u.experimental.jacfwd(self._call_q, argnums=0, units=(q.unit,))(q)
