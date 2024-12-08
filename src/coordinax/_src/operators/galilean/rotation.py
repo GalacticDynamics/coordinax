@@ -260,7 +260,7 @@ class GalileanRotation(AbstractGalileanOperator):
         """
         return vec_matmul(self.rotation, q)
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanRotation", q: AbstractPos3D, /, **__: Any
     ) -> AbstractPos3D:
@@ -288,7 +288,7 @@ class GalileanRotation(AbstractGalileanOperator):
         rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
         return rcart.represent_as(type(q))
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanRotation", q: AbstractPos3D, t: u.Quantity["time"], /
     ) -> tuple[AbstractPos3D, u.Quantity["time"]]:

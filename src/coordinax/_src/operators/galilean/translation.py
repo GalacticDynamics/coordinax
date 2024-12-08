@@ -207,7 +207,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     # -------------------------------------------
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanSpatialTranslation", q: AbstractPos, /, **__: Any
     ) -> AbstractPos:
@@ -231,7 +231,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         """
         return q + self.translation
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanSpatialTranslation",
         q: AbstractPos,
@@ -264,7 +264,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         """
         return q + self.translation, t
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanSpatialTranslation", v4: FourVector, /, **__: Any
     ) -> AbstractPos:
@@ -516,7 +516,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         """
         return x + self.translation
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanTranslation",
         x: AbstractPos3D,

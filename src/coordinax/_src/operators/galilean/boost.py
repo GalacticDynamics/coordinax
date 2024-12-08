@@ -127,7 +127,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     # -----------------------------------------------------
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
+    @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanBoost", q: AbstractPos, delta_t: u.Quantity["time"], /
     ) -> tuple[AbstractPos, u.Quantity["time"]]:
