@@ -9,6 +9,7 @@ from jaxtyping import Shaped
 from plum import convert
 
 import unxt as u
+from dataclassish import replace
 
 from .base import AbstractOperator
 from .pipe import Pipe
@@ -17,6 +18,7 @@ from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
 from coordinax._src.vectors.d4 import FourVector
+from coordinax._src.vectors.space import Space
 
 # ============================================================================
 # 1-Dimensional
@@ -213,6 +215,16 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
     >>> newpos.q.x
     Quantity['length'](Array(2., dtype=float32), unit='km')
 
+    Now on a VelocityBoost:
+
+    >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
+
+    >>> v4 = cx.FourVector.from_([0, 0, 0, 0], "m")
+    >>> newv4 = op(v4)
+    >>> print(newv4)
+    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+        [0. 0. 0. 0.]>
+
     """
     q, t = self(v4.q, v4.t, **kwargs)
     return FourVector(t=t, q=q)
@@ -250,3 +262,55 @@ def call(
 
     """
     return convert(self(FourVector.from_(x), **kwargs), u.Quantity)
+
+
+# ============================================================================
+# Space
+
+
+@AbstractOperator.__call__.dispatch
+def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
+    r"""Apply the boost to a Space.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    On positions:
+
+    >>> op = cx.ops.GalileanRotation.from_([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+
+    >>> x = cx.CartesianPos3D.from_([1., 2, 3], "m")
+    >>> space = cx.Space(length=x)
+    >>> new_space = op(space)  # no effect
+    >>> print(new_space["length"])
+    <CartesianPos3D (x[m], y[m], z[m])
+        [-2.  1.  3.]>
+
+    On positions and velocities:
+
+    >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
+
+    >>> v = cx.CartesianVel3D.from_([4., 5, 6], "m/s")
+    >>> space = cx.Space(length=x, speed=v)
+    >>> space
+    Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
+
+    >>> new_space = op(space)
+    >>> new_space.keys()
+    dict_keys(['length', 'speed'])
+    >>> print(new_space["speed"])
+    <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+        [5. 7. 9.]>
+
+    """
+    # TODO: figure out how to do this in general, not just for q &/ p
+    if "length" in space and "speed" in space:
+        q, p = self(space["length"], space["speed"])
+        out = replace(space, length=q, speed=p)
+
+    else:
+        out = replace(space, length=self(space["length"]))
+
+    return out
