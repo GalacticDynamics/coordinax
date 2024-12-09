@@ -3,7 +3,6 @@
 
 __all__: list[str] = []
 
-from collections.abc import Mapping
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
@@ -12,51 +11,6 @@ from plum import convert
 import unxt as u
 
 import coordinax as cx
-
-#####################################################################
-
-
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
-    cls: type[cx.vecs.AbstractVector], obj: Mapping[str, apyu.Quantity], /
-) -> cx.vecs.AbstractVector:
-    """Construct a vector from a mapping.
-
-    Parameters
-    ----------
-    cls : type[AbstractVector]
-        The vector class.
-    obj : Mapping[str, `astropy.units.Quantity`]
-        The mapping of components.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> from astropy.units import Quantity
-    >>> import coordinax as cx
-
-    >>> xs = {"x": Quantity(1, "m"), "y": Quantity(2, "m"), "z": Quantity(3, "m")}
-    >>> vec = cx.CartesianPos3D.from_(xs)
-    >>> vec
-    CartesianPos3D(
-        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-    )
-
-    >>> xs = {"x": Quantity([1, 2], "m"), "y": Quantity([3, 4], "m"),
-    ...       "z": Quantity([5, 6], "m")}
-    >>> vec = cx.CartesianPos3D.from_(xs)
-    >>> vec
-    CartesianPos3D(
-        x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
-    )
-
-    """
-    return cls(**obj)
-
 
 #####################################################################
 

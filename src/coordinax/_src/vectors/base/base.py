@@ -64,13 +64,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     @classmethod
     @dispatch
     def from_(
-        cls: "type[AbstractVector]", obj: Mapping[str, AbstractQuantity], /
+        cls: "type[AbstractVector]", obj: Mapping[str, Any], /
     ) -> "AbstractVector":
         """Construct a vector from a mapping.
 
         Parameters
         ----------
-        obj : Mapping[str, `unxt.Quantity`]
+        obj : Mapping[str, Any]
             The mapping of components.
 
         Examples
