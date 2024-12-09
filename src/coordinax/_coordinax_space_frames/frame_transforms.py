@@ -160,7 +160,7 @@ class _ICRS2GCFOperator(AbstractOperator):
     >>> print(vega_gcf_q)
     <CartesianPos3D (x[pc], y[pc], z[pc])
         [-8112.899    21.799    29.014]>
-    >>> print(vega_gcf_p.uconvert({"speed": "km/s"}))
+    >>> print(vega_gcf_p.uconvert({u.dimension("speed"): "km/s"}))
     <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
         [ 34.067 234.616 -28.76 ]>
 
@@ -386,12 +386,12 @@ class _GCF2ICRSOperator(AbstractOperator):
     >>> vega_icrs_q, vega_icrs_p = frame_op(vega_q, vega_p)
 
     >>> vega_icrs_q = vega_icrs_q.represent_as(cx.vecs.LonLatSphericalPos)
-    >>> print(vega_icrs_q.uconvert({"angle": "deg", "length": "pc"}))
+    >>> print(vega_icrs_q.uconvert({u.dimension("angle"): "deg", u.dimension("length"): "pc"}))
     <LonLatSphericalPos (lon[deg], lat[deg], distance[pc])
         [279.235  38.785  25.   ]>
 
     >>> vega_icrs_p = vega_icrs_p.represent_as(cx.vecs.LonCosLatSphericalVel, vega_icrs_q)
-    >>> print(vega_icrs_p.uconvert({"angular speed": "mas / yr", "speed": "km/s"}))
+    >>> print(vega_icrs_p.uconvert({u.dimension("angular speed"): "mas / yr", u.dimension("speed"): "km/s"}))
     <LonCosLatSphericalVel (d_lon_coslat[mas / yr], d_lat[mas / yr], d_distance[km / s])
         [ 200.002 -286.002  -13.9  ]>
 
