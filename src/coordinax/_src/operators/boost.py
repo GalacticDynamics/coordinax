@@ -18,7 +18,6 @@ from .base import AbstractOperator
 from .identity import Identity
 from coordinax._src.vectors.base import AbstractPos, AbstractVel
 from coordinax._src.vectors.d3 import CartesianVel3D
-from coordinax._src.vectors.d4 import FourVector
 
 
 @final
@@ -212,7 +211,7 @@ def call(
     return q, convert(newpvec, u.Quantity)
 
 
-@AbstractOperator.__call__.dispatch
+@AbstractOperator.__call__.dispatch(precedence=-1)
 def call(self: VelocityBoost, q: AbstractPos, /) -> AbstractPos:
     """Apply the boost to the coordinates.
 
@@ -256,36 +255,6 @@ def call(
 
     """
     return q, t
-
-
-@AbstractOperator.__call__.dispatch
-def call(self: VelocityBoost, v4: FourVector, /, **__: Any) -> FourVector:
-    r"""Apply the boost to the coordinates.
-
-    This does nothing, as the boost is to the velocity only.
-
-    The operation is given by:
-
-    .. math::
-
-        (t,\mathbf{x}) \mapsto (t, \mathbf{x} + \mathbf{v} t)
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
-
-    >>> v4 = cx.FourVector.from_([0, 0, 0, 0], "m")
-    >>> newv4 = op(v4)
-    >>> print(newv4)
-    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
-        [0. 0. 0. 0.]>
-
-    """
-    q, t = self(v4.q, v4.t)
-    return replace(v4, q=q, t=t)
 
 
 # ======================================================================

@@ -215,6 +215,16 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
     >>> newpos.q.x
     Quantity['length'](Array(2., dtype=float32), unit='km')
 
+    Now on a VelocityBoost:
+
+    >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
+
+    >>> v4 = cx.FourVector.from_([0, 0, 0, 0], "m")
+    >>> newv4 = op(v4)
+    >>> print(newv4)
+    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+        [0. 0. 0. 0.]>
+
     """
     q, t = self(v4.q, v4.t, **kwargs)
     return FourVector(t=t, q=q)
