@@ -13,9 +13,9 @@ from plum import convert, dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import AbstractQuantity
 
 from .base import AbstractGalileanOperator
-from coordinax._src.distances import AbstractDistance
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base import AbstractPos, AbstractVel
@@ -28,14 +28,14 @@ from coordinax._src.vectors.d4 import FourVector
 # Spatial Translations
 
 
-def _converter_spatialtranslation(x: Any) -> AbstractPos:
-    """Convert to a spatial translation vector."""
+def converter(x: Any) -> AbstractPos:
+    """Convert for the spatial translation operator."""
     out: AbstractPos | None = None
     if isinstance(x, GalileanSpatialTranslation):
         out = x.translation
     elif isinstance(x, AbstractPos):
         out = x
-    elif isinstance(x, u.Quantity | AbstractDistance):
+    elif isinstance(x, AbstractQuantity):
         shape: tuple[int, ...] = x.shape
         match shape:
             case (1,):
@@ -157,7 +157,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     """
 
-    translation: AbstractPos = eqx.field(converter=_converter_spatialtranslation)
+    translation: AbstractPos = eqx.field(converter=converter)
     """The spatial translation.
 
     This parameters accepts either a :class:`vector.AbstractVector` instance or
