@@ -180,7 +180,9 @@ def call(
         [1. 2. 3.]>
 
     """
-    return q, p + self.velocity
+    pc = p.represent_as(type(self.velocity), q).uconvert(self.velocity.units)
+    newp = pc + self.velocity
+    return q, newp.represent_as(type(p), q)
 
 
 @AbstractOperator.__call__.dispatch
