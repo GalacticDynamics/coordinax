@@ -10,7 +10,6 @@ import equinox as eqx
 
 from .base import AbstractOperator
 from .composite import AbstractCompositeOperator
-from coordinax._src.vectors.base import AbstractPos
 
 
 def _converter_seq(inp: Any) -> tuple[AbstractOperator, ...]:
@@ -83,54 +82,6 @@ class Pipe(AbstractCompositeOperator):
     """
 
     operators: tuple[AbstractOperator, ...] = eqx.field(converter=_converter_seq)
-
-    # ---------------------------------------------------------------
-
-    @AbstractOperator.__call__.dispatch
-    def __call__(
-        self: "AbstractCompositeOperator", *args: object, **kwargs: Any
-    ) -> tuple[object, ...]:
-        """Apply the operators to the coordinates.
-
-        This is the default implementation, which applies the operators in
-        sequence, passing along the arguments.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
-        >>> op(1, 2, 3)
-        (1, 2, 3)
-
-        """
-        for op in self.operators:
-            args = op(*args, **kwargs)
-        return args
-
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(
-        self: "AbstractCompositeOperator", x: AbstractPos, /, **kwargs: Any
-    ) -> AbstractPos:
-        """Apply the operator to the coordinates.
-
-        This is the default implementation, which applies the operators in
-        sequence.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> op(vec)
-        CartesianPos3D( ... )
-
-        """
-        # TODO: with lax.for_i
-        for op in self.operators:
-            x = op(x, **kwargs)
-        return x
 
     # ---------------------------------------------------------------
 

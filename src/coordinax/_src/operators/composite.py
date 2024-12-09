@@ -4,11 +4,12 @@ __all__ = ["AbstractCompositeOperator"]
 
 from collections.abc import Iterator
 from dataclasses import replace
-from typing import TYPE_CHECKING, Protocol, overload, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
 
 from dataclassish import DataclassInstance
 
 from .base import AbstractOperator
+from coordinax._src.vectors.base import AbstractPos
 
 if TYPE_CHECKING:
     from typing import Self
@@ -62,6 +63,28 @@ class AbstractCompositeOperator(AbstractOperator):
 
         return Pipe(tuple(op.inverse for op in reversed(self.operators)))
 
+    @AbstractOperator.__call__.dispatch  # type: ignore[attr-defined, misc]
+    def __call__(
+        self: "AbstractCompositeOperator", *args: object, **kwargs: Any
+    ) -> tuple[object, ...]:
+        """Apply the operators to the coordinates.
+
+        This is the default implementation, which applies the operators in
+        sequence, passing along the arguments.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
+        >>> op(1, 2, 3)
+        (1, 2, 3)
+
+        """
+        for op in self.operators:
+            args = op(*args, **kwargs)
+        return args
+
     # ===========================================
     # Pipe
 
@@ -79,3 +102,32 @@ class AbstractCompositeOperator(AbstractOperator):
 
     def __iter__(self: HasOperatorsAttr) -> Iterator[AbstractOperator]:
         return iter(self.operators)
+
+
+# ======================================================================
+# Call dispatches
+
+
+@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
+def call(
+    self: AbstractCompositeOperator, x: AbstractPos, /, **kwargs: Any
+) -> AbstractPos:
+    """Apply the operator to the coordinates.
+
+    This is the default implementation, which applies the operators in
+    sequence.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> op(vec)
+    CartesianPos3D( ... )
+
+    """
+    # TODO: with lax.for_i
+    for op in self.operators:
+        x = op(x, **kwargs)
+    return x
