@@ -123,6 +123,11 @@ class Pipe(AbstractCompositeOperator):
         # Append single operators
         return replace(self, operators=(*self, other))
 
+    def __ror__(self, other: AbstractOperator) -> "Pipe":
+        """Compose with another operator."""
+        # Append single operators
+        return replace(self, operators=(other, *self))
+
     def __repr__(self) -> str:
         ops = repr(self.operators)
         if "\n" in ops:

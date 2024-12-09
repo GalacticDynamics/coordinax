@@ -223,10 +223,15 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         --------
         >>> import coordinax as cx
 
-        >>> op1 = cx.ops.Identity()
+        >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> op2 = cx.ops.Identity()
-        >>> op1 | op2
-        Pipe((Identity(), Identity()))
+        >>> op3 = op1 | op2
+        >>> op3
+        Pipe((GalileanRotation(rotation=i32[3,3]), Identity()))
+
+        >>> op4 = cx.ops.Identity() | op3
+        >>> op4
+        Pipe((Identity(), GalileanRotation(rotation=i32[3,3]), Identity()))
 
         """
         from .pipe import Pipe
