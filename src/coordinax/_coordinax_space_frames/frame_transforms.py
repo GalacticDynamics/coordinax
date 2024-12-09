@@ -311,4 +311,4 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
 
     """  # noqa: E501
     icrs2gcf = frame_transform_op(to_frame, from_frame)  # pylint: disable=W1114
-    return icrs2gcf.inverse.simplify()  # y
+    return icrs2gcf.inverse.simplify()
