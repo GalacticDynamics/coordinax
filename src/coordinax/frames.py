@@ -21,7 +21,7 @@ with install_import_hook("coordinax.frames", RUNTIME_TYPECHECKER):
 
     # Register the frame transform operations
     # isort: split
-    from ._src.frames.xfm import *  # noqa: F403
+    from ._src.frames.register_transforms import *  # noqa: F403
 
     # Frames from external packages
     # isort: split

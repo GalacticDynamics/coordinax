@@ -1,4 +1,4 @@
-"""Frames sub-package."""
+"""Register frame transform operations."""
 
 __all__: list[str] = []
 

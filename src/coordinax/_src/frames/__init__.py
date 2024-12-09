@@ -15,3 +15,6 @@ from .api import frame_transform_op
 from .base import AbstractReferenceFrame
 from .errors import FrameTransformError
 from .null import NoFrame
+
+# isort: split
+from . import register_transforms  # noqa: F401
