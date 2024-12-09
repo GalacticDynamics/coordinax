@@ -64,13 +64,13 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     @classmethod
     @dispatch
     def from_(
-        cls: "type[AbstractVector]", obj: Mapping[str, AbstractQuantity], /
+        cls: "type[AbstractVector]", obj: Mapping[str, Any], /
     ) -> "AbstractVector":
         """Construct a vector from a mapping.
 
         Parameters
         ----------
-        obj : Mapping[str, `unxt.Quantity`]
+        obj : Mapping[str, Any]
             The mapping of components.
 
         Examples
@@ -203,8 +203,6 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
 
     # ===============================================================
     # Quantity API
-
-    # TODO: should this be named `uconvert`, and then registered w/ `uconvert?
 
     @dispatch(precedence=-1)
     def uconvert(self, *args: Any, **kwargs: Any) -> "AbstractVector":

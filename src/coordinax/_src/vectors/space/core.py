@@ -557,7 +557,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
 
 # This dispatch is needed because a Space is both a Map and a Vector.
-@AbstractVector.from_.dispatch(precedence=1)
+@AbstractVector.from_.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
 def from_(cls: type[Space], obj: Space, /) -> Space:
     """Construct a Space, returning the Space.
 
@@ -571,23 +571,6 @@ def from_(cls: type[Space], obj: Space, /) -> Space:
 
     """
     return obj
-
-
-@AbstractVector.from_.dispatch
-def from_(cls: type[Space], obj: Mapping[str, AbstractVector], /) -> Space:
-    """Construct a Space, returning the Space.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> q = cx.Space.from_({"length": cx.CartesianPos3D.from_([1, 2, 3], "m")})
-    >>> space = cx.Space.from_(q)
-    >>> space
-    Space({ 'length': CartesianPos3D( ... ) })
-
-    """
-    return cls(**obj)
 
 
 # ===============================================================
