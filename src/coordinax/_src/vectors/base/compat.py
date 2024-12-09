@@ -232,7 +232,7 @@ def uconvert(usys: u.AbstractUnitSystem, vector: AbstractVector, /) -> AbstractV
 
 @dispatch
 def uconvert(
-    units: Mapping[Dimension | str, Unit | str], vector: AbstractVector, /
+    units: Mapping[Dimension, Unit | str], vector: AbstractVector, /
 ) -> AbstractVector:
     """Convert the vector to the given units.
 
@@ -244,7 +244,7 @@ def uconvert(
     We can convert a vector to the given units:
 
     >>> cart = cx.vecs.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
-    >>> cart.uconvert({"length": "km"})
+    >>> cart.uconvert({u.dimension("length"): "km"})
     CartesianPos2D(
         x=Quantity[...](value=f32[], unit=Unit("km")),
         y=Quantity[...](value=f32[], unit=Unit("km"))
@@ -254,7 +254,7 @@ def uconvert(
 
     >>> sph = cx.SphericalPos(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
     ...                       phi=Quantity(3, "rad"))
-    >>> sph.uconvert({"length": "km", "angle": "deg"})
+    >>> sph.uconvert({u.dimension("length"): "km", u.dimension("angle"): "deg"})
     SphericalPos(
         r=Distance(value=f32[], unit=Unit("km")),
         theta=Angle(value=f32[], unit=Unit("deg")),
@@ -268,6 +268,52 @@ def uconvert(
         vector,
         **{
             k: u.uconvert(units_[u.dimension_of(v)], v)
+            for k, v in field_items(AttrFilter, vector)
+        },
+    )
+
+
+@dispatch
+def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVector:
+    """Convert the vector to the given units.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    We can convert a vector to the given units:
+
+    >>> cart = cx.vecs.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
+    >>> cart.uconvert({"x": "km", "y": "m"})
+    CartesianPos2D(
+        x=Quantity[...](value=f32[], unit=Unit("km")),
+        y=Quantity[...](value=f32[], unit=Unit("m"))
+    )
+
+    This also works for converting just some of the components:
+
+    >>> cart.uconvert({"x": "km"})
+    CartesianPos2D(
+        x=Quantity[...](value=f32[], unit=Unit("km")),
+        y=Quantity[...](value=f32[], unit=Unit("km"))
+    )
+
+    This also works for vectors with different units:
+
+    >>> sph = cx.SphericalPos(r=Quantity(1, "m"), theta=Quantity(45, "deg"),
+    ...                       phi=Quantity(3, "rad"))
+    >>> sph.uconvert({"r": "km", "theta": "rad"})
+    SphericalPos(
+        r=Distance(value=f32[], unit=Unit("km")),
+        theta=Angle(value=f32[], unit=Unit("rad")),
+        phi=Angle(value=f32[], unit=Unit("rad")) )
+
+    """
+    return replace(
+        vector,
+        **{
+            k: u.uconvert(units.get(k, u.unit_of(v)), v)
             for k, v in field_items(AttrFilter, vector)
         },
     )
