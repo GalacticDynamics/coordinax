@@ -10,6 +10,7 @@ from dataclassish import DataclassInstance
 
 from .base import AbstractOperator
 from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.space import Space
 
 if TYPE_CHECKING:
     from typing import Self
@@ -108,7 +109,7 @@ class AbstractCompositeOperator(AbstractOperator):
 # Call dispatches
 
 
-@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
+@AbstractOperator.__call__.dispatch(precedence=1)
 def call(
     self: AbstractCompositeOperator, x: AbstractPos, /, **kwargs: Any
 ) -> AbstractPos:
@@ -131,3 +132,13 @@ def call(
     for op in self.operators:
         x = op(x, **kwargs)
     return x
+
+
+# TODO: not need this dispatch
+@AbstractOperator.__call__.dispatch(precedence=1)
+def call(self: AbstractCompositeOperator, space: Space, /, **kwargs: Any) -> Space:
+    """Apply the operator to the coordinates."""
+    # TODO: with lax.for_i
+    for op in self.operators:
+        space = op(space, **kwargs)
+    return space
