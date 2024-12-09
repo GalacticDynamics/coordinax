@@ -283,33 +283,6 @@ class GalileanRotation(AbstractGalileanOperator):
         """
         return self.rotation @ q
 
-    @AbstractOperator.__call__.dispatch
-    def __call__(
-        self: "GalileanRotation", q: AbstractPos3D, t: u.Quantity["time"], /
-    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
-        """Apply the rotation to the coordinates.
-
-        Examples
-        --------
-        >>> import quaxed.numpy as jnp
-        >>> import coordinax as cx
-
-        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cx.ops.GalileanRotation(Rz)
-
-        >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
-        >>> t = u.Quantity(1, "s")
-        >>> newq, newt = op(q, t)
-        >>> newq.x
-        Quantity['length'](Array(0., dtype=float32), unit='m')
-
-        The time is not affected by the rotation.
-        >>> newt
-        Quantity['time'](Array(1, dtype=int32, ...), unit='s')
-
-        """
-        return self(q), t
-
     # -----------------------------------------------------
     # Arithmetic operations
 
@@ -333,6 +306,42 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @dispatch.abstract  # type: ignore[misc]
     def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
+
+
+# ============================================================================
+# Call dispatches
+
+
+@AbstractOperator.__call__.dispatch  # type: ignore[attr-defined, misc]
+def call(
+    self: GalileanRotation, q: AbstractPos3D, t: u.Quantity["time"], /
+) -> tuple[AbstractPos3D, u.Quantity["time"]]:
+    """Apply the rotation to the coordinates.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import coordinax as cx
+
+    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
+    >>> op = cx.ops.GalileanRotation(Rz)
+
+    >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
+    >>> t = u.Quantity(1, "s")
+    >>> newq, newt = op(q, t)
+    >>> newq.x
+    Quantity['length'](Array(0., dtype=float32), unit='m')
+
+    The time is not affected by the rotation.
+    >>> newt
+    Quantity['time'](Array(1, dtype=int32, ...), unit='s')
+
+    """
+    return self(q), t
+
+
+# ============================================================================
+# Simplification
 
 
 @dispatch  # type: ignore[misc]
