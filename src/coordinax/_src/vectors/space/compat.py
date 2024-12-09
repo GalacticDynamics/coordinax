@@ -1,4 +1,4 @@
-"""Space."""
+"""Intra-ecosystem compatibility."""
 
 __all__: list[str] = []
 
