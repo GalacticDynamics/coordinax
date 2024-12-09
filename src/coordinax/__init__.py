@@ -12,6 +12,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from . import angle, distance, frames, ops, vecs
     from ._version import version as __version__  # noqa: F401
     from .distance import Distance
+    from .frames import Coordinate
     from .vecs import (
         CartesianPos3D,
         CartesianVel3D,
@@ -43,6 +44,8 @@ __all__ = [
     "SphericalVel",
     "FourVector",
     "Space",
+    # frame objects
+    "Coordinate",
 ]
 
 

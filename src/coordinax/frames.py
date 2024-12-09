@@ -42,11 +42,15 @@ True
 """
 
 __all__ = [
+    # Frames
     "AbstractReferenceFrame",
     "FrameTransformError",
     "NoFrame",
     "TransformedReferenceFrame",
     "frame_transform_op",
+    # Coordinates
+    "AbstractCoordinate",
+    "Coordinate",
 ]
 
 from jaxtyping import install_import_hook
@@ -55,7 +59,9 @@ from .setup_package import RUNTIME_TYPECHECKER
 
 with install_import_hook("coordinax.frames", RUNTIME_TYPECHECKER):
     from ._src.frames import (
+        AbstractCoordinate,
         AbstractReferenceFrame,
+        Coordinate,
         FrameTransformError,
         NoFrame,
         TransformedReferenceFrame,
