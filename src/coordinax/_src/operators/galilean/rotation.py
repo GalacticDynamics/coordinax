@@ -381,6 +381,38 @@ def call(
     return newqvec, newpvec
 
 
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanRotation,
+    q: u.Quantity["length"],
+    p: u.Quantity["speed"],
+    /,
+    **__: Any,
+) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+    r"""Apply the rotation to the coordinates and velocities.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> R_z = cx.ops.GalileanRotation(jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]]))
+
+    >>> q = u.Quantity([1., 0, 0], "m")
+    >>> p = u.Quantity([1., 0, 0], "m/s")
+
+    >>> newq, newp = R_z(q, p)
+    >>> print(newq, newp, sep="\n")
+    Quantity['length'](Array([0., 1., 0.], dtype=float32), unit='m')
+    Quantity['speed'](Array([0., 1., 0.], dtype=float32), unit='m / s')
+
+    """
+    newq = self(q)
+    newp = vec_matmul(self.rotation, p)
+    return newq, newp
+
+
 # ============================================================================
 # Simplification
 

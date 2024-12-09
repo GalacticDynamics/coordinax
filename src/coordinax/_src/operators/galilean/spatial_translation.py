@@ -337,7 +337,6 @@ def call(
         [1. 2. 3.]>
 
     """
-    # Translate the position.
     newqvec = self(qvec)
 
     # TODO: figure out how to do this in general, then all these dispatches
@@ -358,6 +357,48 @@ def call(
     newpvec = newpvec.represent_as(type(pvec), newqvec)
 
     return newqvec, newpvec
+
+
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanSpatialTranslation,
+    q: u.Quantity["length"],
+    p: u.Quantity["speed"],
+    /,
+    **__: Any,
+) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+    r"""Apply the translation to the coordinates.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
+
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
+    >>> p = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
+    >>> newq, newp = op(q, p)
+    >>> print(newq, newp, sep="\n")
+    <CartesianPos3D (x[km], y[km], z[km])
+        [1. 1. 1.]>
+    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+        [1. 2. 3.]>
+
+    """
+    newq = self(q)
+
+    # TODO: figure out how to do this in general, then all these dispatches
+    # can be consolidated. And do it on vectors, not the quantities.
+    #
+    # Translate the velocity (this operator will have no effect on the
+    # velocity).
+    # 2. create the Jacobian of the operation on the position
+    jac = u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,))(q)
+    # 3. apply the Jacobian to the velocity
+    newp = jac @ p
+
+    return newq, newp
 
 
 # ======================================================================

@@ -180,7 +180,36 @@ def call(
         [1. 2. 3.]>
 
     """
-    return q, p + self.velocity
+    pc = p.represent_as(type(self.velocity), q).uconvert(self.velocity.units)
+    newp = pc + self.velocity
+    return q, newp.represent_as(type(p), q)
+
+
+@AbstractOperator.__call__.dispatch
+def call(
+    self: VelocityBoost, q: u.Quantity["length"], p: u.Quantity["speed"], /
+) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+    r"""Apply the boost to the coordinates.
+
+    This does nothing to the position, as the boost is to the velocity only.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
+
+    >>> q = u.Quantity([0., 0, 0], "m")
+    >>> p = u.Quantity([0., 0, 0], "m/s")
+    >>> newq, newp = op(q, p)
+    >>> print(newq, newp, sep="\n")
+    Quantity['length'](Array([0., 0., 0.], dtype=float32), unit='m')
+    Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='m / s')
+
+    """
+    pvec = CartesianVel3D.from_(p)
+    newpvec = pvec + self.velocity
+    return q, convert(newpvec, u.Quantity)
 
 
 @AbstractOperator.__call__.dispatch
