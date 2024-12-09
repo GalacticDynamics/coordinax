@@ -12,7 +12,7 @@ import equinox as eqx
 import jax
 from jax.scipy.spatial.transform import Rotation
 from jaxtyping import Array, Shaped
-from plum import convert, dispatch
+from plum import dispatch
 from quax import quaxify
 
 import quaxed.numpy as jnp
@@ -22,8 +22,7 @@ from .base import AbstractGalileanOperator
 from coordinax._src.angles import Angle
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.base import ToUnitsOptions
-from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
+from coordinax._src.vectors.d3 import AbstractPos3D
 
 vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
 
@@ -121,6 +120,7 @@ class GalileanRotation(AbstractGalileanOperator):
     rotation: Shaped[Array, "3 3"] = eqx.field(converter=converter)
     """The rotation vector."""
 
+    #: Tolerance check on the rotation matrix.
     check_tol: Mapping[str, Any] = eqx.field(
         default_factory=lambda: {"atol": 1e-7}, repr=False, static=True
     )
@@ -281,12 +281,7 @@ class GalileanRotation(AbstractGalileanOperator):
         Quantity['length'](Array(0., dtype=float32), unit='m')
 
         """
-        vec = convert(  # Array[float, (N, 3)]
-            q.represent_as(CartesianPos3D).uconvert(ToUnitsOptions.consistent),
-            u.Quantity,
-        )
-        rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
-        return rcart.represent_as(type(q))
+        return self.rotation @ q
 
     @AbstractOperator.__call__.dispatch
     def __call__(

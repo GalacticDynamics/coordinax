@@ -10,7 +10,7 @@ from typing import Any, TypeVar
 
 import equinox as eqx
 import jax
-from jaxtyping import ArrayLike
+from jaxtyping import Array, ArrayLike, Shaped
 from plum import convert
 from quax import quaxify, register
 
@@ -19,7 +19,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
 
-from .base import AbstractVector
+from .base import AbstractVector, ToUnitsOptions
 from .flags import AttrFilter
 from .mixins import AvalMixin
 from coordinax._src.distances import BatchableLength
@@ -30,6 +30,8 @@ PosT = TypeVar("PosT", bound="AbstractPos")
 
 # TODO: figure out public API for this
 POSITION_CLASSES: set[type["AbstractPos"]] = set()
+
+_vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)->(N)"))
 
 
 class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
@@ -135,6 +137,36 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         rhs = other.represent_as(type(self))
         return super().__eq__(rhs)
+
+    def __rmatmul__(self, other: Shaped[Array, "N N"]) -> Any:
+        """Matrix multiplication with another object.
+
+        Examples
+        --------
+        >>> import quaxed.numpy as jnp
+        >>> import coordinax as cx
+
+        >>> q = cx.CartesianPos3D.from_([[1., 0, 0 ],
+        ...                              [0 , 1, 0 ],
+        ...                              [0 , 0, 1 ]], "kpc")[None]
+        >>> q.shape
+        (1, 3)
+
+        >>> R_z = rot = jnp.asarray([[0.0, -1, 0], [1, 0, 0], [0, 0, 1]])
+
+        >>> print(R_z @ q)
+        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            [[[ 0.  1.  0.]
+              [-1.  0.  0.]
+              [ 0.  0.  1.]]]>
+
+        """
+        # TODO: figure out how to do this without converting back to arrays.
+        cartvec = self.represent_as(self._cartesian_cls)
+        q = convert(cartvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
+        newq = _vec_matmul(other, q)
+        newvec = self._cartesian_cls.from_(newq)
+        return newvec.represent_as(type(self))
 
     # ===============================================================
     # Convenience methods
