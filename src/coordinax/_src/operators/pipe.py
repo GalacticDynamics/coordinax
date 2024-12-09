@@ -56,28 +56,44 @@ class Pipe(AbstractCompositeOperator):
     >>> import coordinax as cx
 
     >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-    >>> boost = cx.ops.GalileanBoost.from_([1, 2, 3], "km/s")
+    >>> boost = cx.ops.VelocityBoost.from_([1, 2, 3], "km/s")
     >>> pipe = cx.ops.Pipe((shift, boost))
     >>> pipe
-    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
 
-    A sequence of operators can also be constructed by ``|``:
+    A pipe can also be constructed by ``|``:
 
     >>> pipe2 = shift | boost
     >>> pipe2
-    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
 
-    The sequence of operators can be simplified. For this example, we add an
-    identity operator to the sequence:
+    The pipe can be simplified. For this example, we add an identity operator to
+    the sequence and simplify, which will remove the identity operator.
 
     >>> pipe3 = pipe2 | cx.ops.Identity()
     >>> pipe3
     Pipe((
-        GalileanSpatialTranslation(...), GalileanBoost(...), Identity()
+        GalileanSpatialTranslation(...), VelocityBoost(...), Identity()
     ))
 
     >>> cx.ops.simplify_op(pipe3)
-    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+
+    Now let's call the operator on a position:
+
+    >>> pos = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> print(pipe(pos))
+    <CartesianPos3D (x[km], y[km], z[km])
+        [2. 4. 6.]>
+
+    The pipe will also work on a position + velocity:
+
+    >>> vel = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
+    >>> print(*pipe(pos, vel), sep="\n")
+    <CartesianPos3D (x[km], y[km], z[km])
+        [2. 4. 6.]>
+    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+        [5. 7. 9.]>
 
     """
 
