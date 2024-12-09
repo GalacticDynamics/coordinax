@@ -22,8 +22,8 @@ from .base import AbstractGalileanOperator
 from coordinax._src.angles import Angle
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.base import ToUnitsOptions
-from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
+from coordinax._src.vectors.base import AbstractPos, AbstractVel, ToUnitsOptions
+from coordinax._src.vectors.d3 import AbstractPos3D
 
 vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
 
@@ -121,6 +121,7 @@ class GalileanRotation(AbstractGalileanOperator):
     rotation: Shaped[Array, "3 3"] = eqx.field(converter=converter)
     """The rotation vector."""
 
+    #: Tolerance check on the rotation matrix.
     check_tol: Mapping[str, Any] = eqx.field(
         default_factory=lambda: {"atol": 1e-7}, repr=False, static=True
     )
@@ -281,39 +282,7 @@ class GalileanRotation(AbstractGalileanOperator):
         Quantity['length'](Array(0., dtype=float32), unit='m')
 
         """
-        vec = convert(  # Array[float, (N, 3)]
-            q.represent_as(CartesianPos3D).uconvert(ToUnitsOptions.consistent),
-            u.Quantity,
-        )
-        rcart = CartesianPos3D.from_(vec_matmul(self.rotation, vec))
-        return rcart.represent_as(type(q))
-
-    @AbstractOperator.__call__.dispatch
-    def __call__(
-        self: "GalileanRotation", q: AbstractPos3D, t: u.Quantity["time"], /
-    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
-        """Apply the rotation to the coordinates.
-
-        Examples
-        --------
-        >>> import quaxed.numpy as jnp
-        >>> import coordinax as cx
-
-        >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cx.ops.GalileanRotation(Rz)
-
-        >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
-        >>> t = u.Quantity(1, "s")
-        >>> newq, newt = op(q, t)
-        >>> newq.x
-        Quantity['length'](Array(0., dtype=float32), unit='m')
-
-        The time is not affected by the rotation.
-        >>> newt
-        Quantity['time'](Array(1, dtype=int32, ...), unit='s')
-
-        """
-        return self(q), t
+        return self.rotation @ q
 
     # -----------------------------------------------------
     # Arithmetic operations
@@ -338,6 +307,82 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @dispatch.abstract  # type: ignore[misc]
     def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
+
+
+# ============================================================================
+# Call dispatches
+
+
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanRotation, q: AbstractPos3D, t: u.Quantity["time"], /
+) -> tuple[AbstractPos3D, u.Quantity["time"]]:
+    """Apply the rotation to the coordinates.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import coordinax as cx
+
+    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
+    >>> op = cx.ops.GalileanRotation(Rz)
+
+    >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
+    >>> t = u.Quantity(1, "s")
+    >>> newq, newt = op(q, t)
+    >>> newq.x
+    Quantity['length'](Array(0., dtype=float32), unit='m')
+
+    The time is not affected by the rotation.
+    >>> newt
+    Quantity['time'](Array(1, dtype=int32, ...), unit='s')
+
+    """
+    return self(q), t
+
+
+@jax.jit
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanRotation, qvec: AbstractPos, pvec: AbstractVel, /, **__: Any
+) -> tuple[AbstractPos, AbstractVel]:
+    r"""Apply the rotation to the coordinates and velocities.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> R_z = cx.ops.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+
+    >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
+    >>> p = cx.CartesianVel3D.from_([1, 0, 0], "m/s")
+
+    >>> newq, newp = R_z(q, p)
+    >>> print(newq, newp, sep="\n")
+    <CartesianPos3D (x[m], y[m], z[m])
+        [0. 1. 0.]>
+    <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+        [0. 1. 0.]>
+
+    """
+    # Rotate the position.
+    newqvec = self(qvec)
+
+    # TODO: figure out how to do this without converting back to arrays.
+    # XVel -> CartVel -> Q -> R@Q -> CartVel -> XVel
+    pcvec = pvec.represent_as(pvec._cartesian_cls, qvec)  # noqa: SLF001
+    p = convert(pcvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
+    newp = vec_matmul(self.rotation, p)
+    newpcvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
+    newpvec = newpcvec.represent_as(type(pvec), newqvec)
+
+    return newqvec, newpvec
+
+
+# ============================================================================
+# Simplification
 
 
 @dispatch  # type: ignore[misc]

@@ -10,7 +10,6 @@ import equinox as eqx
 
 from .base import AbstractOperator
 from .composite import AbstractCompositeOperator
-from coordinax._src.vectors.base import AbstractPos
 
 
 def _converter_seq(inp: Any) -> tuple[AbstractOperator, ...]:
@@ -57,80 +56,48 @@ class Pipe(AbstractCompositeOperator):
     >>> import coordinax as cx
 
     >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-    >>> boost = cx.ops.GalileanBoost.from_([1, 2, 3], "km/s")
+    >>> boost = cx.ops.VelocityBoost.from_([1, 2, 3], "km/s")
     >>> pipe = cx.ops.Pipe((shift, boost))
     >>> pipe
-    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
 
-    A sequence of operators can also be constructed by ``|``:
+    A pipe can also be constructed by ``|``:
 
     >>> pipe2 = shift | boost
     >>> pipe2
-    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
 
-    The sequence of operators can be simplified. For this example, we add an
-    identity operator to the sequence:
+    The pipe can be simplified. For this example, we add an identity operator to
+    the sequence and simplify, which will remove the identity operator.
 
     >>> pipe3 = pipe2 | cx.ops.Identity()
     >>> pipe3
     Pipe((
-        GalileanSpatialTranslation(...), GalileanBoost(...), Identity()
+        GalileanSpatialTranslation(...), VelocityBoost(...), Identity()
     ))
 
     >>> cx.ops.simplify_op(pipe3)
-    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+
+    Now let's call the operator on a position:
+
+    >>> pos = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> print(pipe(pos))
+    <CartesianPos3D (x[km], y[km], z[km])
+        [2. 4. 6.]>
+
+    The pipe will also work on a position + velocity:
+
+    >>> vel = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
+    >>> print(*pipe(pos, vel), sep="\n")
+    <CartesianPos3D (x[km], y[km], z[km])
+        [2. 4. 6.]>
+    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+        [5. 7. 9.]>
 
     """
 
     operators: tuple[AbstractOperator, ...] = eqx.field(converter=_converter_seq)
-
-    # ---------------------------------------------------------------
-
-    @AbstractOperator.__call__.dispatch
-    def __call__(
-        self: "AbstractCompositeOperator", *args: object, **kwargs: Any
-    ) -> tuple[object, ...]:
-        """Apply the operators to the coordinates.
-
-        This is the default implementation, which applies the operators in
-        sequence, passing along the arguments.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
-        >>> op(1, 2, 3)
-        (1, 2, 3)
-
-        """
-        for op in self.operators:
-            args = op(*args, **kwargs)
-        return args
-
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(
-        self: "AbstractCompositeOperator", x: AbstractPos, /, **kwargs: Any
-    ) -> AbstractPos:
-        """Apply the operator to the coordinates.
-
-        This is the default implementation, which applies the operators in
-        sequence.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> op(vec)
-        CartesianPos3D( ... )
-
-        """
-        # TODO: with lax.for_i
-        for op in self.operators:
-            x = op(x, **kwargs)
-        return x
 
     # ---------------------------------------------------------------
 
