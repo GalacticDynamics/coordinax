@@ -208,7 +208,7 @@ skip = ["uv.lock"]
   ]
   log_cli_level = "INFO"
   minversion = "8.3"
-  testpaths = ["tests"]
+  testpaths = ["README.md", "src", "tests"]
   xfail_strict = true
 
   env = [
