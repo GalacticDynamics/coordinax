@@ -5,7 +5,7 @@ __all__ = ["Space"]
 from collections.abc import Callable, Iterable, Mapping
 from textwrap import indent
 from types import MappingProxyType
-from typing import Any, TypeAlias, final
+from typing import Any, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -18,6 +18,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from xmmutablemap import ImmutableMap
 
+from .utils import DimensionLike, _can_broadcast_shapes, _get_dimension_name
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import represent_as
@@ -27,21 +28,6 @@ from coordinax._src.vectors.base import (
     AbstractVector,
     AbstractVel,
 )
-
-DimensionLike: TypeAlias = Dimension | str
-
-
-def _get_dimension_name(dim: DimensionLike, /) -> str:
-    return u.dimension(dim)._physical_type_list[0]  # noqa: SLF001
-
-
-def _can_broadcast_shapes(*shapes: tuple[int, ...]) -> bool:
-    """Check if the shapes can be broadcasted together."""
-    try:
-        jnp.broadcast_shapes(*shapes)
-    except ValueError:
-        return False
-    return True
 
 
 # TODO: figure out how to make the keys into Dimension objects, not str. This is
@@ -126,6 +112,9 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         )
 
         ImmutableMap.__init__(self, dict(zip(keys, raw.values(), strict=True)))
+
+    # ---------------------------------------------------------------
+    # Constructors
 
     @classmethod
     @AbstractVector.from_.dispatch  # type: ignore[attr-defined, misc]
@@ -554,6 +543,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
 
 # ===============================================================
+# Constructor dispatches
 
 
 # This dispatch is needed because a Space is both a Map and a Vector.
@@ -574,7 +564,7 @@ def from_(cls: type[Space], obj: Space, /) -> Space:
 
 
 # ===============================================================
-# Related dispatches
+# Vector API dispatches
 
 
 @dispatch  # type: ignore[misc]
