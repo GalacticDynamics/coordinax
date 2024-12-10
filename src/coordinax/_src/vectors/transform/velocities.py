@@ -26,13 +26,13 @@ from coordinax._src.vectors.d3 import AbstractVel3D
 # TODO: implement for cross-representations
 @dispatch.multi(  # type: ignore[misc]
     # N-D -> N-D
-    (AbstractVel1D, type[AbstractVel1D], AbstractPos | u.Quantity["length"]),
-    (AbstractVel2D, type[AbstractVel2D], AbstractPos | u.Quantity["length"]),
-    (AbstractVel3D, type[AbstractVel3D], AbstractPos | u.Quantity["length"]),
+    (type[AbstractVel1D], AbstractVel1D, AbstractPos | u.Quantity["length"]),
+    (type[AbstractVel2D], AbstractVel2D, AbstractPos | u.Quantity["length"]),
+    (type[AbstractVel3D], AbstractVel3D, AbstractPos | u.Quantity["length"]),
 )
-def represent_as(
-    current: AbstractVel,
+def vconvert(
     target: type[AbstractVel],
+    current: AbstractVel,
     position: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
@@ -43,10 +43,10 @@ def represent_as(
 
     Parameters
     ----------
-    current : AbstractVel
-        The vector differential to transform.
     target : type[AbstractVel]
         The target type of the vector differential.
+    current : AbstractVel
+        The vector differential to transform.
     position : AbstractPos
         The position vector used to transform the differential.
     **kwargs : Any
@@ -61,14 +61,14 @@ def represent_as(
 
     >>> q = cx.vecs.CartesianPos1D.from_(1.0, "km")
     >>> p = cx.vecs.CartesianVel1D.from_(1.0, "km/s")
-    >>> cx.represent_as(p, cx.vecs.RadialVel, q)
+    >>> cx.vconvert(cx.vecs.RadialVel, p, q)
     RadialVel( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 
     Now in 2D:
 
     >>> q = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> p = cx.vecs.CartesianVel2D.from_([1.0, 2.0], "km/s")
-    >>> cx.represent_as(p, cx.vecs.PolarVel, q)
+    >>> cx.vconvert(cx.vecs.PolarVel, p, q)
     PolarVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
@@ -78,7 +78,7 @@ def represent_as(
 
     >>> q = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> cx.represent_as(p, cx.SphericalVel, q)
+    >>> cx.vconvert(cx.SphericalVel, p, q)
     SphericalVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
@@ -89,7 +89,7 @@ def represent_as(
     Cartesian vector:
 
     >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> cx.represent_as(p, cx.SphericalVel, u.Quantity([1.0, 2.0, 3.0], "km"))
+    >>> cx.vconvert(cx.SphericalVel, p, u.Quantity([1.0, 2.0, 3.0], "km"))
     SphericalVel(
       d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
       d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
@@ -113,7 +113,7 @@ def represent_as(
 
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
-    current_pos = represent_as(posvec, current.integral_cls, **kwargs)
+    current_pos = vconvert(current.integral_cls, posvec, **kwargs)
     # TODO: not need to cast to distance
     current_pos = replace(
         current_pos,
@@ -130,9 +130,9 @@ def represent_as(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
-    tmp = partial(represent_as, **kwargs)
-    jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(tmp), in_axes=(0, None)))
-    jac_nested_vecs = jac_rep_as(current_pos, target.integral_cls)
+    tmp = partial(vconvert, **kwargs)
+    jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(tmp, argnums=1), in_axes=(None, 0)))
+    jac_nested_vecs = jac_rep_as(target.integral_cls, current_pos)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for

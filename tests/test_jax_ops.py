@@ -28,12 +28,19 @@ def q(request) -> cx.vecs.AbstractPos:
         else {"Delta": Quantity(1.0, "kpc")}
     )
 
-    return q.represent_as(request.param, **kwargs)
+    assert isinstance(q, cx.vecs.AbstractPos)
+    assert issubclass(request.param, cx.vecs.AbstractPos)
+
+    q_type = q.vconvert(request.param, **kwargs)
+
+    assert isinstance(q_type, request.param)
+
+    return q_type
 
 
 @eqx.filter_jit
 def func(
-    q: cx.vecs.AbstractPos, target: type[cx.vecs.AbstractPos]
+    target: type[cx.vecs.AbstractPos], q: cx.vecs.AbstractPos
 ) -> cx.vecs.AbstractPos:
     # Special case ProlateSpheroidalPos, which requires a value of Delta to define the
     # coordinate system
@@ -43,7 +50,7 @@ def func(
         else {"Delta": Quantity(1.0, "kpc")}
     )
 
-    return q.represent_as(target, **kwargs)
+    return cx.vconvert(target, q, **kwargs)
 
 
 @pytest.mark.parametrize("target", POSITION_CLASSES_3D)
@@ -51,7 +58,10 @@ def test_jax_through_representation(
     q: cx.vecs.AbstractPos, target: type[cx.vecs.AbstractPos]
 ) -> None:
     """Test using Jax operations through representation."""
-    newq = func(q, target)
+    assert isinstance(q, cx.vecs.AbstractPos)
+    assert isinstance(target, type)
+
+    newq = func(target, q)
 
     assert isinstance(newq, cx.vecs.AbstractPos)
     for k, f in field_items(newq):

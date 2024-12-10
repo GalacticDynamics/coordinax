@@ -61,7 +61,7 @@ print(q)
 #      [ 8. 13. 18.]
 #      [ 9. 14. 19.]]>
 
-q2 = cx.represent_as(q, cx.SphericalPos)
+q2 = cx.vconvert(cx.SphericalPos, q)
 print(q2)
 # <SphericalPos (r[km], theta[rad], phi[rad])
 #     [[11.18   0.464  1.571]
@@ -83,7 +83,7 @@ print(p)
 #      [ 8. 13. 18.]
 #      [ 9. 14. 19.]]>
 
-p2 = cx.represent_as(p, cx.SphericalVel, q)
+p2 = cx.vconvert(cx.SphericalVel, p, q)
 print(p2)
 # <SphericalVel (d_r[m / s], d_theta[m rad / (km s)], d_phi[m rad / (km s)])
 #     [[ 1.118e+01 -3.886e-16  0.000e+00]

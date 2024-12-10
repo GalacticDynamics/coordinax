@@ -86,7 +86,7 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     Quantity['length'](Array(2., dtype=float32), unit='km')
 
     """
-    cart = rhs.represent_as(CartesianPos1D)
+    cart = rhs.vconvert(CartesianPos1D)
     return jax.tree.map(qlax.add, lhs, cart)
 
 
@@ -153,7 +153,7 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     Quantity['length'](Array(0., dtype=float32), unit='km')
 
     """
-    cart = other.represent_as(CartesianPos1D)
+    cart = other.vconvert(CartesianPos1D)
     return jax.tree.map(qlax.sub, self, cart)
 
 

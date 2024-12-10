@@ -117,7 +117,7 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
         self, velocity: AbstractVel, position: AbstractPos, /
     ) -> u.Quantity["speed"]:
         """Return the norm of the vector."""
-        return self.represent_as(self._cartesian_cls, velocity, position).norm()
+        return self.vconvert(self._cartesian_cls, velocity, position).norm()
 
 
 # ===============================================================

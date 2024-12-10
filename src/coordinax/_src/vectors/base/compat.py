@@ -66,7 +66,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
 
     """  # noqa: E501
-    cart = full_shaped(obj.represent_as(obj._cartesian_cls))  # noqa: SLF001
+    cart = full_shaped(obj.vconvert(obj._cartesian_cls))  # noqa: SLF001
     return jnp.stack(tuple(field_values(cart)), axis=-1)
 
 
@@ -352,7 +352,7 @@ def uconvert(
         y=Quantity[...](value=f32[], unit=Unit("m"))
     )
 
-    >>> sph = cart.represent_as(cx.SphericalPos)
+    >>> sph = cart.vconvert(cx.SphericalPos)
     >>> sph.uconvert(cx.vecs.ToUnitsOptions.consistent)
     SphericalPos(
         r=Distance(value=f32[], unit=Unit("m")),

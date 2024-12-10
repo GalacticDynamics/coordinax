@@ -119,7 +119,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1.], dtype=float32), unit='km')
 
-    >>> vec = cx.vecs.CartesianPos1D.from_(q).represent_as(cx.vecs.RadialPos)
+    >>> vec = cx.vecs.CartesianPos1D.from_(q).vconvert(cx.vecs.RadialPos)
     >>> op(vec)
     RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
@@ -130,7 +130,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
-    >>> vec = cx.vecs.CartesianPos2D.from_(q).represent_as(cx.vecs.PolarPos)
+    >>> vec = cx.vecs.CartesianPos2D.from_(q).vconvert(cx.vecs.PolarPos)
     >>> op(vec)
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("rad")) )
@@ -142,7 +142,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op(q)
     Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
 
-    >>> vec = cx.CartesianPos3D.from_(q).represent_as(cx.SphericalPos)
+    >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
     >>> op(vec)
     SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
                   theta=Angle(value=f32[], unit=Unit("rad")),
@@ -345,8 +345,8 @@ def call(
     # Translate the velocity (this operator will have no effect on the
     # velocity).
     # 1. convert to a Quantity in Cartesian coordinates.
-    q = convert(qvec.represent_as(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
-    p = convert(pvec.represent_as(pvec._cartesian_cls, q), u.Quantity)  # noqa: SLF001
+    q = convert(qvec.vconvert(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
+    p = convert(pvec.vconvert(pvec._cartesian_cls, q), u.Quantity)  # noqa: SLF001
     # 2. create the Jacobian of the operation on the position
     jac = u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,))(q)
     # 3. apply the Jacobian to the velocity
@@ -354,7 +354,7 @@ def call(
     # 4. convert the Quantity back to a Cartesian vector
     newpvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
     # 5. convert the Quantity to the original vector type
-    newpvec = newpvec.represent_as(type(pvec), newqvec)
+    newpvec = newpvec.vconvert(type(pvec), newqvec)
 
     return newqvec, newpvec
 

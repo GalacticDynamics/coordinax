@@ -372,11 +372,11 @@ def call(
 
     # TODO: figure out how to do this without converting back to arrays.
     # XVel -> CartVel -> Q -> R@Q -> CartVel -> XVel
-    pcvec = pvec.represent_as(pvec._cartesian_cls, qvec)  # noqa: SLF001
+    pcvec = pvec.vconvert(pvec._cartesian_cls, qvec)  # noqa: SLF001
     p = convert(pcvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
     newp = vec_matmul(self.rotation, p)
     newpcvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
-    newpvec = newpcvec.represent_as(type(pvec), newqvec)
+    newpvec = newpcvec.vconvert(type(pvec), newqvec)
 
     return newqvec, newpvec
 

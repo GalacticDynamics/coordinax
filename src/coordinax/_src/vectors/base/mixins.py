@@ -3,7 +3,7 @@
 __all__: list[str] = []
 
 from collections.abc import Sequence
-from typing import cast
+from typing import Any, cast
 
 import jax
 from plum import convert
@@ -11,7 +11,7 @@ from plum import convert
 import unxt as u
 from dataclassish import field_keys, field_values
 
-from coordinax._src.vectors.api import represent_as
+from coordinax._src.vectors.api import vconvert
 
 
 class AvalMixin:
@@ -119,7 +119,7 @@ class AvalMixin:
         """  # noqa: E501
         # TODO: change to UncheckedQuantity
         target = self._cartesian_cls  # type: ignore[attr-defined]
-        return jax.core.get_aval(convert(represent_as(self, target), u.Quantity).value)
+        return jax.core.get_aval(convert(vconvert(target, self), u.Quantity).value)
 
 
 ##############################################################################
@@ -201,3 +201,62 @@ class IPythonReprMixin:
         latex_vs = r"\left( \begin{matrix}" + r" \\ ".join(vs) + r"\end{matrix} \right)"
 
         return r"$" + latex_ks + "=" + latex_vs + r"$"
+
+
+##############################################################################
+
+
+class AstropyRepresentationAPIMixin:
+    """Mixin class to add Astropy's ``represent_as`` method."""
+
+    def represent_as(self, target: type, *args: Any, **kwargs: Any) -> Any:
+        """Represent the vector as another type.
+
+        This just forwards to `coordinax.vconvert`.
+
+        Parameters
+        ----------
+        target : type[`coordinax.AbstractVel`]
+            The type to represent the vector as.
+        *args, **kwargs : Any
+            Extra arguments. These are passed to `coordinax.vconvert` and might
+            be used, depending on the dispatched method. E.g. for transforming
+            an acceleration, generally the first argument is the velocity
+            (`coordinax.AbstractVel`) followed by the position
+            (`coordinax.AbstractPos`) at which the acceleration is defined. In
+            general this is a required argument, though it is not for
+            Cartesian-to-Cartesian transforms -- see
+            https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for
+            more information.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        Transforming a Position:
+
+        >>> q_cart = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> q_sph = q_cart.represent_as(cx.SphericalPos)
+        >>> q_sph
+        SphericalPos( ... )
+        >>> q_sph.r
+        Distance(Array(3.7416575, dtype=float32), unit='m')
+
+        Transforming a Velocity:
+
+        >>> v_cart = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
+        >>> v_sph = v_cart.represent_as(cx.SphericalVel, q_cart)
+        >>> v_sph
+        SphericalVel( ... )
+
+        Transforming an Acceleration:
+
+        >>> a_cart = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+        >>> a_sph = a_cart.represent_as(cx.vecs.SphericalAcc, v_cart, q_cart)
+        >>> a_sph
+        SphericalAcc( ... )
+        >>> a_sph.d2_r
+        Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
+
+        """
+        return vconvert(target, self, *args, **kwargs)

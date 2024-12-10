@@ -185,7 +185,7 @@ class Coordinate(AbstractCoordinate):
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> coord = cx.Coordinate(data, frame)
 
-    >>> coord.represent_as(cx.SphericalPos)
+    >>> coord.vconvert(cx.SphericalPos)
     Coordinate(
         data=Space({ 'length': SphericalPos( ... ) }),
         frame=ICRS()
@@ -250,8 +250,8 @@ class Coordinate(AbstractCoordinate):
 
 
 @dispatch  # type: ignore[misc]
-def represent_as(w: Coordinate, target: type[AbstractPos], /) -> Coordinate:
-    """Transform the representation of a coordinate.
+def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
+    """Transform the vector representation of a coordinate.
 
     Examples
     --------
@@ -261,14 +261,14 @@ def represent_as(w: Coordinate, target: type[AbstractPos], /) -> Coordinate:
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> w = cx.Coordinate(data, frame)
 
-    >>> cx.represent_as(w, cx.SphericalPos)
+    >>> cx.vconvert(cx.SphericalPos, w)
     Coordinate(
         data=Space({ 'length': SphericalPos( ... ) }),
         frame=ICRS()
     )
 
     """
-    return replace(w, data=w.data.represent_as(target))
+    return replace(w, data=w.data.vconvert(target))
 
 
 ##############################################################################

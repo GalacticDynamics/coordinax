@@ -29,8 +29,8 @@ from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
 
 
 @dispatch
-def represent_as(
-    current: CartesianPos3D, target: type[CartesianPos1D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos1D], current: CartesianPos3D, /, **kwargs: Any
 ) -> CartesianPos1D:
     """CartesianPos3D -> CartesianPos1D.
 
@@ -45,7 +45,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos1D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> x2
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
@@ -55,8 +55,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianPos3D, target: type[RadialPos], /, **kwargs: Any
+def vconvert(
+    target: type[RadialPos], current: CartesianPos3D, /, **kwargs: Any
 ) -> RadialPos:
     """CartesianPos3D -> RadialPos.
 
@@ -70,7 +70,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.RadialPos)
+    ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
     >>> x2
     RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
@@ -84,8 +84,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianPos3D, target: type[CartesianPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos2D], current: CartesianPos3D, /, **kwargs: Any
 ) -> CartesianPos2D:
     """CartesianPos3D -> CartesianPos2D.
 
@@ -99,7 +99,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos2D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                     y=Quantity[...](value=f32[], unit=Unit("km")) )
@@ -110,10 +110,10 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianPos3D, type[PolarPos]),
+    (type[PolarPos], CartesianPos3D),
 )
-def represent_as(
-    current: CartesianPos3D, target: type[AbstractPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[AbstractPos2D], current: CartesianPos3D, /, **kwargs: Any
 ) -> AbstractPos2D:
     """CartesianPos3D -> Cartesian2D -> AbstractPos2D.
 
@@ -126,15 +126,15 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.PolarPos)
+    ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("rad")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    cart2 = represent_as(current, CartesianPos2D)
-    return represent_as(cart2, target)
+    cart2 = vconvert(CartesianPos2D, current)
+    return vconvert(target, cart2)
 
 
 # =============================================================================
@@ -146,8 +146,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CylindricalPos, target: type[CartesianPos1D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos1D], current: CylindricalPos, /, **kwargs: Any
 ) -> CartesianPos1D:
     """CylindricalPos -> CartesianPos1D.
 
@@ -163,7 +163,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos1D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> x2
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
@@ -173,8 +173,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CylindricalPos, target: type[RadialPos], /, **kwargs: Any
+def vconvert(
+    target: type[RadialPos], current: CylindricalPos, /, **kwargs: Any
 ) -> RadialPos:
     """CylindricalPos -> RadialPos.
 
@@ -190,7 +190,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.RadialPos)
+    ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
     >>> x2
     RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
@@ -204,8 +204,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CylindricalPos, target: type[CartesianPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos2D], current: CylindricalPos, /, **kwargs: Any
 ) -> CartesianPos2D:
     """CylindricalPos -> CartesianPos2D.
 
@@ -221,7 +221,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos2D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                     y=Quantity[...](value=f32[], unit=Unit("km")) )
@@ -234,8 +234,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CylindricalPos, target: type[PolarPos], /, **kwargs: Any
+def vconvert(
+    target: type[PolarPos], current: CylindricalPos, /, **kwargs: Any
 ) -> PolarPos:
     """CylindricalPos -> PolarPos.
 
@@ -251,7 +251,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.PolarPos)
+    ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("deg")) )
@@ -270,8 +270,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[CartesianPos1D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos1D], current: SphericalPos, /, **kwargs: Any
 ) -> CartesianPos1D:
     """SphericalPos -> CartesianPos1D.
 
@@ -287,7 +287,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos1D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> x2
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
@@ -297,8 +297,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[RadialPos], /, **kwargs: Any
+def vconvert(
+    target: type[RadialPos], current: SphericalPos, /, **kwargs: Any
 ) -> RadialPos:
     """SphericalPos -> RadialPos.
 
@@ -314,7 +314,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.RadialPos)
+    ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
     >>> x2
     RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
@@ -328,8 +328,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[CartesianPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos2D], current: SphericalPos, /, **kwargs: Any
 ) -> CartesianPos2D:
     """SphericalPos -> CartesianPos2D.
 
@@ -345,7 +345,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos2D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                     y=Quantity[...](value=f32[], unit=Unit("km")) )
@@ -358,8 +358,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[PolarPos], /, **kwargs: Any
+def vconvert(
+    target: type[PolarPos], current: SphericalPos, /, **kwargs: Any
 ) -> PolarPos:
     """SphericalPos -> PolarPos.
 
@@ -375,7 +375,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.PolarPos)
+    ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("deg")) )
@@ -394,8 +394,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: MathSphericalPos, target: type[CartesianPos1D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos1D], current: MathSphericalPos, /, **kwargs: Any
 ) -> CartesianPos1D:
     """MathSphericalPos -> CartesianPos1D.
 
@@ -411,7 +411,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos1D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> x2
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
@@ -421,8 +421,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: MathSphericalPos, target: type[RadialPos], /, **kwargs: Any
+def vconvert(
+    target: type[RadialPos], current: MathSphericalPos, /, **kwargs: Any
 ) -> RadialPos:
     """MathSphericalPos -> RadialPos.
 
@@ -438,7 +438,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.RadialPos)
+    ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
     >>> x2
     RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
@@ -452,8 +452,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: MathSphericalPos, target: type[CartesianPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos2D], current: MathSphericalPos, /, **kwargs: Any
 ) -> CartesianPos2D:
     """MathSphericalPos -> CartesianPos2D.
 
@@ -469,7 +469,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos2D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                     y=Quantity[...](value=f32[], unit=Unit("km")) )
@@ -482,8 +482,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: MathSphericalPos, target: type[PolarPos], /, **kwargs: Any
+def vconvert(
+    target: type[PolarPos], current: MathSphericalPos, /, **kwargs: Any
 ) -> PolarPos:
     """MathSphericalPos -> PolarPos.
 
@@ -499,7 +499,7 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.PolarPos)
+    ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("deg")) )
@@ -518,8 +518,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: ProlateSpheroidalPos, target: type[AbstractPos1D], /, **kwargs: Any
+def vconvert(
+    target: type[AbstractPos1D], current: ProlateSpheroidalPos, /, **kwargs: Any
 ) -> AbstractPos1D:
     """ProlateSpheroidalPos -> AbstractPos1D.
 
@@ -538,19 +538,19 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos1D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> x2
     CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.RadialPos)
+    ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
     >>> x2
     RadialPos(r=Distance(value=f32[], unit=Unit("km")))
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return represent_as(represent_as(current, CartesianPos3D), target)
+    return current.vconvert(CartesianPos3D).vconvert(target)
 
 
 # -----------------------------------------------
@@ -558,8 +558,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: ProlateSpheroidalPos, target: type[AbstractPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[AbstractPos2D], current: ProlateSpheroidalPos, /, **kwargs: Any
 ) -> AbstractPos2D:
     """ProlateSpheroidalPos -> AbstractPos2D.
 
@@ -578,18 +578,18 @@ def represent_as(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.CartesianPos2D)
+    ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> x2
     CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
                     y=Quantity[...](value=f32[], unit=Unit("km")) )
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.represent_as(x, cx.vecs.PolarPos)
+    ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
     >>> x2
     PolarPos( r=Distance(value=f32[], unit=Unit("km")),
               phi=Angle(value=f32[], unit=Unit("rad")) )
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return represent_as(represent_as(current, CartesianPos3D), target)
+    return current.vconvert(CartesianPos3D).vconvert(target)

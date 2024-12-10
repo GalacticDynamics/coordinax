@@ -20,7 +20,7 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
         Space,
         SphericalPos,
         SphericalVel,
-        represent_as,
+        vconvert,
     )
 
     # isort: split
@@ -37,7 +37,7 @@ __all__ = [
     # common distance objects
     "Distance",
     # common vecs objects
-    "represent_as",
+    "vconvert",
     "CartesianPos3D",
     "CartesianVel3D",
     "SphericalPos",

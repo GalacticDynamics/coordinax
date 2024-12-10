@@ -21,7 +21,7 @@ from xmmutablemap import ImmutableMap
 from .utils import DimensionLike, _can_broadcast_shapes, _get_dimension_name
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.api import represent_as
+from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import (
     AbstractAcc,
     AbstractPos,
@@ -68,14 +68,14 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     >>> space["length"]
     CartesianPos3D( ... )
 
-    >>> space.represent_as(cx.SphericalPos)
+    >>> space.vconvert(cx.SphericalPos)
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
         'acceleration': SphericalAcc( ... )
     })
 
-    >>> cx.represent_as(space, cx.SphericalPos)
+    >>> cx.vconvert(cx.SphericalPos, space)
     Space({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
@@ -568,46 +568,44 @@ def from_(cls: type[Space], obj: Space, /) -> Space:
 
 
 @dispatch  # type: ignore[misc]
-def represent_as(space: Space, target: type[AbstractVector], /) -> Space:
+def vconvert(target: type[AbstractVector], space: Space, /) -> Space:
     """Represent the current vector to the target vector."""
-    return type(space)(
-        {k: temp_represent_as(v, target, space) for k, v in space.items()}
-    )
+    return type(space)({k: temp_vconvert(target, v, space) for k, v in space.items()})
 
 
 # =============================================================== Temporary
-# These functions are very similar to `represent_as`, but I don't think this is
+# These functions are very similar to `vconvert`, but I don't think this is
 # the best API. Until we figure out a better way to do this, we'll keep these
 # functions here.
 
 
 # TODO: should this be moved to a different file?
 @dispatch
-def temp_represent_as(
-    current: AbstractPos, target: type[AbstractPos], space: Space, /
+def temp_vconvert(
+    target: type[AbstractPos], current: AbstractPos, space: Space, /
 ) -> AbstractPos:
     """Transform of Poss."""
-    return represent_as(current, target)  # space is unnecessary
+    return vconvert(target, current)  # space is unnecessary
 
 
 # TODO: should this be moved to a different file?
 @dispatch
-def temp_represent_as(
-    current: AbstractVel, target: type[AbstractPos], space: Space, /
+def temp_vconvert(
+    target: type[AbstractPos], current: AbstractVel, space: Space, /
 ) -> AbstractVel:
     """Transform of Velocities."""
-    return represent_as(current, target.differential_cls, space["length"])
+    return vconvert(target.differential_cls, current, space["length"])
 
 
 # TODO: should this be moved to a different file?
 @dispatch
-def temp_represent_as(
-    current: AbstractAcc, target: type[AbstractPos], space: Space, /
+def temp_vconvert(
+    target: type[AbstractPos], current: AbstractAcc, space: Space, /
 ) -> AbstractAcc:
     """Transform of Accs."""
-    return represent_as(
-        current,
+    return vconvert(
         target.differential_cls.differential_cls,
+        current,
         space["speed"],
         space["length"],
     )
