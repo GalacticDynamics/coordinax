@@ -337,8 +337,10 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
     # Methods
 
     @override
-    @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractVel3D | None = None, /) -> ct.BatchableAcc:
+    @partial(jax.jit, inline=True)
+    def norm(
+        self, _: AbstractVel3D | None = None, __: AbstractPos3D | None = None, /
+    ) -> ct.BatchableAcc:
         """Return the norm of the vector.
 
         Examples

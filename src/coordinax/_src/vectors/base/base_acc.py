@@ -6,7 +6,6 @@ from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar
 
-import equinox as eqx
 import jax
 from quax import register
 
@@ -112,11 +111,24 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
-    @partial(eqx.filter_jit, inline=True)
+    @partial(jax.jit)
     def norm(
-        self, velocity: AbstractVel, position: AbstractPos, /
-    ) -> u.Quantity["speed"]:
-        """Return the norm of the vector."""
+        self: "AbstractAcc", velocity: AbstractVel, position: AbstractPos, /
+    ) -> u.Quantity["acceleration"]:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> p = cx.vecs.CartesianVel3D.from_([4, 5, 6], "km/s")
+        >>> a = cx.vecs.CartesianAcc3D.from_([3, 4, 0], "m/s2")
+        >>> a = a.vconvert(cx.vecs.CylindricalAcc, p, q)
+        >>> a.norm(p, q)
+        Quantity[...](Array(5..., dtype=float32), unit='m / s2')
+
+        """
         return self.vconvert(self._cartesian_cls, velocity, position).norm()
 
 
