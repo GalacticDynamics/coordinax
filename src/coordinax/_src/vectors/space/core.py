@@ -567,16 +567,77 @@ def from_(cls: type[Space], obj: Space, /) -> Space:
 # Vector API dispatches
 
 
-@dispatch  # type: ignore[misc]
-def vconvert(target: type[AbstractVector], space: Space, /) -> Space:
-    """Represent the current vector to the target vector."""
-    return type(space)({k: temp_vconvert(target, v, space) for k, v in space.items()})
+@dispatch
+def vconvert(
+    target: type[AbstractPos], current: AbstractPos, space: Space, /
+) -> AbstractPos:
+    """Convert a position to the target type, with a Space context.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
+    ...                  speed=cx.CartesianVel3D.from_([4, 5, 6], "m/s"))
+
+    >>> cx.vconvert(cx.SphericalPos, space["length"], space)
+    SphericalPos( ... )
+
+    """
+    return vconvert(target, current)  # space is unnecessary
+
+
+@dispatch
+def vconvert(
+    target: type[AbstractVel], current: AbstractVel, space: Space, /
+) -> AbstractVel:
+    """Convert a velocty to the target type, with a Space context.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
+    ...                  speed=cx.CartesianVel3D.from_([4, 5, 6], "m/s"))
+
+    >>> cx.vconvert(cx.SphericalVel, space["speed"], space)
+    SphericalVel( ... )
+
+    """
+    return vconvert(target, current, space["length"])
+
+
+@dispatch
+def vconvert(
+    target: type[AbstractAcc], current: AbstractAcc, space: Space, /
+) -> AbstractAcc:
+    """Convert an acceleration to the target type, with a Space context.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
+    ...                  speed=cx.CartesianVel3D.from_([4, 5, 6], "m/s"),
+    ...                  acceleration=cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2"))
+
+    >>> cx.vconvert(cx.vecs.SphericalAcc, space["acceleration"], space)
+    SphericalAcc( ... )
+
+    """
+    return vconvert(target, current, space["speed"], space["length"])
 
 
 # =============================================================== Temporary
 # These functions are very similar to `vconvert`, but I don't think this is
 # the best API. Until we figure out a better way to do this, we'll keep these
 # functions here.
+
+
+@dispatch
+def vconvert(target: type[AbstractVector], space: Space, /) -> Space:
+    """Represent the current vector to the target vector."""
+    return type(space)({k: temp_vconvert(target, v, space) for k, v in space.items()})
 
 
 # TODO: should this be moved to a different file?
