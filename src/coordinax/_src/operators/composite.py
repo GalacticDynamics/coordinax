@@ -9,8 +9,7 @@ from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
 from dataclassish import DataclassInstance
 
 from .base import AbstractOperator
-from coordinax._src.vectors.base import AbstractPos
-from coordinax._src.vectors.space import Space
+from coordinax._src.vectors.base import AbstractVector
 
 if TYPE_CHECKING:
     from typing import Self
@@ -64,7 +63,7 @@ class AbstractCompositeOperator(AbstractOperator):
 
         return Pipe(tuple(op.inverse for op in reversed(self.operators)))
 
-    @AbstractOperator.__call__.dispatch  # type: ignore[attr-defined, misc]
+    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
     def __call__(
         self: "AbstractCompositeOperator", *args: object, **kwargs: Any
     ) -> tuple[object, ...]:
@@ -109,10 +108,10 @@ class AbstractCompositeOperator(AbstractOperator):
 # Call dispatches
 
 
-@AbstractOperator.__call__.dispatch(precedence=1)
+@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
 def call(
-    self: AbstractCompositeOperator, x: AbstractPos, /, **kwargs: Any
-) -> AbstractPos:
+    self: AbstractCompositeOperator, x: AbstractVector, /, **kwargs: Any
+) -> AbstractVector:
     """Apply the operator to the coordinates.
 
     This is the default implementation, which applies the operators in
@@ -132,13 +131,3 @@ def call(
     for op in self.operators:
         x = op(x, **kwargs)
     return x
-
-
-# TODO: not need this dispatch
-@AbstractOperator.__call__.dispatch(precedence=1)
-def call(self: AbstractCompositeOperator, space: Space, /, **kwargs: Any) -> Space:
-    """Apply the operator to the coordinates."""
-    # TODO: with lax.for_i
-    for op in self.operators:
-        space = op(space, **kwargs)
-    return space
