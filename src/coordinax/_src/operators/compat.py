@@ -151,7 +151,7 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
     """
     cart = CartesianPos3D.from_(q)
     result = self(cart, **kwargs)
-    return convert(result.represent_as(CartesianPos3D), u.Quantity)
+    return convert(result.vconvert(CartesianPos3D), u.Quantity)
 
 
 @AbstractOperator.__call__.dispatch

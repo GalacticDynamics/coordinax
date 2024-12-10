@@ -14,8 +14,8 @@ from .poincare import PoincarePolarVector
 
 
 @dispatch
-def represent_as(
-    current: CartesianPosND, target: type[CartesianPosND], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPosND], current: CartesianPosND, /, **kwargs: Any
 ) -> CartesianPosND:
     """CartesianPosND -> CartesianPosND.
 
@@ -26,7 +26,7 @@ def represent_as(
 
     >>> q = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4], "km"))
 
-    >>> cx.represent_as(q, cx.vecs.CartesianPosND) is q
+    >>> cx.vconvert(cx.vecs.CartesianPosND, q) is q
     True
 
     """
@@ -34,9 +34,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianVelND,
+def vconvert(
     target: type[CartesianVelND],
+    current: CartesianVelND,
     position: CartesianPosND,
     /,
     **kwargs: Any,
@@ -50,7 +50,7 @@ def represent_as(
     >>> x = cx.vecs.CartesianPosND.from_([1, 2, 3, 4], "km")
     >>> v = cx.vecs.CartesianVelND.from_([1, 2, 3, 4], "km/s")
 
-    >>> cx.represent_as(v, cx.vecs.CartesianVelND, x) is v
+    >>> cx.vconvert(cx.vecs.CartesianVelND, v, x) is v
     True
 
     """
@@ -62,8 +62,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianVelND, target: type[CartesianVelND], /
+def vconvert(
+    target: type[CartesianVelND], current: CartesianVelND, /
 ) -> CartesianVelND:
     """CartesianVelND -> CartesianVelND with no position.
 
@@ -72,13 +72,13 @@ def represent_as(
     require lower-order derivatives to be specified. See
     https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
     information. This mixin provides a corresponding implementation of the
-    `coordinax.represent_as` method for Cartesian velocities.
+    `coordinax.vconvert` method for Cartesian velocities.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> v = cx.vecs.CartesianVelND.from_([1, 1, 1], "m/s")
-    >>> cx.represent_as(v, cx.vecs.CartesianVelND) is v
+    >>> cx.vconvert(cx.vecs.CartesianVelND, v) is v
     True
 
     """
@@ -90,8 +90,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianAccND, target: type[CartesianAccND], /
+def vconvert(
+    target: type[CartesianAccND], current: CartesianAccND, /
 ) -> CartesianAccND:
     """CartesianAccND -> CartesianAccND with no position.
 
@@ -100,13 +100,13 @@ def represent_as(
     require lower-order derivatives to be specified. See
     https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
     information. This mixin provides a corresponding implementation of the
-    `coordinax.represent_as` method for Cartesian vectors.
+    `coordinax.vconvert` method for Cartesian vectors.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> a = cx.vecs.CartesianAccND.from_([1, 1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.vecs.CartesianAccND) is a
+    >>> cx.vconvert(cx.vecs.CartesianAccND, a) is a
     True
 
     """
@@ -118,8 +118,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: PoincarePolarVector, target: type[PoincarePolarVector], /, **kwargs: Any
+def vconvert(
+    target: type[PoincarePolarVector], current: PoincarePolarVector, /, **kwargs: Any
 ) -> PoincarePolarVector:
     """PoincarePolarVector -> PoincarePolarVector."""
     return current

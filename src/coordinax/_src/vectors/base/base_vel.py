@@ -132,7 +132,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
     @partial(eqx.filter_jit, inline=True)
     def norm(self, position: AbstractPos, /) -> u.Quantity["speed"]:
         """Return the norm of the vector."""
-        return self.represent_as(self._cartesian_cls, position).norm()
+        return self.vconvert(self._cartesian_cls, position).norm()
 
 
 # ---------------------------------------------------------

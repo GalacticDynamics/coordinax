@@ -1,7 +1,7 @@
 """Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
 __all__ = [
-    "represent_as",
+    "vconvert",
     "normalize_vector",
 ]
 
@@ -11,7 +11,7 @@ from plum import dispatch
 
 
 @dispatch.abstract  # type: ignore[misc]
-def represent_as(current: Any, target: type[Any], /, **kwargs: Any) -> Any:
+def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     """Transform the current vector to the target vector.
 
     See the dispatch implementations for more details.

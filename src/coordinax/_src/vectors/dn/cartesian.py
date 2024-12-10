@@ -208,7 +208,7 @@ def _add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     Quantity['length'](Array([3., 5., 7.], dtype=float32), unit='km')
 
     """
-    cart = rhs.represent_as(CartesianPosND)
+    cart = rhs.vconvert(CartesianPosND)
     return replace(lhs, q=lhs.q + cart.q)
 
 
@@ -272,7 +272,7 @@ def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     Quantity['length'](Array([-1., -1., -1.], dtype=float32), unit='km')
 
     """
-    cart = rhs.represent_as(CartesianPosND)
+    cart = rhs.vconvert(CartesianPosND)
     return replace(lhs, q=lhs.q - cart.q)
 
 

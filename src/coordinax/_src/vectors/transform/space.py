@@ -13,7 +13,7 @@ from coordinax._src.vectors.space import Space
 
 
 @dispatch
-def represent_as(w: Space, target: type[Space]) -> Space:
+def vconvert(target: type[Space], w: Space, /) -> Space:
     """Space -> Space.
 
     Examples
@@ -25,7 +25,7 @@ def represent_as(w: Space, target: type[Space]) -> Space:
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
-    >>> cx.represent_as(w, cx.Space)
+    >>> cx.vconvert(cx.Space, w)
     Space({ 'length': CartesianPos3D( ... ),
              'speed': CartesianVel3D( ... ) })
 
@@ -34,7 +34,7 @@ def represent_as(w: Space, target: type[Space]) -> Space:
 
 
 @dispatch
-def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePolarVector:
+def vconvert(target: type[PoincarePolarVector], w: Space, /) -> PoincarePolarVector:
     """Space -> PoincarePolarVector.
 
     Examples
@@ -46,7 +46,7 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
-    >>> cx.represent_as(w, cx.vecs.PoincarePolarVector)
+    >>> cx.vconvert(cx.vecs.PoincarePolarVector, w)
     PoincarePolarVector(
         rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
         pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
@@ -57,8 +57,8 @@ def represent_as(w: Space, target: type[PoincarePolarVector], /) -> PoincarePola
     )
 
     """
-    q = w["length"].represent_as(CylindricalPos)
-    p = w["speed"].represent_as(CylindricalVel, q)
+    q = w["length"].vconvert(CylindricalPos)
+    p = w["speed"].vconvert(CylindricalVel, q)
 
     # pg. 437, Papaphillipou & Laskar (1996)
     sqrt2theta = jnp.sqrt(jnp.abs(2 * q.rho**2 * p.d_phi))

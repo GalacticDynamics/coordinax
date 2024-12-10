@@ -15,34 +15,34 @@ from coordinax._src.vectors.base import AbstractPos
 
 
 @dispatch
-def represent_as(
+def vconvert(
     current: AbstractPos2D, target: type[AbstractPos2D], /, **kwargs: Any
 ) -> AbstractPos2D:
     """AbstractPos2D -> Cartesian2D -> AbstractPos2D.
 
     This is the base case for the transformation of 2D vectors.
     """
-    return represent_as(represent_as(current, CartesianPos2D), target)
+    return vconvert(target, vconvert(CartesianPos2D, current))
 
 
 @dispatch.multi(
-    (CartesianPos2D, type[CartesianPos2D]),
-    (PolarPos, type[PolarPos]),
+    (type[CartesianPos2D], CartesianPos2D),
+    (type[PolarPos], PolarPos),
 )
-def represent_as(
-    current: AbstractPos2D, target: type[AbstractPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[AbstractPos2D], current: AbstractPos2D, /, **kwargs: Any
 ) -> AbstractPos2D:
     """Self transform of 2D vectors."""
     return current
 
 
 @dispatch.multi(
-    (CartesianVel2D, type[CartesianVel2D], AbstractPos),
-    (PolarVel, type[PolarVel], AbstractPos),
+    (type[CartesianVel2D], CartesianVel2D, AbstractPos),
+    (type[PolarVel], PolarVel, AbstractPos),
 )
-def represent_as(
-    current: AbstractVel2D,
+def vconvert(
     target: type[AbstractVel2D],
+    current: AbstractVel2D,
     position: AbstractPos,
     /,
     **kwargs: Any,
@@ -56,8 +56,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianPos2D, target: type[PolarPos], /, **kwargs: Any
+def vconvert(
+    target: type[PolarPos], current: CartesianPos2D, /, **kwargs: Any
 ) -> PolarPos:
     """CartesianPos2D -> PolarPos.
 
@@ -74,8 +74,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: PolarPos, target: type[CartesianPos2D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos2D], current: PolarPos, /, **kwargs: Any
 ) -> CartesianPos2D:
     """PolarPos -> CartesianPos2D."""
     x = current.r.distance * xp.cos(current.phi)
@@ -88,8 +88,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianVel2D, target: type[CartesianVel2D], /
+def vconvert(
+    target: type[CartesianVel2D], current: CartesianVel2D, /
 ) -> CartesianVel2D:
     """CartesianVel2D -> CartesianVel2D with no position.
 
@@ -98,13 +98,13 @@ def represent_as(
     require lower-order derivatives to be specified. See
     https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
     information. This mixin provides a corresponding implementation of the
-    `coordinax.represent_as` method for Cartesian velocities.
+    `coordinax.vconvert` method for Cartesian velocities.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> v = cx.vecs.CartesianVel2D.from_([1, 1], "m/s")
-    >>> cx.represent_as(v, cx.vecs.CartesianVel2D) is v
+    >>> cx.vconvert(cx.vecs.CartesianVel2D, v) is v
     True
 
     """
@@ -116,8 +116,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianAcc2D, target: type[CartesianAcc2D], /
+def vconvert(
+    target: type[CartesianAcc2D], current: CartesianAcc2D, /
 ) -> CartesianAcc2D:
     """CartesianAcc2D -> CartesianAcc2D with no position.
 
@@ -126,13 +126,13 @@ def represent_as(
     require lower-order derivatives to be specified. See
     https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
     information. This mixin provides a corresponding implementation of the
-    `coordinax.represent_as` method for Cartesian vectors.
+    `coordinax.vconvert` method for Cartesian vectors.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> a = cx.vecs.CartesianAcc2D.from_([1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.vecs.CartesianAcc2D) is a
+    >>> cx.vconvert(cx.vecs.CartesianAcc2D, a) is a
     True
 
     """

@@ -72,20 +72,20 @@ class TestCartesianPos3D(AbstractPos3DTest):
         return convert(vector, apyc.CartesianRepresentation)
 
     # ==========================================================================
-    # represent_as
+    # vconvert
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = vector.represent_as(cx.vecs.CartesianPos1D)
+        """Test ``coordinax.vconvert(CartesianPos1D)``."""
+        cart1d = vector.vconvert(cx.vecs.CartesianPos1D)
 
         assert isinstance(cart1d, cx.vecs.CartesianPos1D)
         assert jnp.array_equal(cart1d.x, u.Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = vector.represent_as(cx.vecs.RadialPos)
+        """Test ``coordinax.vconvert(RadialPos)``."""
+        radial = vector.vconvert(cx.vecs.RadialPos)
 
         assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(
@@ -94,8 +94,8 @@ class TestCartesianPos3D(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos2D)``."""
-        cart2d = vector.represent_as(
+        """Test ``coordinax.vconvert(CartesianPos2D)``."""
+        cart2d = vector.vconvert(
             cx.vecs.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
         )
 
@@ -105,10 +105,8 @@ class TestCartesianPos3D(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = vector.represent_as(
-            cx.vecs.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad")
-        )
+        """Test ``coordinax.vconvert(PolarPos)``."""
+        polar = vector.vconvert(cx.vecs.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad"))
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(polar.r, jnp.hypot(vector.x, vector.y))
@@ -117,26 +115,26 @@ class TestCartesianPos3D(AbstractPos3DTest):
         )
 
     def test_cartesian3d_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos3D)``."""
+        """Test ``coordinax.vconvert(CartesianPos3D)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.CartesianPos3D)
+        newvec = vector.vconvert(cx.CartesianPos3D)
         assert jnp.array_equal(newvec, vector)
 
-        # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.CartesianPos3D)
+        # The normal `vconvert` method should return the same object
+        newvec = cx.vconvert(cx.CartesianPos3D, vector)
         assert newvec is vector
 
     def test_cartesian3d_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        newvec = vector.represent_as(cx.CartesianPos3D)
+        newvec = vector.vconvert(cx.CartesianPos3D)
 
         assert np.allclose(convert(newvec.x, APYQuantity), apyvector.x)
         assert np.allclose(convert(newvec.y, APYQuantity), apyvector.y)
         assert np.allclose(convert(newvec.z, APYQuantity), apyvector.z)
 
     def test_cartesian3d_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalPos)``."""
-        spherical = vector.represent_as(cx.SphericalPos)
+        """Test ``coordinax.vconvert(SphericalPos)``."""
+        spherical = vector.vconvert(cx.SphericalPos)
 
         assert isinstance(spherical, cx.SphericalPos)
         assert jnp.array_equal(
@@ -154,7 +152,7 @@ class TestCartesianPos3D(AbstractPos3DTest):
 
     def test_cartesian3d_to_spherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        sph = vector.represent_as(cx.SphericalPos)
+        sph = vector.vconvert(cx.SphericalPos)
 
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
         assert np.allclose(convert(sph.r, APYQuantity), apysph.r)
@@ -162,8 +160,8 @@ class TestCartesianPos3D(AbstractPos3DTest):
         assert np.allclose(convert(sph.phi, APYQuantity), apysph.phi)
 
     def test_cartesian3d_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalPos)``."""
-        cylindrical = vector.represent_as(cx.vecs.CylindricalPos)
+        """Test ``coordinax.vconvert(CylindricalPos)``."""
+        cylindrical = vector.vconvert(cx.vecs.CylindricalPos)
 
         assert isinstance(cylindrical, cx.vecs.CylindricalPos)
         assert jnp.array_equal(cylindrical.rho, jnp.hypot(vector.x, vector.y))
@@ -175,7 +173,7 @@ class TestCartesianPos3D(AbstractPos3DTest):
 
     def test_cartesian3d_to_cylindrical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cyl = vector.represent_as(cx.vecs.CylindricalPos)
+        cyl = vector.vconvert(cx.vecs.CylindricalPos)
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
         assert np.allclose(convert(cyl.rho, APYQuantity), apycyl.rho)
@@ -201,12 +199,12 @@ class TestCylindricalPos(AbstractPos3DTest):
         return convert(vector, apyc.CylindricalRepresentation)
 
     # ==========================================================================
-    # represent_as
+    # vconvert
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = vector.represent_as(cx.vecs.CartesianPos1D)
+        """Test ``coordinax.vconvert(CartesianPos1D)``."""
+        cart1d = vector.vconvert(cx.vecs.CartesianPos1D)
 
         assert isinstance(cart1d, cx.vecs.CartesianPos1D)
         assert jnp.allclose(
@@ -217,16 +215,16 @@ class TestCylindricalPos(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = vector.represent_as(cx.vecs.RadialPos)
+        """Test ``coordinax.vconvert(RadialPos)``."""
+        radial = vector.vconvert(cx.vecs.RadialPos)
 
         assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(radial.r, u.Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos2D)``."""
-        cart2d = vector.represent_as(cx.vecs.CartesianPos2D)
+        """Test ``coordinax.vconvert(CartesianPos2D)``."""
+        cart2d = vector.vconvert(cx.vecs.CartesianPos2D)
 
         assert isinstance(cart2d, cx.vecs.CartesianPos2D)
         assert jnp.array_equal(
@@ -238,16 +236,16 @@ class TestCylindricalPos(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cylindrical_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = vector.represent_as(cx.vecs.PolarPos)
+        """Test ``coordinax.vconvert(PolarPos)``."""
+        polar = vector.vconvert(cx.vecs.PolarPos)
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(polar.r, u.Quantity([1, 2, 3, 4], "kpc"))
         assert jnp.array_equal(polar.phi, u.Quantity([0, 1, 2, 3], "rad"))
 
     def test_cylindrical_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos3D)``."""
-        cart3d = vector.represent_as(cx.CartesianPos3D)
+        """Test ``coordinax.vconvert(CartesianPos3D)``."""
+        cart3d = vector.vconvert(cx.CartesianPos3D)
 
         assert isinstance(cart3d, cx.CartesianPos3D)
         assert jnp.array_equal(
@@ -260,7 +258,7 @@ class TestCylindricalPos(AbstractPos3DTest):
 
     def test_cylindrical_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cart3d = vector.represent_as(cx.CartesianPos3D)
+        cart3d = vector.vconvert(cx.CartesianPos3D)
 
         apycart3 = apyvector.represent_as(apyc.CartesianRepresentation)
         assert np.allclose(convert(cart3d.x, APYQuantity), apycart3.x)
@@ -268,8 +266,8 @@ class TestCylindricalPos(AbstractPos3DTest):
         assert np.allclose(convert(cart3d.z, APYQuantity), apycart3.z)
 
     def test_cylindrical_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalPos)``."""
-        spherical = vector.represent_as(cx.SphericalPos)
+        """Test ``coordinax.vconvert(SphericalPos)``."""
+        spherical = vector.vconvert(cx.SphericalPos)
 
         assert isinstance(spherical, cx.SphericalPos)
         assert jnp.array_equal(spherical.r, u.Quantity([1, 2, 3, 4], "kpc"))
@@ -280,25 +278,25 @@ class TestCylindricalPos(AbstractPos3DTest):
 
     def test_cylindrical_to_spherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        sph = vector.represent_as(cx.SphericalPos)
+        sph = vector.vconvert(cx.SphericalPos)
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
         assert np.allclose(convert(sph.r, APYQuantity), apysph.r)
         assert np.allclose(convert(sph.theta, APYQuantity), apysph.theta)
         assert np.allclose(convert(sph.phi, APYQuantity), apysph.phi)
 
     def test_cylindrical_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalPos)``."""
+        """Test ``coordinax.vconvert(CylindricalPos)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.vecs.CylindricalPos)
+        newvec = vector.vconvert(cx.vecs.CylindricalPos)
         assert jnp.array_equal(newvec, vector)
 
-        # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.vecs.CylindricalPos)
+        # The normal `vconvert` method should return the same object
+        newvec = cx.vconvert(cx.vecs.CylindricalPos, vector)
         assert newvec is vector
 
     def test_cylindrical_to_cylindrical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cyl = vector.represent_as(cx.vecs.CylindricalPos)
+        cyl = vector.vconvert(cx.vecs.CylindricalPos)
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
         assert np.allclose(convert(cyl.rho, APYQuantity), apycyl.rho)
@@ -324,12 +322,12 @@ class TestSphericalPos(AbstractPos3DTest):
         return convert(vector, apyc.PhysicsSphericalRepresentation)
 
     # ==========================================================================
-    # represent_as
+    # vconvert
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = vector.represent_as(cx.vecs.CartesianPos1D)
+        """Test ``coordinax.vconvert(CartesianPos1D)``."""
+        cart1d = vector.vconvert(cx.vecs.CartesianPos1D)
 
         assert isinstance(cart1d, cx.vecs.CartesianPos1D)
         assert jnp.allclose(
@@ -342,16 +340,16 @@ class TestSphericalPos(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = vector.represent_as(cx.vecs.RadialPos)
+        """Test ``coordinax.vconvert(RadialPos)``."""
+        radial = vector.vconvert(cx.vecs.RadialPos)
 
         assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(radial.r, u.Quantity([1, 2, 3, 4], "kpc"))
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos2D)``."""
-        cart2d = vector.represent_as(
+        """Test ``coordinax.vconvert(CartesianPos2D)``."""
+        cart2d = vector.vconvert(
             cx.vecs.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
         )
 
@@ -371,10 +369,8 @@ class TestSphericalPos(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = vector.represent_as(
-            cx.vecs.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad")
-        )
+        """Test ``coordinax.vconvert(PolarPos)``."""
+        polar = vector.vconvert(cx.vecs.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad"))
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(
@@ -386,8 +382,8 @@ class TestSphericalPos(AbstractPos3DTest):
         assert jnp.array_equal(polar.phi, u.Quantity([0.0, 65.0, 135.0, 270.0], "deg"))
 
     def test_spherical_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos3D)``."""
-        cart3d = vector.represent_as(cx.CartesianPos3D)
+        """Test ``coordinax.vconvert(CartesianPos3D)``."""
+        cart3d = vector.vconvert(cx.CartesianPos3D)
 
         assert isinstance(cart3d, cx.CartesianPos3D)
         assert jnp.array_equal(
@@ -406,7 +402,7 @@ class TestSphericalPos(AbstractPos3DTest):
 
     def test_spherical_to_cartesian3d_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        cart3d = vector.represent_as(cx.CartesianPos3D)
+        cart3d = vector.vconvert(cx.CartesianPos3D)
 
         apycart3 = apyvector.represent_as(apyc.CartesianRepresentation)
         assert np.allclose(convert(cart3d.x, APYQuantity), apycart3.x)
@@ -414,8 +410,8 @@ class TestSphericalPos(AbstractPos3DTest):
         assert np.allclose(convert(cart3d.z, APYQuantity), apycart3.z)
 
     def test_spherical_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalPos)``."""
-        cyl = vector.represent_as(
+        """Test ``coordinax.vconvert(CylindricalPos)``."""
+        cyl = vector.vconvert(
             cx.vecs.CylindricalPos, z=u.Quantity([9, 10, 11, 12], "m")
         )
 
@@ -432,8 +428,8 @@ class TestSphericalPos(AbstractPos3DTest):
         )
 
     def test_spherical_to_cylindrical_astropy(self, vector, apyvector):
-        """Test ``coordinax.represent_as(CylindricalPos)``."""
-        cyl = vector.represent_as(
+        """Test ``coordinax.vconvert(CylindricalPos)``."""
+        cyl = vector.vconvert(
             cx.vecs.CylindricalPos, z=u.Quantity([9, 10, 11, 12], "m")
         )
 
@@ -448,18 +444,18 @@ class TestSphericalPos(AbstractPos3DTest):
         assert np.allclose(convert(cyl.phi, APYQuantity) % mod, apycyl.phi % mod)
 
     def test_spherical_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalPos)``."""
+        """Test ``coordinax.vconvert(SphericalPos)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.SphericalPos)
+        newvec = vector.vconvert(cx.SphericalPos)
         assert jnp.array_equal(newvec, vector)
 
-        # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.SphericalPos)
+        # The normal `vconvert` method should return the same object
+        newvec = cx.vconvert(cx.SphericalPos, vector)
         assert newvec is vector
 
     def test_spherical_to_spherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        sph = vector.represent_as(cx.SphericalPos)
+        sph = vector.vconvert(cx.SphericalPos)
 
         apysph = apyvector.represent_as(apyc.PhysicsSphericalRepresentation)
         assert np.allclose(convert(sph.r, APYQuantity), apysph.r)
@@ -467,15 +463,15 @@ class TestSphericalPos(AbstractPos3DTest):
         assert np.allclose(convert(sph.phi, APYQuantity), apysph.phi)
 
     def test_spherical_to_mathspherical(self, vector):
-        """Test ``coordinax.represent_as(MathSphericalPos)``."""
-        newvec = cx.represent_as(vector, cx.vecs.MathSphericalPos)
+        """Test ``coordinax.vconvert(MathSphericalPos)``."""
+        newvec = cx.vconvert(cx.vecs.MathSphericalPos, vector)
         assert jnp.array_equal(newvec.r, vector.r)
         assert jnp.array_equal(newvec.theta, vector.phi)
         assert jnp.array_equal(newvec.phi, vector.theta)
 
     def test_spherical_to_lonlatspherical(self, vector):
-        """Test ``coordinax.represent_as(LonLatSphericalPos)``."""
-        llsph = vector.represent_as(
+        """Test ``coordinax.vconvert(LonLatSphericalPos)``."""
+        llsph = vector.vconvert(
             cx.vecs.LonLatSphericalPos, z=u.Quantity([9, 10, 11, 12], "m")
         )
 
@@ -486,7 +482,7 @@ class TestSphericalPos(AbstractPos3DTest):
 
     def test_spherical_to_lonlatspherical_astropy(self, vector, apyvector):
         """Test Astropy equivalence."""
-        llsph = vector.represent_as(cx.vecs.LonLatSphericalPos)
+        llsph = vector.vconvert(cx.vecs.LonLatSphericalPos)
 
         apycart3 = apyvector.represent_as(apyc.SphericalRepresentation)
         assert np.allclose(convert(llsph.distance, APYQuantity), apycart3.distance)
@@ -514,12 +510,12 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         """Skip."""
 
     # ==========================================================================
-    # represent_as
+    # vconvert
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_prolatespheroidal_to_cartesian1d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = vector.represent_as(cx.vecs.CartesianPos1D)
+        """Test ``coordinax.vconvert(CartesianPos1D)``."""
+        cart1d = vector.vconvert(cx.vecs.CartesianPos1D)
 
         assert isinstance(cart1d, cx.vecs.CartesianPos1D)
         assert jnp.allclose(
@@ -530,8 +526,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_prolatespheroidal_to_radial(self, vector):
-        """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = vector.represent_as(cx.vecs.RadialPos)
+        """Test ``coordinax.vconvert(RadialPos)``."""
+        radial = vector.vconvert(cx.vecs.RadialPos)
 
         assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(
@@ -540,8 +536,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_prolatespheroidal_to_cartesian2d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos2D)``."""
-        cart2d = vector.represent_as(cx.vecs.CartesianPos2D)
+        """Test ``coordinax.vconvert(CartesianPos2D)``."""
+        cart2d = vector.vconvert(cx.vecs.CartesianPos2D)
 
         assert isinstance(cart2d, cx.vecs.CartesianPos2D)
         assert jnp.array_equal(
@@ -553,8 +549,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_prolatespheroidal_to_polar(self, vector):
-        """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = vector.represent_as(cx.vecs.PolarPos)
+        """Test ``coordinax.vconvert(PolarPos)``."""
+        polar = vector.vconvert(cx.vecs.PolarPos)
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(
@@ -565,8 +561,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         )
 
     def test_prolatespheroidal_to_cartesian3d(self, vector):
-        """Test ``coordinax.represent_as(CartesianPos3D)``."""
-        cart3d = vector.represent_as(cx.CartesianPos3D)
+        """Test ``coordinax.vconvert(CartesianPos3D)``."""
+        cart3d = vector.vconvert(cx.CartesianPos3D)
 
         assert isinstance(cart3d, cx.CartesianPos3D)
         assert jnp.array_equal(
@@ -580,8 +576,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         )
 
     def test_prolatespheroidal_to_cylindrical(self, vector):
-        """Test ``coordinax.represent_as(CylindricalPos)``."""
-        cyl = vector.represent_as(cx.vecs.CylindricalPos)
+        """Test ``coordinax.vconvert(CylindricalPos)``."""
+        cyl = vector.vconvert(cx.vecs.CylindricalPos)
 
         assert isinstance(cyl, cx.vecs.CylindricalPos)
         assert jnp.array_equal(
@@ -593,8 +589,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         )
 
     def test_prolatespheroidal_to_spherical(self, vector):
-        """Test ``coordinax.represent_as(SphericalPos)``."""
-        spherical = vector.represent_as(cx.SphericalPos)
+        """Test ``coordinax.vconvert(SphericalPos)``."""
+        spherical = vector.vconvert(cx.SphericalPos)
 
         assert isinstance(spherical, cx.SphericalPos)
         assert jnp.array_equal(
@@ -608,23 +604,23 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         )
 
     def test_prolatespheroidal_to_prolatespheroidal(self, vector):
-        """Test ``coordinax.represent_as(ProlateSpheroidalPos)``."""
+        """Test ``coordinax.vconvert(ProlateSpheroidalPos)``."""
         # Jit can copy
-        newvec = vector.represent_as(cx.vecs.ProlateSpheroidalPos, Delta=vector.Delta)
+        newvec = vector.vconvert(cx.vecs.ProlateSpheroidalPos, Delta=vector.Delta)
         assert jnp.allclose(newvec.mu.value, vector.mu.value)
         assert jnp.allclose(newvec.nu.value, vector.nu.value)
         assert jnp.array_equal(newvec.phi, vector.phi)
 
         # With a different focal length, should not be the same:
-        newvec = vector.represent_as(
+        newvec = vector.vconvert(
             cx.vecs.ProlateSpheroidalPos, Delta=u.Quantity(0.5, "kpc")
         )
         assert not jnp.allclose(newvec.mu.value, vector.mu.value)
         assert not jnp.allclose(newvec.nu.value, vector.nu.value)
         assert jnp.array_equal(newvec.phi, vector.phi)
 
-        # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(vector, cx.vecs.ProlateSpheroidalPos)
+        # The normal `vconvert` method should return the same object
+        newvec = cx.vconvert(cx.vecs.ProlateSpheroidalPos, vector)
         # TODO: re-enable when equality is fixed for array-valued vectors
         # assert newvec == vector
 
@@ -678,8 +674,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_cartesian1d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = difntl.represent_as(cx.vecs.CartesianVel1D, vector)
+        """Test ``coordinax.vconvert(CartesianPos1D)``."""
+        cart1d = difntl.vconvert(cx.vecs.CartesianVel1D, vector)
 
         assert isinstance(cart1d, cx.vecs.CartesianVel1D)
         assert jnp.array_equal(cart1d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -687,8 +683,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_radial(self, difntl, vector):
-        """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = difntl.represent_as(cx.vecs.RadialPos, vector)
+        """Test ``coordinax.vconvert(RadialPos)``."""
+        radial = difntl.vconvert(cx.vecs.RadialPos, vector)
 
         assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(radial.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -696,8 +692,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_cartesian2d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos2D)``."""
-        cart2d = difntl.represent_as(cx.vecs.CartesianVel2D, vector)
+        """Test ``coordinax.vconvert(CartesianPos2D)``."""
+        cart2d = difntl.vconvert(cx.vecs.CartesianVel2D, vector)
 
         assert isinstance(cart2d, cx.vecs.CartesianVel2D)
         assert jnp.array_equal(cart2d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -706,28 +702,28 @@ class TestCartesianVel3D(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian3d_to_polar(self, difntl, vector):
-        """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = difntl.represent_as(cx.vecs.PolarPos, vector)
+        """Test ``coordinax.vconvert(PolarPos)``."""
+        polar = difntl.vconvert(cx.vecs.PolarPos, vector)
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(polar.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(polar.d_phi, u.Quantity([5, 6, 7, 8], "mas/yr"))
 
     def test_cartesian3d_to_cartesian3d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos3D)``."""
+        """Test ``coordinax.vconvert(CartesianPos3D)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.CartesianVel3D, vector)
+        newvec = difntl.vconvert(cx.CartesianVel3D, vector)
         assert jnp.array_equal(newvec, difntl)
 
-        # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.CartesianVel3D, vector)
+        # The normal `vconvert` method should return the same object
+        newvec = cx.vconvert(cx.CartesianVel3D, difntl, vector)
         assert newvec is difntl
 
     def test_cartesian3d_to_cartesian3d_astropy(
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cart3 = difntl.represent_as(cx.CartesianVel3D, vector)
+        cart3 = difntl.vconvert(cx.CartesianVel3D, vector)
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
         assert np.allclose(convert(cart3.d_x, APYQuantity), apycart3.d_x)
@@ -735,8 +731,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
         assert np.allclose(convert(cart3.d_z, APYQuantity), apycart3.d_z)
 
     def test_cartesian3d_to_spherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(SphericalVel)``."""
-        spherical = difntl.represent_as(cx.SphericalVel, vector)
+        """Test ``coordinax.vconvert(SphericalVel)``."""
+        spherical = difntl.vconvert(cx.SphericalVel, vector)
 
         assert isinstance(spherical, cx.SphericalVel)
         assert jnp.allclose(
@@ -763,7 +759,7 @@ class TestCartesianVel3D(AbstractVel3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        sph = difntl.represent_as(cx.SphericalVel, vector)
+        sph = difntl.vconvert(cx.SphericalVel, vector)
 
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
@@ -771,8 +767,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi, atol=1e-7)
 
     def test_cartesian3d_to_cylindrical(self, difntl, vector):
-        """Test ``coordinax.represent_as(CylindricalVel)``."""
-        cylindrical = difntl.represent_as(cx.vecs.CylindricalVel, vector)
+        """Test ``coordinax.vconvert(CylindricalVel)``."""
+        cylindrical = difntl.vconvert(cx.vecs.CylindricalVel, vector)
 
         assert isinstance(cylindrical, cx.vecs.CylindricalVel)
         assert jnp.array_equal(
@@ -794,7 +790,7 @@ class TestCartesianVel3D(AbstractVel3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cyl = difntl.represent_as(cx.vecs.CylindricalVel, vector)
+        cyl = difntl.vconvert(cx.vecs.CylindricalVel, vector)
         apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
@@ -839,8 +835,8 @@ class TestCylindricalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_cartesian1d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = difntl.represent_as(cx.vecs.CartesianVel1D, vector)
+        """Test ``coordinax.vconvert(CartesianPos1D)``."""
+        cart1d = difntl.vconvert(cx.vecs.CartesianVel1D, vector)
 
         assert isinstance(cart1d, cx.vecs.CartesianVel1D)
         assert jnp.array_equal(cart1d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -848,8 +844,8 @@ class TestCylindricalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_radial(self, difntl, vector):
-        """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = difntl.represent_as(cx.vecs.RadialPos, vector)
+        """Test ``coordinax.vconvert(RadialPos)``."""
+        radial = difntl.vconvert(cx.vecs.RadialPos, vector)
 
         assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(radial.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -857,8 +853,8 @@ class TestCylindricalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_cartesian2d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos2D)``."""
-        cart2d = difntl.represent_as(cx.vecs.CartesianVel2D, vector)
+        """Test ``coordinax.vconvert(CartesianPos2D)``."""
+        cart2d = difntl.vconvert(cx.vecs.CartesianVel2D, vector)
 
         assert isinstance(cart2d, cx.vecs.CartesianVel2D)
         assert jnp.array_equal(cart2d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -867,16 +863,16 @@ class TestCylindricalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cylindrical_to_polar(self, difntl, vector):
-        """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = difntl.represent_as(cx.vecs.PolarPos, vector)
+        """Test ``coordinax.vconvert(PolarPos)``."""
+        polar = difntl.vconvert(cx.vecs.PolarPos, vector)
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(polar.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(polar.d_phi, u.Quantity([5, 6, 7, 8], "mas/yr"))
 
     def test_cylindrical_to_cartesian3d(self, difntl, vector, apydifntl, apyvector):
-        """Test ``coordinax.represent_as(CartesianPos3D)``."""
-        cart3d = difntl.represent_as(cx.CartesianVel3D, vector)
+        """Test ``coordinax.vconvert(CartesianPos3D)``."""
+        cart3d = difntl.vconvert(cx.CartesianVel3D, vector)
 
         assert isinstance(cart3d, cx.CartesianVel3D)
         assert jnp.array_equal(
@@ -894,8 +890,8 @@ class TestCylindricalVel(AbstractVel3DTest):
         assert np.allclose(convert(cart3d.d_z, APYQuantity), apycart3.d_z)
 
     def test_cylindrical_to_spherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(SphericalVel)``."""
-        dsph = difntl.represent_as(cx.SphericalVel, vector)
+        """Test ``coordinax.vconvert(SphericalVel)``."""
+        dsph = difntl.vconvert(cx.SphericalVel, vector)
 
         assert isinstance(dsph, cx.SphericalVel)
         assert jnp.array_equal(
@@ -920,25 +916,25 @@ class TestCylindricalVel(AbstractVel3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        sph = difntl.represent_as(cx.SphericalVel, vector)
+        sph = difntl.vconvert(cx.SphericalVel, vector)
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
 
     def test_cylindrical_to_cylindrical(self, difntl, vector):
-        """Test ``coordinax.represent_as(CylindricalVel)``."""
+        """Test ``coordinax.vconvert(CylindricalVel)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.vecs.CylindricalVel, vector)
+        newvec = difntl.vconvert(cx.vecs.CylindricalVel, vector)
         assert newvec == difntl
 
-        # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.vecs.CylindricalVel, vector)
+        # The normal `vconvert` method should return the same object
+        newvec = cx.vconvert(cx.vecs.CylindricalVel, difntl, vector)
         assert newvec is difntl
 
     def test_cylindrical_to_cylindrical(self, difntl, vector, apydifntl, apyvector):
         """Test Astropy equivalence."""
-        cyl = difntl.represent_as(cx.vecs.CylindricalVel, vector)
+        cyl = difntl.vconvert(cx.vecs.CylindricalVel, vector)
         apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
@@ -981,8 +977,8 @@ class TestSphericalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_cartesian1d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos1D)``."""
-        cart1d = difntl.represent_as(cx.vecs.CartesianVel1D, vector)
+        """Test ``coordinax.vconvert(CartesianPos1D)``."""
+        cart1d = difntl.vconvert(cx.vecs.CartesianVel1D, vector)
 
         assert isinstance(cart1d, cx.vecs.CartesianVel1D)
         assert jnp.array_equal(cart1d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -990,8 +986,8 @@ class TestSphericalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_radial(self, difntl, vector):
-        """Test ``coordinax.represent_as(RadialPos)``."""
-        radial = difntl.represent_as(cx.vecs.RadialPos, vector)
+        """Test ``coordinax.vconvert(RadialPos)``."""
+        radial = difntl.vconvert(cx.vecs.RadialPos, vector)
 
         assert isinstance(radial, cx.vecs.RadialPos)
         assert jnp.array_equal(radial.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -999,8 +995,8 @@ class TestSphericalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_cartesian2d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos2D)``."""
-        cart2d = difntl.represent_as(cx.vecs.CartesianVel2D, vector)
+        """Test ``coordinax.vconvert(CartesianPos2D)``."""
+        cart2d = difntl.vconvert(cx.vecs.CartesianVel2D, vector)
 
         assert isinstance(cart2d, cx.vecs.CartesianVel2D)
         assert jnp.array_equal(cart2d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
@@ -1009,16 +1005,16 @@ class TestSphericalVel(AbstractVel3DTest):
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_spherical_to_polar(self, difntl, vector):
-        """Test ``coordinax.represent_as(PolarPos)``."""
-        polar = difntl.represent_as(cx.vecs.PolarPos, vector)
+        """Test ``coordinax.vconvert(PolarPos)``."""
+        polar = difntl.vconvert(cx.vecs.PolarPos, vector)
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(polar.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(polar.d_phi, u.Quantity([5, 6, 7, 8], "mas/yr"))
 
     def test_spherical_to_cartesian3d(self, difntl, vector):
-        """Test ``coordinax.represent_as(CartesianPos3D)``."""
-        cart3d = difntl.represent_as(cx.CartesianVel3D, vector)
+        """Test ``coordinax.vconvert(CartesianPos3D)``."""
+        cart3d = difntl.vconvert(cx.CartesianVel3D, vector)
 
         assert isinstance(cart3d, cx.CartesianVel3D)
         assert jnp.allclose(
@@ -1041,7 +1037,7 @@ class TestSphericalVel(AbstractVel3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cart3d = difntl.represent_as(cx.CartesianVel3D, vector)
+        cart3d = difntl.vconvert(cx.CartesianVel3D, vector)
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
         assert np.allclose(convert(cart3d.d_x, APYQuantity), apycart3.d_x)
@@ -1049,8 +1045,8 @@ class TestSphericalVel(AbstractVel3DTest):
         assert np.allclose(convert(cart3d.d_z, APYQuantity), apycart3.d_z)
 
     def test_spherical_to_cylindrical(self, difntl, vector):
-        """Test ``coordinax.represent_as(CylindricalVel)``."""
-        cylindrical = difntl.represent_as(cx.vecs.CylindricalVel, vector)
+        """Test ``coordinax.vconvert(CylindricalVel)``."""
+        cylindrical = difntl.vconvert(cx.vecs.CylindricalVel, vector)
 
         assert isinstance(cylindrical, cx.vecs.CylindricalVel)
         assert jnp.allclose(
@@ -1075,33 +1071,33 @@ class TestSphericalVel(AbstractVel3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cyl = difntl.represent_as(cx.vecs.CylindricalVel, vector)
+        cyl = difntl.vconvert(cx.vecs.CylindricalVel, vector)
         apycyl = apydifntl.represent_as(apyc.CylindricalDifferential, apyvector)
         assert np.allclose(convert(cyl.d_rho, APYQuantity), apycyl.d_rho)
         assert np.allclose(convert(cyl.d_phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.d_z, APYQuantity), apycyl.d_z)
 
     def test_spherical_to_spherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(SphericalVel)``."""
+        """Test ``coordinax.vconvert(SphericalVel)``."""
         # Jit can copy
-        newvec = difntl.represent_as(cx.SphericalVel, vector)
+        newvec = difntl.vconvert(cx.SphericalVel, vector)
         assert all(newvec == difntl)
 
-        # The normal `represent_as` method should return the same object
-        newvec = cx.represent_as(difntl, cx.SphericalVel, vector)
+        # The normal `vconvert` method should return the same object
+        newvec = cx.vconvert(cx.SphericalVel, difntl, vector)
         assert newvec is difntl
 
     def test_spherical_to_spherical_astropy(self, difntl, vector, apydifntl, apyvector):
         """Test Astropy equivalence."""
-        sph = difntl.represent_as(cx.SphericalVel, vector)
+        sph = difntl.vconvert(cx.SphericalVel, vector)
         apysph = apydifntl.represent_as(apyc.PhysicsSphericalDifferential, apyvector)
         assert np.allclose(convert(sph.d_r, APYQuantity), apysph.d_r)
         assert np.allclose(convert(sph.d_theta, APYQuantity), apysph.d_theta)
         assert np.allclose(convert(sph.d_phi, APYQuantity), apysph.d_phi)
 
     def test_spherical_to_lonlatspherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(LonLatSphericalVel)``."""
-        llsph = difntl.represent_as(cx.vecs.LonLatSphericalVel, vector)
+        """Test ``coordinax.vconvert(LonLatSphericalVel)``."""
+        llsph = difntl.vconvert(cx.vecs.LonLatSphericalVel, vector)
 
         assert isinstance(llsph, cx.vecs.LonLatSphericalVel)
         assert jnp.array_equal(llsph.d_distance, difntl.d_r)
@@ -1116,7 +1112,7 @@ class TestSphericalVel(AbstractVel3DTest):
         self, difntl, vector, apydifntl, apyvector
     ):
         """Test Astropy equivalence."""
-        cart3d = difntl.represent_as(cx.vecs.LonLatSphericalVel, vector)
+        cart3d = difntl.vconvert(cx.vecs.LonLatSphericalVel, vector)
 
         apycart3 = apydifntl.represent_as(apyc.SphericalDifferential, apyvector)
         assert np.allclose(convert(cart3d.d_distance, APYQuantity), apycart3.d_distance)
@@ -1124,8 +1120,8 @@ class TestSphericalVel(AbstractVel3DTest):
         assert np.allclose(convert(cart3d.d_lat, APYQuantity), apycart3.d_lat)
 
     def test_spherical_to_mathspherical(self, difntl, vector):
-        """Test ``coordinax.represent_as(MathSpherical)``."""
-        llsph = difntl.represent_as(cx.vecs.MathSphericalVel, vector)
+        """Test ``coordinax.vconvert(MathSpherical)``."""
+        llsph = difntl.vconvert(cx.vecs.MathSphericalVel, vector)
 
         assert isinstance(llsph, cx.vecs.MathSphericalVel)
         assert jnp.array_equal(llsph.d_r, difntl.d_r)

@@ -44,11 +44,11 @@ def from_(cls: type[AbstractPos3D], obj: AbstractPos3D, /) -> AbstractPos3D:
     >>> cx.vecs.AbstractPos3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalPos)
+    >>> sph = cart.vconvert(cx.SphericalPos)
     >>> cx.vecs.AbstractPos3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.vecs.CylindricalPos)
+    >>> cyl = cart.vconvert(cx.vecs.CylindricalPos)
     >>> cx.vecs.AbstractPos3D.from_(cyl) is cyl
     True
 
@@ -94,11 +94,11 @@ def from_(cls: type[AbstractVel3D], obj: AbstractVel3D, /) -> AbstractVel3D:
     >>> cx.vecs.AbstractVel3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalVel, q)
+    >>> sph = cart.vconvert(cx.SphericalVel, q)
     >>> cx.vecs.AbstractVel3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.vecs.CylindricalVel, q)
+    >>> cyl = cart.vconvert(cx.vecs.CylindricalVel, q)
     >>> cx.vecs.AbstractVel3D.from_(cyl) is cyl
     True
 
@@ -145,11 +145,11 @@ def from_(cls: type[AbstractAcc3D], obj: AbstractAcc3D, /) -> AbstractAcc3D:
     >>> cx.vecs.AbstractAcc3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.vecs.SphericalAcc, p, q)
+    >>> sph = cart.vconvert(cx.vecs.SphericalAcc, p, q)
     >>> cx.vecs.AbstractAcc3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.vecs.CylindricalAcc, p, q)
+    >>> cyl = cart.vconvert(cx.vecs.CylindricalAcc, p, q)
     >>> cx.vecs.AbstractAcc3D.from_(cyl) is cyl
     True
 

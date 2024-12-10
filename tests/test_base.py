@@ -169,15 +169,15 @@ class AbstractPosTest(AbstractVectorTest):
         raise NotImplementedError
 
     @pytest.mark.parametrize("target", BUILTIN_VECTORS)
-    def test_represent_as(self, vector, target):
-        """Test :meth:`AbstractPos.represent_as`.
+    def test_vconvert(self, vector, target):
+        """Test :meth:`AbstractPos.vconvert`.
 
         This just tests that the machinery works.
         """
         # Perform the conversion.
         # Detecting whether the conversion reduces the dimensionality.
         with context_dimension_reduction(vector, target):
-            newvec = vector.represent_as(target)
+            newvec = vector.vconvert(target)
 
         # Test
         assert isinstance(newvec, target)
@@ -198,8 +198,8 @@ class AbstractVelTest(AbstractVectorTest):
 
     @pytest.mark.parametrize("target", BUILTIN_DIFFERENTIALS)
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
-    def test_represent_as(self, difntl, target, vector):
-        """Test :meth:`AbstractPos.represent_as`.
+    def test_vconvert(self, difntl, target, vector):
+        """Test :meth:`AbstractPos.vconvert`.
 
         This just tests that the machiner works.
         """
@@ -223,7 +223,7 @@ class AbstractVelTest(AbstractVectorTest):
         # Perform the conversion.
         # Detecting whether the conversion reduces the dimensionality.
         with context_dimension_reduction(vector, target.integral_cls):
-            newdif = difntl.represent_as(target, vector)
+            newdif = difntl.vconvert(target, vector)
 
         # Test
         assert isinstance(newdif, target)

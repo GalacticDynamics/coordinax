@@ -111,7 +111,7 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     Quantity['length'](Array(2., dtype=float32), unit='km')
 
     """
-    cart = rhs.represent_as(CartesianPos3D)
+    cart = rhs.vconvert(CartesianPos3D)
     return replace(
         lhs, **{k: qlax.add(v, getattr(cart, k)) for k, v in field_items(lhs)}
     )
@@ -147,7 +147,7 @@ def _sub_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     Quantity['length'](Array(0., dtype=float32), unit='km')
 
     """
-    cart = rhs.represent_as(CartesianPos3D)
+    cart = rhs.vconvert(CartesianPos3D)
     return jax.tree.map(qlax.sub, lhs, cart)
 
 
@@ -337,8 +337,10 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
     # Methods
 
     @override
-    @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractVel3D | None = None, /) -> ct.BatchableAcc:
+    @partial(jax.jit, inline=True)
+    def norm(
+        self, _: AbstractVel3D | None = None, __: AbstractPos3D | None = None, /
+    ) -> ct.BatchableAcc:
         """Return the norm of the vector.
 
         Examples

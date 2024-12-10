@@ -27,10 +27,10 @@ from dataclassish import field_items, field_values, fields, replace
 from unxt.quantity import AbstractQuantity
 
 from .flags import AttrFilter
-from .mixins import IPythonReprMixin
+from .mixins import AstropyRepresentationAPIMixin, IPythonReprMixin
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.api import represent_as
+from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.utils import full_shaped
 
 if TYPE_CHECKING:
@@ -49,7 +49,7 @@ class ToUnitsOptions(Enum):
 # ===================================================================
 
 
-class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
+class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue):  # type: ignore[misc]
     """Base class for all vector types.
 
     A vector is a collection of components that can be represented in different
@@ -149,17 +149,17 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
     # ===============================================================
     # Vector API
 
-    def represent_as(self, target: type, *args: Any, **kwargs: Any) -> "AbstractVector":
+    def vconvert(self, target: type, *args: Any, **kwargs: Any) -> "AbstractVector":
         """Represent the vector as another type.
 
-        This just forwards to `coordinax.represent_as`.
+        This just forwards to `coordinax.vconvert`.
 
         Parameters
         ----------
-        target : type[`coordinax.AbstractVel`]
+        target : type[`coordinax.AbstractVector`]
             The type to represent the vector as.
         *args, **kwargs : Any
-            Extra arguments. These are passed to `coordinax.represent_as` and
+            Extra arguments. These are passed to `coordinax.vconvert` and
             might be used, depending on the dispatched method. E.g. for
             transforming an acceleration, generally the first argument is the
             velocity (`coordinax.AbstractVel`) followed by the position
@@ -176,7 +176,7 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Transforming a Position:
 
         >>> q_cart = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> q_sph = q_cart.represent_as(cx.SphericalPos)
+        >>> q_sph = q_cart.vconvert(cx.SphericalPos)
         >>> q_sph
         SphericalPos( ... )
         >>> q_sph.r
@@ -185,21 +185,21 @@ class AbstractVector(IPythonReprMixin, ArrayValue):  # type: ignore[misc]
         Transforming a Velocity:
 
         >>> v_cart = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
-        >>> v_sph = v_cart.represent_as(cx.SphericalVel, q_cart)
+        >>> v_sph = v_cart.vconvert(cx.SphericalVel, q_cart)
         >>> v_sph
         SphericalVel( ... )
 
         Transforming an Acceleration:
 
         >>> a_cart = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
-        >>> a_sph = a_cart.represent_as(cx.vecs.SphericalAcc, v_cart, q_cart)
+        >>> a_sph = a_cart.vconvert(cx.vecs.SphericalAcc, v_cart, q_cart)
         >>> a_sph
         SphericalAcc( ... )
         >>> a_sph.d2_r
         Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
 
         """
-        return represent_as(self, target, *args, **kwargs)
+        return vconvert(target, self, *args, **kwargs)
 
     # ===============================================================
     # Quantity API
@@ -1011,11 +1011,11 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     >>> cx.vecs.AbstractPos3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalPos)
+    >>> sph = cart.vconvert(cx.SphericalPos)
     >>> cx.vecs.AbstractPos3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.vecs.CylindricalPos)
+    >>> cyl = cart.vconvert(cx.vecs.CylindricalPos)
     >>> cx.vecs.AbstractPos3D.from_(cyl) is cyl
     True
 
@@ -1027,11 +1027,11 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     >>> cx.vecs.AbstractVel3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.SphericalVel, q)
+    >>> sph = cart.vconvert(cx.SphericalVel, q)
     >>> cx.vecs.AbstractVel3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.vecs.CylindricalVel, q)
+    >>> cyl = cart.vconvert(cx.vecs.CylindricalVel, q)
     >>> cx.vecs.AbstractVel3D.from_(cyl) is cyl
     True
 
@@ -1043,11 +1043,11 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     >>> cx.vecs.AbstractAcc3D.from_(cart) is cart
     True
 
-    >>> sph = cart.represent_as(cx.vecs.SphericalAcc, p, q)
+    >>> sph = cart.vconvert(cx.vecs.SphericalAcc, p, q)
     >>> cx.vecs.AbstractAcc3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.represent_as(cx.vecs.CylindricalAcc, p, q)
+    >>> cyl = cart.vconvert(cx.vecs.CylindricalAcc, p, q)
     >>> cx.vecs.AbstractAcc3D.from_(cyl) is cyl
     True
 
@@ -1069,6 +1069,6 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
 
 
 @register(jax.lax.eq_p)  # type: ignore[misc]
-def _eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
+def eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
     """Element-wise equality of two vectors."""
     return lhs == rhs

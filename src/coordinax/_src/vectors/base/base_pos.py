@@ -24,7 +24,7 @@ from .flags import AttrFilter
 from .mixins import AvalMixin
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.api import represent_as
+from coordinax._src.vectors.api import vconvert
 
 PosT = TypeVar("PosT", bound="AbstractPos")
 
@@ -114,8 +114,8 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         Showing the change of representation:
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> vec1 = vec.represent_as(cx.SphericalPos)
-        >>> vec2 = vec.represent_as(cx.vecs.MathSphericalPos)
+        >>> vec1 = vec.vconvert(cx.SphericalPos)
+        >>> vec2 = vec.vconvert(cx.vecs.MathSphericalPos)
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
@@ -135,7 +135,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         if not isinstance(other, AbstractPos):
             return NotImplemented
 
-        rhs = other.represent_as(type(self))
+        rhs = other.vconvert(type(self))
         return super().__eq__(rhs)
 
     def __rmatmul__(self, other: Shaped[Array, "N N"]) -> Any:
@@ -162,11 +162,11 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         """
         # TODO: figure out how to do this without converting back to arrays.
-        cartvec = self.represent_as(self._cartesian_cls)
+        cartvec = self.vconvert(self._cartesian_cls)
         q = convert(cartvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
         newq = _vec_matmul(other, q)
         newvec = self._cartesian_cls.from_(newq)
-        return newvec.represent_as(type(self))
+        return newvec.vconvert(type(self))
 
     # ===============================================================
     # Convenience methods
@@ -222,8 +222,8 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
         "must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
     return qlax.add(  # re-dispatch on the Cartesian class
-        lhs.represent_as(cart_cls), rhs.represent_as(cart_cls)
-    ).represent_as(type(lhs))
+        lhs.vconvert(cart_cls), rhs.vconvert(cart_cls)
+    ).vconvert(type(lhs))
 
 
 # ------------------------------------------------
@@ -303,7 +303,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> from plum import dispatch
     >>> @dispatch
-    ... def represent_as(current: MyCartesian, target: type[MyCartesian], /) -> MyCartesian:
+    ... def vconvert(target: type[MyCartesian], current: MyCartesian, /) -> MyCartesian:
     ...     return current
 
     >>> vec = MyCartesian(x=u.Quantity([1], "m"),
@@ -327,10 +327,10 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> MyCartesian._cartesian_cls = cx.CartesianPos3D
     >>> @dispatch
-    ... def represent_as(current: MyCartesian, target: type[cx.CartesianPos3D], /) -> cx.CartesianPos3D:
+    ... def vconvert(target: type[cx.CartesianPos3D],current: MyCartesian, /) -> cx.CartesianPos3D:
     ...     return cx.CartesianPos3D(x=current.x, y=current.y, z=current.z)
     >>> @dispatch
-    ... def represent_as(current: cx.CartesianPos3D, target: type[MyCartesian], /) -> MyCartesian:
+    ... def vconvert(target: type[MyCartesian], current: cx.CartesianPos3D, /) -> MyCartesian:
     ...     return MyCartesian(x=current.x, y=current.y, z=current.z)
 
     >>> jnp.multiply(2, vec)
@@ -351,9 +351,9 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
         "must register a Cartesian-specific dispatch",
     )
 
-    rc = rhs.represent_as(rhs._cartesian_cls)  # noqa: SLF001
+    rc = rhs.vconvert(rhs._cartesian_cls)  # noqa: SLF001
     nr = qlax.mul(lhs, rc)
-    return nr.represent_as(type(rhs))
+    return nr.vconvert(type(rhs))
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -404,8 +404,8 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
     Quantity['length'](Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
     """  # noqa: E501
-    lq = convert(lhs.represent_as(lhs._cartesian_cls), u.Quantity)  # noqa: SLF001
-    rq = convert(rhs.represent_as(rhs._cartesian_cls), u.Quantity)  # noqa: SLF001
+    lq = convert(lhs.vconvert(lhs._cartesian_cls), u.Quantity)  # noqa: SLF001
+    rq = convert(rhs.vconvert(rhs._cartesian_cls), u.Quantity)  # noqa: SLF001
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 
@@ -432,9 +432,9 @@ def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
     Quantity['length'](Array(-1., dtype=float32), unit='m')
 
     """
-    cart = represent_as(obj, obj._cartesian_cls)  # noqa: SLF001
+    cart = vconvert(obj._cartesian_cls, obj)  # noqa: SLF001
     negcart = jnp.negative(cart)
-    return represent_as(negcart, type(obj))
+    return vconvert(type(obj), negcart)
 
 
 # ------------------------------------------------
@@ -487,6 +487,6 @@ def _sub_qq(lhs: AbstractPos, rhs: AbstractPos) -> AbstractPos:
     # singularities or ranges that need to be handled, so this is a safe
     # default.
     return qlax.sub(
-        lhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
-        rhs.represent_as(lhs._cartesian_cls),  # noqa: SLF001
-    ).represent_as(type(lhs))
+        lhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
+        rhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
+    ).vconvert(type(lhs))

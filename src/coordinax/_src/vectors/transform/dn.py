@@ -13,7 +13,7 @@ from coordinax._src.vectors.space import Space
 
 
 @dispatch  # type: ignore[misc]
-def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
+def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
     """Space -> PoincarePolarVector.
 
     Examples
@@ -25,7 +25,7 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
-    >>> cx.represent_as(w, cx.vecs.PoincarePolarVector)
+    >>> cx.vconvert(cx.vecs.PoincarePolarVector, w)
     PoincarePolarVector(
         rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
         pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
@@ -35,7 +35,7 @@ def represent_as(w: PoincarePolarVector, target: type[Space], /) -> Space:
         d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
     )
 
-    >>> cx.represent_as(w, cx.Space)
+    >>> cx.vconvert(cx.Space, w)
     Space({
         'length': CartesianPos3D(
             x=Quantity[...](value=f32[1,2], unit=Unit("m")),

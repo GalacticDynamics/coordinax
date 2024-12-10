@@ -31,22 +31,22 @@ from coordinax._src.vectors.base import AbstractPos
 
 
 @dispatch
-def represent_as(
-    current: AbstractPos3D, target: type[AbstractPos3D], /, **kwargs: Any
+def vconvert(
+    target: type[AbstractPos3D], current: AbstractPos3D, /, **kwargs: Any
 ) -> AbstractPos3D:
     """AbstractPos3D -> Cartesian3D -> AbstractPos3D."""
-    return represent_as(represent_as(current, CartesianPos3D), target)
+    return vconvert(target, vconvert(CartesianPos3D, current))
 
 
 @dispatch.multi(
-    (CartesianPos3D, type[CartesianPos3D]),
-    (CylindricalPos, type[CylindricalPos]),
-    (SphericalPos, type[SphericalPos]),
-    (LonLatSphericalPos, type[LonLatSphericalPos]),
-    (MathSphericalPos, type[MathSphericalPos]),
+    (type[CartesianPos3D], CartesianPos3D),
+    (type[CylindricalPos], CylindricalPos),
+    (type[SphericalPos], SphericalPos),
+    (type[LonLatSphericalPos], LonLatSphericalPos),
+    (type[MathSphericalPos], MathSphericalPos),
 )
-def represent_as(
-    current: AbstractPos3D, target: type[AbstractPos3D], /, **kwargs: Any
+def vconvert(
+    target: type[AbstractPos3D], current: AbstractPos3D, /, **kwargs: Any
 ) -> AbstractPos3D:
     """Self transforms for 3D vectors.
 
@@ -58,7 +58,7 @@ def represent_as(
     Cartesian to Cartesian:
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> cx.represent_as(vec, cx.CartesianPos3D) is vec
+    >>> cx.vconvert(cx.CartesianPos3D, vec) is vec
     True
 
     Cylindrical to Cylindrical:
@@ -66,7 +66,7 @@ def represent_as(
     >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1, "km"),
     ...                              phi=u.Quantity(2, "deg"),
     ...                              z=u.Quantity(3, "km"))
-    >>> cx.represent_as(vec, cx.vecs.CylindricalPos) is vec
+    >>> cx.vconvert(cx.vecs.CylindricalPos, vec) is vec
     True
 
     Spherical to Spherical:
@@ -74,7 +74,7 @@ def represent_as(
     >>> vec = cx.SphericalPos(r=u.Quantity(1, "km"),
     ...                       theta=u.Quantity(2, "deg"),
     ...                       phi=u.Quantity(3, "deg"))
-    >>> cx.represent_as(vec, cx.SphericalPos) is vec
+    >>> cx.vconvert(cx.SphericalPos, vec) is vec
     True
 
     LonLatSpherical to LonLatSpherical:
@@ -82,7 +82,7 @@ def represent_as(
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(1, "deg"),
     ...                                  lat=u.Quantity(2, "deg"),
     ...                                  distance=u.Quantity(3, "km"))
-    >>> cx.represent_as(vec, cx.vecs.LonLatSphericalPos) is vec
+    >>> cx.vconvert(cx.vecs.LonLatSphericalPos, vec) is vec
     True
 
     MathSpherical to MathSpherical:
@@ -90,7 +90,7 @@ def represent_as(
     >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
     ...                                theta=u.Quantity(2, "deg"),
     ...                                phi=u.Quantity(3, "deg"))
-    >>> cx.represent_as(vec, cx.vecs.MathSphericalPos) is vec
+    >>> cx.vconvert(cx.vecs.MathSphericalPos, vec) is vec
     True
 
     """
@@ -98,21 +98,21 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianVel3D, type[CartesianVel3D], AbstractPos),
-    (CylindricalVel, type[CylindricalVel], AbstractPos),
-    (SphericalVel, type[SphericalVel], AbstractPos),
-    (LonLatSphericalVel, type[LonLatSphericalVel], AbstractPos),
+    (type[CartesianVel3D], CartesianVel3D, AbstractPos),
+    (type[CylindricalVel], CylindricalVel, AbstractPos),
+    (type[SphericalVel], SphericalVel, AbstractPos),
+    (type[LonLatSphericalVel], LonLatSphericalVel, AbstractPos),
     (
-        LonCosLatSphericalVel,
         type[LonCosLatSphericalVel],
+        LonCosLatSphericalVel,
         AbstractPos,
     ),
-    (MathSphericalVel, type[MathSphericalVel], AbstractPos),
-    (ProlateSpheroidalVel, type[ProlateSpheroidalVel], AbstractPos),
+    (type[MathSphericalVel], MathSphericalVel, AbstractPos),
+    (type[ProlateSpheroidalVel], ProlateSpheroidalVel, AbstractPos),
 )
-def represent_as(
-    current: AbstractVel3D,
+def vconvert(
     target: type[AbstractVel3D],
+    current: AbstractVel3D,
     position: AbstractPos,
     /,
     **kwargs: Any,
@@ -132,7 +132,7 @@ def represent_as(
     Cartesian to Cartesian velocity:
 
     >>> dif = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> cx.represent_as(dif, cx.CartesianVel3D, vec) is dif
+    >>> cx.vconvert(cx.CartesianVel3D, dif, vec) is dif
     True
 
     Cylindrical to Cylindrical velocity:
@@ -140,7 +140,7 @@ def represent_as(
     >>> dif = cx.vecs.CylindricalVel(d_rho=u.Quantity(1, "km/s"),
     ...                              d_phi=u.Quantity(2, "mas/yr"),
     ...                              d_z=u.Quantity(3, "km/s"))
-    >>> cx.represent_as(dif, cx.vecs.CylindricalVel, vec) is dif
+    >>> cx.vconvert(cx.vecs.CylindricalVel, dif, vec) is dif
     True
 
     Spherical to Spherical velocity:
@@ -148,7 +148,7 @@ def represent_as(
     >>> dif = cx.SphericalVel(d_r=u.Quantity(1, "km/s"),
     ...                       d_theta=u.Quantity(2, "mas/yr"),
     ...                       d_phi=u.Quantity(3, "mas/yr"))
-    >>> cx.represent_as(dif, cx.SphericalVel, vec) is dif
+    >>> cx.vconvert(cx.SphericalVel, dif, vec) is dif
     True
 
     LonLatSpherical to LonLatSpherical velocity:
@@ -156,7 +156,7 @@ def represent_as(
     >>> dif = cx.vecs.LonLatSphericalVel(d_lon=u.Quantity(1, "mas/yr"),
     ...                                  d_lat=u.Quantity(2, "mas/yr"),
     ...                                  d_distance=u.Quantity(3, "km/s"))
-    >>> cx.represent_as(dif, cx.vecs.LonLatSphericalVel, vec) is dif
+    >>> cx.vconvert(cx.vecs.LonLatSphericalVel, dif, vec) is dif
     True
 
     LonCosLatSpherical to LonCosLatSpherical velocity:
@@ -164,7 +164,7 @@ def represent_as(
     >>> dif = cx.vecs.LonCosLatSphericalVel(d_lon_coslat=u.Quantity(1, "mas/yr"),
     ...                                     d_lat=u.Quantity(2, "mas/yr"),
     ...                                     d_distance=u.Quantity(3, "km/s"))
-    >>> cx.represent_as(dif, cx.vecs.LonCosLatSphericalVel, vec) is dif
+    >>> cx.vconvert(cx.vecs.LonCosLatSphericalVel, dif, vec) is dif
     True
 
     MathSpherical to MathSpherical velocity:
@@ -172,7 +172,7 @@ def represent_as(
     >>> dif = cx.vecs.MathSphericalVel(d_r=u.Quantity(1, "km/s"),
     ...                                d_theta=u.Quantity(2, "mas/yr"),
     ...                                d_phi=u.Quantity(3, "mas/yr"))
-    >>> cx.represent_as(dif, cx.vecs.MathSphericalVel, vec) is dif
+    >>> cx.vconvert(cx.vecs.MathSphericalVel, dif, vec) is dif
     True
 
     """
@@ -184,8 +184,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianPos3D, target: type[CylindricalPos], /, **kwargs: Any
+def vconvert(
+    target: type[CylindricalPos], current: CartesianPos3D, /, **kwargs: Any
 ) -> CylindricalPos:
     """CartesianPos3D -> CylindricalPos.
 
@@ -194,7 +194,7 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> print(cx.represent_as(vec, cx.vecs.CylindricalPos))
+    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
     <CylindricalPos (rho[km], phi[rad], z[km])
         [2.236 1.107 3.   ]>
 
@@ -205,8 +205,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianPos3D, target: type[SphericalPos], /, **kwargs: Any
+def vconvert(
+    target: type[SphericalPos], current: CartesianPos3D, /, **kwargs: Any
 ) -> SphericalPos:
     """CartesianPos3D -> SphericalPos.
 
@@ -215,7 +215,7 @@ def represent_as(
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> print(cx.represent_as(vec, cx.SphericalPos))
+    >>> print(cx.vconvert(cx.SphericalPos, vec))
     <SphericalPos (r[km], theta[rad], phi[rad])
         [3.742 0.641 1.107]>
 
@@ -227,12 +227,12 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CartesianPos3D, type[LonLatSphericalPos]),
-    (CartesianPos3D, type[MathSphericalPos]),
+    (type[LonLatSphericalPos], CartesianPos3D),
+    (type[MathSphericalPos], CartesianPos3D),
 )
-def represent_as(
-    current: CartesianPos3D,
+def vconvert(
     target: type[AbstractSphericalPos],
+    current: CartesianPos3D,
     /,
     **kwargs: Any,
 ) -> AbstractSphericalPos:
@@ -244,16 +244,16 @@ def represent_as(
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
 
-    >>> print(cx.represent_as(vec, cx.vecs.LonLatSphericalPos))
+    >>> print(cx.vconvert(cx.vecs.LonLatSphericalPos, vec))
     <LonLatSphericalPos (lon[rad], lat[deg], distance[km])
         [ 1.107 53.301  3.742]>
 
-    >>> print(cx.represent_as(vec, cx.vecs.MathSphericalPos))
+    >>> print(cx.vconvert(cx.vecs.MathSphericalPos, vec))
     <MathSphericalPos (r[km], theta[rad], phi[rad])
         [3.742 1.107 0.641]>
 
     """
-    return represent_as(represent_as(current, SphericalPos), target)
+    return vconvert(target, vconvert(SphericalPos, current))
 
 
 # =============================================================================
@@ -261,8 +261,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CylindricalPos, target: type[CartesianPos3D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos3D], current: CylindricalPos, /, **kwargs: Any
 ) -> CartesianPos3D:
     """CylindricalPos -> CartesianPos3D.
 
@@ -274,7 +274,7 @@ def represent_as(
     >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1., "km"),
     ...                              phi=u.Quantity(90, "deg"),
     ...                              z=u.Quantity(1, "km"))
-    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
     <CartesianPos3D (x[km], y[km], z[km])
         [-4.371e-08  1.000e+00  1.000e+00]>
 
@@ -286,8 +286,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CylindricalPos, target: type[SphericalPos], /, **kwargs: Any
+def vconvert(
+    target: type[SphericalPos], current: CylindricalPos, /, **kwargs: Any
 ) -> SphericalPos:
     """CylindricalPos -> SphericalPos.
 
@@ -299,7 +299,7 @@ def represent_as(
     >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1., "km"),
     ...                              phi=u.Quantity(90, "deg"),
     ...                              z=u.Quantity(1, "km"))
-    >>> print(cx.represent_as(vec, cx.SphericalPos))
+    >>> print(cx.vconvert(cx.SphericalPos, vec))
     <SphericalPos (r[km], theta[rad], phi[deg])
         [ 1.414  0.785 90.   ]>
 
@@ -310,12 +310,12 @@ def represent_as(
 
 
 @dispatch.multi(
-    (CylindricalPos, type[LonLatSphericalPos]),
-    (CylindricalPos, type[MathSphericalPos]),
+    (type[LonLatSphericalPos], CylindricalPos),
+    (type[MathSphericalPos], CylindricalPos),
 )
-def represent_as(
-    current: CylindricalPos,
+def vconvert(
     target: type[AbstractSphericalPos],
+    current: CylindricalPos,
     /,
     **kwargs: Any,
 ) -> AbstractSphericalPos:
@@ -330,16 +330,16 @@ def represent_as(
     ...                              phi=u.Quantity(90, "deg"),
     ...                              z=u.Quantity(1, "km"))
 
-    >>> print(cx.represent_as(vec, cx.vecs.LonLatSphericalPos))
+    >>> print(cx.vconvert(cx.vecs.LonLatSphericalPos, vec))
     <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
         [90.    45.     1.414]>
 
-    >>> print(cx.represent_as(vec, cx.vecs.MathSphericalPos))
+    >>> print(cx.vconvert(cx.vecs.MathSphericalPos, vec))
     <MathSphericalPos (r[km], theta[deg], phi[rad])
         [ 1.414 90.     0.785]>
 
     """
-    return represent_as(represent_as(current, SphericalPos), target)
+    return vconvert(target, vconvert(SphericalPos, current))
 
 
 # =============================================================================
@@ -347,8 +347,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[CartesianPos3D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos3D], current: SphericalPos, /, **kwargs: Any
 ) -> CartesianPos3D:
     """SphericalPos -> CartesianPos3D.
 
@@ -360,7 +360,7 @@ def represent_as(
     >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
     ...                       theta=u.Quantity(90, "deg"),
     ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
     <CartesianPos3D (x[km], y[km], z[km])
         [-4.371e-08  1.000e+00 -4.371e-08]>
 
@@ -372,8 +372,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[CylindricalPos], /, **kwargs: Any
+def vconvert(
+    target: type[CylindricalPos], current: SphericalPos, /, **kwargs: Any
 ) -> CylindricalPos:
     """SphericalPos -> CylindricalPos.
 
@@ -385,7 +385,7 @@ def represent_as(
     >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
     ...                       theta=u.Quantity(90, "deg"),
     ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.vecs.CylindricalPos))
+    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
     <CylindricalPos (rho[km], phi[deg], z[km])
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
@@ -396,8 +396,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[LonLatSphericalPos], /, **kwargs: Any
+def vconvert(
+    target: type[LonLatSphericalPos], current: SphericalPos, /, **kwargs: Any
 ) -> LonLatSphericalPos:
     """SphericalPos -> LonLatSphericalPos.
 
@@ -409,7 +409,7 @@ def represent_as(
     >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
     ...                       theta=u.Quantity(90, "deg"),
     ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.vecs.LonLatSphericalPos))
+    >>> print(cx.vconvert(cx.vecs.LonLatSphericalPos, vec))
     <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
         [90.  0.  1.]>
 
@@ -420,8 +420,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: SphericalPos, target: type[MathSphericalPos], /, **kwargs: Any
+def vconvert(
+    target: type[MathSphericalPos], current: SphericalPos, /, **kwargs: Any
 ) -> MathSphericalPos:
     """SphericalPos -> MathSphericalPos.
 
@@ -433,7 +433,7 @@ def represent_as(
     >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
     ...                       theta=u.Quantity(90, "deg"),
     ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.vecs.MathSphericalPos))
+    >>> print(cx.vconvert(cx.vecs.MathSphericalPos, vec))
     <MathSphericalPos (r[km], theta[deg], phi[deg])
         [ 1. 90. 90.]>
 
@@ -446,9 +446,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: LonLatSphericalPos,
+def vconvert(
     target: type[CartesianPos3D],
+    current: LonLatSphericalPos,
     /,
     **kwargs: Any,
 ) -> CartesianPos3D:
@@ -462,18 +462,18 @@ def represent_as(
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(90, "deg"),
     ...                                  lat=u.Quantity(0, "deg"),
     ...                                  distance=u.Quantity(1., "km"))
-    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
     <CartesianPos3D (x[km], y[km], z[km])
         [-4.371e-08  1.000e+00 -4.371e-08]>
 
     """
-    return represent_as(represent_as(current, SphericalPos), CartesianPos3D)
+    return vconvert(CartesianPos3D, vconvert(SphericalPos, current))
 
 
 @dispatch
-def represent_as(
-    current: LonLatSphericalPos,
+def vconvert(
     target: type[CylindricalPos],
+    current: LonLatSphericalPos,
     /,
     **kwargs: Any,
 ) -> CylindricalPos:
@@ -487,17 +487,17 @@ def represent_as(
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(90, "deg"),
     ...                                  lat=u.Quantity(0, "deg"),
     ...                                  distance=u.Quantity(1., "km"))
-    >>> print(cx.represent_as(vec, cx.vecs.CylindricalPos))
+    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
     <CylindricalPos (rho[km], phi[deg], z[km])
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
-    return represent_as(represent_as(current, SphericalPos), target)
+    return vconvert(target, vconvert(SphericalPos, current))
 
 
 @dispatch
-def represent_as(
-    current: LonLatSphericalPos, target: type[SphericalPos], /, **kwargs: Any
+def vconvert(
+    target: type[SphericalPos], current: LonLatSphericalPos, /, **kwargs: Any
 ) -> SphericalPos:
     """LonLatSphericalPos -> SphericalPos.
 
@@ -509,7 +509,7 @@ def represent_as(
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(90, "deg"),
     ...                                  lat=u.Quantity(0, "deg"),
     ...                                  distance=u.Quantity(1., "km"))
-    >>> print(cx.represent_as(vec, cx.SphericalPos))
+    >>> print(cx.vconvert(cx.SphericalPos, vec))
     <SphericalPos (r[km], theta[deg], phi[deg])
         [ 1. 90. 90.]>
 
@@ -524,8 +524,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: MathSphericalPos, target: type[CartesianPos3D], /, **kwargs: Any
+def vconvert(
+    target: type[CartesianPos3D], current: MathSphericalPos, /, **kwargs: Any
 ) -> CartesianPos3D:
     """MathSphericalPos -> CartesianPos3D.
 
@@ -537,7 +537,7 @@ def represent_as(
     >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1., "km"),
     ...                                theta=u.Quantity(90, "deg"),
     ...                                phi=u.Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
     <CartesianPos3D (x[km], y[km], z[km])
         [-4.371e-08  1.000e+00 -4.371e-08]>
 
@@ -549,8 +549,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: MathSphericalPos, target: type[CylindricalPos], /, **kwargs: Any
+def vconvert(
+    target: type[CylindricalPos], current: MathSphericalPos, /, **kwargs: Any
 ) -> CylindricalPos:
     """MathSphericalPos -> CylindricalPos.
 
@@ -562,7 +562,7 @@ def represent_as(
     >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1., "km"),
     ...                                theta=u.Quantity(90, "deg"),
     ...                                phi=u.Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.vecs.CylindricalPos))
+    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
     <CylindricalPos (rho[km], phi[deg], z[km])
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
@@ -573,8 +573,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: MathSphericalPos, target: type[SphericalPos], /, **kwargs: Any
+def vconvert(
+    target: type[SphericalPos], current: MathSphericalPos, /, **kwargs: Any
 ) -> SphericalPos:
     """MathSphericalPos -> SphericalPos.
 
@@ -586,7 +586,7 @@ def represent_as(
     >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1., "km"),
     ...                                theta=u.Quantity(90, "deg"),
     ...                                phi=u.Quantity(90, "deg"))
-    >>> print(cx.represent_as(vec, cx.SphericalPos))
+    >>> print(cx.vconvert(cx.SphericalPos, vec))
     <SphericalPos (r[km], theta[deg], phi[deg])
         [ 1. 90. 90.]>
 
@@ -599,8 +599,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: ProlateSpheroidalPos, target: type[CylindricalPos], /, **kwargs: Any
+def vconvert(
+    target: type[CylindricalPos], current: ProlateSpheroidalPos, /, **kwargs: Any
 ) -> CylindricalPos:
     """ProlateSpheroidalPos -> CylindricalPos.
 
@@ -615,7 +615,7 @@ def represent_as(
     ...     phi=u.Quantity(90, "deg"),
     ...     Delta=u.Quantity(0.5, "km")
     ... )
-    >>> print(cx.represent_as(vec, cx.vecs.CylindricalPos))
+    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
     <CylindricalPos (rho[km], phi[deg], z[km])
         [ 0.387 90.     0.894]>
 
@@ -630,9 +630,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CylindricalPos,
+def vconvert(
     target: type[ProlateSpheroidalPos],
+    current: CylindricalPos,
     /,
     **kwargs: Any,
 ) -> ProlateSpheroidalPos:
@@ -648,8 +648,8 @@ def represent_as(
     ...     phi=u.Quantity(90, "deg"),
     ...     z=u.Quantity(1, "km")
     ... )
-    >>> print(vec.represent_as(cx.vecs.ProlateSpheroidalPos,
-    ...                        Delta=u.Quantity(0.5, "km")))
+    >>> print(vec.vconvert(cx.vecs.ProlateSpheroidalPos,
+    ...                    Delta=u.Quantity(0.5, "km")))
     <ProlateSpheroidalPos (mu[km2], nu[km2], phi[deg])
         [ 2.133  0.117 90.   ]>
 
@@ -706,8 +706,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: ProlateSpheroidalPos, target: type[AbstractPos3D], /, **kwargs: Any
+def vconvert(
+    target: type[AbstractPos3D], current: ProlateSpheroidalPos, /, **kwargs: Any
 ) -> AbstractPos3D:
     """ProlateSpheroidalPos -> AbstractPos3D.
 
@@ -722,19 +722,18 @@ def represent_as(
     ...     phi=u.Quantity(90, "deg"),
     ...     Delta=u.Quantity(0.5, "km")
     ... )
-    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
     <CartesianPos3D (x[km], y[km], z[km])
         [-1.693e-08  3.873e-01  8.944e-01]>
 
     """
-    cyl = represent_as(current, CylindricalPos)
-    return represent_as(cyl, target)
+    return current.vconvert(CylindricalPos).vconvert(target)
 
 
 @dispatch
-def represent_as(
-    current: ProlateSpheroidalPos,
+def vconvert(
     target: type[ProlateSpheroidalPos],
+    current: ProlateSpheroidalPos,
     /,
     **kwargs: Any,
 ) -> ProlateSpheroidalPos:
@@ -753,13 +752,13 @@ def represent_as(
     ...     phi=u.Quantity(90, "deg"),
     ...     Delta=u.Quantity(0.5, "km")
     ... )
-    >>> print(cx.represent_as(vec, cx.vecs.ProlateSpheroidalPos,
-    ...                       Delta=u.Quantity(0.8, "km")))
+    >>> print(cx.vconvert(cx.vecs.ProlateSpheroidalPos, vec,
+    ...                   Delta=u.Quantity(0.8, "km")))
     <ProlateSpheroidalPos...>
 
     Without changing the focal length, no transform is done:
 
-    >>> vec2 = cx.represent_as(vec, cx.vecs.ProlateSpheroidalPos)
+    >>> vec2 = cx.vconvert(cx.vecs.ProlateSpheroidalPos, vec)
     >>> vec == vec2
     Array(True, dtype=bool)
 
@@ -767,18 +766,16 @@ def represent_as(
     Delta = kwargs.get("Delta", current.Delta)
     return jax.lax.cond(
         "Delta" in kwargs,
-        lambda Delta: represent_as(
-            represent_as(current, CylindricalPos), target, Delta=Delta
-        ),
+        lambda Delta: vconvert(target, vconvert(CylindricalPos, current), Delta=Delta),
         lambda _: current,
         Delta,
     )
 
 
 @dispatch
-def represent_as(
-    current: AbstractPos3D,
+def vconvert(
     target: type[ProlateSpheroidalPos],
+    current: AbstractPos3D,
     /,
     **kwargs: Any,
 ) -> ProlateSpheroidalPos:
@@ -795,7 +792,7 @@ def represent_as(
     ...     phi=u.Quantity(90, "deg"),
     ...     Delta=u.Quantity(0.5, "km")
     ... )
-    >>> print(cx.represent_as(vec, cx.CartesianPos3D))
+    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
     <CartesianPos3D (x[km], y[km], z[km])
         [-1.693e-08  3.873e-01  8.944e-01]>
 
@@ -807,8 +804,8 @@ def represent_as(
     ...     phi=u.Quantity(90, "deg"),
     ...     Delta=u.Quantity(0.5, "km")
     ... )
-    >>> print(cx.represent_as(vec, cx.vecs.ProlateSpheroidalPos,
-    ...                       Delta=u.Quantity(0.8, "km")))
+    >>> print(cx.vconvert(cx.vecs.ProlateSpheroidalPos, vec,
+    ...                   Delta=u.Quantity(0.8, "km")))
     <ProlateSpheroidalPos...>
 
     """
@@ -817,8 +814,8 @@ def represent_as(
         "Delta" not in kwargs,
         "Delta must be provided for ProlateSpheroidalPos.",
     )
-    cyl = represent_as(current, CylindricalPos)
-    return represent_as(cyl, target, Delta=Delta)
+    cyl = vconvert(CylindricalPos, current)
+    return vconvert(target, cyl, Delta=Delta)
 
 
 # =============================================================================
@@ -826,9 +823,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: AbstractVel3D,
+def vconvert(
     target: type[LonCosLatSphericalVel],
+    current: AbstractVel3D,
     position: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
@@ -841,21 +838,21 @@ def represent_as(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(15, "deg"),
-    ...                                  lat=u.Quantity(10, "deg"),
-    ...                                  distance=u.Quantity(1.5, "km"))
-    >>> dif = cx.vecs.LonLatSphericalVel(d_lon=u.Quantity(7, "mas/yr"),
-    ...                                  d_lat=u.Quantity(0, "deg/Gyr"),
-    ...                                  d_distance=u.Quantity(-5, "km/s"))
-    >>> newdif = cx.represent_as(dif, cx.vecs.LonCosLatSphericalVel, vec)
-    >>> newdif
+    >>> q = cx.vecs.LonLatSphericalPos(lon=u.Quantity(15, "deg"),
+    ...                                lat=u.Quantity(10, "deg"),
+    ...                                distance=u.Quantity(1.5, "km"))
+    >>> p = cx.vecs.LonLatSphericalVel(d_lon=u.Quantity(7, "mas/yr"),
+    ...                                d_lat=u.Quantity(0, "deg/Gyr"),
+    ...                                d_distance=u.Quantity(-5, "km/s"))
+    >>> newp = cx.vconvert(cx.vecs.LonCosLatSphericalVel, p, q)
+    >>> newp
     LonCosLatSphericalVel(
       d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
       d_lat=Quantity[...]( value=f32[], unit=Unit("deg / Gyr") ),
       d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
     )
 
-    >>> newdif.d_lon_coslat / jnp.cos(vec.lat)  # float32 imprecision
+    >>> newp.d_lon_coslat / jnp.cos(q.lat)  # float32 imprecision
     Quantity['angular frequency'](Array(6.9999995, dtype=float32), unit='mas / yr')
 
     """
@@ -868,10 +865,10 @@ def represent_as(
         )
 
     # Transform the differential to LonLatSphericalVel
-    current = represent_as(current, LonLatSphericalVel, posvec)
+    current = vconvert(LonLatSphericalVel, current, posvec)
 
     # Transform the position to the required type
-    posvec = represent_as(posvec, current.integral_cls)
+    posvec = vconvert(current.integral_cls, posvec)
 
     # Calculate the differential in the new system
     return target(
@@ -882,9 +879,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: LonCosLatSphericalVel,
+def vconvert(
     target: type[LonLatSphericalVel],
+    current: LonCosLatSphericalVel,
     position: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
@@ -899,7 +896,7 @@ def represent_as(
         )
 
     # Transform the position to the required type
-    posvec = represent_as(posvec, current.integral_cls)
+    posvec = vconvert(current.integral_cls, posvec)
 
     # Calculate the differential in the new system
     return target(
@@ -910,9 +907,9 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: LonCosLatSphericalVel,
+def vconvert(
     target: type[AbstractVel3D],
+    current: LonCosLatSphericalVel,
     position: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
@@ -926,9 +923,9 @@ def represent_as(
             position
         )
     # Transform the differential to LonLatSphericalVel
-    current = represent_as(current, LonLatSphericalVel, posvec)
+    current = vconvert(LonLatSphericalVel, current, posvec)
     # Transform the position to the required type
-    return represent_as(current, target, posvec)
+    return vconvert(target, current, posvec)
 
 
 # =============================================================================
@@ -936,8 +933,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianVel3D, target: type[CartesianVel3D], /
+def vconvert(
+    target: type[CartesianVel3D], current: CartesianVel3D, /
 ) -> CartesianVel3D:
     """CartesianVel3D -> CartesianVel3D with no position.
 
@@ -946,13 +943,13 @@ def represent_as(
     require lower-order derivatives to be specified. See
     https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
     information. This mixin provides a corresponding implementation of the
-    `coordinax.represent_as` method for Cartesian velocities.
+    `coordinax.vconvert` method for Cartesian velocities.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> v = cx.CartesianVel3D.from_([1, 1, 1], "m/s")
-    >>> cx.represent_as(v, cx.CartesianVel3D) is v
+    >>> cx.vconvert(cx.CartesianVel3D, v) is v
     True
 
     """
@@ -964,8 +961,8 @@ def represent_as(
 
 
 @dispatch
-def represent_as(
-    current: CartesianAcc3D, target: type[CartesianAcc3D], /
+def vconvert(
+    target: type[CartesianAcc3D], current: CartesianAcc3D, /
 ) -> CartesianAcc3D:
     """CartesianAcc3D -> CartesianAcc3D with no position.
 
@@ -974,13 +971,13 @@ def represent_as(
     require lower-order derivatives to be specified. See
     https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
     information. This mixin provides a corresponding implementation of the
-    `coordinax.represent_as` method for Cartesian vectors.
+    `coordinax.vconvert` method for Cartesian vectors.
 
     Examples
     --------
     >>> import coordinax as cx
     >>> a = cx.vecs.CartesianAcc3D.from_([1, 1, 1], "m/s2")
-    >>> cx.represent_as(a, cx.vecs.CartesianAcc3D) is a
+    >>> cx.vconvert(cx.vecs.CartesianAcc3D, a) is a
     True
 
     """

@@ -97,7 +97,7 @@ def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     Quantity['length'](Array(0.9999999, dtype=float32), unit='km')
 
     """
-    cart = rhs.represent_as(CartesianPos2D)
+    cart = rhs.vconvert(CartesianPos2D)
     return jax.tree.map(qlax.add, lhs, cart)
 
 
@@ -154,7 +154,7 @@ def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2
     Quantity['length'](Array(1.0000001, dtype=float32), unit='km')
 
     """
-    cart = rhs.represent_as(CartesianPos2D)
+    cart = rhs.vconvert(CartesianPos2D)
     return jax.tree.map(qlax.sub, lhs, cart)
 
 

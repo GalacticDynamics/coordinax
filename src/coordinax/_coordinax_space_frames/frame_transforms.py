@@ -154,8 +154,8 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
     Apply the transformation:
 
     >>> vega_gcf_q, vega_gcf_p = frame_op(vega_q, vega_p)
-    >>> vega_gcf_q = vega_gcf_q.represent_as(cx.vecs.CartesianPos3D)
-    >>> vega_gcf_p = vega_gcf_p.represent_as(cx.vecs.CartesianVel3D, vega_gcf_q)
+    >>> vega_gcf_q = vega_gcf_q.vconvert(cx.vecs.CartesianPos3D)
+    >>> vega_gcf_p = vega_gcf_p.vconvert(cx.vecs.CartesianVel3D, vega_gcf_q)
     >>> print(vega_gcf_q)
     <CartesianPos3D (x[pc], y[pc], z[pc])
         [-8112.898    21.799    29.01...]>
@@ -275,8 +275,8 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
 
     >>> vega_icrs_q, vega_icrs_p = frame_op(vega_q, vega_p)
 
-    >>> vega_icrs_q = vega_icrs_q.represent_as(cx.vecs.LonLatSphericalPos)
-    >>> vega_icrs_p = vega_icrs_p.represent_as(cx.vecs.LonCosLatSphericalVel, vega_icrs_q)
+    >>> vega_icrs_q = vega_icrs_q.vconvert(cx.vecs.LonLatSphericalPos)
+    >>> vega_icrs_p = vega_icrs_p.vconvert(cx.vecs.LonCosLatSphericalVel, vega_icrs_q)
     >>> print(vega_icrs_q.uconvert({u.dimension("angle"): "deg", u.dimension("length"): "pc"}))
     <LonLatSphericalPos (lon[deg], lat[deg], distance[pc])
         [279.235  38.784  25.   ]>
