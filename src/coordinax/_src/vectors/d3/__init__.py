@@ -35,9 +35,19 @@ __all__ = [
     "ProlateSpheroidalPos",
     "ProlateSpheroidalVel",
     "ProlateSpheroidalAcc",
+    # Scaled Cartesian
+    "ScaledCartesianPos3D",
+    "ScaledCartesianVel3D",
+    "ScaledCartesianAcc3D",
     # Generic
     "CartesianGeneric3D",
 ]
+
+from scaled_cartesian import (
+    ScaledCartesianAcc3D,
+    ScaledCartesianPos3D,
+    ScaledCartesianVel3D,
+)
 
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .base_spherical import (
