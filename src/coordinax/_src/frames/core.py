@@ -207,6 +207,32 @@ class Coordinate(AbstractCoordinate):
         frame=ICRS()
     )
 
+    Showing Frame Transformation:
+
+    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
+    ...                  speed=cx.CartesianVel3D.from_([1.0, 0, 0], "km/s"))
+
+    >>> w=cx.Coordinate(
+    ...     data=space,
+    ...     frame=cx.frames.TransformedReferenceFrame(
+    ...         cx.frames.Galactocentric(),
+    ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc"),
+    ...     ),
+    ... )
+
+    >>> w.to_frame(cx.frames.ICRS())
+    Coordinate(
+        data=Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) }),
+        frame=ICRS()
+    )
+
+    >>> w.to_frame(cx.frames.ICRS()).data["length"]
+    CartesianPos3D(
+      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc")),
+      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc")),
+      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc"))
+    )
+
     """
 
     # ---------------------------------------------------------------
