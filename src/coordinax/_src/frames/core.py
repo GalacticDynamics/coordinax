@@ -4,7 +4,7 @@ __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
 from textwrap import indent
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import equinox as eqx
 from plum import dispatch
@@ -150,6 +150,22 @@ class AbstractCoordinate(AbstractVector):
 
     _repr_latex_ = __repr__  # TODO: implement this
 
+    def __str__(self) -> str:
+        """Return string representation.
+
+        Examples
+        --------
+        >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
+        ...                       cx.frames.ICRS())
+        >>> print(coord)
+        Coordinate(
+            data=Space({ 'length': CartesianPos3D( ... ) }),
+            frame=ICRS()
+        )
+
+        """
+        return self.__repr__()
+
 
 ##############################################################################
 
@@ -189,6 +205,32 @@ class Coordinate(AbstractCoordinate):
     Coordinate(
         data=Space({ 'length': SphericalPos( ... ) }),
         frame=ICRS()
+    )
+
+    Showing Frame Transformation:
+
+    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
+    ...                  speed=cx.CartesianVel3D.from_([1.0, 0, 0], "km/s"))
+
+    >>> w=cx.Coordinate(
+    ...     data=space,
+    ...     frame=cx.frames.TransformedReferenceFrame(
+    ...         cx.frames.Galactocentric(),
+    ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc"),
+    ...     ),
+    ... )
+
+    >>> w.to_frame(cx.frames.ICRS())
+    Coordinate(
+        data=Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) }),
+        frame=ICRS()
+    )
+
+    >>> w.to_frame(cx.frames.ICRS()).data["length"]
+    CartesianPos3D(
+      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc")),
+      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc")),
+      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc"))
     )
 
     """
@@ -244,6 +286,46 @@ class Coordinate(AbstractCoordinate):
 
         """
         return cls(data=data, frame=TransformedReferenceFrame(base_frame, ops))
+
+    # ===============================================================
+    # Vector API
+
+    @dispatch
+    def __getitem__(self: "Coordinate", index: Any) -> "Coordinate":
+        """Return Coordinate, with indexing applied to the data.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> data = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
+        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+
+        >>> print(w[0].data["length"])
+        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            [1. 2. 3.]>
+
+        """
+        return replace(self, data=self.data[index])
+
+    @dispatch
+    def __getitem__(self: "Coordinate", index: str) -> AbstractVector:
+        """Return the data of the coordinate.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> data = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
+        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+
+        >>> print(w["length"])
+        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            [[1. 2. 3.]
+             [4. 5. 6.]]>
+
+        """
+        return self.data[index]
 
 
 ##############################################################################
