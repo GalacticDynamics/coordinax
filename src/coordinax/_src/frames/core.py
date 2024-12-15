@@ -150,6 +150,22 @@ class AbstractCoordinate(AbstractVector):
 
     _repr_latex_ = __repr__  # TODO: implement this
 
+    def __str__(self) -> str:
+        """Return string representation.
+
+        Examples
+        --------
+        >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
+        ...                       cx.frames.ICRS())
+        >>> print(coord)
+        Coordinate(
+            data=Space({ 'length': CartesianPos3D( ... ) }),
+            frame=ICRS()
+        )
+
+        """
+        return self.__repr__()
+
 
 ##############################################################################
 
