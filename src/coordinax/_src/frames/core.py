@@ -4,7 +4,7 @@ __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
 from textwrap import indent
-from typing import NoReturn
+from typing import Any, NoReturn
 
 import equinox as eqx
 from plum import dispatch
@@ -286,6 +286,46 @@ class Coordinate(AbstractCoordinate):
 
         """
         return cls(data=data, frame=TransformedReferenceFrame(base_frame, ops))
+
+    # ===============================================================
+    # Vector API
+
+    @dispatch
+    def __getitem__(self: "Coordinate", index: Any) -> "Coordinate":
+        """Return Coordinate, with indexing applied to the data.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> data = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
+        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+
+        >>> print(w[0].data["length"])
+        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            [1. 2. 3.]>
+
+        """
+        return replace(self, data=self.data[index])
+
+    @dispatch
+    def __getitem__(self: "Coordinate", index: str) -> AbstractVector:
+        """Return the data of the coordinate.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> data = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
+        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+
+        >>> print(w["length"])
+        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            [[1. 2. 3.]
+             [4. 5. 6.]]>
+
+        """
+        return self.data[index]
 
 
 ##############################################################################
