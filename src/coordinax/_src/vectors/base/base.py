@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 import jax
 import numpy as np
 from jax import Device, tree
-from jaxtyping import Array, ArrayLike, Bool
+from jaxtyping import Array, ArrayLike, Bool, DTypeLike
 from plum import dispatch
 from quax import ArrayValue, register
 
@@ -692,6 +692,56 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 
         """
         return replace(self, **{k: v.to_device(device) for k, v in field_items(self)})
+
+    # -------------------------------
+
+    @dispatch
+    def astype(self: "AbstractVector", dtype: Any, /) -> "AbstractVector":
+        """Cast the vector to a new dtype.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        We can cast a vector to a new dtype:
+
+        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec.astype(jnp.float32)
+        CartesianPos1D(x=Quantity[...](value=f32[2], unit=Unit("m")))
+
+        >>> import quaxed.numpy as jnp
+        >>> jnp.astype(vec, jnp.float32)
+        CartesianPos1D(x=Quantity[...](value=f32[2], unit=Unit("m")))
+
+        """
+        return replace(self, **{k: v.astype(dtype) for k, v in field_items(self)})
+
+    @dispatch
+    def astype(
+        self: "AbstractVector", dtypes: Mapping[str, DTypeLike], /
+    ) -> "AbstractVector":
+        """Cast the vector to a new dtype.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        We can cast a vector to a new dtype:
+
+        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec.astype({"x": jnp.float32})
+        CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")))
+
+        """
+        return replace(
+            self,
+            **{
+                k: (v.astype(dtypes[k]) if k in dtypes else v)
+                for k, v in field_items(self)
+            },
+        )
 
     # ===============================================================
     # JAX API
