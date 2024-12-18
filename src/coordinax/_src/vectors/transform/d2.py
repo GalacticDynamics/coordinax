@@ -238,10 +238,9 @@ def vconvert(
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
-    >>> x2
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
-    >>> x2.x
-    Quantity['length'](Array(0.9848077, dtype=float32), unit='km')
+    >>> print(x2)
+    <CartesianPos1D (x[km])
+        [0.985]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -263,10 +262,9 @@ def vconvert(target: type[RadialPos], current: PolarPos, /, **kwargs: Any) -> Ra
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
-    >>> x2
-    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
-    >>> x2.r
-    Distance(Array(1., dtype=float32), unit='km')
+    >>> print(x2)
+    <RadialPos (r[km])
+        [1.]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -282,7 +280,7 @@ def vconvert(
     target: type[SphericalPos],
     current: PolarPos,
     /,
-    theta: Quantity["angle"] = Quantity(0.0, "radian"),
+    theta: Quantity["angle"] = Quantity(0, "radian"),
     **kwargs: Any,
 ) -> SphericalPos:
     """PolarPos -> SphericalPos.
@@ -292,15 +290,12 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.PolarPos(r=Quantity(1.0, "km"), phi=u.Quantity(10.0, "deg"))
+    >>> x = cx.vecs.PolarPos(r=Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
     >>> x2 = cx.vconvert(cx.SphericalPos, x, theta=u.Quantity(14, "deg"))
-    >>> x2
-    SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                  theta=Angle(value=f32[], unit=Unit("deg")),
-                  phi=Angle(value=f32[], unit=Unit("deg")) )
-    >>> x2.theta
-    Angle(Array(14., dtype=float32), unit='deg')
+    >>> print(x2)
+    <SphericalPos (r[km], theta[deg], phi[deg])
+        [ 1. 14. 10.]>
 
     """
     return target.from_(r=current.r, theta=theta, phi=current.phi)
@@ -311,7 +306,7 @@ def vconvert(
     target: type[MathSphericalPos],
     current: PolarPos,
     /,
-    phi: Quantity["angle"] = Quantity(0.0, "radian"),
+    phi: Quantity["angle"] = Quantity(0, "radian"),
     **kwargs: Any,
 ) -> MathSphericalPos:
     """PolarPos -> MathSphericalPos.
@@ -321,15 +316,12 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1.0, "km"), phi=u.Quantity(10.0, "deg"))
+    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
     >>> x2 = cx.vconvert(cx.vecs.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
-    >>> x2
-    MathSphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                      theta=Angle(value=f32[], unit=Unit("deg")),
-                      phi=Angle(value=f32[], unit=Unit("deg")) )
-    >>> x2.phi
-    Angle(Array(14., dtype=float32), unit='deg')
+    >>> print(x2)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [ 1. 10. 14.]>
 
     """
     return target.from_(r=current.r, phi=phi, theta=current.phi)
@@ -341,7 +333,7 @@ def vconvert(
     current: PolarPos,
     /,
     *,
-    z: Quantity["length"] = Quantity(0.0, "m"),
+    z: Quantity["length"] = Quantity(0, "m"),
     **kwargs: Any,
 ) -> CylindricalPos:
     """PolarPos -> CylindricalPos.
@@ -351,15 +343,12 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1.0, "km"), phi=u.Quantity(10.0, "deg"))
+    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
     >>> x2 = cx.vconvert(cx.vecs.CylindricalPos, x, z=u.Quantity(14, "km"))
-    >>> x2
-    CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
-                    phi=Angle(value=f32[], unit=Unit("deg")),
-                    z=Quantity[...](value=f32[], unit=Unit("km")) )
-    >>> x2.z
-    Quantity['length'](Array(14., dtype=float32), unit='km')
+    >>> print(x2)
+    <CylindricalPos (rho[km], phi[deg], z[km])
+        [ 1. 10. 14.]>
 
     """
     return target(rho=current.r, phi=current.phi, z=z)

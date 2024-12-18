@@ -100,10 +100,9 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
 
         >>> d2p = cx.vecs.PolarAcc(u.Quantity(1, "m/s2"), u.Quantity(1, "mas/yr2"))
         >>> negd2p = -d2p
-        >>> negd2p.d2_r
-        Quantity['acceleration'](Array(-1., dtype=float32), unit='m / s2')
-        >>> negd2p.d2_phi
-        Quantity['angular acceleration'](Array(-1., dtype=float32), unit='mas / yr2')
+        >>> print(negd2p)
+        <PolarAcc (d2_r[m / s2], d2_phi[mas / yr2])
+            [-1 -1]>
 
         """
         return jax.tree.map(jnp.negative, self)

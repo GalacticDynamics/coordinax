@@ -49,7 +49,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
 
@@ -91,7 +91,7 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
 
@@ -134,7 +134,7 @@ def convert_pos_to_uncheckedq(
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([1., 0.], dtype=float32), unit='km')
 
@@ -176,7 +176,7 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     >>> convert(pos, Distance)
     Distance(Array([1., 2.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.PolarPos(Quantity(1.0, "km"), Quantity(0, "deg"))
+    >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, Distance)
     Distance(Array([1., 0.], dtype=float32), unit='km')
 
