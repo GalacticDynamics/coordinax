@@ -688,7 +688,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
-        CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")))
+        CartesianPos1D(x=Quantity[PhysicalType('length')](value=i32[2], unit=Unit("m")))
 
         """
         return replace(self, **{k: v.to_device(device) for k, v in field_items(self)})

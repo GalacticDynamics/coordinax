@@ -39,10 +39,10 @@ def _broadcast_in_dim_p(
 
     >>> q = cx.vecs.CartesianPos1D.from_([1], "m")
     >>> q.x
-    Quantity['length'](Array(1., dtype=float32), unit='m')
+    Quantity['length'](Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 1)).x
-    Quantity['length'](Array([1.], dtype=float32), unit='m')
+    Quantity['length'](Array([1], dtype=int32), unit='m')
 
     >>> p = cx.vecs.CartesianVel1D.from_([1], "m/s")
     >>> p.d_x
