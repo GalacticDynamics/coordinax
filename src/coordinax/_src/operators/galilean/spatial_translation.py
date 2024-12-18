@@ -128,7 +128,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2], "km")
     >>> q = u.Quantity([0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
+    Quantity['length'](Array([1, 2], dtype=int32), unit='km')
 
     >>> vec = cx.vecs.CartesianPos2D.from_(q).vconvert(cx.vecs.PolarPos)
     >>> op(vec)

@@ -64,7 +64,7 @@ def vconvert(
     The `x` and `y` coordinates are converted to the radial coordinate `r` and
     the angular coordinate `phi`.
     """
-    r = xp.sqrt(current.x**2 + current.y**2)
+    r = xp.hypot(current.x, current.y)
     phi = xp.atan2(current.y, current.x)
     return target(r=r, phi=phi)
 
@@ -78,8 +78,9 @@ def vconvert(
     target: type[CartesianPos2D], current: PolarPos, /, **kwargs: Any
 ) -> CartesianPos2D:
     """PolarPos -> CartesianPos2D."""
-    x = current.r.distance * xp.cos(current.phi)
-    y = current.r.distance * xp.sin(current.phi)
+    d = current.r.distance
+    x = d * xp.cos(current.phi)
+    y = d * xp.sin(current.phi)
     return target(x=x, y=y)
 
 

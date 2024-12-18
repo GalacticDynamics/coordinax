@@ -32,7 +32,7 @@ def vconvert(
     current: CartesianPos1D,
     /,
     *,
-    y: u.Quantity = u.Quantity(0.0, "m"),
+    y: u.Quantity = u.Quantity(0, "m"),
     **kwargs: Any,
 ) -> CartesianPos2D:
     """CartesianPos1D -> CartesianPos2D.
@@ -47,15 +47,14 @@ def vconvert(
 
     >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
-    >>> x2
-    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                    y=Quantity[...](value=f32[], unit=Unit("m")) )
-    >>> x2.y
-    Quantity['length'](Array(0., dtype=float32), unit='m')
+    >>> print(x2)
+    <CartesianPos2D (x[km], y[m])
+        [1. 0.]>
 
     >>> x3 = cx.vconvert(cx.CartesianPos3D, x, y=u.Quantity(14, "km"))
-    >>> x3.y
-    Quantity['length'](Array(14., dtype=float32), unit='km')
+    >>> print(x3)
+    <CartesianPos3D (x[km], y[km], z[m])
+        [ 1. 14.  0.]>
 
     """
     return target(x=current.x, y=y)
@@ -274,12 +273,12 @@ def vconvert(
     >>> x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> print(x2)
     <CartesianPos2D (x[km], y[m])
-        [1. 0.]>
+        [1 0]>
 
     >>> x3 = cx.vconvert(cx.vecs.CartesianPos2D, x, y=u.Quantity(14, "km"))
     >>> print(x3)
     <CartesianPos2D (x[km], y[km])
-        [ 1. 14.]>
+        [ 1 14]>
 
     """
     return target(x=current.r, y=y)

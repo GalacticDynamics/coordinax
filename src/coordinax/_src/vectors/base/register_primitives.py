@@ -86,26 +86,31 @@ def _broadcast_in_dim_p(
     Cartesian 2D position, velocity, and acceleration:
 
     >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "m")
-    >>> q.x
-    Quantity['length'](Array(1., dtype=float32), unit='m')
+    >>> print(q)
+    <CartesianPos2D (x[m], y[m])
+        [1 2]>
 
-    >>> jnp.broadcast_to(q, (1, 2)).x
-    Quantity['length'](Array([1.], dtype=float32), unit='m')
+    >>> print(jnp.broadcast_to(q, (1, 2)))
+    <CartesianPos2D (x[m], y[m])
+        [[1 2]]>
 
     >>> p = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
-    >>> p.d_x
-    Quantity['speed'](Array(1., dtype=float32), unit='m / s')
+    >>> print(p)
+    <CartesianVel2D (d_x[m / s], d_y[m / s])
+        [1 2]>
 
-    >>> jnp.broadcast_to(p, (1, 2)).d_x
-    Quantity['speed'](Array([1.], dtype=float32), unit='m / s')
+    >>> print(jnp.broadcast_to(p, (1, 2)))
+    <CartesianVel2D (d_x[m / s], d_y[m / s])
+        [[1 2]]>
 
     >>> a = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
-    >>> a.d2_x
-    Quantity['acceleration'](Array(1., dtype=float32), unit='m / s2')
+    >>> print(a)
+    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+        [1 2]>
 
-    >>> jnp.broadcast_to(a, (1, 2)).d2_x
-    Quantity['acceleration'](Array([1.], dtype=float32), unit='m / s2')
-
+    >>> print(jnp.broadcast_to(a, (1, 2)))
+    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+        [[1 2]]>
 
     Cartesian 3D position, velocity, and acceleration:
 
@@ -128,7 +133,7 @@ def _broadcast_in_dim_p(
     Quantity['acceleration'](Array(1., dtype=float32), unit='m / s2')
 
     >>> jnp.broadcast_to(a, (1, 3)).d2_x
-     Quantity['acceleration'](Array([1.], dtype=float32), unit='m / s2')
+    Quantity['acceleration'](Array([1.], dtype=float32), unit='m / s2')
 
     """
     # TODO: use `jax.lax.broadcast_in_dim_p`

@@ -31,7 +31,7 @@ def vconvert(
     target: type[AbstractPos3D],
     current: AbstractPos2D,
     /,
-    z: AbstractQuantity = Quantity(0.0, "m"),
+    z: AbstractQuantity = Quantity(0, "m"),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> Cartesian2D -> Cartesian3D -> AbstractPos3D.
@@ -187,7 +187,7 @@ def vconvert(
     current: CartesianPos2D,
     /,
     *,
-    z: AbstractQuantity = Quantity(0.0, "m"),
+    z: AbstractQuantity = Quantity(0, "m"),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """CartesianPos2D -> CartesianPos3D.
