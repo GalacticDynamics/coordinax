@@ -13,10 +13,9 @@ from coordinax._src.angles import Angle, BatchableAngleQ
 
 _0d = Angle(0, "rad")
 _pid = Angle(180, "deg")
-_2pid = Angle(360, "deg")
 
 
-def check_r_non_negative(r: AbstractQuantity) -> AbstractQuantity:
+def check_r_non_negative(r: AbstractQuantity, /) -> AbstractQuantity:
     """Check that the radial distance is non-negative.
 
     Examples
