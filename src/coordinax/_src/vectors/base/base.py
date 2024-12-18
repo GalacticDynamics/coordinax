@@ -696,7 +696,9 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     # -------------------------------
 
     @dispatch
-    def astype(self: "AbstractVector", dtype: Any, /) -> "AbstractVector":
+    def astype(
+        self: "AbstractVector", dtype: Any, /, **kwargs: Any
+    ) -> "AbstractVector":
         """Cast the vector to a new dtype.
 
         Examples
@@ -715,11 +717,13 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         CartesianPos1D(x=Quantity[...](value=f32[2], unit=Unit("m")))
 
         """
-        return replace(self, **{k: v.astype(dtype) for k, v in field_items(self)})
+        return replace(
+            self, **{k: v.astype(dtype, **kwargs) for k, v in field_items(self)}
+        )
 
     @dispatch
     def astype(
-        self: "AbstractVector", dtypes: Mapping[str, DTypeLike], /
+        self: "AbstractVector", dtypes: Mapping[str, DTypeLike], /, **kwargs: Any
     ) -> "AbstractVector":
         """Cast the vector to a new dtype.
 
@@ -738,7 +742,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         return replace(
             self,
             **{
-                k: (v.astype(dtypes[k]) if k in dtypes else v)
+                k: (v.astype(dtypes[k], **kwargs) if k in dtypes else v)
                 for k, v in field_items(self)
             },
         )
