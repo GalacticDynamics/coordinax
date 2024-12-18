@@ -195,13 +195,13 @@ def _mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
 
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, u.Quantity(2, "s2"))
-    >>> vec
-    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
-    >>> vec.r
-    Distance(Array(2., dtype=float32), unit='m')
+    >>> print(vec)
+    <RadialPos (r[m])
+        [2]>
 
-    >>> (d2r * u.Quantity(2, "s2")).r
-    Distance(Array(2., dtype=float32), unit='m')
+    >>> print(d2r * u.Quantity(2, "s2"))
+    <RadialPos (r[m])
+        [2]>
 
     """
     # TODO: better access to corresponding fields
@@ -222,10 +222,9 @@ def _mul_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc) -> AbstractPos:
 
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(u.Quantity(2, "s2"), d2r)
-    >>> vec
-    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
-    >>> vec.r
-    Distance(Array(2., dtype=float32), unit='m')
+    >>> print(vec)
+    <RadialPos (r[m])
+        [2]>
 
     """
     return qlax.mul(rhs, lhs)  # pylint: disable=arguments-out-of-order

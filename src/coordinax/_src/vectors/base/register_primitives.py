@@ -63,10 +63,10 @@ def _broadcast_in_dim_p(
 
     >>> q = cx.vecs.RadialPos.from_([1], "m")
     >>> q.r
-    Distance(Array(1., dtype=float32), unit='m')
+    Distance(Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 1)).r
-    Distance(Array([1.], dtype=float32), unit='m')
+    Distance(Array([1], dtype=int32), unit='m')
 
     >>> p = cx.vecs.RadialVel.from_([1], "m/s")
     >>> p.d_r

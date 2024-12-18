@@ -74,14 +74,13 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> r = cx.vecs.RadialPos.from_([1], "km")
 
-    >>> qpr = jnp.add(q, r)
-    >>> qpr
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
-    >>> qpr.x
-    Quantity['length'](Array(2., dtype=float32), unit='km')
+    >>> print(jnp.add(q, r))
+    <CartesianPos1D (x[km])
+        [2]>
 
-    >>> (q + r).x
-    Quantity['length'](Array(2., dtype=float32), unit='km')
+    >>> print(q + r)
+    <CartesianPos1D (x[km])
+        [2]>
 
     """
     rhs = rhs.vconvert(CartesianPos1D)
@@ -141,14 +140,13 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> r = cx.vecs.RadialPos.from_([1], "km")
 
-    >>> qmr = jnp.subtract(q, r)
-    >>> qmr
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
-    >>> qmr.x
-    Quantity['length'](Array(0., dtype=float32), unit='km')
+    >>> print(jnp.subtract(q, r))
+    <CartesianPos1D (x[km])
+        [0]>
 
-    >>> (q - r).x
-    Quantity['length'](Array(0., dtype=float32), unit='km')
+    >>> print(q - r)
+    <CartesianPos1D (x[km])
+        [0]>
 
     """
     cart = other.vconvert(CartesianPos1D)

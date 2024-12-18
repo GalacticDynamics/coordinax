@@ -37,7 +37,7 @@ class AvalMixin:
 
         >>> vec = cx.vecs.RadialPos.from_([1], "m")
         >>> vec.aval()
-        ConcreteArray([1.], dtype=float32)
+        ConcreteArray([1], dtype=int32)
 
         >>> vec = cx.vecs.CartesianVel1D.from_([1], "m/s")
         >>> vec.aval()
