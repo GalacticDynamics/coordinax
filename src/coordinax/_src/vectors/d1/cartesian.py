@@ -34,24 +34,22 @@ class CartesianPos1D(AbstractPos1D):
 
     >>> vec = cx.vecs.CartesianPos1D.from_([2], "m")
     >>> vec
-    CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")))
+    CartesianPos1D(x=Quantity[...](value=i32[], unit=Unit("m")))
 
     Vectors support the basic math operations:
 
     >>> (vec + vec).x
-    Quantity['length'](Array(4., dtype=float32), unit='m')
+    Quantity['length'](Array(4, dtype=int32), unit='m')
 
     >>> (vec - vec).x
-    Quantity['length'](Array(0., dtype=float32), unit='m')
+    Quantity['length'](Array(0, dtype=int32), unit='m')
 
     >>> (3 * vec).x
-    Quantity['length'](Array(6., dtype=float32), unit='m')
+    Quantity['length'](Array(6, dtype=int32), unit='m')
 
     """
 
-    x: BatchableLength = eqx.field(
-        converter=partial(u.Quantity["length"].from_, dtype=float)
-    )
+    x: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
     @classproperty
@@ -86,8 +84,8 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     Quantity['length'](Array(2., dtype=float32), unit='km')
 
     """
-    cart = rhs.vconvert(CartesianPos1D)
-    return jax.tree.map(qlax.add, lhs, cart)
+    rhs = rhs.vconvert(CartesianPos1D)
+    return jax.tree.map(jnp.add, lhs, rhs)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -101,10 +99,10 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
 
     >>> v = cx.vecs.CartesianPos1D.from_(1, "m")
     >>> jnp.multiply(2, v).x
-    Quantity['length'](Array(2., dtype=float32), unit='m')
+    Quantity['length'](Array(2, dtype=int32, ...), unit='m')
 
     >>> (2 * v).x
-    Quantity['length'](Array(2., dtype=float32), unit='m')
+    Quantity['length'](Array(2, dtype=int32, ...), unit='m')
 
     """
     # Validation
@@ -125,7 +123,7 @@ def _neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
     >>> import coordinax as cx
     >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> (-q).x
-    Quantity['length'](Array(-1., dtype=float32), unit='km')
+    Quantity['length'](Array(-1, dtype=int32), unit='km')
 
     """
     return jax.tree.map(qlax.neg, obj)
@@ -154,7 +152,7 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
 
     """
     cart = other.vconvert(CartesianPos1D)
-    return jax.tree.map(qlax.sub, self, cart)
+    return jax.tree.map(jnp.subtract, self, cart)
 
 
 #####################################################################
@@ -221,7 +219,7 @@ def _add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     Quantity['speed'](Array(2, dtype=int32), unit='km / s')
 
     """
-    return jax.tree.map(qlax.add, lhs, rhs)
+    return jax.tree.map(jnp.add, lhs, rhs)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -312,7 +310,7 @@ def _add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     Quantity['acceleration'](Array(2, dtype=int32), unit='km / s2')
 
     """
-    return jax.tree.map(qlax.add, lhs, rhs)
+    return jax.tree.map(jnp.add, lhs, rhs)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -367,4 +365,4 @@ def _sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D
     Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')
 
     """
-    return jax.tree.map(qlax.sub, self, other)
+    return jax.tree.map(jnp.subtract, self, other)

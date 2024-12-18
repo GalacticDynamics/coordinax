@@ -57,10 +57,10 @@ def from_(
     >>> import coordinax as cx
 
     >>> cx.vecs.CartesianPos1D.from_(u.Quantity(1, "meter"))
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
+    CartesianPos1D( x=Quantity[...](value=...i32[], unit=Unit("m")) )
 
     >>> cx.vecs.CartesianPos1D.from_(u.Quantity([1], "meter"))
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("m")))
+    CartesianPos1D(x=Quantity[...](value=i32[], unit=Unit("m")))
 
     >>> cx.vecs.RadialPos.from_(u.Quantity(1, "meter"))
     RadialPos(r=Distance(value=f32[], unit=Unit("m")))

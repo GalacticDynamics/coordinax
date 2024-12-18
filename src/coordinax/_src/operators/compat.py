@@ -38,7 +38,7 @@ def call(self: AbstractOperator, x: Q1, /, **kwargs: Any) -> Q1:
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
     >>> q = u.Quantity([0], "km")
     >>> op(q)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
+    Quantity['length'](Array([1], dtype=int32), unit='km')
 
     """
     # Quantity -> CartesianPos1D -> [Operator] -> Quantity
@@ -59,7 +59,7 @@ def call(
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
     >>> q = u.Quantity([0], "km")
     >>> op(q, u.Quantity(0, "s"))
-    (Quantity['length'](Array([1.], dtype=float32), unit='km'),
+    (Quantity['length'](Array([1], dtype=int32), unit='km'),
      Quantity['time'](Array(0, dtype=int32, ...), unit='s'))
 
     """
