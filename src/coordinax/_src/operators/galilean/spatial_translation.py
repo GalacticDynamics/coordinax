@@ -121,7 +121,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     >>> vec = cx.vecs.CartesianPos1D.from_(q).vconvert(cx.vecs.RadialPos)
     >>> op(vec)
-    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
+    RadialPos(r=Distance(value=i32[], unit=Unit("km")))
 
     - 2D:
 

@@ -63,10 +63,10 @@ def from_(
     CartesianPos1D(x=Quantity[...](value=i32[], unit=Unit("m")))
 
     >>> cx.vecs.RadialPos.from_(u.Quantity(1, "meter"))
-    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
+    RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
 
     >>> cx.vecs.RadialPos.from_(u.Quantity([1], "meter"))
-    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
+    RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
 
     """
     comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}

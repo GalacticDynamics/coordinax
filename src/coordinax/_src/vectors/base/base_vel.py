@@ -144,19 +144,19 @@ def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
 
     Examples
     --------
-    >>> from quaxed import lax
+    >>> import quaxed.lax as qlax
     >>> import unxt as u
     >>> import coordinax as cx
 
     >>> dr = cx.vecs.RadialVel(u.Quantity(1, "m/s"))
     >>> vec = dr * u.Quantity(2, "s")
-    >>> vec
-    RadialPos(r=Distance(value=f32[], unit=Unit("m")))
-    >>> vec.r
-    Distance(Array(2., dtype=float32), unit='m')
+    >>> print(vec)
+    <RadialPos (r[m])
+        [2]>
 
-    >>> lax.mul(dr, u.Quantity(2, "s")).r
-    Distance(Array(2., dtype=float32), unit='m')
+    >>> print(qlax.mul(dr, u.Quantity(2, "s")))
+    <RadialPos (r[m])
+        [2]>
 
     """
     return self.integral_cls.from_({k[2:]: v * other for k, v in field_items(self)})
