@@ -583,7 +583,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> vel1 = cx.vecs.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
         >>> vel2 = cx.vecs.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
         >>> vel1.d_x
-        Quantity['speed'](Array([1., 2.], dtype=float32), unit='km / s')
+        Quantity['speed'](Array([1, 2], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False], dtype=bool)
         >>> vel1 == vel2
@@ -592,7 +592,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> acc1 = cx.vecs.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
         >>> acc2 = cx.vecs.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
         >>> acc1.d2_x
-        Quantity['acceleration'](Array([1., 2.], dtype=float32), unit='km / s2')
+        Quantity['acceleration'](Array([1, 2], dtype=int32), unit='km / s2')
         >>> jnp.equal(acc1, acc2)
         Array([ True, False], dtype=bool)
         >>> acc1 == acc2
@@ -660,9 +660,9 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         We can slice a vector:
 
         >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                         y=u.Quantity(0, "m"))
+        ...                              y=u.Quantity(0, "m"))
         >>> vec[0].x
-        Quantity['length'](Array([1., 2.], dtype=float32), unit='m')
+        Quantity['length'](Array([1, 2], dtype=int32), unit='m')
 
         """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
@@ -846,8 +846,8 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 
         >>> vec.reshape(4)
         CartesianPos2D(
-            x=Quantity[...](value=f32[4], unit=Unit("m")),
-            y=Quantity[...](value=f32[4], unit=Unit("m"))
+            x=Quantity[...](value=i32[4], unit=Unit("m")),
+            y=Quantity[...](value=...i32[4], unit=Unit("m"))
         )
 
         """
@@ -896,8 +896,8 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
         ...                              y=u.Quantity(0, "m"))
         >>> vec.asdict()
-        {'x': Quantity['length'](Array([[1., 2.], [3., 4.]], dtype=float32), unit='m'),
-         'y': Quantity['length'](Array(0., dtype=float32), unit='m')}
+        {'x': Quantity['length'](Array([[1, 2], [3, 4]], dtype=int32), unit='m'),
+         'y': Quantity['length'](Array(0, dtype=int32, ...), unit='m')}
 
         """
         return dict_factory(field_items(self))

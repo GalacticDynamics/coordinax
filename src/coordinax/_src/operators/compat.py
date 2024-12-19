@@ -86,7 +86,7 @@ def call(self: AbstractOperator, x: Q2, /, **kwargs: Any) -> Q2:
     >>> q = u.Quantity([1, 2], "m")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(q)
-    Quantity['length'](Array([0., 1.], dtype=float32), unit='m')
+    Quantity['length'](Array([0, 1], dtype=int32), unit='m')
 
     """
     return convert(self(CartesianPos2D.from_(x), **kwargs), u.Quantity)
@@ -106,7 +106,7 @@ def call(
     >>> q = u.Quantity([1, 2], "m")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(q, u.Quantity(0, "s"))
-    (Quantity['length'](Array([0., 1.], dtype=float32), unit='m'),
+    (Quantity['length'](Array([0, 1], dtype=int32), unit='m'),
      Quantity['time'](Array(0, dtype=int32, ...), unit='s'))
 
     """

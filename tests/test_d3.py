@@ -12,6 +12,7 @@ import unxt as u
 
 import coordinax as cx
 from .test_base import AbstractPosTest, AbstractVelTest
+from coordinax.distance import Distance
 
 
 class AbstractPos3DTest(AbstractPosTest):
@@ -554,7 +555,7 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(
-            polar.r, u.Quantity([0.0, 0.8944271, 1.183216, 1.3416408], "kpc")
+            polar.r, Distance([0.0, 0.8944271, 1.1832159, 1.3416408], "kpc")
         )
         assert jnp.allclose(
             polar.phi, u.Quantity([0, 1, 2, 3], "rad"), atol=u.Quantity(1e-8, "rad")

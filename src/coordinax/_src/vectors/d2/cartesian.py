@@ -31,16 +31,23 @@ from coordinax._src.vectors.base.mixins import AvalMixin
 
 @final
 class CartesianPos2D(AbstractPos2D):
-    """Cartesian vector representation."""
+    """Cartesian 2D Position.
 
-    x: BatchableLength = eqx.field(
-        converter=partial(u.Quantity["length"].from_, dtype=float)
-    )
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
+    >>> print(vec)
+    <CartesianPos2D (x[m], y[m])
+        [1 2]>
+
+    """
+
+    x: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: BatchableLength = eqx.field(
-        converter=partial(u.Quantity["length"].from_, dtype=float)
-    )
+    y: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
     @classproperty
@@ -66,8 +73,8 @@ def from_(
     >>> vec = cx.vecs.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
     >>> vec
     CartesianPos2D(
-        x=Quantity[...](value=f32[], unit=Unit("m")),
-        y=Quantity[...](value=f32[], unit=Unit("m"))
+        x=Quantity[...](value=i32[], unit=Unit("m")),
+        y=Quantity[...](value=i32[], unit=Unit("m"))
     )
 
     """
@@ -100,7 +107,7 @@ def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
 
     """
     cart = rhs.vconvert(CartesianPos2D)
-    return jax.tree.map(qlax.add, lhs, cart)
+    return jax.tree.map(jnp.add, lhs, cart)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -114,7 +121,7 @@ def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
 
     >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "m")
     >>> jnp.multiply(5, v).x
-    Quantity['length'](Array(15., dtype=float32), unit='m')
+    Quantity['length'](Array(15, dtype=int32), unit='m')
 
     """
     # Validation
@@ -135,7 +142,7 @@ def _neg_p_cart2d_pos(obj: CartesianPos2D, /) -> CartesianPos2D:
     >>> import coordinax as cx
     >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> (-q).x
-    Quantity['length'](Array(-1., dtype=float32), unit='km')
+    Quantity['length'](Array(-1, dtype=int32), unit='km')
 
     """
     return jax.tree.map(qlax.neg, obj)
@@ -158,7 +165,7 @@ def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2
 
     """
     cart = rhs.vconvert(CartesianPos2D)
-    return jax.tree.map(qlax.sub, lhs, cart)
+    return jax.tree.map(jnp.subtract, lhs, cart)
 
 
 #####################################################################
@@ -166,16 +173,23 @@ def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2
 
 @final
 class CartesianVel2D(AvalMixin, AbstractVel2D):
-    """Cartesian differential representation."""
+    """Cartesian 2D Velocity.
 
-    d_x: ct.BatchableSpeed = eqx.field(
-        converter=partial(u.Quantity["speed"].from_, dtype=float)
-    )
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
+    >>> print(vec)
+    <CartesianVel2D (d_x[m / s], d_y[m / s])
+        [1 2]>
+
+    """
+
+    d_x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
 
-    d_y: ct.BatchableSpeed = eqx.field(
-        converter=partial(u.Quantity["speed"].from_, dtype=float)
-    )
+    d_y: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
     @classproperty
@@ -204,11 +218,9 @@ def from_(
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
-    >>> vec
-    CartesianVel2D(
-      d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-      d_y=Quantity[...]( value=f32[], unit=Unit("m / s") )
-    )
+    >>> print(vec)
+    <CartesianVel2D (d_x[m / s], d_y[m / s])
+        [1 2]>
 
     """
     comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
@@ -228,11 +240,13 @@ def _add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
     >>> import coordinax as cx
 
     >>> v = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
-    >>> (v + v).d_x
-    Quantity['speed'](Array(2., dtype=float32), unit='km / s')
+    >>> print(v + v)
+    <CartesianVel2D (d_x[km / s], d_y[km / s])
+        [2 4]>
 
-    >>> jnp.add(v, v).d_x
-    Quantity['speed'](Array(2., dtype=float32), unit='km / s')
+    >>> print(jnp.add(v, v))
+    <CartesianVel2D (d_x[km / s], d_y[km / s])
+        [2 4]>
 
     """
     return jax.tree.map(qlax.add, lhs, rhs)
@@ -248,11 +262,13 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
     >>> import coordinax as cx
 
     >>> v = cx.vecs.CartesianVel2D.from_([3, 4], "m/s")
-    >>> (5 * v).d_x
-    Quantity['speed'](Array(15., dtype=float32), unit='m / s')
+    >>> print(5 * v)
+    <CartesianVel2D (d_x[m / s], d_y[m / s])
+        [15 20]>
 
-    >>> jnp.multiply(5, v).d_x
-    Quantity['speed'](Array(15., dtype=float32), unit='m / s')
+    >>> print(jnp.multiply(5, v))
+    <CartesianVel2D (d_x[m / s], d_y[m / s])
+        [15 20]>
 
     """
     # Validation
@@ -269,16 +285,23 @@ def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
 
 @final
 class CartesianAcc2D(AvalMixin, AbstractAcc2D):
-    """Cartesian acceleration representation."""
+    """Cartesian Acceleration 3D.
 
-    d2_x: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
-    )
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
+    >>> print(vec)
+    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+        [1 2]>
+
+    """
+
+    d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
     r"""X coordinate acceleration :math:`\frac{d^2 x}{dt^2} \in (-\infty,+\infty)`."""
 
-    d2_y: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
-    )
+    d2_y: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""
 
     @classproperty
@@ -317,11 +340,9 @@ def from_(cls: type[CartesianAcc2D], obj: AbstractQuantity, /) -> CartesianAcc2D
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
-    >>> vec
-    CartesianAcc2D(
-      d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
-      d2_y=Quantity[...](value=f32[], unit=Unit("m / s2"))
-    )
+    >>> print(vec)
+    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+        [1 2]>
 
     """
     comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
@@ -341,14 +362,16 @@ def _add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     >>> import coordinax as cx
 
     >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "km/s2")
-    >>> (v + v).d2_x
-    Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
+    >>> print(v + v)
+    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
+        [6 8]>
 
-    >>> jnp.add(v, v).d2_x
-    Quantity['acceleration'](Array(6., dtype=float32), unit='km / s2')
+    >>> print(jnp.add(v, v))
+    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
+        [6 8]>
 
     """
-    return jax.tree.map(qlax.add, lhs, rhs)
+    return jax.tree.map(jnp.add, lhs, rhs)
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -362,10 +385,10 @@ def _mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
 
     >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "m/s2")
     >>> jnp.multiply(5, v).d2_x
-    Quantity['acceleration'](Array(15., dtype=float32), unit='m / s2')
+    Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
 
     >>> (5 * v).d2_x
-    Quantity['acceleration'](Array(15., dtype=float32), unit='m / s2')
+    Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
 
     """
     # Validation

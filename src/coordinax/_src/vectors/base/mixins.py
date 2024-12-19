@@ -59,15 +59,15 @@ class AvalMixin:
 
         >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec.aval()
-        ConcreteArray([1. 2.], dtype=float32)
+        ConcreteArray([1 2], dtype=int32)
 
         >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"))
         >>> vec.aval()
-        ConcreteArray([1. 0.], dtype=float32)
+        ConcreteArray([1. 0.], dtype=float32, ...)
 
         >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
         >>> vec.aval()
-        ConcreteArray([1. 2.], dtype=float32)
+        ConcreteArray([1 2], dtype=int32)
 
         >>> vec = cx.vecs.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"))
         >>> try: vec.aval()
@@ -76,7 +76,7 @@ class AvalMixin:
 
         >>> vec = cx.vecs.CartesianAcc2D.from_([1,2], "m/s2")
         >>> vec.aval()
-        ConcreteArray([1. 2.], dtype=float32)
+        ConcreteArray([1 2], dtype=int32)
 
         >>> vec = cx.vecs.PolarAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"))
         >>> try: vec.aval()
@@ -154,14 +154,14 @@ class IPythonReprMixin:
 
         >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec._repr_mimebundle_()
-        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)',
-         'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'}
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=i32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=i32[], unit=Unit("m"))\n)',
+         'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1 \\; \\mathrm{m} \\\\ 2 \\; \\mathrm{m}\\end{matrix} \\right)$'}
 
         >>> vec._repr_mimebundle_(include=["text/plain"])
-        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)'}
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=i32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=i32[], unit=Unit("m"))\n)'}
 
         >>> vec._repr_mimebundle_(exclude=["text/latex"])
-        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=f32[], unit=Unit("m"))\n)'}
+        {'text/plain': 'CartesianPos2D(\n  x=Quantity[PhysicalType(\'length\')](value=i32[], unit=Unit("m")),\n  y=Quantity[PhysicalType(\'length\')](value=i32[], unit=Unit("m"))\n)'}
 
         """  # noqa: E501
         # Determine the set of keys to include in the MIME bundle
@@ -189,7 +189,7 @@ class IPythonReprMixin:
 
         >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec._repr_latex_()
-        '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1. \\; \\mathrm{m} \\\\ 2. \\; \\mathrm{m}\\end{matrix} \\right)$'
+        '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1 \\; \\mathrm{m} \\\\ 2 \\; \\mathrm{m}\\end{matrix} \\right)$'
 
         """  # noqa: E501
         # TODO: better latex representation of the components. Currently

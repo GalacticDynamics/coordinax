@@ -51,7 +51,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
 
     >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
+    Quantity['length'](Array([1., 0.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, AbstractQuantity)
@@ -79,21 +79,21 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     >>> import coordinax as cx
     >>> from unxt.quantity import AbstractQuantity, Quantity
 
-    >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
+    >>> pos = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
+    Quantity['length'](Array([1], dtype=int32), unit='km')
 
-    >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
+    >>> pos = cx.vecs.RadialPos.from_([1], "km")
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
+    Quantity['length'](Array([1], dtype=int32), unit='km')
 
-    >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> pos = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
+    Quantity['length'](Array([1, 2], dtype=int32), unit='km')
 
     >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0.], dtype=float32), unit='km')
+    Quantity['length'](Array([1., 0.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, AbstractQuantity)
@@ -122,21 +122,21 @@ def convert_pos_to_uncheckedq(
     >>> import coordinax as cx
     >>> from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
-    >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
+    >>> pos = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1.], dtype=float32), unit='km')
+    UncheckedQuantity(Array([1], dtype=int32), unit='km')
 
-    >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
+    >>> pos = cx.vecs.RadialPos.from_([1], "km")
     >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1.], dtype=float32), unit='km')
+    UncheckedQuantity(Array([1], dtype=int32), unit='km')
 
-    >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> pos = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 2.], dtype=float32), unit='km')
+    UncheckedQuantity(Array([1, 2], dtype=int32), unit='km')
 
     >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 0.], dtype=float32), unit='km')
+    UncheckedQuantity(Array([1., 0.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, UncheckedQuantity)
@@ -172,13 +172,13 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     >>> convert(pos, Distance)
     Distance(Array([1.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> pos = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> convert(pos, Distance)
-    Distance(Array([1., 2.], dtype=float32), unit='km')
+    Distance(Array([1, 2], dtype=int32), unit='km')
 
     >>> pos = cx.vecs.PolarPos(Quantity(1, "km"), Quantity(0, "deg"))
     >>> convert(pos, Distance)
-    Distance(Array([1., 0.], dtype=float32), unit='km')
+    Distance(Array([1., 0.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, Distance)
@@ -246,8 +246,8 @@ def uconvert(
     >>> cart = cx.vecs.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
     >>> cart.uconvert({u.dimension("length"): "km"})
     CartesianPos2D(
-        x=Quantity[...](value=f32[], unit=Unit("km")),
-        y=Quantity[...](value=f32[], unit=Unit("km"))
+        x=Quantity[...](value=...f32[], unit=Unit("km")),
+        y=Quantity[...](value=...i32[], unit=Unit("km"))
     )
 
     This also works for vectors with different units:
@@ -287,16 +287,16 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
     >>> cart = cx.vecs.CartesianPos2D(x=Quantity(1, "m"), y=Quantity(2, "km"))
     >>> cart.uconvert({"x": "km", "y": "m"})
     CartesianPos2D(
-        x=Quantity[...](value=f32[], unit=Unit("km")),
-        y=Quantity[...](value=f32[], unit=Unit("m"))
+        x=Quantity[...](value=...f32[], unit=Unit("km")),
+        y=Quantity[...](value=...f32[], unit=Unit("m"))
     )
 
     This also works for converting just some of the components:
 
     >>> cart.uconvert({"x": "km"})
     CartesianPos2D(
-        x=Quantity[...](value=f32[], unit=Unit("km")),
-        y=Quantity[...](value=f32[], unit=Unit("km"))
+        x=Quantity[...](value=...f32[], unit=Unit("km")),
+        y=Quantity[...](value=...i32[], unit=Unit("km"))
     )
 
     This also works for vectors with different units:
@@ -348,8 +348,8 @@ def uconvert(
 
     >>> cart.uconvert(cx.vecs.ToUnitsOptions.consistent)
     CartesianPos2D(
-        x=Quantity[...](value=f32[], unit=Unit("m")),
-        y=Quantity[...](value=f32[], unit=Unit("m"))
+        x=Quantity[...](value=i32[], unit=Unit("m")),
+        y=Quantity[...](value=i32[], unit=Unit("m"))
     )
 
     >>> sph = cart.vconvert(cx.SphericalPos)
