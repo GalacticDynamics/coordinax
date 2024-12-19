@@ -202,8 +202,8 @@ def vconvert(
     current: CartesianPos1D,
     /,
     *,
-    phi: u.Quantity = u.Quantity(0.0, "radian"),
-    z: u.Quantity = u.Quantity(0.0, "m"),
+    phi: u.Quantity = u.Quantity(0, "radian"),
+    z: u.Quantity = u.Quantity(0, "m"),
     **kwargs: Any,
 ) -> CylindricalPos:
     """CartesianPos1D -> CylindricalPos.
@@ -216,22 +216,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1.0, "km"))
+    >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1, "km"))
     >>> x2 = cx.vconvert(cx.vecs.CylindricalPos, x)
-    >>> x2
-    CylindricalPos( rho=Quantity[...](value=f32[], unit=Unit("km")),
-                    phi=Angle(value=f32[], unit=Unit("rad")),
-                    z=Quantity[...](value=f32[], unit=Unit("m")) )
-    >>> x2.phi
-    Angle(Array(0., dtype=float32), unit='rad')
-    >>> x2.z
-    Quantity['length'](Array(0., dtype=float32), unit='m')
+    >>> print(x2)
+    <CylindricalPos (rho[km], phi[rad], z[m])
+        [1. 0. 0.]>
 
     >>> x3 = cx.vconvert(cx.vecs.CylindricalPos, x, phi=u.Quantity(14, "deg"))
-    >>> x3.phi
-    Angle(Array(14., dtype=float32), unit='deg')
-    >>> x3.z
-    Quantity['length'](Array(0., dtype=float32), unit='m')
+    >>> print(x3)
+    <CylindricalPos (rho[km], phi[deg], z[m])
+        [ 1 14  0]>
 
     """
     return target(rho=current.x, phi=phi, z=z)

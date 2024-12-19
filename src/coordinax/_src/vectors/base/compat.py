@@ -61,9 +61,9 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
+    Quantity['length'](Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
     """  # noqa: E501
     cart = full_shaped(obj.vconvert(obj._cartesian_cls))  # noqa: SLF001
@@ -103,9 +103,9 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     >>> convert(pos, AbstractQuantity)
     Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
+    Quantity['length'](Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
     """  # noqa: E501
     return convert(convert(obj, AbstractQuantity), Quantity)
@@ -146,9 +146,9 @@ def convert_pos_to_uncheckedq(
     >>> convert(pos, UncheckedQuantity)
     UncheckedQuantity(Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 0., 0.], dtype=float32), unit='km')
+    UncheckedQuantity(Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
     """  # noqa: E501
     return convert(convert(obj, AbstractQuantity), UncheckedQuantity)
@@ -188,9 +188,9 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
     >>> convert(pos, Distance)
     Distance(Array([0., 0., 1.], dtype=float32), unit='km')
 
-    >>> pos = cx.vecs.CylindricalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "km"))
+    >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, Distance)
-    Distance(Array([1., 0., 0.], dtype=float32), unit='km')
+    Distance(Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
     """  # noqa: E501
     return convert(convert(obj, AbstractQuantity), Distance)

@@ -33,21 +33,15 @@ class CylindricalPos(AbstractPos3D):
 
     """
 
-    rho: BatchableLength = eqx.field(
-        converter=partial(u.Quantity["length"].from_, dtype=float)
-    )
+    rho: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=Unless(
-            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
-        )
+        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
-    z: BatchableLength = eqx.field(
-        converter=partial(u.Quantity["length"].from_, dtype=float)
-    )
+    z: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
     def __check_init__(self) -> None:
@@ -73,29 +67,37 @@ class CylindricalPos(AbstractPos3D):
         ...                            phi=u.Quantity(0, "deg"),
         ...                            z=u.Quantity(4, "km"))
         >>> c.norm()
-        Quantity['length'](Array(5., dtype=float32), unit='km')
+        Quantity['length'](Array(5., dtype=float32, ...), unit='km')
 
         """
-        return xp.sqrt(self.rho**2 + self.z**2)
+        return xp.hypot(self.rho, self.z)
 
 
 @final
 class CylindricalVel(AbstractVel3D):
-    """Cylindrical differential representation."""
+    """Cylindrical velocity.
 
-    d_rho: ct.BatchableSpeed = eqx.field(
-        converter=partial(u.Quantity["speed"].from_, dtype=float)
-    )
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CylindricalVel.from_([1, 2, 3], "km/s")
+    >>> print(vec)
+    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+        [1 2 3]>
+
+    """
+
+    d_rho: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
+        converter=u.Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    d_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(u.Quantity["speed"].from_, dtype=float)
-    )
+    d_z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
     @classproperty
@@ -111,21 +113,29 @@ class CylindricalVel(AbstractVel3D):
 
 @final
 class CylindricalAcc(AbstractAcc3D):
-    """Cylindrical acceleration representation."""
+    """Cylindrical acceleration representation.
 
-    d2_rho: ct.BatchableAcc = eqx.field(
-        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
-    )
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CylindricalAcc.from_([1, 2, 3], "km/s2")
+    >>> print(vec)
+    <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+        [1 2 3]>
+
+    """
+
+    d2_rho: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
+        converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
-    d2_z: ct.BatchableAcc = eqx.field(
-        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
-    )
+    d2_z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
     @classproperty

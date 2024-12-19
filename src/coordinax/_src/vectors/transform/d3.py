@@ -164,8 +164,9 @@ def vconvert(
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
-    >>> x2
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <CartesianPos1D (x[km])
+        [0.985]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -184,15 +185,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1.0, "km"),
-    ...                            phi=u.Quantity(10.0, "deg"),
+    >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1, "km"),
+    ...                            phi=u.Quantity(10, "deg"),
     ...                            z=u.Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
-    >>> x2
-    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <RadialPos (r[km])
+        [1]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -215,16 +217,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1.0, "km"),
-    ...                            phi=u.Quantity(10.0, "deg"),
+    >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1, "km"),
+    ...                            phi=u.Quantity(10, "deg"),
     ...                            z=u.Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
-    >>> x2
-    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                    y=Quantity[...](value=f32[], unit=Unit("km")) )
+    >>> print(x2)
+    <CartesianPos2D (x[km], y[km])
+        [0.985 0.174]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -245,16 +247,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1.0, "km"),
-    ...                            phi=u.Quantity(10.0, "deg"),
+    >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1, "km"),
+    ...                            phi=u.Quantity(10, "deg"),
     ...                            z=u.Quantity(14, "km"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
-    >>> x2
-    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-              phi=Angle(value=f32[], unit=Unit("deg")) )
+    >>> print(x2)
+    <PolarPos (r[km], phi[deg])
+        [ 1 10]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -281,15 +283,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"),
+    >>> x = cx.SphericalPos(r=u.Quantity(1, "km"),
     ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10.0, "deg"))
+    ...                     phi=u.Quantity(10, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
-    >>> x2
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <CartesianPos1D (x[km])
+        [0.238]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -308,15 +311,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"),
+    >>> x = cx.SphericalPos(r=u.Quantity(1, "km"),
     ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10.0, "deg"))
+    ...                     phi=u.Quantity(10, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
-    >>> x2
-    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <RadialPos (r[km])
+        [1.]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -339,16 +343,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"),
+    >>> x = cx.SphericalPos(r=u.Quantity(1, "km"),
     ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10.0, "deg"))
+    ...                     phi=u.Quantity(10, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
-    >>> x2
-    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                    y=Quantity[...](value=f32[], unit=Unit("km")) )
+    >>> print(x2)
+    <CartesianPos2D (x[km], y[km])
+        [0.238 0.042]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -369,16 +373,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.SphericalPos(r=u.Quantity(1.0, "km"),
+    >>> x = cx.SphericalPos(r=u.Quantity(1, "km"),
     ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10.0, "deg"))
+    ...                     phi=u.Quantity(10, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
-    >>> x2
-    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-              phi=Angle(value=f32[], unit=Unit("deg")) )
+    >>> print(x2)
+    <PolarPos (r[km], phi[deg])
+        [ 0.242 10.   ]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -405,15 +409,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1.0, "km"),
-    ...                              theta=u.Quantity(10.0, "deg"),
+    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
+    ...                              theta=u.Quantity(10, "deg"),
     ...                              phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
-    >>> x2
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <CartesianPos1D (x[km])
+        [0.238]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -432,15 +437,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1.0, "km"),
-    ...                              theta=u.Quantity(10.0, "deg"),
+    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
+    ...                              theta=u.Quantity(10, "deg"),
     ...                              phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
-    >>> x2
-    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <RadialPos (r[km])
+        [1.]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -463,16 +469,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1.0, "km"),
-    ...                              theta=u.Quantity(10.0, "deg"),
+    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
+    ...                              theta=u.Quantity(10, "deg"),
     ...                              phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
-    >>> x2
-    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                    y=Quantity[...](value=f32[], unit=Unit("km")) )
+    >>> print(x2)
+    <CartesianPos2D (x[km], y[km])
+        [0.238 0.042]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -493,16 +499,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1.0, "km"),
-    ...                              theta=u.Quantity(10.0, "deg"),
+    >>> x = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
+    ...                              theta=u.Quantity(10, "deg"),
     ...                              phi=u.Quantity(14, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
-    >>> x2
-    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-              phi=Angle(value=f32[], unit=Unit("deg")) )
+    >>> print(x2)
+    <PolarPos (r[km], phi[deg])
+        [ 0.242 10.   ]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -530,23 +536,25 @@ def vconvert(
     >>> import coordinax as cx
 
     >>> x = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(2.0, "km2"),
+    ...     mu=u.Quantity(2, "km2"),
     ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.5, "rad"),
-    ...     Delta=u.Quantity(1.0, "km"),
+    ...     Delta=u.Quantity(1, "km"),
     ... )
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
-    >>> x2
-    CartesianPos1D(x=Quantity[...](value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <CartesianPos1D (x[km])
+        [0.621]>
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
-    >>> x2
-    RadialPos(r=Distance(value=f32[], unit=Unit("km")))
+    >>> print(x2)
+    <RadialPos (r[km])
+        [1.225]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
@@ -570,25 +578,25 @@ def vconvert(
     >>> import coordinax as cx
 
     >>> x = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(2.0, "km2"),
+    ...     mu=u.Quantity(2, "km2"),
     ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.5, "rad"),
-    ...     Delta=u.Quantity(1.0, "km"),
+    ...     Delta=u.Quantity(1, "km"),
     ... )
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
-    >>> x2
-    CartesianPos2D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                    y=Quantity[...](value=f32[], unit=Unit("km")) )
+    >>> print(x2)
+    <CartesianPos2D (x[km], y[km])
+        [0.621 0.339]>
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
-    >>> x2
-    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-              phi=Angle(value=f32[], unit=Unit("rad")) )
+    >>> print(x2)
+    <PolarPos (r[km], phi[rad])
+        [0.707 0.5  ]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
