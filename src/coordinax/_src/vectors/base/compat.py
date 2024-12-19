@@ -59,7 +59,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
 
     >>> pos = cx.SphericalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
+    Quantity['length'](Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, AbstractQuantity)
@@ -101,7 +101,7 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
 
     >>> pos = cx.SphericalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
     >>> convert(pos, AbstractQuantity)
-    Quantity['length'](Array([0., 0., 1.], dtype=float32), unit='km')
+    Quantity['length'](Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, AbstractQuantity)
@@ -144,7 +144,7 @@ def convert_pos_to_uncheckedq(
 
     >>> pos = cx.SphericalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
     >>> convert(pos, UncheckedQuantity)
-    UncheckedQuantity(Array([0., 0., 1.], dtype=float32), unit='km')
+    UncheckedQuantity(Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, UncheckedQuantity)
@@ -186,7 +186,7 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
 
     >>> pos = cx.SphericalPos(Quantity(1.0, "km"), Quantity(0, "deg"), Quantity(0, "deg"))
     >>> convert(pos, Distance)
-    Distance(Array([0., 0., 1.], dtype=float32), unit='km')
+    Distance(Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.vecs.CylindricalPos(Quantity(1, "km"), Quantity(0, "deg"), Quantity(0, "km"))
     >>> convert(pos, Distance)
@@ -253,9 +253,9 @@ def uconvert(
     ...                       phi=Quantity(3, "rad"))
     >>> sph.uconvert({u.dimension("length"): "km", u.dimension("angle"): "deg"})
     SphericalPos(
-        r=Distance(value=f32[], unit=Unit("km")),
-        theta=Angle(value=f32[], unit=Unit("deg")),
-        phi=Angle(value=f32[], unit=Unit("deg")) )
+      r=Distance(value=...f32[], unit=Unit("km")),
+      theta=Angle(value=...i32[], unit=Unit("deg")),
+      phi=Angle(value=...f32[], unit=Unit("deg")) )
 
     """
     # Ensure `units_` is PT -> Unit
@@ -302,9 +302,9 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
     ...                       phi=Quantity(3, "rad"))
     >>> sph.uconvert({"r": "km", "theta": "rad"})
     SphericalPos(
-        r=Distance(value=f32[], unit=Unit("km")),
-        theta=Angle(value=f32[], unit=Unit("rad")),
-        phi=Angle(value=f32[], unit=Unit("rad")) )
+        r=Distance(value=...f32[], unit=Unit("km")),
+        theta=Angle(value=...f32[], unit=Unit("rad")),
+        phi=Angle(value=...f32[], unit=Unit("rad")) )
 
     """
     return replace(

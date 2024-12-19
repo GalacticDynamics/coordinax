@@ -85,7 +85,7 @@ class GalileanTranslation(AbstractGalileanOperator):
     >>> t = u.Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array(1., dtype=float32), unit='km')
+    Quantity['length'](Array(1., dtype=float32, ...), unit='km')
     >>> newt
     Quantity['time'](Array(1., dtype=float32, ...), unit='Gyr')
 

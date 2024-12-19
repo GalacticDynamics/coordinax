@@ -96,7 +96,7 @@ class AvalMixin:
 
         >>> vec = cx.SphericalPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"), theta=u.Quantity(0, "rad"))
         >>> vec.aval()
-        ConcreteArray([0. 0. 1.], dtype=float32)
+        ConcreteArray([0. 0. 1.], dtype=float32, ...)
 
         >>> vec = cx.CartesianVel3D.from_([1,2,3], "m/s")
         >>> vec.aval()

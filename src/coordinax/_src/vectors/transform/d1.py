@@ -157,10 +157,6 @@ def vconvert(
 
     >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1, "km"))
     >>> x2 = cx.vconvert(cx.SphericalPos, x)
-    >>> x2
-    SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                  theta=Angle(value=f32[], unit=Unit("deg")),
-                  phi=Angle(value=f32[], unit=Unit("rad")) )
     >>> print(x2)
     <SphericalPos (r[km], theta[deg], phi[rad])
         [1. 0. 0.]>

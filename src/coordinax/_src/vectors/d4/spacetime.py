@@ -75,7 +75,7 @@ class FourVector(AbstractPos4D):
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=q)
     >>> print(w)
     <FourVector (t[s], q=(r[m], theta[deg], phi[deg]))
-        [1. 3. 1. 2.]>
+        [1 3 1 2]>
 
     """
 
