@@ -29,10 +29,10 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
     PoincarePolarVector(
         rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
         pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
-        z=Quantity[...](value=f32[1,2], unit=Unit("m")),
-        d_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-        d_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
-        d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
+      z=Quantity[...](value=i32[1,2], unit=Unit("m")),
+      d_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
+      d_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
+      d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
     )
 
     >>> cx.vconvert(cx.Space, w)
