@@ -92,7 +92,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       rotation=GalileanRotation(rotation=f32[3,3]),
       translation=GalileanTranslation(
         translation=FourVector(
-          t=Quantity[...)](value=f32[], unit=Unit("Gyr")),
+          t=Quantity[...)](value=...f32[], unit=Unit("Gyr")),
           q=SphericalPos( ... )
         )
       ),
@@ -105,11 +105,11 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> new = op(w)
     >>> new
     FourVector(
-      t=Quantity[...](value=f32[], unit=Unit("s")),
+      t=Quantity[...](value=...f32[], unit=Unit("s")),
       q=CartesianPos3D( ... )
     )
     >>> new.t.ustrip("Gyr").round(2)
-    Array(2.5, dtype=float32)
+    Array(2.5, dtype=float32, ...)
     >>> print(new.q)
     <CartesianPos3D (x[km], y[km], z[km])
         [7.889e+16 1.578e+17 2.367e+17]>
@@ -125,7 +125,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         [7.889e+16 1.578e+17 2.367e+17]>
 
     >>> newt
-    Quantity['time'](Array(7.8894005e+16, dtype=float32), unit='s')
+    Quantity['time'](Array(7.8894005e+16, dtype=float32, ...), unit='s')
 
     """
 
