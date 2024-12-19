@@ -90,7 +90,7 @@ class GalileanRotation(AbstractGalileanOperator):
     >>> t = u.Quantity(1, "s")
     >>> newq, newt = op(q, t)
     >>> newq
-    Quantity['length'](Array([0., 1., 0.], dtype=float32), unit='m')
+    Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
 
     The time is not affected by the rotation.
 
@@ -104,15 +104,15 @@ class GalileanRotation(AbstractGalileanOperator):
 
     >>> newq, newt = op(q, t)
     >>> newq
-    Quantity['length'](Array([[ 0.,  1.,  0.],
-                              [-1.,  0.,  0.]], dtype=float32), unit='m')
+    Quantity['length'](Array([[ 0,  1,  0],
+                              [-1,  0,  0]], dtype=int32), unit='m')
 
     Translation operators can be applied to :class:`vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array([ 0., -1.], dtype=float32), unit='m')
+    Quantity['length'](Array([ 0, -1], dtype=int32), unit='m')
     >>> newq.norm().value.round(2)
     Array([1., 1.], dtype=float32)
 
@@ -252,7 +252,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> t = u.Quantity(1, "s")
         >>> newq, newt = op(q, t)
         >>> newq
-        Quantity['length'](Array([0., 1., 0.], dtype=float32), unit='m')
+        Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
 
         The time is not affected by the rotation.
         >>> newt
@@ -279,7 +279,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
         >>> newq = op(q)
         >>> newq.x
-        Quantity['length'](Array(0., dtype=float32), unit='m')
+        Quantity['length'](Array(0, dtype=int32), unit='m')
 
         """
         return self.rotation @ q
@@ -331,7 +331,7 @@ def call(
     >>> t = u.Quantity(1, "s")
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array(0., dtype=float32), unit='m')
+    Quantity['length'](Array(0, dtype=int32), unit='m')
 
     The time is not affected by the rotation.
     >>> newt

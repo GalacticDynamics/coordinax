@@ -38,14 +38,14 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
     >>> cx.vconvert(cx.Space, w)
     Space({
         'length': CartesianPos3D(
-            x=Quantity[...](value=f32[1,2], unit=Unit("m")),
-            y=Quantity[...](value=f32[1,2], unit=Unit("m")),
-            z=Quantity[...](value=f32[1,2], unit=Unit("m"))
+            x=Quantity[...](value=i32[1,2], unit=Unit("m")),
+            y=Quantity[...](value=i32[1,2], unit=Unit("m")),
+            z=Quantity[...](value=i32[1,2], unit=Unit("m"))
         ),
         'speed': CartesianVel3D(
-            d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-            d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-            d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
+            d_x=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+            d_y=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+            d_z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") )
         )
     })
 

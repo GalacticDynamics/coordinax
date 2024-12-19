@@ -141,7 +141,7 @@ class FourVector(AbstractPos4D):
         )
 
         >>> vec.x
-        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+        Quantity['length'](Array([1, 4], dtype=int32), unit='m')
 
         """
         _ = eqx.error_if(
@@ -164,7 +164,7 @@ class FourVector(AbstractPos4D):
 
         >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.x
-        Quantity['length'](Array(1., dtype=float32), unit='m')
+        Quantity['length'](Array(1, dtype=int32), unit='m')
 
         """
         return getattr(self.q, name)
@@ -297,9 +297,9 @@ def from_(
     FourVector(
       t=Quantity[...](value=f32[], unit=Unit("s")),
       q=CartesianPos3D(
-        x=Quantity[...](value=f32[], unit=Unit("km")),
-        y=Quantity[...](value=f32[], unit=Unit("km")),
-        z=Quantity[...](value=f32[], unit=Unit("km"))
+        x=Quantity[...](value=i32[], unit=Unit("km")),
+        y=Quantity[...](value=i32[], unit=Unit("km")),
+        z=Quantity[...](value=i32[], unit=Unit("km"))
       )
     )
 
@@ -330,7 +330,7 @@ def _add_4v4v(self: FourVector, other: FourVector) -> FourVector:
     Quantity['time'](Array(3., dtype=float32), unit='s')
 
     >>> w3.x
-    Quantity['length'](Array(5., dtype=float32), unit='m')
+    Quantity['length'](Array(5, dtype=int32), unit='m')
 
     """
     return replace(self, t=self.t + other.t, q=self.q + other.q)
@@ -358,7 +358,7 @@ def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
     Quantity['time'](Array(-1., dtype=float32), unit='s')
 
     >>> w3.x
-    Quantity['length'](Array(-3., dtype=float32), unit='m')
+    Quantity['length'](Array(-3, dtype=int32), unit='m')
 
     """
     return replace(lhs, t=lhs.t - rhs.t, q=lhs.q - rhs.q)

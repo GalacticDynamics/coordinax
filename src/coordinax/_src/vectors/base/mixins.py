@@ -87,12 +87,12 @@ class AvalMixin:
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> vec.aval()
-        ConcreteArray([1. 2. 3.], dtype=float32)
+        ConcreteArray([1 2 3], dtype=int32)
 
         >>> vec = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "m")
         >>> vec.aval()
-        ConcreteArray([[1. 2. 3.]
-                       [4. 5. 6.]], dtype=float32)
+        ConcreteArray([[1 2 3]
+                       [4 5 6]], dtype=int32)
 
         >>> vec = cx.SphericalPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"), theta=u.Quantity(0, "rad"))
         >>> vec.aval()
@@ -100,7 +100,7 @@ class AvalMixin:
 
         >>> vec = cx.CartesianVel3D.from_([1,2,3], "m/s")
         >>> vec.aval()
-        ConcreteArray([1. 2. 3.], dtype=float32)
+        ConcreteArray([1 2 3], dtype=int32)
 
         >>> vec = cx.SphericalVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"), d_theta=u.Quantity(0, "rad/s"))
         >>> try: vec.aval()
@@ -109,7 +109,7 @@ class AvalMixin:
 
         >>> vec = cx.vecs.CartesianAcc3D.from_([1,2,3], "m/s2")
         >>> vec.aval()
-        ConcreteArray([1. 2. 3.], dtype=float32)
+        ConcreteArray([1 2 3], dtype=int32)
 
         >>> vec = cx.vecs.SphericalAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"), d2_theta=u.Quantity(0, "rad/s2"))
         >>> try: vec.aval()

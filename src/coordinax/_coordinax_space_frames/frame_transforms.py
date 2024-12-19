@@ -204,7 +204,7 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     # Post-rotation spatial offset to Galactic center.
     offset_q = GalileanSpatialTranslation(
-        -to_frame.galcen.distance * jnp.asarray([1.0, 0.0, 0.0])
+        -to_frame.galcen.distance * jnp.asarray([1, 0, 0])
     )
 
     # Post-rotation velocity offset

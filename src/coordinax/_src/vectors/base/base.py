@@ -82,22 +82,17 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> xs = {"x": u.Quantity(1, "m"), "y": u.Quantity(2, "m"),
         ...       "z": u.Quantity(3, "m")}
         >>> vec = cx.CartesianPos3D.from_(xs)
-        >>> vec
-        CartesianPos3D(
-            x=Quantity[...](value=f32[], unit=Unit("m")),
-            y=Quantity[...](value=f32[], unit=Unit("m")),
-            z=Quantity[...](value=f32[], unit=Unit("m"))
-        )
+        >>> print(vec)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [1 2 3]>
 
         >>> xs = {"x": u.Quantity([1, 2], "m"), "y": u.Quantity([3, 4], "m"),
         ...       "z": u.Quantity([5, 6], "m")}
         >>> vec = cx.CartesianPos3D.from_(xs)
-        >>> vec
-        CartesianPos3D(
-            x=Quantity[...](value=f32[2], unit=Unit("m")),
-            y=Quantity[...](value=f32[2], unit=Unit("m")),
-            z=Quantity[...](value=f32[2], unit=Unit("m"))
-        )
+        >>> print(vec)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [[1 3 5]
+            [2 4 6]]>
 
         """
         return cls(**obj)
@@ -124,23 +119,16 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> import coordinax as cx
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "meter")
-        >>> vec
-        CartesianPos3D(
-            x=Quantity[...](value=f32[], unit=Unit("m")),
-            y=Quantity[...](value=f32[], unit=Unit("m")),
-            z=Quantity[...](value=f32[], unit=Unit("m"))
-        )
+        >>> print(vec)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [1 2 3]>
 
         >>> xs = jnp.array([[1, 2, 3], [4, 5, 6]])
         >>> vec = cx.CartesianPos3D.from_(xs, "meter")
-        >>> vec
-        CartesianPos3D(
-            x=Quantity[...](value=f32[2], unit=Unit("m")),
-            y=Quantity[...](value=f32[2], unit=Unit("m")),
-            z=Quantity[...](value=f32[2], unit=Unit("m"))
-        )
-        >>> vec.x
-        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+        >>> print(vec)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [[1 2 3]
+            [4 5 6]]>
 
         """
         obj = u.Quantity.from_(jnp.asarray(obj), unit)
@@ -227,12 +215,10 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> usys = u.unitsystem("m", "s", "kg", "rad")
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> vec.uconvert(usys)
-        CartesianPos3D(
-            x=Quantity[...](value=f32[], unit=Unit("m")),
-            y=Quantity[...](value=f32[], unit=Unit("m")),
-            z=Quantity[...](value=f32[], unit=Unit("m"))
-        )
+        >>> newvec = vec.uconvert(usys)
+        >>> print(newvec)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [1000. 2000. 3000.]>
 
         """
         return u.uconvert(usys, self)
@@ -341,8 +327,8 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
         ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.mT.x
-        Quantity['length'](Array([[0., 2.],
-                                  [1., 3.]], dtype=float32), unit='m')
+        Quantity['length'](Array([[0, 2],
+                                  [1, 3]], dtype=int32), unit='m')
 
         """
         return replace(self, **{k: v.mT for k, v in field_items(AttrFilter, self)})
@@ -430,8 +416,8 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
         ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.T.x
-        Quantity['length'](Array([[0., 2.],
-                                  [1., 3.]], dtype=float32), unit='m')
+        Quantity['length'](Array([[0, 2],
+                                  [1, 3]], dtype=int32), unit='m')
 
         """
         return replace(self, **{k: v.T for k, v in field_items(AttrFilter, self)})
@@ -445,13 +431,10 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         Examples
         --------
         >>> import coordinax as cx
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> +vec
-        CartesianPos3D(
-            x=Quantity[...](value=f32[], unit=Unit("m")),
-            y=Quantity[...](value=f32[], unit=Unit("m")),
-            z=Quantity[...](value=f32[], unit=Unit("m"))
-        )
+        >>> vec = cx.CartesianPos3D.from_([1, -2, 3], "m")
+        >>> print(+vec)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [ 1 -2  3]>
 
         """
         return replace(self, **{k: +v for k, v in field_items(AttrFilter, self)})
@@ -474,8 +457,9 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> import coordinax as cx
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> (vec * 2).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
+        >>> print(vec * 2)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [2 4 6]>
 
         """
         return qlax.mul(self, other)
@@ -488,8 +472,9 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> import coordinax as cx
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> (2 * vec).x
-        Quantity['length'](Array(2., dtype=float32), unit='m')
+        >>> print(2 * vec)
+        <CartesianPos3D (x[m], y[m], z[m])
+            [2 4 6]>
 
         """
         return qlax.mul(other, self)
@@ -601,7 +586,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> vel1 = cx.CartesianVel3D.from_([[1, 4], [2, 5], [3, 6]], "km/s")
         >>> vel2 = cx.CartesianVel3D.from_([[1, 4], [0, 5], [3, 0]], "km/s")
         >>> vel1.d_x
-        Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
+        Quantity['speed'](Array([1, 2, 3], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False, False], dtype=bool)
         >>> vel1 == vel2
@@ -946,8 +931,8 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> import coordinax as cx
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> vec.dtypes
-        mappingproxy({'x': dtype('float32'), 'y': dtype('float32'),
-                      'z': dtype('float32')})
+        mappingproxy({'x': dtype('int32'), 'y': dtype('int32'),
+                      'z': dtype('int32')})
 
         """
         return MappingProxyType({k: v.dtype for k, v in field_items(AttrFilter, self)})
@@ -1010,7 +995,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> str(vec)
-        '<CartesianPos3D (x[m], y[m], z[m])\n    [1. 2. 3.]>'
+        '<CartesianPos3D (x[m], y[m], z[m])\n    [1 2 3]>'
 
         """
         cls_name = type(self).__name__
@@ -1055,12 +1040,9 @@ def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
 
     >>> cart = cx.CartesianPos3D.from_(q)
-    >>> cart
-    CartesianPos3D(
-      x=Quantity[...](value=f32[], unit=Unit("km")),
-      y=Quantity[...](value=f32[], unit=Unit("km")),
-      z=Quantity[...](value=f32[], unit=Unit("km"))
-    )
+    >>> print(cart)
+    <CartesianPos3D (x[km], y[km], z[km])
+        [1 2 3]>
 
     >>> cx.vecs.AbstractPos3D.from_(cart) is cart
     True

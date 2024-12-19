@@ -104,8 +104,8 @@ def vconvert(
     current: CartesianPos1D,
     /,
     *,
-    y: u.Quantity = u.Quantity(0.0, "m"),
-    z: u.Quantity = u.Quantity(0.0, "m"),
+    y: u.Quantity = u.Quantity(0, "m"),
+    z: u.Quantity = u.Quantity(0, "m"),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """CartesianPos1D -> CartesianPos3D.
@@ -118,22 +118,16 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1.0, "km"))
+    >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1, "km"))
     >>> x2 = cx.vconvert(cx.CartesianPos3D, x)
-    >>> x2
-    CartesianPos3D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                    y=Quantity[...](value=f32[], unit=Unit("m")),
-                    z=Quantity[...](value=f32[], unit=Unit("m")) )
-    >>> x2.y
-    Quantity['length'](Array(0., dtype=float32), unit='m')
-    >>> x2.z
-    Quantity['length'](Array(0., dtype=float32), unit='m')
+    >>> print(x2)
+    <CartesianPos3D (x[km], y[m], z[m])
+        [1 0 0]>
 
     >>> x3 = cx.vconvert(cx.CartesianPos3D, x, y=u.Quantity(14, "km"))
-    >>> x3.y
-    Quantity['length'](Array(14., dtype=float32), unit='km')
-    >>> x3.z
-    Quantity['length'](Array(0., dtype=float32), unit='m')
+    >>> print(x3)
+    <CartesianPos3D (x[km], y[km], z[m])
+        [ 1 14  0]>
 
     """
     return target(x=current.x, y=y, z=z)

@@ -200,15 +200,12 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> x = cx.vecs.CartesianPos2D.from_([1, 2], "km")
 
     >>> x2 = cx.vconvert(cx.CartesianPos3D, x, z=u.Quantity(14, "km"))
-    >>> x2
-    CartesianPos3D( x=Quantity[...](value=f32[], unit=Unit("km")),
-                    y=Quantity[...](value=f32[], unit=Unit("km")),
-                    z=Quantity[...](value=f32[], unit=Unit("km")) )
-    >>> x2.z
-    Quantity['length'](Array(14., dtype=float32), unit='km')
+    >>> print(x2)
+    <CartesianPos3D (x[km], y[km], z[km])
+        [ 1  2 14]>
 
     """
     return target(x=current.x, y=current.y, z=z)

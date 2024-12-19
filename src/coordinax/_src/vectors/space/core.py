@@ -151,13 +151,13 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w[0]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=f32[2], unit=Unit("m")),
-                y=Quantity[...](value=f32[2], unit=Unit("m")),
-                z=Quantity[...](value=f32[2], unit=Unit("m")) ),
+                x=Quantity[...](value=i32[2], unit=Unit("m")),
+                y=Quantity[...](value=i32[2], unit=Unit("m")),
+                z=Quantity[...](value=i32[2], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=f32[2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[2], unit=Unit("m / s") ) )
+                d_x=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=i32[2], unit=Unit("m / s") ) )
         })
 
         By slice:
@@ -165,13 +165,13 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w[1:]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=f32[0,2], unit=Unit("m")),
-                y=Quantity[...](value=f32[0,2], unit=Unit("m")),
-                z=Quantity[...](value=f32[0,2], unit=Unit("m")) ),
+                x=Quantity[...](value=i32[0,2], unit=Unit("m")),
+                y=Quantity[...](value=i32[0,2], unit=Unit("m")),
+                z=Quantity[...](value=i32[0,2], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[0,2], unit=Unit("m / s") ) )
+                d_x=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ) )
         })
 
         By Ellipsis:
@@ -179,13 +179,13 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w[...]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=f32[1,2], unit=Unit("m")),
-                y=Quantity[...](value=f32[1,2], unit=Unit("m")),
-                z=Quantity[...](value=f32[1,2], unit=Unit("m")) ),
+                x=Quantity[...](value=i32[1,2], unit=Unit("m")),
+                y=Quantity[...](value=i32[1,2], unit=Unit("m")),
+                z=Quantity[...](value=i32[1,2], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ) )
+                d_x=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ) )
         })
 
         By tuple[int, ...]:
@@ -193,13 +193,13 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w[(0, 1)]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=f32[], unit=Unit("m")),
-                y=Quantity[...](value=f32[], unit=Unit("m")),
-                z=Quantity[...](value=f32[], unit=Unit("m")) ),
+                x=Quantity[...](value=i32[], unit=Unit("m")),
+                y=Quantity[...](value=i32[], unit=Unit("m")),
+                z=Quantity[...](value=i32[], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[], unit=Unit("m / s") ) )
+                d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
         })
 
         This also supports numpy index arrays. But this example section
@@ -218,24 +218,20 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w = cx.Space(length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...              speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
-        By string key:
+        By string key (which is the dimension name):
 
-        >>> w["length"]
-        CartesianPos3D(
-            x=Quantity[...](value=f32[1,2], unit=Unit("m")),
-            y=Quantity[...](value=f32[1,2], unit=Unit("m")),
-            z=Quantity[...](value=f32[1,2], unit=Unit("m"))
-        )
+        >>> print(w["length"])
+        <CartesianPos3D (x[m], y[m], z[m])
+            [[[1 2 3]
+            [4 5 6]]]>
 
-        By dimension:
+        By the actual dimension object:
 
         >>> import unxt as u
-        >>> w[u.dimension("length")]
-        CartesianPos3D(
-            x=Quantity[...](value=f32[1,2], unit=Unit("m")),
-            y=Quantity[...](value=f32[1,2], unit=Unit("m")),
-            z=Quantity[...](value=f32[1,2], unit=Unit("m"))
-        )
+        >>> print(w[u.dimension("length")])
+        <CartesianPos3D (x[m], y[m], z[m])
+            [[[1 2 3]
+            [4 5 6]]]>
 
         """
         if isinstance(key, Dimension):
@@ -271,13 +267,13 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w.mT
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=f32[2,1], unit=Unit("m")),
-                y=Quantity[...](value=f32[2,1], unit=Unit("m")),
-                z=Quantity[...](value=f32[2,1], unit=Unit("m"))
+                x=Quantity[...](value=i32[2,1], unit=Unit("m")),
+                y=Quantity[...](value=i32[2,1], unit=Unit("m")),
+                z=Quantity[...](value=i32[2,1], unit=Unit("m"))
             ), 'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
+                d_x=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=i32[2,1], unit=Unit("m / s") )
             ) })
 
         """
@@ -354,14 +350,14 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w.T
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=f32[2,1], unit=Unit("m")),
-                y=Quantity[...](value=f32[2,1], unit=Unit("m")),
-                z=Quantity[...](value=f32[2,1], unit=Unit("m"))
+                x=Quantity[...](value=i32[2,1], unit=Unit("m")),
+                y=Quantity[...](value=i32[2,1], unit=Unit("m")),
+                z=Quantity[...](value=i32[2,1], unit=Unit("m"))
             ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=f32[2,1], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[2,1], unit=Unit("m / s") )
+                d_x=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=i32[2,1], unit=Unit("m / s") )
             ) })
 
         """
@@ -383,7 +379,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         ... )
 
         >>> (-w)["length"].x
-        Quantity['length'](Array([[-1., -4.]], dtype=float32), unit='m')
+        Quantity['length'](Array([[-1, -4]], dtype=int32), unit='m')
 
         """
         return type(self)(**{k: -v for k, v in self.items()})
@@ -401,14 +397,14 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         >>> w
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=f32[], unit=Unit("m")),
-                y=Quantity[...](value=f32[], unit=Unit("m")),
-                z=Quantity[...](value=f32[], unit=Unit("m"))
+                x=Quantity[...](value=i32[], unit=Unit("m")),
+                y=Quantity[...](value=i32[], unit=Unit("m")),
+                z=Quantity[...](value=i32[], unit=Unit("m"))
             ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
+                d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                d_y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                d_z=Quantity[...]( value=i32[], unit=Unit("m / s") )
             ) })
 
         """
@@ -475,8 +471,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         ... )
 
         >>> w.dtypes
-        mappingproxy({'length': mappingproxy({'x': dtype('float32'), 'y': dtype('float32'), 'z': dtype('float32')}),
-                      'speed': mappingproxy({'d_x': dtype('float32'), 'd_y': dtype('float32'), 'd_z': dtype('float32')})})
+        mappingproxy({'length': mappingproxy({'x': dtype('int32'), 'y': dtype('int32'), 'z': dtype('int32')}),
+                      'speed': mappingproxy({'d_x': dtype('int32'), 'd_y': dtype('int32'), 'd_z': dtype('int32')})})
 
         """  # noqa: E501
         return MappingProxyType({k: v.dtypes for k, v in self.items()})

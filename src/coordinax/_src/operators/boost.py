@@ -98,7 +98,7 @@ class VelocityBoost(AbstractOperator):
 
         >>> print(op.inverse.velocity)
         <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
-            [-1. -2. -3.]>
+            [-1 -2 -3]>
 
         """
         return VelocityBoost(-self.velocity)
@@ -120,7 +120,7 @@ class VelocityBoost(AbstractOperator):
         >>> p = cx.CartesianVel3D.from_([0, 0, 0], "m/s")
         >>> print(op(p))
         <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
-            [1. 2. 3.]>
+            [1 2 3]>
 
         """
         return p + self.velocity
@@ -139,7 +139,7 @@ class VelocityBoost(AbstractOperator):
         >>> op = cx.ops.VelocityBoost.from_([1, 0, 0], "m/s")
         >>> print((-op).velocity)
         <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
-            [-1. -0. -0.]>
+            [-1 0 0]>
 
         """
         return replace(self, velocity=-self.velocity)
@@ -174,9 +174,9 @@ def call(
     >>> newq, newp = op(q, p)
     >>> print(newq, newp, sep="\n")
     <CartesianPos3D (x[m], y[m], z[m])
-        [0. 0. 0.]>
+        [0 0 0]>
     <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
-        [1. 2. 3.]>
+        [1 2 3]>
 
     """
     pc = p.vconvert(type(self.velocity), q).uconvert(self.velocity.units)

@@ -212,12 +212,9 @@ def uconvert(usys: u.AbstractUnitSystem, vector: AbstractVector, /) -> AbstractV
     >>> usys = u.unitsystem("m", "s", "kg", "rad")
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> u.uconvert(usys, vec)
-    CartesianPos3D(
-        x=Quantity[...](value=f32[], unit=Unit("m")),
-        y=Quantity[...](value=f32[], unit=Unit("m")),
-        z=Quantity[...](value=f32[], unit=Unit("m"))
-    )
+    >>> print(u.uconvert(usys, vec))
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1000. 2000. 3000.]>
 
     """
     usys = u.unitsystem(usys)

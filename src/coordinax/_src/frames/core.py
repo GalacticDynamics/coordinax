@@ -107,7 +107,7 @@ class AbstractCoordinate(AbstractVector):
         >>> coord = cx.Coordinate(data, cx.frames.ICRS())
 
         >>> (-coord).data["length"].x
-        Quantity['length'](Array(-1., dtype=float32), unit='kpc')
+        Quantity['length'](Array(-1, dtype=int32), unit='kpc')
 
         """
         return replace(self, data=-self.data)
@@ -303,7 +303,7 @@ class Coordinate(AbstractCoordinate):
 
         >>> print(w[0].data["length"])
         <CartesianPos3D (x[kpc], y[kpc], z[kpc])
-            [1. 2. 3.]>
+            [1 2 3]>
 
         """
         return replace(self, data=self.data[index])
@@ -321,8 +321,8 @@ class Coordinate(AbstractCoordinate):
 
         >>> print(w["length"])
         <CartesianPos3D (x[kpc], y[kpc], z[kpc])
-            [[1. 2. 3.]
-             [4. 5. 6.]]>
+            [[1 2 3]
+             [4 5 6]]>
 
         """
         return self.data[index]
@@ -378,7 +378,7 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
     >>> new_coord = op(coord)
     >>> print(new_coord.data["length"])
     <CartesianPos3D (x[kpc], y[kpc], z[kpc])
-        [0. 1. 2.]>
+        [0 1 2]>
 
     """
     return replace(x, data=self(x.data))

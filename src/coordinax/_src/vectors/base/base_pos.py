@@ -221,9 +221,9 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
         "must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
-    return qlax.add(  # re-dispatch on the Cartesian class
-        lhs.vconvert(cart_cls), rhs.vconvert(cart_cls)
-    ).vconvert(type(lhs))
+    clhs = lhs.vconvert(cart_cls)
+    crhs = rhs.vconvert(cart_cls)
+    return (clhs + crhs).vconvert(type(lhs))
 
 
 # ------------------------------------------------
@@ -274,12 +274,9 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-    >>> jnp.multiply(2, vec)
-    CartesianPos3D(
-      x=Quantity[...](value=f32[], unit=Unit("m")),
-      y=Quantity[...](value=f32[], unit=Unit("m")),
-      z=Quantity[...](value=f32[], unit=Unit("m"))
-    )
+    >>> print(jnp.multiply(2, vec))
+    <CartesianPos3D (x[m], y[m], z[m])
+        [2 4 6]>
 
     Most of the position classes have specific dispatches for this operation.
     So let's define a new class and try it out:
@@ -333,12 +330,9 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     ... def vconvert(target: type[MyCartesian], current: cx.CartesianPos3D, /) -> MyCartesian:
     ...     return MyCartesian(x=current.x, y=current.y, z=current.z)
 
-    >>> jnp.multiply(2, vec)
-    MyCartesian(
-      x=Quantity[...](value=f32[1], unit=Unit("m")),
-      y=Quantity[...](value=f32[1], unit=Unit("m")),
-      z=Quantity[...](value=f32[1], unit=Unit("m"))
-    )
+    >>> print(jnp.multiply(2, vec))
+    <MyCartesian (x[m], y[m], z[m])
+        [[2 4 6]]>
 
     """  # noqa: E501
     # Validation
@@ -367,12 +361,9 @@ def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-    >>> jnp.multiply(vec, 2)
-    CartesianPos3D(
-      x=Quantity[...](value=f32[], unit=Unit("m")),
-      y=Quantity[...](value=f32[], unit=Unit("m")),
-      z=Quantity[...](value=f32[], unit=Unit("m"))
-    )
+    >>> print(jnp.multiply(vec, 2))
+    <CartesianPos3D (x[m], y[m], z[m])
+        [2 4 6]>
 
     """
     return qlax.mul(rhs, lhs)  # re-dispatch on the other side
@@ -396,9 +387,9 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
     ...     z=u.Quantity([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
-    Quantity['area'](Array([[ 1., 16., 49.],
-       [ 4., 25., 64.],
-       [ 9., 36., 81.]], dtype=float32), unit='m2')
+    Quantity['area'](Array([[ 1, 16, 49],
+                            [ 4, 25, 64],
+                            [ 9, 36, 81]], dtype=int32), unit='m2')
 
     >>> jnp.linalg.vector_norm(vec, axis=-1)
     Quantity['length'](Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
@@ -422,14 +413,9 @@ def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
     --------
     >>> import coordinax as cx
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-    >>> -vec
-    CartesianPos3D(
-        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-    )
-    >>> (-vec).x
-    Quantity['length'](Array(-1., dtype=float32), unit='m')
+    >>> print(-vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [-1 -2 -3]>
 
     """
     cart = vconvert(obj._cartesian_cls, obj)  # noqa: SLF001
@@ -455,12 +441,12 @@ def _reshape_pos(
     >>> vec = cx.CartesianPos3D(x=u.Quantity([1, 2, 3], "m"),
     ...                         y=u.Quantity([4, 5, 6], "m"),
     ...                         z=u.Quantity([7, 8, 9], "m"))
-    >>> jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
-    CartesianPos3D(
-      x=Quantity[PhysicalType('length')](value=f32[1,1,3], unit=Unit("m")),
-      y=Quantity[PhysicalType('length')](value=f32[1,1,3], unit=Unit("m")),
-      z=Quantity[PhysicalType('length')](value=f32[1,1,3], unit=Unit("m"))
-    )
+    >>> vec = jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [[[[1 4 7]
+           [2 5 8]
+           [3 6 9]]]]>
 
     """
     # Adjust the sizes for the components
