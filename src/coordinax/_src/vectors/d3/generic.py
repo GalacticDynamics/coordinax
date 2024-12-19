@@ -5,7 +5,6 @@ __all__ = [
 ]
 
 from dataclasses import fields
-from functools import partial
 from typing import TypeVar, final
 
 import equinox as eqx
@@ -31,26 +30,17 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
     --------
     >>> import coordinax as cx
     >>> vec = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "kg m /s")
-    >>> vec
-    CartesianGeneric3D(
-      x=Quantity[...]( value=f32[], unit=Unit("kg m / s") ),
-      y=Quantity[...]( value=f32[], unit=Unit("kg m / s") ),
-      z=Quantity[...]( value=f32[], unit=Unit("kg m / s") )
-    )
+    >>> print(vec)
+    <CartesianGeneric3D (x[kg m / s], y[kg m / s], z[kg m / s])
+        [1 2 3]>
 
     """
 
-    x: ct.BatchableFloatScalarQ = eqx.field(
-        converter=partial(Quantity.from_, dtype=float)
-    )
+    x: ct.BatchableScalarQ = eqx.field(converter=Quantity.from_)
 
-    y: ct.BatchableFloatScalarQ = eqx.field(
-        converter=partial(Quantity.from_, dtype=float)
-    )
+    y: ct.BatchableScalarQ = eqx.field(converter=Quantity.from_)
 
-    z: ct.BatchableFloatScalarQ = eqx.field(
-        converter=partial(Quantity.from_, dtype=float)
-    )
+    z: ct.BatchableScalarQ = eqx.field(converter=Quantity.from_)
 
     # -----------------------------------------------------
     # Unary operations
@@ -62,8 +52,9 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         --------
         >>> import coordinax as cx
         >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
-        >>> (-q).x
-        Quantity['length'](Array(-1., dtype=float32), unit='km')
+        >>> print(-q)
+        <CartesianGeneric3D (x[km], y[km], z[km])
+        [-1 -2 -3]>
 
         """
         return jax.tree.map(jnp.negative, self)
@@ -87,12 +78,9 @@ def from_(
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.CartesianGeneric3D.from_(u.Quantity([1, 2, 3], "m"))
-    >>> vec
-    CartesianGeneric3D(
-      x=Quantity[...](value=f32[], unit=Unit("m")),
-      y=Quantity[...](value=f32[], unit=Unit("m")),
-      z=Quantity[...](value=f32[], unit=Unit("m"))
-    )
+    >>> print(vec)
+    <CartesianGeneric3D (x[m], y[m], z[m])
+        [1 2 3]>
 
     """
     comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
