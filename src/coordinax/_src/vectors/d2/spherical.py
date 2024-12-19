@@ -2,7 +2,6 @@
 
 __all__ = ["TwoSphereAcc", "TwoSpherePos", "TwoSphereVel"]
 
-from functools import partial
 from typing import final
 from typing_extensions import override
 
@@ -64,13 +63,11 @@ class TwoSpherePos(AbstractPos2D):
 
     """
 
-    theta: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    theta: BatchableAngle = eqx.field(converter=Angle.from_)
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=Unless(
-            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
-        )
+        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 
@@ -136,12 +133,12 @@ class TwoSphereVel(AbstractVel2D):
     """
 
     d_theta: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
+        converter=u.Quantity["angular speed"].from_
     )
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
+        converter=u.Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
@@ -203,12 +200,12 @@ class TwoSphereAcc(AbstractAcc2D):
     """
 
     d2_theta: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
+        converter=u.Quantity["angular acceleration"].from_
     )
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
+        converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
