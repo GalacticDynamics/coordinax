@@ -152,6 +152,9 @@ def vconvert(
             if isinstance(v, AbstractDistance)
         },
     )
+    # The Jacobian requires the position to be a float
+    dtype = jnp.result_type(float)  # TODO: better match e.g. int16 to float16?
+    current_pos = current_pos.astype(dtype, copy=False)  # cast to float
 
     # Takes the Jacobian through the representation transformation function.  This
     # returns a representation of the target type, where the value of each field the
