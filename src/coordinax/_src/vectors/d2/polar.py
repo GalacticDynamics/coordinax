@@ -2,8 +2,8 @@
 
 __all__ = ["PolarAcc", "PolarPos", "PolarVel"]
 
-from functools import partial
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -37,15 +37,11 @@ class PolarPos(AbstractPos2D):
 
     """
 
-    r: BatchableDistance = eqx.field(
-        converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
-    )
+    r: BatchableDistance = eqx.field(converter=Unless(AbstractDistance, Distance.from_))
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=Unless(
-            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
-        )
+        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
     )
     r"""Polar angle, generally :math:`\phi \in [0,2\pi)`."""
 
@@ -58,6 +54,12 @@ class PolarPos(AbstractPos2D):
     def differential_cls(cls) -> type["PolarVel"]:
         return PolarVel
 
+    # TODO: figure out how to do this by primitive
+    @override
+    def norm(self) -> BatchableDistance:
+        """Return the norm of the vector."""
+        return self.r
+
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
 def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
@@ -67,21 +69,20 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> import quaxed.numpy as jnp
+    >>> import quaxed
 
     >>> v = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
+    >>> print(v)
+    <PolarPos (r[m], phi[deg])
+        [ 1 90]>
 
-    >>> jnp.linalg.vector_norm(v, axis=-1)
+    >>> quaxed.numpy.linalg.vector_norm(v, axis=-1)
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
-    >>> nv = jnp.multiply(2, v)
-    >>> nv
-    PolarPos(
-      r=Distance(value=f32[], unit=Unit("m")),
-      phi=Angle(value=f32[], unit=Unit("deg"))
-    )
-    >>> nv.r
-    Distance(Array(2., dtype=float32), unit='m')
+    >>> nv = quaxed.lax.mul(2, v)
+    >>> print(nv)
+    <PolarPos (r[m], phi[deg])
+        [ 2 90]>
 
     """
     # Validation
@@ -97,15 +98,25 @@ def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
 
 @final
 class PolarVel(AbstractVel2D):
-    """Polar differential representation."""
+    """Polar Velocity.
 
-    d_r: ct.BatchableSpeed = eqx.field(
-        converter=partial(u.Quantity["speed"].from_, dtype=float)
-    )
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> vev = cx.vecs.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(90, "deg/s"))
+    >>> print(vev)
+    <PolarVel (d_r[m / s], d_phi[deg / s])
+        [ 1 90]>
+
+    """
+
+    d_r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(u.Quantity["angular speed"].from_, dtype=float)
+        converter=u.Quantity["angular speed"].from_
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
@@ -122,15 +133,26 @@ class PolarVel(AbstractVel2D):
 
 @final
 class PolarAcc(AbstractAcc2D):
-    """Polar acceleration representation."""
+    """Polar acceleration.
 
-    d2_r: ct.BatchableAcc = eqx.field(
-        converter=partial(u.Quantity["acceleration"].from_, dtype=float)
-    )
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> acc = cx.vecs.PolarAcc(d2_r=u.Quantity(1, "m/s2"),
+    ...                        d2_phi=u.Quantity(3, "deg/s2"))
+    >>> print(acc)
+    <PolarAcc (d2_r[m / s2], d2_phi[deg / s2])
+        [1 3]>
+
+    """
+
+    d2_r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty,+\infty]`."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(u.Quantity["angular acceleration"].from_, dtype=float)
+        converter=u.Quantity["angular acceleration"].from_
     )
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""
 

@@ -118,10 +118,9 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
 
         >>> dp = cx.vecs.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
         >>> neg_dp = -dp
-        >>> neg_dp.d_r
-        Quantity['speed'](Array(-1., dtype=float32), unit='m / s')
-        >>> neg_dp.d_phi
-        Quantity['angular frequency'](Array(-1., dtype=float32), unit='mas / yr')
+        >>> print(neg_dp)
+        <PolarVel (d_r[m / s], d_phi[mas / yr])
+            [-1 -1]>
 
         """
         return jax.tree.map(jnp.negative, self)

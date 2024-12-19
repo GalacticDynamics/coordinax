@@ -67,7 +67,7 @@ def vconvert(
     current: CartesianPos1D,
     /,
     *,
-    phi: u.Quantity = u.Quantity(0.0, "radian"),
+    phi: u.Quantity = u.Quantity(0, "radian"),
     **kwargs: Any,
 ) -> PolarPos:
     """CartesianPos1D -> PolarPos.
@@ -82,15 +82,14 @@ def vconvert(
 
     >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cx.vconvert(cx.vecs.PolarPos, x)
-    >>> x2
-    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-              phi=Angle(value=f32[], unit=Unit("rad")) )
-    >>> x2.phi
-    Angle(Array(0., dtype=float32), unit='rad')
+    >>> print(x2)
+    <PolarPos (r[km], phi[rad])
+        [1. 0.]>
 
     >>> x3 = cx.vconvert(cx.vecs.PolarPos, x, phi=u.Quantity(14, "deg"))
-    >>> x3.phi
-    Angle(Array(14., dtype=float32), unit='deg')
+    >>> print(x3)
+    <PolarPos (r[km], phi[deg])
+        [ 1. 14.]>
 
     """
     return target(r=current.x, phi=phi)
@@ -314,7 +313,7 @@ def vconvert(
     >>> x3 = cx.vconvert(cx.vecs.PolarPos, x, phi=u.Quantity(14, "deg"))
     >>> print(x3)
     <PolarPos (r[km], phi[deg])
-        [ 1. 14.]>
+        [ 1 14]>
 
     """
     return target(r=current.r, phi=phi)

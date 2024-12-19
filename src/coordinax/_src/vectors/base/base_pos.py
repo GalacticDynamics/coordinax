@@ -195,7 +195,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
         >>> v.norm()
-        Quantity['length'](Array(3., dtype=float32), unit='km')
+        Distance(Array(3, dtype=int32, ...), unit='km')
 
         >>> v = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> v.norm()
