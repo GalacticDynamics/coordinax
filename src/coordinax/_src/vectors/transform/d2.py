@@ -310,7 +310,7 @@ def vconvert(
     >>> x2 = cx.vconvert(cx.vecs.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
     >>> print(x2)
     <MathSphericalPos (r[km], theta[deg], phi[deg])
-        [ 1. 10. 14.]>
+        [ 1 10 14]>
 
     """
     return target.from_(r=current.r, phi=phi, theta=current.phi)

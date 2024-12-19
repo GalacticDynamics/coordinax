@@ -446,7 +446,7 @@ def vconvert(
     ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
     >>> print(x2)
     <RadialPos (r[km])
-        [1.]>
+        [1]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)

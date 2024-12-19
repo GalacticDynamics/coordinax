@@ -139,8 +139,8 @@ def vconvert(
     current: CartesianPos1D,
     /,
     *,
-    theta: u.Quantity = u.Quantity(0.0, "radian"),
-    phi: u.Quantity = u.Quantity(0.0, "radian"),
+    theta: u.Quantity = u.Quantity(0, "radian"),
+    phi: u.Quantity = u.Quantity(0, "radian"),
     **kwargs: Any,
 ) -> SphericalPos | MathSphericalPos:
     """CartesianPos1D -> SphericalPos | MathSphericalPos.
@@ -155,41 +155,33 @@ def vconvert(
 
     SphericalPos:
 
-    >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1.0, "km"))
+    >>> x = cx.vecs.CartesianPos1D(x=u.Quantity(1, "km"))
     >>> x2 = cx.vconvert(cx.SphericalPos, x)
     >>> x2
     SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
                   theta=Angle(value=f32[], unit=Unit("deg")),
                   phi=Angle(value=f32[], unit=Unit("rad")) )
-    >>> x2.phi
-    Angle(Array(0., dtype=float32), unit='rad')
-    >>> x2.theta
-    Angle(Array(0., dtype=float32), unit='deg')
+    >>> print(x2)
+    <SphericalPos (r[km], theta[deg], phi[rad])
+        [1. 0. 0.]>
 
     >>> x3 = cx.vconvert(cx.SphericalPos, x, phi=u.Quantity(14, "deg"))
-    >>> x3.phi
-    Angle(Array(14., dtype=float32), unit='deg')
-    >>> x2.theta
-    Angle(Array(0., dtype=float32), unit='deg')
+    >>> print(x3)
+    <SphericalPos (r[km], theta[deg], phi[deg])
+        [ 1.  0. 14.]>
 
     MathSphericalPos:
     Note that ``theta`` and ``phi`` have different meanings in this context.
 
     >>> x2 = cx.vconvert(cx.vecs.MathSphericalPos, x)
-    >>> x2
-    MathSphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                      theta=Angle(value=f32[], unit=Unit("rad")),
-                      phi=Angle(value=f32[], unit=Unit("deg")) )
-    >>> x2.theta
-    Angle(Array(0., dtype=float32), unit='rad')
-    >>> x2.phi
-    Angle(Array(0., dtype=float32), unit='deg')
+    >>> print(x2)
+    <MathSphericalPos (r[km], theta[rad], phi[deg])
+        [1. 0. 0.]>
 
     >>> x3 = cx.vconvert(cx.vecs.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
-    >>> x3.theta
-    Angle(Array(0., dtype=float32), unit='rad')
-    >>> x3.phi
-    Angle(Array(14., dtype=float32), unit='deg')
+    >>> print(x3)
+    <MathSphericalPos (r[km], theta[rad], phi[deg])
+        [ 1.  0. 14.]>
 
     """
     x, theta, phi = jnp.broadcast_arrays(current.x, theta, phi)
