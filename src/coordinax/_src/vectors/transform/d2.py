@@ -284,7 +284,7 @@ def vconvert(
     >>> x2 = cx.vconvert(cx.SphericalPos, x, theta=u.Quantity(14, "deg"))
     >>> print(x2)
     <SphericalPos (r[km], theta[deg], phi[deg])
-        [ 1. 14. 10.]>
+        [ 1 14 10]>
 
     """
     return target.from_(r=current.r, theta=theta, phi=current.phi)

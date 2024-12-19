@@ -6,7 +6,6 @@ __all__: list[str] = []
 from typing import Any
 
 import equinox as eqx
-import jax
 from plum import dispatch
 
 import quaxed.numpy as xp
@@ -735,6 +734,7 @@ def vconvert(
     target: type[ProlateSpheroidalPos],
     current: ProlateSpheroidalPos,
     /,
+    Delta: u.Quantity["length"] | None = None,
     **kwargs: Any,
 ) -> ProlateSpheroidalPos:
     """ProlateSpheroidalPos -> ProlateSpheroidalPos.
@@ -759,17 +759,13 @@ def vconvert(
     Without changing the focal length, no transform is done:
 
     >>> vec2 = cx.vconvert(cx.vecs.ProlateSpheroidalPos, vec)
-    >>> vec == vec2
-    Array(True, dtype=bool)
+    >>> vec is vec2
+    True
 
     """
-    Delta = kwargs.get("Delta", current.Delta)
-    return jax.lax.cond(
-        "Delta" in kwargs,
-        lambda Delta: vconvert(target, vconvert(CylindricalPos, current), Delta=Delta),
-        lambda _: current,
-        Delta,
-    )
+    if Delta is None:
+        return current
+    return current.vconvert(CylindricalPos).vconvert(target, Delta=Delta)
 
 
 @dispatch
