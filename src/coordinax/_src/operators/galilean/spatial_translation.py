@@ -140,7 +140,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
     >>> q = u.Quantity([0, 0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
+    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='km')
 
     >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
     >>> op(vec)
@@ -200,7 +200,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
         >>> print(op.inverse.translation)
         <CartesianPos3D (x[km], y[km], z[km])
-            [-1. -1. -1.]>
+            [-1 -1 -1]>
 
         """
         return GalileanSpatialTranslation(-self.translation)
@@ -225,7 +225,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> newq = op(q)
         >>> print(newq)
         <CartesianPos3D (x[km], y[km], z[km])
-            [2. 3. 4.]>
+            [2 3 4]>
 
         """
         return q + self.translation
@@ -244,7 +244,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "km")
         >>> print((-op).translation)
         <CartesianPos3D (x[km], y[km], z[km])
-            [-1. -0. -0.]>
+            [-1 0 0]>
 
         """
         return replace(self, translation=-self.translation)
@@ -282,7 +282,7 @@ def call(
     >>> newq, newt = op(q, t)
     >>> print(newq)
     <CartesianPos3D (x[km], y[km], z[km])
-        [2. 3. 4.]>
+        [2 3 4]>
 
     This spatial translation is time independent.
 
@@ -332,7 +332,7 @@ def call(
     >>> newq, newp = op(q, p)
     >>> print(newq, newp, sep="\n")
     <CartesianPos3D (x[km], y[km], z[km])
-        [1. 1. 1.]>
+        [1 1 1]>
     <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
         [1. 2. 3.]>
 
@@ -347,6 +347,8 @@ def call(
     # 1. convert to a Quantity in Cartesian coordinates.
     q = convert(qvec.vconvert(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
     p = convert(pvec.vconvert(pvec._cartesian_cls, q), u.Quantity)  # noqa: SLF001
+    # 1.5 cast to float dtype  # TODO: more careful casting
+    q, p = q.astype(float, copy=False), p.astype(float, copy=False)
     # 2. create the Jacobian of the operation on the position
     jac = u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,))(q)
     # 3. apply the Jacobian to the velocity
@@ -381,7 +383,7 @@ def call(
     >>> newq, newp = op(q, p)
     >>> print(newq, newp, sep="\n")
     <CartesianPos3D (x[km], y[km], z[km])
-        [1. 1. 1.]>
+        [1 1 1]>
     <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
         [1. 2. 3.]>
 

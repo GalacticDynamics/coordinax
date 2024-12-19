@@ -67,7 +67,7 @@ class GalileanTranslation(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanTranslation(shift)
     >>> op
     GalileanTranslation(FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("Gyr")),
+        t=Quantity[PhysicalType('time')](value=...f32[], unit=Unit("Gyr")),
         q=SphericalPos( ... ) ))
 
     Translation operators can be applied to :class:`vector.FourVector`:
@@ -75,7 +75,7 @@ class GalileanTranslation(AbstractGalileanOperator):
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> op(w)
     FourVector(
-      t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
+      t=Quantity[PhysicalType('time')](value=...f32[], unit=Unit("s")),
       q=CartesianPos3D( ... )
     )
 
@@ -85,9 +85,9 @@ class GalileanTranslation(AbstractGalileanOperator):
     >>> t = u.Quantity(0, "Gyr")
     >>> newq, newt = op(q, t)
     >>> newq.x
-    Quantity['length'](Array(1., dtype=float32), unit='km')
+    Quantity['length'](Array(1., dtype=float32, ...), unit='km')
     >>> newt
-    Quantity['time'](Array(1., dtype=float32), unit='Gyr')
+    Quantity['time'](Array(1., dtype=float32, ...), unit='Gyr')
 
     """
 
@@ -135,7 +135,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         GalileanTranslation(FourVector( ... ))
 
         >>> op.inverse.translation.q.x
-        Quantity['length'](Array(-1., dtype=float32), unit='km')
+        Quantity['length'](Array(-1, dtype=int32), unit='km')
 
         """
         return GalileanTranslation(-self.translation)
@@ -165,16 +165,16 @@ class GalileanTranslation(AbstractGalileanOperator):
 
         >>> w = cx.FourVector.from_([0, 1, 2, 3], "km")
         >>> w.t
-        Quantity['time'](Array(0., dtype=float32), unit='s')
+        Quantity['time'](Array(0., dtype=float32, ...), unit='s')
 
         Apply the translation operator:
 
         >>> new = op(w)
         >>> new.x
-        Quantity['length'](Array(2., dtype=float32), unit='km')
+        Quantity['length'](Array(2, dtype=int32), unit='km')
 
         >>> new.t.uconvert("Gyr")
-        Quantity['time'](Array(1., dtype=float32), unit='Gyr')
+        Quantity['time'](Array(1., dtype=float32, ...), unit='Gyr')
 
         """
         return x + self.translation
@@ -209,10 +209,10 @@ class GalileanTranslation(AbstractGalileanOperator):
         >>> newq, newt = op(q, t)
 
         >>> newq.x
-        Quantity['length'](Array(2., dtype=float32), unit='km')
+        Quantity['length'](Array(2, dtype=int32), unit='km')
 
         >>> newt
-        Quantity['time'](Array(2., dtype=float32), unit='Gyr')
+        Quantity['time'](Array(2, dtype=int32, ...), unit='Gyr')
 
         """
         return (x + self.translation.q, t + self.translation.t)

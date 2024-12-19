@@ -177,11 +177,11 @@ def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[UncheckedQuantity, "*batch 3
 
     >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 2., 3.], dtype=float32), unit='km / s')
+    UncheckedQuantity(Array([1, 2, 3], dtype=int32), unit='km / s')
 
     >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, UncheckedQuantity)
-    UncheckedQuantity(Array([1., 2., 3.], dtype=float32), unit='km / s2')
+    UncheckedQuantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
 
     """
     return convert(_vec_diff_to_q(obj), UncheckedQuantity)
@@ -200,11 +200,11 @@ def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[Quantity, "*batch 3"]:
 
     >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, u.Quantity)
-    Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='km / s')
+    Quantity['speed'](Array([1, 2, 3], dtype=int32), unit='km / s')
 
     >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, u.Quantity)
-    Quantity['acceleration'](Array([1., 2., 3.], dtype=float32), unit='km / s2')
+    Quantity['acceleration'](Array([1, 2, 3], dtype=int32), unit='km / s2')
 
     """
     return convert(_vec_diff_to_q(obj), Quantity)

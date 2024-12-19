@@ -2,7 +2,6 @@
 
 __all__ = ["PoincarePolarVector"]
 
-from functools import partial
 from typing import final
 
 import equinox as eqx
@@ -20,30 +19,22 @@ from coordinax._src.vectors.base import AbstractPos, AbstractVel
 class PoincarePolarVector(AbstractPos):  # TODO: better name
     """Poincare vector + differential."""
 
-    rho: BatchableLength = eqx.field(
-        converter=partial(u.Quantity["length"].from_, dtype=float)
-    )
+    rho: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     pp_phi: Shaped[u.Quantity, "*#batch"] = eqx.field()  # TODO: dimension annotation
     r"""Poincare phi-like variable."""
 
-    z: BatchableLength = eqx.field(
-        converter=partial(u.Quantity["length"].from_, dtype=float)
-    )
+    z: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
-    d_rho: ct.BatchableSpeed = eqx.field(
-        converter=partial(u.Quantity["speed"].from_, dtype=float)
-    )
+    d_rho: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
     d_pp_phi: Shaped[u.Quantity, "*#batch"] = eqx.field()  # TODO: dimension annotation
     r"""Poincare phi-like velocity variable."""
 
-    d_z: ct.BatchableSpeed = eqx.field(
-        converter=partial(u.Quantity["speed"].from_, dtype=float)
-    )
+    d_z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
     @classproperty

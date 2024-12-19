@@ -59,28 +59,27 @@ class FourVector(AbstractPos4D):
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> w
-    FourVector(
-      t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-      q=CartesianPos3D( ... )
-    )
+    >>> print(w)
+    <FourVector (t[s], q=(x[m], y[m], z[m]))
+        [1 1 2 3]>
 
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
     3)`` array to the `q` argument. This assumes that `q` is a
     :class:`coordinax.CartesianPos3D` and uses the
     :meth:`coordinax.CartesianPos3D.from_` method to create the 3D vector.
 
-    We can also create the 3D vector explicitly:
+    We can also create a 3D vector explicitly:
 
-    >>> q = cx.CartesianPos3D(x=u.Quantity(1, "m"), y=u.Quantity(2, "m"),
-    ...                       z=u.Quantity(3, "m"))
+    >>> q = cx.SphericalPos(theta=u.Quantity(1, "deg"), phi=u.Quantity(2, "deg"),
+    ...                     r=u.Quantity(3, "m"))
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=q)
+    >>> print(w)
+    <FourVector (t[s], q=(r[m], theta[deg], phi[deg]))
+        [1 3 1 2]>
 
     """
 
-    t: ct.BatchableTime | ct.ScalarTime = eqx.field(
-        converter=partial(u.Quantity["time"].from_, dtype=float)
-    )
+    t: ct.BatchableTime | ct.ScalarTime = eqx.field(converter=u.Quantity["time"].from_)
     """Time coordinate."""
 
     q: AbstractPos3D = eqx.field(converter=Unless(AbstractPos3D, CartesianPos3D.from_))
@@ -128,20 +127,25 @@ class FourVector(AbstractPos4D):
         >>> vec = cx.FourVector.from_(xs)
         >>> vec
         FourVector(
-            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
-            q=CartesianPos3D( ... )
+            t=Quantity[...](value=...f32[], unit=Unit("m s / km")),
+            q=CartesianPos3D(
+                x=Quantity[...](value=i32[], unit=Unit("m")),
+                y=Quantity[...](value=i32[], unit=Unit("m")),
+                z=Quantity[...](value=i32[], unit=Unit("m"))
+            )
         )
 
         >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
         >>> vec = cx.FourVector.from_(xs)
         >>> vec
         FourVector(
-            t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
-            q=CartesianPos3D( ... )
+            t=Quantity[...](value=...f32[2], unit=Unit("m s / km")),
+            q=CartesianPos3D(
+                x=Quantity[...](value=i32[2], unit=Unit("m")),
+                y=Quantity[...](value=i32[2], unit=Unit("m")),
+                z=Quantity[...](value=i32[2], unit=Unit("m"))
+            )
         )
-
-        >>> vec.x
-        Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
 
         """
         _ = eqx.error_if(
@@ -164,7 +168,7 @@ class FourVector(AbstractPos4D):
 
         >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.x
-        Quantity['length'](Array(1., dtype=float32), unit='m')
+        Quantity['length'](Array(1, dtype=int32), unit='m')
 
         """
         return getattr(self.q, name)
@@ -198,11 +202,9 @@ class FourVector(AbstractPos4D):
         >>> import coordinax as cx
 
         >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-        >>> -w
-        FourVector(
-            t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-            q=CartesianPos3D( ... )
-        )
+        >>> print(-w)
+        <FourVector (t[s], q=(x[m], y[m], z[m]))
+            [-1 -1 -2 -3]>
 
         """
         return replace(self, t=-self.t, q=-self.q)
@@ -295,11 +297,11 @@ def from_(
     >>> vec = cx.FourVector.from_(u.Quantity([0, 1, 2, 3], "km"))
     >>> vec
     FourVector(
-      t=Quantity[...](value=f32[], unit=Unit("s")),
+      t=Quantity[...](value=...f32[], unit=Unit("s")),
       q=CartesianPos3D(
-        x=Quantity[...](value=f32[], unit=Unit("km")),
-        y=Quantity[...](value=f32[], unit=Unit("km")),
-        z=Quantity[...](value=f32[], unit=Unit("km"))
+        x=Quantity[...](value=i32[], unit=Unit("km")),
+        y=Quantity[...](value=i32[], unit=Unit("km")),
+        z=Quantity[...](value=i32[], unit=Unit("km"))
       )
     )
 
@@ -320,17 +322,9 @@ def _add_4v4v(self: FourVector, other: FourVector) -> FourVector:
     >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 + w2
-    >>> w3
-    FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-        q=CartesianPos3D( ... )
-    )
-
-    >>> w3.t
-    Quantity['time'](Array(3., dtype=float32), unit='s')
-
-    >>> w3.x
-    Quantity['length'](Array(5., dtype=float32), unit='m')
+    >>> print(w3)
+    <FourVector (t[s], q=(x[m], y[m], z[m]))
+        [3 5 7 9]>
 
     """
     return replace(self, t=self.t + other.t, q=self.q + other.q)
@@ -348,17 +342,9 @@ def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
     >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 - w2
-    >>> w3
-    FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
-        q=CartesianPos3D( ... )
-    )
-
-    >>> w3.t
-    Quantity['time'](Array(-1., dtype=float32), unit='s')
-
-    >>> w3.x
-    Quantity['length'](Array(-3., dtype=float32), unit='m')
+    >>> print(w3)
+    <FourVector (t[s], q=(x[m], y[m], z[m]))
+        [-1 -3 -3 -3]>
 
     """
     return replace(lhs, t=lhs.t - rhs.t, q=lhs.q - rhs.q)

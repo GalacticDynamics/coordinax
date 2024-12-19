@@ -4,13 +4,10 @@ __all__ = ["AbstractPos4D"]
 
 
 from abc import abstractmethod
-from typing import TYPE_CHECKING
+from typing import NoReturn
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos, AbstractVector
-
-if TYPE_CHECKING:
-    from typing import Never
 
 
 class AbstractPos4D(AbstractPos):
@@ -24,6 +21,6 @@ class AbstractPos4D(AbstractPos):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> "Never":  # type: ignore[override]
+    def differential_cls(cls) -> NoReturn:  # type: ignore[override]
         msg = "Not yet implemented"
         raise NotImplementedError(msg)

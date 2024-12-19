@@ -132,7 +132,7 @@ def replace(obj: Space, /, **kwargs: AbstractVector) -> Space:
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> newspace = replace(space, length=cx.CartesianPos3D.from_([3, 2, 1], "km"))
     >>> newspace["length"].x
-    Quantity['length'](Array(3., dtype=float32), unit='km')
+    Quantity['length'](Array(3, dtype=int32), unit='km')
 
     """
     return type(obj)(**{**obj, **kwargs})

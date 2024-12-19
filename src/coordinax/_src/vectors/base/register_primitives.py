@@ -116,24 +116,26 @@ def _broadcast_in_dim_p(
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> q.x
-    Quantity['length'](Array(1., dtype=float32), unit='m')
+    Quantity['length'](Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 3)).x
-    Quantity['length'](Array([1.], dtype=float32), unit='m')
+    Quantity['length'](Array([1], dtype=int32), unit='m')
 
     >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
     >>> p.d_x
-    Quantity['speed'](Array(1., dtype=float32), unit='m / s')
+    Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 3)).d_x
-    Quantity['speed'](Array([1.], dtype=float32), unit='m / s')
+    Quantity['speed'](Array([1], dtype=int32), unit='m / s')
 
     >>> a = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "m/s2")
-    >>> a.d2_x
-    Quantity['acceleration'](Array(1., dtype=float32), unit='m / s2')
+    >>> print(a)
+    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+        [1 2 3]>
 
-    >>> jnp.broadcast_to(a, (1, 3)).d2_x
-    Quantity['acceleration'](Array([1.], dtype=float32), unit='m / s2')
+    >>> print(jnp.broadcast_to(a, (1, 3)))
+    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+        [[1 2 3]]>
 
     """
     # TODO: use `jax.lax.broadcast_in_dim_p`

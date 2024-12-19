@@ -15,7 +15,6 @@ import jax
 from jaxtyping import ArrayLike
 from quax import register
 
-import quaxed.lax as qlax
 import quaxed.numpy as jnp
 from dataclassish import replace
 from dataclassish.converters import Unless
@@ -55,19 +54,15 @@ class MathSphericalPos(AbstractSphericalPos):
 
     """
 
-    r: BatchableDistance = eqx.field(
-        converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
-    )
+    r: BatchableDistance = eqx.field(converter=Unless(AbstractDistance, Distance.from_))
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
     theta: BatchableAngle = eqx.field(
-        converter=Unless(
-            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
-        )
+        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
     )
     r"""Azimuthal angle, generally :math:`\theta \in [0,360)`."""
 
-    phi: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    phi: BatchableAngle = eqx.field(converter=Angle.from_)
     r"""Inclination angle :math:`\phi \in [0,180]`."""
 
     def __check_init__(self) -> None:
@@ -93,7 +88,7 @@ class MathSphericalPos(AbstractSphericalPos):
         ...                              theta=u.Quantity(90, "deg"),
         ...                              phi=u.Quantity(0, "deg"))
         >>> s.norm()
-        Distance(Array(3., dtype=float32), unit='km')
+        Distance(Array(3, dtype=int32, ...), unit='km')
 
         """
         return self.r
@@ -116,14 +111,12 @@ def from_(
 
     Let's start with a valid input:
 
-    >>> cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
-    ...                                theta=u.Quantity(90, "deg"),
-    ...                                phi=u.Quantity(0, "deg"))
-    MathSphericalPos(
-      r=Distance(value=f32[], unit=Unit("km")),
-      theta=Angle(value=f32[], unit=Unit("deg")),
-      phi=Angle(value=f32[], unit=Unit("deg"))
-    )
+    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                                      theta=u.Quantity(90, "deg"),
+    ...                                      phi=u.Quantity(0, "deg"))
+    >>> print(vec)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [ 3 90  0]>
 
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
@@ -131,12 +124,9 @@ def from_(
     >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(-3, "km"),
     ...                                      theta=u.Quantity(100, "deg"),
     ...                                      phi=u.Quantity(45, "deg"))
-    >>> vec.r
-    Distance(Array(3., dtype=float32), unit='km')
-    >>> vec.theta
-    Angle(Array(280., dtype=float32), unit='deg')
-    >>> vec.phi
-    Angle(Array(135., dtype=float32), unit='deg')
+    >>> print(vec)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [  3 280 135]>
 
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
@@ -144,12 +134,9 @@ def from_(
     >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
     ...                                      theta=u.Quantity(0, "deg"),
     ...                                      phi=u.Quantity(190, "deg"))
-    >>> vec.r
-    Distance(Array(3., dtype=float32), unit='km')
-    >>> vec.theta
-    Angle(Array(180., dtype=float32), unit='deg')
-    >>> vec.phi
-    Angle(Array(170., dtype=float32), unit='deg')
+    >>> print(vec)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [  3 180 170]>
 
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
@@ -158,7 +145,7 @@ def from_(
     ...                                      theta=u.Quantity(365, "deg"),
     ...                                      phi=u.Quantity(90, "deg"))
     >>> vec.theta
-    Angle(Array(5., dtype=float32), unit='deg')
+    Angle(Array(5, dtype=int32, ...), unit='deg')
 
     """
     # 1) Convert the inputs
@@ -169,15 +156,15 @@ def from_(
 
     # 2) handle negative distances
     r_pred = r < jnp.zeros_like(r)
-    r = qlax.select(r_pred, -r, r)
-    theta = qlax.select(r_pred, theta + _180d, theta)
-    phi = qlax.select(r_pred, _180d - phi, phi)
+    r = jnp.where(r_pred, -r, r)
+    theta = jnp.where(r_pred, theta + _180d, theta)
+    phi = jnp.where(r_pred, _180d - phi, phi)
 
     # 3) Handle polar angle outside of [0, 180] degrees
     phi = jnp.mod(phi, _360d)  # wrap to [0, 360) deg
     phi_pred = phi < _180d
-    phi = qlax.select(phi_pred, phi, _360d - phi)
-    theta = qlax.select(phi_pred, theta, theta + _180d)
+    phi = jnp.where(phi_pred, phi, _360d - phi)
+    theta = jnp.where(phi_pred, theta, theta + _180d)
 
     # 4) Construct. This also handles the azimuthal angle wrapping
     return cls(r=r, theta=theta, phi=phi)
@@ -201,14 +188,9 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
     Quantity['length'](Array(3., dtype=float32), unit='km')
 
     >>> nv = jnp.multiply(2, v)
-    >>> nv
-    MathSphericalPos(
-      r=Distance(value=f32[], unit=Unit("km")),
-      theta=Angle(value=f32[], unit=Unit("deg")),
-      phi=Angle(value=f32[], unit=Unit("deg"))
-    )
-    >>> nv.r
-    Distance(Array(6., dtype=float32), unit='km')
+    >>> print(nv)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [ 6. 90.  0.]>
 
     """
     # Validation
@@ -226,18 +208,16 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
 class MathSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
-    d_r: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
-    )
+    d_r: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
     d_theta: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
     d_phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=Quantity["angular speed"].from_
     )
     r"""Inclination speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
@@ -261,18 +241,16 @@ class MathSphericalVel(AbstractSphericalVel):
 class MathSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
-    d2_r: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
-    )
+    d2_r: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
 
     d2_theta: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
     d2_phi: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=Quantity["angular acceleration"].from_
     )
     r"""Inclination acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 

@@ -15,6 +15,8 @@ from unxt.quantity import AbstractQuantity, Quantity
 
 Unit: TypeAlias = AstropyUnit | AstropyUnitBase | AstropyCompositeUnit
 
+BatchableScalarQ = Shaped[AbstractQuantity, "*#batch"]
+
 FloatScalarQ = Float[AbstractQuantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]
 BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]

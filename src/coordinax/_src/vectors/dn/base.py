@@ -260,7 +260,7 @@ class AbstractVelND(AbstractVel):
         >>> vec = cx.vecs.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.flatten()
         CartesianVelND(
-            d_q=Quantity[...]( value=f32[2,2], unit=Unit("m / s") )
+            d_q=Quantity[...]( value=i32[2,2], unit=Unit("m / s") )
         )
 
         """

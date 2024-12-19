@@ -88,7 +88,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
         >>> print(op.translation)
         <CartesianPos3D (x[km], y[km], z[km])
-            [1. 1. 1.]>
+            [1 1 1]>
 
         >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
         >>> print(op.translation)
@@ -98,7 +98,7 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
         >>> print(op.velocity)
         <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
-            [1. 1. 1.]>
+            [1 1 1]>
 
         """
         return cls(u.Quantity(x, unit))
@@ -187,8 +187,8 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
          [0 0 1]])
 
         >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
-        ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
+        ...     translation=u.Quantity([0., 2, 3, 4], "km"),
+        ...     velocity=u.Quantity([1., 2, 3], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
         ... )
         >>> print(op)
