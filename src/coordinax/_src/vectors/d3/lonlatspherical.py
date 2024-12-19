@@ -55,14 +55,12 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                            lat=u.Quantity(0, "deg"),
-    ...                            distance=u.Quantity(3, "km"))
-    LonLatSphericalPos(
-      lon=Angle(value=f32[], unit=Unit("deg")),
-      lat=Angle(value=f32[], unit=Unit("deg")),
-      distance=Distance(value=f32[], unit=Unit("km"))
-    )
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+    ...                                  lat=u.Quantity(0, "deg"),
+    ...                                  distance=u.Quantity(3, "km"))
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [0 0 3]>
 
     The longitude and latitude angles are in the range [0, 360) and [-90, 90] degrees,
     and the radial distance is non-negative.
@@ -72,7 +70,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     ...                                  lat=u.Quantity(90, "deg"),
     ...                                  distance=u.Quantity(3, "km"))
     >>> vec.lon
-    Angle(Array(5., dtype=float32), unit='deg')
+    Angle(Array(5, dtype=int32, ...), unit='deg')
 
     The latitude is not wrapped, but it is checked to be in the [-90, 90] degrees range.
 
@@ -101,17 +99,15 @@ class LonLatSphericalPos(AbstractSphericalPos):
     """
 
     lon: BatchableAngle = eqx.field(
-        converter=Unless(
-            Angle, lambda x: converter_azimuth_to_range(Angle.from_(x, dtype=float))
-        )
+        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
     )
     r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
 
-    lat: BatchableAngle = eqx.field(converter=partial(Angle.from_, dtype=float))
+    lat: BatchableAngle = eqx.field(converter=Angle.from_)
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
     distance: BatchableDistance = eqx.field(
-        converter=Unless(AbstractDistance, partial(Distance.from_, dtype=float))
+        converter=Unless(AbstractDistance, Distance.from_)
     )
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
@@ -139,7 +135,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
         ...                                lat=u.Quantity(90, "deg"),
         ...                                distance=u.Quantity(3, "km"))
         >>> s.norm()
-        Distance(Array(3., dtype=float32), unit='km')
+        Distance(Array(3, dtype=int32, ...), unit='km')
 
         """
         return self.distance
@@ -161,14 +157,12 @@ def from_(
 
     Let's start with a valid input:
 
-    >>> cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
-    ...                                  lat=Quantity(0, "deg"),
-    ...                                  distance=Quantity(3, "km"))
-    LonLatSphericalPos(
-      lon=Angle(value=f32[], unit=Unit("deg")),
-      lat=Angle(value=f32[], unit=Unit("deg")),
-      distance=Distance(value=f32[], unit=Unit("km"))
-    )
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
+    ...                                        lat=Quantity(0, "deg"),
+    ...                                        distance=Quantity(3, "km"))
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [0 0 3]>
 
     The distance can be negative, which wraps the longitude by 180 degrees and
     flips the latitude:
@@ -176,12 +170,9 @@ def from_(
     >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
     ...                                        lat=Quantity(45, "deg"),
     ...                                        distance=Quantity(-3, "km"))
-    >>> vec.lon
-    Angle(Array(180., dtype=float32), unit='deg')
-    >>> vec.lat
-    Angle(Array(-45., dtype=float32), unit='deg')
-    >>> vec.distance
-    Distance(Array(3., dtype=float32), unit='km')
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [180 -45   3]>
 
     The latitude can be outside the [-90, 90] deg range, causing the longitude
     to be shifted by 180 degrees:
@@ -189,22 +180,16 @@ def from_(
     >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
     ...                                        lat=Quantity(-100, "deg"),
     ...                                        distance=Quantity(3, "km"))
-    >>> vec.lon
-    Angle(Array(180., dtype=float32), unit='deg')
-    >>> vec.lat
-    Angle(Array(-80., dtype=float32), unit='deg')
-    >>> vec.distance
-    Distance(Array(3., dtype=float32), unit='km')
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [180 -80   3]>
 
     >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=Quantity(0, "deg"),
     ...                                        lat=Quantity(100, "deg"),
     ...                                        distance=Quantity(3, "km"))
-    >>> vec.lon
-    Angle(Array(180., dtype=float32), unit='deg')
-    >>> vec.lat
-    Angle(Array(80., dtype=float32), unit='deg')
-    >>> vec.distance
-    Distance(Array(3., dtype=float32), unit='km')
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [180  80   3]>
 
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
@@ -213,7 +198,7 @@ def from_(
     ...                                        lat=Quantity(0, "deg"),
     ...                                        distance=Quantity(3, "km"))
     >>> vec.lon
-    Angle(Array(5., dtype=float32), unit='deg')
+    Angle(Array(5, dtype=int32, ...), unit='deg')
 
     """
     # 1) Convert the inputs
@@ -247,21 +232,19 @@ def from_(
 
 @final
 class LonLatSphericalVel(AbstractSphericalVel):
-    """Spherical differential representation."""
+    """Spherical velocity."""
 
     d_lon: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=Quantity["angular speed"].from_
     )
     r"""Longitude speed :math:`dlon/dt \in [-\infty, \infty]."""
 
     d_lat: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=Quantity["angular speed"].from_
     )
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    d_distance: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
-    )
+    d_distance: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
     @classproperty
@@ -280,18 +263,16 @@ class LonCosLatSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
     d_lon_coslat: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=Quantity["angular speed"].from_
     )
     r"""Longitude * cos(Latitude) speed :math:`dlon/dt \in [-\infty, \infty]."""
 
     d_lat: ct.BatchableAngularSpeed = eqx.field(
-        converter=partial(Quantity["angular speed"].from_, dtype=float)
+        converter=Quantity["angular speed"].from_
     )
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    d_distance: ct.BatchableSpeed = eqx.field(
-        converter=partial(Quantity["speed"].from_, dtype=float)
-    )
+    d_distance: ct.BatchableSpeed = eqx.field(converter=Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
     @classproperty
@@ -313,18 +294,16 @@ class LonLatSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
     d2_lon: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=Quantity["angular acceleration"].from_
     )
     r"""Longitude acceleration :math:`d^2lon/dt^2 \in [-\infty, \infty]."""
 
     d2_lat: ct.BatchableAngularAcc = eqx.field(
-        converter=partial(Quantity["angular acceleration"].from_, dtype=float)
+        converter=Quantity["angular acceleration"].from_
     )
     r"""Latitude acceleration :math:`d^2lat/dt^2 \in [-\infty, \infty]."""
 
-    d2_distance: ct.BatchableAcc = eqx.field(
-        converter=partial(Quantity["acceleration"].from_, dtype=float)
-    )
+    d2_distance: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
 
     @classproperty

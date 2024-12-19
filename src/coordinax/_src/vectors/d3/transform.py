@@ -845,17 +845,11 @@ def vconvert(
     ...                                d_lat=u.Quantity(0, "deg/Gyr"),
     ...                                d_distance=u.Quantity(-5, "km/s"))
     >>> newp = cx.vconvert(cx.vecs.LonCosLatSphericalVel, p, q)
-    >>> newp
-    LonCosLatSphericalVel(
-      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_lat=Quantity[...]( value=f32[], unit=Unit("deg / Gyr") ),
-      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
-    )
+    >>> print(newp)
+    <LonCosLatSphericalVel (d_lon_coslat[mas / yr], d_lat[deg / Gyr], d_distance[km / s])
+        [ 6.894  0.    -5.   ]>
 
-    >>> newp.d_lon_coslat / jnp.cos(q.lat)  # float32 imprecision
-    Quantity['angular frequency'](Array(6.9999995, dtype=float32), unit='mas / yr')
-
-    """
+    """  # noqa: E501
     # Parse the position to an AbstractPos
     if isinstance(position, AbstractPos):
         posvec = position
