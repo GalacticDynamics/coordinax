@@ -21,6 +21,8 @@ def from_(
 ) -> cx.CartesianPos3D:
     """Construct from a :class:`astropy.coordinates.CartesianRepresentation`.
 
+    This re-dispatches to :meth:`coordinax.vecs.CartesianPos3D.from_`.
+
     Examples
     --------
     >>> import coordinax as cx
@@ -40,6 +42,8 @@ def from_(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.CylindricalRepresentation, /
 ) -> cx.vecs.CylindricalPos:
     """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`.
+
+    This re-dispatches to :meth:`coordinax.vecs.CylindricalPos.from_`.
 
     Examples
     --------
@@ -63,6 +67,8 @@ def from_(
 ) -> cx.SphericalPos:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`.
 
+    This re-dispatches to :meth:`coordinax.vecs.SphericalPos.from_`.
+
     Examples
     --------
     >>> import astropy.units as u
@@ -84,6 +90,8 @@ def from_(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.SphericalRepresentation, /
 ) -> cx.vecs.LonLatSphericalPos:
     """Construct from a :class:`astropy.coordinates.SphericalRepresentation`.
+
+    This re-dispatches to :meth:`coordinax.vecs.LonLatSphericalPos.from_`.
 
     Examples
     --------
@@ -203,6 +211,8 @@ def from_(
 ) -> cx.CartesianVel3D:
     """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
 
+    This re-dispatches to :meth:`coordinax.vecs.CartesianVel3D.from_`.
+
     Examples
     --------
     >>> import astropy.units as u
@@ -223,6 +233,8 @@ def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.CylindricalDifferential, /
 ) -> cx.vecs.CylindricalVel:
     """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.CylindricalVel.from_`.
 
     Examples
     --------
@@ -246,6 +258,8 @@ def from_(
 ) -> cx.SphericalVel:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
 
+    This re-dispatches to :meth:`coordinax.vecs.SphericalVel.from_`.
+
     Examples
     --------
     >>> import astropy.units as u
@@ -267,6 +281,8 @@ def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalDifferential, /
 ) -> cx.vecs.LonLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.LonLatSphericalVel.from_`.
 
     Examples
     --------
@@ -290,6 +306,8 @@ def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.vecs.LonCosLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.LonCosLatSphericalVel.from_`.
 
     Examples
     --------
