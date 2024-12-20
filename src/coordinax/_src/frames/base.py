@@ -68,6 +68,11 @@ def from_(
 ) -> AbstractReferenceFrame:
     """Construct a reference frame from another reference frame.
 
+    Raises
+    ------
+    TypeError
+        If the input object is not a subclass of the target class.
+
     Examples
     --------
     >>> import coordinax.frames as cxf
