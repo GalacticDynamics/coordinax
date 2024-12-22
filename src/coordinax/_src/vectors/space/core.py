@@ -556,6 +556,45 @@ def from_(cls: type[Space], obj: AbstractPos, /) -> Space:
     return cls(length=obj)
 
 
+@AbstractVector.from_.dispatch
+def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
+    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
+    >>> w = cx.Space.from_(q, p)
+    >>> w
+    Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
+
+    """
+    return cls(length=q, speed=p)
+
+
+@AbstractVector.from_.dispatch
+def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /) -> Space:
+    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> p = cx.vecs.CartesianVel3D.from_([4, 5, 6], "m/s")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+    >>> w = cx.Space.from_(q, p, a)
+    >>> w
+    Space({ 'length': CartesianPos3D( ... ),
+            'speed': CartesianVel3D( ... ),
+            'acceleration': CartesianAcc3D( ... ) })
+
+    """
+    return cls(length=q, speed=p, acceleration=a)
+
+
 # ===============================================================
 # Vector API dispatches
 

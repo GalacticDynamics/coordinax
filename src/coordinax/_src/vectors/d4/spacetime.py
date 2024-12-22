@@ -222,8 +222,8 @@ class FourVector(AbstractPos4D):
         return f"<{cls_name} ({comps})\n    {vs}>"
 
 
-# -----------------------------------------------
-# Register additional from_s
+# ===============================================================
+# Constructors
 
 
 @AbstractVector.from_.dispatch  # type: ignore[misc]
@@ -274,6 +274,9 @@ def from_(
     )
     c = cls.__dataclass_fields__["c"].default.default
     return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
+
+
+# ===============================================================
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]

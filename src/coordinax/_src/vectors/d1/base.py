@@ -9,7 +9,7 @@ from dataclasses import fields
 from jaxtyping import Shaped
 
 import quaxed.numpy as jnp
-import unxt as u
+from unxt.quantity import AbstractQuantity
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import (
@@ -45,8 +45,7 @@ class AbstractPos1D(AbstractPos):
 @AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[AbstractPos1D],
-    obj: Shaped[u.Quantity["length"], "*batch"]
-    | Shaped[u.Quantity["length"], "*batch 1"],
+    obj: Shaped[AbstractQuantity, "*batch"] | Shaped[AbstractQuantity, "*batch 1"],
     /,
 ) -> AbstractPos1D:
     """Construct a 1D position.
@@ -61,6 +60,9 @@ def from_(
 
     >>> cx.vecs.CartesianPos1D.from_(u.Quantity([1], "meter"))
     CartesianPos1D(x=Quantity[...](value=i32[], unit=Unit("m")))
+
+    >>> cx.vecs.CartesianPos1D.from_(cx.Distance(1, "meter"))
+    CartesianPos1D( x=Quantity[...](value=...i32[], unit=Unit("m")) )
 
     >>> cx.vecs.RadialPos.from_(u.Quantity(1, "meter"))
     RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
@@ -105,8 +107,7 @@ class AbstractVel1D(AbstractVel):
 @AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[AbstractVel1D],
-    obj: Shaped[u.Quantity["speed"], "*batch"]
-    | Shaped[u.Quantity["speed"], "*batch 1"],
+    obj: Shaped[AbstractQuantity, "*batch"] | Shaped[AbstractQuantity, "*batch 1"],
     /,
 ) -> AbstractVel1D:
     """Construct a 1D velocity.
@@ -159,8 +160,7 @@ class AbstractAcc1D(AbstractAcc):
 @AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[AbstractAcc1D],
-    obj: Shaped[u.Quantity["acceleration"], "*batch"]
-    | Shaped[u.Quantity["acceleration"], "*batch 1"],
+    obj: Shaped[AbstractQuantity, "*batch"] | Shaped[AbstractQuantity, "*batch 1"],
     /,
 ) -> AbstractAcc1D:
     """Construct a 1D acceleration.
