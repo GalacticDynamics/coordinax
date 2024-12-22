@@ -141,7 +141,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
         return self.distance
 
 
-@LonLatSphericalPos.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+# =====================================================
+# Constructors
+
+
+@LonLatSphericalPos.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[LonLatSphericalPos],
     *,

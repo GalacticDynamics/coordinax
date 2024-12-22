@@ -1024,6 +1024,11 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     """Construct a vector from another vector.
 
+    Raises
+    ------
+    TypeError
+        If the object is not an instance of the vector class.
+
     Parameters
     ----------
     cls : type[AbstractVector], positional-only

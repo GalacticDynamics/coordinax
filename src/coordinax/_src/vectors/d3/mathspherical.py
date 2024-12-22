@@ -94,7 +94,7 @@ class MathSphericalPos(AbstractSphericalPos):
         return self.r
 
 
-@MathSphericalPos.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+@MathSphericalPos.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(
     cls: type[MathSphericalPos],
     *,

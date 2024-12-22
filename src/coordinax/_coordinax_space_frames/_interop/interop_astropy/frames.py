@@ -9,7 +9,7 @@ from coordinax._coordinax_space_frames import ICRS, Galactocentric
 from coordinax._src.vectors.d3 import LonLatSphericalPos
 
 
-@ICRS.from_._f.register  # noqa: SLF001
+@ICRS.from_.dispatch
 def from_(cls: type[ICRS], obj: apyc.ICRS, /) -> ICRS:
     """Construct from a `astropy.coordinates.ICRS`.
 
@@ -27,7 +27,7 @@ def from_(cls: type[ICRS], obj: apyc.ICRS, /) -> ICRS:
     return cls()
 
 
-@Galactocentric.from_._f.register  # noqa: SLF001
+@Galactocentric.from_.dispatch
 def from_(cls: type[Galactocentric], obj: apyc.Galactocentric, /) -> Galactocentric:
     """Construct from a `astropy.coordinates.Galactocentric`.
 
