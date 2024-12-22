@@ -62,77 +62,11 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     # Constructors
 
     @classmethod
-    @dispatch
+    @dispatch.abstract  # type: ignore[misc]
     def from_(
-        cls: "type[AbstractVector]", obj: Mapping[str, Any], /
+        cls: "type[AbstractVector]", *args: Any, **kwargs: Any
     ) -> "AbstractVector":
-        """Construct a vector from a mapping.
-
-        Parameters
-        ----------
-        obj : Mapping[str, Any]
-            The mapping of components.
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> xs = {"x": u.Quantity(1, "m"), "y": u.Quantity(2, "m"),
-        ...       "z": u.Quantity(3, "m")}
-        >>> vec = cx.CartesianPos3D.from_(xs)
-        >>> print(vec)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [1 2 3]>
-
-        >>> xs = {"x": u.Quantity([1, 2], "m"), "y": u.Quantity([3, 4], "m"),
-        ...       "z": u.Quantity([5, 6], "m")}
-        >>> vec = cx.CartesianPos3D.from_(xs)
-        >>> print(vec)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [[1 3 5]
-            [2 4 6]]>
-
-        """
-        return cls(**obj)
-
-    @classmethod
-    @dispatch
-    def from_(
-        cls: "type[AbstractVector]", obj: ArrayLike | list[Any], unit: Unit | str, /
-    ) -> "AbstractVector":
-        """Construct a vector from an array and unit.
-
-        The array is expected to have the components as the last dimension.
-
-        Parameters
-        ----------
-        obj : ArrayLike[Any, (*#batch, N), "..."]
-            The array of components.
-        unit : Unit | str
-            The unit of the quantity
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "meter")
-        >>> print(vec)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [1 2 3]>
-
-        >>> xs = jnp.array([[1, 2, 3], [4, 5, 6]])
-        >>> vec = cx.CartesianPos3D.from_(xs, "meter")
-        >>> print(vec)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [[1 2 3]
-            [4 5 6]]>
-
-        """
-        obj = u.Quantity.from_(jnp.asarray(obj), unit)
-        return cls.from_(obj)  # re-dispatch
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Vector API
@@ -1020,9 +954,74 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 # Register additional constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[attr-defined, misc]
+@AbstractVector.from_.dispatch
+def from_(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVector:
+    """Construct a vector from a mapping.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> xs = {"x": u.Quantity(1, "m"), "y": u.Quantity(2, "m"),
+    ...       "z": u.Quantity(3, "m")}
+    >>> vec = cx.CartesianPos3D.from_(xs)
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1 2 3]>
+
+    >>> xs = {"x": u.Quantity([1, 2], "m"), "y": u.Quantity([3, 4], "m"),
+    ...       "z": u.Quantity([5, 6], "m")}
+    >>> vec = cx.CartesianPos3D.from_(xs)
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [[1 3 5]
+        [2 4 6]]>
+
+    """
+    return cls(**obj)
+
+
+@AbstractVector.from_.dispatch
+def from_(
+    cls: type[AbstractVector], obj: ArrayLike | list[Any], unit: Unit | str, /
+) -> AbstractVector:
+    """Construct a vector from an array and unit.
+
+    The ``ArrayLike[Any, (*#batch, N), "..."]`` is expected to have the
+    components as the last dimension.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import coordinax as cx
+
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "meter")
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1 2 3]>
+
+    >>> xs = jnp.array([[1, 2, 3], [4, 5, 6]])
+    >>> vec = cx.CartesianPos3D.from_(xs, "meter")
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [[1 2 3]
+        [4 5 6]]>
+
+    """
+    obj = u.Quantity.from_(jnp.asarray(obj), unit)
+    return cls.from_(obj)  # re-dispatch
+
+
+@AbstractVector.from_.dispatch
 def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     """Construct a vector from another vector.
+
+    Raises
+    ------
+    TypeError
+        If the object is not an instance of the vector class.
 
     Parameters
     ----------

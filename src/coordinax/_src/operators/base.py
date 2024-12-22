@@ -246,6 +246,11 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
 def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOperator:
     """Construct an operator from another operator.
 
+    Raises
+    ------
+    TypeError
+        If the input object is not a subclass of the target class.
+
     Examples
     --------
     >>> import coordinax as cx

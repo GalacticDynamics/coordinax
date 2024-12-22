@@ -2,7 +2,7 @@
 
 __all__ = ["FourVector"]
 
-from dataclasses import KW_ONLY, fields, replace
+from dataclasses import KW_ONLY, replace
 from functools import partial
 from typing import TYPE_CHECKING, Any, final
 from typing_extensions import override
@@ -18,7 +18,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_values
 from dataclassish.converters import Unless
-from unxt.quantity import AbstractQuantity, Quantity
+from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractPos4D
@@ -99,63 +99,6 @@ class FourVector(AbstractPos4D):
             msg = "t and q must be broadcastable to the same shape."
             raise ValueError(msg)
 
-    # ---------------------------------------------------------------
-    # Constructors
-
-    @classmethod
-    @AbstractPos4D.from_.dispatch  # type: ignore[attr-defined, misc]
-    def from_(
-        cls: "type[FourVector]", obj: Shaped[u.Quantity, "*batch 4"], /
-    ) -> "FourVector":
-        """Construct a vector from a Quantity array.
-
-        The array is expected to have the components as the last dimension.
-
-        Parameters
-        ----------
-        obj : Quantity[Any, (*#batch, 4), "..."]
-            The array of components.
-            The 4 components are the (c x) time, x, y, z.
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
-        >>> vec = cx.FourVector.from_(xs)
-        >>> vec
-        FourVector(
-            t=Quantity[...](value=...f32[], unit=Unit("m s / km")),
-            q=CartesianPos3D(
-                x=Quantity[...](value=i32[], unit=Unit("m")),
-                y=Quantity[...](value=i32[], unit=Unit("m")),
-                z=Quantity[...](value=i32[], unit=Unit("m"))
-            )
-        )
-
-        >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
-        >>> vec = cx.FourVector.from_(xs)
-        >>> vec
-        FourVector(
-            t=Quantity[...](value=...f32[2], unit=Unit("m s / km")),
-            q=CartesianPos3D(
-                x=Quantity[...](value=i32[2], unit=Unit("m")),
-                y=Quantity[...](value=i32[2], unit=Unit("m")),
-                z=Quantity[...](value=i32[2], unit=Unit("m"))
-            )
-        )
-
-        """
-        _ = eqx.error_if(
-            obj,
-            obj.shape[-1] != 4,
-            f"Cannot construct {cls} from array with shape {obj.shape}.",
-        )
-        c = cls.__dataclass_fields__["c"].default.default
-        return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
-
     # ===============================================================
 
     def __getattr__(self, name: str) -> Any:
@@ -212,7 +155,7 @@ class FourVector(AbstractPos4D):
     # -------------------------------------------
 
     @partial(eqx.filter_jit, inline=True)
-    def _norm2(self) -> Shaped[Quantity["area"], "*#batch"]:
+    def _norm2(self) -> Shaped[u.Quantity["area"], "*#batch"]:
         r"""Return the squared vector norm :math:`(ct)^2 - (x^2 + y^2 + z^2)`.
 
         Examples
@@ -279,35 +222,61 @@ class FourVector(AbstractPos4D):
         return f"<{cls_name} ({comps})\n    {vs}>"
 
 
-# -----------------------------------------------
-# Register additional from_s
+# ===============================================================
+# Constructors
 
 
-@FourVector.from_.dispatch  # type: ignore[misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
-    cls: type[FourVector], obj: Shaped[AbstractQuantity, "*batch 3"], /
+    cls: type[FourVector], obj: Shaped[AbstractQuantity, "*batch 4"], /
 ) -> FourVector:
-    """Construct a 3D Cartesian position.
+    """Construct a vector from a Quantity array.
+
+    The ``Quantity[Any, (*#batch, 4), "..."]`` is expected to have the
+    components as the last dimension. The 4 components are the (c x) time, x, y,
+    z.
 
     Examples
     --------
+    >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.FourVector.from_(u.Quantity([0, 1, 2, 3], "km"))
+    >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
+    >>> vec = cx.FourVector.from_(xs)
     >>> vec
     FourVector(
-      t=Quantity[...](value=...f32[], unit=Unit("s")),
-      q=CartesianPos3D(
-        x=Quantity[...](value=i32[], unit=Unit("km")),
-        y=Quantity[...](value=i32[], unit=Unit("km")),
-        z=Quantity[...](value=i32[], unit=Unit("km"))
-      )
+        t=Quantity[...](value=...f32[], unit=Unit("m s / km")),
+        q=CartesianPos3D(
+            x=Quantity[...](value=i32[], unit=Unit("m")),
+            y=Quantity[...](value=i32[], unit=Unit("m")),
+            z=Quantity[...](value=i32[], unit=Unit("m"))
+        )
+    )
+
+    >>> xs = u.Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
+    >>> vec = cx.FourVector.from_(xs)
+    >>> vec
+    FourVector(
+        t=Quantity[...](value=...f32[2], unit=Unit("m s / km")),
+        q=CartesianPos3D(
+            x=Quantity[...](value=i32[2], unit=Unit("m")),
+            y=Quantity[...](value=i32[2], unit=Unit("m")),
+            z=Quantity[...](value=i32[2], unit=Unit("m"))
+        )
     )
 
     """
-    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
-    return cls(**comps)
+    _ = eqx.error_if(
+        obj,
+        obj.shape[-1] != 4,
+        f"Cannot construct {cls} from array with shape {obj.shape}.",
+    )
+    c = cls.__dataclass_fields__["c"].default.default
+    return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
+
+
+# ===============================================================
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]

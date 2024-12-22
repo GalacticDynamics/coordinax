@@ -30,6 +30,7 @@ from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
+from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
@@ -141,7 +142,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
         return self.distance
 
 
-@LonLatSphericalPos.from_._f.register  # type: ignore[attr-defined, misc]  # noqa: SLF001
+# =====================================================
+# Constructors
+
+
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[LonLatSphericalPos],
     *,

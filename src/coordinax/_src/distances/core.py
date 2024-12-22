@@ -272,7 +272,7 @@ class DistanceModulus(AbstractDistance):
 # Additional constructors
 
 
-@Distance.from_._f.register  # noqa: SLF001
+@Distance.from_.dispatch
 def from_(
     cls: type[Distance], value: Parallax | u.Quantity["angle"], /, *, dtype: Any = None
 ) -> Distance:
@@ -294,7 +294,7 @@ def from_(
     return cls(jnp.asarray(d.value, dtype=dtype), d.unit)
 
 
-@Distance.from_._f.register  # type: ignore[no-redef]  # noqa: SLF001
+@Distance.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[Distance],
     value: DistanceModulus | u.Quantity["mag"],
@@ -320,7 +320,7 @@ def from_(
     return cls(jnp.asarray(d, dtype=dtype), "pc")
 
 
-@Parallax.from_._f.register  # type: ignore[no-redef]  # noqa: SLF001
+@Parallax.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[Parallax], value: Distance | u.Quantity["length"], /, *, dtype: Any = None
 ) -> Parallax:

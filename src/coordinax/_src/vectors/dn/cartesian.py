@@ -16,12 +16,13 @@ from quax import register
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base import AbstractPos, AbstractVector
 from coordinax._src.vectors.base.mixins import AvalMixin
 
 ##############################################################################
@@ -121,11 +122,10 @@ class CartesianPosND(AbstractPosND):
 # -------------------------------------------------------------------
 
 
-# TODO: move to the class in py3.11+
-@CartesianPosND.from_.dispatch  # type: ignore[attr-defined,misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianPosND],
-    x: Shaped[u.Quantity["length"], ""] | Shaped[u.Quantity["length"], "*batch N"],
+    x: Shaped[AbstractQuantity, ""] | Shaped[AbstractQuantity, "*batch N"],
     /,
 ) -> CartesianPosND:
     """Construct an N-dimensional position.
@@ -372,11 +372,10 @@ class CartesianVelND(AvalMixin, AbstractVelND):
 # -------------------------------------------------------------------
 
 
-# TODO: move to the class in py3.11+
-@CartesianVelND.from_.dispatch  # type: ignore[attr-defined,misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianVelND],
-    x: Shaped[u.Quantity["speed"], ""] | Shaped[u.Quantity["speed"], "*batch N"],
+    x: Shaped[AbstractQuantity, ""] | Shaped[AbstractQuantity, "*batch N"],
     /,
 ) -> CartesianVelND:
     """Construct an N-dimensional velocity.
@@ -544,12 +543,10 @@ class CartesianAccND(AvalMixin, AbstractAccND):
 # -------------------------------------------------------------------
 
 
-# TODO: move to the class in py3.11+
-@CartesianAccND.from_.dispatch  # type: ignore[attr-defined,misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianAccND],
-    x: Shaped[u.Quantity["acceleration"], ""]
-    | Shaped[u.Quantity["acceleration"], "*batch N"],
+    x: Shaped[AbstractQuantity, ""] | Shaped[AbstractQuantity, "*batch N"],
     /,
 ) -> CartesianAccND:
     """Construct an N-dimensional acceleration.

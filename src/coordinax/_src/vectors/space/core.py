@@ -113,26 +113,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         ImmutableMap.__init__(self, dict(zip(keys, raw.values(), strict=True)))
 
-    # ---------------------------------------------------------------
-    # Constructors
-
-    @classmethod
-    @AbstractVector.from_.dispatch  # type: ignore[attr-defined, misc]
-    def from_(cls: "type[Space]", obj: AbstractPos, /) -> "Space":
-        """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> w = cx.Space.from_(q)
-        >>> w
-        Space({ 'length': CartesianPos3D( ... ) })
-
-        """
-        return cls(length=obj)
-
     # ===============================================================
     # Mapping API
 
@@ -543,7 +523,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
 
 # This dispatch is needed because a Space is both a Map and a Vector.
-@AbstractVector.from_.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
+@AbstractVector.from_.dispatch(precedence=1)
 def from_(cls: type[Space], obj: Space, /) -> Space:
     """Construct a Space, returning the Space.
 
@@ -557,6 +537,62 @@ def from_(cls: type[Space], obj: Space, /) -> Space:
 
     """
     return obj
+
+
+@AbstractVector.from_.dispatch
+def from_(cls: type[Space], obj: AbstractPos, /) -> Space:
+    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> w = cx.Space.from_(q)
+    >>> w
+    Space({ 'length': CartesianPos3D( ... ) })
+
+    """
+    return cls(length=obj)
+
+
+@AbstractVector.from_.dispatch
+def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
+    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
+    >>> w = cx.Space.from_(q, p)
+    >>> w
+    Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
+
+    """
+    return cls(length=q, speed=p)
+
+
+@AbstractVector.from_.dispatch
+def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /) -> Space:
+    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> p = cx.vecs.CartesianVel3D.from_([4, 5, 6], "m/s")
+    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+    >>> w = cx.Space.from_(q, p, a)
+    >>> w
+    Space({ 'length': CartesianPos3D( ... ),
+            'speed': CartesianVel3D( ... ),
+            'acceleration': CartesianAcc3D( ... ) })
+
+    """
+    return cls(length=q, speed=p, acceleration=a)
 
 
 # ===============================================================
