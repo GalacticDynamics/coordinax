@@ -27,7 +27,7 @@ from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .generic import CartesianGeneric3D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty, is_abstract_quantity
-from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base import AbstractPos, AbstractVector
 from coordinax._src.vectors.base.mixins import AvalMixin
 
 #####################################################################
@@ -71,7 +71,7 @@ class CartesianPos3D(AbstractPos3D):
 # Constructors
 
 
-@CartesianPos3D.from_.dispatch  # type: ignore[attr-defined, misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianPos3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
@@ -248,7 +248,7 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
 # -----------------------------------------------------
 
 
-@CartesianVel3D.from_.dispatch  # type: ignore[attr-defined,misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianVel3D],
     obj: AbstractQuantity,  # TODO: Shaped[AbstractQuantity, "*batch 3"]
@@ -354,7 +354,7 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
 # -----------------------------------------------------
 
 
-@CartesianAcc3D.from_.dispatch  # type: ignore[attr-defined, misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianAcc3D], obj: Shaped[AbstractQuantity, "*batch 3"], /
 ) -> CartesianAcc3D:

@@ -7,11 +7,12 @@ from typing import Any
 
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
+from coordinax._src.vectors.base import AbstractVector
 
 #####################################################################
 
 
-@AbstractPos3D.from_.dispatch(precedence=-1)
+@AbstractVector.from_.dispatch(precedence=-1)
 def from_(cls: type[AbstractPos3D], obj: Any, /) -> CartesianPos3D:
     """Try to construct a 3D Cartesian position from an object.
 
@@ -30,7 +31,7 @@ def from_(cls: type[AbstractPos3D], obj: Any, /) -> CartesianPos3D:
     return obj if isinstance(obj, CartesianPos3D) else CartesianPos3D.from_(obj)
 
 
-@AbstractPos3D.from_.dispatch(precedence=1)
+@AbstractVector.from_.dispatch(precedence=1)
 def from_(cls: type[AbstractPos3D], obj: AbstractPos3D, /) -> AbstractPos3D:
     """Construct from a 3D position.
 
@@ -57,7 +58,7 @@ def from_(cls: type[AbstractPos3D], obj: AbstractPos3D, /) -> AbstractPos3D:
 #####################################################################
 
 
-@AbstractVel3D.from_.dispatch(precedence=-1)
+@AbstractVector.from_.dispatch(precedence=-1)
 def from_(cls: type[AbstractVel3D], obj: Any, /) -> CartesianVel3D:
     """Try to construct a 3D Cartesian velocity from an object.
 
@@ -76,7 +77,7 @@ def from_(cls: type[AbstractVel3D], obj: Any, /) -> CartesianVel3D:
     return obj if isinstance(obj, CartesianVel3D) else CartesianVel3D.from_(obj)
 
 
-@AbstractVel3D.from_.dispatch(precedence=1)
+@AbstractVector.from_.dispatch(precedence=1)
 def from_(cls: type[AbstractVel3D], obj: AbstractVel3D, /) -> AbstractVel3D:
     """Construct from a 3D velocity.
 
@@ -105,7 +106,7 @@ def from_(cls: type[AbstractVel3D], obj: AbstractVel3D, /) -> AbstractVel3D:
 #####################################################################
 
 
-@AbstractAcc3D.from_.dispatch(precedence=-1)
+@AbstractVector.from_.dispatch(precedence=-1)
 def from_(cls: type[AbstractAcc3D], obj: Any, /) -> CartesianAcc3D:
     """Try to construct a 3D Cartesian velocity from an object.
 
@@ -124,7 +125,7 @@ def from_(cls: type[AbstractAcc3D], obj: Any, /) -> CartesianAcc3D:
     return obj if isinstance(obj, CartesianAcc3D) else CartesianAcc3D.from_(obj)
 
 
-@AbstractAcc3D.from_.dispatch(precedence=1)
+@AbstractVector.from_.dispatch(precedence=1)
 def from_(cls: type[AbstractAcc3D], obj: AbstractAcc3D, /) -> AbstractAcc3D:
     """Construct from a 3D velocity.
 

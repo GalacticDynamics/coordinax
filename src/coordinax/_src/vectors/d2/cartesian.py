@@ -25,7 +25,7 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base import AbstractPos, AbstractVector
 from coordinax._src.vectors.base.mixins import AvalMixin
 
 
@@ -59,7 +59,7 @@ class CartesianPos2D(AbstractPos2D):
 # -----------------------------------------------------
 
 
-@CartesianPos2D.from_.dispatch  # type: ignore[attr-defined, misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianPos2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
 ) -> CartesianPos2D:
@@ -206,7 +206,7 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
 # -----------------------------------------------------
 
 
-@CartesianVel2D.from_.dispatch  # type: ignore[attr-defined, misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianVel2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
 ) -> CartesianVel2D:
@@ -330,7 +330,7 @@ class CartesianAcc2D(AvalMixin, AbstractAcc2D):
 # -----------------------------------------------------
 
 
-@CartesianAcc2D.from_.dispatch  # type: ignore[attr-defined, misc]
+@AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(cls: type[CartesianAcc2D], obj: AbstractQuantity, /) -> CartesianAcc2D:
     """Construct a 2D Cartesian velocity.
 
