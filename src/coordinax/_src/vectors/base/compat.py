@@ -17,9 +17,10 @@ from dataclassish import field_values, replace
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
 from .attribute import VectorAttribute
-from .base import AbstractVector, ToUnitsOptions
+from .base import AbstractVector
 from .base_pos import AbstractPos
 from .flags import AttrFilter
+from .utils import ToUnitsOptions
 from coordinax._src.distances import Distance
 from coordinax._src.typing import Unit
 from coordinax._src.vectors.utils import full_shaped
