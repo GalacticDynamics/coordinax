@@ -1,5 +1,4 @@
 """Interoperability with :mod:`astropy.coordinates`."""
-# mypy: disable-error-code="attr-defined"
 
 __all__: list[str] = []
 
@@ -12,10 +11,8 @@ import unxt as u
 
 import coordinax as cx
 
-#####################################################################
 
-
-@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.CartesianRepresentation, /
 ) -> cx.CartesianPos3D:
@@ -37,7 +34,7 @@ def from_(
     return cx.CartesianPos3D.from_(obj)
 
 
-@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.CylindricalRepresentation, /
 ) -> cx.vecs.CylindricalPos:
@@ -61,7 +58,7 @@ def from_(
     return cx.vecs.CylindricalPos.from_(obj)
 
 
-@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.PhysicsSphericalRepresentation, /
 ) -> cx.SphericalPos:
@@ -85,7 +82,7 @@ def from_(
     return cx.SphericalPos.from_(obj)
 
 
-@cx.vecs.AbstractPos3D.from_.dispatch(precedence=-1)
+@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
 def from_(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.SphericalRepresentation, /
 ) -> cx.vecs.LonLatSphericalPos:
@@ -112,7 +109,7 @@ def from_(
 # -------------------------------------------------------------------
 
 
-@cx.CartesianPos3D.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.CartesianPos3D], obj: apyc.BaseRepresentation, /
 ) -> cx.CartesianPos3D:
@@ -133,7 +130,7 @@ def from_(
     return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
-@cx.vecs.CylindricalPos.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.CylindricalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.vecs.CylindricalPos:
@@ -156,7 +153,7 @@ def from_(
     return cls(rho=obj.rho, phi=obj.phi, z=obj.z)
 
 
-@cx.SphericalPos.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.SphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.SphericalPos:
@@ -179,7 +176,7 @@ def from_(
     return cls(r=obj.r, theta=obj.theta, phi=obj.phi)
 
 
-@cx.vecs.LonLatSphericalPos.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.LonLatSphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.vecs.LonLatSphericalPos:
@@ -205,7 +202,7 @@ def from_(
 #####################################################################
 
 
-@cx.vecs.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
@@ -228,7 +225,7 @@ def from_(
     return cx.CartesianVel3D.from_(obj)
 
 
-@cx.vecs.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.CylindricalDifferential, /
 ) -> cx.vecs.CylindricalVel:
@@ -252,7 +249,7 @@ def from_(
     return cx.vecs.CylindricalVel.from_(obj)
 
 
-@cx.vecs.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
@@ -276,7 +273,7 @@ def from_(
     return cx.SphericalVel.from_(obj)
 
 
-@cx.vecs.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalDifferential, /
 ) -> cx.vecs.LonLatSphericalVel:
@@ -301,7 +298,7 @@ def from_(
     return cx.vecs.LonLatSphericalVel.from_(obj)
 
 
-@cx.vecs.AbstractVel3D.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.vecs.LonCosLatSphericalVel:
@@ -335,7 +332,7 @@ def from_(
 # -------------------------------------------------------------------
 
 
-@cx.CartesianVel3D.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.CartesianVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
@@ -356,7 +353,7 @@ def from_(
     return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
-@cx.vecs.CylindricalVel.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.CylindricalVel], obj: apyc.CylindricalDifferential, /
 ) -> cx.vecs.CylindricalVel:
@@ -378,7 +375,7 @@ def from_(
     return cls(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
 
 
-@cx.SphericalVel.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.SphericalVel], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
@@ -400,7 +397,7 @@ def from_(
     return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
 
 
-@cx.vecs.LonLatSphericalVel.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.LonLatSphericalVel], obj: apyc.SphericalDifferential, /
 ) -> cx.vecs.LonLatSphericalVel:
@@ -423,7 +420,7 @@ def from_(
     return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
 
 
-@cx.vecs.LonCosLatSphericalVel.from_.dispatch
+@cx.vecs.AbstractVector.from_.dispatch
 def from_(
     cls: type[cx.vecs.LonCosLatSphericalVel], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.vecs.LonCosLatSphericalVel:
