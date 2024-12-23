@@ -1,15 +1,9 @@
 """Representation of coordinates in different systems."""
 
-__all__ = [
-    # vector classes
-    "AbstractVector",
-    # other
-    "ToUnitsOptions",
-]
+__all__ = ["AbstractVector"]
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
-from enum import Enum
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
@@ -37,16 +31,6 @@ if TYPE_CHECKING:
     from typing import Self
 
 VT = TypeVar("VT", bound="AbstractVector")
-
-
-class ToUnitsOptions(Enum):
-    """Options for the units argument of `AbstractVector.uconvert`."""
-
-    consistent = "consistent"
-    """Convert to consistent units."""
-
-
-# ===================================================================
 
 
 class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue):  # type: ignore[misc]
