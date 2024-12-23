@@ -10,6 +10,7 @@ import jax.numpy as jnp
 
 import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import AbstractQuantity
 
 from .base import AbstractDistance
 
@@ -272,7 +273,7 @@ class DistanceModulus(AbstractDistance):
 # Additional constructors
 
 
-@Distance.from_.dispatch
+@AbstractQuantity.from_.dispatch
 def from_(
     cls: type[Distance], value: Parallax | u.Quantity["angle"], /, *, dtype: Any = None
 ) -> Distance:
@@ -294,7 +295,7 @@ def from_(
     return cls(jnp.asarray(d.value, dtype=dtype), d.unit)
 
 
-@Distance.from_.dispatch  # type: ignore[no-redef]
+@AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[Distance],
     value: DistanceModulus | u.Quantity["mag"],
@@ -320,7 +321,7 @@ def from_(
     return cls(jnp.asarray(d, dtype=dtype), "pc")
 
 
-@Parallax.from_.dispatch  # type: ignore[no-redef]
+@AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[Parallax], value: Distance | u.Quantity["length"], /, *, dtype: Any = None
 ) -> Parallax:

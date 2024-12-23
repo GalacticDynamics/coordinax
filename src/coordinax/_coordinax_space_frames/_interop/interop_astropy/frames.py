@@ -6,10 +6,11 @@ import astropy.coordinates as apyc
 import equinox as eqx
 
 from coordinax._coordinax_space_frames import ICRS, Galactocentric
+from coordinax._src.frames.base import AbstractReferenceFrame
 from coordinax._src.vectors.d3 import LonLatSphericalPos
 
 
-@ICRS.from_.dispatch
+@AbstractReferenceFrame.from_.dispatch
 def from_(cls: type[ICRS], obj: apyc.ICRS, /) -> ICRS:
     """Construct from a `astropy.coordinates.ICRS`.
 
@@ -27,7 +28,7 @@ def from_(cls: type[ICRS], obj: apyc.ICRS, /) -> ICRS:
     return cls()
 
 
-@Galactocentric.from_.dispatch
+@AbstractReferenceFrame.from_.dispatch
 def from_(cls: type[Galactocentric], obj: apyc.Galactocentric, /) -> Galactocentric:
     """Construct from a `astropy.coordinates.Galactocentric`.
 

@@ -241,7 +241,6 @@ class AbstractOperator(eqx.Module):  # type: ignore[misc]
         return Pipe((self, other))
 
 
-# TODO: move to the class in py3.11+
 @AbstractOperator.from_.dispatch  # type: ignore[attr-defined, misc]
 def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOperator:
     """Construct an operator from another operator.
