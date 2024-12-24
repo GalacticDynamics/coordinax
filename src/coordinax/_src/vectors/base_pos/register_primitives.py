@@ -15,6 +15,7 @@ import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
+from unxt.quantity import AbstractQuantity
 
 from .core import AbstractPos
 from coordinax._src.vectors.api import vconvert
@@ -36,6 +37,40 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     clhs = lhs.vconvert(cart_cls)
     crhs = rhs.vconvert(cart_cls)
     return (clhs + crhs).vconvert(type(lhs))
+
+
+# ------------------------------------------------
+# Dot product
+# TODO: see implementation in https://github.com/google/tree-math for how to do
+# this more generally.
+
+
+@register(jax.lax.dot_general_p)  # type: ignore[misc]
+def _dot_general_pos(
+    lhs: AbstractPos, rhs: AbstractPos, /, **kwargs: Any
+) -> AbstractQuantity:
+    """Dot product of two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.SphericalPos(
+    ...     r=u.Quantity([1, 2, 3], "m"),
+    ...     theta=u.Quantity([0, 0, 0], "rad"),
+    ...     phi=u.Quantity([0, 0, 0], "rad"))
+
+    >>> jnp.dot(vec, vec)
+    Quantity['area'](Array([1., 4., 9.], dtype=float32), unit='m2')
+
+    """
+    return qlax.dot_general(
+        lhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
+        rhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
+        **kwargs,
+    )
 
 
 # ------------------------------------------------
