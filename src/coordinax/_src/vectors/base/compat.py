@@ -402,8 +402,7 @@ def fields(flag: type[AttrFilter], obj: object) -> tuple[Field, ...]:  # type: i
     ['t', 'q']
 
     """
-    obj_cls = type(obj)
-    return tuple(field for field in fields(obj) if not _is_attr(obj_cls, field.name))
+    return fields(flag, type(obj))
 
 
 @dispatch
@@ -414,10 +413,14 @@ def fields(flag: type[AttrFilter], obj_cls: type[object]) -> tuple[Field, ...]: 
     --------
     An example vector class with a `VectorAttribute` field is `FourVector`.
 
-    >>> from dataclassish import fields
+    >>> import dataclasses
+    >>> import dataclassish
     >>> import coordinax as cx
 
-    >>> [f.name for f in fields(cx.vecs.AttrFilter, cx.FourVector)]
+    >>> [f.name for f in dataclasses.fields(cx.FourVector)]
+    ['t', 'q', 'c']
+
+    >>> [f.name for f in dataclassish.fields(cx.vecs.AttrFilter, cx.FourVector)]
     ['t', 'q']
 
     """
