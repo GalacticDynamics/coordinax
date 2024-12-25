@@ -142,18 +142,18 @@ def classproperty(
     return ClassPropertyDescriptor[EnclosingT, GetterRetT](fget)
 
 
-def is_abstract_quantity(obj: object, /) -> TypeGuard[AbstractQuantity]:
+def is_any_quantity(obj: object, /) -> TypeGuard[AbstractQuantity]:
     """Check if an object is an abstract quantity.
 
     Examples
     --------
     >>> import unxt as u
-    >>> from coordinax._src.utils import is_abstract_quantity
+    >>> from coordinax._src.utils import is_any_quantity
 
-    >>> is_abstract_quantity(4.71)
+    >>> is_any_quantity(4.71)
     False
 
-    >>> is_abstract_quantity(u.Quantity(4.71, "m"))
+    >>> is_any_quantity(u.Quantity(4.71, "m"))
     True
 
     """
