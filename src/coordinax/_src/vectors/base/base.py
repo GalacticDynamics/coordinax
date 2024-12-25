@@ -918,11 +918,28 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     # ===============================================================
     # Python API
 
+    def _str_repr_(self, *, precision: int) -> str:
+        cls_name = type(self).__name__
+        units_ = self.units
+        # make the components string
+        comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
+        # make the values string
+        # TODO: add the VectorAttr, which are filtered out.
+        fvals = field_values(AttrFilter, self)
+        fvstack = jnp.stack(
+            tuple(map(u.ustrip, jnp.broadcast_arrays(*fvals))),
+            axis=-1,
+        )
+        vs = np.array2string(np.array(fvstack), precision=precision, prefix="    ")
+        # return the string
+        return f"<{cls_name} ({comps})\n    {vs}>"
+
     def __str__(self) -> str:
         r"""Return a string representation of the vector.
 
         Examples
         --------
+        >>> import unxt as u
         >>> import coordinax as cx
 
         Showing a vector with only axis fields
@@ -940,22 +957,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
             [14.374  0.626  1.107]>
 
         """
-        cls_name = type(self).__name__
-        units_ = self.units
-        comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
-        # TODO: add the VectorAttr, which are filtered out.
-        vs = np.array2string(
-            jnp.stack(
-                tuple(
-                    v.value
-                    for v in jnp.broadcast_arrays(*field_values(AttrFilter, self))
-                ),
-                axis=-1,
-            ),
-            precision=3,
-            prefix="    ",
-        )
-        return f"<{cls_name} ({comps})\n    {vs}>"
+        return self._str_repr_(precision=3)
 
 
 # ===============================================================
