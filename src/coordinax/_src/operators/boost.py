@@ -148,7 +148,7 @@ class VelocityBoost(AbstractOperator):
     # Python
 
     def __repr__(self) -> str:
-        return f"VelocityBoost({self.velocity!r})"
+        return f"{self.__class__.__name__}({self.velocity!r})"
 
 
 # ======================================================================
