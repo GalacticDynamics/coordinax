@@ -26,7 +26,7 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .generic import CartesianGeneric3D
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty, is_abstract_quantity
+from coordinax._src.utils import classproperty, is_any_quantity
 from coordinax._src.vectors.base import AbstractPos, AbstractVector
 from coordinax._src.vectors.base.mixins import AvalMixin
 
@@ -115,7 +115,7 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 
     """
     cart = rhs.vconvert(CartesianPos3D)
-    return jax.tree.map(jnp.add, lhs, cart, is_leaf=is_abstract_quantity)
+    return jax.tree.map(jnp.add, lhs, cart, is_leaf=is_any_quantity)
 
 
 @register(jax.lax.neg_p)  # type: ignore[misc]
