@@ -23,7 +23,7 @@ from unxt.quantity import AbstractQuantity
 from .flags import AttrFilter
 from .mixins import AstropyRepresentationAPIMixin, IPythonReprMixin
 from coordinax._src.typing import Unit
-from coordinax._src.utils import classproperty
+from coordinax._src.utils import classproperty, is_any_quantity
 from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.utils import full_shaped
 
@@ -510,13 +510,27 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> vel1 == vel2
         Array([ True, False, False], dtype=bool)
 
+        >>> q = cx.vecs.CylindricalPos(rho=u.Quantity([1.0, 2.0], "kpc"),
+        ...                            phi=u.Quantity([0.0, 0.2], "rad"),
+        ...                            z=u.Quantity(0.0, "kpc"))
+        >>> q == q
+        Array([ True,  True], dtype=bool)
+
         """
         if type(other) is not type(self):
             return NotImplemented
 
-        comp_tree = tree.map(jnp.equal, self, other)
-        comp_leaves = jnp.array(tree.leaves(comp_tree))
-        return jax.numpy.logical_and.reduce(comp_leaves)
+        # Map the equality over the leaves, which are Quantities.
+        # The equality should likewise be mapped over the Quantities.
+        comp_tree = tree.map(
+            jnp.equal,
+            tree.leaves(self, is_leaf=is_any_quantity),
+            tree.leaves(other, is_leaf=is_any_quantity),
+            is_leaf=is_any_quantity,
+        )
+
+        # Reduce the equality over the leaves.
+        return jax.tree.reduce(jnp.logical_and, comp_tree)
 
     # ---------------------------------------------------------------
     # methods
@@ -911,9 +925,19 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         --------
         >>> import coordinax as cx
 
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> str(vec)
-        '<CartesianPos3D (x[m], y[m], z[m])\n    [1 2 3]>'
+        Showing a vector with only axis fields
+
+        >>> vec1 = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> print(str(vec1))
+        <CartesianPos3D (x[m], y[m], z[m])
+            [1 2 3]>
+
+        Showing a vector with additional attributes
+
+        >>> vec2 = vec1.vconvert(cx.vecs.ProlateSpheroidalPos, Delta=u.Quantity(1, "m"))
+        >>> print(str(vec2))
+        <ProlateSpheroidalPos (mu[m2], nu[m2], phi[rad])
+            [14.374  0.626  1.107]>
 
         """
         cls_name = type(self).__name__
