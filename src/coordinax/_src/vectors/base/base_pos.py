@@ -287,6 +287,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     ...     x: u.Quantity
     ...     y: u.Quantity
     ...     z: u.Quantity
+    ...     _dimensionality: ClassVar[int] = 3
     ...
     >>> MyCartesian._cartesian_cls = MyCartesian  # hack
 

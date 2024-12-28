@@ -34,6 +34,7 @@ class VectorAttribute(Generic[Return]):
     >>> class TestPos(cx.vecs.AbstractPos):
     ...     x: int
     ...     attr: float = cx.vecs.VectorAttribute(default=2.0)
+    ...     _dimensionality = 1
 
     vector-attributes are used to define fields on a vector that are not one of
     the coordinates.

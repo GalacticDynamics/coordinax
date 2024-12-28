@@ -13,6 +13,20 @@ from coordinax._src.vectors.base import AbstractPos, AbstractVector
 class AbstractPos4D(AbstractPos):
     """Abstract representation of 4D coordinates in different systems."""
 
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.AbstractPos4D._dimensionality()
+        4
+
+        """
+        return 4
+
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:

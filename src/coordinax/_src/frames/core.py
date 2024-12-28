@@ -5,6 +5,7 @@ __all__ = ["AbstractCoordinate", "Coordinate"]
 
 from textwrap import indent
 from typing import Any, NoReturn
+from typing_extensions import override
 
 import equinox as eqx
 from plum import dispatch
@@ -242,6 +243,24 @@ class Coordinate(AbstractCoordinate):
     frame: AbstractReferenceFrame = eqx.field(
         converter=Unless(AbstractReferenceFrame, TransformedReferenceFrame.from_)
     )
+
+    @override
+    def _dimensionality(self) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> w = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
+        ...                   cx.frames.ICRS())
+        >>> try: w._dimensionality()
+        ... except NotImplementedError as e: print("not implemented")
+        not implemented
+
+        """
+        # TODO: Space is currently not implemented.
+        return self.data._dimensionality()  # noqa: SLF001
 
     # ---------------------------------------------------------------
     # Constructors

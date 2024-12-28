@@ -20,20 +20,12 @@ class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
     # Constructors
 
     @classmethod
-    @dispatch.abstract
+    @dispatch.abstract  # type: ignore[misc]
     def from_(
         cls: "type[AbstractReferenceFrame]", obj: Any, /
     ) -> "AbstractReferenceFrame":
         """Construct a reference frame."""
-
-    # TODO: examples
-    @classmethod
-    @dispatch
-    def from_(
-        cls: "type[AbstractReferenceFrame]", obj: Mapping[str, Any], /
-    ) -> "AbstractReferenceFrame":
-        """Construct a reference frame from a mapping."""
-        return cls(**obj)
+        raise NotImplementedError  # pragma: no cover
 
     # ---------------------------------------------------------------
     # Transformations
@@ -62,7 +54,33 @@ class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
         return frame_transform_op(self, to_frame)
 
 
-@AbstractReferenceFrame.from_.dispatch  # type: ignore[attr-defined, misc]
+# =============================================================================
+# Constructors
+
+
+@AbstractReferenceFrame.from_.dispatch
+def from_(
+    cls: type[AbstractReferenceFrame], obj: Mapping[str, Any], /
+) -> AbstractReferenceFrame:
+    """Construct a reference frame from a mapping.
+
+    Examples
+    --------
+    >>> import coordinax.frames as cxf
+
+    >>> icrs = cxf.ICRS.from_({})
+    >>> icrs
+    ICRS()
+
+    >>> gcf = cxf.Galactocentric.from_({})
+    >>> print(gcf)
+    Galactocentric( ... )
+
+    """
+    return cls(**obj)
+
+
+@AbstractReferenceFrame.from_.dispatch
 def from_(
     cls: type[AbstractReferenceFrame], obj: AbstractReferenceFrame, /
 ) -> AbstractReferenceFrame:

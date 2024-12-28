@@ -42,6 +42,20 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 
     z: ct.BatchableScalarQ = eqx.field(converter=Quantity.from_)
 
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianGeneric3D._dimensionality()
+        3
+
+        """
+        return 3
+
     # -----------------------------------------------------
     # Unary operations
 

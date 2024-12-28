@@ -25,6 +25,20 @@ from coordinax._src.vectors.base import (
 class AbstractPos1D(AbstractPos):
     """Abstract representation of 1D coordinates in different systems."""
 
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianPos1D._dimensionality()
+        1
+
+        """
+        return 1
+
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
@@ -80,6 +94,20 @@ def from_(
 
 class AbstractVel1D(AbstractVel):
     """Abstract representation of 1D differentials in different systems."""
+
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianVel1D._dimensionality()
+        1
+
+        """
+        return 1
 
     @classproperty
     @classmethod
@@ -139,6 +167,20 @@ def from_(
 
 class AbstractAcc1D(AbstractAcc):
     """Abstract representation of 1D acceleration in different systems."""
+
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianAcc1D._dimensionality()
+        1
+
+        """
+        return 1
 
     @classproperty
     @classmethod
