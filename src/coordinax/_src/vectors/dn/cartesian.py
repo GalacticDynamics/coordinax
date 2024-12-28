@@ -88,6 +88,22 @@ class CartesianPosND(AbstractPosND):
     """
 
     @override
+    def _dimensionality(self) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        A 3D vector:
+
+        >>> cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))._dimensionality()
+        3
+
+        """
+        return self.q.shape[-1]
+
+    @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianVelND"]:  # type: ignore[override]
@@ -339,6 +355,22 @@ class CartesianVelND(AvalMixin, AbstractVelND):
     dimensions. Arbitrary batch shapes are supported.
     """
 
+    @override
+    def _dimensionality(self) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        A 3D vector:
+
+        >>> cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))._dimensionality()
+        3
+
+        """
+        return self.d_q.shape[-1]
+
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[CartesianPosND]:
@@ -483,6 +515,22 @@ class CartesianAccND(AvalMixin, AbstractAccND):
     Should have shape (*batch, F) where F is the number of features /
     dimensions. Arbitrary batch shapes are supported.
     """
+
+    @override
+    def _dimensionality(self) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        A 3D vector:
+
+        >>> cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))._dimensionality()
+        3
+
+        """
+        return self.d2_q.shape[-1]
 
     @override
     @classproperty

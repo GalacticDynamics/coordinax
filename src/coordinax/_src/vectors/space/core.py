@@ -113,6 +113,22 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         ImmutableMap.__init__(self, dict(zip(keys, raw.values(), strict=True)))
 
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the Space.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> w = cx.Space.from_(cx.CartesianPos3D.from_([1, 2, 3], "kpc"))
+        >>> try: w._dimensionality()
+        ... except NotImplementedError as e: print("not implemented")
+        not implemented
+
+        """
+        raise NotImplementedError  # TODO: implement this
+
     # ===============================================================
     # Mapping API
 

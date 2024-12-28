@@ -37,6 +37,20 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
     d_z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.PoincarePolarVector._dimensionality()
+        6
+
+        """
+        return 6
+
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractPos]:

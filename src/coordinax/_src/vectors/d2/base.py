@@ -17,6 +17,20 @@ from coordinax._src.vectors.base import (
 class AbstractPos2D(AbstractPos):
     """Abstract representation of 2D coordinates in different systems."""
 
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianPos2D._dimensionality()
+        2
+
+        """
+        return 2
+
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
@@ -36,6 +50,20 @@ class AbstractPos2D(AbstractPos):
 
 class AbstractVel2D(AbstractVel):
     """Abstract representation of 2D vector differentials."""
+
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianVel2D._dimensionality()
+        2
+
+        """
+        return 2
 
     @classproperty
     @classmethod
@@ -62,6 +90,20 @@ class AbstractVel2D(AbstractVel):
 
 class AbstractAcc2D(AbstractAcc):
     """Abstract representation of 2D vector accelerations."""
+
+    @classmethod
+    def _dimensionality(cls) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianAcc2D._dimensionality()
+        2
+
+        """
+        return 2
 
     @classproperty
     @classmethod

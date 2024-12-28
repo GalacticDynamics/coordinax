@@ -42,6 +42,20 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 
     """
 
+    @abstractmethod
+    def _dimensionality(self) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianPos2D._dimensionality()
+        2
+
+        """
+        raise NotImplementedError
+
     # ---------------------------------------------------------------
     # Constructors
 

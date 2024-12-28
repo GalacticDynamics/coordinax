@@ -20,6 +20,7 @@ class AttrFilter:
     >>> class TestPos(cx.vecs.AbstractPos):
     ...    x: int
     ...    attr: float = cx.vecs.VectorAttribute(default=2.0)
+    ...    _dimensionality = 1
 
     >>> obj = TestPos(x=1)
 
