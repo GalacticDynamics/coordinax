@@ -85,8 +85,9 @@ def from_(
     RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
 
     """
-    comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
-    return cls(**comps)
+    obj = jnp.atleast_1d(obj)
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls.from_(comps)
 
 
 #####################################################################
@@ -158,8 +159,9 @@ def from_(
     RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     """
-    comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
-    return cls(**comps)
+    obj = jnp.atleast_1d(obj)
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls.from_(comps)
 
 
 #####################################################################
@@ -225,5 +227,6 @@ def from_(
     RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     """
-    comps = {f.name: jnp.atleast_1d(obj)[..., i] for i, f in enumerate(fields(cls))}
-    return cls(**comps)
+    obj = jnp.atleast_1d(obj)
+    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
+    return cls.from_(comps)
