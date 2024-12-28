@@ -31,19 +31,12 @@ class AbstractCoordinate(AbstractVector):
     """
 
     #: The data of the coordinate. This is a `coordinax.Space` object, which is
-    #: a collection of vectors. This can be constructed from a space object, or
-    #: any input that can construct a `coordinax.Space` via
-    #: `coordinax.Space.from_`.
-    data: Space = eqx.field(converter=Space.from_)
+    #: a collection of vectors.
+    data: eqx.AbstractVar[Space]
 
     #: The reference frame of the coordinate as a
-    #: `coordinax.frames.AbstractReferenceFrame` object. This can be
-    #: from a reference frame object, or any input that can construct a
-    #: `coordinax.frames.TransformedReferenceFrame` via
-    #: `coordinax.frames.AbstractReferenceFrame.from_`.
-    frame: AbstractReferenceFrame = eqx.field(
-        converter=Unless(AbstractReferenceFrame, TransformedReferenceFrame.from_)
-    )
+    #: `coordinax.frames.AbstractReferenceFrame` object.
+    frame: eqx.AbstractVar[AbstractReferenceFrame]
 
     # ===============================================================
     # Coordinate API
@@ -234,6 +227,21 @@ class Coordinate(AbstractCoordinate):
     )
 
     """
+
+    #: The data of the coordinate. This is a `coordinax.Space` object, which is
+    #: a collection of vectors. This can be constructed from a space object, or
+    #: any input that can construct a `coordinax.Space` via
+    #: `coordinax.Space.from_`.
+    data: Space = eqx.field(converter=Space.from_)
+
+    #: The reference frame of the coordinate as a
+    #: `coordinax.frames.AbstractReferenceFrame` object. This can be
+    #: from a reference frame object, or any input that can construct a
+    #: `coordinax.frames.TransformedReferenceFrame` via
+    #: `coordinax.frames.AbstractReferenceFrame.from_`.
+    frame: AbstractReferenceFrame = eqx.field(
+        converter=Unless(AbstractReferenceFrame, TransformedReferenceFrame.from_)
+    )
 
     # ---------------------------------------------------------------
     # Constructors
