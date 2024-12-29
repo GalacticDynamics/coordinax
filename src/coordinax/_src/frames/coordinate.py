@@ -97,8 +97,9 @@ class AbstractCoordinate(AbstractVector):
 
         """
         # NOTE: this is necessary because equinox __repr__ isn't great
-        str_fs = ",\n".join(indent(f"{k}={v}", "    ") for k, v in field_items(self))
-        return f"{type(self).__name__}(\n{str_fs}\n)"
+        cls_name = type(self).__name__
+        str_fs = ",\n".join(indent(f"{k}={v!r}", "    ") for k, v in field_items(self))
+        return f"{cls_name}(\n{str_fs}\n)"
 
     _repr_latex_ = __repr__  # TODO: implement this
 
@@ -116,7 +117,9 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
-        return self.__repr__()
+        # NOTE: this is necessary because equinox __repr__ isn't great
+        str_fs = ",\n".join(indent(f"{k}={v}", "    ") for k, v in field_items(self))
+        return f"{type(self).__name__}(\n{str_fs}\n)"
 
 
 ##############################################################################
@@ -202,6 +205,9 @@ class Coordinate(AbstractCoordinate):
         converter=Unless(AbstractReferenceFrame, TransformedReferenceFrame.from_)
     )
 
+    # ===============================================================
+    # Vector API
+
     @override
     def _dimensionality(self) -> int:
         """Dimensionality of the vector.
@@ -219,9 +225,6 @@ class Coordinate(AbstractCoordinate):
         """
         # TODO: Space is currently not implemented.
         return self.data._dimensionality()  # noqa: SLF001
-
-    # ===============================================================
-    # Vector API
 
     @dispatch
     def __getitem__(self: "Coordinate", index: Any) -> "Coordinate":
