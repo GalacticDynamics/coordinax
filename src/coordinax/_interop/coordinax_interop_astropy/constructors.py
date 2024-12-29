@@ -11,11 +11,12 @@ import unxt as u
 
 import coordinax as cx
 
+# ============================================================================
+# From an Astropy object
 
-@dispatch(precedence=-1)
-def vector(
-    cls: type[cx.vecs.AbstractPos3D], obj: apyc.CartesianRepresentation, /
-) -> cx.CartesianPos3D:
+
+@dispatch
+def vector(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D:
     """Construct from a :class:`astropy.coordinates.CartesianRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.CartesianPos3D.from_`.
@@ -26,18 +27,16 @@ def vector(
     >>> from astropy.coordinates import CartesianRepresentation
 
     >>> cart = CartesianRepresentation(1, 2, 3, unit="m")
-    >>> vec = cx.vecs.AbstractPos3D.from_(cart)
+    >>> vec = cx.vector(cart)
     >>> vec.x
     Quantity['length'](Array(1., dtype=float32), unit='m')
 
     """
-    return cx.CartesianPos3D.from_(obj)
+    return vector(cx.vecs.CartesianPos3D, obj)
 
 
-@dispatch(precedence=-1)
-def vector(
-    cls: type[cx.vecs.AbstractPos3D], obj: apyc.CylindricalRepresentation, /
-) -> cx.vecs.CylindricalPos:
+@dispatch
+def vector(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.CylindricalPos:
     """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.CylindricalPos.from_`.
@@ -50,18 +49,16 @@ def vector(
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg,
     ...                                 z=30 * u.m)
-    >>> vec = cx.vecs.AbstractPos3D.from_(cyl)
+    >>> vec = cx.vector(cyl)
     >>> vec.rho
     Quantity['length'](Array(1., dtype=float32), unit='km')
 
     """
-    return cx.vecs.CylindricalPos.from_(obj)
+    return vector(cx.vecs.CylindricalPos, obj)
 
 
-@dispatch(precedence=-1)
-def vector(
-    cls: type[cx.vecs.AbstractPos3D], obj: apyc.PhysicsSphericalRepresentation, /
-) -> cx.SphericalPos:
+@dispatch
+def vector(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPos:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.SphericalPos.from_`.
@@ -74,18 +71,16 @@ def vector(
 
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
-    >>> vec = cx.vecs.AbstractPos3D.from_(sph)
+    >>> vec = cx.vector(sph)
     >>> vec.r
     Distance(Array(1., dtype=float32), unit='km')
 
     """
-    return cx.SphericalPos.from_(obj)
+    return vector(cx.SphericalPos, obj)
 
 
-@dispatch(precedence=-1)
-def vector(
-    cls: type[cx.vecs.AbstractPos3D], obj: apyc.SphericalRepresentation, /
-) -> cx.vecs.LonLatSphericalPos:
+@dispatch
+def vector(obj: apyc.SphericalRepresentation, /) -> cx.vecs.LonLatSphericalPos:
     """Construct from a :class:`astropy.coordinates.SphericalRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.LonLatSphericalPos.from_`.
@@ -98,15 +93,175 @@ def vector(
 
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
     ...                               distance=1 * u.km)
-    >>> vec = cx.vecs.AbstractPos3D.from_(sph)
+    >>> vec = cx.vector(sph)
     >>> vec.distance
     Distance(Array(1., dtype=float32), unit='km')
 
     """
-    return cx.vecs.LonLatSphericalPos.from_(obj)
+    return vector(cx.vecs.LonLatSphericalPos, obj)
 
 
-# -------------------------------------------------------------------
+@dispatch
+def vector(obj: apyc.UnitSphericalRepresentation) -> cx.vecs.TwoSpherePos:
+    """Construct from a :class:`astropy.coordinates.UnitSphericalRepresentation`.
+
+    This re-dispatches to :meth:`coordinax.vecs.TwoSpherePos.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import UnitSphericalRepresentation
+
+    >>> sph = UnitSphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg)
+    >>> vec = cx.vector(sph)
+    >>> vec.theta
+    Angle(Array(2., dtype=float32), unit='deg')
+
+    """
+    return vector(cx.vecs.TwoSpherePos, obj)
+
+
+@dispatch
+def vector(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel3D:
+    """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.CartesianVel3D.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import CartesianDifferential
+
+    >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
+    >>> dif = cx.vector(dcart)
+    >>> dif.d_x
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return vector(cx.CartesianVel3D, obj)
+
+
+@dispatch
+def vector(obj: apyc.CylindricalDifferential, /) -> cx.vecs.CylindricalVel:
+    """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.CylindricalVel.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import astropy.coordinates as apyc
+    >>> import coordinax as cx
+
+    >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
+    ...                                     d_z=2 * u.km / u.s)
+    >>> dif = cx.vector(dcyl)
+    >>> dif.d_rho
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return vector(cx.vecs.CylindricalVel, obj)
+
+
+@dispatch
+def vector(obj: apyc.PhysicsSphericalDifferential, /) -> cx.SphericalVel:
+    """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.SphericalVel.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import PhysicsSphericalDifferential
+
+    >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
+    ...                                     d_phi=3 * u.mas/u.yr)
+    >>> dif = cx.vector(dsph)
+    >>> dif.d_r
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return vector(cx.SphericalVel, obj)
+
+
+@dispatch
+def vector(obj: apyc.SphericalDifferential, /) -> cx.vecs.LonLatSphericalVel:
+    """Construct from a :class:`astropy.coordinates.SphericalDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.LonLatSphericalVel.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import SphericalDifferential
+
+    >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
+    ...                              d_lon=2 * u.mas/u.yr,
+    ...                              d_lat=3 * u.mas/u.yr)
+    >>> dif = cx.vector(dsph)
+    >>> dif.d_distance
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return vector(cx.vecs.LonLatSphericalVel, obj)
+
+
+@dispatch
+def vector(obj: apyc.SphericalCosLatDifferential, /) -> cx.vecs.LonCosLatSphericalVel:
+    """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.LonCosLatSphericalVel.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import SphericalCosLatDifferential
+
+    >>> dsph = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
+    ...                                    d_lon_coslat=2 * u.mas/u.yr,
+    ...                                    d_lat=3 * u.mas/u.yr)
+    >>> dif = cx.vector(dsph)
+    >>> dif
+    LonCosLatSphericalVel(
+      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
+      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
+    )
+    >>> dif.d_distance
+    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+
+    """
+    return vector(cx.vecs.LonCosLatSphericalVel, obj)
+
+
+@dispatch
+def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereVel:
+    """Construct from a :class:`astropy.coordinates.UnitSphericalDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.TwoSphereVel.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import UnitSphericalDifferential
+
+    >>> dsph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
+    >>> vel = cx.vector(dsph)
+    >>> vel.d_phi
+    Quantity[...](Array(3., dtype=float32), unit='deg / s')
+
+    """
+    return vector(cx.vecs.TwoSphereVel, obj)
+
+
+# ============================================================================
+# From an Astropy coordinate, to a specific vector type
 
 
 @dispatch
@@ -199,137 +354,26 @@ def vector(
     return cls(distance=obj.distance, lon=obj.lon, lat=obj.lat)
 
 
-#####################################################################
-
-
 @dispatch
 def vector(
-    cls: type[cx.vecs.AbstractVel3D], obj: apyc.CartesianDifferential, /
-) -> cx.CartesianVel3D:
-    """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
-
-    This re-dispatches to :meth:`coordinax.vecs.CartesianVel3D.from_`.
+    cls: type[cx.vecs.TwoSpherePos], obj: apyc.BaseRepresentation, /
+) -> cx.vecs.TwoSpherePos:
+    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
     >>> import astropy.units as u
     >>> import coordinax as cx
-    >>> from astropy.coordinates import CartesianDifferential
+    >>> from astropy.coordinates import UnitSphericalRepresentation
 
-    >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
-    >>> dif = cx.vecs.AbstractVel3D.from_(dcart)
-    >>> dif.d_x
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
-
-    """
-    return cx.CartesianVel3D.from_(obj)
-
-
-@dispatch
-def vector(
-    cls: type[cx.vecs.AbstractVel3D], obj: apyc.CylindricalDifferential, /
-) -> cx.vecs.CylindricalVel:
-    """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
-
-    This re-dispatches to :meth:`coordinax.vecs.CylindricalVel.from_`.
-
-    Examples
-    --------
-    >>> import astropy.units as u
-    >>> import astropy.coordinates as apyc
-    >>> import coordinax as cx
-
-    >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
-    ...                                     d_z=2 * u.km / u.s)
-    >>> dif = cx.vecs.AbstractVel3D.from_(dcyl)
-    >>> dif.d_rho
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> sph = UnitSphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg)
+    >>> vec = cx.vecs.TwoSpherePos.from_(sph)
+    >>> vec.theta
+    Angle(Array(2., dtype=float32), unit='deg')
 
     """
-    return cx.vecs.CylindricalVel.from_(obj)
-
-
-@dispatch
-def vector(
-    cls: type[cx.vecs.AbstractVel3D], obj: apyc.PhysicsSphericalDifferential, /
-) -> cx.SphericalVel:
-    """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
-
-    This re-dispatches to :meth:`coordinax.vecs.SphericalVel.from_`.
-
-    Examples
-    --------
-    >>> import astropy.units as u
-    >>> import coordinax as cx
-    >>> from astropy.coordinates import PhysicsSphericalDifferential
-
-    >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
-    ...                                     d_phi=3 * u.mas/u.yr)
-    >>> dif = cx.vecs.AbstractVel3D.from_(dsph)
-    >>> dif.d_r
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
-
-    """
-    return cx.SphericalVel.from_(obj)
-
-
-@dispatch
-def vector(
-    cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalDifferential, /
-) -> cx.vecs.LonLatSphericalVel:
-    """Construct from a :class:`astropy.coordinates.SphericalDifferential`.
-
-    This re-dispatches to :meth:`coordinax.vecs.LonLatSphericalVel.from_`.
-
-    Examples
-    --------
-    >>> import astropy.units as u
-    >>> import coordinax as cx
-    >>> from astropy.coordinates import SphericalDifferential
-
-    >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
-    ...                              d_lon=2 * u.mas/u.yr,
-    ...                              d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.vecs.AbstractVel3D.from_(dsph)
-    >>> dif.d_distance
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
-
-    """
-    return cx.vecs.LonLatSphericalVel.from_(obj)
-
-
-@dispatch
-def vector(
-    cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalCosLatDifferential, /
-) -> cx.vecs.LonCosLatSphericalVel:
-    """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
-
-    This re-dispatches to :meth:`coordinax.vecs.LonCosLatSphericalVel.from_`.
-
-    Examples
-    --------
-    >>> import astropy.units as u
-    >>> import coordinax as cx
-    >>> from astropy.coordinates import SphericalCosLatDifferential
-
-    >>> dsph = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
-    ...                                    d_lon_coslat=2 * u.mas/u.yr,
-    ...                                    d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.vecs.AbstractVel3D.from_(dsph)
-    >>> dif
-    LonCosLatSphericalVel(
-      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
-    )
-    >>> dif.d_distance
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
-
-    """
-    return cx.vecs.LonCosLatSphericalVel.from_(obj)
-
-
-# -------------------------------------------------------------------
+    obj = obj.represent_as(apyc.UnitSphericalRepresentation)
+    return cls(phi=obj.lon, theta=obj.lat)
 
 
 @dispatch
@@ -449,6 +493,27 @@ def vector(
     return cls(
         d_distance=obj.d_distance, d_lon_coslat=obj.d_lon_coslat, d_lat=obj.d_lat
     )
+
+
+@dispatch
+def vector(
+    cls: type[cx.vecs.TwoSphereVel], obj: apyc.UnitSphericalDifferential, /
+) -> cx.vecs.TwoSphereVel:
+    """Construct from a :class:`astropy.coordinates.BaseDifferential`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import UnitSphericalDifferential
+
+    >>> sph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
+    >>> vel = cx.vecs.TwoSphereVel.from_(sph)
+    >>> vel.d_phi
+    Quantity[...](Array(3., dtype=float32), unit='deg / s')
+
+    """
+    return cls(d_phi=obj.d_lon, d_theta=obj.d_lat)
 
 
 #####################################################################
