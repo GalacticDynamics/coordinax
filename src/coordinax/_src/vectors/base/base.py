@@ -63,6 +63,11 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     def from_(
         cls: "type[AbstractVector]", *args: Any, **kwargs: Any
     ) -> "AbstractVector":
+        """Create a vector from arguments.
+
+        See `coordinax.vector` for more information.
+
+        """
         return vector(cls, *args, **kwargs)
 
     # ===============================================================
