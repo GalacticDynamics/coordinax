@@ -10,7 +10,7 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 from jaxtyping import ArrayLike, Shaped
-from plum import conversion_method
+from plum import conversion_method, dispatch
 from quax import register
 
 import quaxed.lax as qlax
@@ -22,7 +22,7 @@ import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
 
 ##############################################################################
@@ -107,6 +107,15 @@ class CartesianPosND(AbstractPosND):
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianVelND"]:  # type: ignore[override]
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.vecs.CartesianPosND.differential_cls
+        <class 'coordinax...CartesianVelND'>
+
+        """
         return CartesianVelND
 
     # -----------------------------------------------------
@@ -136,56 +145,6 @@ class CartesianPosND(AbstractPosND):
 
 
 # -------------------------------------------------------------------
-
-
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
-    cls: type[CartesianPosND],
-    x: Shaped[AbstractQuantity, ""] | Shaped[AbstractQuantity, "*batch N"],
-    /,
-) -> CartesianPosND:
-    """Construct an N-dimensional position.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    1D vector:
-
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity(1, "km"))
-    CartesianPosND(
-      q=Quantity[...](value=...i32[1], unit=Unit("km"))
-    )
-
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1], "km"))
-    CartesianPosND(
-      q=Quantity[...](value=...i32[1], unit=Unit("km"))
-    )
-
-    2D vector:
-
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2], "km"))
-    CartesianPosND(
-      q=Quantity[...](value=...i32[2], unit=Unit("km"))
-    )
-
-    3D vector:
-
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3], "km"))
-    CartesianPosND(
-      q=Quantity[...](value=...i32[3], unit=Unit("km"))
-    )
-
-    4D vector:
-
-    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3, 4], "km"))
-    CartesianPosND(
-      q=Quantity[...](value=...i32[4], unit=Unit("km"))
-    )
-
-    """
-    return cls(jnp.atleast_1d(x))
 
 
 @conversion_method(CartesianPosND, u.Quantity)  # type: ignore[misc]
@@ -374,12 +333,30 @@ class CartesianVelND(AvalMixin, AbstractVelND):
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[CartesianPosND]:
+        """Return the integral class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.vecs.CartesianVelND.integral_cls
+        <class 'coordinax...CartesianPosND'>
+
+        """
         return CartesianPosND
 
     @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAccND"]:
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.vecs.CartesianVelND.differential_cls
+        <class 'coordinax...CartesianAccND'>
+
+        """
         return CartesianAccND
 
     @partial(eqx.filter_jit, inline=True)
@@ -399,59 +376,6 @@ class CartesianVelND(AvalMixin, AbstractVelND):
 
         """
         return jnp.linalg.vector_norm(self.d_q, axis=-1)
-
-
-# -------------------------------------------------------------------
-
-
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
-    cls: type[CartesianVelND],
-    x: Shaped[AbstractQuantity, ""] | Shaped[AbstractQuantity, "*batch N"],
-    /,
-) -> CartesianVelND:
-    """Construct an N-dimensional velocity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    1D vector:
-
-    >>> cx.vecs.CartesianVelND.from_(u.Quantity(1, "km/s"))
-    CartesianVelND(
-      d_q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
-    )
-
-    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1], "km/s"))
-    CartesianVelND(
-      d_q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
-    )
-
-    2D vector:
-
-    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2], "km/s"))
-    CartesianVelND(
-      d_q=Quantity[...]( value=...i32[2], unit=Unit("km / s") )
-    )
-
-    3D vector:
-
-    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2, 3], "km/s"))
-    CartesianVelND(
-      d_q=Quantity[...]( value=...i32[3], unit=Unit("km / s") )
-    )
-
-    4D vector:
-
-    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2, 3, 4], "km/s"))
-    CartesianVelND(
-      d_q=Quantity[...]( value=...i32[4], unit=Unit("km / s") )
-    )
-
-    """
-    return cls(jnp.atleast_1d(x))
 
 
 ##############################################################################
@@ -588,15 +512,16 @@ class CartesianAccND(AvalMixin, AbstractAccND):
         return jnp.linalg.vector_norm(self.d2_q, axis=-1)
 
 
-# -------------------------------------------------------------------
+# ==============================================================================
+# Constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
-    cls: type[CartesianAccND],
-    x: Shaped[AbstractQuantity, ""] | Shaped[AbstractQuantity, "*batch N"],
+@dispatch  # type: ignore[misc]
+def vector(
+    cls: type[CartesianPosND] | type[CartesianVelND] | type[CartesianAccND],
+    x: AbstractQuantity,
     /,
-) -> CartesianAccND:
+) -> CartesianPosND | CartesianVelND | CartesianAccND:
     """Construct an N-dimensional acceleration.
 
     Examples
@@ -605,6 +530,26 @@ def from_(
     >>> import coordinax as cx
 
     1D vector:
+
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity(1, "km"))
+    CartesianPosND(
+      q=Quantity[...](value=...i32[1], unit=Unit("km"))
+    )
+
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1], "km"))
+    CartesianPosND(
+      q=Quantity[...](value=...i32[1], unit=Unit("km"))
+    )
+
+    >>> cx.vecs.CartesianVelND.from_(u.Quantity(1, "km/s"))
+    CartesianVelND(
+      d_q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
+    )
+
+    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1], "km/s"))
+    CartesianVelND(
+      d_q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
+    )
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity(1, "km/s2"))
     CartesianAccND(
@@ -618,6 +563,16 @@ def from_(
 
     2D vector:
 
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2], "km"))
+    CartesianPosND(
+      q=Quantity[...](value=...i32[2], unit=Unit("km"))
+    )
+
+    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2], "km/s"))
+    CartesianVelND(
+      d_q=Quantity[...]( value=...i32[2], unit=Unit("km / s") )
+    )
+
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1, 2], "km/s2"))
     CartesianAccND(
       d2_q=Quantity[...]( value=...i32[2], unit=Unit("km / s2") )
@@ -625,12 +580,32 @@ def from_(
 
     3D vector:
 
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3], "km"))
+    CartesianPosND(
+      q=Quantity[...](value=...i32[3], unit=Unit("km"))
+    )
+
+    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2, 3], "km/s"))
+    CartesianVelND(
+      d_q=Quantity[...]( value=...i32[3], unit=Unit("km / s") )
+    )
+
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1, 2, 3], "km/s2"))
     CartesianAccND(
       d2_q=Quantity[...]( value=...i32[3], unit=Unit("km / s2") )
     )
 
     4D vector:
+
+    >>> cx.vecs.CartesianPosND.from_(u.Quantity([1, 2, 3, 4], "km"))
+    CartesianPosND(
+      q=Quantity[...](value=...i32[4], unit=Unit("km"))
+    )
+
+    >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2, 3, 4], "km/s"))
+    CartesianVelND(
+      d_q=Quantity[...]( value=...i32[4], unit=Unit("km / s") )
+    )
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1, 2, 3, 4], "km/s2"))
     CartesianAccND(

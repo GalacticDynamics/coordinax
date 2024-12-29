@@ -1,6 +1,7 @@
 """Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
 __all__ = [
+    "vector",
     "vconvert",
     "normalize_vector",
 ]
@@ -24,3 +25,9 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 def normalize_vector(x: Any, /) -> Any:
     """Return the unit vector."""
     raise NotImplementedError
+
+
+@dispatch.abstract  # type: ignore[misc]
+def vector(*args: Any, **kwargs: Any) -> Any:
+    """Create a vector."""
+    raise NotImplementedError  # pragma: no cover

@@ -12,6 +12,7 @@ from typing import final
 from typing_extensions import override
 
 import equinox as eqx
+from plum import dispatch
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
@@ -30,7 +31,6 @@ from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
@@ -146,8 +146,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
 # Constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
+@dispatch  # type: ignore[misc]
+def vector(
     cls: type[LonLatSphericalPos],
     *,
     lon: AbstractQuantity,

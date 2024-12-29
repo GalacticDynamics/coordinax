@@ -13,6 +13,7 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 from jaxtyping import ArrayLike
+from plum import dispatch
 from quax import register
 
 import quaxed.numpy as jnp
@@ -32,7 +33,6 @@ from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
@@ -95,8 +95,8 @@ class MathSphericalPos(AbstractSphericalPos):
         return self.r
 
 
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
+@dispatch  # type: ignore[misc]
+def vector(
     cls: type[MathSphericalPos],
     *,
     r: AbstractQuantity,

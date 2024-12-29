@@ -6,26 +6,26 @@ __all__ = [
     "CartesianVel2D",
 ]
 
-from dataclasses import fields, replace
+from dataclasses import replace
 from functools import partial
 from typing import final
 from typing_extensions import override
 
 import equinox as eqx
 import jax
-from jaxtyping import ArrayLike, Shaped
+from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.numpy as jnp
 import unxt as u
 from quaxed import lax as qlax
-from unxt.quantity import AbstractQuantity, Quantity
+from unxt.quantity import Quantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
 
 
@@ -54,32 +54,6 @@ class CartesianPos2D(AbstractPos2D):
     @classmethod
     def differential_cls(cls) -> type["CartesianVel2D"]:
         return CartesianVel2D
-
-
-# -----------------------------------------------------
-
-
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
-    cls: type[CartesianPos2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
-) -> CartesianPos2D:
-    """Construct a 2D Cartesian position.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> vec = cx.vecs.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
-    >>> vec
-    CartesianPos2D(
-        x=Quantity[...](value=i32[], unit=Unit("m")),
-        y=Quantity[...](value=i32[], unit=Unit("m"))
-    )
-
-    """
-    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
-    return cls(**comps)
 
 
 # -----------------------------------------------------
@@ -200,31 +174,16 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAcc2D"]:
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> print(cx.vecs.CartesianVel2D.differential_cls)
+        <class 'coordinax...CartesianAcc2D'>
+
+        """
         return CartesianAcc2D
-
-
-# -----------------------------------------------------
-
-
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
-    cls: type[CartesianVel2D], obj: Shaped[AbstractQuantity, "*batch 2"], /
-) -> CartesianVel2D:
-    """Construct a 2D Cartesian velocity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> vec = cx.vecs.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
-    >>> print(vec)
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
-        [1 2]>
-
-    """
-    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
-    return cls(**comps)
 
 
 # -----------------------------------------------------
@@ -325,28 +284,6 @@ class CartesianAcc2D(AvalMixin, AbstractAcc2D):
 
         """
         return jnp.sqrt(self.d2_x**2 + self.d2_y**2)
-
-
-# -----------------------------------------------------
-
-
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(cls: type[CartesianAcc2D], obj: AbstractQuantity, /) -> CartesianAcc2D:
-    """Construct a 2D Cartesian velocity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> vec = cx.vecs.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
-    >>> print(vec)
-    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
-        [1 2]>
-
-    """
-    comps = {f.name: obj[..., i] for i, f in enumerate(fields(cls))}
-    return cls(**comps)
 
 
 # -----------------------------------------------------

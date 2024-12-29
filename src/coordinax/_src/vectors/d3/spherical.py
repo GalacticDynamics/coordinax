@@ -5,6 +5,7 @@ __all__ = ["SphericalAcc", "SphericalPos", "SphericalVel"]
 from typing import final
 
 import equinox as eqx
+from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -23,7 +24,6 @@ from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 ##############################################################################
@@ -72,8 +72,8 @@ class SphericalPos(AbstractSphericalPos):
         return SphericalVel
 
 
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
+@dispatch  # type: ignore[misc]
+def vector(
     cls: type[SphericalPos],
     *,
     r: AbstractQuantity,

@@ -6,22 +6,152 @@ __all__: list[str] = []
 from typing import TypeAlias
 
 from jaxtyping import Shaped
-from plum import conversion_method, convert
+from plum import conversion_method, convert, dispatch
 
 import quaxed.numpy as xp
+import unxt as u
 from dataclassish import field_values
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
+from .api import vector
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.d1 import (
     CartesianAcc1D,
+    CartesianPos1D,
     CartesianVel1D,
     RadialAcc,
     RadialVel,
 )
-from coordinax._src.vectors.d2 import CartesianAcc2D, CartesianVel2D
-from coordinax._src.vectors.d3 import CartesianAcc3D, CartesianVel3D
+from coordinax._src.vectors.d2 import CartesianAcc2D, CartesianPos2D, CartesianVel2D
+from coordinax._src.vectors.d3 import CartesianAcc3D, CartesianPos3D, CartesianVel3D
+from coordinax._src.vectors.dn import CartesianAccND, CartesianPosND, CartesianVelND
 from coordinax._src.vectors.utils import full_shaped
+
+#####################################################################
+# Construct from Quantity
+
+
+class Dim:
+    """Dimension enumeration."""
+
+    LENGTH = u.dimension("length")
+    SPEED = u.dimension("speed")
+    ACCELERATION = u.dimension("acceleration")
+
+
+@dispatch  # type: ignore[misc]
+def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
+    """Construct a vector from a quantity.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> print(cx.vecs.vector(u.Quantity(1, "km")))
+    <CartesianPos1D (x[km])
+        [1]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1], "km")))
+    <CartesianPos1D (x[km])
+        [1]>
+
+    >>> print(cx.vecs.vector(u.Quantity(1, "km/s")))
+    <CartesianVel1D (d_x[km / s])
+        [1]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1], "km/s")))
+    <CartesianVel1D (d_x[km / s])
+        [1]>
+
+    >>> print(cx.vecs.vector(u.Quantity(1, "km/s2")))
+    <CartesianAcc1D (d2_x[km / s2])
+        [1]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1], "km/s2")))
+    <CartesianAcc1D (d2_x[km / s2])
+        [1]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1, 2], "km")))
+    <CartesianPos2D (x[km], y[km])
+        [1 2]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s")))
+    <CartesianVel2D (d_x[km / s], d_y[km / s])
+        [1 2]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s2")))
+    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
+        [1 2]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km")))
+    <CartesianPos3D (x[km], y[km], z[km])
+        [1 2 3]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s")))
+    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+        [1 2 3]>
+
+    >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s2")))
+    <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+        [1 2 3]>
+
+    >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km")))
+    <CartesianPosND (q[km])
+        [[0]
+         [1]
+         [2]
+         [3]]>
+
+    >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s")))
+    <CartesianVelND (d_q[km / s])
+        [[0]
+         [1]
+         [2]
+         [3]]>
+
+    >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s2")))
+    <CartesianAccND (d2_q[km / s2])
+        [[0]
+         [1]
+         [2]
+         [3]]>
+
+    >>> try: print(cx.vecs.vector(u.Quantity([1], "Msun")))
+    ... except ValueError as e: print(e)
+    Cannot construct a Cartesian vector from Quantity['mass'](Array([1], dtype=int32), unit='solMass').
+
+    """  # noqa: E501
+    # TODO: use dispatch instead for these matches
+    match (u.dimension_of(q), xp.atleast_1d(q).shape[-1]):
+        case (Dim.LENGTH, 0) | (Dim.LENGTH, 1):
+            return vector(CartesianPos1D, q)
+        case (Dim.SPEED, 0) | (Dim.SPEED, 1):
+            return vector(CartesianVel1D, q)
+        case (Dim.ACCELERATION, 0) | (Dim.ACCELERATION, 1):
+            return vector(CartesianAcc1D, q)
+        case (Dim.LENGTH, 2):
+            return vector(CartesianPos2D, q)
+        case (Dim.SPEED, 2):
+            return vector(CartesianVel2D, q)
+        case (Dim.ACCELERATION, 2):
+            return vector(CartesianAcc2D, q)
+        case (Dim.LENGTH, 3):
+            return vector(CartesianPos3D, q)
+        case (Dim.SPEED, 3):
+            return vector(CartesianVel3D, q)
+        case (Dim.ACCELERATION, 3):
+            return vector(CartesianAcc3D, q)
+        case (Dim.LENGTH, _):
+            return vector(CartesianPosND, q)
+        case (Dim.SPEED, _):
+            return vector(CartesianVelND, q)
+        case (Dim.ACCELERATION, _):
+            return vector(CartesianAccND, q)
+        case _:
+            msg = f"Cannot construct a Cartesian vector from {q}."
+            raise ValueError(msg)
+
 
 #####################################################################
 # Convert to Quantity

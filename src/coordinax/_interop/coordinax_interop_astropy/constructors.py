@@ -5,15 +5,15 @@ __all__: list[str] = []
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
-from plum import convert
+from plum import convert, dispatch
 
 import unxt as u
 
 import coordinax as cx
 
 
-@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
-def from_(
+@dispatch(precedence=-1)
+def vector(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.CartesianRepresentation, /
 ) -> cx.CartesianPos3D:
     """Construct from a :class:`astropy.coordinates.CartesianRepresentation`.
@@ -34,8 +34,8 @@ def from_(
     return cx.CartesianPos3D.from_(obj)
 
 
-@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
-def from_(
+@dispatch(precedence=-1)
+def vector(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.CylindricalRepresentation, /
 ) -> cx.vecs.CylindricalPos:
     """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`.
@@ -58,8 +58,8 @@ def from_(
     return cx.vecs.CylindricalPos.from_(obj)
 
 
-@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
-def from_(
+@dispatch(precedence=-1)
+def vector(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.PhysicsSphericalRepresentation, /
 ) -> cx.SphericalPos:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`.
@@ -82,8 +82,8 @@ def from_(
     return cx.SphericalPos.from_(obj)
 
 
-@cx.vecs.AbstractVector.from_.dispatch(precedence=-1)
-def from_(
+@dispatch(precedence=-1)
+def vector(
     cls: type[cx.vecs.AbstractPos3D], obj: apyc.SphericalRepresentation, /
 ) -> cx.vecs.LonLatSphericalPos:
     """Construct from a :class:`astropy.coordinates.SphericalRepresentation`.
@@ -109,8 +109,8 @@ def from_(
 # -------------------------------------------------------------------
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.CartesianPos3D], obj: apyc.BaseRepresentation, /
 ) -> cx.CartesianPos3D:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
@@ -130,8 +130,8 @@ def from_(
     return cls(x=obj.x, y=obj.y, z=obj.z)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.CylindricalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.vecs.CylindricalPos:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
@@ -153,8 +153,8 @@ def from_(
     return cls(rho=obj.rho, phi=obj.phi, z=obj.z)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.SphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.SphericalPos:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
@@ -176,8 +176,8 @@ def from_(
     return cls(r=obj.r, theta=obj.theta, phi=obj.phi)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.LonLatSphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.vecs.LonLatSphericalPos:
     """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
@@ -202,8 +202,8 @@ def from_(
 #####################################################################
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
     """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
@@ -225,8 +225,8 @@ def from_(
     return cx.CartesianVel3D.from_(obj)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.CylindricalDifferential, /
 ) -> cx.vecs.CylindricalVel:
     """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
@@ -249,8 +249,8 @@ def from_(
     return cx.vecs.CylindricalVel.from_(obj)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
@@ -273,8 +273,8 @@ def from_(
     return cx.SphericalVel.from_(obj)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalDifferential, /
 ) -> cx.vecs.LonLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalDifferential`.
@@ -298,8 +298,8 @@ def from_(
     return cx.vecs.LonLatSphericalVel.from_(obj)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.AbstractVel3D], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.vecs.LonCosLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
@@ -332,8 +332,8 @@ def from_(
 # -------------------------------------------------------------------
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.CartesianVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
     """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
@@ -353,8 +353,8 @@ def from_(
     return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.CylindricalVel], obj: apyc.CylindricalDifferential, /
 ) -> cx.vecs.CylindricalVel:
     """Construct from a :class:`astropy.coordinates.CylindricalVel`.
@@ -375,8 +375,8 @@ def from_(
     return cls(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.SphericalVel], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
     """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
@@ -397,8 +397,8 @@ def from_(
     return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.LonLatSphericalVel], obj: apyc.SphericalDifferential, /
 ) -> cx.vecs.LonLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalVel`.
@@ -420,8 +420,8 @@ def from_(
     return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.LonCosLatSphericalVel], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.vecs.LonCosLatSphericalVel:
     """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
@@ -454,8 +454,8 @@ def from_(
 #####################################################################
 
 
-@cx.vecs.AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[cx.vecs.AbstractVector], obj: apyu.Quantity, /
 ) -> cx.vecs.AbstractVector:
     """Construct a vector from an Astropy Quantity array.

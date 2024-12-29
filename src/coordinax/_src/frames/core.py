@@ -39,6 +39,14 @@ class AbstractCoordinate(AbstractVector):
     #: `coordinax.frames.AbstractReferenceFrame` object.
     frame: eqx.AbstractVar[AbstractReferenceFrame]
 
+    @classmethod
+    @dispatch  # type: ignore[misc]
+    def from_(
+        cls: "type[AbstractCoordinate]", *args: Any, **kwargs: Any
+    ) -> "AbstractCoordinate":
+        """Construct a coordinate from other data."""
+        return super().from_(*args, **kwargs)
+
     # ===============================================================
     # Coordinate API
 

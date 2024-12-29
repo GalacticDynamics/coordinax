@@ -539,8 +539,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
 
 # This dispatch is needed because a Space is both a Map and a Vector.
-@AbstractVector.from_.dispatch(precedence=1)
-def from_(cls: type[Space], obj: Space, /) -> Space:
+@dispatch(precedence=1)
+def vector(cls: type[Space], obj: Space, /) -> Space:
     """Construct a Space, returning the Space.
 
     Examples
@@ -555,8 +555,8 @@ def from_(cls: type[Space], obj: Space, /) -> Space:
     return obj
 
 
-@AbstractVector.from_.dispatch
-def from_(cls: type[Space], obj: AbstractPos, /) -> Space:
+@dispatch
+def vector(cls: type[Space], obj: AbstractPos, /) -> Space:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -572,8 +572,8 @@ def from_(cls: type[Space], obj: AbstractPos, /) -> Space:
     return cls(length=obj)
 
 
-@AbstractVector.from_.dispatch
-def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
+@dispatch
+def vector(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -590,8 +590,10 @@ def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
     return cls(length=q, speed=p)
 
 
-@AbstractVector.from_.dispatch
-def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /) -> Space:
+@dispatch
+def vector(
+    cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /
+) -> Space:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
