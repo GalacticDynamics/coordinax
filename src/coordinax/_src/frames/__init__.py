@@ -18,7 +18,7 @@ __all__ = [
 
 from .api import frame_transform_op
 from .base import AbstractReferenceFrame
-from .core import AbstractCoordinate, Coordinate
+from .coordinate import AbstractCoordinate, Coordinate
 from .errors import FrameTransformError
 from .null import NoFrame
 from .xfm import TransformedReferenceFrame
