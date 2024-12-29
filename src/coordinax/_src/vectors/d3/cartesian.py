@@ -62,7 +62,15 @@ class CartesianPos3D(AbstractPos3D):
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianVel3D"]:
-        """Return the differential of the class."""
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> print(cx.vecs.CartesianPos3D.differential_cls)
+        <class 'coordinax...CartesianVel3D'>
+
+        """
         return CartesianVel3D
 
 
@@ -200,6 +208,15 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAcc3D"]:
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> print(cx.vecs.CartesianVel3D.differential_cls)
+        <class 'coordinax...CartesianAcc3D'>
+
+        """
         return CartesianAcc3D
 
     @partial(eqx.filter_jit, inline=True)
@@ -303,7 +320,18 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
 
 @register(jax.lax.add_p)  # type: ignore[misc]
 def _add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
-    """Add two Cartesian accelerations."""
+    """Add two Cartesian accelerations.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> print(q + q)
+    <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+        [2 4 6]>
+
+    """
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
@@ -338,5 +366,16 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
 
 @register(jax.lax.sub_p)  # type: ignore[misc]
 def _sub_a3_a3(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
-    """Subtract two accelerations."""
+    """Subtract two accelerations.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> q = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> print(q - q)
+    <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+        [0 0 0]>
+
+    """
     return jax.tree.map(jnp.subtract, lhs, rhs)

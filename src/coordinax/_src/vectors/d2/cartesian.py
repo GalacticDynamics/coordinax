@@ -174,6 +174,15 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAcc2D"]:
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> print(cx.vecs.CartesianVel2D.differential_cls)
+        <class 'coordinax...CartesianAcc2D'>
+
+        """
         return CartesianAcc2D
 
 

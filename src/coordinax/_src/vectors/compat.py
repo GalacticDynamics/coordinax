@@ -117,7 +117,11 @@ def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
          [2]
          [3]]>
 
-    """
+    >>> try: print(cx.vecs.vector(u.Quantity([1], "Msun")))
+    ... except ValueError as e: print(e)
+    Cannot construct a Cartesian vector from Quantity['mass'](Array([1], dtype=int32), unit='solMass').
+
+    """  # noqa: E501
     # TODO: use dispatch instead for these matches
     match (u.dimension_of(q), xp.atleast_1d(q).shape[-1]):
         case (Dim.LENGTH, 0) | (Dim.LENGTH, 1):
@@ -145,7 +149,7 @@ def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
         case (Dim.ACCELERATION, _):
             return vector(CartesianAccND, q)
         case _:
-            msg = f"Cannot construct a Cartesian vector from {q.shape[-1]} components."
+            msg = f"Cannot construct a Cartesian vector from {q}."
             raise ValueError(msg)
 
 

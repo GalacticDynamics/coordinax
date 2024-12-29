@@ -107,6 +107,15 @@ class CartesianPosND(AbstractPosND):
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianVelND"]:  # type: ignore[override]
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.vecs.CartesianPosND.differential_cls
+        <class 'coordinax...CartesianVelND'>
+
+        """
         return CartesianVelND
 
     # -----------------------------------------------------
@@ -324,12 +333,30 @@ class CartesianVelND(AvalMixin, AbstractVelND):
     @classproperty
     @classmethod
     def integral_cls(cls) -> type[CartesianPosND]:
+        """Return the integral class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.vecs.CartesianVelND.integral_cls
+        <class 'coordinax...CartesianPosND'>
+
+        """
         return CartesianPosND
 
     @override
     @classproperty
     @classmethod
     def differential_cls(cls) -> type["CartesianAccND"]:
+        """Return the differential class.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> cx.vecs.CartesianVelND.differential_cls
+        <class 'coordinax...CartesianAccND'>
+
+        """
         return CartesianAccND
 
     @partial(eqx.filter_jit, inline=True)

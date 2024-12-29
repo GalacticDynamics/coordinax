@@ -465,6 +465,12 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> import unxt as u
         >>> import coordinax as cx
 
+        We can compare non-vector objects:
+
+        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec == 2
+        False
+
         Positions are covered by a separate dispatch. So here we show velocities
         and accelerations:
 
@@ -602,6 +608,21 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     # TODO: __int__
 
     def __setitem__(self, k: Any, v: Any) -> NoReturn:
+        """Fail to set an item in the vector.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        We can't set an item in a vector:
+
+        >>> vec = cx.vecs.CartesianPos2D.from_([[1, 2], [3, 4]], "m")
+        >>> try: vec[0] = u.Quantity(1, "m")
+        ... except TypeError as e: print(e)
+        CartesianPos2D is immutable.
+
+        """
         msg = f"{type(self).__name__} is immutable."
         raise TypeError(msg)
 
@@ -1035,6 +1056,12 @@ def vector(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVecto
     --------
     >>> import unxt as u
     >>> import coordinax as cx
+
+    Mismatch:
+
+    >>> try: cx.vecs.CartesianPos1D.from_(u.Quantity([1, 2, 3], "m"))
+    ... except ValueError as e: print(e)
+    Cannot construct <class 'coordinax...CartesianPos1D'> from 3 components.
 
     Pos 1D:
 
