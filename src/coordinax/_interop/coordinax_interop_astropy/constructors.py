@@ -520,19 +520,34 @@ def vector(
 
 
 @dispatch
+def vector(obj: apyu.Quantity, /) -> cx.vecs.AbstractVector:
+    """Construct a vector from an Astropy Quantity.
+
+    The array is expected to have the components as the last dimension.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from astropy.units import Quantity
+    >>> import coordinax as cx
+
+    >>> xs = Quantity([1, 2, 3], "meter")
+    >>> vec = cx.vector(xs)
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1. 2. 3.]>
+
+    """
+    return vector(convert(obj, u.Quantity))
+
+
+@dispatch
 def vector(
     cls: type[cx.vecs.AbstractVector], obj: apyu.Quantity, /
 ) -> cx.vecs.AbstractVector:
     """Construct a vector from an Astropy Quantity array.
 
     The array is expected to have the components as the last dimension.
-
-    Parameters
-    ----------
-    cls : type[AbstractVector]
-        The vector class.
-    obj : Quantity[Any, (*#batch, N), "..."]
-        The array of components.
 
     Examples
     --------
@@ -542,57 +557,39 @@ def vector(
 
     >>> xs = Quantity([1, 2, 3], "meter")
     >>> vec = cx.CartesianPos3D.from_(xs)
-    >>> vec
-    CartesianPos3D(
-        x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("m"))
-    )
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1. 2. 3.]>
 
     >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
     >>> vec = cx.CartesianPos3D.from_(xs)
-    >>> vec
-    CartesianPos3D(
-        x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        y=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")),
-        z=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m"))
-    )
-    >>> vec.x
-    Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [[1. 2. 3.]
+         [4. 5. 6.]]>
 
     >>> vec = cx.CartesianVel3D.from_(Quantity([1, 2, 3], "m/s"))
-    >>> vec
-    CartesianVel3D(
-      d_x=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-      d_y=Quantity[...]( value=f32[], unit=Unit("m / s") ),
-      d_z=Quantity[...]( value=f32[], unit=Unit("m / s") )
-    )
+    >>> print(vec)
+    <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+        [1. 2. 3.]>
 
     >>> vec = cx.vecs.CartesianAcc3D.from_(Quantity([1, 2, 3], "m/s2"))
-    >>> vec
-    CartesianAcc3D(
-      d2_x=Quantity[...](value=f32[], unit=Unit("m / s2")),
-      d2_y=Quantity[...](value=f32[], unit=Unit("m / s2")),
-      d2_z=Quantity[...](value=f32[], unit=Unit("m / s2"))
-    )
+    >>> print(vec)
+    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+        [1. 2. 3.]>
 
     >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
     >>> vec = cx.FourVector.from_(xs)
-    >>> vec
-    FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("m s / km")),
-        q=CartesianPos3D( ... )
-    )
+    >>> print(vec)
+    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+        [0. 1. 2. 3.]>
 
     >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
     >>> vec = cx.FourVector.from_(xs)
-    >>> vec
-    FourVector(
-        t=Quantity[PhysicalType('time')](value=f32[2], unit=Unit("m s / km")),
-        q=CartesianPos3D( ... )
-    )
-    >>> vec.x
-    Quantity['length'](Array([1., 4.], dtype=float32), unit='m')
+    >>> print(vec)
+    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+        [[0.000e+00 1.000e+00 2.000e+00 3.000e+00]
+         [3.336e-05 4.000e+00 5.000e+00 6.000e+00]]>
 
     """
-    return cls.from_(convert(obj, u.Quantity))
+    return vector(cls, convert(obj, u.Quantity))
