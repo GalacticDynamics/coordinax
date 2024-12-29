@@ -65,25 +65,6 @@ class AbstractCoordinate(AbstractVector):
         return replace(self, data=new_data, frame=to_frame)
 
     # ===============================================================
-    # Vector API
-
-    def __neg__(self) -> "AbstractCoordinate":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-        >>> coord = cx.Coordinate(data, cx.frames.ICRS())
-
-        >>> (-coord).data["length"].x
-        Quantity['length'](Array(-1, dtype=int32), unit='kpc')
-
-        """
-        return replace(self, data=-self.data)
-
-    # ===============================================================
     # Quax API
 
     # TODO: is there a way to make this work?
@@ -278,6 +259,25 @@ class Coordinate(AbstractCoordinate):
 
         """
         return self.data[index]
+
+    # ===============================================================
+    # Python API
+
+    def __neg__(self) -> "Coordinate":
+        """Negate the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> coord = cx.Coordinate(data, cx.frames.ICRS())
+
+        >>> (-coord).data["length"].x
+        Quantity['length'](Array(-1, dtype=int32), unit='kpc')
+
+        """
+        return replace(self, data=-self.data)
 
 
 # ===============================================================
