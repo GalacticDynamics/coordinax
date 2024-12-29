@@ -82,9 +82,11 @@ class CylindricalVel(AbstractVel3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalVel.from_([1, 2, 3], "km/s")
+    >>> vec = cx.vecs.CylindricalVel(d_rho=u.Quantity(1, "km/s"),
+    ...                              d_phi=u.Quantity(2, "deg/s"),
+    ...                              d_z=u.Quantity(3, "km/s"))
     >>> print(vec)
-    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+    <CylindricalVel (d_rho[km / s], d_phi[deg / s], d_z[km / s])
         [1 2 3]>
 
     """
@@ -120,9 +122,11 @@ class CylindricalAcc(AbstractAcc3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalAcc.from_([1, 2, 3], "km/s2")
+    >>> vec = cx.vecs.CylindricalAcc(d2_rho=u.Quantity(1, "km/s2"),
+    ...                              d2_phi=u.Quantity(2, "deg/s2"),
+    ...                              d2_z=u.Quantity(3, "km/s2"))
     >>> print(vec)
-    <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+    <CylindricalAcc (d2_rho[km / s2], d2_phi[deg / s2], d2_z[km / s2])
         [1 2 3]>
 
     """

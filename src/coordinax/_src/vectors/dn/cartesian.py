@@ -492,7 +492,7 @@ class CartesianAccND(AvalMixin, AbstractAccND):
 @AbstractVector.from_.dispatch  # type: ignore[misc]
 def from_(
     cls: type[CartesianPosND] | type[CartesianVelND] | type[CartesianAccND],
-    x: Shaped[AbstractQuantity, ""] | Shaped[AbstractQuantity, "*batch N"],
+    x: AbstractQuantity,
     /,
 ) -> CartesianPosND | CartesianVelND | CartesianAccND:
     """Construct an N-dimensional acceleration.

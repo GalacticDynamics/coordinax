@@ -515,14 +515,14 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> acc1 == acc2
         Array([ True, False], dtype=bool)
 
-        >>> vel1 = cx.CartesianVel3D.from_([[1, 4], [2, 5], [3, 6]], "km/s")
-        >>> vel2 = cx.CartesianVel3D.from_([[1, 4], [0, 5], [3, 0]], "km/s")
+        >>> vel1 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 6]], "km/s")
+        >>> vel2 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 0]], "km/s")
         >>> vel1.d_x
-        Quantity['speed'](Array([1, 2, 3], dtype=int32), unit='km / s')
+        Quantity['speed'](Array([1, 4], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
-        Array([ True, False, False], dtype=bool)
+        Array([ True, False], dtype=bool)
         >>> vel1 == vel2
-        Array([ True, False, False], dtype=bool)
+        Array([ True, False], dtype=bool)
 
         >>> q = cx.vecs.CylindricalPos(rho=u.Quantity([1.0, 2.0], "kpc"),
         ...                            phi=u.Quantity([0.0, 0.2], "rad"),
@@ -1005,6 +1005,131 @@ def from_(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVecto
 
     """
     return cls(**obj)
+
+
+@AbstractVector.from_.dispatch
+def from_(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVector:
+    """Construct a vector from a quantity.
+
+    This will fail for most non-position vectors, except Cartesian vectors,
+    since they generally do not have the same dimensions, nor can be converted
+    from a Cartesian vector without additional information.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    Pos 1D:
+
+    >>> cx.vecs.CartesianPos1D.from_(u.Quantity(1, "meter"))
+    CartesianPos1D( x=Quantity[...](value=...i32[], unit=Unit("m")) )
+
+    >>> cx.vecs.CartesianPos1D.from_(u.Quantity([1], "meter"))
+    CartesianPos1D(x=Quantity[...](value=i32[], unit=Unit("m")))
+
+    >>> cx.vecs.CartesianPos1D.from_(cx.Distance(1, "meter"))
+    CartesianPos1D( x=Quantity[...](value=...i32[], unit=Unit("m")) )
+
+    >>> cx.vecs.RadialPos.from_(u.Quantity(1, "meter"))
+    RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
+
+    >>> cx.vecs.RadialPos.from_(u.Quantity([1], "meter"))
+    RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
+
+    Vel 1D:
+
+    >>> cx.vecs.CartesianVel1D.from_(u.Quantity(1, "m/s"))
+    CartesianVel1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+
+    >>> cx.vecs.CartesianVel1D.from_(u.Quantity([1], "m/s"))
+    CartesianVel1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+
+    >>> cx.vecs.RadialVel.from_(u.Quantity(1, "m/s"))
+    RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+
+    >>> cx.vecs.RadialVel.from_(u.Quantity([1], "m/s"))
+    RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+
+    Acc 1D:
+
+    >>> cx.vecs.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
+    CartesianAcc1D( d2_x=... )
+
+    >>> cx.vecs.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
+    CartesianAcc1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+
+    >>> cx.vecs.RadialAcc.from_(u.Quantity(1, "m/s2"))
+    RadialAcc( d2_r=... )
+
+    >>> cx.vecs.RadialAcc.from_(u.Quantity([1], "m/s2"))
+    RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+
+    Pos 2D:
+
+    >>> vec = cx.vecs.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
+    >>> vec
+    CartesianPos2D(
+        x=Quantity[...](value=i32[], unit=Unit("m")),
+        y=Quantity[...](value=i32[], unit=Unit("m"))
+    )
+
+    Vel 2D:
+
+    >>> vec = cx.vecs.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
+    >>> print(vec)
+    <CartesianVel2D (d_x[m / s], d_y[m / s])
+        [1 2]>
+
+    Acc 2D:
+
+    >>> vec = cx.vecs.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
+    >>> print(vec)
+    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+        [1 2]>
+
+    Pos 3D:
+
+    >>> vec = cx.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1 2 3]>
+
+    Vel 3D:
+
+    >>> vec = cx.CartesianVel3D.from_(u.Quantity([1, 2, 3], "m/s"))
+    >>> print(vec)
+    <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+        [1 2 3]>
+
+    Acc 3D:
+
+    >>> vec = cx.vecs.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
+    >>> print(vec)
+    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+        [1 2 3]>
+
+    Generic 3D:
+
+    >>> vec = cx.vecs.CartesianGeneric3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> print(vec)
+    <CartesianGeneric3D (x[m], y[m], z[m])
+        [1 2 3]>
+
+    """
+    # Ensure the object is at least 1D
+    obj = jnp.atleast_1d(obj)
+
+    # Check the dimensions
+    if obj.shape[-1] != cls._dimensionality():
+        msg = f"Cannot construct {cls} from {obj.shape[-1]} components."
+        raise ValueError(msg)
+
+    # Map the components
+    comps = {k: obj[..., i] for i, k in enumerate(cls.components)}
+
+    # Construct the vector from the mapping
+    return cls.from_(comps)
 
 
 @AbstractVector.from_.dispatch

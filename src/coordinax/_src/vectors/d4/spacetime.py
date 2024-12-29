@@ -227,9 +227,7 @@ class FourVector(AbstractPos4D):
 
 
 @AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
-    cls: type[FourVector], obj: Shaped[AbstractQuantity, "*batch 4"], /
-) -> FourVector:
+def from_(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
     """Construct a vector from a Quantity array.
 
     The ``Quantity[Any, (*#batch, 4), "..."]`` is expected to have the
