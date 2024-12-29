@@ -62,7 +62,7 @@ class AbstractCoordinate(AbstractVector):
         """
         op = self.frame.transform_op(to_frame)
         new_data = op(self.data)
-        return replace(self, data=new_data, frame=to_frame)
+        return type(self).from_(new_data, to_frame)
 
     # ===============================================================
     # Quax API
