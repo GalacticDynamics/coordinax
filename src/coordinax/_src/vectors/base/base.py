@@ -24,7 +24,7 @@ from .flags import AttrFilter
 from .mixins import AstropyRepresentationAPIMixin, IPythonReprMixin
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty, is_any_quantity
-from coordinax._src.vectors.api import vconvert
+from coordinax._src.vectors.api import vconvert, vector
 from coordinax._src.vectors.utils import full_shaped
 
 if TYPE_CHECKING:
@@ -60,11 +60,10 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     # Constructors
 
     @classmethod
-    @dispatch.abstract  # type: ignore[misc]
     def from_(
         cls: "type[AbstractVector]", *args: Any, **kwargs: Any
     ) -> "AbstractVector":
-        raise NotImplementedError  # pragma: no cover
+        return vector(cls, *args, **kwargs)
 
     # ===============================================================
     # Vector API
@@ -978,8 +977,25 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 # Register additional constructors
 
 
-@AbstractVector.from_.dispatch
-def from_(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVector:
+@dispatch
+def vector(obj: AbstractVector, /) -> AbstractVector:
+    """Construct a vector from a vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
+    >>> cx.vector(cart) is cart
+    True
+
+    """
+    return obj
+
+
+@dispatch
+def vector(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVector:
     """Construct a vector from a mapping.
 
     Examples
@@ -1007,8 +1023,8 @@ def from_(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVecto
     return cls(**obj)
 
 
-@AbstractVector.from_.dispatch
-def from_(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVector:
+@dispatch
+def vector(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVector:
     """Construct a vector from a quantity.
 
     This will fail for most non-position vectors, except Cartesian vectors,
@@ -1132,8 +1148,8 @@ def from_(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVector
     return cls.from_(comps)
 
 
-@AbstractVector.from_.dispatch
-def from_(
+@dispatch
+def vector(
     cls: type[AbstractVector], obj: ArrayLike | list[Any], unit: Unit | str, /
 ) -> AbstractVector:
     """Construct a vector from an array and unit.
@@ -1163,8 +1179,8 @@ def from_(
     return cls.from_(obj)  # re-dispatch
 
 
-@AbstractVector.from_.dispatch
-def from_(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
+@dispatch
+def vector(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
     """Construct a vector from another vector.
 
     Raises

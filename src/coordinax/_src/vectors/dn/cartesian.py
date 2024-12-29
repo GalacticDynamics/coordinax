@@ -10,7 +10,7 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 from jaxtyping import ArrayLike, Shaped
-from plum import conversion_method
+from plum import conversion_method, dispatch
 from quax import register
 
 import quaxed.lax as qlax
@@ -22,7 +22,7 @@ import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base import AbstractPos
 from coordinax._src.vectors.base.mixins import AvalMixin
 
 ##############################################################################
@@ -489,8 +489,8 @@ class CartesianAccND(AvalMixin, AbstractAccND):
 # Constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(
+@dispatch  # type: ignore[misc]
+def vector(
     cls: type[CartesianPosND] | type[CartesianVelND] | type[CartesianAccND],
     x: AbstractQuantity,
     /,

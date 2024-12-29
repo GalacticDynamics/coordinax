@@ -12,6 +12,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Shaped
+from plum import dispatch
 from quax import register
 
 import quaxed.numpy as jnp
@@ -226,8 +227,8 @@ class FourVector(AbstractPos4D):
 # Constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[misc]
-def from_(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
+@dispatch  # type: ignore[misc]
+def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
     """Construct a vector from a Quantity array.
 
     The ``Quantity[Any, (*#batch, 4), "..."]`` is expected to have the
