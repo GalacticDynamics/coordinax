@@ -9,6 +9,7 @@ from typing import Any, TypeVar
 from jax import lax
 from jax.core import Primitive
 from jaxtyping import ArrayLike
+from plum import convert
 from quax import register as register_
 
 import unxt as u
@@ -46,7 +47,7 @@ def _cbrt_p_a(x: AbstractAngle) -> u.Quantity:
     Quantity['rad1/3'](Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
 
     """
-    return u.Quantity(lax.cbrt(x.value), unit=x.unit ** (1 / 3))
+    return qlax.cbrt(convert(x, u.Quantity))
 
 
 # ==============================================================================
@@ -66,7 +67,7 @@ def _cos_p(x: AbstractAngle) -> u.Quantity:
     Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
 
     """
-    return u.Quantity(qlax.cos(u.ustrip(radian, x)), unit=one)
+    return qlax.cos(convert(x, u.Quantity))
 
 
 # ==============================================================================
@@ -114,7 +115,7 @@ def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> u.Quantity:
     Quantity['rad3'](Array(8, dtype=int32, weak_type=True), unit='deg3')
 
     """
-    return u.Quantity(value=lax.integer_pow(x.value, y), unit=x.unit**y)
+    return qlax.integer_pow(convert(x, u.Quantity), y)
 
 
 # ==============================================================================
@@ -135,7 +136,7 @@ def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> u.Quantity:
     Quantity['rad3'](Array(1000., dtype=float32, ...), unit='deg3')
 
     """
-    return u.Quantity(x.value, x.unit) ** y  # TODO: better call to power
+    return qlax.pow(convert(x, u.Quantity), y)
 
 
 # ==============================================================================
@@ -155,7 +156,7 @@ def _sin_p(x: AbstractAngle) -> u.Quantity:
     Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
 
     """
-    return u.Quantity(qlax.sin(u.ustrip(radian, x)), unit=one)
+    return qlax.sin(convert(x, u.Quantity))
 
 
 # ==============================================================================
@@ -175,5 +176,24 @@ def _sqrt_p_a(x: AbstractAngle) -> u.Quantity:
     Quantity['rad0.5'](Array(3., dtype=float32, ...), unit='deg(1/2)')
 
     """
-    # Promote to something that supports sqrt units.
-    return u.Quantity(lax.sqrt(x.value), unit=x.unit ** (1 / 2))
+    return qlax.sqrt(convert(x, u.Quantity))
+
+
+# ==============================================================================
+
+
+@register(lax.tan_p)
+def _tan_p_a(x: AbstractAngle) -> u.Quantity:
+    """Tangent of an Angle.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> from coordinax.angle import Angle
+
+    >>> q = Angle(45, "deg")
+    >>> jnp.tan(q)
+    Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
+
+    """
+    return qlax.tan(convert(x, u.Quantity))

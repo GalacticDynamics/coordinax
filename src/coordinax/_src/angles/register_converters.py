@@ -2,18 +2,12 @@
 
 __all__: list[str] = []
 
-from plum import add_promotion_rule, conversion_method
+from plum import conversion_method
 
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
+from .angle import Angle
 from .base import AbstractAngle
-from .core import Angle
-
-# Add a rule that when a AbstractAngle interacts with a Quantity, the
-# angle degrades to a Quantity. This is necessary for many operations, e.g.
-# division of an angle by non-dimensionless quantity where the resulting units
-# are not those of an angle.
-add_promotion_rule(AbstractAngle, Quantity, Quantity)
 
 
 @conversion_method(type_from=AbstractAngle, type_to=Quantity)  # type: ignore[misc]
