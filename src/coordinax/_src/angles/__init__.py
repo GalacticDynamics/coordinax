@@ -10,8 +10,8 @@ This module depends on the following modules:
 
 __all__ = ["AbstractAngle", "Angle", "BatchableAngle", "BatchableAngleQ"]
 
+from .angle import Angle
 from .base import AbstractAngle
-from .core import Angle
 from .typing import BatchableAngle, BatchableAngleQ
 
 # isort: split
