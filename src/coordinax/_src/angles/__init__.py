@@ -8,10 +8,11 @@ This module depends on the following modules:
 
 """
 
-__all__ = ["AbstractAngle", "Angle", "BatchableAngle", "BatchableAngleQ"]
+__all__ = ["AbstractAngle", "Angle", "Parallax", "BatchableAngle", "BatchableAngleQ"]
 
 from .angle import Angle
 from .base import AbstractAngle
+from .parallax import Parallax
 from .typing import BatchableAngle, BatchableAngleQ
 
 # isort: split

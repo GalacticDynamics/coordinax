@@ -12,16 +12,19 @@ __all__ = [
     "AbstractDistance",
     "Distance",
     "DistanceModulus",
-    "Parallax",
     # Typing
     "BatchableLength",
     "BatchableDistance",
 ]
 
 from .base import AbstractDistance
-from .distance import Distance, DistanceModulus, Parallax
+from .distance import Distance, DistanceModulus
 from .typing import BatchableDistance, BatchableLength
 
 # isort: split
 # Register the dispatching
-from . import register_converters, register_primitives  # noqa: F401
+from . import (  # noqa: F401
+    register_constructors,
+    register_converters,
+    register_primitives,
+)

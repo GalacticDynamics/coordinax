@@ -7,7 +7,8 @@ from plum import conversion_method
 from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractDistance
-from .distance import Distance, DistanceModulus, Parallax
+from .distance import Distance, DistanceModulus
+from coordinax._src.angles.parallax import Parallax
 
 
 @conversion_method(type_from=AbstractDistance, type_to=Quantity)  # type: ignore[misc]
