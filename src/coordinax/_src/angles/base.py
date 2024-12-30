@@ -31,12 +31,12 @@ class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
 
     >>> try: Angle(90, "m")
     ... except ValueError as e: print(e)
-    Angle must have dimensions angle.
+    Angle must have units with angular dimensions.
 
     """
 
     def __check_init__(self) -> None:
         """Check the initialization."""
         if u.dimension_of(self) != angle_dimension:
-            msg = "Angle must have dimensions angle."
+            msg = f"{type(self).__name__} must have units with angular dimensions."
             raise ValueError(msg)
