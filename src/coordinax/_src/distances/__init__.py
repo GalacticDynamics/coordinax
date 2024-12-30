@@ -24,4 +24,4 @@ from .typing import BatchableDistance, BatchableLength
 
 # isort: split
 # Register the dispatching
-from . import compat, register_primitives  # noqa: F401
+from . import register_converters, register_primitives  # noqa: F401
