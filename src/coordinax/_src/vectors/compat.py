@@ -3,10 +3,11 @@
 __all__: list[str] = []
 
 
-from typing import TypeAlias
+from collections.abc import Callable
+from typing import TypeAlias, TypeVar
 
 from jaxtyping import Shaped
-from plum import conversion_method, convert, dispatch
+from plum import conversion_method as _conversion_method, convert, dispatch
 
 import quaxed.numpy as xp
 import unxt as u
@@ -26,6 +27,14 @@ from coordinax._src.vectors.d2 import CartesianAcc2D, CartesianPos2D, CartesianV
 from coordinax._src.vectors.d3 import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 from coordinax._src.vectors.dn import CartesianAccND, CartesianPosND, CartesianVelND
 from coordinax._src.vectors.utils import full_shaped
+
+T = TypeVar("T")
+
+
+def conversion_method(type_from: type, type_to: type) -> Callable[[T], T]:
+    """Typed version of conversion method."""
+    return _conversion_method(type_from, type_to)
+
 
 #####################################################################
 # Construct from Quantity
@@ -207,7 +216,7 @@ def vec_diff1d_to_uncheckedq(
 @conversion_method(type_from=RadialVel, type_to=Quantity)
 @conversion_method(type_from=CartesianAcc1D, type_to=Quantity)
 @conversion_method(type_from=CartesianVel1D, type_to=Quantity)
-def vec_diff1d_to_uncheckedq(obj: QConvertible1D, /) -> Shaped[Quantity, "*batch 1"]:
+def vec_diff1d_to_q(obj: QConvertible1D, /) -> Shaped[Quantity, "*batch 1"]:
     """1D Differentials -> `unxt.Quantity`.
 
     Examples
@@ -244,7 +253,9 @@ QConvertible2D: TypeAlias = CartesianVel2D | CartesianAcc2D
 
 @conversion_method(type_from=CartesianAcc2D, type_to=UncheckedQuantity)
 @conversion_method(type_from=CartesianVel2D, type_to=UncheckedQuantity)
-def vec_diff_to_q(obj: QConvertible2D, /) -> Shaped[UncheckedQuantity, "*batch 2"]:
+def vec_diff2d_to_uncheckedq(
+    obj: QConvertible2D, /
+) -> Shaped[UncheckedQuantity, "*batch 2"]:
     """2D Differentials -> `unxt.UncheckedQuantity`.
 
     Examples
@@ -267,7 +278,7 @@ def vec_diff_to_q(obj: QConvertible2D, /) -> Shaped[UncheckedQuantity, "*batch 2
 
 @conversion_method(type_from=CartesianAcc2D, type_to=Quantity)
 @conversion_method(type_from=CartesianVel2D, type_to=Quantity)
-def vec_diff_to_q(obj: QConvertible2D, /) -> Shaped[Quantity, "*batch 2"]:
+def vec_diff2d_to_q(obj: QConvertible2D, /) -> Shaped[Quantity, "*batch 2"]:
     """2D Differentials -> `unxt.Quantity`.
 
     Examples
@@ -296,7 +307,9 @@ QConvertible3D: TypeAlias = CartesianVel3D | CartesianAcc3D
 
 @conversion_method(CartesianAcc3D, UncheckedQuantity)
 @conversion_method(CartesianVel3D, UncheckedQuantity)
-def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[UncheckedQuantity, "*batch 3"]:
+def vec_diff3d_to_uncheckedq(
+    obj: QConvertible3D, /
+) -> Shaped[UncheckedQuantity, "*batch 3"]:
     """3D Differentials -> `unxt.UncheckedQuantity`.
 
     Examples
@@ -319,7 +332,7 @@ def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[UncheckedQuantity, "*batch 3
 
 @conversion_method(CartesianAcc3D, Quantity)
 @conversion_method(CartesianVel3D, Quantity)
-def vec_diff_to_q(obj: QConvertible3D, /) -> Shaped[Quantity, "*batch 3"]:
+def vec_diff3d_to_q(obj: QConvertible3D, /) -> Shaped[Quantity, "*batch 3"]:
     """3D Differentials -> `unxt.Quantity`.
 
     Examples
