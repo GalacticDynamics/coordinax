@@ -276,6 +276,7 @@ def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
 
 
 # ===============================================================
+# Register Primitives
 
 
 @register(jax.lax.add_p)  # type: ignore[misc]
