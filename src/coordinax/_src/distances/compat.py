@@ -2,21 +2,12 @@
 
 __all__: list[str] = []
 
-from plum import add_promotion_rule, conversion_method
+from plum import conversion_method
 
 from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractDistance
 from .distance import Distance, DistanceModulus, Parallax
-
-# Add a rule that when a AbstractDistance interacts with a Quantity, the
-# distance degrades to a Quantity. This is necessary for many operations, e.g.
-# division of a distance by non-dimensionless quantity where the resulting units
-# are not those of a distance.
-add_promotion_rule(AbstractDistance, Quantity, Quantity)
-
-#####################################################################
-# Conversion
 
 
 @conversion_method(type_from=AbstractDistance, type_to=Quantity)  # type: ignore[misc]
