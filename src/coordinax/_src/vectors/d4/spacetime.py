@@ -12,7 +12,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Shaped
-from plum import dispatch
+from plum import conversion_method, convert, dispatch
 from quax import register
 
 import quaxed.numpy as jnp
@@ -273,6 +273,37 @@ def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
     )
     c = cls.__dataclass_fields__["c"].default.default
     return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
+
+
+# ===============================================================
+# Converters
+
+
+@conversion_method(type_from=FourVector, type_to=u.Quantity)  # type: ignore[misc]
+def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*batch 4"]:
+    """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
+
+    Convert the 4-vector to a Quantity array with the components as the last
+    dimension.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.vecs.FourVector(t=u.Quantity([1, 2], "yr"),
+    ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
+
+    >>> convert(w, u.Quantity).uconvert("pc")
+    Quantity['length'](Array([[0.3066014, 1. , 2. , 3. ],
+                              [0.6132028, 4. , 4.9999995, 6. ]],
+                             dtype=float32, weak_type=True),
+                       unit='pc')
+
+    """
+    cart = convert(obj.q, u.Quantity)
+    return jnp.concat([obj.c * obj.t[..., None], cart], axis=-1)
 
 
 # ===============================================================
