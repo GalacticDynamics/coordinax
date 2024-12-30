@@ -3,6 +3,8 @@
 __all__: list[str] = []
 
 
+from plum import add_promotion_rule
+
 import unxt as u
 from unxt.quantity import AbstractQuantity
 
@@ -40,3 +42,10 @@ class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
         if u.dimension_of(self) != angle_dimension:
             msg = f"{type(self).__name__} must have units with angular dimensions."
             raise ValueError(msg)
+
+
+# Add a rule that when a AbstractAngle interacts with a Quantity, the
+# angle degrades to a Quantity. This is necessary for many operations, e.g.
+# division of an angle by non-dimensionless quantity where the resulting units
+# are not those of an angle.
+add_promotion_rule(AbstractAngle, u.Quantity, u.Quantity)
