@@ -19,7 +19,7 @@ __all__ = [
 ]
 
 from .base import AbstractDistance
-from .core import Distance, DistanceModulus, Parallax
+from .distance import Distance, DistanceModulus, Parallax
 from .typing import BatchableDistance, BatchableLength
 
 # isort: split

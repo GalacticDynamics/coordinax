@@ -7,7 +7,7 @@ from plum import add_promotion_rule, conversion_method
 from unxt.quantity import AbstractQuantity, Quantity
 
 from .base import AbstractDistance
-from .core import Distance, DistanceModulus, Parallax
+from .distance import Distance, DistanceModulus, Parallax
 
 # Add a rule that when a AbstractDistance interacts with a Quantity, the
 # distance degrades to a Quantity. This is necessary for many operations, e.g.
