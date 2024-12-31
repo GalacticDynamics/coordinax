@@ -22,6 +22,11 @@ class Sentinel(Enum):
         return f"<{self.name}>"
 
 
+def identity(x: Any) -> Any:
+    """Identity function."""
+    return x
+
+
 @final
 @dataclass(frozen=True, slots=True)
 class VectorAttribute(Generic[Return]):
@@ -54,7 +59,7 @@ class VectorAttribute(Generic[Return]):
     when initializing the vector object.
     """
 
-    converter: Callable[[Any], Return] = lambda x: x
+    converter: Callable[[Any], Return] = identity
     """Function to convert the input value to the desired type."""
 
     name: str = field(
@@ -106,6 +111,8 @@ class VectorAttribute(Generic[Return]):
         return obj.__dict__[self.name]
 
     def __set__(self, obj: AbstractVector, value: Any) -> None:
+        # `dataclass` class definition can end up passing `self` as the value.
+        # We interpret this as setting the default value.
         if value is self:
             value = self.default
 
