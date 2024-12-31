@@ -26,8 +26,14 @@ from .base import AbstractPos4D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector, AttrFilter, VectorAttribute
-from coordinax._src.vectors.d3.base import AbstractPos3D
-from coordinax._src.vectors.d3.cartesian import CartesianPos3D
+from coordinax._src.vectors.d3 import (
+    AbstractPos3D,
+    CartesianPos3D,
+    CylindricalPos,
+    LonLatSphericalPos,
+    MathSphericalPos,
+    SphericalPos,
+)
 
 if TYPE_CHECKING:
     from typing import Never
@@ -123,8 +129,7 @@ class FourVector(AbstractPos4D):
     @classproperty
     @classmethod
     def _cartesian_cls(cls) -> type[AbstractVector]:
-        msg = "Not yet implemented"
-        raise NotImplementedError(msg)
+        return CartesianPos3D
 
     @override
     @classproperty
@@ -276,6 +281,30 @@ def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
 
 
 # ===============================================================
+# Vector Convert
+
+
+@dispatch  # type: ignore[misc]
+def vconvert(
+    spatial_target: type[AbstractPos3D], current: FourVector, /, **kwargs: Any
+) -> FourVector:
+    """Convert the spatial part of a 4-vector to a different 3-vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(cx.vconvert(cx.vecs.CylindricalPos, w))
+    <FourVector (t[s], q=(rho[m], phi[rad], z[m]))
+        [1.    2.236 1.107 3.   ]>
+
+    """
+    return replace(current, q=vconvert(spatial_target, current.q, **kwargs))
+
+
+# ===============================================================
 # Converters
 
 
@@ -304,6 +333,101 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*ba
     """
     cart = convert(obj.q, u.Quantity)
     return jnp.concat([obj.c * obj.t[..., None], cart], axis=-1)
+
+
+@conversion_method(type_from=FourVector, type_to=CartesianPos3D)  # type: ignore[misc]
+def convert_4vec_to_cart3d(obj: FourVector, /) -> CartesianPos3D:
+    """Convert a 4-vector to a Cartesian 3-vector.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(convert(w, cx.vecs.CartesianPos3D))
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1 2 3]>
+
+    """
+    return convert(obj.q, CartesianPos3D)
+
+
+@conversion_method(type_from=FourVector, type_to=CylindricalPos)  # type: ignore[misc]
+def convert_4vec_to_cylindrical(obj: FourVector, /) -> CylindricalPos:
+    """Convert a 4-vector to a Cylindrical 3-vector.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(convert(w, cx.vecs.CylindricalPos))
+    <CylindricalPos (rho[m], phi[rad], z[m])
+        [2.236 1.107 3.   ]>
+
+    """
+    return convert(obj.q, CylindricalPos)
+
+
+@conversion_method(type_from=FourVector, type_to=SphericalPos)  # type: ignore[misc]
+def convert_4vec_to_spherical(obj: FourVector, /) -> SphericalPos:
+    """Convert a 4-vector to a spherical 3-vector.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(convert(w, cx.SphericalPos))
+    <SphericalPos (r[m], theta[rad], phi[rad])
+        [3.742 0.641 1.107]>
+
+    """
+    return convert(obj.q, SphericalPos)
+
+
+@conversion_method(type_from=FourVector, type_to=LonLatSphericalPos)  # type: ignore[misc]
+def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> LonLatSphericalPos:
+    """Convert a 4-vector to a lon-lat spherical 3-vector.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(convert(w, cx.vecs.LonLatSphericalPos))
+    <LonLatSphericalPos (lon[rad], lat[deg], distance[m])
+        [ 1.107 53.301  3.742]>
+
+    """
+    return convert(obj.q, LonLatSphericalPos)
+
+
+@conversion_method(type_from=FourVector, type_to=MathSphericalPos)  # type: ignore[misc]
+def convert_4vec_to_mathsph(obj: FourVector, /) -> MathSphericalPos:
+    """Convert a 4-vector to a math spherical 3-vector.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(convert(w, cx.vecs.MathSphericalPos))
+    <MathSphericalPos (r[m], theta[rad], phi[rad])
+        [3.742 1.107 0.641]>
+
+    """
+    return convert(obj.q, MathSphericalPos)
 
 
 # ===============================================================
