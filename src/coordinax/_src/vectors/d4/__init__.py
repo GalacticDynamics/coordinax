@@ -9,6 +9,3 @@ __all__ = [
 
 from .base import AbstractPos4D
 from .spacetime import FourVector
-
-# isort: split
-from . import compat  # noqa: F401

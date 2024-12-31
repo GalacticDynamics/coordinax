@@ -27,5 +27,7 @@ from .utils import ToUnitsOptions
 # isort: split
 from . import (
     compat,  # noqa: F401
+    register_dataclassish,  # noqa: F401
     register_primitives,  # noqa: F401
+    register_unxt,  # noqa: F401
 )

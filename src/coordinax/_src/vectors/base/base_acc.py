@@ -132,6 +132,7 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
 
 
 # ===============================================================
+#  Register Primitives
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

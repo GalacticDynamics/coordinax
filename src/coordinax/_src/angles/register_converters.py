@@ -4,14 +4,15 @@ __all__: list[str] = []
 
 from plum import conversion_method
 
-from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
+import unxt as u
+from unxt.quantity import AbstractQuantity, UncheckedQuantity
 
 from .angle import Angle
 from .base import AbstractAngle
 
 
-@conversion_method(type_from=AbstractAngle, type_to=Quantity)  # type: ignore[misc]
-def convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
+@conversion_method(type_from=AbstractAngle, type_to=u.Quantity)  # type: ignore[misc]
+def convert_angle_to_quantity(x: AbstractAngle) -> u.Quantity:
     """Convert a distance to a quantity.
 
     Examples
@@ -25,7 +26,8 @@ def convert_angle_to_quantity(x: AbstractAngle) -> Quantity:
     Quantity['angle'](Array(90, dtype=int32, weak_type=True), unit='deg')
 
     """
-    return Quantity(x.value, x.unit)
+    unit = u.unit_of(x)
+    return u.Quantity(x.ustrip(unit), unit)
 
 
 @conversion_method(type_from=AbstractAngle, type_to=UncheckedQuantity)  # type: ignore[misc]
@@ -43,7 +45,8 @@ def convert_angle_to_uncheckedquantity(x: AbstractAngle) -> UncheckedQuantity:
     UncheckedQuantity(Array(90, dtype=int32, weak_type=True), unit='deg')
 
     """
-    return UncheckedQuantity(x.value, x.unit)
+    unit = u.unit_of(x)
+    return UncheckedQuantity(x.ustrip(unit), unit)
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=Angle)  # type: ignore[misc]
@@ -69,4 +72,8 @@ def convert_quantity_to_angle(q: AbstractQuantity, /) -> Angle:
     True
 
     """
-    return q if isinstance(q, Angle) else Angle(q.value, q.unit)
+    if isinstance(q, Angle):
+        return q
+
+    unit = u.unit_of(q)
+    return Angle(q.ustrip(unit), unit)
