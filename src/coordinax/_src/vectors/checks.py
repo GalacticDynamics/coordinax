@@ -137,37 +137,6 @@ def check_non_negative_non_zero(
     )
 
 
-def check_less_than(
-    x: AbstractQuantity,
-    max_val: AbstractQuantity,
-    /,
-    *,
-    name: str = "",
-    comparison_name: str = "the specified maximum value",
-) -> AbstractQuantity:
-    """Check that the input value is less than the input maximum value.
-
-    Examples
-    --------
-    >>> import unxt as u
-
-    Pass through the input if the value is less than the max value:
-
-    >>> x = u.Quantity([1, 2, 3], "m")
-    >>> check_less_than(x, u.Quantity(4, "m"))
-    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
-
-    Raise an error if the input is larger than the maximum value.
-
-    >>> try: check_less_than(x, u.Quantity(1.5, "m"))
-    ... except Exception: pass
-
-    """
-    name = f" {name}" if name else name
-    msg = f"The input{name} must be less than {comparison_name}."
-    return eqx.error_if(x, jnp.any(x >= max_val), msg)
-
-
 def check_less_than_equal(
     x: AbstractQuantity,
     max_val: AbstractQuantity,
@@ -197,37 +166,6 @@ def check_less_than_equal(
     name = f" {name}" if name else name
     msg = f"The input{name} must be less than or equal to {comparison_name}."
     return eqx.error_if(x, jnp.any(x > max_val), msg)
-
-
-def check_greater_than(
-    x: AbstractQuantity,
-    min_val: AbstractQuantity,
-    /,
-    *,
-    name: str = "",
-    comparison_name: str = "the specified minimum value",
-) -> AbstractQuantity:
-    """Check that the input value is greater than the input minimum value.
-
-    Examples
-    --------
-    >>> import unxt as u
-
-    Pass through the input if the value is greater than the min value:
-
-    >>> x = u.Quantity([1, 2, 3], "m")
-    >>> check_greater_than(x, u.Quantity(0, "m"))
-    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
-
-    Raise an error if the input is smaller than the minimum value.
-
-    >>> try: check_greater_than(x, u.Quantity(4, "m"))
-    ... except Exception: pass
-
-    """
-    name = f" {name}" if name else name
-    msg = f"The input{name} must be greater than {comparison_name}."
-    return eqx.error_if(x, jnp.any(x <= min_val), msg)
 
 
 def check_greater_than_equal(

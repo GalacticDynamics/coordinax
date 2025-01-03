@@ -62,5 +62,5 @@ from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpher
 from . import (
     constructor,  # noqa: F401
     register_convert,  # noqa: F401
-    transform,  # noqa: F401
+    register_vconvert,  # noqa: F401
 )
