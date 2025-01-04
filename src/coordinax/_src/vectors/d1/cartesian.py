@@ -21,7 +21,7 @@ from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractPos
-from coordinax._src.vectors.base.mixins import AvalMixin
+from coordinax._src.vectors.mixins import AvalMixin
 
 
 @final

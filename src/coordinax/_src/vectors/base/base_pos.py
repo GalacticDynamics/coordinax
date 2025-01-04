@@ -21,11 +21,11 @@ from dataclassish import field_items
 
 from .base import AbstractVector
 from .flags import AttrFilter
-from .mixins import AvalMixin
 from .utils import ToUnitsOptions
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vconvert
+from coordinax._src.vectors.mixins import AvalMixin
 
 PosT = TypeVar("PosT", bound="AbstractPos")
 

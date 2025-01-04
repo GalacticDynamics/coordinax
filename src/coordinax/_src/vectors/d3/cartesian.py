@@ -27,7 +27,7 @@ from .generic import CartesianGeneric3D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty, is_any_quantity
 from coordinax._src.vectors.base import AbstractPos
-from coordinax._src.vectors.base.mixins import AvalMixin
+from coordinax._src.vectors.mixins import AvalMixin
 
 #####################################################################
 # Position
