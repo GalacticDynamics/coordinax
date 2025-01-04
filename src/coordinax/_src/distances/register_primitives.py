@@ -3,13 +3,11 @@
 
 __all__: list[str] = []
 
-from collections.abc import Callable
 from typing import Any, TypeVar
 
 from jax import lax
-from jax.core import Primitive
 from jaxtyping import ArrayLike
-from quax import register as register_
+from quax import register
 
 import unxt as u
 from unxt.quantity import AbstractQuantity
@@ -22,17 +20,8 @@ one = u.unit("")
 radian = u.unit("radian")
 
 
-def register(primitive: Primitive, **kwargs: Any) -> Callable[[T], T]:
-    """`quax.register`, but makes mypy happy."""
-    return register_(primitive, **kwargs)
-
-
-################################################################################
-# Registering Primitives
-
-
 # TODO: can this be done with promotion/conversion instead?
-@register(lax.cbrt_p)
+@register(lax.cbrt_p)  # type: ignore[misc]
 def _cbrt_p_d(x: AbstractDistance) -> u.Quantity:
     """Cube root of a distance.
 
@@ -51,7 +40,7 @@ def _cbrt_p_d(x: AbstractDistance) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.dot_general_p)
+@register(lax.dot_general_p)  # type: ignore[misc]
 def _dot_general_dd(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
 ) -> u.Quantity:
@@ -94,7 +83,7 @@ def _dot_general_dd(
 # ==============================================================================
 
 
-@register(lax.integer_pow_p)
+@register(lax.integer_pow_p)  # type: ignore[misc]
 def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> u.Quantity:
     """Integer power of a Distance.
 
@@ -112,7 +101,7 @@ def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.pow_p)
+@register(lax.pow_p)  # type: ignore[misc]
 def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> u.Quantity:
     """Power of a Distance by redispatching to Quantity.
 
@@ -133,7 +122,7 @@ def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.sqrt_p)
+@register(lax.sqrt_p)  # type: ignore[misc]
 def _sqrt_p_d(x: AbstractDistance) -> u.Quantity:
     """Square root of a quantity.
 
@@ -164,6 +153,6 @@ def _to_value_rad_or_one(q: AbstractQuantity) -> ArrayLike:
 
 
 # TODO: figure out a promotion alternative that works in general
-@register(lax.tan_p)
+@register(lax.tan_p)  # type: ignore[misc]
 def _tan_p_d(x: AbstractDistance) -> u.Quantity["dimensionless"]:
     return u.Quantity(lax.tan(_to_value_rad_or_one(x)), unit=one)

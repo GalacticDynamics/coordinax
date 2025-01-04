@@ -5,48 +5,10 @@ __all__: list[str] = []
 from plum import conversion_method
 
 import unxt as u
-from unxt.quantity import AbstractQuantity, UncheckedQuantity
+from unxt.quantity import AbstractQuantity
 
 from .angle import Angle
-from .base import AbstractAngle
-
-
-@conversion_method(type_from=AbstractAngle, type_to=u.Quantity)  # type: ignore[misc]
-def convert_angle_to_quantity(x: AbstractAngle) -> u.Quantity:
-    """Convert a distance to a quantity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> from coordinax.angle import Angle
-    >>> from plum import convert
-
-    >>> a = Angle(90, "deg")
-    >>> convert(a, u.Quantity)
-    Quantity['angle'](Array(90, dtype=int32, weak_type=True), unit='deg')
-
-    """
-    unit = u.unit_of(x)
-    return u.Quantity(x.ustrip(unit), unit)
-
-
-@conversion_method(type_from=AbstractAngle, type_to=UncheckedQuantity)  # type: ignore[misc]
-def convert_angle_to_uncheckedquantity(x: AbstractAngle) -> UncheckedQuantity:
-    """Convert a distance to a quantity.
-
-    Examples
-    --------
-    >>> from unxt.quantity import UncheckedQuantity
-    >>> from coordinax.angle import Angle
-    >>> from plum import convert
-
-    >>> a = Angle(90, "deg")
-    >>> convert(a, UncheckedQuantity)
-    UncheckedQuantity(Array(90, dtype=int32, weak_type=True), unit='deg')
-
-    """
-    unit = u.unit_of(x)
-    return UncheckedQuantity(x.ustrip(unit), unit)
+from .parallax import Parallax
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=Angle)  # type: ignore[misc]
@@ -77,3 +39,33 @@ def convert_quantity_to_angle(q: AbstractQuantity, /) -> Angle:
 
     unit = u.unit_of(q)
     return Angle(q.ustrip(unit), unit)
+
+
+@conversion_method(type_from=AbstractQuantity, type_to=Parallax)  # type: ignore[misc]
+def convert_quantity_to_parallax(q: AbstractQuantity, /) -> Parallax:
+    """Convert any quantity to a Parallax.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> from coordinax.distance import Parallax
+    >>> q = u.Quantity(1, "mas")
+    >>> q
+    Quantity['angle'](Array(1, dtype=int32, ...), unit='mas')
+
+    >>> convert(q, Parallax)
+    Parallax(Array(1, dtype=int32, weak_type=True), unit='mas')
+
+    The self-conversion doesn't copy the object:
+
+    >>> q = Parallax(1, "mas")
+    >>> convert(q, Parallax) is q
+    True
+
+    """
+    if isinstance(q, Parallax):
+        return q
+
+    unit = u.unit_of(q)
+    return Parallax(q.ustrip(unit), unit)
