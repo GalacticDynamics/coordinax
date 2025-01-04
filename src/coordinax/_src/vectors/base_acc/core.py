@@ -12,7 +12,8 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos, AbstractVector, AbstractVel
+from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base_vel import AbstractVel
 
 if TYPE_CHECKING:
     from typing import Self

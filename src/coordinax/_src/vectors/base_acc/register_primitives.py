@@ -12,7 +12,8 @@ from dataclassish import field_items
 from quaxed import lax as qlax
 
 from .core import AbstractAcc
-from coordinax._src.vectors.base import AbstractPos, AbstractVel
+from coordinax._src.vectors.base.pos import AbstractPos
+from coordinax._src.vectors.base_vel import AbstractVel
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

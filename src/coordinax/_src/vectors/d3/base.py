@@ -7,12 +7,9 @@ from abc import abstractmethod
 from typing_extensions import override
 
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import (
-    AbstractPos,
-    AbstractVector,
-    AbstractVel,
-)
+from coordinax._src.vectors.base import AbstractPos, AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
+from coordinax._src.vectors.base_vel import AbstractVel
 
 
 class AbstractPos3D(AbstractPos):

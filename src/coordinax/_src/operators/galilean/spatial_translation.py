@@ -18,7 +18,8 @@ from unxt.quantity import AbstractQuantity
 from .base import AbstractGalileanOperator
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.base import AbstractPos, AbstractVel
+from coordinax._src.vectors.base.pos import AbstractPos
+from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D

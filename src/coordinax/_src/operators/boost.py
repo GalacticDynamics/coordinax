@@ -16,7 +16,8 @@ from dataclassish.converters import Unless
 
 from .base import AbstractOperator
 from .identity import Identity
-from coordinax._src.vectors.base import AbstractPos, AbstractVel
+from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d3 import CartesianVel3D
 
 

@@ -22,7 +22,8 @@ from .base import AbstractGalileanOperator
 from coordinax._src.angles import Angle
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.base import AbstractPos, AbstractVel, ToUnitsOptions
+from coordinax._src.vectors.base import AbstractPos, ToUnitsOptions
+from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d3 import AbstractPos3D
 
 vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
