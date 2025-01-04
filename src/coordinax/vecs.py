@@ -9,6 +9,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src import vectors
     from ._src.vectors.api import *
     from ._src.vectors.base import *
+    from ._src.vectors.base_acc import AbstractAcc
     from ._src.vectors.d1 import *
     from ._src.vectors.d2 import *
     from ._src.vectors.d3 import *
@@ -28,6 +29,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
 __all__: list[str] = []
 __all__ += vectors.api.__all__
 __all__ += vectors.base.__all__
+__all__ += ["AbstractAcc"]
 __all__ += vectors.d1.__all__
 __all__ += vectors.d2.__all__
 __all__ += vectors.d3.__all__

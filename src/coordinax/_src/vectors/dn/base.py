@@ -14,11 +14,11 @@ import quaxed.numpy as jnp
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import (
-    AbstractAcc,
     AbstractPos,
     AbstractVector,
     AbstractVel,
 )
+from coordinax._src.vectors.base_acc import AbstractAcc
 
 if TYPE_CHECKING:
     from typing import Never
