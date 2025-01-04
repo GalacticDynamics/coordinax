@@ -2,6 +2,7 @@
 
 __all__ = ["AbstractVector"]
 
+import math
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
@@ -222,7 +223,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     # ===============================================================
     # Array API
 
-    def __array_namespace__(self) -> "ArrayAPINamespace":
+    def __array_namespace__(self) -> Any:
         """Return the array API namespace.
 
         Here we return the `quaxed.numpy` module, which is a drop-in replacement
@@ -333,7 +334,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         4
 
         """
-        return int(jnp.prod(jnp.asarray(self.shape)))
+        return int(math.prod(self.shape))
 
     @property
     def T(self) -> "Self":  # noqa: N802
@@ -476,8 +477,16 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         >>> vec == 2
         False
 
-        Positions are covered by a separate dispatch. So here we show velocities
-        and accelerations:
+        And positions.
+
+        >>> q = cx.vecs.CylindricalPos(rho=u.Quantity([1.0, 2.0], "kpc"),
+        ...                            phi=u.Quantity([0.0, 0.2], "rad"),
+        ...                            z=u.Quantity(0.0, "kpc"))
+        >>> q == q
+        Array([ True,  True], dtype=bool)
+
+        Most positions are covered by a separate dispatch. So here we show
+        velocities and accelerations:
 
         >>> vel1 = cx.vecs.CartesianVel1D(u.Quantity([1, 2, 3], "km/s"))
         >>> vel2 = cx.vecs.CartesianVel1D(u.Quantity([1, 0, 3], "km/s"))
@@ -533,12 +542,6 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         Array([ True, False], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False], dtype=bool)
-
-        >>> q = cx.vecs.CylindricalPos(rho=u.Quantity([1.0, 2.0], "kpc"),
-        ...                            phi=u.Quantity([0.0, 0.2], "rad"),
-        ...                            z=u.Quantity(0.0, "kpc"))
-        >>> q == q
-        Array([ True,  True], dtype=bool)
 
         """
         if type(other) is not type(self):
