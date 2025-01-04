@@ -15,10 +15,9 @@ import unxt as u
 from dataclassish import field_items, field_values, replace
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
-from .base import AbstractVector
+from .base import AbstractVector, ToUnitsOptions
 from .base_pos import AbstractPos
 from .flags import AttrFilter
-from .utils import ToUnitsOptions
 from coordinax._src.typing import Unit
 from coordinax._src.vectors.utils import full_shaped
 

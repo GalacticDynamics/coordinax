@@ -17,12 +17,11 @@ __all__ = [
 ]
 
 from .attribute import VectorAttribute
-from .base import AbstractVector
+from .base import AbstractVector, ToUnitsOptions
 from .base_acc import AbstractAcc
 from .base_pos import AbstractPos
 from .base_vel import AbstractVel
 from .flags import AttrFilter
-from .utils import ToUnitsOptions
 
 # isort: split
 from . import (

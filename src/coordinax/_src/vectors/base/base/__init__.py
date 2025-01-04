@@ -2,8 +2,11 @@
 
 __all__ = [
     "AbstractVector",
+    # Utils
+    "ToUnitsOptions",
 ]
 
+from .utils import ToUnitsOptions
 from .vector import AbstractVector
 
 # Register by import

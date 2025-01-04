@@ -19,9 +19,8 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
 
-from .base import AbstractVector
+from .base import AbstractVector, ToUnitsOptions
 from .flags import AttrFilter
-from .utils import ToUnitsOptions
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vconvert
