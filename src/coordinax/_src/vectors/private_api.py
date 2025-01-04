@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-from .base import AbstractPos
+from .base_pos import AbstractPos
 
 
 @dispatch.abstract

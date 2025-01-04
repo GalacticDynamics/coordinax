@@ -5,12 +5,15 @@ __all__: list[str] = []
 from typing import Any
 
 import jax
+from jaxtyping import Array, Bool
 from quax import quaxify, register
 
 import quaxed.numpy as jnp
 from dataclassish import field_items, replace
 
-from .base import AbstractVector
+from .vector import AbstractVector
+
+# ===================================================================
 
 
 @register(jax.lax.convert_element_type_p)  # type: ignore[misc]
@@ -22,6 +25,9 @@ def _convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractV
         operand,
         **{k: convert_p(v, **kwargs) for k, v in field_items(operand)},
     )
+
+
+# ===================================================================
 
 
 @register(jax.lax.broadcast_in_dim_p)  # type: ignore[misc]
@@ -144,3 +150,12 @@ def _broadcast_in_dim_p(
         operand,
         **{k: jnp.broadcast_to(v, c_shape) for k, v in field_items(operand)},
     )
+
+
+# ===================================================================
+
+
+@register(jax.lax.eq_p)  # type: ignore[misc]
+def eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
+    """Element-wise equality of two vectors."""
+    return lhs == rhs

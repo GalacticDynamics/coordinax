@@ -15,7 +15,9 @@ import unxt as u
 from dataclassish import field_items
 
 from coordinax._src.distances import AbstractDistance
-from coordinax._src.vectors.base import AbstractAcc, AbstractPos, AbstractVel
+from coordinax._src.vectors.base_acc import AbstractAcc
+from coordinax._src.vectors.base_pos import AbstractPos
+from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d1 import AbstractAcc1D
 from coordinax._src.vectors.d2 import AbstractAcc2D
 from coordinax._src.vectors.d3 import AbstractAcc3D

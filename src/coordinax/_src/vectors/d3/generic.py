@@ -14,7 +14,7 @@ from unxt.quantity import Quantity
 
 import coordinax._src.typing as ct
 from coordinax._src.vectors.base import AbstractVector
-from coordinax._src.vectors.base.mixins import AvalMixin
+from coordinax._src.vectors.mixins import AvalMixin
 
 VT = TypeVar("VT", bound="CartesianGeneric3D")
 

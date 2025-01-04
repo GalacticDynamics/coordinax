@@ -25,8 +25,8 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos
-from coordinax._src.vectors.base.mixins import AvalMixin
+from coordinax._src.vectors.base_pos import AbstractPos
+from coordinax._src.vectors.mixins import AvalMixin
 
 
 @final

@@ -7,7 +7,8 @@ from abc import abstractmethod
 from typing import NoReturn
 
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base import AbstractVector
+from coordinax._src.vectors.base_pos import AbstractPos
 
 
 class AbstractPos4D(AbstractPos):

@@ -1,5 +1,6 @@
 """Test :mod:`coordinax.distance`."""
 
+import pytest
 from plum import convert, promote
 
 import unxt as u
@@ -23,14 +24,15 @@ def test_promotion_rule():
     assert isinstance(q * d, u.Quantity)
 
 
-def test_convert_distance_to_quantity():
+@pytest.mark.parametrize(
+    "d", [cx.distance.Distance(90, "pc"), cx.distance.DistanceModulus(26, "mag")]
+)
+def test_convert_distance_to_quantity(d):
     """Test converting distance types to general quantity types.
 
     These conversions should be covered under rules defined in `unxt`.
 
     """
-    d = cx.distance.Distance(90, "pc")
-
     q = convert(d, u.Quantity)
 
     assert isinstance(q, u.Quantity)
