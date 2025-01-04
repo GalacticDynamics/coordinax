@@ -15,7 +15,6 @@ from unxt.quantity import AbstractQuantity
 
 from .vector import AbstractVector
 from coordinax._src.typing import Unit
-from coordinax._src.vectors.api import vector
 
 
 @dispatch
