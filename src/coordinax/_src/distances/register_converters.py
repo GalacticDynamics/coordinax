@@ -1,24 +1,18 @@
-"""Compatibility for Quantity."""
+"""Register `plum.convert` to/from distances."""
 
 __all__: list[str] = []
 
 from plum import conversion_method
 
-from unxt.quantity import AbstractQuantity, Quantity
+import unxt as u
+from unxt.quantity import AbstractQuantity
 
-from .base import AbstractDistance
 from .distance import Distance, DistanceModulus
 from coordinax._src.angles.parallax import Parallax
 
 
-@conversion_method(type_from=AbstractDistance, type_to=Quantity)  # type: ignore[misc]
-def _convert_distance_to_quantity(x: AbstractDistance) -> Quantity:
-    """Convert a distance to a quantity."""
-    return Quantity(x.value, x.unit)
-
-
 @conversion_method(type_from=AbstractQuantity, type_to=Distance)  # type: ignore[misc]
-def _quantity_to_distance(q: AbstractQuantity, /) -> Distance:
+def convert_quantity_to_distance(q: AbstractQuantity, /) -> Distance:
     """Convert any quantity to a Distance.
 
     Examples
@@ -42,7 +36,9 @@ def _quantity_to_distance(q: AbstractQuantity, /) -> Distance:
     """
     if isinstance(q, Distance):
         return q
-    return Distance(q.value, q.unit)
+
+    unit = u.unit_of(q)
+    return Distance(q.ustrip(unit), unit)
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=Parallax)  # type: ignore[misc]
@@ -74,7 +70,7 @@ def _quantity_to_parallax(q: AbstractQuantity, /) -> Parallax:
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=DistanceModulus)  # type: ignore[misc]
-def _quantity_to_distmod(q: AbstractQuantity, /) -> DistanceModulus:
+def convert_quantity_to_distmod(q: AbstractQuantity, /) -> DistanceModulus:
     """Convert any quantity to a DistanceModulus.
 
     Examples
@@ -98,4 +94,6 @@ def _quantity_to_distmod(q: AbstractQuantity, /) -> DistanceModulus:
     """
     if isinstance(q, DistanceModulus):
         return q
-    return DistanceModulus(q.value, q.unit)
+
+    unit = u.unit_of(q)
+    return DistanceModulus(q.ustrip(unit), unit)

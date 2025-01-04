@@ -1,6 +1,6 @@
 """Test :mod:`coordinax.distance`."""
 
-from plum import promote
+from plum import convert, promote
 
 import unxt as u
 
@@ -10,14 +10,29 @@ import coordinax as cx
 def test_promotion_rule():
     """Test the promotion rule for distance."""
     # Quantities
-    a = cx.distance.Distance(90.0, "pc")
+    d = cx.distance.Distance(90.0, "pc")
     q = u.Quantity(1.0, "kpc")
 
     # Explicit promotion test
-    a_p, q_p = promote(a, q)
-    assert isinstance(a_p, u.Quantity)
+    d_p, q_p = promote(d, q)
+    assert isinstance(d_p, u.Quantity)
     assert isinstance(q_p, u.Quantity)
 
     # Implicit promotion test
-    assert isinstance(a * q, u.Quantity)
-    assert isinstance(q * a, u.Quantity)
+    assert isinstance(d * q, u.Quantity)
+    assert isinstance(q * d, u.Quantity)
+
+
+def test_convert_distance_to_quantity():
+    """Test converting distance types to general quantity types.
+
+    These conversions should be covered under rules defined in `unxt`.
+
+    """
+    d = cx.distance.Distance(90, "pc")
+
+    q = convert(d, u.Quantity)
+
+    assert isinstance(q, u.Quantity)
+    assert q.unit is d.unit
+    assert q.value is d.value
