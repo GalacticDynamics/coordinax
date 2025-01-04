@@ -19,11 +19,11 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
 
-from .base import AbstractVector, ToUnitsOptions
-from .flags import AttrFilter
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vconvert
+from coordinax._src.vectors.base.base import AbstractVector, ToUnitsOptions
+from coordinax._src.vectors.base.flags import AttrFilter
 from coordinax._src.vectors.mixins import AvalMixin
 
 PosT = TypeVar("PosT", bound="AbstractPos")

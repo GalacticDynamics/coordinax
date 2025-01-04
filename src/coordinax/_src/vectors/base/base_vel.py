@@ -15,7 +15,7 @@ import unxt as u
 from dataclassish import field_items
 
 from .base import AbstractVector
-from .base_pos import AbstractPos
+from .pos import AbstractPos
 from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:

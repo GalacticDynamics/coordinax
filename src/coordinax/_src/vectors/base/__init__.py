@@ -19,13 +19,12 @@ __all__ = [
 from .attribute import VectorAttribute
 from .base import AbstractVector, ToUnitsOptions
 from .base_acc import AbstractAcc
-from .base_pos import AbstractPos
 from .base_vel import AbstractVel
 from .flags import AttrFilter
+from .pos import AbstractPos
 
 # isort: split
 from . import (
-    compat,  # noqa: F401
     register_dataclassish,  # noqa: F401
     register_unxt,  # noqa: F401
 )

@@ -15,8 +15,8 @@ from dataclassish import field_items
 from quaxed import lax as qlax
 
 from .base import AbstractVector
-from .base_pos import AbstractPos
 from .base_vel import AbstractVel
+from .pos import AbstractPos
 from coordinax._src.utils import classproperty
 
 if TYPE_CHECKING:
