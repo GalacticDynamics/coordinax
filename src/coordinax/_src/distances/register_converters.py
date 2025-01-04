@@ -8,7 +8,6 @@ import unxt as u
 from unxt.quantity import AbstractQuantity
 
 from .distance import Distance, DistanceModulus
-from coordinax._src.angles.parallax import Parallax
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=Distance)  # type: ignore[misc]
@@ -39,34 +38,6 @@ def convert_quantity_to_distance(q: AbstractQuantity, /) -> Distance:
 
     unit = u.unit_of(q)
     return Distance(q.ustrip(unit), unit)
-
-
-@conversion_method(type_from=AbstractQuantity, type_to=Parallax)  # type: ignore[misc]
-def _quantity_to_parallax(q: AbstractQuantity, /) -> Parallax:
-    """Convert any quantity to a Parallax.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> from coordinax.distance import Parallax
-    >>> q = u.Quantity(1, "mas")
-    >>> q
-    Quantity['angle'](Array(1, dtype=int32, ...), unit='mas')
-
-    >>> convert(q, Parallax)
-    Parallax(Array(1, dtype=int32, weak_type=True), unit='mas')
-
-    The self-conversion doesn't copy the object:
-
-    >>> q = Parallax(1, "mas")
-    >>> convert(q, Parallax) is q
-    True
-
-    """
-    if isinstance(q, Parallax):
-        return q
-    return Parallax(q.value, q.unit)
 
 
 @conversion_method(type_from=AbstractQuantity, type_to=DistanceModulus)  # type: ignore[misc]
