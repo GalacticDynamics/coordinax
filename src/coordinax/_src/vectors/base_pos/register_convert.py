@@ -10,7 +10,7 @@ import quaxed.numpy as jnp
 from dataclassish import field_values
 from unxt.quantity import AbstractQuantity, Quantity, UncheckedQuantity
 
-from .base import AbstractPos
+from .core import AbstractPos
 from coordinax._src.distances import Distance
 from coordinax._src.vectors.utils import full_shaped
 

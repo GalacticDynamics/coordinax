@@ -16,7 +16,8 @@ from dataclassish.converters import Unless
 from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
 from coordinax._src.operators import AbstractOperator
-from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base import AbstractVector
+from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.space.core import Space
 
 

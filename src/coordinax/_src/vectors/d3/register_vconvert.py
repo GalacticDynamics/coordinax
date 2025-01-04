@@ -23,7 +23,7 @@ from .lonlatspherical import (
 from .mathspherical import MathSphericalPos, MathSphericalVel
 from .spherical import SphericalPos, SphericalVel
 from .spheroidal import ProlateSpheroidalPos, ProlateSpheroidalVel
-from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base_pos import AbstractPos
 
 ###############################################################################
 # 3D

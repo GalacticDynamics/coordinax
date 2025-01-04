@@ -12,7 +12,7 @@ import unxt as u
 import coordinax._src.typing as ct
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base.pos import AbstractPos
+from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
 

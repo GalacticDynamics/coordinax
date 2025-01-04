@@ -15,7 +15,7 @@ import unxt as u
 from dataclassish import field_items, flags
 
 from .api import simplify_op
-from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base_pos import AbstractPos
 
 if TYPE_CHECKING:
     from coordinax.ops import Pipe

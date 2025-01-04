@@ -10,7 +10,7 @@ import unxt as u
 from dataclassish import field_items
 
 from .core import AbstractVel
-from coordinax._src.vectors.base.pos import AbstractPos
+from coordinax._src.vectors.base_pos import AbstractPos
 
 # ---------------------------------------------------------
 

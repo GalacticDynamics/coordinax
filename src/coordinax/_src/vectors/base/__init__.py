@@ -1,16 +1,24 @@
 """Bases."""
 
 __all__ = [
-    # Base
     "AbstractVector",
-    # Utils
-    "ToUnitsOptions",
-    # Position
-    "AbstractPos",
-    # utils
-    "VectorAttribute",
+    # Flags
     "AttrFilter",
+    # Utils
+    "VectorAttribute",
+    "ToUnitsOptions",
 ]
 
-from .base import AbstractVector, AttrFilter, ToUnitsOptions, VectorAttribute
-from .pos import AbstractPos
+from .attribute import VectorAttribute
+from .flags import AttrFilter
+from .utils import ToUnitsOptions
+from .vector import AbstractVector
+
+# Register by import
+# isort: split
+from . import (
+    register_constructors,  # noqa: F401
+    register_dataclassish,  # noqa: F401
+    register_primitives,  # noqa: F401
+    register_unxt,  # noqa: F401
+)

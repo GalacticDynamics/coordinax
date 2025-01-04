@@ -14,7 +14,7 @@ import unxt as u
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector
-from coordinax._src.vectors.base.pos import AbstractPos
+from coordinax._src.vectors.base_pos import AbstractPos
 
 if TYPE_CHECKING:
     from typing import Self

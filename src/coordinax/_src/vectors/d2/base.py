@@ -6,8 +6,9 @@ __all__ = ["AbstractAcc2D", "AbstractPos2D", "AbstractVel2D"]
 from abc import abstractmethod
 
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
+from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
 

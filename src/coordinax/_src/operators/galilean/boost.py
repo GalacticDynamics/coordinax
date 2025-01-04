@@ -18,7 +18,7 @@ from dataclassish.converters import Unless
 from .base import AbstractGalileanOperator
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors.base.pos import AbstractPos
+from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d3 import CartesianVel3D
 from coordinax._src.vectors.d4 import FourVector

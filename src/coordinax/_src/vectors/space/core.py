@@ -22,8 +22,9 @@ from .utils import DimensionLike, _can_broadcast_shapes, _get_dimension_name
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vconvert
-from coordinax._src.vectors.base import AbstractPos, AbstractVector
+from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
+from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
 

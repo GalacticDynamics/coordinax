@@ -26,7 +26,7 @@ from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .generic import CartesianGeneric3D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty, is_any_quantity
-from coordinax._src.vectors.base import AbstractPos
+from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.mixins import AvalMixin
 
 #####################################################################
