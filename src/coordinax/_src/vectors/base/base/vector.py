@@ -21,10 +21,10 @@ import unxt as u
 from dataclassish import field_items, field_values, fields, replace
 from unxt.quantity import AbstractQuantity
 
+from .flags import AttrFilter
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty, is_any_quantity
 from coordinax._src.vectors.api import vconvert, vector
-from coordinax._src.vectors.base.flags import AttrFilter
 from coordinax._src.vectors.mixins import (
     AstropyRepresentationAPIMixin,
     IPythonReprMixin,

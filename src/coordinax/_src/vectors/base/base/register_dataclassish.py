@@ -12,8 +12,8 @@ from plum import dispatch
 from dataclassish import asdict, field_items, fields
 
 from .attribute import VectorAttribute
-from .base import AbstractVector
 from .flags import AttrFilter
+from .vector import AbstractVector
 
 
 def _is_attr(obj_cls: type[AbstractVector], name: str) -> bool:

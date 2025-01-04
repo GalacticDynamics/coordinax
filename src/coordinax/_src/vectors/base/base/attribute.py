@@ -7,7 +7,7 @@ from dataclasses import KW_ONLY, dataclass, field, is_dataclass
 from enum import Enum, auto
 from typing import Any, Generic, TypeVar, Union, final, overload
 
-from .base import AbstractVector
+from .vector import AbstractVector
 
 Return = TypeVar("Return")
 

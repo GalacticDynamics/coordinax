@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 import quaxed.numpy as jnp
 from dataclassish import field_values
 
-from .base.flags import AttrFilter
+from .base.base.flags import AttrFilter
 
 if TYPE_CHECKING:
     from coordinax.vecs import AbstractVector

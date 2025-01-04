@@ -12,8 +12,9 @@ from plum import dispatch
 import unxt as u
 from dataclassish import field_items, replace
 
-from .base import AbstractVector, ToUnitsOptions
 from .flags import AttrFilter
+from .utils import ToUnitsOptions
+from .vector import AbstractVector
 from coordinax._src.typing import Unit
 
 
