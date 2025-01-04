@@ -23,6 +23,7 @@ from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
 from coordinax._src.vectors.d4 import FourVector
+from coordinax._src.vectors.private_api import spatial_component
 
 ##############################################################################
 # Spatial Translations
@@ -345,8 +346,15 @@ def call(
     # Translate the velocity (this operator will have no effect on the
     # velocity).
     # 1. convert to a Quantity in Cartesian coordinates.
+    qvec = spatial_component(qvec)
+    pvec = eqx.error_if(
+        pvec,
+        qvec._dimensionality() != pvec._dimensionality(),  # noqa: SLF001
+        "The position and velocity vectors must have the same dimensionality.",
+    )
+
     q = convert(qvec.vconvert(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
-    p = convert(pvec.vconvert(pvec._cartesian_cls, q), u.Quantity)  # noqa: SLF001
+    p = convert(pvec.vconvert(pvec._cartesian_cls, qvec), u.Quantity)  # noqa: SLF001
     # 1.5 cast to float dtype  # TODO: more careful casting
     q, p = q.astype(float, copy=False), p.astype(float, copy=False)
     # 2. create the Jacobian of the operation on the position

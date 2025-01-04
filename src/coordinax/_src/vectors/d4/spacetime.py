@@ -229,7 +229,7 @@ class FourVector(AbstractPos4D):
 
 
 # ===============================================================
-# Constructors
+# Vector API
 
 
 @dispatch  # type: ignore[misc]
@@ -280,10 +280,6 @@ def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
     return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
 
 
-# ===============================================================
-# Vector Convert
-
-
 @dispatch  # type: ignore[misc]
 def vconvert(
     spatial_target: type[AbstractPos3D], current: FourVector, /, **kwargs: Any
@@ -304,8 +300,26 @@ def vconvert(
     return replace(current, q=vconvert(spatial_target, current.q, **kwargs))
 
 
+@dispatch  # type: ignore[misc]
+def spatial_component(x: FourVector, /) -> AbstractPos3D:
+    """Return the spatial component of the vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(spatial_component(w))
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1 2 3]>
+
+    """
+    return x.q
+
+
 # ===============================================================
-# Converters
+# Plum API
 
 
 @conversion_method(type_from=FourVector, type_to=u.Quantity)  # type: ignore[misc]
