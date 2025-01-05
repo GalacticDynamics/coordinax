@@ -287,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.16.2.dev22+gb5fce13.d20241219"
+version = "0.17.4.dev16+g350915e.d20250104"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -367,7 +367,7 @@ requires-dist = [
     { name = "plum-dispatch", specifier = ">=2.5.4" },
     { name = "quax", specifier = ">=0.0.5" },
     { name = "quaxed", specifier = ">=0.6.7" },
-    { name = "unxt", specifier = ">=1.0.2" },
+    { name = "unxt", specifier = ">=1.0.4" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
 
@@ -1744,7 +1744,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "1.0.2"
+version = "1.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -1761,9 +1761,9 @@ dependencies = [
     { name = "xmmutablemap" },
     { name = "zeroth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/34/da/b9c9be3960369b521ad8e5a7943d9ddace3598009192e48851d7a4e301df/unxt-1.0.2.tar.gz", hash = "sha256:6fdfacf0a68fb6a13d0055518b40b0d82a1c72c696c09e71fc5565f6bd10b71a", size = 656111 }
+sdist = { url = "https://files.pythonhosted.org/packages/99/54/e17c561e931b9e34e78b074b0ce461f3de59d19b27c5c5ed20c3f0709227/unxt-1.0.4.tar.gz", hash = "sha256:5b694bc49ceaaf9b53a1882a8f630dc69842648fb9bc63262c58d61b7cc50e1c", size = 656277 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4b/ff/38103903ce4a50f86d5bd8cc9a95b5fc2457fac80b02e56cf4b06a8ec6a0/unxt-1.0.2-py3-none-any.whl", hash = "sha256:31dba14c61fc80c819da443ecf73eb61cc4b95c14d9136bd57dcb232410ce0db", size = 63418 },
+    { url = "https://files.pythonhosted.org/packages/89/8f/5ba24038f730686b85d097b93c0909464d6506563e58835cdce83b5ddc83/unxt-1.0.4-py3-none-any.whl", hash = "sha256:2a89d639d8700d854412baae991056db2117b52b0f1db596bddd3753be72aecf", size = 63678 },
 ]
 
 [[package]]
