@@ -3,9 +3,12 @@
 __all__: list[str] = []
 
 
+import equinox as eqx
+from jaxtyping import Array, Shaped
 from plum import add_promotion_rule
 
 import unxt as u
+from unxt._src.units.api import AbstractUnits
 from unxt.quantity import AbstractQuantity
 
 angle_dimension = u.dimension("angle")
@@ -36,6 +39,12 @@ class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
     Angle must have units with angular dimensions.
 
     """
+
+    value: eqx.AbstractVar[Shaped[Array, "*shape"]]
+    """The value of the `AbstractQuantity`."""
+
+    unit: eqx.AbstractVar[AbstractUnits]
+    """The unit associated with this value."""
 
     def __check_init__(self) -> None:
         """Check the initialization."""

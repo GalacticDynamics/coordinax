@@ -4,6 +4,13 @@ __all__ = ["Angle"]
 
 from typing import final
 
+import equinox as eqx
+import jax.numpy as jnp
+from jaxtyping import Array, Shaped
+
+import unxt as u
+from unxt._src.units.api import AbstractUnits
+
 from .base import AbstractAngle
 
 
@@ -37,3 +44,9 @@ class Angle(AbstractAngle):
     Angle(Array([1, 2, 3], dtype=int32), unit='deg')
 
     """
+
+    value: Shaped[Array, "*shape"] = eqx.field(converter=jnp.asarray)
+    """The value of the `AbstractQuantity`."""
+
+    unit: AbstractUnits = eqx.field(static=True, converter=u.unit)
+    """The unit associated with this value."""
