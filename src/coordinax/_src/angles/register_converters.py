@@ -10,7 +10,7 @@ from unxt.quantity import AbstractQuantity
 from .angle import Angle
 
 
-@conversion_method(type_from=AbstractQuantity, type_to=Angle)  # type: ignore[misc]
+@conversion_method(type_from=AbstractQuantity, type_to=Angle)  # type: ignore[arg-type]
 def convert_quantity_to_angle(q: AbstractQuantity, /) -> Angle:
     """Convert any quantity to an Angle.
 

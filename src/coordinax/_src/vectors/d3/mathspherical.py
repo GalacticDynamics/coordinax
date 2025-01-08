@@ -95,7 +95,7 @@ class MathSphericalPos(AbstractSphericalPos):
         return self.r
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vector(
     cls: type[MathSphericalPos],
     *,

@@ -139,7 +139,7 @@ def _sub_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 
 
 # from coordinax.vectors.funcs
-@dispatch  # type: ignore[misc]
+@dispatch
 @partial(eqx.filter_jit, inline=True)
 def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
     """Return the norm of the vector.

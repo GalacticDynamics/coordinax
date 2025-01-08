@@ -18,7 +18,7 @@ from coordinax._src.vectors.utils import full_shaped
 # Coordinax
 
 
-@conversion_method(type_from=AbstractPos, type_to=Distance)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos, type_to=Distance)  # type: ignore[arg-type,type-abstract]
 def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dims"]:
     """`coordinax.AbstractPos` -> `coordinax.Distance`.
 
@@ -64,7 +64,7 @@ def convert_pos_to_distance(obj: AbstractPos, /) -> Shaped[Distance, "*batch dim
 # Unxt
 
 
-@conversion_method(type_from=AbstractPos, type_to=AbstractQuantity)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos, type_to=AbstractQuantity)  # type: ignore[arg-type,type-abstract]
 def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     """`coordinax.AbstractPos` -> `unxt.AbstractQuantity`.
 
@@ -106,7 +106,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> AbstractQuantity:
     return jnp.stack(tuple(field_values(cart)), axis=-1)
 
 
-@conversion_method(type_from=AbstractPos, type_to=Quantity)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos, type_to=Quantity)  # type: ignore[arg-type,type-abstract]
 def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     """`coordinax.AbstractPos` -> `unxt.Quantity`.
 
@@ -147,7 +147,7 @@ def convert_pos_to_q(obj: AbstractPos, /) -> Quantity["length"]:
     return convert(convert(obj, AbstractQuantity), Quantity)
 
 
-@conversion_method(type_from=AbstractPos, type_to=UncheckedQuantity)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos, type_to=UncheckedQuantity)  # type: ignore[arg-type,type-abstract]
 def convert_pos_to_uncheckedq(
     obj: AbstractPos, /
 ) -> Shaped[UncheckedQuantity, "*batch dims"]:

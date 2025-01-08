@@ -147,7 +147,7 @@ class CartesianPosND(AbstractPosND):
 # -------------------------------------------------------------------
 
 
-@conversion_method(CartesianPosND, u.Quantity)  # type: ignore[misc]
+@conversion_method(CartesianPosND, u.Quantity)  # type: ignore[arg-type]
 def _vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Quantity["length"], "*batch N"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
@@ -516,7 +516,7 @@ class CartesianAccND(AvalMixin, AbstractAccND):
 # Constructors
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vector(
     cls: type[CartesianPosND] | type[CartesianVelND] | type[CartesianAccND],
     x: AbstractQuantity,

@@ -7,6 +7,6 @@ from typing import Any
 from plum import dispatch
 
 
-@dispatch.abstract  # type: ignore[misc]
+@dispatch.abstract
 def simplify_op(op: Any, /) -> Any:
     """Simplify an operator."""

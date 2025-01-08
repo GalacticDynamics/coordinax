@@ -71,7 +71,7 @@ def fields(flag: type[AttrFilter], obj_cls: type[object]) -> tuple[Field, ...]: 
 # -------------------------------------------------------------------
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def asdict(
     flag: type[AttrFilter],
     obj: AbstractVector,
@@ -146,7 +146,7 @@ def field_keys(
 # -------------------------------------------------------------------
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def field_values(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[Any, ...]:
     """Return field values, filtering out `VectorAttribute`s.
 
@@ -170,7 +170,7 @@ def field_values(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[Any, .
 # -------------------------------------------------------------------
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def field_items(
     flag: type[AttrFilter], obj: AbstractVector, /
 ) -> tuple[tuple[str, Any], ...]:

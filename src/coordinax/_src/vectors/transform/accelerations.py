@@ -24,7 +24,7 @@ from coordinax._src.vectors.d3 import AbstractAcc3D
 
 
 # TODO: implement for cross-representations
-@dispatch.multi(  # type: ignore[misc]
+@dispatch.multi(
     # N-D -> N-D
     (
         type[AbstractAcc1D],

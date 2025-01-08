@@ -208,8 +208,8 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
     Quantity['length'](Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
     """  # noqa: E501
-    lq = convert(lhs.vconvert(lhs._cartesian_cls), u.Quantity)  # noqa: SLF001
-    rq = convert(rhs.vconvert(rhs._cartesian_cls), u.Quantity)  # noqa: SLF001
+    lq: u.Quantity = convert(lhs.vconvert(lhs._cartesian_cls), u.Quantity)  # noqa: SLF001
+    rq: u.Quantity = convert(rhs.vconvert(rhs._cartesian_cls), u.Quantity)  # noqa: SLF001
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 

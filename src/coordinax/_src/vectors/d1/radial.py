@@ -79,7 +79,7 @@ class RadialVel(AbstractVel1D):
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
         # TODO: change to UncheckedQuantity
-        return jax.core.get_aval(convert(self, u.Quantity).value)
+        return jax.core.get_aval(convert(self, u.Quantity).value)  # type: ignore[attr-defined]
 
 
 @final
@@ -109,4 +109,4 @@ class RadialAcc(AbstractAcc1D):
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
         # TODO: change to UncheckedQuantity
-        return jax.core.get_aval(convert(self, u.Quantity).value)
+        return jax.core.get_aval(convert(self, u.Quantity).value)  # type: ignore[attr-defined]

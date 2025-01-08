@@ -72,7 +72,7 @@ class SphericalPos(AbstractSphericalPos):
         return SphericalVel
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vector(
     cls: type[SphericalPos],
     *,

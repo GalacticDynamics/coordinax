@@ -232,7 +232,7 @@ class FourVector(AbstractPos4D):
 # Vector API
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
     """Construct a vector from a Quantity array.
 
@@ -280,7 +280,7 @@ def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
     return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vconvert(
     spatial_target: type[AbstractPos3D], current: FourVector, /, **kwargs: Any
 ) -> FourVector:
@@ -300,7 +300,7 @@ def vconvert(
     return replace(current, q=vconvert(spatial_target, current.q, **kwargs))
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def spatial_component(x: FourVector, /) -> AbstractPos3D:
     """Return the spatial component of the vector.
 
@@ -322,7 +322,7 @@ def spatial_component(x: FourVector, /) -> AbstractPos3D:
 # Plum API
 
 
-@conversion_method(type_from=FourVector, type_to=u.Quantity)  # type: ignore[misc]
+@conversion_method(type_from=FourVector, type_to=u.Quantity)  # type: ignore[arg-type]
 def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*batch 4"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
@@ -345,11 +345,11 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*ba
                        unit='pc')
 
     """
-    cart = convert(obj.q, u.Quantity)
+    cart: u.Quantity = convert(obj.q, u.Quantity)
     return jnp.concat([obj.c * obj.t[..., None], cart], axis=-1)
 
 
-@conversion_method(type_from=FourVector, type_to=CartesianPos3D)  # type: ignore[misc]
+@conversion_method(type_from=FourVector, type_to=CartesianPos3D)  # type: ignore[arg-type]
 def convert_4vec_to_cart3d(obj: FourVector, /) -> CartesianPos3D:
     """Convert a 4-vector to a Cartesian 3-vector.
 
@@ -368,7 +368,7 @@ def convert_4vec_to_cart3d(obj: FourVector, /) -> CartesianPos3D:
     return convert(obj.q, CartesianPos3D)
 
 
-@conversion_method(type_from=FourVector, type_to=CylindricalPos)  # type: ignore[misc]
+@conversion_method(type_from=FourVector, type_to=CylindricalPos)  # type: ignore[arg-type]
 def convert_4vec_to_cylindrical(obj: FourVector, /) -> CylindricalPos:
     """Convert a 4-vector to a Cylindrical 3-vector.
 
@@ -387,7 +387,7 @@ def convert_4vec_to_cylindrical(obj: FourVector, /) -> CylindricalPos:
     return convert(obj.q, CylindricalPos)
 
 
-@conversion_method(type_from=FourVector, type_to=SphericalPos)  # type: ignore[misc]
+@conversion_method(type_from=FourVector, type_to=SphericalPos)  # type: ignore[arg-type]
 def convert_4vec_to_spherical(obj: FourVector, /) -> SphericalPos:
     """Convert a 4-vector to a spherical 3-vector.
 
@@ -406,7 +406,7 @@ def convert_4vec_to_spherical(obj: FourVector, /) -> SphericalPos:
     return convert(obj.q, SphericalPos)
 
 
-@conversion_method(type_from=FourVector, type_to=LonLatSphericalPos)  # type: ignore[misc]
+@conversion_method(type_from=FourVector, type_to=LonLatSphericalPos)  # type: ignore[arg-type]
 def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> LonLatSphericalPos:
     """Convert a 4-vector to a lon-lat spherical 3-vector.
 
@@ -425,7 +425,7 @@ def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> LonLatSphericalPos:
     return convert(obj.q, LonLatSphericalPos)
 
 
-@conversion_method(type_from=FourVector, type_to=MathSphericalPos)  # type: ignore[misc]
+@conversion_method(type_from=FourVector, type_to=MathSphericalPos)  # type: ignore[arg-type]
 def convert_4vec_to_mathsph(obj: FourVector, /) -> MathSphericalPos:
     """Convert a 4-vector to a math spherical 3-vector.
 

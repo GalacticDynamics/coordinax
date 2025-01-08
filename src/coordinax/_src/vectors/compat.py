@@ -33,7 +33,7 @@ T = TypeVar("T")
 
 def conversion_method(type_from: type, type_to: type) -> Callable[[T], T]:
     """Typed version of conversion method."""
-    return _conversion_method(type_from, type_to)
+    return _conversion_method(type_from, type_to)  # type: ignore[return-value]
 
 
 #####################################################################
@@ -48,7 +48,7 @@ class Dim:
     ACCELERATION = u.dimension("acceleration")
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
     """Construct a vector from a quantity.
 

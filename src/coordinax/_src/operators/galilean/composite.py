@@ -197,7 +197,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         return Pipe(self.operators[key])
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def simplify_op(
     op: GalileanOperator, /, **kwargs: Any
 ) -> (

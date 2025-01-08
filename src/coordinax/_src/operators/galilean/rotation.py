@@ -307,7 +307,7 @@ class GalileanRotation(AbstractGalileanOperator):
         """
         return replace(self, rotation=-self.rotation)
 
-    @dispatch.abstract  # type: ignore[misc]
+    @dispatch.abstract
     def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
 
 
@@ -419,7 +419,7 @@ def call(
 # Simplification
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     """Simplify the Galilean rotation operator.
 
@@ -483,7 +483,7 @@ def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
     return GalileanRotation(rotation=self.rotation @ other.rotation)
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def simplify_op(op1: GalileanRotation, op2: GalileanRotation) -> GalileanRotation:
     """Combine two Galilean rotations.
 

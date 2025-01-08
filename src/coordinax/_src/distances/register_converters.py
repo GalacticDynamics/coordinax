@@ -9,7 +9,7 @@ from unxt.quantity import AbstractQuantity
 from .measures import Distance, DistanceModulus, Parallax
 
 
-@conversion_method(type_from=AbstractQuantity, type_to=Distance)  # type: ignore[misc]
+@conversion_method(type_from=AbstractQuantity, type_to=Distance)  # type: ignore[arg-type]
 def convert_quantity_to_distance(q: AbstractQuantity, /) -> Distance:
     """Convert any quantity to a Distance.
 
@@ -35,7 +35,7 @@ def convert_quantity_to_distance(q: AbstractQuantity, /) -> Distance:
     return q if isinstance(q, Distance) else Distance.from_(q)
 
 
-@conversion_method(type_from=AbstractQuantity, type_to=DistanceModulus)  # type: ignore[misc]
+@conversion_method(type_from=AbstractQuantity, type_to=DistanceModulus)  # type: ignore[arg-type]
 def convert_quantity_to_distmod(q: AbstractQuantity, /) -> DistanceModulus:
     """Convert any quantity to a DistanceModulus.
 
@@ -61,7 +61,7 @@ def convert_quantity_to_distmod(q: AbstractQuantity, /) -> DistanceModulus:
     return q if isinstance(q, DistanceModulus) else DistanceModulus.from_(q)
 
 
-@conversion_method(type_from=AbstractQuantity, type_to=Parallax)  # type: ignore[misc]
+@conversion_method(type_from=AbstractQuantity, type_to=Parallax)  # type: ignore[arg-type]
 def convert_quantity_to_parallax(q: AbstractQuantity, /) -> Parallax:
     """Convert any quantity to a Parallax.
 
