@@ -25,7 +25,7 @@ from coordinax._src.vectors.d3 import AbstractVel3D
 
 
 # TODO: implement for cross-representations
-@dispatch.multi(  # type: ignore[misc]
+@dispatch.multi(
     # N-D -> N-D
     (type[AbstractVel1D], AbstractVel1D, AbstractPos | u.Quantity["length"]),
     (type[AbstractVel2D], AbstractVel2D, AbstractPos | u.Quantity["length"]),

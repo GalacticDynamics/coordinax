@@ -342,7 +342,7 @@ def vector(
 # Vector conversion
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
     """Transform the vector representation of a coordinate.
 

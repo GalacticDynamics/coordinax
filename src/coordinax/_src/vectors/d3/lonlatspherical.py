@@ -146,7 +146,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
 # Constructors
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vector(
     cls: type[LonLatSphericalPos],
     *,

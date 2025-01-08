@@ -12,7 +12,7 @@ from coordinax._src.vectors.dn import PoincarePolarVector
 from coordinax._src.vectors.space import Space
 
 
-@dispatch  # type: ignore[misc]
+@dispatch
 def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
     """Space -> PoincarePolarVector.
 

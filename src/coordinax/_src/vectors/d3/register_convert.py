@@ -15,7 +15,7 @@ from .spherical import SphericalPos
 from coordinax._src.vectors.api import vconvert
 
 
-@conversion_method(type_from=AbstractPos3D, type_to=CartesianPos3D)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos3D, type_to=CartesianPos3D)  # type: ignore[type-abstract,arg-type]
 def convert_pos3d_to_cart3d(pos: AbstractPos3D) -> CartesianPos3D:
     """Convert a 3D position vector to Cartesian coordinates.
 
@@ -41,7 +41,7 @@ def convert_pos3d_to_cart3d(pos: AbstractPos3D) -> CartesianPos3D:
     return vconvert(CartesianPos3D, pos)
 
 
-@conversion_method(type_from=AbstractPos3D, type_to=CylindricalPos)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos3D, type_to=CylindricalPos)  # type: ignore[type-abstract,arg-type]
 def convert_cart3d_to_cylindrical(pos: AbstractPos3D) -> CylindricalPos:
     """Convert a 3D position vector to cylindrical coordinates.
 
@@ -67,7 +67,7 @@ def convert_cart3d_to_cylindrical(pos: AbstractPos3D) -> CylindricalPos:
     return vconvert(CylindricalPos, pos)
 
 
-@conversion_method(type_from=AbstractPos3D, type_to=SphericalPos)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos3D, type_to=SphericalPos)  # type: ignore[type-abstract,arg-type]
 def convert_cylindrical_to_spherical(pos: AbstractPos3D) -> SphericalPos:
     """Convert a 3D position vector to spherical coordinates.
 
@@ -93,7 +93,7 @@ def convert_cylindrical_to_spherical(pos: AbstractPos3D) -> SphericalPos:
     return vconvert(SphericalPos, pos)
 
 
-@conversion_method(type_from=AbstractPos3D, type_to=MathSphericalPos)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos3D, type_to=MathSphericalPos)  # type: ignore[type-abstract,arg-type]
 def convert_spherical_to_math_spherical(pos: AbstractPos3D) -> MathSphericalPos:
     """Convert a 3D position vector to mathematical spherical coordinates.
 
@@ -119,7 +119,7 @@ def convert_spherical_to_math_spherical(pos: AbstractPos3D) -> MathSphericalPos:
     return vconvert(MathSphericalPos, pos)
 
 
-@conversion_method(type_from=AbstractPos3D, type_to=LonLatSphericalPos)  # type: ignore[misc]
+@conversion_method(type_from=AbstractPos3D, type_to=LonLatSphericalPos)  # type: ignore[arg-type,type-abstract]
 def convert_math_spherical_to_lonlat_spherical(
     pos: AbstractPos3D,
 ) -> LonLatSphericalPos:

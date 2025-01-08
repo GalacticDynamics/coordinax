@@ -20,7 +20,7 @@ import coordinax as cx
 # Quantity
 
 
-@conversion_method(cx.vecs.AbstractPos3D, apyu.Quantity)  # type: ignore[misc]
+@conversion_method(cx.vecs.AbstractPos3D, apyu.Quantity)  # type: ignore[arg-type,type-abstract]
 def vec_to_q(obj: cx.vecs.AbstractPos3D, /) -> Shaped[apyu.Quantity, "*batch 3"]:
     """`coordinax.AbstractPos3D` -> `astropy.units.Quantity`.
 
@@ -50,8 +50,8 @@ def vec_to_q(obj: cx.vecs.AbstractPos3D, /) -> Shaped[apyu.Quantity, "*batch 3"]
     return convert(convert(obj, u.Quantity), apyu.Quantity)
 
 
-@conversion_method(cx.vecs.CartesianAcc3D, apyu.Quantity)  # type: ignore[misc]
-@conversion_method(cx.CartesianVel3D, apyu.Quantity)  # type: ignore[misc]
+@conversion_method(cx.vecs.CartesianAcc3D, apyu.Quantity)  # type: ignore[arg-type]
+@conversion_method(cx.CartesianVel3D, apyu.Quantity)
 def vec_diff_to_q(
     obj: cx.CartesianVel3D | cx.vecs.CartesianAcc3D, /
 ) -> Shaped[apyu.Quantity, "*batch 3"]:
@@ -79,8 +79,8 @@ def vec_diff_to_q(
 # CartesianPos3D
 
 
-@conversion_method(cx.CartesianPos3D, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.CartesianPos3D, apyc.CartesianRepresentation)  # type: ignore[misc]
+@conversion_method(cx.CartesianPos3D, apyc.BaseRepresentation)  # type: ignore[arg-type]
+@conversion_method(cx.CartesianPos3D, apyc.CartesianRepresentation)
 def cart3_to_apycart3(obj: cx.CartesianPos3D, /) -> apyc.CartesianRepresentation:
     """`coordinax.CartesianPos3D` -> `astropy.CartesianRepresentation`.
 
@@ -105,7 +105,7 @@ def cart3_to_apycart3(obj: cx.CartesianPos3D, /) -> apyc.CartesianRepresentation
     )
 
 
-@conversion_method(apyc.CartesianRepresentation, cx.CartesianPos3D)  # type: ignore[misc]
+@conversion_method(apyc.CartesianRepresentation, cx.CartesianPos3D)  # type: ignore[arg-type]
 def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D:
     """`astropy.CartesianRepresentation` -> `coordinax.CartesianPos3D`.
 
@@ -130,8 +130,8 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D
 # CylindricalPos
 
 
-@conversion_method(cx.vecs.CylindricalPos, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.vecs.CylindricalPos, apyc.CylindricalRepresentation)  # type: ignore[misc]
+@conversion_method(cx.vecs.CylindricalPos, apyc.BaseRepresentation)  # type: ignore[arg-type]
+@conversion_method(cx.vecs.CylindricalPos, apyc.CylindricalRepresentation)
 def cyl_to_apycyl(obj: cx.vecs.CylindricalPos, /) -> apyc.CylindricalRepresentation:
     """`coordinax.CylindricalPos` -> `astropy.CylindricalRepresentation`.
 
@@ -159,7 +159,7 @@ def cyl_to_apycyl(obj: cx.vecs.CylindricalPos, /) -> apyc.CylindricalRepresentat
     )
 
 
-@conversion_method(apyc.CylindricalRepresentation, cx.vecs.CylindricalPos)  # type: ignore[misc]
+@conversion_method(apyc.CylindricalRepresentation, cx.vecs.CylindricalPos)  # type: ignore[arg-type]
 def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.CylindricalPos:
     """`astropy.CylindricalRepresentation` -> `coordinax.CylindricalPos`.
 
@@ -185,8 +185,8 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.Cylindrical
 # SphericalPos
 
 
-@conversion_method(cx.SphericalPos, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.SphericalPos, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
+@conversion_method(cx.SphericalPos, apyc.BaseRepresentation)  # type: ignore[arg-type]
+@conversion_method(cx.SphericalPos, apyc.PhysicsSphericalRepresentation)
 def sph_to_apysph(obj: cx.SphericalPos, /) -> apyc.PhysicsSphericalRepresentation:
     """`coordinax.SphericalPos` -> `astropy.PhysicsSphericalRepresentation`.
 
@@ -210,7 +210,7 @@ def sph_to_apysph(obj: cx.SphericalPos, /) -> apyc.PhysicsSphericalRepresentatio
     )
 
 
-@conversion_method(apyc.PhysicsSphericalRepresentation, cx.SphericalPos)  # type: ignore[misc]
+@conversion_method(apyc.PhysicsSphericalRepresentation, cx.SphericalPos)  # type: ignore[arg-type]
 def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPos:
     """`astropy.PhysicsSphericalRepresentation` -> `coordinax.SphericalPos`.
 
@@ -237,8 +237,8 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
 # LonLatSphericalPos
 
 
-@conversion_method(cx.vecs.LonLatSphericalPos, apyc.BaseRepresentation)  # type: ignore[misc]
-@conversion_method(cx.vecs.LonLatSphericalPos, apyc.PhysicsSphericalRepresentation)  # type: ignore[misc]
+@conversion_method(cx.vecs.LonLatSphericalPos, apyc.BaseRepresentation)  # type: ignore[arg-type]
+@conversion_method(cx.vecs.LonLatSphericalPos, apyc.PhysicsSphericalRepresentation)
 def lonlatsph_to_apysph(
     obj: cx.vecs.LonLatSphericalPos, /
 ) -> apyc.SphericalRepresentation:
@@ -264,7 +264,7 @@ def lonlatsph_to_apysph(
     )
 
 
-@conversion_method(apyc.SphericalRepresentation, cx.vecs.LonLatSphericalPos)  # type: ignore[misc]
+@conversion_method(apyc.SphericalRepresentation, cx.vecs.LonLatSphericalPos)  # type: ignore[arg-type]
 def apysph_to_lonlatsph(
     obj: apyc.SphericalRepresentation, /
 ) -> cx.vecs.LonLatSphericalPos:
@@ -293,8 +293,8 @@ def apysph_to_lonlatsph(
 # CartesianVel3D
 
 
-@conversion_method(cx.CartesianVel3D, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.CartesianVel3D, apyc.CartesianDifferential)  # type: ignore[misc]
+@conversion_method(cx.CartesianVel3D, apyc.BaseDifferential)  # type: ignore[arg-type]
+@conversion_method(cx.CartesianVel3D, apyc.CartesianDifferential)
 def diffcart3_to_apycart3(obj: cx.CartesianVel3D, /) -> apyc.CartesianDifferential:
     """`coordinax.CartesianVel3D` -> `astropy.CartesianDifferential`.
 
@@ -316,7 +316,7 @@ def diffcart3_to_apycart3(obj: cx.CartesianVel3D, /) -> apyc.CartesianDifferenti
     )
 
 
-@conversion_method(  # type: ignore[misc]
+@conversion_method(  # type: ignore[arg-type]
     apyc.CartesianDifferential, cx.CartesianVel3D
 )
 def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel3D:
@@ -343,8 +343,8 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
 # CylindricalVel
 
 
-@conversion_method(cx.vecs.CylindricalVel, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.vecs.CylindricalVel, apyc.CylindricalDifferential)  # type: ignore[misc]
+@conversion_method(cx.vecs.CylindricalVel, apyc.BaseDifferential)  # type: ignore[arg-type]
+@conversion_method(cx.vecs.CylindricalVel, apyc.CylindricalDifferential)
 def diffcyl_to_apycyl(obj: cx.vecs.CylindricalVel, /) -> apyc.CylindricalDifferential:
     """`coordinax.CylindricalVel` -> `astropy.CylindricalDifferential`.
 
@@ -373,7 +373,7 @@ def diffcyl_to_apycyl(obj: cx.vecs.CylindricalVel, /) -> apyc.CylindricalDiffere
     )
 
 
-@conversion_method(  # type: ignore[misc]
+@conversion_method(  # type: ignore[arg-type]
     apyc.CylindricalDifferential, cx.vecs.CylindricalVel
 )
 def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.vecs.CylindricalVel:
@@ -402,8 +402,8 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.vecs.Cylindric
 # SphericalVel
 
 
-@conversion_method(cx.SphericalVel, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.SphericalVel, apyc.PhysicsSphericalDifferential)  # type: ignore[misc]
+@conversion_method(cx.SphericalVel, apyc.BaseDifferential)  # type: ignore[arg-type]
+@conversion_method(cx.SphericalVel, apyc.PhysicsSphericalDifferential)
 def diffsph_to_apysph(obj: cx.SphericalVel, /) -> apyc.PhysicsSphericalDifferential:
     """SphericalVel -> `astropy.PhysicsSphericalDifferential`.
 
@@ -431,7 +431,7 @@ def diffsph_to_apysph(obj: cx.SphericalVel, /) -> apyc.PhysicsSphericalDifferent
     )
 
 
-@conversion_method(  # type: ignore[misc]
+@conversion_method(  # type: ignore[arg-type]
     apyc.PhysicsSphericalDifferential, cx.SphericalVel
 )
 def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.SphericalVel:
@@ -460,8 +460,8 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.Spherical
 # LonLatSphericalVel
 
 
-@conversion_method(cx.vecs.LonLatSphericalVel, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.vecs.LonLatSphericalVel, apyc.SphericalDifferential)  # type: ignore[misc]
+@conversion_method(cx.vecs.LonLatSphericalVel, apyc.BaseDifferential)  # type: ignore[arg-type]
+@conversion_method(cx.vecs.LonLatSphericalVel, apyc.SphericalDifferential)
 def difflonlatsph_to_apysph(
     obj: cx.vecs.LonLatSphericalVel, /
 ) -> apyc.SphericalDifferential:
@@ -491,7 +491,7 @@ def difflonlatsph_to_apysph(
     )
 
 
-@conversion_method(  # type: ignore[misc]
+@conversion_method(  # type: ignore[arg-type]
     apyc.SphericalDifferential, cx.vecs.LonLatSphericalVel
 )
 def apysph_to_difflonlatsph(
@@ -522,8 +522,8 @@ def apysph_to_difflonlatsph(
 # LonCosLatSphericalVel
 
 
-@conversion_method(cx.vecs.LonCosLatSphericalVel, apyc.BaseDifferential)  # type: ignore[misc]
-@conversion_method(cx.vecs.LonCosLatSphericalVel, apyc.SphericalCosLatDifferential)  # type: ignore[misc]
+@conversion_method(cx.vecs.LonCosLatSphericalVel, apyc.BaseDifferential)  # type: ignore[arg-type]
+@conversion_method(cx.vecs.LonCosLatSphericalVel, apyc.SphericalCosLatDifferential)
 def diffloncoslatsph_to_apysph(
     obj: cx.vecs.LonCosLatSphericalVel, /
 ) -> apyc.SphericalCosLatDifferential:
@@ -553,7 +553,7 @@ def diffloncoslatsph_to_apysph(
     )
 
 
-@conversion_method(  # type: ignore[misc]
+@conversion_method(  # type: ignore[arg-type]
     apyc.SphericalCosLatDifferential, cx.vecs.LonCosLatSphericalVel
 )
 def apysph_to_diffloncoslatsph(

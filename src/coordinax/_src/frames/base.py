@@ -20,7 +20,7 @@ class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
     # Constructors
 
     @classmethod
-    @dispatch.abstract  # type: ignore[misc]
+    @dispatch.abstract
     def from_(
         cls: "type[AbstractReferenceFrame]", obj: Any, /
     ) -> "AbstractReferenceFrame":

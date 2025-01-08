@@ -156,7 +156,7 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         """
         # TODO: figure out how to do this without converting back to arrays.
         cartvec = self.vconvert(self._cartesian_cls)
-        q = convert(cartvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
+        q: u.Quantity = convert(cartvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
         newq = _vec_matmul(other, q)
         newvec = self._cartesian_cls.from_(newq)
         return newvec.vconvert(type(self))

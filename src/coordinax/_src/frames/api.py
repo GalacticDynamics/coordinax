@@ -8,7 +8,7 @@ from typing_extensions import Doc
 from plum import dispatch
 
 
-@dispatch.abstract  # type: ignore[misc]
+@dispatch.abstract
 def frame_transform_op(
     from_frame: Antd[Any, Doc("frame to convert from")],
     to_frame: Antd[Any, Doc("frame to convert to")],
