@@ -4,7 +4,7 @@ __all__ = ["CartesianAcc1D", "CartesianPos1D", "CartesianVel1D"]
 
 from dataclasses import replace
 from functools import partial
-from typing import final
+from typing import Any, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -15,6 +15,7 @@ from quax import register
 import quaxed.numpy as jnp
 import unxt as u
 from quaxed import lax as qlax
+from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
@@ -85,6 +86,37 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     """
     rhs = rhs.vconvert(CartesianPos1D)
     return jax.tree.map(jnp.add, lhs, rhs)
+
+
+# ------------------------------------------------
+# Dot product
+# TODO: see implementation in https://github.com/google/tree-math for how to do
+# this more generally.
+
+
+@register(jax.lax.dot_general_p)  # type: ignore[misc]
+def _dot_general_cart1d(
+    lhs: CartesianPos1D, rhs: CartesianPos1D, /, **kwargs: Any
+) -> AbstractQuantity:
+    """Dot product of two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> q1 = cx.vecs.CartesianPos1D.from_([1], "m")
+    >>> q2 = cx.vecs.CartesianPos1D.from_([2], "m")
+
+    >>> jnp.dot(q1, q2)
+    Quantity['area'](Array(2, dtype=int32), unit='m2')
+
+    """
+    return lhs.x * rhs.x
+
+
+# ------------------------------------------------
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

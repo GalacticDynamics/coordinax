@@ -8,7 +8,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import final
+from typing import Any, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -20,6 +20,7 @@ from quax import register
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
@@ -96,6 +97,37 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     """
     cart = rhs.vconvert(CartesianPos3D)
     return jax.tree.map(jnp.add, lhs, cart, is_leaf=is_any_quantity)
+
+
+# ------------------------------------------------
+# Dot product
+# TODO: see implementation in https://github.com/google/tree-math for how to do
+# this more generally.
+
+
+@register(jax.lax.dot_general_p)  # type: ignore[misc]
+def _dot_general_cart3d(
+    lhs: CartesianPos3D, rhs: CartesianPos3D, /, **kwargs: Any
+) -> AbstractQuantity:
+    """Dot product of two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> q1 = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> q2 = cx.vecs.CartesianPos3D.from_([4, 5, 6], "m")
+
+    >>> jnp.dot(q1, q2)
+    Quantity['area'](Array(32, dtype=int32), unit='m2')
+
+    """
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z
+
+
+# ------------------------------------------------
 
 
 @register(jax.lax.neg_p)  # type: ignore[misc]

@@ -4,7 +4,7 @@ __all__ = ["CartesianAccND", "CartesianPosND", "CartesianVelND"]
 
 from dataclasses import replace
 from functools import partial
-from typing import NoReturn, final
+from typing import Any, NoReturn, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -183,6 +183,37 @@ def _add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     """
     cart = rhs.vconvert(CartesianPosND)
     return replace(lhs, q=lhs.q + cart.q)
+
+
+# ------------------------------------------------
+# Dot product
+# TODO: see implementation in https://github.com/google/tree-math for how to do
+# this more generally.
+
+
+@register(jax.lax.dot_general_p)  # type: ignore[misc]
+def _dot_general_cartnd(
+    lhs: CartesianPosND, rhs: CartesianPosND, /, **kwargs: Any
+) -> AbstractQuantity:
+    """Dot product of two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> q1 = cx.vecs.CartesianPosND.from_([1, 2, 3], "m")
+    >>> q2 = cx.vecs.CartesianPosND.from_([4, 5, 6], "m")
+
+    >>> jnp.dot(q1, q2)
+    Quantity['area'](Array(32, dtype=int32), unit='m2')
+
+    """
+    return qlax.dot_general(lhs.q, rhs.q, **kwargs)
+
+
+# ------------------------------------------------
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]

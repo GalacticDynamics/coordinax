@@ -8,7 +8,7 @@ __all__ = [
 
 from dataclasses import replace
 from functools import partial
-from typing import final
+from typing import Any, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -19,7 +19,7 @@ from quax import register
 import quaxed.numpy as jnp
 import unxt as u
 from quaxed import lax as qlax
-from unxt.quantity import Quantity
+from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
@@ -82,6 +82,37 @@ def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     """
     cart = rhs.vconvert(CartesianPos2D)
     return jax.tree.map(jnp.add, lhs, cart)
+
+
+# ------------------------------------------------
+# Dot product
+# TODO: see implementation in https://github.com/google/tree-math for how to do
+# this more generally.
+
+
+@register(jax.lax.dot_general_p)  # type: ignore[misc]
+def _dot_general_cart2d(
+    lhs: CartesianPos2D, rhs: CartesianPos2D, /, **kwargs: Any
+) -> AbstractQuantity:
+    """Dot product of two vectors.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> q1 = cx.vecs.CartesianPos2D.from_([1, 2], "m")
+    >>> q2 = cx.vecs.CartesianPos2D.from_([3, 4], "m")
+
+    >>> jnp.dot(q1, q2)
+    Quantity['area'](Array(11, dtype=int32), unit='m2')
+
+    """
+    return lhs.x * rhs.x + lhs.y * rhs.y
+
+
+# ------------------------------------------------
 
 
 @register(jax.lax.mul_p)  # type: ignore[misc]
@@ -257,10 +288,10 @@ class CartesianAcc2D(AvalMixin, AbstractAcc2D):
 
     """
 
-    d2_x: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
+    d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X coordinate acceleration :math:`\frac{d^2 x}{dt^2} \in (-\infty,+\infty)`."""
 
-    d2_y: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
+    d2_y: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""
 
     @classproperty
