@@ -15,3 +15,8 @@ def frame_transform_op(
     /,
 ) -> Any:
     """Make a frame transform."""
+
+
+@dispatch.abstract
+def frame_of(obj: Any, /) -> Any:
+    """Get the frame of an object."""
