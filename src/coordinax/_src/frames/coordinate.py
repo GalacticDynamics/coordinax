@@ -15,7 +15,7 @@ from dataclassish.converters import Unless
 
 from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
-from coordinax._src.operators import AbstractOperator
+from coordinax._src.operators import AbstractOperator, Identity
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.space.core import Space
@@ -53,6 +53,9 @@ class AbstractCoordinate(AbstractVector):
         >>> cicrs = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
         ...                       cx.frames.ICRS())
 
+        >>> cicrs.to_frame(cx.frames.ICRS()) is cicrs
+        True
+
         >>> cgcf = cicrs.to_frame(cx.frames.Galactocentric())
         >>> cgcf
         Coordinate(
@@ -62,6 +65,12 @@ class AbstractCoordinate(AbstractVector):
 
         """
         op = self.frame.transform_op(to_frame)
+
+        # Special case for identity operations
+        if isinstance(op, Identity):
+            return self
+
+        # Otherwise, apply the transformation and return a new coordinate
         new_data = op(self.data)
         return type(self).from_(new_data, to_frame)
 
