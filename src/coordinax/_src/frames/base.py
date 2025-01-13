@@ -111,3 +111,22 @@ def from_(
         raise TypeError(msg)
 
     return obj
+
+
+# ---------------------------
+# Frame API
+
+
+@dispatch
+def frame_of(obj: AbstractReferenceFrame, /) -> AbstractReferenceFrame:
+    """Get the frame of an `coordinax.frames.AbstractReferenceFrame`.
+
+    Examples
+    --------
+    >>> import coordinax.frames as cxf
+    >>> frame = cxf.ICRS()
+    >>> frame_of(frame) is frame
+    True
+
+    """
+    return obj

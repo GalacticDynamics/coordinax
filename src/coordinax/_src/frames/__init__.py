@@ -11,12 +11,13 @@ __all__ = [
     "NoFrame",
     "TransformedReferenceFrame",
     "frame_transform_op",
+    "frame_of",
     # Coordinate
     "AbstractCoordinate",
     "Coordinate",
 ]
 
-from .api import frame_transform_op
+from .api import frame_of, frame_transform_op
 from .base import AbstractReferenceFrame
 from .coordinate import AbstractCoordinate, Coordinate
 from .errors import FrameTransformError

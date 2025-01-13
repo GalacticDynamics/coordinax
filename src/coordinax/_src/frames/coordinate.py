@@ -123,6 +123,23 @@ class AbstractCoordinate(AbstractVector):
         return f"{type(self).__name__}(\n{str_fs}\n)"
 
 
+@dispatch
+def frame_of(obj: AbstractCoordinate) -> AbstractReferenceFrame:
+    """Return the frame of the coordinate.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
+    ...                       cx.frames.ICRS())
+    >>> cx.frames.frame_of(coord)
+    ICRS()
+
+    """
+    return obj.frame
+
+
 ##############################################################################
 
 

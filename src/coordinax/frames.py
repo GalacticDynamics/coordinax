@@ -48,6 +48,7 @@ __all__ = [
     "NoFrame",
     "TransformedReferenceFrame",
     "frame_transform_op",
+    "frame_of",
     # Coordinates
     "AbstractCoordinate",
     "Coordinate",
@@ -65,6 +66,7 @@ with install_import_hook("coordinax.frames", RUNTIME_TYPECHECKER):
         FrameTransformError,
         NoFrame,
         TransformedReferenceFrame,
+        frame_of,
         frame_transform_op,
     )
 
