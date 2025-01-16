@@ -78,7 +78,9 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     # Vector API
 
     @dispatch
-    def vconvert(self, target: type, *args: Any, **kwargs: Any) -> "AbstractVector":
+    def vconvert(
+        self: "AbstractVector", target: type, *args: Any, **kwargs: Any
+    ) -> "AbstractVector":
         """Represent the vector as another type.
 
         This just forwards to `coordinax.vconvert`.
