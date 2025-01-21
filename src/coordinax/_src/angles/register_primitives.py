@@ -1,5 +1,5 @@
 """Register Angle support for jax primitives."""
-# pylint: disable=import-error, too-many-lines
+# pylint: disable=import-error
 
 __all__: list[str] = []
 
@@ -12,6 +12,7 @@ from quax import register
 
 import unxt as u
 from quaxed import lax as qlax
+from unxt.quantity import UncheckedQuantity as FastQ
 
 from .base import AbstractAngle
 
@@ -21,9 +22,9 @@ one = u.unit("")
 radian = u.unit("radian")
 
 
-# TODO: can this be done with promotion/conversion instead?
+# TODO: can this be done with promotion/conversion/default rule instead?
 @register(lax.cbrt_p)
-def _cbrt_p_a(x: AbstractAngle) -> u.Quantity:
+def cbrt_p_a(x: AbstractAngle) -> FastQ:
     """Cube root of an angle.
 
     Examples
@@ -33,17 +34,17 @@ def _cbrt_p_a(x: AbstractAngle) -> u.Quantity:
 
     >>> q = Angle(8, "rad")
     >>> jnp.cbrt(q)
-    Quantity['rad1/3'](Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
+    UncheckedQuantity(Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
 
     """
-    return qlax.cbrt(convert(x, u.Quantity))
+    return qlax.cbrt(convert(x, FastQ))
 
 
 # ==============================================================================
 
 
 @register(lax.cos_p)
-def _cos_p(x: AbstractAngle) -> u.Quantity:
+def cos_p(x: AbstractAngle) -> FastQ:
     """Cosine of an Angle.
 
     Examples
@@ -53,19 +54,17 @@ def _cos_p(x: AbstractAngle) -> u.Quantity:
 
     >>> q = Angle(0, "deg")
     >>> jnp.cos(q)
-    Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
+    UncheckedQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
-    return qlax.cos(convert(x, u.Quantity))
+    return qlax.cos(convert(x, FastQ))
 
 
 # ==============================================================================
 
 
 @register(lax.dot_general_p)
-def _dot_general_aa(
-    lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any
-) -> u.Quantity:
+def dot_general_aa(lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any) -> FastQ:
     """Dot product of two Angles.
 
     Examples
@@ -76,23 +75,21 @@ def _dot_general_aa(
     >>> q1 = Angle([1, 2, 3], "deg")
     >>> q2 = Angle([4, 5, 6], "deg")
     >>> jnp.vecdot(q1, q2)
-    Quantity['solid angle'](Array(32, dtype=int32), unit='deg2')
+    UncheckedQuantity(Array(32, dtype=int32), unit='deg2')
 
     >>> q1 @ q2
-    Quantity['solid angle'](Array(32, dtype=int32), unit='deg2')
+    UncheckedQuantity(Array(32, dtype=int32), unit='deg2')
 
     """
-    return u.Quantity(
-        lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs),
-        unit=lhs.unit * rhs.unit,
-    )
+    value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
+    return FastQ(value, unit=lhs.unit * rhs.unit)
 
 
 # ==============================================================================
 
 
 @register(lax.integer_pow_p)
-def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> u.Quantity:
+def integer_pow_p_a(x: AbstractAngle, *, y: Any) -> FastQ:
     """Integer power of an Angle.
 
     Examples
@@ -101,17 +98,17 @@ def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> u.Quantity:
     >>> q = Angle(2, "deg")
 
     >>> q ** 3
-    Quantity['rad3'](Array(8, dtype=int32, weak_type=True), unit='deg3')
+    UncheckedQuantity(Array(8, dtype=int32, weak_type=True), unit='deg3')
 
     """
-    return qlax.integer_pow(convert(x, u.Quantity), y)
+    return qlax.integer_pow(convert(x, FastQ), y)
 
 
 # ==============================================================================
 
 
 @register(lax.pow_p)
-def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> u.Quantity:
+def pow_p_a(x: AbstractAngle, y: ArrayLike) -> FastQ:
     """Power of an Angle by redispatching to Quantity.
 
     Examples
@@ -122,17 +119,17 @@ def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> u.Quantity:
     >>> q1 = Angle(10.0, "deg")
     >>> y = 3.0
     >>> q1 ** y
-    Quantity['rad3'](Array(1000., dtype=float32, ...), unit='deg3')
+    UncheckedQuantity(Array(1000., dtype=float32, weak_type=True), unit='deg3')
 
     """
-    return qlax.pow(convert(x, u.Quantity), y)
+    return qlax.pow(convert(x, FastQ), y)
 
 
 # ==============================================================================
 
 
 @register(lax.sin_p)
-def _sin_p(x: AbstractAngle) -> u.Quantity:
+def sin_p(x: AbstractAngle) -> FastQ:
     """Sine of an Angle.
 
     Examples
@@ -142,17 +139,17 @@ def _sin_p(x: AbstractAngle) -> u.Quantity:
 
     >>> q = Angle(90, "deg")
     >>> jnp.sin(q)
-    Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
+    UncheckedQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
-    return qlax.sin(convert(x, u.Quantity))
+    return qlax.sin(convert(x, FastQ))
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def _sqrt_p_a(x: AbstractAngle) -> u.Quantity:
+def sqrt_p_a(x: AbstractAngle) -> FastQ:
     """Square root of an Angle.
 
     Examples
@@ -162,17 +159,17 @@ def _sqrt_p_a(x: AbstractAngle) -> u.Quantity:
 
     >>> q = Angle(9, "deg")
     >>> jnp.sqrt(q)
-    Quantity['rad0.5'](Array(3., dtype=float32, ...), unit='deg(1/2)')
+    UncheckedQuantity(Array(3., dtype=float32, weak_type=True), unit='deg(1/2)')
 
     """
-    return qlax.sqrt(convert(x, u.Quantity))
+    return qlax.sqrt(convert(x, FastQ))
 
 
 # ==============================================================================
 
 
 @register(lax.tan_p)
-def _tan_p_a(x: AbstractAngle) -> u.Quantity:
+def tan_p_a(x: AbstractAngle) -> FastQ:
     """Tangent of an Angle.
 
     Examples
@@ -182,7 +179,7 @@ def _tan_p_a(x: AbstractAngle) -> u.Quantity:
 
     >>> q = Angle(45, "deg")
     >>> jnp.tan(q)
-    Quantity['dimensionless'](Array(1., dtype=float32, ...), unit='')
+    UncheckedQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
-    return qlax.tan(convert(x, u.Quantity))
+    return qlax.tan(convert(x, FastQ))
