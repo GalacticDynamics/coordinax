@@ -4,7 +4,7 @@ __all__ = ["CartesianAccND", "CartesianPosND", "CartesianVelND"]
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, NoReturn, final
+from typing import Any, NoReturn, cast, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -16,6 +16,7 @@ from quax import register
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
+from quaxed.experimental import arrayish
 from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
@@ -30,7 +31,7 @@ from coordinax._src.vectors.mixins import AvalMixin
 
 
 @final
-class CartesianPosND(AbstractPosND):
+class CartesianPosND(AbstractPosND, arrayish.NumpyNegMixin):
     """N-dimensional Cartesian vector representation.
 
     Examples
@@ -119,12 +120,8 @@ class CartesianPosND(AbstractPosND):
         return CartesianVelND
 
     # -----------------------------------------------------
-    # Unary operations
 
-    __neg__ = jnp.negative
-
-    # -----------------------------------------------------
-
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> BatchableLength:
         """Return the norm of the vector.
@@ -165,7 +162,7 @@ def _vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Quantity["length"], "*batch N"
     return obj.q
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     """Add two vectors.
 
@@ -181,7 +178,7 @@ def _add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     Quantity['length'](Array([3, 5, 7], dtype=int32), unit='km')
 
     """
-    cart = rhs.vconvert(CartesianPosND)
+    cart = cast(CartesianPosND, rhs.vconvert(CartesianPosND))
     return replace(lhs, q=lhs.q + cart.q)
 
 
@@ -191,7 +188,7 @@ def _add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 # this more generally.
 
 
-@register(jax.lax.dot_general_p)  # type: ignore[misc]
+@register(jax.lax.dot_general_p)
 def _dot_general_cartnd(
     lhs: CartesianPosND, rhs: CartesianPosND, /, **kwargs: Any
 ) -> AbstractQuantity:
@@ -216,7 +213,7 @@ def _dot_general_cartnd(
 # ------------------------------------------------
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
     """Scale a position by a scalar.
 
@@ -240,7 +237,7 @@ def _mul_vcnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
     return replace(rhs, q=lhs * rhs.q)
 
 
-@register(jax.lax.neg_p)  # type: ignore[misc]
+@register(jax.lax.neg_p)
 def _neg_p_cartnd_pos(obj: CartesianPosND, /) -> CartesianPosND:
     """Negate the `coordinax.CartesianPosND`.
 
@@ -259,7 +256,7 @@ def _neg_p_cartnd_pos(obj: CartesianPosND, /) -> CartesianPosND:
     return jax.tree.map(qlax.neg, obj)
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     """Subtract two vectors.
 
@@ -279,7 +276,7 @@ def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
          [-1]]>
 
     """
-    cart = rhs.vconvert(CartesianPosND)
+    cart = cast(CartesianPosND, rhs.vconvert(CartesianPosND))
     return replace(lhs, q=lhs.q - cart.q)
 
 
@@ -361,9 +358,10 @@ class CartesianVelND(AvalMixin, AbstractVelND):
         """
         return self.d_q.shape[-1]
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianPosND]:
+    def integral_cls(cls) -> type[CartesianPosND]:  # type: ignore[override]
         """Return the integral class.
 
         Examples
@@ -378,7 +376,7 @@ class CartesianVelND(AvalMixin, AbstractVelND):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAccND"]:
+    def differential_cls(cls) -> type["CartesianAccND"]:  # type: ignore[override]
         """Return the differential class.
 
         Examples
@@ -390,6 +388,7 @@ class CartesianVelND(AvalMixin, AbstractVelND):
         """
         return CartesianAccND
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosND | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
@@ -490,7 +489,7 @@ class CartesianAccND(AvalMixin, AbstractAccND):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVelND]:
+    def integral_cls(cls) -> type[CartesianVelND]:  # type: ignore[override]
         """Return the integral class.
 
         Examples
@@ -520,7 +519,7 @@ class CartesianAccND(AvalMixin, AbstractAccND):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(
+    def norm(  # type: ignore[override]
         self,
         velocity: AbstractVelND | None = None,
         position: AbstractPosND | None = None,

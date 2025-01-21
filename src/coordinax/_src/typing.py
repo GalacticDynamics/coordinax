@@ -29,6 +29,8 @@ BatchableArea = Shaped[Quantity["area"], "*#batch"]
 BatchableDiffusivity = Shaped[Quantity["diffusivity"], "*#batch"]
 BatchableSpecificEnergy = Shaped[Quantity["specific energy"], "*#batch"]
 
+BatchableLength = Shaped[Quantity["length"], "*#batch"]
+
 BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
 BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
 

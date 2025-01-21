@@ -2,6 +2,7 @@
 
 __all__: list[str] = []
 
+from typing import cast
 
 import jax
 from quax import register
@@ -15,7 +16,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 # ---------------------------------------------------------
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
     """Multiply the vector by a time :class:`unxt.Quantity` to get a position.
 
@@ -36,4 +37,5 @@ def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
         [2]>
 
     """
-    return self.integral_cls.from_({k[2:]: v * other for k, v in field_items(self)})
+    fs = {k[2:]: v * other for k, v in field_items(self)}
+    return cast(AbstractPos, self.integral_cls.from_(fs))

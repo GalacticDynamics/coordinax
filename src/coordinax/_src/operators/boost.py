@@ -4,7 +4,7 @@ __all__ = ["VelocityBoost"]
 
 
 from dataclasses import replace
-from typing import Any, Literal, final
+from typing import Any, Literal, cast, final
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -124,7 +124,7 @@ class VelocityBoost(AbstractOperator):
             [1 2 3]>
 
         """
-        return p + self.velocity
+        return cast(AbstractVel, p + self.velocity)
 
     # -------------------------------------------
     # Arithmetic operations

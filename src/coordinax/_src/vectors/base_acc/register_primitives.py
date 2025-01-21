@@ -3,6 +3,8 @@
 __all__: list[str] = []
 
 
+from typing import cast
+
 import jax
 from quax import register
 
@@ -16,7 +18,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"]) -> AbstractVel:
     """Multiply the vector by a :class:`unxt.Quantity`.
 
@@ -38,12 +40,11 @@ def _mul_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"]) -> AbstractVel:
 
     """
     # TODO: better access to corresponding fields
-    return lhs.integral_cls.from_(
-        {k.replace("2", ""): jnp.multiply(v, rhs) for k, v in field_items(lhs)}
-    )
+    fs = {k.replace("2", ""): jnp.multiply(v, rhs) for k, v in field_items(lhs)}
+    return cast(AbstractVel, lhs.integral_cls.from_(fs))
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc) -> AbstractVel:
     """Multiply a scalar by an acceleration.
 
@@ -61,10 +62,10 @@ def _mul_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc) -> AbstractVel:
     Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
 
     """
-    return qlax.mul(rhs, lhs)  # pylint: disable=arguments-out-of-order
+    return cast(AbstractVel, qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # pylint: disable=arguments-out-of-order
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
     """Multiply an acceleration by a scalar.
 
@@ -86,12 +87,12 @@ def _mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
 
     """
     # TODO: better access to corresponding fields
-    return lhs.integral_cls.integral_cls.from_(
-        {k.replace("d2_", ""): v * rhs for k, v in field_items(lhs)}
-    )
+    pos_cls = lhs.integral_cls.integral_cls
+    fs = {k.replace("d2_", ""): v * rhs for k, v in field_items(lhs)}
+    return cast(AbstractPos, pos_cls.from_(fs))
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc) -> AbstractPos:
     """Multiply a scalar by an acceleration.
 
@@ -108,4 +109,4 @@ def _mul_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc) -> AbstractPos:
         [2]>
 
     """
-    return qlax.mul(rhs, lhs)  # pylint: disable=arguments-out-of-order
+    return qlax.mul(rhs, lhs)  # type: ignore[arg-type,return-value]  # pylint: disable=arguments-out-of-order

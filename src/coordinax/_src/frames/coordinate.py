@@ -4,7 +4,7 @@ __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
 from textwrap import indent
-from typing import Any, ClassVar, NoReturn
+from typing import Any, ClassVar, NoReturn, cast
 from typing_extensions import override
 
 import equinox as eqx
@@ -12,6 +12,7 @@ from plum import dispatch
 
 from dataclassish import field_items, replace
 from dataclassish.converters import Unless
+from unxt.quantity import AbstractQuantity
 
 from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
@@ -72,7 +73,12 @@ class AbstractCoordinate(AbstractVector):
 
         # Otherwise, apply the transformation and return a new coordinate
         new_data = op(self.data)
-        return type(self).from_(new_data, to_frame)
+        return cast(AbstractCoordinate, type(self).from_(new_data, to_frame))
+
+    # ===============================================================
+
+    def norm(self) -> AbstractQuantity:
+        raise NotImplementedError  # TODO: implement this
 
     # ===============================================================
     # Quax API

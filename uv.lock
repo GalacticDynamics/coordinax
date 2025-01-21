@@ -287,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.18.2.dev0+g32c6906.d20250116"
+version = "0.18.4.dev1+g1b27441.d20250121"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
@@ -366,7 +366,7 @@ requires-dist = [
     { name = "optional-dependencies", specifier = ">=0.3.2" },
     { name = "plum-dispatch", specifier = ">=2.5.6" },
     { name = "quax", specifier = ">=0.0.5" },
-    { name = "quaxed", specifier = ">=0.6.7" },
+    { name = "quaxed", specifier = ">=0.8.1" },
     { name = "unxt", specifier = ">=1.0.4" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
@@ -1044,6 +1044,18 @@ wheels = [
 ]
 
 [[package]]
+name = "optype"
+version = "0.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "typing-extensions", marker = "python_full_version < '3.13'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/89/42/543e02c72aba7ebe78adb76bbfbed1bc1314eba633ad453984948e5a5f46/optype-0.8.0.tar.gz", hash = "sha256:8cbfd452d6f06c7c70502048f38a0d5451bc601054d3a577dd09c7d6363950e1", size = 85295 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/86/ff/604be975eb0e9fd02358cdacf496f4411db97bffc27279ce260e8f50aba4/optype-0.8.0-py3-none-any.whl", hash = "sha256:90a7760177f2e7feae379a60445fceec37b932b75a00c3d96067497573c5e84d", size = 74228 },
+]
+
+[[package]]
 name = "packaging"
 version = "24.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1405,18 +1417,19 @@ wheels = [
 
 [[package]]
 name = "quaxed"
-version = "0.7.1"
+version = "0.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jax" },
     { name = "jaxlib" },
     { name = "jaxtyping" },
+    { name = "optype" },
     { name = "plum-dispatch" },
     { name = "quax" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/aa/c6/01e425d053ee37ae2fd2cc736aaf418088c0b71c402719d06bda768bdf83/quaxed-0.7.1.tar.gz", hash = "sha256:bbc3596be9211324c2e5045e7fd919281f1a76eab63ad0dd1c8027378b1760f9", size = 123702 }
+sdist = { url = "https://files.pythonhosted.org/packages/75/17/80c24f8f21e764f2819182eaf032d620fbdd72df56388929ac4781347d02/quaxed-0.8.1.tar.gz", hash = "sha256:3856a778360cf74f01860f6774bb699a1a49b2b73c4ec7df13dd518f144084fc", size = 131590 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/0a/63/a28e96b31fc27edac3c62d4359b82bdcb61da978b6a891061309a5bfb422/quaxed-0.7.1-py3-none-any.whl", hash = "sha256:1e1f66f3a523ff87f0a70b69c7079d5809f23091636747d8af4a6a99fa9925ba", size = 36547 },
+    { url = "https://files.pythonhosted.org/packages/cd/54/3694e96202a6fea6b197071e4d874ebda49dca5c9eb53434f7c3310b3f06/quaxed-0.8.1-py3-none-any.whl", hash = "sha256:0ce637a7154ccaf7d045caeebb0b7d1433c1f75b6d20a233a29ea99810dbd0ba", size = 48267 },
 ]
 
 [[package]]

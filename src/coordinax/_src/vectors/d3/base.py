@@ -33,15 +33,16 @@ class AbstractPos3D(AbstractPos):
     @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianPos3D
 
         return CartesianPos3D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVel3D"]:
+    def differential_cls(cls) -> type["AbstractVel3D"]:  # type: ignore[override]
         raise NotImplementedError
 
 
@@ -62,23 +63,26 @@ class AbstractVel3D(AbstractVel):
         """
         return 3
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianVel3D
 
         return CartesianVel3D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPos3D]:
+    def integral_cls(cls) -> type[AbstractPos3D]:  # type: ignore[override]
         raise NotImplementedError
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcc]:
+    def differential_cls(cls) -> type[AbstractAcc]:  # type: ignore[override]
         raise NotImplementedError
 
 
@@ -99,15 +103,17 @@ class AbstractAcc3D(AbstractAcc):
         """
         return 3
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianAcc3D
 
         return CartesianAcc3D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVel3D]:
+    def integral_cls(cls) -> type[AbstractVel3D]:  # type: ignore[override]
         raise NotImplementedError

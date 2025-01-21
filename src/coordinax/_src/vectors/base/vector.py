@@ -15,10 +15,10 @@ from jaxtyping import DTypeLike
 from plum import dispatch
 from quax import ArrayValue
 
-import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items, field_values, fields, replace
+from quaxed.experimental import arrayish
 from unxt.quantity import AbstractQuantity
 
 from .flags import AttrFilter
@@ -37,12 +37,42 @@ if TYPE_CHECKING:
 VT = TypeVar("VT", bound="AbstractVector")
 
 
-class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue):  # type: ignore[misc]
+class AbstractVector(
+    IPythonReprMixin,
+    AstropyRepresentationAPIMixin,
+    ArrayValue,
+    arrayish.LaxBothAddMixin[Any, "AbstractVector"],
+    arrayish.LaxBothSubMixin[Any, "AbstractVector"],
+    arrayish.LaxBothMulMixin[Any, Any],  # TODO: type annotation
+    arrayish.LaxBothTrueDivMixin[Any, Any],  # TODO: type annotation
+    arrayish.LaxLenMixin,
+):
     """Base class for all vector types.
 
     A vector is a collection of components that can be represented in different
     coordinate systems. This class provides a common interface for all vector
     types. All fields of the vector are expected to be components of the vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    Scalar vectors have length 0:
+
+    >>> vec = cx.vecs.CartesianPos1D.from_([1], "m")
+    >>> len(vec)
+    0
+
+    Vectors with certain lengths:
+
+    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1], "m"))
+    >>> len(vec)
+    1
+
+    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+    >>> len(vec)
+    2
 
     """
 
@@ -131,6 +161,10 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 
         """
         return vconvert(target, self, *args, **kwargs)
+
+    @abstractmethod
+    def norm(self) -> u.Quantity:
+        """Return the norm of the vector."""
 
     # ===============================================================
     # Quantity API
@@ -386,88 +420,10 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
     def __neg__(self) -> "Self":
         raise NotImplementedError
 
-    __add__ = qlax.add
-    # TODO: __radd__
-
-    __sub__ = qlax.sub
-    # TODO: __rsub__
-
-    def __mul__(self: "AbstractVector", other: Any) -> Any:
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> print(vec * 2)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [2 4 6]>
-
-        """
-        return qlax.mul(self, other)
-
-    def __rmul__(self: "AbstractVector", other: Any) -> Any:
-        """Multiply the vector by a scalar.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> print(2 * vec)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [2 4 6]>
-
-        """
-        return qlax.mul(other, self)
-
-    def __truediv__(self: "AbstractVector", other: Any) -> "AbstractVector":
-        return qlax.div(self, other)
-
-    # TODO: __rtruediv__
-
-    # TODO: __floordiv__
-    # TODO: __rfloordiv__
-
-    # TODO: __mod__
-    # TODO: __rmod__
-
-    # TODO: __pow__
-    # TODO: __rpow__
-
-    # ---------------------------------------------------------------
-    # array operators
-
-    # TODO: __matmul__
-    # TODO: __rmatmul__
-
-    # ---------------------------------------------------------------
-    # bitwise operators
-    # TODO: handle edge cases, e.g. boolean Quantity, not in Astropy
-
-    # TODO: __invert__
-    # TODO: __and__
-    # TODO: __rand__
-    # TODO: __or__
-    # TODO: __ror__
-    # TODO: __xor__
-    # TODO: __rxor__
-    # TODO: __lshift__
-    # TODO: __rlshift__
-    # TODO: __rshift__
-    # TODO: __rrshift__
-
     # ---------------------------------------------------------------
     # comparison operators
 
-    # TODO: __lt__
-    # TODO: __le__
-    # TODO: __eq__
-    # TODO: __ge__
-    # TODO: __gt__
-    # TODO: __ne__
-
+    # TODO: use arrayish.LaxEqMixin
     def __eq__(self: "AbstractVector", other: object) -> Any:
         """Check if the vector is equal to another object.
 
@@ -579,13 +535,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         Quantity['length'](Array(5., dtype=float32), unit='m')
 
         """
-        return self.norm()
-
-    # TODO: __bool__
-    # TODO: __complex__
-    # TODO: __dlpack__
-    # TODO: __dlpack_device__
-    # TODO: __float__
+        return self.norm()  # TODO: fix
 
     def __getitem__(self, index: Any) -> "Self":
         """Return a new object with the given slice applied.
@@ -617,9 +567,6 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
         return replace(full, **{k: v[index] for k, v in field_items(AttrFilter, full)})
-
-    # TODO: __index__
-    # TODO: __int__
 
     def __setitem__(self, k: Any, v: Any) -> NoReturn:
         """Fail to set an item in the vector.
@@ -714,33 +661,6 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
 
     # ===============================================================
     # JAX API
-
-    def __len__(self) -> int:
-        """Return the length of the vector.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        Scalar vectors have length 0:
-
-        >>> vec = cx.vecs.CartesianPos1D.from_([1], "m")
-        >>> len(vec)
-        0
-
-        Vectors with certain lengths:
-
-        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1], "m"))
-        >>> len(vec)
-        1
-
-        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
-        >>> len(vec)
-        2
-
-        """
-        return self.shape[0] if self.ndim > 0 else 0
 
     def flatten(self) -> "Self":
         """Flatten the vector.
@@ -903,7 +823,7 @@ class AbstractVector(IPythonReprMixin, AstropyRepresentationAPIMixin, ArrayValue
         )
 
     @property
-    def dtypes(self) -> MappingProxyType[str, jnp.dtype]:
+    def dtypes(self) -> MappingProxyType[str, jnp.dtype[Any]]:
         """Get the dtypes of the vector's components.
 
         Examples

@@ -74,9 +74,10 @@ class MathSphericalPos(AbstractSphericalPos):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["MathSphericalVel"]:
+    def differential_cls(cls) -> type["MathSphericalVel"]:  # type: ignore[override]
         return MathSphericalVel
 
+    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
@@ -171,7 +172,7 @@ def vector(
     return cls(r=r, theta=theta, phi=phi)
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
     """Scale the polar position by a scalar.
 
@@ -225,13 +226,13 @@ class MathSphericalVel(AbstractSphericalVel):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[MathSphericalPos]:
+    def integral_cls(cls) -> type[MathSphericalPos]:  # type: ignore[override]
         return MathSphericalPos
 
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["MathSphericalAcc"]:
+    def differential_cls(cls) -> type["MathSphericalAcc"]:  # type: ignore[override]
         return MathSphericalAcc
 
 
@@ -258,5 +259,5 @@ class MathSphericalAcc(AbstractSphericalAcc):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[MathSphericalVel]:
+    def integral_cls(cls) -> type[MathSphericalVel]:  # type: ignore[override]
         return MathSphericalVel

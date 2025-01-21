@@ -5,7 +5,7 @@ __all__: list[str] = []
 from dataclasses import replace
 from functools import partial
 from math import prod
-from typing import Any
+from typing import Any, cast
 
 import equinox as eqx
 import jax
@@ -103,12 +103,12 @@ def vconvert(
     flat_shape = prod(shape)
 
     # Parse the position to an AbstractPos
+    posvec: AbstractPos
     if isinstance(position, AbstractPos):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
-            position
-        )
+        cart_cls = current.integral_cls._cartesian_cls  # noqa: SLF001
+        posvec = cast(AbstractPos, cart_cls.from_(position))
 
     posvec = posvec.reshape(flat_shape)  # flattened
 

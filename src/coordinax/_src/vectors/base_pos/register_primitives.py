@@ -3,7 +3,7 @@
 __all__ = ["AbstractPos"]
 
 from dataclasses import replace
-from typing import Any
+from typing import Any, cast
 
 import equinox as eqx
 import jax
@@ -22,7 +22,7 @@ from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AttrFilter
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # The base implementation is to convert to Cartesian and perform the
     # operation.  Cartesian coordinates do not have any branch cuts or
@@ -36,7 +36,7 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     )
     clhs = lhs.vconvert(cart_cls)
     crhs = rhs.vconvert(cart_cls)
-    return (clhs + crhs).vconvert(type(lhs))
+    return cast(AbstractPos, (clhs + crhs).vconvert(type(lhs)))
 
 
 # ------------------------------------------------
@@ -45,7 +45,7 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
 # this more generally.
 
 
-@register(jax.lax.dot_general_p)  # type: ignore[misc]
+@register(jax.lax.dot_general_p)
 def _dot_general_pos(
     lhs: AbstractPos, rhs: AbstractPos, /, **kwargs: Any
 ) -> AbstractQuantity:
@@ -67,8 +67,8 @@ def _dot_general_pos(
 
     """
     return qlax.dot_general(
-        lhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
-        rhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
+        lhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
+        rhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
         **kwargs,
     )
 
@@ -76,7 +76,7 @@ def _dot_general_pos(
 # ------------------------------------------------
 
 
-@register(jax.lax.div_p)  # type: ignore[misc]
+@register(jax.lax.div_p)
 def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
     """Divide a vector by a scalar.
 
@@ -101,7 +101,7 @@ def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
 # ------------------------------------------------
 
 
-@register(jax.lax.eq_p)  # type: ignore[misc]
+@register(jax.lax.eq_p)
 def _eq_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> ArrayLike:
     """Element-wise equality of two positions."""
     return lhs == rhs
@@ -110,7 +110,7 @@ def _eq_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> ArrayLike:
 # ------------------------------------------------
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     """Scale a position by a scalar.
 
@@ -194,11 +194,11 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     )
 
     rc = rhs.vconvert(rhs._cartesian_cls)  # noqa: SLF001
-    nr = qlax.mul(lhs, rc)
-    return nr.vconvert(type(rhs))
+    nr = cast(AbstractPos, qlax.mul(lhs, rc))  # type: ignore[arg-type]
+    return cast(AbstractPos, nr.vconvert(type(rhs)))
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
     """Scale a position by a scalar.
 
@@ -214,10 +214,10 @@ def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
         [2 4 6]>
 
     """
-    return qlax.mul(rhs, lhs)  # re-dispatch on the other side
+    return cast(AbstractPos, qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # re-dispatch on the other side
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
     """Multiply two positions.
 
@@ -251,7 +251,7 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
 # ------------------------------------------------
 
 
-@register(jax.lax.neg_p)  # type: ignore[misc]
+@register(jax.lax.neg_p)
 def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
     """Negate the vector.
 
@@ -274,7 +274,7 @@ def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
 # ------------------------------------------------
 
 
-@register(jax.lax.reshape_p)  # type: ignore[misc]
+@register(jax.lax.reshape_p)
 def _reshape_pos(
     operand: AbstractPos, *, new_sizes: tuple[int, ...], **kwargs: Any
 ) -> AbstractPos:
@@ -313,14 +313,18 @@ def _reshape_pos(
 # ------------------------------------------------
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_qq(lhs: AbstractPos, rhs: AbstractPos) -> AbstractPos:
     """Add another object to this vector."""
     # The base implementation is to convert to Cartesian and perform the
     # operation.  Cartesian coordinates do not have any branch cuts or
     # singularities or ranges that need to be handled, so this is a safe
     # default.
-    return qlax.sub(
-        lhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
-        rhs.vconvert(lhs._cartesian_cls),  # noqa: SLF001
-    ).vconvert(type(lhs))
+    diff = cast(
+        AbstractPos,
+        qlax.sub(
+            lhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
+            rhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
+        ),
+    )
+    return cast(AbstractPos, diff.vconvert(type(lhs)))

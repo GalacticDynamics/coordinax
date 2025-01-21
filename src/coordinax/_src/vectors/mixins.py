@@ -119,7 +119,7 @@ class AvalMixin:
         """  # noqa: E501
         # TODO: change to UncheckedQuantity
         target = self._cartesian_cls  # type: ignore[attr-defined]
-        return jax.core.get_aval(convert(vconvert(target, self), u.Quantity).value)  # type: ignore[attr-defined]
+        return jax.core.get_aval(convert(vconvert(target, self), u.Quantity).value)  # type: ignore[attr-defined,no-untyped-call]
 
 
 ##############################################################################

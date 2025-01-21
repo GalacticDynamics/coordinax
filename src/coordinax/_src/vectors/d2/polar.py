@@ -49,9 +49,10 @@ class PolarPos(AbstractPos2D):
         """Check the initialization."""
         check_r_non_negative(self.r)
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarVel"]:
+    def differential_cls(cls) -> type["PolarVel"]:  # type: ignore[override]
         return PolarVel
 
     # TODO: figure out how to do this by primitive
@@ -61,7 +62,7 @@ class PolarPos(AbstractPos2D):
         return self.r
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
     """Scale the polar position by a scalar.
 
@@ -120,14 +121,16 @@ class PolarVel(AbstractVel2D):
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarPos]:
+    def integral_cls(cls) -> type[PolarPos]:  # type: ignore[override]
         return PolarPos
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["PolarAcc"]:
+    def differential_cls(cls) -> type["PolarAcc"]:  # type: ignore[override]
         return PolarAcc
 
 
@@ -156,7 +159,8 @@ class PolarAcc(AbstractAcc2D):
     )
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[PolarVel]:
+    def integral_cls(cls) -> type[PolarVel]:  # type: ignore[override]
         return PolarVel

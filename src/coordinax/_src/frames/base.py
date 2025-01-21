@@ -13,7 +13,7 @@ from .api import frame_transform_op
 from coordinax._src.operators import AbstractOperator
 
 
-class AbstractReferenceFrame(eqx.Module):  # type: ignore[misc]
+class AbstractReferenceFrame(eqx.Module):
     """Base class for all reference frames."""
 
     # ---------------------------------------------------------------

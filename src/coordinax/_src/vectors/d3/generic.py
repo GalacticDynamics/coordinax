@@ -5,12 +5,13 @@ __all__ = [
 ]
 
 from typing import TypeVar, final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
 
 import quaxed.numpy as jnp
-from unxt.quantity import Quantity
+from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax._src.typing as ct
 from coordinax._src.vectors.base import AbstractVector
@@ -54,6 +55,20 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 
         """
         return 3
+
+    @override
+    def norm(self) -> AbstractQuantity:
+        """Compute the norm of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
+        >>> print(q.norm())
+        Quantity['length'](Array(3.7416575, dtype=float32), unit='km')
+
+        """
+        return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)
 
     # -----------------------------------------------------
     # Unary operations

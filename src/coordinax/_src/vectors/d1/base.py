@@ -4,6 +4,7 @@ __all__ = ["AbstractAcc1D", "AbstractPos1D", "AbstractVel1D"]
 
 
 from abc import abstractmethod
+from typing_extensions import override
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector
@@ -31,17 +32,19 @@ class AbstractPos1D(AbstractPos):
         """
         return 1
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianPos1D
 
         return CartesianPos1D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVel1D"]:
+    def differential_cls(cls) -> type["AbstractVel1D"]:  # type: ignore[override]
         raise NotImplementedError
 
 
@@ -65,23 +68,26 @@ class AbstractVel1D(AbstractVel):
         """
         return 1
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianVel1D
 
         return CartesianVel1D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPos1D]:
+    def integral_cls(cls) -> type[AbstractPos1D]:  # type: ignore[override]
         raise NotImplementedError
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcc]:
+    def differential_cls(cls) -> type[AbstractAcc]:  # type: ignore[override]
         raise NotImplementedError
 
 
@@ -105,15 +111,17 @@ class AbstractAcc1D(AbstractAcc):
         """
         return 1
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianAcc1D
 
         return CartesianAcc1D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVel1D]:
+    def integral_cls(cls) -> type[AbstractVel1D]:  # type: ignore[override]
         raise NotImplementedError

@@ -4,7 +4,7 @@ __all__ = ["FourVector"]
 
 from dataclasses import KW_ONLY, replace
 from functools import partial
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, cast, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -22,6 +22,7 @@ from dataclassish.converters import Unless
 from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
+from coordinax._src.vectors import api
 from .base import AbstractPos4D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
@@ -128,7 +129,7 @@ class FourVector(AbstractPos4D):
     @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         return CartesianPos3D
 
     @override
@@ -156,7 +157,7 @@ class FourVector(AbstractPos4D):
             [-1 -1 -2 -3]>
 
         """
-        return replace(self, t=-self.t, q=-self.q)
+        return replace(self, t=-self.t, q=cast(AbstractPos3D, -self.q))
 
     # -------------------------------------------
 
@@ -174,7 +175,7 @@ class FourVector(AbstractPos4D):
         Quantity['area'](Array(8.987552e+16, dtype=float32), unit='m2')
 
         """
-        return -(self.q.norm() ** 2) + (self.c * self.t) ** 2  # for units
+        return -(self.q.norm() ** 2) + (self.c * self.t) ** 2  # type: ignore[misc,operator]
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -191,7 +192,8 @@ class FourVector(AbstractPos4D):
         Quantity['length'](Array(2.9979248e+08+0.j, dtype=complex64), unit='m')
 
         """
-        return jnp.sqrt(jnp.asarray(self._norm2(), dtype=complex))
+        norm2 = jnp.asarray(self._norm2(), dtype=complex)  # type: ignore[misc]
+        return jnp.sqrt(norm2)
 
     # -------------------------------------------
     # misc
@@ -213,11 +215,12 @@ class FourVector(AbstractPos4D):
         qcomps = ", ".join(f"{c}[{self.q.units[c]}]" for c in self.q.components)
         comps = f"t[{self.units['t']}], q=({qcomps})"
         vs = np.array2string(
-            jnp.stack(
+            jnp.stack(  # type: ignore[arg-type]
                 tuple(
-                    v.value
-                    for v in jnp.broadcast_arrays(
-                        self.t, *field_values(AttrFilter, self.q)
+                    u.ustrip(v)
+                    for v in cast(
+                        list[AbstractQuantity],
+                        jnp.broadcast_arrays(self.t, *field_values(AttrFilter, self.q)),
                     )
                 ),
                 axis=-1,
@@ -297,7 +300,8 @@ def vconvert(
         [1.    2.236 1.107 3.   ]>
 
     """
-    return replace(current, q=vconvert(spatial_target, current.q, **kwargs))
+    q = cast(AbstractPos3D, api.vconvert(spatial_target, current.q, **kwargs))
+    return replace(current, q=q)
 
 
 @dispatch
@@ -448,7 +452,7 @@ def convert_4vec_to_mathsph(obj: FourVector, /) -> MathSphericalPos:
 # Register Primitives
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_4v4v(self: FourVector, other: FourVector) -> FourVector:
     """Add two 4-vectors.
 
@@ -465,10 +469,10 @@ def _add_4v4v(self: FourVector, other: FourVector) -> FourVector:
         [3 5 7 9]>
 
     """
-    return replace(self, t=self.t + other.t, q=self.q + other.q)
+    return replace(self, t=self.t + other.t, q=cast(AbstractPos3D, self.q + other.q))
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
     """Add two 4-vectors.
 
@@ -485,4 +489,4 @@ def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
         [-1 -3 -3 -3]>
 
     """
-    return replace(lhs, t=lhs.t - rhs.t, q=lhs.q - rhs.q)
+    return replace(lhs, t=lhs.t - rhs.t, q=cast(AbstractPos3D, lhs.q - rhs.q))

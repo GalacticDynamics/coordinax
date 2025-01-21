@@ -3,6 +3,7 @@
 __all__ = ["PoincarePolarVector"]
 
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 from jaxtyping import Shaped
@@ -52,14 +53,16 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
         """
         return 6
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractPos]:
+    def _cartesian_cls(cls) -> type[AbstractPos]:  # type: ignore[override]
         """Return the corresponding Cartesian vector class."""
         raise NotImplementedError
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type[AbstractVel]:
+    def differential_cls(cls) -> type[AbstractVel]:  # type: ignore[override]
         """Return the corresponding differential vector class."""
         raise NotImplementedError

@@ -51,7 +51,7 @@ class CylindricalPos(AbstractPos3D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CylindricalVel"]:
+    def differential_cls(cls) -> type["CylindricalVel"]:  # type: ignore[override]
         return CylindricalVel
 
     @override
@@ -102,14 +102,16 @@ class CylindricalVel(AbstractVel3D):
     d_z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CylindricalPos]:
+    def integral_cls(cls) -> type[CylindricalPos]:  # type: ignore[override]
         return CylindricalPos
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CylindricalAcc"]:
+    def differential_cls(cls) -> type["CylindricalAcc"]:  # type: ignore[override]
         return CylindricalAcc
 
 
@@ -142,7 +144,8 @@ class CylindricalAcc(AbstractAcc3D):
     d2_z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CylindricalVel]:
+    def integral_cls(cls) -> type[CylindricalVel]:  # type: ignore[override]
         return CylindricalVel

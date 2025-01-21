@@ -78,7 +78,7 @@ class TwoSpherePos(AbstractPos2D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["TwoSphereVel"]:
+    def differential_cls(cls) -> type["TwoSphereVel"]:  # type: ignore[override]
         return TwoSphereVel
 
 
@@ -145,13 +145,13 @@ class TwoSphereVel(AbstractVel2D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[TwoSpherePos]:
+    def integral_cls(cls) -> type[TwoSpherePos]:  # type: ignore[override]
         return TwoSpherePos
 
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["TwoSphereAcc"]:
+    def differential_cls(cls) -> type["TwoSphereAcc"]:  # type: ignore[override]
         return TwoSphereAcc
 
 
@@ -212,5 +212,5 @@ class TwoSphereAcc(AbstractAcc2D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[TwoSphereVel]:
+    def integral_cls(cls) -> type[TwoSphereVel]:  # type: ignore[override]
         return TwoSphereVel

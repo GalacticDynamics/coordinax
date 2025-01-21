@@ -5,7 +5,7 @@ __all__ = ["GalileanSpatialTranslation"]
 
 
 from dataclasses import replace
-from typing import Any, Literal, final
+from typing import Any, Literal, cast, final
 
 import equinox as eqx
 import jax
@@ -32,7 +32,7 @@ from coordinax._src.vectors.private_api import spatial_component
 
 def converter(x: Any) -> AbstractPos:
     """Convert for the spatial translation operator."""
-    out: AbstractPos | None = None
+    out: AbstractPos | None
     if isinstance(x, GalileanSpatialTranslation):
         out = x.translation
     elif isinstance(x, AbstractPos):
@@ -41,11 +41,11 @@ def converter(x: Any) -> AbstractPos:
         shape: tuple[int, ...] = x.shape
         match shape:
             case (1,):
-                out = CartesianPos1D.from_(x)
+                out = cast(AbstractPos, CartesianPos1D.from_(x))
             case (2,):
-                out = CartesianPos2D.from_(x)
+                out = cast(AbstractPos, CartesianPos2D.from_(x))
             case (3,):
-                out = CartesianPos3D.from_(x)
+                out = cast(AbstractPos, CartesianPos3D.from_(x))
             case _:
                 msg = f"Cannot convert {x} to a spatial translation vector."
                 raise TypeError(msg)
@@ -53,7 +53,6 @@ def converter(x: Any) -> AbstractPos:
     if out is None:
         msg = f"Cannot convert {x} to a spatial translation vector."
         raise TypeError(msg)
-
     return out
 
 
@@ -230,7 +229,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
             [2 3 4]>
 
         """
-        return q + self.translation
+        return cast(AbstractPos, q + self.translation)
 
     # -------------------------------------------
     # Arithmetic operations

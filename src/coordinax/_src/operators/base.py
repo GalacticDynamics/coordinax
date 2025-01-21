@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from coordinax.ops import Pipe
 
 
-class AbstractOperator(eqx.Module):  # type: ignore[misc]
+class AbstractOperator(eqx.Module):
     """Abstract base class for operators on coordinates and potentials.
 
     An operator is an object that defines a transformation on coordinates. It

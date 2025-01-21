@@ -4,6 +4,7 @@ __all__ = ["ProlateSpheroidalAcc", "ProlateSpheroidalPos", "ProlateSpheroidalVel
 
 from dataclasses import KW_ONLY
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 from jaxtyping import Shaped
@@ -112,9 +113,10 @@ class ProlateSpheroidalPos(AbstractPos3D):
             jnp.abs(self.nu), self.Delta**2, name="nu", comparison_name="Delta^2"
         )
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["ProlateSpheroidalVel"]:
+    def differential_cls(cls) -> type["ProlateSpheroidalVel"]:  # type: ignore[override]
         return ProlateSpheroidalVel
 
 
@@ -133,14 +135,16 @@ class ProlateSpheroidalVel(AbstractVel3D):
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[ProlateSpheroidalPos]:
+    def integral_cls(cls) -> type[ProlateSpheroidalPos]:  # type: ignore[override]
         return ProlateSpheroidalPos
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["ProlateSpheroidalAcc"]:
+    def differential_cls(cls) -> type["ProlateSpheroidalAcc"]:  # type: ignore[override]
         return ProlateSpheroidalAcc
 
 
@@ -163,7 +167,8 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[ProlateSpheroidalVel]:
+    def integral_cls(cls) -> type[ProlateSpheroidalVel]:  # type: ignore[override]
         return ProlateSpheroidalVel

@@ -4,7 +4,7 @@ __all__ = ["CartesianAcc1D", "CartesianPos1D", "CartesianVel1D"]
 
 from dataclasses import replace
 from functools import partial
-from typing import Any, final
+from typing import Any, cast, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -53,9 +53,10 @@ class CartesianPos1D(AbstractPos1D):
     x: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianVel1D"]:
+    def differential_cls(cls) -> type["CartesianVel1D"]:  # type: ignore[override]
         return CartesianVel1D
 
 
@@ -63,7 +64,7 @@ class CartesianPos1D(AbstractPos1D):
 # Method dispatches
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     """Add a vector to a CartesianPos1D.
 
@@ -84,7 +85,7 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
         [2]>
 
     """
-    rhs = rhs.vconvert(CartesianPos1D)
+    rhs = cast(CartesianPos1D, rhs.vconvert(CartesianPos1D))
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
@@ -94,7 +95,7 @@ def _add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
 # this more generally.
 
 
-@register(jax.lax.dot_general_p)  # type: ignore[misc]
+@register(jax.lax.dot_general_p)
 def _dot_general_cart1d(
     lhs: CartesianPos1D, rhs: CartesianPos1D, /, **kwargs: Any
 ) -> AbstractQuantity:
@@ -119,7 +120,7 @@ def _dot_general_cart1d(
 # ------------------------------------------------
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     """Scale a position by a scalar.
 
@@ -145,7 +146,7 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     return replace(rhs, x=lhs * rhs.x)
 
 
-@register(jax.lax.neg_p)  # type: ignore[misc]
+@register(jax.lax.neg_p)
 def _neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
     """Negate the `coordinax.CartesianPos1D`.
 
@@ -160,7 +161,7 @@ def _neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
     return jax.tree.map(qlax.neg, obj)
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     """Subtract two vectors.
 
@@ -198,13 +199,13 @@ class CartesianVel1D(AvalMixin, AbstractVel1D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianPos1D]:
+    def integral_cls(cls) -> type[CartesianPos1D]:  # type: ignore[override]
         return CartesianPos1D
 
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAcc1D"]:
+    def differential_cls(cls) -> type["CartesianAcc1D"]:  # type: ignore[override]
         return CartesianAcc1D
 
     @override
@@ -227,7 +228,7 @@ class CartesianVel1D(AvalMixin, AbstractVel1D):
 # Method dispatches
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     """Add two Cartesian velocities.
 
@@ -252,7 +253,7 @@ def _add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     """Scale a velocity by a scalar.
 
@@ -294,9 +295,10 @@ class CartesianAcc1D(AvalMixin, AbstractAcc1D):
     d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVel1D]:
+    def integral_cls(cls) -> type[CartesianVel1D]:  # type: ignore[override]
         return CartesianVel1D
 
     # -----------------------------------------------------
@@ -304,7 +306,7 @@ class CartesianAcc1D(AvalMixin, AbstractAcc1D):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableAcc:
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableAcc:  # type: ignore[override]
         """Return the norm of the vector.
 
         Examples
@@ -318,7 +320,7 @@ class CartesianAcc1D(AvalMixin, AbstractAcc1D):
         return jnp.abs(self.d2_x)
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     """Add two Cartesian accelerations.
 
@@ -343,7 +345,7 @@ def _add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     """Scale an acceleration by a scalar.
 
@@ -373,7 +375,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     return replace(rhs, d2_x=lhs * rhs.d2_x)
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D:
     """Subtract two 1-D cartesian accelerations.
 

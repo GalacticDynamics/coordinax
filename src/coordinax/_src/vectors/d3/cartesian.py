@@ -62,7 +62,7 @@ class CartesianPos3D(AbstractPos3D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianVel3D"]:
+    def differential_cls(cls) -> type["CartesianVel3D"]:  # type: ignore[override]
         """Return the differential class.
 
         Examples
@@ -79,7 +79,7 @@ class CartesianPos3D(AbstractPos3D):
 # Primitives
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     """Subtract two vectors.
 
@@ -105,7 +105,7 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 # this more generally.
 
 
-@register(jax.lax.dot_general_p)  # type: ignore[misc]
+@register(jax.lax.dot_general_p)
 def _dot_general_cart3d(
     lhs: CartesianPos3D, rhs: CartesianPos3D, /, **kwargs: Any
 ) -> AbstractQuantity:
@@ -130,7 +130,7 @@ def _dot_general_cart3d(
 # ------------------------------------------------
 
 
-@register(jax.lax.neg_p)  # type: ignore[misc]
+@register(jax.lax.neg_p)
 def _neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
     """Negate the `coordinax.CartesianPos3D`.
 
@@ -146,7 +146,7 @@ def _neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
     return jax.tree.map(qlax.neg, obj)
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     """Subtract two vectors.
 
@@ -198,7 +198,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
         [0.267 0.535 0.802]>
 
     """
-    norm = obj.norm()
+    norm: AbstractQuantity = obj.norm()  # type: ignore[misc]
     return CartesianGeneric3D(x=obj.x / norm, y=obj.y / norm, z=obj.z / norm)
 
 
@@ -233,13 +233,13 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
     @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianPos3D]:
+    def integral_cls(cls) -> type[CartesianPos3D]:  # type: ignore[override]
         return CartesianPos3D
 
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["CartesianAcc3D"]:
+    def differential_cls(cls) -> type["CartesianAcc3D"]:  # type: ignore[override]
         """Return the differential class.
 
         Examples
@@ -270,7 +270,7 @@ class CartesianVel3D(AvalMixin, AbstractVel3D):
 # Method dispatches
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
     """Add two Cartesian velocities.
 
@@ -287,7 +287,7 @@ def _add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
     """Subtract two differentials.
 
@@ -320,9 +320,10 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
     d2_z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[CartesianVel3D]:
+    def integral_cls(cls) -> type[CartesianVel3D]:  # type: ignore[override]
         return CartesianVel3D
 
     # -----------------------------------------------------
@@ -350,7 +351,7 @@ class CartesianAcc3D(AvalMixin, AbstractAcc3D):
 # Method dispatches
 
 
-@register(jax.lax.add_p)  # type: ignore[misc]
+@register(jax.lax.add_p)
 def _add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
     """Add two Cartesian accelerations.
 
@@ -367,7 +368,7 @@ def _add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
-@register(jax.lax.mul_p)  # type: ignore[misc]
+@register(jax.lax.mul_p)
 def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
     """Scale a position by a scalar.
 
@@ -396,7 +397,7 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
     return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y, z=lhs * rhs.z)
 
 
-@register(jax.lax.sub_p)  # type: ignore[misc]
+@register(jax.lax.sub_p)
 def _sub_a3_a3(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
     """Subtract two accelerations.
 

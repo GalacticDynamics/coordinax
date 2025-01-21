@@ -33,9 +33,11 @@ jobs:
           python-version-file: ".python-version"
       - name: Install the project
         run: uv sync --group nox
-      #     - uses: pre-commit/action@v3.0.1
-      #       with:
-      #         extra_args: --hook-stage manual --all-files
+
+      - uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --hook-stage manual --all-files
+
       - name: Run PyLint
         run: uv run nox -s pylint -- --output-format=github
 

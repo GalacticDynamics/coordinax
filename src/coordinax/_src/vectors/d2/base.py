@@ -4,6 +4,7 @@ __all__ = ["AbstractAcc2D", "AbstractPos2D", "AbstractVel2D"]
 
 
 from abc import abstractmethod
+from typing_extensions import override
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector
@@ -31,15 +32,16 @@ class AbstractPos2D(AbstractPos):
 
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianPos2D
 
         return CartesianPos2D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVel2D"]:
+    def differential_cls(cls) -> type["AbstractVel2D"]:  # type: ignore[override]
         raise NotImplementedError
 
 
@@ -63,23 +65,26 @@ class AbstractVel2D(AbstractVel):
         """
         return 2
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianVel2D
 
         return CartesianVel2D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPos2D]:
+    def integral_cls(cls) -> type[AbstractPos2D]:  # type: ignore[override]
         raise NotImplementedError
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcc]:
+    def differential_cls(cls) -> type[AbstractAcc]:  # type: ignore[override]
         raise NotImplementedError
 
 
@@ -103,15 +108,17 @@ class AbstractAcc2D(AbstractAcc):
         """
         return 2
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianAcc2D
 
         return CartesianAcc2D
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVel2D]:
+    def integral_cls(cls) -> type[AbstractVel2D]:  # type: ignore[override]
         raise NotImplementedError

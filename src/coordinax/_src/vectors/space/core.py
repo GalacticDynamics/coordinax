@@ -16,6 +16,7 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import AbstractQuantity
 from xmmutablemap import ImmutableMap
 
 from .utils import DimensionLike, _can_broadcast_shapes, _get_dimension_name
@@ -126,6 +127,10 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         """
         raise NotImplementedError  # TODO: implement this
+
+    def norm(self) -> AbstractQuantity:
+        """Return the norm of the vector."""
+        raise NotImplementedError
 
     # ===============================================================
     # Mapping API
@@ -441,7 +446,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     @override
     @classproperty
     @classmethod
-    def components(cls) -> tuple[str, ...]:
+    def components(cls) -> tuple[str, ...]:  # type: ignore[override]
         """Vector component names."""
         raise NotImplementedError  # TODO: implement this
 
@@ -452,7 +457,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     @override
     @property
-    def dtypes(self) -> MappingProxyType[str, MappingProxyType[str, jnp.dtype]]:
+    def dtypes(self) -> MappingProxyType[str, MappingProxyType[str, jnp.dtype[Any]]]:  # type: ignore[override]
         """Get the dtypes of the vector's components.
 
         Examples
@@ -473,7 +478,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     @override
     @property
-    def devices(self) -> MappingProxyType[str, MappingProxyType[str, Device]]:
+    def devices(self) -> MappingProxyType[str, MappingProxyType[str, Device]]:  # type: ignore[override]
         """Get the devices of the vector's components.
 
         Examples

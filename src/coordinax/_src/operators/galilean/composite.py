@@ -4,7 +4,7 @@
 __all__ = ["GalileanOperator"]
 
 
-from typing import TYPE_CHECKING, Any, final, overload
+from typing import TYPE_CHECKING, Any, TypeAlias, cast, final, overload
 
 import equinox as eqx
 from plum import dispatch
@@ -17,6 +17,7 @@ from .boost import GalileanBoost
 from .rotation import GalileanRotation
 from .spatial_translation import GalileanSpatialTranslation
 from .translation import GalileanTranslation
+from coordinax._src.operators import api
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
 from coordinax._src.operators.identity import Identity
@@ -159,8 +160,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     :class:`coordinax.ops.GalileanBoost.from_` for details.
     """
 
-    @property
-    def operators(
+    @property  # type: ignore[misc]
+    def operators(  # type: ignore[override]
         self,
     ) -> tuple[GalileanRotation, GalileanTranslation, GalileanBoost]:
         """Rotation -> translation -> boost."""
@@ -172,7 +173,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     @overload
     def __getitem__(self, key: slice) -> "Self": ...
 
-    def __getitem__(self, key: int | slice) -> "AbstractOperator | Self":
+    def __getitem__(self, key: int | slice) -> AbstractOperator | Pipe:
         """Getitem from the operators.
 
         Examples
@@ -194,13 +195,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         """
         if isinstance(key, int):
             return self.operators[key]
-        return Pipe(self.operators[key])
+        return Pipe(self.operators[key])  # type: ignore[arg-type]
 
 
-@dispatch
-def simplify_op(
-    op: GalileanOperator, /, **kwargs: Any
-) -> (
+SimplifyOpR: TypeAlias = (
     GalileanOperator
     | Pipe
     | GalileanBoost
@@ -208,7 +206,11 @@ def simplify_op(
     | GalileanTranslation
     | GalileanSpatialTranslation
     | Identity
-):
+)
+
+
+@dispatch
+def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
     """Simplify a Galilean operator.
 
     Examples
@@ -246,11 +248,11 @@ def simplify_op(
     GalileanTranslation(FourVector( ... ))
 
     """
-    simple_ops = [simplify_op(x, **kwargs) for x in op.operators]
+    simple_ops = tuple(api.simplify_op(x, **kwargs) for x in op.operators)
     if any(
         not isinstance(x, type(orig))
         for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return Pipe(simple_ops).simplify()
+        return cast(SimplifyOpR, Pipe(simple_ops).simplify())
 
     return op
