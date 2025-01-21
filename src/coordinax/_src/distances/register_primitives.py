@@ -21,7 +21,7 @@ radian = u.unit("radian")
 
 
 # TODO: can this be done with promotion/conversion instead?
-@register(lax.cbrt_p)  # type: ignore[misc]
+@register(lax.cbrt_p)
 def _cbrt_p_d(x: AbstractDistance) -> u.Quantity:
     """Cube root of a distance.
 
@@ -40,7 +40,7 @@ def _cbrt_p_d(x: AbstractDistance) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.dot_general_p)  # type: ignore[misc]
+@register(lax.dot_general_p)
 def _dot_general_dd(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
 ) -> u.Quantity:
@@ -83,7 +83,7 @@ def _dot_general_dd(
 # ==============================================================================
 
 
-@register(lax.integer_pow_p)  # type: ignore[misc]
+@register(lax.integer_pow_p)
 def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> u.Quantity:
     """Integer power of a Distance.
 
@@ -101,7 +101,7 @@ def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.pow_p)  # type: ignore[misc]
+@register(lax.pow_p)
 def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> u.Quantity:
     """Power of a Distance by redispatching to Quantity.
 
@@ -122,7 +122,7 @@ def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.sqrt_p)  # type: ignore[misc]
+@register(lax.sqrt_p)
 def _sqrt_p_d(x: AbstractDistance) -> u.Quantity:
     """Square root of a quantity.
 
@@ -153,6 +153,6 @@ def _to_value_rad_or_one(q: AbstractQuantity) -> ArrayLike:
 
 
 # TODO: figure out a promotion alternative that works in general
-@register(lax.tan_p)  # type: ignore[misc]
+@register(lax.tan_p)
 def _tan_p_d(x: AbstractDistance) -> u.Quantity["dimensionless"]:
     return u.Quantity(lax.tan(_to_value_rad_or_one(x)), unit=one)

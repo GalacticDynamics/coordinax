@@ -6,13 +6,15 @@ from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
 
+import equinox as eqx
+
 from dataclassish import DataclassInstance
 
 from .base import AbstractOperator
 from coordinax._src.vectors.base import AbstractVector
 
 if TYPE_CHECKING:
-    from typing import Self
+    import coordinax.ops
 
 
 @runtime_checkable
@@ -34,6 +36,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
     """
 
+    operators: eqx.AbstractVar[tuple[AbstractOperator, ...]]
+
     # ===========================================
     # Operator
 
@@ -43,7 +47,7 @@ class AbstractCompositeOperator(AbstractOperator):
         return all(op.is_inertial for op in self.operators)
 
     @property
-    def inverse(self) -> "Pipe":
+    def inverse(self: "AbstractCompositeOperator") -> "coordinax.ops.Pipe":
         """The inverse of the operator.
 
         This is the sequence of the inverse of each operator in reverse order.
@@ -92,9 +96,11 @@ class AbstractCompositeOperator(AbstractOperator):
     def __getitem__(self, key: int) -> AbstractOperator: ...
 
     @overload
-    def __getitem__(self, key: slice) -> "Self": ...
+    def __getitem__(self, key: slice) -> "AbstractCompositeOperator": ...
 
-    def __getitem__(self, key: int | slice) -> "AbstractOperator | Self":
+    def __getitem__(
+        self, key: int | slice
+    ) -> "AbstractOperator | AbstractCompositeOperator":
         ops = self.operators[key]
         if isinstance(ops, AbstractOperator):
             return ops

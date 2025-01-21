@@ -6,12 +6,14 @@ __all__ = ["AbstractAccND", "AbstractPosND", "AbstractVelND"]
 from abc import abstractmethod
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
+from typing_extensions import override
 
 import equinox as eqx
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 
+import coordinax._src.typing as ct
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
@@ -25,9 +27,12 @@ if TYPE_CHECKING:
 class AbstractPosND(AbstractPos):
     """Abstract representation of N-D coordinates in different systems."""
 
+    q: eqx.AbstractVar[ct.BatchableLength]
+
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         from .cartesian import CartesianPosND
 
         return CartesianPosND
@@ -153,9 +158,12 @@ class AbstractPosND(AbstractPos):
 class AbstractVelND(AbstractVel):
     """Abstract representation of N-D vector differentials."""
 
+    d_q: eqx.AbstractVar[ct.BatchableSpeed]
+
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         """Get the Cartesian velocity class.
 
         Examples
@@ -169,10 +177,11 @@ class AbstractVelND(AbstractVel):
 
         return CartesianVelND
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractPosND]:
+    def integral_cls(cls) -> type[AbstractPosND]:  # type: ignore[override]
         """Get the integral class."""
         raise NotImplementedError
 
@@ -292,9 +301,12 @@ class AbstractVelND(AbstractVel):
 class AbstractAccND(AbstractAcc):
     """Abstract representation of N-D vector differentials."""
 
+    d2_q: eqx.AbstractVar[ct.BatchableAcc]
+
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         """Get the Cartesian acceleration class.
 
         Examples
@@ -308,10 +320,11 @@ class AbstractAccND(AbstractAcc):
 
         return CartesianAccND
 
+    @override
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelND]:
+    def integral_cls(cls) -> type[AbstractVelND]:  # type: ignore[override]
         raise NotImplementedError  # pragma: no cover
 
     # ===============================================================

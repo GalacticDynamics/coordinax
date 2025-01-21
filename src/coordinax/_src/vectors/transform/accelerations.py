@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 from dataclasses import replace
 from math import prod
-from typing import Any
+from typing import Any, cast
 
 import equinox as eqx
 import jax
@@ -127,17 +127,16 @@ def vconvert(
     if isinstance(position, AbstractPos):
         posvec = position
     else:  # Q -> Cart<X>D
-        posvec = current.integral_cls.integral_cls._cartesian_cls.from_(  # noqa: SLF001
-            position
-        )
+        cart_cls = current.integral_cls.integral_cls._cartesian_cls  # noqa: SLF001
+        posvec = cast(AbstractPos, cart_cls.from_(position))
 
     # Parse the velocity to an AbstractVel
+    velvec: AbstractVel
     if isinstance(velocity, AbstractVel):
         velvec = velocity
     else:  # Q -> Cart<X>D
-        velvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
-            velocity
-        )
+        cart_cls = current.integral_cls._cartesian_cls  # noqa: SLF001
+        velvec = cast(AbstractVel, cart_cls.from_(velocity))
 
     posvec = posvec.reshape(flat_shape)  # flattened
     velvec = velvec.reshape(flat_shape)  # flattened

@@ -15,6 +15,7 @@ from quax import quaxify
 
 import quaxed.numpy as jnp
 import unxt as u
+from quaxed.experimental import arrayish
 
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
@@ -27,7 +28,7 @@ POSITION_CLASSES: set[type["AbstractPos"]] = set()
 _vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)->(N)"))
 
 
-class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
+class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -79,11 +80,6 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         """
         raise NotImplementedError
-
-    # ===============================================================
-    # Unary operations
-
-    __neg__ = jnp.negative
 
     # ===============================================================
     # Binary operations
@@ -195,4 +191,4 @@ class AbstractPos(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
 
         """
-        return jnp.linalg.vector_norm(self, axis=-1)
+        return jnp.linalg.vector_norm(self, axis=-1)  # type: ignore[arg-type]

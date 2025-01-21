@@ -120,7 +120,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalVel"]:
+    def differential_cls(cls) -> type["LonLatSphericalVel"]:  # type: ignore[override]
         return LonLatSphericalVel
 
     @override
@@ -254,12 +254,12 @@ class LonLatSphericalVel(AbstractSphericalVel):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalPos]:
+    def integral_cls(cls) -> type[LonLatSphericalPos]:  # type: ignore[override]
         return LonLatSphericalPos
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalAcc"]:
+    def differential_cls(cls) -> type["LonLatSphericalAcc"]:  # type: ignore[override]
         return LonLatSphericalAcc
 
 
@@ -282,12 +282,12 @@ class LonCosLatSphericalVel(AbstractSphericalVel):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalPos]:
+    def integral_cls(cls) -> type[LonLatSphericalPos]:  # type: ignore[override]
         return LonLatSphericalPos
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalAcc"]:
+    def differential_cls(cls) -> type["LonLatSphericalAcc"]:  # type: ignore[override]
         return LonLatSphericalAcc
 
 
@@ -311,7 +311,8 @@ class LonLatSphericalAcc(AbstractSphericalAcc):
     d2_distance: ct.BatchableAcc = eqx.field(converter=Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalVel]:
+    def integral_cls(cls) -> type[LonLatSphericalVel]:  # type: ignore[override]
         return LonLatSphericalVel

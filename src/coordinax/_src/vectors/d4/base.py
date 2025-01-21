@@ -5,6 +5,7 @@ __all__ = ["AbstractPos4D"]
 
 from abc import abstractmethod
 from typing import NoReturn
+from typing_extensions import override
 
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector
@@ -28,9 +29,10 @@ class AbstractPos4D(AbstractPos):
         """
         return 4
 
+    @override
     @classproperty
     @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:
+    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
         raise NotImplementedError
 
     @classproperty

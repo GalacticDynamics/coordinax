@@ -3,12 +3,14 @@
 __all__ = ["RadialAcc", "RadialPos", "RadialVel"]
 
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
 from plum import convert
 
 import unxt as u
+from unxt.quantity import UncheckedQuantity as FastQ
 from dataclassish.converters import Unless
 
 import coordinax._src.typing as ct
@@ -41,9 +43,10 @@ class RadialPos(AbstractPos1D):
         """Check the initialization."""
         check_r_non_negative(self.r)
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["RadialVel"]:
+    def differential_cls(cls) -> type["RadialVel"]:  # type: ignore[override]
         return RadialVel
 
 
@@ -66,20 +69,21 @@ class RadialVel(AbstractVel1D):
     d_r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[RadialPos]:
+    def integral_cls(cls) -> type[RadialPos]:  # type: ignore[override]
         return RadialPos
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["RadialAcc"]:
+    def differential_cls(cls) -> type["RadialAcc"]:  # type: ignore[override]
         return RadialAcc
 
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
-        # TODO: change to UncheckedQuantity
-        return jax.core.get_aval(convert(self, u.Quantity).value)  # type: ignore[attr-defined]
+        return jax.core.get_aval(convert(self, FastQ).value)  # type: ignore[attr-defined, no-untyped-call]
 
 
 @final
@@ -101,12 +105,12 @@ class RadialAcc(AbstractAcc1D):
     d2_r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in (-\infty,+\infty)`."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[RadialVel]:
+    def integral_cls(cls) -> type[RadialVel]:  # type: ignore[override]
         return RadialVel
 
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
-        # TODO: change to UncheckedQuantity
-        return jax.core.get_aval(convert(self, u.Quantity).value)  # type: ignore[attr-defined]
+        return jax.core.get_aval(convert(self, FastQ).value)  # type: ignore[attr-defined,no-untyped-call]

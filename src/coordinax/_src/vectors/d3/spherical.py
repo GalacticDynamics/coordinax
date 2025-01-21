@@ -3,6 +3,7 @@
 __all__ = ["SphericalAcc", "SphericalPos", "SphericalVel"]
 
 from typing import final
+from typing_extensions import override
 
 import equinox as eqx
 from plum import dispatch
@@ -68,7 +69,7 @@ class SphericalPos(AbstractSphericalPos):
 
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["SphericalVel"]:
+    def differential_cls(cls) -> type["SphericalVel"]:  # type: ignore[override]
         return SphericalVel
 
 
@@ -168,14 +169,16 @@ class SphericalVel(AbstractSphericalVel):
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
+    @override
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[SphericalPos]:
+    def integral_cls(cls) -> type[SphericalPos]:  # type: ignore[override]
         return SphericalPos
 
+    @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> type["SphericalAcc"]:
+    def differential_cls(cls) -> type["SphericalAcc"]:  # type: ignore[override]
         return SphericalAcc
 
 
@@ -201,5 +204,5 @@ class SphericalAcc(AbstractSphericalAcc):
 
     @classproperty
     @classmethod
-    def integral_cls(cls) -> type[SphericalVel]:
+    def integral_cls(cls) -> type[SphericalVel]:  # type: ignore[override]
         return SphericalVel

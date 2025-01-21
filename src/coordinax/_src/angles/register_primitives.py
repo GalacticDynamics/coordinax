@@ -22,7 +22,7 @@ radian = u.unit("radian")
 
 
 # TODO: can this be done with promotion/conversion instead?
-@register(lax.cbrt_p)  # type: ignore[misc]
+@register(lax.cbrt_p)
 def _cbrt_p_a(x: AbstractAngle) -> u.Quantity:
     """Cube root of an angle.
 
@@ -42,7 +42,7 @@ def _cbrt_p_a(x: AbstractAngle) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.cos_p)  # type: ignore[misc]
+@register(lax.cos_p)
 def _cos_p(x: AbstractAngle) -> u.Quantity:
     """Cosine of an Angle.
 
@@ -62,7 +62,7 @@ def _cos_p(x: AbstractAngle) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.dot_general_p)  # type: ignore[misc]
+@register(lax.dot_general_p)
 def _dot_general_aa(
     lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any
 ) -> u.Quantity:
@@ -91,7 +91,7 @@ def _dot_general_aa(
 # ==============================================================================
 
 
-@register(lax.integer_pow_p)  # type: ignore[misc]
+@register(lax.integer_pow_p)
 def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> u.Quantity:
     """Integer power of an Angle.
 
@@ -110,7 +110,7 @@ def _integer_pow_p_a(x: AbstractAngle, *, y: Any) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.pow_p)  # type: ignore[misc]
+@register(lax.pow_p)
 def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> u.Quantity:
     """Power of an Angle by redispatching to Quantity.
 
@@ -131,7 +131,7 @@ def _pow_p_a(x: AbstractAngle, y: ArrayLike) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.sin_p)  # type: ignore[misc]
+@register(lax.sin_p)
 def _sin_p(x: AbstractAngle) -> u.Quantity:
     """Sine of an Angle.
 
@@ -151,7 +151,7 @@ def _sin_p(x: AbstractAngle) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.sqrt_p)  # type: ignore[misc]
+@register(lax.sqrt_p)
 def _sqrt_p_a(x: AbstractAngle) -> u.Quantity:
     """Square root of an Angle.
 
@@ -171,7 +171,7 @@ def _sqrt_p_a(x: AbstractAngle) -> u.Quantity:
 # ==============================================================================
 
 
-@register(lax.tan_p)  # type: ignore[misc]
+@register(lax.tan_p)
 def _tan_p_a(x: AbstractAngle) -> u.Quantity:
     """Tangent of an Angle.
 

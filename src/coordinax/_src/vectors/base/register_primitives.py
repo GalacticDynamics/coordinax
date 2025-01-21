@@ -16,7 +16,7 @@ from .vector import AbstractVector
 # ===================================================================
 
 
-@register(jax.lax.convert_element_type_p)  # type: ignore[misc]
+@register(jax.lax.convert_element_type_p)
 def _convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractVector:
     """Convert the element type of a quantity."""
     # TODO: examples
@@ -30,7 +30,7 @@ def _convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractV
 # ===================================================================
 
 
-@register(jax.lax.broadcast_in_dim_p)  # type: ignore[misc]
+@register(jax.lax.broadcast_in_dim_p)
 def _broadcast_in_dim_p(
     operand: AbstractVector, *, shape: tuple[int, ...], **kwargs: Any
 ) -> AbstractVector:
@@ -155,7 +155,7 @@ def _broadcast_in_dim_p(
 # ===================================================================
 
 
-@register(jax.lax.eq_p)  # type: ignore[misc]
+@register(jax.lax.eq_p)
 def eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
     """Element-wise equality of two vectors."""
     return lhs == rhs

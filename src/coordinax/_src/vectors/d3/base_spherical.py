@@ -26,7 +26,7 @@ class AbstractSphericalPos(AbstractPos3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> "type[AbstractSphericalVel]": ...
+    def differential_cls(cls) -> "type[AbstractSphericalVel]": ...  # type: ignore[override]
 
 
 class AbstractSphericalVel(AbstractVel3D):
@@ -36,13 +36,13 @@ class AbstractSphericalVel(AbstractVel3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractSphericalPos]: ...
+    def integral_cls(cls) -> type[AbstractSphericalPos]: ...  # type: ignore[override]
 
     @override
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> "type[AbstractSphericalAcc]": ...
+    def differential_cls(cls) -> "type[AbstractSphericalAcc]": ...  # type: ignore[override]
 
 
 class AbstractSphericalAcc(AbstractAcc3D):
@@ -52,4 +52,4 @@ class AbstractSphericalAcc(AbstractAcc3D):
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type[AbstractSphericalVel]: ...
+    def integral_cls(cls) -> type[AbstractSphericalVel]: ...  # type: ignore[override]
