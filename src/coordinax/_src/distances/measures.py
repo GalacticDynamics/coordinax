@@ -14,6 +14,7 @@ import unxt as u
 from unxt._src.units.api import AbstractUnits
 
 from .base import AbstractDistance
+from coordinax._src.values import value_converter
 
 parallax_base_length = u.Quantity(1, "AU")
 angle_dimension = u.dimension("angle")
@@ -40,7 +41,7 @@ class Distance(AbstractDistance):
 
     """
 
-    value: Shaped[Array, "*shape"] = eqx.field(converter=jnp.asarray)
+    value: Shaped[Array, "*shape"] = eqx.field(converter=value_converter)
     """The value of the `AbstractQuantity`."""
 
     unit: AbstractUnits = eqx.field(static=True, converter=u.unit)
@@ -71,7 +72,7 @@ class DistanceModulus(AbstractDistance):
 
     """
 
-    value: Shaped[Array, "*shape"] = eqx.field(converter=jnp.asarray)
+    value: Shaped[Array, "*shape"] = eqx.field(converter=value_converter)
     """The value of the `AbstractQuantity`."""
 
     unit: AbstractUnits = eqx.field(static=True, converter=u.unit)
@@ -113,7 +114,7 @@ class Parallax(AbstractDistance):
 
     """
 
-    value: Shaped[Array, "*shape"] = eqx.field(converter=jnp.asarray)
+    value: Shaped[Array, "*shape"] = eqx.field(converter=value_converter)
     """The value of the `AbstractQuantity`."""
 
     unit: AbstractUnits = eqx.field(static=True, converter=u.unit)
