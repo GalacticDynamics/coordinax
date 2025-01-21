@@ -287,7 +287,7 @@ wheels = [
 
 [[package]]
 name = "coordinax"
-version = "0.18.4.dev3+ge1a794e.d20250121"
+version = "0.18.4.dev7+gd173e43.d20250121"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },

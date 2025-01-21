@@ -16,6 +16,7 @@ from quax import quaxify
 import quaxed.numpy as jnp
 import unxt as u
 from quaxed.experimental import arrayish
+from unxt.quantity import AbstractQuantity
 
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
@@ -41,6 +42,9 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
             return
 
         POSITION_CLASSES.add(cls)
+
+    # ===============================================================
+    # Vector API
 
     @classproperty
     @classmethod
@@ -81,8 +85,10 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
         """
         raise NotImplementedError
 
+        # TODO: move out of API
+
     # ===============================================================
-    # Binary operations
+    # Python API
 
     def __eq__(self: "AbstractPos", other: object) -> Any:
         """Element-wise equality of two positions.
@@ -156,6 +162,19 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
         newq = _vec_matmul(other, q)
         newvec = self._cartesian_cls.from_(newq)
         return newvec.vconvert(type(self))
+
+    def __abs__(self) -> AbstractQuantity:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
+        >>> abs(vec)
+        Quantity['length'](Array(5., dtype=float32), unit='m')
+
+        """
+        return self.norm()  # type: ignore[misc]
 
     # ===============================================================
     # Convenience methods

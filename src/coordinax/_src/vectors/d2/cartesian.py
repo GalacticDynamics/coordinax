@@ -219,6 +219,20 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
         """
         return CartesianAcc2D
 
+    @override
+    def norm(self, _: AbstractPos2D | None = None, /) -> ct.BatchableSpeed:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> v = cx.vecs.CartesianVel2D.from_([3, 4], "km/s")
+        >>> v.norm()
+        Quantity['speed'](Array(5., dtype=float32), unit='km / s')
+
+        """
+        return jnp.sqrt(self.d_x**2 + self.d_y**2)
+
 
 # -----------------------------------------------------
 

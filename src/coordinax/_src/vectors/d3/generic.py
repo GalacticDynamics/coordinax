@@ -5,7 +5,6 @@ __all__ = [
 ]
 
 from typing import TypeVar, final
-from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -56,7 +55,6 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         """
         return 3
 
-    @override
     def norm(self) -> AbstractQuantity:
         """Compute the norm of the vector.
 

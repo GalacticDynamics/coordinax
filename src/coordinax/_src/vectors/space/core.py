@@ -16,7 +16,6 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import AbstractQuantity
 from xmmutablemap import ImmutableMap
 
 from .utils import DimensionLike, _can_broadcast_shapes, _get_dimension_name
@@ -127,10 +126,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         """
         raise NotImplementedError  # TODO: implement this
-
-    def norm(self) -> AbstractQuantity:
-        """Return the norm of the vector."""
-        raise NotImplementedError
 
     # ===============================================================
     # Mapping API
