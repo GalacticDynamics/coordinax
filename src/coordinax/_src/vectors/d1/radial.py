@@ -10,8 +10,8 @@ import jax
 from plum import convert
 
 import unxt as u
-from unxt.quantity import UncheckedQuantity as FastQ
 from dataclassish.converters import Unless
+from unxt.quantity import UncheckedQuantity as FastQ
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
