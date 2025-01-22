@@ -40,12 +40,10 @@ VT = TypeVar("VT", bound="AbstractVector")
 class AbstractVector(
     IPythonReprMixin,
     AstropyRepresentationAPIMixin,
-    ArrayValue,
-    arrayish.LaxBothAddMixin[Any, "AbstractVector"],
-    arrayish.LaxBothSubMixin[Any, "AbstractVector"],
-    arrayish.LaxBothMulMixin[Any, Any],  # TODO: type annotation
-    arrayish.LaxBothTrueDivMixin[Any, Any],  # TODO: type annotation
+    arrayish.LaxBinaryOpsMixin[Any, Any],  # TODO: type annotation
+    arrayish.LaxRoundMixin["AbstractVector"],
     arrayish.LaxLenMixin,
+    ArrayValue,
 ):
     """Base class for all vector types.
 
