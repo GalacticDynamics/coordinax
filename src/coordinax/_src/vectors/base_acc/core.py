@@ -1,6 +1,6 @@
 """Abstract Accelerations."""
 
-__all__ = ["AbstractAcc"]
+__all__ = ["AbstractAcc", "ACCELERATION_CLASSES"]
 
 from abc import abstractmethod
 from functools import partial
@@ -21,9 +21,6 @@ if TYPE_CHECKING:
     from typing import Self
 
 
-ACCELERATION_CLASSES: set[type["AbstractAcc"]] = set()
-
-
 class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
@@ -32,7 +29,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         The subclass is registered.
         """
-        ACCELERATION_CLASSES.add(cls)
+        ACCELERATION_CLASSES_MUTABLE[cls] = None
 
     @classproperty
     @classmethod
@@ -51,8 +48,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         <class 'coordinax...CartesianAcc3D'>
 
         """
-        # TODO: something nicer than this for getting the corresponding class
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classproperty
     @classmethod
@@ -122,3 +118,9 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         """
         cart_acc = cast(AbstractAcc, self.vconvert(self._cartesian_cls, p, q))
         return cart_acc.norm(p, q)
+
+
+# -----------------
+
+ACCELERATION_CLASSES_MUTABLE: dict[type[AbstractAcc], None] = {}
+ACCELERATION_CLASSES = ACCELERATION_CLASSES_MUTABLE.keys()

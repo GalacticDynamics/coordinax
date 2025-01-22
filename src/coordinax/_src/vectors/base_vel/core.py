@@ -1,6 +1,6 @@
 """Representation of velocities in different systems."""
 
-__all__ = ["AbstractVel"]
+__all__ = ["AbstractVel", "VELOCITY_CLASSES"]
 
 from abc import abstractmethod
 from functools import partial
@@ -22,8 +22,6 @@ if TYPE_CHECKING:
 
     import coordinax.vecs
 
-VELOCITY_CLASSES: set["type[AbstractVel]"] = set()
-
 
 class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
@@ -33,7 +31,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         The subclass is registered.
         """
-        VELOCITY_CLASSES.add(cls)
+        VELOCITY_CLASSES_MUTABLE[cls] = None
 
     # ===============================================================
     # Vector API
@@ -141,3 +139,8 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         """
         cart_vel = cast(AbstractVel, self.vconvert(self._cartesian_cls, q))
         return cart_vel.norm(q)  # type: ignore[call-arg,misc]
+
+
+#: Registered velocity classes.
+VELOCITY_CLASSES_MUTABLE: dict[type[AbstractVel], None] = {}
+VELOCITY_CLASSES = VELOCITY_CLASSES_MUTABLE.keys()

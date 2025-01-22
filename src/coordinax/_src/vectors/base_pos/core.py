@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPos"]
+__all__ = ["AbstractPos", "POSITION_CLASSES"]
 
 from abc import abstractmethod
 from functools import partial
@@ -23,9 +23,6 @@ from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector, ToUnitsOptions
 from coordinax._src.vectors.mixins import AvalMixin
 
-# TODO: figure out public API for this
-POSITION_CLASSES: set[type["AbstractPos"]] = set()
-
 _vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)->(N)"))
 
 
@@ -41,7 +38,7 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
         if isabstract(cls) or cls.__name__.startswith("Abstract"):
             return
 
-        POSITION_CLASSES.add(cls)
+        POSITION_CLASSES_MUTABLE[cls] = None
 
     # ===============================================================
     # Vector API
@@ -168,3 +165,8 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
 
         """
         return jnp.linalg.vector_norm(self, axis=-1)  # type: ignore[arg-type]
+
+
+#: Registered position classes.
+POSITION_CLASSES_MUTABLE: dict[type[AbstractPos], None] = {}
+POSITION_CLASSES = POSITION_CLASSES_MUTABLE.keys()
