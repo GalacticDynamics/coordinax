@@ -11,7 +11,6 @@ from typing_extensions import override
 import equinox as eqx
 
 import quaxed.lax as qlax
-import quaxed.numpy as jnp
 
 import coordinax._src.typing as ct
 from coordinax._src.utils import classproperty
@@ -132,7 +131,7 @@ class AbstractPosND(AbstractPos):
         (2,)
 
         """
-        return replace(self, q=jnp.reshape(self.q, (self.size, self.q.shape[-1]), "C"))
+        return replace(self, q=self.q.reshape(-1, self.q.shape[-1]))
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the N-dimensional position.
@@ -271,9 +270,7 @@ class AbstractVelND(AbstractVel):
         )
 
         """
-        return replace(
-            self, d_q=jnp.reshape(self.d_q, (self.size, self.d_q.shape[-1]), "C")
-        )
+        return replace(self, d_q=self.d_q.reshape(-1, self.d_q.shape[-1]))
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the vector.
@@ -414,9 +411,7 @@ class AbstractAccND(AbstractAcc):
         (2,)
 
         """
-        return replace(
-            self, d2_q=jnp.reshape(self.d2_q, (self.size, self.d2_q.shape[-1]), "C")
-        )
+        return replace(self, d2_q=self.d2_q.reshape(-1, self.d2_q.shape[-1]))
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the vector.

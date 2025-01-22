@@ -2,6 +2,7 @@
 
 __all__ = ["Space"]
 
+import math
 from collections.abc import Callable, Iterable, Mapping
 from textwrap import indent
 from types import MappingProxyType
@@ -37,12 +38,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     Parameters
     ----------
-    *args : Mapping[DimensionLike, AbstractVector] | tuple[DimensionLike, AbstractVector] | Iterable[tuple[DimensionLike, AbstractVector]]
+    *args : Any
         See input to `dict` for the input data.
-
-    primary_key : DimensionLike, optional
-        The key for the primary vector of the space.
-        Default is "length" for position vectors.
 
     **kwargs : AbstractVector
         See input to `dict` for the input data.
@@ -55,6 +52,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
+    All the vectors can be brought together into a space:
+
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> space
     Space({
@@ -63,8 +62,14 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         'acceleration': CartesianAcc3D( ... )
     })
 
+    The vectors can then be accessed by key:
+
     >>> space["length"]
     CartesianPos3D( ... )
+
+    The space can also be converted to different representations. If the
+    conversion is on the primary vector, the other vectors will be
+    correspondingly converted.
 
     >>> space.vconvert(cx.SphericalPos)
     Space({
@@ -80,7 +85,26 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         'acceleration': SphericalAcc( ... )
     })
 
-    """  # noqa: E501
+    Actions on the space are done on the contained vectors.
+
+    >>> w = cx.Space(
+    ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+    ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
+    ... )
+
+    >>> w.ndim
+    2
+
+    >>> w.shape
+    (1, 2)
+
+    >>> w.shapes
+    mappingproxy({'length': (1, 2), 'speed': (1, 2)})
+
+    >>> w.mT.shapes
+    mappingproxy({'length': (2, 1), 'speed': (2, 1)})
+
+    """
 
     _data: dict[str, AbstractVector] = eqx.field(init=False)
 
@@ -247,70 +271,6 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     # Attributes
 
     @property
-    def mT(self) -> "Self":  # noqa: N802
-        """Transpose each vector in the space.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> w = cx.Space(
-        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
-        >>> w.mT
-        Space({
-            'length': CartesianPos3D(
-                x=Quantity[...](value=i32[2,1], unit=Unit("m")),
-                y=Quantity[...](value=i32[2,1], unit=Unit("m")),
-                z=Quantity[...](value=i32[2,1], unit=Unit("m"))
-            ), 'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=i32[2,1], unit=Unit("m / s") )
-            ) })
-
-        """
-        return super().mT
-
-    @property
-    def ndim(self) -> int:
-        """Number of array dimension (axes).
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> w = cx.Space(
-        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s") )
-
-        >>> w.ndim
-        2
-
-        """
-        return super().ndim
-
-    @property
-    def shape(self) -> tuple[int, ...]:
-        """Get the shape of the vector's components.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> w = cx.Space(
-        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
-
-        >>> w.shape
-        (1, 2)
-
-        """
-        return super().shape
-
-    @property
     def size(self) -> int:
         """Total number of elements in the vector.
 
@@ -326,7 +286,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         2
 
         """
-        return super().size
+        return math.prod(self.shape)
 
     @property
     def T(self) -> "Self":  # noqa: N802
@@ -341,18 +301,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
 
-        >>> w.T
-        Space({
-            'length': CartesianPos3D(
-                x=Quantity[...](value=i32[2,1], unit=Unit("m")),
-                y=Quantity[...](value=i32[2,1], unit=Unit("m")),
-                z=Quantity[...](value=i32[2,1], unit=Unit("m"))
-            ),
-            'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=i32[2,1], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=i32[2,1], unit=Unit("m / s") )
-            ) })
+        >>> w.T.shapes
+        mappingproxy({'length': (2, 1), 'speed': (2, 1)})
 
         """
         return super().T
@@ -526,7 +476,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         ... )
 
         >>> w.sizes
-        mappingproxy({'length': 2, 'speed': 2})
+        mappingproxy({'length': 6, 'speed': 6})
 
         """
         return MappingProxyType({k: v.size for k, v in self.items()})
