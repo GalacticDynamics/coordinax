@@ -8,9 +8,8 @@ from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
-import jax
 import numpy as np
-from jax import Device, tree
+from jax import Device
 from jaxtyping import DTypeLike
 from plum import dispatch
 from quax import ArrayValue
@@ -23,7 +22,7 @@ from unxt.quantity import AbstractQuantity
 
 from .flags import AttrFilter
 from coordinax._src.typing import Unit
-from coordinax._src.utils import classproperty, is_any_quantity
+from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vconvert, vector
 from coordinax._src.vectors.mixins import (
     AstropyRepresentationAPIMixin,
@@ -436,8 +435,34 @@ class AbstractVector(
         >>> q == q
         Array([ True,  True], dtype=bool)
 
-        Most positions are covered by a separate dispatch. So here we show
-        velocities and accelerations:
+        Showing the broadcasting, then element-wise comparison of two vectors:
+
+        >>> vec1 = cx.CartesianPos3D.from_([[1, 2, 3], [1, 2, 4]], "m")
+        >>> vec2 = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> jnp.equal(vec1, vec2)
+        Array([ True, False], dtype=bool)
+
+        Showing the change of representation:
+
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> vec1 = vec.vconvert(cx.SphericalPos)
+        >>> vec2 = vec.vconvert(cx.vecs.MathSphericalPos)
+        >>> jnp.equal(vec1, vec2)
+        Array(True, dtype=bool)
+
+        Quick run-through of each dimensionality:
+
+        >>> vec1 = cx.vecs.CartesianPos1D.from_([1], "m")
+        >>> vec2 = cx.vecs.RadialPos.from_([1], "m")
+        >>> jnp.equal(vec1, vec2)
+        Array(True, dtype=bool)
+
+        >>> vec1 = cx.vecs.CartesianPos2D.from_([2, 0], "m")
+        >>> vec2 = cx.vecs.PolarPos(r=u.Quantity(2, "m"), phi=u.Quantity(0, "rad"))
+        >>> jnp.equal(vec1, vec2)
+        Array(True, dtype=bool)
+
+        Now we show velocities and accelerations:
 
         >>> vel1 = cx.vecs.CartesianVel1D(u.Quantity([1, 2, 3], "km/s"))
         >>> vel2 = cx.vecs.CartesianVel1D(u.Quantity([1, 0, 3], "km/s"))
@@ -498,16 +523,7 @@ class AbstractVector(
         if type(other) is not type(self):
             return NotImplemented
 
-        # Map the equality over the leaves, which are Quantities.
-        comp_tree = tree.map(
-            jnp.equal,
-            tree.leaves(self, is_leaf=is_any_quantity),
-            tree.leaves(other, is_leaf=is_any_quantity),
-            is_leaf=is_any_quantity,
-        )
-
-        # Reduce the equality over the leaves.
-        return jax.tree.reduce(jnp.logical_and, comp_tree)
+        return jnp.equal(self, other)  # type: ignore[arg-type]
 
     # ---------------------------------------------------------------
     # methods

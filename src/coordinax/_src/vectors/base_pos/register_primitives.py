@@ -20,6 +20,7 @@ from unxt.quantity import AbstractQuantity
 from .core import AbstractPos
 from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AttrFilter
+from coordinax._src.vectors.base.register_primitives import eq_vec_vec
 
 
 @register(jax.lax.add_p)
@@ -104,7 +105,8 @@ def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
 @register(jax.lax.eq_p)
 def _eq_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> ArrayLike:
     """Element-wise equality of two positions."""
-    return lhs == rhs
+    rhs = cast(AbstractPos, rhs.vconvert(type(lhs)))
+    return eq_vec_vec(lhs, rhs)
 
 
 # ------------------------------------------------
