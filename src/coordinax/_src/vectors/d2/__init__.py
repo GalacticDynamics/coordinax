@@ -26,4 +26,7 @@ from .polar import PolarAcc, PolarPos, PolarVel
 from .spherical import TwoSphereAcc, TwoSpherePos, TwoSphereVel
 
 # isort: split
-from . import transform  # noqa: F401
+from . import (
+    register_primitives,  # noqa: F401
+    register_vconvert,  # noqa: F401
+)

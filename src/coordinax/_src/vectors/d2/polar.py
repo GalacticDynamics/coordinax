@@ -6,12 +6,8 @@ from typing import final
 from typing_extensions import override
 
 import equinox as eqx
-import jax
-from jaxtyping import ArrayLike
-from quax import register
 
 import unxt as u
-from dataclassish import replace
 from dataclassish.converters import Unless
 
 import coordinax._src.typing as ct
@@ -72,38 +68,6 @@ class PolarPos(AbstractPos2D):
         return self.r
 
 
-@register(jax.lax.mul_p)
-def _mul_p_vpolar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
-    """Scale the polar position by a scalar.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-    >>> import quaxed
-
-    >>> v = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
-    >>> print(v)
-    <PolarPos (r[m], phi[deg])
-        [ 1 90]>
-
-    >>> quaxed.numpy.linalg.vector_norm(v, axis=-1)
-    Quantity['length'](Array(1., dtype=float32), unit='m')
-
-    >>> nv = quaxed.lax.mul(2, v)
-    >>> print(nv)
-    <PolarPos (r[m], phi[deg])
-        [ 2 90]>
-
-    """
-    # Validation
-    lhs = eqx.error_if(
-        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
-    )
-    # Scale the radial distance
-    return replace(rhs, r=lhs * rhs.r)
-
-
 #####################################################################
 
 
@@ -142,6 +106,9 @@ class PolarVel(AbstractVel2D):
     @classmethod
     def differential_cls(cls) -> type["PolarAcc"]:  # type: ignore[override]
         return PolarAcc
+
+
+#####################################################################
 
 
 @final

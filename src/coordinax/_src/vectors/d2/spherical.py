@@ -155,6 +155,9 @@ class TwoSphereVel(AbstractVel2D):
         return TwoSphereAcc
 
 
+#####################################################################
+
+
 @final
 class TwoSphereAcc(AbstractAcc2D):
     r"""Vel on the 2-Sphere.

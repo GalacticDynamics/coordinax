@@ -6,26 +6,19 @@ __all__ = [
     "CartesianVel2D",
 ]
 
-from dataclasses import replace
 from functools import partial
-from typing import Any, final
+from typing import final
 from typing_extensions import override
 
 import equinox as eqx
-import jax
-from jaxtyping import ArrayLike
-from quax import register
 
 import quaxed.numpy as jnp
 import unxt as u
-from quaxed import lax as qlax
-from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.mixins import AvalMixin
 
 
@@ -55,123 +48,6 @@ class CartesianPos2D(AbstractPos2D):
     @classmethod
     def differential_cls(cls) -> type["CartesianVel2D"]:  # type: ignore[override]
         return CartesianVel2D
-
-
-# -----------------------------------------------------
-
-
-@register(jax.lax.add_p)
-def _add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
-    """Add two vectors.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
-    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
-    >>> print(cart + polr)
-    <CartesianPos2D (x[km], y[km])
-        [1. 5.]>
-
-    >>> print(jnp.add(cart, polr))
-    <CartesianPos2D (x[km], y[km])
-        [1. 5.]>
-
-    """
-    cart = rhs.vconvert(CartesianPos2D)
-    return jax.tree.map(jnp.add, lhs, cart)
-
-
-# ------------------------------------------------
-# Dot product
-# TODO: see implementation in https://github.com/google/tree-math for how to do
-# this more generally.
-
-
-@register(jax.lax.dot_general_p)
-def _dot_general_cart2d(
-    lhs: CartesianPos2D, rhs: CartesianPos2D, /, **kwargs: Any
-) -> AbstractQuantity:
-    """Dot product of two vectors.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> q1 = cx.vecs.CartesianPos2D.from_([1, 2], "m")
-    >>> q2 = cx.vecs.CartesianPos2D.from_([3, 4], "m")
-
-    >>> jnp.dot(q1, q2)
-    Quantity['area'](Array(11, dtype=int32), unit='m2')
-
-    """
-    return lhs.x * rhs.x + lhs.y * rhs.y
-
-
-# ------------------------------------------------
-
-
-@register(jax.lax.mul_p)
-def _mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
-    """Scale a cartesian 2D position by a scalar.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-
-    >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "m")
-    >>> jnp.multiply(5, v).x
-    Quantity['length'](Array(15, dtype=int32), unit='m')
-
-    """
-    # Validation
-    lhs = eqx.error_if(
-        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
-    )
-
-    # Scale the components
-    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
-
-
-@register(jax.lax.neg_p)
-def _neg_p_cart2d_pos(obj: CartesianPos2D, /) -> CartesianPos2D:
-    """Negate the `coordinax.vecs.CartesianPos2D`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "km")
-    >>> (-q).x
-    Quantity['length'](Array(-1, dtype=int32), unit='km')
-
-    """
-    return jax.tree.map(qlax.neg, obj)
-
-
-@register(jax.lax.sub_p)
-def _sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
-    """Subtract two vectors.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-    >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
-    >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
-
-    >>> print(cart - polr)
-    <CartesianPos2D (x[km], y[km])
-        [ 1. -1.]>
-
-    """
-    cart = rhs.vconvert(CartesianPos2D)
-    return jax.tree.map(jnp.subtract, lhs, cart)
 
 
 #####################################################################
@@ -234,59 +110,6 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
         return jnp.sqrt(self.d_x**2 + self.d_y**2)
 
 
-# -----------------------------------------------------
-
-
-@register(jax.lax.add_p)
-def _add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
-    """Add two Cartesian velocities.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-
-    >>> v = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
-    >>> print(v + v)
-    <CartesianVel2D (d_x[km / s], d_y[km / s])
-        [2 4]>
-
-    >>> print(jnp.add(v, v))
-    <CartesianVel2D (d_x[km / s], d_y[km / s])
-        [2 4]>
-
-    """
-    return jax.tree.map(qlax.add, lhs, rhs)
-
-
-@register(jax.lax.mul_p)
-def _mul_vp(lhs: ArrayLike, rhts: CartesianVel2D, /) -> CartesianVel2D:
-    """Scale a cartesian 2D velocity by a scalar.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-
-    >>> v = cx.vecs.CartesianVel2D.from_([3, 4], "m/s")
-    >>> print(5 * v)
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
-        [15 20]>
-
-    >>> print(jnp.multiply(5, v))
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
-        [15 20]>
-
-    """
-    # Validation
-    lhs = eqx.error_if(
-        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
-    )
-
-    # Scale the components
-    return replace(rhts, d_x=lhs * rhts.d_x, d_y=lhs * rhts.d_y)
-
-
 #####################################################################
 
 
@@ -333,54 +156,3 @@ class CartesianAcc2D(AvalMixin, AbstractAcc2D):
 
         """
         return jnp.sqrt(self.d2_x**2 + self.d2_y**2)
-
-
-# -----------------------------------------------------
-
-
-@register(jax.lax.add_p)
-def _add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
-    """Add two Cartesian accelerations.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-
-    >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "km/s2")
-    >>> print(v + v)
-    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
-        [6 8]>
-
-    >>> print(jnp.add(v, v))
-    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
-        [6 8]>
-
-    """
-    return jax.tree.map(jnp.add, lhs, rhs)
-
-
-@register(jax.lax.mul_p)
-def _mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
-    """Scale a cartesian 2D acceleration by a scalar.
-
-    Examples
-    --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
-
-    >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "m/s2")
-    >>> jnp.multiply(5, v).d2_x
-    Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
-
-    >>> (5 * v).d2_x
-    Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
-
-    """
-    # Validation
-    lhs = eqx.error_if(
-        lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
-    )
-
-    # Scale the components
-    return replace(rhts, d2_x=lhs * rhts.d2_x, d2_y=lhs * rhts.d2_y)
