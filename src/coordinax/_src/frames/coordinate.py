@@ -12,7 +12,6 @@ from plum import dispatch
 
 from dataclassish import field_items, replace
 from dataclassish.converters import Unless
-from unxt.quantity import AbstractQuantity
 
 from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
@@ -74,11 +73,6 @@ class AbstractCoordinate(AbstractVector):
         # Otherwise, apply the transformation and return a new coordinate
         new_data = op(self.data)
         return cast(AbstractCoordinate, type(self).from_(new_data, to_frame))
-
-    # ===============================================================
-
-    def norm(self) -> AbstractQuantity:
-        raise NotImplementedError  # TODO: implement this
 
     # ===============================================================
     # Quax API

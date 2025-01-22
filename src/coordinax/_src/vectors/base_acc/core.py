@@ -4,7 +4,7 @@ __all__ = ["AbstractAcc"]
 
 from abc import abstractmethod
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import jax
 
@@ -108,7 +108,7 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
 
     @partial(jax.jit)
     def norm(
-        self: "AbstractAcc", velocity: AbstractVel, position: AbstractPos, /
+        self: "AbstractAcc", p: AbstractVel, q: AbstractPos, /
     ) -> u.Quantity["acceleration"]:
         """Return the norm of the vector.
 
@@ -119,9 +119,12 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
         >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc")
         >>> p = cx.vecs.CartesianVel3D.from_([4, 5, 6], "km/s")
         >>> a = cx.vecs.CartesianAcc3D.from_([3, 4, 0], "m/s2")
+
         >>> a = a.vconvert(cx.vecs.CylindricalAcc, p, q)
+
         >>> a.norm(p, q)
         Quantity[...](Array(5..., dtype=float32), unit='m / s2')
 
         """
-        return self.vconvert(self._cartesian_cls, velocity, position).norm()
+        cart_acc = cast(AbstractAcc, self.vconvert(self._cartesian_cls, p, q))
+        return cart_acc.norm(p, q)

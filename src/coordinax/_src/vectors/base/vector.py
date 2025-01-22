@@ -162,10 +162,6 @@ class AbstractVector(
         """
         return vconvert(target, self, *args, **kwargs)
 
-    @abstractmethod
-    def norm(self) -> u.Quantity:
-        """Return the norm of the vector."""
-
     # ===============================================================
     # Quantity API
 
@@ -510,7 +506,6 @@ class AbstractVector(
             return NotImplemented
 
         # Map the equality over the leaves, which are Quantities.
-        # The equality should likewise be mapped over the Quantities.
         comp_tree = tree.map(
             jnp.equal,
             tree.leaves(self, is_leaf=is_any_quantity),
@@ -523,19 +518,6 @@ class AbstractVector(
 
     # ---------------------------------------------------------------
     # methods
-
-    def __abs__(self) -> u.Quantity:
-        """Return the norm of the vector.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
-        >>> abs(vec)
-        Quantity['length'](Array(5., dtype=float32), unit='m')
-
-        """
-        return self.norm()  # TODO: fix
 
     def __getitem__(self, index: Any) -> "Self":
         """Return a new object with the given slice applied.

@@ -55,10 +55,20 @@ class PolarPos(AbstractPos2D):
     def differential_cls(cls) -> type["PolarVel"]:  # type: ignore[override]
         return PolarVel
 
-    # TODO: figure out how to do this by primitive
     @override
     def norm(self) -> BatchableDistance:
-        """Return the norm of the vector."""
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
+        >>> vec.norm()
+        Distance(Array(1, dtype=int32, weak_type=True), unit='m')
+
+        """
         return self.r
 
 

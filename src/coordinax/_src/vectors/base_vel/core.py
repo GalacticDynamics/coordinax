@@ -4,7 +4,7 @@ __all__ = ["AbstractVel"]
 
 from abc import abstractmethod
 from functools import partial
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import equinox as eqx
 import jax
@@ -19,7 +19,9 @@ from coordinax._src.vectors.base_pos import AbstractPos
 if TYPE_CHECKING:
     from typing import Self
 
-VELOCITY_CLASSES: set[type["AbstractVel"]] = set()
+    import coordinax.vecs
+
+VELOCITY_CLASSES: set["type[AbstractVel]"] = set()
 
 
 class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
@@ -32,10 +34,13 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
         """
         VELOCITY_CLASSES.add(cls)
 
+    # ===============================================================
+    # Vector API
+
     @classproperty
     @classmethod
     @abstractmethod
-    def _cartesian_cls(cls) -> type["AbstractVector"]:
+    def _cartesian_cls(cls) -> "type[AbstractVector]":
         """Return the corresponding Cartesian vector class.
 
         Examples
@@ -55,7 +60,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def integral_cls(cls) -> type["AbstractPos"]:
+    def integral_cls(cls) -> "type[AbstractPos]":
         """Return the corresponding vector class.
 
         Examples
@@ -74,7 +79,7 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractAcc"]:
+    def differential_cls(cls) -> "type[coordinax.vecs.AbstractAcc]":
         """Return the corresponding differential vector class.
 
         Examples
@@ -91,14 +96,14 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
         raise NotImplementedError
 
     # ===============================================================
-    # Quax
+    # Quax API
 
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
         raise NotImplementedError
 
     # ===============================================================
-    # Unary operations
+    # Python API
 
     def __neg__(self) -> "Self":
         """Negate the vector.
@@ -124,7 +129,21 @@ class AbstractVel(AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
-    @partial(eqx.filter_jit, inline=True)
-    def norm(self, position: AbstractPos, /) -> u.Quantity["speed"]:
-        """Return the norm of the vector."""
-        return self.vconvert(self._cartesian_cls, position).norm()
+    @partial(eqx.filter_jit)
+    def norm(self: "AbstractVel", q: AbstractPos, /) -> u.Quantity["speed"]:
+        """Return the norm of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> q = cx.vecs.CartesianPos2D.from_([1, 1], "km")
+        >>> p = cx.vecs.PolarVel(d_r=u.Quantity(1, "km/s"),
+        ...                      d_phi=u.Quantity(1, "deg/s"))
+
+        >>> p.norm(q)
+        Quantity['speed'](Array(1.0003046, dtype=float32), unit='km / s')
+
+        """
+        cart_vel = cast(AbstractVel, self.vconvert(self._cartesian_cls, q))
+        return cart_vel.norm(q)  # type: ignore[call-arg,misc]
