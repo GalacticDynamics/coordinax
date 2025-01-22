@@ -22,7 +22,6 @@ from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base_pos import AbstractPos
-from coordinax._src.vectors.mixins import AvalMixin
 
 
 @final
@@ -131,7 +130,7 @@ def _mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
 
     >>> v = cx.vecs.CartesianPos1D.from_(1, "m")
     >>> jnp.multiply(2, v).x
-    Quantity['length'](Array(2, dtype=int32, ...), unit='m')
+    Quantity['length'](Array(2, dtype=int32), unit='m')
 
     >>> (2 * v).x
     Quantity['length'](Array(2, dtype=int32, ...), unit='m')
@@ -190,7 +189,7 @@ def _sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
 
 
 @final
-class CartesianVel1D(AvalMixin, AbstractVel1D):
+class CartesianVel1D(AbstractVel1D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
@@ -270,7 +269,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     )
 
     >>> vec.d_x
-    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+    Quantity['speed'](Array(2, dtype=int32), unit='m / s')
 
     >>> (2 * v).d_x
     Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
@@ -289,7 +288,7 @@ def _mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
 
 
 @final
-class CartesianAcc1D(AvalMixin, AbstractAcc1D):
+class CartesianAcc1D(AbstractAcc1D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
@@ -360,7 +359,7 @@ def _mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     CartesianAcc1D( d2_x=... )
 
     >>> vec.d2_x
-    Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
+    Quantity['acceleration'](Array(2, dtype=int32), unit='m / s2')
 
     >>> (2 * v).d2_x
     Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')

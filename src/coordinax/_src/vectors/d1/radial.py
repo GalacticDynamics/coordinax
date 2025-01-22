@@ -6,12 +6,9 @@ from typing import final
 from typing_extensions import override
 
 import equinox as eqx
-import jax
-from plum import convert
 
 import unxt as u
 from dataclassish.converters import Unless
-from unxt.quantity import UncheckedQuantity as FastQ
 
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
@@ -81,10 +78,6 @@ class RadialVel(AbstractVel1D):
     def differential_cls(cls) -> type["RadialAcc"]:  # type: ignore[override]
         return RadialAcc
 
-    def aval(self) -> jax.core.ShapedArray:
-        """Return the vector as a JAX array."""
-        return jax.core.get_aval(convert(self, FastQ).value)  # type: ignore[attr-defined, no-untyped-call]
-
 
 @final
 class RadialAcc(AbstractAcc1D):
@@ -110,7 +103,3 @@ class RadialAcc(AbstractAcc1D):
     @classmethod
     def integral_cls(cls) -> type[RadialVel]:  # type: ignore[override]
         return RadialVel
-
-    def aval(self) -> jax.core.ShapedArray:
-        """Return the vector as a JAX array."""
-        return jax.core.get_aval(convert(self, FastQ).value)  # type: ignore[attr-defined,no-untyped-call]

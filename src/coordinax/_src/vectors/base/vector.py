@@ -251,11 +251,6 @@ class AbstractVector(
         msg = f"Refusing to materialise `{type(self).__name__}`."
         raise RuntimeError(msg)
 
-    @abstractmethod
-    def aval(self) -> jax.core.ShapedArray:
-        """Return the vector as a JAX array."""
-        raise NotImplementedError  # pragma: no cover
-
     # ===============================================================
     # Array API
 
