@@ -32,7 +32,7 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     cart_cls = eqx.error_if(
         cart_cls,
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
-        "must register a Cartesian-specific dispatch for {cart_cls} addition",
+        f"must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
     clhs = lhs.vconvert(cart_cls)
     crhs = rhs.vconvert(cart_cls)
