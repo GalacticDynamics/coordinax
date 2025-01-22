@@ -11,10 +11,12 @@ from dataclassish import field_values
 from .base.flags import AttrFilter
 
 if TYPE_CHECKING:
-    from coordinax.vecs import AbstractVector
+    import coordinax.vecs
 
 
-def full_shaped(obj: "AbstractVector", /) -> "AbstractVector":
+def full_shaped(
+    obj: "coordinax.vecsAbstractVector", /
+) -> "coordinax.vecsAbstractVector":
     """Return the vector, fully broadcasting all components.
 
     Examples

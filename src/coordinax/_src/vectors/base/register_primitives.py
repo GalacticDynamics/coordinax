@@ -5,6 +5,7 @@ __all__: list[str] = []
 from typing import Any
 
 import jax
+from jax import tree as jtu
 from jaxtyping import Array, Bool
 from quax import quaxify, register
 
@@ -12,26 +13,13 @@ import quaxed.numpy as jnp
 from dataclassish import field_items, replace
 
 from .vector import AbstractVector
-
-# ===================================================================
-
-
-@register(jax.lax.convert_element_type_p)
-def _convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractVector:
-    """Convert the element type of a quantity."""
-    # TODO: examples
-    convert_p = quaxify(jax.lax.convert_element_type_p.bind)
-    return replace(
-        operand,
-        **{k: convert_p(v, **kwargs) for k, v in field_items(operand)},
-    )
-
+from coordinax._src.utils import is_any_quantity
 
 # ===================================================================
 
 
 @register(jax.lax.broadcast_in_dim_p)
-def _broadcast_in_dim_p(
+def broadcast_in_dim_p(
     operand: AbstractVector, *, shape: tuple[int, ...], **kwargs: Any
 ) -> AbstractVector:
     """Broadcast in a dimension.
@@ -155,7 +143,44 @@ def _broadcast_in_dim_p(
 # ===================================================================
 
 
+@register(jax.lax.convert_element_type_p)
+def convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractVector:
+    """Convert the element type of a quantity.
+
+    Examples
+    --------
+    >>> import quaxed.lax as qlax
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CartesianPosND.from_([1, 2, 3], "m")
+    >>> qlax.convert_element_type(vec, float)
+    CartesianPosND(q=Quantity[...](value=f32[3], unit=Unit("m")))
+
+    """
+    convert_p = quaxify(jax.lax.convert_element_type_p.bind)
+    return replace(
+        operand,
+        **{k: convert_p(v, **kwargs) for k, v in field_items(operand)},
+    )
+
+
+# ===================================================================
+
+
 @register(jax.lax.eq_p)
 def eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
-    """Element-wise equality of two vectors."""
-    return lhs == rhs
+    """Element-wise equality of two vectors.
+
+    See `AbstractVector.__eq__` for examples.
+
+    """
+    # Map the equality over the leaves, which are Quantities.
+    comp_tree = jtu.map(
+        jnp.equal,
+        jtu.leaves(lhs, is_leaf=is_any_quantity),
+        jtu.leaves(rhs, is_leaf=is_any_quantity),
+        is_leaf=is_any_quantity,
+    )
+
+    # Reduce the equality over the leaves.
+    return jax.tree.reduce(jnp.logical_and, comp_tree)

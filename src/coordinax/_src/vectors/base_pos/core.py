@@ -90,49 +90,6 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
     # ===============================================================
     # Python API
 
-    def __eq__(self: "AbstractPos", other: object) -> Any:
-        """Element-wise equality of two positions.
-
-        Examples
-        --------
-        >>> import quaxed.numpy as jnp
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        Showing the broadcasting, then element-wise comparison of two vectors:
-
-        >>> vec1 = cx.CartesianPos3D.from_([[1, 2, 3], [1, 2, 4]], "m")
-        >>> vec2 = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> jnp.equal(vec1, vec2)
-        Array([ True, False], dtype=bool)
-
-        Showing the change of representation:
-
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> vec1 = vec.vconvert(cx.SphericalPos)
-        >>> vec2 = vec.vconvert(cx.vecs.MathSphericalPos)
-        >>> jnp.equal(vec1, vec2)
-        Array(True, dtype=bool)
-
-        Quick run-through of each dimensionality:
-
-        >>> vec1 = cx.vecs.CartesianPos1D.from_([1], "m")
-        >>> vec2 = cx.vecs.RadialPos.from_([1], "m")
-        >>> jnp.equal(vec1, vec2)
-        Array(True, dtype=bool)
-
-        >>> vec1 = cx.vecs.CartesianPos2D.from_([2, 0], "m")
-        >>> vec2 = cx.vecs.PolarPos(r=u.Quantity(2, "m"), phi=u.Quantity(0, "rad"))
-        >>> jnp.equal(vec1, vec2)
-        Array(True, dtype=bool)
-
-        """
-        if not isinstance(other, AbstractPos):
-            return NotImplemented
-
-        rhs = other.vconvert(type(self))
-        return super().__eq__(rhs)
-
     def __rmatmul__(self, other: Shaped[Array, "N N"]) -> Any:
         """Matrix multiplication with another object.
 
