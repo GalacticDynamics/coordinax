@@ -15,6 +15,7 @@ from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
+from coordinax._src.vectors.mixins import AvalMixin
 
 if TYPE_CHECKING:
     from typing import Self
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
 ACCELERATION_CLASSES: set[type["AbstractAcc"]] = set()
 
 
-class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
+class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     """Abstract representation of vector differentials in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -70,13 +71,6 @@ class AbstractAcc(AbstractVector):  # pylint: disable=abstract-method
         'SphericalVel'
 
         """
-        raise NotImplementedError
-
-    # ===============================================================
-    # Quax
-
-    def aval(self) -> jax.core.ShapedArray:
-        """Return the vector as a JAX array."""
         raise NotImplementedError
 
     # ===============================================================

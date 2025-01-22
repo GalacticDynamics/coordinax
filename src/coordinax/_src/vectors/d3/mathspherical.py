@@ -192,7 +192,7 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
     >>> nv = jnp.multiply(2, v)
     >>> print(nv)
     <MathSphericalPos (r[km], theta[deg], phi[deg])
-        [ 6. 90.  0.]>
+        [ 6 90  0]>
 
     """
     # Validation

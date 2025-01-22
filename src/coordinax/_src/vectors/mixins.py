@@ -6,12 +6,12 @@ from collections.abc import Sequence
 from typing import Any, cast
 
 import jax
-from plum import convert
 
-import unxt as u
+import quaxed.numpy as jnp
 from dataclassish import field_keys, field_values
 
 from .api import vconvert
+from .base.flags import AttrFilter
 
 
 class AvalMixin:
@@ -33,93 +33,89 @@ class AvalMixin:
 
         >>> vec = cx.vecs.CartesianPos1D.from_([1], "m")
         >>> vec.aval()
-        ConcreteArray([1], dtype=int32)
+        ShapedArray(int32[1])
 
         >>> vec = cx.vecs.RadialPos.from_([1], "m")
         >>> vec.aval()
-        ConcreteArray([1], dtype=int32)
+        ShapedArray(int32[1])
 
         >>> vec = cx.vecs.CartesianVel1D.from_([1], "m/s")
         >>> vec.aval()
-        ConcreteArray([1], dtype=int32)
+        ShapedArray(int32[1])
 
         >>> vec = cx.vecs.RadialVel.from_([1], "m/s")
         >>> vec.aval()
-        ConcreteArray([1], dtype=int32)
+        ShapedArray(int32[1])
 
         >>> vec = cx.vecs.CartesianAcc1D.from_([1], "m/s2")
         >>> vec.aval()
-        ConcreteArray([1], dtype=int32)
+        ShapedArray(int32[1])
 
         >>> vec = cx.vecs.RadialAcc.from_([1], "m/s2")
         >>> vec.aval()
-        ConcreteArray([1], dtype=int32)
+        ShapedArray(int32[1])
 
         2 dimensional vectors:
 
         >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec.aval()
-        ConcreteArray([1 2], dtype=int32)
+        ShapedArray(int32[2])
 
         >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"))
         >>> vec.aval()
-        ConcreteArray([1. 0.], dtype=float32, ...)
+        ShapedArray(float32[2])
 
         >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
         >>> vec.aval()
-        ConcreteArray([1 2], dtype=int32)
+        ShapedArray(int32[2])
 
         >>> vec = cx.vecs.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"))
-        >>> try: vec.aval()
-        ... except NotImplementedError as e: print("nope")
-        nope
+        >>> vec.aval()
+        ShapedArray(int32[2])
 
         >>> vec = cx.vecs.CartesianAcc2D.from_([1,2], "m/s2")
         >>> vec.aval()
-        ConcreteArray([1 2], dtype=int32)
+        ShapedArray(int32[2])
 
         >>> vec = cx.vecs.PolarAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"))
-        >>> try: vec.aval()
-        ... except NotImplementedError as e: print("nope")
-        nope
+        >>> vec.aval()
+        ShapedArray(int32[2])
 
         3 dimensional vectors:
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> vec.aval()
-        ConcreteArray([1 2 3], dtype=int32)
+        ShapedArray(int32[3])
 
         >>> vec = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "m")
         >>> vec.aval()
-        ConcreteArray([[1 2 3]
-                       [4 5 6]], dtype=int32)
+        ShapedArray(int32[2,3])
 
         >>> vec = cx.SphericalPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"), theta=u.Quantity(0, "rad"))
         >>> vec.aval()
-        ConcreteArray([0. 0. 1.], dtype=float32, ...)
+        ShapedArray(float32[3])
 
         >>> vec = cx.CartesianVel3D.from_([1,2,3], "m/s")
         >>> vec.aval()
-        ConcreteArray([1 2 3], dtype=int32)
+        ShapedArray(int32[3])
 
         >>> vec = cx.SphericalVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"), d_theta=u.Quantity(0, "rad/s"))
-        >>> try: vec.aval()
-        ... except NotImplementedError as e: print("nope")
-        nope
+        >>> vec.aval()
+        ShapedArray(int32[3])
 
         >>> vec = cx.vecs.CartesianAcc3D.from_([1,2,3], "m/s2")
         >>> vec.aval()
-        ConcreteArray([1 2 3], dtype=int32)
+        ShapedArray(int32[3])
 
         >>> vec = cx.vecs.SphericalAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"), d2_theta=u.Quantity(0, "rad/s2"))
-        >>> try: vec.aval()
-        ... except NotImplementedError as e: print("nope")
-        nope
+        >>> vec.aval()
+        ShapedArray(int32[3])
 
         """  # noqa: E501
-        # TODO: change to UncheckedQuantity
-        target = self._cartesian_cls  # type: ignore[attr-defined]
-        return jax.core.get_aval(convert(vconvert(target, self), u.Quantity).value)  # type: ignore[attr-defined,no-untyped-call]
+        fvs = field_values(AttrFilter, self)
+        shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
+        dtype = jnp.result_type(*map(jnp.dtype, fvs))
+        return jax.core.ShapedArray(shape, dtype)  # type: ignore[no-untyped-call]
 
 
 ##############################################################################

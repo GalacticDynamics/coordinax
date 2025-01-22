@@ -19,7 +19,6 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.mixins import AvalMixin
 
 
 @final
@@ -54,7 +53,7 @@ class CartesianPos2D(AbstractPos2D):
 
 
 @final
-class CartesianVel2D(AvalMixin, AbstractVel2D):
+class CartesianVel2D(AbstractVel2D):
     """Cartesian 2D Velocity.
 
     Examples
@@ -114,7 +113,7 @@ class CartesianVel2D(AvalMixin, AbstractVel2D):
 
 
 @final
-class CartesianAcc2D(AvalMixin, AbstractAcc2D):
+class CartesianAcc2D(AbstractAcc2D):
     """Cartesian Acceleration 3D.
 
     Examples

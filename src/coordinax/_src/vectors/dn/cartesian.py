@@ -24,7 +24,6 @@ from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base_pos import AbstractPos
-from coordinax._src.vectors.mixins import AvalMixin
 
 ##############################################################################
 # Position
@@ -118,6 +117,14 @@ class CartesianPosND(AbstractPosND, arrayish.NumpyNegMixin):
 
         """
         return CartesianVelND
+
+    # ===============================================================
+    # Quax API
+
+    @override
+    def aval(self) -> jax.core.ShapedArray:
+        """Simpler aval than superclass."""
+        return jax.core.get_aval(self.q.value)  # type: ignore[no-untyped-call]
 
     # -----------------------------------------------------
 
@@ -285,7 +292,7 @@ def _sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 
 
 @final
-class CartesianVelND(AvalMixin, AbstractVelND):
+class CartesianVelND(AbstractVelND):
     """Cartesian differential representation.
 
     Examples
@@ -413,7 +420,7 @@ class CartesianVelND(AvalMixin, AbstractVelND):
 
 
 @final
-class CartesianAccND(AvalMixin, AbstractAccND):
+class CartesianAccND(AbstractAccND):
     """Cartesian N-dimensional acceleration representation.
 
     Examples
