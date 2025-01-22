@@ -1,9 +1,10 @@
 """Register Support with Unxt."""
 
-__all__: list[str] = []
+__all__ = ["ToUnitsOptions"]
 
 
 from collections.abc import Mapping
+from enum import Enum
 from typing import Any, Literal
 
 from astropy.units import PhysicalType as Dimension
@@ -13,9 +14,15 @@ import unxt as u
 from dataclassish import field_items, replace
 
 from .flags import AttrFilter
-from .utils import ToUnitsOptions
 from .vector import AbstractVector
 from coordinax._src.typing import Unit
+
+
+class ToUnitsOptions(Enum):
+    """Options for the units argument of `AbstractVector.uconvert`."""
+
+    consistent = "consistent"
+    """Convert to consistent units."""
 
 
 @dispatch

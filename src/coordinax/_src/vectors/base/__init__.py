@@ -11,7 +11,7 @@ __all__ = [
 
 from .attribute import VectorAttribute
 from .flags import AttrFilter
-from .utils import ToUnitsOptions
+from .register_unxt import ToUnitsOptions
 from .vector import AbstractVector
 
 # Register by import
