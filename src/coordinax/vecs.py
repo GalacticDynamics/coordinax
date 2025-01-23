@@ -17,7 +17,17 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src.vectors.base_acc import ACCELERATION_CLASSES, AbstractAcc
     from ._src.vectors.base_pos import POSITION_CLASSES, AbstractPos
     from ._src.vectors.base_vel import VELOCITY_CLASSES, AbstractVel
-    from ._src.vectors.d1 import *
+    from ._src.vectors.d1 import (
+        AbstractAcc1D,
+        AbstractPos1D,
+        AbstractVel1D,
+        CartesianAcc1D,
+        CartesianPos1D,
+        CartesianVel1D,
+        RadialAcc,
+        RadialPos,
+        RadialVel,
+    )
     from ._src.vectors.d2 import *
     from ._src.vectors.d3 import *
     from ._src.vectors.d4 import *
@@ -47,12 +57,24 @@ __all__ = [
     "AbstractPos",
     "AbstractVel",
     "AbstractAcc",
-    # Misc
+    # --- 1D ---
+    # Base
+    "AbstractPos1D",
+    "AbstractVel1D",
+    "AbstractAcc1D",
+    # Radial
+    "RadialPos",
+    "RadialVel",
+    "RadialAcc",
+    # Cartesian
+    "CartesianPos1D",
+    "CartesianVel1D",
+    "CartesianAcc1D",
+    # --- Misc ---
     "POSITION_CLASSES",
     "VELOCITY_CLASSES",
     "ACCELERATION_CLASSES",
 ]
-__all__ += vectors.d1.__all__
 __all__ += vectors.d2.__all__
 __all__ += vectors.d3.__all__
 __all__ += vectors.d4.__all__

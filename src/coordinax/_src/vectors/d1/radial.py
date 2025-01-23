@@ -47,6 +47,9 @@ class RadialPos(AbstractPos1D):
         return RadialVel
 
 
+#####################################################################
+
+
 @final
 class RadialVel(AbstractVel1D):
     """Radial velocity.
@@ -77,6 +80,9 @@ class RadialVel(AbstractVel1D):
     @classmethod
     def differential_cls(cls) -> type["RadialAcc"]:  # type: ignore[override]
         return RadialAcc
+
+
+#####################################################################
 
 
 @final
