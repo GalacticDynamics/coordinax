@@ -42,7 +42,34 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         TwoSpherePos,
         TwoSphereVel,
     )
-    from ._src.vectors.d3 import *
+    from ._src.vectors.d3 import (
+        AbstractAcc3D,
+        AbstractPos3D,
+        AbstractSphericalAcc,
+        AbstractSphericalPos,
+        AbstractSphericalVel,
+        AbstractVel3D,
+        CartesianAcc3D,
+        CartesianGeneric3D,
+        CartesianPos3D,
+        CartesianVel3D,
+        CylindricalAcc,
+        CylindricalPos,
+        CylindricalVel,
+        LonCosLatSphericalVel,
+        LonLatSphericalAcc,
+        LonLatSphericalPos,
+        LonLatSphericalVel,
+        MathSphericalAcc,
+        MathSphericalPos,
+        MathSphericalVel,
+        ProlateSpheroidalAcc,
+        ProlateSpheroidalPos,
+        ProlateSpheroidalVel,
+        SphericalAcc,
+        SphericalPos,
+        SphericalVel,
+    )
     from ._src.vectors.d4 import *
     from ._src.vectors.dn import *
     from ._src.vectors.exceptions import *
@@ -100,12 +127,47 @@ __all__ = [
     "CartesianPos2D",
     "CartesianVel2D",
     "CartesianAcc2D",
+    # --- 3D ---
+    # Base
+    "AbstractPos3D",
+    "AbstractVel3D",
+    "AbstractAcc3D",
+    # Cartesian
+    "CartesianPos3D",
+    "CartesianVel3D",
+    "CartesianAcc3D",
+    # Cylindrical
+    "CylindricalPos",
+    "CylindricalVel",
+    "CylindricalAcc",
+    # Base Spherical
+    "AbstractSphericalPos",
+    "AbstractSphericalVel",
+    "AbstractSphericalAcc",
+    # Spherical
+    "SphericalPos",
+    "SphericalVel",
+    "SphericalAcc",
+    # Math Spherical
+    "MathSphericalPos",
+    "MathSphericalVel",
+    "MathSphericalAcc",
+    # LonLat Spherical
+    "LonLatSphericalPos",
+    "LonLatSphericalVel",
+    "LonLatSphericalAcc",
+    "LonCosLatSphericalVel",
+    # Prolate Spheroidal
+    "ProlateSpheroidalPos",
+    "ProlateSpheroidalVel",
+    "ProlateSpheroidalAcc",
+    # Generic
+    "CartesianGeneric3D",
     # --- Misc ---
     "POSITION_CLASSES",
     "VELOCITY_CLASSES",
     "ACCELERATION_CLASSES",
 ]
-__all__ += vectors.d3.__all__
 __all__ += vectors.d4.__all__
 __all__ += vectors.dn.__all__
 __all__ += vectors.space.__all__
