@@ -8,12 +8,10 @@ from typing import TYPE_CHECKING, Any, cast, final
 from typing_extensions import override
 
 import equinox as eqx
-import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Shaped
-from plum import conversion_method, convert, dispatch
-from quax import register
+from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -30,10 +28,6 @@ from coordinax._src.vectors.base import AbstractVector, AttrFilter, VectorAttrib
 from coordinax._src.vectors.d3 import (
     AbstractPos3D,
     CartesianPos3D,
-    CylindricalPos,
-    LonLatSphericalPos,
-    MathSphericalPos,
-    SphericalPos,
 )
 
 if TYPE_CHECKING:
@@ -320,173 +314,3 @@ def spatial_component(x: FourVector, /) -> AbstractPos3D:
 
     """
     return x.q
-
-
-# ===============================================================
-# Plum API
-
-
-@conversion_method(type_from=FourVector, type_to=u.Quantity)  # type: ignore[arg-type]
-def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*batch 4"]:
-    """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
-
-    Convert the 4-vector to a Quantity array with the components as the last
-    dimension.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.vecs.FourVector(t=u.Quantity([1, 2], "yr"),
-    ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
-
-    >>> convert(w, u.Quantity).uconvert("pc")
-    Quantity['length'](Array([[0.3066014, 1. , 2. , 3. ],
-                              [0.6132028, 4. , 4.9999995, 6. ]],
-                             dtype=float32, weak_type=True),
-                       unit='pc')
-
-    """
-    cart: u.Quantity = convert(obj.q, u.Quantity)
-    return jnp.concat([obj.c * obj.t[..., None], cart], axis=-1)
-
-
-@conversion_method(type_from=FourVector, type_to=CartesianPos3D)  # type: ignore[arg-type]
-def convert_4vec_to_cart3d(obj: FourVector, /) -> CartesianPos3D:
-    """Convert a 4-vector to a Cartesian 3-vector.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> print(convert(w, cx.vecs.CartesianPos3D))
-    <CartesianPos3D (x[m], y[m], z[m])
-        [1 2 3]>
-
-    """
-    return convert(obj.q, CartesianPos3D)
-
-
-@conversion_method(type_from=FourVector, type_to=CylindricalPos)  # type: ignore[arg-type]
-def convert_4vec_to_cylindrical(obj: FourVector, /) -> CylindricalPos:
-    """Convert a 4-vector to a Cylindrical 3-vector.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> print(convert(w, cx.vecs.CylindricalPos))
-    <CylindricalPos (rho[m], phi[rad], z[m])
-        [2.236 1.107 3.   ]>
-
-    """
-    return convert(obj.q, CylindricalPos)
-
-
-@conversion_method(type_from=FourVector, type_to=SphericalPos)  # type: ignore[arg-type]
-def convert_4vec_to_spherical(obj: FourVector, /) -> SphericalPos:
-    """Convert a 4-vector to a spherical 3-vector.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> print(convert(w, cx.SphericalPos))
-    <SphericalPos (r[m], theta[rad], phi[rad])
-        [3.742 0.641 1.107]>
-
-    """
-    return convert(obj.q, SphericalPos)
-
-
-@conversion_method(type_from=FourVector, type_to=LonLatSphericalPos)  # type: ignore[arg-type]
-def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> LonLatSphericalPos:
-    """Convert a 4-vector to a lon-lat spherical 3-vector.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> print(convert(w, cx.vecs.LonLatSphericalPos))
-    <LonLatSphericalPos (lon[rad], lat[deg], distance[m])
-        [ 1.107 53.301  3.742]>
-
-    """
-    return convert(obj.q, LonLatSphericalPos)
-
-
-@conversion_method(type_from=FourVector, type_to=MathSphericalPos)  # type: ignore[arg-type]
-def convert_4vec_to_mathsph(obj: FourVector, /) -> MathSphericalPos:
-    """Convert a 4-vector to a math spherical 3-vector.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> print(convert(w, cx.vecs.MathSphericalPos))
-    <MathSphericalPos (r[m], theta[rad], phi[rad])
-        [3.742 1.107 0.641]>
-
-    """
-    return convert(obj.q, MathSphericalPos)
-
-
-# ===============================================================
-# Register Primitives
-
-
-@register(jax.lax.add_p)
-def _add_4v4v(self: FourVector, other: FourVector) -> FourVector:
-    """Add two 4-vectors.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
-    >>> w3 = w1 + w2
-    >>> print(w3)
-    <FourVector (t[s], q=(x[m], y[m], z[m]))
-        [3 5 7 9]>
-
-    """
-    return replace(self, t=self.t + other.t, q=cast(AbstractPos3D, self.q + other.q))
-
-
-@register(jax.lax.sub_p)
-def _sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
-    """Add two 4-vectors.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
-    >>> w3 = w1 - w2
-    >>> print(w3)
-    <FourVector (t[s], q=(x[m], y[m], z[m]))
-        [-1 -3 -3 -3]>
-
-    """
-    return replace(lhs, t=lhs.t - rhs.t, q=cast(AbstractPos3D, lhs.q - rhs.q))
