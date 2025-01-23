@@ -208,7 +208,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     # -------------------------------------------
 
-    @AbstractOperator.__call__.dispatch  # type: ignore[attr-defined, misc]
+    @AbstractOperator.__call__.dispatch  # type: ignore[misc]
     def __call__(
         self: "GalileanSpatialTranslation", q: AbstractPos, /, **__: Any
     ) -> AbstractPos:

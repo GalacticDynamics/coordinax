@@ -67,7 +67,7 @@ class AbstractCompositeOperator(AbstractOperator):
 
         return Pipe(tuple(op.inverse for op in reversed(self.operators)))
 
-    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
+    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[misc]
     def __call__(
         self: "AbstractCompositeOperator", *args: object, **kwargs: Any
     ) -> tuple[object, ...]:
@@ -114,7 +114,7 @@ class AbstractCompositeOperator(AbstractOperator):
 # Call dispatches
 
 
-@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[attr-defined, misc]
+@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[misc]
 def call(
     self: AbstractCompositeOperator, x: AbstractVector, /, **kwargs: Any
 ) -> AbstractVector:

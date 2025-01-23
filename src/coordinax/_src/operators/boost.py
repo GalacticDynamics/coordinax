@@ -106,7 +106,7 @@ class VelocityBoost(AbstractOperator):
 
     # -----------------------------------------------------
 
-    @AbstractOperator.__call__.dispatch  # type: ignore[attr-defined, misc]
+    @AbstractOperator.__call__.dispatch  # type: ignore[misc]
     def __call__(self: "VelocityBoost", p: AbstractVel, /) -> AbstractVel:
         """Apply the boost to the coordinates.
 
