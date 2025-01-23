@@ -75,13 +75,6 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src.vectors.exceptions import *
     from ._src.vectors.space import *
 
-    # Register vector transformations, functions, etc.
-    # isort: split
-    from ._src.vectors import funcs, transform
-
-    # Interoperability
-    # isort: split
-    from ._src.vectors import compat
 
 __all__ = [
     # API
@@ -174,4 +167,4 @@ __all__ += vectors.space.__all__
 __all__ += vectors.exceptions.__all__
 
 
-del vectors, install_import_hook, RUNTIME_TYPECHECKER, compat, funcs, transform
+del vectors, install_import_hook, RUNTIME_TYPECHECKER
