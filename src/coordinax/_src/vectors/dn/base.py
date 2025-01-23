@@ -40,8 +40,7 @@ class AbstractPosND(AbstractPos):
     @classmethod
     @abstractmethod
     def differential_cls(cls) -> "Never":  # type: ignore[override]
-        msg = "Not yet implemented"
-        raise NotImplementedError(msg)
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Array API
@@ -176,14 +175,6 @@ class AbstractVelND(AbstractVel):
 
         return CartesianVelND
 
-    @override
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def integral_cls(cls) -> type[AbstractPosND]:  # type: ignore[override]
-        """Get the integral class."""
-        raise NotImplementedError
-
     # ===============================================================
     # Array API
 
@@ -316,13 +307,6 @@ class AbstractAccND(AbstractAcc):
         from .cartesian import CartesianAccND
 
         return CartesianAccND
-
-    @override
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def integral_cls(cls) -> type[AbstractVelND]:  # type: ignore[override]
-        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Array API
