@@ -2,7 +2,6 @@
 
 __all__ = ["AbstractVector"]
 
-import math
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
@@ -40,6 +39,8 @@ class AbstractVector(
     IPythonReprMixin,
     AstropyRepresentationAPIMixin,
     arrayish.LaxBinaryOpsMixin[Any, Any],  # TODO: type annotation
+    arrayish.LaxUnaryMixin[Any],
+    arrayish.NumpyInvertMixin[Any],
     arrayish.LaxRoundMixin["AbstractVector"],
     arrayish.LaxLenMixin,
     ArrayValue,
@@ -73,20 +74,6 @@ class AbstractVector(
 
     """
 
-    @abstractmethod
-    def _dimensionality(self) -> int:
-        """Dimensionality of the vector.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> cx.vecs.CartesianPos2D._dimensionality()
-        2
-
-        """
-        raise NotImplementedError
-
     # ---------------------------------------------------------------
     # Constructors
 
@@ -103,6 +90,20 @@ class AbstractVector(
 
     # ===============================================================
     # Vector API
+
+    @abstractmethod
+    def _dimensionality(self) -> int:
+        """Dimensionality of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianPos2D._dimensionality()
+        2
+
+        """
+        raise NotImplementedError
 
     @dispatch
     def vconvert(
@@ -269,11 +270,10 @@ class AbstractVector(
         return jnp
 
     # ---------------------------------------------------------------
-    # attributes
+    # Attributes
 
-    # Missing attributes:
-    # - dtype
-    # - device
+    # `.dtype`, `.shape`, `.size` handled by Quax
+    # TODO: .device
 
     @property
     def mT(self) -> "Self":  # noqa: N802
@@ -332,39 +332,6 @@ class AbstractVector(
         return len(self.shape)
 
     @property
-    def size(self) -> int:
-        """Total number of elements in the vector.
-
-        Examples
-        --------
-        We assume the following imports:
-
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        We can get the size of a vector:
-
-        >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
-        >>> vec.size
-        1
-
-        >>> vec = cx.vecs.CartesianPos2D.from_([[1, 2], [3, 4]], "m")
-        >>> vec.size
-        2
-
-        ``size`` is calculated from the broadcasted shape. We can
-        see this by creating a 2D vector in which the components have
-        different shapes:
-
-        >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
-        ...                              y=u.Quantity(0, "m"))
-        >>> vec.size
-        4
-
-        """
-        return int(math.prod(self.shape))
-
-    @property
     def T(self) -> "Self":  # noqa: N802
         """Transpose the vector.
 
@@ -386,27 +353,6 @@ class AbstractVector(
 
         """
         return replace(self, **{k: v.T for k, v in field_items(AttrFilter, self)})
-
-    # ---------------------------------------------------------------
-    # arithmetic operators
-
-    def __pos__(self) -> "AbstractVector":
-        """Return the plus of the vector.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> vec = cx.CartesianPos3D.from_([1, -2, 3], "m")
-        >>> print(+vec)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [ 1 -2  3]>
-
-        """
-        return replace(self, **{k: +v for k, v in field_items(AttrFilter, self)})
-
-    @abstractmethod
-    def __neg__(self) -> "Self":
-        raise NotImplementedError
 
     # ---------------------------------------------------------------
     # comparison operators
@@ -528,6 +474,20 @@ class AbstractVector(
     # ---------------------------------------------------------------
     # methods
 
+    # def __bool__(self) -> NoReturn:
+    #     """Convert a zero-dimensional object to a Python bool object."""
+    #     raise NotImplementedError  # pragma: no cover
+
+    def __complex__(self) -> NoReturn:
+        """Convert a zero-dimensional object to a Python complex object."""
+        raise NotImplementedError  # pragma: no cover
+
+    # TODO: .__dlpack__, __dlpack_device__
+
+    def __float__(self) -> NoReturn:
+        """Convert a zero-dimensional object to a Python float object."""
+        raise NotImplementedError  # pragma: no cover
+
     def __getitem__(self, index: Any) -> "Self":
         """Return a new object with the given slice applied.
 
@@ -559,6 +519,14 @@ class AbstractVector(
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
         return replace(full, **{k: v[index] for k, v in field_items(AttrFilter, full)})
 
+    def __index__(self) -> NoReturn:
+        """Convert the vector to an integer index."""
+        raise NotImplementedError  # pragma: no cover
+
+    def __int__(self) -> NoReturn:
+        """Convert the vector to an integer."""
+        raise NotImplementedError  # pragma: no cover
+
     def __setitem__(self, k: Any, v: Any) -> NoReturn:
         """Fail to set an item in the vector.
 
@@ -578,25 +546,12 @@ class AbstractVector(
         msg = f"{type(self).__name__} is immutable."
         raise TypeError(msg)
 
-    def to_device(self, device: None | Device = None) -> "Self":
-        """Move the vector to a new device.
+    # ===============================================================
+    # JAX API
 
-        Examples
-        --------
-        >>> from jax import devices
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        We can move a vector to a new device:
-
-        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
-        >>> vec.to_device(devices()[0])
-        CartesianPos1D(x=Quantity[PhysicalType('length')](value=i32[2], unit=Unit("m")))
-
-        """
-        return replace(self, **{k: v.to_device(device) for k, v in field_items(self)})
-
-    # -------------------------------
+    # TODO: repeat(), round(), sort(), squeeze(), swapaxes(), transpose(),
+    # view() addressable_shards, at, committed, globarl_shards,
+    # is_fully_addressable, is_fully_replcated, nbytes, sharding
 
     @dispatch
     def astype(
@@ -650,8 +605,22 @@ class AbstractVector(
             },
         )
 
-    # ===============================================================
-    # JAX API
+    # -------------------------------
+
+    def copy(self) -> "Self":
+        """Return a copy of the vector.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> print(vec.copy())
+        <CartesianPos3D (x[m], y[m], z[m])
+            [1 2 3]>
+
+        """
+        return replace(self)  # TODO: should .copy be called on the components?
 
     def flatten(self) -> "Self":
         """Flatten the vector.
@@ -737,8 +706,31 @@ class AbstractVector(
             },
         )
 
+    def to_device(self, device: None | Device = None) -> "Self":
+        """Move the vector to a new device.
+
+        Examples
+        --------
+        >>> from jax import devices
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        We can move a vector to a new device:
+
+        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+        >>> vec.to_device(devices()[0])
+        CartesianPos1D(x=Quantity[PhysicalType('length')](value=i32[2], unit=Unit("m")))
+
+        """
+        changes = {
+            k: v.to_device(device)
+            for k, v in field_items(self)
+            if hasattr(v, "to_device")
+        }
+        return replace(self, **changes)
+
     # ===============================================================
-    # Collection
+    # Convenience methods
 
     def asdict(
         self, *, dict_factory: Callable[[Any], Mapping[str, AbstractQuantity]] = dict
