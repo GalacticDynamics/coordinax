@@ -103,7 +103,7 @@ class AbstractVector(
         2
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @dispatch
     def vconvert(
@@ -473,10 +473,6 @@ class AbstractVector(
 
     # ---------------------------------------------------------------
     # methods
-
-    # def __bool__(self) -> NoReturn:
-    #     """Convert a zero-dimensional object to a Python bool object."""
-    #     raise NotImplementedError  # pragma: no cover
 
     def __complex__(self) -> NoReturn:
         """Convert a zero-dimensional object to a Python complex object."""
