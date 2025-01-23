@@ -21,4 +21,7 @@ from .cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D
 from .radial import RadialAcc, RadialPos, RadialVel
 
 # isort: split
-from . import register_vconvert  # noqa: F401
+from . import (
+    register_primitives,  # noqa: F401
+    register_vconvert,  # noqa: F401
+)

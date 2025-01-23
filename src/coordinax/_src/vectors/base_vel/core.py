@@ -7,9 +7,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, cast
 
 import equinox as eqx
-import jax
 
-import quaxed.numpy as jnp
 import unxt as u
 
 from coordinax._src.utils import classproperty
@@ -18,8 +16,6 @@ from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.mixins import AvalMixin
 
 if TYPE_CHECKING:
-    from typing import Self
-
     import coordinax.vecs
 
 
@@ -53,8 +49,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         <class 'coordinax...CartesianVel3D'>
 
         """
-        # TODO: something nicer than this for getting the corresponding class
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classproperty
     @classmethod
@@ -73,7 +68,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         'SphericalPos'
 
         """
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classproperty
     @classmethod
@@ -92,31 +87,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         'SphericalAcc'
 
         """
-        raise NotImplementedError
-
-    # ===============================================================
-    # Python API
-
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> dr = cx.vecs.RadialVel.from_([1], "m/s")
-        >>> -dr
-        RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
-
-        >>> dp = cx.vecs.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
-        >>> neg_dp = -dp
-        >>> print(neg_dp)
-        <PolarVel (d_r[m / s], d_phi[mas / yr])
-            [-1 -1]>
-
-        """
-        return jax.tree.map(jnp.negative, self)
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Convenience methods

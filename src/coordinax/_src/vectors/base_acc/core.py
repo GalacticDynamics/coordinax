@@ -4,11 +4,10 @@ __all__ = ["AbstractAcc", "ACCELERATION_CLASSES"]
 
 from abc import abstractmethod
 from functools import partial
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import jax
 
-import quaxed.numpy as jnp
 import unxt as u
 
 from coordinax._src.utils import classproperty
@@ -16,9 +15,6 @@ from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.mixins import AvalMixin
-
-if TYPE_CHECKING:
-    from typing import Self
 
 
 class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
@@ -30,6 +26,9 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         The subclass is registered.
         """
         ACCELERATION_CLASSES_MUTABLE[cls] = None
+
+    # ===============================================================
+    # Vector API
 
     @classproperty
     @classmethod
@@ -67,31 +66,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         'SphericalVel'
 
         """
-        raise NotImplementedError
-
-    # ===============================================================
-    # Unary operations
-
-    def __neg__(self) -> "Self":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> d2r = cx.vecs.RadialAcc.from_([1], "m/s2")
-        >>> -d2r
-        RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
-
-        >>> d2p = cx.vecs.PolarAcc(u.Quantity(1, "m/s2"), u.Quantity(1, "mas/yr2"))
-        >>> negd2p = -d2p
-        >>> print(negd2p)
-        <PolarAcc (d2_r[m / s2], d2_phi[mas / yr2])
-            [-1 -1]>
-
-        """
-        return jax.tree.map(jnp.negative, self)
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Convenience methods

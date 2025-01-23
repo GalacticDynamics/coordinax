@@ -12,7 +12,7 @@ from .radial import RadialAcc, RadialPos, RadialVel
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
-###############################################################################
+# =============================================================================
 # 1D
 
 

@@ -18,7 +18,6 @@ from coordinax._src.vectors.checks import check_polar_range
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
-# TODO: should this be named TwoSphericalPos or S(phere)(ical)2Pos
 @final
 class TwoSpherePos(AbstractPos2D):
     r"""Pos on the 2-Sphere.
@@ -43,7 +42,7 @@ class TwoSpherePos(AbstractPos2D):
 
     See Also
     --------
-    `coordinax.SphericalPos`
+    `coordinax.vecs.SphericalPos`
         The counterpart in $R^3$, adding the polar distance coordinate $r$.
 
     Examples
@@ -109,7 +108,7 @@ class TwoSphereVel(AbstractVel2D):
 
     See Also
     --------
-    `coordinax.SphericalVel`
+    `coordinax.vecs.SphericalVel`
         The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
 
     Examples
@@ -182,7 +181,7 @@ class TwoSphereAcc(AbstractAcc2D):
 
     See Also
     --------
-    `coordinax.SphericalAcc`
+    `coordinax.vecs.SphericalAcc`
         The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
 
     Examples

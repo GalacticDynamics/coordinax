@@ -30,7 +30,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 @dispatch.abstract
 def normalize_vector(x: Any, /) -> Any:
     """Return the unit vector."""
-    raise NotImplementedError
+    raise NotImplementedError  # pragma: no cover
 
 
 @dispatch.abstract

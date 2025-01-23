@@ -3,7 +3,6 @@
 __all__ = ["AbstractAcc2D", "AbstractPos2D", "AbstractVel2D"]
 
 
-from abc import abstractmethod
 from typing_extensions import override
 
 from coordinax._src.utils import classproperty
@@ -37,13 +36,6 @@ class AbstractPos2D(AbstractPos):
 
         return CartesianPos2D
 
-    @override
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def differential_cls(cls) -> type["AbstractVel2D"]:  # type: ignore[override]
-        raise NotImplementedError
-
 
 #####################################################################
 
@@ -73,20 +65,6 @@ class AbstractVel2D(AbstractVel):
 
         return CartesianVel2D
 
-    @override
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def integral_cls(cls) -> type[AbstractPos2D]:  # type: ignore[override]
-        raise NotImplementedError
-
-    @override
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def differential_cls(cls) -> type[AbstractAcc]:  # type: ignore[override]
-        raise NotImplementedError
-
 
 #####################################################################
 
@@ -115,10 +93,3 @@ class AbstractAcc2D(AbstractAcc):
         from .cartesian import CartesianAcc2D
 
         return CartesianAcc2D
-
-    @override
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def integral_cls(cls) -> type[AbstractVel2D]:  # type: ignore[override]
-        raise NotImplementedError

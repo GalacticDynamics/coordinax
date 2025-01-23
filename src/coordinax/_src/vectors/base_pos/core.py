@@ -5,7 +5,7 @@ __all__ = ["AbstractPos", "POSITION_CLASSES"]
 from abc import abstractmethod
 from functools import partial
 from inspect import isabstract
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import equinox as eqx
 import jax
@@ -23,10 +23,15 @@ from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector, ToUnitsOptions
 from coordinax._src.vectors.mixins import AvalMixin
 
+if TYPE_CHECKING:
+    import coordinax.vecs
+
 _vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)->(N)"))
 
 
-class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVector):  # pylint: disable=abstract-method
+class AbstractPos(
+    AvalMixin, arrayish.NumpyNegMixin["coordinax.vecs.AbstractPos"], AbstractVector
+):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
@@ -46,7 +51,7 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
     @classproperty
     @classmethod
     @abstractmethod
-    def _cartesian_cls(cls) -> type["AbstractVector"]:
+    def _cartesian_cls(cls) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding Cartesian vector class.
 
         Examples
@@ -60,13 +65,12 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
         <class 'coordinax...CartesianPos3D'>
 
         """
-        # TODO: something nicer than this for getting the corresponding class
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: no cover
 
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> type["AbstractVel"]:
+    def differential_cls(cls) -> type["coordinax.vecs.AbstractVel"]:
         """Return the corresponding differential vector class.
 
         Examples
@@ -80,9 +84,7 @@ class AbstractPos(AvalMixin, arrayish.NumpyNegMixin["AbstractPos"], AbstractVect
         'SphericalVel'
 
         """
-        raise NotImplementedError
-
-        # TODO: move out of API
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Python API
