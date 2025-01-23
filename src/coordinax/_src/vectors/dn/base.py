@@ -20,7 +20,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
 if TYPE_CHECKING:
-    from typing import Never
+    import typing
 
 
 class AbstractPosND(AbstractPos):
@@ -39,7 +39,7 @@ class AbstractPosND(AbstractPos):
     @classproperty
     @classmethod
     @abstractmethod
-    def differential_cls(cls) -> "Never":  # type: ignore[override]
+    def differential_cls(cls) -> "typing.Never":  # type: ignore[override]
         raise NotImplementedError  # pragma: no cover
 
     # ===============================================================

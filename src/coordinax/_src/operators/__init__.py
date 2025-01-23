@@ -17,6 +17,8 @@ __all__ = [
     "GalileanTranslation",
     # Misc
     "VelocityBoost",
+    # Utils
+    "convert_to_pipe_operators",
 ]
 
 from . import galilean
@@ -31,7 +33,7 @@ from .galilean.rotation import GalileanRotation
 from .galilean.spatial_translation import GalileanSpatialTranslation
 from .galilean.translation import GalileanTranslation
 from .identity import Identity
-from .pipe import Pipe
+from .pipe import Pipe, convert_to_pipe_operators
 
 # isort: split
 from . import compat, register_simplify
