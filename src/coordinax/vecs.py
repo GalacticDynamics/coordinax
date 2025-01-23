@@ -28,7 +28,20 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         RadialPos,
         RadialVel,
     )
-    from ._src.vectors.d2 import *
+    from ._src.vectors.d2 import (
+        AbstractAcc2D,
+        AbstractPos2D,
+        AbstractVel2D,
+        CartesianAcc2D,
+        CartesianPos2D,
+        CartesianVel2D,
+        PolarAcc,
+        PolarPos,
+        PolarVel,
+        TwoSphereAcc,
+        TwoSpherePos,
+        TwoSphereVel,
+    )
     from ._src.vectors.d3 import *
     from ._src.vectors.d4 import *
     from ._src.vectors.dn import *
@@ -70,12 +83,28 @@ __all__ = [
     "CartesianPos1D",
     "CartesianVel1D",
     "CartesianAcc1D",
+    # --- 2D ---
+    # Base
+    "AbstractPos2D",
+    "AbstractVel2D",
+    "AbstractAcc2D",
+    # TwoSphere
+    "TwoSpherePos",
+    "TwoSphereVel",
+    "TwoSphereAcc",
+    # Polar
+    "PolarPos",
+    "PolarVel",
+    "PolarAcc",
+    # Cartesian
+    "CartesianPos2D",
+    "CartesianVel2D",
+    "CartesianAcc2D",
     # --- Misc ---
     "POSITION_CLASSES",
     "VELOCITY_CLASSES",
     "ACCELERATION_CLASSES",
 ]
-__all__ += vectors.d2.__all__
 __all__ += vectors.d3.__all__
 __all__ += vectors.d4.__all__
 __all__ += vectors.dn.__all__

@@ -70,7 +70,7 @@ def add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
 
 
 @register(jax.lax.add_p)
-def _add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
+def add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     """Add two Cartesian accelerations.
 
     Examples
