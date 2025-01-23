@@ -167,7 +167,7 @@ class GalileanRotation(AbstractGalileanOperator):
         return cls(rotation=R)
 
     @classmethod
-    @AbstractOperator.from_.dispatch  # type: ignore[attr-defined, misc]
+    @AbstractOperator.from_.dispatch  # type: ignore[misc]
     def from_(cls: "type[GalileanRotation]", obj: Rotation, /) -> "GalileanRotation":
         """Initialize from a `jax.scipy.spatial.transform.Rotation`.
 

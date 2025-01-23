@@ -18,7 +18,7 @@ from .api import simplify_op
 from coordinax._src.vectors.base_pos import AbstractPos
 
 if TYPE_CHECKING:
-    from coordinax.ops import Pipe
+    import coordinax.ops
 
 
 class AbstractOperator(eqx.Module):
@@ -41,93 +41,20 @@ class AbstractOperator(eqx.Module):
     # Constructors
 
     @classmethod
-    @dispatch(precedence=-1)
+    @dispatch.abstract
     def from_(
         cls: "type[AbstractOperator]", *args: object, **kwargs: object
     ) -> "AbstractOperator":
-        """Construct from a set of arguments.
-
-        This is a low-priority dispatch that will be called if no other
-        dispatch is found. It just tries to pass the arguments to the
-        constructor.
-
-        """
-        return cls(*args, **kwargs)
-
-    @classmethod
-    @dispatch
-    def from_(
-        cls: "type[AbstractOperator]", obj: Mapping[str, Any], /
-    ) -> "AbstractOperator":
-        """Construct from a mapping.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> pipe = cx.ops.Identity() | cx.ops.Identity()
-        >>> cx.ops.Pipe.from_({"operators": pipe})
-        Pipe((Identity(), Identity()))
-
-        """
-        return cls(**obj)
-
-    @classmethod
-    @dispatch
-    def from_(
-        cls: "type[AbstractOperator]",
-        x: ArrayLike | list[float | int],
-        unit: str,  # TODO: support unit object
-        /,
-    ) -> "AbstractOperator":
-        """Construct from a Quantity's value and unit.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
-        >>> print(op.translation)
-        <CartesianPos3D (x[km], y[km], z[km])
-            [1 1 1]>
-
-        >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
-        >>> print(op.translation)
-        <FourVector (t[s], q=(x[km], y[km], z[km]))
-            [1.001 1.    1.    1.   ]>
-
-        >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
-        >>> print(op.velocity)
-        <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
-            [1 1 1]>
-
-        """
-        return cls(u.Quantity(x, unit))
+        """Construct from a set of arguments."""
+        raise NotImplementedError  # pragma: no cover
 
     # ===========================================
     # Operator API
 
     @dispatch.abstract
-    def __call__(
-        self: "AbstractOperator",
-        x: AbstractPos,  # noqa: ARG002
-        /,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> AbstractPos:
+    def __call__(self: "AbstractOperator", *args: Any, **kwargs: Any) -> AbstractPos:
         """Apply the operator to the coordinates `x`."""
-        msg = "implement this method in the subclass"
-        raise TypeError(msg)
-
-    @dispatch.abstract
-    def __call__(
-        self: "AbstractOperator",
-        x: AbstractPos,  # noqa: ARG002
-        t: u.Quantity["time"],  # noqa: ARG002
-        /,
-        **kwargs: Any,  # noqa: ARG002
-    ) -> AbstractPos:
-        """Apply the operator to the coordinates `x` at a time `t`."""
-        msg = "implement this method in the subclass"
-        raise TypeError(msg)
+        raise NotImplementedError  # pragma: no cover
 
     # -------------------------------------------
 
@@ -216,7 +143,7 @@ class AbstractOperator(eqx.Module):
     # ===========================================
     # Operator Composition
 
-    def __or__(self, other: "AbstractOperator") -> "Pipe":
+    def __or__(self, other: "AbstractOperator") -> "coordinax.ops.Pipe":
         """Compose with another operator.
 
         Examples
@@ -241,7 +168,72 @@ class AbstractOperator(eqx.Module):
         return Pipe((self, other))
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[attr-defined, misc]
+# ============================================================
+# Constructors
+
+
+@AbstractOperator.from_.dispatch(precedence=-1)
+def from_(
+    cls: type[AbstractOperator], *args: object, **kwargs: object
+) -> AbstractOperator:
+    """Construct from a set of arguments.
+
+    This is a low-priority dispatch that will be called if no other
+    dispatch is found. It just tries to pass the arguments to the
+    constructor.
+
+    """
+    return cls(*args, **kwargs)
+
+
+@AbstractOperator.from_.dispatch
+def from_(cls: type[AbstractOperator], obj: Mapping[str, Any], /) -> AbstractOperator:
+    """Construct from a mapping.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> pipe = cx.ops.Identity() | cx.ops.Identity()
+    >>> cx.ops.Pipe.from_({"operators": pipe})
+    Pipe((Identity(), Identity()))
+
+    """
+    return cls(**obj)
+
+
+@AbstractOperator.from_.dispatch
+def from_(
+    cls: type[AbstractOperator],
+    x: ArrayLike | list[float | int],
+    unit: str,  # TODO: support unit object
+    /,
+) -> AbstractOperator:
+    """Construct from a Quantity's value and unit.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
+    >>> print(op.translation)
+    <CartesianPos3D (x[km], y[km], z[km])
+        [1 1 1]>
+
+    >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
+    >>> print(op.translation)
+    <FourVector (t[s], q=(x[km], y[km], z[km]))
+        [1.001 1.    1.    1.   ]>
+
+    >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
+    >>> print(op.velocity)
+    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+        [1 1 1]>
+
+    """
+    return cls(u.Quantity(x, unit))
+
+
+@AbstractOperator.from_.dispatch
 def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOperator:
     """Construct an operator from another operator.
 

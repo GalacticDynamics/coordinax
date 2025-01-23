@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 import functools
 
-from plum import dispatch
+from plum import Signature, dispatch
 
 from .base import AbstractOperator
 from .identity import Identity
@@ -97,8 +97,12 @@ def simplify_op(op1: AbstractOperator, op2: AbstractOperator, /) -> Pipe:
     return Pipe((op1, op2))
 
 
-@dispatch(precedence=1)
-def simplify_op(op1: AbstractOperator, op2: Identity) -> AbstractOperator:
+@dispatch.multi(
+    Signature(AbstractOperator, Identity, precedence=1),
+    Signature(Identity, AbstractOperator, precedence=1),
+    Signature(Identity, Identity, precedence=1),
+)
+def simplify_op(op1: AbstractOperator, op2: AbstractOperator) -> AbstractOperator:
     """Simplify an operator with the identity.
 
     Examples
@@ -109,24 +113,12 @@ def simplify_op(op1: AbstractOperator, op2: Identity) -> AbstractOperator:
     >>> cx.ops.simplify_op(op, cx.ops.Identity())
     GalileanSpatialTranslation(...)
 
-    """
-    return op1
-
-
-@dispatch
-def simplify_op(op1: Identity, op2: AbstractOperator) -> AbstractOperator:
-    """Simplify an operator with the identity.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
     >>> cx.ops.simplify_op(cx.ops.Identity(), op)
     GalileanSpatialTranslation(...)
 
     """
-    return op2
+    return op2 if isinstance(op1, Identity) else op1
 
 
 @dispatch

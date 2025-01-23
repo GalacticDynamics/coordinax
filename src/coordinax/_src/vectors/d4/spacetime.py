@@ -31,7 +31,7 @@ from coordinax._src.vectors.d3 import (
 )
 
 if TYPE_CHECKING:
-    from typing import Never
+    import typing
 
 ##############################################################################
 # Position
@@ -129,7 +129,7 @@ class FourVector(AbstractPos4D):
     @override
     @classproperty
     @classmethod
-    def differential_cls(cls) -> "Never":  # type: ignore[override]
+    def differential_cls(cls) -> "typing.Never":  # type: ignore[override]
         msg = "Not yet implemented"
         raise NotImplementedError(msg)
 

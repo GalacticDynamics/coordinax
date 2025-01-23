@@ -1,28 +1,21 @@
 """Sequence of Operators."""
 
-__all__ = ["Pipe"]
+__all__ = ["Pipe", "convert_to_pipe_operators"]
 
 import textwrap
 from dataclasses import replace
 from typing import Any, final
 
 import equinox as eqx
+from plum import dispatch
 
 from .base import AbstractOperator
 from .composite import AbstractCompositeOperator
 
 
-def _converter_seq(inp: Any) -> tuple[AbstractOperator, ...]:
-    if isinstance(inp, tuple):
-        return inp
-    if isinstance(inp, list):
-        return tuple(inp)
-    if isinstance(inp, Pipe):
-        return inp.operators
-    if isinstance(inp, AbstractOperator):
-        return (inp,)
-
-    raise TypeError
+@dispatch.abstract
+def convert_to_pipe_operators(inp: Any, /) -> tuple[AbstractOperator, ...]:
+    raise NotImplementedError  # pragma: no cover
 
 
 @final
@@ -97,7 +90,9 @@ class Pipe(AbstractCompositeOperator):
 
     """
 
-    operators: tuple[AbstractOperator, ...] = eqx.field(converter=_converter_seq)
+    operators: tuple[AbstractOperator, ...] = eqx.field(
+        converter=convert_to_pipe_operators
+    )
 
     # ---------------------------------------------------------------
 
@@ -133,3 +128,60 @@ class Pipe(AbstractCompositeOperator):
         if "\n" in ops:
             ops = "(\n" + textwrap.indent(ops[1:-1], "    ") + "\n)"
         return f"{self.__class__.__name__}({ops})"
+
+
+# ==============================================================
+# Constructor
+
+
+@dispatch
+def convert_to_pipe_operators(
+    inp: tuple[AbstractOperator, ...] | list[AbstractOperator],
+) -> tuple[AbstractOperator, ...]:
+    """Convert to a tuple of operators.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> op2 = cx.ops.Identity()
+    >>> convert_to_pipe_operators((op1, op2))
+    (GalileanRotation(rotation=i32[3,3]), Identity())
+
+    """
+    return tuple(inp)
+
+
+@dispatch
+def convert_to_pipe_operators(inp: AbstractOperator) -> tuple[AbstractOperator, ...]:
+    """Convert to a tuple of operators.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> convert_to_pipe_operators(op1)
+    (GalileanRotation(rotation=i32[3,3]),)
+
+    """
+    return (inp,)
+
+
+@dispatch
+def convert_to_pipe_operators(inp: Pipe) -> tuple[AbstractOperator, ...]:
+    """Convert to a tuple of operators.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op1 = cx.ops.Identity()
+    >>> op2 = cx.ops.Identity()
+    >>> pipe = cx.ops.Pipe((op1, op2))
+    >>> convert_to_pipe_operators(pipe)
+    (Identity(), Identity())
+
+    """
+    return inp.operators

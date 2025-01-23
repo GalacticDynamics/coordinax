@@ -394,7 +394,7 @@ def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
 # Transform operations
 
 
-@AbstractOperator.__call__.dispatch  # type: ignore[attr-defined, misc]
+@AbstractOperator.__call__.dispatch  # type: ignore[misc]
 def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
     """Dispatch to the operator's `__call__` method.
 
