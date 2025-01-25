@@ -122,7 +122,10 @@ class AbstractCoordinate(AbstractVector):
         ...                       cx.frames.ICRS())
         >>> print(coord)
         Coordinate(
-            data=Space({ 'length': CartesianPos3D( ... ) }),
+            data=Space({
+            'length': <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+                [1 2 3]>
+            }),
             frame=ICRS()
         )
 
