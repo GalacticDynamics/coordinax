@@ -13,9 +13,8 @@ from quax import quaxify, register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
-import unxt as u
 from dataclassish import field_items
-from unxt.quantity import AbstractQuantity
+from unxt.quantity import AbstractQuantity, UncheckedQuantity as FastQ
 
 from .core import AbstractPos
 from coordinax._src.vectors.api import vconvert
@@ -220,7 +219,7 @@ def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
 
 
 @register(jax.lax.mul_p)
-def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
+def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> FastQ:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -237,16 +236,16 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> u.Quantity:
     ...     z=u.Quantity([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
-    Quantity['area'](Array([[ 1, 16, 49],
+    UncheckedQuantity(Array([[ 1, 16, 49],
                             [ 4, 25, 64],
                             [ 9, 36, 81]], dtype=int32), unit='m2')
 
     >>> jnp.linalg.vector_norm(vec, axis=-1)
-    Quantity['length'](Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
+    UncheckedQuantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
-    """  # noqa: E501
-    lq: u.Quantity = convert(lhs.vconvert(lhs._cartesian_cls), u.Quantity)  # noqa: SLF001
-    rq: u.Quantity = convert(rhs.vconvert(rhs._cartesian_cls), u.Quantity)  # noqa: SLF001
+    """
+    lq: FastQ = convert(lhs.vconvert(lhs._cartesian_cls), FastQ)  # noqa: SLF001
+    rq: FastQ = convert(rhs.vconvert(rhs._cartesian_cls), FastQ)  # noqa: SLF001
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 

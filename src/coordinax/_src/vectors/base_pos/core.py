@@ -14,11 +14,10 @@ from plum import convert
 from quax import quaxify
 
 import quaxed.numpy as jnp
-import unxt as u
 from quaxed.experimental import arrayish
-from unxt.quantity import AbstractQuantity
+from unxt.quantity import AbstractQuantity, UncheckedQuantity as FastQ
 
-from coordinax._src.distances import BatchableLength
+from coordinax._src.typing import BatchableScalarQ
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector, ToUnitsOptions
 from coordinax._src.vectors.mixins import AvalMixin
@@ -114,7 +113,7 @@ class AbstractPos(
         """
         # TODO: figure out how to do this without converting back to arrays.
         cartvec = self.vconvert(self._cartesian_cls)
-        q: u.Quantity = convert(cartvec.uconvert(ToUnitsOptions.consistent), u.Quantity)
+        q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)
         newq = _vec_matmul(other, q)
         newvec = self._cartesian_cls.from_(newq)
         return newvec.vconvert(type(self))
@@ -127,7 +126,7 @@ class AbstractPos(
         >>> import coordinax as cx
         >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
         >>> abs(vec)
-        Quantity['length'](Array(5., dtype=float32), unit='m')
+        UncheckedQuantity(Array(5., dtype=float32), unit='m')
 
         """
         return self.norm()  # type: ignore[misc]
@@ -136,7 +135,7 @@ class AbstractPos(
     # Convenience methods
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> BatchableScalarQ:
         """Return the norm of the vector.
 
         Returns
@@ -151,11 +150,11 @@ class AbstractPos(
 
         >>> v = cx.vecs.CartesianPos1D.from_([-1], "km")
         >>> v.norm()
-        Quantity['length'](Array(1., dtype=float32), unit='km')
+        UncheckedQuantity(Array(1., dtype=float32), unit='km')
 
         >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "km")
         >>> v.norm()
-        Quantity['length'](Array(5., dtype=float32), unit='km')
+        UncheckedQuantity(Array(5., dtype=float32), unit='km')
 
         >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
         >>> v.norm()
@@ -163,7 +162,7 @@ class AbstractPos(
 
         >>> v = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> v.norm()
-        Quantity['length'](Array(3.7416575, dtype=float32), unit='m')
+        UncheckedQuantity(Array(3.7416575, dtype=float32), unit='m')
 
         """
         return jnp.linalg.vector_norm(self, axis=-1)  # type: ignore[arg-type]
