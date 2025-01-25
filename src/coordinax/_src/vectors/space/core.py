@@ -353,12 +353,32 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         """
         cls_name = self.__class__.__name__
-        data = "{\n" + indent(repr(self._data)[1:-1], "    ")
-        return cls_name + "(" + data + "\n})"
+        data = "{\n" + indent(repr(self._data)[1:-1], "    ") + "\n}"
+        return cls_name + "(" + data + ")"
 
     def __str__(self) -> str:
-        """Return the string representation."""
-        return repr(self)
+        """Return the string representation.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
+        >>> w = cx.Space(length=q, speed=p)
+        >>> print(w)
+        Space({
+            'length': <CartesianPos3D (x[m], y[m], z[m])
+                [1 2 3]>,
+            'speed': <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+                [4 5 6]>
+        })
+
+        """
+        cls_name = self.__class__.__name__
+        kv = (f"{k!r}: {v!s}" for k, v in self._data.items())
+        data = "{\n" + indent(",\n".join(kv), "   ") + "\n}"
+        return cls_name + "(" + data + ")"
 
     # ===============================================================
     # Collection
