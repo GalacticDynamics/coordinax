@@ -6,7 +6,6 @@ from typing import Any
 
 from plum import dispatch
 
-import quaxed.numpy as jnp
 import unxt as u
 
 from coordinax._src.vectors.d1 import CartesianPos1D, RadialPos
@@ -180,8 +179,7 @@ def vconvert(
         [ 1.  0. 14.]>
 
     """
-    x, theta, phi = jnp.broadcast_arrays(current.x, theta, phi)
-    return target.from_(r=x, theta=theta, phi=phi)
+    return target.from_(r=current.x, theta=theta, phi=phi)
 
 
 @dispatch
@@ -380,8 +378,7 @@ def vconvert(
         [ 1.  0. 14.]>
 
     """
-    r, theta, phi = jnp.broadcast_arrays(current.r, theta, phi)
-    return target.from_(r=r, theta=theta, phi=phi)
+    return target.from_(r=current.r, theta=theta, phi=phi)
 
 
 @dispatch
