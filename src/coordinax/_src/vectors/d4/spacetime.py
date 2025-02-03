@@ -166,10 +166,10 @@ class FourVector(AbstractPos4D):
 
         >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w._norm2()
-        Quantity['area'](Array(8.987552e+16, dtype=float32), unit='m2')
+        Quantity['area'](Array(8.987552e+10, dtype=float32), unit='km2')
 
         """
-        return -(self.q.norm() ** 2) + (self.c * self.t) ** 2  # type: ignore[misc,operator]
+        return (self.c * self.t) ** 2 - (self.q.norm() ** 2)  # type: ignore[misc,operator]
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -183,7 +183,7 @@ class FourVector(AbstractPos4D):
 
         >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.norm()
-        Quantity['length'](Array(2.9979248e+08+0.j, dtype=complex64), unit='m')
+        Quantity['length'](Array(299792.47+0.j, dtype=complex64), unit='km')
 
         """
         norm2 = jnp.asarray(self._norm2(), dtype=complex)  # type: ignore[misc]

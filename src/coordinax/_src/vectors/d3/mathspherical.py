@@ -187,7 +187,7 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
     ...                              phi=u.Quantity(0, "deg"))
 
     >>> jnp.linalg.vector_norm(v, axis=-1)
-    Quantity['length'](Array(3., dtype=float32), unit='km')
+    UncheckedQuantity(Array(3., dtype=float32), unit='km')
 
     >>> nv = jnp.multiply(2, v)
     >>> print(nv)
