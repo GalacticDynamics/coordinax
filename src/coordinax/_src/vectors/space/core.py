@@ -19,7 +19,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from xmmutablemap import ImmutableMap
 
-from .utils import DimensionLike, _can_broadcast_shapes, _get_dimension_name
+from .utils import DimensionLike, _get_dimension_name, can_broadcast_shapes
 from coordinax._src.typing import Unit
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vector
@@ -52,11 +52,29 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     All the vectors can be brought together into a space:
 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
-    >>> space
+    >>> print(space)
     Space({
-        'length': CartesianPos3D( ... ),
-        'speed': CartesianVel3D( ... ),
-        'acceleration': CartesianAcc3D( ... )
+       'length': <CartesianPos3D (x[km], y[km], z[km])
+           [1 2 3]>,
+       'speed': <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+           [4 5 6]>,
+       'acceleration': <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+           [7 8 9]>
+    })
+
+    The vectors can initialized from `unxt.Quantity` objects and can have
+    (brodcastable) batch shapes:
+
+    >>> w = cx.Space(
+    ...     length=u.Quantity([[8.5, 0, 0], [10, 0, 0]], "kpc"),
+    ...     speed=u.Quantity([0, 200, 0], "km/s"))
+    >>> print(w)
+    Space({
+       'length': <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+           [[ 8.5  0.   0. ]
+            [10.   0.   0. ]]>,
+       'speed': <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+           [  0 200   0]>
     })
 
     The vectors can then be accessed by key:
@@ -113,6 +131,8 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
            [4 5 6]>
     })
 
+
+
     """
 
     _data: dict[str, AbstractVector] = eqx.field(init=False)
@@ -139,7 +159,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         # Check that the shapes are broadcastable
         values = eqx.error_if(
             values,
-            not _can_broadcast_shapes(*map(jnp.shape, values)),
+            not can_broadcast_shapes([v.shape for v in values]),
             "vector shapes are not broadcastable.",
         )
 
