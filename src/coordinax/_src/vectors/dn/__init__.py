@@ -19,7 +19,8 @@ from .poincare import PoincarePolarVector
 
 # isort: split
 from . import (
+    register_plum,  # noqa: F401
     register_primitives,  # noqa: F401
     register_unxt,  # noqa: F401
-    register_vconvert,  # noqa: F401
+    register_vectorapi,  # noqa: F401
 )
