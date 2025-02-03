@@ -8,7 +8,7 @@ from typing import Any, cast
 import equinox as eqx
 from plum import dispatch
 
-from unxt.quantity import AbstractQuantity
+import unxt as u
 
 from .spacetime import FourVector
 from coordinax._src.vectors import api
@@ -16,7 +16,7 @@ from coordinax._src.vectors.d3 import AbstractPos3D
 
 
 @dispatch
-def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
+def vector(cls: type[FourVector], obj: u.AbstractQuantity, /) -> FourVector:
     """Construct a vector from a Quantity array.
 
     The ``Quantity[Any, (*#batch, 4), "..."]`` is expected to have the

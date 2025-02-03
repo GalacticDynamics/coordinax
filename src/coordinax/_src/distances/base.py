@@ -5,10 +5,10 @@ __all__: list[str] = []
 
 from plum import add_promotion_rule
 
-from unxt.quantity import AbstractQuantity, Quantity
+import unxt as u
 
 
-class AbstractDistance(AbstractQuantity):  # type: ignore[misc]
+class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
     """Distance quantities."""
 
     @property
@@ -94,4 +94,4 @@ class AbstractDistance(AbstractQuantity):  # type: ignore[misc]
 # distance degrades to a Quantity. This is necessary for many operations, e.g.
 # division of a distance by non-dimensionless quantity where the resulting units
 # are not those of a distance.
-add_promotion_rule(AbstractDistance, Quantity, Quantity)
+add_promotion_rule(AbstractDistance, u.Quantity, u.Quantity)

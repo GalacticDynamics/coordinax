@@ -12,7 +12,7 @@ from quax import register
 
 import unxt as u
 from quaxed import lax as qlax
-from unxt.quantity import UncheckedQuantity as FastQ
+from unxt.quantity import BareQuantity as FastQ
 
 from .base import AbstractAngle
 
@@ -34,7 +34,7 @@ def cbrt_p_a(x: AbstractAngle) -> FastQ:
 
     >>> q = Angle(8, "rad")
     >>> jnp.cbrt(q)
-    UncheckedQuantity(Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
+    BareQuantity(Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
 
     """
     return qlax.cbrt(convert(x, FastQ))
@@ -54,7 +54,7 @@ def cos_p(x: AbstractAngle) -> FastQ:
 
     >>> q = Angle(0, "deg")
     >>> jnp.cos(q)
-    UncheckedQuantity(Array(1., dtype=float32, weak_type=True), unit='')
+    BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
     return qlax.cos(convert(x, FastQ))
@@ -75,10 +75,10 @@ def dot_general_aa(lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any) -> 
     >>> q1 = Angle([1, 2, 3], "deg")
     >>> q2 = Angle([4, 5, 6], "deg")
     >>> jnp.vecdot(q1, q2)
-    UncheckedQuantity(Array(32, dtype=int32), unit='deg2')
+    BareQuantity(Array(32, dtype=int32), unit='deg2')
 
     >>> q1 @ q2
-    UncheckedQuantity(Array(32, dtype=int32), unit='deg2')
+    BareQuantity(Array(32, dtype=int32), unit='deg2')
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
@@ -98,7 +98,7 @@ def integer_pow_p_a(x: AbstractAngle, *, y: Any) -> FastQ:
     >>> q = Angle(2, "deg")
 
     >>> q ** 3
-    UncheckedQuantity(Array(8, dtype=int32, weak_type=True), unit='deg3')
+    BareQuantity(Array(8, dtype=int32, weak_type=True), unit='deg3')
 
     """
     return qlax.integer_pow(convert(x, FastQ), y)
@@ -119,7 +119,7 @@ def pow_p_a(x: AbstractAngle, y: ArrayLike) -> FastQ:
     >>> q1 = Angle(10.0, "deg")
     >>> y = 3.0
     >>> q1 ** y
-    UncheckedQuantity(Array(1000., dtype=float32, weak_type=True), unit='deg3')
+    BareQuantity(Array(1000., dtype=float32, weak_type=True), unit='deg3')
 
     """
     return qlax.pow(convert(x, FastQ), y)
@@ -139,7 +139,7 @@ def sin_p(x: AbstractAngle) -> FastQ:
 
     >>> q = Angle(90, "deg")
     >>> jnp.sin(q)
-    UncheckedQuantity(Array(1., dtype=float32, weak_type=True), unit='')
+    BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
     return qlax.sin(convert(x, FastQ))
@@ -159,7 +159,7 @@ def sqrt_p_a(x: AbstractAngle) -> FastQ:
 
     >>> q = Angle(9, "deg")
     >>> jnp.sqrt(q)
-    UncheckedQuantity(Array(3., dtype=float32, weak_type=True), unit='deg(1/2)')
+    BareQuantity(Array(3., dtype=float32, weak_type=True), unit='deg(1/2)')
 
     """
     return qlax.sqrt(convert(x, FastQ))
@@ -179,7 +179,7 @@ def tan_p_a(x: AbstractAngle) -> FastQ:
 
     >>> q = Angle(45, "deg")
     >>> jnp.tan(q)
-    UncheckedQuantity(Array(1., dtype=float32, weak_type=True), unit='')
+    BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
     return qlax.tan(convert(x, FastQ))

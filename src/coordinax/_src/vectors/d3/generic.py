@@ -9,7 +9,7 @@ from typing import TypeVar, final
 import equinox as eqx
 
 import quaxed.numpy as jnp
-from unxt.quantity import AbstractQuantity, Quantity
+import unxt as u
 
 import coordinax._src.typing as ct
 from coordinax._src.vectors.base import AbstractVector
@@ -34,11 +34,11 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 
     """
 
-    x: ct.BatchableScalarQ = eqx.field(converter=Quantity.from_)
+    x: ct.BatchableScalarQ = eqx.field(converter=u.Quantity.from_)
 
-    y: ct.BatchableScalarQ = eqx.field(converter=Quantity.from_)
+    y: ct.BatchableScalarQ = eqx.field(converter=u.Quantity.from_)
 
-    z: ct.BatchableScalarQ = eqx.field(converter=Quantity.from_)
+    z: ct.BatchableScalarQ = eqx.field(converter=u.Quantity.from_)
 
     @classmethod
     def _dimensionality(cls) -> int:
@@ -54,7 +54,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         """
         return 3
 
-    def norm(self) -> AbstractQuantity:
+    def norm(self) -> u.AbstractQuantity:
         """Compute the norm of the vector.
 
         Examples

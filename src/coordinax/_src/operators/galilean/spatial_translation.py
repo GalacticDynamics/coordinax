@@ -13,7 +13,6 @@ from plum import convert, dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import AbstractQuantity
 
 from .base import AbstractGalileanOperator
 from coordinax._src.operators.base import AbstractOperator
@@ -37,7 +36,7 @@ def converter(x: Any) -> AbstractPos:
         out = x.translation
     elif isinstance(x, AbstractPos):
         out = x
-    elif isinstance(x, AbstractQuantity):
+    elif isinstance(x, u.AbstractQuantity):
         shape: tuple[int, ...] = x.shape
         match shape:
             case (1,):
@@ -265,10 +264,10 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 def call(
     self: GalileanSpatialTranslation,
     q: AbstractPos,
-    t: u.Quantity["time"],
+    t: u.AbstractQuantity,
     /,
     **__: Any,
-) -> tuple[AbstractPos, u.Quantity["time"]]:
+) -> tuple[AbstractPos, u.AbstractQuantity]:
     """Apply the translation to the coordinates.
 
     Examples
@@ -386,11 +385,11 @@ def call(
 @AbstractOperator.__call__.dispatch
 def call(
     self: GalileanSpatialTranslation,
-    q: u.Quantity["length"],
+    q: u.AbstractQuantity,
     p: u.Quantity["speed"],
     /,
     **__: Any,
-) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+) -> tuple[u.AbstractQuantity, u.AbstractQuantity]:
     r"""Apply the translation to the coordinates.
 
     Examples

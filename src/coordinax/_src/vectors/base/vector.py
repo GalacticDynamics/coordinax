@@ -17,7 +17,6 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items, field_values, fields, replace
 from quaxed.experimental import arrayish
-from unxt.quantity import AbstractQuantity
 
 from .flags import AttrFilter
 from coordinax._src.typing import Unit
@@ -729,8 +728,8 @@ class AbstractVector(
     # Convenience methods
 
     def asdict(
-        self, *, dict_factory: Callable[[Any], Mapping[str, AbstractQuantity]] = dict
-    ) -> Mapping[str, AbstractQuantity]:
+        self, *, dict_factory: Callable[[Any], Mapping[str, u.AbstractQuantity]] = dict
+    ) -> Mapping[str, u.AbstractQuantity]:
         """Return the vector as a Mapping.
 
         Parameters
@@ -864,6 +863,27 @@ class AbstractVector(
 
     # ===============================================================
     # Python API
+
+    def __hash__(self) -> int:
+        """Return the hash of the vector.
+
+        This is the hash of the fields, however since jax arrays are
+         not hashable this will generally raise an exception.
+        Defining the `__hash__` method is required for the vector to
+        be considered immutable, e.g. by `dataclasses.dataclass`.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> try:
+        ...     hash(vec)
+        ... except TypeError as e:
+        ...     print(e)
+        unhashable type: 'jaxlib.xla_extension.ArrayImpl'
+
+        """
+        return hash(tuple(field_items(self)))
 
     def _str_repr_(self, *, precision: int) -> str:
         cls_name = type(self).__name__

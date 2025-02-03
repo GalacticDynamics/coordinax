@@ -8,7 +8,7 @@ from typing import cast
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt.quantity import AbstractQuantity
+import unxt as u
 
 from coordinax._src.vectors.d3 import CylindricalPos, CylindricalVel
 from coordinax._src.vectors.dn import PoincarePolarVector
@@ -53,7 +53,7 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
     })
 
     """
-    phi = cast(AbstractQuantity, jnp.atan2(w.dt_pp_phi, w.pp_phi))
+    phi = cast(u.AbstractQuantity, jnp.atan2(w.dt_pp_phi, w.pp_phi))
     dt_phi = (w.pp_phi**2 + w.dt_pp_phi**2) / 2 / w.rho**2  # TODO: note the abs
 
     return Space(

@@ -2,7 +2,8 @@
 
 __all__: list[str] = []
 
-from unxt.quantity import AbstractQuantity
+
+import unxt as u
 
 from coordinax._src.angles import Angle
 
@@ -10,9 +11,9 @@ _2pid = Angle(360, "deg")
 
 
 def converter_azimuth_to_range(
-    phi: AbstractQuantity,
+    phi: u.AbstractQuantity,
     /,
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Wrap a polar angle to the range [0, 2pi).
 
     It's safe to do this conversion since this is a phase cut, unlike `theta`,

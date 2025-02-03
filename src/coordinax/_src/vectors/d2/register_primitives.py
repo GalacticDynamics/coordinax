@@ -11,8 +11,8 @@ from quax import register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import replace
-from unxt.quantity import AbstractQuantity
 
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarPos
@@ -101,7 +101,7 @@ def add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
 @register(jax.lax.dot_general_p)
 def dot_general_cart2d(
     lhs: CartesianPos2D, rhs: CartesianPos2D, /, **kwargs: Any
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Dot product of two vectors.
 
     Examples
@@ -217,7 +217,7 @@ def mul_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
         [ 1 90]>
 
     >>> quaxed.numpy.linalg.vector_norm(v, axis=-1)
-    UncheckedQuantity(Array(1., dtype=float32), unit='m')
+    BareQuantity(Array(1., dtype=float32), unit='m')
 
     >>> nv = quaxed.lax.mul(2, v)
     >>> print(nv)

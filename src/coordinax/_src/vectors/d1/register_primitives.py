@@ -11,8 +11,8 @@ from quax import register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import replace
-from unxt.quantity import AbstractQuantity
 
 from .cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -104,7 +104,7 @@ def add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
 @register(jax.lax.dot_general_p)
 def dot_general_cart1d(
     lhs: CartesianPos1D, rhs: CartesianPos1D, /, **kwargs: Any
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Dot product of two vectors.
 
     Examples

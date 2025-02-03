@@ -11,31 +11,31 @@ from astropy.units import (
 )
 from jaxtyping import Float, Int, Shaped
 
-from unxt.quantity import AbstractQuantity, Quantity
+import unxt as u
 
 Unit: TypeAlias = AstropyUnit | AstropyUnitBase | AstropyCompositeUnit
 
-BatchableScalarQ = Shaped[AbstractQuantity, "*#batch"]
+BatchableScalarQ = Shaped[u.AbstractQuantity, "*#batch"]
 
-FloatScalarQ = Float[AbstractQuantity, ""]
+FloatScalarQ = Float[u.AbstractQuantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]
 BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]
 
-ScalarTime = Float[Quantity["time"], ""] | Int[Quantity["time"], ""]
+ScalarTime = Float[u.Quantity["time"], ""] | Int[u.Quantity["time"], ""]
 
-BatchableTime = Shaped[Quantity["time"], "*#batch"]
+BatchableTime = Shaped[u.Quantity["time"], "*#batch"]
 
-BatchableArea = Shaped[Quantity["area"], "*#batch"]
-BatchableDiffusivity = Shaped[Quantity["diffusivity"], "*#batch"]
-BatchableSpecificEnergy = Shaped[Quantity["specific energy"], "*#batch"]
+BatchableArea = Shaped[u.Quantity["area"], "*#batch"]
+BatchableDiffusivity = Shaped[u.Quantity["diffusivity"], "*#batch"]
+BatchableSpecificEnergy = Shaped[u.Quantity["specific energy"], "*#batch"]
 
-BatchableLength = Shaped[Quantity["length"], "*#batch"]
+BatchableLength = Shaped[u.Quantity["length"], "*#batch"]
 
-BatchableSpeed = Shaped[Quantity["speed"], "*#batch"]
-BatchableAngularSpeed = Shaped[Quantity["angular speed"], "*#batch"]
+BatchableSpeed = Shaped[u.Quantity["speed"], "*#batch"]
+BatchableAngularSpeed = Shaped[u.Quantity["angular speed"], "*#batch"]
 
-BatchableAcc = Shaped[Quantity["acceleration"], "*#batch"]
-BatchableAngularAcc = Shaped[Quantity["angular acceleration"], "*#batch"]
+BatchableAcc = Shaped[u.Quantity["acceleration"], "*#batch"]
+BatchableAngularAcc = Shaped[u.Quantity["angular acceleration"], "*#batch"]
 
 
 TimeBatchOrScalar = ScalarTime | BatchableTime

@@ -10,7 +10,7 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import unxt as u
-from unxt.quantity import AbstractQuantity, UncheckedQuantity as FastQ
+from unxt.quantity import BareQuantity
 
 from .base import AbstractDistance
 
@@ -22,7 +22,7 @@ radian = u.unit("radian")
 
 # TODO: can this be done with promotion/conversion instead?
 @register(lax.cbrt_p)
-def _cbrt_p_d(x: AbstractDistance) -> FastQ:
+def _cbrt_p_d(x: AbstractDistance) -> BareQuantity:
     """Cube root of a distance.
 
     Examples
@@ -31,10 +31,10 @@ def _cbrt_p_d(x: AbstractDistance) -> FastQ:
     >>> from coordinax.distance import Distance
     >>> d = Distance(8, "m")
     >>> jnp.cbrt(d)
-     UncheckedQuantity(Array(2., dtype=float32, weak_type=True), unit='m(1/3)')
+     BareQuantity(Array(2., dtype=float32, weak_type=True), unit='m(1/3)')
 
     """
-    return FastQ(lax.cbrt(x.value), unit=x.unit ** (1 / 3))
+    return BareQuantity(lax.cbrt(x.value), unit=x.unit ** (1 / 3))
 
 
 # ==============================================================================
@@ -43,7 +43,7 @@ def _cbrt_p_d(x: AbstractDistance) -> FastQ:
 @register(lax.dot_general_p)
 def _dot_general_dd(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
-) -> FastQ:
+) -> BareQuantity:
     """Dot product of two Distances.
 
     Examples
@@ -57,9 +57,9 @@ def _dot_general_dd(
     >>> q1 = Distance([1, 2, 3], "m")
     >>> q2 = Distance([4, 5, 6], "m")
     >>> jnp.vecdot(q1, q2)
-    UncheckedQuantity(Array(32, dtype=int32), unit='m2')
+    BareQuantity(Array(32, dtype=int32), unit='m2')
     >>> q1 @ q2
-    UncheckedQuantity(Array(32, dtype=int32), unit='m2')
+    BareQuantity(Array(32, dtype=int32), unit='m2')
 
     This rule is also used by `jnp.matmul` for quantities.
 
@@ -75,14 +75,14 @@ def _dot_general_dd(
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
-    return FastQ(value, unit=lhs.unit * rhs.unit)
+    return BareQuantity(value, unit=lhs.unit * rhs.unit)
 
 
 # ==============================================================================
 
 
 @register(lax.integer_pow_p)
-def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> FastQ:
+def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> BareQuantity:
     """Integer power of a Distance.
 
     Examples
@@ -90,17 +90,17 @@ def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> FastQ:
     >>> from coordinax.distance import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
-     UncheckedQuantity(Array(8, dtype=int32, weak_type=True), unit='m3')
+     BareQuantity(Array(8, dtype=int32, weak_type=True), unit='m3')
 
     """
-    return FastQ(value=lax.integer_pow(x.value, y), unit=x.unit**y)
+    return BareQuantity(value=lax.integer_pow(x.value, y), unit=x.unit**y)
 
 
 # ==============================================================================
 
 
 @register(lax.pow_p)
-def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> FastQ:
+def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> BareQuantity:
     """Power of a Distance by redispatching to Quantity.
 
     Examples
@@ -111,17 +111,17 @@ def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> FastQ:
     >>> q1 = Distance(10.0, "m")
     >>> y = 3.0
     >>> q1 ** y
-    UncheckedQuantity(Array(1000., dtype=float32, weak_type=True), unit='m3')
+    BareQuantity(Array(1000., dtype=float32, weak_type=True), unit='m3')
 
     """
-    return FastQ(x.value, x.unit) ** y  # TODO: better call to power
+    return BareQuantity(x.value, x.unit) ** y  # TODO: better call to power
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def _sqrt_p_d(x: AbstractDistance) -> FastQ:
+def _sqrt_p_d(x: AbstractDistance) -> BareQuantity:
     """Square root of a quantity.
 
     Examples
@@ -131,26 +131,26 @@ def _sqrt_p_d(x: AbstractDistance) -> FastQ:
     >>> from coordinax.distance import Distance
     >>> q = Distance(9, "m")
     >>> jnp.sqrt(q)
-    UncheckedQuantity(Array(3., dtype=float32, weak_type=True), unit='m(1/2)')
+    BareQuantity(Array(3., dtype=float32, weak_type=True), unit='m(1/2)')
 
     >>> from coordinax.distance import Parallax
     >>> q = Parallax(9, "mas")
     >>> jnp.sqrt(q)
-    UncheckedQuantity(Array(3., dtype=float32, weak_type=True), unit='mas(1/2)')
+    BareQuantity(Array(3., dtype=float32, weak_type=True), unit='mas(1/2)')
 
     """
     # Promote to something that supports sqrt units.
-    return FastQ(lax.sqrt(x.value), unit=x.unit ** (1 / 2))
+    return BareQuantity(lax.sqrt(x.value), unit=x.unit ** (1 / 2))
 
 
 # ==============================================================================
 
 
-def _to_value_rad_or_one(q: AbstractQuantity) -> ArrayLike:
+def _to_value_rad_or_one(q: u.AbstractQuantity) -> ArrayLike:
     return u.ustrip(radian if u.is_unit_convertible(q.unit, radian) else one, q)
 
 
 # TODO: figure out a promotion alternative that works in general
 @register(lax.tan_p)
-def _tan_p_d(x: AbstractDistance) -> FastQ:
-    return FastQ(lax.tan(_to_value_rad_or_one(x)), unit=one)
+def _tan_p_d(x: AbstractDistance) -> BareQuantity:
+    return BareQuantity(lax.tan(_to_value_rad_or_one(x)), unit=one)

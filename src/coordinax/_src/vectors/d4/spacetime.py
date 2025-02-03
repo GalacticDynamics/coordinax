@@ -17,7 +17,6 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_values
 from dataclassish.converters import Unless
-from unxt.quantity import AbstractQuantity
 
 import coordinax._src.typing as ct
 from .base import AbstractPos4D
@@ -196,7 +195,7 @@ class FourVector(AbstractPos4D):
                 tuple(
                     u.ustrip(v)
                     for v in cast(
-                        list[AbstractQuantity],
+                        list[u.AbstractQuantity],
                         jnp.broadcast_arrays(self.t, *field_values(AttrFilter, self.q)),
                     )
                 ),
