@@ -7,7 +7,6 @@ __all__ = [
 from typing import TypeVar, final
 
 import equinox as eqx
-import jax
 
 import quaxed.numpy as jnp
 from unxt.quantity import AbstractQuantity, Quantity
@@ -67,20 +66,3 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 
         """
         return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)
-
-    # -----------------------------------------------------
-    # Unary operations
-
-    def __neg__(self) -> "CartesianGeneric3D":
-        """Negate the `coordinax.CartesianGeneric3D`.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
-        >>> print(-q)
-        <CartesianGeneric3D (x[km], y[km], z[km])
-        [-1 -2 -3]>
-
-        """
-        return jax.tree.map(jnp.negative, self)

@@ -4,7 +4,7 @@
 __all__ = ["GalileanTranslation"]
 
 
-from typing import Any, Literal, final
+from typing import Any, Literal, cast, final
 
 import equinox as eqx
 from plum import convert, dispatch
@@ -138,7 +138,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         Quantity['length'](Array(-1, dtype=int32), unit='km')
 
         """
-        return GalileanTranslation(-self.translation)
+        return GalileanTranslation(cast(FourVector, -self.translation))
 
     # -------------------------------------------
 

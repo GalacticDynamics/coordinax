@@ -60,7 +60,7 @@ from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpher
 
 # isort: split
 from . import (
-    constructor,  # noqa: F401
     register_convert,  # noqa: F401
-    register_vconvert,  # noqa: F401
+    register_primitives,  # noqa: F401
+    register_vectorapi,  # noqa: F401
 )

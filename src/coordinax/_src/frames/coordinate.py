@@ -15,9 +15,8 @@ from dataclassish.converters import Unless
 
 from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
-from coordinax._src.operators import AbstractOperator, Identity
+from coordinax._src.operators import Identity
 from coordinax._src.vectors.base import AbstractVector
-from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.space.core import Space
 
 
@@ -133,23 +132,6 @@ class AbstractCoordinate(AbstractVector):
         # NOTE: this is necessary because equinox __repr__ isn't great
         str_fs = ",\n".join(indent(f"{k}={v}", "    ") for k, v in field_items(self))
         return f"{type(self).__name__}(\n{str_fs}\n)"
-
-
-@dispatch
-def frame_of(obj: AbstractCoordinate) -> AbstractReferenceFrame:
-    """Return the frame of the coordinate.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-    ...                       cx.frames.ICRS())
-    >>> cx.frames.frame_of(coord)
-    ICRS()
-
-    """
-    return obj.frame
 
 
 ##############################################################################
@@ -292,133 +274,3 @@ class Coordinate(AbstractCoordinate):
 
         """
         return self.data[index]
-
-    # ===============================================================
-    # Python API
-
-    def __neg__(self) -> "Coordinate":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-        >>> coord = cx.Coordinate(data, cx.frames.ICRS())
-
-        >>> (-coord).data["length"].x
-        Quantity['length'](Array(-1, dtype=int32), unit='kpc')
-
-        """
-        return replace(self, data=-self.data)
-
-
-# ===============================================================
-# Constructors
-
-
-@dispatch
-def vector(
-    cls: type[Coordinate],
-    data: Space | AbstractPos,
-    frame: AbstractReferenceFrame,
-    /,
-) -> Coordinate:
-    """Construct a coordinate from data and a frame.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> cx.Coordinate.from_(data, cx.frames.ICRS())
-    Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
-    )
-
-    """
-    return cls(data=data, frame=frame)
-
-
-@dispatch
-def vector(
-    cls: type[Coordinate],
-    data: Space | AbstractPos,
-    base_frame: AbstractReferenceFrame,
-    ops: AbstractOperator,
-    /,
-) -> Coordinate:
-    """Construct a coordinate from data and a frame.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> cx.Coordinate.from_(data, cx.frames.ICRS(), cx.ops.Identity())
-    Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ) }),
-        frame=TransformedReferenceFrame(base_frame=ICRS(), xop=Identity())
-    )
-
-    """
-    frame = TransformedReferenceFrame(base_frame, ops)
-    return cls(data=data, frame=frame)
-
-
-# ===============================================================
-# Vector conversion
-
-
-@dispatch
-def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
-    """Transform the vector representation of a coordinate.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> frame = cx.frames.ICRS()
-    >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> w = cx.Coordinate(data, frame)
-
-    >>> cx.vconvert(cx.SphericalPos, w)
-    Coordinate(
-        data=Space({ 'length': SphericalPos( ... ) }),
-        frame=ICRS()
-    )
-
-    """
-    return replace(w, data=w.data.vconvert(target))
-
-
-# ===============================================================
-# Transform operations
-
-
-@AbstractOperator.__call__.dispatch  # type: ignore[misc]
-def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
-    """Dispatch to the operator's `__call__` method.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-    ...                       cx.frames.ICRS())
-    >>> coord
-    Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
-    )
-
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([-1, -1, -1], "kpc")
-
-    >>> new_coord = op(coord)
-    >>> print(new_coord.data["length"])
-    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
-        [0 1 2]>
-
-    """
-    return replace(x, data=self(x.data))
