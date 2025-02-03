@@ -7,8 +7,8 @@ from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
+import jax
 import numpy as np
-from jax import Device
 from jaxtyping import DTypeLike
 from plum import dispatch
 from quax import ArrayValue
@@ -702,7 +702,7 @@ class AbstractVector(
             },
         )
 
-    def to_device(self, device: None | Device = None) -> "Self":
+    def to_device(self, device: None | jax.Device = None) -> "Self":
         """Move the vector to a new device.
 
         Examples
@@ -817,7 +817,7 @@ class AbstractVector(
         return MappingProxyType({k: v.dtype for k, v in field_items(AttrFilter, self)})
 
     @property
-    def devices(self) -> MappingProxyType[str, Device]:
+    def devices(self) -> MappingProxyType[str, jax.Device]:
         """Get the devices of the vector's components.
 
         Examples

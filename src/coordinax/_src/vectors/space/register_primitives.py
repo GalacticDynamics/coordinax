@@ -3,10 +3,27 @@
 __all__: list[str] = []
 
 
+from typing import Any
+
 import jax
 from quax import register
 
+import quaxed.numpy as jnp
+from dataclassish import replace
+
 from .core import Space
+
+
+@register(jax.lax.broadcast_in_dim_p)
+def broadcast_in_dim_p(obj: Space, *, shape: tuple[int, ...], **kwargs: Any) -> Space:
+    """Broadcast in a dimension."""
+    batch = shape[:-1]
+    return replace(
+        obj,
+        **{
+            k: jnp.broadcast_to(v, (*batch, v.aval().shape[-1])) for k, v in obj.items()
+        },
+    )
 
 
 @register(jax.lax.neg_p)

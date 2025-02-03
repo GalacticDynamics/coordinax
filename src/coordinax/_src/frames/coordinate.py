@@ -4,10 +4,11 @@ __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
 from textwrap import indent
-from typing import Any, ClassVar, NoReturn, cast
+from typing import Any, ClassVar, cast
 from typing_extensions import override
 
 import equinox as eqx
+import jax
 from plum import dispatch
 
 from dataclassish import field_items, replace
@@ -76,10 +77,9 @@ class AbstractCoordinate(AbstractVector):
     # ===============================================================
     # Quax API
 
-    # TODO: is there a way to make this work?
-    def aval(self) -> NoReturn:
+    def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array."""
-        raise NotImplementedError  # pragma: no cover
+        return self.data.aval()
 
     # ===============================================================
     # Plum API
