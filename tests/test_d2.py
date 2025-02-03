@@ -221,8 +221,7 @@ class TestCartesianVel2D(AbstractVel2DTest):
     def difntl(self) -> cx.vecs.CartesianVel2D:
         """Return a differential."""
         return cx.vecs.CartesianVel2D(
-            d_x=u.Quantity([1, 2, 3, 4], "km/s"),
-            d_y=u.Quantity([5, 6, 7, 8], "km/s"),
+            x=u.Quantity([1, 2, 3, 4], "km/s"), y=u.Quantity([5, 6, 7, 8], "km/s")
         )
 
     @pytest.fixture(scope="class")
@@ -242,7 +241,7 @@ class TestCartesianVel2D(AbstractVel2DTest):
         cart1d = difntl.vconvert(cx.vecs.CartesianVel1D, vector)
 
         assert isinstance(cart1d, cx.vecs.CartesianVel1D)
-        assert jnp.array_equal(cart1d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cart1d.x, u.Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -251,7 +250,7 @@ class TestCartesianVel2D(AbstractVel2DTest):
         radial = difntl.vconvert(cx.vecs.RadialVel, vector)
 
         assert isinstance(radial, cx.vecs.RadialVel)
-        assert jnp.array_equal(radial.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(radial.r, u.Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_cartesian2d(self, difntl, vector):
@@ -270,9 +269,9 @@ class TestCartesianVel2D(AbstractVel2DTest):
         polar = difntl.vconvert(cx.vecs.PolarVel, vector)
 
         assert isinstance(polar, cx.vecs.PolarVel)
-        assert jnp.array_equal(polar.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(polar.r, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(
-            polar.d_phi,
+            polar.phi,
             u.Quantity([5.0, 3.0, 2.3333335, 1.9999999], "km rad / (kpc s)"),
         )
 
@@ -281,13 +280,13 @@ class TestCartesianVel2D(AbstractVel2DTest):
     def test_cartesian2d_to_cartesian3d(self, difntl, vector):
         """Test ``difntl.vconvert(CartesianVel3D, vector)``."""
         cart3d = difntl.vconvert(
-            cx.CartesianVel3D, vector, d_z=u.Quantity([9, 10, 11, 12], "m/s")
+            cx.CartesianVel3D, vector, z=u.Quantity([9, 10, 11, 12], "m/s")
         )
 
         assert isinstance(cart3d, cx.CartesianVel3D)
-        assert jnp.array_equal(cart3d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
-        assert jnp.array_equal(cart3d.d_y, u.Quantity([5, 6, 7, 8], "km/s"))
-        assert jnp.array_equal(cart3d.d_z, u.Quantity([9, 10, 11, 12], "m/s"))
+        assert jnp.array_equal(cart3d.x, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cart3d.y, u.Quantity([5, 6, 7, 8], "km/s"))
+        assert jnp.array_equal(cart3d.z, u.Quantity([9, 10, 11, 12], "m/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -298,22 +297,22 @@ class TestCartesianVel2D(AbstractVel2DTest):
         )
 
         assert isinstance(spherical, cx.SphericalVel)
-        assert jnp.array_equal(spherical.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(spherical.r, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(spherical.d_theta, u.Quantity([4, 5, 6, 7], "rad"))
-        assert jnp.array_equal(spherical.d_phi, u.Quantity([5, 6, 7, 8], "km/s"))
+        assert jnp.array_equal(spherical.phi, u.Quantity([5, 6, 7, 8], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_cartesian2d_to_cylindrical(self, difntl, vector):
         """Test ``difntl.vconvert(CylindricalVel, vector)``."""
         cylindrical = difntl.vconvert(
-            cx.vecs.CylindricalVel, vector, d_z=u.Quantity([9, 10, 11, 12], "m/s")
+            cx.vecs.CylindricalVel, vector, z=u.Quantity([9, 10, 11, 12], "m/s")
         )
 
         assert isinstance(cylindrical, cx.vecs.CylindricalVel)
-        assert jnp.array_equal(cylindrical.d_rho, u.Quantity([1, 2, 3, 4], "km/s"))
-        assert jnp.array_equal(cylindrical.d_phi, u.Quantity([5, 6, 7, 8], "km/s"))
-        assert jnp.array_equal(cylindrical.d_z, u.Quantity([9, 10, 11, 12], "m/s"))
+        assert jnp.array_equal(cylindrical.rho, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cylindrical.phi, u.Quantity([5, 6, 7, 8], "km/s"))
+        assert jnp.array_equal(cylindrical.z, u.Quantity([9, 10, 11, 12], "m/s"))
 
 
 class TestPolarVel(AbstractVel2DTest):
@@ -323,8 +322,8 @@ class TestPolarVel(AbstractVel2DTest):
     def difntl(self) -> cx.vecs.PolarVel:
         """Return a differential."""
         return cx.vecs.PolarVel(
-            d_r=u.Quantity([1, 2, 3, 4], "km/s"),
-            d_phi=u.Quantity([5, 6, 7, 8], "mas/yr"),
+            r=u.Quantity([1, 2, 3, 4], "km/s"),
+            phi=u.Quantity([5, 6, 7, 8], "mas/yr"),
         )
 
     @pytest.fixture(scope="class")
@@ -344,7 +343,7 @@ class TestPolarVel(AbstractVel2DTest):
         cart1d = difntl.vconvert(cx.vecs.CartesianVel1D, vector)
 
         assert isinstance(cart1d, cx.vecs.CartesianVel1D)
-        assert jnp.array_equal(cart1d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cart1d.x, u.Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -353,7 +352,7 @@ class TestPolarVel(AbstractVel2DTest):
         radial = difntl.vconvert(cx.vecs.RadialVel, vector)
 
         assert isinstance(radial, cx.vecs.RadialVel)
-        assert jnp.array_equal(radial.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(radial.r, u.Quantity([1, 2, 3, 4], "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_cartesian2d(self, difntl, vector):
@@ -362,10 +361,10 @@ class TestPolarVel(AbstractVel2DTest):
 
         assert isinstance(cart2d, cx.vecs.CartesianVel2D)
         assert jnp.array_equal(
-            cart2d.d_x, u.Quantity([1.0, -46.787014, -91.76889, -25.367176], "km/s")
+            cart2d.x, u.Quantity([1.0, -46.787014, -91.76889, -25.367176], "km/s")
         )
         assert jnp.array_equal(
-            cart2d.d_y,
+            cart2d.y,
             u.Quantity([23.702353, 32.418385, -38.69947, -149.61249], "km/s"),
         )
 
@@ -385,13 +384,13 @@ class TestPolarVel(AbstractVel2DTest):
     def test_polar_to_cartesian3d(self, difntl, vector):
         """Test ``difntl.vconvert(CartesianVel3D, vector)``."""
         cart3d = difntl.vconvert(
-            cx.CartesianVel3D, vector, d_z=u.Quantity([9, 10, 11, 12], "m/s")
+            cx.CartesianVel3D, vector, z=u.Quantity([9, 10, 11, 12], "m/s")
         )
 
         assert isinstance(cart3d, cx.CartesianVel3D)
-        assert jnp.array_equal(cart3d.d_x, u.Quantity([1, 2, 3, 4], "km/s"))
-        assert jnp.array_equal(cart3d.d_y, u.Quantity([5, 6, 7, 8], "km/s"))
-        assert jnp.array_equal(cart3d.d_z, u.Quantity([9, 10, 11, 12], "m/s"))
+        assert jnp.array_equal(cart3d.x, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cart3d.y, u.Quantity([5, 6, 7, 8], "km/s"))
+        assert jnp.array_equal(cart3d.z, u.Quantity([9, 10, 11, 12], "m/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
@@ -402,19 +401,19 @@ class TestPolarVel(AbstractVel2DTest):
         )
 
         assert isinstance(spherical, cx.SphericalVel)
-        assert jnp.array_equal(spherical.d_r, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(spherical.r, u.Quantity([1, 2, 3, 4], "km/s"))
         assert jnp.array_equal(spherical.d_theta, u.Quantity([4, 5, 6, 7], "rad"))
-        assert jnp.array_equal(spherical.d_phi, u.Quantity([5, 6, 7, 8], "km/s"))
+        assert jnp.array_equal(spherical.phi, u.Quantity([5, 6, 7, 8], "km/s"))
 
     @pytest.mark.xfail(reason="Not implemented")
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_cylindrical(self, difntl, vector):
         """Test ``difntl.vconvert(CylindricalVel, vector)``."""
         cylindrical = difntl.vconvert(
-            cx.vecs.CylindricalVel, vector, d_z=u.Quantity([9, 10, 11, 12], "m/s")
+            cx.vecs.CylindricalVel, vector, z=u.Quantity([9, 10, 11, 12], "m/s")
         )
 
         assert isinstance(cylindrical, cx.vecs.CylindricalVel)
-        assert jnp.array_equal(cylindrical.d_rho, u.Quantity([1, 2, 3, 4], "km/s"))
-        assert jnp.array_equal(cylindrical.d_phi, u.Quantity([5, 6, 7, 8], "km/s"))
-        assert jnp.array_equal(cylindrical.d_z, u.Quantity([9, 10, 11, 12], "m/s"))
+        assert jnp.array_equal(cylindrical.rho, u.Quantity([1, 2, 3, 4], "km/s"))
+        assert jnp.array_equal(cylindrical.phi, u.Quantity([5, 6, 7, 8], "km/s"))
+        assert jnp.array_equal(cylindrical.z, u.Quantity([9, 10, 11, 12], "m/s"))

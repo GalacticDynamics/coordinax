@@ -156,7 +156,7 @@ class AbstractPosND(AbstractPos):
 class AbstractVelND(AbstractVel):
     """Abstract representation of N-D vector differentials."""
 
-    d_q: eqx.AbstractVar[ct.BatchableSpeed]
+    q: eqx.AbstractVar[ct.BatchableSpeed]
 
     @override
     @classproperty
@@ -204,7 +204,7 @@ class AbstractVelND(AbstractVel):
             f"x must be at least two-dimensional for matrix_transpose; got {ndim=}",
         )
         axes = (*range(ndim - 3), ndim - 1, ndim - 2, ndim)
-        return replace(self, d_q=qlax.transpose(self.d_q, axes))
+        return replace(self, q=qlax.transpose(self.q, axes))
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -222,7 +222,7 @@ class AbstractVelND(AbstractVel):
         (2,)
 
         """
-        return self.d_q.shape[:-1]
+        return self.q.shape[:-1]
 
     @property
     def T(self) -> "Self":  # noqa: N802
@@ -241,7 +241,7 @@ class AbstractVelND(AbstractVel):
 
         """
         return replace(
-            self, d_q=qlax.transpose(self.d_q, (*range(self.ndim)[::-1], self.ndim))
+            self, q=qlax.transpose(self.q, (*range(self.ndim)[::-1], self.ndim))
         )
 
     # ===============================================================
@@ -257,11 +257,11 @@ class AbstractVelND(AbstractVel):
         >>> vec = cx.vecs.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.flatten()
         CartesianVelND(
-            d_q=Quantity[...]( value=i32[2,2], unit=Unit("m / s") )
+            q=Quantity[...]( value=i32[2,2], unit=Unit("m / s") )
         )
 
         """
-        return replace(self, d_q=self.d_q.reshape(-1, self.d_q.shape[-1]))
+        return replace(self, q=self.q.reshape(-1, self.q.shape[-1]))
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the vector.
@@ -278,9 +278,7 @@ class AbstractVelND(AbstractVel):
         (1, 1)
 
         """
-        return replace(
-            self, d_q=self.d_q.reshape(*shape, self.d_q.shape[-1], order=order)
-        )
+        return replace(self, q=self.q.reshape(*shape, self.q.shape[-1], order=order))
 
 
 #####################################################################
@@ -289,7 +287,7 @@ class AbstractVelND(AbstractVel):
 class AbstractAccND(AbstractAcc):
     """Abstract representation of N-D vector differentials."""
 
-    d2_q: eqx.AbstractVar[ct.BatchableAcc]
+    q: eqx.AbstractVar[ct.BatchableAcc]
 
     @override
     @classproperty
@@ -338,7 +336,7 @@ class AbstractAccND(AbstractAcc):
             f"x must be at least two-dimensional for matrix_transpose; got {ndim=}",
         )
         axes = (*range(ndim - 3), ndim - 1, ndim - 2, ndim)
-        return replace(self, d2_q=qlax.transpose(self.d2_q, axes))
+        return replace(self, q=qlax.transpose(self.q, axes))
 
     @property
     def shape(self) -> tuple[int, ...]:
@@ -357,7 +355,7 @@ class AbstractAccND(AbstractAcc):
         (2, 1)
 
         """
-        return self.d2_q.shape[:-1]
+        return self.q.shape[:-1]
 
     @property
     def T(self) -> "Self":  # noqa: N802
@@ -375,7 +373,7 @@ class AbstractAccND(AbstractAcc):
         """
         return replace(
             self,
-            d2_q=qlax.transpose(self.d2_q, (*range(self.ndim)[::-1], self.ndim)),
+            q=qlax.transpose(self.q, (*range(self.ndim)[::-1], self.ndim)),
         )
 
     # ===============================================================
@@ -395,7 +393,7 @@ class AbstractAccND(AbstractAcc):
         (2,)
 
         """
-        return replace(self, d2_q=self.d2_q.reshape(-1, self.d2_q.shape[-1]))
+        return replace(self, q=self.q.reshape(-1, self.q.shape[-1]))
 
     def reshape(self, *shape: Any, order: str = "C") -> "Self":
         """Reshape the vector.
@@ -411,6 +409,4 @@ class AbstractAccND(AbstractAcc):
         (1, 1)
 
         """
-        return replace(
-            self, d2_q=self.d2_q.reshape(*shape, self.d2_q.shape[-1], order=order)
-        )
+        return replace(self, q=self.q.reshape(*shape, self.q.shape[-1], order=order))

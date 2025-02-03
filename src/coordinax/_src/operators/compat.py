@@ -301,7 +301,7 @@ def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
     >>> new_space.keys()
     dict_keys(['length', 'speed'])
     >>> print(new_space["speed"])
-    <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+    <CartesianVel3D (x[m / s], y[m / s], z[m / s])
         [5. 7. 9.]>
 
     """

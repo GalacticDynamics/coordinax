@@ -82,24 +82,24 @@ class CylindricalVel(AbstractVel3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalVel(d_rho=u.Quantity(1, "km/s"),
-    ...                              d_phi=u.Quantity(2, "deg/s"),
-    ...                              d_z=u.Quantity(3, "km/s"))
+    >>> vec = cx.vecs.CylindricalVel(rho=u.Quantity(1, "km/s"),
+    ...                              phi=u.Quantity(2, "deg/s"),
+    ...                              z=u.Quantity(3, "km/s"))
     >>> print(vec)
-    <CylindricalVel (d_rho[km / s], d_phi[deg / s], d_z[km / s])
+    <CylindricalVel (rho[km / s], phi[deg / s], z[km / s])
         [1 2 3]>
 
     """
 
-    d_rho: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    rho: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
-    d_phi: ct.BatchableAngularSpeed = eqx.field(
+    phi: ct.BatchableAngularSpeed = eqx.field(
         converter=u.Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    d_z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
     @override
@@ -124,24 +124,24 @@ class CylindricalAcc(AbstractAcc3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalAcc(d2_rho=u.Quantity(1, "km/s2"),
-    ...                              d2_phi=u.Quantity(2, "deg/s2"),
-    ...                              d2_z=u.Quantity(3, "km/s2"))
+    >>> vec = cx.vecs.CylindricalAcc(rho=u.Quantity(1, "km/s2"),
+    ...                              phi=u.Quantity(2, "deg/s2"),
+    ...                              z=u.Quantity(3, "km/s2"))
     >>> print(vec)
-    <CylindricalAcc (d2_rho[km / s2], d2_phi[deg / s2], d2_z[km / s2])
+    <CylindricalAcc (rho[km / s2], phi[deg / s2], z[km / s2])
         [1 2 3]>
 
     """
 
-    d2_rho: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    rho: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
-    d2_phi: ct.BatchableAngularAcc = eqx.field(
+    phi: ct.BatchableAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
-    d2_z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
     @override

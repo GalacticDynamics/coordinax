@@ -154,7 +154,7 @@ class AbstractVector(
         >>> a_sph = a_cart.vconvert(cx.vecs.SphericalAcc, v_cart, q_cart)
         >>> a_sph
         SphericalAcc( ... )
-        >>> a_sph.d2_r
+        >>> a_sph.r
         Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
 
         """
@@ -440,7 +440,7 @@ class AbstractVector(
 
         >>> vel1 = cx.vecs.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
         >>> vel2 = cx.vecs.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
-        >>> vel1.d_x
+        >>> vel1.x
         Quantity['speed'](Array([1, 2], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False], dtype=bool)
@@ -449,7 +449,7 @@ class AbstractVector(
 
         >>> acc1 = cx.vecs.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
         >>> acc2 = cx.vecs.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
-        >>> acc1.d2_x
+        >>> acc1.x
         Quantity['acceleration'](Array([1, 2], dtype=int32), unit='km / s2')
         >>> jnp.equal(acc1, acc2)
         Array([ True, False], dtype=bool)
@@ -458,7 +458,7 @@ class AbstractVector(
 
         >>> vel1 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 6]], "km/s")
         >>> vel2 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 0]], "km/s")
-        >>> vel1.d_x
+        >>> vel1.x
         Quantity['speed'](Array([1, 4], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False], dtype=bool)
@@ -780,7 +780,7 @@ class AbstractVector(
         >>> cx.SphericalPos.components
         ('r', 'theta', 'phi')
         >>> cx.vecs.RadialVel.components
-        ('d_r',)
+        ('r',)
 
         """
         return tuple(f.name for f in fields(AttrFilter, cls))

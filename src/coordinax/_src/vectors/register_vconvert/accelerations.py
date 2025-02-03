@@ -78,10 +78,10 @@ def vconvert(
     Let's start in 1D:
 
     >>> q = cx.vecs.CartesianPos1D(x=u.Quantity(1.0, "km"))
-    >>> p = cx.vecs.CartesianVel1D(d_x=u.Quantity(1.0, "km/s"))
-    >>> a = cx.vecs.CartesianAcc1D(d2_x=u.Quantity(1.0, "km/s2"))
+    >>> p = cx.vecs.CartesianVel1D(x=u.Quantity(1.0, "km/s"))
+    >>> a = cx.vecs.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
     >>> cx.vconvert(cx.vecs.RadialAcc, a, p, q)
-    RadialAcc( d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
+    RadialAcc( r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
 
     Now in 2D:
 
@@ -90,8 +90,8 @@ def vconvert(
     >>> a = cx.vecs.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
     >>> cx.vconvert(cx.vecs.PolarAcc, a, p, q)
     PolarAcc(
-      d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
-      d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
+      r=Quantity[...](value=f32[], unit=Unit("km / s2")),
+      phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
     )
 
     And in 3D:
@@ -101,9 +101,9 @@ def vconvert(
     >>> a = cx.vecs.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> cx.vconvert(cx.vecs.SphericalAcc, a, p, q)
     SphericalAcc(
-      d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
-      d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
-      d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
+      r=Quantity[...](value=f32[], unit=Unit("km / s2")),
+      theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
+      phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
     )
 
     If given a position as a Quantity, it will be converted to the appropriate
@@ -113,9 +113,9 @@ def vconvert(
     ...             u.Quantity([1.0, 2.0, 3.0], "km/s"),
     ...             u.Quantity([1.0, 2.0, 3.0], "km"))
     SphericalAcc(
-      d2_r=Quantity[...](value=f32[], unit=Unit("km / s2")),
-      d2_theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
-      d2_phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
+      r=Quantity[...](value=f32[], unit=Unit("km / s2")),
+      theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
+      phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
     )
 
     """
@@ -169,7 +169,7 @@ def vconvert(
     # being that row's column as a dictionary, now with the correct units for
     # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
     jac_rows = {
-        f"d2_{k}": {
+        k: {
             kk: u.Quantity(vv.value, unit=v.unit / vv.unit)
             for kk, vv in field_items(v.value)
         }
@@ -182,10 +182,7 @@ def vconvert(
         **{  # Each field is the dot product of the row of the J and the diff column.
             k: jnp.sum(  # Doing the dot product.
                 jnp.stack(
-                    tuple(
-                        j_c * getattr(flat_current, f"d2_{kk}")
-                        for kk, j_c in j_r.items()
-                    )
+                    tuple(j_c * getattr(flat_current, kk) for kk, j_c in j_r.items())
                 ),
                 axis=0,
             )

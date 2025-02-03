@@ -30,13 +30,13 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
     z: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
-    d_rho: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    dt_rho: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
-    d_pp_phi: Shaped[u.Quantity, "*#batch"] = eqx.field()  # TODO: dimension annotation
+    dt_pp_phi: Shaped[u.Quantity, "*#batch"] = eqx.field()  # TODO: dimension annotation
     r"""Poincare phi-like velocity variable."""
 
-    d_z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    dt_z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
     @classmethod

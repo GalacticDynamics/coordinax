@@ -80,17 +80,17 @@ class PolarVel(AbstractVel2D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vev = cx.vecs.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(90, "deg/s"))
+    >>> vev = cx.vecs.PolarVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(90, "deg/s"))
     >>> print(vev)
-    <PolarVel (d_r[m / s], d_phi[deg / s])
+    <PolarVel (r[m / s], phi[deg / s])
         [ 1 90]>
 
     """
 
-    d_r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
-    d_phi: ct.BatchableAngularSpeed = eqx.field(
+    phi: ct.BatchableAngularSpeed = eqx.field(
         converter=u.Quantity["angular speed"].from_
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
@@ -120,18 +120,18 @@ class PolarAcc(AbstractAcc2D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> acc = cx.vecs.PolarAcc(d2_r=u.Quantity(1, "m/s2"),
-    ...                        d2_phi=u.Quantity(3, "deg/s2"))
+    >>> acc = cx.vecs.PolarAcc(r=u.Quantity(1, "m/s2"),
+    ...                        phi=u.Quantity(3, "deg/s2"))
     >>> print(acc)
-    <PolarAcc (d2_r[m / s2], d2_phi[deg / s2])
+    <PolarAcc (r[m / s2], phi[deg / s2])
         [1 3]>
 
     """
 
-    d2_r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty,+\infty]`."""
 
-    d2_phi: ct.BatchableAngularAcc = eqx.field(
+    phi: ct.BatchableAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""

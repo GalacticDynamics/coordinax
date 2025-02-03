@@ -3,18 +3,22 @@
 
 __all__: list[str] = []
 
+from functools import partial
 from typing import Any
 
 import equinox as eqx
 from plum import dispatch
 
-import quaxed.numpy as xp
+import quaxed.lax as qlax
+import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import AbstractQuantity
 
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from .base_spherical import AbstractSphericalPos
+from .base_spherical import AbstractSphericalPos, _90d, _180d, _360d
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 from .cylindrical import CylindricalPos, CylindricalVel
+from .generic import CartesianGeneric3D
 from .lonlatspherical import (
     LonCosLatSphericalVel,
     LonLatSphericalPos,
@@ -109,6 +113,254 @@ def vector(cls: type[AbstractAcc3D], obj: AbstractAcc3D, /) -> AbstractAcc3D:
 
     """
     return obj
+
+
+# ---------------------------------------------------------
+
+
+@dispatch
+def vector(
+    cls: type[SphericalPos],
+    *,
+    r: AbstractQuantity,
+    theta: AbstractQuantity,
+    phi: AbstractQuantity,
+) -> SphericalPos:
+    """Construct SphericalPos, allowing for out-of-range values.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    Let's start with a valid input:
+
+    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                             theta=u.Quantity(90, "deg"),
+    ...                             phi=u.Quantity(0, "deg"))
+    >>> print(vec)
+    <SphericalPos (r[km], theta[deg], phi[deg])
+        [ 3 90  0]>
+
+    The radial distance can be negative, which wraps the azimuthal angle by 180
+    degrees and flips the polar angle:
+
+    >>> vec = cx.SphericalPos.from_(r=u.Quantity(-3, "km"),
+    ...                             theta=u.Quantity(45, "deg"),
+    ...                             phi=u.Quantity(0, "deg"))
+    >>> print(vec)
+    <SphericalPos (r[km], theta[deg], phi[deg])
+        [  3 135 180]>
+
+    The polar angle can be outside the [0, 180] deg range, causing the azimuthal
+    angle to be shifted by 180 degrees:
+
+    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                             theta=u.Quantity(190, "deg"),
+    ...                             phi=u.Quantity(0, "deg"))
+    >>> print(vec)
+    <SphericalPos (r[km], theta[deg], phi[deg])
+        [  3 170 180]>
+
+    The azimuth can be outside the [0, 360) deg range. This is wrapped to the
+    [0, 360) deg range (actually the base from_ does this):
+
+    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                             theta=u.Quantity(90, "deg"),
+    ...                             phi=u.Quantity(365, "deg"))
+    >>> vec.phi
+    Angle(Array(5, dtype=int32, ...), unit='deg')
+
+    """
+    # 1) Convert the inputs
+    fields = SphericalPos.__dataclass_fields__
+    r = fields["r"].metadata["converter"](r)
+    theta = fields["theta"].metadata["converter"](theta)
+    phi = fields["phi"].metadata["converter"](phi)
+
+    # 2) handle negative distances
+    r_pred = r < jnp.zeros_like(r)
+    r = jnp.where(r_pred, -r, r)
+    phi = jnp.where(r_pred, phi + _180d, phi)
+    theta = jnp.where(r_pred, _180d - theta, theta)
+
+    # 3) Handle polar angle outside of [0, 180] degrees
+    theta = jnp.mod(theta, _360d)  # wrap to [0, 360) deg
+    theta_pred = theta < _180d
+    theta = jnp.where(theta_pred, theta, _360d - theta)
+    phi = jnp.where(theta_pred, phi, phi + _180d)
+
+    # 4) Construct. This also handles the azimuthal angle wrapping
+    return cls(r=r, theta=theta, phi=phi)
+
+
+# ---------------------------------------------------------
+
+
+@dispatch
+def vector(
+    cls: type[LonLatSphericalPos],
+    *,
+    lon: AbstractQuantity,
+    lat: AbstractQuantity,
+    distance: AbstractQuantity,
+) -> LonLatSphericalPos:
+    """Construct LonLatSphericalPos, allowing for out-of-range values.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    Let's start with a valid input:
+
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                        lat=u.Quantity(0, "deg"),
+    ...                                        distance=u.Quantity(3, "km"))
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [0 0 3]>
+
+    The distance can be negative, which wraps the longitude by 180 degrees and
+    flips the latitude:
+
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                        lat=u.Quantity(45, "deg"),
+    ...                                        distance=u.Quantity(-3, "km"))
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [180 -45   3]>
+
+    The latitude can be outside the [-90, 90] deg range, causing the longitude
+    to be shifted by 180 degrees:
+
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                        lat=u.Quantity(-100, "deg"),
+    ...                                        distance=u.Quantity(3, "km"))
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [180 -80   3]>
+
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                        lat=u.Quantity(100, "deg"),
+    ...                                        distance=u.Quantity(3, "km"))
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [180  80   3]>
+
+    The longitude can be outside the [0, 360) deg range. This is wrapped to the
+    [0, 360) deg range (actually the base constructor does this):
+
+    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(365, "deg"),
+    ...                                        lat=u.Quantity(0, "deg"),
+    ...                                        distance=u.Quantity(3, "km"))
+    >>> vec.lon
+    Angle(Array(5, dtype=int32, ...), unit='deg')
+
+    """
+    # 1) Convert the inputs
+    fields = LonLatSphericalPos.__dataclass_fields__
+    lon = fields["lon"].metadata["converter"](lon)
+    lat = fields["lat"].metadata["converter"](lat)
+    distance = fields["distance"].metadata["converter"](distance)
+
+    # 2) handle negative distances
+    distance_pred = distance < jnp.zeros_like(distance)
+    distance = qlax.select(distance_pred, -distance, distance)
+    lon = qlax.select(distance_pred, lon + _180d, lon)
+    lat = qlax.select(distance_pred, -lat, lat)
+
+    # 3) Handle latitude outside of [-90, 90] degrees
+    # TODO: fix when lat < -180, lat > 180
+    lat_pred = lat < -_90d
+    lat = qlax.select(lat_pred, -_180d - lat, lat)
+    lon = qlax.select(lat_pred, lon + _180d, lon)
+
+    lat_pred = lat > _90d
+    lat = qlax.select(lat_pred, _180d - lat, lat)
+    lon = qlax.select(lat_pred, lon + _180d, lon)
+
+    # 4) Construct. This also handles the longitude wrapping
+    return cls(lon=lon, lat=lat, distance=distance)
+
+
+# ---------------------------------------------------------
+
+
+@dispatch
+def vector(
+    cls: type[MathSphericalPos],
+    *,
+    r: AbstractQuantity,
+    theta: AbstractQuantity,
+    phi: AbstractQuantity,
+) -> MathSphericalPos:
+    """Construct MathSphericalPos, allowing for out-of-range values.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    Let's start with a valid input:
+
+    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                                      theta=u.Quantity(90, "deg"),
+    ...                                      phi=u.Quantity(0, "deg"))
+    >>> print(vec)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [ 3 90  0]>
+
+    The radial distance can be negative, which wraps the azimuthal angle by 180
+    degrees and flips the polar angle:
+
+    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(-3, "km"),
+    ...                                      theta=u.Quantity(100, "deg"),
+    ...                                      phi=u.Quantity(45, "deg"))
+    >>> print(vec)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [  3 280 135]>
+
+    The polar angle can be outside the [0, 180] deg range, causing the azimuthal
+    angle to be shifted by 180 degrees:
+
+    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                                      theta=u.Quantity(0, "deg"),
+    ...                                      phi=u.Quantity(190, "deg"))
+    >>> print(vec)
+    <MathSphericalPos (r[km], theta[deg], phi[deg])
+        [  3 180 170]>
+
+    The azimuth can be outside the [0, 360) deg range. This is wrapped to the
+    [0, 360) deg range (actually the base constructor does this):
+
+    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                                      theta=u.Quantity(365, "deg"),
+    ...                                      phi=u.Quantity(90, "deg"))
+    >>> vec.theta
+    Angle(Array(5, dtype=int32, ...), unit='deg')
+
+    """
+    # 1) Convert the inputs
+    fields = MathSphericalPos.__dataclass_fields__
+    r = fields["r"].metadata["converter"](r)
+    theta = fields["theta"].metadata["converter"](theta)
+    phi = fields["phi"].metadata["converter"](phi)
+
+    # 2) handle negative distances
+    r_pred = r < jnp.zeros_like(r)
+    r = jnp.where(r_pred, -r, r)
+    theta = jnp.where(r_pred, theta + _180d, theta)
+    phi = jnp.where(r_pred, _180d - phi, phi)
+
+    # 3) Handle polar angle outside of [0, 180] degrees
+    phi = jnp.mod(phi, _360d)  # wrap to [0, 360) deg
+    phi_pred = phi < _180d
+    phi = jnp.where(phi_pred, phi, _360d - phi)
+    theta = jnp.where(phi_pred, theta, theta + _180d)
+
+    # 4) Construct. This also handles the azimuthal angle wrapping
+    return cls(r=r, theta=theta, phi=phi)
 
 
 ###############################################################################
@@ -222,41 +474,41 @@ def vconvert(
 
     Cylindrical to Cylindrical velocity:
 
-    >>> dif = cx.vecs.CylindricalVel(d_rho=u.Quantity(1, "km/s"),
-    ...                              d_phi=u.Quantity(2, "mas/yr"),
-    ...                              d_z=u.Quantity(3, "km/s"))
+    >>> dif = cx.vecs.CylindricalVel(rho=u.Quantity(1, "km/s"),
+    ...                              phi=u.Quantity(2, "mas/yr"),
+    ...                              z=u.Quantity(3, "km/s"))
     >>> cx.vconvert(cx.vecs.CylindricalVel, dif, vec) is dif
     True
 
     Spherical to Spherical velocity:
 
-    >>> dif = cx.SphericalVel(d_r=u.Quantity(1, "km/s"),
-    ...                       d_theta=u.Quantity(2, "mas/yr"),
-    ...                       d_phi=u.Quantity(3, "mas/yr"))
+    >>> dif = cx.vecs.SphericalVel(r=u.Quantity(1, "km/s"),
+    ...                            theta=u.Quantity(2, "mas/yr"),
+    ...                            phi=u.Quantity(3, "mas/yr"))
     >>> cx.vconvert(cx.SphericalVel, dif, vec) is dif
     True
 
     LonLatSpherical to LonLatSpherical velocity:
 
-    >>> dif = cx.vecs.LonLatSphericalVel(d_lon=u.Quantity(1, "mas/yr"),
-    ...                                  d_lat=u.Quantity(2, "mas/yr"),
-    ...                                  d_distance=u.Quantity(3, "km/s"))
+    >>> dif = cx.vecs.LonLatSphericalVel(lon=u.Quantity(1, "mas/yr"),
+    ...                                  lat=u.Quantity(2, "mas/yr"),
+    ...                                  distance=u.Quantity(3, "km/s"))
     >>> cx.vconvert(cx.vecs.LonLatSphericalVel, dif, vec) is dif
     True
 
     LonCosLatSpherical to LonCosLatSpherical velocity:
 
-    >>> dif = cx.vecs.LonCosLatSphericalVel(d_lon_coslat=u.Quantity(1, "mas/yr"),
-    ...                                     d_lat=u.Quantity(2, "mas/yr"),
-    ...                                     d_distance=u.Quantity(3, "km/s"))
+    >>> dif = cx.vecs.LonCosLatSphericalVel(lon_coslat=u.Quantity(1, "mas/yr"),
+    ...                                     lat=u.Quantity(2, "mas/yr"),
+    ...                                     distance=u.Quantity(3, "km/s"))
     >>> cx.vconvert(cx.vecs.LonCosLatSphericalVel, dif, vec) is dif
     True
 
     MathSpherical to MathSpherical velocity:
 
-    >>> dif = cx.vecs.MathSphericalVel(d_r=u.Quantity(1, "km/s"),
-    ...                                d_theta=u.Quantity(2, "mas/yr"),
-    ...                                d_phi=u.Quantity(3, "mas/yr"))
+    >>> dif = cx.vecs.MathSphericalVel(r=u.Quantity(1, "km/s"),
+    ...                                theta=u.Quantity(2, "mas/yr"),
+    ...                                phi=u.Quantity(3, "mas/yr"))
     >>> cx.vconvert(cx.vecs.MathSphericalVel, dif, vec) is dif
     True
 
@@ -284,8 +536,8 @@ def vconvert(
         [2.236 1.107 3.   ]>
 
     """
-    rho = xp.sqrt(current.x**2 + current.y**2)
-    phi = xp.atan2(current.y, current.x)
+    rho = jnp.sqrt(current.x**2 + current.y**2)
+    phi = jnp.atan2(current.y, current.x)
     return target(rho=rho, phi=phi, z=current.z)
 
 
@@ -305,9 +557,9 @@ def vconvert(
         [3.742 0.641 1.107]>
 
     """
-    r = xp.sqrt(current.x**2 + current.y**2 + current.z**2)
-    theta = xp.acos(current.z / r)
-    phi = xp.atan2(current.y, current.x)
+    r = jnp.sqrt(current.x**2 + current.y**2 + current.z**2)
+    theta = jnp.acos(current.z / r)
+    phi = jnp.atan2(current.y, current.x)
     return target(r=r, theta=theta, phi=phi)
 
 
@@ -364,8 +616,8 @@ def vconvert(
         [-4.371e-08  1.000e+00  1.000e+00]>
 
     """
-    x = current.rho * xp.cos(current.phi)
-    y = current.rho * xp.sin(current.phi)
+    x = current.rho * jnp.cos(current.phi)
+    y = current.rho * jnp.sin(current.phi)
     z = current.z
     return target(x=x, y=y, z=z)
 
@@ -389,8 +641,8 @@ def vconvert(
         [ 1.414  0.785 90.   ]>
 
     """
-    r = xp.sqrt(current.rho**2 + current.z**2)
-    theta = xp.acos(current.z / r)
+    r = jnp.sqrt(current.rho**2 + current.z**2)
+    theta = jnp.acos(current.z / r)
     return target(r=r, theta=theta, phi=current.phi)
 
 
@@ -450,9 +702,9 @@ def vconvert(
         [-4.371e-08  1.000e+00 -4.371e-08]>
 
     """
-    x = current.r.distance * xp.sin(current.theta) * xp.cos(current.phi)
-    y = current.r.distance * xp.sin(current.theta) * xp.sin(current.phi)
-    z = current.r.distance * xp.cos(current.theta)
+    x = current.r.distance * jnp.sin(current.theta) * jnp.cos(current.phi)
+    y = current.r.distance * jnp.sin(current.theta) * jnp.sin(current.phi)
+    z = current.r.distance * jnp.cos(current.theta)
     return target(x=x, y=y, z=z)
 
 
@@ -475,8 +727,8 @@ def vconvert(
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
-    rho = xp.abs(current.r.distance * xp.sin(current.theta))
-    z = current.r.distance * xp.cos(current.theta)
+    rho = jnp.abs(current.r.distance * jnp.sin(current.theta))
+    z = current.r.distance * jnp.cos(current.theta)
     return target(rho=rho, phi=current.phi, z=z)
 
 
@@ -627,9 +879,9 @@ def vconvert(
         [-4.371e-08  1.000e+00 -4.371e-08]>
 
     """
-    x = current.r.distance * xp.sin(current.phi) * xp.cos(current.theta)
-    y = current.r.distance * xp.sin(current.phi) * xp.sin(current.theta)
-    z = current.r.distance * xp.cos(current.phi)
+    x = current.r.distance * jnp.sin(current.phi) * jnp.cos(current.theta)
+    y = current.r.distance * jnp.sin(current.phi) * jnp.sin(current.theta)
+    z = current.r.distance * jnp.cos(current.phi)
     return target(x=x, y=y, z=z)
 
 
@@ -652,8 +904,8 @@ def vconvert(
         [ 1.000e+00  9.000e+01 -4.371e-08]>
 
     """
-    rho = xp.abs(current.r.distance * xp.sin(current.phi))
-    z = current.r.distance * xp.cos(current.phi)
+    rho = jnp.abs(current.r.distance * jnp.sin(current.phi))
+    z = current.r.distance * jnp.cos(current.phi)
     return target(rho=rho, phi=current.theta, z=z)
 
 
@@ -706,10 +958,10 @@ def vconvert(
 
     """
     Delta2 = current.Delta**2
-    nu_D2 = xp.abs(current.nu) / Delta2
+    nu_D2 = jnp.abs(current.nu) / Delta2
 
-    R = xp.sqrt((current.mu - Delta2) * (1 - nu_D2))
-    z = xp.sqrt(current.mu * nu_D2) * xp.sign(current.nu)
+    R = jnp.sqrt((current.mu - Delta2) * (1 - nu_D2))
+    z = jnp.sqrt(current.mu * nu_D2) * jnp.sign(current.nu)
 
     return target(rho=R, phi=current.phi, z=z)
 
@@ -752,20 +1004,11 @@ def vconvert(
     diff_ = R2 + z2 - Delta2
 
     # compute D = sqrt((R² + z² - Δ²)² + 4R²Δ²)
-    D = xp.sqrt(diff_**2 + 4 * R2 * Delta2)
+    D = jnp.sqrt(diff_**2 + 4 * R2 * Delta2)
 
     # handle special cases for R=0 or z=0
-    # TODO: quaxed.numpy.select doesn't work with Quantity's?
-    # D = xp.select(
-    #     [current.z == 0, current.rho == 0, xp.full(current.rho.shape, 1, dtype=bool)],
-    #     [
-    #         sum_,  # z=0 case
-    #         xp.abs(diff_),  # R=0 case
-    #         D,  # otherwise
-    #     ],
-    # )
-    D = xp.where(current.z == 0, sum_, D)
-    D = xp.where(current.rho == 0, xp.abs(diff_), D)
+    D = jnp.where(current.z == 0, sum_, D)
+    D = jnp.where(current.rho == 0, jnp.abs(diff_), D)
 
     # compute mu and nu depending on sign of diff_ - avoids dividing by a small number
     pos_mu_minus_delta = 0.5 * (D + diff_)
@@ -775,17 +1018,17 @@ def vconvert(
     neg_mu_minus_delta = Delta2 * R2 / neg_delta_minus_nu
 
     # Select based on condition
-    mu_minus_delta = xp.where(diff_ >= 0, pos_mu_minus_delta, neg_mu_minus_delta)
-    delta_minus_nu = xp.where(diff_ >= 0, pos_delta_minus_nu, neg_delta_minus_nu)
+    mu_minus_delta = jnp.where(diff_ >= 0, pos_mu_minus_delta, neg_mu_minus_delta)
+    delta_minus_nu = jnp.where(diff_ >= 0, pos_delta_minus_nu, neg_delta_minus_nu)
 
     # compute mu and nu:
     mu = Delta2 + mu_minus_delta
     abs_nu = 2 * Delta2 / (sum_ + D) * z2
 
     # for numerical stability when Delta^2-|nu| is small
-    abs_nu = xp.where(abs_nu * 2 > Delta2, Delta2 - delta_minus_nu, abs_nu)
+    abs_nu = jnp.where(abs_nu * 2 > Delta2, Delta2 - delta_minus_nu, abs_nu)
 
-    nu = abs_nu * xp.sign(current.z)
+    nu = abs_nu * jnp.sign(current.z)
 
     return target(mu=mu, nu=nu, phi=current.phi, Delta=Delta)
 
@@ -923,15 +1166,15 @@ def vconvert(
     >>> q = cx.vecs.LonLatSphericalPos(lon=u.Quantity(15, "deg"),
     ...                                lat=u.Quantity(10, "deg"),
     ...                                distance=u.Quantity(1.5, "km"))
-    >>> p = cx.vecs.LonLatSphericalVel(d_lon=u.Quantity(7, "mas/yr"),
-    ...                                d_lat=u.Quantity(0, "deg/Gyr"),
-    ...                                d_distance=u.Quantity(-5, "km/s"))
+    >>> p = cx.vecs.LonLatSphericalVel(lon=u.Quantity(7, "mas/yr"),
+    ...                                lat=u.Quantity(0, "deg/Gyr"),
+    ...                                distance=u.Quantity(-5, "km/s"))
     >>> newp = cx.vconvert(cx.vecs.LonCosLatSphericalVel, p, q)
     >>> print(newp)
-    <LonCosLatSphericalVel (d_lon_coslat[mas / yr], d_lat[deg / Gyr], d_distance[km / s])
+    <LonCosLatSphericalVel (lon_coslat[mas / yr], lat[deg / Gyr], distance[km / s])
         [ 6.894  0.    -5.   ]>
 
-    """  # noqa: E501
+    """
     # Parse the position to an AbstractPos
     if isinstance(position, AbstractPos):
         posvec = position
@@ -948,9 +1191,9 @@ def vconvert(
 
     # Calculate the differential in the new system
     return target(
-        d_lon_coslat=current.d_lon * xp.cos(posvec.lat),
-        d_lat=current.d_lat,
-        d_distance=current.d_distance,
+        lon_coslat=current.lon * jnp.cos(posvec.lat),
+        lat=current.lat,
+        distance=current.distance,
     )
 
 
@@ -976,9 +1219,9 @@ def vconvert(
 
     # Calculate the differential in the new system
     return target(
-        d_lon=current.d_lon_coslat / xp.cos(posvec.lat),
-        d_lat=current.d_lat,
-        d_distance=current.d_distance,
+        lon=current.lon_coslat / jnp.cos(posvec.lat),
+        lat=current.lat,
+        distance=current.distance,
     )
 
 
@@ -1058,3 +1301,38 @@ def vconvert(
 
     """
     return current
+
+
+#####################################################################
+
+
+# from coordinax.vectors.funcs
+@dispatch
+@partial(eqx.filter_jit, inline=True)
+def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
+    """Return the norm of the vector.
+
+    This has length 1.
+
+    .. note::
+
+        The unit vector is dimensionless, even if the input vector has units.
+        This is because the unit vector is a ratio of two quantities: each
+        component and the norm of the vector.
+
+    Returns
+    -------
+    CartesianGeneric3D
+        The norm of the vector.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> print(cx.vecs.normalize_vector(q))
+    <CartesianGeneric3D (x[], y[], z[])
+        [0.267 0.535 0.802]>
+
+    """
+    norm: AbstractQuantity = obj.norm()  # type: ignore[misc]
+    return CartesianGeneric3D(x=obj.x / norm, y=obj.y / norm, z=obj.z / norm)

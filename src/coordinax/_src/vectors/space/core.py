@@ -56,9 +56,9 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     Space({
        'length': <CartesianPos3D (x[km], y[km], z[km])
            [1 2 3]>,
-       'speed': <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+       'speed': <CartesianVel3D (x[km / s], y[km / s], z[km / s])
            [4 5 6]>,
-       'acceleration': <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+       'acceleration': <CartesianAcc3D (x[km / s2], y[km / s2], z[km / s2])
            [7 8 9]>
     })
 
@@ -73,7 +73,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
        'length': <CartesianPos3D (x[kpc], y[kpc], z[kpc])
            [[ 8.5  0.   0. ]
             [10.   0.   0. ]]>,
-       'speed': <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+       'speed': <CartesianVel3D (x[km / s], y[km / s], z[km / s])
            [  0 200   0]>
     })
 
@@ -127,7 +127,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     Space({
        'length': <CartesianPos3D (x[km], y[km], z[km])
            [1 2 3]>,
-       'speed': <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+       'speed': <CartesianVel3D (x[km / s], y[km / s], z[km / s])
            [4 5 6]>
     })
 
@@ -203,9 +203,9 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 y=Quantity[...](value=i32[2], unit=Unit("m")),
                 z=Quantity[...](value=i32[2], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=i32[2], unit=Unit("m / s") ) )
+                x=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
+                y=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
+                z=Quantity[...]( value=i32[2], unit=Unit("m / s") ) )
         })
 
         By slice:
@@ -217,9 +217,9 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 y=Quantity[...](value=i32[0,2], unit=Unit("m")),
                 z=Quantity[...](value=i32[0,2], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ) )
+                x=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
+                y=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
+                z=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ) )
         })
 
         By Ellipsis:
@@ -231,9 +231,9 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 y=Quantity[...](value=i32[1,2], unit=Unit("m")),
                 z=Quantity[...](value=i32[1,2], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ) )
+                x=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+                y=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+                z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ) )
         })
 
         By tuple[int, ...]:
@@ -245,9 +245,9 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 y=Quantity[...](value=i32[], unit=Unit("m")),
                 z=Quantity[...](value=i32[], unit=Unit("m")) ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+                x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                z=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
         })
 
         This also supports numpy index arrays. But this example section
@@ -358,9 +358,9 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
                 z=Quantity[...](value=i32[], unit=Unit("m"))
             ),
             'speed': CartesianVel3D(
-                d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                d_y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                d_z=Quantity[...]( value=i32[], unit=Unit("m / s") )
+                x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
+                z=Quantity[...]( value=i32[], unit=Unit("m / s") )
             ) })
 
         """
@@ -382,7 +382,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
         Space({
             'length': <CartesianPos3D (x[m], y[m], z[m])
                 [1 2 3]>,
-            'speed': <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+            'speed': <CartesianVel3D (x[m / s], y[m / s], z[m / s])
                 [4 5 6]>
         })
 
@@ -448,7 +448,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         >>> w.dtypes
         mappingproxy({'length': mappingproxy({'x': dtype('int32'), 'y': dtype('int32'), 'z': dtype('int32')}),
-                      'speed': mappingproxy({'d_x': dtype('int32'), 'd_y': dtype('int32'), 'd_z': dtype('int32')})})
+                      'speed': mappingproxy({'x': dtype('int32'), 'y': dtype('int32'), 'z': dtype('int32')})})
 
         """  # noqa: E501
         return MappingProxyType({k: v.dtypes for k, v in self.items()})
@@ -469,7 +469,7 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         >>> w.devices
         mappingproxy({'length': mappingproxy({'x': CpuDevice(id=0), 'y': CpuDevice(id=0), 'z': CpuDevice(id=0)}),
-                      'speed': mappingproxy({'d_x': CpuDevice(id=0), 'd_y': CpuDevice(id=0), 'd_z': CpuDevice(id=0)})})
+                      'speed': mappingproxy({'x': CpuDevice(id=0), 'y': CpuDevice(id=0), 'z': CpuDevice(id=0)})})
 
         """  # noqa: E501
         return MappingProxyType({k: v.devices for k, v in self.items()})

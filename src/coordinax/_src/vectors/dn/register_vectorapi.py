@@ -42,22 +42,22 @@ def vector(
 
     >>> cx.vecs.CartesianVelND.from_(u.Quantity(1, "km/s"))
     CartesianVelND(
-      d_q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
+      q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
     )
 
     >>> cx.vecs.CartesianVelND.from_(u.Quantity([1], "km/s"))
     CartesianVelND(
-      d_q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
+      q=Quantity[...]( value=...i32[1], unit=Unit("km / s") )
     )
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity(1, "km/s2"))
     CartesianAccND(
-      d2_q=Quantity[...]( value=...i32[1], unit=Unit("km / s2") )
+      q=Quantity[...]( value=...i32[1], unit=Unit("km / s2") )
     )
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1], "km/s2"))
     CartesianAccND(
-      d2_q=Quantity[...]( value=...i32[1], unit=Unit("km / s2") )
+      q=Quantity[...](value=i32[1], unit=Unit("km / s2"))
     )
 
     2D vector:
@@ -69,12 +69,12 @@ def vector(
 
     >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2], "km/s"))
     CartesianVelND(
-      d_q=Quantity[...]( value=...i32[2], unit=Unit("km / s") )
+      q=Quantity[...]( value=...i32[2], unit=Unit("km / s") )
     )
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1, 2], "km/s2"))
     CartesianAccND(
-      d2_q=Quantity[...]( value=...i32[2], unit=Unit("km / s2") )
+      q=Quantity[...](value=i32[2], unit=Unit("km / s2"))
     )
 
     3D vector:
@@ -86,12 +86,12 @@ def vector(
 
     >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2, 3], "km/s"))
     CartesianVelND(
-      d_q=Quantity[...]( value=...i32[3], unit=Unit("km / s") )
+      q=Quantity[...]( value=...i32[3], unit=Unit("km / s") )
     )
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1, 2, 3], "km/s2"))
     CartesianAccND(
-      d2_q=Quantity[...]( value=...i32[3], unit=Unit("km / s2") )
+      q=Quantity[...](value=i32[3], unit=Unit("km / s2"))
     )
 
     4D vector:
@@ -103,12 +103,12 @@ def vector(
 
     >>> cx.vecs.CartesianVelND.from_(u.Quantity([1, 2, 3, 4], "km/s"))
     CartesianVelND(
-      d_q=Quantity[...]( value=...i32[4], unit=Unit("km / s") )
+      q=Quantity[...]( value=...i32[4], unit=Unit("km / s") )
     )
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1, 2, 3, 4], "km/s2"))
     CartesianAccND(
-      d2_q=Quantity[...]( value=...i32[4], unit=Unit("km / s2") )
+      q=Quantity[...](value=i32[4], unit=Unit("km / s2"))
     )
 
     """

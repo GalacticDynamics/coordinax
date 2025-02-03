@@ -76,7 +76,7 @@ p = cx.CartesianVel3D(
     d_z=u.Quantity(jnp.arange(10, 20.0), "m/s"),
 )
 print(p)
-# <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+# <CartesianVel3D (x[m / s], y[m / s], z[m / s])
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -85,7 +85,7 @@ print(p)
 
 p2 = cx.vconvert(cx.SphericalVel, p, q)
 print(p2)
-# <SphericalVel (d_r[m / s], d_theta[m rad / (km s)], d_phi[m rad / (km s)])
+# <SphericalVel (r[m / s], theta[m rad / (km s)], phi[m rad / (km s)])
 #     [[ 1.118e+01 -3.886e-16  0.000e+00]
 #      [ 1.257e+01 -1.110e-16  0.000e+00]
 #      ...

@@ -58,12 +58,12 @@ def add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     >>> vec = jnp.add(v, v)
     >>> vec
     CartesianVel1D(
-       d_x=Quantity[...]( value=i32[], unit=Unit("km / s") )
+       x=Quantity[...]( value=i32[], unit=Unit("km / s") )
     )
-    >>> vec.d_x
+    >>> vec.x
     Quantity['speed'](Array(2, dtype=int32), unit='km / s')
 
-    >>> (v + v).d_x
+    >>> (v + v).x
     Quantity['speed'](Array(2, dtype=int32), unit='km / s')
 
     """
@@ -83,12 +83,12 @@ def add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> vec = jnp.add(v, v)
     >>> vec
     CartesianAcc1D(
-        d2_x=Quantity[...](value=i32[], unit=Unit("km / s2"))
+        x=Quantity[...](value=i32[], unit=Unit("km / s2"))
     )
-    >>> vec.d2_x
+    >>> vec.x
     Quantity['acceleration'](Array(2, dtype=int32), unit='km / s2')
 
-    >>> (v + v).d2_x
+    >>> (v + v).x
     Quantity['acceleration'](Array(2, dtype=int32), unit='km / s2')
 
     """
@@ -165,13 +165,13 @@ def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     >>> vec = jnp.multiply(2, v)
     >>> vec
     CartesianVel1D(
-      d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") )
+      x=Quantity[...]( value=...i32[], unit=Unit("m / s") )
     )
 
-    >>> vec.d_x
+    >>> vec.x
     Quantity['speed'](Array(2, dtype=int32), unit='m / s')
 
-    >>> (2 * v).d_x
+    >>> (2 * v).x
     Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
 
     """
@@ -181,7 +181,7 @@ def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     )
 
     # Scale the components
-    return replace(rhs, d_x=lhs * rhs.d_x)
+    return replace(rhs, x=lhs * rhs.x)
 
 
 @register(jax.lax.mul_p)
@@ -196,12 +196,12 @@ def mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> v = cx.vecs.CartesianAcc1D.from_(1, "m/s2")
     >>> vec = jnp.multiply(2, v)
     >>> vec
-    CartesianAcc1D( d2_x=... )
+    CartesianAcc1D( x=... )
 
-    >>> vec.d2_x
+    >>> vec.x
     Quantity['acceleration'](Array(2, dtype=int32), unit='m / s2')
 
-    >>> (2 * v).d2_x
+    >>> (2 * v).x
     Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
 
     """
@@ -211,7 +211,7 @@ def mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     )
 
     # Scale the components
-    return replace(rhs, d2_x=lhs * rhs.d2_x)
+    return replace(rhs, x=lhs * rhs.x)
 
 
 # ------------------------------------------------
@@ -273,12 +273,12 @@ def sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> v2 = cx.vecs.CartesianAcc1D.from_(2, "m/s2")
     >>> vec = lax.sub(v1, v2)
     >>> vec
-    CartesianAcc1D( d2_x=... )
+    CartesianAcc1D( x=... )
 
-    >>> vec.d2_x
+    >>> vec.x
     Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')
 
-    >>> (v1 - v2).d2_x
+    >>> (v1 - v2).x
     Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')
 
     """

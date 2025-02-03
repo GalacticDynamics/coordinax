@@ -39,17 +39,17 @@ def broadcast_in_dim_p(
     Quantity['length'](Array([1], dtype=int32), unit='m')
 
     >>> p = cx.vecs.CartesianVel1D.from_([1], "m/s")
-    >>> p.d_x
+    >>> p.x
     Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
-    >>> jnp.broadcast_to(p, (1, 1)).d_x
+    >>> jnp.broadcast_to(p, (1, 1)).x
     Quantity['speed'](Array([1], dtype=int32), unit='m / s')
 
     >>> a = cx.vecs.CartesianAcc1D.from_([1], "m/s2")
-    >>> a.d2_x
+    >>> a.x
      Quantity['acceleration'](Array(1, dtype=int32), unit='m / s2')
 
-    >>> jnp.broadcast_to(a, (1, 1)).d2_x
+    >>> jnp.broadcast_to(a, (1, 1)).x
     Quantity['acceleration'](Array([1], dtype=int32), unit='m / s2')
 
 
@@ -63,17 +63,17 @@ def broadcast_in_dim_p(
     Distance(Array([1], dtype=int32), unit='m')
 
     >>> p = cx.vecs.RadialVel.from_([1], "m/s")
-    >>> p.d_r
+    >>> p.r
     Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
-    >>> jnp.broadcast_to(p, (1, 1)).d_r
+    >>> jnp.broadcast_to(p, (1, 1)).r
     Quantity['speed'](Array([1], dtype=int32), unit='m / s')
 
     >>> a = cx.vecs.RadialAcc.from_([1], "m/s2")
-    >>> a.d2_r
+    >>> a.r
     Quantity['acceleration'](Array(1, dtype=int32), unit='m / s2')
 
-    >>> jnp.broadcast_to(a, (1, 1)).d2_r
+    >>> jnp.broadcast_to(a, (1, 1)).r
     Quantity['acceleration'](Array([1], dtype=int32), unit='m / s2')
 
 
@@ -90,20 +90,20 @@ def broadcast_in_dim_p(
 
     >>> p = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
     >>> print(p)
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
+    <CartesianVel2D (x[m / s], y[m / s])
         [1 2]>
 
     >>> print(jnp.broadcast_to(p, (1, 2)))
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
+    <CartesianVel2D (x[m / s], y[m / s])
         [[1 2]]>
 
     >>> a = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
     >>> print(a)
-    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+    <CartesianAcc2D (x[m / s2], y[m / s2])
         [1 2]>
 
     >>> print(jnp.broadcast_to(a, (1, 2)))
-    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+    <CartesianAcc2D (x[m / s2], y[m / s2])
         [[1 2]]>
 
     Cartesian 3D position, velocity, and acceleration:
@@ -116,19 +116,19 @@ def broadcast_in_dim_p(
     Quantity['length'](Array([1], dtype=int32), unit='m')
 
     >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
-    >>> p.d_x
+    >>> p.x
     Quantity['speed'](Array(1, dtype=int32), unit='m / s')
 
-    >>> jnp.broadcast_to(p, (1, 3)).d_x
+    >>> jnp.broadcast_to(p, (1, 3)).x
     Quantity['speed'](Array([1], dtype=int32), unit='m / s')
 
     >>> a = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "m/s2")
     >>> print(a)
-    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+    <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
         [1 2 3]>
 
     >>> print(jnp.broadcast_to(a, (1, 3)))
-    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+    <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
         [[1 2 3]]>
 
     """

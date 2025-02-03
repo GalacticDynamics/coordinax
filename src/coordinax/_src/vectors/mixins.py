@@ -69,7 +69,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"))
+        >>> vec = cx.vecs.PolarVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
@@ -77,7 +77,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.PolarAcc(r=u.Quantity(1, "m/s2"), phi=u.Quantity(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
@@ -99,7 +99,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.SphericalVel(d_r=u.Quantity(1, "m/s"), d_phi=u.Quantity(0, "rad/s"), d_theta=u.Quantity(0, "rad/s"))
+        >>> vec = cx.SphericalVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(0, "rad/s"), theta=u.Quantity(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[3])
 
@@ -107,7 +107,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.vecs.SphericalAcc(d2_r=u.Quantity(1, "m/s2"), d2_phi=u.Quantity(0, "rad/s2"), d2_theta=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.SphericalAcc(r=u.Quantity(1, "m/s2"), phi=u.Quantity(0, "rad/s2"), theta=u.Quantity(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[3])
 
@@ -249,10 +249,9 @@ class AstropyRepresentationAPIMixin:
 
         >>> a_cart = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
         >>> a_sph = a_cart.represent_as(cx.vecs.SphericalAcc, v_cart, q_cart)
-        >>> a_sph
-        SphericalAcc( ... )
-        >>> a_sph.d2_r
-        Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
+        >>> print(a_sph)
+        <SphericalAcc (r[m / s2], theta[rad / s2], phi[rad / s2])
+            [13.363  0.767 -1.2  ]>
 
         """
         return vconvert(target, self, *args, **kwargs)
