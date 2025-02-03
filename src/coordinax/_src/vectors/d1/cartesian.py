@@ -15,10 +15,11 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 
 @final
-class CartesianPos1D(AbstractPos1D):
+class CartesianPos1D(AbstractCartesian, AbstractPos1D):
     """Cartesian vector representation.
 
     Examples
@@ -56,7 +57,7 @@ class CartesianPos1D(AbstractPos1D):
 
 
 @final
-class CartesianVel1D(AbstractVel1D):
+class CartesianVel1D(AbstractCartesian, AbstractVel1D):
     """Cartesian differential representation."""
 
     d_x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
@@ -94,7 +95,7 @@ class CartesianVel1D(AbstractVel1D):
 
 
 @final
-class CartesianAcc1D(AbstractAcc1D):
+class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)

@@ -2,6 +2,7 @@
 
 __all__ = [
     "AbstractVector",
+    "AbstractCartesian",
     # Flags
     "AttrFilter",
     # Utils
@@ -10,6 +11,7 @@ __all__ = [
 ]
 
 from .attribute import VectorAttribute
+from .cartesian import AbstractCartesian
 from .flags import AttrFilter
 from .register_unxt import ToUnitsOptions
 from .vector import AbstractVector

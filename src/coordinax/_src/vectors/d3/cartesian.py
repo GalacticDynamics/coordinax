@@ -27,6 +27,7 @@ from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .generic import CartesianGeneric3D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty, is_any_quantity
+from coordinax._src.vectors.base.cartesian import AbstractCartesian
 from coordinax._src.vectors.base_pos import AbstractPos
 
 #####################################################################
@@ -34,7 +35,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 
 
 @final
-class CartesianPos3D(AbstractPos3D):
+class CartesianPos3D(AbstractCartesian, AbstractPos3D):
     """Cartesian 3D Position.
 
     Examples
@@ -206,7 +207,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
 
 
 @final
-class CartesianVel3D(AbstractVel3D):
+class CartesianVel3D(AbstractCartesian, AbstractVel3D):
     """Cartesian 3D Velocity.
 
     Examples
@@ -307,7 +308,7 @@ def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
 
 
 @final
-class CartesianAcc3D(AbstractAcc3D):
+class CartesianAcc3D(AbstractCartesian, AbstractAcc3D):
     """Cartesian differential representation."""
 
     d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
