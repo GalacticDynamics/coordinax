@@ -7,6 +7,8 @@ from typing import Any
 
 from plum import dispatch
 
+import quaxed.numpy as jnp
+
 from .core import Space
 from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AbstractVector
@@ -208,7 +210,8 @@ def temp_vconvert(
     target: type[AbstractPos], current: AbstractVel, space: Space, /
 ) -> AbstractVel:
     """Transform of Velocities."""
-    return vconvert(target.differential_cls, current, space["length"])
+    q, p = jnp.broadcast_arrays(space["length"], current)
+    return vconvert(target.differential_cls, p, q)
 
 
 # TODO: should this be moved to a different file?
@@ -217,9 +220,5 @@ def temp_vconvert(
     target: type[AbstractPos], current: AbstractAcc, space: Space, /
 ) -> AbstractAcc:
     """Transform of Accs."""
-    return vconvert(
-        target.differential_cls.differential_cls,
-        current,
-        space["speed"],
-        space["length"],
-    )
+    q, p, a = jnp.broadcast_arrays(space["length"], space["speed"], current)
+    return vconvert(target.differential_cls.differential_cls, a, p, q)
