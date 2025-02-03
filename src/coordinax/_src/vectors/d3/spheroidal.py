@@ -124,13 +124,13 @@ class ProlateSpheroidalPos(AbstractPos3D):
 class ProlateSpheroidalVel(AbstractVel3D):
     """Prolate spheroidal differential representation."""
 
-    d_mu: ct.BatchableDiffusivity = eqx.field(converter=u.Quantity["diffusivity"].from_)
+    mu: ct.BatchableDiffusivity = eqx.field(converter=u.Quantity["diffusivity"].from_)
     r"""Prolate spheroidal mu speed :math:`d\mu/dt \in [-\infty, \infty]."""
 
-    d_nu: ct.BatchableDiffusivity = eqx.field(converter=u.Quantity["diffusivity"].from_)
+    nu: ct.BatchableDiffusivity = eqx.field(converter=u.Quantity["diffusivity"].from_)
     r"""Prolate spheroidal nu speed :math:`d\nu/dt \in [-\infty, \infty]."""
 
-    d_phi: ct.BatchableAngularSpeed = eqx.field(
+    phi: ct.BatchableAngularSpeed = eqx.field(
         converter=u.Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
@@ -152,17 +152,17 @@ class ProlateSpheroidalVel(AbstractVel3D):
 class ProlateSpheroidalAcc(AbstractAcc3D):
     """Prolate spheroidal acceleration representation."""
 
-    d2_mu: ct.BatchableSpecificEnergy = eqx.field(
+    mu: ct.BatchableSpecificEnergy = eqx.field(
         converter=u.Quantity["specific energy"].from_
     )
     r"""Prolate spheroidal mu acceleration :math:`d^2\mu/dt^2 \in [-\infty, \infty]."""
 
-    d2_nu: ct.BatchableSpecificEnergy = eqx.field(
+    nu: ct.BatchableSpecificEnergy = eqx.field(
         converter=u.Quantity["specific energy"].from_
     )
     r"""Prolate spheroidal nu acceleration :math:`d^2\nu/dt^2 \in [-\infty, \infty]."""
 
-    d2_phi: ct.BatchableAngularAcc = eqx.field(
+    phi: ct.BatchableAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""

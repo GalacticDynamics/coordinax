@@ -28,8 +28,9 @@ def vector(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D:
 
     >>> cart = CartesianRepresentation(1, 2, 3, unit="m")
     >>> vec = cx.vector(cart)
-    >>> vec.x
-    Quantity['length'](Array(1., dtype=float32), unit='m')
+    >>> print(vec)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1. 2. 3.]>
 
     """
     return vector(cx.vecs.CartesianPos3D, obj)
@@ -50,8 +51,9 @@ def vector(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.CylindricalPos:
     >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg,
     ...                                 z=30 * u.m)
     >>> vec = cx.vector(cyl)
-    >>> vec.rho
-    Quantity['length'](Array(1., dtype=float32), unit='km')
+    >>> print(vec)
+    <CylindricalPos (rho[km], phi[deg], z[m])
+        [ 1.  2. 30.]>
 
     """
     return vector(cx.vecs.CylindricalPos, obj)
@@ -72,8 +74,9 @@ def vector(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPos:
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
     >>> vec = cx.vector(sph)
-    >>> vec.r
-    Distance(Array(1., dtype=float32), unit='km')
+    >>> print(vec)
+    <SphericalPos (r[km], theta[deg], phi[deg])
+        [1. 2. 3.]>
 
     """
     return vector(cx.SphericalPos, obj)
@@ -94,8 +97,9 @@ def vector(obj: apyc.SphericalRepresentation, /) -> cx.vecs.LonLatSphericalPos:
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
     ...                               distance=1 * u.km)
     >>> vec = cx.vector(sph)
-    >>> vec.distance
-    Distance(Array(1., dtype=float32), unit='km')
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [3. 2. 1.]>
 
     """
     return vector(cx.vecs.LonLatSphericalPos, obj)
@@ -115,8 +119,9 @@ def vector(obj: apyc.UnitSphericalRepresentation) -> cx.vecs.TwoSpherePos:
 
     >>> sph = UnitSphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg)
     >>> vec = cx.vector(sph)
-    >>> vec.theta
-    Angle(Array(2., dtype=float32), unit='deg')
+    >>> print(vec)
+    <TwoSpherePos (theta[deg], phi[deg])
+        [2. 3.]>
 
     """
     return vector(cx.vecs.TwoSpherePos, obj)
@@ -136,8 +141,9 @@ def vector(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel3D:
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> dif = cx.vector(dcart)
-    >>> dif.d_x
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> print(vec)
+    <TwoSpherePos (theta[deg], phi[deg])
+        [2. 3.]>
 
     """
     return vector(cx.CartesianVel3D, obj)
@@ -158,8 +164,9 @@ def vector(obj: apyc.CylindricalDifferential, /) -> cx.vecs.CylindricalVel:
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
     >>> dif = cx.vector(dcyl)
-    >>> dif.d_rho
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> print(vec)
+    <TwoSpherePos (theta[deg], phi[deg])
+        [2. 3.]>
 
     """
     return vector(cx.vecs.CylindricalVel, obj)
@@ -180,8 +187,9 @@ def vector(obj: apyc.PhysicsSphericalDifferential, /) -> cx.SphericalVel:
     >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                     d_phi=3 * u.mas/u.yr)
     >>> dif = cx.vector(dsph)
-    >>> dif.d_r
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> print(vec)
+    <TwoSpherePos (theta[deg], phi[deg])
+        [2. 3.]>
 
     """
     return vector(cx.SphericalVel, obj)
@@ -203,8 +211,9 @@ def vector(obj: apyc.SphericalDifferential, /) -> cx.vecs.LonLatSphericalVel:
     ...                              d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
     >>> dif = cx.vector(dsph)
-    >>> dif.d_distance
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> print(vec)
+    <TwoSpherePos (theta[deg], phi[deg])
+        [2. 3.]>
 
     """
     return vector(cx.vecs.LonLatSphericalVel, obj)
@@ -226,14 +235,9 @@ def vector(obj: apyc.SphericalCosLatDifferential, /) -> cx.vecs.LonCosLatSpheric
     ...                                    d_lon_coslat=2 * u.mas/u.yr,
     ...                                    d_lat=3 * u.mas/u.yr)
     >>> dif = cx.vector(dsph)
-    >>> dif
-    LonCosLatSphericalVel(
-      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
-    )
-    >>> dif.d_distance
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> print(dif)
+    <LonCosLatSphericalVel (lon_coslat[mas / yr], lat[mas / yr], distance[km / s])
+        [2. 3. 1.]>
 
     """
     return vector(cx.vecs.LonCosLatSphericalVel, obj)
@@ -253,8 +257,9 @@ def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereVel:
 
     >>> dsph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
     >>> vel = cx.vector(dsph)
-    >>> vel.d_phi
-    Quantity[...](Array(3., dtype=float32), unit='deg / s')
+    >>> print(vel)
+    <TwoSphereVel (theta[deg / s], phi[deg / s])
+        [2. 3.]>
 
     """
     return vector(cx.vecs.TwoSphereVel, obj)
@@ -277,8 +282,9 @@ def vector(
 
     >>> cart = CartesianRepresentation(1, 2, 3, unit="km")
     >>> vec = cx.CartesianPos3D.from_(cart)
-    >>> vec.x
-    Quantity['length'](Array(1., dtype=float32), unit='km')
+    >>> print(vec)
+    <CartesianPos3D (x[km], y[km], z[km])
+        [1. 2. 3.]>
 
     """
     obj = obj.represent_as(apyc.CartesianRepresentation)
@@ -300,8 +306,9 @@ def vector(
     >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg,
     ...                                 z=30 * u.m)
     >>> vec = cx.vecs.CylindricalPos.from_(cyl)
-    >>> vec.rho
-    Quantity['length'](Array(1., dtype=float32), unit='km')
+    >>> print(vec)
+    <CylindricalPos (rho[km], phi[deg], z[m])
+        [ 1.  2. 30.]>
 
     """
     obj = obj.represent_as(apyc.CylindricalRepresentation)
@@ -323,8 +330,9 @@ def vector(
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
     >>> vec = cx.SphericalPos.from_(sph)
-    >>> vec.r
-    Distance(Array(1., dtype=float32), unit='km')
+    >>> print(vec)
+    <SphericalPos (r[km], theta[deg], phi[deg])
+        [1. 2. 3.]>
 
     """
     obj = obj.represent_as(apyc.PhysicsSphericalRepresentation)
@@ -346,8 +354,9 @@ def vector(
     >>> sph = SphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg,
     ...                               distance=1 * u.km)
     >>> vec = cx.vecs.LonLatSphericalPos.from_(sph)
-    >>> vec.distance
-    Distance(Array(1., dtype=float32), unit='km')
+    >>> print(vec)
+    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+        [3. 2. 1.]>
 
     """
     obj = obj.represent_as(apyc.SphericalRepresentation)
@@ -368,8 +377,9 @@ def vector(
 
     >>> sph = UnitSphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg)
     >>> vec = cx.vecs.TwoSpherePos.from_(sph)
-    >>> vec.theta
-    Angle(Array(2., dtype=float32), unit='deg')
+    >>> print(vec)
+    <TwoSpherePos (theta[deg], phi[deg])
+        [2. 3.]>
 
     """
     obj = obj.represent_as(apyc.UnitSphericalRepresentation)
@@ -390,11 +400,12 @@ def vector(
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> dif = cx.CartesianVel3D.from_(dcart)
-    >>> dif.d_x
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> print(vec)
+    <TwoSpherePos (theta[deg], phi[deg])
+        [2. 3.]>
 
     """
-    return cls(d_x=obj.d_x, d_y=obj.d_y, d_z=obj.d_z)
+    return cls(x=obj.d_x, y=obj.d_y, z=obj.d_z)
 
 
 @dispatch
@@ -411,12 +422,13 @@ def vector(
 
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
-    >>> dif = cx.vecs.CylindricalVel.from_(dcyl)
-    >>> dif.d_rho
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> vec = cx.vecs.CylindricalVel.from_(dcyl)
+    >>> print(vec)
+    <CylindricalVel (rho[km / s], phi[mas / yr], z[km / s])
+        [1. 2. 2.]>
 
     """
-    return cls(d_rho=obj.d_rho, d_phi=obj.d_phi, d_z=obj.d_z)
+    return cls(rho=obj.d_rho, phi=obj.d_phi, z=obj.d_z)
 
 
 @dispatch
@@ -433,12 +445,13 @@ def vector(
 
     >>> dsph = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                     d_phi=3 * u.mas/u.yr)
-    >>> dif = cx.SphericalVel.from_(dsph)
-    >>> dif.d_r
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> vec = cx.SphericalVel.from_(dsph)
+    >>> print(vec)
+    <SphericalVel (r[km / s], theta[mas / yr], phi[mas / yr])
+        [1. 2. 3.]>
 
     """
-    return cls(d_r=obj.d_r, d_phi=obj.d_phi, d_theta=obj.d_theta)
+    return cls(r=obj.d_r, phi=obj.d_phi, theta=obj.d_theta)
 
 
 @dispatch
@@ -456,12 +469,13 @@ def vector(
     >>> dsph = SphericalDifferential(d_distance=1 * u.km / u.s,
     ...                              d_lon=2 * u.mas/u.yr,
     ...                              d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.vecs.LonLatSphericalVel.from_(dsph)
-    >>> dif.d_distance
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> vec = cx.vecs.LonLatSphericalVel.from_(dsph)
+    >>> print(vec)
+    <LonLatSphericalVel (lon[mas / yr], lat[mas / yr], distance[km / s])
+        [2. 3. 1.]>
 
     """
-    return cls(d_distance=obj.d_distance, d_lon=obj.d_lon, d_lat=obj.d_lat)
+    return cls(distance=obj.d_distance, lon=obj.d_lon, lat=obj.d_lat)
 
 
 @dispatch
@@ -479,20 +493,13 @@ def vector(
     >>> dsph = SphericalCosLatDifferential(d_distance=1 * u.km / u.s,
     ...                                    d_lon_coslat=2 * u.mas/u.yr,
     ...                                    d_lat=3 * u.mas/u.yr)
-    >>> dif = cx.vecs.LonCosLatSphericalVel.from_(dsph)
-    >>> dif
-    LonCosLatSphericalVel(
-      d_lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      d_distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
-    )
-    >>> dif.d_distance
-    Quantity['speed'](Array(1., dtype=float32), unit='km / s')
+    >>> vec = cx.vecs.LonCosLatSphericalVel.from_(dsph)
+    >>> print(vec)
+    <LonCosLatSphericalVel (lon_coslat[mas / yr], lat[mas / yr], distance[km / s])
+        [2. 3. 1.]>
 
     """
-    return cls(
-        d_distance=obj.d_distance, d_lon_coslat=obj.d_lon_coslat, d_lat=obj.d_lat
-    )
+    return cls(distance=obj.d_distance, lon_coslat=obj.d_lon_coslat, lat=obj.d_lat)
 
 
 @dispatch
@@ -508,12 +515,13 @@ def vector(
     >>> from astropy.coordinates import UnitSphericalDifferential
 
     >>> sph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
-    >>> vel = cx.vecs.TwoSphereVel.from_(sph)
-    >>> vel.d_phi
-    Quantity[...](Array(3., dtype=float32), unit='deg / s')
+    >>> vec = cx.vecs.TwoSphereVel.from_(sph)
+    >>> print(vec)
+    <TwoSphereVel (theta[deg / s], phi[deg / s])
+        [2. 3.]>
 
     """
-    return cls(d_phi=obj.d_lon, d_theta=obj.d_lat)
+    return cls(phi=obj.d_lon, theta=obj.d_lat)
 
 
 #####################################################################
@@ -531,8 +539,7 @@ def vector(obj: apyu.Quantity, /) -> cx.vecs.AbstractVector:
     >>> from astropy.units import Quantity
     >>> import coordinax as cx
 
-    >>> xs = Quantity([1, 2, 3], "meter")
-    >>> vec = cx.vector(xs)
+    >>> vec = cx.vector(Quantity([1, 2, 3], "meter"))
     >>> print(vec)
     <CartesianPos3D (x[m], y[m], z[m])
         [1. 2. 3.]>
@@ -570,12 +577,12 @@ def vector(
 
     >>> vec = cx.CartesianVel3D.from_(Quantity([1, 2, 3], "m/s"))
     >>> print(vec)
-    <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+    <CartesianVel3D (x[m / s], y[m / s], z[m / s])
         [1. 2. 3.]>
 
     >>> vec = cx.vecs.CartesianAcc3D.from_(Quantity([1, 2, 3], "m/s2"))
     >>> print(vec)
-    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+    <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
         [1. 2. 3.]>
 
     >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]

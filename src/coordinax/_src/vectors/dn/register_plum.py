@@ -11,8 +11,12 @@ from unxt.quantity import AbstractQuantity
 from .cartesian import CartesianAccND, CartesianPosND, CartesianVelND
 
 
+@conversion_method(CartesianAccND, AbstractQuantity)  # type: ignore[arg-type]
+@conversion_method(CartesianVelND, AbstractQuantity)
 @conversion_method(CartesianPosND, AbstractQuantity)
-def vec_to_q(obj: CartesianPosND, /) -> Shaped[AbstractQuantity, "*batch N"]:
+def vec_to_q(
+    obj: CartesianPosND | CartesianVelND | CartesianAccND, /
+) -> Shaped[AbstractQuantity, "*batch N"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
     Examples
@@ -25,41 +29,13 @@ def vec_to_q(obj: CartesianPosND, /) -> Shaped[AbstractQuantity, "*batch N"]:
     >>> convert(vec, u.Quantity)
     Quantity['length'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
 
-    """
-    return obj.q
-
-
-@conversion_method(CartesianVelND, AbstractQuantity)
-def vec_to_q(obj: CartesianVelND, /) -> Shaped[AbstractQuantity, "*batch N"]:
-    """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
-
     >>> vec = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4, 5], unit="km/s"))
     >>> convert(vec, u.Quantity)
     Quantity['speed'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
-
-    """
-    return obj.d_q
-
-
-@conversion_method(CartesianAccND, AbstractQuantity)
-def vec_to_q(obj: CartesianAccND, /) -> Shaped[AbstractQuantity, "*batch N"]:
-    """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
 
     >>> vec = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4, 5], unit="km/s2"))
     >>> convert(vec, u.Quantity)
     Quantity['acceleration'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
 
     """
-    return obj.d2_q
+    return obj.q

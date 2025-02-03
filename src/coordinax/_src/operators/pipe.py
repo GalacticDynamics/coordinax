@@ -85,7 +85,7 @@ class Pipe(AbstractCompositeOperator):
     >>> print(*pipe(pos, vel), sep="\n")
     <CartesianPos3D (x[km], y[km], z[km])
         [2 4 6]>
-    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
         [5. 7. 9.]>
 
     """

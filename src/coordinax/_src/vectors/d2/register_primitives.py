@@ -58,11 +58,11 @@ def add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
 
     >>> v = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
     >>> print(v + v)
-    <CartesianVel2D (d_x[km / s], d_y[km / s])
+    <CartesianVel2D (x[km / s], y[km / s])
         [2 4]>
 
     >>> print(jnp.add(v, v))
-    <CartesianVel2D (d_x[km / s], d_y[km / s])
+    <CartesianVel2D (x[km / s], y[km / s])
         [2 4]>
 
     """
@@ -80,11 +80,11 @@ def add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
 
     >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "km/s2")
     >>> print(v + v)
-    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
+    <CartesianAcc2D (x[km / s2], y[km / s2])
         [6 8]>
 
     >>> print(jnp.add(v, v))
-    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
+    <CartesianAcc2D (x[km / s2], y[km / s2])
         [6 8]>
 
     """
@@ -158,11 +158,11 @@ def mul_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
 
     >>> v = cx.vecs.CartesianVel2D.from_([3, 4], "m/s")
     >>> print(5 * v)
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
+    <CartesianVel2D (x[m / s], y[m / s])
         [15 20]>
 
     >>> print(jnp.multiply(5, v))
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
+    <CartesianVel2D (x[m / s], y[m / s])
         [15 20]>
 
     """
@@ -172,11 +172,11 @@ def mul_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
     )
 
     # Scale the components
-    return replace(rhs, d_x=lhs * rhs.d_x, d_y=lhs * rhs.d_y)
+    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
 
 
 @register(jax.lax.mul_p)
-def mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
+def mul_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     """Scale a cartesian 2D acceleration by a scalar.
 
     Examples
@@ -185,10 +185,10 @@ def mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
     >>> import coordinax as cx
 
     >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "m/s2")
-    >>> jnp.multiply(5, v).d2_x
+    >>> jnp.multiply(5, v).x
     Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
 
-    >>> (5 * v).d2_x
+    >>> (5 * v).x
     Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
 
     """
@@ -198,7 +198,7 @@ def mul_va(lhs: ArrayLike, rhts: CartesianAcc2D, /) -> CartesianAcc2D:
     )
 
     # Scale the components
-    return replace(rhts, d2_x=lhs * rhts.d2_x, d2_y=lhs * rhts.d2_y)
+    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
 
 
 @register(jax.lax.mul_p)

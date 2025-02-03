@@ -63,7 +63,7 @@ def vconvert(
     >>> q = cx.vecs.CartesianPos1D.from_(1.0, "km")
     >>> p = cx.vecs.CartesianVel1D.from_(1.0, "km/s")
     >>> cx.vconvert(cx.vecs.RadialVel, p, q)
-    RadialVel( d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
+    RadialVel( r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
 
     Now in 2D:
 
@@ -71,8 +71,8 @@ def vconvert(
     >>> p = cx.vecs.CartesianVel2D.from_([1.0, 2.0], "km/s")
     >>> cx.vconvert(cx.vecs.PolarVel, p, q)
     PolarVel(
-      d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+      r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
+      phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     And in 3D:
@@ -81,9 +81,9 @@ def vconvert(
     >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> cx.vconvert(cx.SphericalVel, p, q)
     SphericalVel(
-      d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+      r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
+      theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
+      phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     If given a position as a Quantity, it will be converted to the appropriate
@@ -92,9 +92,9 @@ def vconvert(
     >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> cx.vconvert(cx.SphericalVel, p, u.Quantity([1.0, 2.0, 3.0], "km"))
     SphericalVel(
-      d_r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      d_theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      d_phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
+      r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
+      theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
+      phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
     )
 
     """
@@ -142,7 +142,7 @@ def vconvert(
     # being that row's column as a dictionary, now with the correct units for
     # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
     jac_rows = {
-        f"d_{k}": {
+        k: {
             kk: u.Quantity(vv.value, unit=v.unit / vv.unit)
             for kk, vv in field_items(AttrFilter, v.value)
         }
@@ -155,10 +155,7 @@ def vconvert(
         **{  # Each field is the dot product of the row of the J and the diff column.
             k: jnp.sum(  # Doing the dot product.
                 jnp.stack(
-                    tuple(
-                        j_c * getattr(flat_current, f"d_{kk}")
-                        for kk, j_c in j_r.items()
-                    )
+                    tuple(j_c * getattr(flat_current, kk) for kk, j_c in j_r.items())
                 ),
                 axis=0,
             )

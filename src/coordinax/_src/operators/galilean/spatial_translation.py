@@ -334,7 +334,7 @@ def call(
     >>> print(newq, newp, sep="\n")
     <CartesianPos3D (x[km], y[km], z[km])
         [1 1 1]>
-    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
         [1. 2. 3.]>
 
     """
@@ -392,7 +392,7 @@ def call(
     >>> print(newq, newp, sep="\n")
     <CartesianPos3D (x[km], y[km], z[km])
         [1 1 1]>
-    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
         [1. 2. 3.]>
 
     """

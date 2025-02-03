@@ -51,9 +51,9 @@ def vconvert(target: type[PoincarePolarVector], w: Space, /) -> PoincarePolarVec
       rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
       pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
       z=Quantity[...](value=i32[1,2], unit=Unit("m")),
-      d_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-      d_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
-      d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
+      dt_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
+      dt_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
+      dt_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
     )
 
     """
@@ -61,10 +61,10 @@ def vconvert(target: type[PoincarePolarVector], w: Space, /) -> PoincarePolarVec
     p = w["speed"].vconvert(CylindricalVel, q)
 
     # pg. 437, Papaphillipou & Laskar (1996)
-    sqrt2theta = jnp.sqrt(jnp.abs(2 * q.rho**2 * p.d_phi))
+    sqrt2theta = jnp.sqrt(jnp.abs(2 * q.rho**2 * p.phi))
     pp_phi = sqrt2theta * jnp.cos(q.phi)
     pp_phidot = sqrt2theta * jnp.sin(q.phi)
 
     return PoincarePolarVector(
-        rho=q.rho, pp_phi=pp_phi, z=q.z, d_rho=p.d_rho, d_pp_phi=pp_phidot, d_z=p.d_z
+        rho=q.rho, pp_phi=pp_phi, z=q.z, dt_rho=p.rho, dt_pp_phi=pp_phidot, dt_z=p.z
     )

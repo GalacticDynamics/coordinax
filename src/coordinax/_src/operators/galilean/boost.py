@@ -117,7 +117,7 @@ class GalileanBoost(AbstractGalileanOperator):
         GalileanBoost(CartesianVel3D( ... ))
 
         >>> print(op.inverse.velocity)
-        <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+        <CartesianVel3D (x[m / s], y[m / s], z[m / s])
             [-1 -2 -3]>
 
         """
@@ -189,7 +189,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
         >>> op = cx.ops.GalileanBoost.from_([1, 0, 0], "m/s")
         >>> print((-op).velocity)
-        <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+        <CartesianVel3D (x[m / s], y[m / s], z[m / s])
             [-1 0 0]>
 
         """

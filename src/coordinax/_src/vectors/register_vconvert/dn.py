@@ -33,9 +33,9 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
         rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
         pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
       z=Quantity[...](value=i32[1,2], unit=Unit("m")),
-      d_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-      d_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
-      d_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
+      dt_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
+      dt_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
+      dt_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
     )
 
     >>> cx.vconvert(cx.Space, w)
@@ -46,17 +46,17 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
             z=Quantity[...](value=i32[1,2], unit=Unit("m"))
         ),
         'speed': CartesianVel3D(
-            d_x=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
-            d_y=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
-            d_z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") )
+            x=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+            y=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
+            z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") )
         )
     })
 
     """
-    phi = cast(AbstractQuantity, jnp.atan2(w.d_pp_phi, w.pp_phi))
-    d_phi = (w.pp_phi**2 + w.d_pp_phi**2) / 2 / w.rho**2  # TODO: note the abs
+    phi = cast(AbstractQuantity, jnp.atan2(w.dt_pp_phi, w.pp_phi))
+    dt_phi = (w.pp_phi**2 + w.dt_pp_phi**2) / 2 / w.rho**2  # TODO: note the abs
 
     return Space(
         length=CylindricalPos(rho=w.rho, z=w.z, phi=phi),
-        speed=CylindricalVel(d_rho=w.d_rho, d_z=w.d_z, d_phi=d_phi),
+        speed=CylindricalVel(rho=w.dt_rho, z=w.dt_z, phi=dt_phi),
     )

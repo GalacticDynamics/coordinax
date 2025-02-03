@@ -61,12 +61,12 @@ class RadialVel(AbstractVel1D):
 
     >>> vec = cx.vecs.RadialVel(u.Quantity([2], "m/s"))
     >>> print(vec)
-    <RadialVel (d_r[m / s])
+    <RadialVel (r[m / s])
         [[2]]>
 
     """
 
-    d_r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
     @override
@@ -96,12 +96,12 @@ class RadialAcc(AbstractAcc1D):
 
     >>> vec = cx.vecs.RadialAcc(u.Quantity([2], "m/s2"))
     >>> print(vec)
-    <RadialAcc (d2_r[m / s2])
+    <RadialAcc (r[m / s2])
         [[2]]>
 
     """
 
-    d2_r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in (-\infty,+\infty)`."""
 
     @override

@@ -125,11 +125,11 @@ class AbstractOperator(eqx.Module):
                 [0. 0. 1.]]),
             translation=GalileanTranslation(<FourVector (t[s], q=(x[km], y[km], z[km]))
                     [0. 2. 3. 4.]>),
-            velocity=GalileanBoost(<CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+            velocity=GalileanBoost(<CartesianVel3D (x[km / s], y[km / s], z[km / s])
                     [1. 2. 3.]>)
         )
 
-        """  # noqa: E501
+        """
         name = self.__class__.__name__
         fitems = field_items(flags.FilterRepr, self)
         if len(fitems) == 1:
@@ -226,7 +226,7 @@ def from_(
 
     >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
     >>> print(op.velocity)
-    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
         [1 1 1]>
 
     """

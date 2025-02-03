@@ -32,17 +32,13 @@ def mul_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"]) -> AbstractVel:
 
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, u.Quantity(2, "s"))
-    >>> vec
-    RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
-    >>> vec.d_r
-    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
-
-    >>> (d2r * u.Quantity(2, "s")).d_r
-    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+    >>> print(vec)
+    <RadialVel (r[m / s])
+        [2]>
 
     """
     # TODO: better access to corresponding fields
-    fs = {k.replace("2", ""): jnp.multiply(v, rhs) for k, v in field_items(lhs)}
+    fs = {k: jnp.multiply(v, rhs) for k, v in field_items(lhs)}
     return cast(AbstractVel, lhs.integral_cls.from_(fs))
 
 
@@ -58,10 +54,9 @@ def mul_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc) -> AbstractVel:
 
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(u.Quantity(2, "s"), d2r)
-    >>> vec
-    RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
-    >>> vec.d_r
-    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+    >>> print(vec)
+    <RadialVel (r[m / s])
+        [2]>
 
     """
     return cast(AbstractVel, qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # pylint: disable=arguments-out-of-order
@@ -90,7 +85,7 @@ def mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
     """
     # TODO: better access to corresponding fields
     pos_cls = lhs.integral_cls.integral_cls
-    fs = {k.replace("d2_", ""): v * rhs for k, v in field_items(lhs)}
+    fs = {k: v * rhs for k, v in field_items(lhs)}
     return cast(AbstractPos, pos_cls.from_(fs))
 
 
@@ -130,7 +125,7 @@ def neg_acc(vec: AbstractAcc) -> AbstractAcc:
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.neg(d2r)
     >>> print(vec)
-    <RadialAcc (d2_r[m / s2])
+    <RadialAcc (r[m / s2])
         [-1]>
 
     """

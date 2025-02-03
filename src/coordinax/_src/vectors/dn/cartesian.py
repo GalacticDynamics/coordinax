@@ -158,7 +158,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
     A 1D vector:
 
     >>> q = cx.vecs.CartesianVelND(u.Quantity([[1]], "km/s"))
-    >>> q.d_q
+    >>> q.q
     Quantity['speed'](Array([[1]], dtype=int32), unit='km / s')
     >>> q.shape
     (1,)
@@ -166,7 +166,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
     A 2D vector:
 
     >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2], "km/s"))
-    >>> q.d_q
+    >>> q.q
     Quantity['speed'](Array([1, 2], dtype=int32), unit='km / s')
     >>> q.shape
     ()
@@ -174,7 +174,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
     A 3D vector:
 
     >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "km/s"))
-    >>> q.d_q
+    >>> q.q
     Quantity['speed'](Array([1, 2, 3], dtype=int32), unit='km / s')
     >>> q.shape
     ()
@@ -182,7 +182,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
     A 4D vector:
 
     >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4], "km/s"))
-    >>> q.d_q
+    >>> q.q
     Quantity['speed'](Array([1, 2, 3, 4], dtype=int32), unit='km / s')
     >>> q.shape
     ()
@@ -190,14 +190,14 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
     A 5D vector:
 
     >>> q = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4, 5], "km/s"))
-    >>> q.d_q
+    >>> q.q
     Quantity['speed'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
     >>> q.shape
     ()
 
     """
 
-    d_q: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    q: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""N-D speed :math:`d\vec{x}/dt \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /
@@ -218,7 +218,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
         3
 
         """
-        return self.d_q.shape[-1]
+        return self.q.shape[-1]
 
     @override
     @classproperty
@@ -267,7 +267,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
         Quantity['speed'](Array(3.7416575, dtype=float32), unit='km / s')
 
         """
-        return jnp.linalg.vector_norm(self.d_q, axis=-1)
+        return jnp.linalg.vector_norm(self.q, axis=-1)
 
 
 ##############################################################################
@@ -286,7 +286,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
     A 1D vector:
 
     >>> q = cx.vecs.CartesianAccND(u.Quantity([[1]], "km/s2"))
-    >>> q.d2_q
+    >>> q.q
     Quantity['acceleration'](Array([[1]], dtype=int32), unit='km / s2')
     >>> q.shape
     (1,)
@@ -294,7 +294,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
     A 2D vector:
 
     >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2], "km/s2"))
-    >>> q.d2_q
+    >>> q.q
     Quantity['acceleration'](Array([1, 2], dtype=int32), unit='km / s2')
     >>> q.shape
     ()
@@ -302,7 +302,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
     A 3D vector:
 
     >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3], "km/s2"))
-    >>> q.d2_q
+    >>> q.q
     Quantity['acceleration'](Array([1, 2, 3], dtype=int32), unit='km / s2')
     >>> q.shape
     ()
@@ -310,7 +310,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
     A 4D vector:
 
     >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4], "km/s2"))
-    >>> q.d2_q
+    >>> q.q
     Quantity['acceleration'](Array([1, 2, 3, 4], dtype=int32), unit='km / s2')
     >>> q.shape
     ()
@@ -318,14 +318,14 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
     A 5D vector:
 
     >>> q = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4, 5], "km/s2"))
-    >>> q.d2_q
+    >>> q.q
     Quantity['acceleration'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
     >>> q.shape
     ()
 
     """
 
-    d2_q: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    q: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""N-D acceleration :math:`d\vec{x}/dt^2 \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /
@@ -346,7 +346,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
         3
 
         """
-        return self.d2_q.shape[-1]
+        return self.q.shape[-1]
 
     @override
     @classproperty
@@ -401,4 +401,4 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
         Quantity['acceleration'](Array(3.7416575, dtype=float32), unit='km / s2')
 
         """
-        return jnp.linalg.vector_norm(self.d2_q, axis=-1)
+        return jnp.linalg.vector_norm(self.q, axis=-1)

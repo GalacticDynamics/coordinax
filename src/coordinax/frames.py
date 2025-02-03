@@ -33,7 +33,7 @@ This can also transform a velocity:
 >>> print(q_frame, v_frame, sep="\n")
 <CartesianPos3D (x[kpc], y[kpc], z[kpc])
     [ 0. -1.  0.]>
-<CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+<CartesianVel3D (x[km / s], y[km / s], z[km / s])
     [ 0. -1.  0.]>
 
 >>> op.inverse(q_frame, v_frame) == (q_icrs, v_icrs)

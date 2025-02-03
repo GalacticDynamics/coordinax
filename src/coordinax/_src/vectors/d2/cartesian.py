@@ -63,15 +63,15 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
 
     >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
     >>> print(vec)
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
+    <CartesianVel2D (x[m / s], y[m / s])
         [1 2]>
 
     """
 
-    d_x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""X coordinate differential :math:`\dot{x} \in (-\infty,+\infty)`."""
 
-    d_y: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    y: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
     @override
@@ -107,7 +107,7 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
         Quantity['speed'](Array(5., dtype=float32), unit='km / s')
 
         """
-        return jnp.sqrt(self.d_x**2 + self.d_y**2)
+        return jnp.sqrt(self.x**2 + self.y**2)
 
 
 #####################################################################
@@ -123,15 +123,15 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
 
     >>> vec = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
     >>> print(vec)
-    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+    <CartesianAcc2D (x[m / s2], y[m / s2])
         [1 2]>
 
     """
 
-    d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X coordinate acceleration :math:`\frac{d^2 x}{dt^2} \in (-\infty,+\infty)`."""
 
-    d2_y: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    y: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""
 
     @override
@@ -155,4 +155,4 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
         Quantity['acceleration'](Array(5., dtype=float32), unit='km / s2')
 
         """
-        return jnp.sqrt(self.d2_x**2 + self.d2_y**2)
+        return jnp.sqrt(self.x**2 + self.y**2)

@@ -102,30 +102,30 @@ def vector(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVecto
     Vel 1D:
 
     >>> cx.vecs.CartesianVel1D.from_(u.Quantity(1, "m/s"))
-    CartesianVel1D( d_x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    CartesianVel1D( x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
     >>> cx.vecs.CartesianVel1D.from_(u.Quantity([1], "m/s"))
-    CartesianVel1D( d_x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    CartesianVel1D( x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     >>> cx.vecs.RadialVel.from_(u.Quantity(1, "m/s"))
-    RadialVel( d_r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    RadialVel( r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
 
     >>> cx.vecs.RadialVel.from_(u.Quantity([1], "m/s"))
-    RadialVel( d_r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    RadialVel( r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
 
     Acc 1D:
 
     >>> cx.vecs.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
-    CartesianAcc1D( d2_x=... )
+    CartesianAcc1D( x=... )
 
     >>> cx.vecs.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
-    CartesianAcc1D( d2_x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+    CartesianAcc1D( x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     >>> cx.vecs.RadialAcc.from_(u.Quantity(1, "m/s2"))
-    RadialAcc( d2_r=... )
+    RadialAcc( r=... )
 
     >>> cx.vecs.RadialAcc.from_(u.Quantity([1], "m/s2"))
-    RadialAcc( d2_r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+    RadialAcc( r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
 
     Pos 2D:
 
@@ -140,14 +140,14 @@ def vector(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVecto
 
     >>> vec = cx.vecs.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
     >>> print(vec)
-    <CartesianVel2D (d_x[m / s], d_y[m / s])
+    <CartesianVel2D (x[m / s], y[m / s])
         [1 2]>
 
     Acc 2D:
 
     >>> vec = cx.vecs.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
     >>> print(vec)
-    <CartesianAcc2D (d2_x[m / s2], d2_y[m / s2])
+    <CartesianAcc2D (x[m / s2], y[m / s2])
         [1 2]>
 
     Pos 3D:
@@ -161,14 +161,14 @@ def vector(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVecto
 
     >>> vec = cx.CartesianVel3D.from_(u.Quantity([1, 2, 3], "m/s"))
     >>> print(vec)
-    <CartesianVel3D (d_x[m / s], d_y[m / s], d_z[m / s])
+    <CartesianVel3D (x[m / s], y[m / s], z[m / s])
         [1 2 3]>
 
     Acc 3D:
 
     >>> vec = cx.vecs.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
     >>> print(vec)
-    <CartesianAcc3D (d2_x[m / s2], d2_y[m / s2], d2_z[m / s2])
+    <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
         [1 2 3]>
 
     Generic 3D:

@@ -60,7 +60,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 class CartesianVel1D(AbstractCartesian, AbstractVel1D):
     """Cartesian differential representation."""
 
-    d_x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
@@ -88,7 +88,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
         Quantity['speed'](Array(1, dtype=int32), unit='km / s')
 
         """
-        return jnp.abs(self.d_x)
+        return jnp.abs(self.x)
 
 
 #####################################################################
@@ -98,7 +98,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     """Cartesian differential representation."""
 
-    d2_x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @override
@@ -123,4 +123,4 @@ class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
         Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
 
         """
-        return jnp.abs(self.d2_x)
+        return jnp.abs(self.x)

@@ -66,19 +66,19 @@ def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity(1, "km/s")))
-    <CartesianVel1D (d_x[km / s])
+    <CartesianVel1D (x[km / s])
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity([1], "km/s")))
-    <CartesianVel1D (d_x[km / s])
+    <CartesianVel1D (x[km / s])
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity(1, "km/s2")))
-    <CartesianAcc1D (d2_x[km / s2])
+    <CartesianAcc1D (x[km / s2])
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity([1], "km/s2")))
-    <CartesianAcc1D (d2_x[km / s2])
+    <CartesianAcc1D (x[km / s2])
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2], "km")))
@@ -86,11 +86,11 @@ def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
         [1 2]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s")))
-    <CartesianVel2D (d_x[km / s], d_y[km / s])
+    <CartesianVel2D (x[km / s], y[km / s])
         [1 2]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s2")))
-    <CartesianAcc2D (d2_x[km / s2], d2_y[km / s2])
+    <CartesianAcc2D (x[km / s2], y[km / s2])
         [1 2]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km")))
@@ -98,11 +98,11 @@ def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
         [1 2 3]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s")))
-    <CartesianVel3D (d_x[km / s], d_y[km / s], d_z[km / s])
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
         [1 2 3]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s2")))
-    <CartesianAcc3D (d2_x[km / s2], d2_y[km / s2], d2_z[km / s2])
+    <CartesianAcc3D (x[km / s2], y[km / s2], z[km / s2])
         [1 2 3]>
 
     >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km")))
@@ -113,14 +113,14 @@ def vector(q: AbstractQuantity, /) -> AbstractVector:  # noqa: C901
          [3]]>
 
     >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s")))
-    <CartesianVelND (d_q[km / s])
+    <CartesianVelND (q[km / s])
         [[0]
          [1]
          [2]
          [3]]>
 
     >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s2")))
-    <CartesianAccND (d2_q[km / s2])
+    <CartesianAccND (q[km / s2])
         [[0]
          [1]
          [2]

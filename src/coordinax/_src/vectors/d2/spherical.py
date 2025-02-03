@@ -101,9 +101,9 @@ class TwoSphereVel(AbstractVel2D):
 
     Parameters
     ----------
-    d_theta : Quantity['angular speed']
+    theta : Quantity['angular speed']
         Inclination speed $`d\theta/dt \in [-\infty, \infty]$.
-    d_phi : Quantity['angular speed']
+    phi : Quantity['angular speed']
         Azimuthal speed $d\phi/dt \in [-\infty, \infty]$.
 
     See Also
@@ -118,8 +118,8 @@ class TwoSphereVel(AbstractVel2D):
 
     We can construct a 2-spherical velocity:
 
-    >>> s2 = cx.vecs.TwoSphereVel(d_theta=u.Quantity(0, "deg/s"),
-    ...                           d_phi=u.Quantity(2, "deg/s"))
+    >>> s2 = cx.vecs.TwoSphereVel(theta=u.Quantity(0, "deg/s"),
+    ...                           phi=u.Quantity(2, "deg/s"))
 
     This coordinate has corresponding position and acceleration class:
 
@@ -131,12 +131,12 @@ class TwoSphereVel(AbstractVel2D):
 
     """
 
-    d_theta: ct.BatchableAngularSpeed = eqx.field(
+    theta: ct.BatchableAngularSpeed = eqx.field(
         converter=u.Quantity["angular speed"].from_
     )
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
-    d_phi: ct.BatchableAngularSpeed = eqx.field(
+    phi: ct.BatchableAngularSpeed = eqx.field(
         converter=u.Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
@@ -174,9 +174,9 @@ class TwoSphereAcc(AbstractAcc2D):
 
     Parameters
     ----------
-    d2_theta : Quantity['angular acceleration']
+    theta : Quantity['angular acceleration']
         Inclination acceleration $`d^2\theta/dt^2 \in [-\infty, \infty]$.
-    d2_phi : Quantity['angular acceleration']
+    phi : Quantity['angular acceleration']
         Azimuthal acceleration $d^2\phi/dt^2 \in [-\infty, \infty]$.
 
     See Also
@@ -191,8 +191,8 @@ class TwoSphereAcc(AbstractAcc2D):
 
     We can construct a 2-spherical acceleration:
 
-    >>> s2 = cx.vecs.TwoSphereAcc(d2_theta=u.Quantity(0, "deg/s2"),
-    ...                           d2_phi=u.Quantity(2, "deg/s2"))
+    >>> s2 = cx.vecs.TwoSphereAcc(theta=u.Quantity(0, "deg/s2"),
+    ...                           phi=u.Quantity(2, "deg/s2"))
 
     This coordinate has corresponding velocity class:
 
@@ -201,12 +201,12 @@ class TwoSphereAcc(AbstractAcc2D):
 
     """
 
-    d2_theta: ct.BatchableAngularAcc = eqx.field(
+    theta: ct.BatchableAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
-    d2_phi: ct.BatchableAngularAcc = eqx.field(
+    phi: ct.BatchableAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
