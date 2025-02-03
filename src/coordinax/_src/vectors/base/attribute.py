@@ -13,7 +13,14 @@ Return = TypeVar("Return")
 
 
 class Sentinel(Enum):
-    """Sentinel values for VectorAttribute fields."""
+    """Sentinel values for VectorAttribute fields.
+
+    Examples
+    --------
+    >>> Sentinel.MISSING
+    <MISSING>
+
+    """
 
     MISSING = auto()
     """A sentinel value signifying a missing default."""

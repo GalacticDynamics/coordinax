@@ -2,7 +2,7 @@
 
 __all__: list[str] = []
 
-from typing import Any
+from typing import Any, TypeAlias
 
 import jax
 from jax import tree as jtu
@@ -17,10 +17,12 @@ from coordinax._src.utils import is_any_quantity
 
 # ===================================================================
 
+Shape: TypeAlias = tuple[int, ...]
+
 
 @register(jax.lax.broadcast_in_dim_p)
 def broadcast_in_dim_p(
-    operand: AbstractVector, *, shape: tuple[int, ...], **kwargs: Any
+    operand: AbstractVector, *, shape: Shape, **kwargs: Any
 ) -> AbstractVector:
     """Broadcast in a dimension.
 

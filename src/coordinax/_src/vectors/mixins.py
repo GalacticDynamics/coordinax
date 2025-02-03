@@ -21,6 +21,7 @@ class AvalMixin:
     more details.
     """
 
+    # TODO: generalize to work with FourVector, and Space
     def aval(self) -> jax.core.ShapedArray:
         """Return the vector as a JAX array.
 

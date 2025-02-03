@@ -118,7 +118,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, arrayish.NumpyNegMixin):
     @override
     def aval(self) -> jax.core.ShapedArray:
         """Simpler aval than superclass."""
-        return jax.core.get_aval(self.q.value)  # type: ignore[no-untyped-call]
+        return self.q.aval()
 
     # -----------------------------------------------------
 

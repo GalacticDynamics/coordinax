@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast, final
 from typing_extensions import override
 
 import equinox as eqx
+import jax
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Shaped
@@ -95,6 +96,13 @@ class FourVector(AbstractPos4D):
         if shape != self.q.shape:
             msg = "t and q must be broadcastable to the same shape."
             raise ValueError(msg)
+
+    # TODO: merge with `AvalMixin` and generalize!
+    def aval(self) -> jax.core.ShapedArray:
+        avals = (self.t.aval(), self.q.aval())
+        shape = (*jnp.broadcast_shapes(avals[0].shape, avals[1].shape[:-1]), 4)
+        dtype = jnp.result_type(*map(jnp.dtype, avals))
+        return jax.core.ShapedArray(shape, dtype)  # type: ignore[no-untyped-call]
 
     # ===============================================================
 

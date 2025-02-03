@@ -7,7 +7,7 @@ from typing import Any, cast
 
 import equinox as eqx
 import jax
-from jaxtyping import ArrayLike
+from jaxtyping import Array, ArrayLike
 from plum import convert
 from quax import quaxify, register
 
@@ -102,7 +102,7 @@ def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
 
 
 @register(jax.lax.eq_p)
-def _eq_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> ArrayLike:
+def _eq_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> Array:
     """Element-wise equality of two positions."""
     rhs = cast(AbstractPos, rhs.vconvert(type(lhs)))
     return eq_vec_vec(lhs, rhs)

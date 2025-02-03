@@ -290,9 +290,29 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
     # ===============================================================
     # Quax API
 
+    # TODO: unify this with AvalMixin
     def aval(self) -> jax.core.ShapedArray:
-        """Return the vector as a JAX array."""
-        raise NotImplementedError  # TODO: implement this
+        """Return the vector as a JAX array.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> w = cx.Space(
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([7, 8, 9], "m/s")
+        ... )
+        >>> w.aval()
+        ShapedArray(int32[1,2,6])
+
+        """
+        avals = tuple(v.aval() for v in self.values())
+        shapes = [a.shape for a in avals]
+        shape = (
+            *jnp.broadcast_shapes(*[s[:-1] for s in shapes]),
+            sum(s[-1] for s in shapes),
+        )
+        dtype = jnp.result_type(*map(jnp.dtype, avals))
+        return jax.core.ShapedArray(shape, dtype)  # type: ignore[no-untyped-call]
 
     # ===============================================================
     # Array API
