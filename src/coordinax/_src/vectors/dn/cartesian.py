@@ -20,13 +20,14 @@ import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 ##############################################################################
 # Position
 
 
 @final
-class CartesianPosND(AbstractPosND, arrayish.NumpyNegMixin):
+class CartesianPosND(AbstractPosND, AbstractCartesian, arrayish.NumpyNegMixin):
     """N-dimensional Cartesian vector representation.
 
     Examples
@@ -170,7 +171,7 @@ def vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Quantity["length"], "*batch N"]
 
 
 @final
-class CartesianVelND(AbstractVelND):
+class CartesianVelND(AbstractCartesian, AbstractVelND):
     """Cartesian differential representation.
 
     Examples
@@ -298,7 +299,7 @@ class CartesianVelND(AbstractVelND):
 
 
 @final
-class CartesianAccND(AbstractAccND):
+class CartesianAccND(AbstractCartesian, AbstractAccND):
     """Cartesian N-dimensional acceleration representation.
 
     Examples
