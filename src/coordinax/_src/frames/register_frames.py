@@ -1,14 +1,36 @@
-"""Register frame transform operations."""
+"""Register dispatches for `coordinax.frames`."""
 
 __all__: list[str] = []
+
 
 from typing import NoReturn
 
 from plum import dispatch
 
 from .base import AbstractReferenceFrame
+from .coordinate import AbstractCoordinate
 from .errors import FrameTransformError
 from .null import NoFrame
+
+
+@dispatch
+def frame_of(obj: AbstractCoordinate) -> AbstractReferenceFrame:
+    """Return the frame of the coordinate.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
+    ...                       cx.frames.ICRS())
+    >>> cx.frames.frame_of(coord)
+    ICRS()
+
+    """
+    return obj.frame
+
+
+# ===============================================================
 
 
 @dispatch(precedence=1)

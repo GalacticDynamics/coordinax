@@ -70,10 +70,6 @@ with install_import_hook("coordinax.frames", RUNTIME_TYPECHECKER):
         frame_transform_op,
     )
 
-    # Register the frame transform operations
-    # isort: split
-    from ._src.frames.register_transforms import *  # noqa: F403
-
     # Frames from external packages
     # isort: split
     from . import _coordinax_space_frames

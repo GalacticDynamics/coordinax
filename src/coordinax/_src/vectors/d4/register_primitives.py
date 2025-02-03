@@ -32,6 +32,24 @@ def add_4v4v(self: FourVector, other: FourVector) -> FourVector:
     return replace(self, t=self.t + other.t, q=cast(AbstractPos3D, self.q + other.q))
 
 
+@register(jax.lax.neg_p)
+def neg_4v(self: FourVector) -> FourVector:
+    """Negate the 4-vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> print(-w)
+    <FourVector (t[s], q=(x[m], y[m], z[m]))
+        [-1 -1 -2 -3]>
+
+    """
+    return replace(self, t=-self.t, q=cast(AbstractPos3D, -self.q))
+
+
 @register(jax.lax.sub_p)
 def sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
     """Add two 4-vectors.

@@ -2,7 +2,7 @@
 
 __all__ = ["FourVector"]
 
-from dataclasses import KW_ONLY, replace
+from dataclasses import KW_ONLY
 from functools import partial
 from typing import TYPE_CHECKING, Any, cast, final
 from typing_extensions import override
@@ -11,7 +11,6 @@ import equinox as eqx
 import jax.numpy as jnp
 import numpy as np
 from jaxtyping import Shaped
-from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -23,12 +22,8 @@ import coordinax._src.typing as ct
 from .base import AbstractPos4D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector, AttrFilter, VectorAttribute
-from coordinax._src.vectors.d3 import (
-    AbstractPos3D,
-    CartesianPos3D,
-)
+from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
 if TYPE_CHECKING:
     import typing
@@ -134,26 +129,6 @@ class FourVector(AbstractPos4D):
         raise NotImplementedError(msg)
 
     # -------------------------------------------
-    # Unary operations
-
-    @override
-    def __neg__(self) -> "FourVector":
-        """Negate the vector.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-        >>> print(-w)
-        <FourVector (t[s], q=(x[m], y[m], z[m]))
-            [-1 -1 -2 -3]>
-
-        """
-        return replace(self, t=-self.t, q=cast(AbstractPos3D, -self.q))
-
-    # -------------------------------------------
 
     @partial(eqx.filter_jit, inline=True)
     def _norm2(self) -> Shaped[u.Quantity["area"], "*#batch"]:
@@ -223,94 +198,3 @@ class FourVector(AbstractPos4D):
             prefix="    ",
         )
         return f"<{cls_name} ({comps})\n    {vs}>"
-
-
-# ===============================================================
-# Vector API
-
-
-@dispatch
-def vector(cls: type[FourVector], obj: AbstractQuantity, /) -> FourVector:
-    """Construct a vector from a Quantity array.
-
-    The ``Quantity[Any, (*#batch, 4), "..."]`` is expected to have the
-    components as the last dimension. The 4 components are the (c x) time, x, y,
-    z.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
-    >>> vec = cx.FourVector.from_(xs)
-    >>> vec
-    FourVector(
-        t=Quantity[...](value=...f32[], unit=Unit("m s / km")),
-        q=CartesianPos3D(
-            x=Quantity[...](value=i32[], unit=Unit("m")),
-            y=Quantity[...](value=i32[], unit=Unit("m")),
-            z=Quantity[...](value=i32[], unit=Unit("m"))
-        )
-    )
-
-    >>> xs = u.Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
-    >>> vec = cx.FourVector.from_(xs)
-    >>> vec
-    FourVector(
-        t=Quantity[...](value=...f32[2], unit=Unit("m s / km")),
-        q=CartesianPos3D(
-            x=Quantity[...](value=i32[2], unit=Unit("m")),
-            y=Quantity[...](value=i32[2], unit=Unit("m")),
-            z=Quantity[...](value=i32[2], unit=Unit("m"))
-        )
-    )
-
-    """
-    _ = eqx.error_if(
-        obj,
-        obj.shape[-1] != 4,
-        f"Cannot construct {cls} from array with shape {obj.shape}.",
-    )
-    c = cls.__dataclass_fields__["c"].default.default
-    return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
-
-
-@dispatch
-def vconvert(
-    spatial_target: type[AbstractPos3D], current: FourVector, /, **kwargs: Any
-) -> FourVector:
-    """Convert the spatial part of a 4-vector to a different 3-vector.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> print(cx.vconvert(cx.vecs.CylindricalPos, w))
-    <FourVector (t[s], q=(rho[m], phi[rad], z[m]))
-        [1.    2.236 1.107 3.   ]>
-
-    """
-    q = cast(AbstractPos3D, api.vconvert(spatial_target, current.q, **kwargs))
-    return replace(current, q=q)
-
-
-@dispatch
-def spatial_component(x: FourVector, /) -> AbstractPos3D:
-    """Return the spatial component of the vector.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> print(spatial_component(w))
-    <CartesianPos3D (x[m], y[m], z[m])
-        [1 2 3]>
-
-    """
-    return x.q
