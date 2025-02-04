@@ -337,6 +337,16 @@ def call(
     <CartesianVel3D (x[km / s], y[km / s], z[km / s])
         [1. 2. 3.]>
 
+    >>> q = cx.CartesianPos3D.from_([[0, 0, 0], [0, 1, 0]], "km")
+    >>> newq, newp = op(q, p)
+    >>> print(newq, newp, sep="\n")
+    <CartesianPos3D (x[km], y[km], z[km])
+        [[1 1 1]
+         [1 2 1]]>
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+        [[1. 2. 3.]
+         [1. 2. 3.]]>
+
     """
     newqvec = self(qvec)
 
@@ -349,18 +359,22 @@ def call(
     qvec = spatial_component(qvec)
     pvec = eqx.error_if(
         pvec,
-        qvec._dimensionality() != pvec._dimensionality(),  # noqa: SLF001
+        pvec._dimensionality() != qvec._dimensionality(),  # noqa: SLF001
         "The position and velocity vectors must have the same dimensionality.",
     )
 
     q = convert(qvec.vconvert(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
     p = convert(pvec.vconvert(pvec._cartesian_cls, qvec), u.Quantity)  # noqa: SLF001
+    # 1.5 flatten all but the last axis  # TODO: not need to flatten
+    batch = jnp.broadcast_shapes(q.shape[:-1], p.shape[:-1])
+    q, p = jnp.reshape(q, (-1, q.shape[-1])), jnp.reshape(p, (-1, q.shape[-1]))
     # 1.5 cast to float dtype  # TODO: more careful casting
     q, p = q.astype(float, copy=False), p.astype(float, copy=False)
     # 2. create the Jacobian of the operation on the position
-    jac = u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,))(q)
+    jac = jax.vmap(u.experimental.jacfwd(self.__call__, argnums=0, units=(q.unit,)))(q)
     # 3. apply the Jacobian to the velocity
-    newp = jac @ p
+    newp = jnp.einsum("bmn,bn->bm", jac, p)
+    newp = jnp.reshape(newp, (*batch, newp.shape[-1]))
     # 4. convert the Quantity back to a Cartesian vector
     newpvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
     # 5. convert the Quantity to the original vector type
