@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Annotated as Ann, Generic, TypeGuard, TypeVar
 from typing_extensions import Doc
 
-from unxt.quantity import AbstractQuantity
+import unxt as u
 
 GetterRetT = TypeVar("GetterRetT")
 EnclosingT = TypeVar("EnclosingT")
@@ -142,7 +142,7 @@ def classproperty(
     return ClassPropertyDescriptor[EnclosingT, GetterRetT](fget)
 
 
-def is_any_quantity(obj: object, /) -> TypeGuard[AbstractQuantity]:
+def is_any_quantity(obj: object, /) -> TypeGuard[u.AbstractQuantity]:
     """Check if an object is an abstract quantity.
 
     Examples
@@ -157,4 +157,4 @@ def is_any_quantity(obj: object, /) -> TypeGuard[AbstractQuantity]:
     True
 
     """
-    return isinstance(obj, AbstractQuantity)
+    return isinstance(obj, u.AbstractQuantity)

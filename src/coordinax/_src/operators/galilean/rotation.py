@@ -125,7 +125,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
     #: Tolerance check on the rotation matrix.
     check_tol: Mapping[str, Any] = eqx.field(
-        default_factory=lambda: {"atol": 1e-7}, repr=False, static=True
+        converter=dict, default=(("atol", 1e-7),), repr=False, static=True
     )
 
     # TODO: fix so that it works in jitted contexts

@@ -9,6 +9,7 @@ import equinox as eqx
 from jaxtyping import Array, Shaped
 
 import unxt as u
+from dataclassish.converters import Unless
 
 from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
@@ -54,8 +55,8 @@ class Galactocentric(AbstractReferenceFrame):
     )
 
     #: Rotation angle of the Galactic center from the ICRS x-axis.
-    roll: u.Quantity["angle"] = eqx.field(
-        converter=u.Quantity["angle"].from_, default=u.Quantity(0, "deg")
+    roll: ScalarAngle = eqx.field(
+        converter=Unless(Angle, u.Quantity["angle"].from_), default=u.Quantity(0, "deg")
     )
 
     #: Distance from the Sun to the Galactic center.
@@ -76,4 +77,7 @@ class Galactocentric(AbstractReferenceFrame):
     # --------
 
     #: The angle between the Galactic center and the ICRS x-axis.
-    roll0: ClassVar[ScalarAngle] = u.Quantity(58.5986320306, "degree")
+    roll0: ClassVar[ScalarAngle] = eqx.field(
+        default=u.Quantity(58.5986320306, "degree"),
+        converter=Unless(Angle, u.Quantity["angle"].from_),
+    )

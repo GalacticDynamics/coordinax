@@ -8,13 +8,12 @@ from jaxtyping import Array, Shaped
 from plum import add_promotion_rule
 
 import unxt as u
-from unxt._src.units.api import AbstractUnits
-from unxt.quantity import AbstractQuantity
+from unxt._src.units.api import AstropyUnits
 
 angle_dimension = u.dimension("angle")
 
 
-class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
+class AbstractAngle(u.AbstractQuantity):  # type: ignore[misc]
     """Angular Quantity.
 
     See Also
@@ -41,9 +40,9 @@ class AbstractAngle(AbstractQuantity):  # type: ignore[misc]
     """
 
     value: eqx.AbstractVar[Shaped[Array, "*shape"]]
-    """The value of the `AbstractQuantity`."""
+    """The value of the `unxt.AbstractQuantity`."""
 
-    unit: eqx.AbstractVar[AbstractUnits]
+    unit: eqx.AbstractVar[AstropyUnits]
     """The unit associated with this value."""
 
     def __check_init__(self) -> None:

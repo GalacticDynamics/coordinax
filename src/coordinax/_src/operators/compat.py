@@ -23,7 +23,7 @@ from coordinax._src.vectors.space import Space
 # ============================================================================
 # 1-Dimensional
 
-Q1: TypeAlias = Shaped[u.Quantity["length"], "*#batch 1"]
+Q1: TypeAlias = Shaped[u.AbstractQuantity, "*#batch 1"]
 
 
 @AbstractOperator.__call__.dispatch
@@ -71,7 +71,7 @@ def call(
 # 2-Dimensional
 
 
-Q2: TypeAlias = Shaped[u.Quantity["length"], "*#batch 2"]
+Q2: TypeAlias = Shaped[u.AbstractQuantity, "*#batch 2"]
 
 
 @AbstractOperator.__call__.dispatch
@@ -118,7 +118,7 @@ def call(
 # 3-Dimensional
 
 
-Q3: TypeAlias = Shaped[u.Quantity["length"], "*#batch 3"]
+Q3: TypeAlias = Shaped[u.AbstractQuantity, "*#batch 3"]
 
 
 @AbstractOperator.__call__.dispatch_multi(

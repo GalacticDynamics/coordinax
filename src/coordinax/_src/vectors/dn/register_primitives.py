@@ -11,7 +11,7 @@ from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.lax as qlax
-from unxt.quantity import AbstractQuantity
+import unxt as u
 
 from .cartesian import CartesianPosND
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -48,7 +48,7 @@ def add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 @register(jax.lax.dot_general_p)
 def dot_general_cartnd(
     lhs: CartesianPosND, rhs: CartesianPosND, /, **kwargs: Any
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Dot product of two vectors.
 
     Examples

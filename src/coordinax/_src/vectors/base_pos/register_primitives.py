@@ -13,8 +13,9 @@ from quax import quaxify, register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items
-from unxt.quantity import AbstractQuantity, UncheckedQuantity as FastQ
+from unxt.quantity import BareQuantity
 
 from .core import AbstractPos
 from coordinax._src.vectors.api import vconvert
@@ -48,7 +49,7 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
 @register(jax.lax.dot_general_p)
 def _dot_general_pos(
     lhs: AbstractPos, rhs: AbstractPos, /, **kwargs: Any
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Dot product of two vectors.
 
     Examples
@@ -219,7 +220,7 @@ def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
 
 
 @register(jax.lax.mul_p)
-def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> FastQ:
+def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -236,16 +237,16 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> FastQ:
     ...     z=u.Quantity([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
-    UncheckedQuantity(Array([[ 1, 16, 49],
-                            [ 4, 25, 64],
-                            [ 9, 36, 81]], dtype=int32), unit='m2')
+    BareQuantity(Array([[ 1, 16, 49],
+                        [ 4, 25, 64],
+                        [ 9, 36, 81]], dtype=int32), unit='m2')
 
     >>> jnp.linalg.vector_norm(vec, axis=-1)
-    UncheckedQuantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
+    BareQuantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
     """
-    lq: FastQ = convert(lhs.vconvert(lhs._cartesian_cls), FastQ)  # noqa: SLF001
-    rq: FastQ = convert(rhs.vconvert(rhs._cartesian_cls), FastQ)  # noqa: SLF001
+    lq: BareQuantity = convert(lhs.vconvert(lhs._cartesian_cls), BareQuantity)  # noqa: SLF001
+    rq: BareQuantity = convert(rhs.vconvert(rhs._cartesian_cls), BareQuantity)  # noqa: SLF001
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 

@@ -8,7 +8,7 @@ from warnings import warn
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt.quantity import AbstractQuantity, Quantity
+import unxt as u
 
 from coordinax._src.vectors.d1 import CartesianPos1D, RadialPos
 from coordinax._src.vectors.d2 import AbstractPos2D, CartesianPos2D, PolarPos
@@ -31,7 +31,7 @@ def vconvert(
     target: type[AbstractPos3D],
     current: AbstractPos2D,
     /,
-    z: AbstractQuantity = Quantity(0, "m"),
+    z: u.AbstractQuantity = u.Quantity(0, "m"),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> Cartesian2D -> Cartesian3D -> AbstractPos3D.
@@ -80,7 +80,7 @@ def vconvert(
     target: type[AbstractPos3D],
     current: AbstractPos2D,
     /,
-    z: AbstractQuantity = Quantity(0, "m"),
+    z: u.AbstractQuantity = u.Quantity(0, "m"),
     **kwargs: Any,
 ) -> AbstractPos3D:
     """AbstractPos2D -> PolarPos -> Cylindrical -> AbstractPos3D.
@@ -93,7 +93,7 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.PolarPos(r=Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
     >>> x2 = cx.vconvert(cx.CartesianPos3D, x, z=u.Quantity(14, "km"))
     >>> print(x2)
@@ -179,7 +179,7 @@ def vconvert(
     current: CartesianPos2D,
     /,
     *,
-    z: AbstractQuantity = Quantity(0, "m"),
+    z: u.AbstractQuantity = u.Quantity(0, "m"),
     **kwargs: Any,
 ) -> CartesianPos3D:
     """CartesianPos2D -> CartesianPos3D.
@@ -269,7 +269,7 @@ def vconvert(
     target: type[SphericalPos],
     current: PolarPos,
     /,
-    theta: Quantity["angle"] = Quantity(0, "radian"),
+    theta: u.Quantity["angle"] = u.Quantity(0, "radian"),
     **kwargs: Any,
 ) -> SphericalPos:
     """PolarPos -> SphericalPos.
@@ -279,7 +279,7 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = cx.vecs.PolarPos(r=Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
     >>> x2 = cx.vconvert(cx.SphericalPos, x, theta=u.Quantity(14, "deg"))
     >>> print(x2)
@@ -295,7 +295,7 @@ def vconvert(
     target: type[MathSphericalPos],
     current: PolarPos,
     /,
-    phi: Quantity["angle"] = Quantity(0, "radian"),
+    phi: u.Quantity["angle"] = u.Quantity(0, "radian"),
     **kwargs: Any,
 ) -> MathSphericalPos:
     """PolarPos -> MathSphericalPos.
@@ -322,7 +322,7 @@ def vconvert(
     current: PolarPos,
     /,
     *,
-    z: Quantity["length"] = Quantity(0, "m"),
+    z: u.Quantity["length"] = u.Quantity(0, "m"),
     **kwargs: Any,
 ) -> CylindricalPos:
     """PolarPos -> CylindricalPos.

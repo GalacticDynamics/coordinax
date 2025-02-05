@@ -14,8 +14,9 @@ from plum import convert
 from quax import quaxify
 
 import quaxed.numpy as jnp
+import unxt as u
 from quaxed.experimental import arrayish
-from unxt.quantity import AbstractQuantity, UncheckedQuantity as FastQ
+from unxt.quantity import BareQuantity as FastQ
 
 from coordinax._src.typing import BatchableScalarQ
 from coordinax._src.utils import classproperty
@@ -118,7 +119,7 @@ class AbstractPos(
         newvec = self._cartesian_cls.from_(newq)
         return newvec.vconvert(type(self))
 
-    def __abs__(self) -> AbstractQuantity:
+    def __abs__(self) -> u.AbstractQuantity:
         """Return the norm of the vector.
 
         Examples
@@ -126,7 +127,7 @@ class AbstractPos(
         >>> import coordinax as cx
         >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
         >>> abs(vec)
-        UncheckedQuantity(Array(5., dtype=float32), unit='m')
+        BareQuantity(Array(5., dtype=float32), unit='m')
 
         """
         return self.norm()  # type: ignore[misc]
@@ -150,11 +151,11 @@ class AbstractPos(
 
         >>> v = cx.vecs.CartesianPos1D.from_([-1], "km")
         >>> v.norm()
-        UncheckedQuantity(Array(1., dtype=float32), unit='km')
+        BareQuantity(Array(1., dtype=float32), unit='km')
 
         >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "km")
         >>> v.norm()
-        UncheckedQuantity(Array(5., dtype=float32), unit='km')
+        BareQuantity(Array(5., dtype=float32), unit='km')
 
         >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
         >>> v.norm()
@@ -162,7 +163,7 @@ class AbstractPos(
 
         >>> v = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> v.norm()
-        UncheckedQuantity(Array(3.7416575, dtype=float32), unit='m')
+        BareQuantity(Array(3.7416575, dtype=float32), unit='m')
 
         """
         return jnp.linalg.vector_norm(self, axis=-1)  # type: ignore[arg-type]

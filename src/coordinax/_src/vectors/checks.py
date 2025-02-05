@@ -7,7 +7,6 @@ import equinox as eqx
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import AbstractQuantity
 
 from coordinax._src.angles import Angle, BatchableAngleQ
 
@@ -15,7 +14,7 @@ _0d = Angle(0, "rad")
 _pid = Angle(180, "deg")
 
 
-def check_r_non_negative(r: AbstractQuantity, /) -> AbstractQuantity:
+def check_r_non_negative(r: u.AbstractQuantity, /) -> u.AbstractQuantity:
     """Check that the radial distance is non-negative.
 
     Examples
@@ -81,7 +80,9 @@ def check_polar_range(
     )
 
 
-def check_non_negative(x: AbstractQuantity, /, *, name: str = "") -> AbstractQuantity:
+def check_non_negative(
+    x: u.AbstractQuantity, /, *, name: str = ""
+) -> u.AbstractQuantity:
     """Check that the input is non-negative.
 
     Examples
@@ -106,8 +107,8 @@ def check_non_negative(x: AbstractQuantity, /, *, name: str = "") -> AbstractQua
 
 
 def check_non_negative_non_zero(
-    x: AbstractQuantity, /, *, name: str = ""
-) -> AbstractQuantity:
+    x: u.AbstractQuantity, /, *, name: str = ""
+) -> u.AbstractQuantity:
     """Check that the input is non-negative and non-zero.
 
     Examples
@@ -138,13 +139,13 @@ def check_non_negative_non_zero(
 
 
 def check_less_than_equal(
-    x: AbstractQuantity,
-    max_val: AbstractQuantity,
+    x: u.AbstractQuantity,
+    max_val: u.AbstractQuantity,
     /,
     *,
     name: str = "",
     comparison_name: str = "the specified maximum value",
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Check that the input value is less than or equal to the input maximum value.
 
     Examples
@@ -169,13 +170,13 @@ def check_less_than_equal(
 
 
 def check_greater_than_equal(
-    x: AbstractQuantity,
-    min_val: AbstractQuantity,
+    x: u.AbstractQuantity,
+    min_val: u.AbstractQuantity,
     /,
     *,
     name: str = "",
     comparison_name: str = "the specified minimum value",
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Check that the input value is greater than or equal to the input minimum value.
 
     Examples

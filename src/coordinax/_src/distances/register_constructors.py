@@ -8,7 +8,7 @@ import jax.numpy as jnp
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import AbstractQuantity, UncheckedQuantity
+from unxt.quantity import BareQuantity
 
 from .measures import Distance, DistanceModulus, Parallax
 
@@ -19,7 +19,7 @@ distance_modulus_base_distance = u.Quantity(10, "pc")
 # To Distance
 
 
-@AbstractQuantity.from_.dispatch
+@u.AbstractQuantity.from_.dispatch
 def from_(cls: type[Distance], d: Distance) -> Distance:
     """Construct a `Distance` from a `Distance`.
 
@@ -35,7 +35,7 @@ def from_(cls: type[Distance], d: Distance) -> Distance:
     return d
 
 
-@AbstractQuantity.from_.dispatch
+@u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[Distance], p: Parallax | u.Quantity["angle"], /, **kwargs: Any
 ) -> Distance:
@@ -58,7 +58,7 @@ def from_(
     return cls(jnp.asarray(d.ustrip(unit), **kwargs), unit)
 
 
-@AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
+@u.AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[Distance], dm: DistanceModulus | u.Quantity["mag"], /, **kwargs: Any
 ) -> Distance:
@@ -84,7 +84,7 @@ def from_(
 # To DistanceModulus
 
 
-@AbstractQuantity.from_.dispatch
+@u.AbstractQuantity.from_.dispatch
 def from_(cls: type[DistanceModulus], dm: DistanceModulus) -> DistanceModulus:
     """Construct a `DistanceModulus` from a `DistanceModulus`.
 
@@ -100,7 +100,7 @@ def from_(cls: type[DistanceModulus], dm: DistanceModulus) -> DistanceModulus:
     return dm
 
 
-@AbstractQuantity.from_.dispatch
+@u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[DistanceModulus], d: Distance | u.Quantity["length"], /, **kwargs: Any
 ) -> DistanceModulus:
@@ -122,7 +122,7 @@ def from_(
     return cls(jnp.asarray(dm, **kwargs), "mag")
 
 
-@AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
+@u.AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[DistanceModulus], p: Parallax | u.Quantity["angle"], /, **kwargs: Any
 ) -> DistanceModulus:
@@ -149,7 +149,7 @@ def from_(
 # To Parallax
 
 
-@AbstractQuantity.from_.dispatch
+@u.AbstractQuantity.from_.dispatch
 def from_(cls: type[Parallax], p: Parallax) -> Parallax:
     """Construct a `Parallax` from a `Parallax`.
 
@@ -165,7 +165,7 @@ def from_(cls: type[Parallax], p: Parallax) -> Parallax:
     return p
 
 
-@AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
+@u.AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[Parallax], d: Distance | u.Quantity["length"], /, **kwargs: Any
 ) -> Parallax:
@@ -187,7 +187,7 @@ def from_(
     return cls(jnp.asarray(p.value, **kwargs), p.unit)
 
 
-@AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
+@u.AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
 def from_(
     cls: type[Parallax], dm: DistanceModulus | u.Quantity["mag"], /, **kwargs: Any
 ) -> Parallax:
@@ -205,7 +205,7 @@ def from_(
     Parallax(Array(0., dtype=float32, ...), unit='mas')
 
     """
-    d = UncheckedQuantity(10 ** (1 + dm.ustrip("mag") / 5), "pc")
+    d = BareQuantity(10 ** (1 + dm.ustrip("mag") / 5), "pc")
     p = jnp.atan2(parallax_base_length, d)
     unit = u.unit_of(p)
     return cls(jnp.asarray(p.ustrip(unit), **kwargs), unit)

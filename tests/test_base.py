@@ -9,8 +9,8 @@ from typing import Any
 import pytest
 
 import quaxed.numpy as jnp
+import unxt as u
 from dataclassish import field_items
-from unxt.quantity import AbstractQuantity
 
 import coordinax as cx
 
@@ -135,7 +135,7 @@ class AbstractVectorTest:
         assert isinstance(adict, dict)
         for k, v in adict.items():
             assert isinstance(k, str)
-            assert isinstance(v, AbstractQuantity)
+            assert isinstance(v, u.AbstractQuantity)
             assert jnp.array_equal(v, getattr(vector, k))
 
         # Test with a different dict_factory

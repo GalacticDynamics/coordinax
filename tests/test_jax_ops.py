@@ -3,8 +3,8 @@
 import equinox as eqx
 import pytest
 
+import unxt as u
 from dataclassish import field_items
-from unxt.quantity import AbstractQuantity, Quantity
 
 import coordinax as cx
 from coordinax._src.vectors.base_pos import POSITION_CLASSES
@@ -25,7 +25,7 @@ def q(request) -> cx.vecs.AbstractPos:
     kwargs = (
         {}
         if request.param is not cx.vecs.ProlateSpheroidalPos
-        else {"Delta": Quantity(1.0, "kpc")}
+        else {"Delta": u.Quantity(1.0, "kpc")}
     )
 
     assert isinstance(q, cx.vecs.AbstractPos)
@@ -47,7 +47,7 @@ def func(
     kwargs = (
         {}
         if target is not cx.vecs.ProlateSpheroidalPos
-        else {"Delta": Quantity(1.0, "kpc")}
+        else {"Delta": u.Quantity(1.0, "kpc")}
     )
 
     return cx.vconvert(target, q, **kwargs)
@@ -65,4 +65,4 @@ def test_jax_through_representation(
 
     assert isinstance(newq, cx.vecs.AbstractPos)
     for k, f in field_items(newq):
-        assert isinstance(f, AbstractQuantity), k
+        assert isinstance(f, u.AbstractQuantity), k

@@ -11,7 +11,6 @@ from plum import dispatch
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
-from unxt.quantity import AbstractQuantity
 
 from .vector import AbstractVector
 from coordinax._src.typing import Unit
@@ -64,7 +63,7 @@ def vector(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVect
 
 
 @dispatch
-def vector(cls: type[AbstractVector], obj: AbstractQuantity, /) -> AbstractVector:
+def vector(cls: type[AbstractVector], obj: u.AbstractQuantity, /) -> AbstractVector:
     """Construct a vector from a quantity.
 
     This will fail for most non-position vectors, except Cartesian vectors,

@@ -11,10 +11,9 @@ from jaxtyping import Array, Shaped
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt._src.units.api import AbstractUnits
+from unxt._src.units.api import AstropyUnits
 
 from .base import AbstractDistance
-from coordinax._src.values import value_converter
 
 parallax_base_length = u.Quantity(1, "AU")
 angle_dimension = u.dimension("angle")
@@ -41,10 +40,12 @@ class Distance(AbstractDistance):
 
     """
 
-    value: Shaped[Array, "*shape"] = eqx.field(converter=value_converter)
-    """The value of the `AbstractQuantity`."""
+    value: Shaped[Array, "*shape"] = eqx.field(
+        converter=u.quantity.convert_to_quantity_value
+    )
+    """The value of the `unxt.AbstractQuantity`."""
 
-    unit: AbstractUnits = eqx.field(static=True, converter=u.unit)
+    unit: AstropyUnits = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""
 
     def __check_init__(self) -> None:
@@ -72,10 +73,12 @@ class DistanceModulus(AbstractDistance):
 
     """
 
-    value: Shaped[Array, "*shape"] = eqx.field(converter=value_converter)
-    """The value of the `AbstractQuantity`."""
+    value: Shaped[Array, "*shape"] = eqx.field(
+        converter=u.quantity.convert_to_quantity_value
+    )
+    """The value of the `unxt.AbstractQuantity`."""
 
-    unit: AbstractUnits = eqx.field(static=True, converter=u.unit)
+    unit: AstropyUnits = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""
 
     def __check_init__(self) -> None:
@@ -114,10 +117,12 @@ class Parallax(AbstractDistance):
 
     """
 
-    value: Shaped[Array, "*shape"] = eqx.field(converter=value_converter)
-    """The value of the `AbstractQuantity`."""
+    value: Shaped[Array, "*shape"] = eqx.field(
+        converter=u.quantity.convert_to_quantity_value
+    )
+    """The value of the `unxt.AbstractQuantity`."""
 
-    unit: AbstractUnits = eqx.field(static=True, converter=u.unit)
+    unit: AstropyUnits = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""
 
     _: KW_ONLY

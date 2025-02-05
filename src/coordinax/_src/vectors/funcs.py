@@ -9,7 +9,7 @@ from jaxtyping import Array, Shaped
 from plum import dispatch
 
 import quaxed.numpy as jnp
-from unxt.quantity import AbstractQuantity
+import unxt as u
 
 
 @dispatch
@@ -37,8 +37,8 @@ def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N
 @dispatch
 @partial(eqx.filter_jit, inline=True)
 def normalize_vector(
-    x: Shaped[AbstractQuantity, "*batch N"], /
-) -> Shaped[AbstractQuantity, "*batch N"]:
+    x: Shaped[u.AbstractQuantity, "*batch N"], /
+) -> Shaped[u.AbstractQuantity, "*batch N"]:
     """Return the unit vector.
 
     Examples
