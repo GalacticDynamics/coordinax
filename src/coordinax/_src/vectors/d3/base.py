@@ -2,11 +2,6 @@
 
 __all__ = ["AbstractAcc3D", "AbstractPos3D", "AbstractVel3D"]
 
-
-from typing_extensions import override
-
-from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
@@ -29,14 +24,6 @@ class AbstractPos3D(AbstractPos):
         """
         return 3
 
-    @override
-    @classproperty
-    @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
-        from .cartesian import CartesianPos3D
-
-        return CartesianPos3D
-
 
 class AbstractVel3D(AbstractVel):
     """Abstract representation of 3D vector differentials."""
@@ -55,14 +42,6 @@ class AbstractVel3D(AbstractVel):
         """
         return 3
 
-    @override
-    @classproperty
-    @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
-        from .cartesian import CartesianVel3D
-
-        return CartesianVel3D
-
 
 class AbstractAcc3D(AbstractAcc):
     """Abstract representation of 3D vector accelerations."""
@@ -80,11 +59,3 @@ class AbstractAcc3D(AbstractAcc):
 
         """
         return 3
-
-    @override
-    @classproperty
-    @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
-        from .cartesian import CartesianAcc3D
-
-        return CartesianAcc3D

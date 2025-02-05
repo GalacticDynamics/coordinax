@@ -6,7 +6,6 @@ __all__ = ["AbstractAccND", "AbstractPosND", "AbstractVelND"]
 from abc import abstractmethod
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
-from typing_extensions import override
 
 import equinox as eqx
 
@@ -14,7 +13,6 @@ import quaxed.lax as qlax
 
 import coordinax._src.typing as ct
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
@@ -22,19 +20,13 @@ from coordinax._src.vectors.base_vel import AbstractVel
 if TYPE_CHECKING:
     import typing
 
+    import coordinax.vecs
+
 
 class AbstractPosND(AbstractPos):
     """Abstract representation of N-D coordinates in different systems."""
 
     q: eqx.AbstractVar[ct.BatchableLength]
-
-    @override
-    @classproperty
-    @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
-        from .cartesian import CartesianPosND
-
-        return CartesianPosND
 
     @classproperty
     @classmethod
@@ -158,28 +150,11 @@ class AbstractVelND(AbstractVel):
 
     q: eqx.AbstractVar[ct.BatchableSpeed]
 
-    @override
-    @classproperty
-    @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
-        """Get the Cartesian velocity class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> cx.vecs.CartesianVelND._cartesian_cls
-        <class 'coordinax...CartesianVelND'>
-
-        """
-        from .cartesian import CartesianVelND
-
-        return CartesianVelND
-
     # ===============================================================
     # Array API
 
     @property
-    def mT(self) -> "Self":  # noqa: N802
+    def mT(self) -> "coordinax.vecs.AbstractVelND":  # noqa: N802
         """Transpose the vector.
 
         The last axis is interpreted as the feature axis. The matrix
@@ -289,28 +264,11 @@ class AbstractAccND(AbstractAcc):
 
     q: eqx.AbstractVar[ct.BatchableAcc]
 
-    @override
-    @classproperty
-    @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
-        """Get the Cartesian acceleration class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> cx.vecs.CartesianAccND._cartesian_cls
-        <class 'coordinax...CartesianAccND'>
-
-        """
-        from .cartesian import CartesianAccND
-
-        return CartesianAccND
-
     # ===============================================================
     # Array API
 
     @property
-    def mT(self) -> "Self":  # noqa: N802
+    def mT(self) -> "coordinax.vecs.AbstractAccND":  # noqa: N802
         """Transpose the vector.
 
         The last axis is interpreted as the feature axis. The matrix
@@ -358,7 +316,7 @@ class AbstractAccND(AbstractAcc):
         return self.q.shape[:-1]
 
     @property
-    def T(self) -> "Self":  # noqa: N802
+    def T(self) -> "coordinax.vecs.AbstractAccND":  # noqa: N802
         """Transpose the vector's batch axes, preserving the feature axis.
 
         Examples
@@ -379,7 +337,7 @@ class AbstractAccND(AbstractAcc):
     # ===============================================================
     # Further array methods
 
-    def flatten(self) -> "Self":
+    def flatten(self) -> "coordinax.vecs.AbstractAccND":
         """Flatten the vector's batch dimensions, preserving the component axis.
 
         Examples
@@ -395,7 +353,7 @@ class AbstractAccND(AbstractAcc):
         """
         return replace(self, q=self.q.reshape(-1, self.q.shape[-1]))
 
-    def reshape(self, *shape: Any, order: str = "C") -> "Self":
+    def reshape(self, *shape: Any, order: str = "C") -> "coordinax.vecs.AbstractAccND":
         """Reshape the vector.
 
         Examples

@@ -362,8 +362,10 @@ def call(
         "The position and velocity vectors must have the same dimensionality.",
     )
 
-    q = convert(qvec.vconvert(qvec._cartesian_cls), u.Quantity)  # noqa: SLF001
-    p = convert(pvec.vconvert(pvec._cartesian_cls, qvec), u.Quantity)  # noqa: SLF001
+    qcart_cls = qvec.cartesian_type
+    pcart_cls = pvec.cartesian_type
+    q = convert(qvec.vconvert(qcart_cls), u.Quantity)
+    p = convert(pvec.vconvert(pcart_cls, qvec), u.Quantity)
     # 1.5 flatten all but the last axis  # TODO: not need to flatten
     batch = jnp.broadcast_shapes(q.shape[:-1], p.shape[:-1])
     q, p = jnp.reshape(q, (-1, q.shape[-1])), jnp.reshape(p, (-1, q.shape[-1]))
@@ -375,7 +377,7 @@ def call(
     newp = jnp.einsum("bmn,bn->bm", jac, p)
     newp = jnp.reshape(newp, (*batch, newp.shape[-1]))
     # 4. convert the Quantity back to a Cartesian vector
-    newpvec = pvec._cartesian_cls.from_(newp)  # noqa: SLF001
+    newpvec = pcart_cls.from_(newp)
     # 5. convert the Quantity to the original vector type
     newpvec = newpvec.vconvert(type(pvec), newqvec)
 

@@ -1176,12 +1176,11 @@ def vconvert(
 
     """
     # Parse the position to an AbstractPos
-    if isinstance(position, AbstractPos):
-        posvec = position
-    else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
-            position
-        )
+    posvec = (
+        position
+        if isinstance(position, AbstractPos)
+        else current.integral_cls.cartesian_type.from_(position)
+    )
 
     # Transform the differential to LonLatSphericalVel
     current = vconvert(LonLatSphericalVel, current, posvec)
@@ -1207,12 +1206,11 @@ def vconvert(
 ) -> LonLatSphericalVel:
     """LonCosLatSphericalVel -> LonLatSphericalVel."""
     # Parse the position to an AbstractPos
-    if isinstance(position, AbstractPos):
-        posvec = position
-    else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
-            position
-        )
+    posvec = (
+        position
+        if isinstance(position, AbstractPos)
+        else current.integral_cls.cartesian_type.from_(position)
+    )
 
     # Transform the position to the required type
     posvec = vconvert(current.integral_cls, posvec)
@@ -1235,12 +1233,11 @@ def vconvert(
 ) -> AbstractVel3D:
     """LonCosLatSphericalVel -> AbstractVel3D."""
     # Parse the position to an AbstractPos
-    if isinstance(position, AbstractPos):
-        posvec = position
-    else:  # Q -> Cart<X>D
-        posvec = current.integral_cls._cartesian_cls.from_(  # noqa: SLF001
-            position
-        )
+    posvec = (
+        position
+        if isinstance(position, AbstractPos)
+        else current.integral_cls.cartesian_type.from_(position)
+    )
     # Transform the differential to LonLatSphericalVel
     current = vconvert(LonLatSphericalVel, current, posvec)
     # Transform the position to the required type
@@ -1336,3 +1333,31 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
     """
     norm: AbstractQuantity = obj.norm()  # type: ignore[misc]
     return CartesianGeneric3D(x=obj.x / norm, y=obj.y / norm, z=obj.z / norm)
+
+
+###############################################################################
+# Corresponding Cartesian classes
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractPos3D] | AbstractPos3D, /
+) -> type[CartesianPos3D]:
+    """Return the corresponding Cartesian class."""
+    return CartesianPos3D
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractVel3D] | AbstractVel3D, /
+) -> type[CartesianVel3D]:
+    """Return the corresponding Cartesian class."""
+    return CartesianVel3D
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractAcc3D] | AbstractAcc3D, /
+) -> type[CartesianAcc3D]:
+    """Return the corresponding Cartesian class."""
+    return CartesianAcc3D

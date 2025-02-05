@@ -193,3 +193,31 @@ def vconvert(
 
     """
     return current
+
+
+###############################################################################
+# Corresponding Cartesian classes
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractPos1D] | AbstractPos1D, /
+) -> type[AbstractPos1D]:
+    """Return the corresponding Cartesian vector class."""
+    return CartesianPos1D
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractVel1D] | AbstractVel1D, /
+) -> type[AbstractVel1D]:
+    """Return the corresponding Cartesian vector class."""
+    return CartesianVel1D
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractAcc1D] | AbstractAcc1D, /
+) -> type[AbstractAcc1D]:
+    """Return the corresponding Cartesian vector class."""
+    return CartesianAcc1D

@@ -7,7 +7,12 @@ from .setup_package import RUNTIME_TYPECHECKER
 
 with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src import vectors
-    from ._src.vectors.api import normalize_vector, vconvert, vector
+    from ._src.vectors.api import (
+        cartesian_vector_type,
+        normalize_vector,
+        vconvert,
+        vector,
+    )
     from ._src.vectors.base import (
         AbstractVector,
         AttrFilter,
@@ -81,6 +86,7 @@ __all__ = [
     "vector",
     "vconvert",
     "normalize_vector",
+    "cartesian_vector_type",
     # Base
     "AbstractVector",
     "AttrFilter",
