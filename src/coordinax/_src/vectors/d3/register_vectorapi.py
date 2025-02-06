@@ -17,16 +17,17 @@ from unxt.quantity import AbstractQuantity
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .base_spherical import AbstractSphericalPos, _90d, _180d, _360d
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
-from .cylindrical import CylindricalPos, CylindricalVel
+from .cylindrical import CylindricalAcc, CylindricalPos, CylindricalVel
 from .generic import CartesianGeneric3D
 from .lonlatspherical import (
     LonCosLatSphericalVel,
+    LonLatSphericalAcc,
     LonLatSphericalPos,
     LonLatSphericalVel,
 )
-from .mathspherical import MathSphericalPos, MathSphericalVel
-from .spherical import SphericalPos, SphericalVel
-from .spheroidal import ProlateSpheroidalPos, ProlateSpheroidalVel
+from .mathspherical import MathSphericalAcc, MathSphericalPos, MathSphericalVel
+from .spherical import SphericalAcc, SphericalPos, SphericalVel
+from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpheroidalVel
 from coordinax._src.vectors.base_pos import AbstractPos
 
 ###############################################################################
@@ -1179,14 +1180,14 @@ def vconvert(
     posvec = (
         position
         if isinstance(position, AbstractPos)
-        else current.integral_cls.cartesian_type.from_(position)
+        else current.time_antiderivative_cls.cartesian_type.from_(position)
     )
 
     # Transform the differential to LonLatSphericalVel
     current = vconvert(LonLatSphericalVel, current, posvec)
 
     # Transform the position to the required type
-    posvec = vconvert(current.integral_cls, posvec)
+    posvec = vconvert(current.time_antiderivative_cls, posvec)
 
     # Calculate the differential in the new system
     return target(
@@ -1209,11 +1210,11 @@ def vconvert(
     posvec = (
         position
         if isinstance(position, AbstractPos)
-        else current.integral_cls.cartesian_type.from_(position)
+        else current.time_antiderivative_cls.cartesian_type.from_(position)
     )
 
     # Transform the position to the required type
-    posvec = vconvert(current.integral_cls, posvec)
+    posvec = vconvert(current.time_antiderivative_cls, posvec)
 
     # Calculate the differential in the new system
     return target(
@@ -1236,7 +1237,7 @@ def vconvert(
     posvec = (
         position
         if isinstance(position, AbstractPos)
-        else current.integral_cls.cartesian_type.from_(position)
+        else current.time_antiderivative_cls.cartesian_type.from_(position)
     )
     # Transform the differential to LonLatSphericalVel
     current = vconvert(LonLatSphericalVel, current, posvec)
@@ -1361,3 +1362,230 @@ def cartesian_vector_type(
 ) -> type[CartesianAcc3D]:
     """Return the corresponding Cartesian class."""
     return CartesianAcc3D
+
+
+###############################################################################
+# Corresponding time derivative classes
+
+# -----------------------------------------------
+# Position -> Velocity
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianPos3D] | CartesianPos3D, /
+) -> type[CartesianVel3D]:
+    """Return the corresponding time derivative class."""
+    return CartesianVel3D
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CylindricalPos] | CylindricalPos, /
+) -> type[CylindricalVel]:
+    """Return the corresponding time derivative class."""
+    return CylindricalVel
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[SphericalPos] | SphericalPos, /
+) -> type[SphericalVel]:
+    """Return the corresponding time derivative class."""
+    return SphericalVel
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[MathSphericalPos] | MathSphericalPos, /
+) -> type[MathSphericalVel]:
+    """Return the corresponding time derivative class."""
+    return MathSphericalVel
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[LonLatSphericalPos] | LonLatSphericalPos, /
+) -> type[LonLatSphericalVel]:
+    """Return the corresponding time derivative class."""
+    return LonLatSphericalVel
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[ProlateSpheroidalPos] | ProlateSpheroidalPos, /
+) -> type[ProlateSpheroidalVel]:
+    """Return the corresponding time derivative class."""
+    return ProlateSpheroidalVel
+
+
+# -----------------------------------------------
+# Velocity -> Position
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianVel3D] | CartesianVel3D, /
+) -> type[CartesianPos3D]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianPos3D
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CylindricalVel] | CylindricalVel, /
+) -> type[CylindricalPos]:
+    """Return the corresponding time antiderivative class."""
+    return CylindricalPos
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[SphericalVel] | SphericalVel, /
+) -> type[SphericalPos]:
+    """Return the corresponding time antiderivative class."""
+    return SphericalPos
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[MathSphericalVel] | MathSphericalVel, /
+) -> type[MathSphericalPos]:
+    """Return the corresponding time derivative class."""
+    return MathSphericalPos
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[LonLatSphericalVel] | LonLatSphericalVel, /
+) -> type[LonLatSphericalPos]:
+    """Return the corresponding time antiderivative class."""
+    return LonLatSphericalPos
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[LonCosLatSphericalVel] | LonCosLatSphericalVel, /
+) -> type[LonLatSphericalPos]:
+    """Return the corresponding time antiderivative class."""
+    return LonLatSphericalPos
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[ProlateSpheroidalVel] | ProlateSpheroidalVel, /
+) -> type[ProlateSpheroidalPos]:
+    """Return the corresponding time antiderivative class."""
+    return ProlateSpheroidalPos
+
+
+# -----------------------------------------------
+# Velocity -> Acceleration
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianVel3D] | CartesianVel3D, /
+) -> type[CartesianAcc3D]:
+    """Return the corresponding time derivative class."""
+    return CartesianAcc3D
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CylindricalVel] | CylindricalVel, /
+) -> type[CylindricalAcc]:
+    """Return the corresponding time derivative class."""
+    return CylindricalAcc
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[SphericalVel] | SphericalVel, /
+) -> type[SphericalAcc]:
+    """Return the corresponding time derivative class."""
+    return SphericalAcc
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[MathSphericalVel] | MathSphericalVel, /
+) -> type[MathSphericalAcc]:
+    """Return the corresponding time derivative class."""
+    return MathSphericalAcc
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[LonLatSphericalVel] | LonLatSphericalVel, /
+) -> type[LonLatSphericalAcc]:
+    """Return the corresponding time derivative class."""
+    return LonLatSphericalAcc
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[LonCosLatSphericalVel] | LonCosLatSphericalVel, /
+) -> type[LonLatSphericalAcc]:
+    """Return the corresponding time derivative class."""
+    return LonLatSphericalAcc
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[ProlateSpheroidalVel] | ProlateSpheroidalVel, /
+) -> type[ProlateSpheroidalAcc]:
+    """Return the corresponding time derivative class."""
+    return ProlateSpheroidalAcc
+
+
+# -----------------------------------------------
+# Acceleration -> Velocity
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianAcc3D] | CartesianAcc3D, /
+) -> type[CartesianVel3D]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianVel3D
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CylindricalAcc] | CylindricalAcc, /
+) -> type[CylindricalVel]:
+    """Return the corresponding time antiderivative class."""
+    return CylindricalVel
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[SphericalAcc] | SphericalAcc, /
+) -> type[SphericalVel]:
+    """Return the corresponding time antiderivative class."""
+    return SphericalVel
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[MathSphericalAcc] | MathSphericalAcc, /
+) -> type[MathSphericalVel]:
+    """Return the corresponding time antiderivative class."""
+    return MathSphericalVel
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[LonLatSphericalAcc] | LonLatSphericalAcc, /
+) -> type[LonLatSphericalVel]:
+    """Return the corresponding time antiderivative class."""
+    return LonLatSphericalVel
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[ProlateSpheroidalAcc] | ProlateSpheroidalAcc, /
+) -> type[ProlateSpheroidalVel]:
+    """Return the corresponding time antiderivative class."""
+    return ProlateSpheroidalVel

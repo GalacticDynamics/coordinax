@@ -39,7 +39,7 @@ def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
 
     """
     fs = {k: v * other for k, v in field_items(self)}
-    return cast(AbstractPos, self.integral_cls.from_(fs))
+    return cast(AbstractPos, self.time_antiderivative_cls.from_(fs))
 
 
 # -----------------------------------------------

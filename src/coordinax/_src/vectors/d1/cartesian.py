@@ -14,7 +14,6 @@ import unxt as u
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 
@@ -46,15 +45,6 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
     x: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianVel1D"]:  # type: ignore[override]
-        return CartesianVel1D
-
-
-#####################################################################
-
 
 @final
 class CartesianVel1D(AbstractCartesian, AbstractVel1D):
@@ -62,18 +52,6 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 
     x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianPos1D]:  # type: ignore[override]
-        return CartesianPos1D
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianAcc1D"]:  # type: ignore[override]
-        return CartesianAcc1D
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -91,24 +69,12 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
         return jnp.abs(self.x)
 
 
-#####################################################################
-
-
 @final
 class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     """Cartesian differential representation."""
 
     x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianVel1D]:  # type: ignore[override]
-        return CartesianVel1D
-
-    # -----------------------------------------------------
-    # Methods
 
     @override
     @partial(eqx.filter_jit, inline=True)

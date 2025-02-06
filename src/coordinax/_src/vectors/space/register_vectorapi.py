@@ -211,7 +211,7 @@ def temp_vconvert(
 ) -> AbstractVel:
     """Transform of Velocities."""
     q, p = jnp.broadcast_arrays(space["length"], current)
-    return vconvert(target.differential_cls, p, q)
+    return vconvert(target.time_derivative_cls, p, q)
 
 
 # TODO: should this be moved to a different file?
@@ -221,4 +221,4 @@ def temp_vconvert(
 ) -> AbstractAcc:
     """Transform of Accs."""
     q, p, a = jnp.broadcast_arrays(space["length"], space["speed"], current)
-    return vconvert(target.differential_cls.differential_cls, a, p, q)
+    return vconvert(target.time_nth_derivative_cls(2), a, p, q)

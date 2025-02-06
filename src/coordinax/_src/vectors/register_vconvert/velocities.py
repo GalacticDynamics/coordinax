@@ -107,14 +107,14 @@ def vconvert(
     if isinstance(position, AbstractPos):
         posvec = position
     else:  # Q -> Cart<X>D
-        cart_cls = current.integral_cls.cartesian_type
+        cart_cls = current.time_antiderivative_cls.cartesian_type
         posvec = cast(AbstractPos, cart_cls.from_(position))
 
     posvec = posvec.reshape(flat_shape)  # flattened
 
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
-    current_pos = vconvert(current.integral_cls, posvec, **kwargs)
+    current_pos = vconvert(current.time_antiderivative_cls, posvec, **kwargs)
     # TODO: not need to cast to distance
     current_pos = replace(
         current_pos,
@@ -136,7 +136,7 @@ def vconvert(
     # denomicator's units.
     tmp = partial(vconvert, **kwargs)
     jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(tmp, argnums=1), in_axes=(None, 0)))
-    jac_nested_vecs = jac_rep_as(target.integral_cls, current_pos)
+    jac_nested_vecs = jac_rep_as(target.time_antiderivative_cls, current_pos)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for

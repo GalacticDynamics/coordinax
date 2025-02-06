@@ -10,10 +10,10 @@ from jaxtyping import Array, Bool
 from quax import quaxify, register
 
 import quaxed.numpy as jnp
+import unxt.quantity as uq
 from dataclassish import field_items, replace
 
 from .vector import AbstractVector
-from coordinax._src.utils import is_any_quantity
 
 # ===================================================================
 
@@ -179,9 +179,9 @@ def eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."
     # Map the equality over the leaves, which are Quantities.
     comp_tree = jtu.map(
         jnp.equal,
-        jtu.leaves(lhs, is_leaf=is_any_quantity),
-        jtu.leaves(rhs, is_leaf=is_any_quantity),
-        is_leaf=is_any_quantity,
+        jtu.leaves(lhs, is_leaf=uq.is_any_quantity),
+        jtu.leaves(rhs, is_leaf=uq.is_any_quantity),
+        is_leaf=uq.is_any_quantity,
     )
 
     # Reduce the equality over the leaves.

@@ -3,7 +3,6 @@
 __all__ = ["AbstractAccND", "AbstractPosND", "AbstractVelND"]
 
 
-from abc import abstractmethod
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
@@ -12,14 +11,11 @@ import equinox as eqx
 import quaxed.lax as qlax
 
 import coordinax._src.typing as ct
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
 if TYPE_CHECKING:
-    import typing
-
     import coordinax.vecs
 
 
@@ -27,12 +23,6 @@ class AbstractPosND(AbstractPos):
     """Abstract representation of N-D coordinates in different systems."""
 
     q: eqx.AbstractVar[ct.BatchableLength]
-
-    @classproperty
-    @classmethod
-    @abstractmethod
-    def differential_cls(cls) -> "typing.Never":  # type: ignore[override]
-        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Array API

@@ -23,7 +23,6 @@ from .base_spherical import (
 )
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -64,12 +63,6 @@ class MathSphericalPos(AbstractSphericalPos):
         checks.check_polar_range(self.phi)
 
     @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["MathSphericalVel"]:  # type: ignore[override]
-        return MathSphericalVel
-
-    @override
     @partial(eqx.filter_jit)
     def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
@@ -86,9 +79,6 @@ class MathSphericalPos(AbstractSphericalPos):
 
         """
         return self.r
-
-
-##############################################################################
 
 
 @final
@@ -108,21 +98,6 @@ class MathSphericalVel(AbstractSphericalVel):
     )
     r"""Inclination speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[MathSphericalPos]:  # type: ignore[override]
-        return MathSphericalPos
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["MathSphericalAcc"]:  # type: ignore[override]
-        return MathSphericalAcc
-
-
-##############################################################################
-
 
 @final
 class MathSphericalAcc(AbstractSphericalAcc):
@@ -140,9 +115,3 @@ class MathSphericalAcc(AbstractSphericalAcc):
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Inclination acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[MathSphericalVel]:  # type: ignore[override]
-        return MathSphericalVel

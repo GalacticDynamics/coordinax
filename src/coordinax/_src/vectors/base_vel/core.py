@@ -2,7 +2,6 @@
 
 __all__ = ["AbstractVel", "VELOCITY_CLASSES"]
 
-from abc import abstractmethod
 from functools import partial
 from typing import TYPE_CHECKING, Any, cast
 
@@ -41,41 +40,22 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
     @classproperty
     @classmethod
-    @abstractmethod
-    def integral_cls(cls) -> "type[AbstractPos]":
-        """Return the corresponding vector class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> cx.vecs.RadialVel.integral_cls.__name__
-        'RadialPos'
-
-        >>> cx.SphericalVel.integral_cls.__name__
-        'SphericalPos'
-
-        """
-        raise NotImplementedError  # pragma: no cover
+    def time_derivative_cls(cls) -> "type[coordinax.vecs.AbstractAcc]":
+        """Return the corresponding time derivative class."""
+        return api.time_derivative_vector_type(cls)
 
     @classproperty
     @classmethod
-    @abstractmethod
-    def differential_cls(cls) -> "type[coordinax.vecs.AbstractAcc]":
-        """Return the corresponding differential vector class.
+    def time_antiderivative_cls(cls) -> type[AbstractPos]:
+        """Return the corresponding time antiderivative class."""
+        return api.time_antiderivative_vector_type(cls)
 
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> cx.vecs.RadialVel.differential_cls.__name__
-        'RadialAcc'
-
-        >>> cx.SphericalVel.differential_cls.__name__
-        'SphericalAcc'
-
-        """
-        raise NotImplementedError  # pragma: no cover
+    @classmethod
+    def time_nth_derivative_cls(
+        cls, *, n: int
+    ) -> "type[coordinax.vecs.AbstractVector]":
+        """Return the corresponding time nth derivative class."""
+        return api.time_nth_derivative_vector_type(cls, n=n)
 
     # ===============================================================
     # Convenience methods

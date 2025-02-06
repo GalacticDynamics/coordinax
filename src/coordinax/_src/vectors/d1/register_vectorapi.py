@@ -221,3 +221,82 @@ def cartesian_vector_type(
 ) -> type[AbstractAcc1D]:
     """Return the corresponding Cartesian vector class."""
     return CartesianAcc1D
+
+
+###############################################################################
+# Corresponding time derivative classes
+
+# -----------------------------------------------
+# Position -> Velocity
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianPos1D] | CartesianPos1D, /
+) -> type[CartesianVel1D]:
+    """Return the corresponding time derivative class."""
+    return CartesianVel1D
+
+
+@dispatch
+def time_derivative_vector_type(obj: type[RadialPos] | RadialPos, /) -> type[RadialVel]:
+    """Return the corresponding time derivative class."""
+    return RadialVel
+
+
+# -----------------------------------------------
+# Velocity -> Position
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianVel1D] | CartesianVel1D, /
+) -> type[CartesianPos1D]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianPos1D
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[RadialVel] | RadialVel, /
+) -> type[RadialPos]:
+    """Return the corresponding time antiderivative class."""
+    return RadialPos
+
+
+# -----------------------------------------------
+# Velocity -> Acceleration
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianVel1D] | CartesianVel1D, /
+) -> type[CartesianAcc1D]:
+    """Return the corresponding time derivative class."""
+    return CartesianAcc1D
+
+
+@dispatch
+def time_derivative_vector_type(obj: type[RadialVel] | RadialVel, /) -> type[RadialAcc]:
+    """Return the corresponding time derivative class."""
+    return RadialAcc
+
+
+# -----------------------------------------------
+# Acceleration -> Velocity
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianAcc1D] | CartesianAcc1D, /
+) -> type[CartesianVel1D]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianVel1D
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[RadialAcc] | RadialAcc, /
+) -> type[RadialVel]:
+    """Return the corresponding time antiderivative class."""
+    return RadialVel

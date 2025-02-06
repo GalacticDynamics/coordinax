@@ -222,7 +222,7 @@ class AbstractVelTest(AbstractVectorTest):
 
         # Perform the conversion.
         # Detecting whether the conversion reduces the dimensionality.
-        with context_dimension_reduction(vector, target.integral_cls):
+        with context_dimension_reduction(vector, target.time_antiderivative_cls):
             newdif = difntl.vconvert(target, vector)
 
         # Test

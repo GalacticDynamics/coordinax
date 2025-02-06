@@ -3,6 +3,8 @@
 __all__: list[str] = []
 
 from functools import partial
+from inspect import isclass
+from typing import cast
 
 import equinox as eqx
 from jaxtyping import Array, Shaped
@@ -10,6 +12,9 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
+
+from . import api
+from coordinax._src.vectors.base import AbstractVector
 
 
 @dispatch
@@ -56,3 +61,23 @@ def normalize_vector(
 
     """
     return x / jnp.linalg.vector_norm(x, axis=-1, keepdims=True)
+
+
+# ===========================================================================
+
+
+@dispatch
+def time_nth_derivative_vector_type(
+    obj: type[AbstractVector] | AbstractVector, /, *, n: int
+) -> type[AbstractVector]:
+    out = cast(type[AbstractVector], obj if isclass(obj) else type(obj))
+    if n == 0:
+        pass
+    elif n < 0:
+        for _ in range(-n):
+            out = api.time_antiderivative_vector_type(out)
+    else:
+        for _ in range(n):
+            out = api.time_derivative_vector_type(out)
+
+    return out

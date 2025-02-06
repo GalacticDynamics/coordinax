@@ -277,3 +277,54 @@ def cartesian_vector_type(
     """
     msg = "PoincarePolarVector does not have a corresponding Cartesian class."
     raise NotImplementedError(msg)
+
+
+###############################################################################
+# Corresponding time derivative classes
+
+# -----------------------------------------------
+# Position -> Velocity
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianPosND] | CartesianPosND, /
+) -> type[CartesianVelND]:
+    """Return the corresponding time derivative class."""
+    return CartesianVelND
+
+
+# -----------------------------------------------
+# Velocity -> Position
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianVelND] | CartesianVelND, /
+) -> type[CartesianPosND]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianPosND
+
+
+# -----------------------------------------------
+# Velocity -> Acceleration
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianVelND] | CartesianVelND, /
+) -> type[CartesianAccND]:
+    """Return the corresponding time derivative class."""
+    return CartesianAccND
+
+
+# -----------------------------------------------
+# Acceleration -> Velocity
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianAccND] | CartesianAccND, /
+) -> type[CartesianVelND]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianVelND

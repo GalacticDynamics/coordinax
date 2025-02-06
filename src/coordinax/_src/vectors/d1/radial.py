@@ -3,7 +3,6 @@
 __all__ = ["RadialAcc", "RadialPos", "RadialVel"]
 
 from typing import final
-from typing_extensions import override
 
 import equinox as eqx
 
@@ -13,7 +12,6 @@ from dataclassish.converters import Unless
 import coordinax._src.typing as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 
 
@@ -40,15 +38,6 @@ class RadialPos(AbstractPos1D):
         """Check the initialization."""
         check_r_non_negative(self.r)
 
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["RadialVel"]:  # type: ignore[override]
-        return RadialVel
-
-
-#####################################################################
-
 
 @final
 class RadialVel(AbstractVel1D):
@@ -69,21 +58,6 @@ class RadialVel(AbstractVel1D):
     r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in (-\infty,+\infty)`."""
 
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[RadialPos]:  # type: ignore[override]
-        return RadialPos
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["RadialAcc"]:  # type: ignore[override]
-        return RadialAcc
-
-
-#####################################################################
-
 
 @final
 class RadialAcc(AbstractAcc1D):
@@ -103,9 +77,3 @@ class RadialAcc(AbstractAcc1D):
 
     r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in (-\infty,+\infty)`."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[RadialVel]:  # type: ignore[override]
-        return RadialVel

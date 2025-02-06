@@ -3,7 +3,7 @@
 __all__ = ["CartesianAccND", "CartesianPosND", "CartesianVelND"]
 
 from functools import partial
-from typing import NoReturn, final
+from typing import final
 from typing_extensions import override
 
 import equinox as eqx
@@ -16,7 +16,6 @@ from quaxed.experimental import arrayish
 import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 ##############################################################################
@@ -96,21 +95,6 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, arrayish.NumpyNegMixin):
 
         """
         return self.q.shape[-1]
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianVelND"]:  # type: ignore[override]
-        """Return the differential class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> cx.vecs.CartesianPosND.differential_cls
-        <class 'coordinax...CartesianVelND'>
-
-        """
-        return CartesianVelND
 
     # ===============================================================
     # Quax API
@@ -221,36 +205,6 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
         return self.q.shape[-1]
 
     @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianPosND]:  # type: ignore[override]
-        """Return the integral class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> cx.vecs.CartesianVelND.integral_cls
-        <class 'coordinax...CartesianPosND'>
-
-        """
-        return CartesianPosND
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianAccND"]:  # type: ignore[override]
-        """Return the differential class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> cx.vecs.CartesianVelND.differential_cls
-        <class 'coordinax...CartesianAccND'>
-
-        """
-        return CartesianAccND
-
-    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosND | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
@@ -347,37 +301,6 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
         """
         return self.q.shape[-1]
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianVelND]:  # type: ignore[override]
-        """Return the integral class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> cx.vecs.CartesianAccND.integral_cls.__name__
-        'CartesianVelND'
-
-        """
-        return CartesianVelND
-
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> NoReturn:
-        """Return the differential class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> try: cx.vecs.CartesianAccND.differential_cls
-        ... except NotImplementedError as e: print(e)
-        Not yet supported
-
-        """
-        msg = "Not yet supported"
-        raise NotImplementedError(msg)  # TODO: Implement this
 
     @override
     @partial(eqx.filter_jit, inline=True)

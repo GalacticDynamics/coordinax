@@ -24,7 +24,6 @@ from .base_spherical import (
 )
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -113,12 +112,6 @@ class LonLatSphericalPos(AbstractSphericalPos):
         checks.check_r_non_negative(self.distance)
 
     @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalVel"]:  # type: ignore[override]
-        return LonLatSphericalVel
-
-    @override
     @partial(eqx.filter_jit, inline=True)
     def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
@@ -135,9 +128,6 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
         """
         return self.distance
-
-
-##############################################################################
 
 
 @final
@@ -157,16 +147,6 @@ class LonLatSphericalVel(AbstractSphericalVel):
     distance: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalPos]:  # type: ignore[override]
-        return LonLatSphericalPos
-
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalAcc"]:  # type: ignore[override]
-        return LonLatSphericalAcc
-
 
 @final
 class LonCosLatSphericalVel(AbstractSphericalVel):
@@ -185,19 +165,6 @@ class LonCosLatSphericalVel(AbstractSphericalVel):
     distance: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalPos]:  # type: ignore[override]
-        return LonLatSphericalPos
-
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["LonLatSphericalAcc"]:  # type: ignore[override]
-        return LonLatSphericalAcc
-
-
-##############################################################################
-
 
 @final
 class LonLatSphericalAcc(AbstractSphericalAcc):
@@ -215,9 +182,3 @@ class LonLatSphericalAcc(AbstractSphericalAcc):
 
     distance: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[LonLatSphericalVel]:  # type: ignore[override]
-        return LonLatSphericalVel

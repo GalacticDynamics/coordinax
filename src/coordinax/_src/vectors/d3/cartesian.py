@@ -19,11 +19,7 @@ import unxt as u
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
-
-#####################################################################
-# Position
 
 
 @final
@@ -51,25 +47,6 @@ class CartesianPos3D(AbstractCartesian, AbstractPos3D):
     z: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
 
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianVel3D"]:  # type: ignore[override]
-        """Return the differential class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> print(cx.vecs.CartesianPos3D.differential_cls)
-        <class 'coordinax...CartesianVel3D'>
-
-        """
-        return CartesianVel3D
-
-
-#####################################################################
-# Velocity
-
 
 @final
 class CartesianVel3D(AbstractCartesian, AbstractVel3D):
@@ -95,27 +72,6 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
     z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianPos3D]:  # type: ignore[override]
-        return CartesianPos3D
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianAcc3D"]:  # type: ignore[override]
-        """Return the differential class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> print(cx.vecs.CartesianVel3D.differential_cls)
-        <class 'coordinax...CartesianAcc3D'>
-
-        """
-        return CartesianAcc3D
-
     @partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPos3D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
@@ -131,10 +87,6 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
         return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)
 
 
-#####################################################################
-# Acceleration
-
-
 @final
 class CartesianAcc3D(AbstractCartesian, AbstractAcc3D):
     """Cartesian differential representation."""
@@ -147,15 +99,6 @@ class CartesianAcc3D(AbstractCartesian, AbstractAcc3D):
 
     z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianVel3D]:  # type: ignore[override]
-        return CartesianVel3D
-
-    # -----------------------------------------------------
-    # Methods
 
     @override
     @partial(jax.jit, inline=True)

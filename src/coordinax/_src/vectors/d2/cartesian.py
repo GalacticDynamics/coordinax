@@ -18,7 +18,6 @@ import unxt as u
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 
@@ -43,15 +42,6 @@ class CartesianPos2D(AbstractCartesian, AbstractPos2D):
     y: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianVel2D"]:  # type: ignore[override]
-        return CartesianVel2D
-
-
-#####################################################################
-
 
 @final
 class CartesianVel2D(AbstractCartesian, AbstractVel2D):
@@ -75,27 +65,6 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
     r"""Y coordinate differential :math:`\dot{y} \in (-\infty,+\infty)`."""
 
     @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianPos2D]:  # type: ignore[override]
-        return CartesianPos2D
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CartesianAcc2D"]:  # type: ignore[override]
-        """Return the differential class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-        >>> print(cx.vecs.CartesianVel2D.differential_cls)
-        <class 'coordinax...CartesianAcc2D'>
-
-        """
-        return CartesianAcc2D
-
-    @override
     def norm(self, _: AbstractPos2D | None = None, /) -> ct.BatchableSpeed:
         """Return the norm of the vector.
 
@@ -108,9 +77,6 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
 
         """
         return jnp.sqrt(self.x**2 + self.y**2)
-
-
-#####################################################################
 
 
 @final
@@ -133,14 +99,6 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
 
     y: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CartesianVel2D]:  # type: ignore[override]
-        return CartesianVel2D
-
-    # -----------------------------------------------------
 
     @override
     @partial(eqx.filter_jit, inline=True)
