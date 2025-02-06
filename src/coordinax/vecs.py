@@ -81,7 +81,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src.vectors.d4 import *
     from ._src.vectors.dn import *
     from ._src.vectors.exceptions import *
-    from ._src.vectors.space import *
+    from ._src.vectors.space import AbstractVectors, Space
 
 
 __all__ = [
@@ -168,6 +168,9 @@ __all__ = [
     "ProlateSpheroidalAcc",
     # Generic
     "CartesianGeneric3D",
+    # Space
+    "AbstractVectors",
+    "Space",
     # --- Misc ---
     "POSITION_CLASSES",
     "VELOCITY_CLASSES",
@@ -175,7 +178,6 @@ __all__ = [
 ]
 __all__ += vectors.d4.__all__
 __all__ += vectors.dn.__all__
-__all__ += vectors.space.__all__
 __all__ += vectors.exceptions.__all__
 
 

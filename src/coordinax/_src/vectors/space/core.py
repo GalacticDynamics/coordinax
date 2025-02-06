@@ -3,25 +3,21 @@
 __all__ = ["Space"]
 
 import math
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from textwrap import indent
-from types import MappingProxyType
 from typing import Any, final
-from typing_extensions import override
 
 import equinox as eqx
 import jax
 from astropy.units import PhysicalType as Dimension
-from jax import Device
 from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
 from xmmutablemap import ImmutableMap
 
+from .base import AbstractVectors
 from .utils import DimensionLike, _get_dimension_name, can_broadcast_shapes
-from coordinax._src.typing import Unit
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vector
 from coordinax._src.vectors.base import AbstractVector
 
@@ -30,7 +26,7 @@ from coordinax._src.vectors.base import AbstractVector
 #       running afoul of Jax's tree flattening, where ImmutableMap and
 #       eqx.Module differ.
 @final
-class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: ignore[misc]
+class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: ignore[misc]
     """A collection of vectors that acts like the primary vector.
 
     Parameters
@@ -287,6 +283,15 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
         return ImmutableMap.__getitem__(self, key)
 
+    def keys(self) -> KeysView[str]:
+        return self._data.keys()
+
+    def values(self) -> ValuesView[AbstractVector]:
+        return self._data.values()
+
+    def items(self) -> ItemsView[str, AbstractVector]:
+        return self._data.items()
+
     # ===============================================================
     # Quax API
 
@@ -414,121 +419,3 @@ class Space(AbstractVector, ImmutableMap[Dimension, AbstractVector]):  # type: i
 
     # ===============================================================
     # Collection
-
-    def asdict(
-        self,
-        *,
-        dict_factory: Callable[[Any], Mapping[str, u.Quantity]] = dict,
-    ) -> Mapping[str, u.Quantity]:
-        """Return the vector as a Mapping.
-
-        Parameters
-        ----------
-        dict_factory : type[Mapping]
-            The type of the mapping to return.
-
-        Returns
-        -------
-        Mapping[str, Quantity]
-            The vector as a mapping.
-
-        See Also
-        --------
-        `dataclasses.asdict`
-            This applies recursively to the components of the vector.
-
-        """
-        return dict_factory(self._data)
-
-    @override
-    @classproperty
-    @classmethod
-    def components(cls) -> tuple[str, ...]:  # type: ignore[override]
-        """Vector component names."""
-        raise NotImplementedError  # TODO: implement this
-
-    @property
-    def units(self) -> MappingProxyType[str, Unit]:
-        """Get the units of the vector's components."""
-        raise NotImplementedError  # TODO: implement this
-
-    @override
-    @property
-    def dtypes(self) -> MappingProxyType[str, MappingProxyType[str, jnp.dtype[Any]]]:  # type: ignore[override]
-        """Get the dtypes of the vector's components.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> w = cx.Space(
-        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
-
-        >>> w.dtypes
-        mappingproxy({'length': mappingproxy({'x': dtype('int32'), 'y': dtype('int32'), 'z': dtype('int32')}),
-                      'speed': mappingproxy({'x': dtype('int32'), 'y': dtype('int32'), 'z': dtype('int32')})})
-
-        """  # noqa: E501
-        return MappingProxyType({k: v.dtypes for k, v in self.items()})
-
-    @override
-    @property
-    def devices(self) -> MappingProxyType[str, MappingProxyType[str, Device]]:  # type: ignore[override]
-        """Get the devices of the vector's components.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> w = cx.Space(
-        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
-
-        >>> w.devices
-        mappingproxy({'length': mappingproxy({'x': CpuDevice(id=0), 'y': CpuDevice(id=0), 'z': CpuDevice(id=0)}),
-                      'speed': mappingproxy({'x': CpuDevice(id=0), 'y': CpuDevice(id=0), 'z': CpuDevice(id=0)})})
-
-        """  # noqa: E501
-        return MappingProxyType({k: v.devices for k, v in self.items()})
-
-    @override
-    @property
-    def shapes(self) -> MappingProxyType[str, MappingProxyType[str, tuple[int, ...]]]:  # type: ignore[override]
-        """Get the shapes of the spaces's fields.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> w = cx.Space(
-        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
-
-        >>> w.shapes
-        mappingproxy({'length': (1, 2), 'speed': (1, 2)})
-
-        """
-        return MappingProxyType({k: v.shape for k, v in self.items()})
-
-    @property
-    def sizes(self) -> MappingProxyType[str, int]:
-        """Get the sizes of the vector's components.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> w = cx.Space(
-        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
-        ... )
-
-        >>> w.sizes
-        mappingproxy({'length': 6, 'speed': 6})
-
-        """
-        return MappingProxyType({k: v.size for k, v in self.items()})
