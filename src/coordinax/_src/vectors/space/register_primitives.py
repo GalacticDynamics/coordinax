@@ -22,7 +22,8 @@ def broadcast_in_dim_p_space(obj: Space, /, *, shape: Shape, **kw: Any) -> Space
     return replace(
         obj,
         **{
-            k: jnp.broadcast_to(v, (*batch, v.aval().shape[-1])) for k, v in obj.items()
+            k: jnp.broadcast_to(v, (*batch, v.aval().shape[-1]))  # type: ignore[arg-type]
+            for k, v in obj.items()
         },
     )
 
