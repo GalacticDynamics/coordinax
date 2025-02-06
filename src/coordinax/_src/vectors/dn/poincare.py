@@ -3,7 +3,6 @@
 __all__ = ["PoincarePolarVector"]
 
 from typing import final
-from typing_extensions import override
 
 import equinox as eqx
 from jaxtyping import Shaped
@@ -12,9 +11,7 @@ import unxt as u
 
 import coordinax._src.typing as ct
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base_pos import AbstractPos
-from coordinax._src.vectors.base_vel import AbstractVel
 
 
 @final
@@ -52,10 +49,3 @@ class PoincarePolarVector(AbstractPos):  # TODO: better name
 
         """
         return 6
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type[AbstractVel]:  # type: ignore[override]
-        """Return the corresponding differential vector class."""
-        raise NotImplementedError

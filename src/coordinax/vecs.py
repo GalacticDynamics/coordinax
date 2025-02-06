@@ -10,6 +10,9 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src.vectors.api import (
         cartesian_vector_type,
         normalize_vector,
+        time_antiderivative_vector_type,
+        time_derivative_vector_type,
+        time_nth_derivative_vector_type,
         vconvert,
         vector,
     )
@@ -87,6 +90,9 @@ __all__ = [
     "vconvert",
     "normalize_vector",
     "cartesian_vector_type",
+    "time_derivative_vector_type",
+    "time_antiderivative_vector_type",
+    "time_nth_derivative_vector_type",
     # Base
     "AbstractVector",
     "AttrFilter",

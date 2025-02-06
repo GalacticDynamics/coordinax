@@ -4,7 +4,7 @@ __all__ = ["FourVector"]
 
 from dataclasses import KW_ONLY
 from functools import partial
-from typing import TYPE_CHECKING, Any, cast, final
+from typing import Any, cast, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -21,12 +21,8 @@ from dataclassish.converters import Unless
 import coordinax._src.typing as ct
 from .base import AbstractPos4D
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AttrFilter, VectorAttribute
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
-
-if TYPE_CHECKING:
-    import typing
 
 ##############################################################################
 # Position
@@ -119,15 +115,6 @@ class FourVector(AbstractPos4D):
 
         """
         return getattr(self.q, name)
-
-    # -------------------------------------------
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> "typing.Never":  # type: ignore[override]
-        msg = "Not yet implemented"
-        raise NotImplementedError(msg)
 
     # -------------------------------------------
 

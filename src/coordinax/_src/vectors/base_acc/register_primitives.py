@@ -37,9 +37,8 @@ def mul_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"]) -> AbstractVel:
         [2]>
 
     """
-    # TODO: better access to corresponding fields
     fs = {k: jnp.multiply(v, rhs) for k, v in field_items(lhs)}
-    return cast(AbstractVel, lhs.integral_cls.from_(fs))
+    return cast(AbstractVel, lhs.time_antiderivative_cls.from_(fs))
 
 
 @register(jax.lax.mul_p)
@@ -83,8 +82,7 @@ def mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
         [2]>
 
     """
-    # TODO: better access to corresponding fields
-    pos_cls = lhs.integral_cls.integral_cls
+    pos_cls = lhs.time_nth_derivative_cls(-2)
     fs = {k: v * rhs for k, v in field_items(lhs)}
     return cast(AbstractPos, pos_cls.from_(fs))
 

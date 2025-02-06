@@ -3,7 +3,6 @@
 __all__ = ["TwoSphereAcc", "TwoSpherePos", "TwoSphereVel"]
 
 from typing import final
-from typing_extensions import override
 
 import equinox as eqx
 
@@ -13,7 +12,6 @@ from dataclassish.converters import Unless
 import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angles import Angle, BatchableAngle
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_polar_range
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -57,7 +55,7 @@ class TwoSpherePos(AbstractPos2D):
 
     This coordinate has corresponding velocity class:
 
-    >>> s2.differential_cls
+    >>> s2.time_derivative_cls
     <class 'coordinax...TwoSphereVel'>
 
     """
@@ -73,15 +71,6 @@ class TwoSpherePos(AbstractPos2D):
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         check_polar_range(self.theta)
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["TwoSphereVel"]:  # type: ignore[override]
-        return TwoSphereVel
-
-
-#####################################################################
 
 
 @final
@@ -123,10 +112,10 @@ class TwoSphereVel(AbstractVel2D):
 
     This coordinate has corresponding position and acceleration class:
 
-    >>> s2.integral_cls
+    >>> s2.time_antiderivative_cls
     <class 'coordinax...TwoSpherePos'>
 
-    >>> s2.differential_cls
+    >>> s2.time_derivative_cls
     <class 'coordinax...TwoSphereAcc'>
 
     """
@@ -140,21 +129,6 @@ class TwoSphereVel(AbstractVel2D):
         converter=u.Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[TwoSpherePos]:  # type: ignore[override]
-        return TwoSpherePos
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["TwoSphereAcc"]:  # type: ignore[override]
-        return TwoSphereAcc
-
-
-#####################################################################
 
 
 @final
@@ -196,7 +170,7 @@ class TwoSphereAcc(AbstractAcc2D):
 
     This coordinate has corresponding velocity class:
 
-    >>> s2.integral_cls
+    >>> s2.time_antiderivative_cls
     <class 'coordinax...TwoSphereVel'>
 
     """
@@ -210,9 +184,3 @@ class TwoSphereAcc(AbstractAcc2D):
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[TwoSphereVel]:  # type: ignore[override]
-        return TwoSphereVel

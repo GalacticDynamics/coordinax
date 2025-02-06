@@ -4,10 +4,8 @@ __all__: list[str] = []
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated as Ann, Generic, TypeGuard, TypeVar
+from typing import Annotated as Ann, Generic, TypeVar
 from typing_extensions import Doc
-
-import unxt as u
 
 GetterRetT = TypeVar("GetterRetT")
 EnclosingT = TypeVar("EnclosingT")
@@ -140,21 +138,3 @@ def classproperty(
     fget = func if isinstance(func, classmethod | staticmethod) else classmethod(func)
     # Return the wrapped function as a class-level property
     return ClassPropertyDescriptor[EnclosingT, GetterRetT](fget)
-
-
-def is_any_quantity(obj: object, /) -> TypeGuard[u.AbstractQuantity]:
-    """Check if an object is an abstract quantity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> from coordinax._src.utils import is_any_quantity
-
-    >>> is_any_quantity(4.71)
-    False
-
-    >>> is_any_quantity(u.Quantity(4.71, "m"))
-    True
-
-    """
-    return isinstance(obj, u.AbstractQuantity)

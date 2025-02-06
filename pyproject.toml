@@ -187,7 +187,7 @@ skip = ["uv.lock"]
   py-version = "3.11"
   reports.output-format = "colorized"
   similarities.ignore-imports = "yes"
-  max-module-lines = 1500
+  max-module-lines = 2000
 
 
 [tool.pytest.ini_options]

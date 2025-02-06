@@ -3,7 +3,6 @@
 __all__ = ["SphericalAcc", "SphericalPos", "SphericalVel"]
 
 from typing import final
-from typing_extensions import override
 
 import equinox as eqx
 
@@ -18,7 +17,6 @@ from .base_spherical import (
 )
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -62,14 +60,6 @@ class SphericalPos(AbstractSphericalPos):
         checks.check_r_non_negative(self.r)
         checks.check_polar_range(self.theta)
 
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["SphericalVel"]:  # type: ignore[override]
-        return SphericalVel
-
-
-##############################################################################
-
 
 @final
 class SphericalVel(AbstractSphericalVel):
@@ -88,21 +78,6 @@ class SphericalVel(AbstractSphericalVel):
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[SphericalPos]:  # type: ignore[override]
-        return SphericalPos
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["SphericalAcc"]:  # type: ignore[override]
-        return SphericalAcc
-
-
-##############################################################################
-
 
 @final
 class SphericalAcc(AbstractSphericalAcc):
@@ -120,8 +95,3 @@ class SphericalAcc(AbstractSphericalAcc):
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
-
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[SphericalVel]:  # type: ignore[override]
-        return SphericalVel

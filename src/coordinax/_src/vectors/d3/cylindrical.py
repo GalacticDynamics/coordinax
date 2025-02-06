@@ -20,7 +20,6 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import BatchableLength
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -47,12 +46,6 @@ class CylindricalPos(AbstractPos3D):
     def __check_init__(self) -> None:
         """Check the validity of the initialisation."""
         check_r_non_negative(self.rho)
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CylindricalVel"]:  # type: ignore[override]
-        return CylindricalVel
 
     @override
     @partial(eqx.filter_jit, inline=True)
@@ -102,18 +95,6 @@ class CylindricalVel(AbstractVel3D):
     z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CylindricalPos]:  # type: ignore[override]
-        return CylindricalPos
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["CylindricalAcc"]:  # type: ignore[override]
-        return CylindricalAcc
-
 
 @final
 class CylindricalAcc(AbstractAcc3D):
@@ -143,9 +124,3 @@ class CylindricalAcc(AbstractAcc3D):
 
     z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[CylindricalVel]:  # type: ignore[override]
-        return CylindricalVel

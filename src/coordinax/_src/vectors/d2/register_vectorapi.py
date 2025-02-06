@@ -10,7 +10,8 @@ import quaxed.numpy as xp
 
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
-from .polar import PolarPos, PolarVel
+from .polar import PolarAcc, PolarPos, PolarVel
+from .spherical import TwoSphereAcc, TwoSpherePos, TwoSphereVel
 from coordinax._src.vectors.base_pos import AbstractPos
 
 
@@ -166,3 +167,114 @@ def cartesian_vector_type(
 ) -> type[CartesianAcc2D]:
     """AbstractPos -> CartesianAcc2D."""
     return CartesianAcc2D
+
+
+###############################################################################
+# Corresponding time derivative classes
+
+# -----------------------------------------------
+# Position -> Velocity
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianPos2D] | CartesianPos2D, /
+) -> type[CartesianVel2D]:
+    """Return the corresponding time derivative class."""
+    return CartesianVel2D
+
+
+@dispatch
+def time_derivative_vector_type(obj: type[PolarPos] | PolarPos, /) -> type[PolarVel]:
+    """Return the corresponding time derivative class."""
+    return PolarVel
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[TwoSpherePos] | TwoSpherePos, /
+) -> type[TwoSphereVel]:
+    """Return the corresponding time derivative class."""
+    return TwoSphereVel
+
+
+# -----------------------------------------------
+# Velocity -> Position
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianVel2D] | CartesianVel2D, /
+) -> type[CartesianPos2D]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianPos2D
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[PolarVel] | PolarVel, /
+) -> type[PolarPos]:
+    """Return the corresponding time antiderivative class."""
+    return PolarPos
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[TwoSphereVel] | TwoSphereVel, /
+) -> type[TwoSpherePos]:
+    """Return the corresponding time antiderivative class."""
+    return TwoSpherePos
+
+
+# -----------------------------------------------
+# Velocity -> Acceleration
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[CartesianVel2D] | CartesianVel2D, /
+) -> type[CartesianAcc2D]:
+    """Return the corresponding time derivative class."""
+    return CartesianAcc2D
+
+
+@dispatch
+def time_derivative_vector_type(obj: type[PolarVel] | PolarVel, /) -> type[PolarAcc]:
+    """Return the corresponding time derivative class."""
+    return PolarAcc
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[TwoSphereVel] | TwoSphereVel, /
+) -> type[TwoSphereAcc]:
+    """Return the corresponding time derivative class."""
+    return TwoSphereAcc
+
+
+# -----------------------------------------------
+# Acceleration -> Velocity
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[CartesianAcc2D] | CartesianAcc2D, /
+) -> type[CartesianVel2D]:
+    """Return the corresponding time antiderivative class."""
+    return CartesianVel2D
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[PolarAcc] | PolarAcc, /
+) -> type[PolarVel]:
+    """Return the corresponding time antiderivative class."""
+    return PolarVel
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[TwoSphereAcc] | TwoSphereAcc, /
+) -> type[TwoSphereVel]:
+    """Return the corresponding time antiderivative class."""
+    return TwoSphereVel

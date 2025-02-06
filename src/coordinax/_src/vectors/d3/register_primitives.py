@@ -13,12 +13,11 @@ from quax import register
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
-from unxt.quantity import AbstractQuantity
+import unxt as u
 
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 from .generic import CartesianGeneric3D
 from .mathspherical import MathSphericalPos
-from coordinax._src.utils import is_any_quantity
 from coordinax._src.vectors.base_pos import AbstractPos
 
 # ------------------------------------------------
@@ -41,7 +40,7 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 
     """
     cart = rhs.vconvert(CartesianPos3D)
-    return jax.tree.map(jnp.add, lhs, cart, is_leaf=is_any_quantity)
+    return jax.tree.map(jnp.add, lhs, cart, is_leaf=u.quantity.is_any_quantity)
 
 
 @register(jax.lax.add_p)
@@ -87,7 +86,7 @@ def _add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
 @register(jax.lax.dot_general_p)
 def _dot_general_cart3d(
     lhs: CartesianPos3D, rhs: CartesianPos3D, /, **kwargs: Any
-) -> AbstractQuantity:
+) -> u.AbstractQuantity:
     """Dot product of two vectors.
 
     Examples
@@ -137,7 +136,7 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
         lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
     )
     # Scale the radial distance
-    return replace(rhs, r=cast(AbstractQuantity, lhs * rhs.r))
+    return replace(rhs, r=cast(u.AbstractQuantity, lhs * rhs.r))
 
 
 @register(jax.lax.mul_p)

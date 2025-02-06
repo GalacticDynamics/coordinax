@@ -16,7 +16,6 @@ from dataclassish import replace
 
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarPos
-from coordinax._src.utils import is_any_quantity
 from coordinax._src.vectors.base_pos import AbstractPos
 
 # -----------------------------------------------------
@@ -117,8 +116,8 @@ def dot_general_cart2d(
     Quantity['area'](Array(11, dtype=int32), unit='m2')
 
     """
-    tree = jax.tree.map(jnp.multiply, lhs, rhs, is_leaf=is_any_quantity)
-    return jax.tree.reduce(jnp.add, tree, is_leaf=is_any_quantity)
+    tree = jax.tree.map(jnp.multiply, lhs, rhs, is_leaf=u.quantity.is_any_quantity)
+    return jax.tree.reduce(jnp.add, tree, is_leaf=u.quantity.is_any_quantity)
 
 
 # ------------------------------------------------

@@ -14,7 +14,6 @@ import coordinax._src.typing as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -46,12 +45,6 @@ class PolarPos(AbstractPos2D):
         check_r_non_negative(self.r)
 
     @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["PolarVel"]:  # type: ignore[override]
-        return PolarVel
-
-    @override
     def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
 
@@ -66,9 +59,6 @@ class PolarPos(AbstractPos2D):
 
         """
         return self.r
-
-
-#####################################################################
 
 
 @final
@@ -94,18 +84,6 @@ class PolarVel(AbstractVel2D):
         converter=u.Quantity["angular speed"].from_
     )
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[PolarPos]:  # type: ignore[override]
-        return PolarPos
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["PolarAcc"]:  # type: ignore[override]
-        return PolarAcc
 
 
 #####################################################################
@@ -135,9 +113,3 @@ class PolarAcc(AbstractAcc2D):
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[PolarVel]:  # type: ignore[override]
-        return PolarVel

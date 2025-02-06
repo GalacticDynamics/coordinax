@@ -4,7 +4,6 @@ __all__ = ["ProlateSpheroidalAcc", "ProlateSpheroidalPos", "ProlateSpheroidalVel
 
 from dataclasses import KW_ONLY
 from typing import final
-from typing_extensions import override
 
 import equinox as eqx
 from jaxtyping import Shaped
@@ -16,7 +15,6 @@ from dataclassish.converters import Unless
 import coordinax._src.typing as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import Angle, BatchableAngleQ
-from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import VectorAttribute
 from coordinax._src.vectors.checks import (
     check_greater_than_equal,
@@ -113,12 +111,6 @@ class ProlateSpheroidalPos(AbstractPos3D):
             jnp.abs(self.nu), self.Delta**2, name="nu", comparison_name="Delta^2"
         )
 
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["ProlateSpheroidalVel"]:  # type: ignore[override]
-        return ProlateSpheroidalVel
-
 
 @final
 class ProlateSpheroidalVel(AbstractVel3D):
@@ -134,18 +126,6 @@ class ProlateSpheroidalVel(AbstractVel3D):
         converter=u.Quantity["angular speed"].from_
     )
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[ProlateSpheroidalPos]:  # type: ignore[override]
-        return ProlateSpheroidalPos
-
-    @override
-    @classproperty
-    @classmethod
-    def differential_cls(cls) -> type["ProlateSpheroidalAcc"]:  # type: ignore[override]
-        return ProlateSpheroidalAcc
 
 
 @final
@@ -166,9 +146,3 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
-
-    @override
-    @classproperty
-    @classmethod
-    def integral_cls(cls) -> type[ProlateSpheroidalVel]:  # type: ignore[override]
-        return ProlateSpheroidalVel

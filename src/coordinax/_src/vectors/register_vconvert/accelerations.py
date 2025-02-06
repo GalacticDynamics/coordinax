@@ -123,21 +123,22 @@ def vconvert(
     shape = current.shape
     flat_shape = prod(shape)
 
-    # Parse the position to an AbstractPos (Q -> Cart<X>D)
-    posvec = cast(
-        AbstractPos,
-        position
-        if isinstance(position, AbstractPos)
-        else current.integral_cls.integral_cls.cartesian_type.from_(position),
-    )
-
     # Parse the velocity to an AbstractVel # Q -> Cart<X>D
-    velvec: AbstractVel
+    vel_cls = cast(AbstractVel, current.time_antiderivative_cls)
     velvec = cast(
         AbstractVel,
         velocity
         if isinstance(velocity, AbstractVel)
-        else current.integral_cls.cartesian_type.from_(velocity),
+        else vel_cls.cartesian_type.from_(velocity),
+    )
+
+    # Parse the position to an AbstractPos (Q -> Cart<X>D)
+    pos_cls = cast(AbstractPos, vel_cls.time_antiderivative_cls)
+    posvec = cast(
+        AbstractPos,
+        position
+        if isinstance(position, AbstractPos)
+        else pos_cls.cartesian_type.from_(position),
     )
 
     posvec = posvec.reshape(flat_shape)  # flattened
@@ -145,7 +146,7 @@ def vconvert(
 
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
-    current_pos = vconvert(current.integral_cls.integral_cls, posvec, **kwargs)
+    current_pos = vconvert(current.time_nth_derivative_cls(-2), posvec, **kwargs)
     # TODO: not need to cast to distance
     current_pos = replace(
         current_pos,
@@ -165,7 +166,7 @@ def vconvert(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
-    jac_nested_vecs = jac_rep_as(target.integral_cls.integral_cls, current_pos)
+    jac_nested_vecs = jac_rep_as(target.time_nth_derivative_cls(-2), current_pos)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for

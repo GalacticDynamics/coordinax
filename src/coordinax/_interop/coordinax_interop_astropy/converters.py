@@ -22,7 +22,7 @@ import coordinax as cx
 # Quantity
 
 
-@conversion_method(cx.vecs.AbstractPos3D, apyu.Quantity)  # type: ignore[arg-type,type-abstract]
+@conversion_method(cx.vecs.AbstractPos3D, apyu.Quantity)  # type: ignore[arg-type]
 def vec_to_q(obj: cx.vecs.AbstractPos3D, /) -> Shaped[apyu.Quantity, "*batch 3"]:
     """`coordinax.AbstractPos3D` -> `astropy.units.Quantity`.
 
