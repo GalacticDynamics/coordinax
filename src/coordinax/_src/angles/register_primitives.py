@@ -24,7 +24,7 @@ radian = u.unit("radian")
 
 # TODO: can this be done with promotion/conversion/default rule instead?
 @register(lax.cbrt_p)
-def cbrt_p_a(x: AbstractAngle) -> FastQ:
+def cbrt_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     """Cube root of an angle.
 
     Examples
@@ -44,7 +44,7 @@ def cbrt_p_a(x: AbstractAngle) -> FastQ:
 
 
 @register(lax.cos_p)
-def cos_p(x: AbstractAngle) -> FastQ:
+def cos_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     """Cosine of an Angle.
 
     Examples
@@ -64,7 +64,9 @@ def cos_p(x: AbstractAngle) -> FastQ:
 
 
 @register(lax.dot_general_p)
-def dot_general_aa(lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any) -> FastQ:
+def dot_general_abstractangle_abstractangle(
+    lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any
+) -> FastQ:
     """Dot product of two Angles.
 
     Examples
@@ -89,7 +91,7 @@ def dot_general_aa(lhs: AbstractAngle, rhs: AbstractAngle, /, **kwargs: Any) -> 
 
 
 @register(lax.integer_pow_p)
-def integer_pow_p_a(x: AbstractAngle, *, y: Any) -> FastQ:
+def integer_pow_p_abstractangle(x: AbstractAngle, /, *, y: Any) -> FastQ:
     """Integer power of an Angle.
 
     Examples
@@ -108,7 +110,7 @@ def integer_pow_p_a(x: AbstractAngle, *, y: Any) -> FastQ:
 
 
 @register(lax.pow_p)
-def pow_p_a(x: AbstractAngle, y: ArrayLike) -> FastQ:
+def pow_p_abstractangle_arraylike(x: AbstractAngle, y: ArrayLike, /) -> FastQ:
     """Power of an Angle by redispatching to Quantity.
 
     Examples
@@ -129,7 +131,7 @@ def pow_p_a(x: AbstractAngle, y: ArrayLike) -> FastQ:
 
 
 @register(lax.sin_p)
-def sin_p(x: AbstractAngle) -> FastQ:
+def sin_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     """Sine of an Angle.
 
     Examples
@@ -149,7 +151,7 @@ def sin_p(x: AbstractAngle) -> FastQ:
 
 
 @register(lax.sqrt_p)
-def sqrt_p_a(x: AbstractAngle) -> FastQ:
+def sqrt_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     """Square root of an Angle.
 
     Examples
@@ -169,7 +171,7 @@ def sqrt_p_a(x: AbstractAngle) -> FastQ:
 
 
 @register(lax.tan_p)
-def tan_p_a(x: AbstractAngle) -> FastQ:
+def tan_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     """Tangent of an Angle.
 
     Examples

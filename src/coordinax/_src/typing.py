@@ -13,6 +13,7 @@ from jaxtyping import Float, Int, Shaped
 
 import unxt as u
 
+Shape: TypeAlias = tuple[int, ...]
 Unit: TypeAlias = AstropyUnit | AstropyUnitBase | AstropyCompositeUnit
 
 BatchableScalarQ = Shaped[u.AbstractQuantity, "*#batch"]

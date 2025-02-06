@@ -21,8 +21,8 @@ Shape: TypeAlias = tuple[int, ...]
 
 
 @register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p(
-    operand: AbstractVector, *, shape: Shape, **kwargs: Any
+def broadcast_in_dim_p_absvec(
+    operand: AbstractVector, /, *, shape: Shape, **kwargs: Any
 ) -> AbstractVector:
     """Broadcast in a dimension.
 
@@ -146,7 +146,9 @@ def broadcast_in_dim_p(
 
 
 @register(jax.lax.convert_element_type_p)
-def convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractVector:
+def convert_element_type_p_absvec(
+    operand: AbstractVector, /, **kwargs: Any
+) -> AbstractVector:
     """Convert the element type of a quantity.
 
     Examples
@@ -170,7 +172,7 @@ def convert_element_type_p(operand: AbstractVector, **kwargs: Any) -> AbstractVe
 
 
 @register(jax.lax.eq_p)
-def eq_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
+def eq_p_absvecs(lhs: AbstractVector, rhs: AbstractVector, /) -> Bool[Array, "..."]:
     """Element-wise equality of two vectors.
 
     See `AbstractVector.__eq__` for examples.

@@ -21,7 +21,7 @@ from coordinax._src.vectors.base_vel import AbstractVel
 
 
 @register(jax.lax.mul_p)
-def mul_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"]) -> AbstractVel:
+def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
     """Multiply the vector by a :class:`unxt.Quantity`.
 
     Examples
@@ -42,7 +42,7 @@ def mul_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"]) -> AbstractVel:
 
 
 @register(jax.lax.mul_p)
-def mul_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc) -> AbstractVel:
+def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -62,7 +62,7 @@ def mul_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc) -> AbstractVel:
 
 
 @register(jax.lax.mul_p)
-def mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
+def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
     """Multiply an acceleration by a scalar.
 
     Examples
@@ -88,7 +88,7 @@ def mul_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"]) -> AbstractPos:
 
 
 @register(jax.lax.mul_p)
-def mul_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc) -> AbstractPos:
+def mul_p_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc, /) -> AbstractPos:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -111,7 +111,7 @@ def mul_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc) -> AbstractPos:
 
 
 @register(jax.lax.neg_p)
-def neg_acc(vec: AbstractAcc) -> AbstractAcc:
+def neg_p_acc(vec: AbstractAcc, /) -> AbstractAcc:
     """Negate the vector.
 
     Examples

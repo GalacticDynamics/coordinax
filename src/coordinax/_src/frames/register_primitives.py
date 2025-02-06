@@ -12,7 +12,7 @@ from .coordinate import Coordinate
 
 
 @register(jax.lax.neg_p)
-def neg_coordinate(x: Coordinate, /) -> Coordinate:
+def neg_p_coord(x: Coordinate, /) -> Coordinate:
     """Negate a coordinate.
 
     Examples

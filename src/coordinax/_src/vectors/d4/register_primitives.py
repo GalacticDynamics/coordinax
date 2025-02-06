@@ -16,7 +16,7 @@ from coordinax._src.vectors.d3 import AbstractPos3D
 
 
 @register(jax.lax.add_p)
-def add_4v4v(self: FourVector, other: FourVector) -> FourVector:
+def add_p_4vs(self: FourVector, other: FourVector, /) -> FourVector:
     """Add two 4-vectors.
 
     Examples
@@ -36,8 +36,8 @@ def add_4v4v(self: FourVector, other: FourVector) -> FourVector:
 
 
 @register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p(
-    obj: FourVector, *, shape: tuple[int, ...], **kwargs: Any
+def broadcast_in_dim_p_4v(
+    obj: FourVector, /, *, shape: tuple[int, ...], **kwargs: Any
 ) -> FourVector:
     """Broadcast in a dimension."""
     batch = shape[:-1]
@@ -69,7 +69,7 @@ def _eq_4v_4v(lhs: FourVector, rhs: FourVector, /) -> Bool[Array, "..."]:
 
 
 @register(jax.lax.neg_p)
-def neg_4v(self: FourVector) -> FourVector:
+def neg_p_4v(self: FourVector, /) -> FourVector:
     """Negate the 4-vector.
 
     Examples
@@ -87,7 +87,7 @@ def neg_4v(self: FourVector) -> FourVector:
 
 
 @register(jax.lax.sub_p)
-def sub_4v_4v(lhs: FourVector, rhs: FourVector) -> FourVector:
+def sub_p_4v_4v(lhs: FourVector, rhs: FourVector, /) -> FourVector:
     """Add two 4-vectors.
 
     Examples
