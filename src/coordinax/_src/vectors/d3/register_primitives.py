@@ -24,7 +24,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 
 
 @register(jax.lax.add_p)
-def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
+def add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     """Subtract two vectors.
 
     Examples
@@ -44,7 +44,7 @@ def _add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 
 
 @register(jax.lax.add_p)
-def _add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
+def add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
     """Add two Cartesian velocities.
 
     Examples
@@ -61,7 +61,7 @@ def _add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
 
 
 @register(jax.lax.add_p)
-def _add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
+def add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
     """Add two Cartesian accelerations.
 
     Examples
@@ -84,7 +84,7 @@ def _add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
 
 
 @register(jax.lax.dot_general_p)
-def _dot_general_cart3d(
+def dot_general_cart3d(
     lhs: CartesianPos3D, rhs: CartesianPos3D, /, **kwargs: Any
 ) -> u.AbstractQuantity:
     """Dot product of two vectors.
@@ -109,7 +109,7 @@ def _dot_general_cart3d(
 
 
 @register(jax.lax.mul_p)
-def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
+def mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
     """Scale the polar position by a scalar.
 
     Examples
@@ -140,7 +140,7 @@ def _mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
 
 
 @register(jax.lax.mul_p)
-def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
+def mul_p_arraylike_cart3d(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
     """Scale a position by a scalar.
 
     Examples
@@ -172,7 +172,7 @@ def _mul_ac3(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
 
 
 @register(jax.lax.neg_p)
-def _neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
+def neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
     """Negate the `coordinax.CartesianPos3D`.
 
     Examples
@@ -188,7 +188,7 @@ def _neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
 
 
 @register(jax.lax.neg_p)
-def neg_genericcart3d(obj: CartesianGeneric3D, /) -> CartesianGeneric3D:
+def neg_p_genericcart3d(obj: CartesianGeneric3D, /) -> CartesianGeneric3D:
     """Negate the `coordinax.vecs.CartesianGeneric3D`.
 
     Examples
@@ -207,7 +207,7 @@ def neg_genericcart3d(obj: CartesianGeneric3D, /) -> CartesianGeneric3D:
 
 
 @register(jax.lax.sub_p)
-def _sub_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
+def sub_p_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     """Subtract two vectors.
 
     Examples
@@ -227,7 +227,7 @@ def _sub_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
 
 
 @register(jax.lax.sub_p)
-def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
+def sub_p_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
     """Subtract two differentials.
 
     Examples
@@ -243,7 +243,7 @@ def _sub_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D:
 
 
 @register(jax.lax.sub_p)
-def _sub_a3_a3(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
+def sub_p_a3_a3(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
     """Subtract two accelerations.
 
     Examples

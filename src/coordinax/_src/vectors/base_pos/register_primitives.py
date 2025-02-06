@@ -20,11 +20,11 @@ from unxt.quantity import BareQuantity
 from .core import AbstractPos
 from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AttrFilter
-from coordinax._src.vectors.base.register_primitives import eq_vec_vec
+from coordinax._src.vectors.base.register_primitives import eq_p_absvecs
 
 
 @register(jax.lax.add_p)
-def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
+def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # The base implementation is to convert to Cartesian and perform the
     # operation.  Cartesian coordinates do not have any branch cuts or
     # singularities or ranges that need to be handled, so this is a safe
@@ -47,7 +47,7 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
 
 
 @register(jax.lax.dot_general_p)
-def _dot_general_pos(
+def dot_p_general_poss(
     lhs: AbstractPos, rhs: AbstractPos, /, **kwargs: Any
 ) -> u.AbstractQuantity:
     """Dot product of two vectors.
@@ -75,7 +75,7 @@ def _dot_general_pos(
 
 
 @register(jax.lax.div_p)
-def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
+def div_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
     """Divide a vector by a scalar.
 
     Examples
@@ -100,17 +100,17 @@ def _div_pos_v(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
 
 
 @register(jax.lax.eq_p)
-def _eq_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> Array:
+def eq_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> Array:
     """Element-wise equality of two positions."""
     rhs = cast(AbstractPos, rhs.vconvert(type(lhs)))
-    return eq_vec_vec(lhs, rhs)
+    return eq_p_absvecs(lhs, rhs)
 
 
 # ------------------------------------------------
 
 
 @register(jax.lax.mul_p)
-def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
+def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     """Scale a position by a scalar.
 
     Examples
@@ -142,7 +142,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> from plum import conversion_method
     >>> @conversion_method(MyCartesian, u.Quantity)
-    ... def _to_quantity(x: MyCartesian, /) -> u.Quantity:
+    ... def to_quantity(x: MyCartesian, /) -> u.Quantity:
     ...     return jnp.stack((x.x, x.y, x.z), axis=-1)
 
     Add representation transformation
@@ -201,7 +201,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
 
 @register(jax.lax.mul_p)
-def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
+def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
     """Scale a position by a scalar.
 
     Examples
@@ -220,7 +220,7 @@ def _mul_pos_v(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
 
 
 @register(jax.lax.mul_p)
-def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
+def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -254,7 +254,7 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
 
 
 @register(jax.lax.neg_p)
-def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
+def neg_p_pos(obj: AbstractPos, /) -> AbstractPos:
     """Negate the vector.
 
     The default implementation is to go through Cartesian coordinates.
@@ -277,8 +277,8 @@ def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
 
 
 @register(jax.lax.reshape_p)
-def _reshape_pos(
-    operand: AbstractPos, *, new_sizes: tuple[int, ...], **kwargs: Any
+def reshape_p_pos(
+    operand: AbstractPos, /, *, new_sizes: tuple[int, ...], **kw: Any
 ) -> AbstractPos:
     """Reshape the components of the vector.
 
@@ -306,7 +306,7 @@ def _reshape_pos(
     return replace(
         operand,
         **{
-            k: quaxify(jax.lax.reshape_p.bind)(v, new_sizes=new_sizes, **kwargs)
+            k: quaxify(jax.lax.reshape_p.bind)(v, new_sizes=new_sizes, **kw)
             for k, v in field_items(operand)
         },
     )
@@ -316,7 +316,7 @@ def _reshape_pos(
 
 
 @register(jax.lax.sub_p)
-def _sub_qq(lhs: AbstractPos, rhs: AbstractPos) -> AbstractPos:
+def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     """Add another object to this vector."""
     # The base implementation is to convert to Cartesian and perform the
     # operation.  Cartesian coordinates do not have any branch cuts or

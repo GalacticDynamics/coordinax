@@ -20,7 +20,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 
 
 @register(jax.lax.add_p)
-def add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
+def add_p_cartnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     """Add two vectors.
 
     Examples
@@ -46,7 +46,7 @@ def add_vcnd(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
 
 
 @register(jax.lax.dot_general_p)
-def dot_general_cartnd(
+def dot_general_p_cartnds(
     lhs: CartesianPosND, rhs: CartesianPosND, /, **kwargs: Any
 ) -> u.AbstractQuantity:
     """Dot product of two vectors.
@@ -71,7 +71,7 @@ def dot_general_cartnd(
 
 
 @register(jax.lax.mul_p)
-def mul_vcnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
+def mul_p_arraylike_cartnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
     """Scale a position by a scalar.
 
     Examples
@@ -95,7 +95,7 @@ def mul_vcnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
 
 
 @register(jax.lax.neg_p)
-def neg_p_cartnd_pos(obj: CartesianPosND, /) -> CartesianPosND:
+def neg_p_cartnd(obj: CartesianPosND, /) -> CartesianPosND:
     """Negate the `coordinax.CartesianPosND`.
 
     Examples
@@ -114,7 +114,7 @@ def neg_p_cartnd_pos(obj: CartesianPosND, /) -> CartesianPosND:
 
 
 @register(jax.lax.sub_p)
-def sub_cnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
+def sub_p_cartnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND:
     """Subtract two vectors.
 
     Examples

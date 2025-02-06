@@ -12,10 +12,11 @@ import quaxed.numpy as jnp
 from dataclassish import replace
 
 from .core import Space
+from coordinax._src.typing import Shape
 
 
 @register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p(obj: Space, *, shape: tuple[int, ...], **kwargs: Any) -> Space:
+def broadcast_in_dim_p_space(obj: Space, /, *, shape: Shape, **kw: Any) -> Space:
     """Broadcast in a dimension."""
     batch = shape[:-1]
     return replace(
@@ -27,7 +28,7 @@ def broadcast_in_dim_p(obj: Space, *, shape: tuple[int, ...], **kwargs: Any) -> 
 
 
 @register(jax.lax.neg_p)
-def neg_space(space: Space, /) -> Space:
+def neg_p_space(space: Space, /) -> Space:
     """Negative of the vector.
 
     Examples

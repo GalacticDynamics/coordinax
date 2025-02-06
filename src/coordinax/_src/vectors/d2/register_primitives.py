@@ -22,7 +22,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 
 
 @register(jax.lax.add_p)
-def add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
+def add_p_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     """Add a CartesianPos2D and position vector.
 
     Examples
@@ -47,7 +47,7 @@ def add_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
 
 
 @register(jax.lax.add_p)
-def add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
+def add_p_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
     """Add two Cartesian velocities.
 
     Examples
@@ -69,7 +69,7 @@ def add_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
 
 
 @register(jax.lax.add_p)
-def add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
+def add_p_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     """Add two Cartesian accelerations.
 
     Examples
@@ -98,7 +98,7 @@ def add_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
 
 # TODO: this works for more Cartesian types
 @register(jax.lax.dot_general_p)
-def dot_general_cart2d(
+def dot_general_p_cart2d(
     lhs: CartesianPos2D, rhs: CartesianPos2D, /, **kwargs: Any
 ) -> u.AbstractQuantity:
     """Dot product of two vectors.
@@ -124,7 +124,7 @@ def dot_general_cart2d(
 
 
 @register(jax.lax.mul_p)
-def mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
+def mul_p_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
     """Scale a cartesian 2D position by a scalar.
 
     Examples
@@ -147,7 +147,7 @@ def mul_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
 
 
 @register(jax.lax.mul_p)
-def mul_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
+def mul_p_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
     """Scale a cartesian 2D velocity by a scalar.
 
     Examples
@@ -175,7 +175,7 @@ def mul_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
 
 
 @register(jax.lax.mul_p)
-def mul_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
+def mul_p_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     """Scale a cartesian 2D acceleration by a scalar.
 
     Examples
@@ -201,7 +201,7 @@ def mul_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
 
 
 @register(jax.lax.mul_p)
-def mul_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
+def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
     """Scale the polar position by a scalar.
 
     Examples
@@ -254,7 +254,7 @@ def neg_p_cart2d_pos(obj: CartesianPos2D, /) -> CartesianPos2D:
 
 
 @register(jax.lax.sub_p)
-def sub_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
+def sub_p_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D:
     """Subtract two vectors.
 
     Examples

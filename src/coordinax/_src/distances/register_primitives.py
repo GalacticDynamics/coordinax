@@ -22,7 +22,7 @@ radian = u.unit("radian")
 
 # TODO: can this be done with promotion/conversion instead?
 @register(lax.cbrt_p)
-def _cbrt_p_d(x: AbstractDistance) -> BareQuantity:
+def cbrt_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
     """Cube root of a distance.
 
     Examples
@@ -41,7 +41,7 @@ def _cbrt_p_d(x: AbstractDistance) -> BareQuantity:
 
 
 @register(lax.dot_general_p)
-def _dot_general_dd(
+def dot_general_p_abstractdistances(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
 ) -> BareQuantity:
     """Dot product of two Distances.
@@ -82,7 +82,7 @@ def _dot_general_dd(
 
 
 @register(lax.integer_pow_p)
-def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> BareQuantity:
+def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQuantity:
     """Integer power of a Distance.
 
     Examples
@@ -100,7 +100,9 @@ def _integer_pow_p_d(x: AbstractDistance, *, y: Any) -> BareQuantity:
 
 
 @register(lax.pow_p)
-def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> BareQuantity:
+def pow_p_abstractdistance_arraylike(
+    x: AbstractDistance, y: ArrayLike, /
+) -> BareQuantity:
     """Power of a Distance by redispatching to Quantity.
 
     Examples
@@ -121,7 +123,7 @@ def _pow_p_d(x: AbstractDistance, y: ArrayLike) -> BareQuantity:
 
 
 @register(lax.sqrt_p)
-def _sqrt_p_d(x: AbstractDistance) -> BareQuantity:
+def sqrt_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
     """Square root of a quantity.
 
     Examples
@@ -146,11 +148,11 @@ def _sqrt_p_d(x: AbstractDistance) -> BareQuantity:
 # ==============================================================================
 
 
-def _to_value_rad_or_one(q: u.AbstractQuantity) -> ArrayLike:
+def to_value_rad_or_one(q: u.AbstractQuantity, /) -> ArrayLike:
     return u.ustrip(radian if u.is_unit_convertible(q.unit, radian) else one, q)
 
 
 # TODO: figure out a promotion alternative that works in general
 @register(lax.tan_p)
-def _tan_p_d(x: AbstractDistance) -> BareQuantity:
-    return BareQuantity(lax.tan(_to_value_rad_or_one(x)), unit=one)
+def tan_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
+    return BareQuantity(lax.tan(to_value_rad_or_one(x)), unit=one)
