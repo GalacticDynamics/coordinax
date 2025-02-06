@@ -107,7 +107,7 @@ def vconvert(
     if isinstance(position, AbstractPos):
         posvec = position
     else:  # Q -> Cart<X>D
-        cart_cls = current.integral_cls._cartesian_cls  # noqa: SLF001
+        cart_cls = current.integral_cls.cartesian_type
         posvec = cast(AbstractPos, cart_cls.from_(position))
 
     posvec = posvec.reshape(flat_shape)  # flattened

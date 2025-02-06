@@ -22,7 +22,7 @@ import coordinax._src.typing as ct
 from .base import AbstractPos4D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.utils import classproperty
-from coordinax._src.vectors.base import AbstractVector, AttrFilter, VectorAttribute
+from coordinax._src.vectors.base import AttrFilter, VectorAttribute
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
 if TYPE_CHECKING:
@@ -121,12 +121,6 @@ class FourVector(AbstractPos4D):
         return getattr(self.q, name)
 
     # -------------------------------------------
-
-    @override
-    @classproperty
-    @classmethod
-    def _cartesian_cls(cls) -> type[AbstractVector]:  # type: ignore[override]
-        return CartesianPos3D
 
     @override
     @classproperty

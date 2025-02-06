@@ -29,7 +29,7 @@ def _add_qq(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # operation.  Cartesian coordinates do not have any branch cuts or
     # singularities or ranges that need to be handled, so this is a safe
     # default.
-    cart_cls = lhs._cartesian_cls  # noqa: SLF001
+    cart_cls = lhs.cartesian_type
     cart_cls = eqx.error_if(
         cart_cls,
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
@@ -67,11 +67,8 @@ def _dot_general_pos(
     Quantity['area'](Array([1., 4., 9.], dtype=float32), unit='m2')
 
     """
-    return qlax.dot_general(
-        lhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
-        rhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
-        **kwargs,
-    )
+    cart_cls = lhs.cartesian_type
+    return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)  # type: ignore[arg-type]
 
 
 # ------------------------------------------------
@@ -118,6 +115,7 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     Examples
     --------
+    >>> from plum import dispatch
     >>> import quaxed.numpy as jnp
     >>> import unxt as u
     >>> import coordinax as cx
@@ -137,7 +135,8 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     ...     z: u.Quantity
     ...     _dimensionality: ClassVar[int] = 3
     ...
-    >>> MyCartesian._cartesian_cls = MyCartesian  # hack
+    >>> @dispatch
+    ... def cartesian_vector_type(obj: type[MyCartesian]) -> type[MyCartesian]: return MyCartesian
 
     Add conversion to Quantity:
 
@@ -172,7 +171,9 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     Now a real example. For this we need to define the Cartesian-specific
     dispatches:
 
-    >>> MyCartesian._cartesian_cls = cx.CartesianPos3D
+    >>> @dispatch
+    ... def cartesian_vector_type(obj: type[MyCartesian]) -> type[cx.CartesianPos3D]:
+    ...      return cx.CartesianPos3D
     >>> @dispatch
     ... def vconvert(target: type[cx.CartesianPos3D],current: MyCartesian, /) -> cx.CartesianPos3D:
     ...     return cx.CartesianPos3D(x=current.x, y=current.y, z=current.z)
@@ -189,13 +190,12 @@ def _mul_v_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     lhs = eqx.error_if(
         lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
     )
+    cart_cls = rhs.cartesian_type
     rhs = eqx.error_if(
-        rhs,
-        isinstance(rhs, rhs._cartesian_cls),  # noqa: SLF001
-        "must register a Cartesian-specific dispatch",
+        rhs, isinstance(rhs, cart_cls), "must register a Cartesian-specific dispatch"
     )
 
-    rc = rhs.vconvert(rhs._cartesian_cls)  # noqa: SLF001
+    rc = rhs.vconvert(cart_cls)
     nr = cast(AbstractPos, qlax.mul(lhs, rc))  # type: ignore[arg-type]
     return cast(AbstractPos, nr.vconvert(type(rhs)))
 
@@ -245,8 +245,8 @@ def _mul_pos_pos(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
     BareQuantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
 
     """
-    lq: BareQuantity = convert(lhs.vconvert(lhs._cartesian_cls), BareQuantity)  # noqa: SLF001
-    rq: BareQuantity = convert(rhs.vconvert(rhs._cartesian_cls), BareQuantity)  # noqa: SLF001
+    lq: BareQuantity = convert(lhs.vconvert(lhs.cartesian_type), BareQuantity)
+    rq: BareQuantity = convert(rhs.vconvert(rhs.cartesian_type), BareQuantity)
     return qlax.mul(lq, rq)  # re-dispatch to Quantities
 
 
@@ -268,7 +268,7 @@ def _neg_pos(obj: AbstractPos, /) -> AbstractPos:
         [-1 -2 -3]>
 
     """
-    cart = vconvert(obj._cartesian_cls, obj)  # noqa: SLF001
+    cart = vconvert(obj.cartesian_type, obj)
     negcart = jnp.negative(cart)
     return vconvert(type(obj), negcart)
 
@@ -322,11 +322,6 @@ def _sub_qq(lhs: AbstractPos, rhs: AbstractPos) -> AbstractPos:
     # operation.  Cartesian coordinates do not have any branch cuts or
     # singularities or ranges that need to be handled, so this is a safe
     # default.
-    diff = cast(
-        AbstractPos,
-        qlax.sub(
-            lhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
-            rhs.vconvert(lhs._cartesian_cls),  # type: ignore[arg-type]  # noqa: SLF001
-        ),
-    )
-    return cast(AbstractPos, diff.vconvert(type(lhs)))
+    cart_cls = lhs.cartesian_type
+    diff = qlax.sub(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls))  # type: ignore[arg-type]
+    return cast(AbstractPos, vconvert(type(lhs), diff))

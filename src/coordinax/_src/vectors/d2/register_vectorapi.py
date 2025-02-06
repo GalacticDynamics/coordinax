@@ -8,7 +8,7 @@ from plum import dispatch
 
 import quaxed.numpy as xp
 
-from .base import AbstractPos2D, AbstractVel2D
+from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarPos, PolarVel
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -138,3 +138,31 @@ def vconvert(
 
     """
     return current
+
+
+###############################################################################
+# Corresponding Cartesian classes
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractPos2D] | AbstractPos2D, /
+) -> type[CartesianPos2D]:
+    """AbstractPos2D -> CartesianPos2D."""
+    return CartesianPos2D
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractVel2D] | AbstractVel2D, /
+) -> type[CartesianVel2D]:
+    """AbstractVel2D -> CartesianVel2D."""
+    return CartesianVel2D
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractAcc2D] | AbstractAcc2D, /
+) -> type[CartesianAcc2D]:
+    """AbstractPos -> CartesianAcc2D."""
+    return CartesianAcc2D

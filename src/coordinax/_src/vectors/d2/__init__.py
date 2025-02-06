@@ -28,5 +28,5 @@ from .spherical import TwoSphereAcc, TwoSpherePos, TwoSphereVel
 # isort: split
 from . import (
     register_primitives,  # noqa: F401
-    register_vconvert,  # noqa: F401
+    register_vectorapi,  # noqa: F401
 )

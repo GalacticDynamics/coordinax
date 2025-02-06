@@ -4,17 +4,21 @@ __all__ = ["AbstractAcc", "ACCELERATION_CLASSES"]
 
 from abc import abstractmethod
 from functools import partial
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import jax
 
 import unxt as u
 
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.mixins import AvalMixin
+
+if TYPE_CHECKING:
+    import coordinax.vecs
 
 
 class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
@@ -32,22 +36,9 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
     @classproperty
     @classmethod
-    @abstractmethod
-    def _cartesian_cls(cls) -> type["AbstractVector"]:
-        """Return the corresponding Cartesian vector class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> cx.vecs.CartesianAcc3D._cartesian_cls
-        <class 'coordinax...CartesianAcc3D'>
-
-        >>> cx.vecs.SphericalAcc._cartesian_cls
-        <class 'coordinax...CartesianAcc3D'>
-
-        """
-        raise NotImplementedError  # pragma: no cover
+    def cartesian_type(cls) -> "type[coordinax.vecs.AbstractAcc]":
+        """Return the corresponding Cartesian vector class."""
+        return api.cartesian_vector_type(cls)
 
     @classproperty
     @classmethod
@@ -91,7 +82,8 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         Quantity[...](Array(5..., dtype=float32), unit='m / s2')
 
         """
-        cart_acc = cast(AbstractAcc, self.vconvert(self._cartesian_cls, p, q))
+        cart_cls = self.cartesian_type
+        cart_acc = cast(AbstractAcc, self.vconvert(cart_cls, p, q))
         return cart_acc.norm(p, q)
 
 

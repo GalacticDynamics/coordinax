@@ -4,11 +4,15 @@ __all__ = [
     "vector",
     "vconvert",
     "normalize_vector",
+    "cartesian_vector_type",
 ]
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from plum import dispatch
+
+if TYPE_CHECKING:
+    import coordinax.vecs
 
 
 @dispatch.abstract
@@ -35,5 +39,50 @@ def normalize_vector(x: Any, /) -> Any:
 
 @dispatch.abstract
 def vector(*args: Any, **kwargs: Any) -> Any:
-    """Create a vector."""
+    """Construct a vector given the arguments."""
+    raise NotImplementedError  # pragma: no cover
+
+
+@dispatch.abstract
+def cartesian_vector_type(obj: Any, /) -> "type[coordinax.vecs.AbstractVector]":
+    """Return the corresponding Cartesian vector type.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.RadialPos)
+    <class 'coordinax...CartesianPos1D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.SphericalPos)
+    <class 'coordinax...CartesianPos3D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.RadialVel)
+    <class 'coordinax...CartesianVel1D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.TwoSphereAcc)
+    <class 'coordinax...CartesianAcc2D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.SphericalVel)
+    <class 'coordinax...CartesianVel3D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianAcc3D)
+    <class 'coordinax...CartesianAcc3D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.SphericalAcc)
+    <class 'coordinax...CartesianAcc3D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.FourVector)
+    <class 'coordinax...CartesianPos3D'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianPosND)
+    <class 'coordinax...CartesianPosND'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianVelND)
+    <class 'coordinax...CartesianVelND'>
+
+    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianAccND)
+    <class 'coordinax...CartesianAccND'>
+
+    """
     raise NotImplementedError  # pragma: no cover

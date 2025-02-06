@@ -12,7 +12,7 @@ import unxt as u
 
 from .spacetime import FourVector
 from coordinax._src.vectors import api
-from coordinax._src.vectors.d3 import AbstractPos3D
+from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
 
 @dispatch
@@ -84,6 +84,9 @@ def vconvert(
     return replace(current, q=q)
 
 
+# =============================================================================
+
+
 @dispatch
 def spatial_component(x: FourVector, /) -> AbstractPos3D:
     """Return the spatial component of the vector.
@@ -100,3 +103,15 @@ def spatial_component(x: FourVector, /) -> AbstractPos3D:
 
     """
     return x.q
+
+
+# =============================================================================
+# Corresponding Cartesian class
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[FourVector] | FourVector, /
+) -> type[CartesianPos3D]:
+    """Return the corresponding Cartesian vector class."""
+    return CartesianPos3D

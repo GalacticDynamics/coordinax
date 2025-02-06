@@ -123,20 +123,22 @@ def vconvert(
     shape = current.shape
     flat_shape = prod(shape)
 
-    # Parse the position to an AbstractPos
-    if isinstance(position, AbstractPos):
-        posvec = position
-    else:  # Q -> Cart<X>D
-        cart_cls = current.integral_cls.integral_cls._cartesian_cls  # noqa: SLF001
-        posvec = cast(AbstractPos, cart_cls.from_(position))
+    # Parse the position to an AbstractPos (Q -> Cart<X>D)
+    posvec = cast(
+        AbstractPos,
+        position
+        if isinstance(position, AbstractPos)
+        else current.integral_cls.integral_cls.cartesian_type.from_(position),
+    )
 
-    # Parse the velocity to an AbstractVel
+    # Parse the velocity to an AbstractVel # Q -> Cart<X>D
     velvec: AbstractVel
-    if isinstance(velocity, AbstractVel):
-        velvec = velocity
-    else:  # Q -> Cart<X>D
-        cart_cls = current.integral_cls._cartesian_cls  # noqa: SLF001
-        velvec = cast(AbstractVel, cart_cls.from_(velocity))
+    velvec = cast(
+        AbstractVel,
+        velocity
+        if isinstance(velocity, AbstractVel)
+        else current.integral_cls.cartesian_type.from_(velocity),
+    )
 
     posvec = posvec.reshape(flat_shape)  # flattened
     velvec = velvec.reshape(flat_shape)  # flattened

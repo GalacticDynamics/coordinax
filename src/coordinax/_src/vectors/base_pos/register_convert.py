@@ -103,7 +103,7 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> u.AbstractQuantity:
     Quantity['length'](Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
     """  # noqa: E501
-    cart = full_shaped(obj.vconvert(obj._cartesian_cls))  # noqa: SLF001
+    cart = full_shaped(obj.vconvert(obj.cartesian_type))
     return jnp.stack(tuple(field_values(cart)), axis=-1)
 
 

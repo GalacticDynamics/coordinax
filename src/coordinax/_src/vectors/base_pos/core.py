@@ -20,6 +20,7 @@ from unxt.quantity import BareQuantity as FastQ
 
 from coordinax._src.typing import BatchableScalarQ
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector, ToUnitsOptions
 from coordinax._src.vectors.mixins import AvalMixin
 
@@ -50,22 +51,9 @@ class AbstractPos(
 
     @classproperty
     @classmethod
-    @abstractmethod
-    def _cartesian_cls(cls) -> "type[coordinax.vecs.AbstractVector]":
-        """Return the corresponding Cartesian vector class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> cx.vecs.RadialPos._cartesian_cls
-        <class 'coordinax...CartesianPos1D'>
-
-        >>> cx.SphericalPos._cartesian_cls
-        <class 'coordinax...CartesianPos3D'>
-
-        """
-        raise NotImplementedError  # pragma: no cover
+    def cartesian_type(cls) -> "type[coordinax.vecs.AbstractPos]":
+        """Return the corresponding Cartesian vector class."""
+        return api.cartesian_vector_type(cls)
 
     @classproperty
     @classmethod
@@ -113,10 +101,11 @@ class AbstractPos(
 
         """
         # TODO: figure out how to do this without converting back to arrays.
-        cartvec = self.vconvert(self._cartesian_cls)
+        cart_cls = self.cartesian_type
+        cartvec = self.vconvert(cart_cls)
         q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)
         newq = _vec_matmul(other, q)
-        newvec = self._cartesian_cls.from_(newq)
+        newvec = cart_cls.from_(newq)
         return newvec.vconvert(type(self))
 
     def __abs__(self) -> u.AbstractQuantity:

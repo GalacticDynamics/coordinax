@@ -2,13 +2,14 @@
 
 __all__: list[str] = []
 
-from typing import Any
+from typing import Any, NoReturn
 
 from plum import dispatch
 
 import quaxed.numpy as jnp
 from unxt.quantity import AbstractQuantity
 
+from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from .cartesian import CartesianAccND, CartesianPosND, CartesianVelND
 from .poincare import PoincarePolarVector
 
@@ -116,7 +117,7 @@ def vector(
 
 
 ###############################################################################
-# Cartesian
+# Vector Conversion
 
 
 @dispatch
@@ -219,7 +220,7 @@ def vconvert(
     return current
 
 
-###############################################################################
+# =============================================================================
 # Poincare
 
 
@@ -229,3 +230,50 @@ def vconvert(
 ) -> PoincarePolarVector:
     """PoincarePolarVector -> PoincarePolarVector."""
     return current
+
+
+###############################################################################
+# Corresponding Cartesian class
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractPosND] | AbstractPosND, /
+) -> type[CartesianPosND]:
+    """Return the corresponding Cartesian vector class."""
+    return CartesianPosND
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractVelND] | AbstractVelND, /
+) -> type[CartesianVelND]:
+    """Return the corresponding Cartesian vector class."""
+    return CartesianVelND
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[AbstractAccND] | AbstractAccND, /
+) -> type[CartesianAccND]:
+    """Return the corresponding Cartesian vector class."""
+    return CartesianAccND
+
+
+@dispatch
+def cartesian_vector_type(
+    obj: type[PoincarePolarVector] | PoincarePolarVector, /
+) -> NoReturn:
+    """Return the corresponding Cartesian vector class.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> try: cx.vecs.cartesian_vector_type(cx.vecs.PoincarePolarVector)
+    ... except NotImplementedError as e:
+    ...     print(e)
+    PoincarePolarVector does not have a corresponding Cartesian class.
+
+    """
+    msg = "PoincarePolarVector does not have a corresponding Cartesian class."
+    raise NotImplementedError(msg)

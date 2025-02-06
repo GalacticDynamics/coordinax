@@ -11,6 +11,7 @@ import equinox as eqx
 import unxt as u
 
 from coordinax._src.utils import classproperty
+from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.mixins import AvalMixin
@@ -34,22 +35,9 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
     @classproperty
     @classmethod
-    @abstractmethod
-    def _cartesian_cls(cls) -> "type[AbstractVector]":
-        """Return the corresponding Cartesian vector class.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> cx.vecs.RadialVel._cartesian_cls
-        <class 'coordinax...CartesianVel1D'>
-
-        >>> cx.SphericalVel._cartesian_cls
-        <class 'coordinax...CartesianVel3D'>
-
-        """
-        raise NotImplementedError  # pragma: no cover
+    def cartesian_type(cls) -> "type[coordinax.vecs.AbstractVel]":
+        """Return the corresponding Cartesian vector class."""
+        return api.cartesian_vector_type(cls)
 
     @classproperty
     @classmethod
@@ -107,7 +95,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         Quantity['speed'](Array(1.0003046, dtype=float32), unit='km / s')
 
         """
-        cart_vel = cast(AbstractVel, self.vconvert(self._cartesian_cls, q))
+        cart_vel = cast(AbstractVel, self.vconvert(self.cartesian_type, q))
         return cart_vel.norm(q)  # type: ignore[call-arg,misc]
 
 
