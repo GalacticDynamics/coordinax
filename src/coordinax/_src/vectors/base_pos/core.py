@@ -8,13 +8,13 @@ from typing import TYPE_CHECKING, Any
 
 import equinox as eqx
 import jax
+import quax_blocks
 from jaxtyping import Array, Shaped
 from plum import convert
 from quax import quaxify
 
 import quaxed.numpy as jnp
 import unxt as u
-from quaxed.experimental import arrayish
 from unxt.quantity import BareQuantity as FastQ
 
 from coordinax._src.typing import BatchableScalarQ
@@ -30,7 +30,7 @@ _vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)
 
 
 class AbstractPos(
-    AvalMixin, arrayish.NumpyNegMixin["coordinax.vecs.AbstractPos"], AbstractVector
+    AvalMixin, quax_blocks.NumpyNegMixin["coordinax.vecs.AbstractPos"], AbstractVector
 ):  # pylint: disable=abstract-method
     """Abstract representation of coordinates in different systems."""
 

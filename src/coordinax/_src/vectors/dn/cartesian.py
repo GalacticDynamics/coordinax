@@ -8,10 +8,10 @@ from typing_extensions import override
 
 import equinox as eqx
 import jax
+import quax_blocks
 
 import quaxed.numpy as jnp
 import unxt as u
-from quaxed.experimental import arrayish
 
 import coordinax._src.typing as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
@@ -23,7 +23,7 @@ from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 
 @final
-class CartesianPosND(AbstractPosND, AbstractCartesian, arrayish.NumpyNegMixin):
+class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin):
     """N-dimensional Cartesian vector representation.
 
     Examples
