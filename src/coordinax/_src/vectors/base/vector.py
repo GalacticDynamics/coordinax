@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
 import jax
 import numpy as np
+import quax_blocks
 from jaxtyping import DTypeLike
 from plum import dispatch
 from quax import ArrayValue
@@ -16,7 +17,6 @@ from quax import ArrayValue
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items, field_values, fields, replace
-from quaxed.experimental import arrayish
 
 from .flags import AttrFilter
 from coordinax._src.typing import Unit
@@ -37,11 +37,11 @@ VT = TypeVar("VT", bound="AbstractVector")
 class AbstractVector(
     IPythonReprMixin,
     AstropyRepresentationAPIMixin,
-    arrayish.LaxBinaryOpsMixin[Any, Any],  # TODO: type annotation
-    arrayish.LaxUnaryMixin[Any],
-    arrayish.NumpyInvertMixin[Any],
-    arrayish.LaxRoundMixin["AbstractVector"],
-    arrayish.LaxLenMixin,
+    quax_blocks.LaxBinaryOpsMixin[Any, Any],  # TODO: type annotation
+    quax_blocks.LaxUnaryMixin[Any],
+    quax_blocks.NumpyInvertMixin[Any],
+    quax_blocks.LaxRoundMixin["AbstractVector"],
+    quax_blocks.LaxLenMixin,
     ArrayValue,
 ):
     """Base class for all vector types.
@@ -356,7 +356,7 @@ class AbstractVector(
     # ---------------------------------------------------------------
     # comparison operators
 
-    # TODO: use arrayish.LaxEqMixin
+    # TODO: use quax_blocks.LaxEqMixin
     def __eq__(self: "AbstractVector", other: object) -> Any:
         """Check if the vector is equal to another object.
 
