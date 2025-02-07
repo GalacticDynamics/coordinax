@@ -33,9 +33,9 @@
     "optional-dependencies>=0.3.2",
     "plum-dispatch>=2.5.6",
     "quax>=0.0.5",
-    "quax-blocks>=0.1",
+    "quax-blocks>=0.2",
     "quaxed>=0.8.1",
-    "unxt>=1.1.1",
+    "unxt>=1.2.0",
     "xmmutablemap>=0.1",
 ]
 
