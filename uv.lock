@@ -368,7 +368,7 @@ requires-dist = [
     { name = "quax", specifier = ">=0.0.5" },
     { name = "quax-blocks", specifier = ">=0.2" },
     { name = "quaxed", specifier = ">=0.8.1" },
-    { name = "unxt", specifier = ">=1.1.1" },
+    { name = "unxt", specifier = ">=1.2.0" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
 
@@ -1776,7 +1776,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "1.1.1"
+version = "1.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -1789,13 +1789,14 @@ dependencies = [
     { name = "optional-dependencies" },
     { name = "plum-dispatch" },
     { name = "quax" },
+    { name = "quax-blocks" },
     { name = "quaxed" },
     { name = "xmmutablemap" },
     { name = "zeroth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1a/d6/7052bd2348d9e708030dfde873a5672a93e0cea4360db3770541b25b238b/unxt-1.1.1.tar.gz", hash = "sha256:90d892649fd101c69a64a6d7e80ba3e657fe473b26c80566beb0880632a2a926", size = 670545 }
+sdist = { url = "https://files.pythonhosted.org/packages/e3/95/a5a0580d508a259f94cd9be10b6b462c5d5d97819875ac2689ba471742ff/unxt-1.2.0.tar.gz", hash = "sha256:8b0ec2f8b728562fe04fbee009a9f8745306d4d178ac9a2093b53456f876c203", size = 670783 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8c/4b/497ba5a284e8f6af2772c25da1ff56010fd8dffef8452d02e929a245c63e/unxt-1.1.1-py3-none-any.whl", hash = "sha256:dd63434562771a94edc7760c1302a57a96a04b3064e066cf70e6794e0c5dd31e", size = 65508 },
+    { url = "https://files.pythonhosted.org/packages/38/65/bfbb291f820d4a72326bc701828c0122f151516861bf91eb53d99cbbef1b/unxt-1.2.0-py3-none-any.whl", hash = "sha256:1c98364c7d112a33c0eb331ac007a0d29183bd9e16b42274cd20e655d74880a0", size = 65504 },
 ]
 
 [[package]]
