@@ -62,7 +62,7 @@ def context_dimension_reduction(
 
 
 class AbstractVectorTest:
-    """Test :class:`coordinax.AbstractVector`."""
+    """Test `coordinax.AbstractVector`."""
 
     # ===============================================================
     # Array
@@ -161,7 +161,7 @@ class AbstractVectorTest:
 
 
 class AbstractPosTest(AbstractVectorTest):
-    """Test :class:`coordinax.AbstractPos`."""
+    """Test `coordinax.AbstractPos`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:
@@ -184,7 +184,7 @@ class AbstractPosTest(AbstractVectorTest):
 
 
 class AbstractVelTest(AbstractVectorTest):
-    """Test :class:`coordinax.AbstractVel`."""
+    """Test `coordinax.AbstractVel`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:

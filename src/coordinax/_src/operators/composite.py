@@ -31,8 +31,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
     See Also
     --------
-    :class:`coordinax.ops.Pipe`
-    :class:`coordinax.ops.GalileanOperator`
+    `coordinax.ops.Pipe`
+    `coordinax.ops.GalileanOperator`
 
     """
 

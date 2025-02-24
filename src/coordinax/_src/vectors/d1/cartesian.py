@@ -11,7 +11,7 @@ import equinox as eqx
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.vectors.base.cartesian import AbstractCartesian

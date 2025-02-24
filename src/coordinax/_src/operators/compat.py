@@ -13,7 +13,7 @@ from dataclassish import replace
 
 from .base import AbstractOperator
 from .pipe import Pipe
-from coordinax._src.typing import TimeBatchOrScalar
+from coordinax._src.custom_types import TimeBatchOrScalar
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
@@ -129,7 +129,7 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
     r"""Operate on a 3D Quantity.
 
     `q` is the position vector. This is interpreted as a 3D CartesianVector.
-    See :class:`coordinax.CartesianPos3D` for more details.
+    See `coordinax.CartesianPos3D` for more details.
 
     Returns
     -------

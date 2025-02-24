@@ -12,11 +12,11 @@ from typing_extensions import override
 
 import equinox as eqx
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 import unxt as u
 from dataclassish.converters import Unless
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import BatchableLength
@@ -63,7 +63,7 @@ class CylindricalPos(AbstractPos3D):
         Quantity['length'](Array(5., dtype=float32, ...), unit='km')
 
         """
-        return xp.hypot(self.rho, self.z)
+        return jnp.hypot(self.rho, self.z)
 
 
 @final

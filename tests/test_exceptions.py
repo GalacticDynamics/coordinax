@@ -8,6 +8,6 @@ from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
 
 
 def test_warning_irreversibledimensionchange():
-    """Test :class:`IrreversibleDimensionChange`."""
+    """Test `IrreversibleDimensionChange`."""
     with pytest.warns(UserWarning, match="Irreversible dimension change"):
         warn("Irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)

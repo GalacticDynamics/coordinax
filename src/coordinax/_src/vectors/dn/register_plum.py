@@ -12,8 +12,8 @@ from .cartesian import CartesianAccND, CartesianPosND, CartesianVelND
 
 
 @conversion_method(CartesianAccND, AbstractQuantity)  # type: ignore[arg-type]
-@conversion_method(CartesianVelND, AbstractQuantity)
-@conversion_method(CartesianPosND, AbstractQuantity)
+@conversion_method(CartesianVelND, AbstractQuantity)  # type: ignore[arg-type]
+@conversion_method(CartesianPosND, AbstractQuantity)  # type: ignore[arg-type]
 def vec_to_q(
     obj: CartesianPosND | CartesianVelND | CartesianAccND, /
 ) -> Shaped[AbstractQuantity, "*batch N"]:

@@ -12,7 +12,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish.converters import Unless
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import Angle, BatchableAngleQ
 from coordinax._src.vectors.base import VectorAttribute

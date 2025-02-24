@@ -6,7 +6,7 @@ from typing import Any
 
 from plum import dispatch
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
@@ -65,8 +65,8 @@ def vconvert(
     The `x` and `y` coordinates are converted to the radial coordinate `r` and
     the angular coordinate `phi`.
     """
-    r = xp.hypot(current.x, current.y)
-    phi = xp.atan2(current.y, current.x)
+    r = jnp.hypot(current.x, current.y)
+    phi = jnp.atan2(current.y, current.x)
     return target(r=r, phi=phi)
 
 
@@ -80,8 +80,8 @@ def vconvert(
 ) -> CartesianPos2D:
     """PolarPos -> CartesianPos2D."""
     d = current.r.distance
-    x = d * xp.cos(current.phi)
-    y = d * xp.sin(current.phi)
+    x = d * jnp.cos(current.phi)
+    y = d * jnp.sin(current.phi)
     return target(x=x, y=y)
 
 

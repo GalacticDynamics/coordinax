@@ -9,7 +9,7 @@ import equinox as eqx
 import unxt as u
 from dataclassish.converters import Unless
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from .base_spherical import (
     AbstractSphericalAcc,
     AbstractSphericalPos,

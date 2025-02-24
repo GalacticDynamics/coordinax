@@ -16,7 +16,7 @@ from coordinax.distance import Distance
 
 
 class AbstractPos3DTest(AbstractPosTest):
-    """Test :class:`coordinax.AbstractPos3D`."""
+    """Test `coordinax.AbstractPos3D`."""
 
     # ==========================================================================
     # Unary operations
@@ -56,7 +56,7 @@ class AbstractPos3DTest(AbstractPosTest):
 
 
 class TestCartesianPos3D(AbstractPos3DTest):
-    """Test :class:`coordinax.CartesianPos3D`."""
+    """Test `coordinax.CartesianPos3D`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:
@@ -183,7 +183,7 @@ class TestCartesianPos3D(AbstractPos3DTest):
 
 
 class TestCylindricalPos(AbstractPos3DTest):
-    """Test :class:`coordinax.CylindricalPos`."""
+    """Test `coordinax.CylindricalPos`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:
@@ -306,7 +306,7 @@ class TestCylindricalPos(AbstractPos3DTest):
 
 
 class TestSphericalPos(AbstractPos3DTest):
-    """Test :class:`coordinax.SphericalPos`."""
+    """Test `coordinax.SphericalPos`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.SphericalPos:
@@ -492,7 +492,7 @@ class TestSphericalPos(AbstractPos3DTest):
 
 
 class TestProlateSpheroidalPos(AbstractPos3DTest):
-    """Test :class:`coordinax.ProlateSpheroidalPos`."""
+    """Test `coordinax.ProlateSpheroidalPos`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:
@@ -627,7 +627,7 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
 
 class AbstractVel3DTest(AbstractVelTest):
-    """Test :class:`coordinax.AbstractVel2D`."""
+    """Test `coordinax.AbstractVel2D`."""
 
     # ==========================================================================
     # Unary operations
@@ -640,7 +640,7 @@ class AbstractVel3DTest(AbstractVelTest):
 
 
 class TestCartesianVel3D(AbstractVel3DTest):
-    """Test :class:`coordinax.CartesianVel3D`."""
+    """Test `coordinax.CartesianVel3D`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> cx.CartesianVel3D:
@@ -799,7 +799,7 @@ class TestCartesianVel3D(AbstractVel3DTest):
 
 
 class TestCylindricalVel(AbstractVel3DTest):
-    """Test :class:`coordinax.CylindricalVel`."""
+    """Test `coordinax.CylindricalVel`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> cx.vecs.CylindricalVel:
@@ -943,7 +943,7 @@ class TestCylindricalVel(AbstractVel3DTest):
 
 
 class TestSphericalVel(AbstractVel3DTest):
-    """Test :class:`coordinax.SphericalVel`."""
+    """Test `coordinax.SphericalVel`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> cx.SphericalVel:

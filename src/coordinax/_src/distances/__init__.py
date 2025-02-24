@@ -19,8 +19,8 @@ __all__ = [
 ]
 
 from .base import AbstractDistance
+from .custom_types import BatchableDistance, BatchableLength
 from .measures import Distance, DistanceModulus, Parallax
-from .typing import BatchableDistance, BatchableLength
 
 # isort: split
 # Register the dispatching

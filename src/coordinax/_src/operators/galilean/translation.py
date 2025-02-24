@@ -35,10 +35,10 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : :class:`vector.FourVector`
+    translation : `vector.FourVector`
         The translation vector [T, Q].  This parameters uses
         :meth:`vector.FourVector.from_` to enable a variety of more
-        convenient input types. See :class:`vector.FourVector` for details.
+        convenient input types. See `vector.FourVector` for details.
 
     Examples
     --------
@@ -56,7 +56,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
         q=CartesianPos3D( ... ) ))
 
-    Note that the translation is a :class:`vector.FourVector`, which was
+    Note that the translation is a `vector.FourVector`, which was
     constructed from a 1D array, using :meth:`vector.FourVector.from_`. We
     can also construct it directly, which allows for other vector types.
 
@@ -70,7 +70,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         t=Quantity[PhysicalType('time')](value=...f32[], unit=Unit("Gyr")),
         q=SphericalPos( ... ) ))
 
-    Translation operators can be applied to :class:`vector.FourVector`:
+    Translation operators can be applied to `vector.FourVector`:
 
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> op(w)
@@ -79,7 +79,7 @@ class GalileanTranslation(AbstractGalileanOperator):
       q=CartesianPos3D( ... )
     )
 
-    Also to :class:`vector.AbstractPos3D` and :class:`unxt.Quantity`:
+    Also to `vector.AbstractPos3D` and `unxt.Quantity`:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> t = u.Quantity(0, "Gyr")
@@ -96,7 +96,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     The translation vector [T, Q].  This parameters uses
     :meth:`vector.FourVector.from_` to enable a variety of more convenient
-    input types. See :class:`vector.FourVector` for details.
+    input types. See `vector.FourVector` for details.
     """
 
     # -------------------------------------------

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, TypeAlias, cast, final, overload
 import equinox as eqx
 from plum import dispatch
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
@@ -46,11 +46,11 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ----------
     translation : `coordinax.ops.GalileanTranslation`
         The spatial translation of the frame. See
-        :class:`coordinax.ops.GalileanTranslation` for alternative
+        `coordinax.ops.GalileanTranslation` for alternative
         inputs to construct this parameter.
-    velocity : :class:`coordinax.ops.GalileanBoost`
+    velocity : `coordinax.ops.GalileanBoost`
         The boost to the frame. See
-        :class:`coordinax.ops.GalileanBoost` for alternative
+        `coordinax.ops.GalileanBoost` for alternative
         inputs to construct this parameter.
 
     Examples
@@ -73,10 +73,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     )
 
     Note that the translation is a
-    :class:`coordinax.ops.GalileanTranslation` with a
-    :class:`vector.FourVector` translation, and the velocity is a
-    :class:`coordinax.ops.GalileanBoost` with a
-    :class:`coordinax.vecs.AbstractVel` velocity. We can also construct them
+    `coordinax.ops.GalileanTranslation` with a
+    `vector.FourVector` translation, and the velocity is a
+    `coordinax.ops.GalileanBoost` with a
+    `coordinax.vecs.AbstractVel` velocity. We can also construct them
     directly, which allows for other vector types.
 
     >>> op = cx.ops.GalileanOperator(
@@ -100,7 +100,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
     )
 
-    Galilean operators can be applied to :class:`vector.FourVector`:
+    Galilean operators can be applied to `vector.FourVector`:
 
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> new = op(w)
@@ -116,7 +116,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         [7.889e+16 1.578e+17 2.367e+17]>
 
     Also the Galilean operators can also be applied to
-    :class:`vector.AbstractPos3D` and :class:`unxt.Quantity`:
+    `vector.AbstractPos3D` and `unxt.Quantity`:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> t = u.Quantity(0, "s")
@@ -131,7 +131,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """
 
     rotation: GalileanRotation = eqx.field(
-        default=GalileanRotation(xp.eye(3)),
+        default=GalileanRotation(jnp.eye(3)),
         converter=GalileanRotation.from_,
     )
     """The in-frame spatial rotation."""
@@ -143,9 +143,9 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """The temporal + spatial translation.
 
     The translation vector [T, Q].  This parameters accetps either a
-    :class:`coordinax.ops.GalileanTranslation` instance or
+    `coordinax.ops.GalileanTranslation` instance or
     any input that can be used to construct a :meth:`vector.FourVector`, using
-    :meth:`vector.FourVector.from_`. See :class:`vector.FourVector` for
+    :meth:`vector.FourVector.from_`. See `vector.FourVector` for
     details.
     """
 
@@ -155,9 +155,9 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     )
     """The boost to the frame.
 
-    This parameters accepts either a :class:`coordinax.ops.GalileanBoost`
+    This parameters accepts either a `coordinax.ops.GalileanBoost`
     instance or any input that can be used to construct one. See
-    :class:`coordinax.ops.GalileanBoost.from_` for details.
+    `coordinax.ops.GalileanBoost.from_` for details.
     """
 
     @property  # type: ignore[misc]

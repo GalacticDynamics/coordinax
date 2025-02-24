@@ -19,7 +19,7 @@ import unxt as u
 from dataclassish import field_items, field_values, fields, replace
 
 from .flags import AttrFilter
-from coordinax._src.typing import Unit
+from coordinax._src.custom_types import Unit
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vconvert, vector
 from coordinax._src.vectors.mixins import (

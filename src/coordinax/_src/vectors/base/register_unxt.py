@@ -15,7 +15,7 @@ from dataclassish import field_items, replace
 
 from .flags import AttrFilter
 from .vector import AbstractVector
-from coordinax._src.typing import Unit
+from coordinax._src.custom_types import Unit
 
 
 class ToUnitsOptions(Enum):
