@@ -12,7 +12,7 @@ import quaxed.numpy as jnp
 from dataclassish import replace
 
 from .core import Space
-from coordinax._src.typing import Shape
+from coordinax._src.custom_types import Shape
 
 
 @register(jax.lax.broadcast_in_dim_p)

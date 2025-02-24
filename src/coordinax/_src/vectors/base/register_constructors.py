@@ -13,7 +13,7 @@ import unxt as u
 from dataclassish import field_items
 
 from .vector import AbstractVector
-from coordinax._src.typing import Unit
+from coordinax._src.custom_types import Unit
 
 
 @dispatch

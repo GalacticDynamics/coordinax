@@ -10,7 +10,7 @@ import equinox as eqx
 
 import quaxed.lax as qlax
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel

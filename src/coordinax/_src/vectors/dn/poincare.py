@@ -9,7 +9,7 @@ from jaxtyping import Shaped
 
 import unxt as u
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from coordinax._src.distances import BatchableLength
 from coordinax._src.vectors.base_pos import AbstractPos
 

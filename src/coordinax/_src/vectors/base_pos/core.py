@@ -17,7 +17,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import BareQuantity as FastQ
 
-from coordinax._src.typing import BatchableScalarQ
+from coordinax._src.custom_types import BatchableScalarQ
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector, ToUnitsOptions

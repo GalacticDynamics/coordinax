@@ -12,7 +12,7 @@ __all__ = ["AbstractAngle", "Angle", "BatchableAngle", "BatchableAngleQ"]
 
 from .angle import Angle
 from .base import AbstractAngle
-from .typing import BatchableAngle, BatchableAngleQ
+from .custom_types import BatchableAngle, BatchableAngleQ
 
 # isort: split
 # Register the dispatching

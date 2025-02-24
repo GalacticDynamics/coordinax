@@ -18,7 +18,7 @@ import unxt as u
 from dataclassish import field_values
 from dataclassish.converters import Unless
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from .base import AbstractPos4D
 from coordinax._src.distances import BatchableLength
 from coordinax._src.vectors.base import AttrFilter, VectorAttribute
@@ -171,8 +171,8 @@ class FourVector(AbstractPos4D):
         cls_name = type(self).__name__
         qcomps = ", ".join(f"{c}[{self.q.units[c]}]" for c in self.q.components)
         comps = f"t[{self.units['t']}], q=({qcomps})"
-        vs = np.array2string(
-            jnp.stack(  # type: ignore[arg-type]
+        vs = np.array2string(  # type: ignore[call-overload]  # TODO: use other method
+            jnp.stack(
                 tuple(
                     u.ustrip(v)
                     for v in cast(

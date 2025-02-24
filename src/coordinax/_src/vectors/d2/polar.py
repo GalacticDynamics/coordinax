@@ -10,7 +10,7 @@ import equinox as eqx
 import unxt as u
 from dataclassish.converters import Unless
 
-import coordinax._src.typing as ct
+import coordinax._src.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance

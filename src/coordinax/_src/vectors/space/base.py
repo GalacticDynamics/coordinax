@@ -13,7 +13,7 @@ from jax import Device
 
 import quaxed.numpy as jnp
 
-from coordinax._src.typing import Unit
+from coordinax._src.custom_types import Unit
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.base import AbstractVector
 
