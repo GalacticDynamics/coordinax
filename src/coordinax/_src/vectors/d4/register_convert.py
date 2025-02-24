@@ -9,6 +9,7 @@ from plum import conversion_method, convert
 
 import quaxed.numpy as jnp
 import unxt as u
+from unxt.quantity import BareQuantity
 
 from .spacetime import FourVector
 from coordinax._src.vectors.d3 import (
@@ -20,7 +21,35 @@ from coordinax._src.vectors.d3 import (
 )
 
 
-@conversion_method(type_from=FourVector, type_to=u.Quantity)  # type: ignore[arg-type]
+@conversion_method(type_from=FourVector, type_to=BareQuantity)
+def fourvec_to_quantity(obj: FourVector, /) -> Shaped[BareQuantity, "*batch 4"]:
+    """`coordinax.AbstractPos3D` -> `unxt.quantity.BareQuantity`.
+
+    Convert the 4-vector to a Quantity array with the components as the last
+    dimension.
+
+    Examples
+    --------
+    >>> from plum import convert
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> w = cx.vecs.FourVector(t=u.Quantity([1, 2], "yr"),
+    ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
+
+    >>> convert(w, u.quantity.BareQuantity).uconvert("pc")
+    BareQuantity(Array([[0.3066014, 1. , 2. , 3. ],
+                        [0.6132028, 4. , 4.9999995, 6. ]],
+                       dtype=float32, weak_type=True),
+                 unit='pc')
+
+    """
+    cart = convert(obj.q, BareQuantity)
+    ct = convert(obj.c * obj.t[..., None], BareQuantity)
+    return jnp.concat([ct, cart], axis=-1)
+
+
+@conversion_method(type_from=FourVector, type_to=u.Quantity)
 def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*batch 4"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
@@ -44,7 +73,8 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*ba
 
     """
     cart: u.Quantity = convert(obj.q, u.Quantity)
-    return jnp.concat([obj.c * obj.t[..., None], cart], axis=-1)
+    ct = obj.c * obj.t[..., None]
+    return jnp.concat([ct, cart], axis=-1)
 
 
 @conversion_method(type_from=FourVector, type_to=CartesianPos3D)  # type: ignore[arg-type]
