@@ -12,7 +12,7 @@ from typing_extensions import override
 
 import equinox as eqx
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 import unxt as u
 from dataclassish.converters import Unless
 
@@ -63,7 +63,7 @@ class CylindricalPos(AbstractPos3D):
         Quantity['length'](Array(5., dtype=float32, ...), unit='km')
 
         """
-        return xp.hypot(self.rho, self.z)
+        return jnp.hypot(self.rho, self.z)
 
 
 @final

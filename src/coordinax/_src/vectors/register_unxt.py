@@ -9,7 +9,7 @@ from typing import TypeVar
 from jaxtyping import Shaped
 from plum import conversion_method as _conversion_method, convert, dispatch
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_values
 from unxt.quantity import BareQuantity
@@ -132,7 +132,7 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
 
     """  # noqa: E501
     # TODO: use dispatch instead for these matches
-    match (u.dimension_of(q), xp.atleast_1d(q).shape[-1]):
+    match (u.dimension_of(q), jnp.atleast_1d(q).shape[-1]):
         case (Dim.LENGTH, 0) | (Dim.LENGTH, 1):
             return vector(CartesianPos1D, q)
         case (Dim.SPEED, 0) | (Dim.SPEED, 1):
@@ -168,7 +168,7 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
 
 def _vec_diff_to_q(obj: AbstractVector, /) -> u.AbstractQuantity:
     """`coordinax.AbstractVector` -> `unxt.u.AbstractQuantity`."""
-    return xp.stack(tuple(field_values(full_shaped(obj))), axis=-1)
+    return jnp.stack(tuple(field_values(full_shaped(obj))), axis=-1)
 
 
 @conversion_method(type_from=RadialAcc, type_to=BareQuantity)
