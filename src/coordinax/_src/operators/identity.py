@@ -76,11 +76,11 @@ class Identity(AbstractOperator):
     `Identity` operator will also pass through the time argument:
 
     >>> t = u.Quantity(0, "Gyr")
-    >>> op(vec, t) == (vec, t)
+    >>> op(t, vec) == (t, vec)
     True
 
     >>> q = u.Quantity([1, 2, 3], "km")
-    >>> op(q, t) == (q, t)
+    >>> op(t, q) == (t, q)
     True
 
     """
@@ -163,10 +163,10 @@ class Identity(AbstractOperator):
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> t = u.Quantity(10, "Gyr")
 
-        >>> op(q, t) == (q, t)
+        >>> op(t, q) == (t, q)
         True
 
-        >>> op(vec, t) == (vec, t)
+        >>> op(t, vec) == (t, vec)
         True
 
         """

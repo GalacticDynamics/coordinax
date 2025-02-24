@@ -90,7 +90,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
     >>> q = u.Quantity([1, 0, 0], "m")
     >>> t = u.Quantity(1, "s")
-    >>> newq, newt = op(q, t)
+    >>> newt, newq = op(t, q)
     >>> newq
     Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
 
@@ -104,7 +104,7 @@ class GalileanRotation(AbstractGalileanOperator):
     >>> q = u.Quantity([[1, 0, 0], [0, 1, 0]], "m")
     >>> t = u.Quantity(0, "s")
 
-    >>> newq, newt = op(q, t)
+    >>> newt, newq = op(t, q)
     >>> newq
     Quantity['length'](Array([[ 0,  1,  0],
                               [-1,  0,  0]], dtype=int32), unit='m')
@@ -112,7 +112,7 @@ class GalileanRotation(AbstractGalileanOperator):
     Translation operators can be applied to `vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
-    >>> newq, newt = op(q, t)
+    >>> newt, newq = op(t, q)
     >>> newq.x
     Quantity['length'](Array([ 0, -1], dtype=int32), unit='m')
     >>> newq.norm().value.round(2)
@@ -252,7 +252,7 @@ class GalileanRotation(AbstractGalileanOperator):
         THere's a related dispatch that also takes a time argument:
 
         >>> t = u.Quantity(1, "s")
-        >>> newq, newt = op(q, t)
+        >>> newt, newq = op(t, q)
         >>> newq
         Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
 
@@ -317,8 +317,8 @@ class GalileanRotation(AbstractGalileanOperator):
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanRotation, q: AbstractPos3D, t: u.Quantity["time"], /
-) -> tuple[AbstractPos3D, u.Quantity["time"]]:
+    self: GalileanRotation, t: u.Quantity["time"], q: AbstractPos3D, /
+) -> tuple[u.Quantity["time"], AbstractPos3D]:
     """Apply the rotation to the coordinates.
 
     Examples
@@ -331,7 +331,7 @@ def call(
 
     >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
     >>> t = u.Quantity(1, "s")
-    >>> newq, newt = op(q, t)
+    >>> newt, newq = op(t, q)
     >>> newq.x
     Quantity['length'](Array(0, dtype=int32), unit='m')
 
@@ -340,7 +340,7 @@ def call(
     Quantity['time'](Array(1, dtype=int32, ...), unit='s')
 
     """
-    return self(q), t
+    return t, self(q)
 
 
 @jax.jit

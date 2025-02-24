@@ -54,7 +54,7 @@ class GalileanBoost(AbstractGalileanOperator):
     >>> vec = cx.CartesianPos3D.from_([0.0, 0.0, 0.0], "m")
 
     >>> delta_t = u.Quantity(1.0, "s")
-    >>> newvec, _ = op(vec, delta_t)
+    >>> _, newvec = op(delta_t, vec)
     >>> print(newvec)
     <CartesianPos3D (x[m], y[m], z[m])
         [1. 2. 3.]>
@@ -70,7 +70,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     This can be applied using the ``.inverse`` property.
 
-    >>> vec_in_newframe, _ = op.inverse(vec, delta_t)
+    >>> _, vec_in_newframe = op.inverse(delta_t, vec)
     >>> print(vec_in_newframe)
     <CartesianPos3D (x[m], y[m], z[m])
         [-1. -2. -3.]>
@@ -123,59 +123,6 @@ class GalileanBoost(AbstractGalileanOperator):
         """
         return GalileanBoost(-self.velocity)
 
-    # -----------------------------------------------------
-
-    @AbstractOperator.__call__.dispatch
-    def __call__(
-        self: "GalileanBoost", q: AbstractPos, delta_t: u.Quantity["time"], /
-    ) -> tuple[AbstractPos, u.Quantity["time"]]:
-        """Apply the boost to the coordinates.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        Define a position:
-
-        >>> q = cx.CartesianPos3D.from_([0, 0, 0], "m")
-
-        Define a boost operator and the time interval to apply it:
-
-        >>> op = cx.ops.GalileanBoost.from_([1, 2, 3], "m/s")
-        >>> dt = u.Quantity(1, "s")
-
-        >>> newq, _ = op(q, dt)
-
-        The position is updated by the boost velocity times the time interval:
-
-        >>> print(newq)
-        <CartesianPos3D (x[m], y[m], z[m])
-            [1 2 3]>
-
-        """
-        return q + self.velocity * delta_t, delta_t
-
-    @AbstractOperator.__call__.dispatch
-    def __call__(self: "GalileanBoost", v4: FourVector, /, **__: Any) -> FourVector:
-        r"""Apply the boost to the coordinates.
-
-        Recall that this is spatial-only, the time is invariant.
-
-        The operation is given by:
-
-        .. math::
-
-            (t,\mathbf{x}) \mapsto (t, \mathbf{x} + \mathbf{v} t)
-
-        Examples
-        --------
-        >>> import unxt as u
-
-        """
-        q, _ = self(v4.q, v4.t)
-        return replace(v4, q=q)
-
     # -------------------------------------------
     # Arithmetic operations
 
@@ -202,7 +149,73 @@ class GalileanBoost(AbstractGalileanOperator):
         return f"{self.__class__.__name__}({self.velocity!r})"
 
 
-# -----------------------------------------------------
+# ===================================================================
+# Application
+
+
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanBoost, delta_t: u.Quantity["time"], q: u.AbstractQuantity, /
+) -> tuple[u.Quantity["time"], AbstractPos]:
+    vel = convert(self.velocity, u.Quantity)
+    return delta_t, q + vel * delta_t
+
+
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanBoost, delta_t: u.Quantity["time"], q: AbstractPos, /
+) -> tuple[u.Quantity["time"], AbstractPos]:
+    """Apply the boost to the coordinates.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    Define a position:
+
+    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "m")
+
+    Define a boost operator and the time interval to apply it:
+
+    >>> op = cx.ops.GalileanBoost.from_([1, 2, 3], "m/s")
+    >>> dt = u.Quantity(1, "s")
+
+    >>> _, newq = op(dt, q)
+
+    The position is updated by the boost velocity times the time interval:
+
+    >>> print(newq)
+    <CartesianPos3D (x[m], y[m], z[m])
+        [1 2 3]>
+
+    """
+    return delta_t, q + self.velocity * delta_t
+
+
+@AbstractOperator.__call__.dispatch
+def call(self: GalileanBoost, v4: FourVector, /, **__: Any) -> FourVector:
+    r"""Apply the boost to the coordinates.
+
+    Recall that this is spatial-only, the time is invariant.
+
+    The operation is given by:
+
+    .. math::
+
+        (t,\mathbf{x}) \mapsto (t, \mathbf{x} + \mathbf{v} t)
+
+    Examples
+    --------
+    >>> import unxt as u
+
+    """
+    t, q = self(v4.t, v4.q)
+    return replace(v4, t=t, q=q)
+
+
+# ===================================================================
+# Simplification
 
 
 @dispatch

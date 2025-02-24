@@ -70,9 +70,9 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     translation : `vector.AbstractPos3D`
         The spatial translation vector. This parameters accepts either a
         `vector.AbstractPos3D` instance or uses
-        :meth:`vector.CartesianPos3D.from_` to enable a variety of more
+        `coordinax.vecs.CartesianPos3D.from_` to enable a variety of more
         convenient input types to create a Cartesian vector. See
-        `vector.CartesianPos3D` for details.
+        `coordinax.vecs.CartesianPos3D` for details.
 
     Examples
     --------
@@ -86,8 +86,8 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
-    Note that the translation is a `vector.CartesianPos3D`, which was
-    constructed from a 1D array, using :meth:`vector.CartesianPos3D.from_`. We
+    Note that the translation is a `coordinax.vecs.CartesianPos3D`, which was
+    constructed from a 1D array, using `coordinax.vecs.CartesianPos3D.from_`. We
     can also construct it directly, which allows for other vector types.
 
     >>> shift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
@@ -103,7 +103,10 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op(q)
     CartesianPos3D( ... )
 
-    And to `unxt.Quantity`:
+    Actually, the operator is very flexible and can be applied to many types of
+    input. Let's work up the type ladder:
+
+    - `unxt.Quantity`:
 
     >>> q = u.Quantity([0, 0, 0], "km")
     >>> op(q).value.round(2)
@@ -152,8 +155,17 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     is time independent and will pass through the time argument:
 
     >>> t = u.Quantity(0, "Gyr")
-    >>> op(q, t)[1] is t
+    >>> op(t, q)[0] is t
     True
+
+    `coordinax.ops.GalileanSpatialTranslation` can be applied to other input
+    types. Let's work up the type ladder:
+
+    - `jax.Array`: Note that since the operator is unitful but the
+
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
+
+    >>> q = jnp.array([0, 0, 0])
 
     """
 
@@ -163,7 +175,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     This parameters accepts either a `vector.AbstractVector` instance or
     uses a Cartesian vector from_ to enable a variety of more convenient
     input types to create a Cartesian vector. See
-    `vector.CartesianPos3D.from_` for an example when doing a 3D
+    `coordinax.vecs.CartesianPos3D.from_` for an example when doing a 3D
     translation.
     """
 
@@ -206,31 +218,6 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         return GalileanSpatialTranslation(-self.translation)
 
     # -------------------------------------------
-
-    @AbstractOperator.__call__.dispatch  # type: ignore[misc]
-    def __call__(
-        self: "GalileanSpatialTranslation", q: AbstractPos, /, **__: Any
-    ) -> AbstractPos:
-        """Apply the translation to the coordinates.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
-
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> t = u.Quantity(0, "Gyr")
-        >>> newq = op(q)
-        >>> print(newq)
-        <CartesianPos3D (x[km], y[km], z[km])
-            [2 3 4]>
-
-        """
-        return cast(AbstractPos, q + self.translation)
-
-    # -------------------------------------------
     # Arithmetic operations
 
     def __neg__(self: "GalileanSpatialTranslation") -> "GalileanSpatialTranslation":
@@ -259,15 +246,12 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 # ======================================================================
 # Call dispatches
 
+# ---------------------------
+# Fundamental dispatches
+
 
 @AbstractOperator.__call__.dispatch
-def call(
-    self: GalileanSpatialTranslation,
-    q: AbstractPos,
-    t: u.AbstractQuantity,
-    /,
-    **__: Any,
-) -> tuple[AbstractPos, u.AbstractQuantity]:
+def call(self: GalileanSpatialTranslation, q: AbstractPos, /, **__: Any) -> AbstractPos:
     """Apply the translation to the coordinates.
 
     Examples
@@ -279,18 +263,50 @@ def call(
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> t = u.Quantity(0, "Gyr")
-    >>> newq, newt = op(q, t)
+    >>> newq = op(q)
+    >>> print(newq)
+    <CartesianPos3D (x[km], y[km], z[km])
+        [2 3 4]>
+
+    """
+    return cast(AbstractPos, q + self.translation)
+
+
+@AbstractOperator.__call__.dispatch
+def call(
+    self: GalileanSpatialTranslation,
+    t: u.AbstractQuantity,
+    q: AbstractPos,
+    /,
+    **__: Any,
+) -> tuple[u.AbstractQuantity, AbstractPos]:
+    """Apply the translation to the coordinates.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
+
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> t = u.Quantity(0, "Gyr")
+    >>> newt, newq = op(t, q)
     >>> print(newq)
     <CartesianPos3D (x[km], y[km], z[km])
         [2 3 4]>
 
     This spatial translation is time independent.
 
-    >>> op(q, u.Quantity(1, "Gyr"))[0].x == newq.x
+    >>> t = u.Quantity(1, "Gyr")
+    >>> op(t, q)[1].x == newq.x
     Array(True, dtype=bool)
 
     """
-    return q + self.translation, t
+    return t, q + self.translation
+
+
+# ---------------------------
 
 
 @AbstractOperator.__call__.dispatch

@@ -35,10 +35,10 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : `vector.FourVector`
+    translation : `coordinax.vecs.FourVector`
         The translation vector [T, Q].  This parameters uses
-        :meth:`vector.FourVector.from_` to enable a variety of more
-        convenient input types. See `vector.FourVector` for details.
+        `coordinax.vecs.FourVector.from_` to enable a variety of more convenient
+        input types. See `coordinax.vecs.FourVector` for details.
 
     Examples
     --------
@@ -56,9 +56,9 @@ class GalileanTranslation(AbstractGalileanOperator):
         t=Quantity[PhysicalType('time')](value=f32[], unit=Unit("s")),
         q=CartesianPos3D( ... ) ))
 
-    Note that the translation is a `vector.FourVector`, which was
-    constructed from a 1D array, using :meth:`vector.FourVector.from_`. We
-    can also construct it directly, which allows for other vector types.
+    Note that the translation is a `coordinax.vecs.FourVector`, which was
+    constructed from a 1D array, using :meth:`coordinax.vecs.FourVector.from_`.
+    We can also construct it directly, which allows for other vector types.
 
     >>> qshift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
     ...                          theta=u.Quantity(jnp.pi/2, "rad"),
@@ -70,7 +70,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         t=Quantity[PhysicalType('time')](value=...f32[], unit=Unit("Gyr")),
         q=SphericalPos( ... ) ))
 
-    Translation operators can be applied to `vector.FourVector`:
+    Translation operators can be applied to `coordinax.vecs.FourVector`:
 
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> op(w)
@@ -83,7 +83,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> t = u.Quantity(0, "Gyr")
-    >>> newq, newt = op(q, t)
+    >>> newt, newq = op(t, q)
     >>> newq.x
     Quantity['length'](Array(1., dtype=float32, ...), unit='km')
     >>> newt
@@ -95,8 +95,8 @@ class GalileanTranslation(AbstractGalileanOperator):
     """The temporal + spatial translation.
 
     The translation vector [T, Q].  This parameters uses
-    :meth:`vector.FourVector.from_` to enable a variety of more convenient
-    input types. See `vector.FourVector` for details.
+    :meth:`coordinax.vecs.FourVector.from_` to enable a variety of more convenient
+    input types. See `coordinax.vecs.FourVector` for details.
     """
 
     # -------------------------------------------
@@ -182,11 +182,11 @@ class GalileanTranslation(AbstractGalileanOperator):
     @AbstractOperator.__call__.dispatch
     def __call__(
         self: "GalileanTranslation",
-        x: AbstractPos3D,
         t: u.Quantity["time"],
+        x: AbstractPos3D,
         /,
         **__: Any,
-    ) -> tuple[AbstractPos3D, u.Quantity["time"]]:
+    ) -> tuple[u.Quantity["time"], AbstractPos3D]:
         """Apply the translation to the coordinates.
 
         Examples
@@ -206,7 +206,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> t = u.Quantity(1, "Gyr")
-        >>> newq, newt = op(q, t)
+        >>> newt, newq = op(t, q)
 
         >>> newq.x
         Quantity['length'](Array(2, dtype=int32), unit='km')
@@ -215,7 +215,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         Quantity['time'](Array(2, dtype=int32, ...), unit='Gyr')
 
         """
-        return (x + self.translation.q, t + self.translation.t)
+        return t + self.translation.t, x + self.translation.q
 
     # -------------------------------------------
     # Python special methods
