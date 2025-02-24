@@ -58,7 +58,7 @@ class FourVector(AbstractPos4D):
 
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
     3)`` array to the `q` argument. This assumes that `q` is a
-    :class:`coordinax.CartesianPos3D` and uses the
+    `coordinax.CartesianPos3D` and uses the
     :meth:`coordinax.CartesianPos3D.from_` method to create the 3D vector.
 
     We can also create a 3D vector explicitly:

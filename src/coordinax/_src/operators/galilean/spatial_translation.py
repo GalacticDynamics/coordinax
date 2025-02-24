@@ -67,12 +67,12 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : :class:`vector.AbstractPos3D`
+    translation : `vector.AbstractPos3D`
         The spatial translation vector. This parameters accepts either a
-        :class:`vector.AbstractPos3D` instance or uses
+        `vector.AbstractPos3D` instance or uses
         :meth:`vector.CartesianPos3D.from_` to enable a variety of more
         convenient input types to create a Cartesian vector. See
-        :class:`vector.CartesianPos3D` for details.
+        `vector.CartesianPos3D` for details.
 
     Examples
     --------
@@ -86,7 +86,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
-    Note that the translation is a :class:`vector.CartesianPos3D`, which was
+    Note that the translation is a `vector.CartesianPos3D`, which was
     constructed from a 1D array, using :meth:`vector.CartesianPos3D.from_`. We
     can also construct it directly, which allows for other vector types.
 
@@ -97,20 +97,20 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op
     GalileanSpatialTranslation(SphericalPos( ... ))
 
-    Translation operators can be applied to :class:`vector.AbstractPos`:
+    Translation operators can be applied to any `vector.AbstractPos`:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> op(q)
     CartesianPos3D( ... )
 
-    And to :class:`~unxt.Quantity`:
+    And to `unxt.Quantity`:
 
     >>> q = u.Quantity([0, 0, 0], "km")
     >>> op(q).value.round(2)
     Array([ 1.,  0., -0.], dtype=float32)
 
-    :class:`coordinax.ops.GalileanSpatialTranslation` can be used
-    for other dimensional vectors as well:
+    `coordinax.ops.GalileanSpatialTranslation` can be used for other dimensional
+    vectors as well:
 
     - 1D:
 
@@ -160,10 +160,10 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     translation: AbstractPos = eqx.field(converter=converter)
     """The spatial translation.
 
-    This parameters accepts either a :class:`vector.AbstractVector` instance or
+    This parameters accepts either a `vector.AbstractVector` instance or
     uses a Cartesian vector from_ to enable a variety of more convenient
     input types to create a Cartesian vector. See
-    :class:`vector.CartesianPos3D.from_` for an example when doing a 3D
+    `vector.CartesianPos3D.from_` for an example when doing a 3D
     translation.
     """
 

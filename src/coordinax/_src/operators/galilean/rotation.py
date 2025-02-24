@@ -109,7 +109,7 @@ class GalileanRotation(AbstractGalileanOperator):
     Quantity['length'](Array([[ 0,  1,  0],
                               [-1,  0,  0]], dtype=int32), unit='m')
 
-    Translation operators can be applied to :class:`vector.AbstractPos3D`:
+    Translation operators can be applied to `vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
     >>> newq, newt = op(q, t)

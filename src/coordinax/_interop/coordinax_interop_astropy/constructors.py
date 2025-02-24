@@ -17,7 +17,7 @@ import coordinax as cx
 
 @dispatch
 def vector(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D:
-    """Construct from a :class:`astropy.coordinates.CartesianRepresentation`.
+    """Construct from a `astropy.coordinates.CartesianRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.CartesianPos3D.from_`.
 
@@ -38,7 +38,7 @@ def vector(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D:
 
 @dispatch
 def vector(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.CylindricalPos:
-    """Construct from a :class:`astropy.coordinates.CylindricalRepresentation`.
+    """Construct from a `astropy.coordinates.CylindricalRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.CylindricalPos.from_`.
 
@@ -61,7 +61,7 @@ def vector(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.CylindricalPos:
 
 @dispatch
 def vector(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPos:
-    """Construct from a :class:`astropy.coordinates.PhysicsSphericalRepresentation`.
+    """Construct from a `astropy.coordinates.PhysicsSphericalRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.SphericalPos.from_`.
 
@@ -84,7 +84,7 @@ def vector(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPos:
 
 @dispatch
 def vector(obj: apyc.SphericalRepresentation, /) -> cx.vecs.LonLatSphericalPos:
-    """Construct from a :class:`astropy.coordinates.SphericalRepresentation`.
+    """Construct from a `astropy.coordinates.SphericalRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.LonLatSphericalPos.from_`.
 
@@ -107,7 +107,7 @@ def vector(obj: apyc.SphericalRepresentation, /) -> cx.vecs.LonLatSphericalPos:
 
 @dispatch
 def vector(obj: apyc.UnitSphericalRepresentation) -> cx.vecs.TwoSpherePos:
-    """Construct from a :class:`astropy.coordinates.UnitSphericalRepresentation`.
+    """Construct from a `astropy.coordinates.UnitSphericalRepresentation`.
 
     This re-dispatches to :meth:`coordinax.vecs.TwoSpherePos.from_`.
 
@@ -129,7 +129,7 @@ def vector(obj: apyc.UnitSphericalRepresentation) -> cx.vecs.TwoSpherePos:
 
 @dispatch
 def vector(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel3D:
-    """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
+    """Construct from a `astropy.coordinates.CartesianDifferential`.
 
     This re-dispatches to :meth:`coordinax.vecs.CartesianVel3D.from_`.
 
@@ -151,7 +151,7 @@ def vector(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel3D:
 
 @dispatch
 def vector(obj: apyc.CylindricalDifferential, /) -> cx.vecs.CylindricalVel:
-    """Construct from a :class:`astropy.coordinates.CylindricalDifferential`.
+    """Construct from a `astropy.coordinates.CylindricalDifferential`.
 
     This re-dispatches to :meth:`coordinax.vecs.CylindricalVel.from_`.
 
@@ -174,7 +174,7 @@ def vector(obj: apyc.CylindricalDifferential, /) -> cx.vecs.CylindricalVel:
 
 @dispatch
 def vector(obj: apyc.PhysicsSphericalDifferential, /) -> cx.SphericalVel:
-    """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
+    """Construct from a `astropy.coordinates.PhysicsSphericalDifferential`.
 
     This re-dispatches to :meth:`coordinax.vecs.SphericalVel.from_`.
 
@@ -197,7 +197,7 @@ def vector(obj: apyc.PhysicsSphericalDifferential, /) -> cx.SphericalVel:
 
 @dispatch
 def vector(obj: apyc.SphericalDifferential, /) -> cx.vecs.LonLatSphericalVel:
-    """Construct from a :class:`astropy.coordinates.SphericalDifferential`.
+    """Construct from a `astropy.coordinates.SphericalDifferential`.
 
     This re-dispatches to :meth:`coordinax.vecs.LonLatSphericalVel.from_`.
 
@@ -221,7 +221,7 @@ def vector(obj: apyc.SphericalDifferential, /) -> cx.vecs.LonLatSphericalVel:
 
 @dispatch
 def vector(obj: apyc.SphericalCosLatDifferential, /) -> cx.vecs.LonCosLatSphericalVel:
-    """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
+    """Construct from a `astropy.coordinates.SphericalCosLatDifferential`.
 
     This re-dispatches to :meth:`coordinax.vecs.LonCosLatSphericalVel.from_`.
 
@@ -245,7 +245,7 @@ def vector(obj: apyc.SphericalCosLatDifferential, /) -> cx.vecs.LonCosLatSpheric
 
 @dispatch
 def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereVel:
-    """Construct from a :class:`astropy.coordinates.UnitSphericalDifferential`.
+    """Construct from a `astropy.coordinates.UnitSphericalDifferential`.
 
     This re-dispatches to :meth:`coordinax.vecs.TwoSphereVel.from_`.
 
@@ -273,7 +273,7 @@ def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereVel:
 def vector(
     cls: type[cx.CartesianPos3D], obj: apyc.BaseRepresentation, /
 ) -> cx.CartesianPos3D:
-    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
+    """Construct from a `astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -295,7 +295,7 @@ def vector(
 def vector(
     cls: type[cx.vecs.CylindricalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.vecs.CylindricalPos:
-    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
+    """Construct from a `astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -319,7 +319,7 @@ def vector(
 def vector(
     cls: type[cx.SphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.SphericalPos:
-    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
+    """Construct from a `astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -343,7 +343,7 @@ def vector(
 def vector(
     cls: type[cx.vecs.LonLatSphericalPos], obj: apyc.BaseRepresentation, /
 ) -> cx.vecs.LonLatSphericalPos:
-    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
+    """Construct from a `astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -367,7 +367,7 @@ def vector(
 def vector(
     cls: type[cx.vecs.TwoSpherePos], obj: apyc.BaseRepresentation, /
 ) -> cx.vecs.TwoSpherePos:
-    """Construct from a :class:`astropy.coordinates.BaseRepresentation`.
+    """Construct from a `astropy.coordinates.BaseRepresentation`.
 
     Examples
     --------
@@ -390,7 +390,7 @@ def vector(
 def vector(
     cls: type[cx.CartesianVel3D], obj: apyc.CartesianDifferential, /
 ) -> cx.CartesianVel3D:
-    """Construct from a :class:`astropy.coordinates.CartesianDifferential`.
+    """Construct from a `astropy.coordinates.CartesianDifferential`.
 
     Examples
     --------
@@ -412,7 +412,7 @@ def vector(
 def vector(
     cls: type[cx.vecs.CylindricalVel], obj: apyc.CylindricalDifferential, /
 ) -> cx.vecs.CylindricalVel:
-    """Construct from a :class:`astropy.coordinates.CylindricalVel`.
+    """Construct from a `astropy.coordinates.CylindricalVel`.
 
     Examples
     --------
@@ -435,7 +435,7 @@ def vector(
 def vector(
     cls: type[cx.SphericalVel], obj: apyc.PhysicsSphericalDifferential, /
 ) -> cx.SphericalVel:
-    """Construct from a :class:`astropy.coordinates.PhysicsSphericalDifferential`.
+    """Construct from a `astropy.coordinates.PhysicsSphericalDifferential`.
 
     Examples
     --------
@@ -458,7 +458,7 @@ def vector(
 def vector(
     cls: type[cx.vecs.LonLatSphericalVel], obj: apyc.SphericalDifferential, /
 ) -> cx.vecs.LonLatSphericalVel:
-    """Construct from a :class:`astropy.coordinates.SphericalVel`.
+    """Construct from a `astropy.coordinates.SphericalVel`.
 
     Examples
     --------
@@ -482,7 +482,7 @@ def vector(
 def vector(
     cls: type[cx.vecs.LonCosLatSphericalVel], obj: apyc.SphericalCosLatDifferential, /
 ) -> cx.vecs.LonCosLatSphericalVel:
-    """Construct from a :class:`astropy.coordinates.SphericalCosLatDifferential`.
+    """Construct from a `astropy.coordinates.SphericalCosLatDifferential`.
 
     Examples
     --------
@@ -506,7 +506,7 @@ def vector(
 def vector(
     cls: type[cx.vecs.TwoSphereVel], obj: apyc.UnitSphericalDifferential, /
 ) -> cx.vecs.TwoSphereVel:
-    """Construct from a :class:`astropy.coordinates.BaseDifferential`.
+    """Construct from a `astropy.coordinates.BaseDifferential`.
 
     Examples
     --------

@@ -129,7 +129,7 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
     r"""Operate on a 3D Quantity.
 
     `q` is the position vector. This is interpreted as a 3D CartesianVector.
-    See :class:`coordinax.CartesianPos3D` for more details.
+    See `coordinax.CartesianPos3D` for more details.
 
     Returns
     -------

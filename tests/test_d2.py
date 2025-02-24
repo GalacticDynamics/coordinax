@@ -10,11 +10,11 @@ from .test_base import AbstractPosTest, AbstractVelTest
 
 
 class AbstractPos2DTest(AbstractPosTest):
-    """Test :class:`coordinax.AbstractPos2D`."""
+    """Test `coordinax.AbstractPos2D`."""
 
 
 class TestCartesianPos2D:
-    """Test :class:`coordinax.vecs.CartesianPos2D`."""
+    """Test `coordinax.vecs.CartesianPos2D`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.CartesianPos2D:
@@ -111,7 +111,7 @@ class TestCartesianPos2D:
 
 
 class TestPolarPos:
-    """Test :class:`coordinax.PolarPos`."""
+    """Test `coordinax.PolarPos`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:
@@ -211,11 +211,11 @@ class TestPolarPos:
 
 
 class AbstractVel2DTest(AbstractVelTest):
-    """Test :class:`coordinax.AbstractVel2D`."""
+    """Test `coordinax.AbstractVel2D`."""
 
 
 class TestCartesianVel2D(AbstractVel2DTest):
-    """Test :class:`coordinax.CartesianVel2D`."""
+    """Test `coordinax.CartesianVel2D`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> cx.vecs.CartesianVel2D:
@@ -316,7 +316,7 @@ class TestCartesianVel2D(AbstractVel2DTest):
 
 
 class TestPolarVel(AbstractVel2DTest):
-    """Test :class:`coordinax.PolarVel`."""
+    """Test `coordinax.PolarVel`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> cx.vecs.PolarVel:

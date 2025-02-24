@@ -19,7 +19,7 @@ from coordinax._src.vectors.base_pos import AbstractPos
 
 @register(jax.lax.mul_p)
 def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
-    """Multiply the vector by a time :class:`unxt.Quantity` to get a position.
+    """Multiply the vector by a time `unxt.Quantity` to get a position.
 
     Examples
     --------

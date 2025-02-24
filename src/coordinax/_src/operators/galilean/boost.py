@@ -38,7 +38,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     Parameters
     ----------
-    velocity : :class:`coordinax.vecs.AbstractVel`
+    velocity : `coordinax.vecs.AbstractVel`
         The boost velocity. This parameters uses
         :meth:`coordinax.vecs.CartesianVel3D.from_` to enable a variety of more
         convenient input types.
@@ -82,9 +82,9 @@ class GalileanBoost(AbstractGalileanOperator):
     )
     """The boost velocity.
 
-    Unless given a :class:`coordinax.AbstractVel`, this parameter uses
+    Unless given a `coordinax.AbstractVel`, this parameter uses
     :meth:`coordinax.CartesianVel3D.from_` to enable a variety of more
-    convenient input types. See :class:`coordinax.CartesianVel3D` for details.
+    convenient input types. See `coordinax.CartesianVel3D` for details.
     """
 
     # -----------------------------------------------------

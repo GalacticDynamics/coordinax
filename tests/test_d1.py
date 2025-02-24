@@ -10,13 +10,13 @@ from .test_base import AbstractPosTest, AbstractVelTest
 
 
 class AbstractPos1DTest(AbstractPosTest):
-    """Test :class:`coordinax.AbstractPos1D`."""
+    """Test `coordinax.AbstractPos1D`."""
 
     # TODO: Add tests
 
 
 class TestCartesianPos1D(AbstractPos1DTest):
-    """Test :class:`coordinax.CartesianPos1D`."""
+    """Test `coordinax.CartesianPos1D`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:
@@ -102,7 +102,7 @@ class TestCartesianPos1D(AbstractPos1DTest):
 
 
 class TestRadialPos(AbstractPos1DTest):
-    """Test :class:`coordinax.RadialPos`."""
+    """Test `coordinax.RadialPos`."""
 
     @pytest.fixture(scope="class")
     def vector(self) -> cx.vecs.AbstractPos:
@@ -188,11 +188,11 @@ class TestRadialPos(AbstractPos1DTest):
 
 
 class AbstractVel1DTest(AbstractVelTest):
-    """Test :class:`coordinax.AbstractVel1D`."""
+    """Test `coordinax.AbstractVel1D`."""
 
 
 class TestCartesianVel1D(AbstractVel1DTest):
-    """Test :class:`coordinax.CartesianVel1D`."""
+    """Test `coordinax.CartesianVel1D`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> cx.vecs.CartesianVel1D:
@@ -300,7 +300,7 @@ class TestCartesianVel1D(AbstractVel1DTest):
 
 
 class TestRadialVel(AbstractVel1DTest):
-    """Test :class:`coordinax.RadialVel`."""
+    """Test `coordinax.RadialVel`."""
 
     @pytest.fixture(scope="class")
     def difntl(self) -> cx.vecs.RadialVel:

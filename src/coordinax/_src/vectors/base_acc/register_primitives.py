@@ -22,7 +22,7 @@ from coordinax._src.vectors.base_vel import AbstractVel
 
 @register(jax.lax.mul_p)
 def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
-    """Multiply the vector by a :class:`unxt.Quantity`.
+    """Multiply the vector by a `unxt.Quantity`.
 
     Examples
     --------
