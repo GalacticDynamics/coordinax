@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, TypeAlias, cast, final, overload
 import equinox as eqx
 from plum import dispatch
 
-import quaxed.numpy as xp
+import quaxed.numpy as jnp
 from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
@@ -131,7 +131,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     """
 
     rotation: GalileanRotation = eqx.field(
-        default=GalileanRotation(xp.eye(3)),
+        default=GalileanRotation(jnp.eye(3)),
         converter=GalileanRotation.from_,
     )
     """The in-frame spatial rotation."""

@@ -19,4 +19,4 @@ from . import funcs, register_vconvert  # noqa: F401
 
 # Interoperability
 # isort: split
-from . import register_unxt  # noqa: F401
+from . import register_jax, register_unxt  # noqa: F401
