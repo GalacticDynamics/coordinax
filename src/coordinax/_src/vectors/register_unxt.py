@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 
 from collections.abc import Callable
-from typing import TypeAlias, TypeVar
+from typing import TypeVar
 
 from jaxtyping import Shaped
 from plum import conversion_method as _conversion_method, convert, dispatch
@@ -171,26 +171,24 @@ def _vec_diff_to_q(obj: AbstractVector, /) -> u.AbstractQuantity:
     return xp.stack(tuple(field_values(full_shaped(obj))), axis=-1)
 
 
-# -------------------------------------------------------------------
-# 1D
-
-QConvertible1D: TypeAlias = CartesianVel1D | CartesianAcc1D | RadialVel | RadialAcc
-
-
 @conversion_method(type_from=RadialAcc, type_to=BareQuantity)
 @conversion_method(type_from=RadialVel, type_to=BareQuantity)
 @conversion_method(type_from=CartesianAcc1D, type_to=BareQuantity)
 @conversion_method(type_from=CartesianVel1D, type_to=BareQuantity)
-def vec_diff1d_to_uncheckedq(
-    obj: QConvertible1D, /
-) -> Shaped[BareQuantity, "*batch 1"]:
-    """1D Differentials -> `unxt.BareQuantity`.
+@conversion_method(type_from=CartesianAcc2D, type_to=BareQuantity)
+@conversion_method(type_from=CartesianVel2D, type_to=BareQuantity)
+@conversion_method(type_from=CartesianAcc3D, type_to=BareQuantity)
+@conversion_method(type_from=CartesianVel3D, type_to=BareQuantity)
+def vec_diff_to_uncheckedq(obj: AbstractVector, /) -> Shaped[BareQuantity, "*batch N"]:
+    """Differentials -> `unxt.BareQuantity`.
 
     Examples
     --------
     >>> from plum import convert
     >>> from unxt.quantity import BareQuantity
     >>> import coordinax as cx
+
+    ## 1D
 
     >>> cart_vel = cx.vecs.CartesianVel1D.from_([1], "km/s")
     >>> convert(cart_vel, BareQuantity)
@@ -208,6 +206,26 @@ def vec_diff1d_to_uncheckedq(
     >>> convert(rad_acc, BareQuantity)
     BareQuantity(Array([1], dtype=int32), unit='km / s2')
 
+    ## 2D
+
+    >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
+    >>> convert(vel, BareQuantity)
+    BareQuantity(Array([1, 2], dtype=int32), unit='km / s')
+
+    >>> acc = cx.vecs.CartesianAcc2D.from_([1, 2], "km/s2")
+    >>> convert(acc, BareQuantity)
+    BareQuantity(Array([1, 2], dtype=int32), unit='km / s2')
+
+    # 3D
+
+    >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
+    >>> convert(vel, BareQuantity)
+    BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s')
+
+    >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> convert(acc, BareQuantity)
+    BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
+
     """
     return convert(_vec_diff_to_q(obj), BareQuantity)
 
@@ -216,7 +234,11 @@ def vec_diff1d_to_uncheckedq(
 @conversion_method(type_from=RadialVel, type_to=u.Quantity)
 @conversion_method(type_from=CartesianAcc1D, type_to=u.Quantity)
 @conversion_method(type_from=CartesianVel1D, type_to=u.Quantity)
-def vec_diff1d_to_q(obj: QConvertible1D, /) -> Shaped[u.Quantity, "*batch 1"]:
+@conversion_method(type_from=CartesianAcc2D, type_to=u.Quantity)
+@conversion_method(type_from=CartesianVel2D, type_to=u.Quantity)
+@conversion_method(type_from=CartesianAcc3D, type_to=u.Quantity)
+@conversion_method(type_from=CartesianVel3D, type_to=u.Quantity)
+def vec_diff_to_q(obj: AbstractVector, /) -> Shaped[u.Quantity, "*batch N"]:
     """1D Differentials -> `unxt.Quantity`.
 
     Examples
@@ -224,6 +246,8 @@ def vec_diff1d_to_q(obj: QConvertible1D, /) -> Shaped[u.Quantity, "*batch 1"]:
     >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax as cx
+
+    ## 1D
 
     >>> cart_vel = cx.vecs.CartesianVel1D.from_([1], "km/s")
     >>> convert(cart_vel, u.Quantity)
@@ -241,51 +265,7 @@ def vec_diff1d_to_q(obj: QConvertible1D, /) -> Shaped[u.Quantity, "*batch 1"]:
     >>> convert(rad_acc, u.Quantity)
     Quantity['acceleration'](Array([1], dtype=int32), unit='km / s2')
 
-    """
-    return convert(_vec_diff_to_q(obj), u.Quantity)
-
-
-# -------------------------------------------------------------------
-# 2D
-
-QConvertible2D: TypeAlias = CartesianVel2D | CartesianAcc2D
-
-
-@conversion_method(type_from=CartesianAcc2D, type_to=BareQuantity)
-@conversion_method(type_from=CartesianVel2D, type_to=BareQuantity)
-def vec_diff2d_to_uncheckedq(
-    obj: QConvertible2D, /
-) -> Shaped[BareQuantity, "*batch 2"]:
-    """2D Differentials -> `unxt.BareQuantity`.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> from unxt.quantity import BareQuantity
-    >>> import coordinax as cx
-
-    >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
-    >>> convert(vel, BareQuantity)
-    BareQuantity(Array([1, 2], dtype=int32), unit='km / s')
-
-    >>> acc = cx.vecs.CartesianAcc2D.from_([1, 2], "km/s2")
-    >>> convert(acc, BareQuantity)
-    BareQuantity(Array([1, 2], dtype=int32), unit='km / s2')
-
-    """
-    return convert(_vec_diff_to_q(obj), BareQuantity)
-
-
-@conversion_method(type_from=CartesianAcc2D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianVel2D, type_to=u.Quantity)
-def vec_diff2d_to_q(obj: QConvertible2D, /) -> Shaped[u.Quantity, "*batch 2"]:
-    """2D Differentials -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> from plum import convert
-    >>> import unxt as u
-    >>> import coordinax as cx
+    ## 2D
 
     >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
     >>> convert(vel, u.Quantity)
@@ -295,51 +275,7 @@ def vec_diff2d_to_q(obj: QConvertible2D, /) -> Shaped[u.Quantity, "*batch 2"]:
     >>> convert(acc, u.Quantity)
     Quantity['acceleration'](Array([1, 2], dtype=int32), unit='km / s2')
 
-    """
-    return convert(_vec_diff_to_q(obj), u.Quantity)
-
-
-# -------------------------------------------------------------------
-# 3D
-
-QConvertible3D: TypeAlias = CartesianVel3D | CartesianAcc3D
-
-
-@conversion_method(CartesianAcc3D, BareQuantity)
-@conversion_method(CartesianVel3D, BareQuantity)
-def vec_diff3d_to_uncheckedq(
-    obj: QConvertible3D, /
-) -> Shaped[BareQuantity, "*batch 3"]:
-    """3D Differentials -> `unxt.BareQuantity`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from plum import convert
-    >>> from unxt.quantity import BareQuantity
-
-    >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> convert(vel, BareQuantity)
-    BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s')
-
-    >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> convert(acc, BareQuantity)
-    BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
-
-    """
-    return convert(_vec_diff_to_q(obj), BareQuantity)
-
-
-@conversion_method(CartesianAcc3D, u.Quantity)
-@conversion_method(CartesianVel3D, u.Quantity)
-def vec_diff3d_to_q(obj: QConvertible3D, /) -> Shaped[u.Quantity, "*batch 3"]:
-    """3D Differentials -> `unxt.Quantity`.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> from plum import convert
-    >>> import unxt as u
+    # 3D
 
     >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, u.Quantity)
