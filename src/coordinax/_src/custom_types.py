@@ -9,7 +9,7 @@ from astropy.units import (
     Unit as AstropyUnit,
     UnitBase as AstropyUnitBase,
 )
-from jaxtyping import Float, Int, Shaped
+from jaxtyping import Float, Real, Shaped
 
 import unxt as u
 
@@ -22,7 +22,7 @@ FloatScalarQ = Float[u.AbstractQuantity, ""]
 BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]
 BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]
 
-ScalarTime = Float[u.Quantity["time"], ""] | Int[u.Quantity["time"], ""]
+ScalarTime = Real[u.Quantity["time"], ""]
 
 BatchableTime = Shaped[u.Quantity["time"], "*#batch"]
 

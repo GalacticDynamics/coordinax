@@ -28,12 +28,18 @@ class AbstractOperator(eqx.Module):
     can be applied to a set of coordinates to produce a new set of coordinates.
     Operators can be composed together to form a sequence of transformations.
 
-    When defining a new operator, it should be able to work on
-    `coordinax.AbstractVector` objects. If it is a spatial operator, it should
-    also be able to work on (`coordinax.AbstractPos`, `unxt.Quantity['time']`)
-    pairs (and then also `coordinax.FourVector` objects). If the vector can be
-    created from a `unxt.Quantity` object, then the operator should also be able
-    to work on `unxt.Quantity` object.
+    When defining a new operator, it should be able to work on the following
+    types with the following semantics:
+
+    - `coordinax.vecs.AbstractVector` objects. No restrictions are placed on the
+      these arguments, except that if the operator works on
+      `coordinax.vecs.AbstractPos` and `coordinax.vecs.AbstractVel` objects, the
+      former should precede the latter.
+    - Time arguments come first, followed by spatial arguments.
+    - It should work on a set of `jax.Array` objects. If the `jax.Array` is a
+      coordinate vector then it is Cartesian and the last axis is the component
+      axis and prior axes are the batch axes.
+    - It should work on `unxt.Quantity` objects.
 
     """
 

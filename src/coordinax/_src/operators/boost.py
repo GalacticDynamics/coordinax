@@ -234,8 +234,8 @@ def call(self: VelocityBoost, q: AbstractPos, /) -> AbstractPos:
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: VelocityBoost, q: AbstractPos, t: u.Quantity["time"], /
-) -> tuple[AbstractPos, u.Quantity["time"]]:
+    self: VelocityBoost, t: u.Quantity["time"], q: AbstractPos, /
+) -> tuple[u.Quantity["time"], AbstractPos]:
     """Apply the boost to the coordinates.
 
     This does nothing to the position, as the boost is to the velocity only.
@@ -250,12 +250,12 @@ def call(
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "m")
     >>> t = u.Quantity(1, "s")
 
-    >>> newq, newt = op(q, t)
-    >>> newq is q, newt is t
+    >>> newt, newq = op(t, q)
+    >>> newt is t, newq is q
     (True, True)
 
     """
-    return q, t
+    return t, q
 
 
 # ======================================================================

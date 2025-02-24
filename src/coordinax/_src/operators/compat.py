@@ -47,8 +47,8 @@ def call(self: AbstractOperator, x: Q1, /, **kwargs: Any) -> Q1:
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: AbstractOperator, x: Q1, t: TimeBatchOrScalar, /, **kwargs: Any
-) -> tuple[Q1, TimeBatchOrScalar]:
+    self: AbstractOperator, t: TimeBatchOrScalar, x: Q1, /, **kwargs: Any
+) -> tuple[TimeBatchOrScalar, Q1]:
     """Dispatch to the operator's `__call__` method.
 
     Examples
@@ -58,13 +58,14 @@ def call(
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
     >>> q = u.Quantity([0], "km")
-    >>> op(q, u.Quantity(0, "s"))
-    (Quantity['length'](Array([1], dtype=int32), unit='km'),
-     Quantity['time'](Array(0, dtype=int32, ...), unit='s'))
+    >>> t = u.Quantity(0, "s")
+    >>> op(t, q)
+    (Quantity['time'](Array(0, dtype=int32, weak_type=True), unit='s'),
+     Quantity['length'](Array([1], dtype=int32), unit='km'))
 
     """
-    vec, t = self(CartesianPos1D.from_(x), t, **kwargs)
-    return convert(vec, u.Quantity), t
+    t, vec = self(t, CartesianPos1D.from_(x), **kwargs)
+    return t, convert(vec, u.Quantity)
 
 
 # ============================================================================
@@ -94,8 +95,8 @@ def call(self: AbstractOperator, x: Q2, /, **kwargs: Any) -> Q2:
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: AbstractOperator, x: Q2, t: TimeBatchOrScalar, /, **kwargs: Any
-) -> tuple[Q2, TimeBatchOrScalar]:
+    self: AbstractOperator, t: TimeBatchOrScalar, x: Q2, /, **kwargs: Any
+) -> tuple[TimeBatchOrScalar, Q2]:
     """Dispatch to the operator's `__call__` method.
 
     Examples
@@ -104,14 +105,15 @@ def call(
     >>> import coordinax as cx
 
     >>> q = u.Quantity([1, 2], "m")
+    >>> t = u.Quantity(0, "s")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
-    >>> op(q, u.Quantity(0, "s"))
-    (Quantity['length'](Array([0, 1], dtype=int32), unit='m'),
-     Quantity['time'](Array(0, dtype=int32, ...), unit='s'))
+    >>> op(t, q)
+    (Quantity['time'](Array(0, dtype=int32, weak_type=True), unit='s'),
+     Quantity['length'](Array([0, 1], dtype=int32), unit='m'))
 
     """
-    vec, t = self(CartesianPos2D.from_(x), t, **kwargs)
-    return convert(vec, u.Quantity), t
+    t, vec = self(t, CartesianPos2D.from_(x), **kwargs)
+    return t, convert(vec, u.Quantity)
 
 
 # ============================================================================
@@ -156,8 +158,8 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: AbstractOperator, x: Q3, t: TimeBatchOrScalar, /, **kwargs: Any
-) -> tuple[Q3, TimeBatchOrScalar]:
+    self: AbstractOperator, t: TimeBatchOrScalar, x: Q3, /, **kwargs: Any
+) -> tuple[TimeBatchOrScalar, Q3]:
     """Dispatch to the operator's `__call__` method.
 
     Examples
@@ -176,13 +178,13 @@ def call(
     >>> q = u.Quantity([1.0, 2.0, 3.0], "km")
     >>> t = u.Quantity(0.0, "Gyr")
 
-    >>> op(q, t)
-    (Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='km'),
-     Quantity['time'](Array(0., dtype=float32, ...), unit='Gyr'))
+    >>> op(t, q)
+    (Quantity['time'](Array(0., dtype=float32, weak_type=True), unit='Gyr'),
+     Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='km'))
 
     """
-    vec, t = self(CartesianPos3D.from_(x), t, **kwargs)
-    return convert(vec, u.Quantity), t
+    t, vec = self(t, CartesianPos3D.from_(x), **kwargs)
+    return t, convert(vec, u.Quantity)
 
 
 # ============================================================================
@@ -226,7 +228,7 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
         [0. 0. 0. 0.]>
 
     """
-    q, t = self(v4.q, v4.t, **kwargs)
+    t, q = self(v4.t, v4.q, **kwargs)
     return FourVector(t=t, q=q)
 
 
@@ -261,7 +263,8 @@ def call(
     Quantity['length'](Array([0., 2., 4., 6.], dtype=float32), unit='km')
 
     """
-    return convert(self(FourVector.from_(x), **kwargs), u.Quantity)
+    q4 = FourVector.from_(x)
+    return convert(self(q4, **kwargs), u.Quantity)
 
 
 # ============================================================================
