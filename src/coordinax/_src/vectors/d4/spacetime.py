@@ -38,11 +38,9 @@ class FourVector(AbstractPos4D):
 
     Parameters
     ----------
-    t : Quantity[float, (*batch,), "time"]
-        Time coordinate.
-    q : AbstractPos3D[float, (*batch, 3)]
-        Spatial coordinates.
-    c : Quantity[float, (), "speed"], optional
+    t, q
+        Time and spatial coordinates.
+    c
         Speed of light, by default ``Quantity(299_792.458, "km/s")``.
 
     Examples

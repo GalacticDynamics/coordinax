@@ -31,13 +31,13 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     Parameters
     ----------
-    mu : Quantity["area"]
+    mu
         The spheroidal mu coordinate. This is called `lambda` by Dejonghe & de Zeeuw.
-    nu : Quantity["area"]
+    nu
         The spheroidal nu coordinate.
-    phi : `coordinax.angle.Angle`
+    phi
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
-    Delta : Quantity["length"]
+    Delta
         The focal length of the coordinate system. Must be > 0.
 
     Examples

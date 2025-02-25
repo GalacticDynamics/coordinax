@@ -38,11 +38,11 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     Parameters
     ----------
-    lon : `coordinax.angle.Angle`
+    lon
         The longitude (azimuthal) angle [0, 360) [deg] where 0 is the x-axis.
-    lat : `coordinax.angle.Angle`
+    lat
         The latitude (polar angle) [-90, 90] [deg] where 90 is the z-axis.
-    distance : Distance
+    distance
         Radial distance r (slant distance to origin),
 
     Examples

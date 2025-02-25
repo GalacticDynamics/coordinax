@@ -149,11 +149,11 @@ def uconvert(
 
     Parameters
     ----------
-    flag : Literal[ToUnitsOptions.consistent]
+    flag
         The vector is converted to consistent units by looking for the first
         quantity with each physical type and converting all components to
         the units of that quantity.
-    vector : AbstractVector
+    vector
         The vector to convert.
 
     Examples

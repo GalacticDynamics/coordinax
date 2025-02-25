@@ -44,13 +44,13 @@ def vconvert(
 
     Parameters
     ----------
-    target : type[AbstractVel]
+    target
         The target type of the vector differential.
-    current : AbstractVel
+    current
         The vector differential to transform.
-    position : AbstractPos
+    position
         The position vector used to transform the differential.
-    **kwargs : Any
+    **kwargs
         Additional keyword arguments.
 
     Examples

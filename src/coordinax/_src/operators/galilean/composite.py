@@ -44,11 +44,13 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : `coordinax.ops.GalileanTranslation`
+    rotation
+        The in-frame spatial rotation. This is a `coordinax.ops.GalileanRotation`
+    translation
         The spatial translation of the frame. See
         `coordinax.ops.GalileanTranslation` for alternative inputs to construct
         this parameter.
-    velocity : `coordinax.ops.GalileanBoost`
+    velocity
         The boost to the frame. See `coordinax.ops.GalileanBoost` for
         alternative inputs to construct this parameter.
 

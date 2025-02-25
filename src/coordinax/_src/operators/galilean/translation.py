@@ -35,7 +35,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : `coordinax.vecs.FourVector`
+    translation
         The translation vector [T, Q].  This parameters uses
         `coordinax.vecs.FourVector.from_` to enable a variety of more convenient
         input types. See `coordinax.vecs.FourVector` for details.

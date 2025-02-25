@@ -235,9 +235,9 @@ def vector(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
 
     Parameters
     ----------
-    cls : type[AbstractVector], positional-only
+    cls
         The vector class.
-    obj : `coordinax.AbstractVector`, positional-only
+    obj
         The vector to construct from.
 
     Examples

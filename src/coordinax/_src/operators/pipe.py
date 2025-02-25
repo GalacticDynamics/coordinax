@@ -41,7 +41,7 @@ class Pipe(AbstractCompositeOperator):
 
     Parameters
     ----------
-    operators : tuple[AbstractOperator, ...]
+    operators
         The sequence of operators to apply.
 
     Examples
