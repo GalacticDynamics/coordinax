@@ -20,17 +20,7 @@ from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 @final
 class PolarPos(AbstractPos2D):
-    r"""Polar vector representation.
-
-    Parameters
-    ----------
-    r : BatchableDistance
-        Radial distance :math:`r \in [0,+\infty)`.
-    phi : BatchableAngle
-        Polar angle :math:`\phi \in [0,2\pi)`.  We use the symbol `phi` to
-        adhere to the ISO standard 31-11.
-
-    """
+    r"""Polar vector representation."""
 
     r: BatchableDistance = eqx.field(converter=Unless(AbstractDistance, Distance.from_))
     r"""Radial distance :math:`r \in [0,+\infty)`."""
@@ -38,7 +28,10 @@ class PolarPos(AbstractPos2D):
     phi: BatchableAngle = eqx.field(
         converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
     )
-    r"""Polar angle, generally :math:`\phi \in [0,2\pi)`."""
+    r"""Polar angle, generally :math:`\phi \in [0,2\pi)`.
+
+    We use the symbol `phi` to adhere to the ISO standard 31-11.
+    """
 
     def __check_init__(self) -> None:
         """Check the initialization."""

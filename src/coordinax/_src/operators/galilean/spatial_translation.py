@@ -67,7 +67,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     Parameters
     ----------
-    translation : `vector.AbstractPos3D`
+    translation
         The spatial translation vector. This parameters accepts either a
         `vector.AbstractPos3D` instance or uses
         `coordinax.vecs.CartesianPos3D.from_` to enable a variety of more

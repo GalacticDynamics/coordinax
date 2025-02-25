@@ -38,7 +38,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     Parameters
     ----------
-    velocity : `coordinax.vecs.AbstractVel`
+    velocity
         The boost velocity. This parameters uses
         :meth:`coordinax.vecs.CartesianVel3D.from_` to enable a variety of more
         convenient input types.

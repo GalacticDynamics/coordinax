@@ -59,15 +59,15 @@ def vconvert(
 
     Parameters
     ----------
-    current : AbstractAcc
+    current
         The vector acceleration to transform.
-    target : type[AbstractAcc]
+    target
         The target type of the vector acceleration.
-    velocity : AbstractVel
+    velocity
         The velocity vector used to transform the acceleration.
-    position : AbstractPos
+    position
         The position vector used to transform the acceleration.
-    **kwargs : Any
+    **kwargs
         Additional keyword arguments.
 
     Examples

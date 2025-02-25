@@ -31,10 +31,7 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
 
     Parameters
     ----------
-    *args : Any
-        See input to `dict` for the input data.
-
-    **kwargs : AbstractVector
+    *args, **kwargs
         See input to `dict` for the input data.
 
     Examples

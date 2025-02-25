@@ -140,7 +140,7 @@ class IPythonReprMixin:
 
         Parameters
         ----------
-        include, exclude : Sequence[str] | None, optional
+        include, exclude
             The set of keys to include / exclude in the MIME bundle. If not
             provided, all supported formats are included. 'include' has
             precedence over 'exclude'.
@@ -215,7 +215,7 @@ class AstropyRepresentationAPIMixin:
         ----------
         target : type[`coordinax.AbstractVel`]
             The type to represent the vector as.
-        *args, **kwargs : Any
+        *args, **kwargs
             Extra arguments. These are passed to `coordinax.vconvert` and might
             be used, depending on the dispatched method. E.g. for transforming
             an acceleration, generally the first argument is the velocity

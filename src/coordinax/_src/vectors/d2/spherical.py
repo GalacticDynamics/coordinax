@@ -33,9 +33,9 @@ class TwoSpherePos(AbstractPos2D):
 
     Parameters
     ----------
-    theta : `coordinax.angle.Angle`
+    theta
         Polar angle [0, 180] [deg] where 0 is the z-axis.
-    phi : `coordinax.angle.Angle`
+    phi
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
 
     See Also
@@ -90,9 +90,9 @@ class TwoSphereVel(AbstractVel2D):
 
     Parameters
     ----------
-    theta : Quantity['angular speed']
+    theta
         Inclination speed $`d\theta/dt \in [-\infty, \infty]$.
-    phi : Quantity['angular speed']
+    phi
         Azimuthal speed $d\phi/dt \in [-\infty, \infty]$.
 
     See Also
@@ -144,9 +144,9 @@ class TwoSphereAcc(AbstractAcc2D):
 
     Parameters
     ----------
-    theta : Quantity['angular acceleration']
+    theta
         Inclination acceleration $`d^2\theta/dt^2 \in [-\infty, \infty]$.
-    phi : Quantity['angular acceleration']
+    phi
         Azimuthal acceleration $d^2\phi/dt^2 \in [-\infty, \infty]$.
 
     See Also

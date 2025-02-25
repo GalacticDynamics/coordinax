@@ -43,10 +43,10 @@ class ClassPropertyDescriptor(Generic[EnclosingT, GetterRetT]):
 
         Parameters
         ----------
-        obj : EnclosingT | None
+        obj
             The object this descriptor is being accessed from. If ``None`` then
             this is being accessed from the class, not an instance.
-        klass : type[EnclosingT] | None
+        klass
             The class this descriptor is being accessed from. If ``None`` then
             this is being accessed from an instance, not the class.
 
@@ -115,7 +115,7 @@ def classproperty(
 
     Parameters
     ----------
-    func : callable[EnclosingT, GetterRetT] | classmethod | staticmethod
+    func
         The function to be used as the getter.
 
     Returns

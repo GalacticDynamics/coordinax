@@ -37,11 +37,11 @@ class MathSphericalPos(AbstractSphericalPos):
 
     Parameters
     ----------
-    r : `coordinax.Distance`
+    r
         Radial distance r (slant distance to origin),
-    theta : `coordinax.angle.Angle`
+    theta
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
-    phi : `coordinax.angle.Angle`
+    phi
         Polar angle [0, 180] [deg] where 0 is the z-axis.
 
     """

@@ -116,7 +116,7 @@ class AbstractVector(
         ----------
         target : type[`coordinax.AbstractVector`]
             The type to represent the vector as.
-        *args, **kwargs : Any
+        *args, **kwargs
             Extra arguments. These are passed to `coordinax.vconvert` and
             might be used, depending on the dispatched method. E.g. for
             transforming an acceleration, generally the first argument is the
@@ -173,7 +173,7 @@ class AbstractVector(
 
         Parameters
         ----------
-        usys : Any
+        usys
             The units to convert to according to the physical type of the
             components. This is passed to [`unxt.unitsystem`][].
 
@@ -488,7 +488,7 @@ class AbstractVector(
 
         Parameters
         ----------
-        index : Any
+        index
             The slice to apply.
 
         Returns
@@ -662,9 +662,9 @@ class AbstractVector(
 
         Parameters
         ----------
-        *shape : Any
+        *shape
             The new shape.
-        order : str
+        order
             The order to use for the reshape.
 
         Returns
@@ -734,7 +734,7 @@ class AbstractVector(
 
         Parameters
         ----------
-        dict_factory : type[Mapping]
+        dict_factory
             The type of the mapping to return.
 
         Returns
