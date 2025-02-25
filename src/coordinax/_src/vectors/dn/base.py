@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 class AbstractPosND(AbstractPos):
     """Abstract representation of N-D coordinates in different systems."""
 
-    q: eqx.AbstractVar[ct.BatchableLength]
+    q: eqx.AbstractVar[ct.BBtLength]
 
     # ===============================================================
     # Array API
@@ -138,7 +138,7 @@ class AbstractPosND(AbstractPos):
 class AbstractVelND(AbstractVel):
     """Abstract representation of N-D vector differentials."""
 
-    q: eqx.AbstractVar[ct.BatchableSpeed]
+    q: eqx.AbstractVar[ct.BBtSpeed]
 
     # ===============================================================
     # Array API
@@ -252,7 +252,7 @@ class AbstractVelND(AbstractVel):
 class AbstractAccND(AbstractAcc):
     """Abstract representation of N-D vector differentials."""
 
-    q: eqx.AbstractVar[ct.BatchableAcc]
+    q: eqx.AbstractVar[ct.BBtAcc]
 
     # ===============================================================
     # Array API

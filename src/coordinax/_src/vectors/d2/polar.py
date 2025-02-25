@@ -77,12 +77,10 @@ class PolarVel(AbstractVel2D):
 
     """
 
-    r: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    r: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty,+\infty]`."""
 
-    phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
     r"""Polar angular speed :math:`d\phi/dt \in [-\infty,+\infty]`."""
 
 
@@ -106,10 +104,10 @@ class PolarAcc(AbstractAcc2D):
 
     """
 
-    r: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    r: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty,+\infty]`."""
 
-    phi: ct.BatchableAngularAcc = eqx.field(
+    phi: ct.BBtAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Polar angular acceleration :math:`d^2\phi/dt^2 \in [-\infty,+\infty]`."""

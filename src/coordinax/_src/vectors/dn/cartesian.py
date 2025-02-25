@@ -15,7 +15,7 @@ import unxt as u
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
-from coordinax._src.distances import BatchableLength
+from coordinax._src.distances import BBtLength
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 ##############################################################################
@@ -73,7 +73,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     """
 
-    q: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
+    q: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""N-D coordinate :math:`\vec{x} \in (-\infty,+\infty)`.
 
     Should have shape (*batch, F) where F is the number of features /
@@ -108,7 +108,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> BBtLength:
         """Return the norm of the vector.
 
         Examples
@@ -181,7 +181,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     """
 
-    q: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    q: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""N-D speed :math:`d\vec{x}/dt \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /
@@ -206,7 +206,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPosND | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPosND | None = None, /) -> ct.BBtSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -279,7 +279,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     """
 
-    q: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    q: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""N-D acceleration :math:`d\vec{x}/dt^2 \in (-\infty, \infty).
 
     Should have shape (*batch, F) where F is the number of features /
@@ -309,7 +309,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
         velocity: AbstractVelND | None = None,
         position: AbstractPosND | None = None,
         /,
-    ) -> ct.BatchableAcc:
+    ) -> ct.BBtAcc:
         """Return the norm of the vector.
 
         Examples

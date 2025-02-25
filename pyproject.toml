@@ -162,6 +162,7 @@ skip = ["uv.lock"]
     "fixme",
     "function-redefined",         # plum-dispatch
     "invalid-name",               # handled by ruff
+    "invalid-overridden-method",
     "invalid-unary-operand-type", # pylint doesn't understand dataclass fields
     "isinstance-second-argument-not-valid-type", # pylint doesn't understand classproperty objects
     "line-too-long",

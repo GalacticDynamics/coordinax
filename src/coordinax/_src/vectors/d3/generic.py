@@ -5,6 +5,7 @@ __all__ = [
 ]
 
 from typing import TypeVar, final
+from typing_extensions import override
 
 import equinox as eqx
 
@@ -34,11 +35,11 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 
     """
 
-    x: ct.BatchableScalarQ = eqx.field(converter=u.Quantity.from_)
+    x: ct.BBtScalarQ = eqx.field(converter=u.Quantity.from_)
 
-    y: ct.BatchableScalarQ = eqx.field(converter=u.Quantity.from_)
+    y: ct.BBtScalarQ = eqx.field(converter=u.Quantity.from_)
 
-    z: ct.BatchableScalarQ = eqx.field(converter=u.Quantity.from_)
+    z: ct.BBtScalarQ = eqx.field(converter=u.Quantity.from_)
 
     @classmethod
     def _dimensionality(cls) -> int:
@@ -66,3 +67,23 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
 
         """
         return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)
+
+    @override
+    @property
+    def dimensions(self) -> dict[str, u.dims.AbstractDimension]:  # type: ignore[override]
+        """Vector physical dimensions.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> cx.vecs.CartesianGeneric3D.dimensions
+        <property object at ...>
+
+        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
+        >>> q.dimensions
+        {'x': PhysicalType('length'), 'y': PhysicalType('length'),
+         'z': PhysicalType('length')}
+
+        """
+        return {k: u.dimension_of(getattr(self, k)) for k in self.components}

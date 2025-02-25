@@ -1,5 +1,109 @@
 """`coordinax.vecs` Module."""
-# ruff:noqa: F403
+
+__all__ = [
+    # API
+    "vector",
+    "vconvert",
+    "normalize_vector",
+    "cartesian_vector_type",
+    "time_derivative_vector_type",
+    "time_antiderivative_vector_type",
+    "time_nth_derivative_vector_type",
+    "IrreversibleDimensionChange",
+    # Base
+    "AbstractVector",
+    "AttrFilter",
+    "VectorAttribute",
+    "ToUnitsOptions",
+    # Base Classes
+    "AbstractPos",
+    "AbstractVel",
+    "AbstractAcc",
+    # --- 1D ---
+    # Base
+    "AbstractPos1D",
+    "AbstractVel1D",
+    "AbstractAcc1D",
+    # Radial
+    "RadialPos",
+    "RadialVel",
+    "RadialAcc",
+    # Cartesian
+    "CartesianPos1D",
+    "CartesianVel1D",
+    "CartesianAcc1D",
+    # --- 2D ---
+    # Base
+    "AbstractPos2D",
+    "AbstractVel2D",
+    "AbstractAcc2D",
+    # TwoSphere
+    "TwoSpherePos",
+    "TwoSphereVel",
+    "TwoSphereAcc",
+    # Polar
+    "PolarPos",
+    "PolarVel",
+    "PolarAcc",
+    # Cartesian
+    "CartesianPos2D",
+    "CartesianVel2D",
+    "CartesianAcc2D",
+    # --- 3D ---
+    # Base
+    "AbstractPos3D",
+    "AbstractVel3D",
+    "AbstractAcc3D",
+    # Cartesian
+    "CartesianPos3D",
+    "CartesianVel3D",
+    "CartesianAcc3D",
+    # Cylindrical
+    "CylindricalPos",
+    "CylindricalVel",
+    "CylindricalAcc",
+    # Base Spherical
+    "AbstractSphericalPos",
+    "AbstractSphericalVel",
+    "AbstractSphericalAcc",
+    # Spherical
+    "SphericalPos",
+    "SphericalVel",
+    "SphericalAcc",
+    # Math Spherical
+    "MathSphericalPos",
+    "MathSphericalVel",
+    "MathSphericalAcc",
+    # LonLat Spherical
+    "LonLatSphericalPos",
+    "LonLatSphericalVel",
+    "LonLatSphericalAcc",
+    "LonCosLatSphericalVel",
+    # Prolate Spheroidal
+    "ProlateSpheroidalPos",
+    "ProlateSpheroidalVel",
+    "ProlateSpheroidalAcc",
+    # Generic
+    "CartesianGeneric3D",
+    # --- 4D ---
+    "AbstractPos4D",
+    "FourVector",
+    # --- N-D ---
+    "AbstractPosND",
+    "AbstractVelND",
+    "AbstractAccND",
+    "CartesianPosND",
+    "CartesianVelND",
+    "CartesianAccND",
+    "PoincarePolarVector",
+    # --- Space ---
+    "AbstractVectors",
+    "Space",
+    # --- Misc ---
+    "POSITION_CLASSES",
+    "VELOCITY_CLASSES",
+    "ACCELERATION_CLASSES",
+]
 
 from jaxtyping import install_import_hook
 
@@ -78,107 +182,18 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         SphericalPos,
         SphericalVel,
     )
-    from ._src.vectors.d4 import *
-    from ._src.vectors.dn import *
-    from ._src.vectors.exceptions import *
+    from ._src.vectors.d4 import AbstractPos4D, FourVector
+    from ._src.vectors.dn import (
+        AbstractAccND,
+        AbstractPosND,
+        AbstractVelND,
+        CartesianAccND,
+        CartesianPosND,
+        CartesianVelND,
+        PoincarePolarVector,
+    )
+    from ._src.vectors.exceptions import IrreversibleDimensionChange
     from ._src.vectors.space import AbstractVectors, Space
-
-
-__all__ = [
-    # API
-    "vector",
-    "vconvert",
-    "normalize_vector",
-    "cartesian_vector_type",
-    "time_derivative_vector_type",
-    "time_antiderivative_vector_type",
-    "time_nth_derivative_vector_type",
-    # Base
-    "AbstractVector",
-    "AttrFilter",
-    "VectorAttribute",
-    "ToUnitsOptions",
-    # Base Classes
-    "AbstractPos",
-    "AbstractVel",
-    "AbstractAcc",
-    # --- 1D ---
-    # Base
-    "AbstractPos1D",
-    "AbstractVel1D",
-    "AbstractAcc1D",
-    # Radial
-    "RadialPos",
-    "RadialVel",
-    "RadialAcc",
-    # Cartesian
-    "CartesianPos1D",
-    "CartesianVel1D",
-    "CartesianAcc1D",
-    # --- 2D ---
-    # Base
-    "AbstractPos2D",
-    "AbstractVel2D",
-    "AbstractAcc2D",
-    # TwoSphere
-    "TwoSpherePos",
-    "TwoSphereVel",
-    "TwoSphereAcc",
-    # Polar
-    "PolarPos",
-    "PolarVel",
-    "PolarAcc",
-    # Cartesian
-    "CartesianPos2D",
-    "CartesianVel2D",
-    "CartesianAcc2D",
-    # --- 3D ---
-    # Base
-    "AbstractPos3D",
-    "AbstractVel3D",
-    "AbstractAcc3D",
-    # Cartesian
-    "CartesianPos3D",
-    "CartesianVel3D",
-    "CartesianAcc3D",
-    # Cylindrical
-    "CylindricalPos",
-    "CylindricalVel",
-    "CylindricalAcc",
-    # Base Spherical
-    "AbstractSphericalPos",
-    "AbstractSphericalVel",
-    "AbstractSphericalAcc",
-    # Spherical
-    "SphericalPos",
-    "SphericalVel",
-    "SphericalAcc",
-    # Math Spherical
-    "MathSphericalPos",
-    "MathSphericalVel",
-    "MathSphericalAcc",
-    # LonLat Spherical
-    "LonLatSphericalPos",
-    "LonLatSphericalVel",
-    "LonLatSphericalAcc",
-    "LonCosLatSphericalVel",
-    # Prolate Spheroidal
-    "ProlateSpheroidalPos",
-    "ProlateSpheroidalVel",
-    "ProlateSpheroidalAcc",
-    # Generic
-    "CartesianGeneric3D",
-    # Space
-    "AbstractVectors",
-    "Space",
-    # --- Misc ---
-    "POSITION_CLASSES",
-    "VELOCITY_CLASSES",
-    "ACCELERATION_CLASSES",
-]
-__all__ += vectors.d4.__all__
-__all__ += vectors.dn.__all__
-__all__ += vectors.exceptions.__all__
 
 
 del vectors, install_import_hook, RUNTIME_TYPECHECKER

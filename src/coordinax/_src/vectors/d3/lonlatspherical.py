@@ -134,17 +134,13 @@ class LonLatSphericalPos(AbstractSphericalPos):
 class LonLatSphericalVel(AbstractSphericalVel):
     """Spherical velocity."""
 
-    lon: ct.BatchableAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    lon: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
     r"""Longitude speed :math:`dlon/dt \in [-\infty, \infty]."""
 
-    lat: ct.BatchableAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    distance: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    distance: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
 
@@ -152,17 +148,15 @@ class LonLatSphericalVel(AbstractSphericalVel):
 class LonCosLatSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
-    lon_coslat: ct.BatchableAngularSpeed = eqx.field(
+    lon_coslat: ct.BBtAngularSpeed = eqx.field(
         converter=u.Quantity["angular speed"].from_
     )
     r"""Longitude * cos(Latitude) speed :math:`dlon/dt \in [-\infty, \infty]."""
 
-    lat: ct.BatchableAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    distance: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    distance: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
 
@@ -170,15 +164,15 @@ class LonCosLatSphericalVel(AbstractSphericalVel):
 class LonLatSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
-    lon: ct.BatchableAngularAcc = eqx.field(
+    lon: ct.BBtAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Longitude acceleration :math:`d^2lon/dt^2 \in [-\infty, \infty]."""
 
-    lat: ct.BatchableAngularAcc = eqx.field(
+    lat: ct.BBtAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Latitude acceleration :math:`d^2lat/dt^2 \in [-\infty, \infty]."""
 
-    distance: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    distance: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""

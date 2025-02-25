@@ -7,7 +7,10 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 
-from coordinax._src.vectors.d3 import CylindricalPos, CylindricalVel
+from coordinax._src.vectors.d3 import (
+    CartesianPos3D,
+    CartesianVel3D,
+)
 from coordinax._src.vectors.dn import PoincarePolarVector
 from coordinax._src.vectors.space import Space
 
@@ -49,22 +52,28 @@ def vconvert(target: type[PoincarePolarVector], w: Space, /) -> PoincarePolarVec
     >>> cx.vconvert(cx.vecs.PoincarePolarVector, w)
     PoincarePolarVector(
       rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
-      pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
+      pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m / s(1/2)") ),
       z=Quantity[...](value=i32[1,2], unit=Unit("m")),
       dt_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-      dt_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m rad(1/2) / s(1/2)") ),
-      dt_z=Quantity[...]( value=f32[1,2], unit=Unit("m / s") )
+      dt_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m / s(1/2)") ),
+      dt_z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") )
     )
 
     """
-    q = w["length"].vconvert(CylindricalPos)
-    p = w["speed"].vconvert(CylindricalVel, q)
+    q = w["length"].vconvert(CartesianPos3D)
+    p = w["speed"].vconvert(CartesianVel3D, q)
+
+    rho = jnp.hypot(q.x, q.y)
+    phi = jnp.arctan2(q.x, q.y)
+
+    v_rho = (q.x * p.x + q.y * p.y) / rho
+    v_phi = q.x * p.y - q.y * p.x
 
     # pg. 437, Papaphillipou & Laskar (1996)
-    sqrt2theta = jnp.sqrt(jnp.abs(2 * q.rho**2 * p.phi))
-    pp_phi = sqrt2theta * jnp.cos(q.phi)
-    pp_phidot = sqrt2theta * jnp.sin(q.phi)
+    sqrt2theta = jnp.sqrt(jnp.abs(2 * v_phi))
+    pp_phi = sqrt2theta * jnp.cos(phi)
+    pp_phidot = sqrt2theta * jnp.sin(phi)
 
     return PoincarePolarVector(
-        rho=q.rho, pp_phi=pp_phi, z=q.z, dt_rho=p.rho, dt_pp_phi=pp_phidot, dt_z=p.z
+        rho=rho, pp_phi=pp_phi, z=q.z, dt_rho=v_rho, dt_pp_phi=pp_phidot, dt_z=p.z
     )

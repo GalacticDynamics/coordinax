@@ -9,34 +9,30 @@ from astropy.units import (
     Unit as AstropyUnit,
     UnitBase as AstropyUnitBase,
 )
-from jaxtyping import Float, Real, Shaped
+from jaxtyping import Real, Shaped
 
 import unxt as u
 
 Shape: TypeAlias = tuple[int, ...]
 Unit: TypeAlias = AstropyUnit | AstropyUnitBase | AstropyCompositeUnit
 
-BatchableScalarQ = Shaped[u.AbstractQuantity, "*#batch"]
-
-FloatScalarQ = Float[u.AbstractQuantity, ""]
-BatchFloatScalarQ = Shaped[FloatScalarQ, "*batch"]
-BatchableFloatScalarQ = Shaped[FloatScalarQ, "*#batch"]
+BBtScalarQ = Shaped[u.AbstractQuantity, "*#batch"]
 
 ScalarTime = Real[u.Quantity["time"], ""]
 
-BatchableTime = Shaped[u.Quantity["time"], "*#batch"]
+BBtTime = Real[u.Quantity["time"], "*#batch"]
 
-BatchableArea = Shaped[u.Quantity["area"], "*#batch"]
-BatchableDiffusivity = Shaped[u.Quantity["diffusivity"], "*#batch"]
-BatchableSpecificEnergy = Shaped[u.Quantity["specific energy"], "*#batch"]
+BBtArea = Real[u.Quantity["area"], "*#batch"]
+BBtKinematicFlux = Real[u.Quantity["diffusivity"], "*#batch"]
+BBtSpecificEnergy = Real[u.Quantity["specific energy"], "*#batch"]
 
-BatchableLength = Shaped[u.Quantity["length"], "*#batch"]
+BBtLength = Real[u.Quantity["length"], "*#batch"]
 
-BatchableSpeed = Shaped[u.Quantity["speed"], "*#batch"]
-BatchableAngularSpeed = Shaped[u.Quantity["angular speed"], "*#batch"]
+BBtSpeed = Real[u.Quantity["speed"], "*#batch"]
+BBtAngularSpeed = Real[u.Quantity["angular speed"], "*#batch"]
 
-BatchableAcc = Shaped[u.Quantity["acceleration"], "*#batch"]
-BatchableAngularAcc = Shaped[u.Quantity["angular acceleration"], "*#batch"]
+BBtAcc = Real[u.Quantity["acceleration"], "*#batch"]
+BBtAngularAcc = Real[u.Quantity["angular acceleration"], "*#batch"]
 
 
-TimeBatchOrScalar = ScalarTime | BatchableTime
+TimeBatchOrScalar = ScalarTime | BBtTime

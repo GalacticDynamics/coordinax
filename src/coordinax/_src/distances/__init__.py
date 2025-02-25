@@ -14,12 +14,12 @@ __all__ = [
     "DistanceModulus",
     "Parallax",
     # Typing
-    "BatchableLength",
+    "BBtLength",
     "BatchableDistance",
 ]
 
 from .base import AbstractDistance
-from .custom_types import BatchableDistance, BatchableLength
+from .custom_types import BatchableDistance, BBtLength
 from .measures import Distance, DistanceModulus, Parallax
 
 # isort: split

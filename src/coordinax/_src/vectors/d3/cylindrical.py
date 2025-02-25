@@ -19,7 +19,7 @@ from dataclassish.converters import Unless
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import Angle, BatchableAngle
-from coordinax._src.distances import BatchableLength
+from coordinax._src.distances import BBtLength
 from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -32,7 +32,7 @@ class CylindricalPos(AbstractPos3D):
 
     """
 
-    rho: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
+    rho: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
@@ -40,7 +40,7 @@ class CylindricalPos(AbstractPos3D):
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
-    z: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
+    z: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
     def __check_init__(self) -> None:
@@ -49,7 +49,7 @@ class CylindricalPos(AbstractPos3D):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> BBtLength:
         """Return the norm of the vector.
 
         Examples
@@ -84,15 +84,13 @@ class CylindricalVel(AbstractVel3D):
 
     """
 
-    rho: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    rho: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
-    phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    z: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
 
@@ -114,13 +112,13 @@ class CylindricalAcc(AbstractAcc3D):
 
     """
 
-    rho: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    rho: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
-    phi: ct.BatchableAngularAcc = eqx.field(
+    phi: ct.BBtAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
-    z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    z: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""

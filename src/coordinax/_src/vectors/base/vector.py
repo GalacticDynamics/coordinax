@@ -800,6 +800,139 @@ class AbstractVector(
             {k: u.unit_of(v) for k, v in field_items(AttrFilter, self)}
         )
 
+    @classproperty
+    @classmethod
+    def dimensions(cls) -> dict[str, u.dims.AbstractDimension]:
+        """Vector physical dimensions.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> def pprint(d):
+        ...     print({k: v._physical_type_list[0] for k, v in d.items()})
+
+        >>> pprint(cx.vecs.CartesianPos1D.dimensions)
+        {'x': 'length'}
+
+        >>> pprint(cx.vecs.CartesianVel1D.dimensions)
+        {'x': 'speed'}
+
+        >>> pprint(cx.vecs.CartesianAcc1D.dimensions)
+        {'x': 'acceleration'}
+
+        >>> pprint(cx.vecs.RadialPos.dimensions)
+        {'r': 'length'}
+
+        >>> pprint(cx.vecs.RadialVel.dimensions)
+        {'r': 'speed'}
+
+        >>> pprint(cx.vecs.RadialAcc.dimensions)
+        {'r': 'acceleration'}
+
+        >>> pprint(cx.vecs.CartesianPos2D.dimensions)
+        {'x': 'length', 'y': 'length'}
+
+        >>> pprint(cx.vecs.CartesianVel2D.dimensions)
+        {'x': 'speed', 'y': 'speed'}
+
+        >>> pprint(cx.vecs.CartesianAcc2D.dimensions)
+        {'x': 'acceleration', 'y': 'acceleration'}
+
+        >>> pprint(cx.vecs.PolarPos.dimensions)
+        {'r': 'length', 'phi': 'angle'}
+
+        >>> pprint(cx.vecs.PolarVel.dimensions)
+        {'r': 'speed', 'phi': 'angular frequency'}
+
+        >>> pprint(cx.vecs.PolarAcc.dimensions)
+        {'r': 'acceleration', 'phi': 'angular acceleration'}
+
+        >>> pprint(cx.vecs.TwoSpherePos.dimensions)
+        {'theta': 'angle', 'phi': 'angle'}
+
+        >>> pprint(cx.vecs.TwoSphereVel.dimensions)
+        {'theta': 'angular frequency', 'phi': 'angular frequency'}
+
+        >>> pprint(cx.vecs.TwoSphereAcc.dimensions)
+        {'theta': 'angular acceleration', 'phi': 'angular acceleration'}
+
+        >>> pprint(cx.vecs.CartesianPos3D.dimensions)
+        {'x': 'length', 'y': 'length', 'z': 'length'}
+
+        >>> pprint(cx.vecs.CartesianVel3D.dimensions)
+        {'x': 'speed', 'y': 'speed', 'z': 'speed'}
+
+        >>> pprint(cx.vecs.CartesianAcc3D.dimensions)
+        {'x': 'acceleration', 'y': 'acceleration', 'z': 'acceleration'}
+
+        >>> pprint(cx.vecs.CylindricalPos.dimensions)
+        {'rho': 'length', 'phi': 'angle', 'z': 'length'}
+
+        >>> pprint(cx.vecs.CylindricalVel.dimensions)
+        {'rho': 'speed', 'phi': 'angular frequency', 'z': 'speed'}
+
+        >>> pprint(cx.vecs.CylindricalAcc.dimensions)
+        {'rho': 'acceleration', 'phi': 'angular acceleration', 'z': 'acceleration'}
+
+        >>> pprint(cx.vecs.SphericalPos.dimensions)
+        {'r': 'length', 'theta': 'angle', 'phi': 'angle'}
+
+        >>> pprint(cx.vecs.SphericalVel.dimensions)
+        {'r': 'speed', 'theta': 'angular frequency', 'phi': 'angular frequency'}
+
+        >>> pprint(cx.vecs.SphericalAcc.dimensions)
+        {'r': 'acceleration', 'theta': 'angular acceleration', 'phi': 'angular acceleration'}
+
+        >>> pprint(cx.vecs.LonLatSphericalPos.dimensions)
+        {'lon': 'angle', 'lat': 'angle', 'distance': 'length'}
+
+        >>> pprint(cx.vecs.LonLatSphericalVel.dimensions)
+        {'lon': 'angular frequency', 'lat': 'angular frequency', 'distance': 'speed'}
+
+        >>> pprint(cx.vecs.LonLatSphericalAcc.dimensions)
+        {'lon': 'angular acceleration', 'lat': 'angular acceleration', 'distance': 'acceleration'}
+
+        >>> pprint(cx.vecs.MathSphericalPos.dimensions)
+        {'r': 'length', 'theta': 'angle', 'phi': 'angle'}
+
+        >>> pprint(cx.vecs.MathSphericalVel.dimensions)
+        {'r': 'speed', 'theta': 'angular frequency', 'phi': 'angular frequency'}
+
+        >>> pprint(cx.vecs.MathSphericalAcc.dimensions)
+        {'r': 'acceleration', 'theta': 'angular acceleration', 'phi': 'angular acceleration'}
+
+        >>> pprint(cx.vecs.ProlateSpheroidalPos.dimensions)
+        {'mu': 'area', 'nu': 'area', 'phi': 'angle'}
+
+        >>> pprint(cx.vecs.ProlateSpheroidalVel.dimensions)
+        {'mu': 'diffusivity', 'nu': 'diffusivity', 'phi': 'angular frequency'}
+
+        >>> pprint(cx.vecs.ProlateSpheroidalAcc.dimensions)
+        {'mu': 'dose of ionizing radiation', 'nu': 'dose of ionizing radiation', 'phi': 'angular acceleration'}
+
+        >>> cx.vecs.CartesianGeneric3D.dimensions
+        <property object at ...>
+
+        >>> cx.vecs.FourVector.dimensions
+        <property object at ...>
+
+        >>> pprint(cx.vecs.CartesianPosND.dimensions)
+        {'q': 'length'}
+
+        >>> pprint(cx.vecs.CartesianVelND.dimensions)
+        {'q': 'speed'}
+
+        >>> pprint(cx.vecs.CartesianAccND.dimensions)
+        {'q': 'acceleration'}
+
+        >>> pprint(cx.vecs.PoincarePolarVector.dimensions)
+        {'rho': 'length', 'pp_phi': 'unknown', 'z': 'length',
+         'dt_rho': 'speed', 'dt_pp_phi': 'unknown', 'dt_z': 'speed'}
+
+        """  # noqa: E501
+        return {f.name: u.dimension_of(f.type) for f in fields(AttrFilter, cls)}
+
     @property
     def dtypes(self) -> MappingProxyType[str, jnp.dtype[Any]]:
         """Get the dtypes of the vector's components.
