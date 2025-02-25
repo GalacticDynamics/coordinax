@@ -20,7 +20,8 @@ from dataclassish.converters import Unless
 
 import coordinax._src.custom_types as ct
 from .base import AbstractPos4D
-from coordinax._src.distances import BatchableLength
+from coordinax._src.distances import BBtLength
+from coordinax._src.vectors import dims
 from coordinax._src.vectors.base import AttrFilter, VectorAttribute
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
@@ -72,7 +73,7 @@ class FourVector(AbstractPos4D):
 
     """
 
-    t: ct.BatchableTime | ct.ScalarTime = eqx.field(converter=u.Quantity["time"].from_)
+    t: ct.BBtTime | ct.ScalarTime = eqx.field(converter=u.Quantity["time"].from_)
     """Time coordinate."""
 
     q: AbstractPos3D = eqx.field(converter=Unless(AbstractPos3D, CartesianPos3D.from_))
@@ -136,7 +137,7 @@ class FourVector(AbstractPos4D):
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BatchableLength:
+    def norm(self) -> BBtLength:
         r"""Return the vector norm :math:`\sqrt{(ct)^2 - (x^2 + y^2 + z^2)}`.
 
         Examples
@@ -151,6 +152,28 @@ class FourVector(AbstractPos4D):
         """
         norm2 = jnp.asarray(self._norm2(), dtype=complex)  # type: ignore[misc]
         return jnp.sqrt(norm2)
+
+    @override
+    @property
+    def dimensions(self) -> dict[str, u.dims.AbstractDimension]:  # type: ignore[override]
+        """Vector physical dimensions.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        >>> cx.FourVector.dimensions
+        <property object at ...>
+
+        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w.dimensions
+        {'t': PhysicalType('time'),
+         'q': {'x': PhysicalType('length'), 'y': PhysicalType('length'),
+               'z': PhysicalType('length')}}
+
+        """
+        return {"t": dims.T, "q": self.q.dimensions}
 
     # -------------------------------------------
     # misc

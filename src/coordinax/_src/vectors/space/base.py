@@ -58,7 +58,7 @@ class AbstractVectors(AbstractVector):
     @override
     @classproperty
     @classmethod
-    def components(cls) -> tuple[str, ...]:  # type: ignore[override]
+    def components(cls) -> tuple[str, ...]:
         """Vector component names."""
         raise NotImplementedError  # TODO: implement this
 

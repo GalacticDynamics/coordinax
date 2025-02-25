@@ -4,7 +4,7 @@ __all__: list[str] = []
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated as Ann, Generic, TypeVar
+from typing import Annotated as Ann, Any, Generic, TypeVar
 from typing_extensions import Doc
 
 GetterRetT = TypeVar("GetterRetT")
@@ -103,11 +103,11 @@ class ClassPropertyDescriptor(Generic[EnclosingT, GetterRetT]):
 
 
 def classproperty(
-    func: Ann[  # type: ignore[type-arg]
-        Callable[[type[EnclosingT]], GetterRetT] | classmethod | staticmethod,
+    func: Ann[  # type: ignore[type-arg]  # TODO: can the Any be improved?
+        Callable[[type[Any]], GetterRetT] | classmethod | staticmethod,
         Doc("function to be used for getting a class-level attribute value."),
     ],
-) -> Ann[ClassPropertyDescriptor[EnclosingT, GetterRetT], Doc("class-level property")]:
+) -> Ann[ClassPropertyDescriptor[Any, GetterRetT], Doc("class-level property")]:
     """Create a class-level property.
 
     This is most commonly used as a decorator for a function that returns a
@@ -137,4 +137,4 @@ def classproperty(
     # Ensure that the function is a class/staticmethod
     fget = func if isinstance(func, classmethod | staticmethod) else classmethod(func)
     # Return the wrapped function as a class-level property
-    return ClassPropertyDescriptor[EnclosingT, GetterRetT](fget)
+    return ClassPropertyDescriptor[Any, GetterRetT](fget)

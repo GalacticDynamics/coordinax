@@ -17,7 +17,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import BareQuantity as FastQ
 
-from coordinax._src.custom_types import BatchableScalarQ
+from coordinax._src.custom_types import BBtScalarQ
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors import api
 from coordinax._src.vectors.base import AbstractVector, ToUnitsOptions
@@ -122,7 +122,7 @@ class AbstractPos(
     # Convenience methods
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BatchableScalarQ:
+    def norm(self) -> BBtScalarQ:
         """Return the norm of the vector.
 
         Returns

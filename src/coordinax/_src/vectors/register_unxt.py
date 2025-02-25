@@ -4,9 +4,11 @@ __all__: list[str] = []
 
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import TypeVar, Union
 
+import equinox as eqx
 from jaxtyping import Shaped
+from jaxtyping._array_types import _MetaAbstractArray
 from plum import conversion_method as _conversion_method, convert, dispatch
 
 import quaxed.numpy as jnp
@@ -27,6 +29,8 @@ from coordinax._src.vectors.d2 import CartesianAcc2D, CartesianPos2D, CartesianV
 from coordinax._src.vectors.d3 import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 from coordinax._src.vectors.dn import CartesianAccND, CartesianPosND, CartesianVelND
 from coordinax._src.vectors.utils import full_shaped
+from coordinax.angle import AbstractAngle
+from coordinax.distance import AbstractDistance
 
 T = TypeVar("T")
 
@@ -34,6 +38,57 @@ T = TypeVar("T")
 def conversion_method(type_from: type, type_to: type) -> Callable[[T], T]:
     """Typed version of conversion method."""
     return _conversion_method(type_from, type_to)  # type: ignore[return-value]
+
+
+#####################################################################
+# TODO: move to unxt
+
+
+@dispatch
+def dimension_of(obj: type, /) -> u.dims.AbstractDimension:
+    """Get the dimension of a type.
+
+    Examples
+    --------
+    >>> import unxt as u
+
+    >>> try: u.dimension_of(u.quantity.BareQuantity)
+    ... except ValueError as e: print(e)
+    Cannot get the dimension of <class 'unxt._src.quantity.unchecked.BareQuantity'>.
+
+    """
+    msg = f"Cannot get the dimension of {obj}."
+    raise ValueError(msg)
+
+
+@dispatch(precedence=1)
+def dimension_of(obj: _MetaAbstractArray, /) -> u.dims.AbstractDimension:
+    """Get the dimension of a jaxtyping-annotated object."""
+    return u.dimension_of(obj.array_type)
+
+
+@dispatch
+def dimension_of(obj: type[u.Quantity], /) -> u.dims.AbstractDimension:
+    return obj._type_parameter  # noqa: SLF001
+
+
+@dispatch
+def dimension_of(obj: type[AbstractDistance], /) -> u.dims.AbstractDimension:
+    return u.dimension("length")
+
+
+@dispatch
+def dimension_of(obj: type[AbstractAngle], /) -> u.dims.AbstractDimension:
+    return u.dimension("angle")
+
+
+@dispatch
+def dimension_of(obj: Union, /) -> u.dims.AbstractDimension:
+    # Call dimension_of on all the __args__ of the Union and make sure they are
+    # all the same
+    dims = {dimension_of(arg) for arg in obj.__args__}
+    dims = eqx.error_if(dims, len(dims) != 1, "Cannot mix dimensions in a Union.")
+    return dims.pop()
 
 
 #####################################################################

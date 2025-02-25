@@ -120,14 +120,10 @@ class TwoSphereVel(AbstractVel2D):
 
     """
 
-    theta: ct.BatchableAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    theta: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
-    phi: ct.BatchableAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
 
@@ -175,12 +171,12 @@ class TwoSphereAcc(AbstractAcc2D):
 
     """
 
-    theta: ct.BatchableAngularAcc = eqx.field(
+    theta: ct.BBtAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
-    phi: ct.BatchableAngularAcc = eqx.field(
+    phi: ct.BBtAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""

@@ -13,7 +13,7 @@ import unxt as u
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
-from coordinax._src.distances import BatchableLength
+from coordinax._src.distances import BBtLength
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 
@@ -42,7 +42,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 
     """
 
-    x: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
+    x: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
 
@@ -50,12 +50,12 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 class CartesianVel1D(AbstractCartesian, AbstractVel1D):
     """Cartesian differential representation."""
 
-    x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -73,12 +73,12 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     """Cartesian differential representation."""
 
-    x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @override
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BatchableAcc:  # type: ignore[override]
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtAcc:  # type: ignore[override]
         """Return the norm of the vector.
 
         Examples

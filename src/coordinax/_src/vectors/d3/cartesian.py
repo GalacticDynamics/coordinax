@@ -18,7 +18,7 @@ import unxt as u
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from coordinax._src.distances import BatchableLength
+from coordinax._src.distances import BBtLength
 from coordinax._src.vectors.base.cartesian import AbstractCartesian
 
 
@@ -38,13 +38,13 @@ class CartesianPos3D(AbstractCartesian, AbstractPos3D):
 
     """
 
-    x: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
+    x: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
+    y: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
-    z: BatchableLength = eqx.field(converter=u.Quantity["length"].from_)
+    z: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
 
 
@@ -63,17 +63,17 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
 
     """
 
-    x: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""X speed :math:`dx/dt \in [-\infty, \infty]."""
 
-    y: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    y: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Y speed :math:`dy/dt \in [-\infty, \infty]."""
 
-    z: ct.BatchableSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    z: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
     @partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPos3D | None = None, /) -> ct.BatchableSpeed:
+    def norm(self, _: AbstractPos3D | None = None, /) -> ct.BBtSpeed:
         """Return the norm of the vector.
 
         Examples
@@ -91,20 +91,20 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
 class CartesianAcc3D(AbstractCartesian, AbstractAcc3D):
     """Cartesian differential representation."""
 
-    x: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""X acceleration :math:`d^2x/dt^2 \in [-\infty, \infty]."""
 
-    y: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    y: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Y acceleration :math:`d^2y/dt^2 \in [-\infty, \infty]."""
 
-    z: ct.BatchableAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    z: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
     @override
     @partial(jax.jit, inline=True)
     def norm(
         self, _: AbstractVel3D | None = None, __: AbstractPos3D | None = None, /
-    ) -> ct.BatchableAcc:
+    ) -> ct.BBtAcc:
         """Return the norm of the vector.
 
         Examples
