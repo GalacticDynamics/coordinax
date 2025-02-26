@@ -172,9 +172,9 @@ def vector(cls: type[AbstractVector], obj: u.AbstractQuantity, /) -> AbstractVec
 
     Generic 3D:
 
-    >>> vec = cx.vecs.CartesianGeneric3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> vec = cx.vecs.Cartesian3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> print(vec)
-    <CartesianGeneric3D (x[m], y[m], z[m])
+    <Cartesian3D (x[m], y[m], z[m])
         [1 2 3]>
 
     """

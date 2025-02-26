@@ -16,7 +16,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
-from .generic import CartesianGeneric3D
+from .generic import Cartesian3D
 from .mathspherical import MathSphericalPos
 from coordinax._src.vectors.base_pos import AbstractPos
 
@@ -188,15 +188,15 @@ def neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
 
 
 @register(jax.lax.neg_p)
-def neg_p_genericcart3d(obj: CartesianGeneric3D, /) -> CartesianGeneric3D:
-    """Negate the `coordinax.vecs.CartesianGeneric3D`.
+def neg_p_genericcart3d(obj: Cartesian3D, /) -> Cartesian3D:
+    """Negate the `coordinax.vecs.Cartesian3D`.
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
+    >>> q = cx.vecs.Cartesian3D.from_([1, 2, 3], "km")
     >>> print(-q)
-    <CartesianGeneric3D (x[km], y[km], z[km])
+    <Cartesian3D (x[km], y[km], z[km])
     [-1 -2 -3]>
 
     """

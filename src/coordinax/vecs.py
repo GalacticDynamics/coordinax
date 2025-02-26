@@ -84,7 +84,7 @@ __all__ = [
     "ProlateSpheroidalVel",
     "ProlateSpheroidalAcc",
     # Generic
-    "CartesianGeneric3D",
+    "Cartesian3D",
     # --- 4D ---
     "AbstractPos4D",
     "FourVector",
@@ -161,8 +161,8 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         AbstractSphericalPos,
         AbstractSphericalVel,
         AbstractVel3D,
+        Cartesian3D,
         CartesianAcc3D,
-        CartesianGeneric3D,
         CartesianPos3D,
         CartesianVel3D,
         CylindricalAcc,

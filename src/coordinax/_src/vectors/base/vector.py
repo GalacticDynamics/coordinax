@@ -911,7 +911,7 @@ class AbstractVector(
         >>> pprint(cx.vecs.ProlateSpheroidalAcc.dimensions)
         {'mu': 'dose of ionizing radiation', 'nu': 'dose of ionizing radiation', 'phi': 'angular acceleration'}
 
-        >>> cx.vecs.CartesianGeneric3D.dimensions
+        >>> cx.vecs.Cartesian3D.dimensions
         <property object at ...>
 
         >>> cx.vecs.FourVector.dimensions

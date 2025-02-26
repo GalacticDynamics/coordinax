@@ -18,7 +18,7 @@ from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .base_spherical import AbstractSphericalPos, _90d, _180d, _360d
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 from .cylindrical import CylindricalAcc, CylindricalPos, CylindricalVel
-from .generic import CartesianGeneric3D
+from .generic import Cartesian3D
 from .lonlatspherical import (
     LonCosLatSphericalVel,
     LonLatSphericalAcc,
@@ -1307,7 +1307,7 @@ def vconvert(
 # from coordinax.vectors.funcs
 @dispatch
 @partial(eqx.filter_jit, inline=True)
-def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
+def normalize_vector(obj: CartesianPos3D, /) -> Cartesian3D:
     """Return the norm of the vector.
 
     This has length 1.
@@ -1320,7 +1320,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
 
     Returns
     -------
-    CartesianGeneric3D
+    Cartesian3D
         The norm of the vector.
 
     Examples
@@ -1328,12 +1328,12 @@ def normalize_vector(obj: CartesianPos3D, /) -> CartesianGeneric3D:
     >>> import coordinax as cx
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> print(cx.vecs.normalize_vector(q))
-    <CartesianGeneric3D (x[], y[], z[])
+    <Cartesian3D (x[], y[], z[])
         [0.267 0.535 0.802]>
 
     """
     norm: AbstractQuantity = obj.norm()  # type: ignore[misc]
-    return CartesianGeneric3D(x=obj.x / norm, y=obj.y / norm, z=obj.z / norm)
+    return Cartesian3D(x=obj.x / norm, y=obj.y / norm, z=obj.z / norm)
 
 
 ###############################################################################
