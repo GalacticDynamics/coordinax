@@ -179,6 +179,7 @@ skip = ["uv.lock"]
     "too-many-function-args",     # plum-dispatch
     "unexpected-keyword-arg",     # plum-dispatch
     "unnecessary-ellipsis",       # I like my ellipses in ABCs and Protocols
+    "unnecessary-lambda",         # jax uses lambdas frequently
     "unsubscriptable-object",     # handled by mypy
     "unused-argument",            # handled by ruff
     "unused-wildcard-import",     # handled by ruff
