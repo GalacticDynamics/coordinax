@@ -1,7 +1,7 @@
 """Built-in vector classes."""
 
 __all__ = [
-    "CartesianGeneric3D",
+    "Cartesian3D",
 ]
 
 from typing import TypeVar, final
@@ -16,21 +16,26 @@ import coordinax._src.custom_types as ct
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.mixins import AvalMixin
 
-VT = TypeVar("VT", bound="CartesianGeneric3D")
+VT = TypeVar("VT", bound="Cartesian3D")
 
 
 @final
-class CartesianGeneric3D(AvalMixin, AbstractVector):
+class Cartesian3D(AvalMixin, AbstractVector):
     """Generic 3D Cartesian coordinates.
 
     The fields of this class are not restricted to any specific dimensions.
+    For specific dimensions, use the specialized classes:
+
+    - `coordinax.vecs.CartesianPos3D`
+    - `coordinax.vecs.CartesianVel3D`
+    - `coordinax.vecs.CartesianAcc3D`
 
     Examples
     --------
     >>> import coordinax as cx
-    >>> vec = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "kg m /s")
+    >>> vec = cx.vecs.Cartesian3D.from_([1, 2, 3], "kg m /s")
     >>> print(vec)
-    <CartesianGeneric3D (x[kg m / s], y[kg m / s], z[kg m / s])
+    <Cartesian3D (x[kg m / s], y[kg m / s], z[kg m / s])
         [1 2 3]>
 
     """
@@ -49,7 +54,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         --------
         >>> import coordinax as cx
 
-        >>> cx.vecs.CartesianGeneric3D._dimensionality()
+        >>> cx.vecs.Cartesian3D._dimensionality()
         3
 
         """
@@ -61,7 +66,7 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         Examples
         --------
         >>> import coordinax as cx
-        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
+        >>> q = cx.vecs.Cartesian3D.from_([1, 2, 3], "km")
         >>> print(q.norm())
         Quantity['length'](Array(3.7416575, dtype=float32), unit='km')
 
@@ -77,10 +82,10 @@ class CartesianGeneric3D(AvalMixin, AbstractVector):
         --------
         >>> import coordinax as cx
 
-        >>> cx.vecs.CartesianGeneric3D.dimensions
+        >>> cx.vecs.Cartesian3D.dimensions
         <property object at ...>
 
-        >>> q = cx.vecs.CartesianGeneric3D.from_([1, 2, 3], "km")
+        >>> q = cx.vecs.Cartesian3D.from_([1, 2, 3], "km")
         >>> q.dimensions
         {'x': PhysicalType('length'), 'y': PhysicalType('length'),
          'z': PhysicalType('length')}
