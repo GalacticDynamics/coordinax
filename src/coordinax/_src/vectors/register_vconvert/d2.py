@@ -2,38 +2,33 @@
 
 __all__: list[str] = []
 
-from typing import Any
 from warnings import warn
 
 from plum import dispatch
 
 import quaxed.numpy as jnp
-import unxt as u
 
-from coordinax._src.vectors.d1 import CartesianPos1D, RadialPos
-from coordinax._src.vectors.d2 import AbstractPos2D, CartesianPos2D, PolarPos
-from coordinax._src.vectors.d3 import (
-    AbstractPos3D,
-    CartesianPos3D,
-    CylindricalPos,
-    MathSphericalPos,
-    SphericalPos,
-)
+import coordinax._src.vectors.custom_types as ct
+from coordinax._src.vectors import d1, d2, d3
 from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
+from coordinax._src.vectors.private_api import wrap_vconvert_impl_params
 
 
 @dispatch.multi(
-    (type[CylindricalPos], CartesianPos2D),
-    (type[SphericalPos], CartesianPos2D),
-    (type[MathSphericalPos], CartesianPos2D),
+    (type[d3.CylindricalPos], type[d2.CartesianPos2D], ct.ParamsDict),
+    (type[d3.SphericalPos], type[d2.CartesianPos2D], ct.ParamsDict),
+    (type[d3.MathSphericalPos], type[d2.CartesianPos2D], ct.ParamsDict),
 )
-def vconvert(
-    target: type[AbstractPos3D],
-    current: AbstractPos2D,
+def vconvert_impl(
+    to_vector: type[d3.AbstractPos3D],
+    from_vector: type[d2.CartesianPos2D],
+    p: ct.ParamsDict,
     /,
-    z: u.AbstractQuantity = u.Quantity(0, "m"),
-    **kwargs: Any,
-) -> AbstractPos3D:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """AbstractPos2D -> Cartesian2D -> Cartesian3D -> AbstractPos3D.
 
     The 2D vector is in the xy plane. The `z` coordinate is a keyword argument and
@@ -42,47 +37,50 @@ def vconvert(
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.CartesianPos2D.from_([1, 2], "km")
+    >>> x = cxv.CartesianPos2D.from_([1, 2], "km")
 
-    >>> x2 = cx.vconvert(cx.vecs.CylindricalPos, x, z=u.Quantity(14, "km"))
-    >>> print(x2)
+    >>> y = cxv.vconvert(cxv.CylindricalPos, x, z=u.Quantity(14, "km"))
+    >>> print(y)
     <CylindricalPos (rho[km], phi[rad], z[km])
         [ 2.236  1.107 14.   ]>
 
-    >>> x3 = cx.vconvert(cx.SphericalPos, x, z=u.Quantity(14, "km"))
-    >>> x3
-    SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                  theta=Angle(value=f32[], unit=Unit("rad")),
-                  phi=Angle(value=f32[], unit=Unit("rad")) )
-    >>> x3.r
-    Distance(Array(14.177447, dtype=float32), unit='km')
+    >>> y = cxv.vconvert(cxv.SphericalPos, x, z=u.Quantity(14, "km"))
+    >>> print(y)
+    <SphericalPos (r[km], theta[rad], phi[rad])
+        [14.177  0.158  1.107]>
 
-    >>> x3 = cx.vconvert(cx.vecs.MathSphericalPos, x, z=u.Quantity(14, "km"))
-    >>> x3
-    MathSphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                      theta=Angle(value=f32[], unit=Unit("rad")),
-                      phi=Angle(value=f32[], unit=Unit("rad")) )
-    >>> x3.r
-    Distance(Array(14.177447, dtype=float32), unit='km')
+    >>> y = cxv.vconvert(cxv.MathSphericalPos, x, z=u.Quantity(14, "km"))
+    >>> print(y)
+    <MathSphericalPos (r[km], theta[rad], phi[rad])
+        [14.177  1.107  0.158]>
 
     """
-    cart2 = vconvert(CartesianPos2D, current)
-    cart3 = vconvert(CartesianPos3D, cart2, z=z)
-    return vconvert(target, cart3)
+    p, aux = vconvert_impl(
+        d3.CartesianPos3D, from_vector, p, in_aux=in_aux, out_aux=None
+    )
+    # The z coordinate needs to be provided for the total conversion, however it
+    # can either be consumed in the previous sub-conversion or appear in
+    # out_aux, so we need to handle both cases.
+    p["z"] = out_aux.pop("z", p["z"])
+    p, aux = vconvert_impl(
+        to_vector, d3.CartesianPos3D, p, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return p, aux
 
 
-@dispatch.multi(
-    (type[CartesianPos3D], PolarPos),
-)
-def vconvert(
-    target: type[AbstractPos3D],
-    current: AbstractPos2D,
+@dispatch
+def vconvert_impl(
+    to_vector: type[d3.CartesianPos3D],
+    from_vector: type[d2.PolarPos],
+    p: ct.ParamsDict,
     /,
-    z: u.AbstractQuantity = u.Quantity(0, "m"),
-    **kwargs: Any,
-) -> AbstractPos3D:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """AbstractPos2D -> PolarPos -> Cylindrical -> AbstractPos3D.
 
     The 2D vector is in the xy plane. The `z` coordinate is a keyword argument and
@@ -91,19 +89,22 @@ def vconvert(
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cxv.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
-    >>> x2 = cx.vconvert(cx.CartesianPos3D, x, z=u.Quantity(14, "km"))
+    >>> x2 = cxv.vconvert(cxv.CartesianPos3D, x, z=u.Quantity(14, "km"))
     >>> print(x2)
     <CartesianPos3D (x[km], y[km], z[km])
         [ 0.985  0.174 14.   ]>
 
     """
-    polar = vconvert(PolarPos, current)
-    cyl = vconvert(CylindricalPos, polar, z=z)
-    return vconvert(target, cyl)
+    newp = {
+        "x": p["r"] * jnp.cos(p["phi"]),
+        "y": p["r"] * jnp.sin(p["phi"]),
+        "z": p.get("z", 0 * p["r"]),
+    }
+    return newp, (out_aux or {})
 
 
 # =============================================================================
@@ -115,58 +116,40 @@ def vconvert(
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos1D], current: CartesianPos2D, /, **kwargs: Any
-) -> CartesianPos1D:
-    """CartesianPos2D -> CartesianPos1D.
-
-    The `y` coordinate is dropped.
-
-    Examples
-    --------
-    >>> import warnings
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> x = cx.vecs.CartesianPos2D.from_([1, 2], "km")
-
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x, z=u.Quantity(14, "km"))
-    >>> print(x2)
-    <CartesianPos1D (x[km])
-        [1]>
-
-    """
-    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(x=current.x)
-
-
-@dispatch
-def vconvert(
-    target: type[RadialPos], current: CartesianPos2D, /, **kwargs: Any
-) -> RadialPos:
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[d1.RadialPos],
+    from_vector: type[d2.CartesianPos2D],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CartesianPos2D -> RadialPos.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r`.
 
     Examples
     --------
+    >>> import warnings
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.CartesianPos2D.from_([1, 2], "km")
+    >>> x = cxv.CartesianPos2D.from_([1, 2], "km")
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.vconvert(cx.vecs.RadialPos, x, z=u.Quantity(14, "km"))
-    >>> print(x2)
+    ...     y = cxv.vconvert(cxv.RadialPos, x)
+    >>> print(y)
     <RadialPos (r[km])
         [2.236]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=jnp.sqrt(current.x**2 + current.y**2))
+    newp = {"r": jnp.hypot(p["x"], p["y"])}
+    return newp, (out_aux or {})
 
 
 # -----------------------------------------------
@@ -174,14 +157,17 @@ def vconvert(
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos3D],
-    current: CartesianPos2D,
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[d3.CartesianPos3D],
+    from_vector: type[d2.CartesianPos2D],
+    p: ct.ParamsDict,
     /,
     *,
-    z: u.AbstractQuantity = u.Quantity(0, "m"),
-    **kwargs: Any,
-) -> CartesianPos3D:
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CartesianPos2D -> CartesianPos3D.
 
     The `x` and `y` coordinates are converted to the `x` and `y` coordinates of
@@ -190,17 +176,18 @@ def vconvert(
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.CartesianPos2D.from_([1, 2], "km")
+    >>> x = cxv.CartesianPos2D.from_([1, 2], "km")
 
-    >>> x2 = cx.vconvert(cx.CartesianPos3D, x, z=u.Quantity(14, "km"))
+    >>> x2 = cxv.vconvert(cxv.CartesianPos3D, x, z=u.Quantity(14, "km"))
     >>> print(x2)
     <CartesianPos3D (x[km], y[km], z[km])
         [ 1  2 14]>
 
     """
-    return target(x=current.x, y=current.y, z=z)
+    newp = {"x": p["x"], "y": p["y"], "z": p.get("z", 0 * p["x"])}
+    return newp, (out_aux or {})
 
 
 # =============================================================================
@@ -211,53 +198,38 @@ def vconvert(
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos1D], current: PolarPos, /, **kwargs: Any
-) -> CartesianPos1D:
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[d1.CartesianPos1D],
+    from_vector: type[d2.PolarPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """PolarPos -> CartesianPos1D.
 
     Examples
     --------
     >>> import warnings
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cxv.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.vconvert(cx.vecs.CartesianPos1D, x)
+    ...     x2 = cxv.vconvert(cxv.CartesianPos1D, x)
     >>> print(x2)
     <CartesianPos1D (x[km])
         [0.985]>
 
     """
     warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(x=current.r * jnp.cos(current.phi))
-
-
-@dispatch
-def vconvert(target: type[RadialPos], current: PolarPos, /, **kwargs: Any) -> RadialPos:
-    """PolarPos -> RadialPos.
-
-    Examples
-    --------
-    >>> import warnings
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
-
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
-    ...     x2 = cx.vconvert(cx.vecs.RadialPos, x)
-    >>> print(x2)
-    <RadialPos (r[km])
-        [1]>
-
-    """
-    warn("irreversible dimension change", IrreversibleDimensionChange, stacklevel=2)
-    return target(r=current.r)
+    newp = {"x": p["r"] * jnp.cos(p["phi"])}
+    return newp, (out_aux or {})
 
 
 # -----------------------------------------------
@@ -265,79 +237,98 @@ def vconvert(target: type[RadialPos], current: PolarPos, /, **kwargs: Any) -> Ra
 
 
 @dispatch
-def vconvert(
-    target: type[SphericalPos],
-    current: PolarPos,
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[d3.SphericalPos],
+    from_vector: type[d2.PolarPos],
+    p: ct.ParamsDict,
     /,
-    theta: u.Quantity["angle"] = u.Quantity(0, "radian"),
-    **kwargs: Any,
-) -> SphericalPos:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """PolarPos -> SphericalPos.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cxv.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
-    >>> x2 = cx.vconvert(cx.SphericalPos, x, theta=u.Quantity(14, "deg"))
+    >>> x2 = cxv.vconvert(cxv.SphericalPos, x, theta=u.Quantity(14, "deg"))
     >>> print(x2)
     <SphericalPos (r[km], theta[deg], phi[deg])
         [ 1 14 10]>
 
     """
-    return target.from_(r=current.r, theta=theta, phi=current.phi)
+    newp = {"r": p["r"], "theta": p.get("theta", 0 * p["phi"]), "phi": p["phi"]}
+    return newp, (out_aux or {})
 
 
 @dispatch
-def vconvert(
-    target: type[MathSphericalPos],
-    current: PolarPos,
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[d3.MathSphericalPos],
+    from_vector: type[d2.PolarPos],
+    p: ct.ParamsDict,
     /,
-    phi: u.Quantity["angle"] = u.Quantity(0, "radian"),
-    **kwargs: Any,
-) -> MathSphericalPos:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """PolarPos -> MathSphericalPos.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cxv.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
-    >>> x2 = cx.vconvert(cx.vecs.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
-    >>> print(x2)
+    >>> y = cxv.vconvert(cxv.MathSphericalPos, x, theta=u.Quantity(14, "deg"))
+    >>> print(y)
     <MathSphericalPos (r[km], theta[deg], phi[deg])
         [ 1 10 14]>
 
     """
-    return target.from_(r=current.r, phi=phi, theta=current.phi)
+    newp = {"r": p["r"], "theta": p["phi"], "phi": p.get("theta", 0 * p["phi"])}
+    return newp, (out_aux or {})
 
 
 @dispatch
-def vconvert(
-    target: type[CylindricalPos],
-    current: PolarPos,
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[d3.CylindricalPos],
+    from_vector: type[d2.PolarPos],
+    p: ct.ParamsDict,
     /,
     *,
-    z: u.Quantity["length"] = u.Quantity(0, "m"),
-    **kwargs: Any,
-) -> CylindricalPos:
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """PolarPos -> CylindricalPos.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> x = cx.vecs.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cxv.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
-    >>> x2 = cx.vconvert(cx.vecs.CylindricalPos, x, z=u.Quantity(14, "km"))
+    >>> x2 = cxv.vconvert(cxv.CylindricalPos, x, z=u.Quantity(14, "km"))
     >>> print(x2)
     <CylindricalPos (rho[km], phi[deg], z[km])
         [ 1 10 14]>
 
+    >>> x2 = cxv.vconvert(cxv.CylindricalPos, x)
+    >>> print(x2)
+    <CylindricalPos (rho[km], phi[deg], z[km])
+        [ 1 10 0]>
+
     """
-    return target(rho=current.r, phi=current.phi, z=z)
+    newp = {"rho": p["r"], "phi": p["phi"], "z": p.get("z", 0 * p["r"])}
+    return newp, (out_aux or {})
