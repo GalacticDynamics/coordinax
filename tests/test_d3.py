@@ -412,9 +412,7 @@ class TestSphericalPos(AbstractPos3DTest):
 
     def test_spherical_to_cylindrical(self, vector):
         """Test ``coordinax.vconvert(CylindricalPos)``."""
-        cyl = vector.vconvert(
-            cx.vecs.CylindricalPos, z=u.Quantity([9, 10, 11, 12], "m")
-        )
+        cyl = vector.vconvert(cx.vecs.CylindricalPos)
 
         assert isinstance(cyl, cx.vecs.CylindricalPos)
         assert jnp.array_equal(
@@ -430,9 +428,7 @@ class TestSphericalPos(AbstractPos3DTest):
 
     def test_spherical_to_cylindrical_astropy(self, vector, apyvector):
         """Test ``coordinax.vconvert(CylindricalPos)``."""
-        cyl = vector.vconvert(
-            cx.vecs.CylindricalPos, z=u.Quantity([9, 10, 11, 12], "m")
-        )
+        cyl = vector.vconvert(cx.vecs.CylindricalPos)
 
         apycyl = apyvector.represent_as(apyc.CylindricalRepresentation)
         # There's a 'bug' in Astropy where rho can be negative.
@@ -472,9 +468,7 @@ class TestSphericalPos(AbstractPos3DTest):
 
     def test_spherical_to_lonlatspherical(self, vector):
         """Test ``coordinax.vconvert(LonLatSphericalPos)``."""
-        llsph = vector.vconvert(
-            cx.vecs.LonLatSphericalPos, z=u.Quantity([9, 10, 11, 12], "m")
-        )
+        llsph = vector.vconvert(cx.vecs.LonLatSphericalPos)
 
         assert isinstance(llsph, cx.vecs.LonLatSphericalPos)
         assert jnp.array_equal(llsph.lon, vector.phi)
@@ -595,7 +589,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
 
         assert isinstance(spherical, cx.SphericalPos)
         assert jnp.array_equal(
-            spherical.r, u.Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
+            spherical.r,
+            u.Quantity([0.31622776, 1.0954452, 1.5165752, 1.8439089], "kpc"),
         )
         assert jnp.allclose(spherical.phi, vector.phi, atol=u.Quantity(1e-8, "rad"))
         assert jnp.allclose(
@@ -772,20 +767,15 @@ class TestCartesianVel3D(AbstractVel3DTest):
         cylindrical = difntl.vconvert(cx.vecs.CylindricalVel, vector)
 
         assert isinstance(cylindrical, cx.vecs.CylindricalVel)
-        assert jnp.array_equal(
-            cylindrical.rho,
-            u.Quantity([9.805806, 11.384199, 12.86803, 14.310835], "km/s"),
-        )
-        assert jnp.allclose(
-            cylindrical.phi,
-            u.Quantity(
-                [-0.61538464, -0.40000004, -0.275862, -0.19999999], "km rad / (kpc s)"
-            ),
-            atol=u.Quantity(1e-8, "mas/Myr"),
-        )
-        assert jnp.array_equal(
-            cylindrical.z, u.Quantity([13.0, 14.0, 15.0, 16], "km/s")
-        )
+
+        exp = u.Quantity([9.805806, 11.384199, 12.868031, 14.310835], "km/s")
+        assert jnp.array_equal(cylindrical.rho, exp)
+
+        exp = u.Quantity([-129815.1, -84379.82, -58192.97, -42189.902], "mas/Myr")
+        assert jnp.allclose(cylindrical.phi, exp, atol=u.Quantity(1e-8, "mas/Myr"))
+
+        exp = u.Quantity([13.0, 14.0, 15.0, 16], "km/s")
+        assert jnp.array_equal(cylindrical.z, exp)
 
     def test_cartesian3d_to_cylindrical_astropy(
         self, difntl, vector, apydifntl, apyvector
@@ -895,23 +885,19 @@ class TestCylindricalVel(AbstractVel3DTest):
         dsph = difntl.vconvert(cx.SphericalVel, vector)
 
         assert isinstance(dsph, cx.SphericalVel)
-        assert jnp.array_equal(
-            dsph.r,
-            u.Quantity([13.472646, 14.904826, 16.313278, 17.708754], "km/s"),
+
+        exp = u.Quantity([13.472647, 14.904825, 16.31328, 17.708755], "km/s")
+        assert jnp.array_equal(dsph.r, exp)
+
+        exp = u.Quantity(
+            [0.3902412, 0.30769292, 0.24615361, 0.19999981], "km rad / (kpc s)"
         )
-        assert jnp.allclose(
-            dsph.theta,
-            u.Quantity(
-                [0.3902412, 0.30769292, 0.24615361, 0.19999981], "km rad / (kpc s)"
-            ),
-            atol=u.Quantity(5e-7, "km rad / (kpc s)"),
+        assert jnp.allclose(dsph.theta, exp, atol=u.Quantity(5e-7, "km rad / (kpc s)"))
+
+        exp = u.Quantity(
+            [42.664234, 47.404705, 52.145176, 56.885643], "km rad / (kpc s)"
         )
-        assert jnp.array_equal(
-            dsph.phi,
-            u.Quantity(
-                [42.664234, 47.404705, 52.145176, 56.885643], "km rad / (kpc s)"
-            ),
-        )
+        assert jnp.array_equal(dsph.phi, exp)
 
     def test_cylindrical_to_spherical_astropy(
         self, difntl, vector, apydifntl, apyvector
