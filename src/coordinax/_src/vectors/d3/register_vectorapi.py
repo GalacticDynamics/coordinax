@@ -1121,51 +1121,6 @@ def vconvert_impl(
 @dispatch
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert_impl(
-    to_vector: type[AbstractPos3D],
-    from_vector: type[ProlateSpheroidalPos],
-    p: ct.ParamsDict,
-    /,
-    *,
-    in_aux: ct.AuxDict,
-    out_aux: ct.OptAuxDict = None,
-    units: ct.OptUSys = None,
-) -> tuple[ct.ParamsDict, ct.AuxDict]:
-    """ProlateSpheroidalPos -> AbstractPos3D.
-
-    Examples
-    --------
-    >>> import coordinax.vecs as cxv
-    >>> vec = {"mu": 1, "nu": 0.2, "phi": 90}
-    >>> in_aux = {"Delta": 0.5}
-    >>> usys = u.unitsystem("km", "deg")
-
-    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.ProlateSpheroidalPos,
-    ...                   vec, in_aux=in_aux, units=usys)
-    ({'phi': Array(90., dtype=float32, ...),
-      'rho': Array(0.38729832, dtype=float32, ...),
-      'z': Array(0.8944272, dtype=float32, ...)},
-     {})
-
-    >>> cxv.vconvert_impl(cxv.CartesianPos3D, cxv.ProlateSpheroidalPos,
-    ...                   vec, in_aux=in_aux, units=usys)
-    ({'x': Array(-1.6929347e-08, dtype=float32, ...),
-      'y': Array(0.38729832, dtype=float32, ...),
-      'z': Array(0.8944272, dtype=float32, ...)},
-     {})
-
-    """
-    p, aux = vconvert_impl(
-        CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
-    )
-    p, aux = vconvert_impl(
-        to_vector, CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
-    )
-    return p, aux
-
-
-@dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
-def vconvert_impl(
     to_vector: type[ProlateSpheroidalPos],
     from_vector: type[ProlateSpheroidalPos],
     p: ct.ParamsDict,
@@ -1209,7 +1164,6 @@ def vconvert_impl(
         return p, combine_aux(in_aux, out_aux)
 
     # If Delta is provided, we can proceed with the conversion
-
     p, aux = vconvert_impl(
         CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )

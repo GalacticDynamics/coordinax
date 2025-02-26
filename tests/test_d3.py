@@ -96,9 +96,7 @@ class TestCartesianPos3D(AbstractPos3DTest):
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_cartesian3d_to_cartesian2d(self, vector):
         """Test ``coordinax.vconvert(CartesianPos2D)``."""
-        cart2d = vector.vconvert(
-            cx.vecs.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
-        )
+        cart2d = vector.vconvert(cx.vecs.CartesianPos2D)
 
         assert isinstance(cart2d, cx.vecs.CartesianPos2D)
         assert jnp.array_equal(cart2d.x, u.Quantity([1, 2, 3, 4], "kpc"))
@@ -371,7 +369,7 @@ class TestSphericalPos(AbstractPos3DTest):
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_spherical_to_polar(self, vector):
         """Test ``coordinax.vconvert(PolarPos)``."""
-        polar = vector.vconvert(cx.vecs.PolarPos, phi=u.Quantity([0, 1, 2, 3], "rad"))
+        polar = vector.vconvert(cx.vecs.PolarPos)
 
         assert isinstance(polar, cx.vecs.PolarPos)
         assert jnp.array_equal(
@@ -525,9 +523,8 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         radial = vector.vconvert(cx.vecs.RadialPos)
 
         assert isinstance(radial, cx.vecs.RadialPos)
-        assert jnp.array_equal(
-            radial.r, u.Quantity([0.31622776, 1.095445, 1.5165751, 1.8439089], "kpc")
-        )
+        exp = u.Quantity([0.0, 0.8944272, 1.183216, 1.3416408], "kpc")
+        assert jnp.array_equal(radial.r, exp)
 
     @pytest.mark.filterwarnings("ignore:Irreversible dimension change")
     def test_prolatespheroidal_to_cartesian2d(self, vector):
@@ -548,12 +545,11 @@ class TestProlateSpheroidalPos(AbstractPos3DTest):
         polar = vector.vconvert(cx.vecs.PolarPos)
 
         assert isinstance(polar, cx.vecs.PolarPos)
-        assert jnp.array_equal(
-            polar.r, Distance([0.0, 0.8944271, 1.1832159, 1.3416408], "kpc")
-        )
-        assert jnp.allclose(
-            polar.phi, u.Quantity([0, 1, 2, 3], "rad"), atol=u.Quantity(1e-8, "rad")
-        )
+        exp = Distance([0.0, 0.8944272, 1.183216, 1.3416408], "kpc")
+        assert jnp.array_equal(polar.r, exp)
+
+        exp = u.Quantity([0, 1, 2, 3], "rad")
+        assert jnp.allclose(polar.phi, exp, atol=u.Quantity(1e-8, "rad"))
 
     def test_prolatespheroidal_to_cartesian3d(self, vector):
         """Test ``coordinax.vconvert(CartesianPos3D)``."""
