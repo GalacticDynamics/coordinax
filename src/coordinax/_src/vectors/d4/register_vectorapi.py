@@ -63,6 +63,9 @@ def vector(cls: type[FourVector], obj: u.AbstractQuantity, /) -> FourVector:
     return cls(t=obj[..., 0] / c, q=obj[..., 1:], c=c)
 
 
+# =============================================================================
+
+
 @dispatch
 def vconvert(
     spatial_target: type[AbstractPos3D], current: FourVector, /, **kwargs: Any
