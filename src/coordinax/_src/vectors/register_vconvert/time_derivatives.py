@@ -14,6 +14,7 @@ from plum import dispatch
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
+from unxt.quantity import is_any_quantity
 
 from coordinax._src.distances import AbstractDistance
 from coordinax._src.vectors import d1, d2, d3
@@ -21,6 +22,43 @@ from coordinax._src.vectors.base import AttrFilter
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
+
+is_leaf = lambda x: is_any_quantity(x) or eqx.is_array(x)  # noqa: E731
+
+
+@jax.jit
+def _dot_jac_vec(
+    jac: dict[str, dict[str, u.AbstractQuantity]], vec: dict[str, u.AbstractQuantity]
+) -> dict[str, u.AbstractQuantity]:
+    """Dot product of a Jacobian dict and a vector dict.
+
+    This is a helper function for the `vconvert` function.
+
+    Examples
+    --------
+    >>> import unxt as u
+
+    >>> J = {"r": {"x": u.Quantity(1, ""), "y": u.Quantity(2, "")},
+    ...      "phi": {"x": u.Quantity(3, "rad/km"), "y": u.Quantity(4, "rad/km")}}
+
+    >>> v = {"x": u.Quantity(1, "km"), "y": u.Quantity(2, "km")}
+
+    >>> _dot_jac_vec(J, v)
+    {'phi': Quantity['angle'](Array(11, dtype=int32, ...), unit='rad'),
+     'r': Quantity['length'](Array(5, dtype=int32, ...), unit='km')}
+
+    """
+    flat_jac, treedef = eqx.tree_flatten_one_level(jac)
+    flat_dotted = jax.tree.map(
+        lambda innner: jax.tree.reduce(
+            jnp.add,
+            jax.tree.map(jnp.multiply, innner, vec, is_leaf=is_leaf),
+            is_leaf=is_leaf,
+        ),
+        flat_jac,
+        is_leaf=lambda v: isinstance(v, dict),
+    )
+    return jax.tree.unflatten(treedef, flat_dotted)
 
 
 # TODO: implement for cross-representations
@@ -31,9 +69,9 @@ from coordinax._src.vectors.base_vel import AbstractVel
     (type[d3.AbstractVel3D], d3.AbstractVel3D, AbstractPos | u.Quantity["length"]),
 )
 def vconvert(
-    target: type[AbstractVel],
-    current: AbstractVel,
-    position: AbstractPos | u.Quantity["length"],
+    to_vel_vector: type[AbstractVel],
+    from_vel: AbstractVel,
+    from_pos: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
 ) -> AbstractVel:
@@ -43,11 +81,11 @@ def vconvert(
 
     Parameters
     ----------
-    target
+    to_vel_vector
         The target type of the vector differential.
-    current
+    from_vel
         The vector differential to transform.
-    position
+    from_pos
         The position vector used to transform the differential.
     **kwargs
         Additional keyword arguments.
@@ -98,34 +136,43 @@ def vconvert(
 
     """
     # TODO: not require the shape munging / support more shapes
-    shape = current.shape
+    shape = from_vel.shape
     flat_shape = prod(shape)
 
+    # ----------------------------
+    # Prepare the position
+
+    in_pos_cls = from_vel.time_antiderivative_cls
+    out_pos_cls = to_vel_vector.time_antiderivative_cls
+
     # Parse the position to an AbstractPos
-    posvec: AbstractPos
-    if isinstance(position, AbstractPos):
-        posvec = position
+    from_posv_: AbstractPos
+    if isinstance(from_pos, AbstractPos):
+        from_posv_ = from_pos
     else:  # Q -> Cart<X>D
-        cart_cls = current.time_antiderivative_cls.cartesian_type
-        posvec = cast(AbstractPos, cart_cls.from_(position))
+        cart_cls = in_pos_cls.cartesian_type
+        from_posv_ = cast(AbstractPos, cart_cls.from_(from_pos))
 
-    posvec = posvec.reshape(flat_shape)  # flattened
+    from_posv_ = from_posv_.reshape(flat_shape)  # flattened
 
-    # Start by transforming the position to the type required by the
-    # differential to construct the Jacobian.
-    current_pos = vconvert(current.time_antiderivative_cls, posvec, **kwargs)
+    # Transform the position to the type required by the differential to
+    # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
+    # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
+    # position must be transformed to CartesianPos1D.
+    from_posv = vconvert(in_pos_cls, from_posv_, **kwargs)
+    # The Jacobian requires the position to be a float
+    dtype = jnp.result_type(float)  # TODO: better match e.g. int16 to float16?
+    from_posv = from_posv.astype(dtype, copy=False)  # cast to float
+
     # TODO: not need to cast to distance
-    current_pos = replace(
-        current_pos,
+    from_posv = replace(
+        from_posv,
         **{
             k: v.distance
-            for k, v in field_items(AttrFilter, current_pos)
+            for k, v in field_items(AttrFilter, from_posv)
             if isinstance(v, AbstractDistance)
         },
     )
-    # The Jacobian requires the position to be a float
-    dtype = jnp.result_type(float)  # TODO: better match e.g. int16 to float16?
-    current_pos = current_pos.astype(dtype, copy=False)  # cast to float
 
     # Takes the Jacobian through the representation transformation function.  This
     # returns a representation of the target type, where the value of each field the
@@ -135,7 +182,7 @@ def vconvert(
     # denomicator's units.
     tmp = partial(vconvert, **kwargs)
     jac_rep_as = eqx.filter_jit(jax.vmap(jax.jacfwd(tmp, argnums=1), in_axes=(None, 0)))
-    jac_nested_vecs = jac_rep_as(target.time_antiderivative_cls, current_pos)
+    jac_nested_vecs = jac_rep_as(out_pos_cls, from_posv)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for
@@ -149,8 +196,8 @@ def vconvert(
     }
 
     # Now we can use the Jacobian to transform the differential.
-    flat_current = current.reshape(flat_shape)
-    newvec = target(
+    flat_current = from_vel.reshape(flat_shape)
+    newvec = to_vel_vector(
         **{  # Each field is the dot product of the row of the J and the diff column.
             k: jnp.sum(  # Doing the dot product.
                 jnp.stack(
@@ -160,7 +207,10 @@ def vconvert(
             )
             for k, j_r in jac_rows.items()
         }
-    ).reshape(shape)
+    )
+
+    # Reshape the output to the original shape
+    newvec = newvec.reshape(shape)
 
     # TODO: add  df(q)/dt, which is 0 for all current transforms
 
@@ -290,19 +340,19 @@ def vconvert(
 
     # Start by transforming the position to the type required by the
     # differential to construct the Jacobian.
-    current_pos = vconvert(current.time_nth_derivative_cls(-2), posvec, **kwargs)
+    from_posv = vconvert(current.time_nth_derivative_cls(-2), posvec, **kwargs)
     # TODO: not need to cast to distance
-    current_pos = replace(
-        current_pos,
+    from_posv = replace(
+        from_posv,
         **{
             k: v.distance
-            for k, v in field_items(current_pos)
+            for k, v in field_items(from_posv)
             if isinstance(v, AbstractDistance)
         },
     )
     # The Jacobian requires the position to be a float
     dtype = jnp.result_type(float)  # TODO: better match e.g. int16 to float16?
-    current_pos = current_pos.astype(dtype, copy=False)  # cast to float
+    from_posv = from_posv.astype(dtype, copy=False)  # cast to float
 
     # Takes the Jacobian through the representation transformation function.  This
     # returns a representation of the target type, where the value of each field the
@@ -310,7 +360,7 @@ def vconvert(
     # the correct numerator unit (of the Jacobian row). The value is a Vector of the
     # original type, with fields that are the columns of that row, but with only the
     # denomicator's units.
-    jac_nested_vecs = jac_rep_as(target.time_nth_derivative_cls(-2), current_pos)
+    jac_nested_vecs = jac_rep_as(target.time_nth_derivative_cls(-2), from_posv)
 
     # This changes the Jacobian to be a dictionary of each row, with the value
     # being that row's column as a dictionary, now with the correct units for

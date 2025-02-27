@@ -18,6 +18,16 @@ from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
 from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_params
 
 
+def get_params_and_aux(obj: AbstractVector, /) -> tuple[ct.ParamsDict, ct.AuxDict]:
+    # Get the parameters and auxiliary data
+    p_and_aux = cast("dict[str, Any]", obj.asdict())
+    # Separate the parameters from the auxiliary data
+    comps = obj.components
+    p = {k: p_and_aux.pop(k) for k in tuple(p_and_aux) if k in comps}
+    in_aux = p_and_aux  # popped all the params out
+    return p, in_aux
+
+
 @dispatch
 def vconvert(
     target: type[AbstractPos],
