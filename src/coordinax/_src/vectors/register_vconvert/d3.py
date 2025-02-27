@@ -26,7 +26,7 @@ from coordinax._src.vectors.private_api import wrap_vconvert_impl_params
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d1.RadialPos],
     from_vector: type[d3.CartesianPos3D],
     p: ct.ParamsDict,
@@ -47,7 +47,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.RadialPos, cxv.CartesianPos3D, params)
+    ...     cxv.vconvert(cxv.RadialPos, cxv.CartesianPos3D, params)
     ({'r': Array(3.7416575, dtype=float32, ...)}, {})
 
     >>> x = cxv.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
@@ -70,7 +70,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.PolarPos],
     from_vector: type[d3.CartesianPos3D],
     p: ct.ParamsDict,
@@ -90,7 +90,7 @@ def vconvert_impl(
     >>> params = {"x": 1, "y": 2, "z": 3}
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cx.vecs.vconvert_impl(cx.vecs.PolarPos, cx.vecs.CartesianPos3D, params)
+    ...     cx.vecs.vconvert(cx.vecs.PolarPos, cx.vecs.CartesianPos3D, params)
     ({'r': Array(2.236068, dtype=float32, ...),
       'phi': Array(1.1071488, dtype=float32, ...)},
      {})
@@ -120,7 +120,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d1.CartesianPos1D],
     from_vector: type[d3.CylindricalPos],
     p: ct.ParamsDict,
@@ -143,7 +143,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.CartesianPos1D, cxv.CylindricalPos,
+    ...     cxv.vconvert(cxv.CartesianPos1D, cxv.CylindricalPos,
     ...                       params, units=usys)
     ({'x': Array(0.9848077, dtype=float32, ...)}, {})
 
@@ -164,7 +164,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d1.RadialPos],
     from_vector: type[d3.CylindricalPos],
     p: ct.ParamsDict,
@@ -187,7 +187,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.RadialPos, cxv.CylindricalPos, params, units=usys)
+    ...     cxv.vconvert(cxv.RadialPos, cxv.CylindricalPos, params, units=usys)
     ({'r': Array(1, dtype=int32, ...)}, {})
 
     >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
@@ -211,7 +211,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.CartesianPos2D],
     from_vector: type[d3.CylindricalPos],
     p: ct.ParamsDict,
@@ -234,7 +234,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.CartesianPos2D, cxv.CylindricalPos,
+    ...     cxv.vconvert(cxv.CartesianPos2D, cxv.CylindricalPos,
     ...                       params, units=usys)
     ({'x': Array(0.9848077, dtype=float32, weak_type=True),
       'y': Array(0.17364818, dtype=float32, weak_type=True)},
@@ -259,7 +259,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.PolarPos],
     from_vector: type[d3.CylindricalPos],
     p: ct.ParamsDict,
@@ -282,7 +282,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.PolarPos, cxv.CylindricalPos,
+    ...     cxv.vconvert(cxv.PolarPos, cxv.CylindricalPos,
     ...                       params, units=usys)
     ({'r': Array(1, dtype=int32, ...),
       'phi': Array(10., dtype=float32, ...)}, {})
@@ -312,7 +312,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d1.CartesianPos1D],
     from_vector: type[d3.SphericalPos],
     p: ct.ParamsDict,
@@ -335,7 +335,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.CartesianPos1D, cxv.SphericalPos,
+    ...     cxv.vconvert(cxv.CartesianPos1D, cxv.SphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...)}, {})
 
@@ -361,7 +361,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.CartesianPos2D],
     from_vector: type[d3.SphericalPos],
     p: ct.ParamsDict,
@@ -384,7 +384,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.CartesianPos2D, cxv.SphericalPos,
+    ...     cxv.vconvert(cxv.CartesianPos2D, cxv.SphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...),
       'y': Array(0.0420093, dtype=float32, ...)},
@@ -409,7 +409,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.PolarPos],
     from_vector: type[d3.SphericalPos],
     p: ct.ParamsDict,
@@ -432,7 +432,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.PolarPos, cxv.SphericalPos,
+    ...     cxv.vconvert(cxv.PolarPos, cxv.SphericalPos,
     ...                       params, units=usys)
     ({'r': Array(0.2419219, dtype=float32, ...),
      'phi': Array(10., dtype=float32, ...)},
@@ -464,7 +464,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d1.CartesianPos1D],
     from_vector: type[d3.MathSphericalPos],
     p: ct.ParamsDict,
@@ -487,7 +487,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.CartesianPos1D, cxv.MathSphericalPos,
+    ...     cxv.vconvert(cxv.CartesianPos1D, cxv.MathSphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...)}, {})
 
@@ -514,7 +514,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.CartesianPos2D],
     from_vector: type[d3.MathSphericalPos],
     p: ct.ParamsDict,
@@ -537,7 +537,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.CartesianPos2D, cxv.MathSphericalPos,
+    ...     cxv.vconvert(cxv.CartesianPos2D, cxv.MathSphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...),
       'y': Array(0.0420093, dtype=float32, ...)},
@@ -563,7 +563,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.PolarPos],
     from_vector: type[d3.MathSphericalPos],
     p: ct.ParamsDict,
@@ -586,7 +586,7 @@ def vconvert_impl(
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
-    ...     cxv.vconvert_impl(cxv.PolarPos, cxv.MathSphericalPos,
+    ...     cxv.vconvert(cxv.PolarPos, cxv.MathSphericalPos,
     ...                       params, units=usys)
     ({'r': Array(0.2419219, dtype=float32, ...),
       'phi': Array(10., dtype=float32, ...)},
@@ -622,7 +622,7 @@ def vconvert_impl(
     (type[d3.AbstractPos3D], type[d3.ProlateSpheroidalPos], ct.ParamsDict),
 )
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
-def vconvert_impl(
+def vconvert(
     to_vector: type[AbstractPos],
     from_vector: type[d3.ProlateSpheroidalPos],
     p: ct.ParamsDict,
@@ -680,14 +680,14 @@ def vconvert_impl(
     >>> in_aux = {"Delta": 0.5}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.ProlateSpheroidalPos,
+    >>> cxv.vconvert(cxv.CylindricalPos, cxv.ProlateSpheroidalPos,
     ...                   vec, in_aux=in_aux, units=usys)
     ({'phi': Array(90., dtype=float32, ...),
       'rho': Array(0.38729832, dtype=float32, ...),
       'z': Array(0.8944272, dtype=float32, ...)},
      {})
 
-    >>> cxv.vconvert_impl(cxv.CartesianPos3D, cxv.ProlateSpheroidalPos,
+    >>> cxv.vconvert(cxv.CartesianPos3D, cxv.ProlateSpheroidalPos,
     ...                   vec, in_aux=in_aux, units=usys)
     ({'x': Array(-1.6929347e-08, dtype=float32, ...),
       'y': Array(0.38729832, dtype=float32, ...),
@@ -695,10 +695,10 @@ def vconvert_impl(
      {})
 
     """
-    p, aux = vconvert_impl(
+    p, aux = vconvert(
         d3.CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )
-    p, aux = vconvert_impl(
+    p, aux = vconvert(
         to_vector, d3.CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux

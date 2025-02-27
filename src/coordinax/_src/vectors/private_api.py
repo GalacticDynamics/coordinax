@@ -111,7 +111,11 @@ def vconvert_parse_output(
     if usys is None:
         return params
     return {
-        k: (v if is_any_quantity(v) else ustrip_from_internal_units(v, k, dims, usys))
+        k: (
+            v.uconvert(usys[u.dimension_of(v)])
+            if is_any_quantity(v)
+            else ustrip_from_internal_units(v, k, dims, usys)
+        )
         for k, v in params.items()
     }
 

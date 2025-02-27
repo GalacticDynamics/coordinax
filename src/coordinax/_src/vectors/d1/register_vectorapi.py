@@ -19,28 +19,7 @@ from coordinax._src.vectors.private_api import combine_aux
 
 
 @dispatch
-def vconvert_impl(
-    to_vector: type[AbstractPos1D],
-    from_vector: type[AbstractPos1D],
-    params: ct.ParamsDict,
-    /,
-    *,
-    in_aux: ct.OptAuxDict = None,
-    out_aux: ct.OptAuxDict = None,
-    units: ct.OptUSys = None,
-) -> tuple[ct.ParamsDict, ct.AuxDict]:
-    """AbstractPos -> CartesianPos1D -> AbstractPos."""
-    params, aux = vconvert_impl(
-        CartesianPos1D, from_vector, params, in_aux=in_aux, out_aux=None, units=units
-    )
-    params, aux = vconvert_impl(
-        to_vector, CartesianPos1D, params, in_aux=aux, out_aux=out_aux, units=units
-    )
-    return params, aux
-
-
-@dispatch
-def vconvert_impl(
+def vconvert(
     to_vector: type[CartesianPos1D],
     from_vector: type[RadialPos],
     params: ct.ParamsDict,
@@ -58,7 +37,7 @@ def vconvert_impl(
 
 
 @dispatch
-def vconvert_impl(
+def vconvert(
     to_vector: type[RadialPos],
     from_vector: type[CartesianPos1D],
     p: ct.ParamsDict,

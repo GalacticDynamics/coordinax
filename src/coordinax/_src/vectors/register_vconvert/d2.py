@@ -19,7 +19,7 @@ from coordinax._src.vectors.private_api import wrap_vconvert_impl_params
     (type[d3.SphericalPos], type[d2.CartesianPos2D], ct.ParamsDict),
     (type[d3.MathSphericalPos], type[d2.CartesianPos2D], ct.ParamsDict),
 )
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.AbstractPos3D],
     from_vector: type[d2.CartesianPos2D],
     p: ct.ParamsDict,
@@ -57,21 +57,19 @@ def vconvert_impl(
         [14.177  1.107  0.158]>
 
     """
-    p, aux = vconvert_impl(
-        d3.CartesianPos3D, from_vector, p, in_aux=in_aux, out_aux=None
-    )
+    p, aux = vconvert(d3.CartesianPos3D, from_vector, p, in_aux=in_aux, out_aux=None)
     # The z coordinate needs to be provided for the total conversion, however it
     # can either be consumed in the previous sub-conversion or appear in
     # out_aux, so we need to handle both cases.
     p["z"] = out_aux.pop("z", p["z"])
-    p, aux = vconvert_impl(
+    p, aux = vconvert(
         to_vector, d3.CartesianPos3D, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux
 
 
 @dispatch
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.CartesianPos3D],
     from_vector: type[d2.PolarPos],
     p: ct.ParamsDict,
@@ -117,7 +115,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d1.RadialPos],
     from_vector: type[d2.CartesianPos2D],
     p: ct.ParamsDict,
@@ -158,7 +156,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.CartesianPos3D],
     from_vector: type[d2.CartesianPos2D],
     p: ct.ParamsDict,
@@ -199,7 +197,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d1.CartesianPos1D],
     from_vector: type[d2.PolarPos],
     p: ct.ParamsDict,
@@ -238,7 +236,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.SphericalPos],
     from_vector: type[d2.PolarPos],
     p: ct.ParamsDict,
@@ -269,7 +267,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.MathSphericalPos],
     from_vector: type[d2.PolarPos],
     p: ct.ParamsDict,
@@ -300,7 +298,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.CylindricalPos],
     from_vector: type[d2.PolarPos],
     p: ct.ParamsDict,
