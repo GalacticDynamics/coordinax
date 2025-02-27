@@ -80,14 +80,14 @@ def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
     --------
     >>> import coordinax as cx
 
-    >>> frame = cx.frames.ICRS()
+    >>> frame = cx.frames.NoFrame()
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> w = cx.Coordinate(data, frame)
 
     >>> cx.vconvert(cx.SphericalPos, w)
     Coordinate(
         data=Space({ 'length': SphericalPos( ... ) }),
-        frame=ICRS()
+        frame=NoFrame()
     )
 
     """

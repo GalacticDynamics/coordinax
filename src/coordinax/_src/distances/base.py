@@ -95,3 +95,4 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 # division of a distance by non-dimensionless quantity where the resulting units
 # are not those of a distance.
 add_promotion_rule(AbstractDistance, u.Quantity, u.Quantity)
+add_promotion_rule(AbstractDistance, u.quantity.BareQuantity, u.quantity.BareQuantity)

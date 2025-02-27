@@ -7,13 +7,14 @@ from functools import partial
 from typing import Any
 
 import equinox as eqx
+import jax
 from plum import dispatch
 
 import quaxed.lax as qlax
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import AbstractQuantity
 
+import coordinax._src.vectors.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .base_spherical import AbstractSphericalPos, _90d, _180d, _360d
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
@@ -29,6 +30,7 @@ from .mathspherical import MathSphericalAcc, MathSphericalPos, MathSphericalVel
 from .spherical import SphericalAcc, SphericalPos, SphericalVel
 from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpheroidalVel
 from coordinax._src.vectors.base_pos import AbstractPos
+from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_params
 
 ###############################################################################
 
@@ -39,18 +41,18 @@ def vector(cls: type[AbstractPos3D], obj: AbstractPos3D, /) -> AbstractPos3D:
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> cart = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> cx.vecs.AbstractPos3D.from_(cart) is cart
+    >>> cart = cxv.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> cxv.AbstractPos3D.from_(cart) is cart
     True
 
-    >>> sph = cart.vconvert(cx.SphericalPos)
-    >>> cx.vecs.AbstractPos3D.from_(sph) is sph
+    >>> sph = cart.vconvert(cxv.SphericalPos)
+    >>> cxv.AbstractPos3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.vconvert(cx.vecs.CylindricalPos)
-    >>> cx.vecs.AbstractPos3D.from_(cyl) is cyl
+    >>> cyl = cart.vconvert(cxv.CylindricalPos)
+    >>> cxv.AbstractPos3D.from_(cyl) is cyl
     True
 
     """
@@ -66,20 +68,20 @@ def vector(cls: type[AbstractVel3D], obj: AbstractVel3D, /) -> AbstractVel3D:
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> q = cx.CartesianPos3D.from_([1, 1, 1], "km")
+    >>> q = cxv.CartesianPos3D.from_([1, 1, 1], "km")
 
-    >>> cart = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> cx.vecs.AbstractVel3D.from_(cart) is cart
+    >>> cart = cxv.CartesianVel3D.from_([1, 2, 3], "km/s")
+    >>> cxv.AbstractVel3D.from_(cart) is cart
     True
 
-    >>> sph = cart.vconvert(cx.SphericalVel, q)
-    >>> cx.vecs.AbstractVel3D.from_(sph) is sph
+    >>> sph = cart.vconvert(cxv.SphericalVel, q)
+    >>> cxv.AbstractVel3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.vconvert(cx.vecs.CylindricalVel, q)
-    >>> cx.vecs.AbstractVel3D.from_(cyl) is cyl
+    >>> cyl = cart.vconvert(cxv.CylindricalVel, q)
+    >>> cxv.AbstractVel3D.from_(cyl) is cyl
     True
 
     """
@@ -95,21 +97,21 @@ def vector(cls: type[AbstractAcc3D], obj: AbstractAcc3D, /) -> AbstractAcc3D:
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> q = cx.CartesianPos3D.from_([1, 1, 1], "km")
-    >>> p = cx.CartesianVel3D.from_([1, 1, 1], "km/s")
+    >>> q = cxv.CartesianPos3D.from_([1, 1, 1], "km")
+    >>> p = cxv.CartesianVel3D.from_([1, 1, 1], "km/s")
 
-    >>> cart = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> cx.vecs.AbstractAcc3D.from_(cart) is cart
+    >>> cart = cxv.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> cxv.AbstractAcc3D.from_(cart) is cart
     True
 
-    >>> sph = cart.vconvert(cx.vecs.SphericalAcc, p, q)
-    >>> cx.vecs.AbstractAcc3D.from_(sph) is sph
+    >>> sph = cart.vconvert(cxv.SphericalAcc, p, q)
+    >>> cxv.AbstractAcc3D.from_(sph) is sph
     True
 
-    >>> cyl = cart.vconvert(cx.vecs.CylindricalAcc, p, q)
-    >>> cx.vecs.AbstractAcc3D.from_(cyl) is cyl
+    >>> cyl = cart.vconvert(cxv.CylindricalAcc, p, q)
+    >>> cxv.AbstractAcc3D.from_(cyl) is cyl
     True
 
     """
@@ -123,22 +125,22 @@ def vector(cls: type[AbstractAcc3D], obj: AbstractAcc3D, /) -> AbstractAcc3D:
 def vector(
     cls: type[SphericalPos],
     *,
-    r: AbstractQuantity,
-    theta: AbstractQuantity,
-    phi: AbstractQuantity,
+    r: u.AbstractQuantity,
+    theta: u.AbstractQuantity,
+    phi: u.AbstractQuantity,
 ) -> SphericalPos:
     """Construct SphericalPos, allowing for out-of-range values.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     Let's start with a valid input:
 
-    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
-    ...                             theta=u.Quantity(90, "deg"),
-    ...                             phi=u.Quantity(0, "deg"))
+    >>> vec = cxv.SphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                              theta=u.Quantity(90, "deg"),
+    ...                              phi=u.Quantity(0, "deg"))
     >>> print(vec)
     <SphericalPos (r[km], theta[deg], phi[deg])
         [ 3 90  0]>
@@ -146,9 +148,9 @@ def vector(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cx.SphericalPos.from_(r=u.Quantity(-3, "km"),
-    ...                             theta=u.Quantity(45, "deg"),
-    ...                             phi=u.Quantity(0, "deg"))
+    >>> vec = cxv.SphericalPos.from_(r=u.Quantity(-3, "km"),
+    ...                              theta=u.Quantity(45, "deg"),
+    ...                              phi=u.Quantity(0, "deg"))
     >>> print(vec)
     <SphericalPos (r[km], theta[deg], phi[deg])
         [  3 135 180]>
@@ -156,9 +158,9 @@ def vector(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
-    ...                             theta=u.Quantity(190, "deg"),
-    ...                             phi=u.Quantity(0, "deg"))
+    >>> vec = cxv.SphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                              theta=u.Quantity(190, "deg"),
+    ...                              phi=u.Quantity(0, "deg"))
     >>> print(vec)
     <SphericalPos (r[km], theta[deg], phi[deg])
         [  3 170 180]>
@@ -166,9 +168,9 @@ def vector(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base from_ does this):
 
-    >>> vec = cx.SphericalPos.from_(r=u.Quantity(3, "km"),
-    ...                             theta=u.Quantity(90, "deg"),
-    ...                             phi=u.Quantity(365, "deg"))
+    >>> vec = cxv.SphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                              theta=u.Quantity(90, "deg"),
+    ...                              phi=u.Quantity(365, "deg"))
     >>> vec.phi
     Angle(Array(5, dtype=int32, ...), unit='deg')
 
@@ -202,22 +204,22 @@ def vector(
 def vector(
     cls: type[LonLatSphericalPos],
     *,
-    lon: AbstractQuantity,
-    lat: AbstractQuantity,
-    distance: AbstractQuantity,
+    lon: u.AbstractQuantity,
+    lat: u.AbstractQuantity,
+    distance: u.AbstractQuantity,
 ) -> LonLatSphericalPos:
     """Construct LonLatSphericalPos, allowing for out-of-range values.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     Let's start with a valid input:
 
-    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
-    ...                                        lat=u.Quantity(0, "deg"),
-    ...                                        distance=u.Quantity(3, "km"))
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                    lat=u.Quantity(0, "deg"),
+    ...                                    distance=u.Quantity(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
         [0 0 3]>
@@ -225,9 +227,9 @@ def vector(
     The distance can be negative, which wraps the longitude by 180 degrees and
     flips the latitude:
 
-    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
-    ...                                        lat=u.Quantity(45, "deg"),
-    ...                                        distance=u.Quantity(-3, "km"))
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                    lat=u.Quantity(45, "deg"),
+    ...                                    distance=u.Quantity(-3, "km"))
     >>> print(vec)
     <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
         [180 -45   3]>
@@ -235,16 +237,16 @@ def vector(
     The latitude can be outside the [-90, 90] deg range, causing the longitude
     to be shifted by 180 degrees:
 
-    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
-    ...                                        lat=u.Quantity(-100, "deg"),
-    ...                                        distance=u.Quantity(3, "km"))
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                    lat=u.Quantity(-100, "deg"),
+    ...                                    distance=u.Quantity(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
         [180 -80   3]>
 
-    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
-    ...                                        lat=u.Quantity(100, "deg"),
-    ...                                        distance=u.Quantity(3, "km"))
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
+    ...                                    lat=u.Quantity(100, "deg"),
+    ...                                    distance=u.Quantity(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
         [180  80   3]>
@@ -252,9 +254,9 @@ def vector(
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cx.vecs.LonLatSphericalPos.from_(lon=u.Quantity(365, "deg"),
-    ...                                        lat=u.Quantity(0, "deg"),
-    ...                                        distance=u.Quantity(3, "km"))
+    >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Quantity(365, "deg"),
+    ...                                    lat=u.Quantity(0, "deg"),
+    ...                                    distance=u.Quantity(3, "km"))
     >>> vec.lon
     Angle(Array(5, dtype=int32, ...), unit='deg')
 
@@ -292,22 +294,22 @@ def vector(
 def vector(
     cls: type[MathSphericalPos],
     *,
-    r: AbstractQuantity,
-    theta: AbstractQuantity,
-    phi: AbstractQuantity,
+    r: u.AbstractQuantity,
+    theta: u.AbstractQuantity,
+    phi: u.AbstractQuantity,
 ) -> MathSphericalPos:
     """Construct MathSphericalPos, allowing for out-of-range values.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     Let's start with a valid input:
 
-    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
-    ...                                      theta=u.Quantity(90, "deg"),
-    ...                                      phi=u.Quantity(0, "deg"))
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                                  theta=u.Quantity(90, "deg"),
+    ...                                  phi=u.Quantity(0, "deg"))
     >>> print(vec)
     <MathSphericalPos (r[km], theta[deg], phi[deg])
         [ 3 90  0]>
@@ -315,9 +317,9 @@ def vector(
     The radial distance can be negative, which wraps the azimuthal angle by 180
     degrees and flips the polar angle:
 
-    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(-3, "km"),
-    ...                                      theta=u.Quantity(100, "deg"),
-    ...                                      phi=u.Quantity(45, "deg"))
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Quantity(-3, "km"),
+    ...                                  theta=u.Quantity(100, "deg"),
+    ...                                  phi=u.Quantity(45, "deg"))
     >>> print(vec)
     <MathSphericalPos (r[km], theta[deg], phi[deg])
         [  3 280 135]>
@@ -325,9 +327,9 @@ def vector(
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
     angle to be shifted by 180 degrees:
 
-    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
-    ...                                      theta=u.Quantity(0, "deg"),
-    ...                                      phi=u.Quantity(190, "deg"))
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                                  theta=u.Quantity(0, "deg"),
+    ...                                  phi=u.Quantity(190, "deg"))
     >>> print(vec)
     <MathSphericalPos (r[km], theta[deg], phi[deg])
         [  3 180 170]>
@@ -335,9 +337,9 @@ def vector(
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
     [0, 360) deg range (actually the base constructor does this):
 
-    >>> vec = cx.vecs.MathSphericalPos.from_(r=u.Quantity(3, "km"),
-    ...                                      theta=u.Quantity(365, "deg"),
-    ...                                      phi=u.Quantity(90, "deg"))
+    >>> vec = cxv.MathSphericalPos.from_(r=u.Quantity(3, "km"),
+    ...                                  theta=u.Quantity(365, "deg"),
+    ...                                  phi=u.Quantity(90, "deg"))
     >>> vec.theta
     Angle(Array(5, dtype=int32, ...), unit='deg')
 
@@ -365,640 +367,670 @@ def vector(
 
 
 ###############################################################################
-# 3D
-
-
-@dispatch
-def vconvert(
-    target: type[AbstractPos3D], current: AbstractPos3D, /, **kwargs: Any
-) -> AbstractPos3D:
-    """AbstractPos3D -> Cartesian3D -> AbstractPos3D."""
-    return vconvert(target, vconvert(CartesianPos3D, current))
-
-
-@dispatch.multi(
-    (type[CartesianPos3D], CartesianPos3D),
-    (type[CylindricalPos], CylindricalPos),
-    (type[SphericalPos], SphericalPos),
-    (type[LonLatSphericalPos], LonLatSphericalPos),
-    (type[MathSphericalPos], MathSphericalPos),
-)
-def vconvert(
-    target: type[AbstractPos3D], current: AbstractPos3D, /, **kwargs: Any
-) -> AbstractPos3D:
-    """Self transforms for 3D vectors.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    Cartesian to Cartesian:
-
-    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> cx.vconvert(cx.CartesianPos3D, vec) is vec
-    True
-
-    Cylindrical to Cylindrical:
-
-    >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1, "km"),
-    ...                              phi=u.Quantity(2, "deg"),
-    ...                              z=u.Quantity(3, "km"))
-    >>> cx.vconvert(cx.vecs.CylindricalPos, vec) is vec
-    True
-
-    Spherical to Spherical:
-
-    >>> vec = cx.SphericalPos(r=u.Quantity(1, "km"),
-    ...                       theta=u.Quantity(2, "deg"),
-    ...                       phi=u.Quantity(3, "deg"))
-    >>> cx.vconvert(cx.SphericalPos, vec) is vec
-    True
-
-    LonLatSpherical to LonLatSpherical:
-
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(1, "deg"),
-    ...                                  lat=u.Quantity(2, "deg"),
-    ...                                  distance=u.Quantity(3, "km"))
-    >>> cx.vconvert(cx.vecs.LonLatSphericalPos, vec) is vec
-    True
-
-    MathSpherical to MathSpherical:
-
-    >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1, "km"),
-    ...                                theta=u.Quantity(2, "deg"),
-    ...                                phi=u.Quantity(3, "deg"))
-    >>> cx.vconvert(cx.vecs.MathSphericalPos, vec) is vec
-    True
-
-    """
-    return current
-
-
-@dispatch.multi(
-    (type[CartesianVel3D], CartesianVel3D, AbstractPos),
-    (type[CylindricalVel], CylindricalVel, AbstractPos),
-    (type[SphericalVel], SphericalVel, AbstractPos),
-    (type[LonLatSphericalVel], LonLatSphericalVel, AbstractPos),
-    (
-        type[LonCosLatSphericalVel],
-        LonCosLatSphericalVel,
-        AbstractPos,
-    ),
-    (type[MathSphericalVel], MathSphericalVel, AbstractPos),
-    (type[ProlateSpheroidalVel], ProlateSpheroidalVel, AbstractPos),
-)
-def vconvert(
-    target: type[AbstractVel3D],
-    current: AbstractVel3D,
-    position: AbstractPos,
-    /,
-    **kwargs: Any,
-) -> AbstractVel3D:
-    """Self transforms for 3D velocity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    For these transformations the position does not matter since the
-    self-transform returns the velocity unchanged.
-
-    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-
-    Cartesian to Cartesian velocity:
-
-    >>> dif = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> cx.vconvert(cx.CartesianVel3D, dif, vec) is dif
-    True
-
-    Cylindrical to Cylindrical velocity:
-
-    >>> dif = cx.vecs.CylindricalVel(rho=u.Quantity(1, "km/s"),
-    ...                              phi=u.Quantity(2, "mas/yr"),
-    ...                              z=u.Quantity(3, "km/s"))
-    >>> cx.vconvert(cx.vecs.CylindricalVel, dif, vec) is dif
-    True
-
-    Spherical to Spherical velocity:
-
-    >>> dif = cx.vecs.SphericalVel(r=u.Quantity(1, "km/s"),
-    ...                            theta=u.Quantity(2, "mas/yr"),
-    ...                            phi=u.Quantity(3, "mas/yr"))
-    >>> cx.vconvert(cx.SphericalVel, dif, vec) is dif
-    True
-
-    LonLatSpherical to LonLatSpherical velocity:
-
-    >>> dif = cx.vecs.LonLatSphericalVel(lon=u.Quantity(1, "mas/yr"),
-    ...                                  lat=u.Quantity(2, "mas/yr"),
-    ...                                  distance=u.Quantity(3, "km/s"))
-    >>> cx.vconvert(cx.vecs.LonLatSphericalVel, dif, vec) is dif
-    True
-
-    LonCosLatSpherical to LonCosLatSpherical velocity:
-
-    >>> dif = cx.vecs.LonCosLatSphericalVel(lon_coslat=u.Quantity(1, "mas/yr"),
-    ...                                     lat=u.Quantity(2, "mas/yr"),
-    ...                                     distance=u.Quantity(3, "km/s"))
-    >>> cx.vconvert(cx.vecs.LonCosLatSphericalVel, dif, vec) is dif
-    True
-
-    MathSpherical to MathSpherical velocity:
-
-    >>> dif = cx.vecs.MathSphericalVel(r=u.Quantity(1, "km/s"),
-    ...                                theta=u.Quantity(2, "mas/yr"),
-    ...                                phi=u.Quantity(3, "mas/yr"))
-    >>> cx.vconvert(cx.vecs.MathSphericalVel, dif, vec) is dif
-    True
-
-    """
-    return current
-
+# Vector Transformation
 
 # =============================================================================
-# CartesianPos3D
+# `vconvert_impl`
 
 
 @dispatch
-def vconvert(
-    target: type[CylindricalPos], current: CartesianPos3D, /, **kwargs: Any
-) -> CylindricalPos:
+def vconvert_impl(
+    to_vector: type[AbstractPos3D],
+    from_vector: type[AbstractPos3D],
+    params: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
+    """AbstractPos -> CartesianPos3D -> AbstractPos."""
+    params, aux = vconvert_impl(
+        CartesianPos3D, from_vector, params, in_aux=in_aux, out_aux=None, units=units
+    )
+    params, aux = vconvert_impl(
+        to_vector, CartesianPos3D, params, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return params, aux
+
+
+@dispatch
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CylindricalPos],
+    from_vector: type[CartesianPos3D],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CartesianPos3D -> CylindricalPos.
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
 
-    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
-    <CylindricalPos (rho[km], phi[rad], z[km])
-        [2.236 1.107 3.   ]>
+    >>> cart = {"x": 1, "y": 2, "z": 3}
+    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.CartesianPos3D, cart)
+    ({'phi': Array(1.1071488, dtype=float32, ...),
+      'rho': Array(2.236068, dtype=float32, ...),
+      'z': Array(3, dtype=int32, ...)},
+     {})
+
+    >>> cart = {"x": u.Quantity(1, "km"), "y": u.Quantity(2, "km"),
+    ...         "z": u.Quantity(3, "km")}
+    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.CartesianPos3D, cart)
+    ({'phi': Quantity['angle'](Array(1.1071488, dtype=float32, ...), unit='rad'),
+      'rho': Quantity['length'](Array(2.236068, dtype=float32, ...), unit='km'),
+      'z': Quantity['length'](Array(3, dtype=int32, ...), unit='km')},
+     {})
 
     """
-    rho = jnp.sqrt(current.x**2 + current.y**2)
-    phi = jnp.atan2(current.y, current.x)
-    return target(rho=rho, phi=phi, z=current.z)
+    rho = jnp.hypot(p["x"], p["y"])
+    phi = jnp.atan2(p["y"], p["x"])
+    return {"rho": rho, "phi": phi, "z": p["z"]}, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[SphericalPos], current: CartesianPos3D, /, **kwargs: Any
-) -> SphericalPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[SphericalPos],
+    from_vector: type[CartesianPos3D],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CartesianPos3D -> SphericalPos.
 
     Examples
     --------
-    >>> import coordinax as cx
-
-    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> print(cx.vconvert(cx.SphericalPos, vec))
-    <SphericalPos (r[km], theta[rad], phi[rad])
-        [3.742 0.641 1.107]>
+    >>> import coordinax.vecs as cxv
+    >>> cart = {"x": 1, "y": 2, "z": 3}
+    >>> cxv.vconvert_impl(cxv.SphericalPos, cxv.CartesianPos3D, cart)
+    ({'phi': Array(1.1071488, dtype=float32, ...),
+      'r': Array(3.7416575, dtype=float32, ...),
+      'theta': Array(0.64052236, dtype=float32, ...)},
+     {})
 
     """
-    r = jnp.sqrt(current.x**2 + current.y**2 + current.z**2)
-    theta = jnp.acos(current.z / r)
-    phi = jnp.atan2(current.y, current.x)
-    return target(r=r, theta=theta, phi=phi)
+    r = jnp.sqrt(p["x"] ** 2 + p["y"] ** 2 + p["z"] ** 2)
+    theta = jnp.acos(p["z"] / r)
+    phi = jnp.atan2(p["y"], p["x"])
+    return {"r": r, "theta": theta, "phi": phi}, combine_aux(in_aux, out_aux)
 
 
 @dispatch.multi(
-    (type[LonLatSphericalPos], CartesianPos3D),
-    (type[MathSphericalPos], CartesianPos3D),
+    (type[LonLatSphericalPos], type[CartesianPos3D], ct.ParamsDict),
+    (type[MathSphericalPos], type[CartesianPos3D], ct.ParamsDict),
 )
-def vconvert(
-    target: type[AbstractSphericalPos],
-    current: CartesianPos3D,
+def vconvert_impl(
+    to_vector: type[AbstractSphericalPos],
+    from_vector: type[CartesianPos3D],
+    p: ct.ParamsDict,
     /,
-    **kwargs: Any,
-) -> AbstractSphericalPos:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CartesianPos3D -> AbstractSphericalPos.
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> params = {"x": 1, "y": 2, "z": 3}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> cxv.vconvert_impl(cxv.LonLatSphericalPos, cxv.CartesianPos3D,
+    ...                   params, units=usys)
+    ({'distance': Array(3.7416575, dtype=float32, ...),
+      'lat': Array(53.300774, dtype=float32, ...),
+      'lon': Array(63.43495, dtype=float32, ...)},
+     {})
 
-    >>> print(cx.vconvert(cx.vecs.LonLatSphericalPos, vec))
-    <LonLatSphericalPos (lon[rad], lat[deg], distance[km])
-        [ 1.107 53.301  3.742]>
-
-    >>> print(cx.vconvert(cx.vecs.MathSphericalPos, vec))
-    <MathSphericalPos (r[km], theta[rad], phi[rad])
-        [3.742 1.107 0.641]>
+    >>> cxv.vconvert_impl(cxv.MathSphericalPos, cxv.CartesianPos3D,
+    ...                   params, units=usys)
+    ({'phi': Array(36.69923, dtype=float32, ...),
+      'r': Array(3.7416575, dtype=float32, ...),
+      'theta': Array(63.43495, dtype=float32, ...)},
+     {})
 
     """
-    return vconvert(target, vconvert(SphericalPos, current))
-
-
-# =============================================================================
-# CylindricalPos
+    p, aux = vconvert_impl(
+        SphericalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
+    )
+    p, aux = vconvert_impl(
+        to_vector, SphericalPos, p, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return p, aux
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos3D], current: CylindricalPos, /, **kwargs: Any
-) -> CartesianPos3D:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CartesianPos3D],
+    from_vector: type[CylindricalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CylindricalPos -> CartesianPos3D.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> cyl = {"rho": 1, "phi": 90, "z": 1}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1., "km"),
-    ...                              phi=u.Quantity(90, "deg"),
-    ...                              z=u.Quantity(1, "km"))
-    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
-    <CartesianPos3D (x[km], y[km], z[km])
-        [-4.371e-08  1.000e+00  1.000e+00]>
+    >>> cxv.vconvert_impl(cxv.CartesianPos3D, cxv.CylindricalPos, cyl, units=usys)
+    ({'x': Array(-4.371139e-08, dtype=float32, ...),
+      'y': Array(1., dtype=float32, ...),
+      'z': Array(1, dtype=int32, ...)},
+     {})
 
     """
-    x = current.rho * jnp.cos(current.phi)
-    y = current.rho * jnp.sin(current.phi)
-    z = current.z
-    return target(x=x, y=y, z=z)
+    x = p["rho"] * jnp.cos(p["phi"])
+    y = p["rho"] * jnp.sin(p["phi"])
+    return {"x": x, "y": y, "z": p["z"]}, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[SphericalPos], current: CylindricalPos, /, **kwargs: Any
-) -> SphericalPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[SphericalPos],
+    from_vector: type[CylindricalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CylindricalPos -> SphericalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> cyl = {"rho": 1, "phi": 90, "z": 1}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1., "km"),
-    ...                              phi=u.Quantity(90, "deg"),
-    ...                              z=u.Quantity(1, "km"))
-    >>> print(cx.vconvert(cx.SphericalPos, vec))
-    <SphericalPos (r[km], theta[rad], phi[deg])
-        [ 1.414  0.785 90.   ]>
+    >>> cxv.vconvert_impl(cxv.SphericalPos, cxv.CylindricalPos, cyl, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'r': Array(1.4142135, dtype=float32, ...),
+      'theta': Array(45., dtype=float32, ...)},
+     {})
 
     """
-    r = jnp.sqrt(current.rho**2 + current.z**2)
-    theta = jnp.acos(current.z / r)
-    return target(r=r, theta=theta, phi=current.phi)
+    r = jnp.hypot(p["rho"], p["z"])
+    theta = jnp.acos(p["z"] / r)
+    return {"r": r, "theta": theta, "phi": p["phi"]}, combine_aux(in_aux, out_aux)
 
 
 @dispatch.multi(
-    (type[LonLatSphericalPos], CylindricalPos),
-    (type[MathSphericalPos], CylindricalPos),
+    (type[LonLatSphericalPos], type[CylindricalPos], ct.ParamsDict),
+    (type[MathSphericalPos], type[CylindricalPos], ct.ParamsDict),
 )
-def vconvert(
-    target: type[AbstractSphericalPos],
-    current: CylindricalPos,
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+def vconvert_impl(
+    to_vector: type[AbstractSphericalPos],
+    from_vector: type[CylindricalPos],
+    p: ct.ParamsDict,
     /,
-    **kwargs: Any,
-) -> AbstractSphericalPos:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CylindricalPos -> AbstractSphericalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> cyl = {"rho": 1, "phi": 90, "z": 1}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1., "km"),
-    ...                              phi=u.Quantity(90, "deg"),
-    ...                              z=u.Quantity(1, "km"))
+    >>> cxv.vconvert_impl(cxv.LonLatSphericalPos, cxv.CylindricalPos, cyl, units=usys)
+    ({'distance': Array(1.4142135, dtype=float32, ...),
+      'lat': Array(45.000004, dtype=float32, ...),
+      'lon': Array(90., dtype=float32, ...)},
+     {})
 
-    >>> print(cx.vconvert(cx.vecs.LonLatSphericalPos, vec))
-    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
-        [90.    45.     1.414]>
-
-    >>> print(cx.vconvert(cx.vecs.MathSphericalPos, vec))
-    <MathSphericalPos (r[km], theta[deg], phi[rad])
-        [ 1.414 90.     0.785]>
+    >>> cxv.vconvert_impl(cxv.MathSphericalPos, cxv.CylindricalPos, cyl, units=usys)
+    ({'phi': Array(45., dtype=float32, ...),
+      'r': Array(1.4142135, dtype=float32, ...),
+      'theta': Array(90., dtype=float32, ...)},
+     {})
 
     """
-    return vconvert(target, vconvert(SphericalPos, current))
-
-
-# =============================================================================
-# SphericalPos
+    params, aux = vconvert_impl(
+        SphericalPos, from_vector, p, in_aux=in_aux, out_aux=out_aux, units=units
+    )
+    params, aux = vconvert_impl(
+        to_vector, SphericalPos, params, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return params, aux
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos3D], current: SphericalPos, /, **kwargs: Any
-) -> CartesianPos3D:
-    """SphericalPos -> CartesianPos3D.
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CartesianPos3D],
+    from_vector: type[SphericalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
+    """CylindricalPos -> CartesianPos3D.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> sph = {"r": 1, "theta": 90, "phi": 90}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
-    ...                       theta=u.Quantity(90, "deg"),
-    ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
-    <CartesianPos3D (x[km], y[km], z[km])
-        [-4.371e-08  1.000e+00 -4.371e-08]>
+    >>> cxv.vconvert_impl(cxv.CartesianPos3D, cxv.SphericalPos, sph, units=usys)
+    ({'x': Array(-4.371139e-08, dtype=float32, ...),
+      'y': Array(1., dtype=float32, ...),
+      'z': Array(-4.371139e-08, dtype=float32, ...)},
+     {})
 
     """
-    x = current.r.distance * jnp.sin(current.theta) * jnp.cos(current.phi)
-    y = current.r.distance * jnp.sin(current.theta) * jnp.sin(current.phi)
-    z = current.r.distance * jnp.cos(current.theta)
-    return target(x=x, y=y, z=z)
+    x = p["r"] * jnp.sin(p["theta"]) * jnp.cos(p["phi"])
+    y = p["r"] * jnp.sin(p["theta"]) * jnp.sin(p["phi"])
+    z = p["r"] * jnp.cos(p["theta"])
+    return {"x": x, "y": y, "z": z}, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[CylindricalPos], current: SphericalPos, /, **kwargs: Any
-) -> CylindricalPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CylindricalPos],
+    from_vector: type[SphericalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """SphericalPos -> CylindricalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> sph = {"r": 1, "theta": 90, "phi": 90}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
-    ...                       theta=u.Quantity(90, "deg"),
-    ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
-    <CylindricalPos (rho[km], phi[deg], z[km])
-        [ 1.000e+00  9.000e+01 -4.371e-08]>
+    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.SphericalPos, sph, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'rho': Array(1., dtype=float32, ...),
+      'z': Array(-4.371139e-08, dtype=float32, ...)},
+     {})
 
     """
-    rho = jnp.abs(current.r.distance * jnp.sin(current.theta))
-    z = current.r.distance * jnp.cos(current.theta)
-    return target(rho=rho, phi=current.phi, z=z)
+    rho = jnp.abs(p["r"]) * jnp.sin(p["theta"])
+    phi = p["phi"]
+    z = p["r"] * jnp.cos(p["theta"])
+    return {"rho": rho, "phi": phi, "z": z}, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[LonLatSphericalPos], current: SphericalPos, /, **kwargs: Any
-) -> LonLatSphericalPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[LonLatSphericalPos],
+    from_vector: type[SphericalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """SphericalPos -> LonLatSphericalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> sph = {"r": 1, "theta": 90, "phi": 90}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
-    ...                       theta=u.Quantity(90, "deg"),
-    ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.vconvert(cx.vecs.LonLatSphericalPos, vec))
-    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
-        [90.  0.  1.]>
+    >>> cxv.vconvert_impl(cxv.LonLatSphericalPos, cxv.SphericalPos, sph, units=usys)
+    ({'distance': Array(1, dtype=int32, ...),
+      'lat': Array(3.2016512e-06, dtype=float32, ...),
+      'lon': Array(90., dtype=float32, ...)},
+     {})
 
     """
-    return target(
-        lon=current.phi, lat=u.Quantity(90, "deg") - current.theta, distance=current.r
-    )
+    if isinstance(p["theta"], u.AbstractQuantity):
+        lat = u.Quantity(90, "deg") - p["theta"]
+    else:
+        lat = jnp.pi / 2 - p["theta"]
+
+    aux = combine_aux(in_aux, out_aux)
+    return {"lon": p["phi"], "lat": lat, "distance": p["r"]}, aux
 
 
-@dispatch
-def vconvert(
-    target: type[MathSphericalPos], current: SphericalPos, /, **kwargs: Any
-) -> MathSphericalPos:
-    """SphericalPos -> MathSphericalPos.
+@dispatch.multi(
+    (type[MathSphericalPos], type[SphericalPos], ct.ParamsDict),
+    (type[SphericalPos], type[MathSphericalPos], ct.ParamsDict),
+)
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[AbstractPos3D],
+    from_vector: type[AbstractPos3D],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
+    """SphericalPos <-> MathSphericalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> vec = cx.SphericalPos(r=u.Quantity(1., "km"),
-    ...                       theta=u.Quantity(90, "deg"),
-    ...                       phi=u.Quantity(90, "deg"))
-    >>> print(cx.vconvert(cx.vecs.MathSphericalPos, vec))
-    <MathSphericalPos (r[km], theta[deg], phi[deg])
-        [ 1. 90. 90.]>
+    >>> p = {"r": 1, "theta": 90, "phi": 90}
+    >>> usys = u.unitsystem("km", "deg")
+
+    >>> cxv.vconvert_impl(cxv.MathSphericalPos, cxv.SphericalPos, p, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'r': Array(1, dtype=int32, ...),
+      'theta': Array(90., dtype=float32, ...)},
+     {})
+
+    >>> cxv.vconvert_impl(cxv.SphericalPos, cxv.MathSphericalPos, p, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'r': Array(1, dtype=int32, ...),
+      'theta': Array(90., dtype=float32, ...)},
+     {})
 
     """
-    return target(r=current.r, theta=current.phi, phi=current.theta)
-
-
-# =============================================================================
-# LonLatSphericalPos
+    outp = {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
+    return outp, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos3D],
-    current: LonLatSphericalPos,
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+def vconvert_impl(
+    to_vector: type[CartesianPos3D],
+    from_vector: type[LonLatSphericalPos],
+    p: ct.ParamsDict,
     /,
-    **kwargs: Any,
-) -> CartesianPos3D:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """LonLatSphericalPos -> CartesianPos3D.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> vec = {"lon": 90, "lat": 0, "distance": 1}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(90, "deg"),
-    ...                                  lat=u.Quantity(0, "deg"),
-    ...                                  distance=u.Quantity(1., "km"))
-    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
-    <CartesianPos3D (x[km], y[km], z[km])
-        [-4.371e-08  1.000e+00 -4.371e-08]>
+    >>> cxv.vconvert_impl(cxv.CartesianPos3D, cxv.LonLatSphericalPos, vec, units=usys)
+    ({'x': Array(-4.371139e-08, dtype=float32, ...),
+      'y': Array(1., dtype=float32, ...),
+      'z': Array(-4.371139e-08, dtype=float32, ...)},
+     {})
 
     """
-    return vconvert(CartesianPos3D, vconvert(SphericalPos, current))
+    p, aux = vconvert_impl(
+        SphericalPos, from_vector, p, in_aux=in_aux, out_aux=out_aux, units=units
+    )
+    p, aux = vconvert_impl(
+        to_vector, SphericalPos, p, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return p, aux
 
 
 @dispatch
-def vconvert(
-    target: type[CylindricalPos],
-    current: LonLatSphericalPos,
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+def vconvert_impl(
+    to_vector: type[CylindricalPos],
+    from_vector: type[LonLatSphericalPos],
+    p: ct.ParamsDict,
     /,
-    **kwargs: Any,
-) -> CylindricalPos:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """LonLatSphericalPos -> CylindricalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> sph = {"lon": 90, "lat": 0, "distance": 1}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(90, "deg"),
-    ...                                  lat=u.Quantity(0, "deg"),
-    ...                                  distance=u.Quantity(1., "km"))
-    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
-    <CylindricalPos (rho[km], phi[deg], z[km])
-        [ 1.000e+00  9.000e+01 -4.371e-08]>
+    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.LonLatSphericalPos, sph, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'rho': Array(1., dtype=float32, ...),
+      'z': Array(-4.371139e-08, dtype=float32, ...)},
+     {})
 
     """
-    return vconvert(target, vconvert(SphericalPos, current))
+    p, aux = vconvert_impl(
+        SphericalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
+    )
+    p, aux = vconvert_impl(
+        to_vector, SphericalPos, p, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return p, aux
 
 
 @dispatch
-def vconvert(
-    target: type[SphericalPos], current: LonLatSphericalPos, /, **kwargs: Any
-) -> SphericalPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[SphericalPos],
+    from_vector: type[LonLatSphericalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """LonLatSphericalPos -> SphericalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> vec = {"lon": 90, "lat": 0, "distance": 1}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(90, "deg"),
-    ...                                  lat=u.Quantity(0, "deg"),
-    ...                                  distance=u.Quantity(1., "km"))
-    >>> print(cx.vconvert(cx.SphericalPos, vec))
-    <SphericalPos (r[km], theta[deg], phi[deg])
-        [ 1. 90. 90.]>
+    >>> cxv.vconvert_impl(cxv.SphericalPos, cxv.LonLatSphericalPos, vec, units=usys)
+    ({'phi': Array(90., dtype=float32, ...,
+      'r': Array(1, dtype=int32, ...,
+      'theta': Array(90., dtype=float32, ...},
+     {})
 
     """
-    return target(
-        r=current.distance, theta=u.Quantity(90, "deg") - current.lat, phi=current.lon
-    )
+    if isinstance(p["lat"], u.AbstractQuantity):
+        theta = u.Quantity(90, "deg") - p["lat"]
+    else:
+        theta = jnp.pi / 2 - p["lat"]
 
-
-# =============================================================================
-# MathSphericalPos
+    outp = {"r": p["distance"], "theta": theta, "phi": p["lon"]}
+    return outp, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos3D], current: MathSphericalPos, /, **kwargs: Any
-) -> CartesianPos3D:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CartesianPos3D],
+    from_vector: type[MathSphericalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """MathSphericalPos -> CartesianPos3D.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> vec = {"r": 1, "theta": 90, "phi": 90}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1., "km"),
-    ...                                theta=u.Quantity(90, "deg"),
-    ...                                phi=u.Quantity(90, "deg"))
-    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
-    <CartesianPos3D (x[km], y[km], z[km])
-        [-4.371e-08  1.000e+00 -4.371e-08]>
+    >>> cxv.vconvert_impl(cxv.CartesianPos3D, cxv.MathSphericalPos, vec, units=usys)
+    ({'x': Array(-4.371139e-08, dtype=float32, ...),
+      'y': Array(1., dtype=float32, ...),
+      'z': Array(-4.371139e-08, dtype=float32, ...)},
+     {})
 
     """
-    x = current.r.distance * jnp.sin(current.phi) * jnp.cos(current.theta)
-    y = current.r.distance * jnp.sin(current.phi) * jnp.sin(current.theta)
-    z = current.r.distance * jnp.cos(current.phi)
-    return target(x=x, y=y, z=z)
+    x = p["r"] * jnp.sin(p["phi"]) * jnp.cos(p["theta"])
+    y = p["r"] * jnp.sin(p["phi"]) * jnp.sin(p["theta"])
+    z = p["r"] * jnp.cos(p["phi"])
+    return {"x": x, "y": y, "z": z}, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[CylindricalPos], current: MathSphericalPos, /, **kwargs: Any
-) -> CylindricalPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CylindricalPos],
+    from_vector: type[MathSphericalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """MathSphericalPos -> CylindricalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> vec = {"r": 1, "theta": 90, "phi": 90}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1., "km"),
-    ...                                theta=u.Quantity(90, "deg"),
-    ...                                phi=u.Quantity(90, "deg"))
-    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
-    <CylindricalPos (rho[km], phi[deg], z[km])
-        [ 1.000e+00  9.000e+01 -4.371e-08]>
+    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.MathSphericalPos, vec, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'rho': Array(1., dtype=float32, ...),
+      'z': Array(-4.371139e-08, dtype=float32, ...)},
+     {})
 
     """
-    rho = jnp.abs(current.r.distance * jnp.sin(current.phi))
-    z = current.r.distance * jnp.cos(current.phi)
-    return target(rho=rho, phi=current.theta, z=z)
+    rho = jnp.abs(p["r"]) * jnp.sin(p["phi"])
+    z = p["r"] * jnp.cos(p["phi"])
+    return {"rho": rho, "phi": p["theta"], "z": z}, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[SphericalPos], current: MathSphericalPos, /, **kwargs: Any
-) -> SphericalPos:
-    """MathSphericalPos -> SphericalPos.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> vec = cx.vecs.MathSphericalPos(r=u.Quantity(1., "km"),
-    ...                                theta=u.Quantity(90, "deg"),
-    ...                                phi=u.Quantity(90, "deg"))
-    >>> print(cx.vconvert(cx.SphericalPos, vec))
-    <SphericalPos (r[km], theta[deg], phi[deg])
-        [ 1. 90. 90.]>
-
-    """
-    return target(r=current.r, theta=current.phi, phi=current.theta)
-
-
-# =============================================================================
-# ProlateSpheroidalPos
-
-
-@dispatch
-def vconvert(
-    target: type[CylindricalPos], current: ProlateSpheroidalPos, /, **kwargs: Any
-) -> CylindricalPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CylindricalPos],
+    from_vector: type[ProlateSpheroidalPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """ProlateSpheroidalPos -> CylindricalPos.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> vec = {"mu": 1, "nu": 0.2, "phi": 90}
+    >>> in_aux = {"Delta": 0.5}
+    >>> usys = u.unitsystem("km", "deg")
 
-    >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(1., "km2"),
-    ...     nu=u.Quantity(0.2, "km2"),
-    ...     phi=u.Quantity(90, "deg"),
-    ...     Delta=u.Quantity(0.5, "km")
-    ... )
-    >>> print(cx.vconvert(cx.vecs.CylindricalPos, vec))
-    <CylindricalPos (rho[km], phi[deg], z[km])
-        [ 0.387 90.     0.894]>
+    >>> cxv.vconvert_impl(cxv.CylindricalPos, cxv.ProlateSpheroidalPos,
+    ...                   vec, in_aux=in_aux, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'rho': Array(0.38729832, dtype=float32, ...),
+      'z': Array(0.8944272, dtype=float32, ...)},
+     {})
+
+    TODO: example with Delta as a Quantity
 
     """
-    Delta2 = current.Delta**2
-    nu_D2 = jnp.abs(current.nu) / Delta2
-
-    R = jnp.sqrt((current.mu - Delta2) * (1 - nu_D2))
-    z = jnp.sqrt(current.mu * nu_D2) * jnp.sign(current.nu)
-
-    return target(rho=R, phi=current.phi, z=z)
+    Delta2 = in_aux["Delta"] ** 2
+    nu_D2 = jnp.abs(p["nu"]) / Delta2
+    rho = jnp.sqrt((p["mu"] - Delta2) * (1 - nu_D2))
+    z = jnp.sqrt(p["mu"] * nu_D2) * jnp.sign(p["nu"])
+    return {"rho": rho, "phi": p["phi"], "z": z}, {}
 
 
 @dispatch
-def vconvert(
-    target: type[ProlateSpheroidalPos],
-    current: CylindricalPos,
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[ProlateSpheroidalPos],
+    from_vector: type[CylindricalPos],
+    p: ct.ParamsDict,
     /,
-    **kwargs: Any,
-) -> ProlateSpheroidalPos:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """CylindricalPos -> ProlateSpheroidalPos.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> vec = cx.vecs.CylindricalPos(
-    ...     rho=u.Quantity(1., "km"),
-    ...     phi=u.Quantity(90, "deg"),
-    ...     z=u.Quantity(1, "km")
-    ... )
-    >>> print(vec.vconvert(cx.vecs.ProlateSpheroidalPos,
-    ...                    Delta=u.Quantity(0.5, "km")))
-    <ProlateSpheroidalPos (mu[km2], nu[km2], phi[deg])
-        [ 2.133  0.117 90.   ]>
+    >>> vec = {"rho": 1, "phi": 90, "z": 1}
+    >>> out_aux = {"Delta": 0.5}
+    >>> usys = u.unitsystem("km", "deg")
+
+    >>> cxv.vconvert_impl(cxv.ProlateSpheroidalPos, cxv.CylindricalPos,
+    ...                   vec, out_aux=out_aux, units=usys)
+    ({'mu': Array(2.1327822, dtype=float32, ...),
+      'nu': Array(0.11721778, dtype=float32, ...),
+      'phi': Array(90., dtype=float32, ...)},
+     {'Delta': Array(0.5, dtype=float32, ...)})
+
+    # <ProlateSpheroidalPos (mu[km2], nu[km2], phi[deg])
+    #     [ 2.133  0.117 90.   ]>
+
+    TODO: example with Delta as a Quantity
 
     """
     Delta = eqx.error_if(
-        kwargs.get("Delta"),
-        "Delta" not in kwargs,
+        out_aux.get("Delta"),
+        "Delta" not in out_aux,
         "Delta must be provided for ProlateSpheroidalPos.",
     )
-    R2 = current.rho**2
-    z2 = current.z**2
+    R2 = p["rho"] ** 2
+    z2 = p["z"] ** 2
     Delta2 = Delta**2
 
     sum_ = R2 + z2 + Delta2
@@ -1008,8 +1040,8 @@ def vconvert(
     D = jnp.sqrt(diff_**2 + 4 * R2 * Delta2)
 
     # handle special cases for R=0 or z=0
-    D = jnp.where(current.z == 0, sum_, D)
-    D = jnp.where(current.rho == 0, jnp.abs(diff_), D)
+    D = jnp.where(p["z"] == 0, sum_, D)
+    D = jnp.where(p["rho"] == 0, jnp.abs(diff_), D)
 
     # compute mu and nu depending on sign of diff_ - avoids dividing by a small number
     pos_mu_minus_delta = 0.5 * (D + diff_)
@@ -1029,119 +1061,104 @@ def vconvert(
     # for numerical stability when Delta^2-|nu| is small
     abs_nu = jnp.where(abs_nu * 2 > Delta2, Delta2 - delta_minus_nu, abs_nu)
 
-    nu = abs_nu * jnp.sign(current.z)
+    nu = abs_nu * jnp.sign(p["z"])
 
-    return target(mu=mu, nu=nu, phi=current.phi, Delta=Delta)
-
-
-@dispatch
-def vconvert(
-    target: type[AbstractPos3D], current: ProlateSpheroidalPos, /, **kwargs: Any
-) -> AbstractPos3D:
-    """ProlateSpheroidalPos -> AbstractPos3D.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(1., "km2"),
-    ...     nu=u.Quantity(0.2, "km2"),
-    ...     phi=u.Quantity(90, "deg"),
-    ...     Delta=u.Quantity(0.5, "km")
-    ... )
-    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
-    <CartesianPos3D (x[km], y[km], z[km])
-        [-1.693e-08  3.873e-01  8.944e-01]>
-
-    """
-    return current.vconvert(CylindricalPos).vconvert(target)
+    return {"mu": mu, "nu": nu, "phi": p["phi"]}, out_aux
 
 
 @dispatch
-def vconvert(
-    target: type[ProlateSpheroidalPos],
-    current: ProlateSpheroidalPos,
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+def vconvert_impl(
+    to_vector: type[ProlateSpheroidalPos],
+    from_vector: type[ProlateSpheroidalPos],
+    p: ct.ParamsDict,
     /,
-    Delta: u.Quantity["length"] | None = None,
-    **kwargs: Any,
-) -> ProlateSpheroidalPos:
+    *,
+    in_aux: ct.AuxDict,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """ProlateSpheroidalPos -> ProlateSpheroidalPos.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> vec = {"mu": 1, "nu": 0.2, "phi": 90}
+    >>> in_aux = {"Delta": 0.5}
+    >>> usys = u.unitsystem("km", "deg")
 
     Self-transforms can change the focal length:
 
-    >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(1., "km2"),
-    ...     nu=u.Quantity(0.2, "km2"),
-    ...     phi=u.Quantity(90, "deg"),
-    ...     Delta=u.Quantity(0.5, "km")
-    ... )
-    >>> print(cx.vconvert(cx.vecs.ProlateSpheroidalPos, vec,
-    ...                   Delta=u.Quantity(0.8, "km")))
-    <ProlateSpheroidalPos...>
+    >>> out_aux = {"Delta": 0.8}
+    >>> cxv.vconvert_impl(cxv.ProlateSpheroidalPos, cxv.ProlateSpheroidalPos,
+    ...                   vec, in_aux=in_aux, out_aux=out_aux, units=usys)
+    ({'mu': Array(1.1414464, dtype=float32, ...),
+      'nu': Array(0.44855377, dtype=float32, ...),
+      'phi': Array(90., dtype=float32, ...)},
+     {'Delta': Array(0.8, dtype=float32, ...)})
 
     Without changing the focal length, no transform is done:
 
-    >>> vec2 = cx.vconvert(cx.vecs.ProlateSpheroidalPos, vec)
-    >>> vec is vec2
-    True
+    >>> cxv.vconvert_impl(cxv.ProlateSpheroidalPos, cxv.ProlateSpheroidalPos,
+    ...                   vec, in_aux=in_aux, units=usys)
+    ({'mu': Array(1, dtype=int32, ...),
+      'nu': Array(0.2, dtype=float32, ...),
+      'phi': Array(90, dtype=int32, ...)},
+     {'Delta': Array(0.5, dtype=float32, ...)})
 
     """
-    if Delta is None:
-        return current
-    return current.vconvert(CylindricalPos).vconvert(target, Delta=Delta)
+    out_aux = out_aux or {}
+    if out_aux.get("Delta", None) is None:
+        return p, combine_aux(in_aux, out_aux)
+
+    # If Delta is provided, we can proceed with the conversion
+    p, aux = vconvert_impl(
+        CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
+    )
+    p, aux = vconvert_impl(
+        to_vector, CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return p, aux
 
 
 @dispatch
-def vconvert(
-    target: type[ProlateSpheroidalPos],
-    current: AbstractPos3D,
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+def vconvert_impl(
+    to_vector: type[ProlateSpheroidalPos],
+    from_vector: type[AbstractPos3D,],
+    p: ct.ParamsDict,
     /,
-    **kwargs: Any,
-) -> ProlateSpheroidalPos:
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.AuxDict,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """AbstractPos3D -> ProlateSpheroidalPos.
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(1., "km2"),
-    ...     nu=u.Quantity(0.2, "km2"),
-    ...     phi=u.Quantity(90, "deg"),
-    ...     Delta=u.Quantity(0.5, "km")
-    ... )
-    >>> print(cx.vconvert(cx.CartesianPos3D, vec))
-    <CartesianPos3D (x[km], y[km], z[km])
-        [-1.693e-08  3.873e-01  8.944e-01]>
+    >>> vec = {"x": 1, "y": 2, "z": 3}
+    >>> out_aux = {"Delta": 0.5}
+    >>> usys = u.unitsystem("km", "deg")
 
-    Self-transforms also work to change the focal length:
-
-    >>> vec = cx.vecs.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(1., "km2"),
-    ...     nu=u.Quantity(0.2, "km2"),
-    ...     phi=u.Quantity(90, "deg"),
-    ...     Delta=u.Quantity(0.5, "km")
-    ... )
-    >>> print(cx.vconvert(cx.vecs.ProlateSpheroidalPos, vec,
-    ...                   Delta=u.Quantity(0.8, "km")))
-    <ProlateSpheroidalPos...>
+    >>> cxv.vconvert_impl(cxv.ProlateSpheroidalPos, cxv.CartesianPos3D,
+    ...                   vec, out_aux=out_aux, units=usys)
+    ({'mu': Array(14.090316, dtype=float32, ...),
+      'nu': Array(0.15968415, dtype=float32, ...),
+      'phi': Array(63.43495, dtype=float32, ...)},
+     {'Delta': Array(0.5, dtype=float32, ...)})
 
     """
-    Delta = eqx.error_if(
-        kwargs.get("Delta"),
-        "Delta" not in kwargs,
-        "Delta must be provided for ProlateSpheroidalPos.",
+    p, aux = vconvert_impl(
+        CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )
-    cyl = vconvert(CylindricalPos, current)
-    return vconvert(target, cyl, Delta=Delta)
+    p, aux = vconvert_impl(
+        to_vector, CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return p, aux
 
 
 # =============================================================================
@@ -1162,15 +1179,15 @@ def vconvert(
     --------
     >>> import quaxed.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> q = cx.vecs.LonLatSphericalPos(lon=u.Quantity(15, "deg"),
-    ...                                lat=u.Quantity(10, "deg"),
-    ...                                distance=u.Quantity(1.5, "km"))
-    >>> p = cx.vecs.LonLatSphericalVel(lon=u.Quantity(7, "mas/yr"),
-    ...                                lat=u.Quantity(0, "deg/Gyr"),
-    ...                                distance=u.Quantity(-5, "km/s"))
-    >>> newp = cx.vconvert(cx.vecs.LonCosLatSphericalVel, p, q)
+    >>> q = cxv.LonLatSphericalPos(lon=u.Quantity(15, "deg"),
+    ...                            lat=u.Quantity(10, "deg"),
+    ...                            distance=u.Quantity(1.5, "km"))
+    >>> p = cxv.LonLatSphericalVel(lon=u.Quantity(7, "mas/yr"),
+    ...                            lat=u.Quantity(0, "deg/Gyr"),
+    ...                            distance=u.Quantity(-5, "km/s"))
+    >>> newp = cxv.vconvert(cxv.LonCosLatSphericalVel, p, q)
     >>> print(newp)
     <LonCosLatSphericalVel (lon_coslat[mas / yr], lat[deg / Gyr], distance[km / s])
         [ 6.894  0.    -5.   ]>
@@ -1245,62 +1262,6 @@ def vconvert(
     return vconvert(target, current, posvec)
 
 
-# =============================================================================
-# CartesianVel3D
-
-
-@dispatch
-def vconvert(
-    target: type[CartesianVel3D], current: CartesianVel3D, /
-) -> CartesianVel3D:
-    """CartesianVel3D -> CartesianVel3D with no position.
-
-    Cartesian coordinates are an affine coordinate system and so the
-    transformation of an n-th order derivative vector in this system do not
-    require lower-order derivatives to be specified. See
-    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
-    information. This mixin provides a corresponding implementation of the
-    `coordinax.vconvert` method for Cartesian velocities.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> v = cx.CartesianVel3D.from_([1, 1, 1], "m/s")
-    >>> cx.vconvert(cx.CartesianVel3D, v) is v
-    True
-
-    """
-    return current
-
-
-# =============================================================================
-# CartesianAcc3D
-
-
-@dispatch
-def vconvert(
-    target: type[CartesianAcc3D], current: CartesianAcc3D, /
-) -> CartesianAcc3D:
-    """CartesianAcc3D -> CartesianAcc3D with no position.
-
-    Cartesian coordinates are an affine coordinate system and so the
-    transformation of an n-th order derivative vector in this system do not
-    require lower-order derivatives to be specified. See
-    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
-    information. This mixin provides a corresponding implementation of the
-    `coordinax.vconvert` method for Cartesian vectors.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> a = cx.vecs.CartesianAcc3D.from_([1, 1, 1], "m/s2")
-    >>> cx.vconvert(cx.vecs.CartesianAcc3D, a) is a
-    True
-
-    """
-    return current
-
-
 #####################################################################
 
 
@@ -1325,14 +1286,14 @@ def normalize_vector(obj: CartesianPos3D, /) -> Cartesian3D:
 
     Examples
     --------
-    >>> import coordinax as cx
-    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> print(cx.vecs.normalize_vector(q))
+    >>> import coordinax.vecs as cxv
+    >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> print(cxv.normalize_vector(q))
     <Cartesian3D (x[], y[], z[])
         [0.267 0.535 0.802]>
 
     """
-    norm: AbstractQuantity = obj.norm()  # type: ignore[misc]
+    norm: u.AbstractQuantity = obj.norm()  # type: ignore[misc]
     return Cartesian3D(x=obj.x / norm, y=obj.y / norm, z=obj.z / norm)
 
 

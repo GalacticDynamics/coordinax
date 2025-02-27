@@ -3,6 +3,7 @@
 __all__ = [
     # API
     "vector",
+    "vconvert_impl",
     "vconvert",
     "normalize_vector",
     "cartesian_vector_type",
@@ -118,6 +119,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         time_derivative_vector_type,
         time_nth_derivative_vector_type,
         vconvert,
+        vconvert_impl,
         vector,
     )
     from ._src.vectors.base import (

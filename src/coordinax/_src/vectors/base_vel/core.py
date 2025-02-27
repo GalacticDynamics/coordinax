@@ -71,7 +71,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> q = cx.vecs.CartesianPos2D.from_([1, 1], "km")
         >>> p = cx.vecs.PolarVel(r=u.Quantity(1, "km/s"), phi=u.Quantity(1, "deg/s"))
 
-        >>> p.norm(q)
+        >>> p.norm(q).uconvert('km / s')
         Quantity['speed'](Array(1.0003046, dtype=float32), unit='km / s')
 
         """

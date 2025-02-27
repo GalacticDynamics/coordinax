@@ -146,9 +146,7 @@ class TestPolarPos:
 
     def test_polar_to_cartesian2d(self, vector):
         """Test ``coordinax.vconvert(CartesianPos2D)``."""
-        cart2d = vector.vconvert(
-            cx.vecs.CartesianPos2D, y=u.Quantity([5, 6, 7, 8], "km")
-        )
+        cart2d = vector.vconvert(cx.vecs.CartesianPos2D)
 
         assert isinstance(cart2d, cx.vecs.CartesianPos2D)
         assert jnp.array_equal(

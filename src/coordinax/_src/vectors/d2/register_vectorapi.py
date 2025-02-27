@@ -2,143 +2,91 @@
 
 __all__: list[str] = []
 
-from typing import Any
+from functools import partial
 
+import jax
 from plum import dispatch
 
 import quaxed.numpy as jnp
 
+import coordinax._src.vectors.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarAcc, PolarPos, PolarVel
 from .spherical import TwoSphereAcc, TwoSpherePos, TwoSphereVel
-from coordinax._src.vectors.base_pos import AbstractPos
+from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_params
+
+###############################################################################
+# Vector Transformation
 
 
 @dispatch
-def vconvert(
-    current: AbstractPos2D, target: type[AbstractPos2D], /, **kwargs: Any
-) -> AbstractPos2D:
-    """AbstractPos2D -> Cartesian2D -> AbstractPos2D.
-
-    This is the base case for the transformation of 2D vectors.
-    """
-    return vconvert(target, vconvert(CartesianPos2D, current))
-
-
-@dispatch.multi(
-    (type[CartesianPos2D], CartesianPos2D),
-    (type[PolarPos], PolarPos),
-)
-def vconvert(
-    target: type[AbstractPos2D], current: AbstractPos2D, /, **kwargs: Any
-) -> AbstractPos2D:
-    """Self transform of 2D vectors."""
-    return current
-
-
-@dispatch.multi(
-    (type[CartesianVel2D], CartesianVel2D, AbstractPos),
-    (type[PolarVel], PolarVel, AbstractPos),
-)
-def vconvert(
-    target: type[AbstractVel2D],
-    current: AbstractVel2D,
-    position: AbstractPos,
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+def vconvert_impl(
+    to_vector: type[AbstractPos2D],
+    from_vector: type[AbstractPos2D],
+    params: ct.ParamsDict,
     /,
-    **kwargs: Any,
-) -> AbstractVel2D:
-    """Self transform of 2D Differentials."""
-    return current
-
-
-# =============================================================================
-# CartesianPos2D
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
+    """AbstractPos -> CartesianPos1D -> AbstractPos."""
+    params, aux = vconvert_impl(
+        CartesianPos2D, from_vector, params, in_aux=in_aux, out_aux=None, units=units
+    )
+    params, aux = vconvert_impl(
+        to_vector, CartesianPos2D, params, in_aux=aux, out_aux=out_aux, units=units
+    )
+    return params, aux
 
 
 @dispatch
-def vconvert(
-    target: type[PolarPos], current: CartesianPos2D, /, **kwargs: Any
-) -> PolarPos:
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[PolarPos],
+    from_vector: type[CartesianPos2D],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.OptAuxDict]:
     """CartesianPos2D -> PolarPos.
 
     The `x` and `y` coordinates are converted to the radial coordinate `r` and
     the angular coordinate `phi`.
+
     """
-    r = jnp.hypot(current.x, current.y)
-    phi = jnp.atan2(current.y, current.x)
-    return target(r=r, phi=phi)
-
-
-# =============================================================================
-# PolarPos
+    r = jnp.hypot(p["x"], p["y"])
+    phi = jnp.atan2(p["y"], p["x"])
+    return {"r": r, "phi": phi}, combine_aux(in_aux, out_aux)
 
 
 @dispatch
-def vconvert(
-    target: type[CartesianPos2D], current: PolarPos, /, **kwargs: Any
-) -> CartesianPos2D:
-    """PolarPos -> CartesianPos2D."""
-    d = current.r.distance
-    x = d * jnp.cos(current.phi)
-    y = d * jnp.sin(current.phi)
-    return target(x=x, y=y)
+@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@wrap_vconvert_impl_params
+def vconvert_impl(
+    to_vector: type[CartesianPos2D],
+    from_vector: type[PolarPos],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.OptAuxDict]:
+    """PolarPos -> CartesianPos2D.
 
-
-# =============================================================================
-# CartesianVel2D
-
-
-@dispatch
-def vconvert(
-    target: type[CartesianVel2D], current: CartesianVel2D, /
-) -> CartesianVel2D:
-    """CartesianVel2D -> CartesianVel2D with no position.
-
-    Cartesian coordinates are an affine coordinate system and so the
-    transformation of an n-th order derivative vector in this system do not
-    require lower-order derivatives to be specified. See
-    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
-    information. This mixin provides a corresponding implementation of the
-    `coordinax.vconvert` method for Cartesian velocities.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> v = cx.vecs.CartesianVel2D.from_([1, 1], "m/s")
-    >>> cx.vconvert(cx.vecs.CartesianVel2D, v) is v
-    True
+    The `r` and `phi` coordinates are converted to the `x` and `y` coordinates.
 
     """
-    return current
-
-
-# =============================================================================
-# CartesianAcc2D
-
-
-@dispatch
-def vconvert(
-    target: type[CartesianAcc2D], current: CartesianAcc2D, /
-) -> CartesianAcc2D:
-    """CartesianAcc2D -> CartesianAcc2D with no position.
-
-    Cartesian coordinates are an affine coordinate system and so the
-    transformation of an n-th order derivative vector in this system do not
-    require lower-order derivatives to be specified. See
-    https://en.wikipedia.org/wiki/Tensors_in_curvilinear_coordinates for more
-    information. This mixin provides a corresponding implementation of the
-    `coordinax.vconvert` method for Cartesian vectors.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-    >>> a = cx.vecs.CartesianAcc2D.from_([1, 1], "m/s2")
-    >>> cx.vconvert(cx.vecs.CartesianAcc2D, a) is a
-    True
-
-    """
-    return current
+    x = p["r"] * jnp.cos(p["phi"])
+    y = p["r"] * jnp.sin(p["phi"])
+    return {"x": x, "y": y}, combine_aux(in_aux, out_aux)
 
 
 ###############################################################################
