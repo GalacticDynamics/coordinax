@@ -57,3 +57,4 @@ class AbstractAngle(u.AbstractQuantity):  # type: ignore[misc]
 # division of an angle by non-dimensionless quantity where the resulting units
 # are not those of an angle.
 add_promotion_rule(AbstractAngle, u.Quantity, u.Quantity)
+add_promotion_rule(AbstractAngle, u.quantity.BareQuantity, u.quantity.BareQuantity)
