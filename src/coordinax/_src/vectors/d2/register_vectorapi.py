@@ -3,7 +3,6 @@
 __all__: list[str] = []
 
 from functools import partial
-from typing import Any
 
 import jax
 from plum import dispatch
@@ -15,14 +14,10 @@ from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarAcc, PolarPos, PolarVel
 from .spherical import TwoSphereAcc, TwoSpherePos, TwoSphereVel
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_params
 
 ###############################################################################
 # Vector Transformation
-
-# =============================================================================
-# `vconvert_impl`
 
 
 @dispatch
@@ -45,35 +40,6 @@ def vconvert_impl(
         to_vector, CartesianPos2D, params, in_aux=aux, out_aux=out_aux, units=units
     )
     return params, aux
-
-
-@dispatch.multi(
-    # Positions
-    (type[CartesianPos2D], type[CartesianPos2D], ct.ParamsDict),
-    (type[PolarPos], type[PolarPos], ct.ParamsDict),
-    (type[TwoSpherePos], type[TwoSpherePos], ct.ParamsDict),
-    # Velocities
-    (type[CartesianVel2D], type[CartesianVel2D], ct.ParamsDict),
-    (type[PolarVel], type[PolarVel], ct.ParamsDict),
-    (type[TwoSphereVel], type[TwoSphereVel], ct.ParamsDict),
-    # Accelerations
-    (type[CartesianAcc2D], type[CartesianAcc2D], ct.ParamsDict),
-    (type[PolarAcc], type[PolarAcc], ct.ParamsDict),
-    (type[TwoSphereAcc], type[TwoSphereAcc], ct.ParamsDict),
-)
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",), inline=True)
-def vconvert_impl(
-    to_vector: type[AbstractVector],
-    from_vector: type[AbstractVector],
-    params: ct.ParamsDict,
-    /,
-    *,
-    in_aux: ct.OptAuxDict = None,
-    out_aux: ct.OptAuxDict = None,
-    units: ct.OptUSys = None,
-) -> tuple[ct.ParamsDict, ct.AuxDict]:
-    """Self transform."""
-    return params, combine_aux(in_aux, out_aux)
 
 
 @dispatch
@@ -121,30 +87,6 @@ def vconvert_impl(
     x = p["r"] * jnp.cos(p["phi"])
     y = p["r"] * jnp.sin(p["phi"])
     return {"x": x, "y": y}, combine_aux(in_aux, out_aux)
-
-
-# =============================================================================
-# `vconvert`
-
-
-@dispatch.multi(
-    # Positions
-    (type[CartesianPos2D], CartesianPos2D),
-    (type[PolarPos], PolarPos),
-    (type[TwoSpherePos], TwoSpherePos),
-    # Velocities
-    (type[CartesianVel2D], CartesianVel2D, AbstractPos2D),
-    (type[CartesianVel2D], CartesianVel2D),  # q not needed
-    (type[PolarVel], PolarVel, AbstractPos2D),
-    # Accelerations
-    (type[CartesianAcc2D], CartesianAcc2D, AbstractVel2D, AbstractPos2D),
-    (type[CartesianAcc2D], CartesianAcc2D),  # q,p not needed
-)
-def vconvert(
-    target: type[AbstractVector], current: AbstractVector, /, *args: Any, **kwargs: Any
-) -> AbstractVector:
-    """Self transform of 2D vectors."""
-    return current
 
 
 ###############################################################################

@@ -29,9 +29,7 @@ from .lonlatspherical import (
 from .mathspherical import MathSphericalAcc, MathSphericalPos, MathSphericalVel
 from .spherical import SphericalAcc, SphericalPos, SphericalVel
 from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpheroidalVel
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
-from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_params
 
 ###############################################################################
@@ -396,34 +394,6 @@ def vconvert_impl(
     return params, aux
 
 
-@dispatch.multi(
-    # Positions
-    (type[CartesianPos3D], type[CartesianPos3D], ct.ParamsDict),
-    (type[CylindricalPos], type[CylindricalPos], ct.ParamsDict),
-    (type[SphericalPos], type[SphericalPos], ct.ParamsDict),
-    (type[LonLatSphericalPos], type[LonLatSphericalPos], ct.ParamsDict),
-    (type[MathSphericalPos], type[MathSphericalPos], ct.ParamsDict),
-    (type[Cartesian3D], type[Cartesian3D], ct.ParamsDict),
-    # Velocities
-    (type[CartesianVel3D], type[CartesianVel3D], ct.ParamsDict),
-    # Accelerations
-    (type[CartesianAcc3D], type[CartesianAcc3D], ct.ParamsDict),
-)
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",), inline=True)
-def vconvert_impl(
-    to_vector: type[AbstractVector],
-    from_vector: type[AbstractVector],
-    params: ct.ParamsDict,
-    /,
-    *,
-    in_aux: ct.OptAuxDict = None,
-    out_aux: ct.OptAuxDict = None,
-    units: ct.OptUSys = None,
-) -> tuple[ct.ParamsDict, ct.AuxDict]:
-    """Self transform."""
-    return params, combine_aux(in_aux, out_aux)
-
-
 @dispatch
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
@@ -759,12 +729,15 @@ def vconvert_impl(
     return {"lon": p["phi"], "lat": lat, "distance": p["r"]}, aux
 
 
-@dispatch
+@dispatch.multi(
+    (type[MathSphericalPos], type[SphericalPos], ct.ParamsDict),
+    (type[SphericalPos], type[MathSphericalPos], ct.ParamsDict),
+)
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert_impl(
-    to_vector: type[MathSphericalPos],
-    from_vector: type[SphericalPos],
+    to_vector: type[AbstractPos3D],
+    from_vector: type[AbstractPos3D],
     p: ct.ParamsDict,
     /,
     *,
@@ -772,15 +745,22 @@ def vconvert_impl(
     out_aux: ct.OptAuxDict = None,
     units: ct.OptUSys = None,
 ) -> tuple[ct.ParamsDict, ct.AuxDict]:
-    """SphericalPos -> MathSphericalPos.
+    """SphericalPos <-> MathSphericalPos.
 
     Examples
     --------
     >>> import coordinax.vecs as cxv
-    >>> sph = {"r": 1, "theta": 90, "phi": 90}
+
+    >>> p = {"r": 1, "theta": 90, "phi": 90}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> cxv.vconvert_impl(cxv.MathSphericalPos, cxv.SphericalPos, sph, units=usys)
+    >>> cxv.vconvert_impl(cxv.MathSphericalPos, cxv.SphericalPos, p, units=usys)
+    ({'phi': Array(90., dtype=float32, ...),
+      'r': Array(1, dtype=int32, ...),
+      'theta': Array(90., dtype=float32, ...)},
+     {})
+
+    >>> cxv.vconvert_impl(cxv.SphericalPos, cxv.MathSphericalPos, p, units=usys)
     ({'phi': Array(90., dtype=float32, ...),
       'r': Array(1, dtype=int32, ...),
       'theta': Array(90., dtype=float32, ...)},
@@ -965,38 +945,6 @@ def vconvert_impl(
     rho = jnp.abs(p["r"]) * jnp.sin(p["phi"])
     z = p["r"] * jnp.cos(p["phi"])
     return {"rho": rho, "phi": p["theta"], "z": z}, combine_aux(in_aux, out_aux)
-
-
-@dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
-@wrap_vconvert_impl_params
-def vconvert_impl(
-    to_vector: type[SphericalPos],
-    from_vector: type[MathSphericalPos],
-    p: ct.ParamsDict,
-    /,
-    *,
-    in_aux: ct.OptAuxDict = None,
-    out_aux: ct.OptAuxDict = None,
-    units: ct.OptUSys = None,
-) -> tuple[ct.ParamsDict, ct.AuxDict]:
-    """MathSphericalPos -> SphericalPos.
-
-    Examples
-    --------
-    >>> import coordinax.vecs as cxv
-    >>> vec = {"r": 1, "theta": 90, "phi": 90}
-    >>> usys = u.unitsystem("km", "deg")
-
-    >>> cxv.vconvert_impl(cxv.SphericalPos, cxv.MathSphericalPos, vec, units=usys)
-    ({'phi': Array(90., dtype=float32, ...),
-      'r': Array(1, dtype=int32, ...),
-      'theta': Array(90., dtype=float32, ...)},
-     {})
-
-    """
-    outp = {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
-    return outp, combine_aux(in_aux, out_aux)
 
 
 @dispatch
@@ -1211,153 +1159,6 @@ def vconvert_impl(
         to_vector, CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux
-
-
-# =============================================================================
-# `vconvert`
-
-
-@dispatch.multi(
-    # Positions
-    (type[CartesianPos3D], CartesianPos3D),
-    (type[CylindricalPos], CylindricalPos),
-    (type[SphericalPos], SphericalPos),
-    (type[LonLatSphericalPos], LonLatSphericalPos),
-    (type[MathSphericalPos], MathSphericalPos),
-    # Velocities
-    (type[CartesianVel3D], CartesianVel3D, AbstractPos),
-    (type[CartesianVel3D], CartesianVel3D),  # q not needed
-    (type[CylindricalVel], CylindricalVel, AbstractPos),
-    (type[CylindricalVel], CylindricalVel),  # q not needed
-    (type[SphericalVel], SphericalVel, AbstractPos),
-    (type[SphericalVel], SphericalVel),  # q not needed
-    (type[LonLatSphericalVel], LonLatSphericalVel, AbstractPos),
-    (type[LonLatSphericalVel], LonLatSphericalVel),  # q not needed
-    (type[LonCosLatSphericalVel], LonCosLatSphericalVel, AbstractPos),
-    (type[LonCosLatSphericalVel], LonCosLatSphericalVel),  # q not needed
-    (type[MathSphericalVel], MathSphericalVel, AbstractPos),
-    (type[MathSphericalVel], MathSphericalVel),  # q not needed
-    (type[ProlateSpheroidalVel], ProlateSpheroidalVel, AbstractPos),
-    (type[ProlateSpheroidalVel], ProlateSpheroidalVel),  # q not needed
-    # Accelerations
-    (type[CartesianAcc3D], CartesianAcc3D, AbstractVel, AbstractPos),
-    (type[CartesianAcc3D], CartesianAcc3D),  # q,p not needed
-    (type[CylindricalAcc], CylindricalAcc, AbstractVel, AbstractPos),
-    (type[CylindricalAcc], CylindricalAcc),  # q,p not needed
-    (type[SphericalAcc], SphericalAcc, AbstractVel, AbstractPos),
-    (type[SphericalAcc], SphericalAcc),  # q,p not needed
-    (type[LonLatSphericalAcc], LonLatSphericalAcc, AbstractVel, AbstractPos),
-    (type[LonLatSphericalAcc], LonLatSphericalAcc),  # q,p not needed
-    (type[MathSphericalAcc], MathSphericalAcc, AbstractVel, AbstractPos),
-    (type[MathSphericalAcc], MathSphericalAcc),  # q,p not needed
-)
-def vconvert(
-    target: type[AbstractVector], current: AbstractVector, /, *args: Any, **kwargs: Any
-) -> AbstractVector:
-    """Self transforms for 3D vectors.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax.vecs as cxv
-
-    Cartesian to Cartesian:
-
-    >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> cxv.vconvert(cxv.CartesianPos3D, vec) is vec
-    True
-
-    Cylindrical to Cylindrical:
-
-    >>> vec = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
-    ...                          phi=u.Quantity(2, "deg"),
-    ...                          z=u.Quantity(3, "km"))
-    >>> cxv.vconvert(cxv.CylindricalPos, vec) is vec
-    True
-
-    Spherical to Spherical:
-
-    >>> vec = cxv.SphericalPos(r=u.Quantity(1, "km"),
-    ...                        theta=u.Quantity(2, "deg"),
-    ...                        phi=u.Quantity(3, "deg"))
-    >>> cxv.vconvert(cxv.SphericalPos, vec) is vec
-    True
-
-    LonLatSpherical to LonLatSpherical:
-
-    >>> vec = cxv.LonLatSphericalPos(lon=u.Quantity(1, "deg"),
-    ...                              lat=u.Quantity(2, "deg"),
-    ...                              distance=u.Quantity(3, "km"))
-    >>> cxv.vconvert(cxv.LonLatSphericalPos, vec) is vec
-    True
-
-    MathSpherical to MathSpherical:
-
-    >>> vec = cxv.MathSphericalPos(r=u.Quantity(1, "km"),
-    ...                            theta=u.Quantity(2, "deg"),
-    ...                            phi=u.Quantity(3, "deg"))
-    >>> cxv.vconvert(cxv.MathSphericalPos, vec) is vec
-    True
-
-    For these transformations the position does not matter since the
-    self-transform returns the velocity unchanged.
-
-    >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "km")
-
-    Cartesian to Cartesian velocity:
-
-    >>> dif = cxv.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> cxv.vconvert(cxv.CartesianVel3D, dif, vec) is dif
-    True
-
-    Cylindrical to Cylindrical velocity:
-
-    >>> dif = cxv.CylindricalVel(rho=u.Quantity(1, "km/s"),
-    ...                          phi=u.Quantity(2, "mas/yr"),
-    ...                          z=u.Quantity(3, "km/s"))
-    >>> cxv.vconvert(cxv.CylindricalVel, dif, vec) is dif
-    True
-
-    Spherical to Spherical velocity:
-
-    >>> dif = cxv.SphericalVel(r=u.Quantity(1, "km/s"),
-    ...                        theta=u.Quantity(2, "mas/yr"),
-    ...                        phi=u.Quantity(3, "mas/yr"))
-    >>> cxv.vconvert(cxv.SphericalVel, dif, vec) is dif
-    True
-
-    LonLatSpherical to LonLatSpherical velocity:
-
-    >>> dif = cxv.LonLatSphericalVel(lon=u.Quantity(1, "mas/yr"),
-    ...                              lat=u.Quantity(2, "mas/yr"),
-    ...                              distance=u.Quantity(3, "km/s"))
-    >>> cxv.vconvert(cxv.LonLatSphericalVel, dif, vec) is dif
-    True
-
-    LonCosLatSpherical to LonCosLatSpherical velocity:
-
-    >>> dif = cxv.LonCosLatSphericalVel(lon_coslat=u.Quantity(1, "mas/yr"),
-    ...                                 lat=u.Quantity(2, "mas/yr"),
-    ...                                 distance=u.Quantity(3, "km/s"))
-    >>> cxv.vconvert(cxv.LonCosLatSphericalVel, dif, vec) is dif
-    True
-
-    MathSpherical to MathSpherical velocity:
-
-    >>> dif = cxv.MathSphericalVel(r=u.Quantity(1, "km/s"),
-    ...                            theta=u.Quantity(2, "mas/yr"),
-    ...                            phi=u.Quantity(3, "mas/yr"))
-    >>> cxv.vconvert(cxv.MathSphericalVel, dif, vec) is dif
-    True
-
-    Similarly for the these accelerations:
-
-    >>> a = cxv.CartesianAcc3D.from_([1, 1, 1], "m/s2")
-    >>> cxv.vconvert(cxv.CartesianAcc3D, a) is a
-    True
-
-    """
-    return current
 
 
 # =============================================================================
