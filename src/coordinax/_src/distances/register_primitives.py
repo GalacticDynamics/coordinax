@@ -40,6 +40,29 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
 # ==============================================================================
 
 
+@register(lax.div_p)
+def div_p_abstractdistances(
+    x: AbstractDistance, y: AbstractDistance, /
+) -> BareQuantity:
+    """Division of two Distances.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> from coordinax.distance import Distance
+
+    >>> q1 = Distance(2, "m")
+    >>> q2 = Distance(4, "m")
+    >>> jnp.divide(q1, q2)
+    BareQuantity(Array(0.5, dtype=float32, ...), unit='')
+
+    """
+    return BareQuantity(lax.div(x.value, y.value), unit=x.unit / y.unit)
+
+
+# ==============================================================================
+
+
 @register(lax.dot_general_p)
 def dot_general_p_abstractdistances(
     lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any

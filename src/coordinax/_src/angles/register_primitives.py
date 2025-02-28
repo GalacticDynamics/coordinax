@@ -7,7 +7,7 @@ from typing import Any, TypeVar
 
 from jax import lax
 from jaxtyping import ArrayLike
-from plum import convert
+from plum import convert, promote
 from quax import register
 
 import unxt as u
@@ -38,6 +38,30 @@ def cbrt_p_abstractangle(x: AbstractAngle, /) -> FastQ:
 
     """
     return qlax.cbrt(convert(x, FastQ))
+
+
+# ==============================================================================
+
+
+# TODO: can this be done with promotion/conversion/default rule instead?
+@register(lax.div_p)
+def div_p_q_a(x: AbstractAngle, y: AbstractAngle, /) -> u.Quantity:
+    """Division of a Quantity by an Angle.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> from coordinax.angle import Angle
+
+    >>> angle = Angle(1, "deg")
+    >>> q = u.Quantity(2, "km")
+    >>> jnp.divide(q, angle)
+    Quantity['m rad-1'](Array(2., dtype=float32, ...), unit='km / deg')
+
+    """
+    x, y = promote(x, y)
+    return qlax.div(convert(x, u.Quantity), convert(y, u.Quantity))
 
 
 # ==============================================================================
