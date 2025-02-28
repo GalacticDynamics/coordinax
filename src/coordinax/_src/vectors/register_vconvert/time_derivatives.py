@@ -2,9 +2,8 @@
 
 __all__: list[str] = []
 
-from dataclasses import replace
 from math import prod
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import equinox as eqx
 import jax
@@ -12,7 +11,6 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
-from dataclassish import field_items
 from unxt.quantity import is_any_quantity
 
 from .common import get_params_and_aux
@@ -78,6 +76,9 @@ def _dot_jac_vec(
     return jax.tree.unflatten(treedef, flat_dotted)
 
 
+in_axes: Final = (None, None, 0)
+
+
 # TODO: implement for cross-representations
 @dispatch.multi(
     # N-D -> N-D
@@ -86,7 +87,7 @@ def _dot_jac_vec(
     (type[d3.AbstractVel3D], d3.AbstractVel3D, AbstractPos | u.Quantity["length"]),
 )
 def vconvert(
-    to_vel_vector: type[AbstractVel],
+    to_vel_cls: type[AbstractVel],
     from_vel: AbstractVel,
     from_pos: AbstractPos | u.Quantity["length"],
     /,
@@ -98,7 +99,7 @@ def vconvert(
 
     Parameters
     ----------
-    to_vel_vector
+    to_vel_cls
         The target type of the vector differential.
     from_vel
         The vector differential to transform.
@@ -160,15 +161,15 @@ def vconvert(
     # Prepare the position
 
     in_pos_cls = from_vel.time_antiderivative_cls
-    out_pos_cls = to_vel_vector.time_antiderivative_cls
+    out_pos_cls = to_vel_cls.time_antiderivative_cls
 
     # Parse the position to an AbstractPos
-    from_posv_: AbstractPos
-    if isinstance(from_pos, AbstractPos):
-        from_posv_ = from_pos
-    else:  # Q -> Cart<X>D
-        cart_cls = in_pos_cls.cartesian_type
-        from_posv_ = cast(AbstractPos, cart_cls.from_(from_pos))
+    from_posv_ = cast(
+        AbstractPos,
+        from_pos
+        if isinstance(from_pos, AbstractPos)
+        else in_pos_cls.cartesian_type.from_(from_pos),
+    )
 
     from_posv_ = from_posv_.reshape(flat_shape)  # flattened
 
@@ -188,15 +189,16 @@ def vconvert(
         for k, v in in_pos_params.items()
     }
 
-    jac, out_pos_aux = jax.jacfwd(vconvert, argnums=2, has_aux=True)(
-        out_pos_cls, in_pos_cls, in_pos_params, in_aux=in_pos_aux
-    )
+    # Compute the Jacobian of the position transformation.
+    # NOTE: this is using Quantities. Using raw arrays is ~20x faster.
+    # TODO: what about the auxiliary values?
+    jac_fn = jax.vmap(jax.jacfwd(vconvert, argnums=2, has_aux=True), in_axes=in_axes)
+    jac, _ = jac_fn(out_pos_cls, in_pos_cls, in_pos_params, in_aux=in_pos_aux)
     jac = transform_jac(jac)
 
     to_vel_params = _dot_jac_vec(jac, from_vel.asdict())
 
-    # TODO: what about the auxiliary values?
-    to_vel = to_vel_vector(**to_vel_params)
+    to_vel = to_vel_cls(**to_vel_params)
 
     # Reshape the output to the original shape
     to_vel = to_vel.reshape(shape)
@@ -229,26 +231,51 @@ def vconvert(
     ),
 )
 def vconvert(
-    target: type[AbstractAcc],
-    current: AbstractAcc,
-    velocity: AbstractVel | u.Quantity["speed"],
-    position: AbstractPos | u.Quantity["length"],
+    to_acc_cls: type[AbstractAcc],
+    from_acc: AbstractAcc,
+    from_vel: AbstractVel | u.Quantity["speed"],
+    from_pos: AbstractPos | u.Quantity["length"],
     /,
     **kwargs: Any,
 ) -> AbstractAcc:
-    """AbstractAcc -> Cartesian -> AbstractAcc.
+    r"""AbstractAcc -> Cartesian -> AbstractAcc.
 
     This is the base case for the transformation of accelerations.
 
+    Let $\mathbf{x}$ be a position vector in one representation $\mathbf{y}$ a
+    position vector in another representation related by:
+
+    $$ \mathbf{y} = f(\mathbf{x}) $$
+
+    where $f$ is a differentiable function mapping between the coordinate
+    systems.
+
+    The Jacobian matrix $J$ of the transformation is:
+
+    $$ J = \frac{\partial \mathbf{y}}{\partial \mathbf{x}}$$
+
+    The coordinate transformation of the acceleration is given by the chain
+    rule:
+
+    $$ \ddot{\mathbf{y}} = \dot{J} \dot{\mathbf{x}} + J \ddot{\mathbf{x}}$$
+
+    where $\dot{J}$ is the time derivative of the Jacobian matrix. This function
+    assumes that the representation conversion is time-invariant, so $\dot{J} =
+    0$. Thus, the transformation simplifies to:
+
+    $$ \ddot{\mathbf{y}} = J \ddot{\mathbf{x}}$$
+
+    This function implements this transformation.
+
     Parameters
     ----------
-    current
-        The vector acceleration to transform.
-    target
+    to_acc_cls
         The target type of the vector acceleration.
-    velocity
+    from_acc
+        The vector acceleration to transform.
+    from_vel
         The velocity vector used to transform the acceleration.
-    position
+    from_pos
         The position vector used to transform the acceleration.
     **kwargs
         Additional keyword arguments.
@@ -303,86 +330,58 @@ def vconvert(
 
     """
     # TODO: not require the shape munging / support more shapes
-    shape = current.shape
+    shape = from_acc.shape
     flat_shape = prod(shape)
 
-    # Parse the velocity to an AbstractVel # Q -> Cart<X>D
-    vel_cls = cast(AbstractVel, current.time_antiderivative_cls)
-    velvec = cast(
-        AbstractVel,
-        velocity
-        if isinstance(velocity, AbstractVel)
-        else vel_cls.cartesian_type.from_(velocity),
-    )
+    # ----------------------------
+    # Prepare the velocity
 
-    # Parse the position to an AbstractPos (Q -> Cart<X>D)
-    pos_cls = cast(AbstractPos, vel_cls.time_antiderivative_cls)
-    posvec = cast(
+    in_vel_cls = from_acc.time_antiderivative_cls
+    to_vel_cls = to_acc_cls.time_antiderivative_cls
+
+    in_pos_cls = in_vel_cls.time_antiderivative_cls
+    out_pos_cls = to_vel_cls.time_antiderivative_cls
+
+    # Parse the position to an AbstractPos
+    from_posa_ = cast(
         AbstractPos,
-        position
-        if isinstance(position, AbstractPos)
-        else pos_cls.cartesian_type.from_(position),
+        from_pos
+        if isinstance(from_pos, AbstractPos)
+        else in_pos_cls.cartesian_type.from_(from_pos),
     )
 
-    posvec = posvec.reshape(flat_shape)  # flattened
-    velvec = velvec.reshape(flat_shape)  # flattened
+    from_posa_ = from_posa_.reshape(flat_shape)  # flattened
 
-    # Start by transforming the position to the type required by the
-    # differential to construct the Jacobian.
-    from_posv = vconvert(current.time_nth_derivative_cls(-2), posvec, **kwargs)
-    # TODO: not need to cast to distance
-    from_posv = replace(
-        from_posv,
-        **{
-            k: v.distance
-            for k, v in field_items(from_posv)
-            if isinstance(v, AbstractDistance)
-        },
-    )
-    # The Jacobian requires the position to be a float
+    # Transform the position to the type required by the differential to
+    # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
+    # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
+    # position must be transformed to CartesianPos1D.
+    from_posa = vconvert(in_pos_cls, from_posa_, **kwargs)
+    # Jacobian requires the position to be a float
     dtype = jnp.result_type(float)  # TODO: better match e.g. int16 to float16?
-    from_posv = from_posv.astype(dtype, copy=False)  # cast to float
+    from_posa = from_posa.astype(dtype, copy=False)  # cast to float
 
-    # Takes the Jacobian through the representation transformation function.  This
-    # returns a representation of the target type, where the value of each field the
-    # corresponding row of the Jacobian. The value of the field is a Quantity with
-    # the correct numerator unit (of the Jacobian row). The value is a Vector of the
-    # original type, with fields that are the columns of that row, but with only the
-    # denomicator's units.
-    jac_nested_vecs = jac_rep_as(target.time_nth_derivative_cls(-2), from_posv)
-
-    # This changes the Jacobian to be a dictionary of each row, with the value
-    # being that row's column as a dictionary, now with the correct units for
-    # each element:  {row_i: {col_j: Quantity(value, row.unit / column.unit)}}
-    jac_rows = {
-        k: {
-            kk: u.Quantity(vv.value, unit=v.unit / vv.unit)
-            for kk, vv in field_items(v.value)
-        }
-        for k, v in field_items(jac_nested_vecs)
+    # Convert to a dictionary of parameters and auxiliary values.
+    in_pos_params, in_pos_aux = get_params_and_aux(from_posa)
+    in_pos_params = {  # NOTE: if use unitful jacobian, this is not needed
+        k: (v.distance if isinstance(v, AbstractDistance) else v)
+        for k, v in in_pos_params.items()
     }
 
-    # Now we can use the Jacobian to transform the differential.
-    flat_current = current.reshape(flat_shape)
-    newvec = target(
-        **{  # Each field is the dot product of the row of the J and the diff column.
-            k: jnp.sum(  # Doing the dot product.
-                jnp.stack(
-                    tuple(j_c * getattr(flat_current, kk) for kk, j_c in j_r.items())
-                ),
-                axis=0,
-            )
-            for k, j_r in jac_rows.items()
-        }
-    ).reshape(shape)
+    # Compute the Jacobian of the position transformation.
+    # NOTE: this is using Quantities. Using raw arrays is ~20x faster.
+    # TODO: what about the auxiliary values?
+    jac_fn = jax.vmap(jax.jacfwd(vconvert, argnums=2, has_aux=True), in_axes=in_axes)
+    jac, _ = jac_fn(out_pos_cls, in_pos_cls, in_pos_params, in_aux=in_pos_aux)
+    jac = transform_jac(jac)
 
-    # TODO: add  df(q)/dt, which is 0 for all current transforms
-    #       This is necessary for the df/dt * vel term in the chain rule.
+    to_acc_params = _dot_jac_vec(jac, from_acc.asdict())
 
-    return newvec  # noqa: RET504
+    to_acc = to_acc_cls(**to_acc_params)
 
+    # Reshape the output to the original shape
+    to_acc = to_acc.reshape(shape)
 
-# TODO: situate this better to show how vconvert is used
-jac_rep_as = eqx.filter_jit(
-    jax.vmap(jax.jacfwd(vconvert, argnums=1), in_axes=(None, 0))
-)
+    # TODO: add dJ/dt which is 0 for all current transforms
+
+    return to_acc  # noqa: RET504

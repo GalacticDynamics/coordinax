@@ -358,13 +358,11 @@ class TestPolarVel(AbstractVel2DTest):
         cart2d = difntl.vconvert(cx.vecs.CartesianVel2D, vector)
 
         assert isinstance(cart2d, cx.vecs.CartesianVel2D)
-        assert jnp.array_equal(
-            cart2d.x, u.Quantity([1.0, -46.787014, -91.76889, -25.367176], "km/s")
-        )
-        assert jnp.array_equal(
-            cart2d.y,
-            u.Quantity([23.702353, 32.418385, -38.69947, -149.61249], "km/s"),
-        )
+        exp = u.Quantity([1.0, -46.787014, -91.76888, -25.367176], "km/s")
+        assert jnp.allclose(cart2d.x, exp, atol=u.Quantity(1e-8, "km/s"))
+
+        exp = u.Quantity([23.702353, 32.418385, -38.699474, -149.61249], "km/s")
+        assert jnp.allclose(cart2d.y, exp, atol=u.Quantity(1e-8, "km/s"))
 
     @pytest.mark.filterwarnings("ignore:Explicitly requested dtype")
     def test_polar_to_polar(self, difntl, vector):

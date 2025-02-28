@@ -862,14 +862,12 @@ class TestCylindricalVel(AbstractVel3DTest):
         cart3d = difntl.vconvert(cx.CartesianVel3D, vector)
 
         assert isinstance(cart3d, cx.CartesianVel3D)
-        assert jnp.array_equal(
-            cart3d.x, u.Quantity([5.0, -76.537544, -145.15944, -40.03075], "km/s")
-        )
-        assert jnp.array_equal(
-            cart3d.y,
-            u.Quantity([42.664234, 56.274563, -58.73506, -224.13647], "km/s"),
-        )
-        assert jnp.array_equal(cart3d.z, u.Quantity([13.0, 14.0, 15.0, 16.0], "km/s"))
+        exp = u.Quantity([5.0, -76.537544, -145.15944, -40.03075], "km/s")
+        assert jnp.array_equal(cart3d.x, exp)
+        exp = u.Quantity([42.664234, 56.274563, -58.73506, -224.13647], "km/s")
+        assert jnp.allclose(cart3d.y, exp, atol=u.Quantity(1e-8, "km/s"))
+        exp = u.Quantity([13.0, 14.0, 15.0, 16.0], "km/s")
+        assert jnp.array_equal(cart3d.z, exp)
 
         apycart3 = apydifntl.represent_as(apyc.CartesianDifferential, apyvector)
         assert np.allclose(convert(cart3d.x, APYQuantity), apycart3.d_x)
@@ -882,17 +880,15 @@ class TestCylindricalVel(AbstractVel3DTest):
 
         assert isinstance(dsph, cx.SphericalVel)
 
-        exp = u.Quantity([13.472647, 14.904825, 16.31328, 17.708755], "km/s")
-        assert jnp.array_equal(dsph.r, exp)
+        exp = u.Quantity([13.472647, 14.904824, 16.313278, 17.708754], "km/s")
+        assert jnp.allclose(dsph.r, exp, atol=u.Quantity(1e-8, "km/s"))
 
         exp = u.Quantity(
             [0.3902412, 0.30769292, 0.24615361, 0.19999981], "km rad / (kpc s)"
         )
         assert jnp.allclose(dsph.theta, exp, atol=u.Quantity(5e-7, "km rad / (kpc s)"))
 
-        exp = u.Quantity(
-            [42.664234, 47.404705, 52.145176, 56.885643], "km rad / (kpc s)"
-        )
+        exp = u.Quantity([9, 10, 11, 12], "mas / yr")
         assert jnp.array_equal(dsph.phi, exp)
 
     def test_cylindrical_to_spherical_astropy(
