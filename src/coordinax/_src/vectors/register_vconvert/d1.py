@@ -22,7 +22,7 @@ from coordinax._src.vectors.private_api import wrap_vconvert_impl_params
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.CartesianPos2D],
     from_vector: type[d1.CartesianPos1D],
     p: ct.ParamsDict,
@@ -60,7 +60,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.PolarPos],
     from_vector: type[d1.CartesianPos1D],
     p: ct.ParamsDict,
@@ -103,7 +103,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.CartesianPos3D],
     from_vector: type[d1.CartesianPos1D],
     p: ct.ParamsDict,
@@ -144,7 +144,7 @@ def vconvert_impl(
     (type[d3.MathSphericalPos], type[d1.CartesianPos1D], ct.ParamsDict),
 )
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.AbstractPos3D],
     from_vector: type[d1.CartesianPos1D],
     p: ct.ParamsDict,
@@ -199,7 +199,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.CylindricalPos],
     from_vector: type[d1.CartesianPos1D],
     p: ct.ParamsDict,
@@ -246,7 +246,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.CartesianPos2D],
     from_vector: type[d1.RadialPos],
     p: ct.ParamsDict,
@@ -284,7 +284,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d2.PolarPos],
     from_vector: type[d1.RadialPos],
     p: ct.ParamsDict,
@@ -331,7 +331,7 @@ def vconvert_impl(
 # axis. What about giving theta, phi instead?
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.CartesianPos3D],
     from_vector: type[d1.RadialPos],
     p: ct.ParamsDict,
@@ -373,7 +373,7 @@ def vconvert_impl(
     (type[d3.MathSphericalPos], type[d1.RadialPos], ct.ParamsDict),
 )
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.AbstractPos3D],
     from_vector: type[d1.RadialPos],
     p: ct.ParamsDict,
@@ -431,7 +431,7 @@ def vconvert_impl(
 
 @dispatch
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[d3.CylindricalPos],
     from_vector: type[d1.RadialPos],
     p: ct.ParamsDict,

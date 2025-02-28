@@ -22,7 +22,7 @@ from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_p
 
 @dispatch
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
-def vconvert_impl(
+def vconvert(
     to_vector: type[AbstractPos2D],
     from_vector: type[AbstractPos2D],
     params: ct.ParamsDict,
@@ -33,10 +33,10 @@ def vconvert_impl(
     units: ct.OptUSys = None,
 ) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """AbstractPos -> CartesianPos1D -> AbstractPos."""
-    params, aux = vconvert_impl(
+    params, aux = vconvert(
         CartesianPos2D, from_vector, params, in_aux=in_aux, out_aux=None, units=units
     )
-    params, aux = vconvert_impl(
+    params, aux = vconvert(
         to_vector, CartesianPos2D, params, in_aux=aux, out_aux=out_aux, units=units
     )
     return params, aux
@@ -45,7 +45,7 @@ def vconvert_impl(
 @dispatch
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[PolarPos],
     from_vector: type[CartesianPos2D],
     p: ct.ParamsDict,
@@ -69,7 +69,7 @@ def vconvert_impl(
 @dispatch
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
-def vconvert_impl(
+def vconvert(
     to_vector: type[CartesianPos2D],
     from_vector: type[PolarPos],
     p: ct.ParamsDict,
