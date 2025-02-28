@@ -82,14 +82,14 @@ in_axes: Final = (None, None, 0)
 # TODO: implement for cross-representations
 @dispatch.multi(
     # N-D -> N-D
-    (type[d1.AbstractVel1D], d1.AbstractVel1D, AbstractPos | u.Quantity["length"]),
-    (type[d2.AbstractVel2D], d2.AbstractVel2D, AbstractPos | u.Quantity["length"]),
-    (type[d3.AbstractVel3D], d3.AbstractVel3D, AbstractPos | u.Quantity["length"]),
+    (type[d1.AbstractVel1D], d1.AbstractVel1D, AbstractPos | u.AbstractQuantity),
+    (type[d2.AbstractVel2D], d2.AbstractVel2D, AbstractPos | u.AbstractQuantity),
+    (type[d3.AbstractVel3D], d3.AbstractVel3D, AbstractPos | u.AbstractQuantity),
 )
 def vconvert(
     to_vel_cls: type[AbstractVel],
     from_vel: AbstractVel,
-    from_pos: AbstractPos | u.Quantity["length"],
+    from_pos: AbstractPos | u.AbstractQuantity,
     /,
     **kwargs: Any,
 ) -> AbstractVel:
@@ -208,26 +208,29 @@ def vconvert(
     return to_vel  # noqa: RET504
 
 
+# ===================================================================
+
+
 # TODO: implement for cross-representations
 @dispatch.multi(
     # N-D -> N-D
     (
         type[d1.AbstractAcc1D],
         d1.AbstractAcc1D,
-        AbstractVel | u.Quantity["speed"],
-        AbstractPos | u.Quantity["length"],
+        AbstractVel | u.AbstractQuantity,
+        AbstractPos | u.AbstractQuantity,
     ),
     (
         type[d2.AbstractAcc2D],
         d2.AbstractAcc2D,
-        AbstractVel | u.Quantity["speed"],
-        AbstractPos | u.Quantity["length"],
+        AbstractVel | u.AbstractQuantity,
+        AbstractPos | u.AbstractQuantity,
     ),
     (
         type[d3.AbstractAcc3D],
         d3.AbstractAcc3D,
-        AbstractVel | u.Quantity["speed"],
-        AbstractPos | u.Quantity["length"],
+        AbstractVel | u.AbstractQuantity,
+        AbstractPos | u.AbstractQuantity,
     ),
 )
 def vconvert(

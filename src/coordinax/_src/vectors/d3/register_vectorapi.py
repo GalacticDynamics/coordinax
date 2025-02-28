@@ -29,6 +29,7 @@ from .lonlatspherical import (
 from .mathspherical import MathSphericalAcc, MathSphericalPos, MathSphericalVel
 from .spherical import SphericalAcc, SphericalPos, SphericalVel
 from .spheroidal import ProlateSpheroidalAcc, ProlateSpheroidalPos, ProlateSpheroidalVel
+from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_params
 
@@ -730,14 +731,77 @@ def vconvert(
 
 
 @dispatch.multi(
+    (type[LonLatSphericalVel], type[SphericalVel], ct.ParamsDict),
+    (type[LonLatSphericalAcc], type[SphericalAcc], ct.ParamsDict),
+)
+@wrap_vconvert_impl_params
+def vconvert(
+    to_vector: type[AbstractVector],
+    from_vector: type[AbstractVector],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
+    """SphericalVel/Acc -> LonLatSphericalVel/Acc.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    >>> p = {"r": u.Quantity(1, "km/s"),
+    ...      "theta": u.Quantity(10, "deg/s"),
+    ...      "phi": u.Quantity(20, "deg/s")}
+
+    >>> cxv.vconvert(cxv.LonLatSphericalVel, cxv.SphericalVel, p)
+    ({'distance': Quantity[...](Array(1, dtype=int32, ...), unit='km / s'),
+      'lat': Quantity[...](Array(-10, dtype=int32, ...), unit='deg / s'),
+      'lon': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s')},
+     {})
+
+    >>> x = cxv.SphericalVel(**p)
+    >>> y = cxv.vconvert(cxv.LonLatSphericalVel, x)
+    >>> print(y)
+    <LonLatSphericalVel (lon[deg / s], lat[deg / s], distance[km / s])
+        [ 20 -10   1]>
+
+    >>> p = {"r": u.Quantity(1, "km/s2"),
+    ...      "theta": u.Quantity(10, "deg/s2"),
+    ...      "phi": u.Quantity(20, "deg/s2")}
+
+    >>> cxv.vconvert(cxv.LonLatSphericalAcc, cxv.SphericalAcc, p)
+    ({'distance': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
+      'lat': Quantity[...](Array(-10, dtype=int32, ...), unit='deg / s2'),
+      'lon': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s2')},
+     {})
+
+    >>> x = cxv.SphericalAcc(**p)
+    >>> y = cxv.vconvert(cxv.LonLatSphericalAcc, x)
+    >>> print(y)
+    <LonLatSphericalAcc (lon[deg / s2], lat[deg / s2], distance[km / s2])
+        [ 20 -10   1]>
+
+    """
+    newp = {"distance": p["r"], "lat": -p["theta"], "lon": p["phi"]}
+    return newp, (out_aux or {})
+
+
+@dispatch.multi(
     (type[MathSphericalPos], type[SphericalPos], ct.ParamsDict),
     (type[SphericalPos], type[MathSphericalPos], ct.ParamsDict),
+    (type[MathSphericalVel], type[SphericalVel], ct.ParamsDict),
+    (type[SphericalVel], type[MathSphericalVel], ct.ParamsDict),
+    (type[MathSphericalAcc], type[SphericalAcc], ct.ParamsDict),
+    (type[SphericalAcc], type[MathSphericalAcc], ct.ParamsDict),
 )
 @partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
-    to_vector: type[AbstractPos3D],
-    from_vector: type[AbstractPos3D],
+    to_vector: type[AbstractVector],
+    from_vector: type[AbstractVector],
     p: ct.ParamsDict,
     /,
     *,
@@ -749,7 +813,10 @@ def vconvert(
 
     Examples
     --------
+    >>> import unxt as u
     >>> import coordinax.vecs as cxv
+
+    Position:
 
     >>> p = {"r": 1, "theta": 90, "phi": 90}
     >>> usys = u.unitsystem("km", "deg")
@@ -765,6 +832,69 @@ def vconvert(
       'r': Array(1, dtype=int32, ...),
       'theta': Array(90., dtype=float32, ...)},
      {})
+
+    Velocity:
+
+    >>> p = {"r": u.Quantity(1, "km/s"),
+    ...      "theta": u.Quantity(10, "deg/s"),
+    ...      "phi": u.Quantity(20, "deg/s")}
+
+    >>> p, aux = cxv.vconvert(cxv.MathSphericalVel, cxv.SphericalVel, p)
+    >>> p, aux
+    ({'phi': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s'),
+      'r': Quantity['speed'](Array(1, dtype=int32, ...), unit='km / s'),
+      'theta': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s')}, {})
+
+    >>> cxv.vconvert(cxv.SphericalVel, cxv.MathSphericalVel, p)
+    ({'phi': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s'),
+      'r': Quantity['speed'](Array(1, dtype=int32, ...), unit='km / s'),
+      'theta': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s')},
+     {})
+
+    >>> x = cxv.SphericalVel(r=u.Quantity(1, "km/s"),
+    ...                      theta=u.Quantity(10, "deg/s"),
+    ...                      phi=u.Quantity(20, "deg/s"))
+    >>> y = cxv.vconvert(cxv.MathSphericalVel, x)
+    >>> print(y)
+    <MathSphericalVel (r[km / s], theta[deg / s], phi[deg / s])
+        [ 1 20 10]>
+
+    >>> x = cxv.vconvert(cxv.SphericalVel, y)
+    >>> print(x)
+    <SphericalVel (r[km / s], theta[deg / s], phi[deg / s])
+        [ 1 10 20]>
+
+    Acceleration:
+
+    >>> p = {"r": u.Quantity(1, "km/s2"),
+    ...      "theta": u.Quantity(10, "deg/s2"),
+    ...      "phi": u.Quantity(20, "deg/s2")}
+
+    >>> p, aux = cxv.vconvert(cxv.MathSphericalAcc, cxv.SphericalAcc, p)
+    >>> p, aux
+    ({'phi': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s2'),
+      'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
+      'theta': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s2')},
+     {})
+
+    >>> cxv.vconvert(cxv.SphericalAcc, cxv.MathSphericalAcc, p)
+    ({'phi': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s2'),
+      'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
+      'theta': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s2')},
+     {})
+
+    >>> x = cxv.SphericalAcc(r=u.Quantity(1, "km/s2"),
+    ...                      theta=u.Quantity(10, "deg/s2"),
+    ...                      phi=u.Quantity(20, "deg/s2"))
+    >>> y = cxv.vconvert(cxv.MathSphericalAcc, x)
+    >>> print(y)
+    <MathSphericalAcc (r[km / s2], theta[deg / s2], phi[deg / s2])
+        [ 1 20 10]>
+
+    >>> x = cxv.vconvert(cxv.SphericalAcc, y)
+    >>> print(x)
+    <SphericalAcc (r[km / s2], theta[deg / s2], phi[deg / s2])
+        [ 1 10 20]>
 
     """
     outp = {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
@@ -878,6 +1008,63 @@ def vconvert(
 
     outp = {"r": p["distance"], "theta": theta, "phi": p["lon"]}
     return outp, combine_aux(in_aux, out_aux)
+
+
+@dispatch.multi(
+    (type[SphericalVel], type[LonLatSphericalVel], ct.ParamsDict),
+    (type[SphericalAcc], type[LonLatSphericalAcc], ct.ParamsDict),
+)
+@wrap_vconvert_impl_params
+def vconvert(
+    to_vector: type[AbstractVector],
+    from_vector: type[AbstractVector],
+    p: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+    units: ct.OptUSys = None,
+) -> tuple[ct.ParamsDict, ct.AuxDict]:
+    """LonLatSphericalVel -> SphericalVel.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    >>> p = {"lon": u.Quantity(90, "deg/s"),
+    ...      "lat": u.Quantity(0, "deg/s"),
+    ...      "distance": u.Quantity(1, "km/s")}
+    >>> cxv.vconvert(cxv.SphericalVel, cxv.LonLatSphericalVel, p)
+    ({'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s'),
+      'theta': Quantity[...](Array(0, dtype=int32, ...), unit='deg / s'),
+      'phi': Quantity[...](Array(90, dtype=int32, ...), unit='deg / s')},
+     {})
+
+    >>> x = cxv.LonLatSphericalVel(**p)
+    >>> y = cxv.vconvert(cxv.SphericalVel, x)
+    >>> print(y)
+    <SphericalVel (r[km / s], theta[deg / s], phi[deg / s])
+        [ 1  0 90]>
+
+    >>> p = {"lon": u.Quantity(90, "deg/s2"),
+    ...      "lat": u.Quantity(0, "deg/s2"),
+    ...      "distance": u.Quantity(1, "km/s2")}
+    >>> cxv.vconvert(cxv.SphericalAcc, cxv.LonLatSphericalAcc, p)
+    ({'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
+      'theta': Quantity[...](Array(0, dtype=int32, ...), unit='deg / s2'),
+      'phi': Quantity[...](Array(90, dtype=int32, ...), unit='deg / s2')},
+     {})
+
+    >>> x = cxv.LonLatSphericalAcc(**p)
+    >>> y = cxv.vconvert(cxv.SphericalAcc, x)
+    >>> print(y)
+    <SphericalAcc (r[km / s2], theta[deg / s2], phi[deg / s2])
+        [ 1  0 90]>
+
+    """
+    newp = {"r": p["distance"], "theta": -p["lat"], "phi": p["lon"]}
+    return newp, (out_aux or {})
 
 
 @dispatch
@@ -1169,7 +1356,7 @@ def vconvert(
 def vconvert(
     target: type[LonCosLatSphericalVel],
     current: AbstractVel3D,
-    position: AbstractPos | u.Quantity["length"],
+    position: AbstractPos | u.AbstractQuantity,
     /,
     **kwargs: Any,
 ) -> LonCosLatSphericalVel:

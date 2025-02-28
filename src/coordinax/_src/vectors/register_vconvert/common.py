@@ -12,6 +12,7 @@ import coordinax._src.vectors.custom_types as ct
 from coordinax._src.vectors import d1, d2, d3, d4, dn
 from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AbstractVector
+from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
@@ -28,14 +29,21 @@ def get_params_and_aux(obj: AbstractVector, /) -> tuple[ct.ParamsDict, ct.AuxDic
     return p, in_aux
 
 
-@dispatch
+# =============================================================================
+
+
+@dispatch.multi(
+    (type[AbstractPos], AbstractPos),
+    (type[AbstractVel], AbstractVel),
+    (type[AbstractAcc], AbstractAcc),
+)
 def vconvert(
-    target: type[AbstractPos],
-    current: AbstractPos,
+    target: type[AbstractVector],
+    current: AbstractVector,
     /,
     units: ct.OptUSys = None,
     **out_aux: Any,
-) -> AbstractPos:
+) -> AbstractVector:
     """AbstractPos -> vconvert_impl -> AbstractPos.
 
     This is the base case for the transformation of position vectors.
@@ -64,14 +72,18 @@ def vconvert(
     return target(**(aux or {}), **p)
 
 
-@dispatch
+@dispatch.multi(
+    (type[AbstractPos], type[AbstractPos], AbstractPos),
+    (type[AbstractVel], type[AbstractVel], AbstractVel),
+    (type[AbstractAcc], type[AbstractAcc], AbstractAcc),
+)
 def vconvert(
-    to_vector: type[AbstractPos],
-    from_vector: type[AbstractPos],
-    current: AbstractPos,
+    to_vector: type[AbstractVector],
+    from_vector: type[AbstractVector],
+    current: AbstractVector,
     /,
     **out_aux: Any,
-) -> AbstractPos:
+) -> AbstractVector:
     """Convert from one position vector to another.
 
     Examples
