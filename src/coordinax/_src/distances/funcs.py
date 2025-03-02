@@ -9,6 +9,7 @@ __all__ = [
 
 from typing import Any
 
+from jaxtyping import ArrayLike
 from plum import dispatch
 
 import quaxed.numpy as jnp
@@ -20,11 +21,27 @@ from .measures import Distance, DistanceModulus, Parallax
 parallax_base_length = u.Quantity(1, "AU")
 
 #####################################################################
-# Distance
+# Distance constructor
 
 
 @dispatch
-def distance(p: Distance, /, **kw: Any) -> Distance:
+def distance(value: ArrayLike, unit: Any, /, **kw: Any) -> Distance:
+    """Construct a distance.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.distance as cxd
+
+    >>> cxd.distance(1, "kpc")
+    Distance(Array(1, dtype=int32, weak_type=True), unit='kpc')
+
+    """
+    return Distance(jnp.asarray(value, **kw), unit)
+
+
+@dispatch
+def distance(d: Distance, /, **kw: Any) -> Distance:
     """Compute distance from distance.
 
     Examples
@@ -41,8 +58,8 @@ def distance(p: Distance, /, **kw: Any) -> Distance:
 
     """
     if len(kw) == 0:
-        return p
-    return jnp.asarray(p, **kw)
+        return d
+    return jnp.asarray(d, **kw)
 
 
 @dispatch
@@ -109,7 +126,23 @@ def distance(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Distance:
 
 
 #####################################################################
-# Parallax
+# Parallax constructor
+
+
+@dispatch
+def parallax(value: ArrayLike, unit: Any, /, **kw: Any) -> Parallax:
+    """Construct a distance.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.distance as cxd
+
+    >>> cxd.parallax(1, "mas")
+    Parallax(Array(1, dtype=int32, weak_type=True), unit='mas')
+
+    """
+    return Parallax(jnp.asarray(value, **kw), unit)
 
 
 @dispatch
@@ -195,7 +228,23 @@ def parallax(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Parallax:
 
 
 #####################################################################
-# Distance Modulus
+# Distance Modulus constructor
+
+
+@dispatch
+def distance_modulus(value: ArrayLike, unit: Any, /, **kw: Any) -> DistanceModulus:
+    """Construct a distance.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.distance as cxd
+
+    >>> cxd.distance_modulus(1, "mag")
+    DistanceModulus(Array(1, dtype=int32, weak_type=True), unit='mag')
+
+    """
+    return DistanceModulus(jnp.asarray(value, **kw), unit)
 
 
 @dispatch
