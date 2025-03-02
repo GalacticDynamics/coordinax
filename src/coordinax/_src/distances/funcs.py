@@ -1,6 +1,7 @@
 """distance functions."""
 
 __all__ = [
+    "distance",
     "parallax",
     "distance_modulus",
 ]
@@ -18,13 +19,101 @@ from .measures import Distance, DistanceModulus, Parallax
 
 parallax_base_length = u.Quantity(1, "AU")
 
+#####################################################################
+# Distance
+
+
+@dispatch
+def distance(p: Distance, /, **kw: Any) -> Distance:
+    """Compute distance from distance.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.distance as cxd
+
+    >>> d = cxd.Distance(1, "kpc")
+    >>> cxd.distance(d) is d
+    True
+
+    >>> cxd.distance(d, dtype=float)
+    Distance(Array(1., dtype=float32), unit='kpc')
+
+    """
+    if len(kw) == 0:
+        return p
+    return jnp.asarray(p, **kw)
+
+
+@dispatch
+def distance(d: u.Quantity["length"], /, **kw: Any) -> Distance:
+    """Compute distance from distance.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.distance as cxd
+
+    >>> q = u.Quantity(1, "kpc")
+    >>> cxd.distance(q, dtype=float)
+    Distance(Array(1., dtype=float32), unit='kpc')
+
+    """
+    unit = u.unit_of(d)
+    return Distance(jnp.asarray(d.ustrip(unit), **kw), unit)
+
+
+@dispatch
+def distance(p: Parallax | u.Quantity["angle"], /, **kw: Any) -> Distance:
+    """Compute distance from parallax.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.distance as cxd
+
+    >>> p = cxd.Parallax(1, "mas")
+    >>> cxd.distance(p).uconvert("pc").round(2)
+    Distance(Array(1000., dtype=float32, weak_type=True), unit='pc')
+
+    >>> q = u.Quantity(1, "mas")
+    >>> cxd.distance(q).uconvert("pc").round(2)
+    Distance(Array(1000., dtype=float32, weak_type=True), unit='pc')
+
+    """
+    d = parallax_base_length / jnp.tan(p)  # [AU]
+    unit = u.unit_of(d)
+    return Distance(jnp.asarray(d.ustrip(unit), **kw), unit)
+
+
+@dispatch
+def distance(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Distance:
+    """Compute distance from distance modulus.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.distance as cxd
+
+    >>> dm = cxd.DistanceModulus(10, "mag")
+    >>> cxd.distance(dm).uconvert("pc").round(2)
+    Distance(Array(1000., dtype=float32, weak_type=True), unit='pc')
+
+    >>> q = u.Quantity(10, "mag")
+    >>> cxd.distance(q).uconvert("pc").round(2)
+    Distance(Array(1000., dtype=float32, weak_type=True), unit='pc')
+
+    """
+    d = 10 ** (1 + dm.ustrip("mag") / 5)
+    return Distance(jnp.asarray(d, **kw), "pc")
+
 
 #####################################################################
 # Parallax
 
 
 @dispatch
-def parallax(p: Parallax, /, **kwargs: Any) -> Parallax:
+def parallax(p: Parallax, /, **kw: Any) -> Parallax:
     """Compute parallax from parallax.
 
     Examples
@@ -40,13 +129,13 @@ def parallax(p: Parallax, /, **kwargs: Any) -> Parallax:
     Parallax(Array(1., dtype=float32), unit='mas')
 
     """
-    if len(kwargs) == 0:
+    if len(kw) == 0:
         return p
-    return jnp.asarray(p, **kwargs)
+    return jnp.asarray(p, **kw)
 
 
 @dispatch
-def parallax(p: u.Quantity["angle"], /) -> Parallax:
+def parallax(p: u.Quantity["angle"], /, **kw: Any) -> Parallax:
     """Compute parallax from parallax.
 
     Examples
@@ -55,16 +144,16 @@ def parallax(p: u.Quantity["angle"], /) -> Parallax:
     >>> import coordinax.distance as cxd
 
     >>> q = u.Quantity(1, "mas")
-    >>> cxd.parallax(q)
-    Parallax(Array(1, dtype=int32, weak_type=True), unit='mas')
+    >>> cxd.parallax(q, dtype=float)
+    Parallax(Array(1., dtype=float32), unit='mas')
 
     """
     unit = u.unit_of(p)
-    return Parallax(p.ustrip(unit), unit)
+    return Parallax(jnp.asarray(p.ustrip(unit), **kw), unit)
 
 
 @dispatch
-def parallax(d: Distance | u.Quantity["length"], /, **kwargs: Any) -> Parallax:
+def parallax(d: Distance | u.Quantity["length"], /, **kw: Any) -> Parallax:
     """Compute parallax from distance.
 
     Examples
@@ -82,11 +171,11 @@ def parallax(d: Distance | u.Quantity["length"], /, **kwargs: Any) -> Parallax:
 
     """
     p = jnp.atan2(parallax_base_length, d)
-    return Parallax(jnp.asarray(p.value, **kwargs), p.unit)
+    return Parallax(jnp.asarray(p.value, **kw), p.unit)
 
 
 @dispatch
-def parallax(dm: DistanceModulus | u.Quantity["mag"], /, **kwargs: Any) -> Parallax:
+def parallax(dm: DistanceModulus | u.Quantity["mag"], /, **kw: Any) -> Parallax:
     """Convert distance modulus to parallax.
 
     Examples
@@ -102,7 +191,7 @@ def parallax(dm: DistanceModulus | u.Quantity["mag"], /, **kwargs: Any) -> Paral
     d = BareQuantity(10 ** (1 + dm.ustrip("mag") / 5), "pc")
     p = jnp.atan2(parallax_base_length, d)
     unit = u.unit_of(p)
-    return Parallax(jnp.asarray(p.ustrip(unit), **kwargs), unit)
+    return Parallax(jnp.asarray(p.ustrip(unit), **kw), unit)
 
 
 #####################################################################
@@ -110,7 +199,7 @@ def parallax(dm: DistanceModulus | u.Quantity["mag"], /, **kwargs: Any) -> Paral
 
 
 @dispatch
-def distance_modulus(dm: DistanceModulus, /, **kwargs: Any) -> DistanceModulus:
+def distance_modulus(dm: DistanceModulus, /, **kw: Any) -> DistanceModulus:
     """Compute distance modulus from distance modulus.
 
     Examples
@@ -126,13 +215,13 @@ def distance_modulus(dm: DistanceModulus, /, **kwargs: Any) -> DistanceModulus:
     DistanceModulus(Array(1., dtype=float32), unit='mag')
 
     """
-    if len(kwargs) == 0:
+    if len(kw) == 0:
         return dm
-    return jnp.asarray(dm, **kwargs)
+    return jnp.asarray(dm, **kw)
 
 
 @dispatch
-def distance_modulus(dm: u.Quantity["mag"], /) -> DistanceModulus:
+def distance_modulus(dm: u.Quantity["mag"], /, **kw: Any) -> DistanceModulus:
     """Compute parallax from parallax.
 
     Examples
@@ -146,12 +235,12 @@ def distance_modulus(dm: u.Quantity["mag"], /) -> DistanceModulus:
 
     """
     unit = u.unit_of(dm)
-    return DistanceModulus(u.ustrip(unit, dm), unit)
+    return DistanceModulus(jnp.asarray(u.ustrip(unit, dm), **kw), unit)
 
 
 @dispatch
 def distance_modulus(
-    d: Distance | u.Quantity["length"], /, **kwargs: Any
+    d: Distance | u.Quantity["length"], /, **kw: Any
 ) -> DistanceModulus:
     """Compute distance modulus from distance.
 
@@ -170,12 +259,12 @@ def distance_modulus(
 
     """
     dm = 5 * jnp.log10(d.ustrip("pc")) - 5
-    return DistanceModulus(jnp.asarray(dm, **kwargs), "mag")
+    return DistanceModulus(jnp.asarray(dm, **kw), "mag")
 
 
 @dispatch
 def distance_modulus(
-    p: Parallax | u.Quantity["angle"], /, **kwargs: Any
+    p: Parallax | u.Quantity["angle"], /, **kw: Any
 ) -> DistanceModulus:
     """Compute distance modulus from parallax.
 
@@ -195,4 +284,4 @@ def distance_modulus(
     """
     d = parallax_base_length / jnp.tan(p)  # [AU]
     dm = 5 * jnp.log10(d.ustrip("pc")) - 5
-    return DistanceModulus(jnp.asarray(dm, **kwargs), "mag")
+    return DistanceModulus(jnp.asarray(dm, **kw), "mag")

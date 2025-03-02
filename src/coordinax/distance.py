@@ -7,6 +7,7 @@ __all__ = [
     "DistanceModulus",
     "Parallax",
     # funcs
+    "distance",
     "parallax",
     "distance_modulus",
 ]
@@ -21,6 +22,7 @@ with install_import_hook("coordinax.distance", RUNTIME_TYPECHECKER):
         Distance,
         DistanceModulus,
         Parallax,
+        distance,
         distance_modulus,
         parallax,
     )
