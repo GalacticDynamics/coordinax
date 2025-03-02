@@ -8,6 +8,7 @@ __all__ = [
     "Parallax",
     # funcs
     "parallax",
+    "distance_modulus",
 ]
 
 from jaxtyping import install_import_hook
@@ -20,6 +21,7 @@ with install_import_hook("coordinax.distance", RUNTIME_TYPECHECKER):
         Distance,
         DistanceModulus,
         Parallax,
+        distance_modulus,
         parallax,
     )
 

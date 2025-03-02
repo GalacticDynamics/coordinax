@@ -10,7 +10,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractDistance
-from .funcs import parallax
+from .funcs import distance_modulus, parallax
 from .measures import Distance, DistanceModulus, Parallax
 
 parallax_base_length = u.Quantity(1, "AU")
@@ -86,70 +86,17 @@ def from_(
 
 
 @u.AbstractQuantity.from_.dispatch
-def from_(cls: type[DistanceModulus], dm: DistanceModulus) -> DistanceModulus:
-    """Construct a `DistanceModulus` from a `DistanceModulus`.
-
-    Examples
-    --------
-    >>> from coordinax.distance import DistanceModulus
-
-    >>> dm = DistanceModulus(1, "mag")
-    >>> DistanceModulus.from_(dm) is dm
-    True
-
-    """
-    return dm
-
-
-@u.AbstractQuantity.from_.dispatch
 def from_(
-    cls: type[DistanceModulus], d: Distance | u.Quantity["length"], /, **kwargs: Any
+    cls: type[DistanceModulus],
+    dm: AbstractDistance
+    | u.Quantity["mag"]
+    | u.Quantity["length"]
+    | u.Quantity["angle"],
+    /,
+    **kwargs: Any,
 ) -> DistanceModulus:
-    """Construct a `DistanceModulus` from a distance.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> from coordinax.distance import Distance, DistanceModulus
-
-    >>> DistanceModulus.from_(Distance(1, "pc"))
-    DistanceModulus(Array(-5., dtype=float32), unit='mag')
-
-    >>> DistanceModulus.from_(u.Quantity(1, "pc"))
-    DistanceModulus(Array(-5., dtype=float32), unit='mag')
-
-    """
-    dm = 5 * jnp.log10(d.ustrip("pc")) - 5
-    return cls(jnp.asarray(dm, **kwargs), "mag")
-
-
-@u.AbstractQuantity.from_.dispatch  # type: ignore[no-redef]
-def from_(
-    cls: type[DistanceModulus], p: Parallax | u.Quantity["angle"], /, **kwargs: Any
-) -> DistanceModulus:
-    """Construct a `DistanceModulus` from a parallax.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax.distance as cxd
-
-    >>> p = cxd.Parallax(1, "mas")
-    >>> cxd.DistanceModulus.from_(p)
-    DistanceModulus(Array(10., dtype=float32), unit='mag')
-
-    >>> q = u.Quantity(1, "mas")
-    >>> DistanceModulus.from_(q)
-    DistanceModulus(Array(10., dtype=float32), unit='mag')
-
-    """
-    d = parallax_base_length / jnp.tan(p)  # [AU]
-    dm = 5 * jnp.log10(d.ustrip("pc")) - 5
-    return cls(jnp.asarray(dm, **kwargs), "mag")
-
-
-# -------------------------------------------------------------------
-# To Parallax
+    """Construct a `DistanceModulus` from the input."""
+    return distance_modulus(dm, **kwargs)
 
 
 @u.AbstractQuantity.from_.dispatch
