@@ -13,6 +13,10 @@ __all__ = [
     "Distance",
     "DistanceModulus",
     "Parallax",
+    # funcs
+    "distance",
+    "parallax",
+    "distance_modulus",
     # Typing
     "BBtLength",
     "BatchableDistance",
@@ -20,6 +24,7 @@ __all__ = [
 
 from .base import AbstractDistance
 from .custom_types import BatchableDistance, BBtLength
+from .funcs import distance, distance_modulus, parallax
 from .measures import Distance, DistanceModulus, Parallax
 
 # isort: split
