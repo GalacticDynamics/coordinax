@@ -12,6 +12,7 @@ from plum import dispatch
 import quaxed.numpy as jnp
 import unxt as u
 
+from .base import AbstractSpaceFrame
 from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.angles import Angle
@@ -29,6 +30,54 @@ ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
 LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]
 VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
+
+
+# ---------------------------------------------------------------
+# Base Space-Frame Transformation
+
+_icrs_frame = ICRS()
+
+
+@dispatch
+def frame_transform_op(
+    from_frame: AbstractSpaceFrame, to_frame: AbstractSpaceFrame, /
+) -> Pipe:
+    """Compute frame transformations with ICRS as the intermediary.
+
+    Examples
+    --------
+    >>> from plum import dispatch
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> class MySpaceFrame(cx.frames.AbstractSpaceFrame):
+    ...     pass
+
+    >>> @dispatch
+    ... def frame_transform_op(from_frame: MySpaceFrame, to_frame: ICRS, /) -> cx.ops.AbstractOperator:
+    ...     return cx.ops.GalileanRotation.from_euler("z", u.Quantity(10, "deg"))
+
+    We can transform from `MySpaceFrame` to a Galacocentric frame, even though
+    we don't have a direct transformation defined:
+
+    >>> my_frame = MySpaceFrame()
+    >>> gcf_frame = cx.frames.Galactocentric()
+
+    >>> op = cx.frames.frame_transform_op(my_frame, gcf_frame)
+    >>> op
+    Pipe((
+        GalileanRotation(rotation=f32[3,3]),
+        ...
+    ))
+
+    """  # noqa: E501
+    fromframe_to_icrs = frame_transform_op(from_frame, _icrs_frame)
+    icrs_to_toframe = frame_transform_op(_icrs_frame, to_frame)
+    pipe = fromframe_to_icrs | icrs_to_toframe
+    return simplify_op(pipe)
+
+
+# ---------------------------------------------------------------
 
 
 @dispatch

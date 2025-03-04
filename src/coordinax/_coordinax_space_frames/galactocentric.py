@@ -11,9 +11,9 @@ from jaxtyping import Array, Shaped
 import unxt as u
 from dataclassish.converters import Unless
 
+from .base import AbstractSpaceFrame
 from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
-from coordinax._src.frames import AbstractReferenceFrame
 from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
 
 ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | Angle, ""]
@@ -23,7 +23,7 @@ VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
 
 
 @final
-class Galactocentric(AbstractReferenceFrame):
+class Galactocentric(AbstractSpaceFrame):
     """Reference frame centered at the Galactic center.
 
     Based on the Astropy implementation of the Galactocentric frame.

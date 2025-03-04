@@ -9,15 +9,15 @@ from jaxtyping import Array, Shaped
 
 import unxt as u
 
+from .base import AbstractSpaceFrame
 from coordinax._src.distances import Distance
-from coordinax._src.frames import AbstractReferenceFrame
 
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
 LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]
 
 
 @final
-class ICRS(AbstractReferenceFrame):
+class ICRS(AbstractSpaceFrame):
     """The International Celestial Reference System (ICRS).
 
     Examples
