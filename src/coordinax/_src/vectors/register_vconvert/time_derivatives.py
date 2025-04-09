@@ -2,23 +2,32 @@
 
 __all__: list[str] = []
 
-from math import prod
-from typing import Any, Final, cast
+from typing import Any, cast
 
 import equinox as eqx
 import jax
+import jax.tree as jtu
+from jaxtyping import Array, Float, Real
 from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import is_any_quantity
 
-from .common import get_params_and_aux
+import coordinax._src.vectors.custom_types as ct
 from coordinax._src.distances import AbstractDistance
-from coordinax._src.vectors import d1, d2, d3
+from coordinax._src.vectors import api, d1, d2, d3
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
+
+# NOTE: this is using Quantities. Using raw arrays is ~20x faster.
+# TODO: what about the auxiliary values?
+pos_jac_fn = jax.vmap(
+    jax.jacfwd(api.vconvert, argnums=2, has_aux=True), in_axes=(None, None, 0)
+)
+
+is_q_or_arr = lambda x: is_any_quantity(x) or eqx.is_array(x)  # noqa: E731
 
 
 def transform_jac(
@@ -26,8 +35,8 @@ def transform_jac(
 ) -> dict[str, dict[str, u.AbstractQuantity]]:
     """Transform Jacobian.
 
-    It comes in as  ``{k: Quantity({kk: Quantity(vv, unit2)}, unit)}``
-    it needs to be rearranged to ``{k: {kk: Quantity(vv, unit/unit2)}}``.
+    It comes in as  ``{k: Quantity({kk: Quantity(vv, unit2)}, unit1)}``
+    it needs to be rearranged to ``{k: {kk: Quantity(vv, unit1/unit2)}}``.
 
     """
     return {
@@ -38,11 +47,8 @@ def transform_jac(
     }
 
 
-is_leaf = lambda x: is_any_quantity(x) or eqx.is_array(x)  # noqa: E731
-
-
 @jax.jit
-def _dot_jac_vec(
+def dot_jac_vec(
     jac: dict[str, dict[str, u.AbstractQuantity]], vec: dict[str, u.AbstractQuantity]
 ) -> dict[str, u.AbstractQuantity]:
     """Dot product of a Jacobian dict and a vector dict.
@@ -58,25 +64,109 @@ def _dot_jac_vec(
 
     >>> v = {"x": u.Quantity(1, "km"), "y": u.Quantity(2, "km")}
 
-    >>> _dot_jac_vec(J, v)
+    >>> dot_jac_vec(J, v)
     {'phi': Quantity['angle'](Array(11, dtype=int32, ...), unit='rad'),
      'r': Quantity['length'](Array(5, dtype=int32, ...), unit='km')}
 
     """
     flat_jac, treedef = eqx.tree_flatten_one_level(jac)
-    flat_dotted = jax.tree.map(
-        lambda innner: jax.tree.reduce(
+    flat_dotted = jtu.map(
+        lambda inner: jtu.reduce(
             jnp.add,
-            jax.tree.map(jnp.multiply, innner, vec, is_leaf=is_leaf),
-            is_leaf=is_leaf,
+            jtu.map(jnp.multiply, inner, vec, is_leaf=is_q_or_arr),
+            is_leaf=is_q_or_arr,
         ),
         flat_jac,
         is_leaf=lambda v: isinstance(v, dict),
     )
-    return jax.tree.unflatten(treedef, flat_dotted)
+    return jtu.unflatten(treedef, flat_dotted)
 
 
-in_axes: Final = (None, None, 0)
+def atleast_1d_float(x: Real[Array, "..."]) -> Float[Array, "..."]:
+    """Convert to 1D float array."""
+    return jnp.atleast_1d(jnp.astype(x, float, copy=False))
+
+
+# ============================================================================
+
+
+@dispatch.multi(
+    (type[AbstractVel], type[AbstractVel], ct.ParamsDict, ct.ParamsDict),
+)
+def vconvert(
+    to_vel_cls: type[AbstractVel],
+    from_vel_cls: type[AbstractVel],
+    p_vel: ct.ParamsDict,
+    p_pos: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+) -> tuple[ct.ParamsDict, ct.OptAuxDict]:
+    """AbstractVel1D -> AbstractVel1D.
+
+    Parameters
+    ----------
+    to_vel_cls
+        The target type of the vector differential.
+    from_vel_cls
+        The type of the vector differential to transform.
+    p_vel
+        The data of the vector differential to transform.
+    p_pos
+        The data of the position vector used to transform the differential.
+    in_aux
+        The auxiliary data of the vector differential to transform.
+    out_aux
+        The auxiliary data of the position vector used to transform the
+        differential.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    Let's start in 1D:
+
+    >>> q = {"x": u.Quantity([1.0], "km")}
+    >>> p = {"x": u.Quantity([1.0], "km/s")}
+    >>> newp = cxv.vconvert(cxv.RadialVel, cxv.CartesianVel1D, p, q)
+    >>> print(newp)
+    ({'r': Quantity['speed'](Array([1.], dtype=float32), unit='km / s')}, {})
+
+    """
+    # Check the dimensionality
+    to_vel_cls = eqx.error_if(
+        to_vel_cls,
+        from_vel_cls._dimensionality() != to_vel_cls._dimensionality(),  # noqa: SLF001
+        "Dimensionality mismatch",
+    )
+
+    shape = jnp.broadcast_shapes(*[v.shape for v in p_vel.values()])
+
+    # The position is assumed to be in the type required by the differential to
+    # construct the Jacobian. E.g. for CartesianVel1D -> RadialVel, we need the
+    # Jacobian of the CartesianPos1D -> RadialPos transform.
+    p_pos = jtu.map(atleast_1d_float, p_pos)
+    p_pos = {  # NOTE: if use unitful jacobian, this is not needed
+        k: (v.distance if isinstance(v, AbstractDistance) else v)
+        for k, v in p_pos.items()
+    }
+
+    # -----------------------
+    # Compute the Jacobian of the position transformation.
+    to_pos_cls = to_vel_cls.time_antiderivative_cls
+    from_pos_cls = from_vel_cls.time_antiderivative_cls
+    jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
+    jac = transform_jac(jac)
+
+    # -----------------------
+    # Transform the velocity
+
+    to_p_vel = dot_jac_vec(jac, p_vel)
+    to_p_vel = jtu.map(lambda x: jnp.reshape(x, shape), to_p_vel)
+
+    return to_p_vel, (out_aux or {})
 
 
 # TODO: implement for cross-representations
@@ -111,57 +201,51 @@ def vconvert(
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     Let's start in 1D:
 
-    >>> q = cx.vecs.CartesianPos1D.from_(1.0, "km")
-    >>> p = cx.vecs.CartesianVel1D.from_(1.0, "km/s")
-    >>> cx.vconvert(cx.vecs.RadialVel, p, q)
-    RadialVel( r=Quantity[...]( value=f32[], unit=Unit("km / s") ) )
+    >>> q = cxv.CartesianPos1D.from_(1.0, "km")
+    >>> p = cxv.CartesianVel1D.from_(1.0, "km/s")
+    >>> newp = cxv.vconvert(cxv.RadialVel, p, q)
+    >>> print(newp)
+    <RadialVel (r[km / s])
+        [1.]>
 
     Now in 2D:
 
-    >>> q = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
-    >>> p = cx.vecs.CartesianVel2D.from_([1.0, 2.0], "km/s")
-    >>> cx.vconvert(cx.vecs.PolarVel, p, q)
-    PolarVel(
-      r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
-    )
+    >>> q = cxv.CartesianPos2D.from_([1.0, 2.0], "km")
+    >>> p = cxv.CartesianVel2D.from_([1.0, 2.0], "km/s")
+    >>> newp = cxv.vconvert(cxv.PolarVel, p, q)
+    >>> print(newp)
+    <PolarVel (r[km / s], phi[rad / s])
+        [2.236 0.   ]>
 
     And in 3D:
 
-    >>> q = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
-    >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> cx.vconvert(cx.SphericalVel, p, q)
-    SphericalVel(
-      r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
-    )
+    >>> q = cxv.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
+    >>> p = cxv.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
+    >>> newp = cxv.vconvert(cxv.SphericalVel, p, q)
+    >>> print(newp)
+    <SphericalVel (r[km / s], theta[rad / s], phi[rad / s])
+        [ 3.742e+00 -8.941e-08  0.000e+00]>
 
     If given a position as a Quantity, it will be converted to the appropriate
     Cartesian vector:
 
-    >>> p = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> cx.vconvert(cx.SphericalVel, p, u.Quantity([1.0, 2.0, 3.0], "km"))
-    SphericalVel(
-      r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      theta=Quantity[...]( value=f32[], unit=Unit("rad / s") ),
-      phi=Quantity[...]( value=f32[], unit=Unit("rad / s") )
-    )
+    >>> p = cxv.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
+    >>> newp = cxv.vconvert(cxv.SphericalVel, p, u.Quantity([1.0, 2.0, 3.0], "km"))
+    >>> print(newp)
+    <SphericalVel (r[km / s], theta[rad / s], phi[rad / s])
+        [ 3.742e+00 -8.941e-08  0.000e+00]>
 
     """
-    # TODO: not require the shape munging / support more shapes
     shape = from_vel.shape
-    flat_shape = prod(shape)
 
     # ----------------------------
     # Prepare the position
 
     in_pos_cls = from_vel.time_antiderivative_cls
-    out_pos_cls = to_vel_cls.time_antiderivative_cls
 
     # Parse the position to an AbstractPos
     from_posv_ = cast(
@@ -171,44 +255,115 @@ def vconvert(
         else in_pos_cls.cartesian_type.from_(from_pos),
     )
 
-    from_posv_ = from_posv_.reshape(flat_shape)  # flattened
-
     # Transform the position to the type required by the differential to
     # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
     # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
     # position must be transformed to CartesianPos1D.
     from_posv = vconvert(in_pos_cls, from_posv_, **kwargs)
-    # Jacobian requires the position to be a float
-    dtype = jnp.result_type(float)  # TODO: better match e.g. int16 to float16?
-    from_posv = from_posv.astype(dtype, copy=False)  # cast to float
 
-    # Convert to a dictionary of parameters and auxiliary values.
-    in_pos_params, in_pos_aux = get_params_and_aux(from_posv)
-    in_pos_params = {  # NOTE: if use unitful jacobian, this is not needed
-        k: (v.distance if isinstance(v, AbstractDistance) else v)
-        for k, v in in_pos_params.items()
-    }
-
-    # Compute the Jacobian of the position transformation.
-    # NOTE: this is using Quantities. Using raw arrays is ~20x faster.
-    # TODO: what about the auxiliary values?
-    jac_fn = jax.vmap(jax.jacfwd(vconvert, argnums=2, has_aux=True), in_axes=in_axes)
-    jac, _ = jac_fn(out_pos_cls, in_pos_cls, in_pos_params, in_aux=in_pos_aux)
-    jac = transform_jac(jac)
-
-    to_vel_params = _dot_jac_vec(jac, from_vel.asdict())
-
-    to_vel = to_vel_cls(**to_vel_params)
-
-    # Reshape the output to the original shape
-    to_vel = to_vel.reshape(shape)
+    # ----------------------------
+    # Perform the transformation
 
     # TODO: add  df(q)/dt, which is 0 for all current transforms
+    to_vel_params, to_vel_aux = vconvert(
+        to_vel_cls,
+        type(from_vel),
+        from_vel.asdict(),
+        from_posv.asdict(),
+    )
+
+    # ----------------------------
+    # Reconstruct the vector
+
+    to_vel = to_vel_cls(**to_vel_params, **to_vel_aux)
+    to_vel = to_vel.reshape(shape)  # reshape to original shape
 
     return to_vel  # noqa: RET504
 
 
 # ===================================================================
+
+
+@dispatch
+def vconvert(
+    to_acc_cls: type[AbstractAcc],
+    from_acc_cls: type[AbstractAcc],
+    p_acc: ct.ParamsDict,
+    p_vel: ct.ParamsDict,
+    p_pos: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
+) -> tuple[ct.ParamsDict, ct.OptAuxDict]:
+    """AbstractAcc1D -> AbstractAcc1D.
+
+    Parameters
+    ----------
+    to_acc_cls
+        The target type of the vector differential.
+    from_acc_cls
+        The type of the vector differential to transform.
+    p_acc
+        The data of the vector differential to transform.
+    p_vel, p_pos
+        The data of the velocity/position vector used to transform the
+        differential.
+    in_aux
+        The auxiliary data of the vector differential to transform.
+    out_aux
+        The auxiliary data of the position vector used to transform the
+        differential.
+    units
+        The unit system to use for the transformation.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    Let's start in 1D:
+
+    >>> q = {"x": u.Quantity([1.0], "km")}
+    >>> p = {"x": u.Quantity([1.0], "km/s")}
+    >>> a = {"x": u.Quantity([1.0], "km/s2")}
+    >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, p, q)
+    >>> print(newa)
+    ({'r': Quantity['acceleration'](Array([1.], dtype=float32), unit='km / s2')}, {})
+
+    """
+    # Check the dimensionality
+    to_acc_cls = eqx.error_if(
+        to_acc_cls,
+        from_acc_cls._dimensionality() != to_acc_cls._dimensionality(),  # noqa: SLF001
+        "Dimensionality mismatch",
+    )
+
+    shape = jnp.broadcast_shapes(*[v.shape for v in p_acc.values()])
+
+    # The position is assumed to be in the type required by the differential to
+    # construct the Jacobian. E.g. for CartesianVel1D -> RadialVel, we need the
+    # Jacobian of the CartesianPos1D -> RadialPos transform.
+    p_pos = jtu.map(atleast_1d_float, p_pos)
+    p_pos = {  # NOTE: if use unitful jacobian, this is not needed
+        k: (v.distance if isinstance(v, AbstractDistance) else v)
+        for k, v in p_pos.items()
+    }
+
+    # -----------------------
+    # Compute the Jacobian of the position transformation.
+    to_pos_cls = to_acc_cls.time_nth_derivative_cls(-2)
+    from_pos_cls = from_acc_cls.time_nth_derivative_cls(-2)
+    jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
+    jac = transform_jac(jac)
+
+    # -----------------------
+    # Transform the acceleration
+
+    to_p_acc = dot_jac_vec(jac, p_acc)
+    to_p_acc = jtu.map(lambda x: jnp.reshape(x, shape), to_p_acc)
+
+    return to_p_acc, (out_aux or {})
 
 
 # TODO: implement for cross-representations
@@ -332,59 +487,54 @@ def vconvert(
     )
 
     """
-    # TODO: not require the shape munging / support more shapes
     shape = from_acc.shape
-    flat_shape = prod(shape)
 
     # ----------------------------
-    # Prepare the velocity
-
-    in_vel_cls = from_acc.time_antiderivative_cls
-    to_vel_cls = to_acc_cls.time_antiderivative_cls
-
-    in_pos_cls = in_vel_cls.time_antiderivative_cls
-    out_pos_cls = to_vel_cls.time_antiderivative_cls
+    # Prepare the position
 
     # Parse the position to an AbstractPos
-    from_posa_ = cast(
+    in_pos_cls = from_acc.time_nth_derivative_cls(-2)
+    from_posv_ = cast(
         AbstractPos,
         from_pos
         if isinstance(from_pos, AbstractPos)
         else in_pos_cls.cartesian_type.from_(from_pos),
     )
 
-    from_posa_ = from_posa_.reshape(flat_shape)  # flattened
-
     # Transform the position to the type required by the differential to
     # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
     # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
     # position must be transformed to CartesianPos1D.
-    from_posa = vconvert(in_pos_cls, from_posa_, **kwargs)
-    # Jacobian requires the position to be a float
-    dtype = jnp.result_type(float)  # TODO: better match e.g. int16 to float16?
-    from_posa = from_posa.astype(dtype, copy=False)  # cast to float
+    from_posv = vconvert(in_pos_cls, from_posv_, **kwargs)
 
-    # Convert to a dictionary of parameters and auxiliary values.
-    in_pos_params, in_pos_aux = get_params_and_aux(from_posa)
-    in_pos_params = {  # NOTE: if use unitful jacobian, this is not needed
-        k: (v.distance if isinstance(v, AbstractDistance) else v)
-        for k, v in in_pos_params.items()
-    }
+    # ----------------------------
+    # Prepare the velocity
 
-    # Compute the Jacobian of the position transformation.
-    # NOTE: this is using Quantities. Using raw arrays is ~20x faster.
-    # TODO: what about the auxiliary values?
-    jac_fn = jax.vmap(jax.jacfwd(vconvert, argnums=2, has_aux=True), in_axes=in_axes)
-    jac, _ = jac_fn(out_pos_cls, in_pos_cls, in_pos_params, in_aux=in_pos_aux)
-    jac = transform_jac(jac)
+    in_vel_cls = from_acc.time_antiderivative_cls
+    from_velv_ = cast(
+        AbstractVel,
+        from_vel
+        if isinstance(from_vel, AbstractVel)
+        else in_vel_cls.cartesian_type.from_(from_vel),
+    )
+    from_velv = vconvert(in_vel_cls, from_velv_, from_posv, **kwargs)
 
-    to_acc_params = _dot_jac_vec(jac, from_acc.asdict())
+    # ----------------------------
+    # Perform the transformation
 
-    to_acc = to_acc_cls(**to_acc_params)
+    # TODO: add  df(q)/dt, which is 0 for all current transforms
+    to_acc_params, to_acc_aux = vconvert(
+        to_acc_cls,
+        type(from_acc),
+        from_acc.asdict(),
+        from_velv.asdict(),
+        from_posv.asdict(),
+    )
 
-    # Reshape the output to the original shape
-    to_acc = to_acc.reshape(shape)
+    # ----------------------------
+    # Reconstruct the vector
 
-    # TODO: add dJ/dt which is 0 for all current transforms
+    to_acc = to_acc_cls(**to_acc_params, **to_acc_aux)
+    to_acc = to_acc.reshape(shape)  # reshape to original shape
 
     return to_acc  # noqa: RET504
