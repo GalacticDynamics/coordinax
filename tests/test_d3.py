@@ -790,9 +790,8 @@ class TestCartesianVel3D(AbstractVel3DTest):
             y=u.Quantity([0, 0, 0, 0], "m/s"),
             z=u.Quantity([0, 0, 0, 0], "m/s"),
         )
-        assert jnp.allclose(total.x,
-                            u.Quantity([5, 6, 7, 8], "km/s") + u.Quantity([1, 1, 1, 1], "m/s"),
-                            atol=u.Quantity(1e-8, "km/s"))
+        correct_x = u.Quantity([5, 6, 7, 8], "km/s") + u.Quantity([1, 1, 1, 1], "m/s")
+        assert jnp.allclose(total.x, correct_x, atol=u.Quantity(1e-8, "km/s"))
 
 
 class TestCylindricalVel(AbstractVel3DTest):
