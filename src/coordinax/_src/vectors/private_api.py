@@ -2,7 +2,7 @@
 
 __all__ = ["spatial_component"]
 
-import functools
+import functools as ft
 from typing import Any, TypeAlias
 
 from jaxtyping import Array, ArrayLike
@@ -128,7 +128,7 @@ def combine_aux(in_aux: ct.OptAuxDict, out_aux: ct.OptAuxDict, /) -> ct.AuxDict:
 def wrap_vconvert_impl_params(func: Any) -> Any:
     """Wrap a function that implements a vector conversion."""
 
-    @functools.wraps(func)
+    @ft.wraps(func)
     def wrapper(
         to_vector: type[AbstractVector],
         from_vector: type[AbstractVector],

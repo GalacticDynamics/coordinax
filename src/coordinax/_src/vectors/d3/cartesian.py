@@ -6,7 +6,7 @@ __all__ = [
     "CartesianVel3D",
 ]
 
-from functools import partial
+import functools as ft
 from typing import final
 from typing_extensions import override
 
@@ -72,7 +72,7 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
     z: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPos3D | None = None, /) -> ct.BBtSpeed:
         """Return the norm of the vector.
 
@@ -101,7 +101,7 @@ class CartesianAcc3D(AbstractCartesian, AbstractAcc3D):
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
     @override
-    @partial(jax.jit, inline=True)
+    @ft.partial(jax.jit, inline=True)
     def norm(
         self, _: AbstractVel3D | None = None, __: AbstractPos3D | None = None, /
     ) -> ct.BBtAcc:

@@ -2,7 +2,7 @@
 
 __all__ = ["CartesianAccND", "CartesianPosND", "CartesianVelND"]
 
-from functools import partial
+import functools as ft
 from typing import final
 from typing_extensions import override
 
@@ -107,7 +107,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
     # -----------------------------------------------------
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self) -> BBtLength:
         """Return the norm of the vector.
 
@@ -205,7 +205,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
         return self.q.shape[-1]
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPosND | None = None, /) -> ct.BBtSpeed:
         """Return the norm of the vector.
 
@@ -303,7 +303,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
         return self.q.shape[-1]
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(  # type: ignore[override]
         self,
         velocity: AbstractVelND | None = None,

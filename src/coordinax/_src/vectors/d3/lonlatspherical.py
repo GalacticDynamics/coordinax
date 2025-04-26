@@ -7,7 +7,7 @@ __all__ = [
     "LonLatSphericalVel",
 ]
 
-from functools import partial
+import functools as ft
 from typing import final
 from typing_extensions import override
 
@@ -112,7 +112,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
         checks.check_r_non_negative(self.distance)
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
 

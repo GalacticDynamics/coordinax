@@ -6,7 +6,7 @@ __all__ = [
     "CartesianVel2D",
 ]
 
-from functools import partial
+import functools as ft
 from typing import final
 from typing_extensions import override
 
@@ -101,7 +101,7 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
     r"""Y coordinate acceleration :math:`\frac{d^2 y}{dt^2} \in (-\infty,+\infty)`."""
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractVel2D | None = None, /) -> ct.BBtAcc:  # type: ignore[override]
         """Return the norm of the vector.
 

@@ -2,7 +2,7 @@
 
 __all__: list[str] = []
 
-from functools import partial
+import functools as ft
 
 import jax
 from plum import dispatch
@@ -21,7 +21,7 @@ from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_p
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert(
     to_vector: type[AbstractPos2D],
     from_vector: type[AbstractPos2D],
@@ -43,7 +43,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[PolarPos],
@@ -67,7 +67,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CartesianPos2D],

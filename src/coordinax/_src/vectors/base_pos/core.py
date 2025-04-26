@@ -2,7 +2,7 @@
 
 __all__ = ["AbstractPos", "POSITION_CLASSES"]
 
-from functools import partial
+import functools as ft
 from inspect import isabstract
 from typing import TYPE_CHECKING, Any
 
@@ -121,7 +121,7 @@ class AbstractPos(
     # ===============================================================
     # Convenience methods
 
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self) -> BBtScalarQ:
         """Return the norm of the vector.
 

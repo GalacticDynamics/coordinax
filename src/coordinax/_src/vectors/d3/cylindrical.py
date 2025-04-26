@@ -6,7 +6,7 @@ __all__ = [
     "CylindricalVel",
 ]
 
-from functools import partial
+import functools as ft
 from typing import final
 from typing_extensions import override
 
@@ -48,7 +48,7 @@ class CylindricalPos(AbstractPos3D):
         check_r_non_negative(self.rho)
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self) -> BBtLength:
         """Return the norm of the vector.
 

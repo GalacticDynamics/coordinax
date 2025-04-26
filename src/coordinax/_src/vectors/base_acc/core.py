@@ -2,7 +2,7 @@
 
 __all__ = ["AbstractAcc", "ACCELERATION_CLASSES"]
 
-from functools import partial
+import functools as ft
 from typing import TYPE_CHECKING, Any, cast
 
 import jax
@@ -59,7 +59,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
-    @partial(jax.jit)
+    @ft.partial(jax.jit)
     def norm(
         self: "AbstractAcc", p: AbstractVel, q: AbstractPos, /
     ) -> u.Quantity["acceleration"]:

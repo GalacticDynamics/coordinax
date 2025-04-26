@@ -2,7 +2,7 @@
 
 __all__: list[str] = []
 
-import functools
+import functools as ft
 
 from plum import Signature, dispatch
 
@@ -70,7 +70,7 @@ def simplify_op(seq: Pipe, /) -> AbstractOperator:
     """
     # TODO: more sophisticated operator fusion. This just applies pair-wise
     # simplification.
-    return functools.reduce(simplify_op, seq.operators, Identity())
+    return ft.reduce(simplify_op, seq.operators, Identity())
 
 
 # ======================================================================

@@ -2,7 +2,7 @@
 
 __all__: list[str] = []
 
-from functools import partial
+import functools as ft
 from inspect import isclass
 from typing import cast
 
@@ -18,7 +18,7 @@ from coordinax._src.vectors.base import AbstractVector
 
 
 @dispatch
-@partial(eqx.filter_jit, inline=True)
+@ft.partial(eqx.filter_jit, inline=True)
 def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N"]:
     """Return the unit vector.
 
@@ -40,7 +40,7 @@ def normalize_vector(x: Shaped[Array, "*batch N"], /) -> Shaped[Array, "*batch N
 
 
 @dispatch
-@partial(eqx.filter_jit, inline=True)
+@ft.partial(eqx.filter_jit, inline=True)
 def normalize_vector(
     x: Shaped[u.AbstractQuantity, "*batch N"], /
 ) -> Shaped[u.AbstractQuantity, "*batch N"]:
