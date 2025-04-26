@@ -3,7 +3,7 @@
 
 __all__: list[str] = []
 
-from functools import partial
+import functools as ft
 from typing import Any
 
 import equinox as eqx
@@ -396,7 +396,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CylindricalPos],
@@ -437,7 +437,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[SphericalPos],
@@ -515,7 +515,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CartesianPos3D],
@@ -548,7 +548,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[SphericalPos],
@@ -584,7 +584,7 @@ def vconvert(
     (type[LonLatSphericalPos], type[CylindricalPos], ct.ParamsDict),
     (type[MathSphericalPos], type[CylindricalPos], ct.ParamsDict),
 )
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert(
     to_vector: type[AbstractSphericalPos],
     from_vector: type[CylindricalPos],
@@ -626,7 +626,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CartesianPos3D],
@@ -660,7 +660,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CylindricalPos],
@@ -694,7 +694,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[LonLatSphericalPos],
@@ -797,7 +797,7 @@ def vconvert(
     (type[MathSphericalAcc], type[SphericalAcc], ct.ParamsDict),
     (type[SphericalAcc], type[MathSphericalAcc], ct.ParamsDict),
 )
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[AbstractVector],
@@ -902,7 +902,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert(
     to_vector: type[CartesianPos3D],
     from_vector: type[LonLatSphericalPos],
@@ -938,7 +938,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert(
     to_vector: type[CylindricalPos],
     from_vector: type[LonLatSphericalPos],
@@ -974,7 +974,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[SphericalPos],
@@ -1068,7 +1068,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CartesianPos3D],
@@ -1102,7 +1102,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CylindricalPos],
@@ -1135,7 +1135,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[CylindricalPos],
@@ -1175,7 +1175,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 @wrap_vconvert_impl_params
 def vconvert(
     to_vector: type[ProlateSpheroidalPos],
@@ -1254,7 +1254,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert(
     to_vector: type[ProlateSpheroidalPos],
     from_vector: type[ProlateSpheroidalPos],
@@ -1309,7 +1309,7 @@ def vconvert(
 
 
 @dispatch
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert(
     to_vector: type[ProlateSpheroidalPos],
     from_vector: type[AbstractPos3D,],
@@ -1454,7 +1454,7 @@ def vconvert(
 
 # from coordinax.vectors.funcs
 @dispatch
-@partial(eqx.filter_jit, inline=True)
+@ft.partial(eqx.filter_jit, inline=True)
 def normalize_vector(obj: CartesianPos3D, /) -> Cartesian3D:
     """Return the norm of the vector.
 

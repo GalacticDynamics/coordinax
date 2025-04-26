@@ -2,7 +2,7 @@
 
 __all__: list[str] = []
 
-from functools import partial
+import functools as ft
 from warnings import warn
 
 import jax
@@ -621,7 +621,7 @@ def vconvert(
     (type[d2.AbstractPos2D], type[d3.ProlateSpheroidalPos], ct.ParamsDict),
     (type[d3.AbstractPos3D], type[d3.ProlateSpheroidalPos], ct.ParamsDict),
 )
-@partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
+@ft.partial(jax.jit, static_argnums=(0, 1), static_argnames=("units",))
 def vconvert(
     to_vector: type[AbstractPos],
     from_vector: type[d3.ProlateSpheroidalPos],

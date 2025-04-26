@@ -6,7 +6,7 @@ __all__ = [
     "MathSphericalVel",
 ]
 
-from functools import partial
+import functools as ft
 from typing import final
 from typing_extensions import override
 
@@ -63,7 +63,7 @@ class MathSphericalPos(AbstractSphericalPos):
         checks.check_polar_range(self.phi)
 
     @override
-    @partial(eqx.filter_jit)
+    @ft.partial(eqx.filter_jit)
     def norm(self) -> BatchableDistance:
         """Return the norm of the vector.
 

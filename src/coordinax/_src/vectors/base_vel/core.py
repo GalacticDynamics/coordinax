@@ -2,7 +2,7 @@
 
 __all__ = ["AbstractVel", "VELOCITY_CLASSES"]
 
-from functools import partial
+import functools as ft
 from typing import TYPE_CHECKING, Any, cast
 
 import equinox as eqx
@@ -60,7 +60,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # ===============================================================
     # Convenience methods
 
-    @partial(eqx.filter_jit)
+    @ft.partial(eqx.filter_jit)
     def norm(self: "AbstractVel", q: AbstractPos, /) -> u.Quantity["speed"]:
         """Return the norm of the vector.
 

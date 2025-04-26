@@ -247,14 +247,17 @@ skip = ["uv.lock"]
       "TD002",   # Missing author in TODO
       "TD003",   # Missing issue link on the line following this TODO
     ]
-    # Uncomment if using a _compat.typing backport
-    # typing-modules = ["coordinax._compat.typing"]
 
     [tool.ruff.lint.per-file-ignores]
       "__init__.py" = ["F403"]
       "docs/conf.py" = ["A001", "INP001"]
       "noxfile.py" = ["T20"]
       "tests/**" = ["ANN", "S101", "T20"]
+
+    [tool.ruff.lint.flake8-import-conventions.aliases]
+      equinox = "eqx"
+      functools = "ft"
+      unxt = "u"
 
     [tool.ruff.lint.isort]
       combine-as-imports = true

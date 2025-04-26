@@ -116,7 +116,7 @@ class AvalMixin:
         fvs = field_values(AttrFilter, self)
         shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
         dtype = jnp.result_type(*map(jnp.dtype, fvs))
-        return jax.core.ShapedArray(shape, dtype)  # type: ignore[no-untyped-call]
+        return jax.core.ShapedArray(shape, dtype)
 
 
 ##############################################################################

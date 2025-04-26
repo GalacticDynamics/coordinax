@@ -2,7 +2,7 @@
 
 __all__ = ["CartesianAcc1D", "CartesianPos1D", "CartesianVel1D"]
 
-from functools import partial
+import functools as ft
 from typing import final
 from typing_extensions import override
 
@@ -54,7 +54,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtSpeed:
         """Return the norm of the vector.
 
@@ -77,7 +77,7 @@ class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtAcc:  # type: ignore[override]
         """Return the norm of the vector.
 

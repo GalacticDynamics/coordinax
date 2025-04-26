@@ -2,8 +2,8 @@
 
 __all__ = ["FourVector"]
 
+import functools as ft
 from dataclasses import KW_ONLY
-from functools import partial
 from typing import Any, cast, final
 from typing_extensions import override
 
@@ -96,7 +96,7 @@ class FourVector(AbstractPos4D):
         avals = (self.t.aval(), self.q.aval())
         shape = (*jnp.broadcast_shapes(avals[0].shape, avals[1].shape[:-1]), 4)
         dtype = jnp.result_type(*map(jnp.dtype, avals))
-        return jax.core.ShapedArray(shape, dtype)  # type: ignore[no-untyped-call]
+        return jax.core.ShapedArray(shape, dtype)
 
     # ===============================================================
 
@@ -117,7 +117,7 @@ class FourVector(AbstractPos4D):
 
     # -------------------------------------------
 
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def _norm2(self) -> Shaped[u.Quantity["area"], "*#batch"]:
         r"""Return the squared vector norm :math:`(ct)^2 - (x^2 + y^2 + z^2)`.
 
@@ -134,7 +134,7 @@ class FourVector(AbstractPos4D):
         return (self.c * self.t) ** 2 - (self.q.norm() ** 2)  # type: ignore[misc,operator]
 
     @override
-    @partial(eqx.filter_jit, inline=True)
+    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self) -> BBtLength:
         r"""Return the vector norm :math:`\sqrt{(ct)^2 - (x^2 + y^2 + z^2)}`.
 

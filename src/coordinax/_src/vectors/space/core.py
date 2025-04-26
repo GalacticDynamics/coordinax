@@ -314,7 +314,7 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
             sum(s[-1] for s in shapes),
         )
         dtype = jnp.result_type(*map(jnp.dtype, avals))
-        return jax.core.ShapedArray(shape, dtype)  # type: ignore[no-untyped-call]
+        return jax.core.ShapedArray(shape, dtype)
 
     # ===============================================================
     # Array API
@@ -413,6 +413,3 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         kv = (f"{k!r}: {v!s}" for k, v in self._data.items())
         data = "{\n" + indent(",\n".join(kv), "   ") + "\n}"
         return cls_name + "(" + data + ")"
-
-    # ===============================================================
-    # Collection
