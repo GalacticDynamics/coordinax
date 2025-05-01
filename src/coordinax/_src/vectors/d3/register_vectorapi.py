@@ -571,7 +571,7 @@ def vconvert(
     >>> cxv.vconvert(cxv.SphericalPos, cxv.CylindricalPos, cyl, units=usys)
     ({'phi': Array(90., dtype=float32, ...),
       'r': Array(1.4142135, dtype=float32, ...),
-      'theta': Array(45., dtype=float32, ...)},
+      'theta': Array(45..., dtype=float32, ...)},
      {})
 
     """
@@ -605,12 +605,12 @@ def vconvert(
 
     >>> cxv.vconvert(cxv.LonLatSphericalPos, cxv.CylindricalPos, cyl, units=usys)
     ({'distance': Array(1.4142135, dtype=float32, ...),
-      'lat': Array(45.000004, dtype=float32, ...),
+      'lat': Array(45., dtype=float32, ...),
       'lon': Array(90., dtype=float32, ...)},
      {})
 
     >>> cxv.vconvert(cxv.MathSphericalPos, cxv.CylindricalPos, cyl, units=usys)
-    ({'phi': Array(45., dtype=float32, ...),
+    ({'phi': Array(45..., dtype=float32, ...),
       'r': Array(1.4142135, dtype=float32, ...),
       'theta': Array(90., dtype=float32, ...)},
      {})

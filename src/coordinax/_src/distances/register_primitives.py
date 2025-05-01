@@ -22,7 +22,7 @@ radian = u.unit("radian")
 
 # TODO: can this be done with promotion/conversion instead?
 @register(lax.cbrt_p)
-def cbrt_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
+def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
     """Cube root of a distance.
 
     Examples
@@ -34,7 +34,8 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
      BareQuantity(Array(2., dtype=float32, weak_type=True), unit='m(1/3)')
 
     """
-    return BareQuantity(lax.cbrt(x.value), unit=x.unit ** (1 / 3))
+    value = lax.cbrt_p.bind(x.value, accuracy=accuracy)
+    return BareQuantity(value, unit=x.unit ** (1 / 3))
 
 
 # ==============================================================================
@@ -146,7 +147,7 @@ def pow_p_abstractdistance_arraylike(
 
 
 @register(lax.sqrt_p)
-def sqrt_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
+def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
     """Square root of a quantity.
 
     Examples
@@ -165,7 +166,8 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
 
     """
     # Promote to something that supports sqrt units.
-    return BareQuantity(lax.sqrt(x.value), unit=x.unit ** (1 / 2))
+    value = lax.sqrt_p.bind(x.value, accuracy=accuracy)
+    return BareQuantity(value, unit=x.unit ** (1 / 2))
 
 
 # ==============================================================================
@@ -177,5 +179,6 @@ def to_value_rad_or_one(q: u.AbstractQuantity, /) -> ArrayLike:
 
 # TODO: figure out a promotion alternative that works in general
 @register(lax.tan_p)
-def tan_p_abstractdistance(x: AbstractDistance, /) -> BareQuantity:
-    return BareQuantity(lax.tan(to_value_rad_or_one(x)), unit=one)
+def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+    value = lax.tan_p.bind(to_value_rad_or_one(x), accuracy=accuracy)
+    return BareQuantity(value, unit=one)

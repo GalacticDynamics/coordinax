@@ -9,6 +9,7 @@ from typing_extensions import override
 
 import equinox as eqx
 import jax
+import wadler_lindig as wl
 from plum import dispatch
 
 from dataclassish import field_items, replace
@@ -87,10 +88,10 @@ class AbstractCoordinate(AbstractVector):
     __faithful__: ClassVar = True
 
     # ===============================================================
-    # Python API
+    # Wadler-Lindig API
 
-    def __repr__(self) -> str:
-        """Return string representation.
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig representation.
 
         Examples
         --------
@@ -105,12 +106,18 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
-        # NOTE: this is necessary because equinox __repr__ isn't great
-        cls_name = type(self).__name__
-        str_fs = ",\n".join(indent(f"{k}={v!r}", "    ") for k, v in field_items(self))
-        return f"{cls_name}(\n{str_fs}\n)"
+        return wl.bracketed(
+            begin=wl.TextDoc(f"{self.__class__.__name__}("),
+            docs=wl.named_objs(tuple(field_items(self)), **kwargs),
+            sep=wl.comma,
+            end=wl.TextDoc(")"),
+            indent=kwargs.get("indent", 4),
+        )
 
-    _repr_latex_ = __repr__  # TODO: implement this
+    # ===============================================================
+    # Python API
+
+    _repr_latex_ = lambda self: wl.pformat(self)  # noqa: E731  # TODO: implement this
 
     def __str__(self) -> str:
         """Return string representation.
@@ -129,7 +136,6 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
-        # NOTE: this is necessary because equinox __repr__ isn't great
         str_fs = ",\n".join(indent(f"{k}={v}", "    ") for k, v in field_items(self))
         return f"{type(self).__name__}(\n{str_fs}\n)"
 

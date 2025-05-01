@@ -9,6 +9,7 @@ from typing import Any, final
 
 import equinox as eqx
 import jax
+import wadler_lindig as wl
 from astropy.units import PhysicalType as Dimension
 from plum import dispatch
 
@@ -362,8 +363,8 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
     # ---------------------------------------------------------------
     # Methods
 
-    def __repr__(self) -> str:
-        """Return the string representation.
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig representation.
 
         Examples
         --------
@@ -386,11 +387,14 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
             ) })
 
         """
-        cls_name = self.__class__.__name__
-        data = "{\n" + indent(repr(self._data)[1:-1], "    ") + "\n}"
-        return cls_name + "(" + data + ")"
+        return (
+            wl.TextDoc(self.__class__.__name__)
+            + wl.TextDoc("(")
+            + wl.pdoc(self._data, **kwargs)
+            + wl.TextDoc(")")
+        )
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # TODO: update using wadler-lindig
         """Return the string representation.
 
         Examples

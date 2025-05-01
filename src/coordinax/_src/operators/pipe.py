@@ -2,11 +2,11 @@
 
 __all__ = ["Pipe", "convert_to_pipe_operators"]
 
-import textwrap
 from dataclasses import replace
 from typing import Any, final
 
 import equinox as eqx
+import wadler_lindig as wl
 from plum import dispatch
 
 from .base import AbstractOperator
@@ -123,11 +123,18 @@ class Pipe(AbstractCompositeOperator):
         # Append single operators
         return replace(self, operators=(other, *self))
 
-    def __repr__(self) -> str:
-        ops = repr(self.operators)
-        if "\n" in ops:
-            ops = "(\n" + textwrap.indent(ops[1:-1], "    ") + "\n)"
-        return f"{self.__class__.__name__}({ops})"
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig representation."""
+        docs = [wl.pdoc(op, **kwargs) for op in self.operators]
+        begin = wl.TextDoc("((" if len(docs) > 1 else "(")
+        end = wl.TextDoc("))" if len(docs) > 1 else ")")
+        return wl.bracketed(
+            begin=wl.TextDoc(f"{self.__class__.__name__}") + begin,
+            docs=docs,
+            sep=wl.comma,
+            end=end,
+            indent=kwargs.get("indent", 4),
+        )
 
 
 # ==============================================================

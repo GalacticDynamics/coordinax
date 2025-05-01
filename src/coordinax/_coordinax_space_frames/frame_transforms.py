@@ -111,7 +111,7 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) 
     >>> gcf_frame = cxf.Galactocentric()
     >>> frame_op = cxf.frame_transform_op(gcf_frame, gcf_frame)
     >>> frame_op
-    Pipe((Identity(),))
+    Pipe(Identity())
 
     >>> gcf_frame2 = cxf.Galactocentric(roll=u.Quantity(10, "deg"))
     >>> frame_op2 = cxf.frame_transform_op(gcf_frame, gcf_frame2)

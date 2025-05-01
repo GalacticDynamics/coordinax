@@ -8,7 +8,7 @@ from typing import Any, TypeVar
 from jax import lax
 from jaxtyping import ArrayLike
 from plum import convert, promote
-from quax import register
+from quax import quaxify, register
 
 import unxt as u
 from quaxed import lax as qlax
@@ -24,7 +24,7 @@ radian = u.unit("radian")
 
 # TODO: can this be done with promotion/conversion/default rule instead?
 @register(lax.cbrt_p)
-def cbrt_p_abstractangle(x: AbstractAngle, /) -> FastQ:
+def cbrt_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
     """Cube root of an angle.
 
     Examples
@@ -37,7 +37,9 @@ def cbrt_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     BareQuantity(Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
 
     """
-    return qlax.cbrt(convert(x, FastQ))
+    return quaxify(lax.cbrt_p.bind)(  # TODO: move to quaxed
+        convert(x, FastQ), accuracy=accuracy
+    )
 
 
 # ==============================================================================
@@ -68,7 +70,7 @@ def div_p_q_a(x: AbstractAngle, y: AbstractAngle, /) -> u.Quantity:
 
 
 @register(lax.cos_p)
-def cos_p_abstractangle(x: AbstractAngle, /) -> FastQ:
+def cos_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
     """Cosine of an Angle.
 
     Examples
@@ -81,7 +83,9 @@ def cos_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
-    return qlax.cos(convert(x, FastQ))
+    return quaxify(lax.cos_p.bind)(  # TODO: move to quaxed
+        convert(x, FastQ), accuracy=accuracy
+    )
 
 
 # ==============================================================================
@@ -155,7 +159,7 @@ def pow_p_abstractangle_arraylike(x: AbstractAngle, y: ArrayLike, /) -> FastQ:
 
 
 @register(lax.sin_p)
-def sin_p_abstractangle(x: AbstractAngle, /) -> FastQ:
+def sin_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
     """Sine of an Angle.
 
     Examples
@@ -168,14 +172,16 @@ def sin_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
-    return qlax.sin(convert(x, FastQ))
+    return quaxify(lax.sin_p.bind)(  # TODO: move to quaxed
+        convert(x, FastQ), accuracy=accuracy
+    )
 
 
 # ==============================================================================
 
 
 @register(lax.sqrt_p)
-def sqrt_p_abstractangle(x: AbstractAngle, /) -> FastQ:
+def sqrt_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
     """Square root of an Angle.
 
     Examples
@@ -188,14 +194,14 @@ def sqrt_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     BareQuantity(Array(3., dtype=float32, weak_type=True), unit='deg(1/2)')
 
     """
-    return qlax.sqrt(convert(x, FastQ))
+    return quaxify(lax.sqrt_p.bind)(convert(x, FastQ), accuracy=accuracy)
 
 
 # ==============================================================================
 
 
 @register(lax.tan_p)
-def tan_p_abstractangle(x: AbstractAngle, /) -> FastQ:
+def tan_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
     """Tangent of an Angle.
 
     Examples
@@ -208,4 +214,6 @@ def tan_p_abstractangle(x: AbstractAngle, /) -> FastQ:
     BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
 
     """
-    return qlax.tan(convert(x, FastQ))
+    return quaxify(lax.tan_p.bind)(  # TODO: move to quaxed
+        convert(x, FastQ), accuracy=accuracy
+    )

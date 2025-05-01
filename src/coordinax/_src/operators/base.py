@@ -105,7 +105,7 @@ class AbstractOperator(eqx.Module):
     # ===========================================
     # Python stuff
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # TODO: use wadler-lindig
         """Return a string representation of the operator.
 
         Examples
