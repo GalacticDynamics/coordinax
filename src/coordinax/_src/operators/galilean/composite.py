@@ -64,12 +64,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
-      translation=GalileanTranslation(
-        translation=FourVector(
-          t=Quantity[...](value=f32[], unit=Unit("s")),
-          q=CartesianPos3D( ... ) )
-      ),
-      velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
+      translation=GalileanTranslation(FourVector(
+        t=Quantity[...](value=f32[], unit=Unit("s")),
+        q=CartesianPos3D( ... ) )),
+      velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
     Note that the translation is a `coordinax.ops.GalileanTranslation` with a
@@ -88,13 +86,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ... )
     >>> op
     GalileanOperator(
-      translation=GalileanTranslation(
-        translation=FourVector(
-          t=Quantity[...)](value=...f32[], unit=Unit("Gyr")),
-          q=SphericalPos( ... )
-        )
-      ),
-      velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
+      translation=GalileanTranslation(FourVector( ... )),
+      velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
     Galilean operators can be applied to `coordinax.vecs.FourVector`:
@@ -227,12 +220,8 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
     >>> op
     GalileanOperator(
       rotation=GalileanRotation(rotation=f32[3,3]),
-      translation=GalileanTranslation(
-        translation=FourVector(
-          t=Quantity[...](value=f32[], unit=Unit("s")),
-          q=CartesianPos3D( ... ) )
-      ),
-      velocity=GalileanBoost( velocity=CartesianVel3D( ... ) )
+      translation=GalileanTranslation(FourVector( ... )),
+      velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
     >>> cx.ops.simplify_op(op) is op

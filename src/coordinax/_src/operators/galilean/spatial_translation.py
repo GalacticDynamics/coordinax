@@ -9,6 +9,7 @@ from typing import Any, Literal, cast, final
 
 import equinox as eqx
 import jax
+import wadler_lindig as wl
 from plum import convert, dispatch
 
 import quaxed.numpy as jnp
@@ -237,10 +238,14 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         return replace(self, translation=-self.translation)
 
     # -------------------------------------------
-    # Python special methods
 
-    def __repr__(self) -> str:  # TODO: update using wadler-lindig
-        return f"{self.__class__.__name__}({self.translation!r})"
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig representation."""
+        return (
+            wl.TextDoc(f"{self.__class__.__name__}(")
+            + wl.pdoc(self.translation, **kwargs)
+            + wl.TextDoc(")")
+        )
 
 
 # ======================================================================

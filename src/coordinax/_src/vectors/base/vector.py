@@ -1018,7 +1018,7 @@ class AbstractVector(
         """
         return hash(tuple(field_items(self)))
 
-    def _str_repr_(self, *, precision: int) -> str:
+    def _str_repr_(self, *, precision: int) -> str:  # TODO: with wadler-lindig
         cls_name = type(self).__name__
         units_ = self.units
         # make the components string

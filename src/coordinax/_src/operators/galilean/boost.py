@@ -9,6 +9,7 @@ from typing import Any, Literal, final
 
 import equinox as eqx
 import jax.numpy as jnp
+import wadler_lindig as wl
 from plum import convert, dispatch
 
 import quaxed.numpy as jnp
@@ -143,10 +144,14 @@ class GalileanBoost(AbstractGalileanOperator):
         return replace(self, velocity=-self.velocity)
 
     # -----------------------------------------------------
-    # Python
 
-    def __repr__(self) -> str:  # TODO: update using wadler-lindig
-        return f"{self.__class__.__name__}({self.velocity!r})"
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig representation."""
+        return (
+            wl.TextDoc(f"{self.__class__.__name__}(")
+            + wl.pdoc(self.velocity, **kwargs)
+            + wl.TextDoc(")")
+        )
 
 
 # ===================================================================
