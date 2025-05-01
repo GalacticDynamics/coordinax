@@ -360,15 +360,15 @@ requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
     { name = "dataclassish", specifier = ">=0.6.0" },
     { name = "equinox", specifier = ">=0.11.8" },
-    { name = "jax", specifier = ">=0.4.33,<0.4.36" },
-    { name = "jaxlib", specifier = ">=0.4.33,<0.4.36" },
+    { name = "jax", specifier = ">=0.5.3" },
+    { name = "jaxlib", specifier = ">=0.5.3" },
     { name = "jaxtyping", specifier = ">=0.2.34" },
     { name = "optional-dependencies", specifier = ">=0.3.2" },
-    { name = "plum-dispatch", specifier = ">=2.5.6" },
-    { name = "quax", specifier = ">=0.0.5" },
-    { name = "quax-blocks", specifier = ">=0.2" },
-    { name = "quaxed", specifier = ">=0.8.1" },
-    { name = "unxt", specifier = ">=1.3.2" },
+    { name = "plum-dispatch", specifier = ">=2.5.7" },
+    { name = "quax", specifier = ">=0.2.0" },
+    { name = "quax-blocks", specifier = ">=0.3" },
+    { name = "quaxed", specifier = ">=0.9.0" },
+    { name = "unxt", specifier = ">=1.5.0" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
 
@@ -567,16 +567,17 @@ wheels = [
 
 [[package]]
 name = "equinox"
-version = "0.11.8"
+version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jax" },
     { name = "jaxtyping" },
     { name = "typing-extensions" },
+    { name = "wadler-lindig" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/d6/ada74487b24395d1572cb133953429bb195cdfe3bd9fd71d7c8ade2a55ef/equinox-0.11.8.tar.gz", hash = "sha256:d1e91a05e41bb9538db72a8e15d26daf958348c26714533434c88c5ec0c0b0ef", size = 140801 }
+sdist = { url = "https://files.pythonhosted.org/packages/21/05/0813c40592ef04ceb30ba8150664078f50f41d4fb9e26214d1f41c0f2c0c/equinox-0.12.1.tar.gz", hash = "sha256:7ed4b84553cb59d4930185f87ac2c1121aab2b38999be9499c021e7583a7ed0d", size = 138854 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/9f/3be7f03bf66c8d7d2956b727d984595e4af899f3c15ef2c653029008bf3b/equinox-0.11.8-py3-none-any.whl", hash = "sha256:552292b473956693e8e8973bdae9b58aaec54fd48e192921beb82995e3a9c995", size = 179319 },
+    { url = "https://files.pythonhosted.org/packages/8e/27/4d9db47b7ac12aedf0c3d7774e5df2c1f211d3b6610b82dd40a8bd36657b/equinox-0.12.1-py3-none-any.whl", hash = "sha256:bd0e22863e8b4d4c988b412ef50ea244377061973344ab0be002363ac284148f", size = 177102 },
 ]
 
 [[package]]
@@ -724,7 +725,7 @@ wheels = [
 
 [[package]]
 name = "jax"
-version = "0.4.35"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jaxlib" },
@@ -733,14 +734,14 @@ dependencies = [
     { name = "opt-einsum" },
     { name = "scipy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e3/34/21da583b9596e72bb8e95b6197dee0a44b96b9ea2c147fccabd43ca5515b/jax-0.4.35.tar.gz", hash = "sha256:c0c986993026b10bf6f607fecb7417377460254640766ce40f1fef3fd139c12e", size = 1861189 }
+sdist = { url = "https://files.pythonhosted.org/packages/8e/ab/1229e0e027df6ab9e1d343f2900ab2fcca41bfde688df3b26600feb87e59/jax-0.6.0.tar.gz", hash = "sha256:abc690c530349ce470eeef92e09a7bd8a0460424b4980bc72feea45332a636bf", size = 2016538 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/20/6c57c50c0ccc645fea1895950f1e5cd02f961ee44b3ffe83617fa46b0c1d/jax-0.4.35-py3-none-any.whl", hash = "sha256:fa99e909a31424abfec750019a6dd36f6acc18a6e7d40e2c0086b932cc351325", size = 2158621 },
+    { url = "https://files.pythonhosted.org/packages/31/25/32c5e2c919da4faaea9ef5088437ab6e01738c49402e4ec8a6c7b49e30ef/jax-0.6.0-py3-none-any.whl", hash = "sha256:22b21827597c6d6b46e88543b4fc372fcddf1cc1247660452de020cc4bda1afc", size = 2338416 },
 ]
 
 [[package]]
 name = "jaxlib"
-version = "0.4.35"
+version = "0.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "ml-dtypes" },
@@ -748,33 +749,32 @@ dependencies = [
     { name = "scipy" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/01/4be899cf8d05920877b46b8acf51083dedaba206e951d88ddf7b098bed80/jaxlib-0.4.35-cp311-cp311-macosx_10_14_x86_64.whl", hash = "sha256:7f8bfc90f68857b223b7e38a9bdf466a4f1cb405c9a4aa11698dc9ab7b35c29b", size = 87895891 },
-    { url = "https://files.pythonhosted.org/packages/55/77/ca1e70bc3a161c1043d2e169a618263f865bf959433e5bf40ea56ec13e5e/jaxlib-0.4.35-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:261570c94b169dc90f3af903282eeec856b52736c0944d243504ced93d19b217", size = 68045181 },
-    { url = "https://files.pythonhosted.org/packages/cd/2f/a8f4c441718558406cf27749415d1aa14bdac9dbd06fadb7bb4742c53637/jaxlib-0.4.35-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:e1cee6dc291251f3fb6b0127fdd96c0439ac1ea97e01571d06910df72d6ac6e1", size = 70614621 },
-    { url = "https://files.pythonhosted.org/packages/c8/a6/1abe8d682d46cf2989f9c4928866ae80c30a54d607221a262cff8a5d9366/jaxlib-0.4.35-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:bc9eafba001ff8569cfa252fe7f04ba553622702b4b473b656dd0866edf6b8d4", size = 87309681 },
-    { url = "https://files.pythonhosted.org/packages/7d/7c/73a4c4a34f2bbfce63e8baefee11753b0d58a71e0d2c33f210e00edba3cb/jaxlib-0.4.35-cp311-cp311-win_amd64.whl", hash = "sha256:0fd990354d5623d3a34493fcd7213493390dbf5039bea19b62e2aaee1049eda9", size = 56520062 },
-    { url = "https://files.pythonhosted.org/packages/ef/1c/901a59d9bc051b2a991163c46f58c50724d18ab25e71fa5556e5f68b84a4/jaxlib-0.4.35-cp312-cp312-macosx_10_14_x86_64.whl", hash = "sha256:b44f3e6e9fb748bb43df914356cf9d0d0c9a6e446a12c21fe843db25ed0df65f", size = 87936215 },
-    { url = "https://files.pythonhosted.org/packages/da/ff/38030bc3c96fae50f629830afe9c63a8a040aae332f6e28cd529397ba114/jaxlib-0.4.35-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:504d0a2e2117724359d99d7e3663022686dcdddd85aa14bdad02008d444481ad", size = 68063993 },
-    { url = "https://files.pythonhosted.org/packages/55/27/83b6d2a1b380e20610e1449231c30c948cc4352c9a7e74a0d0d01bff8339/jaxlib-0.4.35-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:187cb6929dc139b75d952d67c33118473c1b4105525a3e5607f064e7b8efdc74", size = 70629159 },
-    { url = "https://files.pythonhosted.org/packages/6d/3f/5ac6dfef795f4f58645ccff0ebd65234cb77d7dbf1bdd2b6c49a677b64b0/jaxlib-0.4.35-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:04d1db3bf0050d120238bfb9b686b58fefcc4d9dd9e2d96aecd3f68a1f1f5e0a", size = 87349348 },
-    { url = "https://files.pythonhosted.org/packages/97/05/093b3c511837ba514f0b97581f7b21e1bb79768b8b9c29013a406b00d484/jaxlib-0.4.35-cp312-cp312-win_amd64.whl", hash = "sha256:dddffce48d7e6057008999aed2d8a9daecc57a48c45a4f8c475e00880eb2e41d", size = 56561679 },
-    { url = "https://files.pythonhosted.org/packages/99/40/aedef37c44797779a01bf71a392145724e3e0fc369e5f08f55c3c82de733/jaxlib-0.4.35-cp313-cp313-macosx_10_14_x86_64.whl", hash = "sha256:14aeac3fea2ca1d5afb1878f72470b159cc89adb2633c5f0686f5d7c39f2ac18", size = 87934299 },
-    { url = "https://files.pythonhosted.org/packages/94/42/62d4d13078886f4d22ca95ca07135f740cf9dd925f4cdb23d7b7d432403b/jaxlib-0.4.35-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:e8c9579e20d5ecdc4f61336cdd032710cb8c38d5ae9c4fce0cf9ea031cef21cb", size = 68065641 },
-    { url = "https://files.pythonhosted.org/packages/4d/a0/87a4eae3811ce7014ce2c59b811ad930273bfbbb8252ba78079606f9ec40/jaxlib-0.4.35-cp313-cp313-manylinux2014_aarch64.whl", hash = "sha256:7b11ad7c13f7f96f36efd303711ecac425f19ca2ddf65cf1be1541167a959ee5", size = 70629568 },
-    { url = "https://files.pythonhosted.org/packages/b3/89/59d6fe10e30ff5a48a73319bafa9a11cd999f91a47e4f08f7dc3651c899c/jaxlib-0.4.35-cp313-cp313-manylinux2014_x86_64.whl", hash = "sha256:0be3cf9df879d9ae1b5b92fc281f77d21f522fcbae1a48a02661026bbd9b9309", size = 87350315 },
-    { url = "https://files.pythonhosted.org/packages/79/d7/d7600c65fe0412a6584d84ca172816a8cf19965219ee3dd59542447ffe2f/jaxlib-0.4.35-cp313-cp313-win_amd64.whl", hash = "sha256:330c090bb9af413f552d8a92d097e50baec6b75823430fb2966a49f5298d4c43", size = 56562022 },
+    { url = "https://files.pythonhosted.org/packages/38/13/f072d016428b3abccdce09fe9154f7ddb8008fbc74e977f122988b177b69/jaxlib-0.6.0-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:ef163cf07de00bc5690169e97fafaadc378f1c381f0287e8a473e78ab5bab1b5", size = 53466890 },
+    { url = "https://files.pythonhosted.org/packages/42/ad/e7e580d0c3d8da64d610934342ac71c984e24d561cb97390ee05f51208b0/jaxlib-0.6.0-cp311-cp311-manylinux2014_aarch64.whl", hash = "sha256:c0ae959899802e1329cc8ec5a2b4d4be9a076b5beb2052eb49ba37514e623ebc", size = 77475513 },
+    { url = "https://files.pythonhosted.org/packages/f9/d3/da7e18974de849093047251052d64228ab895ec0a2b12390f5a2dc7172d5/jaxlib-0.6.0-cp311-cp311-manylinux2014_x86_64.whl", hash = "sha256:bed45525e3bb5ec08630bfd207c09af9d62e9ff13f5f07c2ee2cfd8ed8411ba1", size = 87767967 },
+    { url = "https://files.pythonhosted.org/packages/d7/4c/6ffb2c208cdf8e1bbaf0d48922ab58327700238b6efd4a9295af3563533c/jaxlib-0.6.0-cp311-cp311-win_amd64.whl", hash = "sha256:ec61ca368d0708e1a7543eae620823025bfd405fa9ab331302f209833e970107", size = 56389049 },
+    { url = "https://files.pythonhosted.org/packages/7d/f4/ab3b96c6f2fb6a4c83bce6b49ccae760a8c53ddb788e8a334bf9124d2607/jaxlib-0.6.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:7e3ce2ef0edc9b48b36e2704c36181f1ece7a12ac114df753db4286ea2c6e8b8", size = 53481042 },
+    { url = "https://files.pythonhosted.org/packages/90/af/d6ef7f3aba000446a8829510d4015d6757a8fb67638197de625ed71c9a19/jaxlib-0.6.0-cp312-cp312-manylinux2014_aarch64.whl", hash = "sha256:2536fa93ec148d5016da8b2077ba66325b0d86aae2289a61c126877f042b3d1c", size = 77475532 },
+    { url = "https://files.pythonhosted.org/packages/a7/c4/1a252f12e3ed0a3986cfb36bbdc38ff33e358f58ee7a0ddb5d6bb126cb31/jaxlib-0.6.0-cp312-cp312-manylinux2014_x86_64.whl", hash = "sha256:b6d85b8d1fd79248b04503517201e72fcbcd3980cf791d37e814709ea50a3c82", size = 87788826 },
+    { url = "https://files.pythonhosted.org/packages/65/81/5a989ecd4819de26ebffe90a165b81ceec1c98cd20214764c4b7c15c5837/jaxlib-0.6.0-cp312-cp312-win_amd64.whl", hash = "sha256:554512c1445ee69c566ef097c3dbdd09e9d9908523eef222c589a559f4220370", size = 56412726 },
+    { url = "https://files.pythonhosted.org/packages/14/bd/bf524a52586efb3fb3b9428b0950436e4ed4c11a7a7e81b41b33dd5c7fac/jaxlib-0.6.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:c4e97934cbaf5172343aa5ae8ef0c58462ce26154dfda754202b3034160cac7b", size = 53481483 },
+    { url = "https://files.pythonhosted.org/packages/da/5c/9678ca9d1880da395e25d0241bec1661e62a23250df8d8c15dca16727f14/jaxlib-0.6.0-cp313-cp313-manylinux2014_aarch64.whl", hash = "sha256:189729639762050c1780b050e98ff620480b1ea32bf167533e000a5cf4c5738e", size = 77473727 },
+    { url = "https://files.pythonhosted.org/packages/a0/3b/57be3ad61b04267d182be1053f4900cafa5a67aa60c7b4d2b69bc3f4662a/jaxlib-0.6.0-cp313-cp313-manylinux2014_x86_64.whl", hash = "sha256:d0fb122dc7830ca2a5ca3c874a087363a00532b644509c219c3bfd1d54515e8d", size = 87788241 },
+    { url = "https://files.pythonhosted.org/packages/9f/74/dafbdb0e441444368cfdb59172df2413867b470fd8cdc87aae2ddb775dcd/jaxlib-0.6.0-cp313-cp313-win_amd64.whl", hash = "sha256:1597e972ff0e99abbb5bd376167b0b1d565554da54de94f12a5f5c574082f9c6", size = 56412915 },
+    { url = "https://files.pythonhosted.org/packages/eb/12/e322d282ac6c157574313938b79673f674d8180c01e7911d22649da7990f/jaxlib-0.6.0-cp313-cp313t-manylinux2014_aarch64.whl", hash = "sha256:d7ab9eaa6e4db3dc6bfba8a061b660147bcd5a1b9d777fde3d729c794f274ab9", size = 77610069 },
+    { url = "https://files.pythonhosted.org/packages/5e/c5/15dfc92b98f3d14eb3c50934f1293dc141c0e9ed4e66cd43833fd72cd131/jaxlib-0.6.0-cp313-cp313t-manylinux2014_x86_64.whl", hash = "sha256:63106d4e38aec5e4285c8de85e8cddcbb40084c077d07ac03778d3a2bcfa3aae", size = 87894402 },
 ]
 
 [[package]]
 name = "jaxtyping"
-version = "0.2.34"
+version = "0.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typeguard" },
+    { name = "wadler-lindig" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/32/cb/580f3ec30b9e52b79c0288c033a1f0a90378f3b820707a2e8894c076481b/jaxtyping-0.2.34.tar.gz", hash = "sha256:eed9a3458ec8726c84ea5457ebde53c964f65d2c22c0ec40d0555ae3fed5bbaf", size = 32688 }
+sdist = { url = "https://files.pythonhosted.org/packages/88/a8/416bd7ea110ec6b68e8868b0f99c985c735adcf7badc491d3c343937260a/jaxtyping-0.3.2.tar.gz", hash = "sha256:f30483fac4b42e915db8ad2414a85c3b63284aa7d3c100b96b59f755cf4a86ad", size = 44989 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/56/ae/220537f80eb82ae43a299de31edb2a91a28b8c5fb8046e9ff853ec7763cd/jaxtyping-0.2.34-py3-none-any.whl", hash = "sha256:2f81fb6d1586e497a6ea2d28c06dcab37b108a096cbb36ea3fe4fa2e1c1f32e5", size = 42426 },
+    { url = "https://files.pythonhosted.org/packages/c9/b9/281e10e2d967ea5e481683eaec99f55ac5a61085ee60551c36942ef32bef/jaxtyping-0.3.2-py3-none-any.whl", hash = "sha256:6a020fd276226ddb5ac4f5725323843dd65e3c7e85c64fd62431e5f738c74e04", size = 55409 },
 ]
 
 [[package]]
@@ -1046,14 +1046,14 @@ wheels = [
 
 [[package]]
 name = "optype"
-version = "0.8.0"
+version = "0.9.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "typing-extensions", marker = "python_full_version < '3.13'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/89/42/543e02c72aba7ebe78adb76bbfbed1bc1314eba633ad453984948e5a5f46/optype-0.8.0.tar.gz", hash = "sha256:8cbfd452d6f06c7c70502048f38a0d5451bc601054d3a577dd09c7d6363950e1", size = 85295 }
+sdist = { url = "https://files.pythonhosted.org/packages/88/3c/9d59b0167458b839273ad0c4fc5f62f787058d8f5aed7f71294963a99471/optype-0.9.3.tar.gz", hash = "sha256:5f09d74127d316053b26971ce441a4df01f3a01943601d3712dd6f34cdfbaf48", size = 96143 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/ff/604be975eb0e9fd02358cdacf496f4411db97bffc27279ce260e8f50aba4/optype-0.8.0-py3-none-any.whl", hash = "sha256:90a7760177f2e7feae379a60445fceec37b932b75a00c3d96067497573c5e84d", size = 74228 },
+    { url = "https://files.pythonhosted.org/packages/73/d8/ac50e2982bdc2d3595dc2bfe3c7e5a0574b5e407ad82d70b5f3707009671/optype-0.9.3-py3-none-any.whl", hash = "sha256:2935c033265938d66cc4198b0aca865572e635094e60e6e79522852f029d9e8d", size = 84357 },
 ]
 
 [[package]]
@@ -1106,16 +1106,16 @@ wheels = [
 
 [[package]]
 name = "plum-dispatch"
-version = "2.5.6"
+version = "2.5.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beartype" },
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/50/6f/940dcf576c7dff934613a08bf7eaaf54ba3ccdd744137defe784abcd9cbb/plum_dispatch-2.5.6.tar.gz", hash = "sha256:ab25c2b891a14e30e04013a9ca36a3ab3d3e1c02105dc00dab82c47372efea99", size = 35450 }
+sdist = { url = "https://files.pythonhosted.org/packages/f4/46/ab3928e864b0a88a8ae6987b3da3b7ae32fe0a610264f33272139275dab5/plum_dispatch-2.5.7.tar.gz", hash = "sha256:a7908ad5563b93f387e3817eb0412ad40cfbad04bc61d869cf7a76cd58a3895d", size = 35452 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/10/71ef7f92d25521c2be9152e8d117f2ac9281715899f4fb6260bc023f65b2/plum_dispatch-2.5.6-py3-none-any.whl", hash = "sha256:07b6c8b1b453656fc650caf99c4e77f41ee37317062129e3bb558afeae10eeb6", size = 42609 },
+    { url = "https://files.pythonhosted.org/packages/2b/31/21609a9be48e877bc33b089a7f495c853215def5aeb9564a31c210d9d769/plum_dispatch-2.5.7-py3-none-any.whl", hash = "sha256:06471782eea0b3798c1e79dca2af2165bafcfa5eb595540b514ddd81053b1ede", size = 42612 },
 ]
 
 [[package]]
@@ -1403,7 +1403,7 @@ wheels = [
 
 [[package]]
 name = "quax"
-version = "0.0.5"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "equinox" },
@@ -1411,14 +1411,14 @@ dependencies = [
     { name = "jaxtyping" },
     { name = "plum-dispatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d3/e6/c898689d4471bf9ac91a51a9c1877c1486fe6668f8d26f5d61a57a403f31/quax-0.0.5.tar.gz", hash = "sha256:ea321e70dd63f48ee22a47fcbe253ff8a0f64ead26f1a9e7243ba1e68dd3dc1d", size = 25963 }
+sdist = { url = "https://files.pythonhosted.org/packages/89/02/721331f21c60a79b0ba7cd0f264724aa6abe67c0a3c6026dd4bc9719ad1c/quax-0.2.0.tar.gz", hash = "sha256:cec1f48b92107e6473f803d779da441a5ccef0f4d80e04a2067121f1f64987ae", size = 26040 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/56/fbac153d0b403ec48c5423a54b15963f4fd5fc80a8907f50cc595afcb8eb/quax-0.0.5-py3-none-any.whl", hash = "sha256:385d3619b22a95c562d2dd89a0b68a47590e0879216b2f20ac2093860c75f606", size = 37016 },
+    { url = "https://files.pythonhosted.org/packages/86/0c/422910c7ffad742899b8b112ca26ac81046252e3d044fa02035df5e876f0/quax-0.2.0-py3-none-any.whl", hash = "sha256:1f03e7966f358488ef2dba7c67a8f8009c3b256862ce65a9444a351928cb92e7", size = 36921 },
 ]
 
 [[package]]
 name = "quax-blocks"
-version = "0.2"
+version = "0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jax" },
@@ -1429,9 +1429,9 @@ dependencies = [
     { name = "quax" },
     { name = "quaxed" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/f5/3e94efe20264a359a6b460cd00f3b8615910b9fdbe2d50752c1f325d2556/quax_blocks-0.2.tar.gz", hash = "sha256:ba5821ec15be84fa349abb8fd1fd303b963a7277c58d53c2c1bf7269f8fdd92e", size = 59025 }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/88/3fa746079a64365fe56633d37d1df52c50d9a322e0183943502144236440/quax_blocks-0.3.tar.gz", hash = "sha256:e3fbc4ac644e4c94ad79ed0aa62f7b66606e4656f0a1f81eeddd7b8c8e1407d0", size = 59016 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/52/a3/cd31be11e3742fe6de070e1418788c46eed8ba712aab45b113042ba92877/quax_blocks-0.2-py3-none-any.whl", hash = "sha256:090efe99ab999d645c02905ef90cc65067b8fded64ba25e641bf23ddc5142d3d", size = 16155 },
+    { url = "https://files.pythonhosted.org/packages/4c/fb/c729ea797f2b96c8b67e4a2ae15c156aafe1eee71334aa6b795edda7e8b4/quax_blocks-0.3-py3-none-any.whl", hash = "sha256:1deaa4549a6c6b350636cafe5a4fda4bae960f491ab287e5845921d22fcf7a45", size = 16184 },
 ]
 
 [[package]]
@@ -1757,15 +1757,6 @@ wheels = [
 ]
 
 [[package]]
-name = "typeguard"
-version = "2.13.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/3a/38/c61bfcf62a7b572b5e9363a802ff92559cb427ee963048e1442e3aef7490/typeguard-2.13.3.tar.gz", hash = "sha256:00edaa8da3a133674796cf5ea87d9f4b4c367d77476e185e80251cc13dfbb8c4", size = 40604 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9a/bb/d43e5c75054e53efce310e79d63df0ac3f25e34c926be5dffb7d283fb2a8/typeguard-2.13.3-py3-none-any.whl", hash = "sha256:5e3e3be01e887e7eafae5af63d1f36c849aaa94e3a0112097312aabfa16284f1", size = 17605 },
-]
-
-[[package]]
 name = "typing-extensions"
 version = "4.12.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1776,7 +1767,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "1.3.2"
+version = "1.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -1794,9 +1785,9 @@ dependencies = [
     { name = "xmmutablemap" },
     { name = "zeroth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/53/78/20305f13d6036cfba477268a1e7db9a45a1a22c0d25bdfb3ee122bb0234b/unxt-1.3.2.tar.gz", hash = "sha256:aeaf1c58df3822df176e5206cf58a8245a3b09c1300bb367257c942aebec8119", size = 672592 }
+sdist = { url = "https://files.pythonhosted.org/packages/33/54/0a190e489f34c5df6abef0d23030006de2322da41370037a43e7a5bd72dd/unxt-1.5.0.tar.gz", hash = "sha256:f502f4ad6b606809ccbf7c5607abc73d393960dab17dc9e0b6c94c9b118f1126", size = 830814 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3f/fc/a6f6681fd70f072d353354fa5c8d5dfcb0414ef7f87f8ed27ad6c9e68352/unxt-1.3.2-py3-none-any.whl", hash = "sha256:262208c7c469cb4e6c0e4c7c6a132d3637d689d512fda0c4c50e3dcbabe169da", size = 66699 },
+    { url = "https://files.pythonhosted.org/packages/04/3d/99fc834fb0d05549cef5008e6003b7736bd64d7b421487b57ae505118d07/unxt-1.5.0-py3-none-any.whl", hash = "sha256:6f956bf81eb6444f4c8bfed59fafce2793294460027be6d5ec6bf401ddb17458", size = 68560 },
 ]
 
 [[package]]
@@ -1820,6 +1811,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/3f/40/abc5a766da6b0b2457f819feab8e9203cbeae29327bd241359f866a3da9d/virtualenv-20.26.6.tar.gz", hash = "sha256:280aede09a2a5c317e409a00102e7077c6432c5a38f0ef938e643805a7ad2c48", size = 9372482 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/59/90/57b8ac0c8a231545adc7698c64c5a36fa7cd8e376c691b9bde877269f2eb/virtualenv-20.26.6-py3-none-any.whl", hash = "sha256:7345cc5b25405607a624d8418154577459c3e0277f5466dd79c49d5e492995f2", size = 5999862 },
+]
+
+[[package]]
+name = "wadler-lindig"
+version = "0.1.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/36/75/bde0b7a9062fb0849a43cea2edce1bc98193d00ac1cab0f037f2d4ef60f3/wadler_lindig-0.1.5.tar.gz", hash = "sha256:c8d6c0e74fc61c7108077009238b7f5a5a52b25f75e024dac313393faf7f7440", size = 15606 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f9/4e/ef53ee4a6bf563a7c0a33682d6fef7a96b6685821516e52596cd90a376cd/wadler_lindig-0.1.5-py3-none-any.whl", hash = "sha256:54f830ec0bdab41b28df8bc91be4596c6cc8cf9772b3b5c7cd5922d2ba5073b7", size = 20390 },
 ]
 
 [[package]]

@@ -220,7 +220,7 @@ class GalileanTranslation(AbstractGalileanOperator):
     # -------------------------------------------
     # Python special methods
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # TODO: update using wadler-lindig
         return f"{self.__class__.__name__}({self.translation!r})"
 
 

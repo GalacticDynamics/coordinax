@@ -64,7 +64,6 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
-      rotation=GalileanRotation(rotation=f32[3,3]),
       translation=GalileanTranslation(
         translation=FourVector(
           t=Quantity[...](value=f32[], unit=Unit("s")),
@@ -89,7 +88,6 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ... )
     >>> op
     GalileanOperator(
-      rotation=GalileanRotation(rotation=f32[3,3]),
       translation=GalileanTranslation(
         translation=FourVector(
           t=Quantity[...)](value=...f32[], unit=Unit("Gyr")),

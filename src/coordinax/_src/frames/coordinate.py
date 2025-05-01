@@ -89,7 +89,7 @@ class AbstractCoordinate(AbstractVector):
     # ===============================================================
     # Python API
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # TODO: update using wadler-lindig
         """Return string representation.
 
         Examples

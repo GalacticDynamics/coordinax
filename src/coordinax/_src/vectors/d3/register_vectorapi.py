@@ -605,7 +605,7 @@ def vconvert(
 
     >>> cxv.vconvert(cxv.LonLatSphericalPos, cxv.CylindricalPos, cyl, units=usys)
     ({'distance': Array(1.4142135, dtype=float32, ...),
-      'lat': Array(45.000004, dtype=float32, ...),
+      'lat': Array(45., dtype=float32, ...),
       'lon': Array(90., dtype=float32, ...)},
      {})
 

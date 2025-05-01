@@ -362,7 +362,7 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
     # ---------------------------------------------------------------
     # Methods
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # TODO: update using wadler-lindig
         """Return the string representation.
 
         Examples
@@ -390,7 +390,7 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         data = "{\n" + indent(repr(self._data)[1:-1], "    ") + "\n}"
         return cls_name + "(" + data + ")"
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # TODO: update using wadler-lindig
         """Return the string representation.
 
         Examples
