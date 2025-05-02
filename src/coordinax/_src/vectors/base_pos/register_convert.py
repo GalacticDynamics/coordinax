@@ -76,31 +76,31 @@ def convert_pos_to_absquantity(obj: AbstractPos, /) -> u.AbstractQuantity:
 
     >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
+    Quantity(Array([1.], dtype=float32), unit='km')
 
     >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1.], dtype=float32), unit='km')
+    Quantity(Array([1.], dtype=float32), unit='km')
 
     >>> pos = cx.vecs.CartesianPos2D.from_([1.0, 2.0], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1., 2.], dtype=float32), unit='km')
+    Quantity(Array([1., 2.], dtype=float32), unit='km')
 
     >>> pos = cx.vecs.PolarPos(u.Quantity(1, "km"), u.Quantity(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1., 0.], dtype=float32, ...), unit='km')
+    Quantity(Array([1., 0.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
+    Quantity(Array([1., 2., 3.], dtype=float32), unit='km')
 
     >>> pos = cx.SphericalPos(u.Quantity(1.0, "km"), u.Quantity(0, "deg"), u.Quantity(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([0., 0., 1.], dtype=float32, ...), unit='km')
+    Quantity(Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.vecs.CylindricalPos(u.Quantity(1, "km"), u.Quantity(0, "deg"), u.Quantity(0, "km"))
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1., 0., 0.], dtype=float32, ...), unit='km')
+    Quantity(Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
     """  # noqa: E501
     cart = full_shaped(obj.vconvert(obj.cartesian_type))
@@ -118,31 +118,31 @@ def convert_pos_to_q(obj: AbstractPos, /) -> u.Quantity["length"]:
 
     >>> pos = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1], dtype=int32), unit='km')
+    Quantity(Array([1], dtype=int32), unit='km')
 
     >>> pos = cx.vecs.RadialPos.from_([1], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1], dtype=int32), unit='km')
+    Quantity(Array([1], dtype=int32), unit='km')
 
     >>> pos = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1, 2], dtype=int32), unit='km')
+    Quantity(Array([1, 2], dtype=int32), unit='km')
 
     >>> pos = cx.vecs.PolarPos(u.Quantity(1, "km"), u.Quantity(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1., 0.], dtype=float32, ...), unit='km')
+    Quantity(Array([1., 0.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
+    Quantity(Array([1., 2., 3.], dtype=float32), unit='km')
 
     >>> pos = cx.SphericalPos(u.Quantity(1.0, "km"), u.Quantity(0, "deg"), u.Quantity(0, "deg"))
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([0., 0., 1.], dtype=float32, ...), unit='km')
+    Quantity(Array([0., 0., 1.], dtype=float32, ...), unit='km')
 
     >>> pos = cx.vecs.CylindricalPos(u.Quantity(1, "km"), u.Quantity(0, "deg"), u.Quantity(0, "km"))
     >>> convert(pos, u.AbstractQuantity)
-    Quantity['length'](Array([1., 0., 0.], dtype=float32, ...), unit='km')
+    Quantity(Array([1., 0., 0.], dtype=float32, ...), unit='km')
 
     """  # noqa: E501
     return convert(convert(obj, u.AbstractQuantity), u.Quantity)

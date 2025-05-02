@@ -53,11 +53,11 @@ def normalize_vector(
 
     >>> x = u.Quantity(jnp.asarray([2, 0]), "km")
     >>> cx.vecs.normalize_vector(x)
-    Quantity['dimensionless'](Array([1., 0.], dtype=float32), unit='')
+    Quantity(Array([1., 0.], dtype=float32), unit='')
 
     >>> x = u.Quantity(jnp.asarray([0, 2]), "s")
     >>> cx.vecs.normalize_vector(x)
-    Quantity['dimensionless'](Array([0., 1.], dtype=float32), unit='')
+    Quantity(Array([0., 1.], dtype=float32), unit='')
 
     """
     return x / jnp.linalg.vector_norm(x, axis=-1, keepdims=True)

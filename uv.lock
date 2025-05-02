@@ -369,7 +369,7 @@ requires-dist = [
     { name = "quax", specifier = ">=0.2.0" },
     { name = "quax-blocks", specifier = ">=0.3" },
     { name = "quaxed", specifier = ">=0.9.0" },
-    { name = "unxt", specifier = ">=1.5.0" },
+    { name = "unxt", specifier = ">=1.6.0" },
     { name = "wadler-lindig", specifier = ">=0.1.5" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
@@ -1769,7 +1769,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "1.5.0"
+version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -1784,12 +1784,13 @@ dependencies = [
     { name = "quax" },
     { name = "quax-blocks" },
     { name = "quaxed" },
+    { name = "wadler-lindig" },
     { name = "xmmutablemap" },
     { name = "zeroth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/54/0a190e489f34c5df6abef0d23030006de2322da41370037a43e7a5bd72dd/unxt-1.5.0.tar.gz", hash = "sha256:f502f4ad6b606809ccbf7c5607abc73d393960dab17dc9e0b6c94c9b118f1126", size = 830814 }
+sdist = { url = "https://files.pythonhosted.org/packages/27/d9/75a50b3b2376d23f7598d982fbcc2b50620cbce31a0425571e75e4eccdea/unxt-1.6.0.tar.gz", hash = "sha256:6226d29d5892798ab1b90cf7257b8bc0680cbbc3b51ec5fc779eae593c4a18ea", size = 831921 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/3d/99fc834fb0d05549cef5008e6003b7736bd64d7b421487b57ae505118d07/unxt-1.5.0-py3-none-any.whl", hash = "sha256:6f956bf81eb6444f4c8bfed59fafce2793294460027be6d5ec6bf401ddb17458", size = 68560 },
+    { url = "https://files.pythonhosted.org/packages/88/9d/6aff1780de14f4e1642cf18836cf9f513441b58a4c59687d557da067a36c/unxt-1.6.0-py3-none-any.whl", hash = "sha256:aa62f653788c6e8f8ecb8b961bcdc02392f14fcc19c093cda01f9b53b760ae06", size = 69552 },
 ]
 
 [[package]]

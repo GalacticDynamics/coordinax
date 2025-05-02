@@ -121,36 +121,37 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
     >>> q = u.Quantity([0], "km")
     >>> op(q)
-    Quantity['length'](Array([1], dtype=int32), unit='km')
+    Quantity(Array([1], dtype=int32), unit='km')
 
     >>> vec = cx.vecs.CartesianPos1D.from_(q).vconvert(cx.vecs.RadialPos)
     >>> op(vec)
-    RadialPos(r=Distance(value=i32[], unit=Unit("km")))
+    RadialPos(r=Distance(i32[], unit='km'))
 
     - 2D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2], "km")
     >>> q = u.Quantity([0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1, 2], dtype=int32), unit='km')
+    Quantity(Array([1, 2], dtype=int32), unit='km')
 
     >>> vec = cx.vecs.CartesianPos2D.from_(q).vconvert(cx.vecs.PolarPos)
     >>> op(vec)
-    PolarPos( r=Distance(value=f32[], unit=Unit("km")),
-              phi=Angle(value=f32[], unit=Unit("rad")) )
+    PolarPos(r=Distance(f32[], unit='km'), phi=Angle(f32[], unit='rad'))
 
     - 3D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
     >>> q = u.Quantity([0, 0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='km')
+    Quantity(Array([1, 2, 3], dtype=int32), unit='km')
 
     >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
     >>> op(vec)
-    SphericalPos( r=Distance(value=f32[], unit=Unit("km")),
-                  theta=Angle(value=f32[], unit=Unit("rad")),
-                  phi=Angle(value=f32[], unit=Unit("rad")) )
+    SphericalPos(
+      r=Distance(f32[], unit='km'),
+      theta=Angle(f32[], unit='rad'),
+      phi=Angle(f32[], unit='rad')
+    )
 
     Many operators are time dependent and require a time argument. This operator
     is time independent and will pass through the time argument:

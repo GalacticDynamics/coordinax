@@ -60,7 +60,7 @@ class CylindricalPos(AbstractPos3D):
         ...                            phi=u.Quantity(0, "deg"),
         ...                            z=u.Quantity(4, "km"))
         >>> c.norm()
-        Quantity['length'](Array(5., dtype=float32, ...), unit='km')
+        Quantity(Array(5., dtype=float32, ...), unit='km')
 
         """
         return jnp.hypot(self.rho, self.z)

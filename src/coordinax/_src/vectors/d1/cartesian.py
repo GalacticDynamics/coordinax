@@ -27,18 +27,18 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 
     >>> vec = cx.vecs.CartesianPos1D.from_([2], "m")
     >>> vec
-    CartesianPos1D(x=Quantity[...](value=i32[], unit=Unit("m")))
+    CartesianPos1D(x=Quantity(i32[], unit='m'))
 
     Vectors support the basic math operations:
 
     >>> (vec + vec).x
-    Quantity['length'](Array(4, dtype=int32), unit='m')
+    Quantity(Array(4, dtype=int32), unit='m')
 
     >>> (vec - vec).x
-    Quantity['length'](Array(0, dtype=int32), unit='m')
+    Quantity(Array(0, dtype=int32), unit='m')
 
     >>> (3 * vec).x
-    Quantity['length'](Array(6, dtype=int32), unit='m')
+    Quantity(Array(6, dtype=int32), unit='m')
 
     """
 
@@ -63,7 +63,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
         >>> import coordinax as cx
         >>> q = cx.vecs.CartesianVel1D.from_([-1], "km/s")
         >>> q.norm()
-        Quantity['speed'](Array(1, dtype=int32), unit='km / s')
+        Quantity(Array(1, dtype=int32), unit='km / s')
 
         """
         return jnp.abs(self.x)
@@ -86,7 +86,7 @@ class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
         >>> import coordinax as cx
         >>> q = cx.vecs.CartesianAcc1D.from_([-1], "km/s2")
         >>> q.norm()
-        Quantity['acceleration'](Array(1, dtype=int32), unit='km / s2')
+        Quantity(Array(1, dtype=int32), unit='km / s2')
 
         """
         return jnp.abs(self.x)

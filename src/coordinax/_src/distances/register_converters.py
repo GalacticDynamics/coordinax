@@ -46,7 +46,7 @@ def convert_quantity_to_distmod(q: u.AbstractQuantity, /) -> DistanceModulus:
     >>> from coordinax.distance import DistanceModulus
     >>> q = u.Quantity(1, "mag")
     >>> q
-    Quantity['dex'](Array(1, dtype=int32, ...), unit='mag')
+    Quantity(Array(1, dtype=int32, ...), unit='mag')
 
     >>> convert(q, DistanceModulus)
     DistanceModulus(Array(1, dtype=int32, ...), unit='mag')
@@ -72,7 +72,7 @@ def convert_quantity_to_parallax(q: u.AbstractQuantity, /) -> Parallax:
     >>> from coordinax.distance import Parallax
     >>> q = u.Quantity(1, "mas")
     >>> q
-    Quantity['angle'](Array(1, dtype=int32, ...), unit='mas')
+    Quantity(Array(1, dtype=int32, ...), unit='mas')
 
     >>> convert(q, Parallax)
     Parallax(Array(1, dtype=int32, weak_type=True), unit='mas')

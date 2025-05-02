@@ -33,24 +33,16 @@ def vector(cls: type[FourVector], obj: u.AbstractQuantity, /) -> FourVector:
     >>> vec = cx.FourVector.from_(xs)
     >>> vec
     FourVector(
-        t=Quantity[...](value=...f32[], unit=Unit("m s / km")),
-        q=CartesianPos3D(
-            x=Quantity[...](value=i32[], unit=Unit("m")),
-            y=Quantity[...](value=i32[], unit=Unit("m")),
-            z=Quantity[...](value=i32[], unit=Unit("m"))
-        )
+      t=Quantity(weak_f32[], unit='m s / km'),
+      q=CartesianPos3D( ... )
     )
 
     >>> xs = u.Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
     >>> vec = cx.FourVector.from_(xs)
     >>> vec
     FourVector(
-        t=Quantity[...](value=...f32[2], unit=Unit("m s / km")),
-        q=CartesianPos3D(
-            x=Quantity[...](value=i32[2], unit=Unit("m")),
-            y=Quantity[...](value=i32[2], unit=Unit("m")),
-            z=Quantity[...](value=i32[2], unit=Unit("m"))
-        )
+      t=Quantity(weak_f32[2], unit='m s / km'),
+      q=CartesianPos3D( ... )
     )
 
     """

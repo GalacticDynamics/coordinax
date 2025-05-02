@@ -24,7 +24,7 @@ def converter_azimuth_to_range(
     >>> import unxt as u
     >>> x = u.Quantity(370, "deg")
     >>> converter_azimuth_to_range(x)
-    Quantity['angle'](Array(10, dtype=int32, ...), unit='deg')
+    Quantity(Array(10, dtype=int32, ...), unit='deg')
 
     """
     # TODO: have an integer-preserving version of this

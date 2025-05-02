@@ -35,24 +35,24 @@ def broadcast_in_dim_p_absvec(
 
     >>> q = cx.vecs.CartesianPos1D.from_([1], "m")
     >>> q.x
-    Quantity['length'](Array(1, dtype=int32), unit='m')
+    Quantity(Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 1)).x
-    Quantity['length'](Array([1], dtype=int32), unit='m')
+    Quantity(Array([1], dtype=int32), unit='m')
 
     >>> p = cx.vecs.CartesianVel1D.from_([1], "m/s")
     >>> p.x
-    Quantity['speed'](Array(1, dtype=int32), unit='m / s')
+    Quantity(Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).x
-    Quantity['speed'](Array([1], dtype=int32), unit='m / s')
+    Quantity(Array([1], dtype=int32), unit='m / s')
 
     >>> a = cx.vecs.CartesianAcc1D.from_([1], "m/s2")
     >>> a.x
-     Quantity['acceleration'](Array(1, dtype=int32), unit='m / s2')
+    Quantity(Array(1, dtype=int32), unit='m / s2')
 
     >>> jnp.broadcast_to(a, (1, 1)).x
-    Quantity['acceleration'](Array([1], dtype=int32), unit='m / s2')
+    Quantity(Array([1], dtype=int32), unit='m / s2')
 
 
     Radial 1D position, velocity, and acceleration:
@@ -66,17 +66,17 @@ def broadcast_in_dim_p_absvec(
 
     >>> p = cx.vecs.RadialVel.from_([1], "m/s")
     >>> p.r
-    Quantity['speed'](Array(1, dtype=int32), unit='m / s')
+    Quantity(Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).r
-    Quantity['speed'](Array([1], dtype=int32), unit='m / s')
+    Quantity(Array([1], dtype=int32), unit='m / s')
 
     >>> a = cx.vecs.RadialAcc.from_([1], "m/s2")
     >>> a.r
-    Quantity['acceleration'](Array(1, dtype=int32), unit='m / s2')
+    Quantity(Array(1, dtype=int32), unit='m / s2')
 
     >>> jnp.broadcast_to(a, (1, 1)).r
-    Quantity['acceleration'](Array([1], dtype=int32), unit='m / s2')
+    Quantity(Array([1], dtype=int32), unit='m / s2')
 
 
     Cartesian 2D position, velocity, and acceleration:
@@ -112,17 +112,17 @@ def broadcast_in_dim_p_absvec(
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> q.x
-    Quantity['length'](Array(1, dtype=int32), unit='m')
+    Quantity(Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 3)).x
-    Quantity['length'](Array([1], dtype=int32), unit='m')
+    Quantity(Array([1], dtype=int32), unit='m')
 
     >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
     >>> p.x
-    Quantity['speed'](Array(1, dtype=int32), unit='m / s')
+    Quantity(Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 3)).x
-    Quantity['speed'](Array([1], dtype=int32), unit='m / s')
+    Quantity(Array([1], dtype=int32), unit='m / s')
 
     >>> a = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "m/s2")
     >>> print(a)
@@ -158,7 +158,7 @@ def convert_element_type_p_absvec(
 
     >>> vec = cx.vecs.CartesianPosND.from_([1, 2, 3], "m")
     >>> qlax.convert_element_type(vec, float)
-    CartesianPosND(q=Quantity[...](value=f32[3], unit=Unit("m")))
+    CartesianPosND(q=Quantity(f32[3], unit='m'))
 
     """
     convert_p = quaxify(jax.lax.convert_element_type_p.bind)

@@ -53,10 +53,10 @@ class ProlateSpheroidalPos(AbstractPos3D):
     ... )
     >>> vec
     ProlateSpheroidalPos(
-      mu=Quantity[PhysicalType('area')](value=...f32[], unit=Unit("km2")),
-      nu=Quantity[PhysicalType('area')](value=...f32[], unit=Unit("km2")),
-      phi=Angle(value=...f32[], unit=Unit("rad")),
-      Delta=Quantity[PhysicalType('length')](value=...f32[], unit=Unit("km"))
+      mu=Quantity(weak_f32[], unit='km2'),
+      nu=Quantity(weak_f32[], unit='km2'),
+      phi=Angle(weak_f32[], unit='rad'),
+      Delta=Quantity(weak_f32[], unit='km')
     )
 
     This fails with a zero or negative Delta:

@@ -84,56 +84,53 @@ def vector(cls: type[AbstractVector], obj: u.AbstractQuantity, /) -> AbstractVec
     Pos 1D:
 
     >>> cx.vecs.CartesianPos1D.from_(u.Quantity(1, "meter"))
-    CartesianPos1D( x=Quantity[...](value=...i32[], unit=Unit("m")) )
+    CartesianPos1D(x=Quantity(weak_i32[], unit='m'))
 
     >>> cx.vecs.CartesianPos1D.from_(u.Quantity([1], "meter"))
-    CartesianPos1D(x=Quantity[...](value=i32[], unit=Unit("m")))
+    CartesianPos1D(x=Quantity(i32[], unit='m'))
 
     >>> cx.vecs.CartesianPos1D.from_(cx.Distance(1, "meter"))
-    CartesianPos1D( x=Quantity[...](value=...i32[], unit=Unit("m")) )
+    CartesianPos1D(x=Quantity(weak_i32[], unit='m'))
 
     >>> cx.vecs.RadialPos.from_(u.Quantity(1, "meter"))
-    RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
+    RadialPos(r=Distance(weak_i32[], unit='m'))
 
     >>> cx.vecs.RadialPos.from_(u.Quantity([1], "meter"))
-    RadialPos(r=Distance(value=...i32[], unit=Unit("m")))
+    RadialPos(r=Distance(i32[], unit='m'))
 
     Vel 1D:
 
     >>> cx.vecs.CartesianVel1D.from_(u.Quantity(1, "m/s"))
-    CartesianVel1D( x=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    CartesianVel1D(x=Quantity(weak_i32[], unit='m / s'))
 
     >>> cx.vecs.CartesianVel1D.from_(u.Quantity([1], "m/s"))
-    CartesianVel1D( x=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    CartesianVel1D(x=Quantity(i32[], unit='m / s'))
 
     >>> cx.vecs.RadialVel.from_(u.Quantity(1, "m/s"))
-    RadialVel( r=Quantity[...]( value=...i32[], unit=Unit("m / s") ) )
+    RadialVel(r=Quantity(weak_i32[], unit='m / s'))
 
     >>> cx.vecs.RadialVel.from_(u.Quantity([1], "m/s"))
-    RadialVel( r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    RadialVel(r=Quantity(i32[], unit='m / s'))
 
     Acc 1D:
 
     >>> cx.vecs.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
-    CartesianAcc1D( x=... )
+    CartesianAcc1D(x=Quantity(weak_i32[], unit='m / s2'))
 
     >>> cx.vecs.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
-    CartesianAcc1D( x=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+    CartesianAcc1D(x=Quantity(i32[], unit='m / s2'))
 
     >>> cx.vecs.RadialAcc.from_(u.Quantity(1, "m/s2"))
-    RadialAcc( r=... )
+    RadialAcc(r=Quantity(weak_i32[], unit='m / s2'))
 
     >>> cx.vecs.RadialAcc.from_(u.Quantity([1], "m/s2"))
-    RadialAcc( r=Quantity[...](value=i32[], unit=Unit("m / s2")) )
+    RadialAcc(r=Quantity(i32[], unit='m / s2'))
 
     Pos 2D:
 
     >>> vec = cx.vecs.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
     >>> vec
-    CartesianPos2D(
-        x=Quantity[...](value=i32[], unit=Unit("m")),
-        y=Quantity[...](value=i32[], unit=Unit("m"))
-    )
+    CartesianPos2D(x=Quantity(i32[], unit='m'), y=Quantity(i32[], unit='m'))
 
     Vel 2D:
 

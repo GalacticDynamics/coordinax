@@ -65,8 +65,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> op
     GalileanOperator(
       translation=GalileanTranslation(FourVector(
-        t=Quantity[...](value=f32[], unit=Unit("s")),
-        q=CartesianPos3D( ... ) )),
+        t=Quantity(f32[], unit='s'), q=CartesianPos3D( ... ) )),
       velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
@@ -95,10 +94,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> new = op(w)
     >>> new
-    FourVector(
-      t=Quantity[...](value=...f32[], unit=Unit("s")),
-      q=CartesianPos3D( ... )
-    )
+    FourVector( t=Quantity(weak_f32[], unit='s'), q=CartesianPos3D( ... ) )
     >>> new.t.ustrip("Gyr").round(2)
     Array(2.5, dtype=float32, ...)
     >>> print(new.q)
@@ -116,7 +112,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         [7.889e+16 1.578e+17 2.367e+17]>
 
     >>> newt
-    Quantity['time'](Array(7.8894005e+16, dtype=float32, ...), unit='s')
+    Quantity(Array(7.8894005e+16, dtype=float32, ...), unit='s')
 
     """
 

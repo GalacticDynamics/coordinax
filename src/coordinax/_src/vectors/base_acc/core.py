@@ -76,7 +76,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> a = a.vconvert(cx.vecs.CylindricalAcc, p, q)
 
         >>> a.norm(p, q)
-        Quantity[...](Array(5..., dtype=float32), unit='m / s2')
+        Quantity(Array(5..., dtype=float32), unit='m / s2')
 
         """
         cart_cls = self.cartesian_type

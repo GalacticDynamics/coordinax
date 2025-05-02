@@ -25,7 +25,7 @@ def check_r_non_negative(r: u.AbstractQuantity, /) -> u.AbstractQuantity:
 
     >>> x = u.Quantity([0, 1, 2], "m")
     >>> check_r_non_negative(x)
-    Quantity['length'](Array([0, 1, 2], dtype=int32), unit='m')
+    Quantity(Array([0, 1, 2], dtype=int32), unit='m')
 
     Raise an error if the radial distance is negative.
 
@@ -54,7 +54,7 @@ def check_polar_range(
 
     >>> x = u.Quantity([0., 1, 2], "deg")
     >>> check_polar_range(x)
-    Quantity['angle'](Array([0., 1., 2.], dtype=float32), unit='deg')
+    Quantity(Array([0., 1., 2.], dtype=float32), unit='deg')
 
     Raise an error if anything is outside the range.
 
@@ -93,7 +93,7 @@ def check_non_negative(
 
     >>> x = u.Quantity([0, 1, 2], "m")
     >>> check_non_negative(x)
-    Quantity['length'](Array([0, 1, 2], dtype=int32), unit='m')
+    Quantity(Array([0, 1, 2], dtype=int32), unit='m')
 
     Raise an error if any value is negative.
 
@@ -119,7 +119,7 @@ def check_non_negative_non_zero(
 
     >>> x = u.Quantity([1, 2, 3], "m")
     >>> check_non_negative_non_zero(x)
-    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if any value is negative or zero.
 
@@ -156,7 +156,7 @@ def check_less_than_equal(
 
     >>> x = u.Quantity([1, 2, 3], "m")
     >>> check_less_than_equal(x, u.Quantity(3, "m"))
-    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is larger than the maximum value.
 
@@ -187,7 +187,7 @@ def check_greater_than_equal(
 
     >>> x = u.Quantity([1, 2, 3], "m")
     >>> check_greater_than_equal(x, u.Quantity(1, "m"))
-    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='m')
+    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is smaller than the minimum value.
 

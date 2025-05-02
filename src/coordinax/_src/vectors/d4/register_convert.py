@@ -66,7 +66,7 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*ba
     ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
 
     >>> convert(w, u.Quantity).uconvert("pc")
-    Quantity['length'](Array([[0.3066014, 1. , 2. , 3. ],
+    Quantity(Array([[0.3066014, 1. , 2. , 3. ],
                               [0.6132028, 4. , 4.9999995, 6. ]],
                              dtype=float32, weak_type=True),
                        unit='pc')

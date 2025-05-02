@@ -119,9 +119,9 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D
     >>> vec = CartesianRepresentation(1, 2, 3, unit="km")
     >>> convert(vec, cx.CartesianPos3D)
     CartesianPos3D(
-      x=Quantity[...](value=f32[], unit=Unit("km")),
-      y=Quantity[...](value=f32[], unit=Unit("km")),
-      z=Quantity[...](value=f32[], unit=Unit("km"))
+      x=Quantity(f32[], unit='km'),
+      y=Quantity(f32[], unit='km'),
+      z=Quantity(f32[], unit='km')
     )
 
     """
@@ -174,9 +174,9 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.Cylindrical
     >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
     >>> convert(cyl, cx.vecs.CylindricalPos)
     CylindricalPos(
-        rho=Quantity[...](value=f32[], unit=Unit("km")),
-        phi=Angle(value=f32[], unit=Unit("deg")),
-        z=Quantity[...](value=f32[], unit=Unit("m"))
+      rho=Quantity(f32[], unit='km'),
+      phi=Angle(f32[], unit='deg'),
+      z=Quantity(f32[], unit='m')
     )
 
     """
@@ -226,9 +226,9 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
     ...                                      phi=3 * u.deg)
     >>> convert(sph, cx.SphericalPos)
     SphericalPos(
-      r=Distance(value=f32[], unit=Unit("km")),
-      theta=Angle(value=f32[], unit=Unit("deg")),
-      phi=Angle(value=f32[], unit=Unit("deg"))
+      r=Distance(f32[], unit='km'),
+      theta=Angle(f32[], unit='deg'),
+      phi=Angle(f32[], unit='deg')
     )
 
     """
@@ -282,9 +282,9 @@ def apysph_to_lonlatsph(
     ...                               distance=1 * u.km)
     >>> convert(sph, cx.vecs.LonLatSphericalPos)
     LonLatSphericalPos(
-      lon=Angle(value=f32[], unit=Unit("deg")),
-      lat=Angle(value=f32[], unit=Unit("deg")),
-      distance=Distance(value=f32[], unit=Unit("km"))
+      lon=Angle(f32[], unit='deg'),
+      lat=Angle(f32[], unit='deg'),
+      distance=Distance(f32[], unit='km')
     )
 
     """
@@ -332,9 +332,9 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> convert(dcart, cx.CartesianVel3D)
     CartesianVel3D(
-      x=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      y=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      z=Quantity[...]( value=f32[], unit=Unit("km / s") )
+      x=Quantity(f32[], unit='km / s'),
+      y=Quantity(f32[], unit='km / s'),
+      z=Quantity(f32[], unit='km / s')
     )
 
     """
@@ -391,9 +391,9 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.vecs.Cylindric
     ...                                     d_z=2 * u.km / u.s)
     >>> convert(dcyl, cx.vecs.CylindricalVel)
     CylindricalVel(
-      rho=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      z=Quantity[...]( value=f32[], unit=Unit("km / s") )
+      rho=Quantity(f32[], unit='km / s'),
+      phi=Quantity(f32[], unit='mas / yr'),
+      z=Quantity(f32[], unit='km / s')
     )
 
     """
@@ -449,9 +449,9 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.Spherical
     ...                                    d_phi=3 * u.mas/u.yr)
     >>> convert(dif, cx.SphericalVel)
     SphericalVel(
-      r=Quantity[...]( value=f32[], unit=Unit("km / s") ),
-      theta=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      phi=Quantity[...]( value=f32[], unit=Unit("mas / yr") )
+      r=Quantity(f32[], unit='km / s'),
+      theta=Quantity(f32[], unit='mas / yr'),
+      phi=Quantity(f32[], unit='mas / yr')
     )
 
     """
@@ -511,9 +511,9 @@ def apysph_to_difflonlatsph(
     ...                             d_lon=3 * u.mas/u.yr)
     >>> convert(dif, cx.vecs.LonLatSphericalVel)
     LonLatSphericalVel(
-      lon=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
+      lon=Quantity(f32[], unit='mas / yr'),
+      lat=Quantity(f32[], unit='mas / yr'),
+      distance=Quantity(f32[], unit='km / s')
     )
 
     """
@@ -574,9 +574,9 @@ def apysph_to_diffloncoslatsph(
     ...                                   d_lon_coslat=3 * u.mas/u.yr)
     >>> convert(dif, cx.vecs.LonCosLatSphericalVel)
     LonCosLatSphericalVel(
-      lon_coslat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      lat=Quantity[...]( value=f32[], unit=Unit("mas / yr") ),
-      distance=Quantity[...]( value=f32[], unit=Unit("km / s") )
+      lon_coslat=Quantity(f32[], unit='mas / yr'),
+      lat=Quantity(f32[], unit='mas / yr'),
+      distance=Quantity(f32[], unit='km / s')
     )
 
     """

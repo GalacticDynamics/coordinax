@@ -27,15 +27,15 @@ def vec_to_q(
 
     >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], unit="km"))
     >>> convert(vec, u.Quantity)
-    Quantity['length'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
+    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
 
     >>> vec = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4, 5], unit="km/s"))
     >>> convert(vec, u.Quantity)
-    Quantity['speed'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
+    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
 
     >>> vec = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4, 5], unit="km/s2"))
     >>> convert(vec, u.Quantity)
-    Quantity['acceleration'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
+    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
 
     """
     return obj.q

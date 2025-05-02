@@ -3,10 +3,11 @@
 __all__ = ["Distance", "DistanceModulus", "Parallax"]
 
 from dataclasses import KW_ONLY
-from typing import final
+from typing import Any, final
 
 import equinox as eqx
 import jax.numpy as jnp
+import wadler_lindig as wl
 from jaxtyping import Array, Shaped
 
 import quaxed.numpy as jnp
@@ -113,7 +114,7 @@ class Parallax(AbstractDistance):
     To disable this check, set `check_negative=False`.
 
     >>> Parallax(-1, "mas", check_negative=False)
-    Parallax(Array(-1, dtype=int32, ...), unit='mas')
+    Parallax(Array(-1, dtype=int32, weak_type=True), unit='mas', check_negative=False)
 
     """
 
@@ -145,3 +146,14 @@ class Parallax(AbstractDistance):
                 jnp.any(jnp.less(self.value, 0)),
                 "Parallax must be non-negative.",
             )
+
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return a Wadler-Lindig document for the parallax."""
+        pdoc = super().__pdoc__(**kwargs)
+
+        # Don't show check_negative if it's the default.
+        fs = pdoc.children[2].child.child.children
+        if fs[-1].children[-1].text == str(self.__class__.check_negative):
+            object.__setattr__(pdoc.children[2].child.child, "children", fs[:-2])
+
+        return pdoc
