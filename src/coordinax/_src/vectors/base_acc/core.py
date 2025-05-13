@@ -28,6 +28,8 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         The subclass is registered.
         """
+        super().__init_subclass__(**kwargs)
+
         ACCELERATION_CLASSES_MUTABLE[cls] = None
 
     # ===============================================================

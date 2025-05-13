@@ -39,6 +39,8 @@ class AbstractPos(
 
         The subclass is registered if it is not an abstract class.
         """
+        super().__init_subclass__(**kwargs)
+
         # TODO: a more robust check using equinox.
         if isabstract(cls) or cls.__name__.startswith("Abstract"):
             return
