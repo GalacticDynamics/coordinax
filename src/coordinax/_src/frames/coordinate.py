@@ -201,9 +201,9 @@ class Coordinate(AbstractCoordinate):
 
     >>> w.to_frame(cx.frames.ICRS()).data["length"]
     CartesianPos3D(
-      x=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc")),
-      y=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc")),
-      z=Quantity[PhysicalType('length')](value=f32[], unit=Unit("pc"))
+      x=Quantity(f32[], unit='pc'),
+      y=Quantity(f32[], unit='pc'),
+      z=Quantity(f32[], unit='pc')
     )
 
     """

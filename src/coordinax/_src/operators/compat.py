@@ -38,7 +38,7 @@ def call(self: AbstractOperator, x: Q1, /, **kwargs: Any) -> Q1:
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
     >>> q = u.Quantity([0], "km")
     >>> op(q)
-    Quantity['length'](Array([1], dtype=int32), unit='km')
+    Quantity(Array([1], dtype=int32), unit='km')
 
     """
     # Quantity -> CartesianPos1D -> [Operator] -> Quantity
@@ -60,8 +60,8 @@ def call(
     >>> q = u.Quantity([0], "km")
     >>> t = u.Quantity(0, "s")
     >>> op(t, q)
-    (Quantity['time'](Array(0, dtype=int32, weak_type=True), unit='s'),
-     Quantity['length'](Array([1], dtype=int32), unit='km'))
+    (Quantity(Array(0, dtype=int32, weak_type=True), unit='s'),
+     Quantity(Array([1], dtype=int32), unit='km'))
 
     """
     t, vec = self(t, CartesianPos1D.from_(x), **kwargs)
@@ -87,7 +87,7 @@ def call(self: AbstractOperator, x: Q2, /, **kwargs: Any) -> Q2:
     >>> q = u.Quantity([1, 2], "m")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(q)
-    Quantity['length'](Array([0, 1], dtype=int32), unit='m')
+    Quantity(Array([0, 1], dtype=int32), unit='m')
 
     """
     return convert(self(CartesianPos2D.from_(x), **kwargs), u.Quantity)
@@ -108,8 +108,8 @@ def call(
     >>> t = u.Quantity(0, "s")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(t, q)
-    (Quantity['time'](Array(0, dtype=int32, weak_type=True), unit='s'),
-     Quantity['length'](Array([0, 1], dtype=int32), unit='m'))
+    (Quantity(Array(0, dtype=int32, weak_type=True), unit='s'),
+     Quantity(Array([0, 1], dtype=int32), unit='m'))
 
     """
     t, vec = self(t, CartesianPos2D.from_(x), **kwargs)
@@ -148,7 +148,7 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
 
     >>> q = u.Quantity([0.0, 0, 0], "km")
     >>> op(q)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
+    Quantity(Array([1., 2., 3.], dtype=float32), unit='km')
 
     """
     cart = CartesianPos3D.from_(q)
@@ -179,8 +179,8 @@ def call(
     >>> t = u.Quantity(0.0, "Gyr")
 
     >>> op(t, q)
-    (Quantity['time'](Array(0., dtype=float32, weak_type=True), unit='Gyr'),
-     Quantity['length'](Array([2., 4., 6.], dtype=float32), unit='km'))
+    (Quantity(Array(0., dtype=float32, weak_type=True), unit='Gyr'),
+     Quantity(Array([2., 4., 6.], dtype=float32), unit='km'))
 
     """
     t, vec = self(t, CartesianPos3D.from_(x), **kwargs)
@@ -209,13 +209,13 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
 
     >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "km")
     >>> pos
-    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPos3D( ... ) )
+    FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
 
     >>> newpos = op(pos)
     >>> newpos
-    FourVector( t=Quantity[PhysicalType('time')](...), q=CartesianPos3D( ... ) )
+    FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
     >>> newpos.q.x
-    Quantity['length'](Array(2., dtype=float32), unit='km')
+    Quantity(Array(2., dtype=float32), unit='km')
 
     Now on a VelocityBoost:
 
@@ -256,11 +256,11 @@ def call(
 
     >>> pos = u.Quantity([0, 1.0, 2.0, 3.0], "km")
     >>> pos
-    Quantity['length'](Array([0., 1., 2., 3.], dtype=float32), unit='km')
+    Quantity(Array([0., 1., 2., 3.], dtype=float32), unit='km')
 
     >>> newpos = op(pos)
     >>> newpos
-    Quantity['length'](Array([0., 2., 4., 6.], dtype=float32), unit='km')
+    Quantity(Array([0., 2., 4., 6.], dtype=float32), unit='km')
 
     """
     q4 = FourVector.from_(x)

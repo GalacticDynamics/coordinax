@@ -51,12 +51,12 @@ def vconvert(target: type[PoincarePolarVector], w: Space, /) -> PoincarePolarVec
 
     >>> cx.vconvert(cx.vecs.PoincarePolarVector, w)
     PoincarePolarVector(
-      rho=Quantity[...](value=f32[1,2], unit=Unit("m")),
-      pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m / s(1/2)") ),
-      z=Quantity[...](value=i32[1,2], unit=Unit("m")),
-      dt_rho=Quantity[...]( value=f32[1,2], unit=Unit("m / s") ),
-      dt_pp_phi=Quantity[...]( value=f32[1,2], unit=Unit("m / s(1/2)") ),
-      dt_z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") )
+      rho=Quantity(f32[1,2], unit='m'),
+      pp_phi=Quantity(f32[1,2], unit='m / s(1/2)'),
+      z=Quantity(i32[1,2], unit='m'),
+      dt_rho=Quantity(f32[1,2], unit='m / s'),
+      dt_pp_phi=Quantity(f32[1,2], unit='m / s(1/2)'),
+      dt_z=Quantity(i32[1,2], unit='m / s')
     )
 
     """

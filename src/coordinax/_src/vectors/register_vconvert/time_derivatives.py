@@ -65,8 +65,8 @@ def dot_jac_vec(
     >>> v = {"x": u.Quantity(1, "km"), "y": u.Quantity(2, "km")}
 
     >>> dot_jac_vec(J, v)
-    {'phi': Quantity['angle'](Array(11, dtype=int32, ...), unit='rad'),
-     'r': Quantity['length'](Array(5, dtype=int32, ...), unit='km')}
+    {'phi': Quantity(Array(11, dtype=int32, ...), unit='rad'),
+     'r': Quantity(Array(5, dtype=int32, ...), unit='km')}
 
     """
     flat_jac, treedef = eqx.tree_flatten_one_level(jac)
@@ -132,7 +132,7 @@ def vconvert(
     >>> p = {"x": u.Quantity([1.0], "km/s")}
     >>> newp = cxv.vconvert(cxv.RadialVel, cxv.CartesianVel1D, p, q)
     >>> print(newp)
-    ({'r': Quantity['speed'](Array([1.], dtype=float32), unit='km / s')}, {})
+    ({'r': Quantity(Array([1.], dtype=float32), unit='km / s')}, {})
 
     """
     # Check the dimensionality
@@ -329,7 +329,7 @@ def vconvert(
     >>> a = {"x": u.Quantity([1.0], "km/s2")}
     >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, p, q)
     >>> print(newa)
-    ({'r': Quantity['acceleration'](Array([1.], dtype=float32), unit='km / s2')}, {})
+    ({'r': Quantity(Array([1.], dtype=float32), unit='km / s2')}, {})
 
     """
     # Check the dimensionality
@@ -449,7 +449,7 @@ def vconvert(
     >>> p = cx.vecs.CartesianVel1D(x=u.Quantity(1.0, "km/s"))
     >>> a = cx.vecs.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
     >>> cx.vconvert(cx.vecs.RadialAcc, a, p, q)
-    RadialAcc( r=Quantity[...](value=f32[], unit=Unit("km / s2")) )
+    RadialAcc(r=Quantity(f32[], unit='km / s2'))
 
     Now in 2D:
 
@@ -458,8 +458,7 @@ def vconvert(
     >>> a = cx.vecs.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
     >>> cx.vconvert(cx.vecs.PolarAcc, a, p, q)
     PolarAcc(
-      r=Quantity[...](value=f32[], unit=Unit("km / s2")),
-      phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
+      r=Quantity(f32[], unit='km / s2'), phi=Quantity(f32[], unit='rad / s2')
     )
 
     And in 3D:
@@ -469,9 +468,9 @@ def vconvert(
     >>> a = cx.vecs.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> cx.vconvert(cx.vecs.SphericalAcc, a, p, q)
     SphericalAcc(
-      r=Quantity[...](value=f32[], unit=Unit("km / s2")),
-      theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
-      phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
+      r=Quantity(f32[], unit='km / s2'),
+      theta=Quantity(f32[], unit='rad / s2'),
+      phi=Quantity(f32[], unit='rad / s2')
     )
 
     If given a position as a Quantity, it will be converted to the appropriate
@@ -481,9 +480,9 @@ def vconvert(
     ...             u.Quantity([1.0, 2.0, 3.0], "km/s"),
     ...             u.Quantity([1.0, 2.0, 3.0], "km"))
     SphericalAcc(
-      r=Quantity[...](value=f32[], unit=Unit("km / s2")),
-      theta=Quantity[...]( value=f32[], unit=Unit("rad / s2") ),
-      phi=Quantity[...]( value=f32[], unit=Unit("rad / s2") )
+      r=Quantity(f32[], unit='km / s2'),
+      theta=Quantity(f32[], unit='rad / s2'),
+      phi=Quantity(f32[], unit='rad / s2')
     )
 
     """

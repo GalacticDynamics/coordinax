@@ -154,7 +154,7 @@ class AbstractVector(
         >>> a_sph
         SphericalAcc( ... )
         >>> a_sph.r
-        Quantity['acceleration'](Array(13.363062, dtype=float32), unit='m / s2')
+        Quantity(Array(13.363062, dtype=float32), unit='m / s2')
 
         """
         return vconvert(target, self, *args, **kwargs)
@@ -291,7 +291,7 @@ class AbstractVector(
         ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
         ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.mT.x
-        Quantity['length'](Array([[0, 2],
+        Quantity(Array([[0, 2],
                                   [1, 3]], dtype=int32), unit='m')
 
         """
@@ -347,7 +347,7 @@ class AbstractVector(
         ...                         y=u.Quantity([[0, 1], [2, 3]], "m"),
         ...                         z=u.Quantity([[0, 1], [2, 3]], "m"))
         >>> vec.T.x
-        Quantity['length'](Array([[0, 2],
+        Quantity(Array([[0, 2],
                                   [1, 3]], dtype=int32), unit='m')
 
         """
@@ -440,7 +440,7 @@ class AbstractVector(
         >>> vel1 = cx.vecs.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
         >>> vel2 = cx.vecs.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
         >>> vel1.x
-        Quantity['speed'](Array([1, 2], dtype=int32), unit='km / s')
+        Quantity(Array([1, 2], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False], dtype=bool)
         >>> vel1 == vel2
@@ -449,7 +449,7 @@ class AbstractVector(
         >>> acc1 = cx.vecs.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
         >>> acc2 = cx.vecs.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
         >>> acc1.x
-        Quantity['acceleration'](Array([1, 2], dtype=int32), unit='km / s2')
+        Quantity(Array([1, 2], dtype=int32), unit='km / s2')
         >>> jnp.equal(acc1, acc2)
         Array([ True, False], dtype=bool)
         >>> acc1 == acc2
@@ -458,7 +458,7 @@ class AbstractVector(
         >>> vel1 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 6]], "km/s")
         >>> vel2 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 0]], "km/s")
         >>> vel1.x
-        Quantity['speed'](Array([1, 4], dtype=int32), unit='km / s')
+        Quantity(Array([1, 4], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False], dtype=bool)
         >>> vel1 == vel2
@@ -508,7 +508,7 @@ class AbstractVector(
         >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
         ...                              y=u.Quantity(0, "m"))
         >>> vec[0].x
-        Quantity['length'](Array([1, 2], dtype=int32), unit='m')
+        Quantity(Array([1, 2], dtype=int32), unit='m')
 
         """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy
@@ -563,11 +563,11 @@ class AbstractVector(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.astype(jnp.float32)
-        CartesianPos1D(x=Quantity[...](value=f32[2], unit=Unit("m")))
+        CartesianPos1D(x=Quantity(f32[2], unit='m'))
 
         >>> import quaxed.numpy as jnp
         >>> jnp.astype(vec, jnp.float32)
-        CartesianPos1D(x=Quantity[...](value=f32[2], unit=Unit("m")))
+        CartesianPos1D(x=Quantity(f32[2], unit='m'))
 
         """
         return replace(
@@ -589,7 +589,7 @@ class AbstractVector(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.astype({"x": jnp.float32})
-        CartesianPos1D(x=Quantity[PhysicalType('length')](value=f32[2], unit=Unit("m")))
+        CartesianPos1D(x=Quantity(f32[2], unit='m'))
 
         """
         return replace(
@@ -685,10 +685,7 @@ class AbstractVector(
         ...                              y=u.Quantity(0, "m"))
 
         >>> vec.reshape(4)
-        CartesianPos2D(
-            x=Quantity[...](value=i32[4], unit=Unit("m")),
-            y=Quantity[...](value=...i32[4], unit=Unit("m"))
-        )
+        CartesianPos2D(x=Quantity(i32[4], unit='m'), y=Quantity(weak_i32[4], unit='m'))
 
         """
         # TODO: enable not needing to make a full-shaped copy
@@ -714,7 +711,7 @@ class AbstractVector(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
-        CartesianPos1D(x=Quantity[PhysicalType('length')](value=i32[2], unit=Unit("m")))
+        CartesianPos1D(x=Quantity(i32[2], unit='m'))
 
         """
         changes = {
@@ -759,8 +756,8 @@ class AbstractVector(
         >>> vec = cx.vecs.CartesianPos2D(x=u.Quantity([[1, 2], [3, 4]], "m"),
         ...                              y=u.Quantity(0, "m"))
         >>> vec.asdict()
-        {'x': Quantity['length'](Array([[1, 2], [3, 4]], dtype=int32), unit='m'),
-         'y': Quantity['length'](Array(0, dtype=int32, ...), unit='m')}
+        {'x': Quantity(Array([[1, 2], [3, 4]], dtype=int32), unit='m'),
+         'y': Quantity(Array(0, dtype=int32, ...), unit='m')}
 
         """
         return dict_factory(field_items(self))

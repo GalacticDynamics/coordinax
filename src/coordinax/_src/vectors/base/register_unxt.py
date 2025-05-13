@@ -68,8 +68,7 @@ def uconvert(
     >>> cart = cx.vecs.CartesianPos2D(x=u.Quantity(1, "m"), y=u.Quantity(2, "km"))
     >>> cart.uconvert({u.dimension("length"): "km"})
     CartesianPos2D(
-        x=Quantity[...](value=...f32[], unit=Unit("km")),
-        y=Quantity[...](value=...i32[], unit=Unit("km"))
+      x=Quantity(weak_f32[], unit='km'), y=Quantity(weak_i32[], unit='km')
     )
 
     This also works for vectors with different units:
@@ -78,9 +77,10 @@ def uconvert(
     ...                       phi=u.Quantity(3, "rad"))
     >>> sph.uconvert({u.dimension("length"): "km", u.dimension("angle"): "deg"})
     SphericalPos(
-      r=Distance(value=...f32[], unit=Unit("km")),
-      theta=Angle(value=...i32[], unit=Unit("deg")),
-      phi=Angle(value=...f32[], unit=Unit("deg")) )
+      r=Distance(weak_f32[], unit='km'),
+      theta=Angle(weak_i32[], unit='deg'),
+      phi=Angle(weak_f32[], unit='deg')
+    )
 
     """
     # Ensure `units_` is PT -> Unit
@@ -109,16 +109,14 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
     >>> cart = cx.vecs.CartesianPos2D(x=u.Quantity(1, "m"), y=u.Quantity(2, "km"))
     >>> cart.uconvert({"x": "km", "y": "m"})
     CartesianPos2D(
-        x=Quantity[...](value=...f32[], unit=Unit("km")),
-        y=Quantity[...](value=...f32[], unit=Unit("m"))
+      x=Quantity(weak_f32[], unit='km'), y=Quantity(weak_f32[], unit='m')
     )
 
     This also works for converting just some of the components:
 
     >>> cart.uconvert({"x": "km"})
     CartesianPos2D(
-        x=Quantity[...](value=...f32[], unit=Unit("km")),
-        y=Quantity[...](value=...i32[], unit=Unit("km"))
+      x=Quantity(weak_f32[], unit='km'), y=Quantity(weak_i32[], unit='km')
     )
 
     This also works for vectors with different units:
@@ -127,9 +125,10 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
     ...                       phi=u.Quantity(3, "rad"))
     >>> sph.uconvert({"r": "km", "theta": "rad"})
     SphericalPos(
-        r=Distance(value=...f32[], unit=Unit("km")),
-        theta=Angle(value=...f32[], unit=Unit("rad")),
-        phi=Angle(value=...f32[], unit=Unit("rad")) )
+      r=Distance(weak_f32[], unit='km'),
+      theta=Angle(weak_f32[], unit='rad'),
+      phi=Angle(weak_f32[], unit='rad')
+    )
 
     """
     return replace(
@@ -169,17 +168,14 @@ def uconvert(
     ``"consistent"``:
 
     >>> cart.uconvert(cx.vecs.ToUnitsOptions.consistent)
-    CartesianPos2D(
-        x=Quantity[...](value=i32[], unit=Unit("m")),
-        y=Quantity[...](value=i32[], unit=Unit("m"))
-    )
+    CartesianPos2D(x=Quantity(i32[], unit='m'), y=Quantity(i32[], unit='m'))
 
     >>> sph = cart.vconvert(cx.SphericalPos)
     >>> sph.uconvert(cx.vecs.ToUnitsOptions.consistent)
     SphericalPos(
-        r=Distance(value=f32[], unit=Unit("m")),
-        theta=Angle(value=f32[], unit=Unit("rad")),
-        phi=Angle(value=f32[], unit=Unit("rad"))
+      r=Distance(f32[], unit='m'),
+      theta=Angle(f32[], unit='rad'),
+      phi=Angle(f32[], unit='rad')
     )
 
     """

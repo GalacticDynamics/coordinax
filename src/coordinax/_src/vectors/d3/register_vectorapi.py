@@ -425,9 +425,9 @@ def vconvert(
     >>> cart = {"x": u.Quantity(1, "km"), "y": u.Quantity(2, "km"),
     ...         "z": u.Quantity(3, "km")}
     >>> cxv.vconvert(cxv.CylindricalPos, cxv.CartesianPos3D, cart)
-    ({'phi': Quantity['angle'](Array(1.1071488, dtype=float32, ...), unit='rad'),
-      'rho': Quantity['length'](Array(2.236068, dtype=float32, ...), unit='km'),
-      'z': Quantity['length'](Array(3, dtype=int32, ...), unit='km')},
+    ({'phi': Quantity(Array(1.1071488, dtype=float32, ...), unit='rad'),
+      'rho': Quantity(Array(2.236068, dtype=float32, ...), unit='km'),
+      'z': Quantity(Array(3, dtype=int32, ...), unit='km')},
      {})
 
     """
@@ -757,9 +757,9 @@ def vconvert(
     ...      "phi": u.Quantity(20, "deg/s")}
 
     >>> cxv.vconvert(cxv.LonLatSphericalVel, cxv.SphericalVel, p)
-    ({'distance': Quantity[...](Array(1, dtype=int32, ...), unit='km / s'),
-      'lat': Quantity[...](Array(-10, dtype=int32, ...), unit='deg / s'),
-      'lon': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s')},
+    ({'distance': Quantity(Array(1, dtype=int32, ...), unit='km / s'),
+      'lat': Quantity(Array(-10, dtype=int32, ...), unit='deg / s'),
+      'lon': Quantity(Array(20, dtype=int32, ...), unit='deg / s')},
      {})
 
     >>> x = cxv.SphericalVel(**p)
@@ -773,9 +773,9 @@ def vconvert(
     ...      "phi": u.Quantity(20, "deg/s2")}
 
     >>> cxv.vconvert(cxv.LonLatSphericalAcc, cxv.SphericalAcc, p)
-    ({'distance': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
-      'lat': Quantity[...](Array(-10, dtype=int32, ...), unit='deg / s2'),
-      'lon': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s2')},
+    ({'distance': Quantity(Array(1, dtype=int32, ...), unit='km / s2'),
+      'lat': Quantity(Array(-10, dtype=int32, ...), unit='deg / s2'),
+      'lon': Quantity(Array(20, dtype=int32, ...), unit='deg / s2')},
      {})
 
     >>> x = cxv.SphericalAcc(**p)
@@ -841,14 +841,14 @@ def vconvert(
 
     >>> p, aux = cxv.vconvert(cxv.MathSphericalVel, cxv.SphericalVel, p)
     >>> p, aux
-    ({'phi': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s'),
-      'r': Quantity['speed'](Array(1, dtype=int32, ...), unit='km / s'),
-      'theta': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s')}, {})
+    ({'phi': Quantity(Array(10, dtype=int32, ...), unit='deg / s'),
+      'r': Quantity(Array(1, dtype=int32, ...), unit='km / s'),
+      'theta': Quantity(Array(20, dtype=int32, ...), unit='deg / s')}, {})
 
     >>> cxv.vconvert(cxv.SphericalVel, cxv.MathSphericalVel, p)
-    ({'phi': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s'),
-      'r': Quantity['speed'](Array(1, dtype=int32, ...), unit='km / s'),
-      'theta': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s')},
+    ({'phi': Quantity(Array(20, dtype=int32, ...), unit='deg / s'),
+      'r': Quantity(Array(1, dtype=int32, ...), unit='km / s'),
+      'theta': Quantity(Array(10, dtype=int32, ...), unit='deg / s')},
      {})
 
     >>> x = cxv.SphericalVel(r=u.Quantity(1, "km/s"),
@@ -872,15 +872,15 @@ def vconvert(
 
     >>> p, aux = cxv.vconvert(cxv.MathSphericalAcc, cxv.SphericalAcc, p)
     >>> p, aux
-    ({'phi': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s2'),
-      'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
-      'theta': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s2')},
+    ({'phi': Quantity(Array(10, dtype=int32, ...), unit='deg / s2'),
+      'r': Quantity(Array(1, dtype=int32, ...), unit='km / s2'),
+      'theta': Quantity(Array(20, dtype=int32, ...), unit='deg / s2')},
      {})
 
     >>> cxv.vconvert(cxv.SphericalAcc, cxv.MathSphericalAcc, p)
-    ({'phi': Quantity[...](Array(20, dtype=int32, ...), unit='deg / s2'),
-      'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
-      'theta': Quantity[...](Array(10, dtype=int32, ...), unit='deg / s2')},
+    ({'phi': Quantity(Array(20, dtype=int32, ...), unit='deg / s2'),
+      'r': Quantity(Array(1, dtype=int32, ...), unit='km / s2'),
+      'theta': Quantity(Array(10, dtype=int32, ...), unit='deg / s2')},
      {})
 
     >>> x = cxv.SphericalAcc(r=u.Quantity(1, "km/s2"),
@@ -1036,9 +1036,9 @@ def vconvert(
     ...      "lat": u.Quantity(0, "deg/s"),
     ...      "distance": u.Quantity(1, "km/s")}
     >>> cxv.vconvert(cxv.SphericalVel, cxv.LonLatSphericalVel, p)
-    ({'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s'),
-      'theta': Quantity[...](Array(0, dtype=int32, ...), unit='deg / s'),
-      'phi': Quantity[...](Array(90, dtype=int32, ...), unit='deg / s')},
+    ({'r': Quantity(Array(1, dtype=int32, ...), unit='km / s'),
+      'theta': Quantity(Array(0, dtype=int32, ...), unit='deg / s'),
+      'phi': Quantity(Array(90, dtype=int32, ...), unit='deg / s')},
      {})
 
     >>> x = cxv.LonLatSphericalVel(**p)
@@ -1051,9 +1051,9 @@ def vconvert(
     ...      "lat": u.Quantity(0, "deg/s2"),
     ...      "distance": u.Quantity(1, "km/s2")}
     >>> cxv.vconvert(cxv.SphericalAcc, cxv.LonLatSphericalAcc, p)
-    ({'r': Quantity[...](Array(1, dtype=int32, ...), unit='km / s2'),
-      'theta': Quantity[...](Array(0, dtype=int32, ...), unit='deg / s2'),
-      'phi': Quantity[...](Array(90, dtype=int32, ...), unit='deg / s2')},
+    ({'r': Quantity(Array(1, dtype=int32, ...), unit='km / s2'),
+      'theta': Quantity(Array(0, dtype=int32, ...), unit='deg / s2'),
+      'phi': Quantity(Array(90, dtype=int32, ...), unit='deg / s2')},
      {})
 
     >>> x = cxv.LonLatSphericalAcc(**p)

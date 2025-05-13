@@ -35,8 +35,8 @@ class Galactocentric(AbstractSpaceFrame):
     >>> frame
     Galactocentric(
       galcen=LonLatSphericalPos( ... ),
-      roll=Quantity[...](value=weak_i32[], unit=Unit("deg")),
-      z_sun=Quantity[...](value=weak_f32[], unit=Unit("pc")),
+      roll=Quantity(weak_i32[], unit='deg'),
+      z_sun=Quantity(weak_f32[], unit='pc'),
       galcen_v_sun=CartesianVel3D( ... )
     )
 

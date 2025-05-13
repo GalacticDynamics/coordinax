@@ -64,7 +64,7 @@ def dot_p_general_poss(
     ...     phi=u.Quantity([0, 0, 0], "rad"))
 
     >>> jnp.dot(vec, vec)
-    Quantity['area'](Array([1., 4., 9.], dtype=float32), unit='m2')
+    Quantity(Array([1., 4., 9.], dtype=float32), unit='m2')
 
     """
     cart_cls = lhs.cartesian_type
@@ -85,10 +85,10 @@ def div_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> jnp.divide(vec, 2).x
-    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+    Quantity(Array(0.5, dtype=float32), unit='m')
 
     >>> (vec / 2).x
-    Quantity['length'](Array(0.5, dtype=float32), unit='m')
+    Quantity(Array(0.5, dtype=float32), unit='m')
 
     """
     return replace(

@@ -92,12 +92,12 @@ class GalileanRotation(AbstractGalileanOperator):
     >>> t = u.Quantity(1, "s")
     >>> newt, newq = op(t, q)
     >>> newq
-    Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
+    Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
     The time is not affected by the rotation.
 
     >>> newt
-    Quantity['time'](Array(1, dtype=int32, ...), unit='s')
+    Quantity(Array(1, dtype=int32, ...), unit='s')
 
     This also works for a batch of vectors:
 
@@ -106,15 +106,15 @@ class GalileanRotation(AbstractGalileanOperator):
 
     >>> newt, newq = op(t, q)
     >>> newq
-    Quantity['length'](Array([[ 0,  1,  0],
-                              [-1,  0,  0]], dtype=int32), unit='m')
+    Quantity(Array([[ 0,  1,  0],
+                    [-1,  0,  0]], dtype=int32), unit='m')
 
     Translation operators can be applied to `vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
     >>> newt, newq = op(t, q)
     >>> newq.x
-    Quantity['length'](Array([ 0, -1], dtype=int32), unit='m')
+    Quantity(Array([ 0, -1], dtype=int32), unit='m')
     >>> newq.norm().value.round(2)
     Array([1., 1.], dtype=float32)
 
@@ -247,18 +247,18 @@ class GalileanRotation(AbstractGalileanOperator):
 
         >>> q = u.Quantity([1, 0, 0], "m")
         >>> op(q)
-        Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
+        Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
         THere's a related dispatch that also takes a time argument:
 
         >>> t = u.Quantity(1, "s")
         >>> newt, newq = op(t, q)
         >>> newq
-        Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
+        Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
         The time is not affected by the rotation.
         >>> newt
-        Quantity['time'](Array(1, dtype=int32, ...), unit='s')
+        Quantity(Array(1, dtype=int32, ...), unit='s')
 
         """
         return vec_matmul(self.rotation, q)
@@ -281,7 +281,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
         >>> newq = op(q)
         >>> newq.x
-        Quantity['length'](Array(0, dtype=int32), unit='m')
+        Quantity(Array(0, dtype=int32), unit='m')
 
         """
         return self.rotation @ q
@@ -333,11 +333,11 @@ def call(
     >>> t = u.Quantity(1, "s")
     >>> newt, newq = op(t, q)
     >>> newq.x
-    Quantity['length'](Array(0, dtype=int32), unit='m')
+    Quantity(Array(0, dtype=int32), unit='m')
 
     The time is not affected by the rotation.
     >>> newt
-    Quantity['time'](Array(1, dtype=int32, ...), unit='s')
+    Quantity(Array(1, dtype=int32, ...), unit='s')
 
     """
     return t, self(q)
@@ -406,9 +406,9 @@ def call(
     >>> p = u.Quantity([1., 0, 0], "m/s")
 
     >>> newq, newp = R_z(q, p)
-    >>> print(newq, newp, sep="\n")
-    Quantity['length'](Array([0., 1., 0.], dtype=float32), unit='m')
-    Quantity['speed'](Array([0., 1., 0.], dtype=float32), unit='m / s')
+    >>> newq, newp
+    (Quantity(Array([0., 1., 0.], dtype=float32), unit='m'),
+     Quantity(Array([0., 1., 0.], dtype=float32), unit='m / s'))
 
     """
     newq = self(q)

@@ -113,7 +113,7 @@ def dot_general_p_cart2d(
     >>> q2 = cx.vecs.CartesianPos2D.from_([3, 4], "m")
 
     >>> jnp.dot(q1, q2)
-    Quantity['area'](Array(11, dtype=int32), unit='m2')
+    Quantity(Array(11, dtype=int32), unit='m2')
 
     """
     tree = jax.tree.map(jnp.multiply, lhs, rhs, is_leaf=u.quantity.is_any_quantity)
@@ -134,7 +134,7 @@ def mul_p_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
 
     >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "m")
     >>> jnp.multiply(5, v).x
-    Quantity['length'](Array(15, dtype=int32), unit='m')
+    Quantity(Array(15, dtype=int32), unit='m')
 
     """
     # Validation
@@ -184,11 +184,13 @@ def mul_p_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     >>> import coordinax as cx
 
     >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "m/s2")
-    >>> jnp.multiply(5, v).x
-    Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
+    >>> print(jnp.multiply(5, v))
+    <CartesianAcc2D (x[m / s2], y[m / s2])
+        [15 20]>
 
-    >>> (5 * v).x
-    Quantity['acceleration'](Array(15, dtype=int32), unit='m / s2')
+    >>> print(5 * v)
+    <CartesianAcc2D (x[m / s2], y[m / s2])
+        [15 20]>
 
     """
     # Validation
@@ -244,7 +246,7 @@ def neg_p_cart2d_pos(obj: CartesianPos2D, /) -> CartesianPos2D:
     >>> import coordinax as cx
     >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> (-q).x
-    Quantity['length'](Array(-1, dtype=int32), unit='km')
+    Quantity(Array(-1, dtype=int32), unit='km')
 
     """
     return jax.tree.map(qlax.neg, obj)

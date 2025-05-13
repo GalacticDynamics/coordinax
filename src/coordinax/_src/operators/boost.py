@@ -207,9 +207,9 @@ def call(
     >>> q = u.Quantity([0., 0, 0], "m")
     >>> p = u.Quantity([0., 0, 0], "m/s")
     >>> newq, newp = op(q, p)
-    >>> print(newq, newp, sep="\n")
-    Quantity['length'](Array([0., 0., 0.], dtype=float32), unit='m')
-    Quantity['speed'](Array([1., 2., 3.], dtype=float32), unit='m / s')
+    >>> (newq, newp)
+    (Quantity(Array([0., 0., 0.], dtype=float32), unit='m'),
+     Quantity(Array([1., 2., 3.], dtype=float32), unit='m / s'))
 
     """
     pvec = CartesianVel3D.from_(p)

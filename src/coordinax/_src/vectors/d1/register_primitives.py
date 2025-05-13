@@ -56,15 +56,13 @@ def add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
 
     >>> v = cx.vecs.CartesianVel1D.from_([1], "km/s")
     >>> vec = jnp.add(v, v)
-    >>> vec
-    CartesianVel1D(
-       x=Quantity[...]( value=i32[], unit=Unit("km / s") )
-    )
-    >>> vec.x
-    Quantity['speed'](Array(2, dtype=int32), unit='km / s')
+    >>> print(vec)
+    <CartesianVel1D (x[km / s])
+        [2]>
 
-    >>> (v + v).x
-    Quantity['speed'](Array(2, dtype=int32), unit='km / s')
+    >>> print(v + v)
+    <CartesianVel1D (x[km / s])
+        [2]>
 
     """
     return jax.tree.map(jnp.add, lhs, rhs)
@@ -81,15 +79,13 @@ def add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
 
     >>> v = cx.vecs.CartesianAcc1D.from_([1], "km/s2")
     >>> vec = jnp.add(v, v)
-    >>> vec
-    CartesianAcc1D(
-        x=Quantity[...](value=i32[], unit=Unit("km / s2"))
-    )
-    >>> vec.x
-    Quantity['acceleration'](Array(2, dtype=int32), unit='km / s2')
+    >>> print(vec)
+    <CartesianAcc1D (x[km / s2])
+        [2]>
 
-    >>> (v + v).x
-    Quantity['acceleration'](Array(2, dtype=int32), unit='km / s2')
+    >>> print(v + v)
+    <CartesianAcc1D (x[km / s2])
+        [2]>
 
     """
     return jax.tree.map(jnp.add, lhs, rhs)
@@ -117,7 +113,7 @@ def dot_general_cart1d(
     >>> q2 = cx.vecs.CartesianPos1D.from_([2], "m")
 
     >>> jnp.dot(q1, q2)
-    Quantity['area'](Array(2, dtype=int32), unit='m2')
+    Quantity(Array(2, dtype=int32), unit='m2')
 
     """
     return lhs.x * rhs.x
@@ -137,10 +133,10 @@ def mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
 
     >>> v = cx.vecs.CartesianPos1D.from_(1, "m")
     >>> jnp.multiply(2, v).x
-    Quantity['length'](Array(2, dtype=int32), unit='m')
+    Quantity(Array(2, dtype=int32), unit='m')
 
     >>> (2 * v).x
-    Quantity['length'](Array(2, dtype=int32, ...), unit='m')
+    Quantity(Array(2, dtype=int32, ...), unit='m')
 
     """
     # Validation
@@ -163,16 +159,13 @@ def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
 
     >>> v = cx.vecs.CartesianVel1D.from_(1, "m/s")
     >>> vec = jnp.multiply(2, v)
-    >>> vec
-    CartesianVel1D(
-      x=Quantity[...]( value=...i32[], unit=Unit("m / s") )
-    )
+    >>> print(vec)
+    <CartesianVel1D (x[m / s])
+        [2]>
 
-    >>> vec.x
-    Quantity['speed'](Array(2, dtype=int32), unit='m / s')
-
-    >>> (2 * v).x
-    Quantity['speed'](Array(2, dtype=int32, ...), unit='m / s')
+    >>> print(2 * v)
+    <CartesianVel1D (x[m / s])
+        [2]>
 
     """
     # Validation
@@ -195,14 +188,13 @@ def mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
 
     >>> v = cx.vecs.CartesianAcc1D.from_(1, "m/s2")
     >>> vec = jnp.multiply(2, v)
-    >>> vec
-    CartesianAcc1D( x=... )
+    >>> print(vec)
+    <CartesianAcc1D (x[m / s2])
+        [2]>
 
-    >>> vec.x
-    Quantity['acceleration'](Array(2, dtype=int32), unit='m / s2')
-
-    >>> (2 * v).x
-    Quantity['acceleration'](Array(2, dtype=int32, ...), unit='m / s2')
+    >>> print(2 * v)
+    <CartesianAcc1D (x[m / s2])
+        [2]>
 
     """
     # Validation
@@ -226,7 +218,7 @@ def neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
     >>> import coordinax as cx
     >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
     >>> (-q).x
-    Quantity['length'](Array(-1, dtype=int32), unit='km')
+    Quantity(Array(-1, dtype=int32), unit='km')
 
     """
     return jax.tree.map(qlax.neg, obj)
@@ -272,14 +264,13 @@ def sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> v1 = cx.vecs.CartesianAcc1D.from_(1, "m/s2")
     >>> v2 = cx.vecs.CartesianAcc1D.from_(2, "m/s2")
     >>> vec = lax.sub(v1, v2)
-    >>> vec
-    CartesianAcc1D( x=... )
+    >>> print(vec)
+    <CartesianAcc1D (x[m / s2])
+        [-1]>
 
-    >>> vec.x
-    Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')
-
-    >>> (v1 - v2).x
-    Quantity['acceleration'](Array(-1, dtype=int32, ...), unit='m / s2')
+    >>> print(v1 - v2)
+    <CartesianAcc1D (x[m / s2])
+        [-1]>
 
     """
     return jax.tree.map(jnp.subtract, self, other)

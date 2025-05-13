@@ -59,7 +59,7 @@ def div_p_q_a(x: AbstractAngle, y: AbstractAngle, /) -> u.Quantity:
     >>> angle = Angle(1, "deg")
     >>> q = u.Quantity(2, "km")
     >>> jnp.divide(q, angle)
-    Quantity['m rad-1'](Array(2., dtype=float32, ...), unit='km / deg')
+    Quantity(Array(2., dtype=float32, ...), unit='km / deg')
 
     """
     x, y = promote(x, y)

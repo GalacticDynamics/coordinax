@@ -32,7 +32,7 @@ def add_p_cartnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND
     >>> q1 = cx.vecs.CartesianPosND.from_([1, 2, 3], "km")
     >>> q2 = cx.vecs.CartesianPosND.from_([2, 3, 4], "km")
     >>> (q1 + q2).q
-    Quantity['length'](Array([3, 5, 7], dtype=int32), unit='km')
+    Quantity(Array([3, 5, 7], dtype=int32), unit='km')
 
     """
     cart = cast(CartesianPosND, rhs.vconvert(CartesianPosND))
@@ -61,7 +61,7 @@ def dot_general_p_cartnds(
     >>> q2 = cx.vecs.CartesianPosND.from_([4, 5, 6], "m")
 
     >>> jnp.dot(q1, q2)
-    Quantity['area'](Array(32, dtype=int32), unit='m2')
+    Quantity(Array(32, dtype=int32), unit='m2')
 
     """
     return qlax.dot_general(lhs.q, rhs.q, **kwargs)
@@ -82,7 +82,7 @@ def mul_p_arraylike_cartnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianP
 
     >>> v = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "km"))
     >>> jnp.multiply(2, v).q
-    Quantity['length'](Array([ 2,  4,  6,  8, 10], dtype=int32), unit='km')
+    Quantity(Array([ 2,  4,  6,  8, 10], dtype=int32), unit='km')
 
     """
     # Validation
@@ -107,7 +107,7 @@ def neg_p_cartnd(obj: CartesianPosND, /) -> CartesianPosND:
 
     >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
     >>> (-vec).q
-    Quantity['length'](Array([-1, -2, -3], dtype=int32), unit='km')
+    Quantity(Array([-1, -2, -3], dtype=int32), unit='km')
 
     """
     return jax.tree.map(qlax.neg, obj)

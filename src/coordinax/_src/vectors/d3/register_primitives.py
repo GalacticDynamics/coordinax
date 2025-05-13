@@ -99,7 +99,7 @@ def dot_general_cart3d(
     >>> q2 = cx.vecs.CartesianPos3D.from_([4, 5, 6], "m")
 
     >>> jnp.dot(q1, q2)
-    Quantity['area'](Array(32, dtype=int32), unit='m2')
+    Quantity(Array(32, dtype=int32), unit='m2')
 
     """
     return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z

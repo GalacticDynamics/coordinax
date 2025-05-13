@@ -90,12 +90,12 @@ def dot_general_p_abstractdistances(
     >>> Rz = jnp.asarray([[0, -1,  0], [1,  0,  0], [0,  0,  1]])
     >>> q = u.Quantity([1, 0, 0], "m")
     >>> Rz @ q
-    Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
+    Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
     This uses `matmul` for quantities.
 
     >>> jnp.linalg.matmul(Rz, q)
-    Quantity['length'](Array([0, 1, 0], dtype=int32), unit='m')
+    Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
@@ -117,7 +117,7 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQua
      BareQuantity(Array(8, dtype=int32, weak_type=True), unit='m3')
 
     """
-    return BareQuantity(value=lax.integer_pow(x.value, y), unit=x.unit**y)
+    return BareQuantity(lax.integer_pow(x.value, y), unit=x.unit**y)
 
 
 # ==============================================================================

@@ -23,7 +23,7 @@ def vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Quantity["length"], "*batch N"]
 
     >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], unit="km"))
     >>> convert(vec, u.Quantity)
-    Quantity['length'](Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
+    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
 
     """
     return obj.q

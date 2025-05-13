@@ -46,8 +46,8 @@ def from_(cls: type[Galactocentric], obj: apyc.Galactocentric, /) -> Galactocent
     >>> gcf
     Galactocentric(
         galcen=LonLatSphericalPos( ... ),
-        roll=Quantity[...](value=f32[], unit=Unit("deg")),
-        z_sun=Quantity[...](value=f32[], unit=Unit("pc")),
+        roll=Quantity(f32[], unit='deg'),
+        z_sun=Quantity(f32[], unit='pc'),
         galcen_v_sun=CartesianVel3D( ... )
     )
 

@@ -193,13 +193,15 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[0]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=i32[2], unit=Unit("m")),
-                y=Quantity[...](value=i32[2], unit=Unit("m")),
-                z=Quantity[...](value=i32[2], unit=Unit("m")) ),
+                x=Quantity(i32[2], unit='m'),
+                y=Quantity(i32[2], unit='m'),
+                z=Quantity(i32[2], unit='m')
+            ),
             'speed': CartesianVel3D(
-                x=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
-                y=Quantity[...]( value=i32[2], unit=Unit("m / s") ),
-                z=Quantity[...]( value=i32[2], unit=Unit("m / s") ) )
+                x=Quantity(i32[2], unit='m / s'),
+                y=Quantity(i32[2], unit='m / s'),
+                z=Quantity(i32[2], unit='m / s')
+            )
         })
 
         By slice:
@@ -207,13 +209,13 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[1:]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=i32[0,2], unit=Unit("m")),
-                y=Quantity[...](value=i32[0,2], unit=Unit("m")),
-                z=Quantity[...](value=i32[0,2], unit=Unit("m")) ),
+                x=Quantity(i32[0,2], unit='m'),
+                y=Quantity(i32[0,2], unit='m'),
+                z=Quantity(i32[0,2], unit='m') ),
             'speed': CartesianVel3D(
-                x=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
-                y=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ),
-                z=Quantity[...]( value=i32[0,2], unit=Unit("m / s") ) )
+                x=Quantity(i32[0,2], unit='m / s'),
+                y=Quantity(i32[0,2], unit='m / s'),
+                z=Quantity(i32[0,2], unit='m / s') )
         })
 
         By Ellipsis:
@@ -221,13 +223,13 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[...]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=i32[1,2], unit=Unit("m")),
-                y=Quantity[...](value=i32[1,2], unit=Unit("m")),
-                z=Quantity[...](value=i32[1,2], unit=Unit("m")) ),
+                x=Quantity(i32[1,2], unit='m'),
+                y=Quantity(i32[1,2], unit='m'),
+                z=Quantity(i32[1,2], unit='m') ),
             'speed': CartesianVel3D(
-                x=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
-                y=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ),
-                z=Quantity[...]( value=i32[1,2], unit=Unit("m / s") ) )
+                x=Quantity(i32[1,2], unit='m / s'),
+                y=Quantity(i32[1,2], unit='m / s'),
+                z=Quantity(i32[1,2], unit='m / s') )
         })
 
         By tuple[int, ...]:
@@ -235,13 +237,13 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[(0, 1)]
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=i32[], unit=Unit("m")),
-                y=Quantity[...](value=i32[], unit=Unit("m")),
-                z=Quantity[...](value=i32[], unit=Unit("m")) ),
+                x=Quantity(i32[], unit='m'),
+                y=Quantity(i32[], unit='m'),
+                z=Quantity(i32[], unit='m') ),
             'speed': CartesianVel3D(
-                x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                z=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+                x=Quantity(i32[], unit='m / s'),
+                y=Quantity(i32[], unit='m / s'),
+                z=Quantity(i32[], unit='m / s') )
         })
 
         This also supports numpy index arrays. But this example section
@@ -376,14 +378,14 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w
         Space({
             'length': CartesianPos3D(
-                x=Quantity[...](value=i32[], unit=Unit("m")),
-                y=Quantity[...](value=i32[], unit=Unit("m")),
-                z=Quantity[...](value=i32[], unit=Unit("m"))
+                x=Quantity(i32[], unit='m'),
+                y=Quantity(i32[], unit='m'),
+                z=Quantity(i32[], unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                y=Quantity[...]( value=i32[], unit=Unit("m / s") ),
-                z=Quantity[...]( value=i32[], unit=Unit("m / s") )
+                x=Quantity(i32[], unit='m / s'),
+                y=Quantity(i32[], unit='m / s'),
+                z=Quantity(i32[], unit='m / s')
             ) })
 
         """

@@ -61,7 +61,7 @@ def neg_vel(vec: AbstractVel, /) -> AbstractVel:
         [-1]>
 
     >>> -dr
-    RadialVel( r=Quantity[...]( value=i32[], unit=Unit("m / s") ) )
+    RadialVel(r=Quantity(i32[], unit='m / s'))
 
     >>> dp = cx.vecs.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
     >>> neg_dp = -dp

@@ -35,7 +35,7 @@
     "quax>=0.2.0",
     "quax-blocks>=0.3",
     "quaxed>=0.9.0",
-    "unxt>=1.5.0",
+    "unxt>=1.6.0",
     "wadler-lindig>=0.1.5",
     "xmmutablemap>=0.1",
 ]

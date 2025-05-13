@@ -149,9 +149,9 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
 
     >>> try: print(cx.vecs.vector(u.Quantity([1], "Msun")))
     ... except ValueError as e: print(e)
-    Cannot construct a Cartesian vector from Quantity['mass'](Array([1], dtype=int32), unit='solMass').
+    Cannot construct a Cartesian vector from Quantity[mass](i32[1], unit='solMass').
 
-    """  # noqa: E501
+    """
     # TODO: use dispatch instead for these matches
     match (u.dimension_of(q), jnp.atleast_1d(q).shape[-1]):
         case (Dim.LENGTH, 0) | (Dim.LENGTH, 1):
@@ -272,39 +272,39 @@ def vec_diff_to_q(obj: AbstractVector, /) -> Shaped[u.Quantity, "*batch N"]:
 
     >>> cart_vel = cx.vecs.CartesianVel1D.from_([1], "km/s")
     >>> convert(cart_vel, u.Quantity)
-    Quantity['speed'](Array([1], dtype=int32), unit='km / s')
+    Quantity(Array([1], dtype=int32), unit='km / s')
 
     >>> cart_acc = cx.vecs.CartesianAcc1D.from_([1], "km/s2")
     >>> convert(cart_acc, u.Quantity)
-    Quantity['acceleration'](Array([1], dtype=int32), unit='km / s2')
+    Quantity(Array([1], dtype=int32), unit='km / s2')
 
     >>> rad_vel = cx.vecs.RadialVel.from_([1], "km/s")
     >>> convert(rad_vel, u.Quantity)
-    Quantity['speed'](Array([1], dtype=int32), unit='km / s')
+    Quantity(Array([1], dtype=int32), unit='km / s')
 
     >>> rad_acc = cx.vecs.RadialAcc.from_([1], "km/s2")
     >>> convert(rad_acc, u.Quantity)
-    Quantity['acceleration'](Array([1], dtype=int32), unit='km / s2')
+    Quantity(Array([1], dtype=int32), unit='km / s2')
 
     ## 2D
 
     >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
     >>> convert(vel, u.Quantity)
-    Quantity['speed'](Array([1, 2], dtype=int32), unit='km / s')
+    Quantity(Array([1, 2], dtype=int32), unit='km / s')
 
     >>> acc = cx.vecs.CartesianAcc2D.from_([1, 2], "km/s2")
     >>> convert(acc, u.Quantity)
-    Quantity['acceleration'](Array([1, 2], dtype=int32), unit='km / s2')
+    Quantity(Array([1, 2], dtype=int32), unit='km / s2')
 
     # 3D
 
     >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, u.Quantity)
-    Quantity['speed'](Array([1, 2, 3], dtype=int32), unit='km / s')
+    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
 
     >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, u.Quantity)
-    Quantity['acceleration'](Array([1, 2, 3], dtype=int32), unit='km / s2')
+    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
 
     """
     return convert(_vec_diff_to_q(obj), u.Quantity)

@@ -218,14 +218,14 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     >>> q = u.Quantity([0, 0, 0], "pc")
     >>> frame_op(q)
-    Quantity[...](Array([-8121.972, 0. , 20.8 ], dtype=float32), unit='pc')
+    Quantity(Array([-8121.972, 0. , 20.8 ], dtype=float32), unit='pc')
 
     >>> p = u.Quantity([0., 0, 0], "km/s")
 
     >>> newq, newp = frame_op(q, p)
-    >>> print(newq, newp, sep="\n")
-    Quantity['length'](Array([-8121.972, 0. , 20.8  ], dtype=float32), unit='pc')
-    Quantity['speed'](Array([ 12.9 , 245.6 , 7.78], dtype=float32), unit='km / s')
+    >>> newq, newp
+    (Quantity(Array([-8121.972,     0.   ,    20.8  ], dtype=float32), unit='pc'),
+     Quantity(Array([ 12.9 , 245.6 ,   7.78], dtype=float32), unit='km / s'))
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
     >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
@@ -339,14 +339,14 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
 
     >>> q = u.Quantity([0, 0, 0], "pc")
     >>> frame_op(q).round(0)
-    Quantity['length'](Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
+    Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
 
     >>> p = u.Quantity([0., 0, 0], "km/s")
 
     >>> newq, newp = frame_op(q, p)
-    >>> print(newq.round(0), newp.round(0), sep="\n")
-    Quantity['length'](Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
-    Quantity['speed'](Array([-114., 122., -181.], dtype=float32), unit='km / s')
+    >>> newq.round(0), newp.round(0)
+    (Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc'),
+     Quantity(Array([-114.,  122., -181.], dtype=float32), unit='km / s'))
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
     >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
