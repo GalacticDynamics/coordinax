@@ -5,7 +5,7 @@ __all__ = ["AbstractVector"]
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, TypeVar
 
 import jax
 import numpy as np
@@ -18,6 +18,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items, field_values, fields, replace
 
+from .attribute import VectorAttribute
 from .flags import AttrFilter
 from coordinax._src.custom_types import Unit
 from coordinax._src.utils import classproperty
@@ -72,6 +73,21 @@ class AbstractVector(
     2
 
     """
+
+    _AUX_FIELDS: ClassVar[frozenset[str]]
+
+    def __init_subclass__(cls) -> None:
+        """Determine properties of the vector."""
+        # Note that this is called before `dataclass` has had a chance to
+        # process the class, so we cannot just call `fields(cls)` to get the
+        # fields. Instead, we parse `cls.__annotation__`.
+        aux = [
+            k
+            for k in cls.__annotations__
+            if isinstance(cls.__dict__.get(k), VectorAttribute)
+        ]
+
+        cls._AUX_FIELDS = frozenset(aux)
 
     # ---------------------------------------------------------------
     # Constructors
@@ -158,6 +174,33 @@ class AbstractVector(
 
         """
         return vconvert(target, self, *args, **kwargs)
+
+    # TODO: a better name
+    @property
+    def _auxiliary_data(self) -> dict[str, Any]:
+        """Get the auxiliary data of the vector.
+
+        This is a dictionary of auxiliary data that is not part of the vector
+        itself. This is used for storing additional information about the
+        vector.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        >>> vec = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> vec._auxiliary_data
+        {}
+
+        >>> vec = cx.vecs.ProlateSpheroidalPos(
+        ...     mu=u.Quantity(3, "m2"), nu=u.Quantity(2, "m2"),
+        ...     phi=u.Quantity(4, "rad"), Delta=u.Quantity(1.5, "m"))
+        >>> vec._auxiliary_data
+        {'Delta': Quantity(Array(1.5, dtype=float32, weak_type=True), unit='m')}
+
+        """
+        return {k: getattr(self, k) for k in self._AUX_FIELDS}
 
     # ===============================================================
     # Quantity API

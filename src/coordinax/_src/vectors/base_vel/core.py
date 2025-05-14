@@ -27,6 +27,8 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         The subclass is registered.
         """
+        super().__init_subclass__(**kwargs)
+
         VELOCITY_CLASSES_MUTABLE[cls] = None
 
     # ===============================================================

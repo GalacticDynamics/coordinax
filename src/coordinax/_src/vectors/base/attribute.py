@@ -5,9 +5,11 @@ __all__: list[str] = []
 from collections.abc import Callable
 from dataclasses import KW_ONLY, dataclass, field, is_dataclass
 from enum import Enum, auto
-from typing import Any, Generic, TypeVar, Union, final, overload
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, final, overload
 
-from .vector import AbstractVector
+if TYPE_CHECKING:
+    import coordinax.vecs
+
 
 Return = TypeVar("Return")
 
@@ -90,16 +92,18 @@ class VectorAttribute(Generic[Return]):
 
     @overload
     def __get__(
-        self, obj: None, obj_cls: type[AbstractVector]
+        self, obj: None, obj_cls: "type[coordinax.vecs.AbstractVector]"
     ) -> "VectorAttribute[Return]": ...
 
     @overload
-    def __get__(self, obj: AbstractVector, obj_cls: None) -> Return: ...
+    def __get__(
+        self, obj: "coordinax.vecs.AbstractVector", obj_cls: None
+    ) -> Return: ...
 
     def __get__(
         self,
-        obj: AbstractVector | None,
-        obj_cls: type[AbstractVector] | None,
+        obj: "coordinax.vecs.AbstractVector | None",
+        obj_cls: "type[coordinax.vecs.AbstractVector] | None",
     ) -> Union["VectorAttribute[Return]", Return]:
         # Get from class
         if obj is None:
@@ -117,7 +121,7 @@ class VectorAttribute(Generic[Return]):
         # return getattr(obj, "_" + self.name)
         return obj.__dict__[self.name]
 
-    def __set__(self, obj: AbstractVector, value: Any) -> None:
+    def __set__(self, obj: "coordinax.vecs.AbstractVector", value: Any) -> None:
         # `dataclass` class definition can end up passing `self` as the value.
         # We interpret this as setting the default value.
         if value is self:
