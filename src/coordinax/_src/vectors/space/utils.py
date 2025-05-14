@@ -15,7 +15,7 @@ Shape: TypeAlias = tuple[int, ...]
 
 
 def _get_dimension_name(dim: DimensionLike, /) -> str:
-    return u.dimension(dim)._physical_type_list[0]  # noqa: SLF001
+    return u.dimension(dim)._physical_type_list[0]
 
 
 def can_broadcast_shapes(shapes: Sequence[Shape], /) -> bool:

@@ -380,7 +380,7 @@ def call(
     qvec = spatial_component(qvec)
     pvec = eqx.error_if(
         pvec,
-        pvec._dimensionality() != qvec._dimensionality(),  # noqa: SLF001
+        pvec._dimensionality() != qvec._dimensionality(),
         "The position and velocity vectors must have the same dimensionality.",
     )
 
