@@ -16,7 +16,6 @@ import unxt as u
 from unxt.quantity import BareQuantity, is_any_quantity
 
 import coordinax._src.vectors.custom_types as ct
-from coordinax._src.distances import AbstractDistance
 from coordinax._src.vectors import api, d1, d2, d3
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -176,19 +175,17 @@ def vconvert(
         "as their dimensionalities do not match.",
     )
 
+    # Get the broadcasted shape of the input
     shape = jnp.broadcast_shapes(*[v.shape for v in p_vel.values()])
 
     # The position is assumed to be in the type required by the differential to
     # construct the Jacobian. E.g. for CartesianVel1D -> RadialVel, we need the
     # Jacobian of the CartesianPos1D -> RadialPos transform.
     p_pos = jtu.map(atleast_1d_float, p_pos)
-    p_pos = {  # NOTE: if use unitful jacobian, this is not needed
-        k: (v.distance if isinstance(v, AbstractDistance) else v)
-        for k, v in p_pos.items()
-    }
 
     # -----------------------
     # Compute the Jacobian of the position transformation.
+
     to_pos_cls = to_vel_cls.time_antiderivative_cls
     from_pos_cls = from_vel_cls.time_antiderivative_cls
     jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
@@ -359,16 +356,13 @@ def vconvert(
         "as their dimensionalities do not match.",
     )
 
+    # Get the broadcasted shape of the input
     shape = jnp.broadcast_shapes(*[v.shape for v in p_acc.values()])
 
     # The position is assumed to be in the type required by the differential to
     # construct the Jacobian. E.g. for CartesianVel1D -> RadialVel, we need the
     # Jacobian of the CartesianPos1D -> RadialPos transform.
     p_pos = jtu.map(atleast_1d_float, p_pos)
-    p_pos = {  # NOTE: if use unitful jacobian, this is not needed
-        k: (v.distance if isinstance(v, AbstractDistance) else v)
-        for k, v in p_pos.items()
-    }
 
     # -----------------------
     # Compute the Jacobian of the position transformation.
