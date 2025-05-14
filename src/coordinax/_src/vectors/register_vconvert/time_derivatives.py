@@ -138,7 +138,7 @@ def vconvert(
     # Check the dimensionality
     to_vel_cls = eqx.error_if(
         to_vel_cls,
-        from_vel_cls._dimensionality() != to_vel_cls._dimensionality(),  # noqa: SLF001
+        from_vel_cls._dimensionality() != to_vel_cls._dimensionality(),
         "Dimensionality mismatch",
     )
 
@@ -335,7 +335,7 @@ def vconvert(
     # Check the dimensionality
     to_acc_cls = eqx.error_if(
         to_acc_cls,
-        from_acc_cls._dimensionality() != to_acc_cls._dimensionality(),  # noqa: SLF001
+        from_acc_cls._dimensionality() != to_acc_cls._dimensionality(),
         "Dimensionality mismatch",
     )
 

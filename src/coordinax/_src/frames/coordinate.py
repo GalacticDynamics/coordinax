@@ -242,7 +242,7 @@ class Coordinate(AbstractCoordinate):
 
         """
         # TODO: Space is currently not implemented.
-        return self.data._dimensionality()  # noqa: SLF001
+        return self.data._dimensionality()
 
     @dispatch
     def __getitem__(self: "Coordinate", index: Any) -> "Coordinate":

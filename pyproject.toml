@@ -245,6 +245,7 @@ skip = ["uv.lock"]
       "PLR2004", # Magic value used in comparison
       "PYI041",  # Use `complex` instead of `int | complex` <- plum is more strict
       "RUF022",  # `__all__` is not sorted
+      "SLF001",  # private-member-access TODO: unignore this.
       "TD002",   # Missing author in TODO
       "TD003",   # Missing issue link on the line following this TODO
     ]
