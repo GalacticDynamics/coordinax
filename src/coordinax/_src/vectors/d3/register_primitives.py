@@ -57,6 +57,7 @@ def add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
         [2 4 6]>
 
     """
+    rhs = rhs.uconvert(lhs.units)
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
@@ -74,6 +75,7 @@ def add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
         [2 4 6]>
 
     """
+    rhs = rhs.uconvert(lhs.units)
     return jax.tree.map(jnp.add, lhs, rhs)
 
 
