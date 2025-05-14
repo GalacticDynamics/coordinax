@@ -274,20 +274,14 @@ def vconvert(
     """
     shape = from_vel.shape
 
-    # ----------------------------
-    # Prepare the position
-
-    in_pos_cls = from_vel.time_antiderivative_cls
-
     # Transform the position to the type required by the differential to
     # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
     # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
     # position must be transformed to CartesianPos1D.
+    in_pos_cls = from_vel.time_antiderivative_cls
     from_posv = vconvert(in_pos_cls, from_pos, **kwargs)
 
-    # ----------------------------
     # Perform the transformation
-
     # TODO: add  df(q)/dt, which is 0 for all current transforms
     to_vel_params, to_vel_aux = vconvert(
         to_vel_cls,
@@ -296,9 +290,7 @@ def vconvert(
         from_posv.asdict(),
     )
 
-    # ----------------------------
     # Reconstruct the vector
-
     to_vel = to_vel_cls(**to_vel_params, **to_vel_aux)
     to_vel = to_vel.reshape(shape)  # reshape to original shape
 
@@ -401,32 +393,23 @@ def vconvert(
     )
 
     """
-    shape = from_acc.shape
-
-    # ----------------------------
-    # Prepare the position
-
-    # Parse the position to an AbstractPos
-    in_pos_cls = from_acc.time_nth_derivative_cls(-2)
+    del from_vel  # unused
 
     # Transform the position to the type required by the differential to
     # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
     # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
     # position must be transformed to CartesianPos1D.
+    in_pos_cls = from_acc.time_nth_derivative_cls(-2)
     from_posv = vconvert(in_pos_cls, from_pos, **kwargs)
 
-    # ----------------------------
     # Perform the transformation
-
     # TODO: add  df(q)/dt, which is 0 for all current transforms
     to_acc_params, to_acc_aux = vconvert(
         to_acc_cls, type(from_acc), from_acc.asdict(), from_posv.asdict()
     )
 
-    # ----------------------------
     # Reconstruct the vector
-
     to_acc = to_acc_cls(**to_acc_params, **to_acc_aux)
-    to_acc = to_acc.reshape(shape)  # reshape to original shape
+    to_acc = to_acc.reshape(from_acc.shape)  # reshape to original shape
 
     return to_acc  # noqa: RET504
