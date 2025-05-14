@@ -17,6 +17,7 @@ from unxt.quantity import BareQuantity, is_any_quantity
 
 import coordinax._src.vectors.custom_types as ct
 from coordinax._src.vectors import api, d1, d2, d3
+from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
@@ -122,11 +123,12 @@ def atleast_1d_float(x: Real[Array, "..."]) -> Float[Array, "..."]:
 
 @dispatch.multi(
     (type[AbstractVel], type[AbstractVel], ct.ParamsDict, ct.ParamsDict),
+    (type[AbstractAcc], type[AbstractAcc], ct.ParamsDict, ct.ParamsDict),
 )
 def vconvert(
-    to_vel_cls: type[AbstractVel],
-    from_vel_cls: type[AbstractVel],
-    p_vel: ct.ParamsDict,
+    to_dif_cls: type[AbstractVector],
+    from_dif_cls: type[AbstractVector],
+    p_dif: ct.ParamsDict,
     p_pos: ct.ParamsDict,
     /,
     *,
@@ -137,11 +139,11 @@ def vconvert(
 
     Parameters
     ----------
-    to_vel_cls
+    to_dif_cls
         The target type of the vector differential.
-    from_vel_cls
+    from_dif_cls
         The type of the vector differential to transform.
-    p_vel
+    p_dif
         The data of the vector differential to transform.
     p_pos
         The data of the position vector used to transform the differential.
@@ -164,40 +166,45 @@ def vconvert(
     >>> print(newp)
     ({'r': Quantity(Array([1.], dtype=float32), unit='km / s')}, {})
 
+    >>> q = {"x": u.Quantity([1.0], "km")}
+    >>> a = {"x": u.Quantity([1.0], "km/s2")}
+    >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, q)
+    >>> print(newa)
+    ({'r': Quantity(Array([1.], dtype=float32), unit='km / s2')}, {})
+
     """
     # Check the dimensionality
-    to_vel_cls = eqx.error_if(
-        to_vel_cls,
-        from_vel_cls._dimensionality() != to_vel_cls._dimensionality(),
-        f"Dimensionality mismatch: cannot convert from {from_vel_cls.__name__} "
-        f"(dim={from_vel_cls._dimensionality()}) "
-        f"to {to_vel_cls.__name__} (dim={to_vel_cls._dimensionality()}) "
+    to_dif_cls = eqx.error_if(
+        to_dif_cls,
+        from_dif_cls._dimensionality() != to_dif_cls._dimensionality(),
+        f"Dimensionality mismatch: cannot convert from {from_dif_cls.__name__} "
+        f"(dim={from_dif_cls._dimensionality()}) "
+        f"to {to_dif_cls.__name__} (dim={to_dif_cls._dimensionality()}) "
         "as their dimensionalities do not match.",
     )
 
     # Get the broadcasted shape of the input
-    shape = jnp.broadcast_shapes(*[v.shape for v in p_vel.values()])
+    shape = jnp.broadcast_shapes(*[v.shape for v in p_dif.values()])
 
+    # Compute the Jacobian of the position transformation.
     # The position is assumed to be in the type required by the differential to
     # construct the Jacobian. E.g. for CartesianVel1D -> RadialVel, we need the
     # Jacobian of the CartesianPos1D -> RadialPos transform.
+    n = -2 if issubclass(to_dif_cls, AbstractAcc) else -1
+    to_pos_cls = to_dif_cls.time_nth_derivative_cls(n=n)
+    from_pos_cls = from_dif_cls.time_nth_derivative_cls(n=n)
     p_pos = jtu.map(atleast_1d_float, p_pos)
-
-    # -----------------------
-    # Compute the Jacobian of the position transformation.
-
-    to_pos_cls = to_vel_cls.time_antiderivative_cls
-    from_pos_cls = from_vel_cls.time_antiderivative_cls
     jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
     jac = restructure_jac(jac)
 
-    # -----------------------
-    # Transform the velocity
+    # Transform the differential
+    to_p_dif = dot_jac_vec(jac, p_dif)
+    to_p_dif = jtu.map(lambda x: jnp.reshape(x, shape), to_p_dif)
 
-    to_p_vel = dot_jac_vec(jac, p_vel)
-    to_p_vel = jtu.map(lambda x: jnp.reshape(x, shape), to_p_vel)
+    return to_p_dif, (out_aux or {})
 
-    return to_p_vel, (out_aux or {})
+
+# ============================================================================
 
 
 # TODO: implement for cross-representations
@@ -296,87 +303,6 @@ def vconvert(
 
 
 # ===================================================================
-
-
-@dispatch
-def vconvert(
-    to_acc_cls: type[AbstractAcc],
-    from_acc_cls: type[AbstractAcc],
-    p_acc: ct.ParamsDict,
-    p_pos: ct.ParamsDict,
-    /,
-    *,
-    in_aux: ct.OptAuxDict = None,
-    out_aux: ct.OptAuxDict = None,
-) -> tuple[ct.ParamsDict, ct.OptAuxDict]:
-    """AbstractAcc1D -> AbstractAcc1D.
-
-    Parameters
-    ----------
-    to_acc_cls
-        The target type of the vector differential.
-    from_acc_cls
-        The type of the vector differential to transform.
-    p_acc
-        The data of the vector differential to transform.
-    p_pos
-        The data of the position vector used to transform the
-        differential.
-    in_aux
-        The auxiliary data of the vector differential to transform.
-    out_aux
-        The auxiliary data of the position vector used to transform the
-        differential.
-    units
-        The unit system to use for the transformation.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax.vecs as cxv
-
-    Let's start in 1D:
-
-    >>> q = {"x": u.Quantity([1.0], "km")}
-    >>> a = {"x": u.Quantity([1.0], "km/s2")}
-    >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, q)
-    >>> print(newa)
-    ({'r': Quantity(Array([1.], dtype=float32), unit='km / s2')}, {})
-
-    """
-    # Check the dimensionality
-    to_acc_cls = eqx.error_if(
-        to_acc_cls,
-        from_acc_cls._dimensionality() != to_acc_cls._dimensionality(),
-        f"Dimensionality mismatch: cannot convert from {from_acc_cls.__name__} "
-        f"(dim={from_acc_cls._dimensionality()}) "
-        f"to {to_acc_cls.__name__} (dim={to_acc_cls._dimensionality()}) "
-        "as their dimensionalities do not match.",
-    )
-
-    # Get the broadcasted shape of the input
-    shape = jnp.broadcast_shapes(*[v.shape for v in p_acc.values()])
-
-    # The position is assumed to be in the type required by the differential to
-    # construct the Jacobian. E.g. for CartesianVel1D -> RadialVel, we need the
-    # Jacobian of the CartesianPos1D -> RadialPos transform.
-    p_pos = jtu.map(atleast_1d_float, p_pos)
-
-    # -----------------------
-    # Compute the Jacobian of the position transformation.
-
-    to_pos_cls = to_acc_cls.time_nth_derivative_cls(-2)
-    from_pos_cls = from_acc_cls.time_nth_derivative_cls(-2)
-    jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
-    jac = restructure_jac(jac)
-
-    # -----------------------
-    # Transform the acceleration
-
-    to_p_acc = dot_jac_vec(jac, p_acc)
-    to_p_acc = jtu.map(lambda x: jnp.reshape(x, shape), to_p_acc)
-
-    return to_p_acc, (out_aux or {})
 
 
 # TODO: implement for cross-representations

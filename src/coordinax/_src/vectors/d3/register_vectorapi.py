@@ -785,6 +785,7 @@ def vconvert(
         [ 20 -10   1]>
 
     """
+    del to_vector, from_vector, in_aux, units
     newp = {"distance": p["r"], "lat": -p["theta"], "lon": p["phi"]}
     return newp, (out_aux or {})
 
