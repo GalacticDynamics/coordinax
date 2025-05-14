@@ -2,6 +2,7 @@
 
 __all__: list[str] = []
 
+import functools as ft
 from typing import Any, cast
 
 import equinox as eqx
@@ -85,6 +86,7 @@ def dot_jac_vec(
     return jtu.unflatten(treedef, flat_dotted)
 
 
+@ft.partial(jax.jit, inline=True)
 def atleast_1d_float(x: Real[Array, "..."]) -> Float[Array, "..."]:
     """Convert to 1D float array."""
     return jnp.atleast_1d(jnp.astype(x, float, copy=False))
