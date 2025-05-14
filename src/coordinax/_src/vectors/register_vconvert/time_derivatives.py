@@ -22,8 +22,6 @@ from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
-# NOTE: this is using Quantities. Using raw arrays is ~20x faster.
-# TODO: what about the auxiliary values?
 pos_jac_fn = jax.vmap(
     jax.jacfwd(api.vconvert, argnums=2, has_aux=True), in_axes=(None, None, 0)
 )
@@ -31,24 +29,30 @@ pos_jac_fn = jax.vmap(
 is_q_or_arr = lambda x: is_any_quantity(x) or eqx.is_array(x)  # noqa: E731
 
 
-def restructure_jac(
-    jac: dict[str, u.AbstractQuantity],
+def compute_jac(
+    to_pos_cls: type[AbstractPos],
+    from_pos_cls: type[AbstractPos],
+    p_pos: ct.ParamsDict,
+    /,
+    *,
+    in_aux: ct.OptAuxDict = None,
+    out_aux: ct.OptAuxDict = None,
 ) -> dict[str, dict[str, u.AbstractQuantity]]:
-    """Restructure the Jacobian.
-
-    It comes in as:
-        ``{to_k: Quantity({from_k: Quantity(dto/dfrom, u_from)}, u_to)}``
-    it needs to be rearranged to:
-        ``{to_k: {from_k: Quantity(dto/dfrom, u_to/u_from)}}``.
-
-    """
-    return {
+    """Compute the Jacobian of the transformation."""
+    # Compute the Jacobian of the transformation.
+    # NOTE: this is using Quantities. Using raw arrays is ~20x faster.
+    jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux, out_aux=out_aux)
+    # Restructure the Jacobian:
+    # from: ``{to_k: Quantity({from_k: Quantity(dto/dfrom, u_from)}, u_to)}``
+    # to  : ``{to_k: {from_k: Quantity(dto/dfrom, u_to/u_from)}}``.
+    jac = {
         out_k: {
             k: BareQuantity(v.value, out_v.unit / v.unit)
             for k, v in out_v.value.items()
         }
         for out_k, out_v in jac.items()
     }
+    return jac  # noqa: RET504
 
 
 @ft.partial(jax.jit, inline=True)
@@ -194,8 +198,7 @@ def vconvert(
     to_pos_cls = to_dif_cls.time_nth_derivative_cls(n=n)
     from_pos_cls = from_dif_cls.time_nth_derivative_cls(n=n)
     p_pos = jtu.map(atleast_1d_float, p_pos)
-    jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
-    jac = restructure_jac(jac)
+    jac = compute_jac(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux, out_aux=None)
 
     # Transform the differential
     to_p_dif = dot_jac_vec(jac, p_dif)
