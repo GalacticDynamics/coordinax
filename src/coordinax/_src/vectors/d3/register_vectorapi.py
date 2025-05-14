@@ -1356,7 +1356,7 @@ def vconvert(
 def vconvert(
     target: type[LonCosLatSphericalVel],
     current: AbstractVel3D,
-    position: AbstractPos | u.AbstractQuantity,
+    position: AbstractPos,
     /,
     **kwargs: Any,
 ) -> LonCosLatSphericalVel:
@@ -1380,22 +1380,17 @@ def vconvert(
         [ 6.894  0.    -5.   ]>
 
     """
-    # Parse the position to an AbstractPos
-    posvec = (
-        position
-        if isinstance(position, AbstractPos)
-        else current.time_antiderivative_cls.cartesian_type.from_(position)
-    )
+    del kwargs  # unused
 
     # Transform the differential to LonLatSphericalVel
-    current = vconvert(LonLatSphericalVel, current, posvec)
+    current = vconvert(LonLatSphericalVel, current, position)
 
     # Transform the position to the required type
-    posvec = vconvert(current.time_antiderivative_cls, posvec)
+    position = vconvert(current.time_antiderivative_cls, position)
 
     # Calculate the differential in the new system
     return target(
-        lon_coslat=current.lon * jnp.cos(posvec.lat),
+        lon_coslat=current.lon * jnp.cos(position.lat),
         lat=current.lat,
         distance=current.distance,
     )
@@ -1405,24 +1400,17 @@ def vconvert(
 def vconvert(
     target: type[LonLatSphericalVel],
     current: LonCosLatSphericalVel,
-    position: AbstractPos | u.Quantity["length"],
+    position: AbstractPos,
     /,
     **kwargs: Any,
 ) -> LonLatSphericalVel:
     """LonCosLatSphericalVel -> LonLatSphericalVel."""
-    # Parse the position to an AbstractPos
-    posvec = (
-        position
-        if isinstance(position, AbstractPos)
-        else current.time_antiderivative_cls.cartesian_type.from_(position)
-    )
-
+    del kwargs  # unused
     # Transform the position to the required type
-    posvec = vconvert(current.time_antiderivative_cls, posvec)
-
+    position = vconvert(current.time_antiderivative_cls, position)
     # Calculate the differential in the new system
     return target(
-        lon=current.lon_coslat / jnp.cos(posvec.lat),
+        lon=current.lon_coslat / jnp.cos(position.lat),
         lat=current.lat,
         distance=current.distance,
     )
@@ -1432,21 +1420,16 @@ def vconvert(
 def vconvert(
     target: type[AbstractVel3D],
     current: LonCosLatSphericalVel,
-    position: AbstractPos | u.Quantity["length"],
+    position: AbstractPos,
     /,
     **kwargs: Any,
 ) -> AbstractVel3D:
     """LonCosLatSphericalVel -> AbstractVel3D."""
-    # Parse the position to an AbstractPos
-    posvec = (
-        position
-        if isinstance(position, AbstractPos)
-        else current.time_antiderivative_cls.cartesian_type.from_(position)
-    )
+    del kwargs  # unused
     # Transform the differential to LonLatSphericalVel
-    current = vconvert(LonLatSphericalVel, current, posvec)
+    current = vconvert(LonLatSphericalVel, current, position)
     # Transform the position to the required type
-    return vconvert(target, current, posvec)
+    return vconvert(target, current, position)
 
 
 #####################################################################

@@ -3,7 +3,7 @@
 __all__: list[str] = []
 
 import functools as ft
-from typing import Any, cast
+from typing import Any
 
 import equinox as eqx
 import jax
@@ -203,14 +203,14 @@ def vconvert(
 # TODO: implement for cross-representations
 @dispatch.multi(
     # N-D -> N-D
-    (type[d1.AbstractVel1D], d1.AbstractVel1D, AbstractPos | u.AbstractQuantity),
-    (type[d2.AbstractVel2D], d2.AbstractVel2D, AbstractPos | u.AbstractQuantity),
-    (type[d3.AbstractVel3D], d3.AbstractVel3D, AbstractPos | u.AbstractQuantity),
+    (type[d1.AbstractVel1D], d1.AbstractVel1D, AbstractPos),
+    (type[d2.AbstractVel2D], d2.AbstractVel2D, AbstractPos),
+    (type[d3.AbstractVel3D], d3.AbstractVel3D, AbstractPos),
 )
 def vconvert(
     to_vel_cls: type[AbstractVel],
     from_vel: AbstractVel,
-    from_pos: AbstractPos | u.AbstractQuantity,
+    from_pos: AbstractPos,
     /,
     **kwargs: Any,
 ) -> AbstractVel:
@@ -261,15 +261,6 @@ def vconvert(
     <SphericalVel (r[km / s], theta[rad / s], phi[rad / s])
         [ 3.742e+00 -8.941e-08  0.000e+00]>
 
-    If given a position as a Quantity, it will be converted to the appropriate
-    Cartesian vector:
-
-    >>> p = cxv.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
-    >>> newp = cxv.vconvert(cxv.SphericalVel, p, u.Quantity([1.0, 2.0, 3.0], "km"))
-    >>> print(newp)
-    <SphericalVel (r[km / s], theta[rad / s], phi[rad / s])
-        [ 3.742e+00 -8.941e-08  0.000e+00]>
-
     """
     shape = from_vel.shape
 
@@ -278,19 +269,11 @@ def vconvert(
 
     in_pos_cls = from_vel.time_antiderivative_cls
 
-    # Parse the position to an AbstractPos
-    from_posv_ = cast(
-        AbstractPos,
-        from_pos
-        if isinstance(from_pos, AbstractPos)
-        else in_pos_cls.cartesian_type.from_(from_pos),
-    )
-
     # Transform the position to the type required by the differential to
     # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
     # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
     # position must be transformed to CartesianPos1D.
-    from_posv = vconvert(in_pos_cls, from_posv_, **kwargs)
+    from_posv = vconvert(in_pos_cls, from_pos, **kwargs)
 
     # ----------------------------
     # Perform the transformation
@@ -383,6 +366,7 @@ def vconvert(
 
     # -----------------------
     # Compute the Jacobian of the position transformation.
+
     to_pos_cls = to_acc_cls.time_nth_derivative_cls(-2)
     from_pos_cls = from_acc_cls.time_nth_derivative_cls(-2)
     jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
@@ -400,30 +384,15 @@ def vconvert(
 # TODO: implement for cross-representations
 @dispatch.multi(
     # N-D -> N-D
-    (
-        type[d1.AbstractAcc1D],
-        d1.AbstractAcc1D,
-        AbstractVel | u.AbstractQuantity,
-        AbstractPos | u.AbstractQuantity,
-    ),
-    (
-        type[d2.AbstractAcc2D],
-        d2.AbstractAcc2D,
-        AbstractVel | u.AbstractQuantity,
-        AbstractPos | u.AbstractQuantity,
-    ),
-    (
-        type[d3.AbstractAcc3D],
-        d3.AbstractAcc3D,
-        AbstractVel | u.AbstractQuantity,
-        AbstractPos | u.AbstractQuantity,
-    ),
+    (type[d1.AbstractAcc1D], d1.AbstractAcc1D, AbstractVel, AbstractPos),
+    (type[d2.AbstractAcc2D], d2.AbstractAcc2D, AbstractVel, AbstractPos),
+    (type[d3.AbstractAcc3D], d3.AbstractAcc3D, AbstractVel, AbstractPos),
 )
 def vconvert(
     to_acc_cls: type[AbstractAcc],
     from_acc: AbstractAcc,
-    from_vel: AbstractVel | u.Quantity["speed"],
-    from_pos: AbstractPos | u.Quantity["length"],
+    from_vel: AbstractVel,
+    from_pos: AbstractPos,
     /,
     **kwargs: Any,
 ) -> AbstractAcc:
@@ -504,18 +473,6 @@ def vconvert(
       phi=Quantity(f32[], unit='rad / s2')
     )
 
-    If given a position as a Quantity, it will be converted to the appropriate
-    Cartesian vector:
-
-    >>> cx.vconvert(cx.vecs.SphericalAcc, a,
-    ...             u.Quantity([1.0, 2.0, 3.0], "km/s"),
-    ...             u.Quantity([1.0, 2.0, 3.0], "km"))
-    SphericalAcc(
-      r=Quantity(f32[], unit='km / s2'),
-      theta=Quantity(f32[], unit='rad / s2'),
-      phi=Quantity(f32[], unit='rad / s2')
-    )
-
     """
     shape = from_acc.shape
 
@@ -524,30 +481,18 @@ def vconvert(
 
     # Parse the position to an AbstractPos
     in_pos_cls = from_acc.time_nth_derivative_cls(-2)
-    from_posv_ = cast(
-        AbstractPos,
-        from_pos
-        if isinstance(from_pos, AbstractPos)
-        else in_pos_cls.cartesian_type.from_(from_pos),
-    )
 
     # Transform the position to the type required by the differential to
     # construct the Jacobian. E.g. if we are transforming CartesianVel1D ->
     # RadialVel, we need the Jacobian of the CartesianPos1D -> RadialPos so the
     # position must be transformed to CartesianPos1D.
-    from_posv = vconvert(in_pos_cls, from_posv_, **kwargs)
+    from_posv = vconvert(in_pos_cls, from_pos, **kwargs)
 
     # ----------------------------
     # Prepare the velocity
 
     in_vel_cls = from_acc.time_antiderivative_cls
-    from_velv_ = cast(
-        AbstractVel,
-        from_vel
-        if isinstance(from_vel, AbstractVel)
-        else in_vel_cls.cartesian_type.from_(from_vel),
-    )
-    from_velv = vconvert(in_vel_cls, from_velv_, from_posv, **kwargs)
+    from_velv = vconvert(in_vel_cls, from_vel, from_posv, **kwargs)
 
     # ----------------------------
     # Perform the transformation
