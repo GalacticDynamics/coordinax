@@ -51,6 +51,32 @@ def restructure_jac(
     }
 
 
+@ft.partial(jax.jit, inline=True)
+def inner_dot(
+    inner: dict[str, u.AbstractQuantity],
+    vec: dict[str, u.AbstractQuantity],
+) -> u.AbstractQuantity:
+    """Dot product of two dicts.
+
+    This is a helper function for the `dot_jac_vec` function.
+
+    Parameters
+    ----------
+    inner
+        The first dict.
+        The structure is ``{from_k: Quantity(v, unit)}``.
+    vec
+        The second dict.
+        The structure is ``{from_k: Quantity(v, unit)}``.
+
+    """
+    return jtu.reduce(
+        jnp.add,
+        jtu.map(jnp.multiply, inner, vec, is_leaf=is_q_or_arr),
+        is_leaf=is_q_or_arr,
+    )
+
+
 @jax.jit
 def dot_jac_vec(
     jac: dict[str, dict[str, u.AbstractQuantity]], vec: dict[str, u.AbstractQuantity]
@@ -58,6 +84,15 @@ def dot_jac_vec(
     """Dot product of a Jacobian dict and a vector dict.
 
     This is a helper function for the `vconvert` function.
+
+    Parameters
+    ----------
+    jac
+        The Jacobian of the transformation.
+        The structure is ``{to_k: {from_k: Quantity(v, unit)}}``.
+    vec
+        The vector to transform.
+        The structure is ``{from_k: Quantity(v, unit)}``.
 
     Examples
     --------
@@ -73,17 +108,8 @@ def dot_jac_vec(
      'r': Quantity(Array(5, dtype=int32, ...), unit='km')}
 
     """
-    flat_jac, treedef = eqx.tree_flatten_one_level(jac)
-    flat_dotted = jtu.map(
-        lambda inner: jtu.reduce(
-            jnp.add,
-            jtu.map(jnp.multiply, inner, vec, is_leaf=is_q_or_arr),
-            is_leaf=is_q_or_arr,
-        ),
-        flat_jac,
-        is_leaf=lambda v: isinstance(v, dict),
-    )
-    return jtu.unflatten(treedef, flat_dotted)
+    # TODO: rewrite this by separating the units and the values
+    return {k: inner_dot(inner, vec) for k, inner in jac.items()}
 
 
 @ft.partial(jax.jit, inline=True)
