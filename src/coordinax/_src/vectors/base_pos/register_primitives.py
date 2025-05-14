@@ -25,19 +25,38 @@ from coordinax._src.vectors.base.register_primitives import eq_p_absvecs
 
 @register(jax.lax.add_p)
 def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
+    """Add another object to this vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(2.0, "kpc"))
+
+    >>> px2 = px + px
+    >>> print(px2)
+    <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[rad])
+        [57.495  2.505  1.107]>
+
+    >>> print(px2.vconvert(cxv.CartesianPos3D))
+    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        [2. 4. 6.]>
+
+    """
     # The base implementation is to convert to Cartesian and perform the
-    # operation.  Cartesian coordinates do not have any branch cuts or
-    # singularities or ranges that need to be handled, so this is a safe
-    # default.
+    # operation.  Cartesian coordinates do not have any branch cuts,
+    # singularities, ranges, or auxiliary data that need to be handled, so this
+    # is a safe default. We restore aux data from the lhs.
     cart_cls = lhs.cartesian_type
     cart_cls = eqx.error_if(
         cart_cls,
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
         f"must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
-    clhs = lhs.vconvert(cart_cls)
-    crhs = rhs.vconvert(cart_cls)
-    return cast(AbstractPos, (clhs + crhs).vconvert(type(lhs)))
+    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)
+    return cast(AbstractPos, add.vconvert(type(lhs), **lhs._auxiliary_data))
 
 
 # ------------------------------------------------
@@ -101,8 +120,17 @@ def div_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
 
 @register(jax.lax.eq_p)
 def eq_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> Array:
-    """Element-wise equality of two positions."""
+    """Element-wise equality of two positions.
+
+    The base AbstractVector-AbstractVector equality dispatch does not allow for
+    conversion of the right-hand side to the left-hand side type since e.g.
+    non-Cartesian velocities require a position to transform.
+
+    """
+    # Convert to the same type (left-hand side)
     rhs = cast(AbstractPos, rhs.vconvert(type(lhs)))
+    # Check if the two positions are equal. This directly calls the appropriate
+    # primitive, bypassing this dispatch to avoid infinite recursion.
     return eq_p_absvecs(lhs, rhs)
 
 
@@ -203,6 +231,9 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 @register(jax.lax.mul_p)
 def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
     """Scale a position by a scalar.
+
+    This just re-dispatches to the other side -- for example vec * 2 becomes 2 *
+    vec -- so that there's only one complex dispatch required.
 
     Examples
     --------
@@ -317,11 +348,30 @@ def reshape_p_pos(
 
 @register(jax.lax.sub_p)
 def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
-    """Add another object to this vector."""
+    """Subtract another object from this vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(2.0, "kpc"))
+
+    >>> px2 = px - px
+    >>> print(px2)
+    <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[rad])
+        [4. 0. 0.]>
+
+    >>> print(px2.vconvert(cxv.CartesianPos3D))
+    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        [0. 0. 0.]>
+
+    """
     # The base implementation is to convert to Cartesian and perform the
-    # operation.  Cartesian coordinates do not have any branch cuts or
-    # singularities or ranges that need to be handled, so this is a safe
-    # default.
+    # operation.  Cartesian coordinates do not have any branch cuts,
+    # singularities, ranges, or auxiliary data that need to be handled, so this
+    # is a safe default. We restore aux data from the lhs.
     cart_cls = lhs.cartesian_type
-    diff = qlax.sub(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls))  # type: ignore[arg-type]
-    return cast(AbstractPos, vconvert(type(lhs), diff))
+    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)
+    return cast(AbstractPos, diff.vconvert(type(lhs), **lhs._auxiliary_data))
