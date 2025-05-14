@@ -303,7 +303,6 @@ def vconvert(
     to_acc_cls: type[AbstractAcc],
     from_acc_cls: type[AbstractAcc],
     p_acc: ct.ParamsDict,
-    p_vel: ct.ParamsDict,
     p_pos: ct.ParamsDict,
     /,
     *,
@@ -320,8 +319,8 @@ def vconvert(
         The type of the vector differential to transform.
     p_acc
         The data of the vector differential to transform.
-    p_vel, p_pos
-        The data of the velocity/position vector used to transform the
+    p_pos
+        The data of the position vector used to transform the
         differential.
     in_aux
         The auxiliary data of the vector differential to transform.
@@ -339,9 +338,8 @@ def vconvert(
     Let's start in 1D:
 
     >>> q = {"x": u.Quantity([1.0], "km")}
-    >>> p = {"x": u.Quantity([1.0], "km/s")}
     >>> a = {"x": u.Quantity([1.0], "km/s2")}
-    >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, p, q)
+    >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, q)
     >>> print(newa)
     ({'r': Quantity(Array([1.], dtype=float32), unit='km / s2')}, {})
 
@@ -489,21 +487,11 @@ def vconvert(
     from_posv = vconvert(in_pos_cls, from_pos, **kwargs)
 
     # ----------------------------
-    # Prepare the velocity
-
-    in_vel_cls = from_acc.time_antiderivative_cls
-    from_velv = vconvert(in_vel_cls, from_vel, from_posv, **kwargs)
-
-    # ----------------------------
     # Perform the transformation
 
     # TODO: add  df(q)/dt, which is 0 for all current transforms
     to_acc_params, to_acc_aux = vconvert(
-        to_acc_cls,
-        type(from_acc),
-        from_acc.asdict(),
-        from_velv.asdict(),
-        from_posv.asdict(),
+        to_acc_cls, type(from_acc), from_acc.asdict(), from_posv.asdict()
     )
 
     # ----------------------------
