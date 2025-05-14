@@ -12,7 +12,7 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt.quantity import is_any_quantity
+from unxt.quantity import BareQuantity, is_any_quantity
 
 import coordinax._src.vectors.custom_types as ct
 from coordinax._src.distances import AbstractDistance
@@ -30,18 +30,21 @@ pos_jac_fn = jax.vmap(
 is_q_or_arr = lambda x: is_any_quantity(x) or eqx.is_array(x)  # noqa: E731
 
 
-def transform_jac(
+def restructure_jac(
     jac: dict[str, u.AbstractQuantity],
 ) -> dict[str, dict[str, u.AbstractQuantity]]:
-    """Transform Jacobian.
+    """Restructure the Jacobian.
 
-    It comes in as  ``{k: Quantity({kk: Quantity(vv, unit2)}, unit1)}``
-    it needs to be rearranged to ``{k: {kk: Quantity(vv, unit1/unit2)}}``.
+    It comes in as:
+        ``{to_k: Quantity({from_k: Quantity(dto/dfrom, u_from)}, u_to)}``
+    it needs to be rearranged to:
+        ``{to_k: {from_k: Quantity(dto/dfrom, u_to/u_from)}}``.
 
     """
     return {
         out_k: {
-            k: u.Quantity(v.value, out_v.unit / v.unit) for k, v in out_v.value.items()
+            k: BareQuantity(v.value, out_v.unit / v.unit)
+            for k, v in out_v.value.items()
         }
         for out_k, out_v in jac.items()
     }
@@ -158,7 +161,7 @@ def vconvert(
     to_pos_cls = to_vel_cls.time_antiderivative_cls
     from_pos_cls = from_vel_cls.time_antiderivative_cls
     jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
-    jac = transform_jac(jac)
+    jac = restructure_jac(jac)
 
     # -----------------------
     # Transform the velocity
@@ -355,7 +358,7 @@ def vconvert(
     to_pos_cls = to_acc_cls.time_nth_derivative_cls(-2)
     from_pos_cls = from_acc_cls.time_nth_derivative_cls(-2)
     jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux=in_aux)
-    jac = transform_jac(jac)
+    jac = restructure_jac(jac)
 
     # -----------------------
     # Transform the acceleration
