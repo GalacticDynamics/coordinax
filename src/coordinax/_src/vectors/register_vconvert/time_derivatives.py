@@ -170,7 +170,10 @@ def vconvert(
     to_vel_cls = eqx.error_if(
         to_vel_cls,
         from_vel_cls._dimensionality() != to_vel_cls._dimensionality(),
-        "Dimensionality mismatch",
+        f"Dimensionality mismatch: cannot convert from {from_vel_cls.__name__} "
+        f"(dim={from_vel_cls._dimensionality()}) "
+        f"to {to_vel_cls.__name__} (dim={to_vel_cls._dimensionality()}) "
+        "as their dimensionalities do not match.",
     )
 
     shape = jnp.broadcast_shapes(*[v.shape for v in p_vel.values()])
@@ -350,7 +353,10 @@ def vconvert(
     to_acc_cls = eqx.error_if(
         to_acc_cls,
         from_acc_cls._dimensionality() != to_acc_cls._dimensionality(),
-        "Dimensionality mismatch",
+        f"Dimensionality mismatch: cannot convert from {from_acc_cls.__name__} "
+        f"(dim={from_acc_cls._dimensionality()}) "
+        f"to {to_acc_cls.__name__} (dim={to_acc_cls._dimensionality()}) "
+        "as their dimensionalities do not match.",
     )
 
     shape = jnp.broadcast_shapes(*[v.shape for v in p_acc.values()])
