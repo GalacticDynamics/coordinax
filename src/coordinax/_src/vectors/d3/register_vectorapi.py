@@ -458,12 +458,24 @@ def vconvert(
     >>> cxv.vconvert(cxv.SphericalPos, cxv.CartesianPos3D, cart)
     ({'phi': Array(1.1071488, dtype=float32, ...),
       'r': Array(3.7416575, dtype=float32, ...),
-      'theta': Array(0.64052236, dtype=float32, ...)},
+      'theta': Array(0.64052236, dtype=float32)},
+     {})
+
+    The origin is a special case, where the angles are set to 0 by convention:
+
+    >>> cart = {"x": 0, "y": 0, "z": 0}
+    >>> cxv.vconvert(cxv.SphericalPos, cxv.CartesianPos3D, cart)
+    ({'phi': Array(0., dtype=float32, ...),
+      'r': Array(0., dtype=float32, ...),
+      'theta': Array(0., dtype=float32)},
      {})
 
     """
+    del units  # unused
     r = jnp.sqrt(p["x"] ** 2 + p["y"] ** 2 + p["z"] ** 2)
-    theta = jnp.acos(p["z"] / r)
+    # Avoid division by zero: when r == 0, set theta = 0 by convention
+    theta = jnp.acos(jnp.where(r == 0, jnp.ones(r.shape), p["z"] / r))
+    # atan2 handles the case when x = y = 0, returning phi = 0
     phi = jnp.atan2(p["y"], p["x"])
     return {"r": r, "theta": theta, "phi": phi}, combine_aux(in_aux, out_aux)
 
@@ -491,15 +503,15 @@ def vconvert(
     >>> usys = u.unitsystem("km", "deg")
 
     >>> cxv.vconvert(cxv.LonLatSphericalPos, cxv.CartesianPos3D,
-    ...                   params, units=usys)
+    ...              params, units=usys)
     ({'distance': Array(3.7416575, dtype=float32, ...),
-      'lat': Array(53.300774, dtype=float32, ...),
+      'lat': Array(53.300774, dtype=float32),
       'lon': Array(63.43495, dtype=float32, ...)},
      {})
 
     >>> cxv.vconvert(cxv.MathSphericalPos, cxv.CartesianPos3D,
-    ...                   params, units=usys)
-    ({'phi': Array(36.69923, dtype=float32, ...),
+    ...              params, units=usys)
+    ({'phi': Array(36.69923, dtype=float32),
       'r': Array(3.7416575, dtype=float32, ...),
       'theta': Array(63.43495, dtype=float32, ...)},
      {})
@@ -571,12 +583,22 @@ def vconvert(
     >>> cxv.vconvert(cxv.SphericalPos, cxv.CylindricalPos, cyl, units=usys)
     ({'phi': Array(90., dtype=float32, ...),
       'r': Array(1.4142135, dtype=float32, ...),
-      'theta': Array(45..., dtype=float32, ...)},
+      'theta': Array(45..., dtype=float32)},
+     {})
+
+    The origin is a special case, where the angles are set to 0 by convention:
+
+    >>> cyl = {"rho": 0, "phi": 0, "z": 0}
+    >>> cxv.vconvert(cxv.SphericalPos, cxv.CylindricalPos, cyl, units=usys)
+    ({'phi': Array(0., dtype=float32, ...),
+      'r': Array(0., dtype=float32, ...),
+      'theta': Array(0., dtype=float32)},
      {})
 
     """
     r = jnp.hypot(p["rho"], p["z"])
-    theta = jnp.acos(p["z"] / r)
+    # Avoid division by zero: when r == 0, set theta = 0 by convention
+    theta = jnp.acos(jnp.where(r == 0, jnp.ones(r.shape), p["z"] / r))
     return {"r": r, "theta": theta, "phi": p["phi"]}, combine_aux(in_aux, out_aux)
 
 
@@ -605,12 +627,12 @@ def vconvert(
 
     >>> cxv.vconvert(cxv.LonLatSphericalPos, cxv.CylindricalPos, cyl, units=usys)
     ({'distance': Array(1.4142135, dtype=float32, ...),
-      'lat': Array(45., dtype=float32, ...),
+      'lat': Array(45., dtype=float32),
       'lon': Array(90., dtype=float32, ...)},
      {})
 
     >>> cxv.vconvert(cxv.MathSphericalPos, cxv.CylindricalPos, cyl, units=usys)
-    ({'phi': Array(45..., dtype=float32, ...),
+    ({'phi': Array(45..., dtype=float32),
       'r': Array(1.4142135, dtype=float32, ...),
       'theta': Array(90., dtype=float32, ...)},
      {})
