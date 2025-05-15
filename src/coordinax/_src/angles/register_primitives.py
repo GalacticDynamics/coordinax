@@ -34,7 +34,7 @@ def cbrt_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
 
     >>> q = Angle(8, "rad")
     >>> jnp.cbrt(q)
-    BareQuantity(Array(2., dtype=float32, weak_type=True), unit='rad(1/3)')
+    BareQuantity(Array(2., dtype=float32, ...), unit='rad(1/3)')
 
     """
     return quaxify(lax.cbrt_p.bind)(  # TODO: move to quaxed
@@ -80,7 +80,7 @@ def cos_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
 
     >>> q = Angle(0, "deg")
     >>> jnp.cos(q)
-    BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
+    BareQuantity(Array(1., dtype=float32, ...), unit='')
 
     """
     return quaxify(lax.cos_p.bind)(  # TODO: move to quaxed
@@ -128,7 +128,7 @@ def integer_pow_p_abstractangle(x: AbstractAngle, /, *, y: Any) -> FastQ:
     >>> q = Angle(2, "deg")
 
     >>> q ** 3
-    BareQuantity(Array(8, dtype=int32, weak_type=True), unit='deg3')
+    BareQuantity(Array(8, dtype=int32, ...), unit='deg3')
 
     """
     return qlax.integer_pow(convert(x, FastQ), y)
@@ -149,7 +149,7 @@ def pow_p_abstractangle_arraylike(x: AbstractAngle, y: ArrayLike, /) -> FastQ:
     >>> q1 = Angle(10.0, "deg")
     >>> y = 3.0
     >>> q1 ** y
-    BareQuantity(Array(1000., dtype=float32, weak_type=True), unit='deg3')
+    BareQuantity(Array(1000., dtype=float32, ...), unit='deg3')
 
     """
     return qlax.pow(convert(x, FastQ), y)
@@ -169,7 +169,7 @@ def sin_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
 
     >>> q = Angle(90, "deg")
     >>> jnp.sin(q)
-    BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
+    BareQuantity(Array(1., dtype=float32, ...), unit='')
 
     """
     return quaxify(lax.sin_p.bind)(  # TODO: move to quaxed
@@ -191,7 +191,7 @@ def sqrt_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
 
     >>> q = Angle(9, "deg")
     >>> jnp.sqrt(q)
-    BareQuantity(Array(3., dtype=float32, weak_type=True), unit='deg(1/2)')
+    BareQuantity(Array(3., dtype=float32, ...), unit='deg(1/2)')
 
     """
     return quaxify(lax.sqrt_p.bind)(convert(x, FastQ), accuracy=accuracy)
@@ -211,7 +211,7 @@ def tan_p_abstractangle(x: AbstractAngle, /, *, accuracy: Any) -> FastQ:
 
     >>> q = Angle(45, "deg")
     >>> jnp.tan(q)
-    BareQuantity(Array(1., dtype=float32, weak_type=True), unit='')
+    BareQuantity(Array(1., dtype=float32, ...), unit='')
 
     """
     return quaxify(lax.tan_p.bind)(  # TODO: move to quaxed

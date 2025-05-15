@@ -31,19 +31,16 @@ def vector(cls: type[FourVector], obj: u.AbstractQuantity, /) -> FourVector:
 
     >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
     >>> vec = cx.FourVector.from_(xs)
-    >>> vec
-    FourVector(
-      t=Quantity(weak_f32[], unit='m s / km'),
-      q=CartesianPos3D( ... )
-    )
+    >>> print(vec)
+    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+        [0. 1. 2. 3.]>
 
     >>> xs = u.Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
     >>> vec = cx.FourVector.from_(xs)
-    >>> vec
-    FourVector(
-      t=Quantity(weak_f32[2], unit='m s / km'),
-      q=CartesianPos3D( ... )
-    )
+    >>> print(vec)
+    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+        [[0.000e+00 1.000e+00 2.000e+00 3.000e+00]
+         [3.336e-05 4.000e+00 5.000e+00 6.000e+00]]>
 
     """
     _ = eqx.error_if(

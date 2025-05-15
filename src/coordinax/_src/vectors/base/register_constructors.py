@@ -73,103 +73,104 @@ def vector(cls: type[AbstractVector], obj: u.AbstractQuantity, /) -> AbstractVec
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     Mismatch:
 
-    >>> try: cx.vecs.CartesianPos1D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> try: cxv.CartesianPos1D.from_(u.Quantity([1, 2, 3], "m"))
     ... except ValueError as e: print(e)
     Cannot construct <class 'coordinax...CartesianPos1D'> from 3 components.
 
     Pos 1D:
 
-    >>> cx.vecs.CartesianPos1D.from_(u.Quantity(1, "meter"))
-    CartesianPos1D(x=Quantity(weak_i32[], unit='m'))
+    >>> cxv.CartesianPos1D.from_(u.Quantity(1, "meter"))
+    CartesianPos1D(x=Quantity(Array(1, dtype=int32, ...), unit='m'))
 
-    >>> cx.vecs.CartesianPos1D.from_(u.Quantity([1], "meter"))
-    CartesianPos1D(x=Quantity(i32[], unit='m'))
+    >>> cxv.CartesianPos1D.from_(u.Quantity([1], "meter"))
+    CartesianPos1D(x=Quantity(Array(1, dtype=int32), unit='m'))
 
-    >>> cx.vecs.CartesianPos1D.from_(cx.Distance(1, "meter"))
-    CartesianPos1D(x=Quantity(weak_i32[], unit='m'))
+    >>> cxv.CartesianPos1D.from_(cx.Distance(1, "meter"))
+    CartesianPos1D(x=Quantity(Array(1, dtype=int32, ...), unit='m'))
 
-    >>> cx.vecs.RadialPos.from_(u.Quantity(1, "meter"))
-    RadialPos(r=Distance(weak_i32[], unit='m'))
+    >>> cxv.RadialPos.from_(u.Quantity(1, "meter"))
+    RadialPos(r=Distance(Array(1, dtype=int32, ...), unit='m'))
 
-    >>> cx.vecs.RadialPos.from_(u.Quantity([1], "meter"))
-    RadialPos(r=Distance(i32[], unit='m'))
+    >>> cxv.RadialPos.from_(u.Quantity([1], "meter"))
+    RadialPos(r=Distance(Array(1, dtype=int32), unit='m'))
 
     Vel 1D:
 
-    >>> cx.vecs.CartesianVel1D.from_(u.Quantity(1, "m/s"))
-    CartesianVel1D(x=Quantity(weak_i32[], unit='m / s'))
+    >>> cxv.CartesianVel1D.from_(u.Quantity(1, "m/s"))
+    CartesianVel1D(x=Quantity(Array(1, dtype=int32, ...), unit='m / s'))
 
-    >>> cx.vecs.CartesianVel1D.from_(u.Quantity([1], "m/s"))
-    CartesianVel1D(x=Quantity(i32[], unit='m / s'))
+    >>> cxv.CartesianVel1D.from_(u.Quantity([1], "m/s"))
+    CartesianVel1D(x=Quantity(Array(1, dtype=int32), unit='m / s'))
 
-    >>> cx.vecs.RadialVel.from_(u.Quantity(1, "m/s"))
-    RadialVel(r=Quantity(weak_i32[], unit='m / s'))
+    >>> cxv.RadialVel.from_(u.Quantity(1, "m/s"))
+    RadialVel(r=Quantity(Array(1, dtype=int32, ...), unit='m / s'))
 
-    >>> cx.vecs.RadialVel.from_(u.Quantity([1], "m/s"))
-    RadialVel(r=Quantity(i32[], unit='m / s'))
+    >>> cxv.RadialVel.from_(u.Quantity([1], "m/s"))
+    RadialVel(r=Quantity(Array(1, dtype=int32), unit='m / s'))
 
     Acc 1D:
 
-    >>> cx.vecs.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
-    CartesianAcc1D(x=Quantity(weak_i32[], unit='m / s2'))
+    >>> cxv.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
+    CartesianAcc1D(x=Quantity(Array(1, dtype=int32, ...), unit='m / s2'))
 
-    >>> cx.vecs.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
-    CartesianAcc1D(x=Quantity(i32[], unit='m / s2'))
+    >>> cxv.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
+    CartesianAcc1D(x=Quantity(Array(1, dtype=int32), unit='m / s2'))
 
-    >>> cx.vecs.RadialAcc.from_(u.Quantity(1, "m/s2"))
-    RadialAcc(r=Quantity(weak_i32[], unit='m / s2'))
+    >>> cxv.RadialAcc.from_(u.Quantity(1, "m/s2"))
+    RadialAcc(r=Quantity(Array(1, dtype=int32, ...), unit='m / s2'))
 
-    >>> cx.vecs.RadialAcc.from_(u.Quantity([1], "m/s2"))
-    RadialAcc(r=Quantity(i32[], unit='m / s2'))
+    >>> cxv.RadialAcc.from_(u.Quantity([1], "m/s2"))
+    RadialAcc(r=Quantity(Array(1, dtype=int32), unit='m / s2'))
 
     Pos 2D:
 
-    >>> vec = cx.vecs.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
-    >>> vec
-    CartesianPos2D(x=Quantity(i32[], unit='m'), y=Quantity(i32[], unit='m'))
+    >>> vec = cxv.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
+    >>> print(vec)
+    <CartesianPos2D (x[m], y[m])
+        [1 2]>
 
     Vel 2D:
 
-    >>> vec = cx.vecs.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
+    >>> vec = cxv.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
     >>> print(vec)
     <CartesianVel2D (x[m / s], y[m / s])
         [1 2]>
 
     Acc 2D:
 
-    >>> vec = cx.vecs.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
+    >>> vec = cxv.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
     >>> print(vec)
     <CartesianAcc2D (x[m / s2], y[m / s2])
         [1 2]>
 
     Pos 3D:
 
-    >>> vec = cx.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> vec = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> print(vec)
     <CartesianPos3D (x[m], y[m], z[m])
         [1 2 3]>
 
     Vel 3D:
 
-    >>> vec = cx.CartesianVel3D.from_(u.Quantity([1, 2, 3], "m/s"))
+    >>> vec = cxv.CartesianVel3D.from_(u.Quantity([1, 2, 3], "m/s"))
     >>> print(vec)
     <CartesianVel3D (x[m / s], y[m / s], z[m / s])
         [1 2 3]>
 
     Acc 3D:
 
-    >>> vec = cx.vecs.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
+    >>> vec = cxv.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
     >>> print(vec)
     <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
         [1 2 3]>
 
     Generic 3D:
 
-    >>> vec = cx.vecs.Cartesian3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> vec = cxv.Cartesian3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> print(vec)
     <Cartesian3D (x[m], y[m], z[m])
         [1 2 3]>

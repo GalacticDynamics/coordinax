@@ -7,6 +7,7 @@ from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, TypeVar
 
+import equinox as eqx
 import jax
 import numpy as np
 import quax_blocks
@@ -197,7 +198,7 @@ class AbstractVector(
         ...     mu=u.Quantity(3, "m2"), nu=u.Quantity(2, "m2"),
         ...     phi=u.Quantity(4, "rad"), Delta=u.Quantity(1.5, "m"))
         >>> vec._auxiliary_data
-        {'Delta': Quantity(Array(1.5, dtype=float32, weak_type=True), unit='m')}
+        {'Delta': Quantity(Array(1.5, dtype=float32, ...), unit='m')}
 
         """
         return {k: getattr(self, k) for k in self._AUX_FIELDS}
@@ -599,6 +600,7 @@ class AbstractVector(
 
         Examples
         --------
+        >>> import quaxed.numpy as jnp
         >>> import unxt as u
         >>> import coordinax as cx
 
@@ -606,11 +608,10 @@ class AbstractVector(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.astype(jnp.float32)
-        CartesianPos1D(x=Quantity(f32[2], unit='m'))
+        CartesianPos1D(x=Quantity(Array([1., 2.], dtype=float32), unit='m'))
 
-        >>> import quaxed.numpy as jnp
         >>> jnp.astype(vec, jnp.float32)
-        CartesianPos1D(x=Quantity(f32[2], unit='m'))
+        CartesianPos1D(x=Quantity(Array([1., 2.], dtype=float32), unit='m'))
 
         """
         return replace(
@@ -632,7 +633,7 @@ class AbstractVector(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.astype({"x": jnp.float32})
-        CartesianPos1D(x=Quantity(f32[2], unit='m'))
+        CartesianPos1D(x=Quantity(Array([1., 2.], dtype=float32), unit='m'))
 
         """
         return replace(
@@ -728,7 +729,10 @@ class AbstractVector(
         ...                              y=u.Quantity(0, "m"))
 
         >>> vec.reshape(4)
-        CartesianPos2D(x=Quantity(i32[4], unit='m'), y=Quantity(weak_i32[4], unit='m'))
+        CartesianPos2D(
+            x=Quantity(Array([1, 2, 3, 4], dtype=int32), unit='m'),
+            y=Quantity(Array([0, 0, 0, 0], dtype=int32, ...), unit='m')
+        )
 
         """
         # TODO: enable not needing to make a full-shaped copy
@@ -754,7 +758,7 @@ class AbstractVector(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
-        CartesianPos1D(x=Quantity(i32[2], unit='m'))
+        CartesianPos1D(x=Quantity(Array([1, 2], dtype=int32), unit='m'))
 
         """
         changes = {
@@ -1057,6 +1061,16 @@ class AbstractVector(
 
         """
         return hash(tuple(field_items(self)))
+
+    def __repr__(self) -> str:
+        """Return a string representation of the vector.
+
+        This uses the `eqxuinox.tree_pformat` function to format the vector,
+        which internally uses the `wadler_lindig` algorithm to format the string
+        representation of the vector.
+
+        """
+        return eqx.tree_pformat(self, short_arrays=False)
 
     def _str_repr_(self, *, precision: int) -> str:  # TODO: with wadler-lindig
         cls_name = type(self).__name__
