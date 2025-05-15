@@ -745,6 +745,38 @@ class AbstractVector(
             },
         )
 
+    def round(self, decimals: int = 0) -> "Self":
+        """Round the components of the vector.
+
+        Parameters
+        ----------
+        decimals
+            The number of decimals to round to.
+
+        Returns
+        -------
+        AbstractVector
+            The vector with the rounded components.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> import coordinax as cx
+
+        We can round a vector:
+
+        >>> vec = cx.vecs.CartesianPos2D.from_([[1.1, 2.2], [3.3, 4.4]], "m")
+        >>> vec.round(0)
+        CartesianPos2D(
+            x=Quantity(Array([1., 3.], dtype=float32), unit='m'),
+            y=Quantity(Array([2., 4.], dtype=float32), unit='m')
+        )
+
+        """
+        return replace(
+            self, **{k: v.round(decimals) for k, v in field_items(AttrFilter, self)}
+        )
+
     def to_device(self, device: None | jax.Device = None) -> "Self":
         """Move the vector to a new device.
 
