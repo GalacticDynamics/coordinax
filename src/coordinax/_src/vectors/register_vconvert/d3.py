@@ -236,8 +236,8 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     cxv.vconvert(cxv.CartesianPos2D, cxv.CylindricalPos,
     ...                       params, units=usys)
-    ({'x': Array(0.9848077, dtype=float32, weak_type=True),
-      'y': Array(0.17364818, dtype=float32, weak_type=True)},
+    ({'x': Array(0.9848077, dtype=float32, ...),
+      'y': Array(0.17364818, dtype=float32, ...)},
      {})
 
     >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),

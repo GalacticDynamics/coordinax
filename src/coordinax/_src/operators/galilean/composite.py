@@ -93,8 +93,6 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> new = op(w)
-    >>> new
-    FourVector( t=Quantity(weak_f32[], unit='s'), q=CartesianPos3D( ... ) )
     >>> new.t.ustrip("Gyr").round(2)
     Array(2.5, dtype=float32, ...)
     >>> print(new.q)

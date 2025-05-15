@@ -60,7 +60,7 @@ def call(
     >>> q = u.Quantity([0], "km")
     >>> t = u.Quantity(0, "s")
     >>> op(t, q)
-    (Quantity(Array(0, dtype=int32, weak_type=True), unit='s'),
+    (Quantity(Array(0, dtype=int32, ...), unit='s'),
      Quantity(Array([1], dtype=int32), unit='km'))
 
     """
@@ -108,7 +108,7 @@ def call(
     >>> t = u.Quantity(0, "s")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
     >>> op(t, q)
-    (Quantity(Array(0, dtype=int32, weak_type=True), unit='s'),
+    (Quantity(Array(0, dtype=int32, ...), unit='s'),
      Quantity(Array([0, 1], dtype=int32), unit='m'))
 
     """
@@ -179,7 +179,7 @@ def call(
     >>> t = u.Quantity(0.0, "Gyr")
 
     >>> op(t, q)
-    (Quantity(Array(0., dtype=float32, weak_type=True), unit='Gyr'),
+    (Quantity(Array(0., dtype=float32, ...), unit='Gyr'),
      Quantity(Array([2., 4., 6.], dtype=float32), unit='km'))
 
     """

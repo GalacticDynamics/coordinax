@@ -75,7 +75,7 @@ def convert_quantity_to_parallax(q: u.AbstractQuantity, /) -> Parallax:
     Quantity(Array(1, dtype=int32, ...), unit='mas')
 
     >>> convert(q, Parallax)
-    Parallax(Array(1, dtype=int32, weak_type=True), unit='mas')
+    Parallax(Array(1, dtype=int32, ...), unit='mas')
 
     The self-conversion doesn't copy the object:
 

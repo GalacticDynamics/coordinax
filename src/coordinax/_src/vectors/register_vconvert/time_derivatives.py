@@ -368,7 +368,7 @@ def vconvert(
     >>> p = cx.vecs.CartesianVel1D(x=u.Quantity(1.0, "km/s"))
     >>> a = cx.vecs.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
     >>> cx.vconvert(cx.vecs.RadialAcc, a, p, q)
-    RadialAcc(r=Quantity(f32[], unit='km / s2'))
+    RadialAcc(r=Quantity(Array(1., dtype=float32), unit='km / s2'))
 
     Now in 2D:
 
@@ -377,7 +377,8 @@ def vconvert(
     >>> a = cx.vecs.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
     >>> cx.vconvert(cx.vecs.PolarAcc, a, p, q)
     PolarAcc(
-      r=Quantity(f32[], unit='km / s2'), phi=Quantity(f32[], unit='rad / s2')
+      r=Quantity(Array(2.236068, dtype=float32), unit='km / s2'),
+      phi=Quantity(Array(0., dtype=float32), unit='rad / s2')
     )
 
     And in 3D:
@@ -387,9 +388,9 @@ def vconvert(
     >>> a = cx.vecs.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> cx.vconvert(cx.vecs.SphericalAcc, a, p, q)
     SphericalAcc(
-      r=Quantity(f32[], unit='km / s2'),
-      theta=Quantity(f32[], unit='rad / s2'),
-      phi=Quantity(f32[], unit='rad / s2')
+      r=Quantity(Array(3.7416573, dtype=float32), unit='km / s2'),
+      theta=Quantity(Array(-8.940697e-08, dtype=float32), unit='rad / s2'),
+      phi=Quantity(Array(0., dtype=float32), unit='rad / s2')
     )
 
     """

@@ -46,9 +46,10 @@ class PolarPos(AbstractPos2D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
+        >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"),
+        ...                        phi=u.Quantity(90, "deg"))
         >>> vec.norm()
-        Distance(Array(1, dtype=int32, weak_type=True), unit='m')
+        Distance(Array(1, dtype=int32, ...), unit='m')
 
         """
         return self.r

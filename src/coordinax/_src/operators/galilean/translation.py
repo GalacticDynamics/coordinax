@@ -74,10 +74,9 @@ class GalileanTranslation(AbstractGalileanOperator):
     Translation operators can be applied to `coordinax.vecs.FourVector`:
 
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
-    >>> op(w)
-    FourVector(
-      t=Quantity(weak_f32[], unit='s'), q=CartesianPos3D( ... )
-    )
+    >>> print(op(w))
+    <FourVector (t[s], q=(x[km], y[km], z[km]))
+        [ 3.156e+16  1.000e+00  0.000e+00 -4.371e-08]>
 
     Also to `vector.AbstractPos3D` and `unxt.Quantity`:
 

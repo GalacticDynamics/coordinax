@@ -114,7 +114,7 @@ class Parallax(AbstractDistance):
     To disable this check, set `check_negative=False`.
 
     >>> Parallax(-1, "mas", check_negative=False)
-    Parallax(Array(-1, dtype=int32, weak_type=True), unit='mas', check_negative=False)
+    Parallax(Array(-1, dtype=int32, ...), unit='mas', check_negative=False)
 
     """
 
@@ -149,6 +149,7 @@ class Parallax(AbstractDistance):
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
         """Return a Wadler-Lindig document for the parallax."""
+        # Use the default __pdoc__ method to get the base document.
         pdoc = super().__pdoc__(**kwargs)
 
         # Don't show check_negative if it's the default.

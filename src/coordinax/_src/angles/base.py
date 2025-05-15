@@ -27,9 +27,8 @@ class AbstractAngle(u.AbstractQuantity):  # type: ignore[misc]
 
     >>> from coordinax.angle import Angle
 
-    >>> a = Angle(90, "deg")
-    >>> a
-    Angle(Array(90, dtype=int32, weak_type=True), unit='deg')
+    >>> Angle(90, "deg")
+    Angle(Array(90, dtype=int32, ...), unit='deg')
 
     Angles have to have dimensions of angle.
 

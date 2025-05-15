@@ -157,8 +157,11 @@ def convert_element_type_p_absvec(
     >>> import coordinax as cx
 
     >>> vec = cx.vecs.CartesianPosND.from_([1, 2, 3], "m")
+    >>> vec.q.dtype
+    dtype('int32')
+
     >>> qlax.convert_element_type(vec, float)
-    CartesianPosND(q=Quantity(f32[3], unit='m'))
+    CartesianPosND(q=Quantity(Array([1., 2., 3.], dtype=float32), unit='m'))
 
     """
     convert_p = quaxify(jax.lax.convert_element_type_p.bind)
