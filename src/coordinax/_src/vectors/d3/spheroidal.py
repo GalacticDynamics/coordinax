@@ -22,19 +22,20 @@ from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 @final
 class ProlateSpheroidalPos(AbstractPos3D):
-    """Prolate spheroidal coordinates as defined by Dejonghe & de Zeeuw 1988.
+    r"""Prolate spheroidal coordinates as defined by Dejonghe & de Zeeuw 1988.
 
-    Note that valid coordinates have:
-    - mu >= Delta^2
-    - |nu| <= Delta^2
-    - Delta > 0
+    Note that valid coordinates have: $- mu >= \Delta^2 - |nu| <= \Delta^2 -
+    \Delta > 0$
 
     Parameters
     ----------
     mu
-        The spheroidal mu coordinate. This is called `lambda` by Dejonghe & de Zeeuw.
+        The spheroidal mu coordinate. This is called `lambda` by Dejonghe & de
+        Zeeuw. Surfaces of constant mu are ellipsoids with foci at the origin
+        and at (`Delta`, 0, 0).
     nu
-        The spheroidal nu coordinate.
+        The spheroidal nu coordinate. Surfaces of constant nu are hyperboloids
+        of two sheets.
     phi
         Azimuthal angle [0, 360) [deg] where 0 is the x-axis.
     Delta
@@ -43,25 +44,21 @@ class ProlateSpheroidalPos(AbstractPos3D):
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> vec = cx.vecs.ProlateSpheroidalPos(
+    >>> vec = cxv.ProlateSpheroidalPos(
     ...     mu=u.Quantity(3.0, "km2"),
     ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.25, "rad"),
     ...     Delta=u.Quantity(1.5, "km"),
     ... )
-    >>> vec
-    ProlateSpheroidalPos(
-      mu=Quantity(Array(3., dtype=float32, ...), unit='km2'),
-      nu=Quantity(Array(0.5, dtype=float32, ...), unit='km2'),
-      phi=Angle(Array(0.25, dtype=float32, ...), unit='rad'),
-      Delta=Quantity(Array(1.5, dtype=float32, ...), unit='km')
-    )
+    >>> print(vec)
+    <ProlateSpheroidalPos (mu[km2], nu[km2], phi[rad])
+        [3.   0.5  0.25]>
 
     This fails with a zero or negative Delta:
 
-    >>> try: vec = cx.vecs.ProlateSpheroidalPos(
+    >>> try: vec = cxv.ProlateSpheroidalPos(
     ...     mu=u.Quantity(3.0, "km2"),
     ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.25, "rad"),
@@ -71,13 +68,33 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     Or with invalid mu and nu:
 
-    >>> try: vec = cx.vecs.ProlateSpheroidalPos(
+    >>> try: vec = cxv.ProlateSpheroidalPos(
     ...     mu=u.Quantity(0.5, "km2"),
     ...     nu=u.Quantity(0.5, "km2"),
     ...     phi=u.Quantity(0.25, "rad"),
     ...     Delta=u.Quantity(1.5, "km"),
     ... )
     ... except Exception as e: pass
+
+    We can convert to other coordinates:
+
+    >>> sph = vec.vconvert(cxv.SphericalPos)
+    >>> print(sph)
+    <SphericalPos (r[km], theta[rad], phi[rad])
+        [1.118 0.752 0.25 ]>
+
+    However, this is generally a one-way conversion, as the focal length
+    parameter `Delta` is not retained through the conversion. To convert back to
+    prolate spheroidal coordinates, we need to provide the focal length again:
+
+    >>> vec2 = sph.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "km"))
+    >>> print(vec2.round(3))
+    <ProlateSpheroidalPos (mu[km2], nu[km2], phi[rad])
+        [3.   0.5  0.25]>
+
+    >>> print((vec2 - vec).vconvert(cxv.CartesianPos3D))
+    <CartesianPos3D (x[km], y[km], z[km])
+        [0. 0. 0.]>
 
     """
 
@@ -110,29 +127,90 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
 @final
 class ProlateSpheroidalVel(AbstractVel3D):
-    """Prolate spheroidal differential representation."""
+    r"""Prolate spheroidal differential representation.
+
+    Parameters
+    ----------
+    mu
+        Prolate spheroidal mu speed $d\mu/dt \in [-\infty, \infty]$.
+    nu
+        Prolate spheroidal nu speed $d\nu/dt \in [-\infty, \infty]$.
+    phi
+        Azimuthal speed $d\phi/dt \in [-\infty, \infty]$.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
+    >>> v = cxv.CartesianVel3D.from_(u.Quantity([4, 5, 6], "km/s"))
+
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(4, "kpc"))
+    >>> pv = v.vconvert(cxv.ProlateSpheroidalVel, px)
+
+    >>> print(pv.vconvert(cxv.CartesianVel3D, px))
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+        [4. 5. 6.]>
+
+    >>> print(pv.vconvert(cxv.CartesianVel3D, x, Delta=u.Quantity(4, "kpc")))
+    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+        [4. 5. 6.]>
+
+    """
 
     mu: ct.BBtKinematicFlux = eqx.field(converter=u.Quantity["diffusivity"].from_)
-    r"""Prolate spheroidal mu speed :math:`d\mu/dt \in [-\infty, \infty]."""
+    r"""Prolate spheroidal mu speed $d\mu/dt \in [-\infty, \infty]$."""
 
     nu: ct.BBtKinematicFlux = eqx.field(converter=u.Quantity["diffusivity"].from_)
-    r"""Prolate spheroidal nu speed :math:`d\nu/dt \in [-\infty, \infty]."""
+    r"""Prolate spheroidal nu speed $d\nu/dt \in [-\infty, \infty]$."""
 
     phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
-    r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
+    r"""Azimuthal speed $d\phi/dt \in [-\infty, \infty]$."""
 
 
 @final
 class ProlateSpheroidalAcc(AbstractAcc3D):
-    """Prolate spheroidal acceleration representation."""
+    r"""Prolate spheroidal acceleration representation.
+
+    Parameters
+    ----------
+    mu
+        Prolate spheroidal mu speed $d\mu/dt \in [-\infty, \infty]$.
+    nu
+        Prolate spheroidal nu speed $d\nu/dt \in [-\infty, \infty]$.
+    phi
+        Azimuthal speed $d\phi/dt \in [-\infty, \infty]$.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
+    >>> v = cxv.CartesianVel3D.from_(u.Quantity([4, 5, 6], "km/s"))
+    >>> a = cxv.CartesianAcc3D.from_(u.Quantity([4, 5, 6], "km/s2"))
+
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(4, "kpc"))
+    >>> pa = a.vconvert(cxv.ProlateSpheroidalAcc, v, px)
+
+    >>> print(pa.vconvert(cxv.CartesianAcc3D, v, px))
+    <CartesianAcc3D (x[km / s2], y[km / s2], z[km / s2])
+        [4. 5. 6.]>
+
+    >>> print(pa.vconvert(cxv.CartesianAcc3D, v, x, Delta=u.Quantity(4, "kpc")))
+    <CartesianAcc3D (x[km / s2], y[km / s2], z[km / s2])
+        [4. 5. 6.]>
+
+    """
 
     mu: ct.BBtSpecificEnergy = eqx.field(converter=u.Quantity["specific energy"].from_)
-    r"""Prolate spheroidal mu acceleration :math:`d^2\mu/dt^2 \in [-\infty, \infty]."""
+    r"""Prolate spheroidal mu acceleration $d^2\mu/dt^2 \in [-\infty, \infty]$."""
 
     nu: ct.BBtSpecificEnergy = eqx.field(converter=u.Quantity["specific energy"].from_)
-    r"""Prolate spheroidal nu acceleration :math:`d^2\nu/dt^2 \in [-\infty, \infty]."""
+    r"""Prolate spheroidal nu acceleration $d^2\nu/dt^2 \in [-\infty, \infty]$."""
 
     phi: ct.BBtAngularAcc = eqx.field(
         converter=u.Quantity["angular acceleration"].from_
     )
-    r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
+    r"""Azimuthal acceleration $d^2\phi/dt^2 \in [-\infty, \infty]$."""

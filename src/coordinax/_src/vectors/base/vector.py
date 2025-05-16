@@ -75,19 +75,26 @@ class AbstractVector(
 
     """
 
+    # TODO: 1) a better variable name. 2) make this public (and frozen)
+    #       3) a params_fields property that's better than `components`
     _AUX_FIELDS: ClassVar[frozenset[str]]
 
     def __init_subclass__(cls) -> None:
-        """Determine properties of the vector."""
+        """Determine properties of the vector class."""
         # Note that this is called before `dataclass` has had a chance to
         # process the class, so we cannot just call `fields(cls)` to get the
-        # fields. Instead, we parse `cls.__annotation__`.
+        # fields. Instead, we parse `cls.__annotation__` directly.
+
+        # To find the auxiliary fields, we look for fields that are instances of
+        # `VectorAttribute`. This is done by looking at the `__dict__` rather
+        # than doing `getattr` since `VectorAttribute` is a descriptor and will
+        # raise an error when accessed before the dataclass construction is
+        # complete.
         aux = [
             k
             for k in cls.__annotations__
             if isinstance(cls.__dict__.get(k), VectorAttribute)
         ]
-
         cls._AUX_FIELDS = frozenset(aux)
 
     # ---------------------------------------------------------------
@@ -107,6 +114,7 @@ class AbstractVector(
     # ===============================================================
     # Vector API
 
+    # TODO: make public
     @abstractmethod
     def _dimensionality(self) -> int:
         """Dimensionality of the vector.
@@ -146,32 +154,42 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import unxt as u
+        >>> import coordinax.vecs as cxv
 
         Transforming a Position:
 
-        >>> q_cart = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> q_sph = q_cart.vconvert(cx.SphericalPos)
-        >>> q_sph
-        SphericalPos( ... )
-        >>> q_sph.r
-        Distance(Array(3.7416575, dtype=float32), unit='m')
+        >>> q_cart = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+
+        >>> q_sph = q_cart.vconvert(cxv.SphericalPos)
+        >>> print(q_sph)
+        <SphericalPos (r[m], theta[rad], phi[rad])
+            [3.742 0.641 1.107]>
+
+        >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "m"))
+        >>> print(q_ps)
+        <ProlateSpheroidalPos (mu[m2], nu[m2], phi[rad])
+            [14.89   1.36   1.107]>
+
+        >>> print((q_ps.vconvert(cxv.CartesianPos3D) - q_cart).round(3))
+        <CartesianPos3D (x[m], y[m], z[m])
+            [-0.  0.  0.]>
 
         Transforming a Velocity:
 
-        >>> v_cart = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
-        >>> v_sph = v_cart.vconvert(cx.SphericalVel, q_cart)
-        >>> v_sph
-        SphericalVel( ... )
+        >>> v_cart = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
+        >>> v_sph = v_cart.vconvert(cxv.SphericalVel, q_cart)
+        >>> print(v_sph)
+        <SphericalVel (r[m / s], theta[rad / s], phi[rad / s])
+            [ 3.742e+00 -8.941e-08  0.000e+00]>
 
         Transforming an Acceleration:
 
-        >>> a_cart = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
-        >>> a_sph = a_cart.vconvert(cx.vecs.SphericalAcc, v_cart, q_cart)
-        >>> a_sph
-        SphericalAcc( ... )
-        >>> a_sph.r
-        Quantity(Array(13.363062, dtype=float32), unit='m / s2')
+        >>> a_cart = cxv.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+        >>> a_sph = a_cart.vconvert(cxv.SphericalAcc, v_cart, q_cart)
+        >>> print(a_sph)
+        <SphericalAcc (r[m / s2], theta[rad / s2], phi[rad / s2])
+            [13.363  0.767 -1.2  ]>
 
         """
         return vconvert(target, self, *args, **kwargs)
