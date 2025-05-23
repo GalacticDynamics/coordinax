@@ -7,10 +7,10 @@ from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar, NoReturn, TypeVar
 
-import equinox as eqx
 import jax
 import numpy as np
 import quax_blocks
+import wadler_lindig as wl
 from jaxtyping import DTypeLike
 from plum import dispatch
 from quax import ArrayValue
@@ -1089,6 +1089,38 @@ class AbstractVector(
         return MappingProxyType({k: v.size for k, v in field_items(AttrFilter, self)})
 
     # ===============================================================
+    # Wadler-Lindig
+
+    def __pdoc__(
+        self,
+        *,
+        vector_form: bool = False,
+        short_arrays: bool = True,
+        **kwargs: Any,
+    ) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig docstring for the vector.
+
+        Parameters
+        ----------
+        vector_form
+            If True, return the vector form of the docstring.
+        short_arrays
+            If True, use short arrays for the docstring.
+        **kwargs
+            Additional keyword arguments to pass to the Wadler-Lindig docstring
+            formatter.
+
+        """
+        if not vector_form:
+            # TODO: not use private API.
+            return wl._definitions._pformat_dataclass(
+                self, short_arrays=short_arrays, **kwargs
+            )
+
+        msg = "`__pdoc__` is not implemented for vector form."
+        raise NotImplementedError(msg)
+
+    # ===============================================================
     # Python API
 
     def __hash__(self) -> int:
@@ -1120,7 +1152,7 @@ class AbstractVector(
         representation of the vector.
 
         """
-        return eqx.tree_pformat(self, short_arrays=False)
+        return wl.pformat(self, short_arrays=False)
 
     def _str_repr_(self, *, precision: int) -> str:  # TODO: with wadler-lindig
         cls_name = type(self).__name__
