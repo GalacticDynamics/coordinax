@@ -77,7 +77,7 @@ class AbstractVector(
 
     # TODO: 1) a better variable name. 2) make this public (and frozen)
     #       3) a params_fields property that's better than `components`
-    _AUX_FIELDS: ClassVar[frozenset[str]]
+    _AUX_FIELDS: ClassVar[tuple[str, ...]]
 
     def __init_subclass__(cls) -> None:
         """Determine properties of the vector class."""
@@ -95,7 +95,7 @@ class AbstractVector(
             for k in cls.__annotations__
             if isinstance(cls.__dict__.get(k), VectorAttribute)
         ]
-        cls._AUX_FIELDS = frozenset(aux)
+        cls._AUX_FIELDS = tuple(aux)
 
     # ---------------------------------------------------------------
     # Constructors
