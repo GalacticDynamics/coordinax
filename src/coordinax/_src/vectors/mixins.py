@@ -151,13 +151,15 @@ class IPythonReprMixin:
 
         >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec._repr_mimebundle_()
-        {'text/plain': "CartesianPos2D(\n  x=Quantity(Array(1, dtype=int32), unit='m'),\n  y=Quantity(Array(2, dtype=int32), unit='m')\n)", 'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1 \\; \\mathrm{m} \\\\ 2 \\; \\mathrm{m}\\end{matrix} \\right)$'}
+        {'text/plain': "CartesianPos2D(x=Quantity(1, unit='m'),
+                                       y=Quantity(2, unit='m'))",
+         'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1 \\; \\mathrm{m} \\\\ 2 \\; \\mathrm{m}\\end{matrix} \\right)$'}
 
         >>> vec._repr_mimebundle_(include=["text/plain"])
-        {'text/plain': "CartesianPos2D(\n  x=Quantity(Array(1, dtype=int32), unit='m'),\n  y=Quantity(Array(2, dtype=int32), unit='m')\n)"}
+        {'text/plain': "CartesianPos2D(x=Quantity(1, unit='m'), y=Quantity(2, unit='m'))"}
 
         >>> vec._repr_mimebundle_(exclude=["text/latex"])
-        {'text/plain': "CartesianPos2D(\n  x=Quantity(Array(1, dtype=int32), unit='m'),\n  y=Quantity(Array(2, dtype=int32), unit='m')\n)"}
+        {'text/plain': "CartesianPos2D(x=Quantity(1, unit='m'), y=Quantity(2, unit='m'))"}
 
         """  # noqa: E501
         # Determine the set of keys to include in the MIME bundle

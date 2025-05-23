@@ -27,7 +27,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 
     >>> vec = cx.vecs.CartesianPos1D.from_([2], "m")
     >>> vec
-    CartesianPos1D(x=Quantity(Array(2, dtype=int32), unit='m'))
+    CartesianPos1D(x=Quantity(2, unit='m'))
 
     Vectors support the basic math operations:
 
