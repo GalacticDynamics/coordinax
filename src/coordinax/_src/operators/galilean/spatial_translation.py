@@ -125,7 +125,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     >>> vec = cx.vecs.CartesianPos1D.from_(q).vconvert(cx.vecs.RadialPos)
     >>> op(vec)
-    RadialPos(r=Distance(Array(1, dtype=int32), unit='km'))
+    RadialPos(r=Distance(1, unit='km'))
 
     - 2D:
 
@@ -136,10 +136,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     >>> vec = cx.vecs.CartesianPos2D.from_(q).vconvert(cx.vecs.PolarPos)
     >>> op(vec)
-    PolarPos(
-      r=Distance(Array(2.236068, dtype=float32), unit='km'),
-      phi=Angle(Array(1.1071488, dtype=float32), unit='rad')
-    )
+    PolarPos(r=Distance(2.236068, unit='km'), phi=Angle(1.1071488, unit='rad'))
 
     - 3D:
 
@@ -151,9 +148,9 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
     >>> op(vec)
     SphericalPos(
-      r=Distance(Array(3.7416575, dtype=float32), unit='km'),
-      theta=Angle(Array(0.64052236, dtype=float32), unit='rad'),
-      phi=Angle(Array(1.1071488, dtype=float32), unit='rad')
+      r=Distance(3.7416575, unit='km'),
+      theta=Angle(0.64052236, unit='rad'),
+      phi=Angle(1.1071488, unit='rad')
     )
 
     Many operators are time dependent and require a time argument. This operator
