@@ -38,17 +38,13 @@ def vector(
     CartesianPosND(q=Quantity(Array([1], dtype=int32), unit='km'))
 
     >>> cx.vecs.CartesianVelND.from_(u.Quantity(1, "km/s"))
-    CartesianVelND(
-      q=Quantity(Array([1], dtype=int32, ...), unit='km / s')
-    )
+    CartesianVelND(q=Quantity(Array([1], dtype=int32, weak_type=True), unit='km / s'))
 
     >>> cx.vecs.CartesianVelND.from_(u.Quantity([1], "km/s"))
     CartesianVelND(q=Quantity(Array([1], dtype=int32), unit='km / s'))
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity(1, "km/s2"))
-    CartesianAccND(
-      q=Quantity(Array([1], dtype=int32, ...), unit='km / s2')
-    )
+    CartesianAccND(q=Quantity(Array([1], dtype=int32, weak_type=True), unit='km / s2'))
 
     >>> cx.vecs.CartesianAccND.from_(u.Quantity([1], "km/s2"))
     CartesianAccND(q=Quantity(Array([1], dtype=int32), unit='km / s2'))
