@@ -675,9 +675,10 @@ def vconvert(
      {})
 
     """
-    x = p["r"] * jnp.sin(p["theta"]) * jnp.cos(p["phi"])
-    y = p["r"] * jnp.sin(p["theta"]) * jnp.sin(p["phi"])
-    z = p["r"] * jnp.cos(p["theta"])
+    r, theta, phi = p["r"], p["theta"], p["phi"]
+    x = r * jnp.sin(theta) * jnp.cos(phi)
+    y = r * jnp.sin(theta) * jnp.sin(phi)
+    z = r * jnp.cos(theta)
     return {"x": x, "y": y, "z": z}, combine_aux(in_aux, out_aux)
 
 

@@ -904,7 +904,7 @@ class AbstractVector(
         >>> import coordinax as cx
 
         >>> def pprint(d):
-        ...     print({k: v._physical_type_list[0] for k, v in d.items()})
+        ...     print({k: str(v).split("/")[0] for k, v in d.items()})
 
         >>> pprint(cx.vecs.CartesianPos1D.dimensions)
         {'x': 'length'}
@@ -1107,7 +1107,7 @@ class AbstractVector(
         ...     hash(vec)
         ... except TypeError as e:
         ...     print(e)
-        unhashable type: 'jaxlib.xla_extension.ArrayImpl'
+        unhashable type: 'jaxlib...ArrayImpl'
 
         """
         return hash(tuple(field_items(self)))
