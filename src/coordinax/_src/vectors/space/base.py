@@ -90,7 +90,7 @@ class AbstractVectors(AbstractVector):
 
     @override
     @property
-    def devices(self) -> MappingProxyType[str, MappingProxyType[str, Device]]:  # type: ignore[override]
+    def devices(self) -> MappingProxyType[str, MappingProxyType[str, Device]]:  # type: ignore[override,unused-ignore]
         """Get the devices of the vector's components.
 
         Examples

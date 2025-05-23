@@ -30,25 +30,25 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
 
     >>> cx.vconvert(cx.vecs.PoincarePolarVector, w)
     PoincarePolarVector(
-      rho=Quantity(Array([[2.236068 , 6.4031243]], dtype=float32), unit='m'),
-      pp_phi=Quantity(Array([[0., 0.]], dtype=float32), unit='m / s(1/2)'),
-      z=Quantity(Array([[3, 6]], dtype=int32), unit='m'),
-      dt_rho=Quantity(Array([[2.236068 , 6.4031243]], dtype=float32), unit='m / s'),
-      dt_pp_phi=Quantity(Array([[0., 0.]], dtype=float32), unit='m / s(1/2)'),
-      dt_z=Quantity(Array([[3, 6]], dtype=int32), unit='m / s')
+      rho=Quantity([[2.236068  6.4031243]], unit='m'),
+      pp_phi=Quantity([[0. 0.]], unit='m / s(1/2)'),
+      z=Quantity([[3 6]], unit='m'),
+      dt_rho=Quantity([[2.236068  6.4031243]], unit='m / s'),
+      dt_pp_phi=Quantity([[0. 0.]], unit='m / s(1/2)'),
+      dt_z=Quantity([[3 6]], unit='m / s')
     )
 
     >>> cx.vconvert(cx.Space, w)
     Space({
       'length': CartesianPos3D(
-        x=Quantity(Array([[1, 4]], dtype=int32), unit='m'),
-        y=Quantity(Array([[2, 5]], dtype=int32), unit='m'),
-        z=Quantity(Array([[3, 6]], dtype=int32), unit='m')
+        x=Quantity([[1 4]], unit='m'),
+        y=Quantity([[2 5]], unit='m'),
+        z=Quantity([[3 6]], unit='m')
       ),
       'speed': CartesianVel3D(
-        x=Quantity(Array([[1, 4]], dtype=int32), unit='m / s'),
-        y=Quantity(Array([[2, 5]], dtype=int32), unit='m / s'),
-        z=Quantity(Array([[3, 6]], dtype=int32), unit='m / s')
+        x=Quantity([[1 4]], unit='m / s'),
+        y=Quantity([[2 5]], unit='m / s'),
+        z=Quantity([[3 6]], unit='m / s')
       )
     })
 
