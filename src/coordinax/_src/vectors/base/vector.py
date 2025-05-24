@@ -1114,8 +1114,21 @@ class AbstractVector(
                 self, short_arrays=short_arrays, **kwargs
             )
 
-        msg = "`__pdoc__` is not implemented for vector form."
-        raise NotImplementedError(msg)
+        cls_name = type(self).__name__
+        units_ = self.units
+        # make the components string
+        comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
+        # make the values string
+        # TODO: add the VectorAttr, which are filtered out.
+        fvals = field_values(AttrFilter, self)
+        fvstack = jnp.stack(
+            tuple(map(u.ustrip, jnp.broadcast_arrays(*fvals))),
+            axis=-1,
+        )
+        precision = kwargs.pop("precision", 3)
+        vs = np.array2string(np.array(fvstack), precision=precision, prefix="    ")
+        # return the string
+        return wl.TextDoc(f"<{cls_name} ({comps})\n    {vs}>")
 
     # ===============================================================
     # Python API
@@ -1149,23 +1162,9 @@ class AbstractVector(
         representation of the vector.
 
         """
-        return wl.pformat(self, short_arrays=False, compact_arrays=True)
-
-    def _str_repr_(self, *, precision: int) -> str:  # TODO: with wadler-lindig
-        cls_name = type(self).__name__
-        units_ = self.units
-        # make the components string
-        comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
-        # make the values string
-        # TODO: add the VectorAttr, which are filtered out.
-        fvals = field_values(AttrFilter, self)
-        fvstack = jnp.stack(
-            tuple(map(u.ustrip, jnp.broadcast_arrays(*fvals))),
-            axis=-1,
+        return wl.pformat(
+            self, vector_form=False, short_arrays=False, compact_arrays=True
         )
-        vs = np.array2string(np.array(fvstack), precision=precision, prefix="    ")
-        # return the string
-        return f"<{cls_name} ({comps})\n    {vs}>"
 
     def __str__(self) -> str:
         r"""Return a string representation of the vector.
@@ -1190,4 +1189,4 @@ class AbstractVector(
             [14.374  0.626  1.107]>
 
         """
-        return self._str_repr_(precision=3)
+        return wl.pformat(self, vector_form=True, precision=3)
