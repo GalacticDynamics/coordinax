@@ -33,7 +33,7 @@ def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, u.Quantity(2, "s"))
     >>> print(vec)
-    <RadialVel (r[m / s])
+    <RadialVel: (r[m / s])
         [2]>
 
     """
@@ -54,7 +54,7 @@ def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(u.Quantity(2, "s"), d2r)
     >>> print(vec)
-    <RadialVel (r[m / s])
+    <RadialVel: (r[m / s])
         [2]>
 
     """
@@ -74,11 +74,11 @@ def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(d2r, u.Quantity(2, "s2"))
     >>> print(vec)
-    <RadialPos (r[m])
+    <RadialPos: (r[m])
         [2]>
 
     >>> print(d2r * u.Quantity(2, "s2"))
-    <RadialPos (r[m])
+    <RadialPos: (r[m])
         [2]>
 
     """
@@ -100,7 +100,7 @@ def mul_p_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc, /) -> AbstractPos:
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.mul(u.Quantity(2, "s2"), d2r)
     >>> print(vec)
-    <RadialPos (r[m])
+    <RadialPos: (r[m])
         [2]>
 
     """
@@ -123,7 +123,7 @@ def neg_p_acc(vec: AbstractAcc, /) -> AbstractAcc:
     >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
     >>> vec = lax.neg(d2r)
     >>> print(vec)
-    <RadialAcc (r[m / s2])
+    <RadialAcc: (r[m / s2])
         [-1]>
 
     """

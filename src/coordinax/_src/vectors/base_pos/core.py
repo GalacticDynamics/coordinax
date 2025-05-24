@@ -93,7 +93,7 @@ class AbstractPos(
         >>> R_z = rot = jnp.asarray([[0.0, -1, 0], [1, 0, 0], [0, 0, 1]])
 
         >>> print(R_z @ q)
-        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        <CartesianPos3D: (x[kpc], y[kpc], z[kpc])
             [[[ 0.  1.  0.]
               [-1.  0.  0.]
               [ 0.  0.  1.]]]>

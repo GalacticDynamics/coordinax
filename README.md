@@ -54,7 +54,7 @@ q = cx.CartesianPos3D(
     z=u.Quantity(jnp.arange(10, 20.0), "km"),
 )
 print(q)
-# <CartesianPos3D (x[km], y[km], z[km])
+# <CartesianPos3D: (x[km], y[km], z[km])
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -63,7 +63,7 @@ print(q)
 
 q2 = cx.vconvert(cx.SphericalPos, q)
 print(q2)
-# <SphericalPos (r[km], theta[rad], phi[rad])
+# <SphericalPos: (r[km], theta[rad], phi[rad])
 #     [[11.18   0.464  1.571]
 #      [12.57   0.505  1.406]
 #      ...
@@ -76,7 +76,7 @@ p = cx.CartesianVel3D(
     d_z=u.Quantity(jnp.arange(10, 20.0), "m/s"),
 )
 print(p)
-# <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+# <CartesianVel3D: (x[m / s], y[m / s], z[m / s])
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -85,7 +85,7 @@ print(p)
 
 p2 = cx.vconvert(cx.SphericalVel, p, q)
 print(p2)
-# <SphericalVel (r[m / s], theta[m rad / (km s)], phi[m rad / (km s)])
+# <SphericalVel: (r[m / s], theta[m rad / (km s)], phi[m rad / (km s)])
 #     [[ 1.118e+01 -3.886e-16  0.000e+00]
 #      [ 1.257e+01 -1.110e-16  0.000e+00]
 #      ...

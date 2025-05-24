@@ -37,11 +37,11 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> px2 = px + px
     >>> print(px2)
-    <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[rad])
+    <ProlateSpheroidalPos: (mu[kpc2], nu[kpc2], phi[rad])
         [57.495  2.505  1.107]>
 
     >>> print(px2.vconvert(cxv.CartesianPos3D))
-    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+    <CartesianPos3D: (x[kpc], y[kpc], z[kpc])
         [2. 4. 6.]>
 
     """
@@ -150,7 +150,7 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> print(jnp.multiply(2, vec))
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x[m], y[m], z[m])
         [2 4 6]>
 
     Most of the position classes have specific dispatches for this operation.
@@ -210,7 +210,7 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     ...     return MyCartesian(x=current.x, y=current.y, z=current.z)
 
     >>> print(jnp.multiply(2, vec))
-    <MyCartesian (x[m], y[m], z[m])
+    <MyCartesian: (x[m], y[m], z[m])
         [[2 4 6]]>
 
     """  # noqa: E501
@@ -243,7 +243,7 @@ def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> print(jnp.multiply(vec, 2))
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x[m], y[m], z[m])
         [2 4 6]>
 
     """
@@ -295,7 +295,7 @@ def neg_p_pos(obj: AbstractPos, /) -> AbstractPos:
     >>> import coordinax as cx
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> print(-vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x[m], y[m], z[m])
         [-1 -2 -3]>
 
     """
@@ -324,7 +324,7 @@ def reshape_p_pos(
     ...                         z=u.Quantity([7, 8, 9], "m"))
     >>> vec = jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
     >>> print(vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x[m], y[m], z[m])
         [[[[1 4 7]
            [2 5 8]
            [3 6 9]]]]>
@@ -360,11 +360,11 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> px2 = px - px
     >>> print(px2)
-    <ProlateSpheroidalPos (mu[kpc2], nu[kpc2], phi[rad])
+    <ProlateSpheroidalPos: (mu[kpc2], nu[kpc2], phi[rad])
         [4. 0. 0.]>
 
     >>> print(px2.vconvert(cxv.CartesianPos3D))
-    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+    <CartesianPos3D: (x[kpc], y[kpc], z[kpc])
         [0. 0. 0.]>
 
     """

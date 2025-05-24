@@ -63,7 +63,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     >>> x = cxv.CartesianPos1D.from_(1, "km")
     >>> y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
-    <RadialPos (r[km])
+    <RadialPos: (r[km])
         [1]>
 
     ## 2D:
@@ -99,12 +99,12 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     >>> x = cxv.CartesianPos2D.from_([3, 4], "km")
     >>> y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
-    <PolarPos (r[km], phi[rad])
+    <PolarPos: (r[km], phi[rad])
         [5.    0.927]>
 
     >>> y = cxv.vconvert(cxv.PolarPos, x, units=u.unitsystem("m", "deg"))
     >>> print(y)
-    <PolarPos (r[m], phi[deg])
+    <PolarPos: (r[m], phi[deg])
         [5000.     53.13]>
 
     ## 3D:
@@ -135,7 +135,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     >>> x = cxv.CartesianPos3D.from_([[1, 3, 5], [2, 4, 6]], "km")
     >>> y = cxv.vconvert(cxv.SphericalPos, x)
     >>> print(y)
-    <SphericalPos (r[km], theta[rad], phi[rad])
+    <SphericalPos: (r[km], theta[rad], phi[rad])
         [[5.916 0.564 1.249]
          [7.483 0.641 1.107]]>
 

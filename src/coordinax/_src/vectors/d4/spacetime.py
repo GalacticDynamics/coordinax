@@ -52,7 +52,7 @@ class FourVector(AbstractPos4D):
 
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(w)
-    <FourVector (t[s], q=(x[m], y[m], z[m]))
+    <FourVector: (t[s], q=(x[m], y[m], z[m]))
         [1 1 2 3]>
 
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
@@ -66,7 +66,7 @@ class FourVector(AbstractPos4D):
     ...                     r=u.Quantity(3, "m"))
     >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=q)
     >>> print(w)
-    <FourVector (t[s], q=(r[m], theta[deg], phi[deg]))
+    <FourVector: (t[s], q=(r[m], theta[deg], phi[deg]))
         [1 3 1 2]>
 
     """
@@ -185,7 +185,7 @@ class FourVector(AbstractPos4D):
         >>> import coordinax as cx
         >>> w = cx.FourVector(t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> print(w)
-        <FourVector (t[s], q=(x[m], y[m], z[m]))
+        <FourVector: (t[s], q=(x[m], y[m], z[m]))
             [0.5 1.  2.  3. ]>
 
         """
@@ -206,4 +206,4 @@ class FourVector(AbstractPos4D):
             precision=3,
             prefix="    ",
         )
-        return f"<{cls_name} ({comps})\n    {vs}>"
+        return f"<{cls_name}: ({comps})\n    {vs}>"

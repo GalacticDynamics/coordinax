@@ -363,9 +363,9 @@ def call(
 
     >>> newq, newp = R_z(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x[m], y[m], z[m])
         [0. 1. 0.]>
-    <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+    <CartesianVel3D: (x[m / s], y[m / s], z[m / s])
         [0. 1. 0.]>
 
     """

@@ -163,16 +163,16 @@ class AbstractVector(
 
         >>> q_sph = q_cart.vconvert(cxv.SphericalPos)
         >>> print(q_sph)
-        <SphericalPos (r[m], theta[rad], phi[rad])
+        <SphericalPos: (r[m], theta[rad], phi[rad])
             [3.742 0.641 1.107]>
 
         >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "m"))
         >>> print(q_ps)
-        <ProlateSpheroidalPos (mu[m2], nu[m2], phi[rad])
+        <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
             [14.89   1.36   1.107]>
 
         >>> print((q_ps.vconvert(cxv.CartesianPos3D) - q_cart).round(3))
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x[m], y[m], z[m])
             [-0.  0.  0.]>
 
         Transforming a Velocity:
@@ -180,7 +180,7 @@ class AbstractVector(
         >>> v_cart = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
         >>> v_sph = v_cart.vconvert(cxv.SphericalVel, q_cart)
         >>> print(v_sph)
-        <SphericalVel (r[m / s], theta[rad / s], phi[rad / s])
+        <SphericalVel: (r[m / s], theta[rad / s], phi[rad / s])
             [ 3.742e+00 -8.941e-08  0.000e+00]>
 
         Transforming an Acceleration:
@@ -188,7 +188,7 @@ class AbstractVector(
         >>> a_cart = cxv.CartesianAcc3D.from_([7, 8, 9], "m/s2")
         >>> a_sph = a_cart.vconvert(cxv.SphericalAcc, v_cart, q_cart)
         >>> print(a_sph)
-        <SphericalAcc (r[m / s2], theta[rad / s2], phi[rad / s2])
+        <SphericalAcc: (r[m / s2], theta[rad / s2], phi[rad / s2])
             [13.363  0.767 -1.2  ]>
 
         """
@@ -249,7 +249,7 @@ class AbstractVector(
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> newvec = vec.uconvert(usys)
         >>> print(newvec)
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x[m], y[m], z[m])
             [1000. 2000. 3000.]>
 
         """
@@ -676,7 +676,7 @@ class AbstractVector(
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> print(vec.copy())
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x[m], y[m], z[m])
             [1 2 3]>
 
         """
@@ -1128,7 +1128,7 @@ class AbstractVector(
         precision = kwargs.pop("precision", 3)
         vs = np.array2string(np.array(fvstack), precision=precision, prefix="    ")
         # return the string
-        return wl.TextDoc(f"<{cls_name} ({comps})\n    {vs}>")
+        return wl.TextDoc(f"<{cls_name}: ({comps})\n    {vs}>")
 
     # ===============================================================
     # Python API
@@ -1178,14 +1178,14 @@ class AbstractVector(
 
         >>> vec1 = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> print(str(vec1))
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x[m], y[m], z[m])
             [1 2 3]>
 
         Showing a vector with additional attributes
 
         >>> vec2 = vec1.vconvert(cx.vecs.ProlateSpheroidalPos, Delta=u.Quantity(1, "m"))
         >>> print(str(vec2))
-        <ProlateSpheroidalPos (mu[m2], nu[m2], phi[rad])
+        <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
             [14.374  0.626  1.107]>
 
         """

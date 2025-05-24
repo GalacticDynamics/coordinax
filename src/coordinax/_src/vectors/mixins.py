@@ -252,7 +252,7 @@ class AstropyRepresentationAPIMixin:
         >>> a_cart = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
         >>> a_sph = a_cart.represent_as(cx.vecs.SphericalAcc, v_cart, q_cart)
         >>> print(a_sph)
-        <SphericalAcc (r[m / s2], theta[rad / s2], phi[rad / s2])
+        <SphericalAcc: (r[m / s2], theta[rad / s2], phi[rad / s2])
             [13.363  0.767 -1.2  ]>
 
         """

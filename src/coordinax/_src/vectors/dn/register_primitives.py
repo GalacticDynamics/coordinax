@@ -127,7 +127,7 @@ def sub_p_cartnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND
     >>> q1 = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
     >>> q2 = cx.vecs.CartesianPosND(u.Quantity([2, 3, 4], "km"))
     >>> print(q1 - q2)
-    <CartesianPosND (q[km])
+    <CartesianPosND: (q[km])
         [[-1]
          [-1]
          [-1]]>

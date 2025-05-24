@@ -83,29 +83,29 @@ def broadcast_in_dim_p_absvec(
 
     >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "m")
     >>> print(q)
-    <CartesianPos2D (x[m], y[m])
+    <CartesianPos2D: (x[m], y[m])
         [1 2]>
 
     >>> print(jnp.broadcast_to(q, (1, 2)))
-    <CartesianPos2D (x[m], y[m])
+    <CartesianPos2D: (x[m], y[m])
         [[1 2]]>
 
     >>> p = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
     >>> print(p)
-    <CartesianVel2D (x[m / s], y[m / s])
+    <CartesianVel2D: (x[m / s], y[m / s])
         [1 2]>
 
     >>> print(jnp.broadcast_to(p, (1, 2)))
-    <CartesianVel2D (x[m / s], y[m / s])
+    <CartesianVel2D: (x[m / s], y[m / s])
         [[1 2]]>
 
     >>> a = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
     >>> print(a)
-    <CartesianAcc2D (x[m / s2], y[m / s2])
+    <CartesianAcc2D: (x[m / s2], y[m / s2])
         [1 2]>
 
     >>> print(jnp.broadcast_to(a, (1, 2)))
-    <CartesianAcc2D (x[m / s2], y[m / s2])
+    <CartesianAcc2D: (x[m / s2], y[m / s2])
         [[1 2]]>
 
     Cartesian 3D position, velocity, and acceleration:
@@ -126,11 +126,11 @@ def broadcast_in_dim_p_absvec(
 
     >>> a = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "m/s2")
     >>> print(a)
-    <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
+    <CartesianAcc3D: (x[m / s2], y[m / s2], z[m / s2])
         [1 2 3]>
 
     >>> print(jnp.broadcast_to(a, (1, 3)))
-    <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
+    <CartesianAcc3D: (x[m / s2], y[m / s2], z[m / s2])
         [[1 2 3]]>
 
     """

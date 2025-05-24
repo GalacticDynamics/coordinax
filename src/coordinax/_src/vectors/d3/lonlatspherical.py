@@ -54,7 +54,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     ...                                  lat=u.Quantity(0, "deg"),
     ...                                  distance=u.Quantity(3, "km"))
     >>> print(vec)
-    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+    <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [0 0 3]>
 
     The longitude and latitude angles are in the range [0, 360) and [-90, 90] degrees,

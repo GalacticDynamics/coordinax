@@ -30,11 +30,11 @@ def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
     >>> dr = cx.vecs.RadialVel(u.Quantity(1, "m/s"))
     >>> vec = dr * u.Quantity(2, "s")
     >>> print(vec)
-    <RadialPos (r[m])
+    <RadialPos: (r[m])
         [2]>
 
     >>> print(qlax.mul(dr, u.Quantity(2, "s")))
-    <RadialPos (r[m])
+    <RadialPos: (r[m])
         [2]>
 
     """
@@ -57,7 +57,7 @@ def neg_vel(vec: AbstractVel, /) -> AbstractVel:
 
     >>> dr = cx.vecs.RadialVel.from_([1], "m/s")
     >>> print(lax.neg(dr))
-    <RadialVel (r[m / s])
+    <RadialVel: (r[m / s])
         [-1]>
 
     >>> -dr
@@ -66,7 +66,7 @@ def neg_vel(vec: AbstractVel, /) -> AbstractVel:
     >>> dp = cx.vecs.PolarVel(u.Quantity(1, "m/s"), u.Quantity(1, "mas/yr"))
     >>> neg_dp = -dp
     >>> print(neg_dp)
-    <PolarVel (r[m / s], phi[mas / yr])
+    <PolarVel: (r[m / s], phi[mas / yr])
         [-1 -1]>
 
     """

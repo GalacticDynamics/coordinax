@@ -76,16 +76,16 @@ class Pipe(AbstractCompositeOperator):
 
     >>> pos = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> print(pipe(pos))
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x[km], y[km], z[km])
         [2 4 6]>
 
     The pipe will also work on a position + velocity:
 
     >>> vel = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
     >>> print(*pipe(pos, vel), sep="\n")
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x[km], y[km], z[km])
         [2 4 6]>
-    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
         [5. 7. 9.]>
 
     """

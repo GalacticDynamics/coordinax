@@ -35,7 +35,7 @@ class Cartesian3D(AvalMixin, AbstractVector):
     >>> import coordinax as cx
     >>> vec = cx.vecs.Cartesian3D.from_([1, 2, 3], "kg m /s")
     >>> print(vec)
-    <Cartesian3D (x[kg m / s], y[kg m / s], z[kg m / s])
+    <Cartesian3D: (x[kg m / s], y[kg m / s], z[kg m / s])
         [1 2 3]>
 
     """

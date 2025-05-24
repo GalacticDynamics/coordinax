@@ -45,12 +45,12 @@ def vconvert(
     >>> x = cxv.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(x2)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x[km], y[km])
         [1. 0.]>
 
     >>> x3 = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Quantity(14, "km"))
     >>> print(x3)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x[km], y[km], z[km])
         [ 1. 14.  0.]>
 
     """
@@ -83,12 +83,12 @@ def vconvert(
     >>> x = cxv.CartesianPos1D(x=u.Quantity(1.0, "km"))
     >>> x2 = cxv.vconvert(cxv.PolarPos, x)
     >>> print(x2)
-    <PolarPos (r[km], phi[rad])
+    <PolarPos: (r[km], phi[rad])
         [1. 0.]>
 
     >>> x3 = cxv.vconvert(cxv.PolarPos, x, phi=u.Quantity(14, "deg"))
     >>> print(x3)
-    <PolarPos (r[km], phi[deg])
+    <PolarPos: (r[km], phi[deg])
         [ 1. 14.]>
 
     """
@@ -126,12 +126,12 @@ def vconvert(
     >>> x = cxv.CartesianPos1D(x=u.Quantity(1, "km"))
     >>> x2 = cxv.vconvert(cxv.CartesianPos3D, x)
     >>> print(x2)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x[km], y[km], z[km])
         [1 0 0]>
 
     >>> x3 = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Quantity(14, "km"))
     >>> print(x3)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x[km], y[km], z[km])
         [ 1 14  0]>
 
     """
@@ -169,12 +169,12 @@ def vconvert(
     >>> x = cxv.CartesianPos1D(x=u.Quantity(1, "km"))
     >>> x2 = cxv.vconvert(cxv.SphericalPos, x)
     >>> print(x2)
-    <SphericalPos (r[km], theta[rad], phi[rad])
+    <SphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
     >>> x3 = cxv.vconvert(cxv.SphericalPos, x, phi=u.Quantity(14, "deg"))
     >>> print(x3)
-    <SphericalPos (r[km], theta[rad], phi[deg])
+    <SphericalPos: (r[km], theta[rad], phi[deg])
         [ 1  0 14]>
 
     MathSphericalPos:
@@ -182,12 +182,12 @@ def vconvert(
 
     >>> x2 = cxv.vconvert(cxv.MathSphericalPos, x)
     >>> print(x2)
-    <MathSphericalPos (r[km], theta[rad], phi[rad])
+    <MathSphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
     >>> x3 = cxv.vconvert(cxv.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
     >>> print(x3)
-    <MathSphericalPos (r[km], theta[rad], phi[deg])
+    <MathSphericalPos: (r[km], theta[rad], phi[deg])
         [ 1.  0. 14.]>
 
     """
@@ -222,12 +222,12 @@ def vconvert(
     >>> x = cxv.CartesianPos1D(x=u.Quantity(1, "km"))
     >>> x2 = cxv.vconvert(cxv.CylindricalPos, x)
     >>> print(x2)
-    <CylindricalPos (rho[km], phi[rad], z[km])
+    <CylindricalPos: (rho[km], phi[rad], z[km])
         [1. 0. 0.]>
 
     >>> x3 = cxv.vconvert(cxv.CylindricalPos, x, phi=u.Quantity(14, "deg"))
     >>> print(x3)
-    <CylindricalPos (rho[km], phi[deg], z[km])
+    <CylindricalPos: (rho[km], phi[deg], z[km])
         [ 1 14  0]>
 
     """
@@ -269,12 +269,12 @@ def vconvert(
     >>> x = cxv.RadialPos(r=u.Quantity(1, "km"))
     >>> x2 = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(x2)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x[km], y[km])
         [1 0]>
 
     >>> x3 = cxv.vconvert(cxv.CartesianPos2D, x, y=u.Quantity(14, "km"))
     >>> print(x3)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x[km], y[km])
         [ 1 14]>
 
     """
@@ -307,12 +307,12 @@ def vconvert(
     >>> x = cxv.RadialPos(r=u.Quantity(1, "km"))
     >>> x2 = cxv.vconvert(cxv.PolarPos, x)
     >>> print(x2)
-    <PolarPos (r[km], phi[rad])
+    <PolarPos: (r[km], phi[rad])
         [1. 0.]>
 
     >>> x3 = cxv.vconvert(cxv.PolarPos, x, phi=u.Quantity(14, "deg"))
     >>> print(x3)
-    <PolarPos (r[km], phi[deg])
+    <PolarPos: (r[km], phi[deg])
         [ 1 14]>
 
     """
@@ -354,12 +354,12 @@ def vconvert(
     >>> x = cxv.RadialPos(r=u.Quantity(1.0, "km"))
     >>> y = cxv.vconvert(cxv.CartesianPos3D, x)
     >>> print(y)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x[km], y[km], z[km])
         [1. 0. 0.]>
 
     >>> y = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Quantity(14, "km"))
     >>> print(y)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x[km], y[km], z[km])
         [ 1. 14.  0.]>
 
     """
@@ -399,24 +399,24 @@ def vconvert(
 
     >>> y = cxv.vconvert(cxv.SphericalPos, x)
     >>> print(y)
-    <SphericalPos (r[km], theta[rad], phi[rad])
+    <SphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
     >>> y = cxv.vconvert(cxv.SphericalPos, x, phi=u.Quantity(14, "deg"))
     >>> print(y)
-    <SphericalPos (r[km], theta[rad], phi[deg])
+    <SphericalPos: (r[km], theta[rad], phi[deg])
         [ 1  0 14]>
 
     MathSphericalPos:
 
     >>> y = cxv.vconvert(cxv.MathSphericalPos, x)
     >>> print(y)
-    <MathSphericalPos (r[km], theta[rad], phi[rad])
+    <MathSphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
     >>> y = cxv.vconvert(cxv.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
     >>> print(y)
-    <MathSphericalPos (r[km], theta[rad], phi[deg])
+    <MathSphericalPos: (r[km], theta[rad], phi[deg])
         [ 1.  0. 14.]>
 
     """
@@ -454,12 +454,12 @@ def vconvert(
     >>> x = cxv.RadialPos(r=u.Quantity(1.0, "km"))
     >>> y = cxv.vconvert(cxv.CylindricalPos, x)
     >>> print(y)
-    <CylindricalPos (rho[km], phi[rad], z[km])
+    <CylindricalPos: (rho[km], phi[rad], z[km])
         [1. 0. 0.]>
 
     >>> y = cxv.vconvert(cxv.CylindricalPos, x, phi=u.Quantity(14, "deg"))
     >>> print(y)
-    <CylindricalPos (rho[km], phi[deg], z[km])
+    <CylindricalPos: (rho[km], phi[deg], z[km])
         [ 1. 14.  0.]>
 
     """

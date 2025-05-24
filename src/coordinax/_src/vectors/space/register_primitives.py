@@ -43,10 +43,10 @@ def neg_p_space(space: Space, /) -> Space:
 
     >>> print(-w)
     Space({
-       'length': <CartesianPos3D (x[m], y[m], z[m])
+       'length': <CartesianPos3D: (x[m], y[m], z[m])
            [[[-1 -2 -3]
              [-4 -5 -6]]]>,
-       'speed': <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+       'speed': <CartesianVel3D: (x[m / s], y[m / s], z[m / s])
            [[[-1 -2 -3]
              [-4 -5 -6]]]>
     })
