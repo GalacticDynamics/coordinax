@@ -188,7 +188,7 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
 
     >>> try: jnp.multiply(jnp.asarray([[1, 1, 1]]), vec)
     ... except Exception as e: print(e)
-    must be a scalar, not <class 'jaxlib.xla_extension.ArrayImpl'>
+    must be a scalar, not <class 'jaxlib...ArrayImpl'>
 
     Then hit the Cartesian-specific dispatch error:
 

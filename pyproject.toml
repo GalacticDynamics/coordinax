@@ -35,8 +35,8 @@
     "quax>=0.2.0",
     "quax-blocks>=0.3",
     "quaxed>=0.9.0",
-    "unxt>=1.6.0",
     "wadler-lindig>=0.1.5",
+    "unxt>=1.6.1",
     "xmmutablemap>=0.1",
 ]
 
@@ -66,8 +66,8 @@ build-backend = "hatchling.build"
     "furo>=2023.08.17",
     "myst_parser>=0.13",
     "sphinx>=7.0",
-    "sphinx_copybutton",
-    "sphinx_autodoc_typehints",
+    "sphinx_copybutton>=0.5.2",
+    "sphinx_autodoc_typehints>=3.0.0",
   ]
   lint = [
       "pylint>=3.3.2",
@@ -78,7 +78,7 @@ build-backend = "hatchling.build"
     "pytest>=8.3.3",
     "pytest-arraydiff>=0.6.1",
     "pytest-cov >=3",
-    "pytest-env",
+    "pytest-env>=1.1.5",
     "pytest-github-actions-annotate-failures",
     "sybil>=8.0.0",
   ]
