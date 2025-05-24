@@ -377,7 +377,7 @@ requires-dist = [
     { name = "quax-blocks", specifier = ">=0.3" },
     { name = "quaxed", specifier = ">=0.9.0" },
     { name = "unxt", specifier = ">=1.6.1" },
-    { name = "wadler-lindig", specifier = ">=0.1.5" },
+    { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
 

@@ -84,47 +84,47 @@ def vector(cls: type[AbstractVector], obj: u.AbstractQuantity, /) -> AbstractVec
     Pos 1D:
 
     >>> cxv.CartesianPos1D.from_(u.Quantity(1, "meter"))
-    CartesianPos1D(x=Quantity(Array(1, dtype=int32, ...), unit='m'))
+    CartesianPos1D(x=Quantity(1, unit='m'))
 
     >>> cxv.CartesianPos1D.from_(u.Quantity([1], "meter"))
-    CartesianPos1D(x=Quantity(Array(1, dtype=int32), unit='m'))
+    CartesianPos1D(x=Quantity(1, unit='m'))
 
     >>> cxv.CartesianPos1D.from_(cx.Distance(1, "meter"))
-    CartesianPos1D(x=Quantity(Array(1, dtype=int32, ...), unit='m'))
+    CartesianPos1D(x=Quantity(1, unit='m'))
 
     >>> cxv.RadialPos.from_(u.Quantity(1, "meter"))
-    RadialPos(r=Distance(Array(1, dtype=int32, ...), unit='m'))
+    RadialPos(r=Distance(1, unit='m'))
 
     >>> cxv.RadialPos.from_(u.Quantity([1], "meter"))
-    RadialPos(r=Distance(Array(1, dtype=int32), unit='m'))
+    RadialPos(r=Distance(1, unit='m'))
 
     Vel 1D:
 
     >>> cxv.CartesianVel1D.from_(u.Quantity(1, "m/s"))
-    CartesianVel1D(x=Quantity(Array(1, dtype=int32, ...), unit='m / s'))
+    CartesianVel1D(x=Quantity(1, unit='m / s'))
 
     >>> cxv.CartesianVel1D.from_(u.Quantity([1], "m/s"))
-    CartesianVel1D(x=Quantity(Array(1, dtype=int32), unit='m / s'))
+    CartesianVel1D(x=Quantity(1, unit='m / s'))
 
     >>> cxv.RadialVel.from_(u.Quantity(1, "m/s"))
-    RadialVel(r=Quantity(Array(1, dtype=int32, ...), unit='m / s'))
+    RadialVel(r=Quantity(1, unit='m / s'))
 
     >>> cxv.RadialVel.from_(u.Quantity([1], "m/s"))
-    RadialVel(r=Quantity(Array(1, dtype=int32), unit='m / s'))
+    RadialVel(r=Quantity(1, unit='m / s'))
 
     Acc 1D:
 
     >>> cxv.CartesianAcc1D.from_(u.Quantity(1, "m/s2"))
-    CartesianAcc1D(x=Quantity(Array(1, dtype=int32, ...), unit='m / s2'))
+    CartesianAcc1D(x=Quantity(1, unit='m / s2'))
 
     >>> cxv.CartesianAcc1D.from_(u.Quantity([1], "m/s2"))
-    CartesianAcc1D(x=Quantity(Array(1, dtype=int32), unit='m / s2'))
+    CartesianAcc1D(x=Quantity(1, unit='m / s2'))
 
     >>> cxv.RadialAcc.from_(u.Quantity(1, "m/s2"))
-    RadialAcc(r=Quantity(Array(1, dtype=int32, ...), unit='m / s2'))
+    RadialAcc(r=Quantity(1, unit='m / s2'))
 
     >>> cxv.RadialAcc.from_(u.Quantity([1], "m/s2"))
-    RadialAcc(r=Quantity(Array(1, dtype=int32), unit='m / s2'))
+    RadialAcc(r=Quantity(1, unit='m / s2'))
 
     Pos 2D:
 

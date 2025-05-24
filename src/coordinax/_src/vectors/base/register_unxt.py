@@ -67,10 +67,7 @@ def uconvert(
 
     >>> cart = cx.vecs.CartesianPos2D(x=u.Quantity(1, "m"), y=u.Quantity(2, "km"))
     >>> cart.uconvert({u.dimension("length"): "km"})
-    CartesianPos2D(
-      x=Quantity(Array(0.001, dtype=float32, ...), unit='km'),
-      y=Quantity(Array(2, dtype=int32, ...), unit='km')
-    )
+    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2, unit='km'))
 
     This also works for vectors with different units:
 
@@ -78,9 +75,9 @@ def uconvert(
     ...                       phi=u.Quantity(3, "rad"))
     >>> sph.uconvert({u.dimension("length"): "km", u.dimension("angle"): "deg"})
     SphericalPos(
-      r=Distance(Array(0.001, dtype=float32, ...), unit='km'),
-      theta=Angle(Array(45, dtype=int32, ...), unit='deg'),
-      phi=Angle(Array(171.88734, dtype=float32, ...), unit='deg')
+      r=Distance(0.001, unit='km'),
+      theta=Angle(45, unit='deg'),
+      phi=Angle(171.88734, unit='deg')
     )
 
     """
@@ -109,18 +106,12 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
 
     >>> cart = cx.vecs.CartesianPos2D(x=u.Quantity(1, "m"), y=u.Quantity(2, "km"))
     >>> cart.uconvert({"x": "km", "y": "m"})
-    CartesianPos2D(
-      x=Quantity(Array(0.001, dtype=float32, ...), unit='km'),
-      y=Quantity(Array(2000., dtype=float32, ...), unit='m')
-    )
+    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2000.0, unit='m'))
 
     This also works for converting just some of the components:
 
     >>> cart.uconvert({"x": "km"})
-    CartesianPos2D(
-      x=Quantity(Array(0.001, dtype=float32, ...), unit='km'),
-      y=Quantity(Array(2, dtype=int32, ...), unit='km')
-    )
+    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2, unit='km'))
 
     This also works for vectors with different units:
 
@@ -128,9 +119,9 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
     ...                       phi=u.Quantity(3, "rad"))
     >>> sph.uconvert({"r": "km", "theta": "rad"})
     SphericalPos(
-      r=Distance(Array(0.001, dtype=float32, ...), unit='km'),
-      theta=Angle(Array(0.7853982, dtype=float32, ...), unit='rad'),
-      phi=Angle(Array(3., dtype=float32, ...), unit='rad')
+      r=Distance(0.001, unit='km'),
+      theta=Angle(0.7853982, unit='rad'),
+      phi=Angle(3.0, unit='rad')
     )
 
     """
@@ -171,17 +162,14 @@ def uconvert(
     ``"consistent"``:
 
     >>> cart.uconvert(cx.vecs.ToUnitsOptions.consistent)
-    CartesianPos2D(
-      x=Quantity(Array(1, dtype=int32), unit='m'),
-      y=Quantity(Array(2, dtype=int32), unit='m')
-    )
+    CartesianPos2D(x=Quantity(1, unit='m'), y=Quantity(2, unit='m'))
 
     >>> sph = cart.vconvert(cx.SphericalPos)
     >>> sph.uconvert(cx.vecs.ToUnitsOptions.consistent)
     SphericalPos(
-      r=Distance(Array(2.236068, dtype=float32), unit='m'),
-      theta=Angle(Array(1.5707964, dtype=float32), unit='rad'),
-      phi=Angle(Array(1.1071488, dtype=float32), unit='rad')
+      r=Distance(2.236068, unit='m'),
+      theta=Angle(1.5707964, unit='rad'),
+      phi=Angle(1.1071488, unit='rad')
     )
 
     """

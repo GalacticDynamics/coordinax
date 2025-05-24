@@ -193,14 +193,14 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[0]
         Space({
             'length': CartesianPos3D(
-                x=Quantity(Array([1, 4], dtype=int32), unit='m'),
-                y=Quantity(Array([2, 5], dtype=int32), unit='m'),
-                z=Quantity(Array([3, 6], dtype=int32), unit='m')
+                x=Quantity([1 4], unit='m'),
+                y=Quantity([2 5], unit='m'),
+                z=Quantity([3 6], unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity(Array([1, 4], dtype=int32), unit='m / s'),
-                y=Quantity(Array([2, 5], dtype=int32), unit='m / s'),
-                z=Quantity(Array([3, 6], dtype=int32), unit='m / s')
+                x=Quantity([1 4], unit='m / s'),
+                y=Quantity([2 5], unit='m / s'),
+                z=Quantity([3 6], unit='m / s')
             )
         })
 
@@ -209,14 +209,13 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[1:]
         Space({
             'length': CartesianPos3D(
-                x=Quantity(Array([], shape=(0, 2), dtype=int32), unit='m'),
-                y=Quantity(Array([], shape=(0, 2), dtype=int32), unit='m'),
-                z=Quantity(Array([], shape=(0, 2), dtype=int32), unit='m')
+                x=Quantity([], unit='m'), y=Quantity([], unit='m'),
+                z=Quantity([], unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity(Array([], shape=(0, 2), dtype=int32), unit='m / s'),
-                y=Quantity(Array([], shape=(0, 2), dtype=int32), unit='m / s'),
-                z=Quantity(Array([], shape=(0, 2), dtype=int32), unit='m / s')
+                x=Quantity([], unit='m / s'),
+                y=Quantity([], unit='m / s'),
+                z=Quantity([], unit='m / s')
             )
         })
 
@@ -225,14 +224,14 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[...]
         Space({
             'length': CartesianPos3D(
-                x=Quantity(Array([[1, 4]], dtype=int32), unit='m'),
-                y=Quantity(Array([[2, 5]], dtype=int32), unit='m'),
-                z=Quantity(Array([[3, 6]], dtype=int32), unit='m')
+                x=Quantity([[1 4]], unit='m'),
+                y=Quantity([[2 5]], unit='m'),
+                z=Quantity([[3 6]], unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity(Array([[1, 4]], dtype=int32), unit='m / s'),
-                y=Quantity(Array([[2, 5]], dtype=int32), unit='m / s'),
-                z=Quantity(Array([[3, 6]], dtype=int32), unit='m / s')
+                x=Quantity([[1 4]], unit='m / s'),
+                y=Quantity([[2 5]], unit='m / s'),
+                z=Quantity([[3 6]], unit='m / s')
             )
         })
 
@@ -241,14 +240,13 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w[(0, 1)]
         Space({
             'length': CartesianPos3D(
-                x=Quantity(Array(4, dtype=int32), unit='m'),
-                y=Quantity(Array(5, dtype=int32), unit='m'),
-                z=Quantity(Array(6, dtype=int32), unit='m')
+                x=Quantity(4, unit='m'), y=Quantity(5, unit='m'),
+                z=Quantity(6, unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity(Array(4, dtype=int32), unit='m / s'),
-                y=Quantity(Array(5, dtype=int32), unit='m / s'),
-                z=Quantity(Array(6, dtype=int32), unit='m / s')
+                x=Quantity(4, unit='m / s'),
+                y=Quantity(5, unit='m / s'),
+                z=Quantity(6, unit='m / s')
             )
         })
 
@@ -384,14 +382,14 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w
         Space({
             'length': CartesianPos3D(
-                x=Quantity(Array(1, dtype=int32), unit='m'),
-                y=Quantity(Array(2, dtype=int32), unit='m'),
-                z=Quantity(Array(3, dtype=int32), unit='m')
+                x=Quantity(1, unit='m'),
+                y=Quantity(2, unit='m'),
+                z=Quantity(3, unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity(Array(1, dtype=int32), unit='m / s'),
-                y=Quantity(Array(2, dtype=int32), unit='m / s'),
-                z=Quantity(Array(3, dtype=int32), unit='m / s')
+                x=Quantity(1, unit='m / s'),
+                y=Quantity(2, unit='m / s'),
+                z=Quantity(3, unit='m / s')
             )
         })
 
