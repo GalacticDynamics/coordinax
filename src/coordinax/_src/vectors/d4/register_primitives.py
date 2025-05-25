@@ -24,8 +24,8 @@ def add_p_4vs(self: FourVector, other: FourVector, /) -> FourVector:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
+    >>> w1 = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w2 = cx.FourVector (t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 + w2
     >>> print(w3)
     <FourVector: (t[s], q=(x[m], y[m], z[m]))
@@ -57,9 +57,9 @@ def _eq_4v_4v(lhs: FourVector, rhs: FourVector, /) -> Bool[Array, "..."]:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w1 = cx.FourVector(t=u.Quantity([1, 2], "s"),
+    >>> w1 = cx.FourVector (t=u.Quantity([1, 2], "s"),
     ...                    q=u.Quantity([[1, 2, 3], [4, 5, 6]], "m"))
-    >>> w2 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 3, 3], "m"))
+    >>> w2 = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 3, 3], "m"))
 
     >>> w1 == w2
     Array([False, False], dtype=bool)
@@ -77,7 +77,7 @@ def neg_p_4v(self: FourVector, /) -> FourVector:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(-w)
     <FourVector: (t[s], q=(x[m], y[m], z[m]))
         [-1 -1 -2 -3]>
@@ -95,8 +95,8 @@ def sub_p_4v_4v(lhs: FourVector, rhs: FourVector, /) -> FourVector:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w1 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
+    >>> w1 = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w2 = cx.FourVector (t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 - w2
     >>> print(w3)
     <FourVector: (t[s], q=(x[m], y[m], z[m]))

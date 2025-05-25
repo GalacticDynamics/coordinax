@@ -29,7 +29,7 @@ def vector(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D:
     >>> cart = CartesianRepresentation(1, 2, 3, unit="m")
     >>> vec = cx.vector(cart)
     >>> print(vec)
-    <CartesianPos3D: (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1. 2. 3.]>
 
     """
@@ -120,7 +120,7 @@ def vector(obj: apyc.UnitSphericalRepresentation) -> cx.vecs.TwoSpherePos:
     >>> sph = UnitSphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg)
     >>> vec = cx.vector(sph)
     >>> print(vec)
-    <TwoSpherePos: (theta[deg], phi[deg])
+    <TwoSpherePos: (theta, phi) [deg]
         [2. 3.]>
 
     """
@@ -142,7 +142,7 @@ def vector(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel3D:
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> dif = cx.vector(dcart)
     >>> print(vec)
-    <TwoSpherePos: (theta[deg], phi[deg])
+    <TwoSpherePos: (theta, phi) [deg]
         [2. 3.]>
 
     """
@@ -165,7 +165,7 @@ def vector(obj: apyc.CylindricalDifferential, /) -> cx.vecs.CylindricalVel:
     ...                                     d_z=2 * u.km / u.s)
     >>> dif = cx.vector(dcyl)
     >>> print(vec)
-    <TwoSpherePos: (theta[deg], phi[deg])
+    <TwoSpherePos: (theta, phi) [deg]
         [2. 3.]>
 
     """
@@ -188,7 +188,7 @@ def vector(obj: apyc.PhysicsSphericalDifferential, /) -> cx.SphericalVel:
     ...                                     d_phi=3 * u.mas/u.yr)
     >>> dif = cx.vector(dsph)
     >>> print(vec)
-    <TwoSpherePos: (theta[deg], phi[deg])
+    <TwoSpherePos: (theta, phi) [deg]
         [2. 3.]>
 
     """
@@ -212,7 +212,7 @@ def vector(obj: apyc.SphericalDifferential, /) -> cx.vecs.LonLatSphericalVel:
     ...                              d_lat=3 * u.mas/u.yr)
     >>> dif = cx.vector(dsph)
     >>> print(vec)
-    <TwoSpherePos: (theta[deg], phi[deg])
+    <TwoSpherePos: (theta, phi) [deg]
         [2. 3.]>
 
     """
@@ -258,7 +258,7 @@ def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereVel:
     >>> dsph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
     >>> vel = cx.vector(dsph)
     >>> print(vel)
-    <TwoSphereVel: (theta[deg / s], phi[deg / s])
+    <TwoSphereVel: (theta, phi) [deg / s]
         [2. 3.]>
 
     """
@@ -283,7 +283,7 @@ def vector(
     >>> cart = CartesianRepresentation(1, 2, 3, unit="km")
     >>> vec = cx.CartesianPos3D.from_(cart)
     >>> print(vec)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [1. 2. 3.]>
 
     """
@@ -378,7 +378,7 @@ def vector(
     >>> sph = UnitSphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg)
     >>> vec = cx.vecs.TwoSpherePos.from_(sph)
     >>> print(vec)
-    <TwoSpherePos: (theta[deg], phi[deg])
+    <TwoSpherePos: (theta, phi) [deg]
         [2. 3.]>
 
     """
@@ -401,7 +401,7 @@ def vector(
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> dif = cx.CartesianVel3D.from_(dcart)
     >>> print(vec)
-    <TwoSpherePos: (theta[deg], phi[deg])
+    <TwoSpherePos: (theta, phi) [deg]
         [2. 3.]>
 
     """
@@ -517,7 +517,7 @@ def vector(
     >>> sph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
     >>> vec = cx.vecs.TwoSphereVel.from_(sph)
     >>> print(vec)
-    <TwoSphereVel: (theta[deg / s], phi[deg / s])
+    <TwoSphereVel: (theta, phi) [deg / s]
         [2. 3.]>
 
     """
@@ -541,7 +541,7 @@ def vector(obj: apyu.Quantity, /) -> cx.vecs.AbstractVector:
 
     >>> vec = cx.vector(Quantity([1, 2, 3], "meter"))
     >>> print(vec)
-    <CartesianPos3D: (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1. 2. 3.]>
 
     """
@@ -565,24 +565,24 @@ def vector(
     >>> xs = Quantity([1, 2, 3], "meter")
     >>> vec = cx.CartesianPos3D.from_(xs)
     >>> print(vec)
-    <CartesianPos3D: (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1. 2. 3.]>
 
     >>> xs = Quantity(jnp.array([[1, 2, 3], [4, 5, 6]]), "meter")
     >>> vec = cx.CartesianPos3D.from_(xs)
     >>> print(vec)
-    <CartesianPos3D: (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [[1. 2. 3.]
          [4. 5. 6.]]>
 
     >>> vec = cx.CartesianVel3D.from_(Quantity([1, 2, 3], "m/s"))
     >>> print(vec)
-    <CartesianVel3D: (x[m / s], y[m / s], z[m / s])
+    <CartesianVel3D: (x, y, z) [m / s]
         [1. 2. 3.]>
 
     >>> vec = cx.vecs.CartesianAcc3D.from_(Quantity([1, 2, 3], "m/s2"))
     >>> print(vec)
-    <CartesianAcc3D: (x[m / s2], y[m / s2], z[m / s2])
+    <CartesianAcc3D: (x, y, z) [m / s2]
         [1. 2. 3.]>
 
     >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]

@@ -172,7 +172,7 @@ class AbstractVector(
             [14.89   1.36   1.107]>
 
         >>> print((q_ps.vconvert(cxv.CartesianPos3D) - q_cart).round(3))
-        <CartesianPos3D: (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [-0.  0.  0.]>
 
         Transforming a Velocity:
@@ -249,7 +249,7 @@ class AbstractVector(
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> newvec = vec.uconvert(usys)
         >>> print(newvec)
-        <CartesianPos3D: (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [1000. 2000. 3000.]>
 
         """
@@ -676,7 +676,7 @@ class AbstractVector(
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> print(vec.copy())
-        <CartesianPos3D: (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [1 2 3]>
 
         """
@@ -1117,7 +1117,13 @@ class AbstractVector(
         cls_name = type(self).__name__
         units_ = self.units
         # make the components string
-        comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
+        if len(set(units_.values())) == 1:
+            comps = ", ".join(self.components)
+            comps = f"({comps}) [{units_[self.components[0]]}]"
+        else:
+            comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
+            comps = f"({comps})"
+
         # make the values string
         # TODO: add the VectorAttr, which are filtered out.
         fvals = field_values(AttrFilter, self)
@@ -1128,7 +1134,7 @@ class AbstractVector(
         precision = kwargs.pop("precision", 3)
         vs = np.array2string(np.array(fvstack), precision=precision, prefix="    ")
         # return the string
-        return wl.TextDoc(f"<{cls_name}: ({comps})\n    {vs}>")
+        return wl.TextDoc(f"<{cls_name}: {comps}\n    {vs}>")
 
     # ===============================================================
     # Python API
@@ -1178,7 +1184,7 @@ class AbstractVector(
 
         >>> vec1 = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> print(str(vec1))
-        <CartesianPos3D: (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [1 2 3]>
 
         Showing a vector with additional attributes

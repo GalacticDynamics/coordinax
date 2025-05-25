@@ -63,7 +63,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     >>> x = cxv.CartesianPos1D.from_(1, "km")
     >>> y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
-    <RadialPos: (r[km])
+    <RadialPos: (r) [km]
         [1]>
 
     ## 2D:

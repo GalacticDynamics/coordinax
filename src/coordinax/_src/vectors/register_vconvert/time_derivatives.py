@@ -264,12 +264,12 @@ def vconvert(
     >>> p = cxv.CartesianVel1D.from_(1.0, "km/s")
     >>> newp = cxv.vconvert(cxv.RadialVel, p, q)
     >>> print(newp)
-    <RadialVel: (r[km / s])
+    <RadialVel: (r) [km / s]
         [1.]>
 
     >>> a = cxv.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
     >>> print(cxv.vconvert(cxv.RadialAcc, a, p, q))
-    <RadialAcc: (r[km / s2])
+    <RadialAcc: (r) [km / s2]
         [1.]>
 
     Now in 2D:
@@ -421,7 +421,7 @@ def vconvert(
     >>> p = cxv.CartesianVel1D(x=u.Quantity(1.0, "km/s"))
     >>> a = cxv.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
     >>> print(cxv.vconvert(cxv.RadialAcc, a, p, q))
-    <RadialAcc: (r[km / s2])
+    <RadialAcc: (r) [km / s2]
         [1.]>
 
     Now in 2D:

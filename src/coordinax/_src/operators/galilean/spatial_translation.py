@@ -213,7 +213,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         GalileanSpatialTranslation(CartesianPos3D( ... ))
 
         >>> print(op.inverse.translation)
-        <CartesianPos3D: (x[km], y[km], z[km])
+        <CartesianPos3D: (x, y, z) [km]
             [-1 -1 -1]>
 
         """
@@ -232,7 +232,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
         >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "km")
         >>> print((-op).translation)
-        <CartesianPos3D: (x[km], y[km], z[km])
+        <CartesianPos3D: (x, y, z) [km]
             [-1 0 0]>
 
         """
@@ -271,7 +271,7 @@ def call(self: GalileanSpatialTranslation, q: AbstractPos, /, **__: Any) -> Abst
     >>> t = u.Quantity(0, "Gyr")
     >>> newq = op(q)
     >>> print(newq)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [2 3 4]>
 
     """
@@ -299,7 +299,7 @@ def call(
     >>> t = u.Quantity(0, "Gyr")
     >>> newt, newq = op(t, q)
     >>> print(newq)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [2 3 4]>
 
     This spatial translation is time independent.
@@ -353,18 +353,18 @@ def call(
     >>> p = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> newq, newp = op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [1 1 1]>
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [1. 2. 3.]>
 
     >>> q = cx.CartesianPos3D.from_([[0, 0, 0], [0, 1, 0]], "km")
     >>> newq, newp = op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [[1 1 1]
          [1 2 1]]>
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [[1. 2. 3.]
          [1. 2. 3.]]>
 
@@ -427,9 +427,9 @@ def call(
     >>> p = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> newq, newp = op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [1 1 1]>
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [1. 2. 3.]>
 
     """

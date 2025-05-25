@@ -288,7 +288,7 @@ def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
     >>> space = cx.Space(length=x)
     >>> new_space = op(space)  # no effect
     >>> print(new_space["length"])
-    <CartesianPos3D: (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [-2.  1.  3.]>
 
     On positions and velocities:
@@ -304,7 +304,7 @@ def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
     >>> new_space.keys()
     dict_keys(['length', 'speed'])
     >>> print(new_space["speed"])
-    <CartesianVel3D: (x[m / s], y[m / s], z[m / s])
+    <CartesianVel3D: (x, y, z) [m / s]
         [5. 7. 9.]>
 
     """

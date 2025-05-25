@@ -54,7 +54,7 @@ q = cx.CartesianPos3D(
     z=u.Quantity(jnp.arange(10, 20.0), "km"),
 )
 print(q)
-# <CartesianPos3D: (x[km], y[km], z[km])
+# <CartesianPos3D: (x, y, z) [km]
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -76,7 +76,7 @@ p = cx.CartesianVel3D(
     d_z=u.Quantity(jnp.arange(10, 20.0), "m/s"),
 )
 print(p)
-# <CartesianVel3D: (x[m / s], y[m / s], z[m / s])
+# <CartesianVel3D: (x, y, z) [m / s]
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...

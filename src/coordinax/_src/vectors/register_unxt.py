@@ -79,69 +79,69 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
     >>> import coordinax as cx
 
     >>> print(cx.vecs.vector(u.Quantity(1, "km")))
-    <CartesianPos1D: (x[km])
+    <CartesianPos1D: (x) [km]
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity([1], "km")))
-    <CartesianPos1D: (x[km])
+    <CartesianPos1D: (x) [km]
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity(1, "km/s")))
-    <CartesianVel1D: (x[km / s])
+    <CartesianVel1D: (x) [km / s]
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity([1], "km/s")))
-    <CartesianVel1D: (x[km / s])
+    <CartesianVel1D: (x) [km / s]
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity(1, "km/s2")))
-    <CartesianAcc1D: (x[km / s2])
+    <CartesianAcc1D: (x) [km / s2]
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity([1], "km/s2")))
-    <CartesianAcc1D: (x[km / s2])
+    <CartesianAcc1D: (x) [km / s2]
         [1]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2], "km")))
-    <CartesianPos2D: (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [1 2]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s")))
-    <CartesianVel2D: (x[km / s], y[km / s])
+    <CartesianVel2D: (x, y) [km / s]
         [1 2]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s2")))
-    <CartesianAcc2D: (x[km / s2], y[km / s2])
+    <CartesianAcc2D: (x, y) [km / s2]
         [1 2]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km")))
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [1 2 3]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s")))
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [1 2 3]>
 
     >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s2")))
-    <CartesianAcc3D: (x[km / s2], y[km / s2], z[km / s2])
+    <CartesianAcc3D: (x, y, z) [km / s2]
         [1 2 3]>
 
     >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km")))
-    <CartesianPosND: (q[km])
+    <CartesianPosND: (q) [km]
         [[0]
          [1]
          [2]
          [3]]>
 
     >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s")))
-    <CartesianVelND: (q[km / s])
+    <CartesianVelND: (q) [km / s]
         [[0]
          [1]
          [2]
          [3]]>
 
     >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s2")))
-    <CartesianAccND: (q[km / s2])
+    <CartesianAccND: (q) [km / s2]
         [[0]
          [1]
          [2]

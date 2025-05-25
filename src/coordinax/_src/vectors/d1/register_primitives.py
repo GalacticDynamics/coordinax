@@ -33,11 +33,11 @@ def add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
     >>> r = cx.vecs.RadialPos.from_([1], "km")
 
     >>> print(jnp.add(q, r))
-    <CartesianPos1D: (x[km])
+    <CartesianPos1D: (x) [km]
         [2]>
 
     >>> print(q + r)
-    <CartesianPos1D: (x[km])
+    <CartesianPos1D: (x) [km]
         [2]>
 
     """
@@ -57,11 +57,11 @@ def add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     >>> v = cx.vecs.CartesianVel1D.from_([1], "km/s")
     >>> vec = jnp.add(v, v)
     >>> print(vec)
-    <CartesianVel1D: (x[km / s])
+    <CartesianVel1D: (x) [km / s]
         [2]>
 
     >>> print(v + v)
-    <CartesianVel1D: (x[km / s])
+    <CartesianVel1D: (x) [km / s]
         [2]>
 
     """
@@ -80,11 +80,11 @@ def add_aa(lhs: CartesianAcc1D, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> v = cx.vecs.CartesianAcc1D.from_([1], "km/s2")
     >>> vec = jnp.add(v, v)
     >>> print(vec)
-    <CartesianAcc1D: (x[km / s2])
+    <CartesianAcc1D: (x) [km / s2]
         [2]>
 
     >>> print(v + v)
-    <CartesianAcc1D: (x[km / s2])
+    <CartesianAcc1D: (x) [km / s2]
         [2]>
 
     """
@@ -160,11 +160,11 @@ def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     >>> v = cx.vecs.CartesianVel1D.from_(1, "m/s")
     >>> vec = jnp.multiply(2, v)
     >>> print(vec)
-    <CartesianVel1D: (x[m / s])
+    <CartesianVel1D: (x) [m / s]
         [2]>
 
     >>> print(2 * v)
-    <CartesianVel1D: (x[m / s])
+    <CartesianVel1D: (x) [m / s]
         [2]>
 
     """
@@ -189,11 +189,11 @@ def mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> v = cx.vecs.CartesianAcc1D.from_(1, "m/s2")
     >>> vec = jnp.multiply(2, v)
     >>> print(vec)
-    <CartesianAcc1D: (x[m / s2])
+    <CartesianAcc1D: (x) [m / s2]
         [2]>
 
     >>> print(2 * v)
-    <CartesianAcc1D: (x[m / s2])
+    <CartesianAcc1D: (x) [m / s2]
         [2]>
 
     """
@@ -240,11 +240,11 @@ def sub_q1d_pos(self: CartesianPos1D, other: AbstractPos, /) -> CartesianPos1D:
     >>> r = cx.vecs.RadialPos.from_([1], "km")
 
     >>> print(jnp.subtract(q, r))
-    <CartesianPos1D: (x[km])
+    <CartesianPos1D: (x) [km]
         [0]>
 
     >>> print(q - r)
-    <CartesianPos1D: (x[km])
+    <CartesianPos1D: (x) [km]
         [0]>
 
     """
@@ -265,11 +265,11 @@ def sub_a1_a1(self: CartesianAcc1D, other: CartesianAcc1D, /) -> CartesianAcc1D:
     >>> v2 = cx.vecs.CartesianAcc1D.from_(2, "m/s2")
     >>> vec = lax.sub(v1, v2)
     >>> print(vec)
-    <CartesianAcc1D: (x[m / s2])
+    <CartesianAcc1D: (x) [m / s2]
         [-1]>
 
     >>> print(v1 - v2)
-    <CartesianAcc1D: (x[m / s2])
+    <CartesianAcc1D: (x) [m / s2]
         [-1]>
 
     """

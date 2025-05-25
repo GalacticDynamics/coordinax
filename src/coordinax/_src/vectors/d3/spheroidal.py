@@ -93,7 +93,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
         [3.   0.5  0.25]>
 
     >>> print((vec2 - vec).vconvert(cxv.CartesianPos3D))
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [0. 0. 0.]>
 
     """
@@ -150,11 +150,11 @@ class ProlateSpheroidalVel(AbstractVel3D):
     >>> pv = v.vconvert(cxv.ProlateSpheroidalVel, px)
 
     >>> print(pv.vconvert(cxv.CartesianVel3D, px))
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
     >>> print(pv.vconvert(cxv.CartesianVel3D, x, Delta=u.Quantity(4, "kpc")))
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
     """
@@ -195,11 +195,11 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
     >>> pa = a.vconvert(cxv.ProlateSpheroidalAcc, v, px)
 
     >>> print(pa.vconvert(cxv.CartesianAcc3D, v, px))
-    <CartesianAcc3D: (x[km / s2], y[km / s2], z[km / s2])
+    <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 
     >>> print(pa.vconvert(cxv.CartesianAcc3D, v, x, Delta=u.Quantity(4, "kpc")))
-    <CartesianAcc3D: (x[km / s2], y[km / s2], z[km / s2])
+    <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 
     """

@@ -93,7 +93,7 @@ def vconvert(
 
     >>> x2 = cxv.vconvert(cxv.CartesianPos3D, x, z=u.Quantity(14, "km"))
     >>> print(x2)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [ 0.985  0.174 14.   ]>
 
     """
@@ -141,7 +141,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
-    <RadialPos: (r[km])
+    <RadialPos: (r) [km]
         [2.236]>
 
     """
@@ -180,7 +180,7 @@ def vconvert(
 
     >>> x2 = cxv.vconvert(cxv.CartesianPos3D, x, z=u.Quantity(14, "km"))
     >>> print(x2)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [ 1  2 14]>
 
     """
@@ -221,7 +221,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     x2 = cxv.vconvert(cxv.CartesianPos1D, x)
     >>> print(x2)
-    <CartesianPos1D: (x[km])
+    <CartesianPos1D: (x) [km]
         [0.985]>
 
     """

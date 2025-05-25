@@ -50,7 +50,7 @@ class FourVector(AbstractPos4D):
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(w)
     <FourVector: (t[s], q=(x[m], y[m], z[m]))
         [1 1 2 3]>
@@ -64,7 +64,7 @@ class FourVector(AbstractPos4D):
 
     >>> q = cx.SphericalPos(theta=u.Quantity(1, "deg"), phi=u.Quantity(2, "deg"),
     ...                     r=u.Quantity(3, "m"))
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=q)
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=q)
     >>> print(w)
     <FourVector: (t[s], q=(r[m], theta[deg], phi[deg]))
         [1 3 1 2]>
@@ -108,7 +108,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.x
         Quantity(Array(1, dtype=int32), unit='m')
 
@@ -126,7 +126,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w._norm2()
         Quantity(Array(8.987552e+10, dtype=float32), unit='km2')
 
@@ -143,7 +143,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.norm()
         Quantity(Array(299792.47+0.j, dtype=complex64), unit='km')
 
@@ -164,7 +164,7 @@ class FourVector(AbstractPos4D):
         >>> cx.FourVector.dimensions
         <property object at ...>
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.dimensions
         {'t': PhysicalType('time'),
          'q': {'x': PhysicalType('length'), 'y': PhysicalType('length'),
@@ -183,7 +183,7 @@ class FourVector(AbstractPos4D):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> w = cx.FourVector(t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> print(w)
         <FourVector: (t[s], q=(x[m], y[m], z[m]))
             [0.5 1.  2.  3. ]>

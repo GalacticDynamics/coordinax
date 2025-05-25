@@ -206,10 +206,10 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
     >>> vega_gcf_q = vega_gcf_q.vconvert(cx.vecs.CartesianPos3D)
     >>> vega_gcf_p = vega_gcf_p.vconvert(cx.vecs.CartesianVel3D, vega_gcf_q)
     >>> print(vega_gcf_q)
-    <CartesianPos3D: (x[pc], y[pc], z[pc])
+    <CartesianPos3D: (x, y, z) [pc]
         [-8112.898    21.799    29.01...]>
     >>> print(vega_gcf_p.uconvert({u.dimension("speed"): "km/s"}))
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [ 34.067 234.616 -28.76 ]>
 
     It matches!
@@ -232,9 +232,9 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     >>> newq, newp = frame_op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D: (x[pc], y[pc], z[pc])
+    <CartesianPos3D: (x, y, z) [pc]
         [-8121.972     0.       20.8  ]>
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [ 12.9  245.6    7.78]>
 
     """  # noqa: E501
@@ -353,9 +353,9 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
 
     >>> newq, newp = frame_op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D: (x[pc], y[pc], z[pc])
+    <CartesianPos3D: (x, y, z) [pc]
         [ -445.689 -7094.056 -3929.708]>
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [-113.868  122.047 -180.79 ]>
 
     """  # noqa: E501

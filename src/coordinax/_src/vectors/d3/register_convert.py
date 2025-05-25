@@ -27,14 +27,14 @@ def convert_pos3d_to_cart3d(pos: AbstractPos3D) -> CartesianPos3D:
 
     >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> print(convert(q, cx.vecs.CartesianPos3D))
-    <CartesianPos3D: (x[kpc], y[kpc], z[kpc])
+    <CartesianPos3D: (x, y, z) [kpc]
         [1 2 3]>
 
     >>> q = cx.vecs.CylindricalPos(rho=u.Quantity(1, "kpc"),
     ...                            phi=u.Quantity(0, "deg"),
     ...                            z=u.Quantity(3, "kpc"))
     >>> print(convert(q, cx.vecs.CartesianPos3D))
-    <CartesianPos3D: (x[kpc], y[kpc], z[kpc])
+    <CartesianPos3D: (x, y, z) [kpc]
         [1. 0. 3.]>
 
     """

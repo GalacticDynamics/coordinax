@@ -110,7 +110,7 @@ def vector(
     >>> space = cx.Space.from_({ 'length': u.Quantity([1, 2, 3], "m") })
     >>> print(space)
     Space({
-       'length': <CartesianPos3D: (x[m], y[m], z[m])
+       'length': <CartesianPos3D: (x, y, z) [m]
            [1 2 3]>
     })
 

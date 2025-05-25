@@ -35,7 +35,7 @@ def add_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D:
     >>> s = cx.SphericalPos(r=u.Quantity(1, "km"), theta=u.Quantity(90, "deg"),
     ...                     phi=u.Quantity(0, "deg"))
     >>> print(q + s)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [2. 2. 3.]>
 
     """
@@ -53,7 +53,7 @@ def add_pp(lhs: CartesianVel3D, rhs: CartesianVel3D, /) -> CartesianVel3D:
 
     >>> q = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> print(q + q)
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [2 4 6]>
 
     """
@@ -70,7 +70,7 @@ def add_aa(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
 
     >>> q = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> print(q + q)
-    <CartesianAcc3D: (x[km / s2], y[km / s2], z[km / s2])
+    <CartesianAcc3D: (x, y, z) [km / s2]
         [2 4 6]>
 
     """
@@ -151,11 +151,11 @@ def mul_p_arraylike_cart3d(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianP
     >>> v = cx.CartesianPos3D.from_([1, 2, 3], "km")
 
     >>> print(2 * v)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [2 4 6]>
 
     >>> print(jnp.multiply(2, v))
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [2 4 6]>
 
     """
@@ -180,7 +180,7 @@ def neg_p_cart3d_pos(obj: CartesianPos3D, /) -> CartesianPos3D:
     >>> import coordinax as cx
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> print(-q)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [-1 -2 -3]>
 
     """
@@ -196,7 +196,7 @@ def neg_p_genericcart3d(obj: Cartesian3D, /) -> Cartesian3D:
     >>> import coordinax as cx
     >>> q = cx.vecs.Cartesian3D.from_([1, 2, 3], "km")
     >>> print(-q)
-    <Cartesian3D: (x[km], y[km], z[km])
+    <Cartesian3D: (x, y, z) [km]
     [-1 -2 -3]>
 
     """
@@ -218,7 +218,7 @@ def sub_p_cart3d_pos(lhs: CartesianPos3D, rhs: AbstractPos, /) -> CartesianPos3D
     >>> s = cx.SphericalPos(r=u.Quantity(1, "km"), theta=u.Quantity(90, "deg"),
     ...                     phi=u.Quantity(0, "deg"))
     >>> print(q - s)
-    <CartesianPos3D: (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [0. 2. 3.]>
 
     """
@@ -235,7 +235,7 @@ def sub_p_v3_v3(lhs: CartesianVel3D, other: CartesianVel3D, /) -> CartesianVel3D
     >>> from coordinax import CartesianPos3D, CartesianVel3D
     >>> q = CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> print(q - q)
-    <CartesianVel3D: (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [0 0 0]>
 
     """
@@ -252,7 +252,7 @@ def sub_p_a3_a3(lhs: CartesianAcc3D, rhs: CartesianAcc3D, /) -> CartesianAcc3D:
 
     >>> q = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> print(q - q)
-    <CartesianAcc3D: (x[km / s2], y[km / s2], z[km / s2])
+    <CartesianAcc3D: (x, y, z) [km / s2]
         [0 0 0]>
 
     """

@@ -1483,7 +1483,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> Cartesian3D:
     >>> import coordinax.vecs as cxv
     >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "km")
     >>> print(cxv.normalize_vector(q))
-    <Cartesian3D: (x[], y[], z[])
+    <Cartesian3D: (x, y, z) []
         [0.267 0.535 0.802]>
 
     """
