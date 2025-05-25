@@ -169,6 +169,7 @@ class AbstractVector(
         >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "m"))
         >>> print(q_ps)
         <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
+         Delta=Quantity(1.5, unit='m')
             [14.89   1.36   1.107]>
 
         >>> print((q_ps.vconvert(cxv.CartesianPos3D) - q_cart).round(3))
@@ -1114,27 +1115,68 @@ class AbstractVector(
                 self, short_arrays=short_arrays, **kwargs
             )
 
-        cls_name = type(self).__name__
-        units_ = self.units
+        # -----------------------------
+
+        cls_name = wl.TextDoc(self.__class__.__name__)
+
         # make the components string
+        units_ = self.units
         if len(set(units_.values())) == 1:
-            comps = ", ".join(self.components)
-            comps = f"({comps}) [{units_[self.components[0]]}]"
+            cdocs = [wl.TextDoc(f"{c}") for c in self.components]
+            end = wl.TextDoc(f") [{units_[self.components[0]]}]")
         else:
-            comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
-            comps = f"({comps})"
+            cdocs = [wl.TextDoc(f"{c}[{units_[c]}]") for c in self.components]
+            end = wl.TextDoc(")")
+        comps_doc = wl.bracketed(
+            begin=wl.TextDoc("("), docs=cdocs, sep=wl.comma, end=end, indent=4
+        )
+
+        # make the aux fields string
+        if not self._AUX_FIELDS:
+            aux_doc = wl.TextDoc("")
+        else:
+            aux_doc = (
+                wl.TextDoc("\n")  # force a line break
+                + wl.bracketed(
+                    begin=wl.TextDoc(" "),  # indent to opening "<"
+                    docs=wl.named_objs(
+                        [(k, getattr(self, k)) for k in self._AUX_FIELDS],
+                        short_arrays=False,
+                        compact_arrays=True,
+                        **kwargs,
+                    ),
+                    sep=wl.comma,
+                    end=wl.TextDoc(""),  # no end bracket
+                    indent=1,
+                )
+            )
 
         # make the values string
-        # TODO: add the VectorAttr, which are filtered out.
-        fvals = field_values(AttrFilter, self)
-        fvstack = jnp.stack(
-            tuple(map(u.ustrip, jnp.broadcast_arrays(*fvals))),
-            axis=-1,
+        # TODO: avoid casting to numpy arrays
+        fvals = tuple(
+            map(u.ustrip, jnp.broadcast_arrays(*field_values(AttrFilter, self)))
         )
-        precision = kwargs.pop("precision", 3)
-        vs = np.array2string(np.array(fvstack), precision=precision, prefix="    ")
-        # return the string
-        return wl.TextDoc(f"<{cls_name}: {comps}\n    {vs}>")
+        fvs = np.array2string(
+            np.stack(fvals, axis=-1),
+            precision=kwargs.pop("precision", 3),
+            threshold=kwargs.pop("threshold", 1000),
+            suffix=">",
+        )
+        vs_doc = wl.TextDoc(fvs).nest(4)
+
+        # TODO: figure out how to avoid the hacky line breaks
+        return (
+            (  # header
+                (wl.TextDoc("<") + cls_name + wl.TextDoc(":")).group()
+                + wl.BreakDoc(" ")
+                + comps_doc
+            ).group()
+            + aux_doc.group()  # aux fields
+            + wl.TextDoc("\n")  # force a line break
+            + (  # values (including end >)
+                wl.TextDoc("    ") + vs_doc + wl.TextDoc(">")
+            ).group()
+        )
 
     # ===============================================================
     # Python API
@@ -1192,6 +1234,7 @@ class AbstractVector(
         >>> vec2 = vec1.vconvert(cx.vecs.ProlateSpheroidalPos, Delta=u.Quantity(1, "m"))
         >>> print(str(vec2))
         <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
+         Delta=Quantity(1, unit='m')
             [14.374  0.626  1.107]>
 
         """

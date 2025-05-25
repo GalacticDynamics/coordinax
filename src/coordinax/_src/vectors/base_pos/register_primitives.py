@@ -38,6 +38,7 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     >>> px2 = px + px
     >>> print(px2)
     <ProlateSpheroidalPos: (mu[kpc2], nu[kpc2], phi[rad])
+     Delta=Quantity(2.0, unit='kpc')
         [57.495  2.505  1.107]>
 
     >>> print(px2.vconvert(cxv.CartesianPos3D))
@@ -361,6 +362,7 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     >>> px2 = px - px
     >>> print(px2)
     <ProlateSpheroidalPos: (mu[kpc2], nu[kpc2], phi[rad])
+      Delta=Quantity(2.0, unit='kpc')
         [4. 0. 0.]>
 
     >>> print(px2.vconvert(cxv.CartesianPos3D))

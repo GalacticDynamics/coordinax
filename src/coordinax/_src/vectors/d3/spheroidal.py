@@ -54,6 +54,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     ... )
     >>> print(vec)
     <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
+     Delta=Quantity(1.5, unit='km')
         [3.   0.5  0.25]>
 
     This fails with a zero or negative Delta:
@@ -90,6 +91,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     >>> vec2 = sph.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "km"))
     >>> print(vec2.round(3))
     <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
+     Delta=Quantity(1.5, unit='km')
         [3.   0.5  0.25]>
 
     >>> print((vec2 - vec).vconvert(cxv.CartesianPos3D))
