@@ -224,7 +224,7 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
     >>> v4 = cx.FourVector.from_([0, 0, 0, 0], "m")
     >>> newv4 = op(v4)
     >>> print(newv4)
-    <FourVector: (t[m s / km], q=(x[m], y[m], z[m]))
+    <FourVector: (t[m s / km], q=(x, y, z) [m])
         [0. 0. 0. 0.]>
 
     """

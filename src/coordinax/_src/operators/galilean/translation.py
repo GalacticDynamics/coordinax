@@ -75,7 +75,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> print(op(w))
-    <FourVector: (t[s], q=(x[km], y[km], z[km]))
+    <FourVector: (t[s], q=(x, y, z) [km])
         [ 3.156e+16  1.000e+00  0.000e+00 -4.371e-08]>
 
     Also to `vector.AbstractPos3D` and `unxt.Quantity`:

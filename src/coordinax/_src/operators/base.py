@@ -129,7 +129,7 @@ class AbstractOperator(eqx.Module):
             rotation=GalileanRotation([[1. 0. 1.]
                 [0. 1. 0.]
                 [0. 0. 1.]]),
-            translation=GalileanTranslation(<FourVector: (t[s], q=(x[km], y[km], z[km]))
+            translation=GalileanTranslation(<FourVector: (t[s], q=(x, y, z) [km])
                     [0. 2. 3. 4.]>),
             velocity=GalileanBoost(<CartesianVel3D: (x, y, z) [km / s]
                     [1. 2. 3.]>)
@@ -227,7 +227,7 @@ def from_(
 
     >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
     >>> print(op.translation)
-    <FourVector: (t[s], q=(x[km], y[km], z[km]))
+    <FourVector: (t[s], q=(x, y, z) [km])
         [1.001 1.    1.    1.   ]>
 
     >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")

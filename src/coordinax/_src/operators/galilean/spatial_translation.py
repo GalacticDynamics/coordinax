@@ -328,7 +328,7 @@ def call(self: GalileanSpatialTranslation, v4: FourVector, /, **__: Any) -> Abst
     >>> v4 = cx.FourVector.from_([0, 1, 2, 3], "km")
     >>> newv4 = op(v4)
     >>> print(newv4)
-    <FourVector: (t[s], q=(x[km], y[km], z[km]))
+    <FourVector: (t[s], q=(x, y, z) [km])
         [0. 2. 3. 4.]>
 
     """

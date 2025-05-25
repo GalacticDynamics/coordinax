@@ -1089,13 +1089,20 @@ class AbstractVector(
     # ===============================================================
     # Wadler-Lindig
 
-    def __pdoc__(
-        self,
-        *,
-        vector_form: bool = False,
-        short_arrays: bool = True,
-        **kwargs: Any,
-    ) -> wl.AbstractDoc:
+    def _pdoc_comps(self) -> wl.AbstractDoc:
+        # make the components string
+        units_ = self.units
+        if len(set(units_.values())) == 1:
+            cdocs = [wl.TextDoc(f"{c}") for c in self.components]
+            end = wl.TextDoc(f") [{units_[self.components[0]]}]")
+        else:
+            cdocs = [wl.TextDoc(f"{c}[{units_[c]}]") for c in self.components]
+            end = wl.TextDoc(")")
+        return wl.bracketed(
+            begin=wl.TextDoc("("), docs=cdocs, sep=wl.comma, end=end, indent=4
+        )
+
+    def __pdoc__(self, *, vector_form: bool = False, **kwargs: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig docstring for the vector.
 
         Parameters
@@ -1111,25 +1118,14 @@ class AbstractVector(
         """
         if not vector_form:
             # TODO: not use private API.
-            return wl._definitions._pformat_dataclass(
-                self, short_arrays=short_arrays, **kwargs
-            )
+            return wl._definitions._pformat_dataclass(self, **kwargs)
 
         # -----------------------------
 
         cls_name = wl.TextDoc(self.__class__.__name__)
 
         # make the components string
-        units_ = self.units
-        if len(set(units_.values())) == 1:
-            cdocs = [wl.TextDoc(f"{c}") for c in self.components]
-            end = wl.TextDoc(f") [{units_[self.components[0]]}]")
-        else:
-            cdocs = [wl.TextDoc(f"{c}[{units_[c]}]") for c in self.components]
-            end = wl.TextDoc(")")
-        comps_doc = wl.bracketed(
-            begin=wl.TextDoc("("), docs=cdocs, sep=wl.comma, end=end, indent=4
-        )
+        comps_doc = self._pdoc_comps()
 
         # make the aux fields string
         if not self._AUX_FIELDS:
@@ -1141,9 +1137,7 @@ class AbstractVector(
                     begin=wl.TextDoc(" "),  # indent to opening "<"
                     docs=wl.named_objs(
                         [(k, getattr(self, k)) for k in self._AUX_FIELDS],
-                        short_arrays=False,
-                        compact_arrays=True,
-                        **kwargs,
+                        **kwargs | {"short_arrays": False, "compact_arrays": True},
                     ),
                     sep=wl.comma,
                     end=wl.TextDoc(""),  # no end bracket

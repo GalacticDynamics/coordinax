@@ -588,13 +588,13 @@ def vector(
     >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
     >>> vec = cx.FourVector.from_(xs)
     >>> print(vec)
-    <FourVector: (t[m s / km], q=(x[m], y[m], z[m]))
+    <FourVector: (t[m s / km], q=(x, y, z) [m])
         [0. 1. 2. 3.]>
 
     >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
     >>> vec = cx.FourVector.from_(xs)
     >>> print(vec)
-    <FourVector: (t[m s / km], q=(x[m], y[m], z[m]))
+    <FourVector: (t[m s / km], q=(x, y, z) [m])
         [[0.000e+00 1.000e+00 2.000e+00 3.000e+00]
          [3.336e-05 4.000e+00 5.000e+00 6.000e+00]]>
 

@@ -11,6 +11,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
+import wadler_lindig as wl
 from jaxtyping import Shaped
 
 import quaxed.numpy as jnp
@@ -52,7 +53,7 @@ class FourVector(AbstractPos4D):
 
     >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(w)
-    <FourVector: (t[s], q=(x[m], y[m], z[m]))
+    <FourVector: (t[s], q=(x, y, z) [m])
         [1 1 2 3]>
 
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
@@ -173,11 +174,12 @@ class FourVector(AbstractPos4D):
         """
         return {"t": dims.T, "q": self.q.dimensions}
 
-    # -------------------------------------------
-    # misc
+    # ===============================================================
+    # Wadler-Lindig
 
-    def __str__(self) -> str:
-        r"""Return a string representation of the spacetime vector.
+    @override
+    def __pdoc__(self, *, vector_form: bool = False, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig docstring for the vector.
 
         Examples
         --------
@@ -185,13 +187,25 @@ class FourVector(AbstractPos4D):
         >>> import coordinax as cx
         >>> w = cx.FourVector (t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> print(w)
-        <FourVector: (t[s], q=(x[m], y[m], z[m]))
+        <FourVector: (t[s], q=(x, y, z) [m])
             [0.5 1.  2.  3. ]>
 
         """
-        cls_name = type(self).__name__
-        qcomps = ", ".join(f"{c}[{self.q.units[c]}]" for c in self.q.components)
-        comps = f"t[{self.units['t']}], q=({qcomps})"
+        if not vector_form:
+            return super().__pdoc__(vector_form=vector_form, **kwargs)
+
+        cls_name = wl.TextDoc(self.__class__.__name__)
+
+        # make the components string
+        comps_doc = (
+            wl.TextDoc("(")
+            + wl.TextDoc(f"t[{self.units['t']}]")
+            + wl.comma
+            + wl.TextDoc("q=")
+            + self.q._pdoc_comps()
+            + wl.TextDoc(")")
+        ).group()
+
         vs = np.array2string(  # type: ignore[call-overload]  # TODO: use other method
             jnp.stack(
                 tuple(
@@ -204,6 +218,12 @@ class FourVector(AbstractPos4D):
                 axis=-1,
             ),
             precision=3,
-            prefix="    ",
+            suffix=">",
         )
-        return f"<{cls_name}: ({comps})\n    {vs}>"
+        return (
+            (wl.TextDoc("<") + cls_name + wl.TextDoc(":")).group()
+            + wl.BreakDoc(" ")
+            + comps_doc
+            + wl.TextDoc("\n")  # force a line break
+            + (wl.TextDoc("    ") + wl.TextDoc(vs).nest(4) + wl.TextDoc(">")).group()
+        )
