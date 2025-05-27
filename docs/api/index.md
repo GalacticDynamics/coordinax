@@ -1,14 +1,15 @@
 # `coordinax` library
 
+## API Submodules
+
 ```{toctree}
 :maxdepth: 1
-:caption: API submodules
 :glob:
 
 *
 ```
 
----
+## API Reference
 
 ```{eval-rst}
 
