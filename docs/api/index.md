@@ -15,6 +15,7 @@
 .. currentmodule:: coordinax
 
 .. automodule:: coordinax
+    :exclude-members: aval, default, materialise, enable_materialise
     :noindex:
 
 ```

@@ -1,7 +1,4 @@
-"""Copyright (c) 2023 Nathaniel Starkman. All rights reserved.
-
-coordinax: Vectors in JAX
-"""
+"""coordinax: Coordinates in JAX."""
 # pylint: disable=import-error
 
 from jaxtyping import install_import_hook

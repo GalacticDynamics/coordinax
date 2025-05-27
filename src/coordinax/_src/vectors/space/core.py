@@ -5,7 +5,7 @@ __all__ = ["Space"]
 import math
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
 from textwrap import indent
-from typing import Any, final
+from typing import TYPE_CHECKING, Any, final
 
 import equinox as eqx
 import jax
@@ -21,6 +21,9 @@ from .base import AbstractVectors
 from .utils import DimensionLike, _get_dimension_name, can_broadcast_shapes
 from coordinax._src.vectors.api import vector
 from coordinax._src.vectors.base import AbstractVector
+
+if TYPE_CHECKING:
+    from typing import Self
 
 
 # TODO: figure out how to make the keys into Dimension objects, not str. This is
