@@ -1,7 +1,12 @@
 """Base classes for angular quantities."""
 
-__all__: list[str] = []
+__all__: list[str] = [
+    "AbstractAngle",
+    "wrap_to",
+]
 
+
+from dataclasses import replace
 
 import equinox as eqx
 from jaxtyping import Array, Shaped
@@ -50,6 +55,28 @@ class AbstractAngle(u.AbstractQuantity):  # type: ignore[misc]
             msg = f"{type(self).__name__} must have units with angular dimensions."
             raise ValueError(msg)
 
+    def wrap_to(
+        self, /, min: u.AbstractQuantity, max: u.AbstractQuantity
+    ) -> "AbstractAngle":
+        """Wrap the angle to the range [min, max).
+
+        Parameters
+        ----------
+        min, max
+            The minimum, maximum value of the range.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> from coordinax.angle import Angle
+
+        >>> angle = Angle(370, "deg")
+        >>> angle.wrap_to(min=u.Quantity(0, "deg"), max=u.Quantity(360, "deg"))
+        Angle(Array(10, dtype=int32, ...), unit='deg')
+
+        """
+        return wrap_to(self, min=min, max=max)
+
 
 # Add a rule that when a AbstractAngle interacts with a Quantity, the
 # angle degrades to a Quantity. This is necessary for many operations, e.g.
@@ -57,3 +84,36 @@ class AbstractAngle(u.AbstractQuantity):  # type: ignore[misc]
 # are not those of an angle.
 add_promotion_rule(AbstractAngle, u.Quantity, u.Quantity)
 add_promotion_rule(AbstractAngle, u.quantity.BareQuantity, u.quantity.BareQuantity)
+
+
+# =========================================================
+
+
+def wrap_to(
+    angle: AbstractAngle,
+    /,
+    min: u.AbstractQuantity,
+    max: u.AbstractQuantity,
+) -> AbstractAngle:
+    """Wrap the angle to the range [min, max).
+
+    Parameters
+    ----------
+    angle
+        The angle to wrap.
+    min, max
+        The minimum, maximum value of the range.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> from coordinax.angle import Angle, wrap_to
+
+    >>> angle = Angle(370, "deg")
+    >>> wrap_to(angle, min=u.Quantity(0, "deg"), max=u.Quantity(360, "deg"))
+    Angle(Array(10, dtype=int32, ...), unit='deg')
+
+    """
+    minv, maxv = min.ustrip(angle.unit), max.ustrip(angle.unit)
+    value = ((angle.value - minv) % (maxv - minv)) + minv
+    return replace(angle, value=value)
