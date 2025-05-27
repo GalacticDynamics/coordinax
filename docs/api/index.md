@@ -5,11 +5,6 @@
 :caption: API submodules
 :glob:
 
-angle.md
-distance.md
-vecs.md
-ops.md
-frames.md
 *
 ```
 

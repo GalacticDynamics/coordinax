@@ -207,7 +207,7 @@ from various input formats, such as lists, tuples, or NumPy arrays. Direct
 construction is also possible:
 
 ```{code-block} python
->>> q = cxv.CartesianPos3D(u.Quantity(1, "kpc"), u.Quantity(2, "kpc"), u.Quantity(3, "kpc"))
+>>> q = cxv.CartesianPos3D(x=u.Quantity(1, "kpc"), y=u.Quantity(2, "kpc"), z=u.Quantity(3, "kpc"))
 >>> print(q)
 <CartesianPos3D: (x, y, z) [kpc]
     [1 2 3]>
