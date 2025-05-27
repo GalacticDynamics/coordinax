@@ -36,7 +36,7 @@ def fields(flag: type[AttrFilter], obj: object) -> tuple[Field, ...]:  # type: i
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> [f.name for f in fields(cx.vecs.AttrFilter, w)]
     ['t', 'q']
 
@@ -89,7 +89,7 @@ def asdict(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> asdict(cx.vecs.AttrFilter, w).keys()
     dict_keys(['t', 'q'])
 
@@ -115,7 +115,7 @@ def field_keys(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[str, ...
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> field_keys(cx.vecs.AttrFilter, w)
     ('t', 'q')
 
@@ -158,7 +158,7 @@ def field_values(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[Any, .
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> field_keys(cx.vecs.AttrFilter, w)
     ('t', 'q')
 
@@ -184,7 +184,7 @@ def field_items(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> [(f[0], type(f[1]).__name__) for f in field_items(cx.vecs.AttrFilter, w)]
     [('t', "Quantity[PhysicalType('time')]"), ('q', 'CartesianPos3D')]
 

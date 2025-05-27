@@ -264,12 +264,12 @@ def vconvert(
     >>> p = cxv.CartesianVel1D.from_(1.0, "km/s")
     >>> newp = cxv.vconvert(cxv.RadialVel, p, q)
     >>> print(newp)
-    <RadialVel (r[km / s])
+    <RadialVel: (r) [km / s]
         [1.]>
 
     >>> a = cxv.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
     >>> print(cxv.vconvert(cxv.RadialAcc, a, p, q))
-    <RadialAcc (r[km / s2])
+    <RadialAcc: (r) [km / s2]
         [1.]>
 
     Now in 2D:
@@ -278,12 +278,12 @@ def vconvert(
     >>> p = cxv.CartesianVel2D.from_([1.0, 2.0], "km/s")
     >>> newp = cxv.vconvert(cxv.PolarVel, p, q)
     >>> print(newp)
-    <PolarVel (r[km / s], phi[rad / s])
+    <PolarVel: (r[km / s], phi[rad / s])
         [2.236 0.   ]>
 
     >>> a = cxv.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
     >>> print(cxv.vconvert(cxv.PolarAcc, a, p, q))
-    <PolarAcc (r[km / s2], phi[rad / s2])
+    <PolarAcc: (r[km / s2], phi[rad / s2])
         [2.236 0.   ]>
 
     And in 3D:
@@ -292,12 +292,12 @@ def vconvert(
     >>> p = cxv.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> newp = cxv.vconvert(cxv.SphericalVel, p, q)
     >>> print(newp.round(2))
-    <SphericalVel (r[km / s], theta[rad / s], phi[rad / s])
+    <SphericalVel: (r[km / s], theta[rad / s], phi[rad / s])
         [ 3.74 -0.    0.  ]>
 
     >>> a = cxv.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> print(cxv.vconvert(cxv.SphericalAcc, a, p, q).round(2))
-    <SphericalAcc (r[km / s2], theta[rad / s2], phi[rad / s2])
+    <SphericalAcc: (r[km / s2], theta[rad / s2], phi[rad / s2])
         [ 3.74 -0.    0.  ]>
 
     """
@@ -421,7 +421,7 @@ def vconvert(
     >>> p = cxv.CartesianVel1D(x=u.Quantity(1.0, "km/s"))
     >>> a = cxv.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
     >>> print(cxv.vconvert(cxv.RadialAcc, a, p, q))
-    <RadialAcc (r[km / s2])
+    <RadialAcc: (r) [km / s2]
         [1.]>
 
     Now in 2D:
@@ -430,7 +430,7 @@ def vconvert(
     >>> p = cxv.CartesianVel2D.from_([1.0, 2.0], "km/s")
     >>> a = cxv.CartesianAcc2D.from_([1.0, 2.0], "km/s2")
     >>> print(cxv.vconvert(cxv.PolarAcc, a, p, q))
-    <PolarAcc (r[km / s2], phi[rad / s2])
+    <PolarAcc: (r[km / s2], phi[rad / s2])
         [2.236 0.   ]>
 
     And in 3D:
@@ -439,7 +439,7 @@ def vconvert(
     >>> p = cxv.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> a = cxv.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> print(cxv.vconvert(cxv.SphericalAcc, a, p, q).round(2))
-    <SphericalAcc (r[km / s2], theta[rad / s2], phi[rad / s2])
+    <SphericalAcc: (r[km / s2], theta[rad / s2], phi[rad / s2])
         [ 3.74 -0.    0.  ]>
 
     """

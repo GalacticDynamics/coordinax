@@ -31,7 +31,7 @@ class CartesianPos2D(AbstractCartesian, AbstractPos2D):
 
     >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
     >>> print(vec)
-    <CartesianPos2D (x[m], y[m])
+    <CartesianPos2D: (x, y) [m]
         [1 2]>
 
     """
@@ -53,7 +53,7 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
 
     >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
     >>> print(vec)
-    <CartesianVel2D (x[m / s], y[m / s])
+    <CartesianVel2D: (x, y) [m / s]
         [1 2]>
 
     """
@@ -89,7 +89,7 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
 
     >>> vec = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
     >>> print(vec)
-    <CartesianAcc2D (x[m / s2], y[m / s2])
+    <CartesianAcc2D: (x, y) [m / s2]
         [1 2]>
 
     """

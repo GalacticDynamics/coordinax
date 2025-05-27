@@ -48,11 +48,11 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
     >>> space = cx.Space(length=x, speed=v, acceleration=a)
     >>> print(space)
     Space({
-       'length': <CartesianPos3D (x[km], y[km], z[km])
+       'length': <CartesianPos3D: (x, y, z) [km]
            [1 2 3]>,
-       'speed': <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+       'speed': <CartesianVel3D: (x, y, z) [km / s]
            [4 5 6]>,
-       'acceleration': <CartesianAcc3D (x[km / s2], y[km / s2], z[km / s2])
+       'acceleration': <CartesianAcc3D: (x, y, z) [km / s2]
            [7 8 9]>
     })
 
@@ -64,10 +64,10 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
     ...     speed=u.Quantity([0, 200, 0], "km/s"))
     >>> print(w)
     Space({
-       'length': <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+       'length': <CartesianPos3D: (x, y, z) [kpc]
            [[ 8.5  0.   0. ]
             [10.   0.   0. ]]>,
-       'speed': <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+       'speed': <CartesianVel3D: (x, y, z) [km / s]
            [  0 200   0]>
     })
 
@@ -119,9 +119,9 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
     ...                         "speed": u.Quantity([4, 5, 6], "km/s")})
     >>> print(space)
     Space({
-       'length': <CartesianPos3D (x[km], y[km], z[km])
+       'length': <CartesianPos3D: (x, y, z) [km]
            [1 2 3]>,
-       'speed': <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+       'speed': <CartesianVel3D: (x, y, z) [km / s]
            [4 5 6]>
     })
 
@@ -269,7 +269,7 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         By string key (which is the dimension name):
 
         >>> print(w["length"])
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [[[1 2 3]
             [4 5 6]]]>
 
@@ -277,7 +277,7 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
 
         >>> import unxt as u
         >>> print(w[u.dimension("length")])
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [[[1 2 3]
             [4 5 6]]]>
 
@@ -413,9 +413,9 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         >>> w = cx.Space(length=q, speed=p)
         >>> print(w)
         Space({
-            'length': <CartesianPos3D (x[m], y[m], z[m])
+            'length': <CartesianPos3D: (x, y, z) [m]
                 [1 2 3]>,
-            'speed': <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+            'speed': <CartesianVel3D: (x, y, z) [m / s]
                 [4 5 6]>
         })
 

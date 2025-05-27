@@ -96,7 +96,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> new.t.ustrip("Gyr").round(2)
     Array(2.5, dtype=float32, ...)
     >>> print(new.q)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [7.889e+16 1.578e+17 2.367e+17]>
 
     Also the Galilean operators can also be applied to `vector.AbstractPos3D`
@@ -106,7 +106,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> t = u.Quantity(0, "s")
     >>> newt, newq = op(t, q)
     >>> print(newq)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [7.889e+16 1.578e+17 2.367e+17]>
 
     >>> newt

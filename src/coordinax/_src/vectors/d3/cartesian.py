@@ -33,7 +33,7 @@ class CartesianPos3D(AbstractCartesian, AbstractPos3D):
 
     >>> vec = cx.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> print(vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
     """
@@ -58,7 +58,7 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
 
     >>> vec = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
     >>> print(vec)
-    <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+    <CartesianVel3D: (x, y, z) [m / s]
         [1 2 3]>
 
     """

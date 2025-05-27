@@ -32,13 +32,13 @@ def vector(cls: type[FourVector], obj: u.AbstractQuantity, /) -> FourVector:
     >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
     >>> vec = cx.FourVector.from_(xs)
     >>> print(vec)
-    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+    <FourVector: (t[m s / km], q=(x, y, z) [m])
         [0. 1. 2. 3.]>
 
     >>> xs = u.Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
     >>> vec = cx.FourVector.from_(xs)
     >>> print(vec)
-    <FourVector (t[m s / km], q=(x[m], y[m], z[m]))
+    <FourVector: (t[m s / km], q=(x, y, z) [m])
         [[0.000e+00 1.000e+00 2.000e+00 3.000e+00]
          [3.336e-05 4.000e+00 5.000e+00 6.000e+00]]>
 
@@ -66,9 +66,9 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(cx.vconvert(cx.vecs.CylindricalPos, w))
-    <FourVector (t[s], q=(rho[m], phi[rad], z[m]))
+    <FourVector: (t[s], q=(rho[m], phi[rad], z[m]))
         [1.    2.236 1.107 3.   ]>
 
     """
@@ -88,9 +88,9 @@ def spatial_component(x: FourVector, /) -> AbstractPos3D:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(spatial_component(w))
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
     """

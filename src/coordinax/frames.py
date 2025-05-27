@@ -20,7 +20,7 @@ Let's transform a position from the base frame to the transformed frame:
 >>> q_icrs = cx.CartesianPos3D.from_([1, 0, 0], "kpc")
 >>> q_frame = op(q_icrs)
 >>> print(q_frame)
-<CartesianPos3D (x[kpc], y[kpc], z[kpc])
+<CartesianPos3D: (x, y, z) [kpc]
     [ 0. -1.  0.]>
 
 >>> op.inverse(q_frame) == q_icrs
@@ -31,9 +31,9 @@ This can also transform a velocity:
 >>> v_icrs = cx.CartesianVel3D.from_([1, 0, 0], "km/s")
 >>> q_frame, v_frame = op(q_icrs, v_icrs)
 >>> print(q_frame, v_frame, sep="\n")
-<CartesianPos3D (x[kpc], y[kpc], z[kpc])
+<CartesianPos3D: (x, y, z) [kpc]
     [ 0. -1.  0.]>
-<CartesianVel3D (x[km / s], y[km / s], z[km / s])
+<CartesianVel3D: (x, y, z) [km / s]
     [ 0. -1.  0.]>
 
 >>> op.inverse(q_frame, v_frame) == (q_icrs, v_icrs)

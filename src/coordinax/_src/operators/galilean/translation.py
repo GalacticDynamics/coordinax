@@ -75,7 +75,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
     >>> print(op(w))
-    <FourVector (t[s], q=(x[km], y[km], z[km]))
+    <FourVector: (t[s], q=(x, y, z) [km])
         [ 3.156e+16  1.000e+00  0.000e+00 -4.371e-08]>
 
     Also to `vector.AbstractPos3D` and `unxt.Quantity`:
@@ -127,7 +127,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
-        >>> shift = FourVector(u.Quantity(1, "Gyr"), qshift)
+        >>> shift = FourVector (u.Quantity(1, "Gyr"), qshift)
         >>> op = cx.ops.GalileanTranslation(shift)
 
         >>> op.inverse
@@ -156,7 +156,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         Explicitly construct the translation operator:
 
         >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
-        >>> shift = FourVector(u.Quantity(1, "Gyr"), qshift)
+        >>> shift = FourVector (u.Quantity(1, "Gyr"), qshift)
         >>> op = cx.ops.GalileanTranslation(shift)
 
         Construct a vector to translate, using the convenience from_ (the
@@ -198,7 +198,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
         >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
         >>> tshift = u.Quantity(1, "Gyr")
-        >>> shift = cx.FourVector(tshift, qshift)
+        >>> shift = cx.FourVector (tshift, qshift)
         >>> op = cx.ops.GalileanTranslation(shift)
 
         Construct a vector to translate
@@ -274,11 +274,11 @@ def simplify_op(
 
     >>> qshift = cx.CartesianPos3D.from_([1, 0, 0], "km")
     >>> tshift = u.Quantity(1, "Gyr")
-    >>> op1 = cx.ops.GalileanTranslation(FourVector(tshift, qshift))
+    >>> op1 = cx.ops.GalileanTranslation(FourVector (tshift, qshift))
 
     >>> qshift = cx.CartesianPos3D.from_([0, 1, 0], "km")
     >>> tshift = u.Quantity(1, "Gyr")
-    >>> op2 = cx.ops.GalileanTranslation(FourVector(tshift, qshift))
+    >>> op2 = cx.ops.GalileanTranslation(FourVector (tshift, qshift))
 
     >>> op3 = cx.ops.simplify_op(op1, op2)
     >>> op3

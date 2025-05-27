@@ -163,16 +163,17 @@ class AbstractVector(
 
         >>> q_sph = q_cart.vconvert(cxv.SphericalPos)
         >>> print(q_sph)
-        <SphericalPos (r[m], theta[rad], phi[rad])
+        <SphericalPos: (r[m], theta[rad], phi[rad])
             [3.742 0.641 1.107]>
 
         >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "m"))
         >>> print(q_ps)
-        <ProlateSpheroidalPos (mu[m2], nu[m2], phi[rad])
+        <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
+         Delta=Quantity(1.5, unit='m')
             [14.89   1.36   1.107]>
 
         >>> print((q_ps.vconvert(cxv.CartesianPos3D) - q_cart).round(3))
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [-0.  0.  0.]>
 
         Transforming a Velocity:
@@ -180,7 +181,7 @@ class AbstractVector(
         >>> v_cart = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
         >>> v_sph = v_cart.vconvert(cxv.SphericalVel, q_cart)
         >>> print(v_sph)
-        <SphericalVel (r[m / s], theta[rad / s], phi[rad / s])
+        <SphericalVel: (r[m / s], theta[rad / s], phi[rad / s])
             [ 3.742e+00 -8.941e-08  0.000e+00]>
 
         Transforming an Acceleration:
@@ -188,7 +189,7 @@ class AbstractVector(
         >>> a_cart = cxv.CartesianAcc3D.from_([7, 8, 9], "m/s2")
         >>> a_sph = a_cart.vconvert(cxv.SphericalAcc, v_cart, q_cart)
         >>> print(a_sph)
-        <SphericalAcc (r[m / s2], theta[rad / s2], phi[rad / s2])
+        <SphericalAcc: (r[m / s2], theta[rad / s2], phi[rad / s2])
             [13.363  0.767 -1.2  ]>
 
         """
@@ -249,7 +250,7 @@ class AbstractVector(
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
         >>> newvec = vec.uconvert(usys)
         >>> print(newvec)
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [1000. 2000. 3000.]>
 
         """
@@ -676,7 +677,7 @@ class AbstractVector(
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> print(vec.copy())
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [1 2 3]>
 
         """
@@ -1088,13 +1089,20 @@ class AbstractVector(
     # ===============================================================
     # Wadler-Lindig
 
-    def __pdoc__(
-        self,
-        *,
-        vector_form: bool = False,
-        short_arrays: bool = True,
-        **kwargs: Any,
-    ) -> wl.AbstractDoc:
+    def _pdoc_comps(self) -> wl.AbstractDoc:
+        # make the components string
+        units_ = self.units
+        if len(set(units_.values())) == 1:
+            cdocs = [wl.TextDoc(f"{c}") for c in self.components]
+            end = wl.TextDoc(f") [{units_[self.components[0]]}]")
+        else:
+            cdocs = [wl.TextDoc(f"{c}[{units_[c]}]") for c in self.components]
+            end = wl.TextDoc(")")
+        return wl.bracketed(
+            begin=wl.TextDoc("("), docs=cdocs, sep=wl.comma, end=end, indent=4
+        )
+
+    def __pdoc__(self, *, vector_form: bool = False, **kwargs: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig docstring for the vector.
 
         Parameters
@@ -1110,12 +1118,59 @@ class AbstractVector(
         """
         if not vector_form:
             # TODO: not use private API.
-            return wl._definitions._pformat_dataclass(
-                self, short_arrays=short_arrays, **kwargs
+            return wl._definitions._pformat_dataclass(self, **kwargs)
+
+        # -----------------------------
+
+        cls_name = wl.TextDoc(self.__class__.__name__)
+
+        # make the components string
+        comps_doc = self._pdoc_comps()
+
+        # make the aux fields string
+        if not self._AUX_FIELDS:
+            aux_doc = wl.TextDoc("")
+        else:
+            aux_doc = (
+                wl.TextDoc("\n")  # force a line break
+                + wl.bracketed(
+                    begin=wl.TextDoc(" "),  # indent to opening "<"
+                    docs=wl.named_objs(
+                        [(k, getattr(self, k)) for k in self._AUX_FIELDS],
+                        **kwargs | {"short_arrays": False, "compact_arrays": True},
+                    ),
+                    sep=wl.comma,
+                    end=wl.TextDoc(""),  # no end bracket
+                    indent=1,
+                )
             )
 
-        msg = "`__pdoc__` is not implemented for vector form."
-        raise NotImplementedError(msg)
+        # make the values string
+        # TODO: avoid casting to numpy arrays
+        fvals = tuple(
+            map(u.ustrip, jnp.broadcast_arrays(*field_values(AttrFilter, self)))
+        )
+        fvs = np.array2string(
+            np.stack(fvals, axis=-1),
+            precision=kwargs.pop("precision", 3),
+            threshold=kwargs.pop("threshold", 1000),
+            suffix=">",
+        )
+        vs_doc = wl.TextDoc(fvs).nest(4)
+
+        # TODO: figure out how to avoid the hacky line breaks
+        return (
+            (  # header
+                (wl.TextDoc("<") + cls_name + wl.TextDoc(":")).group()
+                + wl.BreakDoc(" ")
+                + comps_doc
+            ).group()
+            + aux_doc.group()  # aux fields
+            + wl.TextDoc("\n")  # force a line break
+            + (  # values (including end >)
+                wl.TextDoc("    ") + vs_doc + wl.TextDoc(">")
+            ).group()
+        )
 
     # ===============================================================
     # Python API
@@ -1149,23 +1204,9 @@ class AbstractVector(
         representation of the vector.
 
         """
-        return wl.pformat(self, short_arrays=False, compact_arrays=True)
-
-    def _str_repr_(self, *, precision: int) -> str:  # TODO: with wadler-lindig
-        cls_name = type(self).__name__
-        units_ = self.units
-        # make the components string
-        comps = ", ".join(f"{c}[{units_[c]}]" for c in self.components)
-        # make the values string
-        # TODO: add the VectorAttr, which are filtered out.
-        fvals = field_values(AttrFilter, self)
-        fvstack = jnp.stack(
-            tuple(map(u.ustrip, jnp.broadcast_arrays(*fvals))),
-            axis=-1,
+        return wl.pformat(
+            self, vector_form=False, short_arrays=False, compact_arrays=True
         )
-        vs = np.array2string(np.array(fvstack), precision=precision, prefix="    ")
-        # return the string
-        return f"<{cls_name} ({comps})\n    {vs}>"
 
     def __str__(self) -> str:
         r"""Return a string representation of the vector.
@@ -1179,15 +1220,16 @@ class AbstractVector(
 
         >>> vec1 = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> print(str(vec1))
-        <CartesianPos3D (x[m], y[m], z[m])
+        <CartesianPos3D: (x, y, z) [m]
             [1 2 3]>
 
         Showing a vector with additional attributes
 
         >>> vec2 = vec1.vconvert(cx.vecs.ProlateSpheroidalPos, Delta=u.Quantity(1, "m"))
         >>> print(str(vec2))
-        <ProlateSpheroidalPos (mu[m2], nu[m2], phi[rad])
+        <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
+         Delta=Quantity(1, unit='m')
             [14.374  0.626  1.107]>
 
         """
-        return self._str_repr_(precision=3)
+        return wl.pformat(self, vector_form=True, precision=3)

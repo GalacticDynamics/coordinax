@@ -26,7 +26,7 @@ class RadialPos(AbstractPos1D):
 
     >>> vec = cx.vecs.RadialPos(u.Quantity([2], "m"))
     >>> print(vec)
-    <RadialPos (r[m])
+    <RadialPos: (r) [m]
         [[2]]>
 
     """
@@ -50,7 +50,7 @@ class RadialVel(AbstractVel1D):
 
     >>> vec = cx.vecs.RadialVel(u.Quantity([2], "m/s"))
     >>> print(vec)
-    <RadialVel (r[m / s])
+    <RadialVel: (r) [m / s]
         [[2]]>
 
     """
@@ -70,7 +70,7 @@ class RadialAcc(AbstractAcc1D):
 
     >>> vec = cx.vecs.RadialAcc(u.Quantity([2], "m/s2"))
     >>> print(vec)
-    <RadialAcc (r[m / s2])
+    <RadialAcc: (r) [m / s2]
         [[2]]>
 
     """

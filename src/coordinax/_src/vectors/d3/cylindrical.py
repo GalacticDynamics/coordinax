@@ -79,7 +79,7 @@ class CylindricalVel(AbstractVel3D):
     ...                              phi=u.Quantity(2, "deg/s"),
     ...                              z=u.Quantity(3, "km/s"))
     >>> print(vec)
-    <CylindricalVel (rho[km / s], phi[deg / s], z[km / s])
+    <CylindricalVel: (rho[km / s], phi[deg / s], z[km / s])
         [1 2 3]>
 
     """
@@ -107,7 +107,7 @@ class CylindricalAcc(AbstractAcc3D):
     ...                              phi=u.Quantity(2, "deg/s2"),
     ...                              z=u.Quantity(3, "km/s2"))
     >>> print(vec)
-    <CylindricalAcc (rho[km / s2], phi[deg / s2], z[km / s2])
+    <CylindricalAcc: (rho[km / s2], phi[deg / s2], z[km / s2])
         [1 2 3]>
 
     """

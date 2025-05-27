@@ -129,7 +129,7 @@ class AbstractCoordinate(AbstractVector):
         >>> print(coord)
         Coordinate(
             data=Space({
-            'length': <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+            'length': <CartesianPos3D: (x, y, z) [kpc]
                 [1 2 3]>
             }),
             frame=ICRS()
@@ -256,7 +256,7 @@ class Coordinate(AbstractCoordinate):
         >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
 
         >>> print(w[0].data["length"])
-        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        <CartesianPos3D: (x, y, z) [kpc]
             [1 2 3]>
 
         """
@@ -274,7 +274,7 @@ class Coordinate(AbstractCoordinate):
         >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
 
         >>> print(w["length"])
-        <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+        <CartesianPos3D: (x, y, z) [kpc]
             [[1 2 3]
              [4 5 6]]>
 

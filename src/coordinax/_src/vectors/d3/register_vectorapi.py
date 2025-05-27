@@ -143,7 +143,7 @@ def vector(
     ...                              theta=u.Quantity(90, "deg"),
     ...                              phi=u.Quantity(0, "deg"))
     >>> print(vec)
-    <SphericalPos (r[km], theta[deg], phi[deg])
+    <SphericalPos: (r[km], theta[deg], phi[deg])
         [ 3 90  0]>
 
     The radial distance can be negative, which wraps the azimuthal angle by 180
@@ -153,7 +153,7 @@ def vector(
     ...                              theta=u.Quantity(45, "deg"),
     ...                              phi=u.Quantity(0, "deg"))
     >>> print(vec)
-    <SphericalPos (r[km], theta[deg], phi[deg])
+    <SphericalPos: (r[km], theta[deg], phi[deg])
         [  3 135 180]>
 
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
@@ -163,7 +163,7 @@ def vector(
     ...                              theta=u.Quantity(190, "deg"),
     ...                              phi=u.Quantity(0, "deg"))
     >>> print(vec)
-    <SphericalPos (r[km], theta[deg], phi[deg])
+    <SphericalPos: (r[km], theta[deg], phi[deg])
         [  3 170 180]>
 
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
@@ -222,7 +222,7 @@ def vector(
     ...                                    lat=u.Quantity(0, "deg"),
     ...                                    distance=u.Quantity(3, "km"))
     >>> print(vec)
-    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+    <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [0 0 3]>
 
     The distance can be negative, which wraps the longitude by 180 degrees and
@@ -232,7 +232,7 @@ def vector(
     ...                                    lat=u.Quantity(45, "deg"),
     ...                                    distance=u.Quantity(-3, "km"))
     >>> print(vec)
-    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+    <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [180 -45   3]>
 
     The latitude can be outside the [-90, 90] deg range, causing the longitude
@@ -242,14 +242,14 @@ def vector(
     ...                                    lat=u.Quantity(-100, "deg"),
     ...                                    distance=u.Quantity(3, "km"))
     >>> print(vec)
-    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+    <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [180 -80   3]>
 
     >>> vec = cxv.LonLatSphericalPos.from_(lon=u.Quantity(0, "deg"),
     ...                                    lat=u.Quantity(100, "deg"),
     ...                                    distance=u.Quantity(3, "km"))
     >>> print(vec)
-    <LonLatSphericalPos (lon[deg], lat[deg], distance[km])
+    <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [180  80   3]>
 
     The longitude can be outside the [0, 360) deg range. This is wrapped to the
@@ -312,7 +312,7 @@ def vector(
     ...                                  theta=u.Quantity(90, "deg"),
     ...                                  phi=u.Quantity(0, "deg"))
     >>> print(vec)
-    <MathSphericalPos (r[km], theta[deg], phi[deg])
+    <MathSphericalPos: (r[km], theta[deg], phi[deg])
         [ 3 90  0]>
 
     The radial distance can be negative, which wraps the azimuthal angle by 180
@@ -322,7 +322,7 @@ def vector(
     ...                                  theta=u.Quantity(100, "deg"),
     ...                                  phi=u.Quantity(45, "deg"))
     >>> print(vec)
-    <MathSphericalPos (r[km], theta[deg], phi[deg])
+    <MathSphericalPos: (r[km], theta[deg], phi[deg])
         [  3 280 135]>
 
     The polar angle can be outside the [0, 180] deg range, causing the azimuthal
@@ -332,7 +332,7 @@ def vector(
     ...                                  theta=u.Quantity(0, "deg"),
     ...                                  phi=u.Quantity(190, "deg"))
     >>> print(vec)
-    <MathSphericalPos (r[km], theta[deg], phi[deg])
+    <MathSphericalPos: (r[km], theta[deg], phi[deg])
         [  3 180 170]>
 
     The azimuth can be outside the [0, 360) deg range. This is wrapped to the
@@ -788,7 +788,7 @@ def vconvert(
     >>> x = cxv.SphericalVel(**p)
     >>> y = cxv.vconvert(cxv.LonLatSphericalVel, x)
     >>> print(y)
-    <LonLatSphericalVel (lon[deg / s], lat[deg / s], distance[km / s])
+    <LonLatSphericalVel: (lon[deg / s], lat[deg / s], distance[km / s])
         [ 20 -10   1]>
 
     >>> p = {"r": u.Quantity(1, "km/s2"),
@@ -804,7 +804,7 @@ def vconvert(
     >>> x = cxv.SphericalAcc(**p)
     >>> y = cxv.vconvert(cxv.LonLatSphericalAcc, x)
     >>> print(y)
-    <LonLatSphericalAcc (lon[deg / s2], lat[deg / s2], distance[km / s2])
+    <LonLatSphericalAcc: (lon[deg / s2], lat[deg / s2], distance[km / s2])
         [ 20 -10   1]>
 
     """
@@ -880,12 +880,12 @@ def vconvert(
     ...                      phi=u.Quantity(20, "deg/s"))
     >>> y = cxv.vconvert(cxv.MathSphericalVel, x)
     >>> print(y)
-    <MathSphericalVel (r[km / s], theta[deg / s], phi[deg / s])
+    <MathSphericalVel: (r[km / s], theta[deg / s], phi[deg / s])
         [ 1 20 10]>
 
     >>> x = cxv.vconvert(cxv.SphericalVel, y)
     >>> print(x)
-    <SphericalVel (r[km / s], theta[deg / s], phi[deg / s])
+    <SphericalVel: (r[km / s], theta[deg / s], phi[deg / s])
         [ 1 10 20]>
 
     Acceleration:
@@ -912,12 +912,12 @@ def vconvert(
     ...                      phi=u.Quantity(20, "deg/s2"))
     >>> y = cxv.vconvert(cxv.MathSphericalAcc, x)
     >>> print(y)
-    <MathSphericalAcc (r[km / s2], theta[deg / s2], phi[deg / s2])
+    <MathSphericalAcc: (r[km / s2], theta[deg / s2], phi[deg / s2])
         [ 1 20 10]>
 
     >>> x = cxv.vconvert(cxv.SphericalAcc, y)
     >>> print(x)
-    <SphericalAcc (r[km / s2], theta[deg / s2], phi[deg / s2])
+    <SphericalAcc: (r[km / s2], theta[deg / s2], phi[deg / s2])
         [ 1 10 20]>
 
     """
@@ -1068,7 +1068,7 @@ def vconvert(
     >>> x = cxv.LonLatSphericalVel(**p)
     >>> y = cxv.vconvert(cxv.SphericalVel, x)
     >>> print(y)
-    <SphericalVel (r[km / s], theta[deg / s], phi[deg / s])
+    <SphericalVel: (r[km / s], theta[deg / s], phi[deg / s])
         [ 1  0 90]>
 
     >>> p = {"lon": u.Quantity(90, "deg/s2"),
@@ -1083,7 +1083,7 @@ def vconvert(
     >>> x = cxv.LonLatSphericalAcc(**p)
     >>> y = cxv.vconvert(cxv.SphericalAcc, x)
     >>> print(y)
-    <SphericalAcc (r[km / s2], theta[deg / s2], phi[deg / s2])
+    <SphericalAcc: (r[km / s2], theta[deg / s2], phi[deg / s2])
         [ 1  0 90]>
 
     """
@@ -1229,7 +1229,7 @@ def vconvert(
       'phi': Array(90., dtype=float32, ...)},
      {'Delta': Array(0.5, dtype=float32, ...)})
 
-    # <ProlateSpheroidalPos (mu[km2], nu[km2], phi[deg])
+    # <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[deg])
     #     [ 2.133  0.117 90.   ]>
 
     TODO: example with Delta as a Quantity
@@ -1400,7 +1400,7 @@ def vconvert(
     ...                            distance=u.Quantity(-5, "km/s"))
     >>> newp = cxv.vconvert(cxv.LonCosLatSphericalVel, p, q)
     >>> print(newp)
-    <LonCosLatSphericalVel (lon_coslat[mas / yr], lat[deg / Gyr], distance[km / s])
+    <LonCosLatSphericalVel: (lon_coslat[mas / yr], lat[deg / Gyr], distance[km / s])
         [ 6.894  0.    -5.   ]>
 
     """
@@ -1483,7 +1483,7 @@ def normalize_vector(obj: CartesianPos3D, /) -> Cartesian3D:
     >>> import coordinax.vecs as cxv
     >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "km")
     >>> print(cxv.normalize_vector(q))
-    <Cartesian3D (x[], y[], z[])
+    <Cartesian3D: (x, y, z) []
         [0.267 0.535 0.802]>
 
     """

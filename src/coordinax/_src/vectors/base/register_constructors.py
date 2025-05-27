@@ -47,14 +47,14 @@ def vector(cls: type[AbstractVector], obj: Mapping[str, Any], /) -> AbstractVect
     ...       "z": u.Quantity(3, "m")}
     >>> vec = cx.CartesianPos3D.from_(xs)
     >>> print(vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
     >>> xs = {"x": u.Quantity([1, 2], "m"), "y": u.Quantity([3, 4], "m"),
     ...       "z": u.Quantity([5, 6], "m")}
     >>> vec = cx.CartesianPos3D.from_(xs)
     >>> print(vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [[1 3 5]
         [2 4 6]]>
 
@@ -130,49 +130,49 @@ def vector(cls: type[AbstractVector], obj: u.AbstractQuantity, /) -> AbstractVec
 
     >>> vec = cxv.CartesianPos2D.from_(u.Quantity([1, 2], "m"))
     >>> print(vec)
-    <CartesianPos2D (x[m], y[m])
+    <CartesianPos2D: (x, y) [m]
         [1 2]>
 
     Vel 2D:
 
     >>> vec = cxv.CartesianVel2D.from_(u.Quantity([1, 2], "m/s"))
     >>> print(vec)
-    <CartesianVel2D (x[m / s], y[m / s])
+    <CartesianVel2D: (x, y) [m / s]
         [1 2]>
 
     Acc 2D:
 
     >>> vec = cxv.CartesianAcc2D.from_(u.Quantity([1, 2], "m/s2"))
     >>> print(vec)
-    <CartesianAcc2D (x[m / s2], y[m / s2])
+    <CartesianAcc2D: (x, y) [m / s2]
         [1 2]>
 
     Pos 3D:
 
     >>> vec = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> print(vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
     Vel 3D:
 
     >>> vec = cxv.CartesianVel3D.from_(u.Quantity([1, 2, 3], "m/s"))
     >>> print(vec)
-    <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+    <CartesianVel3D: (x, y, z) [m / s]
         [1 2 3]>
 
     Acc 3D:
 
     >>> vec = cxv.CartesianAcc3D.from_(u.Quantity([1, 2, 3], "m/s2"))
     >>> print(vec)
-    <CartesianAcc3D (x[m / s2], y[m / s2], z[m / s2])
+    <CartesianAcc3D: (x, y, z) [m / s2]
         [1 2 3]>
 
     Generic 3D:
 
     >>> vec = cxv.Cartesian3D.from_(u.Quantity([1, 2, 3], "m"))
     >>> print(vec)
-    <Cartesian3D (x[m], y[m], z[m])
+    <Cartesian3D: (x, y, z) [m]
         [1 2 3]>
 
     """
@@ -207,13 +207,13 @@ def vector(
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "meter")
     >>> print(vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
     >>> xs = jnp.array([[1, 2, 3], [4, 5, 6]])
     >>> vec = cx.CartesianPos3D.from_(xs, "meter")
     >>> print(vec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [[1 2 3]
         [4 5 6]]>
 
@@ -248,7 +248,7 @@ def vector(cls: type[AbstractVector], obj: AbstractVector, /) -> AbstractVector:
 
     >>> cart = cx.CartesianPos3D.from_(q)
     >>> print(cart)
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [1 2 3]>
 
     >>> cx.vecs.AbstractPos3D.from_(cart) is cart

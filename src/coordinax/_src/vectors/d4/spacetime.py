@@ -11,6 +11,7 @@ import equinox as eqx
 import jax
 import jax.numpy as jnp
 import numpy as np
+import wadler_lindig as wl
 from jaxtyping import Shaped
 
 import quaxed.numpy as jnp
@@ -50,9 +51,9 @@ class FourVector(AbstractPos4D):
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(w)
-    <FourVector (t[s], q=(x[m], y[m], z[m]))
+    <FourVector: (t[s], q=(x, y, z) [m])
         [1 1 2 3]>
 
     Note that we used a shortcut to create the 3D vector by passing a ``(*batch,
@@ -64,9 +65,9 @@ class FourVector(AbstractPos4D):
 
     >>> q = cx.SphericalPos(theta=u.Quantity(1, "deg"), phi=u.Quantity(2, "deg"),
     ...                     r=u.Quantity(3, "m"))
-    >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=q)
+    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=q)
     >>> print(w)
-    <FourVector (t[s], q=(r[m], theta[deg], phi[deg]))
+    <FourVector: (t[s], q=(r[m], theta[deg], phi[deg]))
         [1 3 1 2]>
 
     """
@@ -108,7 +109,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.x
         Quantity(Array(1, dtype=int32), unit='m')
 
@@ -126,7 +127,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w._norm2()
         Quantity(Array(8.987552e+10, dtype=float32), unit='km2')
 
@@ -143,7 +144,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.norm()
         Quantity(Array(299792.47+0.j, dtype=complex64), unit='km')
 
@@ -164,7 +165,7 @@ class FourVector(AbstractPos4D):
         >>> cx.FourVector.dimensions
         <property object at ...>
 
-        >>> w = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.dimensions
         {'t': PhysicalType('time'),
          'q': {'x': PhysicalType('length'), 'y': PhysicalType('length'),
@@ -173,25 +174,38 @@ class FourVector(AbstractPos4D):
         """
         return {"t": dims.T, "q": self.q.dimensions}
 
-    # -------------------------------------------
-    # misc
+    # ===============================================================
+    # Wadler-Lindig
 
-    def __str__(self) -> str:
-        r"""Return a string representation of the spacetime vector.
+    @override
+    def __pdoc__(self, *, vector_form: bool = False, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the Wadler-Lindig docstring for the vector.
 
         Examples
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> w = cx.FourVector(t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = cx.FourVector (t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> print(w)
-        <FourVector (t[s], q=(x[m], y[m], z[m]))
+        <FourVector: (t[s], q=(x, y, z) [m])
             [0.5 1.  2.  3. ]>
 
         """
-        cls_name = type(self).__name__
-        qcomps = ", ".join(f"{c}[{self.q.units[c]}]" for c in self.q.components)
-        comps = f"t[{self.units['t']}], q=({qcomps})"
+        if not vector_form:
+            return super().__pdoc__(vector_form=vector_form, **kwargs)
+
+        cls_name = wl.TextDoc(self.__class__.__name__)
+
+        # make the components string
+        comps_doc = (
+            wl.TextDoc("(")
+            + wl.TextDoc(f"t[{self.units['t']}]")
+            + wl.comma
+            + wl.TextDoc("q=")
+            + self.q._pdoc_comps()
+            + wl.TextDoc(")")
+        ).group()
+
         vs = np.array2string(  # type: ignore[call-overload]  # TODO: use other method
             jnp.stack(
                 tuple(
@@ -204,6 +218,12 @@ class FourVector(AbstractPos4D):
                 axis=-1,
             ),
             precision=3,
-            prefix="    ",
+            suffix=">",
         )
-        return f"<{cls_name} ({comps})\n    {vs}>"
+        return (
+            (wl.TextDoc("<") + cls_name + wl.TextDoc(":")).group()
+            + wl.BreakDoc(" ")
+            + comps_doc
+            + wl.TextDoc("\n")  # force a line break
+            + (wl.TextDoc("    ") + wl.TextDoc(vs).nest(4) + wl.TextDoc(">")).group()
+        )

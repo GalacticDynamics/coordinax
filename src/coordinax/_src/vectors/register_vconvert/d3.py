@@ -55,7 +55,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
-    <RadialPos (r[km])
+    <RadialPos: (r) [km]
         [3.742]>
 
     """
@@ -100,7 +100,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cx.vconvert(cx.vecs.PolarPos, x)
     >>> print(y)
-    <PolarPos (r[km], phi[rad])
+    <PolarPos: (r[km], phi[rad])
         [2.236 1.107]>
 
     """
@@ -154,7 +154,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> print(y)
-    <CartesianPos1D (x[km])
+    <CartesianPos1D: (x) [km]
         [0.985]>
 
     """
@@ -197,7 +197,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cx.vconvert(cxv.RadialPos, x)
     >>> print(y)
-    <RadialPos (r[km])
+    <RadialPos: (r) [km]
         [1]>
 
     """
@@ -247,7 +247,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(y)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [0.985 0.174]>
 
     """
@@ -294,7 +294,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
-    <PolarPos (r[km], phi[deg])
+    <PolarPos: (r[km], phi[deg])
         [ 1 10]>
 
     """
@@ -346,7 +346,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.CartesianPos1D, x)
     >>> print(y)
-    <CartesianPos1D (x[km])
+    <CartesianPos1D: (x) [km]
         [0.238]>
 
     """
@@ -397,7 +397,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(y)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [0.238 0.042]>
 
     """
@@ -445,7 +445,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
-    <PolarPos (r[km], phi[deg])
+    <PolarPos: (r[km], phi[deg])
         [ 0.242 10.   ]>
 
     """
@@ -499,7 +499,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> print(y)
-    <CartesianPos1D (x[km])
+    <CartesianPos1D: (x) [km]
         [0.238]>
 
     """
@@ -551,7 +551,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> print(y)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [0.238 0.042]>
 
     """
@@ -599,7 +599,7 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
-    <PolarPos (r[km], phi[deg])
+    <PolarPos: (r[km], phi[deg])
         [ 0.242 10.   ]>
 
     """
@@ -651,28 +651,28 @@ def vconvert(
     ...     warnings.simplefilter("ignore")
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> print(y)
-    <CartesianPos1D (x[km])
+    <CartesianPos1D: (x) [km]
         [0.621]>
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     y = cx.vconvert(cx.vecs.RadialPos, x)
     >>> print(y)
-    <RadialPos (r[km])
+    <RadialPos: (r) [km]
         [0.707]>
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> print(x2)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [0.621 0.339]>
 
     >>> with warnings.catch_warnings():
     ...     warnings.simplefilter("ignore")
     ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
     >>> print(x2)
-    <PolarPos (r[km], phi[rad])
+    <PolarPos: (r[km], phi[rad])
         [0.707 0.5  ]>
 
     >>> import coordinax.vecs as cxv

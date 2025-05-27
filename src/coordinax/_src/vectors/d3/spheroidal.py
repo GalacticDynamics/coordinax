@@ -53,7 +53,8 @@ class ProlateSpheroidalPos(AbstractPos3D):
     ...     Delta=u.Quantity(1.5, "km"),
     ... )
     >>> print(vec)
-    <ProlateSpheroidalPos (mu[km2], nu[km2], phi[rad])
+    <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
+     Delta=Quantity(1.5, unit='km')
         [3.   0.5  0.25]>
 
     This fails with a zero or negative Delta:
@@ -80,7 +81,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     >>> sph = vec.vconvert(cxv.SphericalPos)
     >>> print(sph)
-    <SphericalPos (r[km], theta[rad], phi[rad])
+    <SphericalPos: (r[km], theta[rad], phi[rad])
         [1.118 0.752 0.25 ]>
 
     However, this is generally a one-way conversion, as the focal length
@@ -89,11 +90,12 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     >>> vec2 = sph.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "km"))
     >>> print(vec2.round(3))
-    <ProlateSpheroidalPos (mu[km2], nu[km2], phi[rad])
+    <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
+     Delta=Quantity(1.5, unit='km')
         [3.   0.5  0.25]>
 
     >>> print((vec2 - vec).vconvert(cxv.CartesianPos3D))
-    <CartesianPos3D (x[km], y[km], z[km])
+    <CartesianPos3D: (x, y, z) [km]
         [0. 0. 0.]>
 
     """
@@ -150,11 +152,11 @@ class ProlateSpheroidalVel(AbstractVel3D):
     >>> pv = v.vconvert(cxv.ProlateSpheroidalVel, px)
 
     >>> print(pv.vconvert(cxv.CartesianVel3D, px))
-    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
     >>> print(pv.vconvert(cxv.CartesianVel3D, x, Delta=u.Quantity(4, "kpc")))
-    <CartesianVel3D (x[km / s], y[km / s], z[km / s])
+    <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
     """
@@ -195,11 +197,11 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
     >>> pa = a.vconvert(cxv.ProlateSpheroidalAcc, v, px)
 
     >>> print(pa.vconvert(cxv.CartesianAcc3D, v, px))
-    <CartesianAcc3D (x[km / s2], y[km / s2], z[km / s2])
+    <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 
     >>> print(pa.vconvert(cxv.CartesianAcc3D, v, x, Delta=u.Quantity(4, "kpc")))
-    <CartesianAcc3D (x[km / s2], y[km / s2], z[km / s2])
+    <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 
     """

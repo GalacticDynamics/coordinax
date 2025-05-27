@@ -38,7 +38,7 @@ def uconvert(usys: u.AbstractUnitSystem, vector: AbstractVector, /) -> AbstractV
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> print(u.uconvert(usys, vec))
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1000. 2000. 3000.]>
 
     """

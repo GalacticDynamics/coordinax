@@ -66,7 +66,7 @@ class PolarVel(AbstractVel2D):
 
     >>> vev = cx.vecs.PolarVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(90, "deg/s"))
     >>> print(vev)
-    <PolarVel (r[m / s], phi[deg / s])
+    <PolarVel: (r[m / s], phi[deg / s])
         [ 1 90]>
 
     """
@@ -93,7 +93,7 @@ class PolarAcc(AbstractAcc2D):
     >>> acc = cx.vecs.PolarAcc(r=u.Quantity(1, "m/s2"),
     ...                        phi=u.Quantity(3, "deg/s2"))
     >>> print(acc)
-    <PolarAcc (r[m / s2], phi[deg / s2])
+    <PolarAcc: (r[m / s2], phi[deg / s2])
         [1 3]>
 
     """

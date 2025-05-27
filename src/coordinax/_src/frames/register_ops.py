@@ -29,7 +29,7 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
 
     >>> new_coord = op(coord)
     >>> print(new_coord.data["length"])
-    <CartesianPos3D (x[kpc], y[kpc], z[kpc])
+    <CartesianPos3D: (x, y, z) [kpc]
         [0 1 2]>
 
     """

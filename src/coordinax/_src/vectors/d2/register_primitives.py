@@ -34,11 +34,11 @@ def add_p_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D
     >>> cart = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
     >>> print(cart + polr)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [1. 5.]>
 
     >>> print(jnp.add(cart, polr))
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [1. 5.]>
 
     """
@@ -57,11 +57,11 @@ def add_p_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
 
     >>> v = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
     >>> print(v + v)
-    <CartesianVel2D (x[km / s], y[km / s])
+    <CartesianVel2D: (x, y) [km / s]
         [2 4]>
 
     >>> print(jnp.add(v, v))
-    <CartesianVel2D (x[km / s], y[km / s])
+    <CartesianVel2D: (x, y) [km / s]
         [2 4]>
 
     """
@@ -79,11 +79,11 @@ def add_p_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
 
     >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "km/s2")
     >>> print(v + v)
-    <CartesianAcc2D (x[km / s2], y[km / s2])
+    <CartesianAcc2D: (x, y) [km / s2]
         [6 8]>
 
     >>> print(jnp.add(v, v))
-    <CartesianAcc2D (x[km / s2], y[km / s2])
+    <CartesianAcc2D: (x, y) [km / s2]
         [6 8]>
 
     """
@@ -157,11 +157,11 @@ def mul_p_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
 
     >>> v = cx.vecs.CartesianVel2D.from_([3, 4], "m/s")
     >>> print(5 * v)
-    <CartesianVel2D (x[m / s], y[m / s])
+    <CartesianVel2D: (x, y) [m / s]
         [15 20]>
 
     >>> print(jnp.multiply(5, v))
-    <CartesianVel2D (x[m / s], y[m / s])
+    <CartesianVel2D: (x, y) [m / s]
         [15 20]>
 
     """
@@ -185,11 +185,11 @@ def mul_p_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
 
     >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "m/s2")
     >>> print(jnp.multiply(5, v))
-    <CartesianAcc2D (x[m / s2], y[m / s2])
+    <CartesianAcc2D: (x, y) [m / s2]
         [15 20]>
 
     >>> print(5 * v)
-    <CartesianAcc2D (x[m / s2], y[m / s2])
+    <CartesianAcc2D: (x, y) [m / s2]
         [15 20]>
 
     """
@@ -214,7 +214,7 @@ def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
 
     >>> v = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(90, "deg"))
     >>> print(v)
-    <PolarPos (r[m], phi[deg])
+    <PolarPos: (r[m], phi[deg])
         [ 1 90]>
 
     >>> quaxed.numpy.linalg.vector_norm(v, axis=-1)
@@ -222,7 +222,7 @@ def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
 
     >>> nv = quaxed.lax.mul(2, v)
     >>> print(nv)
-    <PolarPos (r[m], phi[deg])
+    <PolarPos: (r[m], phi[deg])
         [ 2 90]>
 
     """
@@ -267,7 +267,7 @@ def sub_p_cart2d_pos2d(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos
     >>> polr = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
 
     >>> print(cart - polr)
-    <CartesianPos2D (x[km], y[km])
+    <CartesianPos2D: (x, y) [km]
         [ 1. -1.]>
 
     """

@@ -57,7 +57,7 @@ class GalileanBoost(AbstractGalileanOperator):
     >>> delta_t = u.Quantity(1.0, "s")
     >>> _, newvec = op(delta_t, vec)
     >>> print(newvec)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1. 2. 3.]>
 
     In the context of frame transformations, a Galilean boost is treated as the
@@ -73,7 +73,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     >>> _, vec_in_newframe = op.inverse(delta_t, vec)
     >>> print(vec_in_newframe)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [-1. -2. -3.]>
 
     """
@@ -118,7 +118,7 @@ class GalileanBoost(AbstractGalileanOperator):
         GalileanBoost(CartesianVel3D( ... ))
 
         >>> print(op.inverse.velocity)
-        <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+        <CartesianVel3D: (x, y, z) [m / s]
             [-1 -2 -3]>
 
         """
@@ -137,7 +137,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
         >>> op = cx.ops.GalileanBoost.from_([1, 0, 0], "m/s")
         >>> print((-op).velocity)
-        <CartesianVel3D (x[m / s], y[m / s], z[m / s])
+        <CartesianVel3D: (x, y, z) [m / s]
             [-1 0 0]>
 
         """
@@ -191,7 +191,7 @@ def call(
     The position is updated by the boost velocity times the time interval:
 
     >>> print(newq)
-    <CartesianPos3D (x[m], y[m], z[m])
+    <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
     """
