@@ -1,24 +1,48 @@
-"""Sphinx configuration."""
-# pylint: disable=invalid-name
+"""Configuration file for the Sphinx documentation builder.
 
-import importlib.metadata
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+"""
 
+from datetime import datetime
+from typing import Any
+
+import pytz
+
+from coordinax import __version__
+
+# -- Project information -----------------------------------------------------
+
+author = "Coordinax Developers"
 project = "coordinax"
-copyright = "2023, Nathaniel Starkman"
-author = "Nathaniel Starkman"
-version = release = importlib.metadata.version("coordinax")
+copyright = f"{datetime.now(pytz.timezone('UTC')).year}, {author}"
+version = __version__
+
+master_doc = "index"
+language = "en"
+
+# -- General configuration ---------------------------------------------------
 
 extensions = [
-    "myst_parser",
-    "sphinx.ext.autodoc",
+    "myst_parser",  # General MyST markdown support
+    "sphinx_design",
+    "sphinx.ext.autodoc",  # TODO: replace with autodoc2
+    "sphinx.ext.autosummary",  # TODO: replace with autodoc2
     "sphinx.ext.intersphinx",
     "sphinx.ext.mathjax",
     "sphinx.ext.napoleon",
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
+    "sphinx-prompt",
+    "sphinxext.opengraph",
+    # "sphinxext.rediraffe",  # Add redirects
+    "sphinx_togglebutton",
+    "sphinx_tippy",
 ]
 
-source_suffix = [".rst", ".md"]
+python_use_unqualified_type_names = True
+
 exclude_patterns = [
     "_build",
     "**.ipynb_checkpoints",
@@ -28,19 +52,103 @@ exclude_patterns = [
     ".venv",
 ]
 
-html_theme = "furo"
-
-myst_enable_extensions = [
-    "colon_fence",
-]
+source_suffix = [".md", ".rst"]
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
+    "jax": ("https://jax.readthedocs.io/en/latest/", None),
+    "jaxtyping": ("https://docs.kidger.site/jaxtyping/", None),
+    "astropy": ("https://docs.astropy.org/en/stable/", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
+    "quax": ("https://docs.kidger.site/quax/", None),
 }
+
+# -- Autodoc settings ---------------------------------------------------
+
+autodoc_typehints = "description"
+autodoc_typehints_format = "short"
+
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "inherited-members": True,
+    "show-inheritance": True,
+    "member-order": "bysource",
+}
+
+always_document_param_types = True
+typehints_use_signature = True
+
 
 nitpick_ignore = [
     ("py:class", "_io.StringIO"),
     ("py:class", "_io.BytesIO"),
+    # TODO: fix these
+    ("py:class", "P"),  # ParamSpec alias
+    ("py:class", "ArrayLike"),
+    ("py:class", "NoneType"),
+    ("py:class", "quax._core.ArrayValue"),
+    ("py:class", "jaxtyping.Shaped[Array, '*shape']"),
+    ("py:class", "astropy.units.core.Annotated"),
 ]
 
-always_document_param_types = True
+# -- MyST Setting -------------------------------------------------
+
+myst_enable_extensions = [
+    "amsmath",  # for direct LaTeX math
+    "attrs_block",  # enable parsing of block attributes
+    "attrs_inline",  # apply syntax highlighting to inline code
+    "colon_fence",
+    "deflist",
+    "dollarmath",  # for $, $$
+    # "linkify",  # identify “bare” web URLs and add hyperlinks:
+    "smartquotes",  # convert straight quotes to curly quotes
+    "substitution",  # substitution definitions
+]
+myst_heading_anchors = 3
+
+# myst_substitutions = {
+#     "ArrayLike": ":obj:`jaxtyping.ArrayLike`",
+#     "Any": ":obj:`typing.Any`",
+# }
+
+
+# -- HTML output -------------------------------------------------
+
+html_theme = "sphinx_book_theme"
+html_title = "coordinax"
+html_logo = "_static/favicon.png"  # TODO: an svg
+html_copy_source = True
+html_favicon = "_static/favicon.png"
+
+html_static_path = ["_static"]
+html_css_files = ["custom_toc.css", "custom_tooltip.css"]
+
+html_theme_options: dict[str, Any] = {
+    "home_page_in_toc": True,
+    "repository_url": "https://github.com/GalacticDynamics/coordinax",
+    "repository_branch": "main",
+    "path_to_docs": "docs",
+    "use_repository_button": True,
+    "use_edit_page_button": False,
+    "use_issues_button": True,
+    "show_toc_level": 2,
+    "icon_links": [
+        {
+            "name": "GitHub",
+            "url": "https://github.com/GalacticDynamics/coordinax",
+            "icon": "fa-brands fa-github",
+        },
+        {
+            "name": "PyPI",
+            "url": "https://pypi.org/project/coordinax/",
+            "icon": "https://img.shields.io/pypi/v/coordinax",
+            "type": "url",
+        },
+        {
+            "name": "Zenodo",
+            "url": "https://doi.org/10.5281/zenodo.10850455",
+            "icon": "fa fa-quote-right",
+        },
+    ],
+}
