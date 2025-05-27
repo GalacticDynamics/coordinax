@@ -8,10 +8,8 @@ additional features and constraints tailored for angles.
 
 <!-- invisible-code-block: python
 
-```python
 import unxt as u
 import jax.numpy as jnp
-```
 
 -->
 
