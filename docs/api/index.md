@@ -1,16 +1,5 @@
 # `coordinax` library
 
-## API Submodules
-
-```{toctree}
-:maxdepth: 1
-:glob:
-
-*
-```
-
-## API Reference
-
 ```{eval-rst}
 
 .. currentmodule:: coordinax
@@ -19,4 +8,14 @@
     :exclude-members: aval, default, materialise, enable_materialise
     :noindex:
 
+```
+
+```{toctree}
+:maxdepth: 1
+:titlesonly:
+:hidden:
+:caption: API submodules
+:glob:
+
+*
 ```
