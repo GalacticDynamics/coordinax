@@ -21,7 +21,6 @@ __all__ = [
     "convert_to_pipe_operators",
 ]
 
-from . import galilean
 from .api import simplify_op
 from .base import AbstractOperator
 from .boost import VelocityBoost
