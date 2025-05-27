@@ -1,4 +1,4 @@
-# Contributing to `coordinax`
+# 👏 Contributing
 
 ## Reporting Issues
 

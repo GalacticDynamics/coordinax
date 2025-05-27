@@ -61,6 +61,7 @@ intersphinx_mapping = {
     "astropy": ("https://docs.astropy.org/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "quax": ("https://docs.kidger.site/quax/", None),
+    "unxt": ("https://unxt.readthedocs.io/en/latest/", None),
 }
 
 # -- Autodoc settings ---------------------------------------------------
@@ -89,7 +90,6 @@ nitpick_ignore = [
     ("py:class", "NoneType"),
     ("py:class", "quax._core.ArrayValue"),
     ("py:class", "jaxtyping.Shaped[Array, '*shape']"),
-    ("py:class", "astropy.units.core.Annotated"),
 ]
 
 # -- MyST Setting -------------------------------------------------
