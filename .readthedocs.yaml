@@ -1,18 +1,22 @@
-# Read the Docs configuration file
-# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
-
 version: 2
 
+# Set the version of Python and other tools you might need
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.11"
-sphinx:
-  configuration: docs/conf.py
+    python: "3.12"
+  commands:
+    - asdf plugin add uv
+    - asdf install uv latest
+    - asdf global uv latest
+    - uv sync --group docs --frozen
+    - uv run -m sphinx -T -b html -d docs/_build/doctrees -D language=en docs
+      $READTHEDOCS_OUTPUT/html
 
-python:
-  install:
-    - method: pip
-      path: .
-      extra_requirements:
-        - docs
+sphinx:
+  builder: html
+  configuration: docs/conf.py
+  fail_on_warning: true
+
+# Don't build any extra formats
+formats: []

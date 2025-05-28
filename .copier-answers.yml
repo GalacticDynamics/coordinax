@@ -3,7 +3,7 @@ _commit: 2024.04.23
 _src_path: gh:scientific-python/cookie
 backend: hatch
 email: nstarman@users.noreply.github.com
-full_name: Nathaniel Starkman
+full_name: Coordinax Devs
 license: MIT
 org: GalacticDynamics
 project_name: coordinax

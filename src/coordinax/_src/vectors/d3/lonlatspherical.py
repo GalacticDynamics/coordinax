@@ -69,27 +69,26 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     The latitude is not wrapped, but it is checked to be in the [-90, 90] degrees range.
 
-    .. skip: next
-
-    >>> try:
-    ...     cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                lat=u.Quantity(100, "deg"),
-    ...                                distance=u.Quantity(3, "km"))
-    ... except Exception as e:
-    ...     print(e)
+    >>> import jax
+    >>> with jax.disable_jit():
+    ...     try:
+    ...         cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+    ...                                    lat=u.Quantity(100, "deg"),
+    ...                                    distance=u.Quantity(3, "km"))
+    ...     except Exception as e:
+    ...         print(e)
     The inclination angle must be in the range [0, pi]...
 
     Likewise, the radial distance is checked to be non-negative.
 
-    .. skip: next
-
-    >>> try:
-    ...     cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                lat=u.Quantity(0, "deg"),
-    ...                                distance=u.Quantity(-3, "km"))
-    ... except Exception as e:
-    ...     print(e)
-    The radial distance must be non-negative...
+    >>> with jax.disable_jit():
+    ...     try:
+    ...         cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
+    ...                                    lat=u.Quantity(0, "deg"),
+    ...                                    distance=u.Quantity(-3, "km"))
+    ...     except Exception as e:
+    ...         print(e)
+    The input radial distance r must be non-negative.
 
     """
 

@@ -16,6 +16,8 @@ from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
 if TYPE_CHECKING:
+    from typing import Self
+
     import coordinax.vecs
 
 

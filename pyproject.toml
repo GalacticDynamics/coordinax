@@ -6,13 +6,15 @@
   license.file = "LICENSE"
   requires-python = ">=3.11"
   authors = [
+    { name = "Coordinax Devs", email = "nstarman@users.noreply.github.com" },
     { name = "Nathaniel Starkman", email = "nstarman@users.noreply.github.com" },
+    { name = "Adrian Price-Whelan", email = "adrn@users.noreply.github.com" },
   ]
   classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: BSD License",
+    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -63,11 +65,19 @@ build-backend = "hatchling.build"
       { include-group = "test-all" },
   ]
   docs = [
-    "furo>=2023.08.17",
+    "myst-nb>=1.1.2",
     "myst_parser>=0.13",
+    "pytz>=2024.2",               # for copyright date
+    "sphinx-book-theme==1.1.3",
+    "sphinx-prompt>=1.8.0",
+    "sphinx-tippy>=0.4.3",
     "sphinx>=7.0",
-    "sphinx_copybutton>=0.5.2",
     "sphinx_autodoc_typehints>=3.0.0",
+    "sphinx_copybutton>=0.5.2",
+    "sphinx_design>=0.6.1",
+    "sphinx_togglebutton>=0.3.2",
+    "sphinxext-opengraph>=0.9.1",
+    "sphinxext-rediraffe>=0.2.7",
   ]
   lint = [
       "pylint>=3.3.2",
@@ -197,12 +207,12 @@ skip = ["uv.lock"]
 
 [tool.pytest.ini_options]
   addopts = [
-    "-ra",
     "--arraydiff",
     "--showlocals",
-    "--strict-markers",
     "--strict-config",
-    "--doctest-glob='*.rst | *.py'",
+    "--strict-markers",
+    "-p no:doctest",    # using sybil
+    "-ra",
   ]
   filterwarnings = [
     "error",
@@ -213,12 +223,16 @@ skip = ["uv.lock"]
   ]
   log_cli_level = "INFO"
   minversion = "8.3"
-  testpaths = ["README", "src", "docs", "tests"]
+  testpaths = ["README", "src/", "docs/", "tests/"]
+  norecursedirs = [
+    ".*",          # ignores .hypothesis, .git, etc.
+    "__pycache__",
+    "docs/_build"
+  ]
   xfail_strict = true
 
-  env = [
-    "COORDINAX_ENABLE_RUNTIME_TYPECHECKING=beartype.beartype",
-  ]
+[tool.pytest_env]
+COORDINAX_ENABLE_RUNTIME_TYPECHECKING = "beartype.beartype"
 
 [tool.ruff]
   [tool.ruff.lint]
