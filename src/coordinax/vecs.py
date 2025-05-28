@@ -11,6 +11,7 @@ __all__ = [
     "time_nth_derivative_vector_type",
     "IrreversibleDimensionChange",
     # Base
+    "AbstractVectorLike",
     "AbstractVector",
     "AttrFilter",
     "VectorAttribute",
@@ -122,6 +123,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     )
     from ._src.vectors.base import (
         AbstractVector,
+        AbstractVectorLike,
         AttrFilter,
         ToUnitsOptions,
         VectorAttribute,
