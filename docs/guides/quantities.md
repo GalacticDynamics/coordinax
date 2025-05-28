@@ -146,3 +146,13 @@ Parallax(Array(4.848137e-10, dtype=float32, weak_type=True), unit='rad')
 All three classes enforce that their units are appropriate for their physical
 meaning (e.g., `Distance` must have length units, `Parallax` must have angular
 units, and `DistanceModulus` must have magnitude units).
+
+---
+
+:::{seealso}
+
+[API Documentation for Angles](../api/angle.md)
+
+[API Documentation for Distances](../api/distance.md)
+
+:::

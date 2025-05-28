@@ -120,5 +120,8 @@ You can define your own operators by subclassing `AbstractOperator`.
 
 ---
 
-See the API reference for a full list of available operators and advanced usage
-patterns.
+:::{seealso}
+
+[API Documentation for Operators](../api/ops.md)
+
+:::
