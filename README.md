@@ -126,7 +126,7 @@ We welcome contributions!
 [ruff-link]:                https://docs.astral.sh/ruff/
 [spec0-badge]:              https://img.shields.io/badge/SPEC-0-green?labelColor=%23004811&color=%235CA038
 [spec0-link]:               https://scientific-python.org/specs/spec-0000/
-[zenodo-badge]:             https://zenodo.org/badge/755708966.svg
+[zenodo-badge]:             https://zenodo.org/badge/DOI/10.5281/zenodo.15320465.svg
 [zenodo-link]:              https://zenodo.org/doi/10.5281/zenodo.10850557
 
 <!-- prettier-ignore-end -->

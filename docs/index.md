@@ -372,7 +372,7 @@ Coordinate(
 
 ### `coordinax`'s Dependencies
 
-- [`unxt`][unxt]: Quantities in JAX.
+- [unxt][unxt]: Quantities in JAX.
 - [Equinox][equinox]: one-stop JAX library, for everything that isn't already in
   core JAX.
 - [Quax][quax]: JAX + multiple dispatch + custom array-ish objects.
@@ -395,5 +395,5 @@ Coordinate(
 [pypi-link]: https://pypi.org/project/coordinax/
 [pypi-platforms]: https://img.shields.io/pypi/pyversions/coordinax
 [pypi-version]: https://img.shields.io/pypi/v/coordinax
-[zenodo-badge]: https://zenodo.org/badge/734877295.svg
-[zenodo-link]: https://zenodo.org/doi/10.5281/zenodo.10850455
+[zenodo-badge]: https://zenodo.org/badge/DOI/10.5281/zenodo.15320465.svg
+[zenodo-link]: https://zenodo.org/doi/10.5281/zenodo.10850557
