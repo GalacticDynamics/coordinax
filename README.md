@@ -36,10 +36,7 @@ pip install coordinax
 
 ## Documentation
 
-[![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://unxt.readthedocs.io/en/)
-
-Coming soon. In the meantime, if you've used `astropy.coordinates`, then
-`coordinax` should be fairly intuitive.
+[![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://coordinax.readthedocs.io/en/)
 
 ## Quick example
 
@@ -49,12 +46,12 @@ import unxt as u
 import coordinax as cx
 
 q = cx.CartesianPos3D(
-    x=u.Quantity(jnp.arange(0, 10.0), "km"),
-    y=u.Quantity(jnp.arange(5, 15.0), "km"),
-    z=u.Quantity(jnp.arange(10, 20.0), "km"),
+    x=u.Quantity(jnp.arange(0, 10.0), "kpc"),
+    y=u.Quantity(jnp.arange(5, 15.0), "kpc"),
+    z=u.Quantity(jnp.arange(10, 20.0), "kpc"),
 )
 print(q)
-# <CartesianPos3D: (x, y, z) [km]
+# <CartesianPos3D: (x, y, z) [kpc]
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -63,7 +60,7 @@ print(q)
 
 q2 = cx.vconvert(cx.SphericalPos, q)
 print(q2)
-# <SphericalPos: (r[km], theta[rad], phi[rad])
+# <SphericalPos: (r[kpc], theta[rad], phi[rad])
 #     [[11.18   0.464  1.571]
 #      [12.57   0.505  1.406]
 #      ...
@@ -71,12 +68,12 @@ print(q2)
 #      [25.259  0.719  0.999]]>
 
 p = cx.CartesianVel3D(
-    d_x=u.Quantity(jnp.arange(0, 10.0), "m/s"),
-    d_y=u.Quantity(jnp.arange(5, 15.0), "m/s"),
-    d_z=u.Quantity(jnp.arange(10, 20.0), "m/s"),
+    x=u.Quantity(jnp.arange(0, 10.0), "km/s"),
+    y=u.Quantity(jnp.arange(5, 15.0), "km/s"),
+    z=u.Quantity(jnp.arange(10, 20.0), "km/s"),
 )
 print(p)
-# <CartesianVel3D: (x, y, z) [m / s]
+# <CartesianVel3D: (x, y, z) [km / s]
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -85,12 +82,59 @@ print(p)
 
 p2 = cx.vconvert(cx.SphericalVel, p, q)
 print(p2)
-# <SphericalVel: (r[m / s], theta[m rad / (km s)], phi[m rad / (km s)])
+# <SphericalVel: (r[km / s], theta[km rad / (km s)], phi[km rad / (km s)])
 #     [[ 1.118e+01 -3.886e-16  0.000e+00]
 #      [ 1.257e+01 -1.110e-16  0.000e+00]
 #      ...
 #      [ 2.360e+01  0.000e+00  0.000e+00]
 #      [ 2.526e+01 -2.776e-16  0.000e+00]]>
+
+
+# Transforming between frames
+icrs_frame = cx.frames.ICRS()
+gc_frame = cx.frames.Galactocentric()
+op = cxf.frame_transform_op(icrs_frame, gc_frame)
+q_gc, p_gc = op(q, p)
+print(q_gc, p_gc, sep="\n")
+# <CartesianPos3D: (x, y, z) [kpc]
+#     [[-1.732e+01  5.246e+00  3.614e+00]
+#      ...
+#      [-3.004e+01  1.241e+01 -1.841e+00]]>
+# <CartesianVel3D: (x, y, z) [km / s]
+#      [[  3.704 250.846  11.373]
+#       ...
+#       [ -9.02  258.012   5.918]]>
+
+coord = cx.Coordinate(cx.Space(length=q, speed=p), frame=icrs_frame)
+print(coord)
+# Coordinate(
+#     data=Space({
+#        'length': <CartesianPos3D: (x, y, z) [kpc]
+#             [[ 0.  5. 10.]
+#              ...
+#              [ 9. 14. 19.]]>,
+#        'speed': <CartesianVel3D: (x, y, z) [km / s]
+#             [[ 0.  5. 10.]
+#              ...
+#              [ 9. 14. 19.]]>
+#     }),
+#     frame=ICRS()
+# )
+
+print(coord.to_frame(gc_frame))
+# Coordinate(
+#     data=Space({
+#        'length': <CartesianPos3D: (x, y, z) [kpc]
+#             [[-1.732e+01  5.246e+00  3.614e+00]
+#              ...
+#              [-3.004e+01  1.241e+01 -1.841e+00]]>,
+#        'speed': <CartesianVel3D: (x, y, z) [km / s]
+#             [[  3.704 250.846  11.373]
+#              ...
+#              [ -9.02  258.012   5.918]]>
+#     }),
+#     frame=Galactocentric( ... )
+# )
 ```
 
 ## Citation
