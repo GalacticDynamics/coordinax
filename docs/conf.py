@@ -147,7 +147,7 @@ html_theme_options: dict[str, Any] = {
         },
         {
             "name": "Zenodo",
-            "url": "hthttps://zenodo.org/doi/10.5281/zenodo.10850557",
+            "url": "https://zenodo.org/doi/10.5281/zenodo.10850557",
             "icon": "fa fa-quote-right",
         },
     ],
