@@ -93,9 +93,7 @@ def docs(session: nox.Session) -> None:
     if args.builder != "html" and args.serve:
         session.error("Must not specify non-HTML builder with --serve")
 
-    extra_installs = ["sphinx-autobuild"] if args.serve else []
-
-    session.install("-e.[docs]", *extra_installs)
+    session.run("uv", "sync", "--group", "docs", "--active")
     session.chdir("docs")
 
     if args.builder == "linkcheck":
