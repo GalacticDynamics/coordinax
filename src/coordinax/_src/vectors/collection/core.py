@@ -17,7 +17,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from xmmutablemap import ImmutableMap
 
-from .base import AbstractVectors
+from .aggregate import AbstractVectors
 from .utils import DimensionLike, _get_dimension_name, can_broadcast_shapes
 from coordinax._src.vectors.api import vector
 from coordinax._src.vectors.base import AbstractVector
