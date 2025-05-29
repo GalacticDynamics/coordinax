@@ -14,11 +14,11 @@ from dataclassish import replace
 from .base import AbstractOperator
 from .pipe import Pipe
 from coordinax._src.custom_types import TimeBatchOrScalar
+from coordinax._src.vectors.collection import Space
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
 from coordinax._src.vectors.d4 import FourVector
-from coordinax._src.vectors.space import Space
 
 # ============================================================================
 # 1-Dimensional
