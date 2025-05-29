@@ -47,18 +47,22 @@ dev.md
 
 # 🚀 Get Started
 
-`coordinax` enables coordinates in [JAX][jax].
+`coordinax` enables working with coordinates and reference frames with
+[JAX][jax].
 
-coordinax supports JAX's compelling features:
+`coordinax` supports JAX's main features:
 
-- JIT compilation (`jit`)
-- vectorization (`vmap`, etc.)
-- auto-differentiation (`grad`, `jacobian`, `hessian`)
+- JIT compilation ({func}`~jax.jit`)
+- vectorization ({func}`~jax.vmap`, etc.)
+- auto-differentiation ({func}`~jax.grad`, {func}`~jax.jacobian`,
+  {func}`jax.hessian`)
 - GPU/TPU/multi-host acceleration
 
 And best of all, `coordinax` doesn't force you to use special unit-compatible
 re-exports of JAX libraries. You can use `coordinax` with existing JAX code, and
 with one simple decorator, JAX will work with `coordinax` objects.
+
+<!-- TODO: Explain the "simple decorator" or link to a page with explainer -->
 
 ---
 
@@ -87,6 +91,9 @@ uv add coordinax
 
 :::{tab-item} source, via pip
 
+To install the latest development version of `coordinax` directly from the
+GitHub repository, use pip:
+
 ```bash
 pip install git+https://https://github.com/GalacticDynamics/coordinax.git
 ```
@@ -94,6 +101,8 @@ pip install git+https://https://github.com/GalacticDynamics/coordinax.git
 :::
 
 :::{tab-item} building from source
+
+To build `coordinax` from source, clone the repository and install it with pip:
 
 ```bash
 cd /path/to/parent
@@ -108,19 +117,27 @@ pip install -e .  # editable mode
 
 ## Quickstart
 
-The `coordinax` package has powerful tools for creating and using coordinate
-vector objects:
+The `coordinax` package has powerful tools for representing, using, and
+transforming coordinate objects, such as:
 
-- specific `unxt.AbstractQuantity` subclasses like angles and distances
+- specific {class}`~unxt.quantity.Quantity` subclasses like
+  {class}`~coordinax.angle.Angle` and {class}`~coordinax.distance.Distance`
 - vector objects
-  - 1 through N-dimensional vector classes in many different representation
-    types (e.g. Cartesian, Spherical, ProlateSpheroidal, etc.)
-  - time-differential vector objects, like velocities and accelerations
+  - 1D, 2D, 3D and N-dimensional vector classes in many different representation
+    types (e.g., {class}`~coordinax.vecs.CartesianPos1D`,
+    {class}`~coordinax.vecs.CartesianPos2D`,
+    {class}`~coordinax.vecs.CartesianPos3D`,
+    {class}`~coordinax.vecs.CartesianPos3D`,
+    {class}`~coordinax.vecs.SphericalPos`,
+    {class}`~coordinax.vecs.ProlateSpheroidalPos`, etc.)
+  - time-differential vector objects, like velocities and accelerations (e.g.,
+    {class}`~coordinax.vecs.CartesianVel3D`,
+    {class}`~coordinax.vecs.SphericalVel`, etc.)
   - collections of vector objects
-- transformations on vectors
-- reference frames
+- transformations on vectors ({func}`~coordinax.vecs.vconvert`)
+- reference frames <!-- TODO: add e.g., links to classes -->
 
-These many tools are organized into submodules, which are imported into the
+This functionality is organized into submodules, which are imported into the
 top-level `coordinax` namespace. You can import them directly, or use the
 `coordinax` namespace to access them.
 
@@ -141,14 +158,17 @@ We recommend importing as needed:
 
 ### Angles and Distances
 
-`coordinax` is built on top of `unxt`, which provides the `AbstractQuantity`
-base class and concrete classes like `Quantity`. The latter can be used
-throughout `coordinax`, but `coordinax` also provides specific classes that
-offer additional functionality for angles and distances.
+`coordinax` is built on top of [`unxt`](http://unxt.readthedocs.io), which
+provides support for quantity objects that represent a data array with an
+associated unit with the {class}`unxt.quantity.Quantity` class. These
+{class}`~unxt.quantity.Quantity` objects can be used throughout `coordinax`, but
+`coordinax` also provides specific classes that offer additional functionality
+for angles and distances.
 
-Let's start with angles, which are represented by the `Angle` class. They check
-that the units have angular dimensions. Angles can also be wrapped to a specific
-range to conform to a branch cut.
+Let's start with angles, which are represented by the
+{class}`~coordinax.angle.Angle` class. They check that the units have angular
+dimensions. Angles can also be wrapped to a specific range to conform to a
+branch cut.
 
 ```{code-block} python
 >>> import unxt as u
@@ -161,9 +181,9 @@ Angle(Array(370, dtype=int32, weak_type=True), unit='deg')
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 
-Next, we have distances, which are represented by subclasses of the
-`coordinax.distance.AbstractDistance` class. The most commonly used is the
-`coordinax.distance.Distance` class,
+Next, we have distance objects, which are represented by subclasses of the
+{class}`coordinax.distance.AbstractDistance` class. The most commonly used is
+the {class}`coordinax.distance.Distance` class,
 
 ```{code-block} python
 >>> d = cx.distance.Distance(10, "kpc")
@@ -171,10 +191,10 @@ Next, we have distances, which are represented by subclasses of the
 Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')
 ```
 
-but there are others like `coordinax.distance.Parallax` and
-`coordinax.distance.DistanceModulus`. These classes check that the units have
-distance dimensions, and they provide useful properties for converting between
-different distance representations.
+but there are others like {class}`coordinax.distance.Parallax` and
+{class}`coordinax.distance.DistanceModulus`. These classes check that the units
+have distance dimensions, and they provide useful properties for converting
+between different distance representations.
 
 ```{code-block} python
 >>> d.parallax
@@ -203,9 +223,9 @@ You can create a vector by specifying its components and units:
     [1 2 3]>
 ```
 
-The `from_` method is a flexible constructor that allows you to create vectors
-from various input formats, such as lists, tuples, or NumPy arrays. Direct
-construction is also possible:
+The {meth}`coordinax.vecs.CartesianPos3D.from_` method is a flexible constructor
+that allows you to create vectors from various input formats, such as lists,
+tuples, or NumPy arrays. Direct construction is also possible:
 
 ```{code-block} python
 >>> q = cxv.CartesianPos3D(x=u.Quantity(1, "kpc"), y=u.Quantity(2, "kpc"), z=u.Quantity(3, "kpc"))
