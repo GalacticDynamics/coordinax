@@ -88,14 +88,13 @@ def docs(session: nox.Session) -> None:
         default="html",
         help="Build target (default: html)",
     )
+    parser.add_argument("--output-dir", dest="output_dir", default="_build")
     args, posargs = parser.parse_known_args(session.posargs)
 
     if args.builder != "html" and args.serve:
         session.error("Must not specify non-HTML builder with --serve")
 
-    extra_installs = ["sphinx-autobuild"] if args.serve else []
-
-    session.install("-e.[docs]", *extra_installs)
+    session.run("uv", "sync", "--group", "docs", "--active")
     session.chdir("docs")
 
     if args.builder == "linkcheck":
@@ -113,8 +112,10 @@ def docs(session: nox.Session) -> None:
         "-n",  # nitpicky mode
         "-T",  # full tracebacks
         f"-b={args.builder}",
+        f"-d {args.output_dir}/doctrees",
+        "-D language=en",
         ".",
-        f"_build/{args.builder}",
+        f"{args.output_dir}/{args.builder}",
         *posargs,
     )
 
