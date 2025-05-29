@@ -131,6 +131,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src.vectors.base_acc import ACCELERATION_CLASSES, AbstractAcc
     from ._src.vectors.base_pos import POSITION_CLASSES, AbstractPos
     from ._src.vectors.base_vel import VELOCITY_CLASSES, AbstractVel
+    from ._src.vectors.collection import AbstractVectors, Space
     from ._src.vectors.d1 import (
         AbstractAcc1D,
         AbstractPos1D,
@@ -195,7 +196,6 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         PoincarePolarVector,
     )
     from ._src.vectors.exceptions import IrreversibleDimensionChange
-    from ._src.vectors.space import AbstractVectors, Space
 
 
 del vectors, install_import_hook, RUNTIME_TYPECHECKER

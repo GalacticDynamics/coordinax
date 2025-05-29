@@ -10,9 +10,9 @@ from plum import dispatch
 import quaxed.numpy as jnp
 import unxt as u
 
+from coordinax._src.vectors.collection import Space
 from coordinax._src.vectors.d3 import CylindricalPos, CylindricalVel
 from coordinax._src.vectors.dn import PoincarePolarVector
-from coordinax._src.vectors.space import Space
 
 
 @dispatch
