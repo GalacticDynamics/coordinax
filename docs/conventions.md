@@ -64,12 +64,13 @@ SphericalPos(
 
 `coordinax` uses [multiple dispatch](https://beartype.github.io/plum/) to hook
 into `quax`'s flexible and extensible system to enable custom array-ish objects,
-like `Quantity`, in `JAX`. Also, `coordinax` uses multiple dispatch to enable
-deep interoperability between `coordinax` and other libraries, like `astropy` (,
-and anything user-defined).
+like {class}`~unxt.quantity.Quantity`, in `JAX`. Also, `coordinax` uses multiple
+dispatch to enable deep interoperability between `coordinax` and other
+libraries, like `astropy` (and anything user-defined).
 
-For example, `coordinax` provides a `AbstractVector.from_` method that can
-convert an `astropy.Representation` to a `coordinax.AbstractVector`:
+For example, `coordinax` provides a {meth}`~coordinax.vecs.AbstractVector.from_`
+method that can convert an `astropy.Representation` to a
+{class}`~coordinax.vecs.AbstractVector`:
 
 ```{code-block} python
 
@@ -89,8 +90,8 @@ convert an `astropy.Representation` to a `coordinax.AbstractVector`:
 ```
 
 This easy interoperability is enabled by multiple dispatch, which allows the
-`AbstractVector.from_` method to dispatch to the correct implementation based on
-the types of the arguments.
+{meth}`~coordinax.vecs.AbstractVector.from_` method to dispatch to the correct
+implementation based on the types of the arguments.
 
 For more information on multiple dispatch, see the
 [plum documentation](https://beartype.github.io/plum/).
