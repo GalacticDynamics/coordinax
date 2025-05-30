@@ -1,7 +1,7 @@
 # Operators
 
-The `coordinax.ops` submodule provides a powerful and extensible framework for
-working with vector operators. Operators are objects that represent
+The {mod}`coordinax.ops` submodule provides a powerful and extensible framework
+for working with vector operators. Operators are objects that represent
 transformations or actions on vectors and spaces, such as translations,
 rotations, and boosts. This system is inspired by mathematical operator algebra
 and is designed for composability, batch operations, and JAX compatibility.
@@ -68,7 +68,8 @@ CartesianPos3D(
 
 ## Operator Composition and Pipes
 
-Operators can be composed using the `Pipe` class or the `|` operator:
+Operators can be composed using the {class}`~coordinax.ops.Pipe` class or the
+`|` operator:
 
 ```{code-block} python
 >>> op1 = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
@@ -94,29 +95,33 @@ CartesianPos3D(
 
 ## Identity and Composite Operators
 
-- `Identity`: The do-nothing operator, useful for generic code.
-- `AbstractCompositeOperator`: Base for building custom operator pipelines.
+- {class}`~coordinax.ops.Identity`: The do-nothing operator, useful for generic
+  code.
+- {class}`~coordinax.ops.AbstractCompositeOperator`: Base for building custom
+  operator pipelines.
 
 ---
 
 ## Utilities and Advanced Usage
 
-- `simplify_op`: Simplifies composed operators when possible.
-- `convert_to_pipe_operators`: Utility to convert a list of operators into a
-  `Pipe`.
+- {class}`~coordinax.ops.simplify_op`: Simplifies composed operators when
+  possible.
+- {class}`~coordinax.ops.convert_to_pipe_operators`: Utility to convert a list
+  of operators into a {class}`~coordinax.ops.Pipe`.
 
 ---
 
 ## Operator API and Custom Operators
 
-All operators inherit from `AbstractOperator` and support:
+All operators inherit from {class}`~coordinax.ops.AbstractOperator` and support:
 
 - Functional call syntax: `op(vector)`
 - Batch and broadcasting
 - JAX transformations (jit, vmap, etc.)
 - Composability
 
-You can define your own operators by subclassing `AbstractOperator`.
+You can define your own operators by subclassing
+{class}`~coordinax.ops.AbstractOperator`.
 
 ---
 
