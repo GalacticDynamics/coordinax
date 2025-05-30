@@ -127,7 +127,6 @@ transforming coordinate objects, such as:
     types (e.g., {class}`~coordinax.vecs.CartesianPos1D`,
     {class}`~coordinax.vecs.CartesianPos2D`,
     {class}`~coordinax.vecs.CartesianPos3D`,
-    {class}`~coordinax.vecs.CartesianPos3D`,
     {class}`~coordinax.vecs.SphericalPos`,
     {class}`~coordinax.vecs.ProlateSpheroidalPos`, etc.)
   - time-differential vector objects, like velocities and accelerations (e.g.,
