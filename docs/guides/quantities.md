@@ -1,10 +1,11 @@
-# Quantities
+# Specialized Quantity Objects
 
 ## Working with `Angle` Objects
 
-The `Angle` class in `coordinax.angle` is a specialized quantity for
-representing angular measurements, similar to `unxt.Quantity` but with
-additional features and constraints tailored for angles.
+The {class}`~coordinax.angle.Angle` class in {mod}`coordinax.angle` is a
+specialized quantity for representing angular measurements, similar to
+{class}`~unxt.quantity.Quantity` but with additional features and constraints
+tailored for angles.
 
 <!-- invisible-code-block: python
 
@@ -15,8 +16,9 @@ import jax.numpy as jnp
 
 ### Creating Angles
 
-You can create an `Angle` just like a `Quantity`, by specifying a value and a
-unit with angular dimensions:
+You can create an {class}`~coordinax.angle.Angle` just like a
+{class}`~unxt.quantity.Quantity`, by specifying a value and a unit with angular
+dimensions:
 
 ```{code-block} python
 >>> import coordinax.angle as cxa
@@ -25,8 +27,9 @@ unit with angular dimensions:
 Angle(Array(45, dtype=int32, weak_type=True), unit='deg')
 ```
 
-Just like `unxt.Quantity`, you can flexibly create `Angle` objects using the
-`Angle.from_` constructor:
+Just like {class}`~unxt.quantity.Quantity`, you can flexibly create
+{class}`~coordinax.angle.Angle` objects using the
+{meth}`~coordinax.angle.Angle.from_` constructor:
 
 ```{code-block} python
 >>> cxa.Angle.from_(45, "deg")
@@ -42,8 +45,9 @@ Angle(Array([10, 15, 20], dtype=int32), unit='deg')
 
 ### Mathematical Operations
 
-`Angle` objects support arithmetic operations, broadcasting, and most
-mathematical functions, just like `unxt.Quantity`:
+{class}`~coordinax.angle.Angle` objects support arithmetic operations,
+broadcasting, and most mathematical functions, just like
+{class}`~unxt.quantity.Quantity`:
 
 ```{code-block} python
 >>> b = cxa.Angle(30, "deg")
@@ -59,9 +63,10 @@ For more information on mathematical operations, see the unxt documentation.
 
 ### Enforced Dimensionality
 
-Unlike a generic `Quantity`, the `Angle` class enforces that the unit must be
-angular (e.g., degrees, radians). Attempting to use a non-angular unit will
-raise an error:
+Unlike a generic {class}`~unxt.quantity.Quantity`, the
+{class}`~coordinax.angle.Angle` class enforces that the unit must be angular
+(e.g., degrees, radians). Attempting to use a non-angular unit will raise an
+error:
 
 ```{code-block} python
 >>> try: cxa.Angle(1, "m")
@@ -71,8 +76,8 @@ Angle must have units with angular dimensions.
 
 ### Wrapping Angles
 
-A key feature of `Angle` is the ability to wrap values to a specified range,
-which is useful for keeping angles within a branch cut:
+A key feature of {class}`~coordinax.angle.Angle` is the ability to wrap values
+to a specified range, which is useful for keeping angles within a branch cut:
 
 ```{code-block} python
 >>> from unxt import Quantity
@@ -81,7 +86,7 @@ which is useful for keeping angles within a branch cut:
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 
-The `Angle.wrap_to` method has a function counterpart
+The {meth}`~coordinax.angle.Angle.wrap_to` method has a function counterpart
 
 ```{code-block} python
 >>> cxa.wrap_to(a, u.Quantity(0, "deg"), u.Quantity(360, "deg"))
@@ -90,16 +95,18 @@ Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 
 ## Working with `Distance` Objects
 
-The `Distance` class in `coordinax.distance` is a specialized quantity for
-representing physical distances, with enforced dimensionality and convenient
-conversions to and from other distance-like representations. Related classes,
-`Parallax` and `DistanceModulus`, are also provided for common astronomical use
-cases.
+The {class}`~coordinax.distance.Distance` class in {mod}`coordinax.distance` is
+a specialized quantity for representing physical distances, with enforced
+dimensionality and convenient conversions to and from other distance-like
+representations. Related classes, {class}`~coordinax.distance.Parallax` and
+{class}`~coordinax.distance.DistanceModulus`, are also provided for common
+astronomical use cases.
 
 ### Creating Distance Objects
 
-You can create a `Distance` just like a `Quantity`, by specifying a value and a
-unit with length dimensions:
+You can create a {class}`~coordinax.distance.Distance` just like a
+{class}`~unxt.quantity.Quantity`, by specifying a value and a unit with length
+dimensions:
 
 ```{code-block} python
 >>> import coordinax.distance as cxd
@@ -110,7 +117,9 @@ Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')
 
 ### Creating Parallax and DistanceModulus Objects
 
-`Parallax` and `DistanceModulus` are alternative representations of distance:
+{class}`~coordinax.distance.Parallax` and
+{class}`~coordinax.distance.DistanceModulus` are alternative representations of
+distance:
 
 ```{code-block} python
 >>> p = cxd.Parallax(0.1, "mas")
@@ -144,8 +153,9 @@ Parallax(Array(4.848137e-10, dtype=float32, weak_type=True), unit='rad')
 ```
 
 All three classes enforce that their units are appropriate for their physical
-meaning (e.g., `Distance` must have length units, `Parallax` must have angular
-units, and `DistanceModulus` must have magnitude units).
+meaning (e.g., {class}`~coordinax.distance.Distance` must have length units,
+{class}`~coordinax.distance.Parallax` must have angular units, and
+{class}`~coordinax.distance.DistanceModulus` must have magnitude units).
 
 ---
 
