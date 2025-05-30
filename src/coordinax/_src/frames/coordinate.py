@@ -19,7 +19,7 @@ from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
 from coordinax._src.operators import Identity
 from coordinax._src.vectors.base import AbstractVector
-from coordinax._src.vectors.space.core import Space
+from coordinax._src.vectors.collection.core import Space
 
 
 # TODO: parametrize by the vector type(s), when Space is parametrized,

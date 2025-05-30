@@ -2,7 +2,7 @@
 
 __all__ = ["AbstractVectors", "Space"]
 
-from .base import AbstractVectors
+from .aggregate import AbstractVectors
 from .core import Space
 
 # Register by import

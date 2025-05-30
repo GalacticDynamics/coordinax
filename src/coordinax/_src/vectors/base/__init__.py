@@ -1,6 +1,7 @@
 """Bases."""
 
 __all__ = [
+    "AbstractVectorLike",
     "AbstractVector",
     "AbstractCartesian",
     # Flags
@@ -11,6 +12,7 @@ __all__ = [
 ]
 
 from .attribute import VectorAttribute
+from .base import AbstractVectorLike
 from .cartesian import AbstractCartesian
 from .flags import AttrFilter
 from .register_unxt import ToUnitsOptions
