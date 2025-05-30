@@ -181,9 +181,8 @@ Angle(Array(370, dtype=int32, weak_type=True), unit='deg')
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 
-Next, we have distance objects, which are represented by subclasses of the
-{class}`coordinax.distance.AbstractDistance` class. The most commonly used is
-the {class}`coordinax.distance.Distance` class,
+Similarly, distances in `coordinax` are represented by the
+{class}`~coordinax.distance.Distance` class:
 
 ```{code-block} python
 >>> d = cx.distance.Distance(10, "kpc")
@@ -191,10 +190,11 @@ the {class}`coordinax.distance.Distance` class,
 Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')
 ```
 
-but there are others like {class}`coordinax.distance.Parallax` and
-{class}`coordinax.distance.DistanceModulus`. These classes check that the units
-have distance dimensions, and they provide useful properties for converting
-between different distance representations.
+but other distance-like objects can be represented with the
+{class}`~coordinax.distance.Parallax` and
+{class}`~coordinax.distance.DistanceModulus` classes. These classes check that
+the units have distance dimensions, and they provide useful properties for
+converting between different distance representations.
 
 ```{code-block} python
 >>> d.parallax
@@ -223,9 +223,10 @@ You can create a vector by specifying its components and units:
     [1 2 3]>
 ```
 
-The {meth}`coordinax.vecs.CartesianPos3D.from_` method is a flexible constructor
-that allows you to create vectors from various input formats, such as lists,
-tuples, or NumPy arrays. Direct construction is also possible:
+The {meth}`~coordinax.vecs.AbstractVector.from_` method is a flexible
+constructor that allows you to create vectors from various input formats, such
+as lists, tuples, or NumPy arrays. Direct construction is also possible by
+specifying values for all components:
 
 ```{code-block} python
 >>> q = cxv.CartesianPos3D(x=u.Quantity(1, "kpc"), y=u.Quantity(2, "kpc"), z=u.Quantity(3, "kpc"))
@@ -236,7 +237,9 @@ tuples, or NumPy arrays. Direct construction is also possible:
 
 #### Vector Conversion
 
-Vectors can be converted between different coordinate systems:
+Vectors can be converted between different coordinate representations using the
+{meth}`~coordinax.vecs.AbstractVector.vconvert` method. For example, to convert
+a Cartesian position vector to spherical coordinates:
 
 ```{code-block} python
 >>> sph = q.vconvert(cxv.SphericalPos)
@@ -247,8 +250,8 @@ Vectors can be converted between different coordinate systems:
 
 #### Transforming Velocities
 
-Velocity vectors can be transformed to match the coordinate system of a
-position:
+Velocity vectors can also be converted to other representations, but require
+specifying the corresponding position:
 
 ```{code-block} python
 >>> v = cxv.CartesianVel3D.from_([4, 5, 6], "kpc/Myr")
@@ -260,8 +263,8 @@ position:
 
 #### Creating a Space Object
 
-A `Space` object collects related vectors (e.g., position, velocity,
-acceleration) into a single container:
+A {class}`~coordinax.vecs.Space` object collects related vectors (e.g.,
+position, velocity, acceleration) into a single container:
 
 ```{code-block} python
 >>> import coordinax as cx
@@ -276,7 +279,8 @@ Space({
 })
 ```
 
-You can convert all vectors in a `Space` to a different representation at once:
+You can convert all vectors in a {class}`~coordinax.vecs.Space` to a different
+representation at once:
 
 ```{code-block} python
 >>> space_sph = space.vconvert(cxv.SphericalPos)
@@ -291,8 +295,8 @@ Space({
 
 ### Operators on Vectors
 
-The `coordinax.ops` module (`cxo`) provides a framework for and set of vector
-operations that work seamlessly with all `coordinax` vector types.
+The {mod}`coordinax.ops` module (shorthand `cxo`) provides a framework for and
+set of vector operations that work seamlessly with all `coordinax` vector types.
 
 ```{code-block} python
 >>> import coordinax.ops as cxo
@@ -307,8 +311,9 @@ operations that work seamlessly with all `coordinax` vector types.
 
 ### Reference Frames and Coordinates
 
-`coordinax.frames` (`cxf`) provides a framework for defining and working with
-reference frames and coordinates.
+{mod}`coordinax.frames` (shorthand `cxf`) provides a framework for defining and
+working with reference frames and coordinate systems. Currently, this is geared
+towards astronomical coordinate systems.
 
 ```{code-block} python
 >>> import coordinax.frames as cxf
