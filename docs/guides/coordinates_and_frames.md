@@ -1,13 +1,13 @@
 # Coordinates and Frames
 
-The `coordinax.frames` module provides a flexible and extensible framework for
-working with reference frames and coordinate objects. This system allows you to
-represent positions in different frames, transform between frames, and attach
+The {mod}`coordinax.frames` module provides a flexible and extensible framework
+for working with reference frames and coordinate objects. This system allows you
+to represent positions in different frames, transform between frames, and attach
 frame metadata to your data.
 
 ## Built-in Frames
 
-`coordinax.frames` includes several standard astronomical frames:
+{mod}`coordinax.frames` includes several standard astronomical frames:
 
 ```{code-block} python
 >>> import coordinax.frames as cxf
@@ -27,7 +27,8 @@ Galactocentric(
 
 ## Creating Coordinate Objects
 
-Coordinate objects attach a vector (or `Space`) to a frame:
+Coordinate objects attach a vector (or {class}`~coordinax.vecs.Space`) to a
+frame:
 
 ```{code-block} python
 >>> import coordinax.vecs as cxv
@@ -43,8 +44,8 @@ Coordinate(
 )
 ```
 
-You can also create coordinates from a `Space` object containing multiple
-vectors.
+You can also create coordinates from a {class}`~coordinax.vecs.Space` object
+containing multiple vectors.
 
 ## Transforming Between Frames
 
