@@ -309,10 +309,14 @@ def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
 
     """
     # TODO: figure out how to do this in general, not just for q &/ p
-    if "length" in space and "speed" in space:
+    if "length" not in space:
+        raise NotImplementedError("TODO")  # noqa: EM101
+    if "speed" in space and "acceleration" in space:
+        q, p, a = self(space["length"], space["speed"], space["acceleration"])
+        out = replace(space, length=q, speed=p, acceleration=a)
+    elif "speed" in space:
         q, p = self(space["length"], space["speed"])
         out = replace(space, length=q, speed=p)
-
     else:
         out = replace(space, length=self(space["length"]))
 

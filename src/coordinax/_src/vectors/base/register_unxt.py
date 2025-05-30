@@ -137,7 +137,7 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
 @dispatch
 def uconvert(
     flag: Literal[ToUnitsOptions.consistent], vector: AbstractVector, /
-) -> "AbstractVector":
+) -> AbstractVector:
     """Convert the vector to a self-consistent set of units.
 
     Parameters
@@ -185,3 +185,33 @@ def uconvert(
         vector,
         **{k: u.uconvert(units_[k], v) for k, v in field_items(AttrFilter, vector)},
     )
+
+
+@dispatch
+def uconvert(usys: str, vector: AbstractVector, /) -> AbstractVector:
+    """Convert the vector to the given units system.
+
+    Parameters
+    ----------
+    usys
+        The units system to convert to, as a string.
+    vector
+        The vector to convert.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> usys = "galactic"
+    >>> vector = cx.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> u.uconvert(usys, vector)
+    CartesianPos3D(
+      x=Quantity(3.2407793e-20, unit='kpc'),
+      y=Quantity(6.4815585e-20, unit='kpc'),
+      z=Quantity(9.722338e-20, unit='kpc')
+    )
+
+    """
+    usys = u.unitsystem(usys)
+    return uconvert(usys, vector)

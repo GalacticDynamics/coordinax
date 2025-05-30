@@ -162,7 +162,22 @@ class AbstractVectorLike(
 
     @dispatch(precedence=-1)
     def uconvert(self, *args: Any, **kwargs: Any) -> "AbstractVectorLike":
-        """Convert the vector to the given units."""
+        """Convert the vector to the given units.
+
+        This just forwards to `unxt.uconvert`, reversing the order of the
+        arguments to match the `unxt` API.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> vec = cx.vecs.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> vec.uconvert({"length": "km"})
+        CartesianPos3D(
+            x=Quantity(1, unit='km'), y=Quantity(2, unit='km'), z=Quantity(3, unit='km')
+        )
+
+        """
         return u.uconvert(*args, self, **kwargs)
 
     @dispatch
@@ -183,10 +198,14 @@ class AbstractVectorLike(
         >>> usys = u.unitsystem("m", "s", "kg", "rad")
 
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> newvec = vec.uconvert(usys)
-        >>> print(newvec)
+
+        >>> print(vec.uconvert(usys))
         <CartesianPos3D: (x, y, z) [m]
             [1000. 2000. 3000.]>
+
+        >>> print(vec.uconvert("galactic"))
+        <CartesianPos3D: (x, y, z) [kpc]
+            [3.241e-17 6.482e-17 9.722e-17]>
 
         """
         return u.uconvert(usys, self)
