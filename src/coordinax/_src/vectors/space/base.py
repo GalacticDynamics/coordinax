@@ -111,7 +111,7 @@ class AbstractVectors(AbstractVector):
 
     @override
     @property
-    def shapes(self) -> MappingProxyType[str, MappingProxyType[str, tuple[int, ...]]]:  # type: ignore[override]
+    def shapes(self) -> MappingProxyType[str, tuple[int, ...]]:
         """Get the shapes of the spaces's fields.
 
         Examples
