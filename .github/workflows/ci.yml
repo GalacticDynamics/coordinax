@@ -77,7 +77,7 @@ jobs:
           --durations=20 --arraydiff -m"not slow"
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v5.4.2
+        uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -112,6 +112,6 @@ jobs:
           --durations=20
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v5.4.2
+        uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
