@@ -260,7 +260,7 @@ class AbstractVector(
     # Quax API
 
     @property
-    def shape(self) -> Any:
+    def shape(self) -> tuple[int, ...]:
         """Get the shape of the vector's components.
 
         When represented as a single array, the vector has an additional
