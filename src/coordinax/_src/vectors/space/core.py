@@ -4,7 +4,6 @@ __all__ = ["Space"]
 
 import math
 from collections.abc import ItemsView, Iterable, KeysView, Mapping, ValuesView
-from textwrap import indent
 from typing import TYPE_CHECKING, Any, final
 
 import equinox as eqx
@@ -15,6 +14,7 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 import unxt as u
+from dataclassish import replace
 from xmmutablemap import ImmutableMap
 
 from .base import AbstractVectors
@@ -397,11 +397,15 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         })
 
         """
+        data_pdoc = wl.pdoc(self._data, **kwargs)
+        data_pdoc = replace(  # remove the "{}""
+            data_pdoc, {"child": {"children": data_pdoc.child.children[1:-1]}}
+        )
         return (
             wl.TextDoc(self.__class__.__name__)
-            + wl.TextDoc("(")
-            + wl.pdoc(self._data, **kwargs)
-            + wl.TextDoc(")")
+            + wl.TextDoc("({\n")
+            + data_pdoc
+            + wl.TextDoc("\n})")
         )
 
     def __str__(self) -> str:  # TODO: update using wadler-lindig
@@ -423,7 +427,4 @@ class Space(AbstractVectors, ImmutableMap[Dimension, AbstractVector]):  # type: 
         })
 
         """
-        cls_name = self.__class__.__name__
-        kv = (f"{k!r}: {v!s}" for k, v in self._data.items())
-        data = "{\n" + indent(",\n".join(kv), "   ") + "\n}"
-        return cls_name + "(" + data + ")"
+        return wl.pformat(self, vector_form=True, short_arrays=False)
