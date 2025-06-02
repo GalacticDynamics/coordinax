@@ -1,6 +1,6 @@
 """Flag types on which to dispatch."""
 
-__all__: list[str] = []
+__all__ = ["AttrFilter"]
 
 from typing import Any, NoReturn, final
 
