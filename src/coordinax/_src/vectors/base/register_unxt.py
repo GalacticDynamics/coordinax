@@ -106,7 +106,7 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
 
     >>> cart = cx.vecs.CartesianPos2D(x=u.Quantity(1, "m"), y=u.Quantity(2, "km"))
     >>> cart.uconvert({"x": "km", "y": "m"})
-    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2000.0, unit='m'))
+    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2000., unit='m'))
 
     This also works for converting just some of the components:
 
@@ -121,7 +121,7 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
     SphericalPos(
       r=Distance(0.001, unit='km'),
       theta=Angle(0.7853982, unit='rad'),
-      phi=Angle(3.0, unit='rad')
+      phi=Angle(3., unit='rad')
     )
 
     """

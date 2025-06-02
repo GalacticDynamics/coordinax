@@ -149,7 +149,7 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
 
     >>> try: print(cx.vecs.vector(u.Quantity([1], "Msun")))
     ... except ValueError as e: print(e)
-    Cannot construct a Cartesian vector from Quantity[mass](i32[1], unit='solMass').
+    Cannot construct a Cartesian vector from Quantity['mass']([1], unit='solMass').
 
     """
     # TODO: use dispatch instead for these matches
