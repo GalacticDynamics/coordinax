@@ -3,7 +3,6 @@
 __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
-from textwrap import indent
 from typing import Any, ClassVar, cast
 from typing_extensions import override
 
@@ -118,8 +117,6 @@ class AbstractCoordinate(AbstractVector):
     # ===============================================================
     # Python API
 
-    _repr_latex_ = lambda self: wl.pformat(self)  # noqa: E731  # TODO: implement this
-
     def __str__(self) -> str:
         """Return string representation.
 
@@ -137,8 +134,12 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
-        str_fs = ",\n".join(indent(f"{k}={v}", "    ") for k, v in field_items(self))
-        return f"{type(self).__name__}(\n{str_fs}\n)"
+        return wl.pformat(self, width=88, vector_form=True)
+
+    # ===============================================================
+    # IPython API
+
+    _repr_latex_ = lambda self: wl.pformat(self)  # noqa: E731  # TODO: implement this
 
 
 ##############################################################################
