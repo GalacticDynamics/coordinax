@@ -73,7 +73,8 @@ class AbstractCoordinate(AbstractVector):
 
         # Otherwise, apply the transformation and return a new coordinate
         new_data = op(self.data)
-        return cast(AbstractCoordinate, type(self).from_(new_data, to_frame))
+        out = self.__class__.from_(new_data, to_frame)
+        return cast(AbstractCoordinate, out)
 
     # ===============================================================
     # Quax API
