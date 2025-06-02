@@ -25,7 +25,7 @@ You can also create N-D vectors:
 ```
 
 All vector types support flexible input: scalars, lists, arrays, or
-`unxt.Quantity`.
+{class}`~unxt.quantity.Quantity`.
 
 The component values can be multidimensional arrays, allowing for batch
 operations:
@@ -62,11 +62,13 @@ CartesianVel3D(
 
 `coordinax` provides vector classes for many dimensions:
 
-- `CartesianPos1D`, `CartesianPos2D`, `CartesianPos3D`, `CartesianPos4D`,
-  `CartesianPosND`
+- {class}`~coordinax.vecs.CartesianPos1D`,
+  {class}`~coordinax.vecs.CartesianPos2D`,
+  {class}`~coordinax.vecs.CartesianPos3D`,
+  {class}`~coordinax.vecs.CartesianPosND`
 - Similar classes for velocities (`CartesianVel*`), accelerations
   (`CartesianAcc*`), etc.
-- Spacetime vectors `FourVector`
+- Spacetime vectors {class}`~coordinax.vecs.FourVector`
 
 ## Conversion Between Representations
 
@@ -95,8 +97,8 @@ CartesianPos3D(
 
 ## Space Objects: Grouping Related Vectors
 
-A `Space` object collects related vectors (e.g., position, velocity,
-acceleration):
+A {class}`~coordinax.vecs.Space` object collects related vectors (e.g.,
+position, velocity, acceleration):
 
 ```{code-block} python
 >>> space = cxv.Space(length=q3, speed=v3, acceleration=a3)
@@ -114,7 +116,7 @@ Space({
 })
 ```
 
-You can convert all vectors in a `Space` at once:
+You can convert all vectors in a {class}`~coordinax.vecs.Space` at once:
 
 ```{code-block} python
 >>> space_sph = space.vconvert(cxv.SphericalPos)
