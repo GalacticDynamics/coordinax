@@ -1,8 +1,7 @@
 """Space."""
 
-__all__ = ["AbstractVectors", "Space"]
+__all__ = ["Space"]
 
-from .aggregate import AbstractVectors
 from .core import Space
 
 # Register by import
