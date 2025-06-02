@@ -2,12 +2,13 @@
 
 __all__ = ["AbstractOperator"]
 
-import textwrap
 from abc import abstractmethod
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 import equinox as eqx
+import jax.numpy as jnp
+import wadler_lindig as wl
 from jaxtyping import ArrayLike
 from plum import dispatch
 
@@ -19,6 +20,8 @@ from coordinax._src.vectors.base_pos import AbstractPos
 
 if TYPE_CHECKING:
     import coordinax.ops
+
+_sentinel: Final = object()
 
 
 class AbstractOperator(eqx.Module):
@@ -54,7 +57,7 @@ class AbstractOperator(eqx.Module):
         """Construct from a set of arguments."""
         raise NotImplementedError  # pragma: no cover
 
-    # ===========================================
+    # ===============================================================
     # Operator API
 
     @dispatch.abstract
@@ -102,10 +105,35 @@ class AbstractOperator(eqx.Module):
         """
         return simplify_op(self)
 
-    # ===========================================
-    # Python stuff
+    # ===============================================================
+    # Wadler-Lindig API
 
-    def __str__(self) -> str:  # TODO: use wadler-lindig
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return the documentation for the operator."""
+        # Get the field items, excluding those that should not be shown and
+        # those that are equal to the default value.
+        # TODO: better filtering using `fields`
+        fitems = list(field_items(flags.FilterRepr, self))
+        fitems = [
+            (k, v)
+            for k, v in fitems
+            if not jnp.all(v == getattr(self.__class__, k, _sentinel))
+        ]
+        # Make the field docs list
+        if len(fitems) == 1 and kwargs.get("compact_arrays", False):
+            docs = [wl.TextDoc(str(fitems[0][1]))]
+        else:
+            docs = wl.named_objs(fitems, **kwargs)
+
+        return wl.bracketed(
+            begin=wl.TextDoc(f"{self.__class__.__name__}("),
+            docs=docs,
+            sep=wl.comma,
+            end=wl.TextDoc(")"),
+            indent=kwargs.get("indent", 4),
+        )
+
+    def __str__(self) -> str:
         """Return a string representation of the operator.
 
         Examples
@@ -116,8 +144,8 @@ class AbstractOperator(eqx.Module):
         >>> op = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> print(op)
         GalileanRotation([[1 0 0]
-         [0 1 0]
-         [0 0 1]])
+                          [0 1 0]
+                          [0 0 1]])
 
         >>> op = cx.ops.GalileanOperator(
         ...     translation=u.Quantity([0., 2, 3, 4], "km"),
@@ -127,8 +155,8 @@ class AbstractOperator(eqx.Module):
         >>> print(op)
         GalileanOperator(
             rotation=GalileanRotation([[1. 0. 1.]
-                [0. 1. 0.]
-                [0. 0. 1.]]),
+                                       [0. 1. 0.]
+                                       [0. 0. 1.]]),
             translation=GalileanTranslation(<FourVector: (t[s], q=(x, y, z) [km])
                     [0. 2. 3. 4.]>),
             velocity=GalileanBoost(<CartesianVel3D: (x, y, z) [km / s]
@@ -136,15 +164,9 @@ class AbstractOperator(eqx.Module):
         )
 
         """
-        name = self.__class__.__name__
-        fitems = field_items(flags.FilterRepr, self)
-        if len(fitems) == 1:
-            fs = str(fitems[0][1]).replace("\n", "\n    ")
-        else:
-            fs = ",\n".join(textwrap.indent(f"{k}={v}", "    ") for k, v in fitems)
-            fs = "\n" + fs + "\n"
-
-        return f"{name}({fs})"
+        return wl.pformat(
+            self, width=88, vector_form=True, short_arrays=False, compact_arrays=True
+        )
 
     # ===========================================
     # Operator Composition
