@@ -158,10 +158,29 @@ class GalileanBoost(AbstractGalileanOperator):
 # Application
 
 
-@AbstractOperator.__call__.dispatch
+# Higher precedence than the compat.py:: (Op, t, Q3) dispatch.
+@AbstractOperator.__call__.dispatch(precedence=1)
 def call(
     self: GalileanBoost, delta_t: u.Quantity["time"], q: u.AbstractQuantity, /
-) -> tuple[u.Quantity["time"], AbstractPos]:
+) -> tuple[u.Quantity["time"], u.AbstractQuantity]:
+    """Apply the boost to the quantities.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> q = u.Quantity([1, 0, 0], "m")
+    >>> op = cx.ops.GalileanBoost.from_([1, -1, 3], "m/s")
+    >>> delta_t = u.Quantity(1, "s")
+
+    The position is updated by the boost velocity times the time interval:
+
+    >>> _, newq = op(delta_t, q)
+    >>> newq
+    Quantity(Array([ 2, -1,  3], dtype=int32), unit='m')
+
+    """
     vel = convert(self.velocity, u.Quantity)
     return delta_t, q + vel * delta_t
 
