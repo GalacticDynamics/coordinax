@@ -215,7 +215,7 @@ def vector(
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
         [[1 2 3]
-        [4 5 6]]>
+         [4 5 6]]>
 
     """
     obj = u.Quantity.from_(jnp.asarray(obj), unit)

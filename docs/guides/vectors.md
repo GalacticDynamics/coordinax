@@ -89,9 +89,9 @@ All vector types support batch operations and broadcasting:
 >>> arr = cxv.CartesianPos3D.from_([[1,2,3],[4,5,6]], "kpc")
 >>> arr * 2
 CartesianPos3D(
-    x=Quantity([2 8], unit='kpc'),
-    y=Quantity([ 4 10], unit='kpc'),
-    z=Quantity([ 6 12], unit='kpc')
+    x=Quantity([2, 8], unit='kpc'),
+    y=Quantity([ 4, 10], unit='kpc'),
+    z=Quantity([ 6, 12], unit='kpc')
 )
 ```
 

@@ -529,10 +529,10 @@ class AbstractVectorLike(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.astype(jnp.float32)
-        CartesianPos1D(x=Quantity([1. 2.], unit='m'))
+        CartesianPos1D(x=Quantity([1., 2.], unit='m'))
 
         >>> jnp.astype(vec, jnp.float32)
-        CartesianPos1D(x=Quantity([1. 2.], unit='m'))
+        CartesianPos1D(x=Quantity([1., 2.], unit='m'))
 
         """
         return replace(
@@ -554,10 +554,10 @@ class AbstractVectorLike(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec
-        CartesianPos1D(x=Quantity([1 2], unit='m'))
+        CartesianPos1D(x=Quantity([1, 2], unit='m'))
 
         >>> vec.astype({"x": jnp.float32})
-        CartesianPos1D(x=Quantity([1. 2.], unit='m'))
+        CartesianPos1D(x=Quantity([1., 2.], unit='m'))
 
         """
         return replace(
@@ -648,7 +648,8 @@ class AbstractVectorLike(
         ...                              y=u.Quantity(0, "m"))
 
         >>> vec.reshape(4)
-        CartesianPos2D(x=Quantity([1 2 3 4], unit='m'), y=Quantity([0 0 0 0], unit='m'))
+        CartesianPos2D(x=Quantity([1, 2, 3, 4], unit='m'),
+                       y=Quantity([0, 0, 0, 0], unit='m'))
 
         """
         # TODO: enable not needing to make a full-shaped copy
@@ -675,7 +676,7 @@ class AbstractVectorLike(
 
         >>> vec = cx.vecs.CartesianPos2D.from_([[1.1, 2.2], [3.3, 4.4]], "m")
         >>> vec.round(0)
-        CartesianPos2D(x=Quantity([1. 3.], unit='m'), y=Quantity([2. 4.], unit='m'))
+        CartesianPos2D(x=Quantity([1., 3.], unit='m'), y=Quantity([2., 4.], unit='m'))
 
         """
         changes = {k: v.round(decimals) for k, v in field_items(AttrFilter, self)}
@@ -694,7 +695,7 @@ class AbstractVectorLike(
 
         >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
         >>> vec.to_device(devices()[0])
-        CartesianPos1D(x=Quantity([1 2], unit='m'))
+        CartesianPos1D(x=Quantity([1, 2], unit='m'))
 
         """
         changes = {

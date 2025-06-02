@@ -119,7 +119,7 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D
     >>> vec = CartesianRepresentation(1, 2, 3, unit="km")
     >>> convert(vec, cx.CartesianPos3D)
     CartesianPos3D(
-      x=Quantity(1.0, unit='km'), y=Quantity(2.0, unit='km'), z=Quantity(3.0, unit='km')
+      x=Quantity(1., unit='km'), y=Quantity(2., unit='km'), z=Quantity(3., unit='km')
     )
 
     """
@@ -172,8 +172,8 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.Cylindrical
     >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
     >>> convert(cyl, cx.vecs.CylindricalPos)
     CylindricalPos(
-      rho=Quantity(1.0, unit='km'), phi=Angle(2.0, unit='deg'),
-      z=Quantity(30.0, unit='m')
+      rho=Quantity(1., unit='km'), phi=Angle(2., unit='deg'),
+      z=Quantity(30., unit='m')
     )
 
     """
@@ -223,8 +223,8 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
     ...                                      phi=3 * u.deg)
     >>> convert(sph, cx.SphericalPos)
     SphericalPos(
-      r=Distance(1.0, unit='km'), theta=Angle(2.0, unit='deg'),
-      phi=Angle(3.0, unit='deg')
+      r=Distance(1., unit='km'), theta=Angle(2., unit='deg'),
+      phi=Angle(3., unit='deg')
     )
 
     """
@@ -278,9 +278,9 @@ def apysph_to_lonlatsph(
     ...                               distance=1 * u.km)
     >>> convert(sph, cx.vecs.LonLatSphericalPos)
     LonLatSphericalPos(
-      lon=Angle(2.0, unit='deg'),
-      lat=Angle(3.0, unit='deg'),
-      distance=Distance(1.0, unit='km')
+      lon=Angle(2., unit='deg'),
+      lat=Angle(3., unit='deg'),
+      distance=Distance(1., unit='km')
     )
 
     """
@@ -328,9 +328,9 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> convert(dcart, cx.CartesianVel3D)
     CartesianVel3D(
-      x=Quantity(1.0, unit='km / s'),
-      y=Quantity(2.0, unit='km / s'),
-      z=Quantity(3.0, unit='km / s')
+      x=Quantity(1., unit='km / s'),
+      y=Quantity(2., unit='km / s'),
+      z=Quantity(3., unit='km / s')
     )
 
     """
@@ -387,9 +387,9 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.vecs.Cylindric
     ...                                     d_z=2 * u.km / u.s)
     >>> convert(dcyl, cx.vecs.CylindricalVel)
     CylindricalVel(
-      rho=Quantity(1.0, unit='km / s'),
-      phi=Quantity(2.0, unit='mas / yr'),
-      z=Quantity(2.0, unit='km / s')
+      rho=Quantity(1., unit='km / s'),
+      phi=Quantity(2., unit='mas / yr'),
+      z=Quantity(2., unit='km / s')
     )
 
     """
@@ -445,9 +445,9 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.Spherical
     ...                                    d_phi=3 * u.mas/u.yr)
     >>> convert(dif, cx.SphericalVel)
     SphericalVel(
-      r=Quantity(1.0, unit='km / s'),
-      theta=Quantity(2.0, unit='mas / yr'),
-      phi=Quantity(3.0, unit='mas / yr')
+      r=Quantity(1., unit='km / s'),
+      theta=Quantity(2., unit='mas / yr'),
+      phi=Quantity(3., unit='mas / yr')
     )
 
     """
@@ -507,9 +507,9 @@ def apysph_to_difflonlatsph(
     ...                             d_lon=3 * u.mas/u.yr)
     >>> convert(dif, cx.vecs.LonLatSphericalVel)
     LonLatSphericalVel(
-      lon=Quantity(3.0, unit='mas / yr'),
-      lat=Quantity(2.0, unit='mas / yr'),
-      distance=Quantity(1.0, unit='km / s')
+      lon=Quantity(3., unit='mas / yr'),
+      lat=Quantity(2., unit='mas / yr'),
+      distance=Quantity(1., unit='km / s')
     )
 
     """
@@ -570,9 +570,9 @@ def apysph_to_diffloncoslatsph(
     ...                                   d_lon_coslat=3 * u.mas/u.yr)
     >>> convert(dif, cx.vecs.LonCosLatSphericalVel)
     LonCosLatSphericalVel(
-      lon_coslat=Quantity(3.0, unit='mas / yr'),
-      lat=Quantity(2.0, unit='mas / yr'),
-      distance=Quantity(1.0, unit='km / s')
+      lon_coslat=Quantity(3., unit='mas / yr'),
+      lat=Quantity(2., unit='mas / yr'),
+      distance=Quantity(1., unit='km / s')
     )
 
     """

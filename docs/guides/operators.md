@@ -46,7 +46,7 @@ Applies a velocity boost to a velocity vector:
 >>> boost = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
 >>> boost(u.Quantity(1.0, "s"), q)[1]
 CartesianPos3D(
-    x=Quantity(1.0, unit='kpc'), y=Quantity(2.0, unit='kpc'), z=Quantity(3.0, unit='kpc')
+    x=Quantity(1., unit='kpc'), y=Quantity(2., unit='kpc'), z=Quantity(3., unit='kpc')
 )
 ```
 
@@ -56,11 +56,11 @@ Rotates vectors in space:
 
 ```{code-block} python
 >>> rot = cxo.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
->>> rot(q).round(3)
+>>> rot(q).round(2)
 CartesianPos3D(
-    x=Quantity(-2.0, unit='kpc'),
-    y=Quantity(1.0, unit='kpc'),
-    z=Quantity(3.0000002, unit='kpc')
+    x=Quantity(-2., unit='kpc'),
+    y=Quantity(1., unit='kpc'),
+    z=Quantity(3., unit='kpc')
 )
 ```
 
@@ -77,7 +77,7 @@ Operators can be composed using the {class}`~coordinax.ops.Pipe` class or the
 >>> pipe = cxo.Pipe([op1, op2])
 >>> pipe(q).round(2)
 CartesianPos3D(
-    x=Quantity(-2.0, unit='kpc'), y=Quantity(2.0, unit='kpc'), z=Quantity(3.0, unit='kpc')
+    x=Quantity(-2., unit='kpc'), y=Quantity(2., unit='kpc'), z=Quantity(3., unit='kpc')
 )
 ```
 
@@ -87,7 +87,7 @@ Or using the pipe operator:
 >>> combined = op1 | op2
 >>> combined(q).round(2)
 CartesianPos3D(
-    x=Quantity(-2.0, unit='kpc'), y=Quantity(2.0, unit='kpc'), z=Quantity(3.0, unit='kpc')
+    x=Quantity(-2., unit='kpc'), y=Quantity(2., unit='kpc'), z=Quantity(3., unit='kpc')
 )
 ```
 

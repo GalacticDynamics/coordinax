@@ -201,14 +201,14 @@ class Space(
         >>> w[0]
         Space({
             'length': CartesianPos3D(
-                x=Quantity([1 4], unit='m'),
-                y=Quantity([2 5], unit='m'),
-                z=Quantity([3 6], unit='m')
+                x=Quantity([1, 4], unit='m'),
+                y=Quantity([2, 5], unit='m'),
+                z=Quantity([3, 6], unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity([1 4], unit='m / s'),
-                y=Quantity([2 5], unit='m / s'),
-                z=Quantity([3 6], unit='m / s')
+                x=Quantity([1, 4], unit='m / s'),
+                y=Quantity([2, 5], unit='m / s'),
+                z=Quantity([3, 6], unit='m / s')
             )
         })
 
@@ -232,14 +232,14 @@ class Space(
         >>> w[...]
         Space({
             'length': CartesianPos3D(
-                x=Quantity([[1 4]], unit='m'),
-                y=Quantity([[2 5]], unit='m'),
-                z=Quantity([[3 6]], unit='m')
+                x=Quantity([[1, 4]], unit='m'),
+                y=Quantity([[2, 5]], unit='m'),
+                z=Quantity([[3, 6]], unit='m')
             ),
             'speed': CartesianVel3D(
-                x=Quantity([[1 4]], unit='m / s'),
-                y=Quantity([[2 5]], unit='m / s'),
-                z=Quantity([[3 6]], unit='m / s')
+                x=Quantity([[1, 4]], unit='m / s'),
+                y=Quantity([[2, 5]], unit='m / s'),
+                z=Quantity([[3, 6]], unit='m / s')
             )
         })
 
@@ -279,7 +279,7 @@ class Space(
         >>> print(w["length"])
         <CartesianPos3D: (x, y, z) [m]
             [[[1 2 3]
-            [4 5 6]]]>
+              [4 5 6]]]>
 
         By the actual dimension object:
 
@@ -287,7 +287,7 @@ class Space(
         >>> print(w[u.dimension("length")])
         <CartesianPos3D: (x, y, z) [m]
             [[[1 2 3]
-            [4 5 6]]]>
+              [4 5 6]]]>
 
         """
         if isinstance(key, Dimension):

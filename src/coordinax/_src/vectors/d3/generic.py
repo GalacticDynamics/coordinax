@@ -68,7 +68,7 @@ class Cartesian3D(AvalMixin, AbstractVector):
         >>> import coordinax as cx
         >>> q = cx.vecs.Cartesian3D.from_([1, 2, 3], "km")
         >>> print(q.norm())
-        Quantity[length](f32[], unit='km')
+        Quantity['length'](3.7416575, unit='km')
 
         """
         return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)

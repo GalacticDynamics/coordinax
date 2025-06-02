@@ -161,7 +161,7 @@ def convert_element_type_p_absvec(
     dtype('int32')
 
     >>> qlax.convert_element_type(vec, float)
-    CartesianPosND(q=Quantity([1. 2. 3.], unit='m'))
+    CartesianPosND(q=Quantity([1., 2., 3.], unit='m'))
 
     """
     convert_p = quaxify(jax.lax.convert_element_type_p.bind)
