@@ -1,6 +1,6 @@
 """Frames sub-package."""
 
-__all__ = ["frame_transform_op"]
+__all__ = ["frame_transform_op", "frame_of"]
 
 from typing import Annotated as Antd, Any
 from typing_extensions import Doc
