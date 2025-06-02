@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__: list[str] = []
+__all__ = ["VectorAttribute"]
 
 from collections.abc import Callable
 from dataclasses import KW_ONLY, dataclass, field, is_dataclass
