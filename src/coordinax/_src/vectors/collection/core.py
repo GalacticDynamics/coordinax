@@ -183,15 +183,6 @@ class Space(
         """
         raise NotImplementedError  # TODO: implement this
 
-    # ---------------------------------
-    # Constructors
-
-    @classmethod
-    @dispatch.abstract
-    def from_(cls: type[Any], *args: Any, **kwargs: Any) -> Any:
-        """Create a Space from arguments."""
-        raise NotImplementedError  # pragma: no cover
-
     # ===============================================================
     # Mapping API
 

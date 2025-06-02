@@ -88,6 +88,40 @@ class AbstractVectorLike(
 
     """
 
+    # ---------------------------------
+    # Constructors
+
+    @classmethod
+    @dispatch.abstract
+    def from_(
+        cls: "type[AbstractVectorLike]", *args: Any, **kwargs: Any
+    ) -> "AbstractVectorLike":
+        """Create a vector-like object from arguments.
+
+        Examples
+        --------
+        >>> import coordinax.vecs as cxv
+
+        >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> print(q)
+        <CartesianPos3D: (x, y, z) [m]
+            [1 2 3]>
+
+        >>> v = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
+        >>> print(v)
+        <CartesianVel3D: (x, y, z) [m / s]
+            [1 2 3]>
+
+        >>> space = cxv.Space.from_(q)
+        >>> print(space)
+        Space({
+         'length': <CartesianPos3D: (x, y, z) [m]
+                       [1 2 3]>
+        })
+
+        """
+        raise NotImplementedError  # pragma: no cover
+
     # ===============================================================
     # Vector API
 

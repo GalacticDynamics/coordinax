@@ -108,20 +108,6 @@ class AbstractVector(
         ]
         cls._AUX_FIELDS = tuple(aux)
 
-    # ---------------------------------------------------------------
-    # Constructors
-
-    @classmethod
-    def from_(
-        cls: "type[AbstractVector]", *args: Any, **kwargs: Any
-    ) -> "AbstractVector":
-        """Create a vector from arguments.
-
-        See `coordinax.vector` for more information.
-
-        """
-        return vector(cls, *args, **kwargs)
-
     # ===============================================================
     # Vector API
 
@@ -610,3 +596,17 @@ class AbstractVector(
                 wl.TextDoc("    ") + vs_doc + wl.TextDoc(">")
             ).group()
         )
+
+
+# ---------------------------------------------------------------
+# Constructors
+
+
+@AbstractVector.from_.dispatch  # type: ignore[misc]
+def from_(cls: type[AbstractVector], *args: Any, **kwargs: Any) -> AbstractVector:
+    """Create a vector from arguments.
+
+    See `coordinax.vector` for more information.
+
+    """
+    return vector(cls, *args, **kwargs)
