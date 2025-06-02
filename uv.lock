@@ -452,7 +452,7 @@ dev = [
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
     { name = "pytest-cov", specifier = ">=3" },
     { name = "pytest-env", specifier = ">=1.1.5" },
-    { name = "pytest-github-actions-annotate-failures" },
+    { name = "pytest-github-actions-annotate-failures", specifier = ">=0.3.0" },
     { name = "pytz", specifier = ">=2024.2" },
     { name = "sphinx", specifier = ">=7.0" },
     { name = "sphinx-autobuild", specifier = ">=2024.9.3" },
@@ -491,7 +491,7 @@ test = [
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
     { name = "pytest-cov", specifier = ">=3" },
     { name = "pytest-env", specifier = ">=1.1.5" },
-    { name = "pytest-github-actions-annotate-failures" },
+    { name = "pytest-github-actions-annotate-failures", specifier = ">=0.3.0" },
     { name = "sybil", specifier = ">=8.0.0" },
 ]
 test-all = [
@@ -500,7 +500,7 @@ test-all = [
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
     { name = "pytest-cov", specifier = ">=3" },
     { name = "pytest-env", specifier = ">=1.1.5" },
-    { name = "pytest-github-actions-annotate-failures" },
+    { name = "pytest-github-actions-annotate-failures", specifier = ">=0.3.0" },
     { name = "sybil", specifier = ">=8.0.0" },
 ]
 
