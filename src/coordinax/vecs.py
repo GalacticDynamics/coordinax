@@ -98,7 +98,6 @@ __all__ = [
     "CartesianAccND",
     "PoincarePolarVector",
     # --- Space ---
-    "AbstractVectors",
     "Space",
     # --- Misc ---
     "POSITION_CLASSES",
@@ -131,7 +130,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
     from ._src.vectors.base_acc import ACCELERATION_CLASSES, AbstractAcc
     from ._src.vectors.base_pos import POSITION_CLASSES, AbstractPos
     from ._src.vectors.base_vel import VELOCITY_CLASSES, AbstractVel
-    from ._src.vectors.collection import AbstractVectors, Space
+    from ._src.vectors.collection import Space
     from ._src.vectors.d1 import (
         AbstractAcc1D,
         AbstractPos1D,
