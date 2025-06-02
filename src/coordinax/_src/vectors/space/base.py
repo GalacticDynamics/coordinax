@@ -22,7 +22,7 @@ class AbstractVectors(AbstractVector):
     """A collection of vectors.
 
     A concrete vector collection class may be attribute-driven, like a
-    dataclasses, but must also implement aspects of the `Mapping` API.
+    dataclass, but must also implement aspects of the `Mapping` API.
 
     """
 
