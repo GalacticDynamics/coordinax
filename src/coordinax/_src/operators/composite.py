@@ -11,7 +11,7 @@ import equinox as eqx
 from dataclassish import DataclassInstance
 
 from .base import AbstractOperator
-from coordinax._src.vectors.base import AbstractVector
+from coordinax._src.vectors.base import AbstractVectorLike
 
 if TYPE_CHECKING:
     import coordinax.ops
@@ -116,8 +116,8 @@ class AbstractCompositeOperator(AbstractOperator):
 
 @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[misc]
 def call(
-    self: AbstractCompositeOperator, x: AbstractVector, /, **kwargs: Any
-) -> AbstractVector:
+    self: AbstractCompositeOperator, x: AbstractVectorLike, /, **kwargs: Any
+) -> AbstractVectorLike:
     """Apply the operator to the coordinates.
 
     This is the default implementation, which applies the operators in

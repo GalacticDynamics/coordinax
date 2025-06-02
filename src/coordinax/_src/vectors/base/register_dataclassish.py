@@ -12,11 +12,11 @@ from plum import dispatch
 from dataclassish import asdict, field_items, fields
 
 from .attribute import VectorAttribute
+from .base import AbstractVectorLike
 from .flags import AttrFilter
-from .vector import AbstractVector
 
 
-def _is_attr(obj_cls: type[AbstractVector], name: str) -> bool:
+def _is_attr(obj_cls: type[AbstractVectorLike], name: str, /) -> bool:
     """Check if the attribute is a `VectorAttribute`."""
     return isinstance(getattr(obj_cls, name, None), VectorAttribute)
 
@@ -74,7 +74,7 @@ def fields(flag: type[AttrFilter], obj_cls: type[object]) -> tuple[Field, ...]: 
 @dispatch
 def asdict(
     flag: type[AttrFilter],
-    obj: AbstractVector,
+    obj: AbstractVectorLike,
     /,
     *,
     dict_factory: Callable[[list[tuple[str, Any]]], dict[str, Any]] = dict,
@@ -104,7 +104,7 @@ def asdict(
 
 
 @dispatch
-def field_keys(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[str, ...]:
+def field_keys(flag: type[AttrFilter], obj: AbstractVectorLike, /) -> tuple[str, ...]:
     """Return field keys, filtering out `VectorAttribute`s.
 
     Examples
@@ -125,7 +125,7 @@ def field_keys(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[str, ...
 
 @dispatch
 def field_keys(
-    flag: type[AttrFilter], obj_cls: type[AbstractVector], /
+    flag: type[AttrFilter], obj_cls: type[AbstractVectorLike], /
 ) -> tuple[str, ...]:
     """Return field keys, filtering out `VectorAttribute`s.
 
@@ -147,7 +147,7 @@ def field_keys(
 
 
 @dispatch
-def field_values(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[Any, ...]:
+def field_values(flag: type[AttrFilter], obj: AbstractVectorLike, /) -> tuple[Any, ...]:
     """Return field values, filtering out `VectorAttribute`s.
 
     Examples
@@ -172,7 +172,7 @@ def field_values(flag: type[AttrFilter], obj: AbstractVector, /) -> tuple[Any, .
 
 @dispatch
 def field_items(
-    flag: type[AttrFilter], obj: AbstractVector, /
+    flag: type[AttrFilter], obj: AbstractVectorLike, /
 ) -> tuple[tuple[str, Any], ...]:
     """Return field items, filtering out `VectorAttribute`s.
 

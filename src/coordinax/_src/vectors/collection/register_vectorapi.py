@@ -10,7 +10,7 @@ from plum import dispatch
 import quaxed.numpy as jnp
 
 from .core import Space
-from coordinax._src.vectors.api import vconvert
+from coordinax._src.vectors.api import vconvert, vector
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -20,9 +20,8 @@ from coordinax._src.vectors.base_vel import AbstractVel
 # Constructor dispatches
 
 
-# This dispatch is needed because a Space is both a Map and a Vector.
-@dispatch(precedence=1)
-def vector(cls: type[Space], obj: Space, /) -> Space:
+@Space.from_.dispatch(precedence=1)
+def from_(cls: type[Space], obj: Space, /) -> Space:
     """Construct a Space, returning the Space.
 
     Examples
@@ -37,8 +36,8 @@ def vector(cls: type[Space], obj: Space, /) -> Space:
     return obj
 
 
-@dispatch
-def vector(cls: type[Space], obj: AbstractPos, /) -> Space:
+@Space.from_.dispatch
+def from_(cls: type[Space], obj: AbstractPos, /) -> Space:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -51,11 +50,11 @@ def vector(cls: type[Space], obj: AbstractPos, /) -> Space:
     Space({ 'length': CartesianPos3D( ... ) })
 
     """
-    return cls(length=obj)
+    return Space(length=obj)
 
 
-@dispatch
-def vector(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
+@Space.from_.dispatch
+def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -72,10 +71,8 @@ def vector(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
     return cls(length=q, speed=p)
 
 
-@dispatch
-def vector(
-    cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /
-) -> Space:
+@Space.from_.dispatch
+def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /) -> Space:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -95,11 +92,8 @@ def vector(
     return cls(length=q, speed=p, acceleration=a)
 
 
-@dispatch
-def vector(
-    cls: type[Space],
-    obj: Mapping[str, Any],
-) -> Space:
+@Space.from_.dispatch
+def from_(cls: type[Space], obj: Mapping[str, Any]) -> Space:
     """Construct a Space from a Mapping.
 
     Examples

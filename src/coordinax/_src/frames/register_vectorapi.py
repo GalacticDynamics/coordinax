@@ -12,7 +12,7 @@ from .coordinate import Coordinate
 from .xfm import TransformedReferenceFrame
 from coordinax._src.operators import AbstractOperator
 from coordinax._src.vectors.base_pos import AbstractPos
-from coordinax._src.vectors.space.core import Space
+from coordinax._src.vectors.collection.core import Space
 
 # ===============================================================
 # Constructors
