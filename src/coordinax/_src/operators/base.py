@@ -133,6 +133,9 @@ class AbstractOperator(eqx.Module):
             indent=kwargs.get("indent", 4),
         )
 
+    # ===============================================================
+    # Python API
+
     def __str__(self) -> str:
         """Return a string representation of the operator.
 

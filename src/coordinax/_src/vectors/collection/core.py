@@ -452,6 +452,9 @@ class Space(
             + wl.TextDoc("\n})")
         )
 
+    # ===============================================================
+    # Python API
+
     def __str__(self) -> str:  # TODO: update using wadler-lindig
         """Return the string representation.
 

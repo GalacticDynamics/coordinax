@@ -117,8 +117,6 @@ class AbstractCoordinate(AbstractVector):
     # ===============================================================
     # Python API
 
-    _repr_latex_ = lambda self: wl.pformat(self)  # noqa: E731  # TODO: implement this
-
     def __str__(self) -> str:
         """Return string representation.
 
@@ -137,6 +135,11 @@ class AbstractCoordinate(AbstractVector):
 
         """
         return wl.pformat(self, width=88, vector_form=True)
+
+    # ===============================================================
+    # IPython API
+
+    _repr_latex_ = lambda self: wl.pformat(self)  # noqa: E731  # TODO: implement this
 
 
 ##############################################################################
