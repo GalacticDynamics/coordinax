@@ -88,7 +88,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     ...                                    distance=u.Quantity(-3, "km"))
     ...     except Exception as e:
     ...         print(e)
-    The input radial distance r must be non-negative.
+    Distance must be non-negative.
 
     """
 
@@ -108,7 +108,6 @@ class LonLatSphericalPos(AbstractSphericalPos):
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
         checks.check_polar_range(self.lat, -Angle(90, "deg"), Angle(90, "deg"))
-        checks.check_r_non_negative(self.distance)
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)

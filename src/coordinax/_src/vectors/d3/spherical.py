@@ -57,7 +57,6 @@ class SphericalPos(AbstractSphericalPos):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        checks.check_r_non_negative(self.r)
         checks.check_polar_range(self.theta)
 
 

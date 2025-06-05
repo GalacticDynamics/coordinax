@@ -19,8 +19,7 @@ from dataclassish.converters import Unless
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from coordinax._src.angles import Angle, BatchableAngle
-from coordinax._src.distances import BBtLength
-from coordinax._src.vectors.checks import check_r_non_negative
+from coordinax._src.distances import AbstractDistance, BBtLength, Distance
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
@@ -32,7 +31,7 @@ class CylindricalPos(AbstractPos3D):
 
     """
 
-    rho: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    rho: BBtLength = eqx.field(converter=Unless(AbstractDistance, Distance.from_))
     r"""Cylindrical radial distance :math:`\rho \in [0,+\infty)`."""
 
     phi: BatchableAngle = eqx.field(
@@ -43,10 +42,6 @@ class CylindricalPos(AbstractPos3D):
     z: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
-    def __check_init__(self) -> None:
-        """Check the validity of the initialisation."""
-        check_r_non_negative(self.rho)
-
     @override
     @ft.partial(eqx.filter_jit, inline=True)
     def norm(self) -> BBtLength:
@@ -55,10 +50,10 @@ class CylindricalPos(AbstractPos3D):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax as cx
-        >>> c = cx.vecs.CylindricalPos(rho=u.Quantity(3, "km"),
-        ...                            phi=u.Quantity(0, "deg"),
-        ...                            z=u.Quantity(4, "km"))
+        >>> import coordinax.vecs as cxv
+        >>> c = cxv.CylindricalPos(rho=u.Quantity(3, "km"),
+        ...                        phi=u.Quantity(0, "deg"),
+        ...                        z=u.Quantity(4, "km"))
         >>> c.norm()
         Quantity(Array(5., dtype=float32, ...), unit='km')
 
