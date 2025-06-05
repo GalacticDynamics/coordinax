@@ -14,29 +14,6 @@ _0d = Angle(0, "rad")
 _pid = Angle(180, "deg")
 
 
-def check_r_non_negative(r: u.AbstractQuantity, /) -> u.AbstractQuantity:
-    """Check that the radial distance is non-negative.
-
-    Examples
-    --------
-    >>> import unxt as u
-
-    Pass through the input if the radial distance is non-negative.
-
-    >>> x = u.Quantity([0, 1, 2], "m")
-    >>> check_r_non_negative(x)
-    Quantity(Array([0, 1, 2], dtype=int32), unit='m')
-
-    Raise an error if the radial distance is negative.
-
-    >>> x = u.Quantity([-1, 1, 2], "m")
-    >>> try: check_r_non_negative(x)
-    ... except Exception: pass
-
-    """
-    return check_non_negative(r, name="radial distance r")
-
-
 def check_polar_range(
     polar: BatchableAngleQ,
     /,

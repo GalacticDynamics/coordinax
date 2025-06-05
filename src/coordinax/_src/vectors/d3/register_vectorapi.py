@@ -178,7 +178,7 @@ def vector(
     """
     # 1) Convert the inputs
     fields = SphericalPos.__dataclass_fields__
-    r = fields["r"].metadata["converter"](r)
+    # don't convert r to avoid negatives condition
     theta = fields["theta"].metadata["converter"](theta)
     phi = fields["phi"].metadata["converter"](phi)
 
@@ -266,7 +266,7 @@ def vector(
     fields = LonLatSphericalPos.__dataclass_fields__
     lon = fields["lon"].metadata["converter"](lon)
     lat = fields["lat"].metadata["converter"](lat)
-    distance = fields["distance"].metadata["converter"](distance)
+    # don't convert r to avoid negatives condition
 
     # 2) handle negative distances
     distance_pred = distance < jnp.zeros_like(distance)
@@ -347,7 +347,7 @@ def vector(
     """
     # 1) Convert the inputs
     fields = MathSphericalPos.__dataclass_fields__
-    r = fields["r"].metadata["converter"](r)
+    # don't convert r to avoid negatives condition
     theta = fields["theta"].metadata["converter"](theta)
     phi = fields["phi"].metadata["converter"](phi)
 
