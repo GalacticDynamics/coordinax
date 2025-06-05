@@ -13,6 +13,7 @@ import unxt as u
 from unxt.quantity import BareQuantity
 
 from .base import AbstractDistance
+from .measures import Distance
 
 T = TypeVar("T")
 
@@ -42,9 +43,7 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
 
 
 @register(lax.div_p)
-def div_p_abstractdistances(
-    x: AbstractDistance, y: AbstractDistance, /
-) -> BareQuantity:
+def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Quantity:
     """Division of two Distances.
 
     Examples
@@ -55,10 +54,10 @@ def div_p_abstractdistances(
     >>> q1 = Distance(2, "m")
     >>> q2 = Distance(4, "m")
     >>> jnp.divide(q1, q2)
-    BareQuantity(Array(0.5, dtype=float32, ...), unit='')
+    Quantity(Array(0.5, dtype=float32, ...), unit='')
 
     """
-    return BareQuantity(lax.div(x.value, y.value), unit=x.unit / y.unit)
+    return u.Quantity(lax.div(x.value, y.value), unit=x.unit / y.unit)
 
 
 # ==============================================================================
@@ -114,10 +113,28 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
-     BareQuantity(Array(8, dtype=int32, ...), unit='m3')
+    BareQuantity(Array(8, dtype=int32, ...), unit='m3')
 
     """
     return BareQuantity(lax.integer_pow(x.value, y), unit=x.unit**y)
+
+
+# ==============================================================================
+
+
+@register(lax.neg_p)
+def neg_p_distance(x: Distance, /) -> u.Quantity:
+    """Negation of a Distance degrades to a Quantity.
+
+    Examples
+    --------
+    >>> from coordinax.distance import Distance
+    >>> q = Distance(10, "m")
+    >>> -q
+    Quantity(Array(-10, dtype=int32, ...), unit='m')
+
+    """
+    return u.Quantity(-x.value, x.unit)
 
 
 # ==============================================================================

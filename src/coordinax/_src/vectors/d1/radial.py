@@ -12,7 +12,6 @@ from dataclassish.converters import Unless
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
-from coordinax._src.vectors.checks import check_r_non_negative
 
 
 @final
@@ -33,10 +32,6 @@ class RadialPos(AbstractPos1D):
 
     r: BatchableDistance = eqx.field(converter=Unless(AbstractDistance, Distance.from_))
     r"""Radial distance :math:`r \in [0,+\infty)`."""
-
-    def __check_init__(self) -> None:
-        """Check the initialization."""
-        check_r_non_negative(self.r)
 
 
 @final

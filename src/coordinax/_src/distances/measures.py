@@ -49,11 +49,35 @@ class Distance(AbstractDistance):
     unit: AstropyUnits = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""
 
+    _: KW_ONLY
+    check_negative: bool = eqx.field(default=True, static=True, compare=False)
+    """Whether to check that the distance is strictly non-negative."""
+
     def __check_init__(self) -> None:
         """Check the initialization."""
         if u.dimension_of(self) != length_dimension:
             msg = "Distance must have dimensions length."
             raise ValueError(msg)
+
+        if self.check_negative:
+            eqx.error_if(
+                self.value,
+                jnp.any(jnp.less(self.value, 0)),
+                "Distance must be non-negative.",
+            )
+
+    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+        """Return a Wadler-Lindig document for the parallax."""
+        # Use the default __pdoc__ method to get the base document.
+        pdoc = super().__pdoc__(**kwargs)
+
+        # TODO: enable filtering in AbstractQuantity.__pdoc__ to avoid this.
+        # Don't show check_negative if it's the default.
+        fs = pdoc.children[2].child.child.children
+        if fs[-1].children[-1].text == str(self.__class__.check_negative):
+            object.__setattr__(pdoc.children[2].child.child, "children", fs[:-2])
+
+        return pdoc
 
 
 @final
@@ -152,6 +176,7 @@ class Parallax(AbstractDistance):
         # Use the default __pdoc__ method to get the base document.
         pdoc = super().__pdoc__(**kwargs)
 
+        # TODO: enable filtering in AbstractQuantity.__pdoc__ to avoid this.
         # Don't show check_negative if it's the default.
         fs = pdoc.children[2].child.child.children
         if fs[-1].children[-1].text == str(self.__class__.check_negative):

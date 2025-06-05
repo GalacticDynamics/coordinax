@@ -14,7 +14,6 @@ import coordinax._src.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angles import Angle, BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
-from coordinax._src.vectors.checks import check_r_non_negative
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 
@@ -32,10 +31,6 @@ class PolarPos(AbstractPos2D):
 
     We use the symbol `phi` to adhere to the ISO standard 31-11.
     """
-
-    def __check_init__(self) -> None:
-        """Check the initialization."""
-        check_r_non_negative(self.r)
 
     @override
     def norm(self) -> BatchableDistance:

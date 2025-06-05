@@ -172,7 +172,7 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.Cylindrical
     >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
     >>> convert(cyl, cx.vecs.CylindricalPos)
     CylindricalPos(
-      rho=Quantity(1., unit='km'), phi=Angle(2., unit='deg'),
+      rho=Distance(1., unit='km'), phi=Angle(2., unit='deg'),
       z=Quantity(30., unit='m')
     )
 
