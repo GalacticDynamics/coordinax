@@ -591,7 +591,7 @@ class AbstractVector(
                 + comps_doc
             ).group()
             + aux_doc.group()  # aux fields
-            + wl.TextDoc("\n")  # force a line break
+            + wl.BreakDoc(" " * 9_999)  # TODO: better way to force break
             + (  # values (including end >)
                 wl.TextDoc("    ") + vs_doc + wl.TextDoc(">")
             ).group()
