@@ -9,14 +9,14 @@ from typing import Any
 
 from plum import dispatch
 
-from .core import Space
+from .core import KinematicSpace
 from coordinax._src.vectors.base import AbstractVector
 
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
 @dispatch(precedence=1)  # type: ignore[misc,call-overload]
-def fields(obj: Space, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
+def fields(obj: KinematicSpace, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
     """Return the items from a Space.
 
     Examples
@@ -28,7 +28,7 @@ def fields(obj: Space, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
-    >>> space = cx.Space(length=x, speed=v, acceleration=a)
+    >>> space = cx.KinematicSpace(length=x, speed=v, acceleration=a)
 
     >>> fields(space)
     (Field(name='length',type=<class 'coordinax...CartesianPos3D'>,...),
@@ -42,7 +42,7 @@ def fields(obj: Space, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
 @dispatch(precedence=1)  # type: ignore[misc,call-overload]
-def field_keys(obj: Space, /) -> KeysView[str]:
+def field_keys(obj: KinematicSpace, /) -> KeysView[str]:
     """Return the keys from a Space.
 
     Examples
@@ -54,7 +54,7 @@ def field_keys(obj: Space, /) -> KeysView[str]:
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
-    >>> space = cx.Space(length=x, speed=v, acceleration=a)
+    >>> space = cx.KinematicSpace(length=x, speed=v, acceleration=a)
 
     >>> field_keys(space)
     dict_keys(['length', 'speed', 'acceleration'])
@@ -66,7 +66,7 @@ def field_keys(obj: Space, /) -> KeysView[str]:
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
 @dispatch(precedence=1)  # type: ignore[misc,call-overload]
-def field_values(obj: Space, /) -> ValuesView[AbstractVector]:
+def field_values(obj: KinematicSpace, /) -> ValuesView[AbstractVector]:
     """Return the values from a Space.
 
     Examples
@@ -78,7 +78,7 @@ def field_values(obj: Space, /) -> ValuesView[AbstractVector]:
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
-    >>> space = cx.Space(length=x, speed=v, acceleration=a)
+    >>> space = cx.KinematicSpace(length=x, speed=v, acceleration=a)
 
     >>> field_values(space)
     dict_values([CartesianPos3D(...), CartesianVel3D(...), CartesianAcc3D(...)])
@@ -90,7 +90,7 @@ def field_values(obj: Space, /) -> ValuesView[AbstractVector]:
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
 @dispatch(precedence=1)  # type: ignore[misc,call-overload]
-def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
+def field_items(obj: KinematicSpace, /) -> ItemsView[str, AbstractVector]:
     """Return the items from a Space.
 
     Examples
@@ -102,7 +102,7 @@ def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
-    >>> space = cx.Space(length=x, speed=v, acceleration=a)
+    >>> space = cx.KinematicSpace(length=x, speed=v, acceleration=a)
 
     >>> field_items(space)
     dict_items([('length', CartesianPos3D(...)),
@@ -116,7 +116,7 @@ def field_items(obj: Space, /) -> ItemsView[str, AbstractVector]:
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `replace` dispatch table.
 @dispatch(precedence=1)  # type: ignore[misc,call-overload]
-def replace(obj: Space, /, **kwargs: AbstractVector) -> Space:
+def replace(obj: KinematicSpace, /, **kwargs: AbstractVector) -> KinematicSpace:
     """Replace the components of the vector.
 
     Examples
@@ -129,7 +129,7 @@ def replace(obj: Space, /, **kwargs: AbstractVector) -> Space:
     >>> v = cx.CartesianVel3D.from_([4, 5, 6], "km/s")
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "km/s^2")
 
-    >>> space = cx.Space(length=x, speed=v, acceleration=a)
+    >>> space = cx.KinematicSpace(length=x, speed=v, acceleration=a)
     >>> newspace = replace(space, length=cx.CartesianPos3D.from_([3, 2, 1], "km"))
     >>> newspace["length"].x
     Quantity(Array(3, dtype=int32), unit='km')

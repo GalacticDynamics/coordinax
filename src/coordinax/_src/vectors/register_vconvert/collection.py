@@ -7,26 +7,26 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 
-from coordinax._src.vectors.collection import Space
+from coordinax._src.vectors.collection import KinematicSpace
 from coordinax._src.vectors.d3 import CartesianPos3D, CartesianVel3D
 from coordinax._src.vectors.dn import PoincarePolarVector
 
 
 @dispatch
-def vconvert(target: type[Space], w: Space, /) -> Space:
-    """Space -> Space.
+def vconvert(target: type[KinematicSpace], w: KinematicSpace, /) -> KinematicSpace:
+    """Space -> KinematicSpace.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> w = cx.Space(
+    >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
-    >>> cx.vconvert(cx.Space, w)
-    Space({ 'length': CartesianPos3D( ... ),
+    >>> cx.vconvert(cx.KinematicSpace, w)
+    KinematicSpace({ 'length': CartesianPos3D( ... ),
              'speed': CartesianVel3D( ... ) })
 
     """
@@ -34,14 +34,16 @@ def vconvert(target: type[Space], w: Space, /) -> Space:
 
 
 @dispatch
-def vconvert(target: type[PoincarePolarVector], w: Space, /) -> PoincarePolarVector:
+def vconvert(
+    target: type[PoincarePolarVector], w: KinematicSpace, /
+) -> PoincarePolarVector:
     """Space -> PoincarePolarVector.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> w = cx.Space(
+    >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )

@@ -9,7 +9,7 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 
-from .core import Space
+from .core import KinematicSpace
 from coordinax._src.vectors.api import vconvert, vector
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
@@ -20,24 +20,24 @@ from coordinax._src.vectors.base_vel import AbstractVel
 # Constructor dispatches
 
 
-@Space.from_.dispatch(precedence=1)
-def from_(cls: type[Space], obj: Space, /) -> Space:
-    """Construct a Space, returning the Space.
+@KinematicSpace.from_.dispatch(precedence=1)
+def from_(cls: type[KinematicSpace], obj: KinematicSpace, /) -> KinematicSpace:
+    """Construct a Space, returning the KinematicSpace.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> q = cx.Space.from_(cx.CartesianPos3D.from_([1, 2, 3], "m"))
-    >>> cx.Space.from_(q) is q
+    >>> q = cx.KinematicSpace.from_(cx.CartesianPos3D.from_([1, 2, 3], "m"))
+    >>> cx.KinematicSpace.from_(q) is q
     True
 
     """
     return obj
 
 
-@Space.from_.dispatch
-def from_(cls: type[Space], obj: AbstractPos, /) -> Space:
+@KinematicSpace.from_.dispatch
+def from_(cls: type[KinematicSpace], obj: AbstractPos, /) -> KinematicSpace:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -45,16 +45,18 @@ def from_(cls: type[Space], obj: AbstractPos, /) -> Space:
     >>> import coordinax as cx
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
-    >>> w = cx.Space.from_(q)
+    >>> w = cx.KinematicSpace.from_(q)
     >>> w
-    Space({ 'length': CartesianPos3D( ... ) })
+    KinematicSpace({ 'length': CartesianPos3D( ... ) })
 
     """
-    return Space(length=obj)
+    return KinematicSpace(length=obj)
 
 
-@Space.from_.dispatch
-def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
+@KinematicSpace.from_.dispatch
+def from_(
+    cls: type[KinematicSpace], q: AbstractPos, p: AbstractVel, /
+) -> KinematicSpace:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -63,16 +65,18 @@ def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, /) -> Space:
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
-    >>> w = cx.Space.from_(q, p)
+    >>> w = cx.KinematicSpace.from_(q, p)
     >>> w
-    Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
+    KinematicSpace({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
 
     """
     return cls(length=q, speed=p)
 
 
-@Space.from_.dispatch
-def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /) -> Space:
+@KinematicSpace.from_.dispatch
+def from_(
+    cls: type[KinematicSpace], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /
+) -> KinematicSpace:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
     Examples
@@ -82,9 +86,9 @@ def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /) -
     >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
     >>> p = cx.vecs.CartesianVel3D.from_([4, 5, 6], "m/s")
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
-    >>> w = cx.Space.from_(q, p, a)
+    >>> w = cx.KinematicSpace.from_(q, p, a)
     >>> w
-    Space({ 'length': CartesianPos3D( ... ),
+    KinematicSpace({ 'length': CartesianPos3D( ... ),
             'speed': CartesianVel3D( ... ),
             'acceleration': CartesianAcc3D( ... ) })
 
@@ -92,8 +96,8 @@ def from_(cls: type[Space], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /) -
     return cls(length=q, speed=p, acceleration=a)
 
 
-@Space.from_.dispatch
-def from_(cls: type[Space], obj: Mapping[str, Any]) -> Space:
+@KinematicSpace.from_.dispatch
+def from_(cls: type[KinematicSpace], obj: Mapping[str, Any]) -> KinematicSpace:
     """Construct a Space from a Mapping.
 
     Examples
@@ -101,9 +105,9 @@ def from_(cls: type[Space], obj: Mapping[str, Any]) -> Space:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> space = cx.Space.from_({ 'length': u.Quantity([1, 2, 3], "m") })
+    >>> space = cx.KinematicSpace.from_({ 'length': u.Quantity([1, 2, 3], "m") })
     >>> print(space)
-    Space({
+    KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [m]
            [1 2 3]>
     })
@@ -118,7 +122,7 @@ def from_(cls: type[Space], obj: Mapping[str, Any]) -> Space:
 
 @dispatch
 def vconvert(
-    target: type[AbstractPos], current: AbstractPos, space: Space, /
+    target: type[AbstractPos], current: AbstractPos, space: KinematicSpace, /
 ) -> AbstractPos:
     """Convert a position to the target type, with a Space context.
 
@@ -126,7 +130,7 @@ def vconvert(
     --------
     >>> import coordinax as cx
 
-    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
+    >>> space = cx.KinematicSpace(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
     ...                  speed=cx.CartesianVel3D.from_([4, 5, 6], "m/s"))
 
     >>> cx.vconvert(cx.SphericalPos, space["length"], space)
@@ -138,7 +142,7 @@ def vconvert(
 
 @dispatch
 def vconvert(
-    target: type[AbstractVel], current: AbstractVel, space: Space, /
+    target: type[AbstractVel], current: AbstractVel, space: KinematicSpace, /
 ) -> AbstractVel:
     """Convert a velocty to the target type, with a Space context.
 
@@ -146,7 +150,7 @@ def vconvert(
     --------
     >>> import coordinax as cx
 
-    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
+    >>> space = cx.KinematicSpace(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
     ...                  speed=cx.CartesianVel3D.from_([4, 5, 6], "m/s"))
 
     >>> cx.vconvert(cx.SphericalVel, space["speed"], space)
@@ -158,7 +162,7 @@ def vconvert(
 
 @dispatch
 def vconvert(
-    target: type[AbstractAcc], current: AbstractAcc, space: Space, /
+    target: type[AbstractAcc], current: AbstractAcc, space: KinematicSpace, /
 ) -> AbstractAcc:
     """Convert an acceleration to the target type, with a Space context.
 
@@ -166,7 +170,7 @@ def vconvert(
     --------
     >>> import coordinax as cx
 
-    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
+    >>> space = cx.KinematicSpace(length=cx.CartesianPos3D.from_([1, 2, 3], "m"),
     ...                  speed=cx.CartesianVel3D.from_([4, 5, 6], "m/s"),
     ...                  acceleration=cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2"))
 
@@ -184,7 +188,7 @@ def vconvert(
 
 
 @dispatch
-def vconvert(target: type[AbstractVector], space: Space, /) -> Space:
+def vconvert(target: type[AbstractVector], space: KinematicSpace, /) -> KinematicSpace:
     """Represent the current vector to the target vector."""
     return type(space)({k: temp_vconvert(target, v, space) for k, v in space.items()})
 
@@ -192,7 +196,7 @@ def vconvert(target: type[AbstractVector], space: Space, /) -> Space:
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_vconvert(
-    target: type[AbstractPos], current: AbstractPos, space: Space, /
+    target: type[AbstractPos], current: AbstractPos, space: KinematicSpace, /
 ) -> AbstractPos:
     """Transform of Poss."""
     return vconvert(target, current)  # space is unnecessary
@@ -201,7 +205,7 @@ def temp_vconvert(
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_vconvert(
-    target: type[AbstractPos], current: AbstractVel, space: Space, /
+    target: type[AbstractPos], current: AbstractVel, space: KinematicSpace, /
 ) -> AbstractVel:
     """Transform of Velocities."""
     q, p = jnp.broadcast_arrays(space["length"], current)
@@ -211,7 +215,7 @@ def temp_vconvert(
 # TODO: should this be moved to a different file?
 @dispatch
 def temp_vconvert(
-    target: type[AbstractPos], current: AbstractAcc, space: Space, /
+    target: type[AbstractPos], current: AbstractAcc, space: KinematicSpace, /
 ) -> AbstractAcc:
     """Transform of Accs."""
     q, p, a = jnp.broadcast_arrays(space["length"], space["speed"], current)

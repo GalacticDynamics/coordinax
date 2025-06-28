@@ -10,20 +10,20 @@ from plum import dispatch
 import quaxed.numpy as jnp
 import unxt as u
 
-from coordinax._src.vectors.collection import Space
+from coordinax._src.vectors.collection import KinematicSpace
 from coordinax._src.vectors.d3 import CylindricalPos, CylindricalVel
 from coordinax._src.vectors.dn import PoincarePolarVector
 
 
 @dispatch
-def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
+def vconvert(target: type[KinematicSpace], w: PoincarePolarVector, /) -> KinematicSpace:
     """Space -> PoincarePolarVector.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> w = cx.Space(
+    >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
@@ -38,8 +38,8 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
       dt_z=Quantity([[3, 6]], unit='m / s')
     )
 
-    >>> cx.vconvert(cx.Space, w)
-    Space({
+    >>> cx.vconvert(cx.KinematicSpace, w)
+    KinematicSpace({
       'length': CartesianPos3D(
         x=Quantity([[1, 4]], unit='m'),
         y=Quantity([[2, 5]], unit='m'),
@@ -56,7 +56,7 @@ def vconvert(target: type[Space], w: PoincarePolarVector, /) -> Space:
     phi = cast(u.AbstractQuantity, jnp.atan2(w.dt_pp_phi, w.pp_phi))
     dt_phi = (w.pp_phi**2 + w.dt_pp_phi**2) / 2 / w.rho**2  # TODO: note the abs
 
-    return Space(
+    return KinematicSpace(
         length=CylindricalPos(rho=w.rho, z=w.z, phi=phi),
         speed=CylindricalVel(rho=w.dt_rho, z=w.dt_z, phi=dt_phi),
     )

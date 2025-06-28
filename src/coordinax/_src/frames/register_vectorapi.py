@@ -12,7 +12,7 @@ from .coordinate import Coordinate
 from .xfm import TransformedReferenceFrame
 from coordinax._src.operators import AbstractOperator
 from coordinax._src.vectors.base_pos import AbstractPos
-from coordinax._src.vectors.collection.core import Space
+from coordinax._src.vectors.collection.core import KinematicSpace
 
 # ===============================================================
 # Constructors
@@ -21,7 +21,7 @@ from coordinax._src.vectors.collection.core import Space
 @dispatch
 def vector(
     cls: type[Coordinate],
-    data: Space | AbstractPos,
+    data: KinematicSpace | AbstractPos,
     frame: AbstractReferenceFrame,
     /,
 ) -> Coordinate:
@@ -34,7 +34,7 @@ def vector(
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_(data, cx.frames.ICRS())
     Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ) }),
+        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
@@ -45,7 +45,7 @@ def vector(
 @dispatch
 def vector(
     cls: type[Coordinate],
-    data: Space | AbstractPos,
+    data: KinematicSpace | AbstractPos,
     base_frame: AbstractReferenceFrame,
     ops: AbstractOperator,
     /,
@@ -59,7 +59,7 @@ def vector(
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_(data, cx.frames.ICRS(), cx.ops.Identity())
     Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ) }),
+        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=TransformedReferenceFrame(base_frame=ICRS(), xop=Identity())
     )
 
@@ -86,7 +86,7 @@ def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
 
     >>> cx.vconvert(cx.SphericalPos, w)
     Coordinate(
-        data=Space({ 'length': SphericalPos( ... ) }),
+        data=KinematicSpace({ 'length': SphericalPos( ... ) }),
         frame=NoFrame()
     )
 

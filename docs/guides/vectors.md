@@ -97,13 +97,13 @@ CartesianPos3D(
 
 ## Space Objects: Grouping Related Vectors
 
-A {class}`~coordinax.vecs.Space` object collects related vectors (e.g.,
+A {class}`~coordinax.vecs.KinematicSpace` object collects related vectors (e.g.,
 position, velocity, acceleration):
 
 ```{code-block} python
->>> space = cxv.Space(length=q3, speed=v3, acceleration=a3)
+>>> space = cxv.KinematicSpace(length=q3, speed=v3, acceleration=a3)
 >>> print(space)
-Space({
+KinematicSpace({
     'length':
     <CartesianPos3D: (x, y, z) [kpc]
          [1 2 3]>,
@@ -116,12 +116,13 @@ Space({
 })
 ```
 
-You can convert all vectors in a {class}`~coordinax.vecs.Space` at once:
+You can convert all vectors in a {class}`~coordinax.vecs.KinematicSpace` at
+once:
 
 ```{code-block} python
 >>> space_sph = space.vconvert(cxv.SphericalPos)
 >>> print(space_sph)
-Space({
+KinematicSpace({
        'length':
        <SphericalPos: (r[kpc], theta[rad], phi[rad])
            [3.742 0.641 1.107]>,

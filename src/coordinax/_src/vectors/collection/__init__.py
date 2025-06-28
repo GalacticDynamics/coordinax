@@ -1,8 +1,8 @@
 """Space."""
 
-__all__ = ["Space"]
+__all__ = ["KinematicSpace"]
 
-from .core import Space
+from .core import KinematicSpace
 
 # Register by import
 # isort: split

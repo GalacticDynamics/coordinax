@@ -37,22 +37,8 @@ class AbstractPos3DTest(AbstractPosTest):
         assert np.allclose(cart.y, apycart.y, atol=1e-5)  # TODO: better agreement
         assert np.allclose(cart.z, apycart.z, atol=5e-7)
 
-        # # Try finding the poles
-        # if hasattr(vector, "theta"):
-        #     sel = (ustrip("deg", vector.theta) != 0) & (
-        #         ustrip("deg", vector.theta) != 180
-        #     )
-        # else:
-        #     sel = slice(None)
-        # vecsel = convert(-vector[sel], type(apyvector))
-        # apyvecsel = -apyvector[sel]
-        # for c in vecsel.components:
-        #     unit_ = units(getattr(apyvecsel, c))
-        #     assert np.allclose(
-        #         ustrip(unit_, getattr(vecsel, c)),
-        #         ustrip(unit_, getattr(apyvecsel, c)),
-        #         atol=5e-7,
-        #     )
+
+##############################################################################
 
 
 class TestCartesianPos3D(AbstractPos3DTest):
