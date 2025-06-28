@@ -260,17 +260,17 @@ specifying the corresponding position:
     [ 8.552  0.383 -0.6  ]>
 ```
 
-#### Creating a Space Object
+#### Creating a KinematicSpace Object
 
-A {class}`~coordinax.vecs.Space` object collects related vectors (e.g.,
+A {class}`~coordinax.vecs.KinematicSpace` object collects related vectors (e.g.,
 position, velocity, acceleration) into a single container:
 
 ```{code-block} python
 >>> import coordinax as cx
 
->>> space = cx.Space(length=q, speed=v)
+>>> space = cx.KinematicSpace(length=q, speed=v)
 >>> print(space)
-Space({
+KinematicSpace({
    'length': <CartesianPos3D: (x, y, z) [kpc]
        [1 2 3]>,
    'speed': <CartesianVel3D: (x, y, z) [kpc / Myr]
@@ -278,13 +278,13 @@ Space({
 })
 ```
 
-You can convert all vectors in a {class}`~coordinax.vecs.Space` to a different
-representation at once:
+You can convert all vectors in a {class}`~coordinax.vecs.KinematicSpace` to a
+different representation at once:
 
 ```{code-block} python
 >>> space_sph = space.vconvert(cxv.SphericalPos)
 >>> print(space_sph)
-Space({
+KinematicSpace({
        'length': <SphericalPos: (r[kpc], theta[rad], phi[rad])
                      [3.742 0.641 1.107]>,
        'speed': <SphericalVel: (r[kpc / Myr], theta[rad / Myr], phi[rad / Myr])
@@ -369,7 +369,7 @@ Coordinate(
 
 >>> coord.to_frame(gc_frame)
 Coordinate(
-    data=Space({
+    data=KinematicSpace({
     'length': CartesianPos3D(
         x=Quantity(-11.3749485, unit='kpc'),
         y=Quantity(1.8453989, unit='kpc'),
@@ -381,7 +381,7 @@ Coordinate(
 
 >>> coord.vconvert(cxv.SphericalPos)
 Coordinate(
-    data=Space({
+    data=KinematicSpace({
     'length': SphericalPos(
         r=Distance(3.7416575, unit='kpc'),
         theta=Angle(0.64052236, unit='rad'),

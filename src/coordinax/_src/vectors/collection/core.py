@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["Space"]
+__all__ = ["KinematicSpace"]
 
 import math
 from collections.abc import Callable, ItemsView, Iterable, KeysView, Mapping, ValuesView
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 #       running afoul of Jax's tree flattening, where ImmutableMap and
 #       eqx.Module differ.
 @final
-class Space(
+class KinematicSpace(
     AbstractVectorLike,
     ImmutableMap[Dimension, AbstractVector],  # type: ignore[misc]
 ):
@@ -55,9 +55,9 @@ class Space(
 
     All the vectors can be brought together into a space:
 
-    >>> space = cx.Space(length=x, speed=v, acceleration=a)
+    >>> space = cx.KinematicSpace(length=x, speed=v, acceleration=a)
     >>> print(space)
-    Space({
+    KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [km]
            [1 2 3]>,
        'speed': <CartesianVel3D: (x, y, z) [km / s]
@@ -69,11 +69,11 @@ class Space(
     The vectors can initialized from `unxt.Quantity` objects and can have
     (brodcastable) batch shapes:
 
-    >>> w = cx.Space(
+    >>> w = cx.KinematicSpace(
     ...     length=u.Quantity([[8.5, 0, 0], [10, 0, 0]], "kpc"),
     ...     speed=u.Quantity([0, 200, 0], "km/s"))
     >>> print(w)
-    Space({
+    KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [kpc]
            [[ 8.5  0.   0. ]
             [10.   0.   0. ]]>,
@@ -91,14 +91,14 @@ class Space(
     correspondingly converted.
 
     >>> space.vconvert(cx.SphericalPos)
-    Space({
+    KinematicSpace({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
         'acceleration': SphericalAcc( ... )
     })
 
     >>> cx.vconvert(cx.SphericalPos, space)
-    Space({
+    KinematicSpace({
         'length': SphericalPos( ... ),
         'speed': SphericalVel( ... ),
         'acceleration': SphericalAcc( ... )
@@ -106,7 +106,7 @@ class Space(
 
     Actions on the space are done on the contained vectors.
 
-    >>> w = cx.Space(
+    >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
@@ -125,10 +125,10 @@ class Space(
 
     There are convenience ways to initialize the vectors in the space:
 
-    >>> space = cx.Space.from_({"length": u.Quantity([1, 2, 3], "km"),
+    >>> space = cx.KinematicSpace.from_({"length": u.Quantity([1, 2, 3], "km"),
     ...                         "speed": u.Quantity([4, 5, 6], "km/s")})
     >>> print(space)
-    Space({
+    KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [km]
            [1 2 3]>,
        'speed': <CartesianVel3D: (x, y, z) [km / s]
@@ -175,7 +175,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space.from_(cx.CartesianPos3D.from_([1, 2, 3], "kpc"))
+        >>> w = cx.KinematicSpace.from_(cx.CartesianPos3D.from_([1, 2, 3], "kpc"))
         >>> try: w._dimensionality()
         ... except NotImplementedError as e: print("not implemented")
         not implemented
@@ -192,14 +192,15 @@ class Space(
 
         Examples
         --------
-        >>> import coordinax as cx
-        >>> w = cx.Space(length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...              speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        >>> import coordinax as cxv
+        >>> w = cxv.KinematicSpace(
+        ...     length=cxv.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cxv.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         By number:
 
         >>> w[0]
-        Space({
+        KinematicSpace({
             'length': CartesianPos3D(
                 x=Quantity([1, 4], unit='m'),
                 y=Quantity([2, 5], unit='m'),
@@ -215,7 +216,7 @@ class Space(
         By slice:
 
         >>> w[1:]
-        Space({
+        KinematicSpace({
             'length': CartesianPos3D(
                 x=Quantity([], unit='m'), y=Quantity([], unit='m'),
                 z=Quantity([], unit='m')
@@ -230,7 +231,7 @@ class Space(
         By Ellipsis:
 
         >>> w[...]
-        Space({
+        KinematicSpace({
             'length': CartesianPos3D(
                 x=Quantity([[1, 4]], unit='m'),
                 y=Quantity([[2, 5]], unit='m'),
@@ -246,7 +247,7 @@ class Space(
         By tuple[int, ...]:
 
         >>> w[(0, 1)]
-        Space({
+        KinematicSpace({
             'length': CartesianPos3D(
                 x=Quantity(4, unit='m'), y=Quantity(5, unit='m'),
                 z=Quantity(6, unit='m')
@@ -262,7 +263,7 @@ class Space(
         highlights core python indexing.
 
         """
-        return Space(**{k: v[key] for k, v in self.items()})
+        return KinematicSpace(**{k: v[key] for k, v in self.items()})
 
     @dispatch
     def __getitem__(self, key: str | Dimension) -> Any:
@@ -271,8 +272,9 @@ class Space(
         Examples
         --------
         >>> import coordinax as cx
-        >>> w = cx.Space(length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
-        ...              speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
+        >>> w = cx.KinematicSpace(
+        ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
+        ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s"))
 
         By string key (which is the dimension name):
 
@@ -314,7 +316,7 @@ class Space(
         Examples
         --------
         >>> import coordinax as cx
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([7, 8, 9], "m/s")
         ... )
@@ -360,7 +362,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([7, 8, 9], "m/s")
         ... )
@@ -379,7 +381,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s") )
 
@@ -402,7 +404,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
@@ -425,9 +427,9 @@ class Space(
 
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
-        >>> w = cx.Space(length=q, speed=p)
+        >>> w = cx.KinematicSpace(length=q, speed=p)
         >>> w
-        Space({
+        KinematicSpace({
             'length': CartesianPos3D(
                 x=Quantity(1, unit='m'),
                 y=Quantity(2, unit='m'),
@@ -464,9 +466,9 @@ class Space(
 
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
-        >>> w = cx.Space(length=q, speed=p)
+        >>> w = cx.KinematicSpace(length=q, speed=p)
         >>> print(w)
-        Space({
+        KinematicSpace({
             'length': <CartesianPos3D: (x, y, z) [m]
                 [1 2 3]>,
             'speed': <CartesianVel3D: (x, y, z) [m / s]
@@ -512,7 +514,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
@@ -532,7 +534,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
@@ -552,7 +554,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )
@@ -571,7 +573,7 @@ class Space(
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Space(
+        >>> w = cx.KinematicSpace(
         ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
         ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
         ... )

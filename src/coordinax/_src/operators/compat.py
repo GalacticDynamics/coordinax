@@ -14,7 +14,7 @@ from dataclassish import replace
 from .base import AbstractOperator
 from .pipe import Pipe
 from coordinax._src.custom_types import TimeBatchOrScalar
-from coordinax._src.vectors.collection import Space
+from coordinax._src.vectors.collection import KinematicSpace
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
@@ -272,7 +272,7 @@ def call(
 
 
 @AbstractOperator.__call__.dispatch
-def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
+def call(self: AbstractOperator, space: KinematicSpace, /, **__: Any) -> KinematicSpace:
     r"""Apply the boost to a Space.
 
     Examples
@@ -285,7 +285,7 @@ def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
     >>> op = cx.ops.GalileanRotation.from_([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
 
     >>> x = cx.CartesianPos3D.from_([1., 2, 3], "m")
-    >>> space = cx.Space(length=x)
+    >>> space = cx.KinematicSpace(length=x)
     >>> new_space = op(space)  # no effect
     >>> print(new_space["length"])
     <CartesianPos3D: (x, y, z) [m]
@@ -296,9 +296,9 @@ def call(self: AbstractOperator, space: Space, /, **__: Any) -> Space:
     >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
 
     >>> v = cx.CartesianVel3D.from_([4., 5, 6], "m/s")
-    >>> space = cx.Space(length=x, speed=v)
+    >>> space = cx.KinematicSpace(length=x, speed=v)
     >>> space
-    Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
+    KinematicSpace({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
 
     >>> new_space = op(space)
     >>> new_space.keys()

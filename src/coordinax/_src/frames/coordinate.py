@@ -18,7 +18,7 @@ from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
 from coordinax._src.operators import Identity
 from coordinax._src.vectors.base import AbstractVector
-from coordinax._src.vectors.collection.core import Space
+from coordinax._src.vectors.collection.core import KinematicSpace
 
 
 # TODO: parametrize by the vector type(s), when Space is parametrized,
@@ -34,7 +34,7 @@ class AbstractCoordinate(AbstractVector):
 
     #: The data of the coordinate. This is a `coordinax.Space` object, which is
     #: a collection of vectors.
-    data: eqx.AbstractVar[Space]
+    data: eqx.AbstractVar[KinematicSpace]
 
     #: The reference frame of the coordinate as a
     #: `coordinax.frames.AbstractReferenceFrame` object.
@@ -59,7 +59,7 @@ class AbstractCoordinate(AbstractVector):
         >>> cgcf = cicrs.to_frame(cx.frames.Galactocentric())
         >>> cgcf
         Coordinate(
-            data=Space({ 'length': CartesianPos3D( ... ) }),
+            data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
             frame=Galactocentric( ... )
         )
 
@@ -103,7 +103,7 @@ class AbstractCoordinate(AbstractVector):
         >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
         >>> print(repr(cx.Coordinate(data, frame)))
         Coordinate(
-            data=Space({ 'length': CartesianPos3D( ... ) }),
+            data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
             frame=ICRS()
         )
 
@@ -166,7 +166,7 @@ class Coordinate(AbstractCoordinate):
     ...                       cx.frames.ICRS())
     >>> coord
     Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ) }),
+        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
@@ -176,7 +176,7 @@ class Coordinate(AbstractCoordinate):
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_({"data": data, "frame": frame})
     Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ) }),
+        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
@@ -188,14 +188,15 @@ class Coordinate(AbstractCoordinate):
 
     >>> coord.vconvert(cx.SphericalPos)
     Coordinate(
-        data=Space({ 'length': SphericalPos( ... ) }),
+        data=KinematicSpace({ 'length': SphericalPos( ... ) }),
         frame=ICRS()
     )
 
     Showing Frame Transformation:
 
-    >>> space = cx.Space(length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
-    ...                  speed=cx.CartesianVel3D.from_([1.0, 0, 0], "km/s"))
+    >>> space = cx.KinematicSpace(
+    ...     length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
+    ...     speed=cx.CartesianVel3D.from_([1.0, 0, 0], "km/s"))
 
     >>> w=cx.Coordinate(
     ...     data=space,
@@ -207,7 +208,8 @@ class Coordinate(AbstractCoordinate):
 
     >>> w.to_frame(cx.frames.ICRS())
     Coordinate(
-        data=Space({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) }),
+        data=KinematicSpace({
+            'length': CartesianPos3D(...), 'speed': CartesianVel3D(...) }),
         frame=ICRS()
     )
 
@@ -224,7 +226,9 @@ class Coordinate(AbstractCoordinate):
     #: a collection of vectors. This can be constructed from a space object, or
     #: any input that can construct a `coordinax.Space` via
     #: `coordinax.Space.from_`.
-    data: Space = eqx.field(converter=Space.from_)
+    data: KinematicSpace = eqx.field(
+        converter=Unless(KinematicSpace, KinematicSpace.from_)
+    )
 
     #: The reference frame of the coordinate as a
     #: `coordinax.frames.AbstractReferenceFrame` object. This can be
@@ -253,7 +257,7 @@ class Coordinate(AbstractCoordinate):
         not implemented
 
         """
-        # TODO: Space is currently not implemented.
+        # TODO: KinematicSpace is currently not implemented.
         return self.data._dimensionality()
 
     @dispatch

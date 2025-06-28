@@ -11,12 +11,14 @@ from quax import register
 import quaxed.numpy as jnp
 from dataclassish import replace
 
-from .core import Space
+from .core import KinematicSpace
 from coordinax._src.custom_types import Shape
 
 
 @register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p_space(obj: Space, /, *, shape: Shape, **kw: Any) -> Space:
+def broadcast_in_dim_p_space(
+    obj: KinematicSpace, /, *, shape: Shape, **kw: Any
+) -> KinematicSpace:
     """Broadcast in a dimension."""
     batch = shape[:-1]
     return replace(
@@ -29,20 +31,20 @@ def broadcast_in_dim_p_space(obj: Space, /, *, shape: Shape, **kw: Any) -> Space
 
 
 @register(jax.lax.neg_p)
-def neg_p_space(space: Space, /) -> Space:
+def neg_p_space(space: KinematicSpace, /) -> KinematicSpace:
     """Negative of the vector.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> w = cx.Space(
+    >>> w = cx.KinematicSpace(
     ...     length=cx.CartesianPos3D.from_([[[1, 2, 3], [4, 5, 6]]], "m"),
     ...     speed=cx.CartesianVel3D.from_([[[1, 2, 3], [4, 5, 6]]], "m/s")
     ... )
 
     >>> print(-w)
-    Space({
+    KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [m]
            [[[-1 -2 -3]
              [-4 -5 -6]]]>,

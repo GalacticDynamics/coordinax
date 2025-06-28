@@ -27,8 +27,8 @@ Galactocentric(
 
 ## Creating Coordinate Objects
 
-Coordinate objects attach a vector (or {class}`~coordinax.vecs.Space`) to a
-frame:
+Coordinate objects attach a vector (or {class}`~coordinax.vecs.KinematicSpace`)
+to a frame:
 
 ```{code-block} python
 >>> import coordinax.vecs as cxv
@@ -44,8 +44,8 @@ Coordinate(
 )
 ```
 
-You can also create coordinates from a {class}`~coordinax.vecs.Space` object
-containing multiple vectors.
+You can also create coordinates from a {class}`~coordinax.vecs.KinematicSpace`
+object containing multiple vectors.
 
 ## Transforming Between Frames
 

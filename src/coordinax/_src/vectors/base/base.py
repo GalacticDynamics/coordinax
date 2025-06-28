@@ -112,9 +112,9 @@ class AbstractVectorLike(
         <CartesianVel3D: (x, y, z) [m / s]
             [1 2 3]>
 
-        >>> space = cxv.Space.from_(q)
+        >>> space = cxv.KinematicSpace.from_(q)
         >>> print(space)
-        Space({
+        KinematicSpace({
          'length': <CartesianPos3D: (x, y, z) [m]
                        [1 2 3]>
         })
@@ -291,7 +291,7 @@ class AbstractVectorLike(
         >>> vec.shape
         (2, 2)
 
-        >>> space = cx.Space(length=vec)
+        >>> space = cx.KinematicSpace(length=vec)
         >>> space.shape
         (2, 2)
 

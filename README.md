@@ -105,10 +105,10 @@ print(q_gc, p_gc, sep="\n")
 #       ...
 #       [ -9.02  258.012   5.918]]>
 
-coord = cx.Coordinate(cx.Space(length=q, speed=p), frame=icrs_frame)
+coord = cx.Coordinate({"length": q, "speed": p}, frame=icrs_frame)
 print(coord)
 # Coordinate(
-#     data=Space({
+#     data=KinematicSpace({
 #        'length': <CartesianPos3D: (x, y, z) [kpc]
 #             [[ 0.  5. 10.]
 #              ...
@@ -123,7 +123,7 @@ print(coord)
 
 print(coord.to_frame(gc_frame))
 # Coordinate(
-#     data=Space({
+#     data=KinematicSpace({
 #        'length': <CartesianPos3D: (x, y, z) [kpc]
 #             [[-1.732e+01  5.246e+00  3.614e+00]
 #              ...
