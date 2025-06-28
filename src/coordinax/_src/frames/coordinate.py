@@ -90,7 +90,9 @@ class AbstractCoordinate(AbstractVector):
     # ===============================================================
     # Wadler-Lindig API
 
-    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+    def __pdoc__(
+        self, *, include_data_name: bool = True, **kwargs: Any
+    ) -> wl.AbstractDoc:
         """Return the Wadler-Lindig representation.
 
         Examples
@@ -106,9 +108,17 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
+        if include_data_name:
+            docs = wl.named_objs(tuple(field_items(self)), **kwargs)
+        else:
+            docs = [
+                wl.pdoc(self.data._data, **kwargs),
+                *wl.named_objs(tuple(field_items(self))[1:], **kwargs),
+            ]
+
         return wl.bracketed(
             begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=wl.named_objs(tuple(field_items(self)), **kwargs),
+            docs=docs,
             sep=wl.comma,
             end=wl.TextDoc(")"),
             indent=kwargs.get("indent", 4),
@@ -126,15 +136,15 @@ class AbstractCoordinate(AbstractVector):
         ...                       cx.frames.ICRS())
         >>> print(coord)
         Coordinate(
-            data=Space({
+            {
             'length': <CartesianPos3D: (x, y, z) [kpc]
                 [1 2 3]>
-            }),
+            },
             frame=ICRS()
         )
 
         """
-        return wl.pformat(self, width=88, vector_form=True)
+        return wl.pformat(self, width=88, include_data_name=False, vector_form=True)
 
     # ===============================================================
     # IPython API
