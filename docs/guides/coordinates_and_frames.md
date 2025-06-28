@@ -36,10 +36,10 @@ frame:
 >>> coord = cxf.Coordinate(q, frame=icrs)
 >>> print(coord)
 Coordinate(
-    data=Space({
+    {
         'length': <CartesianPos3D: (x, y, z) [kpc]
             [1 2 3]>
-    }),
+    },
     frame=ICRS()
 )
 ```
@@ -62,10 +62,10 @@ operators:
 >>> coord_gc = coord.to_frame(gc)
 >>> print(coord_gc)
 Coordinate(
-    data=Space({
+    {
         'length': <CartesianPos3D: (x, y, z) [kpc]
-                                            [-11.375   1.845   0.133]>
-    }),
+            [-11.375   1.845   0.133]>
+    },
     frame=Galactocentric(...)
 )
 ```
@@ -79,10 +79,10 @@ Spherical) without changing its frame:
 >>> coord_sph = coord.vconvert(cxv.SphericalPos)
 >>> print(coord_sph)
 Coordinate(
-    data=Space({
+    {
         'length': <SphericalPos: (r[kpc], theta[rad], phi[rad])
             [3.742 0.641 1.107]>
-    }),
+    },
     frame=ICRS()
 )
 ```

@@ -24,10 +24,10 @@ def neg_p_coord(x: Coordinate, /) -> Coordinate:
 
     >>> print(-coord)
     Coordinate(
-        data=Space({
+        {
            'length': <CartesianPos3D: (x, y, z) [kpc]
                [-1 -2 -3]>
-        }),
+        },
         frame=ICRS()
     )
 

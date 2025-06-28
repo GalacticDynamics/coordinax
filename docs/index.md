@@ -360,10 +360,10 @@ frame:
 >>> coord = cxf.Coordinate(q, frame=icrs_frame)
 >>> print(coord)
 Coordinate(
-    data=Space({
+    {
         'length': <CartesianPos3D: (x, y, z) [kpc]
                       [1 2 3]>
-    }),
+    },
     frame=ICRS()
 )
 
@@ -420,5 +420,3 @@ Coordinate(
 [pypi-link]: https://pypi.org/project/coordinax/
 [pypi-platforms]: https://img.shields.io/pypi/pyversions/coordinax
 [pypi-version]: https://img.shields.io/pypi/v/coordinax
-[zenodo-badge]: https://zenodo.org/badge/DOI/10.5281/zenodo.15320465.svg
-[zenodo-link]: https://zenodo.org/doi/10.5281/zenodo.10850557
