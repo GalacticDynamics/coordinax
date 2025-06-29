@@ -260,7 +260,7 @@ def simplify_op(
     return op
 
 
-# TODO: show op3.translation = op1.translation + op2.translation
+# TODO: show op3.delta_q = op1.delta_q + op2.delta_q
 @dispatch
 def simplify_op(
     op1: GalileanTranslation, op2: GalileanTranslation, /

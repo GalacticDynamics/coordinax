@@ -243,19 +243,19 @@ def from_(
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.ops as cxo
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
-    >>> print(op.translation)
+    >>> op = cxo.GalileanSpatialTranslation.from_([1, 1, 1], "km")
+    >>> print(op.delta_q)
     <CartesianPos3D: (x, y, z) [km]
         [1 1 1]>
 
-    >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
+    >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
     >>> print(op.translation)
     <FourVector: (t[s], q=(x, y, z) [km])
         [1.001 1.    1.    1.   ]>
 
-    >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
+    >>> op = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
     >>> print(op.velocity)
     <CartesianVel3D: (x, y, z) [km / s]
         [1 1 1]>
