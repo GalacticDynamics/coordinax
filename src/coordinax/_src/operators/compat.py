@@ -18,7 +18,6 @@ from coordinax._src.vectors.collection import KinematicSpace
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
-from coordinax._src.vectors.d4 import FourVector
 
 # ============================================================================
 # 1-Dimensional
@@ -185,86 +184,6 @@ def call(
     """
     t, vec = self(t, CartesianPos3D.from_(x), **kwargs)
     return t, convert(vec, u.Quantity)
-
-
-# ============================================================================
-# 4-Dimensional
-
-
-@AbstractOperator.__call__.dispatch
-def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector:
-    """Dispatch to the operator's `__call__` method.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    We can then create a spatial translation operator:
-
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-    >>> op
-    GalileanSpatialTranslation(CartesianPos3D( ... ))
-
-    We can then apply the operator to a position:
-
-    >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "km")
-    >>> pos
-    FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
-
-    >>> newpos = op(pos)
-    >>> newpos
-    FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
-    >>> newpos.q.x
-    Quantity(Array(2., dtype=float32), unit='km')
-
-    Now on a VelocityBoost:
-
-    >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
-
-    >>> v4 = cx.FourVector.from_([0, 0, 0, 0], "m")
-    >>> newv4 = op(v4)
-    >>> print(newv4)
-    <FourVector: (t[m s / km], q=(x, y, z) [m])
-        [0. 0. 0. 0.]>
-
-    """
-    t, q = self(v4.t, v4.q, **kwargs)
-    return FourVector(t=t, q=q)
-
-
-@AbstractOperator.__call__.dispatch
-def call(
-    self: AbstractOperator,
-    x: Shaped[u.Quantity["length"], "*batch 4"],
-    /,
-    **kwargs: Any,
-) -> Shaped[u.Quantity["length"], "*batch 4"]:
-    """Dispatch to the operator's `__call__` method.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-
-    We can then create a spatial translation operator:
-
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-    >>> op
-    GalileanSpatialTranslation(CartesianPos3D( ... ))
-
-    We can then apply the operator to a position:
-
-    >>> pos = u.Quantity([0, 1.0, 2.0, 3.0], "km")
-    >>> pos
-    Quantity(Array([0., 1., 2., 3.], dtype=float32), unit='km')
-
-    >>> newpos = op(pos)
-    >>> newpos
-    Quantity(Array([0., 2., 4., 6.], dtype=float32), unit='km')
-
-    """
-    q4 = FourVector.from_(x)
-    return convert(self(q4, **kwargs), u.Quantity)
 
 
 # ============================================================================

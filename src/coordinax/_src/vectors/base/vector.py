@@ -431,9 +431,6 @@ class AbstractVector(
         >>> cx.vecs.Cartesian3D.dimensions
         <property object at ...>
 
-        >>> cx.vecs.FourVector.dimensions
-        <property object at ...>
-
         >>> pprint(cx.vecs.CartesianPosND.dimensions)
         {'q': 'length'}
 

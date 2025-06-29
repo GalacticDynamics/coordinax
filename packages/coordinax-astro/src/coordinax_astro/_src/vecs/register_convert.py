@@ -11,14 +11,8 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import BareQuantity
 
+import coordinax.vecs as cxv
 from .spacetime import FourVector
-from coordinax._src.vectors.d3 import (
-    CartesianPos3D,
-    CylindricalPos,
-    LonLatSphericalPos,
-    MathSphericalPos,
-    SphericalPos,
-)
 
 
 @conversion_method(type_from=FourVector, type_to=BareQuantity)
@@ -77,8 +71,8 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*ba
     return jnp.concat([ct, cart], axis=-1)
 
 
-@conversion_method(type_from=FourVector, type_to=CartesianPos3D)  # type: ignore[arg-type]
-def convert_4vec_to_cart3d(obj: FourVector, /) -> CartesianPos3D:
+@conversion_method(type_from=FourVector, type_to=cxv.CartesianPos3D)  # type: ignore[arg-type]
+def convert_4vec_to_cart3d(obj: FourVector, /) -> cxv.CartesianPos3D:
     """Convert a 4-vector to a Cartesian 3-vector.
 
     Examples
@@ -93,11 +87,11 @@ def convert_4vec_to_cart3d(obj: FourVector, /) -> CartesianPos3D:
         [1 2 3]>
 
     """
-    return convert(obj.q, CartesianPos3D)
+    return convert(obj.q, cxv.CartesianPos3D)
 
 
-@conversion_method(type_from=FourVector, type_to=CylindricalPos)  # type: ignore[arg-type]
-def convert_4vec_to_cylindrical(obj: FourVector, /) -> CylindricalPos:
+@conversion_method(type_from=FourVector, type_to=cxv.CylindricalPos)  # type: ignore[arg-type]
+def convert_4vec_to_cylindrical(obj: FourVector, /) -> cxv.CylindricalPos:
     """Convert a 4-vector to a Cylindrical 3-vector.
 
     Examples
@@ -112,11 +106,11 @@ def convert_4vec_to_cylindrical(obj: FourVector, /) -> CylindricalPos:
         [2.236 1.107 3.   ]>
 
     """
-    return convert(obj.q, CylindricalPos)
+    return convert(obj.q, cxv.CylindricalPos)
 
 
-@conversion_method(type_from=FourVector, type_to=SphericalPos)  # type: ignore[arg-type]
-def convert_4vec_to_spherical(obj: FourVector, /) -> SphericalPos:
+@conversion_method(type_from=FourVector, type_to=cxv.SphericalPos)  # type: ignore[arg-type]
+def convert_4vec_to_spherical(obj: FourVector, /) -> cxv.SphericalPos:
     """Convert a 4-vector to a spherical 3-vector.
 
     Examples
@@ -131,11 +125,11 @@ def convert_4vec_to_spherical(obj: FourVector, /) -> SphericalPos:
         [3.742 0.641 1.107]>
 
     """
-    return convert(obj.q, SphericalPos)
+    return convert(obj.q, cxv.SphericalPos)
 
 
-@conversion_method(type_from=FourVector, type_to=LonLatSphericalPos)  # type: ignore[arg-type]
-def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> LonLatSphericalPos:
+@conversion_method(type_from=FourVector, type_to=cxv.LonLatSphericalPos)  # type: ignore[arg-type]
+def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> cxv.LonLatSphericalPos:
     """Convert a 4-vector to a lon-lat spherical 3-vector.
 
     Examples
@@ -150,11 +144,11 @@ def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> LonLatSphericalPos:
         [ 1.107 53.301  3.742]>
 
     """
-    return convert(obj.q, LonLatSphericalPos)
+    return convert(obj.q, cxv.LonLatSphericalPos)
 
 
-@conversion_method(type_from=FourVector, type_to=MathSphericalPos)  # type: ignore[arg-type]
-def convert_4vec_to_mathsph(obj: FourVector, /) -> MathSphericalPos:
+@conversion_method(type_from=FourVector, type_to=cxv.MathSphericalPos)  # type: ignore[arg-type]
+def convert_4vec_to_mathsph(obj: FourVector, /) -> cxv.MathSphericalPos:
     """Convert a 4-vector to a math spherical 3-vector.
 
     Examples
@@ -169,4 +163,4 @@ def convert_4vec_to_mathsph(obj: FourVector, /) -> MathSphericalPos:
         [3.742 1.107 0.641]>
 
     """
-    return convert(obj.q, MathSphericalPos)
+    return convert(obj.q, cxv.MathSphericalPos)

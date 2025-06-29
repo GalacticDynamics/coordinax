@@ -20,18 +20,16 @@ from dataclassish import field_values
 from dataclassish.converters import Unless
 
 import coordinax._src.custom_types as ct
-from .base import AbstractPos4D
+import coordinax.vecs as cxv
 from coordinax._src.distances import BBtLength
 from coordinax._src.vectors import dims
-from coordinax._src.vectors.base import AttrFilter, VectorAttribute
-from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
 ##############################################################################
 # Position
 
 
 @final
-class FourVector(AbstractPos4D):
+class FourVector(cxv.AbstractPos4D):
     """3+1 vector representation.
 
     The 3+1 vector representation is a 4-vector with 3 spatial coordinates and 1
@@ -47,11 +45,12 @@ class FourVector(AbstractPos4D):
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> from coordinax_astro import FourVector
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(w)
     <FourVector: (t[s], q=(x, y, z) [m])
         [1 1 2 3]>
@@ -63,24 +62,110 @@ class FourVector(AbstractPos4D):
 
     We can also create a 3D vector explicitly:
 
-    >>> q = cx.SphericalPos(theta=u.Quantity(1, "deg"), phi=u.Quantity(2, "deg"),
+    >>> q = cxv.SphericalPos(theta=u.Quantity(1, "deg"), phi=u.Quantity(2, "deg"),
     ...                     r=u.Quantity(3, "m"))
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=q)
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=q)
     >>> print(w)
     <FourVector: (t[s], q=(r[m], theta[deg], phi[deg]))
         [1 3 1 2]>
+
+    A FourVector can be constructed using the `coordinax.vecs.vector` function,
+
+    >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
+    >>> vec = FourVector.from_(xs)
+    >>> print(vec)
+    <FourVector: (t[m s / km], q=(x, y, z) [m])
+        [0. 1. 2. 3.]>
+
+    >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
+    >>> vec = FourVector.from_(xs)
+    >>> print(vec)
+    <FourVector: (t[m s / km], q=(x, y, z) [m])
+        [[0.000e+00 1.000e+00 2.000e+00 3.000e+00]
+         [3.336e-05 4.000e+00 5.000e+00 6.000e+00]]>
+
+    The corresponding Cartesian vector type is:
+
+    >>> cxv.cartesian_vector_type(FourVector)
+    <class 'coordinax...CartesianPos3D'>
+
+    The dimensions are a property
+
+    >>> FourVector.dimensions
+    <property object at ...>
+
+    Fields:
+
+    >>> from dataclassish import fields
+
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> [f.name for f in fields(cxv.AttrFilter, w)]
+    ['t', 'q']
+
+    Field Keys:
+
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> field_keys(cxv.AttrFilter, w)
+    ('t', 'q')
+
+    Field Values:
+
+    >>> field_values(cxv.AttrFilter, w)
+
+    Field Items:
+
+    >>> from dataclassish import field_items
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> [(f[0], type(f[1]).__name__) for f in field_items(cxv.AttrFilter, w)]
+    [('t', "Quantity[PhysicalType('time')]"), ('q', 'CartesianPos3D')]
+
+    Asdict:
+
+    >>> from dataclassish import asdict
+    >>> asdict(cxv.AttrFilter, w).keys()
+    dict_keys(['t', 'q'])
+
+    The FourVector can be used with the `coordinax.ops` operators, for example
+    `coordinax.ops.Identity`:
+
+    >>> q = u.Quantity([1, 2, 3, 4], "km")  # 0th elt is ct
+    >>> vec4 = cx.FourVector.from_(q)
+    >>> op = cxo.Identity()
+    >>> op(vec4) is vec4 and op(q) is q
+    True
+
+    Translation operators can be applied to `coordinax_astro.FourVector`:
+
+    >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
+
+    >>> w = FourVector.from_([0, 0, 0, 0], "km")
+    >>> print(op(w))
+    <FourVector: (t[s], q=(x, y, z) [km])
+        [ 3.156e+16  1.000e+00  0.000e+00 -4.371e-08]>
+
+    Galilean operators can be applied to `coordinax.vecs.FourVector`:
+
+    >>> w = FourVector.from_([0, 0, 0, 0], "km")
+    >>> new = op(w)
+    >>> new.t.ustrip("Gyr").round(2)
+    Array(2.5, dtype=float32, ...)
+    >>> print(new.q)
+    <CartesianPos3D: (x, y, z) [km]
+        [7.889e+16 1.578e+17 2.367e+17]>
 
     """
 
     t: ct.BBtTime | ct.ScalarTime = eqx.field(converter=u.Quantity["time"].from_)
     """Time coordinate."""
 
-    q: AbstractPos3D = eqx.field(converter=Unless(AbstractPos3D, CartesianPos3D.from_))
+    q: cxv.AbstractPos3D = eqx.field(
+        converter=Unless(cxv.AbstractPos3D, cxv.CartesianPos3D.from_)
+    )
     """Spatial coordinates."""
 
     _: KW_ONLY
     c: Shaped[u.Quantity["speed"], ""] = eqx.field(
-        default=VectorAttribute(default=u.Quantity(299_792.458, "km/s")), repr=False
+        default=cxv.VectorAttribute(default=u.Quantity(299_792.458, "km/s")), repr=False
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
@@ -94,6 +179,7 @@ class FourVector(AbstractPos4D):
 
     # TODO: merge with `AvalMixin` and generalize!
     def aval(self) -> jax.core.ShapedArray:
+        """Return the JAX ShapedArray for the 4-vector."""
         avals = (self.t.aval(), self.q.aval())
         shape = (*jnp.broadcast_shapes(avals[0].shape, avals[1].shape[:-1]), 4)
         dtype = jnp.result_type(*map(jnp.dtype, avals))
@@ -109,7 +195,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.x
         Quantity(Array(1, dtype=int32), unit='m')
 
@@ -127,7 +213,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w._norm2()
         Quantity(Array(8.987552e+10, dtype=float32), unit='km2')
 
@@ -144,7 +230,7 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.norm()
         Quantity(Array(299792.47+0.j, dtype=complex64), unit='km')
 
@@ -162,10 +248,10 @@ class FourVector(AbstractPos4D):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> cx.FourVector.dimensions
+        >>> FourVector.dimensions
         <property object at ...>
 
-        >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> w.dimensions
         {'t': PhysicalType('time'),
          'q': {'x': PhysicalType('length'), 'y': PhysicalType('length'),
@@ -185,7 +271,7 @@ class FourVector(AbstractPos4D):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> w = cx.FourVector (t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
+        >>> w = FourVector(t=u.Quantity(0.5, "s"), q=u.Quantity([1, 2, 3], "m"))
         >>> print(w)
         <FourVector: (t[s], q=(x, y, z) [m])
             [0.5 1.  2.  3. ]>
@@ -212,7 +298,9 @@ class FourVector(AbstractPos4D):
                     u.ustrip(v)
                     for v in cast(
                         list[u.AbstractQuantity],
-                        jnp.broadcast_arrays(self.t, *field_values(AttrFilter, self.q)),
+                        jnp.broadcast_arrays(
+                            self.t, *field_values(cxv.AttrFilter, self.q)
+                        ),
                     )
                 ),
                 axis=-1,

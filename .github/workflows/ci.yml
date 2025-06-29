@@ -69,11 +69,11 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install the project
-        run: uv sync --group test
+        run: uv sync --all-packages --group test --active
 
       - name: Test package
         run: >-
-          uv run pytest -ra --cov --cov-report=xml --cov-report=term
+          uv run --frozen pytest --cov --cov-report=xml --cov-report=term
           --durations=20 --arraydiff -m"not slow"
 
       - name: Upload coverage report
@@ -108,8 +108,8 @@ jobs:
 
       - name: Test package
         run: >-
-          uv run pytest -ra --cov --cov-report=xml --cov-report=term
-          --durations=20
+          uv run --active --frozen pytest --cov --cov-report=xml
+          --cov-report=term --durations=20
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v5.4.3

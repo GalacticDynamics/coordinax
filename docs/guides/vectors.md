@@ -68,7 +68,7 @@ CartesianVel3D(
   {class}`~coordinax.vecs.CartesianPosND`
 - Similar classes for velocities (`CartesianVel*`), accelerations
   (`CartesianAcc*`), etc.
-- Spacetime vectors {class}`~coordinax.vecs.FourVector`
+- Spacetime vectors {class}`~coordinax_astro.FourVector`
 
 ## Conversion Between Representations
 

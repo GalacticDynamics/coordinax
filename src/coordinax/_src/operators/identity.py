@@ -65,13 +65,6 @@ class Identity(AbstractOperator):
     >>> op(vec) is vec and op(q) is q
     True
 
-    - 4D:
-
-    >>> q = u.Quantity([1, 2, 3, 4], "km")  # 0th elt is ct
-    >>> vec4 = cx.FourVector.from_(q)
-    >>> op(vec4) is vec4 and op(q) is q
-    True
-
     Lastly, many operators are time dependent and support a time argument. The`
     `Identity` operator will also pass through the time argument:
 

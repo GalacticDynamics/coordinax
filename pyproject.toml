@@ -15,7 +15,6 @@
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -65,6 +64,7 @@ build-backend = "hatchling.build"
       { include-group = "test-all" },
   ]
   docs = [
+    "coordinax_astro",
     "myst-nb>=1.1.2",
     "myst_parser>=0.13",
     "pytz>=2024.2",               # for copyright date
@@ -294,3 +294,9 @@ dev-dependencies = [
     "pytest>=8.3.3",
     "sybil>=8.0.0",
 ]
+
+[tool.uv.sources]
+coordinax-astro = { workspace = true }
+
+[tool.uv.workspace]
+members = ["packages/*"]
