@@ -23,9 +23,10 @@ def add_p_4vs(self: FourVector, other: FourVector, /) -> FourVector:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w1 = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector (t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
+    >>> w1 = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w2 = FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 + w2
     >>> print(w3)
     <FourVector: (t[s], q=(x, y, z) [m])
@@ -43,11 +44,8 @@ def broadcast_in_dim_p_4v(
 ) -> FourVector:
     """Broadcast in a dimension."""
     batch = shape[:-1]
-    return replace(
-        obj,
-        t=jnp.broadcast_to(obj.t, batch),
-        q=cast(cxv.AbstractPos3D, jnp.broadcast_to(obj.q, (*batch, 3))),  # type: ignore[arg-type]
-    )
+    q = cast(cxv.AbstractPos3D, jnp.broadcast_to(obj.q, (*batch, 3)))  # type: ignore[arg-type]
+    return replace(obj, t=jnp.broadcast_to(obj.t, batch), q=q)
 
 
 @register(jax.lax.eq_p)
@@ -58,16 +56,19 @@ def _eq_4v_4v(lhs: FourVector, rhs: FourVector, /) -> Bool[Array, "..."]:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w1 = cx.FourVector (t=u.Quantity([1, 2], "s"),
-    ...                    q=u.Quantity([[1, 2, 3], [4, 5, 6]], "m"))
-    >>> w2 = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 3, 3], "m"))
+    >>> w1 = FourVector(t=u.Quantity([1, 2], "s"),
+    ...                 q=u.Quantity([[1, 2, 3], [4, 5, 6]], "m"))
+    >>> w2 = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 3, 3], "m"))
 
     >>> w1 == w2
     Array([False, False], dtype=bool)
 
     """
-    return jnp.logical_and(jnp.equal(lhs.q, rhs.q), jnp.equal(lhs.t, rhs.t))  # type: ignore[arg-type]
+    equal_t = jnp.equal(lhs.t, rhs.t)
+    equal_q = jnp.equal(lhs.q, rhs.q)  # type: ignore[arg-type]
+    return jnp.logical_and(equal_t, equal_q)
 
 
 @register(jax.lax.neg_p)
@@ -78,8 +79,9 @@ def neg_p_4v(self: FourVector, /) -> FourVector:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(-w)
     <FourVector: (t[s], q=(x, y, z) [m])
         [-1 -1 -2 -3]>
@@ -96,9 +98,10 @@ def sub_p_4v_4v(lhs: FourVector, rhs: FourVector, /) -> FourVector:
     --------
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w1 = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> w2 = cx.FourVector (t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
+    >>> w1 = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w2 = FourVector(t=u.Quantity(2, "s"), q=u.Quantity([4, 5, 6], "m"))
     >>> w3 = w1 - w2
     >>> print(w3)
     <FourVector: (t[s], q=(x, y, z) [m])

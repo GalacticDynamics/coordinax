@@ -37,15 +37,15 @@ class TransformedReferenceFrame(AbstractReferenceFrame, Generic[FrameT]):
     >>> import coordinax.frames as cxf
 
     >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> frame = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
+    >>> frame = cxf.TransformedReferenceFrame(cxf.Alice(), R)
     >>> frame
     TransformedReferenceFrame(
-      base_frame=ICRS(), xop=GalileanRotation(rotation=f32[3,3])
+      base_frame=Alice(), xop=GalileanRotation(rotation=f32[3,3])
     )
 
     Let's transform a position from the base frame to the transformed frame:
 
-    >>> op = cxf.frame_transform_op(cxf.ICRS(), frame)
+    >>> op = cxf.frame_transform_op(cxf.Alice(), frame)
 
     >>> q_icrs = cx.CartesianPos3D.from_([1, 0, 0], "kpc")
     >>> q_frame = op(q_icrs)
@@ -94,15 +94,15 @@ def frame_transform_op(
     >>> import coordinax.frames as cxf
 
     >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> frame = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
+    >>> frame = cxf.TransformedReferenceFrame(cxf.Alice(), R)
     >>> frame
     TransformedReferenceFrame(
-      base_frame=ICRS(), xop=GalileanRotation(rotation=f32[3,3])
+      base_frame=Alice(), xop=GalileanRotation(rotation=f32[3,3])
     )
 
     Let's transform a position from the base frame to the transformed frame:
 
-    >>> op = cxf.frame_transform_op(cxf.ICRS(), frame)
+    >>> op = cxf.frame_transform_op(cxf.Alice(), frame)
 
     >>> q_icrs = cx.CartesianPos3D.from_([1, 0, 0], "kpc")
     >>> q_frame = op(q_icrs)
@@ -127,17 +127,17 @@ def frame_transform_op(
     >>> import coordinax.frames as cxf
 
     >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> frame = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
+    >>> frame = cx.frames.TransformedReferenceFrame(cx.frames.Alice(), R)
     >>> frame
     TransformedReferenceFrame(
-      base_frame=ICRS(), xop=GalileanRotation(rotation=f32[3,3])
+      base_frame=Alice(), xop=GalileanRotation(rotation=f32[3,3])
     )
 
     Let's transform a position from the base frame to the transformed frame:
 
-    >>> op = cxf.frame_transform_op(frame, cxf.ICRS())
+    >>> op = cx.frames.frame_transform_op(frame, cx.frames.Alice())
 
-    >>> q_icrs = cx.CartesianPos3D.from_([0, -1, 0], "kpc")
+    >>> q_icrs = cx.vecs.CartesianPos3D.from_([0, -1, 0], "kpc")
     >>> q_frame = op(q_icrs)
     >>> print(q_frame)
     <CartesianPos3D: (x, y, z) [kpc]
@@ -157,15 +157,14 @@ def frame_transform_op(
     --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax as cx
-    >>> import coordinax.frames as cxf
 
     >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> frame1 = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
+    >>> frame1 = cx.frames.TransformedReferenceFrame(cx.frames.Alice(), R)
 
     >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
-    >>> frame2 = cxf.TransformedReferenceFrame(frame1, shift)
+    >>> frame2 = cx.frames.TransformedReferenceFrame(frame1, shift)
 
-    >>> op1to2 = cxf.frame_transform_op(frame1, frame2)
+    >>> op1to2 = cx.frames.frame_transform_op(frame1, frame2)
 
     >>> q_frame1 = cx.CartesianPos3D.from_([0, -1, 0], "kpc")
     >>> q_frame2 = op1to2(q_icrs)

@@ -32,10 +32,10 @@ def vector(
     >>> import coordinax as cx
 
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> cx.Coordinate.from_(data, cx.frames.ICRS())
+    >>> cx.Coordinate.from_(data, cx.frames.Alice())
     Coordinate(
         KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
+        frame=Alice()
     )
 
     """
@@ -57,10 +57,10 @@ def vector(
     >>> import coordinax as cx
 
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> cx.Coordinate.from_(data, cx.frames.ICRS(), cx.ops.Identity())
+    >>> cx.Coordinate.from_(data, cx.frames.Alice(), cx.ops.Identity())
     Coordinate(
         KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=TransformedReferenceFrame(base_frame=ICRS(), xop=Identity())
+        frame=TransformedReferenceFrame(base_frame=Alice(), xop=Identity())
     )
 
     """

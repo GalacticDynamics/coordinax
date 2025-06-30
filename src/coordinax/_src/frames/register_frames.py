@@ -20,7 +20,7 @@ def frame_of(obj: AbstractReferenceFrame, /) -> AbstractReferenceFrame:
     Examples
     --------
     >>> import coordinax.frames as cxf
-    >>> frame = cxf.ICRS()
+    >>> frame = cxf.Alice()
     >>> frame_of(frame) is frame
     True
 
@@ -36,10 +36,10 @@ def frame_of(obj: AbstractCoordinate) -> AbstractReferenceFrame:
     --------
     >>> import coordinax as cx
 
-    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-    ...                       cx.frames.ICRS())
+    >>> coord = cx.Coordinate(cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc"),
+    ...                       cx.frames.Alice())
     >>> cx.frames.frame_of(coord)
-    ICRS()
+    Alice()
 
     """
     return obj.frame

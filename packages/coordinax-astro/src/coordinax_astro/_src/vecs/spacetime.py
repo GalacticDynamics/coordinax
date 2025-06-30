@@ -44,8 +44,10 @@ class FourVector(cxv.AbstractPos4D):
 
     Examples
     --------
+    >>> import dataclassish
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
+    >>> import coordinax.ops as cxo
     >>> from coordinax_astro import FourVector
 
     Create a 3+1 vector with a time and 3 spatial coordinates:
@@ -71,13 +73,13 @@ class FourVector(cxv.AbstractPos4D):
 
     A FourVector can be constructed using the `coordinax.vecs.vector` function,
 
-    >>> xs = Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
+    >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
     >>> vec = FourVector.from_(xs)
     >>> print(vec)
     <FourVector: (t[m s / km], q=(x, y, z) [m])
         [0. 1. 2. 3.]>
 
-    >>> xs = Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
+    >>> xs = u.Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
     >>> vec = FourVector.from_(xs)
     >>> print(vec)
     <FourVector: (t[m s / km], q=(x, y, z) [m])
@@ -96,40 +98,41 @@ class FourVector(cxv.AbstractPos4D):
 
     Fields:
 
-    >>> from dataclassish import fields
-
     >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> [f.name for f in fields(cxv.AttrFilter, w)]
+    >>> [f.name for f in dataclassish.fields(cxv.AttrFilter, w)]
     ['t', 'q']
 
     Field Keys:
 
     >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> field_keys(cxv.AttrFilter, w)
+    >>> dataclassish.field_keys(cxv.AttrFilter, w)
     ('t', 'q')
 
     Field Values:
 
-    >>> field_values(cxv.AttrFilter, w)
+    >>> dataclassish.field_values(cxv.AttrFilter, w)
+    (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
+     CartesianPos3D( x=Quantity(1, unit='m'), y=Quantity(2, unit='m'),
+                     z=Quantity(3, unit='m')
+    ))
 
     Field Items:
 
-    >>> from dataclassish import field_items
     >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> [(f[0], type(f[1]).__name__) for f in field_items(cxv.AttrFilter, w)]
+    >>> [(f[0], type(f[1]).__name__) for f in
+    ...  dataclassish.field_items(cxv.AttrFilter, w)]
     [('t', "Quantity[PhysicalType('time')]"), ('q', 'CartesianPos3D')]
 
     Asdict:
 
-    >>> from dataclassish import asdict
-    >>> asdict(cxv.AttrFilter, w).keys()
+    >>> dataclassish.asdict(cxv.AttrFilter, w).keys()
     dict_keys(['t', 'q'])
 
     The FourVector can be used with the `coordinax.ops` operators, for example
     `coordinax.ops.Identity`:
 
     >>> q = u.Quantity([1, 2, 3, 4], "km")  # 0th elt is ct
-    >>> vec4 = cx.FourVector.from_(q)
+    >>> vec4 = FourVector.from_(q)
     >>> op = cxo.Identity()
     >>> op(vec4) is vec4 and op(q) is q
     True
@@ -141,17 +144,17 @@ class FourVector(cxv.AbstractPos4D):
     >>> w = FourVector.from_([0, 0, 0, 0], "km")
     >>> print(op(w))
     <FourVector: (t[s], q=(x, y, z) [km])
-        [ 3.156e+16  1.000e+00  0.000e+00 -4.371e-08]>
+        [1.001 1.    1.    1.   ]>
 
     Galilean operators can be applied to `coordinax.vecs.FourVector`:
 
     >>> w = FourVector.from_([0, 0, 0, 0], "km")
     >>> new = op(w)
     >>> new.t.ustrip("Gyr").round(2)
-    Array(2.5, dtype=float32, ...)
+    Array(0., dtype=float32)
     >>> print(new.q)
     <CartesianPos3D: (x, y, z) [km]
-        [7.889e+16 1.578e+17 2.367e+17]>
+        [1. 1. 1.]>
 
     """
 
@@ -205,23 +208,6 @@ class FourVector(cxv.AbstractPos4D):
     # -------------------------------------------
 
     @ft.partial(eqx.filter_jit, inline=True)
-    def _norm2(self) -> Shaped[u.Quantity["area"], "*#batch"]:
-        r"""Return the squared vector norm :math:`(ct)^2 - (x^2 + y^2 + z^2)`.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-        >>> w._norm2()
-        Quantity(Array(8.987552e+10, dtype=float32), unit='km2')
-
-        """
-        return (self.c * self.t) ** 2 - (self.q.norm() ** 2)  # type: ignore[misc,operator]
-
-    @override
-    @ft.partial(eqx.filter_jit, inline=True)
     def norm(self) -> BBtLength:
         r"""Return the vector norm :math:`\sqrt{(ct)^2 - (x^2 + y^2 + z^2)}`.
 
@@ -235,8 +221,8 @@ class FourVector(cxv.AbstractPos4D):
         Quantity(Array(299792.47+0.j, dtype=complex64), unit='km')
 
         """
-        norm2 = jnp.asarray(self._norm2(), dtype=complex)  # type: ignore[misc]
-        return jnp.sqrt(norm2)
+        norm2 = (self.c * self.t) ** 2 - (self.q.norm() ** 2)  # type: ignore[misc, operator]
+        return jnp.sqrt(jnp.asarray(norm2, dtype=complex))
 
     @override
     @property
@@ -263,7 +249,6 @@ class FourVector(cxv.AbstractPos4D):
     # ===============================================================
     # Wadler-Lindig
 
-    @override
     def __pdoc__(self, *, vector_form: bool = False, **kwargs: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig docstring for the vector.
 

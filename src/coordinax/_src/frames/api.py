@@ -22,18 +22,16 @@ def frame_transform_op(
     >>> import coordinax.vecs as cxv
     >>> import coordinax.frames as cxf
 
-    >>> alice = cxf.Alice()
-    >>> bob = cxf.Bob()
-
-    >>> op = cxf.frame_transform_op(alice, bob)
+    >>> op = cxf.frame_transform_op(cxf.Alice(), cxf.Bob())
     >>> op
     Pipe(( ... ))
 
+    >>> t = u.Quantity(2.5, "yr")
     >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> t = u.Quantity(1, "yr")
-    >>> print(op(t, q)[1])
+    >>> _, q_bob = op(t, q)
+    >>> print(q_bob)
     <CartesianPos3D: (x, y, z) [kpc]
-        [1. 2. 3.]>
+        [1.001 2.    3.   ]>
 
     """
 

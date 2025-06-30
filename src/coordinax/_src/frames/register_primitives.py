@@ -20,15 +20,13 @@ def neg_p_coord(x: Coordinate, /) -> Coordinate:
     >>> import coordinax as cx
 
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> coord = cx.Coordinate(data, cx.frames.ICRS())
+    >>> coord = cx.Coordinate(data, cx.frames.Alice())
 
     >>> print(-coord)
     Coordinate(
-        {
-           'length': <CartesianPos3D: (x, y, z) [kpc]
-               [-1 -2 -3]>
-        },
-        frame=ICRS()
+        { 'length': <CartesianPos3D: (x, y, z) [kpc]
+                        [-1 -2 -3]> },
+        frame=Alice()
     )
 
     """

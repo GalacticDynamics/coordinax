@@ -7,15 +7,29 @@ frame metadata to your data.
 
 ## Built-in Frames
 
-{mod}`coordinax.frames` includes several standard astronomical frames:
+`coordinax.frames` includes several standard frames:
 
 ```{code-block} python
 >>> import coordinax.frames as cxf
->>> icrs = cxf.ICRS()
+
+>>> alice = cxf.Alice()
+>>> alice
+Alice()
+
+>>> bob = cxf.Bob()
+>>> bob
+Bob()
+```
+
+`coordinax_astro` includes several standard astronomical frames:
+
+```{code-block} python
+>>> from coordinax_astro import ICRS, Galactocentric
+>>> icrs = ICRS()
 >>> icrs
 ICRS()
 
->>> gc = cxf.Galactocentric()
+>>> gc = Galactocentric()
 >>> gc
 Galactocentric(
   galcen=LonLatSphericalPos(...),

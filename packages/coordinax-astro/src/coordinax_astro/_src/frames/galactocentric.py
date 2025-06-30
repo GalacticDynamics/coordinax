@@ -30,9 +30,8 @@ class Galactocentric(AbstractSpaceFrame):
 
     Examples
     --------
-    >>> import coordinax as cx
-    >>> frame = cx.frames.Galactocentric()
-    >>> frame
+    >>> from coordinax_astro import Galactocentric
+    >>> Galactocentric()
     Galactocentric(
       galcen=LonLatSphericalPos( ... ),
       roll=Quantity(weak_i32[], unit='deg'),

@@ -28,16 +28,16 @@ def vector(cls: type[FourVector], obj: u.AbstractQuantity, /) -> FourVector:
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
     >>> xs = u.Quantity([0, 1, 2, 3], "meter")  # [ct, x, y, z]
-    >>> vec = cx.FourVector.from_(xs)
+    >>> vec = FourVector.from_(xs)
     >>> print(vec)
     <FourVector: (t[m s / km], q=(x, y, z) [m])
         [0. 1. 2. 3.]>
 
     >>> xs = u.Quantity(jnp.array([[0, 1, 2, 3], [10, 4, 5, 6]]), "meter")
-    >>> vec = cx.FourVector.from_(xs)
+    >>> vec = FourVector.from_(xs)
     >>> print(vec)
     <FourVector: (t[m s / km], q=(x, y, z) [m])
         [[0.000e+00 1.000e+00 2.000e+00 3.000e+00]
@@ -66,8 +66,9 @@ def vconvert(
     --------
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(cx.vconvert(cx.vecs.CylindricalPos, w))
     <FourVector: (t[s], q=(rho[m], phi[rad], z[m]))
         [1.    2.236 1.107 3.   ]>
@@ -103,7 +104,7 @@ def spatial_component(x: FourVector, /) -> cxv.AbstractPos3D:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(spatial_component(w))
     <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
@@ -135,6 +136,7 @@ def call(self: cxo.AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVe
     Examples
     --------
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
     We can then create a spatial translation operator:
 
@@ -144,7 +146,7 @@ def call(self: cxo.AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVe
 
     We can then apply the operator to a position:
 
-    >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "km")
+    >>> pos = FourVector.from_([0, 1.0, 2.0, 3.0], "km")
     >>> pos
     FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
 
@@ -158,7 +160,7 @@ def call(self: cxo.AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVe
 
     >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
 
-    >>> v4 = cx.FourVector.from_([0, 0, 0, 0], "m")
+    >>> v4 = FourVector.from_([0, 0, 0, 0], "m")
     >>> newv4 = op(v4)
     >>> print(newv4)
     <FourVector: (t[m s / km], q=(x, y, z) [m])
@@ -259,17 +261,18 @@ def call(self: cxo.GalileanTranslation, x: FourVector, /, **__: Any) -> FourVect
     >>> import unxt as u
     >>> import coordinax as cx
     >>> import coordinax.ops as cxo
+    >>> from coordinax_astro import FourVector
 
     Explicitly construct the translation operator:
 
     >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
-    >>> shift = FourVector (u.Quantity(1, "Gyr"), qshift)
-    >>> op = cx.ops.GalileanTranslation(shift)
+    >>> shift = FourVector(u.Quantity(1, "Gyr"), qshift)
+    >>> op = cx.ops.GalileanTranslation.from_(shift)
 
     Construct a vector to translate, using the convenience from_ (the
     0th component is :math:`c * t`, the rest are spatial components):
 
-    >>> w = cx.FourVector.from_([0, 1, 2, 3], "km")
+    >>> w = FourVector.from_([0, 1, 2, 3], "km")
     >>> w.t
     Quantity(Array(0., dtype=float32, ...), unit='s')
 
@@ -284,3 +287,28 @@ def call(self: cxo.GalileanTranslation, x: FourVector, /, **__: Any) -> FourVect
 
     """
     return x + FourVector(self.delta_t, self.delta_q)
+
+
+@cxo.GalileanTranslation.from_.dispatch  # type: ignore[misc]
+def from_(
+    cls: type[cxo.GalileanTranslation], shift: FourVector, /
+) -> cxo.GalileanTranslation:
+    """Construct a Galilean translation operator from a 4-vector.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
+
+    >>> shift = FourVector.from_([0, 1, 2, 3], "km")
+    >>> op = cx.ops.GalileanTranslation.from_(shift)
+    >>> print(op)
+    GalileanTranslation( ... )
+
+    """
+    return cxo.GalileanTranslation(
+        delta_t=shift.t,
+        delta_q=shift.q,
+        # c=shift.c,
+    )

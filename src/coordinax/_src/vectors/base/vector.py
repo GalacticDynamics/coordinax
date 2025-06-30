@@ -627,7 +627,7 @@ def is_vector(obj: Any, /) -> TypeGuard[AbstractVector]:
     >>> cx.vecs.is_vector(space)
     False
 
-    >>> coord = cx.Coordinate.from_(vec, cx.frames.ICRS())
+    >>> coord = cx.Coordinate.from_(vec, cx.frames.Alice())
     >>> cx.vecs.is_vector(coord)
     True
 

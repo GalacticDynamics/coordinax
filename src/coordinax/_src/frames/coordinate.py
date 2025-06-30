@@ -53,17 +53,17 @@ class AbstractCoordinate(AbstractVector):
         --------
         >>> import coordinax as cx
 
-        >>> cicrs = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-        ...                       cx.frames.ICRS())
+        >>> calice = cx.Coordinate(cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc"),
+        ...                       cx.frames.Alice())
 
-        >>> cicrs.to_frame(cx.frames.ICRS()) is cicrs
+        >>> calice.to_frame(cx.frames.Alice()) is calice
         True
 
-        >>> cgcf = cicrs.to_frame(cx.frames.Galactocentric())
-        >>> cgcf
+        >>> cfriend = calice.to_frame(cx.frames.FriendOfAlice())
+        >>> cfriend
         Coordinate(
             KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-            frame=Galactocentric( ... )
+            frame=FriendOfAlice()
         )
 
         """
@@ -114,12 +114,14 @@ class AbstractCoordinate(AbstractVector):
         --------
         >>> import coordinax as cx
 
-        >>> frame = cx.frames.ICRS()
-        >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-        >>> print(repr(cx.Coordinate(data, frame)))
+        >>> frame = cx.frames.Alice()
+        >>> data = cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> coord = cx.Coordinate(data, frame)
+        >>> print(coord)
         Coordinate(
-            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-            frame=ICRS()
+            { 'length': <CartesianPos3D: (x, y, z) [kpc]
+                            [1 2 3]> },
+            frame=Alice()
         )
 
         """
@@ -152,11 +154,11 @@ class AbstractCoordinate(AbstractVector):
         --------
         >>> import coordinax as cx
         >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-        ...                       cx.frames.ICRS())
+        ...                       cx.frames.Alice())
         >>> print(repr(coord))
         Coordinate(
             KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-            frame=ICRS()
+            frame=Alice()
         )
 
         """
@@ -167,16 +169,13 @@ class AbstractCoordinate(AbstractVector):
 
         Examples
         --------
-        >>> import coordinax as cx
-        >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-        ...                       cx.frames.ICRS())
+        >>> coord = cx.Coordinate(cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc"),
+        ...                       cx.frames.Alice())
         >>> print(coord)
         Coordinate(
-            {
-            'length': <CartesianPos3D: (x, y, z) [kpc]
-                [1 2 3]>
-            },
-            frame=ICRS()
+            { 'length': <CartesianPos3D: (x, y, z) [kpc]
+                            [1 2 3]> },
+            frame=Alice()
         )
 
         """
@@ -198,62 +197,62 @@ class Coordinate(AbstractCoordinate):
     --------
     >>> import coordinax as cx
 
-    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-    ...                       cx.frames.ICRS())
+    >>> coord = cx.Coordinate(cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc"),
+    ...                       cx.frames.Alice())
     >>> coord
     Coordinate(
         KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
+        frame=Alice()
     )
 
     Alternative Construction:
 
-    >>> frame = cx.frames.ICRS()
-    >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> frame = cx.frames.Alice()
+    >>> data = cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_({"data": data, "frame": frame})
     Coordinate(
         KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
+        frame=Alice()
     )
 
     Changing Representation:
 
-    >>> frame = cx.frames.ICRS()
-    >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> frame = cx.frames.Alice()
+    >>> data = cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> coord = cx.Coordinate(data, frame)
 
     >>> coord.vconvert(cx.SphericalPos)
     Coordinate(
         KinematicSpace({ 'length': SphericalPos( ... ) }),
-        frame=ICRS()
+        frame=Alice()
     )
 
     Showing Frame Transformation:
 
     >>> space = cx.KinematicSpace(
-    ...     length=cx.CartesianPos3D.from_([1.0, 0, 0], "pc"),
+    ...     length=cx.vecs.CartesianPos3D.from_([1.0, 0, 0], "pc"),
     ...     speed=cx.CartesianVel3D.from_([1.0, 0, 0], "km/s"))
 
     >>> w=cx.Coordinate(
     ...     data=space,
     ...     frame=cx.frames.TransformedReferenceFrame(
-    ...         cx.frames.Galactocentric(),
+    ...         cx.frames.FriendOfAlice(),
     ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc"),
     ...     ),
     ... )
 
-    >>> w.to_frame(cx.frames.ICRS())
+    >>> w.to_frame(cx.frames.Alice())
     Coordinate(
         KinematicSpace({
             'length': CartesianPos3D(...), 'speed': CartesianVel3D(...) }),
-        frame=ICRS()
+        frame=Alice()
     )
 
-    >>> w.to_frame(cx.frames.ICRS()).data["length"]
+    >>> w.to_frame(cx.frames.Alice()).data["length"]
     CartesianPos3D(
-      x=Quantity(-1587.6683, unit='pc'),
-      y=Quantity(-24573.762, unit='pc'),
-      z=Quantity(-13583.504, unit='pc')
+      x=Quantity(-3.2407793e-16, unit='pc'),
+      y=Quantity(-20000.998, unit='pc'),
+      z=Quantity(0., unit='pc')
     )
 
     """
@@ -286,8 +285,8 @@ class Coordinate(AbstractCoordinate):
         --------
         >>> import coordinax as cx
 
-        >>> w = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-        ...                   cx.frames.ICRS())
+        >>> w = cx.Coordinate(cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc"),
+        ...                   cx.frames.Alice())
         >>> try: w._dimensionality()
         ... except NotImplementedError as e: print("not implemented")
         not implemented
@@ -304,8 +303,8 @@ class Coordinate(AbstractCoordinate):
         --------
         >>> import coordinax as cx
 
-        >>> data = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
-        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+        >>> data = cx.vecs.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
+        >>> w = cx.Coordinate.from_(data, cx.frames.Alice())
 
         >>> print(w[0].data["length"])
         <CartesianPos3D: (x, y, z) [kpc]
@@ -322,8 +321,8 @@ class Coordinate(AbstractCoordinate):
         --------
         >>> import coordinax as cx
 
-        >>> data = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
-        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+        >>> data = cx.vecs.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
+        >>> w = cx.Coordinate.from_(data, cx.frames.Alice())
 
         >>> print(w["length"])
         <CartesianPos3D: (x, y, z) [kpc]

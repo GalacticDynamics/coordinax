@@ -26,10 +26,10 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[BareQuantity, "*batch 4"]:
     --------
     >>> from plum import convert
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.vecs.FourVector (t=u.Quantity([1, 2], "yr"),
-    ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
+    >>> w = FourVector(t=u.Quantity([1, 2], "yr"),
+    ...                q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
 
     >>> convert(w, u.quantity.BareQuantity).uconvert("pc")
     BareQuantity(Array([[0.3066014, 1. , 2. , 3. ],
@@ -54,10 +54,10 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Quantity["length"], "*ba
     --------
     >>> from plum import convert
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.vecs.FourVector (t=u.Quantity([1, 2], "yr"),
-    ...                        q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
+    >>> w = FourVector(t=u.Quantity([1, 2], "yr"),
+    ...                q=u.Quantity([[1, 2, 3], [4, 5, 6]], "pc"))
 
     >>> convert(w, u.Quantity).uconvert("pc")
     Quantity(Array([[0.3066014, 1. , 2. , 3. ],
@@ -80,8 +80,9 @@ def convert_4vec_to_cart3d(obj: FourVector, /) -> cxv.CartesianPos3D:
     >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(convert(w, cx.vecs.CartesianPos3D))
     <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
@@ -99,8 +100,9 @@ def convert_4vec_to_cylindrical(obj: FourVector, /) -> cxv.CylindricalPos:
     >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(convert(w, cx.vecs.CylindricalPos))
     <CylindricalPos: (rho[m], phi[rad], z[m])
         [2.236 1.107 3.   ]>
@@ -118,8 +120,9 @@ def convert_4vec_to_spherical(obj: FourVector, /) -> cxv.SphericalPos:
     >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(convert(w, cx.SphericalPos))
     <SphericalPos: (r[m], theta[rad], phi[rad])
         [3.742 0.641 1.107]>
@@ -137,8 +140,9 @@ def convert_4vec_to_lonlat_spherical(obj: FourVector, /) -> cxv.LonLatSphericalP
     >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(convert(w, cx.vecs.LonLatSphericalPos))
     <LonLatSphericalPos: (lon[rad], lat[deg], distance[m])
         [ 1.107 53.301  3.742]>
@@ -156,8 +160,9 @@ def convert_4vec_to_mathsph(obj: FourVector, /) -> cxv.MathSphericalPos:
     >>> from plum import convert
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import FourVector
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
+    >>> w = FourVector(t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
     >>> print(convert(w, cx.vecs.MathSphericalPos))
     <MathSphericalPos: (r[m], theta[rad], phi[rad])
         [3.742 1.107 0.641]>
