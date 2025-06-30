@@ -19,16 +19,16 @@ class NoFrame(AbstractReferenceFrame):
     >>> import coordinax.frames as cxf
 
     >>> null = cxf.NoFrame()
-    >>> icrs = cxf.ICRS()
+    >>> alice = cxf.Alice()
 
     >>> try:
-    ...     cxf.frame_transform_op(null, icrs)
+    ...     cxf.frame_transform_op(null, alice)
     ... except cxf.FrameTransformError as e:
     ...     print(e)
     Cannot transform from the null frame.
 
     >>> try:
-    ...     cxf.frame_transform_op(icrs, null)
+    ...     cxf.frame_transform_op(alice, null)
     ... except cxf.FrameTransformError as e:
     ...     print(e)
     Cannot transform to the null frame.

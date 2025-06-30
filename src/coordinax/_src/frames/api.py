@@ -18,20 +18,22 @@ def frame_transform_op(
 
     Examples
     --------
+    >>> import unxt as u
     >>> import coordinax.vecs as cxv
     >>> import coordinax.frames as cxf
 
-    >>> icrs = cxf.ICRS()
-    >>> gcf = cxf.Galactocentric()
+    >>> alice = cxf.Alice()
+    >>> bob = cxf.Bob()
 
-    >>> op = cxf.frame_transform_op(icrs, gcf)
+    >>> op = cxf.frame_transform_op(alice, bob)
     >>> op
     Pipe(( ... ))
 
     >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> print(op(q))
+    >>> t = u.Quantity(1, "yr")
+    >>> print(op(t, q)[1])
     <CartesianPos3D: (x, y, z) [kpc]
-        [-11.375   1.845   0.133]>
+        [1. 2. 3.]>
 
     """
 
