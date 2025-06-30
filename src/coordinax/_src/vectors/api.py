@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 from plum import dispatch
 
 if TYPE_CHECKING:
-    import coordinax.vecs
+    import coordinax.vecs  # noqa: ICN001
 
 
 @dispatch.abstract

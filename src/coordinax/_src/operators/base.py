@@ -19,7 +19,7 @@ from .api import simplify_op
 from coordinax._src.vectors.base_pos import AbstractPos
 
 if TYPE_CHECKING:
-    import coordinax.ops
+    import coordinax.ops  # noqa: ICN001
 
 _sentinel: Final = object()
 

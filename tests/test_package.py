@@ -2,9 +2,9 @@
 
 import importlib.metadata
 
-import coordinax as pkg
+import coordinax as cx
 
 
 def test_version():
     """Test version."""
-    assert importlib.metadata.version("coordinax") == pkg.__version__
+    assert importlib.metadata.version("coordinax") == cx.__version__

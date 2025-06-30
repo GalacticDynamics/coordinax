@@ -8,7 +8,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, final, overload
 
 if TYPE_CHECKING:
-    import coordinax.vecs
+    import coordinax.vecs  # noqa: ICN001
 
 
 Return = TypeVar("Return")

@@ -11,7 +11,7 @@ from dataclassish import field_values
 from .base.flags import AttrFilter
 
 if TYPE_CHECKING:
-    import coordinax.vecs
+    import coordinax.vecs  # noqa: ICN001
 
 
 def full_shaped(
