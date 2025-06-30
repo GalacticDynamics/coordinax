@@ -40,13 +40,13 @@ class AbstractReferenceFrame(eqx.Module):
         --------
         >>> import coordinax.frames as cxf
 
-        >>> icrs = cxf.ICRS()
-        >>> gcf = cxf.Galactocentric()
-        >>> op = icrs.transform_op(gcf)  # ICRS to Galactocentric
+        >>> alice = cxf.ICRS()
+        >>> bob = cxf.Bob()
+        >>> op = alice.transform_op(bob)
         >>> op
         Pipe(( ... ))
 
-        >>> op = gcf.transform_op(icrs)  # Galactocentric to ICRS
+        >>> op = bob.transform_op(alice)
         >>> op
         Pipe(( ... ))
 
@@ -95,15 +95,15 @@ def from_(
     --------
     >>> import coordinax.frames as cxf
 
-    >>> icrs = cxf.ICRS()
-    >>> cxf.AbstractReferenceFrame.from_(icrs) is icrs
+    >>> alice = cxf.Alice()
+    >>> cxf.AbstractReferenceFrame.from_(alice) is alice
     True
 
     >>> try:
-    ...     cxf.Galactocentric.from_(icrs)
+    ...     cxf.Galactocentric.from_(alice)
     ... except TypeError as e:
     ...     print(e)
-    Cannot construct 'Galactocentric' from ICRS()
+    Cannot construct 'Galactocentric' from Alice()
 
     """
     if not isinstance(obj, cls):
