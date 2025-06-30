@@ -155,39 +155,39 @@ def cartesian_vector_type(obj: Any, /) -> "type[coordinax.vecs.AbstractVector]":
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.RadialPos)
+    >>> cxv.cartesian_vector_type(cxv.RadialPos)
     <class 'coordinax...CartesianPos1D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.SphericalPos)
+    >>> cxv.cartesian_vector_type(cxv.SphericalPos)
     <class 'coordinax...CartesianPos3D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.RadialVel)
+    >>> cxv.cartesian_vector_type(cxv.RadialVel)
     <class 'coordinax...CartesianVel1D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.TwoSphereAcc)
+    >>> cxv.cartesian_vector_type(cxv.TwoSphereAcc)
     <class 'coordinax...CartesianAcc2D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.SphericalVel)
+    >>> cxv.cartesian_vector_type(cxv.SphericalVel)
     <class 'coordinax...CartesianVel3D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianAcc3D)
+    >>> cxv.cartesian_vector_type(cxv.CartesianAcc3D)
     <class 'coordinax...CartesianAcc3D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.SphericalAcc)
+    >>> cxv.cartesian_vector_type(cxv.SphericalAcc)
     <class 'coordinax...CartesianAcc3D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.FourVector)
+    >>> cxv.cartesian_vector_type(cxv.FourVector)
     <class 'coordinax...CartesianPos3D'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianPosND)
+    >>> cxv.cartesian_vector_type(cxv.CartesianPosND)
     <class 'coordinax...CartesianPosND'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianVelND)
+    >>> cxv.cartesian_vector_type(cxv.CartesianVelND)
     <class 'coordinax...CartesianVelND'>
 
-    >>> cx.vecs.cartesian_vector_type(cx.vecs.CartesianAccND)
+    >>> cxv.cartesian_vector_type(cxv.CartesianAccND)
     <class 'coordinax...CartesianAccND'>
 
     """
