@@ -40,7 +40,7 @@ class AbstractReferenceFrame(eqx.Module):
         --------
         >>> import coordinax.frames as cxf
 
-        >>> alice = cxf.ICRS()
+        >>> alice = cxf.Alice()
         >>> bob = cxf.Bob()
         >>> op = alice.transform_op(bob)
         >>> op

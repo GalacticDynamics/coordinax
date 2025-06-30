@@ -33,7 +33,7 @@ def frame_transform_op(
     >>> t = u.Quantity(1, "yr")
     >>> print(op(t, q)[1])
     <CartesianPos3D: (x, y, z) [kpc]
-        [-11.375   1.845   0.133]>
+        [1. 2. 3.]>
 
     """
 
