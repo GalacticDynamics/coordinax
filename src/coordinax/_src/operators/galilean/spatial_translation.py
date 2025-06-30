@@ -34,7 +34,7 @@ def converter(x: Any) -> AbstractPos:
     """Convert for the spatial translation operator."""
     out: AbstractPos | None
     if isinstance(x, GalileanSpatialTranslation):
-        out = x.translation
+        out = x.delta_q
     elif isinstance(x, AbstractPos):
         out = x
     elif isinstance(x, u.AbstractQuantity):
@@ -171,7 +171,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     """
 
-    translation: AbstractPos = eqx.field(converter=converter)
+    delta_q: AbstractPos = eqx.field(converter=converter)
     """The spatial translation.
 
     This parameters accepts either a `vector.AbstractVector` instance or
@@ -212,12 +212,12 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> op.inverse
         GalileanSpatialTranslation(CartesianPos3D( ... ))
 
-        >>> print(op.inverse.translation)
+        >>> print(op.inverse.delta_q)
         <CartesianPos3D: (x, y, z) [km]
             [-1 -1 -1]>
 
         """
-        return GalileanSpatialTranslation(-self.translation)
+        return GalileanSpatialTranslation(-self.delta_q)
 
     # -------------------------------------------
     # Arithmetic operations
@@ -231,12 +231,12 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "km")
-        >>> print((-op).translation)
+        >>> print((-op).delta_q)
         <CartesianPos3D: (x, y, z) [km]
             [-1 0 0]>
 
         """
-        return replace(self, translation=-self.translation)
+        return replace(self, delta_q=-self.delta_q)
 
     # -------------------------------------------
 
@@ -244,7 +244,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
         """Return the Wadler-Lindig representation."""
         return (
             wl.TextDoc(f"{self.__class__.__name__}(")
-            + wl.pdoc(self.translation, **kwargs)
+            + wl.pdoc(self.delta_q, **kwargs)
             + wl.TextDoc(")")
         )
 
@@ -275,7 +275,7 @@ def call(self: GalileanSpatialTranslation, q: AbstractPos, /, **__: Any) -> Abst
         [2 3 4]>
 
     """
-    return cast(AbstractPos, q + self.translation)
+    return cast(AbstractPos, q + self.delta_q)
 
 
 @AbstractOperator.__call__.dispatch
@@ -309,7 +309,7 @@ def call(
     Array(True, dtype=bool)
 
     """
-    return t, q + self.translation
+    return t, q + self.delta_q
 
 
 # ---------------------------
@@ -332,7 +332,7 @@ def call(self: GalileanSpatialTranslation, v4: FourVector, /, **__: Any) -> Abst
         [0. 2. 3. 4.]>
 
     """
-    return replace(v4, q=v4.q + self.translation)
+    return replace(v4, q=v4.q + self.delta_q)
 
 
 @jax.jit
@@ -476,9 +476,7 @@ def simplify_op(
 
     """
     # Check if the translation is zero.
-    if jnp.allclose(
-        convert(op.translation, u.Quantity).value, jnp.zeros((3,)), **kwargs
-    ):
+    if jnp.allclose(convert(op.delta_q, u.Quantity).value, 0, **kwargs):
         return Identity()
     return op
 
@@ -501,8 +499,8 @@ def simplify_op(
     >>> op3
     GalileanSpatialTranslation(CartesianPos3D( ... ))
 
-    >>> op3.translation == op1.translation + op2.translation
+    >>> op3.delta_q == op1.delta_q + op2.delta_q
     Array(True, dtype=bool)
 
     """
-    return GalileanSpatialTranslation(op1.translation + op2.translation)
+    return GalileanSpatialTranslation(op1.delta_q + op2.delta_q)

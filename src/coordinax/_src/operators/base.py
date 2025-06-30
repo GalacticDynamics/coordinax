@@ -88,19 +88,22 @@ class AbstractOperator(eqx.Module):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax as cx
+        >>> import coordinax.ops as cxo
 
-        >>> op = cx.ops.Identity()
+        >>> op = cxo.Identity()
         >>> op.simplify() is op
         True
 
-        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
+        >>> op = cxo.Pipe((cxo.Identity(), cxo.Identity()))
         >>> op.simplify()
         Identity()
 
-        >>> op = cx.ops.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
+        >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
         >>> op.simplify()
-        GalileanTranslation(FourVector( ... ))
+        GalileanTranslation(
+            delta_t=Quantity(f32[], unit='s'),
+            delta_q=CartesianPos3D( ... )
+        )
 
         """
         return simplify_op(self)
@@ -160,8 +163,11 @@ class AbstractOperator(eqx.Module):
             rotation=GalileanRotation([[1. 0. 1.]
                                        [0. 1. 0.]
                                        [0. 0. 1.]]),
-            translation=GalileanTranslation(<FourVector: (t[s], q=(x, y, z) [km])
-                    [0. 2. 3. 4.]>),
+            translation=GalileanTranslation(
+                delta_t=Quantity(0., unit='s'),
+                delta_q=<CartesianPos3D: (x, y, z) [km]
+                    [2. 3. 4.]>
+            ),
             velocity=GalileanBoost(<CartesianVel3D: (x, y, z) [km / s]
                     [1. 2. 3.]>)
         )
@@ -179,15 +185,15 @@ class AbstractOperator(eqx.Module):
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.ops as cxo
 
-        >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-        >>> op2 = cx.ops.Identity()
+        >>> op1 = cxo.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> op2 = cxo.Identity()
         >>> op3 = op1 | op2
         >>> op3
         Pipe((GalileanRotation(rotation=i32[3,3]), Identity()))
 
-        >>> op4 = cx.ops.Identity() | op3
+        >>> op4 = cxo.Identity() | op3
         >>> op4
         Pipe((Identity(), GalileanRotation(rotation=i32[3,3]), Identity()))
 
@@ -223,9 +229,9 @@ def from_(cls: type[AbstractOperator], obj: Mapping[str, Any], /) -> AbstractOpe
 
     Examples
     --------
-    >>> import coordinax as cx
-    >>> pipe = cx.ops.Identity() | cx.ops.Identity()
-    >>> cx.ops.Pipe.from_({"operators": pipe})
+    >>> import coordinax.ops as cxo
+    >>> pipe = cxo.Identity() | cxo.Identity()
+    >>> cxo.Pipe.from_({"operators": pipe})
     Pipe((Identity(), Identity()))
 
     """
@@ -243,25 +249,28 @@ def from_(
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.ops as cxo
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
-    >>> print(op.translation)
-    <CartesianPos3D: (x, y, z) [km]
-        [1 1 1]>
+    >>> op = cxo.GalileanSpatialTranslation.from_([1, 1, 1], "km")
+    >>> print(op)
+    GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
+        [1 1 1]>)
 
-    >>> op = cx.ops.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
-    >>> print(op.translation)
-    <FourVector: (t[s], q=(x, y, z) [km])
-        [1.001 1.    1.    1.   ]>
+    >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
+    >>> print(op)
+    GalileanTranslation(
+      delta_t=Quantity(1.0006922, unit='s'),
+      delta_q=<CartesianPos3D: (x, y, z) [km]
+          [1. 1. 1.]>
+    )
 
-    >>> op = cx.ops.GalileanBoost.from_([1, 1, 1], "km/s")
-    >>> print(op.velocity)
-    <CartesianVel3D: (x, y, z) [km / s]
-        [1 1 1]>
+    >>> op = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
+    >>> print(op)
+    GalileanBoost(<CartesianVel3D: (x, y, z) [km / s]
+        [1 1 1]>)
 
     """
-    return cls(u.Quantity(x, unit))
+    return cls.from_(u.Quantity(x, unit))
 
 
 @AbstractOperator.from_.dispatch
