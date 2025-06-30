@@ -260,7 +260,7 @@ specifying the corresponding position:
     [ 8.552  0.383 -0.6  ]>
 ```
 
-#### Creating a KinematicSpace Object
+#### Creating a `KinematicSpace` Object
 
 A {class}`~coordinax.vecs.KinematicSpace` object collects related vectors (e.g.,
 position, velocity, acceleration) into a single container:
@@ -285,11 +285,11 @@ different representation at once:
 >>> space_sph = space.vconvert(cxv.SphericalPos)
 >>> print(space_sph)
 KinematicSpace({
-       'length': <SphericalPos: (r[kpc], theta[rad], phi[rad])
-                     [3.742 0.641 1.107]>,
-       'speed': <SphericalVel: (r[kpc / Myr], theta[rad / Myr], phi[rad / Myr])
-                    [ 8.552  0.383 -0.6  ]>
-    })
+    'length': <SphericalPos: (r[kpc], theta[rad], phi[rad])
+                [3.742 0.641 1.107]>,
+    'speed': <SphericalVel: (r[kpc / Myr], theta[rad / Myr], phi[rad / Myr])
+                [ 8.552  0.383 -0.6  ]>
+})
 ```
 
 ### Operators on Vectors
@@ -354,24 +354,21 @@ Coordinate(
 
 >>> coord.to_frame(bob, t)
 Coordinate(
-    data=KinematicSpace({
-    'length': CartesianPos3D(
-        x=Quantity(1.000276, unit='kpc'),
-        y=Quantity(2., unit='kpc'),
-        z=Quantity(3., unit='kpc') )
-    }),
+    KinematicSpace({ 'length': CartesianPos3D(
+        x=Quantity(f32[], unit='kpc'),
+        y=Quantity(f32[], unit='kpc'),
+        z=Quantity(f32[], unit='kpc')
+    ) }),
     frame=Bob()
 )
 
 >>> coord.vconvert(cxv.SphericalPos)
 Coordinate(
-    data=KinematicSpace({
-    'length': SphericalPos(
-        r=Distance(3.7416575, unit='kpc'),
-        theta=Angle(0.64052236, unit='rad'),
-        phi=Angle(1.1071488, unit='rad')
-    )
-    }),
+    KinematicSpace({ 'length': SphericalPos(
+          r=Distance(weak_f32[], unit='kpc'),
+          theta=Angle(f32[], unit='rad'),
+          phi=Angle(weak_f32[], unit='rad')
+        ) }),
     frame=Alice()
 )
 

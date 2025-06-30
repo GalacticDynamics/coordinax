@@ -21,7 +21,7 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
     ...                       cx.frames.ICRS())
     >>> coord
     Coordinate(
-        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
