@@ -17,7 +17,7 @@ from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.mixins import AvalMixin
 
 if TYPE_CHECKING:
-    import coordinax.vecs
+    import coordinax.vecs  # noqa: ICN001
 
 
 class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method

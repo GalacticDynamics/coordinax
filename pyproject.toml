@@ -3,7 +3,8 @@
   dynamic = ["version"]
   description = "Coordinates in JAX"
   readme = "README.md"
-  license.file = "LICENSE"
+  license = "MIT"
+  license-files = ["LICENSE"]
   requires-python = ">=3.11"
   authors = [
     { name = "Coordinax Devs", email = "nstarman@users.noreply.github.com" },
@@ -41,10 +42,7 @@
     "unxt>=1.6.2",
     "wadler-lindig>=0.1.6",
     "xmmutablemap>=0.1",
-]
-
-  [project.optional-dependencies]
-    all = ["coordinax"]
+  ]
 
   [project.urls]
     "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
@@ -214,7 +212,7 @@ skip = ["uv.lock"]
     "--strict-config",
     "--strict-markers",
     "-p no:doctest",    # using sybil
-    "-ra",
+    "-ra", # Display extra test summary info for all outcomes
   ]
   filterwarnings = [
     "error",
@@ -276,6 +274,10 @@ COORDINAX_ENABLE_RUNTIME_TYPECHECKING = "beartype.beartype"
       equinox = "eqx"
       functools = "ft"
       unxt = "u"
+      coordinax = "cx"
+      "coordinax.vecs" = "cxv"
+      "coordinax.frames" = "cxf"
+      "coordinax.ops" = "cxo"
 
     [tool.ruff.lint.isort]
       combine-as-imports = true

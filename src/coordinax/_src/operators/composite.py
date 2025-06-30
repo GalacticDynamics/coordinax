@@ -14,7 +14,7 @@ from .base import AbstractOperator
 from coordinax._src.vectors.base import AbstractVectorLike
 
 if TYPE_CHECKING:
-    import coordinax.ops
+    import coordinax.ops  # noqa: ICN001
 
 
 @runtime_checkable

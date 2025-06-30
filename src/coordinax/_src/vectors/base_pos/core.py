@@ -24,7 +24,7 @@ from coordinax._src.vectors.base import AbstractVector, ToUnitsOptions
 from coordinax._src.vectors.mixins import AvalMixin
 
 if TYPE_CHECKING:
-    import coordinax.vecs
+    import coordinax.vecs  # noqa: ICN001
 
 _vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)->(N)"))
 
