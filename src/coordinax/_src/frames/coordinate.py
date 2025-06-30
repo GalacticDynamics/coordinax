@@ -11,6 +11,7 @@ import jax
 import wadler_lindig as wl
 from plum import dispatch
 
+import unxt as u
 from dataclassish import field_items, replace
 from dataclassish.converters import Unless
 
@@ -43,7 +44,9 @@ class AbstractCoordinate(AbstractVector):
     # ===============================================================
     # Coordinate API
 
-    def to_frame(self, to_frame: AbstractReferenceFrame, /) -> "AbstractCoordinate":
+    def to_frame(
+        self, toframe: AbstractReferenceFrame, /, t: u.Quantity | None = None
+    ) -> "AbstractCoordinate":
         """Transform the coordinate to a specified frame.
 
         Examples
@@ -64,15 +67,15 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
-        op = self.frame.transform_op(to_frame)
+        op = self.frame.transform_op(toframe)
 
         # Special case for identity operations
         if isinstance(op, Identity):
             return self
 
         # Otherwise, apply the transformation and return a new coordinate
-        new_data = op(self.data)
-        out = self.__class__.from_(new_data, to_frame)
+        new_data = op(self.data) if t is None else op(t, self.data)[1]
+        out = self.__class__.from_(new_data, toframe)
         return cast(AbstractCoordinate, out)
 
     # ===============================================================
