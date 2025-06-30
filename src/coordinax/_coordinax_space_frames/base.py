@@ -3,8 +3,8 @@
 __all__ = ["AbstractSpaceFrame"]
 
 
-from coordinax._src.frames import AbstractReferenceFrame
+import coordinax.frames as cxf
 
 
-class AbstractSpaceFrame(AbstractReferenceFrame):
+class AbstractSpaceFrame(cxf.AbstractReferenceFrame):
     """ABC for space-related reference frames."""

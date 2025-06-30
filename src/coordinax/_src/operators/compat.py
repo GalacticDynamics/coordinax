@@ -3,7 +3,7 @@
 __all__: list[str] = []
 
 
-from typing import Any, TypeAlias
+from typing import Any, Final, TypeAlias
 
 from jaxtyping import Shaped
 from plum import convert
@@ -270,9 +270,12 @@ def call(
 # ============================================================================
 # Space
 
+# TODO: enable arbitrary keys
+known_keys: Final = ("length", "speed", "acceleration")
+
 
 @AbstractOperator.__call__.dispatch
-def call(self: AbstractOperator, space: KinematicSpace, /, **__: Any) -> KinematicSpace:
+def call(op: AbstractOperator, space: KinematicSpace, /, **__: Any) -> KinematicSpace:
     r"""Apply the boost to a Space.
 
     Examples
@@ -308,16 +311,35 @@ def call(self: AbstractOperator, space: KinematicSpace, /, **__: Any) -> Kinemat
         [5. 7. 9.]>
 
     """
-    # TODO: figure out how to do this in general, not just for q &/ p
-    if "length" not in space:
-        raise NotImplementedError("TODO")  # noqa: EM101
-    if "speed" in space and "acceleration" in space:
-        q, p, a = self(space["length"], space["speed"], space["acceleration"])
-        out = replace(space, length=q, speed=p, acceleration=a)
-    elif "speed" in space:
-        q, p = self(space["length"], space["speed"])
-        out = replace(space, length=q, speed=p)
-    else:
-        out = replace(space, length=self(space["length"]))
+    ks = [k for k in known_keys if k in space]
+    vecs = op(*(space[k] for k in ks))
+    vecs = (vecs,) if len(ks) == 1 else vecs
+    return replace(space, **dict(zip(ks, vecs, strict=True)))
 
-    return out
+
+@AbstractOperator.__call__.dispatch
+def call(
+    op: AbstractOperator, t: u.Quantity, space: KinematicSpace, /, **__: Any
+) -> tuple[u.Quantity, KinematicSpace]:
+    """Apply the operator to a Space with a time argument.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> space = cx.KinematicSpace(length=cx.CartesianPos3D.from_([1., 2, 3], "m"))
+
+    >>> op = cx.ops.GalileanRotation.from_([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+    >>> t = u.Quantity(0.0, "s")
+    >>> _, new_space = op(t, space)
+    >>> print(new_space["length"])
+    <CartesianPos3D: (x, y, z) [m]
+        [-2.  1.  3.]>
+
+    """
+    ks = [k for k in known_keys if k in space]
+    t, vecs = op(t, *(space[k] for k in ks))
+    vecs = (vecs,) if len(ks) == 1 else vecs
+    out = replace(space, **dict(zip(ks, vecs, strict=True)))
+    return t, out

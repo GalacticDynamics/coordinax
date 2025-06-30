@@ -311,44 +311,31 @@ set of vector operations that work seamlessly with all `coordinax` vector types.
 ### Reference Frames and Coordinates
 
 {mod}`coordinax.frames` (shorthand `cxf`) provides a framework for defining and
-working with reference frames and coordinate systems. Currently, this is geared
-towards astronomical coordinate systems.
+working with reference frames and coordinate systems.
 
 ```{code-block} python
 >>> import coordinax.frames as cxf
 
->>> icrs_frame = cxf.ICRS()
->>> icrs_frame
-ICRS()
+>>> alice = cxf.Alice()
+>>> alice
+Alice()
 
->>> gc_frame = cxf.Galactocentric()
->>> gc_frame
-Galactocentric(
-  galcen=LonLatSphericalPos(
-    lon=Angle(weak_f32[], unit='deg'),
-    lat=Angle(weak_f32[], unit='deg'),
-    distance=Distance(weak_f32[], unit='kpc')
-  ),
-  roll=Quantity(weak_i32[], unit='deg'),
-  z_sun=Quantity(weak_f32[], unit='pc'),
-  galcen_v_sun=CartesianVel3D(
-    x=Quantity(f32[], unit='km / s'),
-    y=Quantity(f32[], unit='km / s'),
-    z=Quantity(f32[], unit='km / s')
-  )
-)
+>>> bob = cxf.Bob()
+>>> bob
+Bob()
 
 ```
 
 Frames can be used to define coordinate transformations. For example, you can
-transform a position vector from the ICRS frame to the Galactocentric frame:
+transform a position vector from the Alice frame to the Bob frame:
 
 ```{code-block} python
 
->>> op = cxf.frame_transform_op(icrs_frame, gc_frame)
->>> print(op(q))
+>>> op = cxf.frame_transform_op(alice, bob)
+>>> t = u.Quantity(1, "yr")
+>>> print(op(t, q)[1])
 <CartesianPos3D: (x, y, z) [kpc]
-    [-11.375   1.845   0.133]>
+    [1. 2. 3.]>
 
 ```
 
@@ -357,26 +344,23 @@ frame:
 
 ```{code-block} python
 
->>> coord = cxf.Coordinate(q, frame=icrs_frame)
+>>> coord = cxf.Coordinate(q, frame=alice)
 >>> print(coord)
 Coordinate(
-    {
-        'length': <CartesianPos3D: (x, y, z) [kpc]
-                      [1 2 3]>
-    },
-    frame=ICRS()
+    { 'length': <CartesianPos3D: (x, y, z) [kpc]
+                    [1 2 3]> },
+    frame=Alice()
 )
 
->>> coord.to_frame(gc_frame)
+>>> coord.to_frame(bob, t)
 Coordinate(
     data=KinematicSpace({
     'length': CartesianPos3D(
-        x=Quantity(-11.3749485, unit='kpc'),
-        y=Quantity(1.8453989, unit='kpc'),
-        z=Quantity(0.13326225, unit='kpc')
-    )
+        x=Quantity(1.000276, unit='kpc'),
+        y=Quantity(2., unit='kpc'),
+        z=Quantity(3., unit='kpc') )
     }),
-    frame=Galactocentric(...)
+    frame=Bob()
 )
 
 >>> coord.vconvert(cxv.SphericalPos)
@@ -388,7 +372,7 @@ Coordinate(
         phi=Angle(1.1071488, unit='rad')
     )
     }),
-    frame=ICRS()
+    frame=Alice()
 )
 
 ```

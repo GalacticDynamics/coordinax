@@ -12,6 +12,10 @@ __all__ = [
     "TransformedReferenceFrame",
     "frame_transform_op",
     "frame_of",
+    # Example frames
+    "Alice",
+    "FriendOfAlice",
+    "Bob",
     # Coordinate
     "AbstractCoordinate",
     "Coordinate",
@@ -21,6 +25,7 @@ from .api import frame_of, frame_transform_op
 from .base import AbstractReferenceFrame
 from .coordinate import AbstractCoordinate, Coordinate
 from .errors import FrameTransformError
+from .example import Alice, Bob, FriendOfAlice
 from .null import NoFrame
 from .xfm import TransformedReferenceFrame
 
