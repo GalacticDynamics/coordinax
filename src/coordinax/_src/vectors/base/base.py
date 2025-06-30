@@ -1,9 +1,9 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVectorLike"]
+__all__ = ["AbstractVectorLike", "is_vectorlike"]
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, TypeGuard, TypeVar
 
 import jax
 import quax_blocks
@@ -744,3 +744,29 @@ class AbstractVectorLike(
     def __str__(self) -> str:
         """Return a string representation of the vector-like object."""
         return wl.pformat(self, vector_form=True, precision=3)
+
+
+def is_vectorlike(obj: Any, /) -> TypeGuard[AbstractVectorLike]:
+    """Check if the object is a `AbstractVectorLike` object.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> cx.vecs.is_vectorlike(vec)
+    True
+
+    >>> space = cx.vecs.KinematicSpace.from_(vec)
+    >>> cx.vecs.is_vectorlike(space)
+    True
+
+    >>> coord = cx.Coordinate.from_(vec, cx.frames.ICRS())
+    >>> cx.vecs.is_vectorlike(coord)
+    True
+
+    >>> cx.vecs.is_vectorlike(42)
+    False
+
+    """
+    return isinstance(obj, AbstractVectorLike)

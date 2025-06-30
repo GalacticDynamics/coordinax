@@ -4,6 +4,9 @@ __all__ = [
     "AbstractVectorLike",
     "AbstractVector",
     "AbstractCartesian",
+    # Type Guards
+    "is_vectorlike",
+    "is_vector",
     # Flags
     "AttrFilter",
     # Utils
@@ -12,11 +15,11 @@ __all__ = [
 ]
 
 from .attribute import VectorAttribute
-from .base import AbstractVectorLike
+from .base import AbstractVectorLike, is_vectorlike
 from .cartesian import AbstractCartesian
 from .flags import AttrFilter
 from .register_unxt import ToUnitsOptions
-from .vector import AbstractVector
+from .vector import AbstractVector, is_vector
 
 # Register by import
 # isort: split
