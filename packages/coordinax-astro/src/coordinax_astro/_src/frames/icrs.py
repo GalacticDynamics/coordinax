@@ -22,9 +22,9 @@ class ICRS(AbstractSpaceFrame):
 
     Examples
     --------
-    >>> import coordinax as cx
-    >>> frame = cx.frames.ICRS()
-    >>> frame
+    >>> from coordinax_astro import ICRS
+
+    >>> ICRS()
     ICRS()
 
     """

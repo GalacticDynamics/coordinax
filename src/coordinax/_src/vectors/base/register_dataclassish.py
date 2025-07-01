@@ -30,15 +30,12 @@ def fields(flag: type[AttrFilter], obj: object) -> tuple[Field, ...]:  # type: i
 
     Examples
     --------
-    An example vector class with a `VectorAttribute` field is `FourVector`.
-
     >>> from dataclassish import fields
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> [f.name for f in fields(cx.vecs.AttrFilter, w)]
-    ['t', 'q']
+    >>> w = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> [f.name for f in fields(cxv.AttrFilter, w)]
+    ['x', 'y', 'z']
 
     """
     return fields(flag, type(obj))
@@ -50,17 +47,15 @@ def fields(flag: type[AttrFilter], obj_cls: type[object]) -> tuple[Field, ...]: 
 
     Examples
     --------
-    An example vector class with a `VectorAttribute` field is `FourVector`.
-
     >>> import dataclasses
     >>> import dataclassish
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> [f.name for f in dataclasses.fields(cx.FourVector)]
-    ['t', 'q', 'c']
+    >>> [f.name for f in dataclasses.fields(cxv.CartesianPos3D)]
+    ['x', 'y', 'z']
 
-    >>> [f.name for f in dataclassish.fields(cx.vecs.AttrFilter, cx.FourVector)]
-    ['t', 'q']
+    >>> [f.name for f in dataclassish.fields(cxv.AttrFilter, cxv.CartesianPos3D)]
+    ['x', 'y', 'z']
 
     """
     return tuple(
@@ -83,15 +78,14 @@ def asdict(
 
     Examples
     --------
-    An example vector class with a `VectorAttribute` field is `FourVector`.
-
     >>> from dataclassish import asdict
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> asdict(cx.vecs.AttrFilter, w).keys()
-    dict_keys(['t', 'q'])
+    >>> w = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> asdict(cxv.AttrFilter, w)
+    {'x': {'value': Array(1, dtype=int32), 'unit': Unit("m")},
+     'y': {'value': Array(2, dtype=int32), 'unit': Unit("m")},
+     'z': {'value': Array(3, dtype=int32), 'unit': Unit("m")}}
 
     """
     obj_cls = type(obj)
@@ -109,15 +103,12 @@ def field_keys(flag: type[AttrFilter], obj: AbstractVectorLike, /) -> tuple[str,
 
     Examples
     --------
-    An example vector class with a `VectorAttribute` field is `FourVector`.
-
     >>> from dataclassish import field_keys
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> field_keys(cx.vecs.AttrFilter, w)
-    ('t', 'q')
+    >>> w = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> field_keys(cxv.AttrFilter, w)
+    ('x', 'y', 'z')
 
     """
     return tuple(f.name for f in fields(flag, obj))
@@ -131,13 +122,11 @@ def field_keys(
 
     Examples
     --------
-    An example vector class with a `VectorAttribute` field is `FourVector`.
-
     >>> from dataclassish import field_keys
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> field_keys(cx.vecs.AttrFilter, cx.FourVector)
-    ('t', 'q')
+    >>> field_keys(cxv.AttrFilter, cxv.CartesianPos3D)
+    ('x', 'y', 'z')
 
     """
     return tuple(f.name for f in fields(flag, obj_cls))
@@ -152,15 +141,14 @@ def field_values(flag: type[AttrFilter], obj: AbstractVectorLike, /) -> tuple[An
 
     Examples
     --------
-    An example vector class with a `VectorAttribute` field is `FourVector`.
-
     >>> from dataclassish import asdict
-    >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> field_keys(cx.vecs.AttrFilter, w)
-    ('t', 'q')
+    >>> w = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> field_values(cxv.AttrFilter, w)
+    (Quantity(Array(1, dtype=int32), unit='m'),
+     Quantity(Array(2, dtype=int32), unit='m'),
+     Quantity(Array(3, dtype=int32), unit='m'))
 
     """
     obj_cls = type(obj)
@@ -178,15 +166,14 @@ def field_items(
 
     Examples
     --------
-    An example vector class with a `VectorAttribute` field is `FourVector`.
-
     >>> from dataclassish import field_items
-    >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> w = cx.FourVector (t=u.Quantity(1, "s"), q=u.Quantity([1, 2, 3], "m"))
-    >>> [(f[0], type(f[1]).__name__) for f in field_items(cx.vecs.AttrFilter, w)]
-    [('t', "Quantity[PhysicalType('time')]"), ('q', 'CartesianPos3D')]
+    >>> w = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> field_items(w)
+    (('x', Quantity(Array(1, dtype=int32), unit='m')),
+     ('y', Quantity(Array(2, dtype=int32), unit='m')),
+     ('z', Quantity(Array(3, dtype=int32), unit='m')))
 
     """
     obj_cls = type(obj)

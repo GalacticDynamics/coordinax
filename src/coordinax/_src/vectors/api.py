@@ -30,11 +30,11 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     See the dispatch implementations for more details. Not all transformations
     result in the target vector type, for example
-    ``vconvert(type[Cartesian3DPos], FourVector)`` will return a
-    `coordinax.vecs.FourVector` with the spatial part in Cartesian coordinates.
-    Likewise, `coordinax.vconvert` on `coordinax.Coordinate` instances will
-    transform the contained vectors to the target type, returning a
-    `coordinax.Coordinate` instance.
+    ``vconvert(type[Cartesian3DPos], FourVector)`` will return a ``FourVector``
+    with the spatial part in Cartesian coordinates.  Likewise,
+    `coordinax.vconvert` on `coordinax.Coordinate` instances will transform the
+    contained vectors to the target type, returning a `coordinax.Coordinate`
+    instance.
 
     Examples
     --------
@@ -177,9 +177,6 @@ def cartesian_vector_type(obj: Any, /) -> "type[coordinax.vecs.AbstractVector]":
 
     >>> cxv.cartesian_vector_type(cxv.SphericalAcc)
     <class 'coordinax...CartesianAcc3D'>
-
-    >>> cxv.cartesian_vector_type(cxv.FourVector)
-    <class 'coordinax...CartesianPos3D'>
 
     >>> cxv.cartesian_vector_type(cxv.CartesianPosND)
     <class 'coordinax...CartesianPosND'>

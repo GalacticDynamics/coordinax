@@ -9,7 +9,7 @@ import equinox as eqx
 from plum import dispatch
 
 import coordinax._src.vectors.custom_types as ct
-from coordinax._src.vectors import d1, d2, d3, d4, dn
+from coordinax._src.vectors import d1, d2, d3, dn
 from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
@@ -236,7 +236,6 @@ def vconvert(
     (type[d3.SphericalPos], d3.SphericalPos),
     (type[d3.LonLatSphericalPos], d3.LonLatSphericalPos),
     (type[d3.MathSphericalPos], d3.MathSphericalPos),
-    (type[d4.FourVector], d4.FourVector),
     (type[dn.PoincarePolarVector], dn.PoincarePolarVector),
     (type[dn.CartesianPosND], dn.CartesianPosND),
     # Velocities

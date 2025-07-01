@@ -45,7 +45,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Parameters
     ----------
     rotation
-        The in-frame spatial rotation. This is a `coordinax.ops.GalileanRotation`
+        The in-frame spatial rotation. This is a
+        `coordinax.ops.GalileanRotation`
     translation
         The spatial translation of the frame. See
         `coordinax.ops.GalileanTranslation` for alternative inputs to construct
@@ -64,14 +65,14 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
-      translation=GalileanTranslation( delta_t=..., delta_q=... ),
+      translation=GalileanTranslation( delta_t=..., delta_q=CartesianPos3D( ... ) ),
       velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
-    Note that the translation is a `coordinax.ops.GalileanTranslation` with a
-    `coordinax.vecs.FourVector` translation, and the velocity is a
-    `coordinax.ops.GalileanBoost` with a `coordinax.vecs.AbstractVel` velocity.
-    We can also construct them directly, which allows for other vector types.
+    Note that the translation is a `coordinax.ops.GalileanTranslation`, and the
+    velocity is a `coordinax.ops.GalileanBoost` with a
+    `coordinax.vecs.AbstractVel` velocity.  We can also construct them directly,
+    which allows for other vector types.
 
     >>> op = cx.ops.GalileanOperator(
     ...     translation=cx.ops.GalileanTranslation(
@@ -88,18 +89,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
       velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
-    Galilean operators can be applied to `coordinax.vecs.FourVector`:
-
-    >>> w = cx.FourVector.from_([0, 0, 0, 0], "km")
-    >>> new = op(w)
-    >>> new.t.ustrip("Gyr").round(2)
-    Array(2.5, dtype=float32, ...)
-    >>> print(new.q)
-    <CartesianPos3D: (x, y, z) [km]
-        [7.889e+16 1.578e+17 2.367e+17]>
-
-    Also the Galilean operators can also be applied to `vector.AbstractPos3D`
-    and `unxt.Quantity`:
+    Galilean operators can be applied to `vector.AbstractPos3D` and
+    `unxt.Quantity`:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> t = u.Quantity(0, "s")
@@ -127,9 +118,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     The translation vector [T, Q].  This parameters accepts either a
     `coordinax.ops.GalileanTranslation` instance or any input that can be used
-    to construct a `coordinax.vecs.FourVector`, using
-    `coordinax.vecs.FourVector.from_`. See `coordinax.vecs.FourVector` for
-    details.
+    to construct it. See `coordinax.ops.GalileanTranslation.from_` for details.
 
     """
 

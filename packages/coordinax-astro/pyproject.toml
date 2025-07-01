@@ -1,0 +1,32 @@
+[project]
+name = "coordinax_astro"
+dynamic = ["version"]
+description = "Astronomical coordinates in JAX"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Coordinax Devs", email = "nstarman@users.noreply.github.com" },
+    { name = "Nathaniel Starkman", email = "nstarman@users.noreply.github.com" },
+    { name = "Adrian Price-Whelan", email = "adrn@users.noreply.github.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "Typing :: Typed",
+]
+dependencies = [
+    "coordinax",
+]
+
+[tool.uv.sources]
+coordinax = { workspace = true }

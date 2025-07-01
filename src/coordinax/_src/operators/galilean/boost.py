@@ -22,7 +22,6 @@ from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d3 import CartesianVel3D
-from coordinax._src.vectors.d4 import FourVector
 
 
 @final
@@ -215,27 +214,6 @@ def call(
 
     """
     return delta_t, q + self.velocity * delta_t
-
-
-@AbstractOperator.__call__.dispatch
-def call(self: GalileanBoost, v4: FourVector, /, **__: Any) -> FourVector:
-    r"""Apply the boost to the coordinates.
-
-    Recall that this is spatial-only, the time is invariant.
-
-    The operation is given by:
-
-    .. math::
-
-        (t,\mathbf{x}) \mapsto (t, \mathbf{x} + \mathbf{v} t)
-
-    Examples
-    --------
-    >>> import unxt as u
-
-    """
-    t, q = self(v4.t, v4.q)
-    return replace(v4, t=t, q=q)
 
 
 # ===================================================================

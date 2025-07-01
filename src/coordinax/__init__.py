@@ -17,7 +17,6 @@ __all__ = [
     "CartesianVel3D",
     "SphericalPos",
     "SphericalVel",
-    "FourVector",
     "KinematicSpace",
     # frame objects
     "Coordinate",
@@ -36,7 +35,6 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
     from .vecs import (
         CartesianPos3D,
         CartesianVel3D,
-        FourVector,
         KinematicSpace,
         SphericalPos,
         SphericalVel,

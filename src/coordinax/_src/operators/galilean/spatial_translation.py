@@ -23,7 +23,6 @@ from coordinax._src.vectors.base_vel import AbstractVel
 from coordinax._src.vectors.d1 import CartesianPos1D
 from coordinax._src.vectors.d2 import CartesianPos2D
 from coordinax._src.vectors.d3 import CartesianPos3D
-from coordinax._src.vectors.d4 import FourVector
 from coordinax._src.vectors.private_api import spatial_component
 
 ##############################################################################
@@ -313,26 +312,6 @@ def call(
 
 
 # ---------------------------
-
-
-@AbstractOperator.__call__.dispatch
-def call(self: GalileanSpatialTranslation, v4: FourVector, /, **__: Any) -> AbstractPos:
-    """Apply the translation to the coordinates.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
-
-    >>> v4 = cx.FourVector.from_([0, 1, 2, 3], "km")
-    >>> newv4 = op(v4)
-    >>> print(newv4)
-    <FourVector: (t[s], q=(x, y, z) [km])
-        [0. 2. 3. 4.]>
-
-    """
-    return replace(v4, q=v4.q + self.delta_q)
 
 
 @jax.jit

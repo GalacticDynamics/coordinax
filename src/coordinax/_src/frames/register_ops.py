@@ -18,11 +18,11 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
     >>> import coordinax as cx
 
     >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-    ...                       cx.frames.ICRS())
+    ...                       cx.frames.Alice())
     >>> coord
     Coordinate(
         KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
+        frame=Alice()
     )
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([-1, -1, -1], "kpc")

@@ -90,7 +90,6 @@ __all__ = [
     "Cartesian3D",
     # --- 4D ---
     "AbstractPos4D",
-    "FourVector",
     # --- N-D ---
     "AbstractPosND",
     "AbstractVelND",
@@ -188,7 +187,7 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         SphericalPos,
         SphericalVel,
     )
-    from ._src.vectors.d4 import AbstractPos4D, FourVector
+    from ._src.vectors.d4 import AbstractPos4D
     from ._src.vectors.dn import (
         AbstractAccND,
         AbstractPosND,

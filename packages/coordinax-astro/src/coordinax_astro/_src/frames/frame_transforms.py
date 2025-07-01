@@ -49,8 +49,9 @@ def frame_transform_op(
     >>> from plum import dispatch
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import AbstractSpaceFrame, ICRS, Galactocentric
 
-    >>> class MySpaceFrame(cx.frames.AbstractSpaceFrame):
+    >>> class MySpaceFrame(AbstractSpaceFrame):
     ...     pass
 
     >>> @dispatch
@@ -61,7 +62,7 @@ def frame_transform_op(
     we don't have a direct transformation defined:
 
     >>> my_frame = MySpaceFrame()
-    >>> gcf_frame = cx.frames.Galactocentric()
+    >>> gcf_frame = Galactocentric()
 
     >>> op = cx.frames.frame_transform_op(my_frame, gcf_frame)
     >>> op
@@ -87,8 +88,8 @@ def frame_transform_op(from_frame: ICRS, to_frame: ICRS, /) -> Identity:
     Examples
     --------
     >>> import coordinax.frames as cxf
-    >>> icrs_frame = cxf.ICRS()
-    >>> frame_op = cxf.frame_transform_op(icrs_frame, icrs_frame)
+    >>> alice = cxf.Alice()
+    >>> frame_op = cxf.frame_transform_op(alice, alice)
     >>> frame_op
     Identity()
 
@@ -107,13 +108,14 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) 
     --------
     >>> import unxt as u
     >>> import coordinax.frames as cxf
+    >>> from coordinax_astro import Galactocentric
 
-    >>> gcf_frame = cxf.Galactocentric()
+    >>> gcf_frame = Galactocentric()
     >>> frame_op = cxf.frame_transform_op(gcf_frame, gcf_frame)
     >>> frame_op
     Pipe(Identity())
 
-    >>> gcf_frame2 = cxf.Galactocentric(roll=u.Quantity(10, "deg"))
+    >>> gcf_frame2 = Galactocentric(roll=u.Quantity(10, "deg"))
     >>> frame_op2 = cxf.frame_transform_op(gcf_frame, gcf_frame2)
     >>> frame_op2
     Pipe((
@@ -151,6 +153,7 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import Galactocentric, ICRS
     >>> import astropy.coordinates as apyc
 
     The location of Vega in ICRS coordinates:
@@ -186,8 +189,8 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
     >>> vega_q = cx.vecs.LonLatSphericalPos.from_(vega.icrs.data)
     >>> vega_p = cx.vecs.LonCosLatSphericalVel.from_(vega.icrs.data.differentials["s"])
 
-    >>> icrs_frame = cx.frames.ICRS()
-    >>> gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
+    >>> icrs_frame = ICRS()
+    >>> gcf_frame = Galactocentric.from_(apy_gcf)
 
     Define the transformation operator:
 
@@ -277,6 +280,7 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
 
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> from coordinax_astro import Galactocentric, ICRS
     >>> import astropy.coordinates as apyc
 
     The location of Vega in Galactocentric coordinates:
@@ -313,8 +317,8 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
     >>> vega_q = cx.CartesianPos3D.from_(vega.galactocentric.data)
     >>> vega_p = cx.CartesianVel3D.from_(vega.galactocentric.data.differentials["s"])
 
-    >>> icrs_frame = cx.frames.ICRS()
-    >>> gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
+    >>> icrs_frame = ICRS()
+    >>> gcf_frame = Galactocentric.from_(apy_gcf)
 
     Define the transformation operator:
 
