@@ -5,7 +5,7 @@ __all__ = ["KinematicSpace"]
 import math
 from collections.abc import Callable, ItemsView, Iterable, KeysView, Mapping, ValuesView
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, final
+from typing import TYPE_CHECKING, Any, Generic, cast, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -25,6 +25,7 @@ from coordinax._src.custom_types import Unit
 from coordinax._src.utils import classproperty
 from coordinax._src.vectors.api import vector
 from coordinax._src.vectors.base import AbstractVector, AbstractVectorLike
+from coordinax._src.vectors.base_pos import PosT
 
 if TYPE_CHECKING:
     from typing import Self
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
 class KinematicSpace(
     AbstractVectorLike,
     ImmutableMap[Dimension, AbstractVector],  # type: ignore[misc]
+    Generic[PosT],
 ):
     """A collection of vectors that acts like the primary vector.
 
@@ -137,7 +139,8 @@ class KinematicSpace(
 
     """
 
-    _data: dict[str, AbstractVector] = eqx.field(init=False)
+    # TODO: https://peps.python.org/pep-0728/#the-extra-items-class-parameter
+    _data: dict[str, AbstractVector] = eqx.field(init=False, repr=False)
 
     def __init__(  # pylint: disable=super-init-not-called  # TODO: resolve this
         self,
@@ -190,6 +193,11 @@ class KinematicSpace(
 
         """
         raise NotImplementedError  # TODO: implement this
+
+    @property
+    def q(self) -> PosT:
+        """Get the position vector of the space."""
+        return cast(PosT, self._data["length"])
 
     # ===============================================================
     # Mapping API
