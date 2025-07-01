@@ -3,7 +3,7 @@
 __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
-from typing import Any, ClassVar, cast
+from typing import Any, ClassVar, Literal, cast
 from typing_extensions import override
 
 import equinox as eqx
@@ -62,7 +62,7 @@ class AbstractCoordinate(AbstractVector):
         >>> cgcf = cicrs.to_frame(cx.frames.Galactocentric())
         >>> cgcf
         Coordinate(
-            data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
             frame=Galactocentric( ... )
         )
 
@@ -94,9 +94,21 @@ class AbstractCoordinate(AbstractVector):
     # Wadler-Lindig API
 
     def __pdoc__(
-        self, *, include_data_name: bool = True, **kwargs: Any
+        self,
+        *,
+        include_data_name: Literal["named", "vector", "map"] = "named",
+        **kwargs: Any,
     ) -> wl.AbstractDoc:
         """Return the Wadler-Lindig representation.
+
+        Parameters
+        ----------
+        include_data_name : {'named', ''}, optional
+            If `named`, include the name of the data field.
+            If `vector`, only include the data itself as a `KinematicSpace`.
+            If `map`, only include the data as dict-like representation.
+        **kwargs : Any, optional
+            Additional keyword arguments to pass to `wl.pdoc`.
 
         Examples
         --------
@@ -106,16 +118,19 @@ class AbstractCoordinate(AbstractVector):
         >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
         >>> print(repr(cx.Coordinate(data, frame)))
         Coordinate(
-            data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
             frame=ICRS()
         )
 
         """
-        if include_data_name:
+        if include_data_name == "named":
             docs = wl.named_objs(tuple(field_items(self)), **kwargs)
         else:
             docs = [
-                wl.pdoc(self.data._data, **kwargs),
+                wl.pdoc(
+                    self.data if include_data_name == "vector" else self.data._data,
+                    **kwargs,
+                ),
                 *wl.named_objs(tuple(field_items(self))[1:], **kwargs),
             ]
 
@@ -130,11 +145,29 @@ class AbstractCoordinate(AbstractVector):
     # ===============================================================
     # Python API
 
+    def __repr__(self) -> str:
+        """Return string representation.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
+        ...                       cx.frames.ICRS())
+        >>> print(repr(coord))
+        Coordinate(
+            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            frame=ICRS()
+        )
+
+        """
+        return wl.pformat(self, width=88, include_data_name="vector", vector_form=False)
+
     def __str__(self) -> str:
         """Return string representation.
 
         Examples
         --------
+        >>> import coordinax as cx
         >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
         ...                       cx.frames.ICRS())
         >>> print(coord)
@@ -147,7 +180,7 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
-        return wl.pformat(self, width=88, include_data_name=False, vector_form=True)
+        return wl.pformat(self, width=88, include_data_name="map", vector_form=True)
 
     # ===============================================================
     # IPython API
@@ -169,7 +202,7 @@ class Coordinate(AbstractCoordinate):
     ...                       cx.frames.ICRS())
     >>> coord
     Coordinate(
-        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
@@ -179,7 +212,7 @@ class Coordinate(AbstractCoordinate):
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_({"data": data, "frame": frame})
     Coordinate(
-        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
@@ -191,7 +224,7 @@ class Coordinate(AbstractCoordinate):
 
     >>> coord.vconvert(cx.SphericalPos)
     Coordinate(
-        data=KinematicSpace({ 'length': SphericalPos( ... ) }),
+        KinematicSpace({ 'length': SphericalPos( ... ) }),
         frame=ICRS()
     )
 
@@ -211,7 +244,7 @@ class Coordinate(AbstractCoordinate):
 
     >>> w.to_frame(cx.frames.ICRS())
     Coordinate(
-        data=KinematicSpace({
+        KinematicSpace({
             'length': CartesianPos3D(...), 'speed': CartesianVel3D(...) }),
         frame=ICRS()
     )

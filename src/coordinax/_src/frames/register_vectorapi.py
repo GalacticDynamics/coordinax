@@ -34,7 +34,7 @@ def vector(
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_(data, cx.frames.ICRS())
     Coordinate(
-        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
@@ -59,7 +59,7 @@ def vector(
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_(data, cx.frames.ICRS(), cx.ops.Identity())
     Coordinate(
-        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=TransformedReferenceFrame(base_frame=ICRS(), xop=Identity())
     )
 
@@ -86,7 +86,7 @@ def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
 
     >>> cx.vconvert(cx.SphericalPos, w)
     Coordinate(
-        data=KinematicSpace({ 'length': SphericalPos( ... ) }),
+        KinematicSpace({ 'length': SphericalPos( ... ) }),
         frame=NoFrame()
     )
 

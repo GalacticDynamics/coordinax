@@ -147,16 +147,19 @@ class KinematicSpace(
         | Iterable[tuple[DimensionLike, Any]],
         **kwargs: Any,
     ) -> None:
+        # Fast-path for the common case of a single dict input.
+        if len(args) == 1 and isinstance(args[0], Mapping) and not kwargs:
+            self._data = dict(args[0])
+            return
+
         # Consolidate the inputs into a single dict, then process keys & values.
         raw = dict(*args, **kwargs)  # process the input data
 
         # Process the keys
-        dims = tuple(u.dimension(k) for k in raw)
-        keys = tuple(_get_dimension_name(dim) for dim in dims)
+        dims = [u.dimension(k) for k in raw]
+        keys = [_get_dimension_name(dim) for dim in dims]
         # Convert the values to vectors
-        values = tuple(vector(v) for v in raw.values())
-
-        # TODO: check the dimension makes sense for the value
+        values = [vector(v) for v in raw.values()]
 
         # Check that the shapes are broadcastable
         values = eqx.error_if(
@@ -165,7 +168,12 @@ class KinematicSpace(
             "vector shapes are not broadcastable.",
         )
 
-        ImmutableMap.__init__(self, dict(zip(keys, values, strict=True)))
+        self._data = dict(zip(keys, values, strict=True))
+
+    def __check_init__(self) -> None:
+        if "length" not in self._data:
+            msg = "KinematicSpace must have a 'length' vector component."
+            raise ValueError(msg)
 
     @classmethod
     def _dimensionality(cls) -> int:

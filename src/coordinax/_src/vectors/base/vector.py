@@ -1,11 +1,11 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVector"]
+__all__ = ["AbstractVector", "is_vector"]
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeGuard, TypeVar
 
 import jax
 import numpy as np
@@ -610,3 +610,32 @@ def from_(cls: type[AbstractVector], *args: Any, **kwargs: Any) -> AbstractVecto
 
     """
     return vector(cls, *args, **kwargs)
+
+
+# ================================================================
+
+
+def is_vector(obj: Any, /) -> TypeGuard[AbstractVector]:
+    """Check if the object is a `AbstractVector` object.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> vec = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> cx.vecs.is_vector(vec)
+    True
+
+    >>> space = cx.vecs.KinematicSpace.from_(vec)
+    >>> cx.vecs.is_vector(space)
+    False
+
+    >>> coord = cx.Coordinate.from_(vec, cx.frames.ICRS())
+    >>> cx.vecs.is_vector(coord)
+    True
+
+    >>> cx.vecs.is_vector(42)
+    False
+
+    """
+    return isinstance(obj, AbstractVector)  # pragma: no cover

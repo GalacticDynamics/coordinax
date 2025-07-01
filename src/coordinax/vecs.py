@@ -10,6 +10,8 @@ __all__ = [
     "time_antiderivative_vector_type",
     "time_nth_derivative_vector_type",
     "IrreversibleDimensionChange",
+    "is_vectorlike",
+    "is_vector",
     # Base
     "AbstractVectorLike",
     "AbstractVector",
@@ -126,6 +128,8 @@ with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
         AttrFilter,
         ToUnitsOptions,
         VectorAttribute,
+        is_vector,
+        is_vectorlike,
     )
     from ._src.vectors.base_acc import ACCELERATION_CLASSES, AbstractAcc
     from ._src.vectors.base_pos import POSITION_CLASSES, AbstractPos

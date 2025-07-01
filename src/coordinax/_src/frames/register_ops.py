@@ -11,7 +11,7 @@ from coordinax._src.operators import AbstractOperator
 
 @AbstractOperator.__call__.dispatch  # type: ignore[misc]
 def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
-    """Dispatch to the operator's `__call__` method.
+    """Apply the operator to a coordinate.
 
     Examples
     --------
@@ -21,7 +21,7 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
     ...                       cx.frames.ICRS())
     >>> coord
     Coordinate(
-        data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
         frame=ICRS()
     )
 
@@ -33,4 +33,5 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
         [0 1 2]>
 
     """
+    # TODO: take the frame into account
     return replace(x, data=self(x.data))
