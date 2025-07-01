@@ -335,6 +335,7 @@ name = "coordinax"
 source = { editable = "." }
 dependencies = [
     { name = "astropy" },
+    { name = "beartype" },
     { name = "dataclassish" },
     { name = "equinox" },
     { name = "jax" },
@@ -423,6 +424,7 @@ test-all = [
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
+    { name = "beartype", specifier = ">=0.21.0" },
     { name = "dataclassish", specifier = ">=0.6.0" },
     { name = "equinox", specifier = ">=0.11.8" },
     { name = "jax", specifier = ">=0.5.3" },

@@ -2,16 +2,19 @@
 
 __all__: list[str] = ["TransformedReferenceFrame"]
 
-from typing import final
+from typing import Generic, final
+from typing_extensions import TypeVar
 
 from plum import dispatch
 
 from .base import AbstractReferenceFrame
 from coordinax._src.operators.base import AbstractOperator
 
+FrameT = TypeVar("FrameT", bound=AbstractReferenceFrame, default=AbstractReferenceFrame)
+
 
 @final
-class TransformedReferenceFrame(AbstractReferenceFrame):
+class TransformedReferenceFrame(AbstractReferenceFrame, Generic[FrameT]):
     r"""Transformations relative to a base reference frame.
 
     This class represents a reference frame that is defined relative to a base
@@ -69,7 +72,7 @@ class TransformedReferenceFrame(AbstractReferenceFrame):
     """
 
     #: The base reference frame.
-    base_frame: AbstractReferenceFrame
+    base_frame: FrameT
 
     #: The transformation from the base frame to this frame.
     #: This is a passive transformation, describing the transformation of the
