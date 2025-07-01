@@ -35,7 +35,7 @@ class AbstractCoordinate(AbstractVector):
 
     #: The data of the coordinate. This is a `coordinax.Space` object, which is
     #: a collection of vectors.
-    data: eqx.AbstractVar[KinematicSpace]
+    data: eqx.AbstractVar[KinematicSpace]  # TODO: KinematicSpace[PosT] -- plum#212
 
     #: The reference frame of the coordinate as a
     #: `coordinax.frames.AbstractReferenceFrame` object.

@@ -274,7 +274,7 @@ def call(
 known_keys: Final = ("length", "speed", "acceleration")
 
 
-@AbstractOperator.__call__.dispatch
+@AbstractOperator.__call__.dispatch  # TODO: KinematicSpace[PosT] -- plum#212
 def call(op: AbstractOperator, space: KinematicSpace, /, **__: Any) -> KinematicSpace:
     r"""Apply the boost to a Space.
 
@@ -317,7 +317,7 @@ def call(op: AbstractOperator, space: KinematicSpace, /, **__: Any) -> Kinematic
     return replace(space, **dict(zip(ks, vecs, strict=True)))
 
 
-@AbstractOperator.__call__.dispatch
+@AbstractOperator.__call__.dispatch  # TODO: KinematicSpace[PosT] -- plum#212
 def call(
     op: AbstractOperator, t: u.Quantity, space: KinematicSpace, /, **__: Any
 ) -> tuple[u.Quantity, KinematicSpace]:
