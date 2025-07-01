@@ -16,7 +16,7 @@ from coordinax._src.custom_types import Shape
 
 
 @register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p_space(
+def broadcast_in_dim_p_space(  # TODO: KinematicSpace[PosT] -- plum#212
     obj: KinematicSpace, /, *, shape: Shape, **kw: Any
 ) -> KinematicSpace:
     """Broadcast in a dimension."""
@@ -30,7 +30,7 @@ def broadcast_in_dim_p_space(
     )
 
 
-@register(jax.lax.neg_p)
+@register(jax.lax.neg_p)  # TODO: KinematicSpace[PosT] -- plum#212
 def neg_p_space(space: KinematicSpace, /) -> KinematicSpace:
     """Negative of the vector.
 

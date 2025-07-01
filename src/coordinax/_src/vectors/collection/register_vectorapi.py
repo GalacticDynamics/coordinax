@@ -11,7 +11,6 @@ import quaxed.numpy as jnp
 
 from .core import KinematicSpace
 from coordinax._src.vectors.api import vconvert, vector
-from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
@@ -21,7 +20,9 @@ from coordinax._src.vectors.base_vel import AbstractVel
 
 
 @KinematicSpace.from_.dispatch(precedence=1)
-def from_(cls: type[KinematicSpace], obj: KinematicSpace, /) -> KinematicSpace:
+def from_(  # TODO: KinematicSpace[PosT] for obj, return -- plum#212
+    cls: type[KinematicSpace], obj: KinematicSpace, /
+) -> KinematicSpace:
     """Construct a Space, returning the KinematicSpace.
 
     Examples
@@ -36,7 +37,7 @@ def from_(cls: type[KinematicSpace], obj: KinematicSpace, /) -> KinematicSpace:
     return obj
 
 
-@KinematicSpace.from_.dispatch
+@KinematicSpace.from_.dispatch  # TODO: KinematicSpace[PosT] for obj, return -- plum#212
 def from_(cls: type[KinematicSpace], obj: AbstractPos, /) -> KinematicSpace:
     """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
 
@@ -53,7 +54,7 @@ def from_(cls: type[KinematicSpace], obj: AbstractPos, /) -> KinematicSpace:
     return KinematicSpace(length=obj)
 
 
-@KinematicSpace.from_.dispatch
+@KinematicSpace.from_.dispatch  # TODO: KinematicSpace[PosT] for q, return -- plum#212
 def from_(
     cls: type[KinematicSpace], q: AbstractPos, p: AbstractVel, /
 ) -> KinematicSpace:
@@ -73,7 +74,7 @@ def from_(
     return cls(length=q, speed=p)
 
 
-@KinematicSpace.from_.dispatch
+@KinematicSpace.from_.dispatch  # TODO: KinematicSpace[PosT] for obj, return -- plum#212
 def from_(
     cls: type[KinematicSpace], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /
 ) -> KinematicSpace:
@@ -187,8 +188,8 @@ def vconvert(
 # functions here.
 
 
-@dispatch
-def vconvert(target: type[AbstractVector], space: KinematicSpace, /) -> KinematicSpace:
+@dispatch  # TODO: KinematicSpace[PosT] for all types -- plum#212
+def vconvert(target: type[AbstractPos], space: KinematicSpace, /) -> KinematicSpace:
     """Represent the current vector to the target vector."""
     return type(space)({k: temp_vconvert(target, v, space) for k, v in space.items()})
 

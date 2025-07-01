@@ -261,6 +261,7 @@ COORDINAX_ENABLE_RUNTIME_TYPECHECKING = "beartype.beartype"
       "PYI041",  # Use `complex` instead of `int | complex` <- plum is more strict
       "RUF022",  # `__all__` is not sorted
       "SLF001",  # private-member-access TODO: unignore this.
+      "TC001",   # Move into a type-checking block
       "TD002",   # Missing author in TODO
       "TD003",   # Missing issue link on the line following this TODO
     ]

@@ -4,9 +4,10 @@ This is Private API.
 
 """
 
-__all__ = ["AbstractPos", "POSITION_CLASSES"]
+__all__ = ["AbstractPos", "POSITION_CLASSES", "PosT"]
 
 from .core import POSITION_CLASSES, AbstractPos
+from .custom_types import PosT
 
 # Register by import
 # isort: split

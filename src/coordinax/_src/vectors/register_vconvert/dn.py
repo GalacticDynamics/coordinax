@@ -15,7 +15,7 @@ from coordinax._src.vectors.d3 import CylindricalPos, CylindricalVel
 from coordinax._src.vectors.dn import PoincarePolarVector
 
 
-@dispatch
+@dispatch  # TODO: KinematicSpace[CylindricalPos] -- plum#212
 def vconvert(target: type[KinematicSpace], w: PoincarePolarVector, /) -> KinematicSpace:
     """Space -> PoincarePolarVector.
 

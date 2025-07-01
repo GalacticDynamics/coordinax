@@ -12,7 +12,7 @@ from coordinax._src.vectors.d3 import CartesianPos3D, CartesianVel3D
 from coordinax._src.vectors.dn import PoincarePolarVector
 
 
-@dispatch
+@dispatch  # TODO: KinematicSpace[PosT] for all types -- plum#212
 def vconvert(target: type[KinematicSpace], w: KinematicSpace, /) -> KinematicSpace:
     """Space -> KinematicSpace.
 

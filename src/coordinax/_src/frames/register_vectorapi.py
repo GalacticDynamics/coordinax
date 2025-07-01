@@ -18,7 +18,7 @@ from coordinax._src.vectors.collection.core import KinematicSpace
 # Constructors
 
 
-@dispatch
+@dispatch  # TODO: KinematicSpace[PosT] -- plum#212
 def vector(
     cls: type[Coordinate],
     data: KinematicSpace | AbstractPos,
@@ -42,7 +42,7 @@ def vector(
     return cls(data=data, frame=frame)
 
 
-@dispatch
+@dispatch  # TODO: KinematicSpace[PosT] -- plum#212
 def vector(
     cls: type[Coordinate],
     data: KinematicSpace | AbstractPos,
