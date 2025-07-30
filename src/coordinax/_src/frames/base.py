@@ -38,17 +38,20 @@ class AbstractReferenceFrame(eqx.Module):
 
         Examples
         --------
+        >>> import unxt as u
+        >>> import coordinax.vecs as cxv
         >>> import coordinax.frames as cxf
 
-        >>> alice = cxf.Alice()
-        >>> bob = cxf.Bob()
-        >>> op = alice.transform_op(bob)
+        >>> op = cxf.frame_transform_op(cxf.Alice(), cxf.Bob())
         >>> op
         Pipe(( ... ))
 
-        >>> op = bob.transform_op(alice)
-        >>> op
-        Pipe(( ... ))
+        >>> t = u.Quantity(2.5, "yr")
+        >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> _, q_bob = op(t, q)
+        >>> print(q_bob)
+        <CartesianPos3D: (x, y, z) [kpc]
+            [1.001 2.    3.   ]>
 
         """
         return frame_transform_op(self, to_frame)
@@ -68,13 +71,13 @@ def from_(
     --------
     >>> import coordinax.frames as cxf
 
-    >>> icrs = cxf.ICRS.from_({})
-    >>> icrs
-    ICRS()
+    >>> alice = cxf.Alice.from_({})
+    >>> alice
+    Alice()
 
-    >>> gcf = cxf.Galactocentric.from_({})
-    >>> print(gcf)
-    Galactocentric( ... )
+    >>> bob = cxf.Bob.from_({})
+    >>> print(bob)
+    Bob()
 
     """
     return cls(**obj)
@@ -100,10 +103,10 @@ def from_(
     True
 
     >>> try:
-    ...     cxf.Galactocentric.from_(alice)
+    ...     cxf.Bob.from_(alice)
     ... except TypeError as e:
     ...     print(e)
-    Cannot construct 'Galactocentric' from Alice()
+    Cannot construct 'Bob' from Alice()
 
     """
     if not isinstance(obj, cls):

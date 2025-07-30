@@ -761,7 +761,7 @@ def is_vectorlike(obj: Any, /) -> TypeGuard[AbstractVectorLike]:
     >>> cx.vecs.is_vectorlike(space)
     True
 
-    >>> coord = cx.Coordinate.from_(vec, cx.frames.ICRS())
+    >>> coord = cx.Coordinate.from_(vec, cx.frames.Alice())
     >>> cx.vecs.is_vectorlike(coord)
     True
 

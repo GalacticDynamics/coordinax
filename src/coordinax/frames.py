@@ -99,13 +99,5 @@ with install_import_hook("coordinax.frames", RUNTIME_TYPECHECKER):
         frame_transform_op,
     )
 
-    # Frames from external packages
-    # isort: split
-    from . import _coordinax_space_frames
-    from ._coordinax_space_frames import *  # noqa: F403
-
-
-__all__ += _coordinax_space_frames.__all__
-
 # clean up namespace
-del _coordinax_space_frames, RUNTIME_TYPECHECKER, install_import_hook
+del RUNTIME_TYPECHECKER, install_import_hook
