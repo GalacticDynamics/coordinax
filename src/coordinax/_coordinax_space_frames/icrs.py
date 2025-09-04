@@ -28,3 +28,6 @@ class ICRS(AbstractSpaceFrame):
     ICRS()
 
     """
+
+    def __init__(self) -> None:
+        """Initialize ICRS frame."""

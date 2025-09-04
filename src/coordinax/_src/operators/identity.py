@@ -85,6 +85,9 @@ class Identity(AbstractOperator):
 
     """
 
+    def __init__(self) -> None:
+        """Initialize Identity operator."""
+
     @property
     def is_inertial(self) -> Literal[True]:
         """Identity operation is an inertial-frame preserving transform.
