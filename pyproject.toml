@@ -290,3 +290,11 @@ COORDINAX_ENABLE_RUNTIME_TYPECHECKING = "beartype.beartype"
       extra-standard-library = ["typing_extensions"]
       known-first-party = ["dataclassish", "optional_dependencies", "quaxed", "unxt", "xmmutablemap"]
       known-local-folder = ["coordinax"]
+
+
+[tool.uv]
+# Temporary constraint to restrict JAX version
+constraint-dependencies = [
+    "jax<0.7",
+    "jaxlib<0.7",
+]
