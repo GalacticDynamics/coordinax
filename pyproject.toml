@@ -31,8 +31,8 @@
     "beartype>=0.21.0",
     "dataclassish>=0.6.0",
     "equinox>=0.11.8",
-    "jax>=0.5.3",
-    "jaxlib>=0.5.3",
+    "jax>=0.6.0",
+    "jaxlib>=0.6.0",
     "jaxtyping>=0.2.34",
     "optional-dependencies>=0.3.2",
     "plum-dispatch>=2.5.7",
@@ -60,6 +60,7 @@ build-backend = "hatchling.build"
   dev = [
       "cz-conventional-gitmoji>=0.6.1",
       { include-group = "docs" },
+      { include-group = "ide" },
       { include-group = "lint" },
       { include-group = "nox" },
       { include-group = "test-all" },
@@ -79,6 +80,9 @@ build-backend = "hatchling.build"
     "sphinx_togglebutton>=0.3.2",
     "sphinxext-opengraph>=0.9.1",
     "sphinxext-rediraffe>=0.2.7",
+  ]
+  ide = [
+    "ipykernel>=6.29.5",
   ]
   lint = [
       "pylint>=3.3.2",
@@ -287,11 +291,10 @@ COORDINAX_ENABLE_RUNTIME_TYPECHECKING = "beartype.beartype"
       known-first-party = ["dataclassish", "optional_dependencies", "quaxed", "unxt", "xmmutablemap"]
       known-local-folder = ["coordinax"]
 
+
 [tool.uv]
-dev-dependencies = [
-    "ipykernel>=6.29.5",
-    "pytest-arraydiff>=0.6.1",
-    "pytest-env>=1.1.5",
-    "pytest>=8.3.3",
-    "sybil>=8.0.0",
+# Temporary constraint to restrict JAX version
+constraint-dependencies = [
+    "jax<0.7",
+    "jaxlib<0.7",
 ]

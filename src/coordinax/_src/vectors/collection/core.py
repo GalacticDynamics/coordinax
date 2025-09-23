@@ -140,7 +140,7 @@ class KinematicSpace(
     """
 
     # TODO: https://peps.python.org/pep-0728/#the-extra-items-class-parameter
-    _data: dict[str, AbstractVector] = eqx.field(init=False, repr=False)
+    _data: dict[str, AbstractVector] = eqx.field(repr=False)
 
     def __init__(  # pylint: disable=super-init-not-called  # TODO: resolve this
         self,

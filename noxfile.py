@@ -24,57 +24,75 @@ nox.options.sessions = [
 nox.options.default_venv_backend = "uv"
 
 
-@nox.session
-def lint(session: nox.Session) -> None:
+# =============================================================================
+# Linting
+
+
+@nox.session(venv_backend="uv")
+def lint(session: nox.Session, /) -> None:
     """Run the linter."""
-    session.run("uv", "sync")
-    session.run(
-        "uv",
-        "run",
-        "pre-commit",
-        "run",
-        "--all-files",
-        "--show-diff-on-failure",
-        *session.posargs,
-    )
+    precommit(session)  # reuse pre-commit session
+    pylint(session)  # reuse pylint session
 
 
 @nox.session
-def pylint(session: nox.Session) -> None:
+def precommit(session: nox.Session) -> None:
+    """Run the linter."""
+    session.run_install(
+        "uv",
+        "sync",
+        "--group=lint",
+        f"--python={session.virtualenv.location}",
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
+    session.run("pre-commit", "run", "--all-files", *session.posargs)
+
+
+@nox.session(venv_backend="uv")
+def pylint(session: nox.Session, /) -> None:
     """Run PyLint."""
-    # This needs to be installed into the package environment, and is slower
-    # than a pre-commit check
-    session.run("uv", "sync", "--group", "lint")
-    session.run("pylint", "src", *session.posargs)
+    session.run_install(
+        "uv",
+        "sync",
+        "--group=lint",
+        f"--python={session.virtualenv.location}",
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
+    session.run("pylint", "coordinax", *session.posargs)
 
 
 # =============================================================================
 # Testing
 
 
-@nox.session
-def tests(session: nox.Session) -> None:
+@nox.session(venv_backend="uv")
+def tests(session: nox.Session, /) -> None:
     """Run the unit and regular tests."""
-    session.run("uv", "sync", "--group", "test")
-    session.run("uv", "run", "pytest", *session.posargs)
+    session.run_install(
+        "uv",
+        "sync",
+        "--group=test",
+        f"--python={session.virtualenv.location}",
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
+    session.run("pytest", *session.posargs)
 
 
 @nox.session
 def tests_benckmark(session: nox.Session, /) -> None:
     """Run the benchmarks."""
-    session.run("uv", "sync", "--group", "test")
-    session.run(
+    session.run_install(
         "uv",
-        "run",
-        "pytest",
-        "tests/benchmark",
-        "--codspeed",
-        *session.posargs,
+        "sync",
+        "--group=test",
+        f"--python={session.virtualenv.location}",
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
     )
+    session.run("pytest", "tests/benchmark", "--codspeed", *session.posargs)
 
 
 # =============================================================================
-# Testing
+# Documentation
 
 
 @nox.session(reuse_venv=True)
@@ -88,13 +106,24 @@ def docs(session: nox.Session) -> None:
         default="html",
         help="Build target (default: html)",
     )
+    parser.add_argument("--offline", action="store_true", help="run in offline mode")
     parser.add_argument("--output-dir", dest="output_dir", default="_build")
     args, posargs = parser.parse_known_args(session.posargs)
 
     if args.builder != "html" and args.serve:
         session.error("Must not specify non-HTML builder with --serve")
 
-    session.run("uv", "sync", "--group", "docs", "--active")
+    offline_command = ["--offline"] if args.offline else []
+
+    session.run_install(
+        "uv",
+        "sync",
+        "--group=docs",
+        f"--python={session.virtualenv.location}",
+        "--active",
+        *offline_command,
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
     session.chdir("docs")
 
     if args.builder == "linkcheck":
