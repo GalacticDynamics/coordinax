@@ -60,9 +60,8 @@ dev.md
 
 And best of all, `coordinax` doesn't force you to use special unit-compatible
 re-exports of JAX libraries. You can use `coordinax` with existing JAX code, and
-with one simple decorator, JAX will work with `coordinax` objects.
-
-<!-- TODO: Explain the "simple decorator" or link to a page with explainer -->
+with one simple decorator ({func}`quax.quaxify`), JAX will work with `coordinax`
+objects.
 
 ---
 
@@ -165,9 +164,11 @@ associated unit with the {class}`unxt.quantity.Quantity` class. These
 for angles and distances.
 
 Let's start with angles, which are represented by the
-{class}`~coordinax.angle.Angle` class. They check that the units have angular
-dimensions. Angles can also be wrapped to a specific range to conform to a
-branch cut.
+{class}`~coordinax.angle.Angle` class. This class enforces that the inputted
+units have angular dimensions and provides some other useful utilities for
+working with angles. For example, the resulting {class}`~coordinax.angle.Angle`
+object can be wrapped to a specific range to conform to a branch cut (e.g., 0 to
+2π or -180º to 180º).
 
 ```{code-block} python
 >>> import unxt as u
@@ -180,8 +181,8 @@ Angle(Array(370, dtype=int32, weak_type=True), unit='deg')
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 
-Similarly, distances in `coordinax` are represented by the
-{class}`~coordinax.distance.Distance` class:
+Similarly, the {class}`~coordinax.distance.Distance` class represents distances
+in `coordinax`:
 
 ```{code-block} python
 >>> d = cx.distance.Distance(10, "kpc")
