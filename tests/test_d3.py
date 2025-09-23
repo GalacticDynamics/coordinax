@@ -769,6 +769,16 @@ class TestCartesianVel3D(AbstractVel3DTest):
         assert np.allclose(convert(cyl.phi, APYQuantity), apycyl.d_phi)
         assert np.allclose(convert(cyl.z, APYQuantity), apycyl.d_z)
 
+    def test_add_cartesian3d_diff_units(self, difntl):
+        """Test that you can add CartesianVel3D with different units."""
+        total = difntl + cx.CartesianVel3D(
+            x=u.Quantity([1, 1, 1, 1], "m/s"),
+            y=u.Quantity([0, 0, 0, 0], "m/s"),
+            z=u.Quantity([0, 0, 0, 0], "m/s"),
+        )
+        correct_x = u.Quantity([5, 6, 7, 8], "km/s") + u.Quantity([1, 1, 1, 1], "m/s")
+        assert jnp.allclose(total.x, correct_x, atol=u.Quantity(1e-8, "km/s"))
+
 
 class TestCylindricalVel(AbstractVel3DTest):
     """Test `coordinax.CylindricalVel`."""
