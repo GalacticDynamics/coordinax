@@ -238,6 +238,17 @@ specifying values for all components:
     [1 2 3]>
 ```
 
+The most flexible way to create vectors is to use the
+{meth}`~coordinax.vecs.vector` method, which infers the appropriate vector class
+based on the provided inputs:
+
+```{code-block} python
+>>> q = cxv.vector([1, 2, 3], "kpc")
+>>> print(q)
+<CartesianPos3D: (x, y, z) [kpc]
+    [1 2 3]>
+```
+
 #### Vector Conversion
 
 Vectors can be converted between different coordinate representations using the
