@@ -13,10 +13,10 @@ from .base import AbstractReferenceFrame
 from coordinax._src.frames import api
 from coordinax._src.operators import (
     GalileanBoost,
-    GalileanRotation,
-    GalileanSpatialTranslation,
     Identity,
     Pipe,
+    Rotate,
+    Translate,
 )
 
 
@@ -133,8 +133,8 @@ def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> Pipe:
      ))
 
     """
-    shift = GalileanSpatialTranslation.from_([10, 0, 0], "m")
-    rotation = GalileanRotation.from_euler("Z", u.Quantity(90, "deg"))
+    shift = Translate.from_([10, 0, 0], "m")
+    rotation = Rotate.from_euler("Z", u.Quantity(90, "deg"))
     return shift | rotation
 
 
@@ -175,7 +175,7 @@ def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Pipe:
     ))
 
     """
-    shift = GalileanSpatialTranslation.from_([100_000, 10_000, 0], "km")
+    shift = Translate.from_([100_000, 10_000, 0], "km")
     boost = GalileanBoost.from_([269_813_212.2, 0, 0], "m/s")
     return shift | boost
 

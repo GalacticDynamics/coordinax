@@ -1,4 +1,3 @@
-# ruff: noqa: ERA001
 """Galilean coordinate transformations."""
 
 __all__ = ["GalileanOperator"]
@@ -14,14 +13,14 @@ from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
 from .boost import GalileanBoost
-from .rotation import GalileanRotation
 from .spatial_translation import GalileanSpatialTranslation
-from .translation import GalileanTranslation
 from coordinax._src.operators import api
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.operators.pipe import Pipe
+from coordinax._src.operators.rotate import Rotate
+from coordinax._src.operators.translate import Translate
 
 if TYPE_CHECKING:
     from typing import Self
@@ -45,10 +44,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     Parameters
     ----------
     rotation
-        The in-frame spatial rotation. This is a `coordinax.ops.GalileanRotation`
+        The in-frame spatial rotation. This is a `coordinax.ops.Rotate`
     translation
         The spatial translation of the frame. See
-        `coordinax.ops.GalileanTranslation` for alternative inputs to construct
+        `coordinax.ops.Translate` for alternative inputs to construct
         this parameter.
     velocity
         The boost to the frame. See `coordinax.ops.GalileanBoost` for
@@ -60,21 +59,21 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> import coordinax as cx
 
     >>> op = cx.ops.GalileanOperator(
-    ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
+    ...     translation=u.Quantity([2., 3., 4.], "km"),
     ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
-      translation=GalileanTranslation( delta_t=..., delta_q=... ),
+      translation=Translate( delta_t=..., delta_q=... ),
       velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
-    Note that the translation is a `coordinax.ops.GalileanTranslation` with a
+    Note that the translation is a `coordinax.ops.Translate` with a
     `coordinax.vecs.FourVector` translation, and the velocity is a
     `coordinax.ops.GalileanBoost` with a `coordinax.vecs.AbstractVel` velocity.
     We can also construct them directly, which allows for other vector types.
 
     >>> op = cx.ops.GalileanOperator(
-    ...     translation=cx.ops.GalileanTranslation(
+    ...     translation=cx.ops.Translate(
     ...         delta_t=u.Quantity(2.5, "Gyr"),
     ...         delta_q=cx.SphericalPos(r=u.Quantity(1, "km"),
     ...                                 theta=u.Quantity(90, "deg"),
@@ -84,7 +83,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     ... )
     >>> op
     GalileanOperator(
-      translation=GalileanTranslation( delta_t=..., delta_q=SphericalPos( ... ) ),
+      translation=Translate( delta_t=..., delta_q=SphericalPos( ... ) ),
       velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
@@ -113,20 +112,20 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     """
 
-    rotation: GalileanRotation = eqx.field(
-        default=GalileanRotation(jnp.eye(3)),
-        converter=Unless(GalileanRotation, GalileanRotation.from_),
+    rotation: Rotate = eqx.field(
+        default=Rotate(jnp.eye(3)),
+        converter=Unless(Rotate, Rotate.from_),
     )
     """The in-frame spatial rotation."""
 
-    translation: GalileanTranslation = eqx.field(
-        default=GalileanTranslation.from_([0, 0, 0, 0], "km"),
-        converter=Unless(GalileanTranslation, converter=GalileanTranslation.from_),
+    translation: Translate = eqx.field(
+        default=Translate.from_([0, 0, 0], "km"),
+        converter=Unless(Translate, converter=Translate.from_),
     )
     """The temporal + spatial translation.
 
     The translation vector [T, Q].  This parameters accepts either a
-    `coordinax.ops.GalileanTranslation` instance or any input that can be used
+    `coordinax.ops.Translate` instance or any input that can be used
     to construct a `coordinax.vecs.FourVector`, using
     `coordinax.vecs.FourVector.from_`. See `coordinax.vecs.FourVector` for
     details.
@@ -147,7 +146,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     @property  # type: ignore[misc]
     def operators(  # type: ignore[override]
         self,
-    ) -> tuple[GalileanRotation, GalileanTranslation, GalileanBoost]:
+    ) -> tuple[Rotate, Translate, GalileanBoost]:
         """Rotation -> translation -> boost."""
         return (self.rotation, self.translation, self.velocity)
 
@@ -170,10 +169,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
 
         >>> op[0]
-        GalileanRotation(rotation=f32[3,3])
+        Rotate(rotation=f32[3,3])
 
         >>> op[1:]
-        Pipe(( GalileanTranslation( delta_t=..., delta_q=... ),
+        Pipe(( Translate( delta_t=..., delta_q=... ),
                GalileanBoost(CartesianVel3D( ... ))   ))
 
         """
@@ -186,8 +185,8 @@ SimplifyOpR: TypeAlias = (
     GalileanOperator
     | Pipe
     | GalileanBoost
-    | GalileanRotation
-    | GalileanTranslation
+    | Rotate
+    | Translate
     | GalileanSpatialTranslation
     | Identity
 )
@@ -212,8 +211,8 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
     ... )
     >>> op
     GalileanOperator(
-      rotation=GalileanRotation(rotation=f32[3,3]),
-      translation=GalileanTranslation( delta_t=..., delta_q=... ),
+      rotation=Rotate(rotation=f32[3,3]),
+      translation=Translate( delta_t=..., delta_q=... ),
       velocity=GalileanBoost(CartesianVel3D( ... ))
     )
 
@@ -225,7 +224,7 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
 
     >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
     >>> cxo.simplify_op(op)
-    GalileanTranslation( delta_t=..., delta_q=CartesianPos3D( ... ) )
+    Translate( delta_t=..., delta_q=CartesianPos3D( ... ) )
 
     """
     simple_ops = tuple(api.simplify_op(x, **kwargs) for x in op.operators)
@@ -233,6 +232,6 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
         not isinstance(x, type(orig))
         for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return cast(SimplifyOpR, Pipe(simple_ops).simplify())
+        return cast("SimplifyOpR", Pipe(simple_ops).simplify())
 
     return op
