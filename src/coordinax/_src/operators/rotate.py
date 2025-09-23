@@ -1,10 +1,9 @@
 """Galilean coordinate transformations."""
 # ruff: noqa: N806
 
-__all__ = ["GalileanRotation"]
+__all__ = ["Rotate"]
 
 
-from collections.abc import Mapping
 from dataclasses import replace
 from typing import Any, Literal, TypeAlias, final
 
@@ -18,7 +17,6 @@ from quax import quaxify
 import quaxed.numpy as jnp
 import unxt as u
 
-from .base import AbstractGalileanOperator
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base import ToUnitsOptions
@@ -33,7 +31,7 @@ RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
 
 def converter(x: Any) -> Array:
     """Convert the input to a rotation matrix."""
-    if isinstance(x, GalileanRotation):
+    if isinstance(x, Rotate):
         out = x.rotation
     elif isinstance(x, u.Quantity):
         out = u.ustrip("", x)
@@ -43,8 +41,10 @@ def converter(x: Any) -> Array:
 
 
 @final
-class GalileanRotation(AbstractGalileanOperator):
-    r"""Operator for Galilean rotations.
+class Rotate(AbstractOperator):
+    r"""Operator for a rotation.
+
+    Currently, only static (time-independent) rotations are supported.
 
     The coordinate transform is given by:
 
@@ -52,7 +52,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
         (t,\mathbf{x}) \mapsto (t, R \mathbf{x})
 
-    where :math:`R` is the rotation matrix.  Note this is NOT time dependent.
+    where :math:`R` is a rotation matrix.
 
     Parameters
     ----------
@@ -66,9 +66,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
     Notes
     -----
-    The Galilean rotation is not a time-dependent transformation.  This is part
-    of the inhomogeneous Galilean group, which is the group of transformations
-    that leave the space-time interval invariant.
+    The rotation must currently be time independent.
 
     Examples
     --------
@@ -81,11 +79,11 @@ class GalileanRotation(AbstractGalileanOperator):
     We can then create a rotation operator:
 
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-    >>> op = cx.ops.GalileanRotation(Rz)
+    >>> op = cx.ops.Rotate(Rz)
     >>> op
-    GalileanRotation(rotation=i32[3,3])
+    Rotate(rotation=i32[3,3])
 
-    Translation operators can be applied to a Quantity[float, (N, 3), "...]:
+    This operator can be applied to a Quantity[float, (N, 3), "...]:
 
     >>> q = u.Quantity([1, 0, 0], "m")
     >>> t = u.Quantity(1, "s")
@@ -108,7 +106,7 @@ class GalileanRotation(AbstractGalileanOperator):
     Quantity(Array([[ 0,  1,  0],
                     [-1,  0,  0]], dtype=int32), unit='m')
 
-    Translation operators can be applied to `vector.AbstractPos3D`:
+    This operator can be applied to `vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
     >>> newt, newq = op(t, q)
@@ -120,12 +118,13 @@ class GalileanRotation(AbstractGalileanOperator):
     """
 
     rotation: Shaped[Array, "3 3"] = eqx.field(converter=converter)
-    """The rotation vector."""
+    """The rotation matrix."""
 
-    #: Tolerance check on the rotation matrix.
-    check_tol: Mapping[str, Any] = eqx.field(
-        converter=dict, default=(("atol", 1e-7),), repr=False, static=True
-    )
+    # TODO: implement this
+    #: Tolerance check for orthogonality of the rotation matrix.
+    # check_tol: Mapping[str, Any] = eqx.field(
+    #     converter=dict, default=(("atol", 1e-7),), repr=False, static=True
+    # )
 
     # TODO: fix so that it works in jitted contexts
     # def __check_init__(self) -> None:
@@ -142,11 +141,11 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @classmethod
     def from_euler(
-        cls: "type[GalileanRotation]",
+        cls: "type[Rotate]",
         seq: str,
         angles: u.Quantity["angle"] | u.Angle,
         /,
-    ) -> "GalileanRotation":
+    ) -> "Rotate":
         """Initialize from Euler angles.
 
         See `jax.scipy.spatial.transform.Rotation.from_euler`.
@@ -157,7 +156,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import unxt as u
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+        >>> op = cx.ops.Rotate.from_euler("z", u.Quantity(90, "deg"))
         >>> op.rotation.round(2)
         Array([[ 0., -1.,  0.],
                [ 1.,  0.,  0.],
@@ -170,7 +169,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @classmethod
     @AbstractOperator.from_.dispatch  # type: ignore[misc]
-    def from_(cls: "type[GalileanRotation]", obj: Rotation, /) -> "GalileanRotation":
+    def from_(cls: "type[Rotate]", obj: Rotation, /) -> "Rotate":
         """Initialize from a `jax.scipy.spatial.transform.Rotation`.
 
         Examples
@@ -180,7 +179,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> R = Rotation.from_euler("z", 90, degrees=True)
-        >>> op = cx.ops.GalileanRotation.from_(R)
+        >>> op = cx.ops.Rotate.from_(R)
 
         >>> jnp.allclose(op.rotation, R.as_matrix())
         Array(True, dtype=bool)
@@ -192,7 +191,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @property
     def is_inertial(self) -> Literal[True]:
-        """Galilean rotation is an inertial-frame preserving transform.
+        """Rotation is an inertial-frame preserving transform.
 
         Examples
         --------
@@ -200,7 +199,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cx.ops.GalileanRotation(Rz)
+        >>> op = cx.ops.Rotate(Rz)
         >>> op.is_inertial
         True
 
@@ -208,7 +207,7 @@ class GalileanRotation(AbstractGalileanOperator):
         return True
 
     @property
-    def inverse(self) -> "GalileanRotation":
+    def inverse(self) -> "Rotate":
         """The inverse of the operator.
 
         Examples
@@ -217,9 +216,9 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cx.ops.GalileanRotation(Rz)
+        >>> op = cx.ops.Rotate(Rz)
         >>> op.inverse
-        GalileanRotation(rotation=i32[3,3])
+        Rotate(rotation=i32[3,3])
 
         >>> jnp.allclose(op.rotation, op.inverse.rotation.T)
         Array(True, dtype=bool)
@@ -231,7 +230,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @AbstractOperator.__call__.dispatch(precedence=1)
     def __call__(
-        self: "GalileanRotation",
+        self: "Rotate",
         q: Shaped[u.Quantity["length"], "*batch 3"],
         /,
         **__: Any,
@@ -245,7 +244,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cx.ops.GalileanRotation(Rz)
+        >>> op = cx.ops.Rotate(Rz)
 
         >>> q = u.Quantity([1, 0, 0], "m")
         >>> op(q)
@@ -266,9 +265,7 @@ class GalileanRotation(AbstractGalileanOperator):
         return vec_matmul(self.rotation, q)
 
     @AbstractOperator.__call__.dispatch
-    def __call__(
-        self: "GalileanRotation", q: AbstractPos3D, /, **__: Any
-    ) -> AbstractPos3D:
+    def __call__(self: "Rotate", q: AbstractPos3D, /, **__: Any) -> AbstractPos3D:
         """Apply the rotation to the coordinates.
 
         Examples
@@ -278,7 +275,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cx.ops.GalileanRotation(Rz)
+        >>> op = cx.ops.Rotate(Rz)
 
         >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
         >>> newq = op(q)
@@ -291,7 +288,7 @@ class GalileanRotation(AbstractGalileanOperator):
     # -----------------------------------------------------
     # Arithmetic operations
 
-    def __neg__(self: "GalileanRotation") -> "GalileanRotation":
+    def __neg__(self: "Rotate") -> "Rotate":
         """Negate the rotation.
 
         Examples
@@ -300,7 +297,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-        >>> op = cx.ops.GalileanRotation(Rz)
+        >>> op = cx.ops.Rotate(Rz)
         >>> print((-op).rotation)
         [[ 0  1  0]
          [-1  0  0]
@@ -310,7 +307,7 @@ class GalileanRotation(AbstractGalileanOperator):
         return replace(self, rotation=-self.rotation)
 
     @dispatch.abstract
-    def __matmul__(self: "GalileanRotation", other: Any, /) -> Any: ...
+    def __matmul__(self: "Rotate", other: Any, /) -> Any: ...
 
 
 # ============================================================================
@@ -319,7 +316,7 @@ class GalileanRotation(AbstractGalileanOperator):
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanRotation, t: u.Quantity["time"], q: AbstractPos3D, /
+    self: Rotate, t: u.Quantity["time"], q: AbstractPos3D, /
 ) -> tuple[u.Quantity["time"], AbstractPos3D]:
     """Apply the rotation to the coordinates.
 
@@ -329,7 +326,7 @@ def call(
     >>> import coordinax as cx
 
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-    >>> op = cx.ops.GalileanRotation(Rz)
+    >>> op = cx.ops.Rotate(Rz)
 
     >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
     >>> t = u.Quantity(1, "s")
@@ -348,7 +345,7 @@ def call(
 @jax.jit
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanRotation, qvec: AbstractPos, pvec: AbstractVel, /, **__: Any
+    self: Rotate, qvec: AbstractPos, pvec: AbstractVel, /, **__: Any
 ) -> tuple[AbstractPos, AbstractVel]:
     r"""Apply the rotation to the coordinates and velocities.
 
@@ -358,7 +355,7 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> R_z = cx.ops.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+    >>> R_z = cx.ops.Rotate.from_euler("z", u.Quantity(90, "deg"))
 
     >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
     >>> p = cx.CartesianVel3D.from_([1, 0, 0], "m/s")
@@ -388,7 +385,7 @@ def call(
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanRotation,
+    self: Rotate,
     q: u.Quantity["length"],
     p: u.Quantity["speed"],
     /,
@@ -402,7 +399,7 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> R_z = cx.ops.GalileanRotation(jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]]))
+    >>> R_z = cx.ops.Rotate(jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]]))
 
     >>> q = u.Quantity([1., 0, 0], "m")
     >>> p = u.Quantity([1., 0, 0], "m/s")
@@ -423,7 +420,7 @@ def call(
 
 
 @dispatch
-def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
+def simplify_op(op: Rotate, /, **kwargs: Any) -> AbstractOperator:
     """Simplify the Galilean rotation operator.
 
     Examples
@@ -435,13 +432,13 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     An operator with a non-identity rotation matrix is not simplified:
 
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
-    >>> op = cx.ops.GalileanRotation(Rz)
+    >>> op = cx.ops.Rotate(Rz)
     >>> cx.ops.simplify_op(op)
-    GalileanRotation(rotation=i32[3,3])
+    Rotate(rotation=i32[3,3])
 
     An operator with an identity rotation matrix is simplified:
 
-    >>> op = cx.ops.GalileanRotation(jnp.eye(3))
+    >>> op = cx.ops.Rotate(jnp.eye(3))
     >>> cx.ops.simplify_op(op)
     Identity()
 
@@ -451,8 +448,8 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     return op
 
 
-@GalileanRotation.__matmul__.dispatch  # type: ignore[misc]
-def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
+@Rotate.__matmul__.dispatch  # type: ignore[misc]
+def matmul(self: Rotate, other: Rotate) -> Rotate:
     """Combine two Galilean rotations.
 
     Examples
@@ -467,27 +464,27 @@ def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
     >>> Rz1 = jnp.asarray([[jnp.cos(theta1), -jnp.sin(theta1), 0],
     ...                   [jnp.sin(theta1), jnp.cos(theta1),  0],
     ...                   [0,             0,              1]])
-    >>> op1 = cx.ops.GalileanRotation(Rz1)
+    >>> op1 = cx.ops.Rotate(Rz1)
 
     >>> theta2 = u.Quantity(90, "deg")
     >>> Rz2 = jnp.asarray([[jnp.cos(theta2), -jnp.sin(theta2), 0],
     ...                   [jnp.sin(theta2), jnp.cos(theta2),  0],
     ...                   [0,             0,              1]])
-    >>> op2 = cx.ops.GalileanRotation(Rz2)
+    >>> op2 = cx.ops.Rotate(Rz2)
 
     >>> op3 = op1 @ op2
     >>> op3
-    GalileanRotation(rotation=f32[3,3])
+    Rotate(rotation=f32[3,3])
 
     >>> jnp.allclose(op3.rotation, op1.rotation @ op2.rotation)
     Array(True, dtype=bool)
 
     """
-    return GalileanRotation(rotation=self.rotation @ other.rotation)
+    return Rotate(rotation=self.rotation @ other.rotation)
 
 
 @dispatch
-def simplify_op(op1: GalileanRotation, op2: GalileanRotation) -> GalileanRotation:
+def simplify_op(op1: Rotate, op2: Rotate) -> Rotate:
     """Combine two Galilean rotations.
 
     Examples
@@ -502,20 +499,20 @@ def simplify_op(op1: GalileanRotation, op2: GalileanRotation) -> GalileanRotatio
     >>> Rz1 = jnp.asarray([[jnp.cos(theta1), -jnp.sin(theta1), 0],
     ...                   [jnp.sin(theta1), jnp.cos(theta1),  0],
     ...                   [0,             0,              1]])
-    >>> op1 = cx.ops.GalileanRotation(Rz1)
+    >>> op1 = cx.ops.Rotate(Rz1)
 
     >>> theta2 = u.Quantity(60, "deg")
     >>> Rz2 = jnp.asarray([[jnp.cos(theta2), -jnp.sin(theta2), 0],
     ...                   [jnp.sin(theta2), jnp.cos(theta2),  0],
     ...                   [0,             0,              1]])
-    >>> op2 = cx.ops.GalileanRotation(Rz2)
+    >>> op2 = cx.ops.Rotate(Rz2)
 
     >>> op3 = cx.ops.simplify_op(op1, op2)
     >>> op3
-    GalileanRotation(rotation=f32[3,3])
+    Rotate(rotation=f32[3,3])
 
     >>> jnp.allclose(op3.rotation, op1.rotation @ op2.rotation)
     Array(True, dtype=bool)
 
     """
-    return GalileanRotation(rotation=op1.rotation @ op2.rotation)
+    return Rotate(rotation=op1.rotation @ op2.rotation)
