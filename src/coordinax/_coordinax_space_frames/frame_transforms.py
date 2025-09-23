@@ -35,7 +35,7 @@ VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
 # ---------------------------------------------------------------
 # Base Space-Frame Transformation
 
-_icrs_frame = ICRS()
+_icrs_frame = ICRS()  # type: ignore[no-untyped-call]
 
 
 @dispatch

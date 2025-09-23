@@ -445,7 +445,7 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
 
     """
     if jnp.allclose(op.rotation, jnp.eye(3), **kwargs):
-        return Identity()
+        return Identity()  # type: ignore[no-untyped-call]
     return op
 
 
