@@ -97,6 +97,8 @@ The {meth}`~coordinax.angle.Angle.wrap_to` method has a function counterpart
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 
+---
+
 ## Working with `Distance` Objects
 
 The {class}`~coordinax.distance.Distance` class in {mod}`coordinax.distance` is
