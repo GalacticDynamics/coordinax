@@ -24,13 +24,11 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
-      - name: "Set up Python"
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6
+
       - name: Install the project
         run: uv sync --locked --group nox
 
@@ -49,28 +47,17 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
         runs-on: [ubuntu-latest, macos-latest, windows-latest]
 
-        # include:
-        #   - python-version: pypy-3.11
-        #     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6
         with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Install the project
-        run: uv sync --group test
+          python-version: ${{ matrix.python-version }}
 
       - name: Test package
         run: >-
-          uv run pytest -ra --cov --cov-report=xml --cov-report=term
+          uv run --group test pytest --cov --cov-report=xml --cov-report=term
           --durations=20 --arraydiff -m"not slow"
 
       - name: Upload coverage report
@@ -89,24 +76,17 @@ jobs:
         runs-on: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@b75a909f75acd358c2196fb9a5f1299a9a8868a4 # v6
         with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Install the project
-        run: uv sync --group test-all --resolution lowest-direct
+          python-version: ${{ matrix.python-version }}
 
       - name: Test package
         run: >-
-          uv run pytest -ra --cov --cov-report=xml --cov-report=term
-          --durations=20
+          uv run --group test-all --resolution lowest-direct pytest --cov
+          --cov-report=xml --cov-report=term --durations=20
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v5.4.3
