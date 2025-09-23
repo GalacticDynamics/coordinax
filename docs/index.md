@@ -131,9 +131,13 @@ transforming coordinate objects, such as:
   - time-differential vector objects, like velocities and accelerations (e.g.,
     {class}`~coordinax.vecs.CartesianVel3D`,
     {class}`~coordinax.vecs.SphericalVel`, etc.)
-  - collections of vector objects
-- transformations on vectors ({func}`~coordinax.vecs.vconvert`)
-- reference frames <!-- TODO: add e.g., links to classes -->
+  - collections of vector objects like {class}`~coordinax.vecs.KinematicSpace`
+- transformations of vector types ({func}`~coordinax.vecs.vconvert`)
+- operations on vectors ({mod}`~coordinax.ops`)
+- reference frames and coordinate systems ({mod}`~coordinax.frames`)
+- coordinates that combine vectors and frames
+  ({class}`~coordinax.frames.Coordinate`)
+- and more!
 
 This functionality is organized into submodules, which are imported into the
 top-level `coordinax` namespace. You can import them directly, or use the
@@ -143,7 +147,7 @@ top-level `coordinax` namespace. You can import them directly, or use the
 >>> import coordinax as cx
 
 >>> from inspect import ismodule
->>> [x for x in cx.__all__ if ismodule(getattr(cx, x))]
+>>> [name for name in cx.__all__ if ismodule(getattr(cx, name))]
 ['angle', 'distance', 'vecs', 'ops', 'frames']
 ```
 
