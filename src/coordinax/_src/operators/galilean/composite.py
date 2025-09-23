@@ -13,7 +13,6 @@ from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
 from .boost import GalileanBoost
-from .spatial_translation import GalileanSpatialTranslation
 from coordinax._src.operators import api
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
@@ -182,13 +181,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
 
 SimplifyOpR: TypeAlias = (
-    GalileanOperator
-    | Pipe
-    | GalileanBoost
-    | Rotate
-    | Translate
-    | GalileanSpatialTranslation
-    | Identity
+    GalileanOperator | Pipe | GalileanBoost | Rotate | Translate | Identity
 )
 
 

@@ -48,17 +48,17 @@ class Pipe(AbstractCompositeOperator):
     --------
     >>> import coordinax as cx
 
-    >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
+    >>> shift = cx.ops.Translate.from_([1, 2, 3], "km")
     >>> boost = cx.ops.VelocityBoost.from_([1, 2, 3], "km/s")
     >>> pipe = cx.ops.Pipe((shift, boost))
     >>> pipe
-    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+    Pipe(( Translate(...), VelocityBoost(...) ))
 
     A pipe can also be constructed by ``|``:
 
     >>> pipe2 = shift | boost
     >>> pipe2
-    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+    Pipe(( Translate(...), VelocityBoost(...) ))
 
     The pipe can be simplified. For this example, we add an identity operator to
     the sequence and simplify, which will remove the identity operator.
@@ -66,11 +66,11 @@ class Pipe(AbstractCompositeOperator):
     >>> pipe3 = pipe2 | cx.ops.Identity()
     >>> pipe3
     Pipe((
-        GalileanSpatialTranslation(...), VelocityBoost(...), Identity()
+        Translate(...), VelocityBoost(...), Identity()
     ))
 
     >>> cx.ops.simplify_op(pipe3)
-    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+    Pipe(( Translate(...), VelocityBoost(...) ))
 
     Now let's call the operator on a position:
 
@@ -103,13 +103,13 @@ class Pipe(AbstractCompositeOperator):
         --------
         >>> import coordinax as cx
 
-        >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
+        >>> shift = cx.ops.Translate.from_([1, 2, 3], "km")
         >>> boost = cx.ops.GalileanBoost.from_([1, 2, 3], "km/s")
         >>> pipe = cx.ops.Pipe((shift, boost))
 
         >>> pipe | pipe
-        Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...),
-               GalileanSpatialTranslation(...), GalileanBoost(...) ))
+        Pipe(( Translate(...), GalileanBoost(...),
+               Translate(...), GalileanBoost(...) ))
 
         """
         # Concatenate sequences
@@ -151,10 +151,10 @@ def convert_to_pipe_operators(
     --------
     >>> import coordinax as cx
 
-    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     >>> op2 = cx.ops.Identity()
     >>> convert_to_pipe_operators((op1, op2))
-    (GalileanRotation(rotation=i32[3,3]), Identity())
+    (Rotate(rotation=i32[3,3]), Identity())
 
     """
     return tuple(inp)
@@ -168,9 +168,9 @@ def convert_to_pipe_operators(inp: AbstractOperator) -> tuple[AbstractOperator, 
     --------
     >>> import coordinax as cx
 
-    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     >>> convert_to_pipe_operators(op1)
-    (GalileanRotation(rotation=i32[3,3]),)
+    (Rotate(rotation=i32[3,3]),)
 
     """
     return (inp,)

@@ -48,9 +48,9 @@ class Translate(AbstractOperator):
     >>> op = cx.ops.Translate.from_([1.0, 2.0, 3.0], "km")
     >>> op
     Translate(
-      delta_t=Quantity(f32[], unit='s'),
-      delta_q=CartesianPos3D( ... )
+      delta=CartesianPos3D( ... )
     )
+
     Note that position translation is a `coordinax.vecs.CartesianPos3D`, which was
     constructed from a 1D array, using :meth:`coordinax.vecs.AbstractPos.from_`.  We can
     also construct it directly, which allows for other vector types:
@@ -58,23 +58,18 @@ class Translate(AbstractOperator):
     >>> qshift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
     ...                          theta=u.Quantity(jnp.pi/2, "rad"),
     ...                          phi=u.Quantity(0, "rad"))
-    >>> op = cx.ops.Translate(u.Quantity(1.0, "Gyr"), qshift)
+    >>> op = cx.ops.Translate(qshift)
     >>> op
     Translate(
-      delta_t=Quantity(weak_f32[], unit='Gyr'),
-      delta_q=SphericalPos( ... )
+      delta=SphericalPos( ... )
     )
 
-    Translation operators can be applied to `coordinax.vecs.AbstractPos` subclasses and
-    `unxt.Quantity`:
+    Translation operators can be applied to `coordinax.vecs.AbstractPos` subclasses:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
-    >>> t = u.Quantity(0, "Gyr")
-    >>> newt, newq = op(t, q)
+    >>> newq = op(q)
     >>> newq.x
     Quantity(Array(1., dtype=float32, ...), unit='km')
-    >>> newt
-    Quantity(Array(1., dtype=float32, ...), unit='Gyr')
 
     """
 
@@ -115,14 +110,11 @@ class Translate(AbstractOperator):
         >>> import coordinax as cx
 
         >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
-        >>> op = cx.ops.Translate(u.Quantity(1, "Gyr"), qshift)
+        >>> op = cx.ops.Translate(qshift)
 
         >>> print(op.inverse)
-        Translate(
-            delta_t=Quantity(-1, unit='Gyr'),
-            delta_q=<CartesianPos3D: (x, y, z) [km]
-                [-1 -1 -1]>
-        )
+        Translate(<CartesianPos3D: (x, y, z) [km]
+                    [-1 -1 -1]>)
 
         """
         return Translate(-self.delta)
@@ -159,7 +151,7 @@ class Translate(AbstractOperator):
 
         This also works for position + time translations using a `FourVector`:
 
-        >>> dq4 = cx.FourVector(t=u.Quantity(1, "s"), q=u.Quantity([4, 5, 6], "m"))
+        >>> dq4 = cx.FourVector(t=u.Quantity(1.0, "s"), q=u.Quantity([4., 5., 6.], "m"))
         >>> op4 = cx.ops.Translate(dq4)
 
         Now let's apply it to a `FourVector`:
@@ -170,9 +162,9 @@ class Translate(AbstractOperator):
         FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
 
         >>> newq4.q.x
-        Quantity(Array(5., dtype=float32), unit='km')
+        Quantity(Array(5., dtype=float32), unit='m')
         >>> newq4.t
-        Quantity(Array(1., dtype=float32), unit='s')
+        Quantity(Array(1., dtype=float32, weak_type=True), unit='s')
 
         TODO: Now on a VelocityBoost:
 
@@ -198,7 +190,7 @@ def from_(cls: type[Translate], delta: u.Quantity["length"], /) -> Translate:
     >>> import coordinax.ops as cxo
 
     >>> q = u.Quantity([1.0, 2.0, 3.0], "km")
-    >>> op = cxo.Translation.from_(q)
+    >>> op = cxo.Translate.from_(q)
 
     """
     return cls(delta=api.vector(delta))

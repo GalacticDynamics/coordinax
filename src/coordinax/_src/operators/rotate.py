@@ -86,22 +86,15 @@ class Rotate(AbstractOperator):
     This operator can be applied to a Quantity[float, (N, 3), "...]:
 
     >>> q = u.Quantity([1, 0, 0], "m")
-    >>> t = u.Quantity(1, "s")
-    >>> newt, newq = op(t, q)
+    >>> newq = op(q)
     >>> newq
     Quantity(Array([0, 1, 0], dtype=int32), unit='m')
-
-    The time is not affected by the rotation.
-
-    >>> newt
-    Quantity(Array(1, dtype=int32, ...), unit='s')
 
     This also works for a batch of vectors:
 
     >>> q = u.Quantity([[1, 0, 0], [0, 1, 0]], "m")
-    >>> t = u.Quantity(0, "s")
 
-    >>> newt, newq = op(t, q)
+    >>> newq = op(q)
     >>> newq
     Quantity(Array([[ 0,  1,  0],
                     [-1,  0,  0]], dtype=int32), unit='m')
@@ -109,7 +102,7 @@ class Rotate(AbstractOperator):
     This operator can be applied to `vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
-    >>> newt, newq = op(t, q)
+    >>> newq = op(q)
     >>> newq.x
     Quantity(Array([ 0, -1], dtype=int32), unit='m')
     >>> newq.norm().value.round(2)
@@ -249,17 +242,6 @@ class Rotate(AbstractOperator):
         >>> q = u.Quantity([1, 0, 0], "m")
         >>> op(q)
         Quantity(Array([0, 1, 0], dtype=int32), unit='m')
-
-        THere's a related dispatch that also takes a time argument:
-
-        >>> t = u.Quantity(1, "s")
-        >>> newt, newq = op(t, q)
-        >>> newq
-        Quantity(Array([0, 1, 0], dtype=int32), unit='m')
-
-        The time is not affected by the rotation.
-        >>> newt
-        Quantity(Array(1, dtype=int32, ...), unit='s')
 
         """
         return vec_matmul(self.rotation, q)
