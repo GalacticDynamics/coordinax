@@ -396,6 +396,9 @@ docs = [
     { name = "sphinxext-opengraph" },
     { name = "sphinxext-rediraffe" },
 ]
+ide = [
+    { name = "ipykernel" },
+]
 lint = [
     { name = "pylint" },
 ]
@@ -485,6 +488,7 @@ docs = [
     { name = "sphinxext-opengraph", specifier = ">=0.9.1" },
     { name = "sphinxext-rediraffe", specifier = ">=0.2.7" },
 ]
+ide = [{ name = "ipykernel", specifier = ">=6.29.5" }]
 lint = [{ name = "pylint", specifier = ">=3.3.2" }]
 nox = [{ name = "nox", specifier = ">=2024.10.9" }]
 test = [
