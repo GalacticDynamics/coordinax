@@ -15,7 +15,7 @@ from .base_spherical import (
     AbstractSphericalPos,
     AbstractSphericalVel,
 )
-from coordinax._src.angles import Angle, BatchableAngle
+from coordinax._src.angles import BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -47,11 +47,13 @@ class SphericalPos(AbstractSphericalPos):
     r: BatchableDistance = eqx.field(converter=Unless(AbstractDistance, Distance.from_))
     r"""Radial distance :math:`r \in [0,+\infty)`."""
 
-    theta: BatchableAngle = eqx.field(converter=Angle.from_)
+    theta: BatchableAngle = eqx.field(converter=u.Angle.from_)
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
+        converter=Unless(
+            u.Angle, lambda x: converter_azimuth_to_range(u.Angle.from_(x))
+        )
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 

@@ -8,17 +8,17 @@ import equinox as eqx
 import quaxed.numpy as jnp
 import unxt as u
 
-from coordinax._src.angles import Angle, BatchableAngleQ
+from coordinax._src.angles import BatchableAngleQ
 
-_0d = Angle(0, "rad")
-_pid = Angle(180, "deg")
+_0d = u.Angle(0, "rad")
+_pid = u.Angle(180, "deg")
 
 
 def check_polar_range(
     polar: BatchableAngleQ,
     /,
-    _l: Angle = _0d,
-    _u: Angle = _pid,
+    _l: u.Angle = _0d,
+    _u: u.Angle = _pid,
 ) -> BatchableAngleQ:
     """Check that the polar angle is in the range.
 

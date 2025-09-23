@@ -1,5 +1,5 @@
 """Galilean coordinate transformations."""
-# ruff: noqa: ERA001, N806
+# ruff: noqa: N806
 
 __all__ = ["GalileanRotation"]
 
@@ -19,7 +19,6 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .base import AbstractGalileanOperator
-from coordinax._src.angles import Angle
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
 from coordinax._src.vectors.base import ToUnitsOptions
@@ -143,7 +142,10 @@ class GalileanRotation(AbstractGalileanOperator):
 
     @classmethod
     def from_euler(
-        cls: "type[GalileanRotation]", seq: str, angles: u.Quantity["angle"] | Angle, /
+        cls: "type[GalileanRotation]",
+        seq: str,
+        angles: u.Quantity["angle"] | u.Angle,
+        /,
     ) -> "GalileanRotation":
         """Initialize from Euler angles.
 

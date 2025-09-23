@@ -1,19 +1,17 @@
-"""Type hints for `coordinax.angle`."""
+"""Type hints for angles."""
 
-__all__: list[str] = []
+__all__ = ["BatchableAngle", "BatchableAngleQ"]
 
 
 from jaxtyping import Shaped
 
 import unxt as u
 
-from .base import AbstractAngle
-
 #: Batchable angular-type Quantity.
 BatchableAngularQuantity = Shaped[u.Quantity["angle"], "*#batch"]
 
 #: Batchable Angle.
-BatchableAngle = Shaped[AbstractAngle, "*#batch"]
+BatchableAngle = Shaped[u.quantity.AbstractAngle, "*#batch"]
 
 #: Batchable Angle or Angular Quantity.
 BatchableAngleQ = BatchableAngle | BatchableAngularQuantity

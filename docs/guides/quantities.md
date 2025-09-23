@@ -1,5 +1,12 @@
 # Specialized Quantity Objects
 
+<!-- invisible-code-block: python
+
+import unxt as u
+import jax.numpy as jnp
+
+-->
+
 ## Working with `Angle` Objects
 
 The {class}`~coordinax.angle.Angle` class in {mod}`coordinax.angle` is a
@@ -7,12 +14,9 @@ specialized quantity for representing angular measurements, similar to
 {class}`~unxt.quantity.Quantity` but with additional features and constraints
 tailored for angles.
 
-<!-- invisible-code-block: python
-
-import unxt as u
-import jax.numpy as jnp
-
--->
+```{note}
+The `Angle` class is a re-export of `unxt.Angle` with additional coordinax-specific functionality.
+```
 
 ### Creating Angles
 

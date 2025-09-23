@@ -160,20 +160,19 @@ We recommend importing as needed:
 provides support for quantity objects that represent a data array with an
 associated unit with the {class}`unxt.quantity.Quantity` class. These
 {class}`~unxt.quantity.Quantity` objects can be used throughout `coordinax`, but
-`coordinax` also provides specific classes that offer additional functionality
-for angles and distances.
+`coordinax` also provides specific classes that offer additional functionality.
 
 Let's start with angles, which are represented by the
 {class}`~coordinax.angle.Angle` class. This class enforces that the inputted
 units have angular dimensions and provides some other useful utilities for
 working with angles. For example, the resulting {class}`~coordinax.angle.Angle`
-object can be wrapped to a specific range to conform to a branch cut (e.g., 0 to
-2π or -180º to 180º).
+(a re-export of `unxt.Angle`) object can be wrapped to a specific range to
+conform to a branch cut (e.g., 0 to 2π or -180º to 180º).
 
 ```{code-block} python
 >>> import unxt as u
 
->>> a = cx.angle.Angle(370, "deg")
+>>> a = u.Angle(370, "deg")
 >>> a
 Angle(Array(370, dtype=int32, weak_type=True), unit='deg')
 

@@ -22,7 +22,7 @@ from .base_spherical import (
     AbstractSphericalPos,
     AbstractSphericalVel,
 )
-from coordinax._src.angles import Angle, BatchableAngle
+from coordinax._src.angles import BatchableAngle
 from coordinax._src.distances import AbstractDistance, BatchableDistance, Distance
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -93,11 +93,13 @@ class LonLatSphericalPos(AbstractSphericalPos):
     """
 
     lon: BatchableAngle = eqx.field(
-        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
+        converter=Unless(
+            u.Angle, lambda x: converter_azimuth_to_range(u.Angle.from_(x))
+        )
     )
     r"""Longitude (azimuthal) angle :math:`\in [0,360)`."""
 
-    lat: BatchableAngle = eqx.field(converter=Angle.from_)
+    lat: BatchableAngle = eqx.field(converter=u.Angle.from_)
     r"""Latitude (polar) angle :math:`\in [-90,90]`."""
 
     distance: BatchableDistance = eqx.field(
@@ -107,7 +109,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     def __check_init__(self) -> None:
         """Check the validity of the initialization."""
-        checks.check_polar_range(self.lat, -Angle(90, "deg"), Angle(90, "deg"))
+        checks.check_polar_range(self.lat, -u.Angle(90, "deg"), u.Angle(90, "deg"))
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)

@@ -14,7 +14,7 @@ from dataclassish.converters import Unless
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
-from coordinax._src.angles import Angle, BatchableAngleQ
+from coordinax._src.angles import BatchableAngleQ
 from coordinax._src.vectors import checks
 from coordinax._src.vectors.base import VectorAttribute
 from coordinax._src.vectors.converters import converter_azimuth_to_range
@@ -108,7 +108,9 @@ class ProlateSpheroidalPos(AbstractPos3D):
     r"""Spheroidal nu coordinate :math:`\lambda \in [-\infty,+\infty)`."""
 
     phi: BatchableAngleQ = eqx.field(
-        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
+        converter=Unless(
+            u.Angle, lambda x: converter_azimuth_to_range(u.Angle.from_(x))
+        )
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 

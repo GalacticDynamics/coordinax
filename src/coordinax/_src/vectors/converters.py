@@ -5,9 +5,7 @@ __all__: list[str] = []
 
 import unxt as u
 
-from coordinax._src.angles import Angle
-
-_2pid = Angle(360, "deg")
+_2pid = u.Angle(360, "deg")
 
 
 def converter_azimuth_to_range(
