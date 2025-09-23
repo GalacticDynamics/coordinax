@@ -40,10 +40,10 @@
     "quax-blocks>=0.3",
     "quaxed>=0.9.0",
     "typing-extensions>=4.13.2",
-    "unxt>=1.6.2",
+    "unxt>=1.7.0",
     "wadler-lindig>=0.1.6",
     "xmmutablemap>=0.1",
-  ]
+]
 
   [project.urls]
     "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"

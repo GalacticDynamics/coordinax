@@ -11,7 +11,7 @@ from dataclassish.converters import Unless
 
 import coordinax._src.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
-from coordinax._src.angles import Angle, BatchableAngle
+from coordinax._src.angles import BatchableAngle
 from coordinax._src.vectors.checks import check_polar_range
 from coordinax._src.vectors.converters import converter_azimuth_to_range
 
@@ -60,11 +60,13 @@ class TwoSpherePos(AbstractPos2D):
 
     """
 
-    theta: BatchableAngle = eqx.field(converter=Angle.from_)
+    theta: BatchableAngle = eqx.field(converter=u.Angle.from_)
     r"""Inclination angle :math:`\theta \in [0,180]`."""
 
     phi: BatchableAngle = eqx.field(
-        converter=Unless(Angle, lambda x: converter_azimuth_to_range(Angle.from_(x)))
+        converter=Unless(
+            u.Angle, lambda x: converter_azimuth_to_range(u.Angle.from_(x))
+        )
     )
     r"""Azimuthal angle :math:`\phi \in [0,360)`."""
 

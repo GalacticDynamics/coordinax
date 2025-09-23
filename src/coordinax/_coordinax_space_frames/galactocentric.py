@@ -12,11 +12,10 @@ import unxt as u
 from dataclassish.converters import Unless
 
 from .base import AbstractSpaceFrame
-from coordinax._src.angles import Angle
 from coordinax._src.distances import Distance
 from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
 
-ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | Angle, ""]
+ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | u.Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
 LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]
 VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
@@ -48,15 +47,16 @@ class Galactocentric(AbstractSpaceFrame):
     galcen: LonLatSphericalPos = eqx.field(
         converter=LonLatSphericalPos.from_,
         default_factory=lambda: LonLatSphericalPos(
-            lon=Angle(266.4051, "deg"),
-            lat=Angle(-28.936175, "degree"),
+            lon=u.Angle(266.4051, "deg"),
+            lat=u.Angle(-28.936175, "degree"),
             distance=Distance(8.122, "kpc"),
         ),
     )
 
     #: Rotation angle of the Galactic center from the ICRS x-axis.
     roll: ScalarAngle = eqx.field(
-        converter=Unless(Angle, u.Quantity["angle"].from_), default=u.Quantity(0, "deg")
+        converter=Unless(u.Angle, u.Quantity["angle"].from_),
+        default=u.Quantity(0, "deg"),
     )
 
     #: Distance from the Sun to the Galactic center.
@@ -79,5 +79,5 @@ class Galactocentric(AbstractSpaceFrame):
     #: The angle between the Galactic center and the ICRS x-axis.
     roll0: ClassVar[ScalarAngle] = eqx.field(
         default=u.Quantity(58.5986320306, "degree"),
-        converter=Unless(Angle, u.Quantity["angle"].from_),
+        converter=Unless(u.Angle, u.Quantity["angle"].from_),
     )
