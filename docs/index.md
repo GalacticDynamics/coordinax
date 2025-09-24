@@ -380,9 +380,9 @@ Coordinate(
 >>> coord.vconvert(cxv.SphericalPos)
 Coordinate(
     KinematicSpace({ 'length': SphericalPos(
-          r=Distance(weak_f32[], unit='kpc'),
+          r=Distance(f32[], unit='kpc'),
           theta=Angle(f32[], unit='rad'),
-          phi=Angle(weak_f32[], unit='rad')
+          phi=Angle(f32[], unit='rad')
         ) }),
     frame=Alice()
 )
