@@ -1,4 +1,4 @@
-# Specialized Quantity Objects
+# Specialized Quantities
 
 <!-- invisible-code-block: python
 
