@@ -183,6 +183,54 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
             raise ValueError(msg)
 
 
+@dispatch
+def vector(q: list[float | int], unit: str, /) -> AbstractVector:
+    """Construct a vector from a list and unit.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> print(cx.vecs.vector([1], "km"))
+    <CartesianPos1D: (x) [km]
+        [1]>
+
+    >>> print(cx.vecs.vector([1], "km/s"))
+    <CartesianVel1D: (x) [km / s]
+        [1]>
+
+    >>> print(cx.vecs.vector([1], "km/s2"))
+    <CartesianAcc1D: (x) [km / s2]
+        [1]>
+
+    >>> print(cx.vecs.vector([1, 2], "km"))
+    <CartesianPos2D: (x, y) [km]
+        [1 2]>
+
+    >>> print(cx.vecs.vector([1, 2], "km/s"))
+    <CartesianVel2D: (x, y) [km / s]
+        [1 2]>
+
+    >>> print(cx.vecs.vector([1, 2], "km/s2"))
+    <CartesianAcc2D: (x, y) [km / s2]
+        [1 2]>
+
+    >>> print(cx.vecs.vector([1, 2, 3], "km"))
+    <CartesianPos3D: (x, y, z) [km]
+        [1 2 3]>
+
+    >>> print(cx.vecs.vector([1, 2, 3], "km/s"))
+    <CartesianVel3D: (x, y, z) [km / s]
+        [1 2 3]>
+
+    >>> print(cx.vecs.vector([1, 2, 3], "km/s2"))
+    <CartesianAcc3D: (x, y, z) [km / s2]
+        [1 2 3]>
+
+    """
+    return vector(u.Quantity.from_(jnp.array(q), unit))
+
+
 #####################################################################
 # Convert to Quantity
 
