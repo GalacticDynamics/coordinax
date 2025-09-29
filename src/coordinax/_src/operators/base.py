@@ -1,6 +1,6 @@
-"""Base classes for operators on coordinates and potentials."""
+"""Base classes for operators on coordinates."""
 
-__all__ = ["AbstractOperator"]
+__all__ = ("AbstractOperator",)
 
 from abc import abstractmethod
 from collections.abc import Mapping
@@ -15,8 +15,7 @@ from plum import dispatch
 import unxt as u
 from dataclassish import field_items, flags
 
-from .api import simplify_op
-from coordinax._src.vectors.base_pos import AbstractPos
+from .api import invert, operate, simplify_op
 
 if TYPE_CHECKING:
     import coordinax.ops  # noqa: ICN001
@@ -25,24 +24,11 @@ _sentinel: Final = object()
 
 
 class AbstractOperator(eqx.Module):
-    """Abstract base class for operators on coordinates and potentials.
+    """Abstract base class for operators on coordinates.
 
     An operator is an object that defines a transformation on coordinates. It
     can be applied to a set of coordinates to produce a new set of coordinates.
     Operators can be composed together to form a sequence of transformations.
-
-    When defining a new operator, it should be able to work on the following
-    types with the following semantics:
-
-    - `coordinax.vecs.AbstractVector` objects. No restrictions are placed on the
-      these arguments, except that if the operator works on
-      `coordinax.vecs.AbstractPos` and `coordinax.vecs.AbstractVel` objects, the
-      former should precede the latter.
-    - Time arguments come first, followed by spatial arguments.
-    - It should work on a set of `jax.Array` objects. If the `jax.Array` is a
-      coordinate vector then it is Cartesian and the last axis is the component
-      axis and prior axes are the batch axes.
-    - It should work on `unxt.Quantity` objects.
 
     """
 
@@ -60,10 +46,13 @@ class AbstractOperator(eqx.Module):
     # ===============================================================
     # Operator API
 
-    @dispatch.abstract
-    def __call__(self: "AbstractOperator", *args: Any, **kwargs: Any) -> AbstractPos:
-        """Apply the operator to the coordinates `x`."""
-        raise NotImplementedError  # pragma: no cover
+    def __call__(self: "AbstractOperator", *args: Any, **kwargs: Any) -> Any:
+        """Apply the operator to the arguments.
+
+        This method calls `coordinax.ops.operate` to apply the operator.
+
+        """
+        return operate(self, *args, **kwargs)
 
     # -------------------------------------------
 
@@ -74,10 +63,9 @@ class AbstractOperator(eqx.Module):
         ...
 
     @property
-    @abstractmethod
     def inverse(self) -> "AbstractOperator":
         """The inverse of the operator."""
-        ...
+        return invert(self)
 
     def simplify(self) -> "AbstractOperator":
         """Simplify the operator.
@@ -98,9 +86,9 @@ class AbstractOperator(eqx.Module):
         >>> op.simplify()
         Identity()
 
-        >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
+        >>> op = cxo.GalileanOp(translation=u.Quantity([0., 2., 3., 4.], "km"))
         >>> op.simplify()
-        GalileanTranslation(
+        Translate(
             delta_t=Quantity(f32[], unit='s'),
             delta_q=CartesianPos3D( ... )
         )
@@ -147,23 +135,23 @@ class AbstractOperator(eqx.Module):
         >>> import jax.numpy as jnp
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> op = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> print(op)
-        GalileanRotation([[1 0 0]
+        Rotate([[1 0 0]
                           [0 1 0]
                           [0 0 1]])
 
-        >>> op = cx.ops.GalileanOperator(
+        >>> op = cx.ops.GalileanOp(
         ...     translation=u.Quantity([0., 2, 3, 4], "km"),
         ...     velocity=u.Quantity([1., 2, 3], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
         ... )
         >>> print(op)
-        GalileanOperator(
-            rotation=GalileanRotation([[1. 0. 1.]
+        GalileanOp(
+            rotation=Rotate([[1. 0. 1.]
                                        [0. 1. 0.]
                                        [0. 0. 1.]]),
-            translation=GalileanTranslation(
+            translation=Translate(
                 delta_t=Quantity(0., unit='s'),
                 delta_q=<CartesianPos3D: (x, y, z) [km]
                     [2. 3. 4.]>
@@ -187,15 +175,15 @@ class AbstractOperator(eqx.Module):
         --------
         >>> import coordinax.ops as cxo
 
-        >>> op1 = cxo.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> op1 = cxo.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> op2 = cxo.Identity()
         >>> op3 = op1 | op2
         >>> op3
-        Pipe((GalileanRotation(rotation=i32[3,3]), Identity()))
+        Pipe((Rotate(rotation=i32[3,3]), Identity()))
 
         >>> op4 = cxo.Identity() | op3
         >>> op4
-        Pipe((Identity(), GalileanRotation(rotation=i32[3,3]), Identity()))
+        Pipe((Identity(), Rotate(rotation=i32[3,3]), Identity()))
 
         """
         from .pipe import Pipe
@@ -256,9 +244,9 @@ def from_(
     GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
         [1 1 1]>)
 
-    >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
+    >>> op = cxo.Translate.from_([3e5, 1, 1, 1], "km")
     >>> print(op)
-    GalileanTranslation(
+    Translate(
       delta_t=Quantity(1.0006922, unit='s'),
       delta_q=<CartesianPos3D: (x, y, z) [km]
           [1. 1. 1.]>
@@ -318,7 +306,7 @@ def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOper
         msg = f"Cannot construct {cls} from {type(obj)}."
         raise TypeError(msg)
 
-    # avoid copying if the types are the same. Isinstance is not strict
+    # avoid copying if the types are the same. `isinstance` is not strict
     # enough, so we use type() instead.
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj

@@ -1,6 +1,6 @@
 """Sequence of Operators."""
 
-__all__ = ["Pipe", "convert_to_pipe_operators"]
+__all__ = ("Pipe", "convert_to_operator_tuple")
 
 from dataclasses import replace
 from typing import Any, final
@@ -14,7 +14,8 @@ from .composite import AbstractCompositeOperator
 
 
 @dispatch.abstract
-def convert_to_pipe_operators(inp: Any, /) -> tuple[AbstractOperator, ...]:
+def convert_to_operator_tuple(inp: Any, /) -> tuple[AbstractOperator, ...]:
+    """Convert to a tuple of operators for `Pipe`."""
     raise NotImplementedError  # pragma: no cover
 
 
@@ -91,7 +92,7 @@ class Pipe(AbstractCompositeOperator):
     """
 
     operators: tuple[AbstractOperator, ...] = eqx.field(
-        converter=convert_to_pipe_operators
+        converter=convert_to_operator_tuple
     )
 
     # ---------------------------------------------------------------
@@ -124,10 +125,30 @@ class Pipe(AbstractCompositeOperator):
         return replace(self, operators=(other, *self))
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
-        """Return the Wadler-Lindig representation."""
+        """Return the Wadler-Lindig representation.
+
+        This is used to generate the documentation for the operator.
+
+        Examples
+        --------
+        >>> import wadler_lindig as wl
+        >>> import coordinax.ops as cxo
+
+        >>> shift = cxo.GalileanSpatialTranslation.from_([1, 2, 3], "km")
+        >>> pipe = cxo.Pipe((shift, boost))
+        >>> print(wl.pdoc(shift))
+
+        >>> boost = cxo.GalileanBoost.from_([1, 2, 3], "km/s")
+        >>> pipe = cxo.Pipe((shift, boost))
+        >>> print(wl.pdoc(pipe))
+
+        """
+        # Build docs for each operator
         docs = [wl.pdoc(op, **kwargs) for op in self.operators]
+        # Wrap in ((...)) if more than one operator
         begin = wl.TextDoc("((" if len(docs) > 1 else "(")
         end = wl.TextDoc("))" if len(docs) > 1 else ")")
+        # Assemble in Pipe(...)
         return wl.bracketed(
             begin=wl.TextDoc(f"{self.__class__.__name__}") + begin,
             docs=docs,
@@ -142,8 +163,8 @@ class Pipe(AbstractCompositeOperator):
 
 
 @dispatch
-def convert_to_pipe_operators(
-    inp: tuple[AbstractOperator, ...] | list[AbstractOperator],
+def convert_to_operator_tuple(
+    obj: tuple[AbstractOperator, ...] | list[AbstractOperator], /
 ) -> tuple[AbstractOperator, ...]:
     """Convert to a tuple of operators.
 
@@ -151,33 +172,33 @@ def convert_to_pipe_operators(
     --------
     >>> import coordinax as cx
 
-    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     >>> op2 = cx.ops.Identity()
-    >>> convert_to_pipe_operators((op1, op2))
-    (GalileanRotation(rotation=i32[3,3]), Identity())
+    >>> convert_to_operator_tuple((op1, op2))
+    (Rotate(rotation=i32[3,3]), Identity())
 
     """
-    return tuple(inp)
+    return tuple(obj)
 
 
 @dispatch
-def convert_to_pipe_operators(inp: AbstractOperator) -> tuple[AbstractOperator, ...]:
+def convert_to_operator_tuple(obj: AbstractOperator, /) -> tuple[AbstractOperator, ...]:
     """Convert to a tuple of operators.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-    >>> convert_to_pipe_operators(op1)
-    (GalileanRotation(rotation=i32[3,3]),)
+    >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> convert_to_operator_tuple(op1)
+    (Rotate(rotation=i32[3,3]),)
 
     """
-    return (inp,)
+    return (obj,)
 
 
 @dispatch
-def convert_to_pipe_operators(inp: Pipe) -> tuple[AbstractOperator, ...]:
+def convert_to_operator_tuple(obj: Pipe, /) -> tuple[AbstractOperator, ...]:
     """Convert to a tuple of operators.
 
     Examples
@@ -187,8 +208,8 @@ def convert_to_pipe_operators(inp: Pipe) -> tuple[AbstractOperator, ...]:
     >>> op1 = cx.ops.Identity()
     >>> op2 = cx.ops.Identity()
     >>> pipe = cx.ops.Pipe((op1, op2))
-    >>> convert_to_pipe_operators(pipe)
+    >>> convert_to_operator_tuple(pipe)
     (Identity(), Identity())
 
     """
-    return inp.operators
+    return obj.operators

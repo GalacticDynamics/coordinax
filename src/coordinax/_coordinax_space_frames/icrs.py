@@ -12,7 +12,7 @@ import unxt as u
 from .base import AbstractSpaceFrame
 from coordinax._src.distances import Distance
 
-RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
+RotateMatrix: TypeAlias = Shaped[Array, "3 3"]
 LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]
 
 

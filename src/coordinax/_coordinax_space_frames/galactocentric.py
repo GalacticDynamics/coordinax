@@ -16,7 +16,7 @@ from coordinax._src.distances import Distance
 from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
 
 ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | u.Angle, ""]
-RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
+RotateMatrix: TypeAlias = Shaped[Array, "3 3"]
 LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]
 VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
 
@@ -53,7 +53,7 @@ class Galactocentric(AbstractSpaceFrame):
         ),
     )
 
-    #: Rotation angle of the Galactic center from the ICRS x-axis.
+    #: Rotate angle of the Galactic center from the ICRS x-axis.
     roll: ScalarAngle = eqx.field(
         converter=Unless(u.Angle, u.Quantity["angle"].from_),
         default=u.Quantity(0, "deg"),

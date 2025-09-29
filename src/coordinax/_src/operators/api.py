@@ -1,6 +1,6 @@
-"""Base classes for operators on coordinates and potentials."""
+"""Base classes for operators."""
 
-__all__ = ["simplify_op"]
+__all__ = ("operate", "simplify_op", "invert")
 
 from typing import Any
 
@@ -8,5 +8,30 @@ from plum import dispatch
 
 
 @dispatch.abstract
+def operate(op: Any, t: Any, x: Any, /) -> Any:
+    """Apply an operator."""
+
+
+@dispatch.abstract
 def simplify_op(op: Any, /) -> Any:
-    """Simplify an operator."""
+    """Simplify an operator.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.Rotate.from_euler("z", 45)
+    >>> simplified = cx.ops.simplify_op(op)
+    >>> simplified
+    Rotate(rotation=f32[3,3])
+
+    >>> op = cx.ops.Rotate.from_euler("z", 45) @ cx.ops.Rotate.from_euler("z", -45)
+    >>> cx.ops.simplify_op(op)
+    Identity()
+
+    """
+
+
+@dispatch.abstract
+def invert(obj: Any, /) -> Any:
+    """Invert an operator."""
