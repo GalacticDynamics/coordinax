@@ -36,11 +36,11 @@ class TransformedReferenceFrame(AbstractReferenceFrame, Generic[FrameT]):
     >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
-    >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+    >>> R = cx.ops.Rotate([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
     >>> frame = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
     >>> frame
     TransformedReferenceFrame(
-      base_frame=ICRS(), xop=GalileanRotation(rotation=f32[3,3])
+      base_frame=ICRS(), xop=Rotate(rotation=f32[3,3])
     )
 
     Let's transform a position from the base frame to the transformed frame:
@@ -93,11 +93,11 @@ def frame_transform_op(
     >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
-    >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+    >>> R = cx.ops.Rotate([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
     >>> frame = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
     >>> frame
     TransformedReferenceFrame(
-      base_frame=ICRS(), xop=GalileanRotation(rotation=f32[3,3])
+      base_frame=ICRS(), xop=Rotate(rotation=f32[3,3])
     )
 
     Let's transform a position from the base frame to the transformed frame:
@@ -126,11 +126,11 @@ def frame_transform_op(
     >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
-    >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+    >>> R = cx.ops.Rotate([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
     >>> frame = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
     >>> frame
     TransformedReferenceFrame(
-      base_frame=ICRS(), xop=GalileanRotation(rotation=f32[3,3])
+      base_frame=ICRS(), xop=Rotate(rotation=f32[3,3])
     )
 
     Let's transform a position from the base frame to the transformed frame:
@@ -159,10 +159,10 @@ def frame_transform_op(
     >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
-    >>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+    >>> R = cx.ops.Rotate([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
     >>> frame1 = cxf.TransformedReferenceFrame(cxf.ICRS(), R)
 
-    >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
+    >>> shift = cx.ops.GalileanOp.from_([1, 0, 0], "kpc")
     >>> frame2 = cxf.TransformedReferenceFrame(frame1, shift)
 
     >>> op1to2 = cxf.frame_transform_op(frame1, frame2)
