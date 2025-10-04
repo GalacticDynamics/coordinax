@@ -1,6 +1,11 @@
 """Transformations of the coordinate reference frame.
 
-E.g. a translation.
+Let's start by defining some operators and seeing how they can be applied and
+combined.
+
+>>> import coordinax.ops as cxo
+
+
 """
 # pylint: disable=unused-wildcard-import,wildcard-import
 

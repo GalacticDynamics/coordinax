@@ -11,13 +11,7 @@ import unxt as u
 
 from .base import AbstractReferenceFrame
 from coordinax._src.frames import api
-from coordinax._src.operators import (
-    GalileanBoost,
-    GalileanRotation,
-    GalileanSpatialTranslation,
-    Identity,
-    Pipe,
-)
+from coordinax._src.operators import Add, Identity, Pipe, Rotate
 
 
 @final
@@ -34,9 +28,9 @@ class Alice(AbstractReferenceFrame):
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
+      Add(<CartesianPos3D: (x, y, z) [km]
           [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
+      Add(<CartesianVel3D: (x, y, z) [m / s]
           [2.698e+08 0.000e+00 0.000e+00]>)
     ))
 
@@ -62,9 +56,9 @@ class Bob(AbstractReferenceFrame):
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
+      Add(<CartesianPos3D: (x, y, z) [km]
           [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
+      Add(<CartesianVel3D: (x, y, z) [m / s]
           [2.698e+08 0.000e+00 0.000e+00]>)
     ))
 
@@ -117,9 +111,9 @@ def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> Pipe:
     >>> op = cx.frames.frame_transform_op(alice, friend)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [m]
+      Add(<CartesianPos3D: (x, y, z) [m]
           [10  0  0]>),
-      GalileanRotation([[ 0.         -0.99999994  0.        ]
+      Rotate([[ 0.         -0.99999994  0.        ]
                         [ 0.99999994  0.          0.        ]
                         [ 0.          0.          0.99999994]])
     ))
@@ -133,8 +127,8 @@ def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> Pipe:
      ))
 
     """
-    shift = GalileanSpatialTranslation.from_([10, 0, 0], "m")
-    rotation = GalileanRotation.from_euler("Z", u.Quantity(90, "deg"))
+    shift = Add.from_([10, 0, 0], "m")
+    rotation = Rotate.from_euler("Z", u.Quantity(90, "deg"))
     return shift | rotation
 
 
@@ -154,9 +148,9 @@ def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Pipe:
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
+      Add(<CartesianPos3D: (x, y, z) [km]
           [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
+      Add(<CartesianVel3D: (x, y, z) [m / s]
           [2.698e+08 0.000e+00 0.000e+00]>)
     ))
 
@@ -175,8 +169,8 @@ def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Pipe:
     ))
 
     """
-    shift = GalileanSpatialTranslation.from_([100_000, 10_000, 0], "km")
-    boost = GalileanBoost.from_([269_813_212.2, 0, 0], "m/s")
+    shift = Add.from_([100_000, 10_000, 0], "km")
+    boost = Add.from_([269_813_212.2, 0, 0], "m/s")
     return shift | boost
 
 
@@ -200,10 +194,10 @@ def frame_transform_op(
     >>> op = cx.frames.frame_transform_op(friend, alice)
     >>> print(op)
     Pipe((
-      GalileanRotation([[ 0.          0.99999994  0.        ]
+      Rotate([[ 0.          0.99999994  0.        ]
                         [-0.99999994  0.          0.        ]
                         [ 0.          0.          0.99999994]]),
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [m]
+      Add(<CartesianPos3D: (x, y, z) [m]
           [-10   0   0]>)
     ))
 
