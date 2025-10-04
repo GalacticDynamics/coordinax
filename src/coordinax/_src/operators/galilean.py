@@ -216,11 +216,11 @@ def simplify_op(op: GalileanOp, /, **kwargs: Any) -> SimplifyOpR:
     Add( delta_t=..., delta_q=CartesianPos3D( ... ) )
 
     """
-    simple_ops = tuple(api.simplify_op(x, **kwargs) for x in op.operators)
+    simple_ops = [api.simplify_op(x, **kwargs) for x in op.operators]
     if any(
         not isinstance(x, type(orig))
         for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return cast("SimplifyOpR", Pipe(simple_ops).simplify())
+        return cast("SimplifyOpR", Pipe(tuple(simple_ops)).simplify())
 
     return op
