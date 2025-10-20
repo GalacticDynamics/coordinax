@@ -3,7 +3,7 @@
 __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
-from typing import Any, ClassVar, Literal, cast
+from typing import Any, ClassVar, Literal, cast, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -191,6 +191,7 @@ class AbstractCoordinate(AbstractVector):
 ##############################################################################
 
 
+@final
 class Coordinate(AbstractCoordinate):
     """Coordinates are vectors in a reference frame.
 
