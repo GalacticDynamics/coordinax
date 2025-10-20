@@ -41,9 +41,10 @@ jobs:
     name: Publish to TestPyPI
     environment: testpypi
     runs-on: ubuntu-latest
-    if:
-      github.repository_owner == 'GalacticDynamics' && github.event_name ==
-      'push' && github.ref == 'refs/heads/main'
+    if: >
+      (github.repository_owner == 'GalacticDynamics' && github.event_name ==
+      'push' && github.ref == 'refs/heads/main') || (github.event_name ==
+      'release' && github.event.action == 'published')
 
     permissions:
       id-token: write
