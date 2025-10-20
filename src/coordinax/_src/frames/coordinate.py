@@ -3,7 +3,7 @@
 __all__ = ["AbstractCoordinate", "Coordinate"]
 
 
-from typing import Any, ClassVar, Literal, cast, final
+from typing import Any, ClassVar, Literal, assert_never, cast, final
 from typing_extensions import override
 
 import equinox as eqx
@@ -76,7 +76,7 @@ class AbstractCoordinate(AbstractVector):
         # Otherwise, apply the transformation and return a new coordinate
         new_data = op(self.data) if t is None else op(t, self.data)[1]
         out = self.__class__.from_(new_data, toframe)
-        return cast(AbstractCoordinate, out)
+        return cast("AbstractCoordinate", out)
 
     # ===============================================================
     # Quax API
@@ -103,36 +103,73 @@ class AbstractCoordinate(AbstractVector):
 
         Parameters
         ----------
-        include_data_name : {'named', ''}, optional
+        include_data_name : {'named', 'vector', 'map'}, optional
             If `named`, include the name of the data field.
             If `vector`, only include the data itself as a `KinematicSpace`.
             If `map`, only include the data as dict-like representation.
         **kwargs : Any, optional
             Additional keyword arguments to pass to `wl.pdoc`.
+            'vector_form' is one option.
 
         Examples
         --------
         >>> import coordinax as cx
+        >>> import wadler_lindig as wl
 
         >>> frame = cx.frames.ICRS()
         >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
-        >>> print(repr(cx.Coordinate(data, frame)))
+        >>> coord = cx.Coordinate(data, frame)
+
+        >>> wl.pprint(coord, include_data_name="named")
+        Coordinate(
+            data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            frame=ICRS()
+        )
+
+        >>> wl.pprint(coord, include_data_name="vector")
         Coordinate(
             KinematicSpace({ 'length': CartesianPos3D( ... ) }),
             frame=ICRS()
         )
 
+        >>> wl.pprint(coord, include_data_name="map")
+        Coordinate(
+            { 'length': CartesianPos3D( ... ) },
+            frame=ICRS()
+        )
+
+        >>> print(repr(coord))
+        Coordinate(
+            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            frame=ICRS()
+        )
+
+        >>> print(str(coord))
+        Coordinate(
+            {
+                'length':
+                <CartesianPos3D: (x, y, z) [kpc]
+                    [1 2 3]>
+            },
+            frame=ICRS()
+        )
+
         """
-        if include_data_name == "named":
-            docs = wl.named_objs(tuple(field_items(self)), **kwargs)
-        else:
-            docs = [
-                wl.pdoc(
-                    self.data if include_data_name == "vector" else self.data._data,
-                    **kwargs,
-                ),
-                *wl.named_objs(tuple(field_items(self))[1:], **kwargs),
-            ]
+        match include_data_name:
+            case "named":
+                docs = wl.named_objs(tuple(field_items(self)), **kwargs)
+            case "vector":
+                docs = [
+                    wl.pdoc(self.data, **kwargs),
+                    *wl.named_objs(tuple(field_items(self))[1:], **kwargs),
+                ]
+            case "map":
+                docs = [
+                    wl.pdoc(self.data._data, **kwargs),
+                    *wl.named_objs(tuple(field_items(self))[1:], **kwargs),
+                ]
+            case _:
+                assert_never()
 
         return wl.bracketed(
             begin=wl.TextDoc(f"{self.__class__.__name__}("),
