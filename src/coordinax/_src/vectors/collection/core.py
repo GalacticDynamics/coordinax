@@ -465,9 +465,9 @@ class KinematicSpace(
         )
         return (
             wl.TextDoc(self.__class__.__name__)
-            + wl.TextDoc("({\n")
+            + wl.TextDoc("({")
             + data_pdoc
-            + wl.TextDoc("\n})")
+            + wl.TextDoc("})")
         )
 
     # ===============================================================
