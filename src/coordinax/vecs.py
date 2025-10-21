@@ -107,11 +107,9 @@ __all__ = [
     "ACCELERATION_CLASSES",
 ]
 
-from jaxtyping import install_import_hook
+from .setup_package import RUNTIME_TYPECHECKER, install_import_hook
 
-from .setup_package import RUNTIME_TYPECHECKER
-
-with install_import_hook("coordinax.vecs", RUNTIME_TYPECHECKER):
+with install_import_hook("coordinax.vecs"):
     from ._src import vectors
     from ._src.vectors.api import (
         cartesian_vector_type,

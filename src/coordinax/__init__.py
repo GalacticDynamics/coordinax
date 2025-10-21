@@ -23,12 +23,9 @@ __all__ = [
     "Coordinate",
 ]
 
+from .setup_package import install_import_hook
 
-from jaxtyping import install_import_hook
-
-from .setup_package import RUNTIME_TYPECHECKER
-
-with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
+with install_import_hook("coordinax"):
     from . import angle, distance, frames, ops, vecs
     from ._version import version as __version__  # noqa: F401
     from .distance import Distance
@@ -50,4 +47,4 @@ with install_import_hook("coordinax", RUNTIME_TYPECHECKER):
 
 
 # Cleanup
-del RUNTIME_TYPECHECKER, _interop
+del _interop, install_import_hook

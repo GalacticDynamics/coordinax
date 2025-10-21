@@ -80,11 +80,9 @@ __all__ = [
     "Coordinate",
 ]
 
-from jaxtyping import install_import_hook
+from .setup_package import install_import_hook
 
-from .setup_package import RUNTIME_TYPECHECKER
-
-with install_import_hook("coordinax.frames", RUNTIME_TYPECHECKER):
+with install_import_hook("coordinax.frames"):
     from ._src.frames import (
         AbstractCoordinate,
         AbstractReferenceFrame,
@@ -108,4 +106,4 @@ with install_import_hook("coordinax.frames", RUNTIME_TYPECHECKER):
 __all__ += _coordinax_space_frames.__all__
 
 # clean up namespace
-del _coordinax_space_frames, RUNTIME_TYPECHECKER, install_import_hook
+del _coordinax_space_frames, install_import_hook
