@@ -137,8 +137,7 @@ def vconvert(
 
     >>> x = cxv.CartesianPos2D.from_([1, 2], "km")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
     <RadialPos: (r) [km]
@@ -217,8 +216,7 @@ def vconvert(
 
     >>> x = cxv.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     x2 = cxv.vconvert(cxv.CartesianPos1D, x)
     >>> print(x2)
     <CartesianPos1D: (x) [km]
