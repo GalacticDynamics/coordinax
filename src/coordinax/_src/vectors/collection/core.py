@@ -37,7 +37,7 @@ if TYPE_CHECKING:
 @final
 class KinematicSpace(
     AbstractVectorLike,
-    ImmutableMap[Dimension, AbstractVector],  # type: ignore[misc]
+    ImmutableMap[str, AbstractVector],  # type: ignore[misc]
     Generic[PosT],
 ):
     """A collection of vectors that acts like the primary vector.
@@ -197,7 +197,7 @@ class KinematicSpace(
     @property
     def q(self) -> PosT:
         """Get the position vector of the space."""
-        return cast(PosT, self._data["length"])
+        return cast("PosT", self._data["length"])
 
     # ===============================================================
     # Mapping API
