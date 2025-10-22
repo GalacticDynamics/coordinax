@@ -1,7 +1,9 @@
 """Register for `coordinax.ops`."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
+
+from plum import dispatch
 
 from dataclassish import replace
 
@@ -9,8 +11,8 @@ from .coordinate import Coordinate
 from coordinax._src.operators import AbstractOperator
 
 
-@AbstractOperator.__call__.dispatch  # type: ignore[misc]
-def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
+@dispatch
+def operate(self: AbstractOperator, obj: Coordinate, /) -> Coordinate:
     """Apply the operator to a coordinate.
 
     Examples
@@ -34,4 +36,4 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
 
     """
     # TODO: take the frame into account
-    return replace(x, data=self(x.data))
+    return replace(obj, data=self(obj.data))
