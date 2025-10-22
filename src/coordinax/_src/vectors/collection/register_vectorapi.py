@@ -39,7 +39,7 @@ def from_(  # TODO: KinematicSpace[PosT] for obj, return -- plum#212
 
 @KinematicSpace.from_.dispatch  # TODO: KinematicSpace[PosT] for obj, return -- plum#212
 def from_(cls: type[KinematicSpace], obj: AbstractPos, /) -> KinematicSpace:
-    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+    """Construct a `coordinax.KinematicSpace` from a `coordinax.AbstractPos`.
 
     Examples
     --------
@@ -58,7 +58,7 @@ def from_(cls: type[KinematicSpace], obj: AbstractPos, /) -> KinematicSpace:
 def from_(
     cls: type[KinematicSpace], q: AbstractPos, p: AbstractVel, /
 ) -> KinematicSpace:
-    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+    """Construct a `coordinax.KinematicSpace` from a `coordinax.AbstractPos`.
 
     Examples
     --------
@@ -78,7 +78,7 @@ def from_(
 def from_(
     cls: type[KinematicSpace], q: AbstractPos, p: AbstractVel, a: AbstractAcc, /
 ) -> KinematicSpace:
-    """Construct a `coordinax.Space` from a `coordinax.AbstractPos`.
+    """Construct a `coordinax.KinematicSpace` from a `coordinax.AbstractPos`.
 
     Examples
     --------
@@ -99,7 +99,7 @@ def from_(
 
 @KinematicSpace.from_.dispatch
 def from_(cls: type[KinematicSpace], obj: Mapping[str, Any]) -> KinematicSpace:
-    """Construct a Space from a Mapping.
+    """Construct a KinematicSpace from a Mapping.
 
     Examples
     --------
@@ -125,7 +125,7 @@ def from_(cls: type[KinematicSpace], obj: Mapping[str, Any]) -> KinematicSpace:
 def vconvert(
     target: type[AbstractPos], current: AbstractPos, space: KinematicSpace, /
 ) -> AbstractPos:
-    """Convert a position to the target type, with a Space context.
+    """Convert a position to the target type, with a KinematicSpace context.
 
     Examples
     --------
@@ -145,7 +145,7 @@ def vconvert(
 def vconvert(
     target: type[AbstractVel], current: AbstractVel, space: KinematicSpace, /
 ) -> AbstractVel:
-    """Convert a velocty to the target type, with a Space context.
+    """Convert a velocity to the target type, with a KinematicSpace context.
 
     Examples
     --------
@@ -165,7 +165,7 @@ def vconvert(
 def vconvert(
     target: type[AbstractAcc], current: AbstractAcc, space: KinematicSpace, /
 ) -> AbstractAcc:
-    """Convert an acceleration to the target type, with a Space context.
+    """Convert an acceleration to the target type, with a KinematicSpace context.
 
     Examples
     --------

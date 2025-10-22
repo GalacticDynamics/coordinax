@@ -33,8 +33,8 @@ class AbstractCoordinate(AbstractVector):
 
     """
 
-    #: The data of the coordinate. This is a `coordinax.Space` object, which is
-    #: a collection of vectors.
+    #: The data of the coordinate. This is a `coordinax.KinematicSpace` object,
+    #: which is a collection of vectors.
     data: eqx.AbstractVar[KinematicSpace]  # TODO: KinematicSpace[PosT] -- plum#212
 
     #: The reference frame of the coordinate as a
@@ -296,10 +296,10 @@ class Coordinate(AbstractCoordinate):
 
     """
 
-    #: The data of the coordinate. This is a `coordinax.Space` object, which is
-    #: a collection of vectors. This can be constructed from a space object, or
-    #: any input that can construct a `coordinax.Space` via
-    #: `coordinax.Space.from_`.
+    # The data of the coordinate. This is a `coordinax.KinematicSpace` object,
+    # which is a collection of vectors. This can be constructed from a space
+    # object, or any input that can construct a `coordinax.KinematicSpace` via
+    # `coordinax.KinematicSpace.from_`.
     data: KinematicSpace = eqx.field(
         converter=Unless(KinematicSpace, KinematicSpace.from_)
     )
