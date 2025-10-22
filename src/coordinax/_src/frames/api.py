@@ -2,19 +2,21 @@
 
 __all__ = ["frame_transform_op", "frame_of"]
 
-from typing import Annotated as Antd, Any
-from typing_extensions import Doc
+from typing import Any
 
 from plum import dispatch
 
 
 @dispatch.abstract
-def frame_transform_op(
-    from_frame: Antd[Any, Doc("frame to convert from")],
-    to_frame: Antd[Any, Doc("frame to convert to")],
-    /,
-) -> Any:
+def frame_transform_op(from_frame: Any, to_frame: Any, /) -> Any:
     """Make a frame transform.
+
+    Parameters
+    ----------
+    from_frame : AbstractReferenceFrame
+        The reference frame to transform from.
+    to_frame : AbstractReferenceFrame
+        The reference frame to transform to.
 
     Examples
     --------
