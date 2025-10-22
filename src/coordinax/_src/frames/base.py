@@ -3,8 +3,7 @@
 __all__ = ["AbstractReferenceFrame"]
 
 from collections.abc import Mapping
-from typing import Annotated as Antd, Any
-from typing_extensions import Doc
+from typing import Any
 
 import equinox as eqx
 from plum import dispatch
@@ -31,10 +30,19 @@ class AbstractReferenceFrame(eqx.Module):
     # Transformations
 
     # TODO: rename?
-    def transform_op(
-        self, to_frame: Antd["AbstractReferenceFrame", Doc("frame to transform to")], /
-    ) -> Antd[AbstractOperator, Doc("frame transform operator")]:
+    def transform_op(self, to_frame: "AbstractReferenceFrame", /) -> AbstractOperator:
         """Make a frame transform operator.
+
+        Parameters
+        ----------
+        to_frame : AbstractReferenceFrame
+            The reference frame to transform to.
+
+        Returns
+        -------
+        AbstractOperator
+            The operator that transforms coordinates from this frame to
+            `to_frame`.
 
         Examples
         --------
