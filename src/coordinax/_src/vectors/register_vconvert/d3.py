@@ -45,14 +45,12 @@ def vconvert(
 
     >>> params = {"x": 1, "y": 2, "z": 3}
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.RadialPos, cxv.CartesianPos3D, params)
     ({'r': Array(3.7416575, dtype=float32, ...)}, {})
 
     >>> x = cxv.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
     <RadialPos: (r) [km]
@@ -88,16 +86,14 @@ def vconvert(
     >>> import coordinax as cx
 
     >>> params = {"x": 1, "y": 2, "z": 3}
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cx.vecs.vconvert(cx.vecs.PolarPos, cx.vecs.CartesianPos3D, params)
     ({'r': Array(2.236068, dtype=float32, ...),
       'phi': Array(1.1071488, dtype=float32, ...)},
      {})
 
     >>> x = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.PolarPos, x)
     >>> print(y)
     <PolarPos: (r[km], phi[rad])
@@ -141,8 +137,7 @@ def vconvert(
     >>> params = {"rho": 1, "phi": 10, "z": 14}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.CartesianPos1D, cxv.CylindricalPos,
     ...                       params, units=usys)
     ({'x': Array(0.9848077, dtype=float32, ...)}, {})
@@ -150,8 +145,7 @@ def vconvert(
     >>> x = cx.vecs.CylindricalPos(rho=u.Quantity(1.0, "km"),
     ...                            phi=u.Quantity(10.0, "deg"),
     ...                            z=u.Quantity(14, "km"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> print(y)
     <CartesianPos1D: (x) [km]
@@ -185,16 +179,14 @@ def vconvert(
     >>> params = {"rho": 1, "phi": 10, "z": 14}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.RadialPos, cxv.CylindricalPos, params, units=usys)
     ({'r': Array(1, dtype=int32, ...)}, {})
 
     >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
     ...                        phi=u.Quantity(10, "deg"),
     ...                        z=u.Quantity(14, "km"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cxv.RadialPos, x)
     >>> print(y)
     <RadialPos: (r) [km]
@@ -232,8 +224,7 @@ def vconvert(
     >>> params = {"rho": 1, "phi": 10, "z": 14}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.CartesianPos2D, cxv.CylindricalPos,
     ...                       params, units=usys)
     ({'x': Array(0.9848077, dtype=float32, ...),
@@ -243,8 +234,7 @@ def vconvert(
     >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
     ...                        phi=u.Quantity(10, "deg"),
     ...                        z=u.Quantity(14, "km"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(y)
     <CartesianPos2D: (x, y) [km]
@@ -280,8 +270,7 @@ def vconvert(
     >>> params = {"rho": 1, "phi": 10, "z": 14}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.PolarPos, cxv.CylindricalPos,
     ...                       params, units=usys)
     ({'r': Array(1, dtype=int32, ...),
@@ -290,8 +279,7 @@ def vconvert(
     >>> x = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
     ...                        phi=u.Quantity(10, "deg"),
     ...                        z=u.Quantity(14, "km"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
     <PolarPos: (r[km], phi[deg])
@@ -333,8 +321,7 @@ def vconvert(
     >>> params = {"r": 1, "theta": 14, "phi": 10}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.CartesianPos1D, cxv.SphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...)}, {})
@@ -342,8 +329,7 @@ def vconvert(
     >>> x = cxv.SphericalPos(r=u.Quantity(1, "km"),
     ...                     theta=u.Quantity(14, "deg"),
     ...                     phi=u.Quantity(10, "deg"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.CartesianPos1D, x)
     >>> print(y)
     <CartesianPos1D: (x) [km]
@@ -382,8 +368,7 @@ def vconvert(
     >>> params = {"r": 1, "theta": 14, "phi": 10}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.CartesianPos2D, cxv.SphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...),
@@ -393,8 +378,7 @@ def vconvert(
     >>> x = cxv.SphericalPos(r=u.Quantity(1, "km"),
     ...                     theta=u.Quantity(14, "deg"),
     ...                     phi=u.Quantity(10, "deg"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(y)
     <CartesianPos2D: (x, y) [km]
@@ -430,8 +414,7 @@ def vconvert(
     >>> params = {"r": 1, "theta": 14, "phi": 10}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.PolarPos, cxv.SphericalPos,
     ...                       params, units=usys)
     ({'r': Array(0.2419219, dtype=float32, ...),
@@ -441,8 +424,7 @@ def vconvert(
     >>> x = cxv.SphericalPos(r=u.Quantity(1, "km"),
     ...                     theta=u.Quantity(14, "deg"),
     ...                     phi=u.Quantity(10, "deg"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
     <PolarPos: (r[km], phi[deg])
@@ -485,8 +467,7 @@ def vconvert(
     >>> params = {"r": 1, "theta": 10, "phi": 14}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.CartesianPos1D, cxv.MathSphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...)}, {})
@@ -495,8 +476,7 @@ def vconvert(
     ...                              theta=u.Quantity(10, "deg"),
     ...                              phi=u.Quantity(14, "deg"))
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> print(y)
     <CartesianPos1D: (x) [km]
@@ -535,8 +515,7 @@ def vconvert(
     >>> params = {"r": 1, "theta": 10, "phi": 14}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.CartesianPos2D, cxv.MathSphericalPos,
     ...                       params, units=usys)
     ({'x': Array(0.23824656, dtype=float32, ...),
@@ -547,8 +526,7 @@ def vconvert(
     ...                              theta=u.Quantity(10, "deg"),
     ...                              phi=u.Quantity(14, "deg"))
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> print(y)
     <CartesianPos2D: (x, y) [km]
@@ -584,8 +562,7 @@ def vconvert(
     >>> params = {"r": 1, "theta": 10, "phi": 14}
     >>> usys = u.unitsystem("km", "deg")
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     cxv.vconvert(cxv.PolarPos, cxv.MathSphericalPos,
     ...                       params, units=usys)
     ({'r': Array(0.2419219, dtype=float32, ...),
@@ -595,8 +572,7 @@ def vconvert(
     >>> x = cxv.MathSphericalPos(r=u.Quantity(1, "km"),
     ...                          theta=u.Quantity(10, "deg"),
     ...                          phi=u.Quantity(14, "deg"))
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.PolarPos, x)
     >>> print(y)
     <PolarPos: (r[km], phi[deg])
@@ -647,29 +623,25 @@ def vconvert(
     ...     Delta=u.Quantity(1, "km"),
     ... )
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.CartesianPos1D, x)
     >>> print(y)
     <CartesianPos1D: (x) [km]
         [0.621]>
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cx.vconvert(cx.vecs.RadialPos, x)
     >>> print(y)
     <RadialPos: (r) [km]
         [0.707]>
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     x2 = cx.vconvert(cx.vecs.CartesianPos2D, x)
     >>> print(x2)
     <CartesianPos2D: (x, y) [km]
         [0.621 0.339]>
 
-    >>> with warnings.catch_warnings():
-    ...     warnings.simplefilter("ignore")
+    >>> with warnings.catch_warnings(action="ignore"):
     ...     x2 = cx.vconvert(cx.vecs.PolarPos, x)
     >>> print(x2)
     <PolarPos: (r[km], phi[rad])
