@@ -1,27 +1,19 @@
-"""Base classes for operators on coordinates and potentials."""
+"""Base classes for operators on coordinates."""
 
-__all__ = ["AbstractCompositeOperator"]
+__all__ = ("AbstractCompositeOperator",)
 
 from collections.abc import Iterator
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
+from typing import TYPE_CHECKING, overload
 
 import equinox as eqx
-
-from dataclassish import DataclassInstance
+from plum import dispatch
 
 from .base import AbstractOperator
-from coordinax._src.vectors.base import AbstractVectorLike
+from .custom_types import HasOperatorsAttr
 
 if TYPE_CHECKING:
     import coordinax.ops  # noqa: ICN001
-
-
-@runtime_checkable
-class HasOperatorsAttr(DataclassInstance, Protocol):  # type: ignore[misc]
-    """Protocol for classes with an `operators` attribute."""
-
-    operators: tuple[AbstractOperator, ...]
 
 
 class AbstractCompositeOperator(AbstractOperator):
@@ -32,14 +24,14 @@ class AbstractCompositeOperator(AbstractOperator):
     See Also
     --------
     `coordinax.ops.Pipe`
-    `coordinax.ops.GalileanOperator`
+    `coordinax.ops.GalileanOp`
 
     """
 
     operators: eqx.AbstractVar[tuple[AbstractOperator, ...]]
 
     # ===========================================
-    # Operator
+    # Operator API
 
     @property
     def is_inertial(self: HasOperatorsAttr) -> bool:
@@ -57,37 +49,15 @@ class AbstractCompositeOperator(AbstractOperator):
         >>> import coordinax as cx
 
         >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-        >>> boost = cx.ops.GalileanBoost.from_([1, 2, 3], "km/s")
+        >>> boost = cx.ops.Add.from_([1, 2, 3], "km/s")
         >>> pipe = cx.ops.Pipe((shift, boost))
         >>> pipe.inverse
-        Pipe(( GalileanBoost(...), GalileanSpatialTranslation(...) ))
+        Pipe(( Add(...), GalileanSpatialTranslation(...) ))
 
         """
         from .pipe import Pipe
 
         return Pipe(tuple(op.inverse for op in reversed(self.operators)))
-
-    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[misc]
-    def __call__(
-        self: "AbstractCompositeOperator", *args: object, **kwargs: Any
-    ) -> tuple[object, ...]:
-        """Apply the operators to the coordinates.
-
-        This is the default implementation, which applies the operators in
-        sequence, passing along the arguments.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
-        >>> op(1, 2, 3)
-        (1, 2, 3)
-
-        """
-        for op in self.operators:
-            args = op(*args, **kwargs)
-        return args
 
     # ===========================================
     # Pipe
@@ -101,12 +71,20 @@ class AbstractCompositeOperator(AbstractOperator):
     def __getitem__(
         self, key: int | slice
     ) -> "AbstractOperator | AbstractCompositeOperator":
+        """Get one or more operators from the composite operator.
+
+        This returns either a single operator or a new composite operator,
+        depending if the result of the getitem on the `operators` attribute is a
+        single operator or a tuple of operators.
+
+        """
         ops = self.operators[key]
         if isinstance(ops, AbstractOperator):
             return ops
         return replace(self, operators=ops)
 
     def __iter__(self: HasOperatorsAttr) -> Iterator[AbstractOperator]:
+        """Iterate over the operators in the composite operator."""
         return iter(self.operators)
 
 
@@ -114,18 +92,21 @@ class AbstractCompositeOperator(AbstractOperator):
 # Call dispatches
 
 
-@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[misc]
-def call(
-    self: AbstractCompositeOperator, x: AbstractVectorLike, /, **kwargs: Any
-) -> AbstractVectorLike:
-    """Apply the operator to the coordinates.
+@dispatch(precedence=1)  # type: ignore[call-overload,misc]
+def operate(self: AbstractCompositeOperator, *args: object, **kwargs: object) -> object:
+    """Apply the operators to the coordinates.
 
-    This is the default implementation, which applies the operators in
-    sequence.
+    This is the default implementation for `AbstractCompositeOperator`, which
+    applies the operators in sequence, passing the arguments through each one.
+    Keyword arguments are passed to each operator.
 
     Examples
     --------
     >>> import coordinax as cx
+
+    >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
+    >>> op(1, 2, 3)
+    (1, 2, 3)
 
     >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
@@ -133,7 +114,6 @@ def call(
     CartesianPos3D( ... )
 
     """
-    # TODO: with lax.for_i
     for op in self.operators:
-        x = op(x, **kwargs)
-    return x
+        args = op(*args, **kwargs)
+    return args

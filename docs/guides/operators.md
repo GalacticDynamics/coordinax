@@ -38,24 +38,24 @@ CartesianPos3D(
 )
 ```
 
-### GalileanBoost
+### Galilean Boost
 
 Applies a velocity boost to a velocity vector:
 
 ```{code-block} python
->>> boost = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
+>>> boost = cxo.Add.from_([1, 1, 1], "km/s")
 >>> boost(u.Quantity(1.0, "s"), q)[1]
 CartesianPos3D(
     x=Quantity(1., unit='kpc'), y=Quantity(2., unit='kpc'), z=Quantity(3., unit='kpc')
 )
 ```
 
-### GalileanRotation
+### Rotate
 
 Rotates vectors in space:
 
 ```{code-block} python
->>> rot = cxo.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+>>> rot = cxo.Rotate.from_euler("z", u.Quantity(90, "deg"))
 >>> rot(q).round(2)
 CartesianPos3D(
     x=Quantity(-2., unit='kpc'),
@@ -73,7 +73,7 @@ Operators can be composed using the {class}`~coordinax.ops.Pipe` class or the
 
 ```{code-block} python
 >>> op1 = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
->>> op2 = cxo.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+>>> op2 = cxo.Rotate.from_euler("z", u.Quantity(90, "deg"))
 >>> pipe = cxo.Pipe([op1, op2])
 >>> pipe(q).round(2)
 CartesianPos3D(
@@ -106,7 +106,7 @@ CartesianPos3D(
 
 - {class}`~coordinax.ops.simplify_op`: Simplifies composed operators when
   possible.
-- {class}`~coordinax.ops.convert_to_pipe_operators`: Utility to convert a list
+- {class}`~coordinax.ops.convert_to_operator_tuple`: Utility to convert a list
   of operators into a {class}`~coordinax.ops.Pipe`.
 
 ---
