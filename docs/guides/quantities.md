@@ -1,4 +1,4 @@
-# Specialized Quantity Objects
+# Specialized Quantities
 
 <!-- invisible-code-block: python
 
@@ -96,6 +96,8 @@ The {meth}`~coordinax.angle.Angle.wrap_to` method has a function counterpart
 >>> cxa.wrap_to(a, u.Quantity(0, "deg"), u.Quantity(360, "deg"))
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
+
+---
 
 ## Working with `Distance` Objects
 
