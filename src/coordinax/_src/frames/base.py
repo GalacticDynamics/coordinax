@@ -1,6 +1,6 @@
 """Base implementation of coordinate frames."""
 
-__all__ = ["AbstractReferenceFrame"]
+__all__ = ("AbstractReferenceFrame",)
 
 from collections.abc import Mapping
 from typing import Any

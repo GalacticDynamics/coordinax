@@ -1,6 +1,6 @@
 """Transformations on Frames."""
 
-__all__: list[str] = ["TransformedReferenceFrame"]
+__all__ = ("TransformedReferenceFrame",)
 
 from typing import Generic, final
 from typing_extensions import TypeVar

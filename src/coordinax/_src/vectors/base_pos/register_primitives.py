@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPos"]
+__all__ = ("AbstractPos",)
 
 from dataclasses import replace
 from typing import Any, cast

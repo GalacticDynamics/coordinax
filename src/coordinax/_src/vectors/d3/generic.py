@@ -1,8 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = [
-    "Cartesian3D",
-]
+__all__ = ("Cartesian3D",)
 
 from typing import TypeVar, final
 from typing_extensions import override

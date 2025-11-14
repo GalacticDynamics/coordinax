@@ -1,6 +1,6 @@
 """Base classes for operators on coordinates and potentials."""
 
-__all__ = ["simplify_op"]
+__all__ = ("simplify_op",)
 
 from typing import Any
 

@@ -1,6 +1,6 @@
 """Astronomy reference frames."""
 
-__all__ = ["Galactocentric"]
+__all__ = ("Galactocentric",)
 
 
 from typing import ClassVar, TypeAlias, final

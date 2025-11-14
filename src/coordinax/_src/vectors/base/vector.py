@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVector", "is_vector"]
+__all__ = ("AbstractVector", "is_vector")
 
 from abc import abstractmethod
 from collections.abc import Callable, Mapping

@@ -1,6 +1,6 @@
 """Type hints for angles."""
 
-__all__ = ["BatchableAngle", "BatchableAngleQ"]
+__all__ = ("BatchableAngle", "BatchableAngleQ")
 
 
 from jaxtyping import Shaped

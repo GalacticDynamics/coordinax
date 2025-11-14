@@ -1,6 +1,6 @@
 """Transformations between representations."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from typing import cast

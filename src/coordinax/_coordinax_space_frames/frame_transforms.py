@@ -1,7 +1,7 @@
 """Astronomy reference frames."""
 # ruff:noqa: N806
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from typing import TypeAlias

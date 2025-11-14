@@ -1,6 +1,6 @@
 """N-dimensional."""
 
-__all__ = [
+__all__ = (
     # Base
     "AbstractPosND",
     "AbstractVelND",
@@ -11,7 +11,7 @@ __all__ = [
     "CartesianAccND",
     # Poincare
     "PoincarePolarVector",
-]
+)
 
 from .base import AbstractAccND, AbstractPosND, AbstractVelND
 from .cartesian import CartesianAccND, CartesianPosND, CartesianVelND

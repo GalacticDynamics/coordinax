@@ -1,6 +1,6 @@
 """Base classes for operators on coordinates and potentials."""
 
-__all__ = ["AbstractCompositeOperator"]
+__all__ = ("AbstractCompositeOperator",)
 
 from collections.abc import Iterator
 from dataclasses import replace

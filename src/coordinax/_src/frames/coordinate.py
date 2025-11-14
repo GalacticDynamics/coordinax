@@ -1,6 +1,6 @@
 """Coordinates."""
 
-__all__ = ["AbstractCoordinate", "Coordinate"]
+__all__ = ("AbstractCoordinate", "Coordinate")
 
 
 from typing import Any, ClassVar, Literal, assert_never, cast, final

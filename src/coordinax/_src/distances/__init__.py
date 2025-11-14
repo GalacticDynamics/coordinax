@@ -8,7 +8,7 @@ This module depends on the following modules:
 
 """
 
-__all__ = [
+__all__ = (
     "AbstractDistance",
     "Distance",
     "DistanceModulus",
@@ -20,7 +20,7 @@ __all__ = [
     # Typing
     "BBtLength",
     "BatchableDistance",
-]
+)
 
 from .base import AbstractDistance
 from .custom_types import BatchableDistance, BBtLength

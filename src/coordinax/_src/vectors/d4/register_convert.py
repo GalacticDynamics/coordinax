@@ -1,6 +1,6 @@
 """Built-in 4-vector classes."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 import jax.numpy as jnp

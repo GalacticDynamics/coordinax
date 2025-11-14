@@ -63,23 +63,6 @@ True
 
 """
 
-__all__ = [
-    # Frames
-    "AbstractReferenceFrame",
-    "FrameTransformError",
-    "NoFrame",
-    "TransformedReferenceFrame",
-    "frame_transform_op",
-    "frame_of",
-    # Example frames
-    "Alice",
-    "FriendOfAlice",
-    "Bob",
-    # Coordinates
-    "AbstractCoordinate",
-    "Coordinate",
-]
-
 from .setup_package import install_import_hook
 
 with install_import_hook("coordinax.frames"):
@@ -103,6 +86,23 @@ with install_import_hook("coordinax.frames"):
     from ._coordinax_space_frames import *  # noqa: F403
 
 
+# Defined here b/c it's mutated by `_coordinax_space_frames`
+__all__ = [
+    # Frames
+    "AbstractReferenceFrame",
+    "FrameTransformError",
+    "NoFrame",
+    "TransformedReferenceFrame",
+    "frame_transform_op",
+    "frame_of",
+    # Example frames
+    "Alice",
+    "FriendOfAlice",
+    "Bob",
+    # Coordinates
+    "AbstractCoordinate",
+    "Coordinate",
+]
 __all__ += _coordinax_space_frames.__all__
 
 # clean up namespace

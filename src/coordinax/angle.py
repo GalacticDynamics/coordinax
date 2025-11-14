@@ -1,6 +1,6 @@
 """`coordinax.angle` module."""
 
-__all__ = ["AbstractAngle", "Angle", "wrap_to", "Parallax"]
+__all__ = ("AbstractAngle", "Angle", "wrap_to", "Parallax")
 
 from .setup_package import install_import_hook
 

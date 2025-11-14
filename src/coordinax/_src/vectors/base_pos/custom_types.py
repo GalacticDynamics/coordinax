@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["PosT"]
+__all__ = ("PosT",)
 
 from typing_extensions import TypeVar
 

@@ -1,6 +1,6 @@
 """Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
-__all__ = ["spatial_component"]
+__all__ = ("spatial_component",)
 
 import functools as ft
 from typing import Any, TypeAlias

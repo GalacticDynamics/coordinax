@@ -1,7 +1,7 @@
 """Register Quantity support for jax primitives."""
 # pylint: disable=import-error, too-many-lines
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 from typing import Any, TypeVar
 

@@ -4,7 +4,7 @@ This is the private implementation of the frames sub-package.
 
 """
 
-__all__ = [
+__all__ = (
     # Frames
     "AbstractReferenceFrame",
     "FrameTransformError",
@@ -19,7 +19,7 @@ __all__ = [
     # Coordinate
     "AbstractCoordinate",
     "Coordinate",
-]
+)
 
 from .api import frame_of, frame_transform_op
 from .base import AbstractReferenceFrame

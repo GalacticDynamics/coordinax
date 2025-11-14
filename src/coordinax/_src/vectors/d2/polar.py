@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__ = ["PolarAcc", "PolarPos", "PolarVel"]
+__all__ = ("PolarAcc", "PolarPos", "PolarVel")
 
 from typing import final
 from typing_extensions import override

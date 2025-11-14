@@ -1,6 +1,6 @@
 """`coordinax.distance` module."""
 
-__all__ = [
+__all__ = (
     # Classes
     "AbstractDistance",
     "Distance",
@@ -10,7 +10,7 @@ __all__ = [
     "distance",
     "parallax",
     "distance_modulus",
-]
+)
 
 from .setup_package import install_import_hook
 

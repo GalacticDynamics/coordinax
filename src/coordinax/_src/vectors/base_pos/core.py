@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractPos", "POSITION_CLASSES"]
+__all__ = ("AbstractPos", "POSITION_CLASSES")
 
 import functools as ft
 from inspect import isabstract

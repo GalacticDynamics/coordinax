@@ -1,10 +1,10 @@
 """Built-in vector classes."""
 
-__all__ = [
+__all__ = (
     "AbstractSphericalAcc",
     "AbstractSphericalPos",
     "AbstractSphericalVel",
-]
+)
 
 
 import unxt as u

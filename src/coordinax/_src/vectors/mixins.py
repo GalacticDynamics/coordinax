@@ -1,6 +1,6 @@
 """Mixin classes."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 from collections.abc import Sequence
 from typing import Any, cast

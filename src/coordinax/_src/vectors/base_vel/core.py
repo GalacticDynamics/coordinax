@@ -1,6 +1,6 @@
 """Representation of velocities in different systems."""
 
-__all__ = ["AbstractVel", "VELOCITY_CLASSES"]
+__all__ = ("AbstractVel", "VELOCITY_CLASSES")
 
 import functools as ft
 from typing import TYPE_CHECKING, Any, cast

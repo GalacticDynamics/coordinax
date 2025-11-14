@@ -1,6 +1,6 @@
 """Space."""
 
-__all__ = ["KinematicSpace"]
+__all__ = ("KinematicSpace",)
 
 from .core import KinematicSpace
 

@@ -1,6 +1,6 @@
 """Abstract Accelerations."""
 
-__all__ = ["AbstractAcc", "ACCELERATION_CLASSES"]
+__all__ = ("AbstractAcc", "ACCELERATION_CLASSES")
 
 import functools as ft
 from typing import TYPE_CHECKING, Any, cast

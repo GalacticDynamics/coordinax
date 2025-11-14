@@ -1,6 +1,6 @@
 """Type hints for `coordinax.distance`."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from jaxtyping import Shaped

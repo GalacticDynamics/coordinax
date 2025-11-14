@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 from dataclasses import replace as _dataclass_replace
 from typing import TYPE_CHECKING

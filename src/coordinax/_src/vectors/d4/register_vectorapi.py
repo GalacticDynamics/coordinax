@@ -1,6 +1,6 @@
 """Built-in 4-vector classes."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 from dataclasses import replace
 from typing import Any, cast

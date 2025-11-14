@@ -1,6 +1,6 @@
 """Base implementation of coordinate frames."""
 
-__all__ = ["NoFrame"]
+__all__ = ("NoFrame",)
 
 
 from typing import final

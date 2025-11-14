@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 from collections.abc import Mapping
 from typing import Any

@@ -1,6 +1,6 @@
 """Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
-__all__ = [
+__all__ = (
     "vector",
     "vconvert",
     "normalize_vector",
@@ -8,7 +8,7 @@ __all__ = [
     "time_derivative_vector_type",
     "time_antiderivative_vector_type",
     "time_nth_derivative_vector_type",
-]
+)
 
 from typing import TYPE_CHECKING, Any
 

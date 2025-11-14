@@ -1,6 +1,10 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractAccND", "AbstractPosND", "AbstractVelND"]
+__all__ = (
+    "AbstractAccND",
+    "AbstractPosND",
+    "AbstractVelND",
+)
 
 
 from dataclasses import replace

@@ -1,6 +1,6 @@
 """Abstract Cartesian class."""
 
-__all__ = ["AbstractCartesian"]
+__all__ = ("AbstractCartesian",)
 
 
 class AbstractCartesian:
