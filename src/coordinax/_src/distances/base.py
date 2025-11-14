@@ -1,6 +1,6 @@
 """Base classes for distance quantities."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from plum import add_promotion_rule

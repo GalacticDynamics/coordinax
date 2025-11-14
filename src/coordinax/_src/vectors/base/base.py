@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractVectorLike", "is_vectorlike"]
+__all__ = ("AbstractVectorLike", "is_vectorlike")
 
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any, NoReturn, TypeGuard, TypeVar

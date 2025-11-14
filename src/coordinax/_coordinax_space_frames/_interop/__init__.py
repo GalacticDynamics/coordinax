@@ -1,6 +1,6 @@
 """Interoperability."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 from .optional_deps import OptDeps
 

@@ -1,6 +1,6 @@
 """Sequence of Operators."""
 
-__all__ = ["Pipe", "convert_to_pipe_operators"]
+__all__ = ("Pipe", "convert_to_pipe_operators")
 
 from dataclasses import replace
 from typing import Any, final

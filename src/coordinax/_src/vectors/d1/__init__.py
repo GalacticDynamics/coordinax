@@ -1,7 +1,7 @@
 """1-dimensional."""
 # pylint: disable=duplicate-code
 
-__all__ = [
+__all__ = (
     # Base
     "AbstractPos1D",
     "AbstractVel1D",
@@ -14,7 +14,7 @@ __all__ = [
     "CartesianPos1D",
     "CartesianVel1D",
     "CartesianAcc1D",
-]
+)
 
 from .base import AbstractAcc1D, AbstractPos1D, AbstractVel1D
 from .cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D

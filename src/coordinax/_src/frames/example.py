@@ -1,6 +1,6 @@
 """Base implementation of coordinate frames."""
 
-__all__ = ["Alice", "FriendOfAlice", "Bob"]
+__all__ = ("Alice", "FriendOfAlice", "Bob")
 
 
 from typing import final

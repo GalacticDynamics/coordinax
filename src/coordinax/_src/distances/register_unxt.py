@@ -1,7 +1,7 @@
 """Register Distance support for `unxt`."""
 # pylint: disable=import-error
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from plum import dispatch

@@ -1,6 +1,6 @@
 """Register Support with Unxt."""
 
-__all__ = ["ToUnitsOptions"]
+__all__ = ("ToUnitsOptions",)
 
 
 from collections.abc import Mapping

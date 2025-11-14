@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["AbstractAcc2D", "AbstractPos2D", "AbstractVel2D"]
+__all__ = ("AbstractAcc2D", "AbstractPos2D", "AbstractVel2D")
 
 
 from coordinax._src.vectors.base_acc import AbstractAcc

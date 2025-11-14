@@ -1,7 +1,6 @@
 """Coordinax Operator package."""
-# ruff: noqa: F401
 
-__all__ = [
+__all__ = (
     "simplify_op",
     # Classes
     "AbstractOperator",
@@ -19,7 +18,7 @@ __all__ = [
     "VelocityBoost",
     # Utils
     "convert_to_pipe_operators",
-]
+)
 
 from .api import simplify_op
 from .base import AbstractOperator

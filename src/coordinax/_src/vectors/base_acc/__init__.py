@@ -4,7 +4,7 @@ This is Private API.
 
 """
 
-__all__ = ["AbstractAcc", "ACCELERATION_CLASSES"]
+__all__ = ("AbstractAcc", "ACCELERATION_CLASSES")
 
 from .core import ACCELERATION_CLASSES, AbstractAcc
 

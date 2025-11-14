@@ -1,6 +1,6 @@
 """Built-in 4-vector classes."""
 
-__all__ = ["FourVector"]
+__all__ = ("FourVector",)
 
 import functools as ft
 from dataclasses import KW_ONLY

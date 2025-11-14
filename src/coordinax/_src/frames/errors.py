@@ -1,6 +1,6 @@
 """Frames sub-package."""
 
-__all__ = ["FrameTransformError"]
+__all__ = ("FrameTransformError",)
 
 
 class FrameTransformError(Exception):

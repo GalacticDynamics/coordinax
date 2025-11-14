@@ -1,6 +1,6 @@
 """Interoperability with :mod:`astropy.coordinates`."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 import astropy.coordinates as apyc

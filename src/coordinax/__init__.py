@@ -1,7 +1,7 @@
 """coordinax: Coordinates in JAX."""
 # pylint: disable=import-error
 
-__all__ = [
+__all__ = (
     # modules
     "angle",
     "distance",
@@ -21,7 +21,7 @@ __all__ = [
     "KinematicSpace",
     # frame objects
     "Coordinate",
-]
+)
 
 from .setup_package import install_import_hook
 

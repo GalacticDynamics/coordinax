@@ -1,6 +1,6 @@
 """Intra-ecosystem compatibility."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from collections.abc import ItemsView, KeysView, Mapping, ValuesView

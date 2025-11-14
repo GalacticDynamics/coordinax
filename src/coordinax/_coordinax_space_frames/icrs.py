@@ -1,6 +1,6 @@
 """Astronomy reference frames."""
 
-__all__ = ["ICRS"]
+__all__ = ("ICRS",)
 
 
 from typing import TypeAlias, final

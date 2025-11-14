@@ -1,6 +1,6 @@
 """Radial 1D vectors."""
 
-__all__ = ["RadialAcc", "RadialPos", "RadialVel"]
+__all__ = ("RadialAcc", "RadialPos", "RadialVel")
 
 from typing import final
 

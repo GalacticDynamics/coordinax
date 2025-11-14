@@ -1,6 +1,6 @@
 """Poincare."""
 
-__all__ = ["PoincarePolarVector"]
+__all__ = ("PoincarePolarVector",)
 
 from typing import final
 

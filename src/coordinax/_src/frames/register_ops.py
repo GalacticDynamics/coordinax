@@ -1,6 +1,6 @@
 """Register for `coordinax.ops`."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from dataclassish import replace

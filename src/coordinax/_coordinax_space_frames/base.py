@@ -1,6 +1,6 @@
 """Astronomy reference frames."""
 
-__all__ = ["AbstractSpaceFrame"]
+__all__ = ("AbstractSpaceFrame",)
 
 
 import coordinax.frames as cxf

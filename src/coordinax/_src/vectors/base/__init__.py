@@ -1,6 +1,6 @@
 """Bases."""
 
-__all__ = [
+__all__ = (
     "AbstractVectorLike",
     "AbstractVector",
     "AbstractCartesian",
@@ -12,7 +12,7 @@ __all__ = [
     # Utils
     "VectorAttribute",
     "ToUnitsOptions",
-]
+)
 
 from .attribute import VectorAttribute
 from .base import AbstractVectorLike, is_vectorlike

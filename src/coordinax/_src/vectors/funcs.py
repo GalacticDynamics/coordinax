@@ -1,6 +1,6 @@
 """Copyright (c) 2023 coordinax maintainers. All rights reserved."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 import functools as ft
 from inspect import isclass

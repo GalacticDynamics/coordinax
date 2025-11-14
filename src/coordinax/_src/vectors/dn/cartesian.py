@@ -1,6 +1,10 @@
 """Built-in vector classes."""
 
-__all__ = ["CartesianAccND", "CartesianPosND", "CartesianVelND"]
+__all__ = (
+    "CartesianAccND",
+    "CartesianPosND",
+    "CartesianVelND",
+)
 
 import functools as ft
 from typing import final

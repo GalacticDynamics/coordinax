@@ -1,11 +1,11 @@
 """Built-in vector classes."""
 
-__all__ = [
+__all__ = (
     "LonCosLatSphericalVel",
     "LonLatSphericalAcc",
     "LonLatSphericalPos",
     "LonLatSphericalVel",
-]
+)
 
 import functools as ft
 from typing import final

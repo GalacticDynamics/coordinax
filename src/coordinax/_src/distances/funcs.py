@@ -1,10 +1,10 @@
 """distance functions."""
 
-__all__ = [
+__all__ = (
     "distance",
     "parallax",
     "distance_modulus",
-]
+)
 
 
 from typing import Any

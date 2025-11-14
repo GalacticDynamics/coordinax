@@ -11,7 +11,7 @@ This module depends on the following modules:
 
 """
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 # Register vector transformations, functions, etc.

@@ -1,6 +1,6 @@
 """Built-in vector classes."""
 
-__all__: list[str] = []
+__all__: tuple[str, ...] = ()
 
 
 from jaxtyping import Shaped

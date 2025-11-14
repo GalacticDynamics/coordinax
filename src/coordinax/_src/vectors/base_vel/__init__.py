@@ -1,6 +1,6 @@
 """Abstract Velocity."""
 
-__all__ = ["AbstractVel", "VELOCITY_CLASSES"]
+__all__ = ("AbstractVel", "VELOCITY_CLASSES")
 
 from .core import VELOCITY_CLASSES, AbstractVel
 

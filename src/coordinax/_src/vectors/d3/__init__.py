@@ -1,7 +1,7 @@
 """3-dimensional representations."""
 # pylint: disable=duplicate-code
 
-__all__ = [
+__all__ = (
     # Base
     "AbstractPos3D",
     "AbstractVel3D",
@@ -37,7 +37,7 @@ __all__ = [
     "ProlateSpheroidalAcc",
     # Generic
     "Cartesian3D",
-]
+)
 
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .base_spherical import (

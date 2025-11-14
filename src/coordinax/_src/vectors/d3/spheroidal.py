@@ -1,6 +1,10 @@
 """Built-in vector classes."""
 
-__all__ = ["ProlateSpheroidalAcc", "ProlateSpheroidalPos", "ProlateSpheroidalVel"]
+__all__ = (
+    "ProlateSpheroidalAcc",
+    "ProlateSpheroidalPos",
+    "ProlateSpheroidalVel",
+)
 
 from dataclasses import KW_ONLY
 from typing import final

@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["KinematicSpace"]
+__all__ = ("KinematicSpace",)
 
 import math
 from collections.abc import Callable, ItemsView, Iterable, KeysView, Mapping, ValuesView

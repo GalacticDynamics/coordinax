@@ -1,6 +1,6 @@
 """`coordinax.vecs` Module."""
 
-__all__ = [
+__all__ = (
     # API
     "vector",
     "vconvert",
@@ -105,7 +105,7 @@ __all__ = [
     "POSITION_CLASSES",
     "VELOCITY_CLASSES",
     "ACCELERATION_CLASSES",
-]
+)
 
 from .setup_package import RUNTIME_TYPECHECKER, install_import_hook
 

@@ -1,6 +1,6 @@
 """Base classes for operators on coordinates and potentials."""
 
-__all__ = ["AbstractOperator"]
+__all__ = ("AbstractOperator",)
 
 from abc import abstractmethod
 from collections.abc import Mapping

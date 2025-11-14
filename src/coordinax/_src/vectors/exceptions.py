@@ -1,6 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__ = ["IrreversibleDimensionChange"]
+__all__ = ("IrreversibleDimensionChange",)
 
 
 class IrreversibleDimensionChange(UserWarning):

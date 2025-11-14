@@ -1,10 +1,10 @@
 """Built-in vector classes."""
 
-__all__ = [
+__all__ = (
     "CartesianAcc2D",
     "CartesianPos2D",
     "CartesianVel2D",
-]
+)
 
 import functools as ft
 from typing import final
