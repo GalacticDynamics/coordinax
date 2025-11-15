@@ -1,8 +1,10 @@
-"""Base classes for operators on coordinates and potentials."""
+"""Identity operator."""
 
 __all__ = ("Identity",)
 
-from typing import Any, Literal, final
+from typing import Any, final
+
+from plum import dispatch
 
 from .base import AbstractOperator
 
@@ -86,22 +88,6 @@ class Identity(AbstractOperator):
     """
 
     @property
-    def is_inertial(self) -> Literal[True]:
-        """Identity operation is an inertial-frame preserving transform.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.Identity()
-        >>> op.is_inertial
-        True
-
-        """
-        return True
-
-    @property
     def inverse(self) -> "Identity":
         """The inverse of the operator.
 
@@ -118,56 +104,54 @@ class Identity(AbstractOperator):
         """
         return self
 
-    # -------------------------------------------
-    # Dispatched call signatures
-    # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", arg: Any, /, **__: Any) -> Any:
-        """Apply the Identity operation.
+@dispatch
+def operate(self: Identity, arg: Any, /, **__: Any) -> Any:
+    """Apply the Identity operation.
 
-        This is the identity operation, which does nothing to the input.
+    This is the identity operation, which does nothing to the input.
 
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
 
-        >>> op = cx.ops.Identity()
+    >>> op = cx.ops.Identity()
 
-        >>> q = u.Quantity([1, 2, 3], "km")
-        >>> op(q) is q
-        True
+    >>> q = u.Quantity([1, 2, 3], "km")
+    >>> op(q) is q
+    True
 
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> op(vec) is vec
-        True
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> op(vec) is vec
+    True
 
-        """
-        return arg
+    """
+    return arg
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", *args: Any, **__: Any) -> tuple[Any, ...]:
-        """Apply the Identity operation.
 
-        This is the identity operation, which does nothing to the input.
+@dispatch
+def operate(self: Identity, *args: Any, **__: Any) -> tuple[Any, ...]:
+    """Apply the Identity operation.
 
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
+    This is the identity operation, which does nothing to the input.
 
-        >>> op = cx.ops.Identity()
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
 
-        >>> q = u.Quantity([1, 2, 3], "km")
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> t = u.Quantity(10, "Gyr")
+    >>> op = cx.ops.Identity()
 
-        >>> op(t, q) == (t, q)
-        True
+    >>> q = u.Quantity([1, 2, 3], "km")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> t = u.Quantity(10, "Gyr")
 
-        >>> op(t, vec) == (t, vec)
-        True
+    >>> op(t, q) == (t, q)
+    True
 
-        """
-        return args
+    >>> op(t, vec) == (t, vec)
+    True
+
+    """
+    return args

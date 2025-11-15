@@ -276,7 +276,7 @@ class Coordinate(AbstractCoordinate):
     ...     data=space,
     ...     frame=cx.frames.TransformedReferenceFrame(
     ...         cx.frames.Galactocentric(),
-    ...         cx.ops.GalileanSpatialTranslation.from_([20, 0, 0], "kpc"),
+    ...         cx.ops.GalileanOp.from_([20, 0, 0], "kpc"),
     ...     ),
     ... )
 
