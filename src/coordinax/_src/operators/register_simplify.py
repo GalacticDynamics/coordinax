@@ -19,7 +19,7 @@ def simplify_op(op: AbstractOperator, /) -> AbstractOperator:
     --------
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> op = cx.ops.Translate.from_([1, 0, 0], "m")
     >>> cx.ops.simplify_op(op) is op
     True
 
@@ -55,17 +55,17 @@ def simplify_op(seq: Pipe, /) -> AbstractOperator:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> shift = cx.ops.GalileanSpatialTranslation(u.Quantity([1, 2, 3], "km"))
+    >>> shift = cx.ops.Translate(u.Quantity([1, 2, 3], "km"))
     >>> boost = cx.ops.GalileanBoost(u.Quantity([10, 20, 30], "km/s"))
 
     >>> seq = shift | cx.ops.Identity() | boost
     >>> seq
     Pipe((
-        GalileanSpatialTranslation(...), Identity(), GalileanBoost(...)
+        Translate(...), Identity(), GalileanBoost(...)
     ))
 
     >>> cx.ops.simplify_op(seq)
-    Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...) ))
+    Pipe(( Translate(...), GalileanBoost(...) ))
 
     """
     # TODO: more sophisticated operator fusion. This just applies pair-wise
@@ -85,11 +85,13 @@ def simplify_op(op1: AbstractOperator, op2: AbstractOperator, /) -> Pipe:
     --------
     >>> import coordinax as cx
 
-    >>> op1 = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> op1 = cx.ops.Translate.from_([1, 0, 0], "m")
     >>> op2 = cx.ops.GalileanBoost.from_([0, 1, 0], "m/s")
     >>> cx.ops.simplify_op(op1, op2)
     Pipe((
-        GalileanSpatialTranslation(CartesianPos3D( ... )),
+        Translate(
+            delta=CartesianPos3D( ... )
+        ),
         GalileanBoost(CartesianVel3D( ... ))
     ))
 
@@ -109,13 +111,13 @@ def simplify_op(op1: AbstractOperator, op2: AbstractOperator) -> AbstractOperato
     --------
     >>> import coordinax as cx
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> op = cx.ops.Translate.from_([1, 0, 0], "m")
     >>> cx.ops.simplify_op(op, cx.ops.Identity())
-    GalileanSpatialTranslation(...)
+    Translate(...)
 
-    >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 0, 0], "m")
+    >>> op = cx.ops.Translate.from_([1, 0, 0], "m")
     >>> cx.ops.simplify_op(cx.ops.Identity(), op)
-    GalileanSpatialTranslation(...)
+    Translate(...)
 
     """
     return op2 if isinstance(op1, Identity) else op1
