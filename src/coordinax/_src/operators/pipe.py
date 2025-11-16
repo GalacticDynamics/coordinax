@@ -1,6 +1,6 @@
 """Sequence of Operators."""
 
-__all__ = ("Pipe", "convert_to_pipe_operators")
+__all__ = ("Pipe",)
 
 from dataclasses import replace
 from typing import Any, final
@@ -11,11 +11,44 @@ from plum import dispatch
 
 from .base import AbstractOperator
 from .composite import AbstractCompositeOperator
+from .identity import Identity
 
 
-@dispatch.abstract
-def convert_to_pipe_operators(inp: Any, /) -> tuple[AbstractOperator, ...]:
-    raise NotImplementedError  # pragma: no cover
+def convert_to_operator_tuple(inp: Any, /) -> tuple[AbstractOperator, ...]:
+    """Convert to a tuple of operators for `Pipe`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> op2 = cx.ops.Identity()
+    >>> convert_to_operator_tuple((op1, op2))
+    (Rotate(rotation=i32[3,3]), Identity())
+
+    >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    >>> convert_to_operator_tuple(op1)
+    (Rotate(rotation=i32[3,3]),)
+
+    >>> op1 = cx.ops.Identity()
+    >>> op2 = cx.ops.Identity()
+    >>> pipe = cx.ops.Pipe((op1, op2))
+    >>> convert_to_operator_tuple(pipe)
+    (Identity(), Identity())
+
+    """
+    if isinstance(inp, (tuple, list)):
+        return tuple(inp)
+    if isinstance(inp, AbstractOperator):
+        return (inp,)
+    if isinstance(inp, Pipe):
+        return inp.operators
+
+    msg = f"Cannot convert object of type {type(inp)} to a tuple of operators."
+    raise ValueError(msg)
+
+
+# =============================================================
 
 
 @final
@@ -48,17 +81,17 @@ class Pipe(AbstractCompositeOperator):
     --------
     >>> import coordinax as cx
 
-    >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
+    >>> shift = cx.ops.Add.from_([1, 2, 3], "km")
     >>> boost = cx.ops.VelocityBoost.from_([1, 2, 3], "km/s")
     >>> pipe = cx.ops.Pipe((shift, boost))
     >>> pipe
-    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+    Pipe(( Add(...), VelocityBoost(...) ))
 
     A pipe can also be constructed by ``|``:
 
     >>> pipe2 = shift | boost
     >>> pipe2
-    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+    Pipe(( Add(...), VelocityBoost(...) ))
 
     The pipe can be simplified. For this example, we add an identity operator to
     the sequence and simplify, which will remove the identity operator.
@@ -66,11 +99,11 @@ class Pipe(AbstractCompositeOperator):
     >>> pipe3 = pipe2 | cx.ops.Identity()
     >>> pipe3
     Pipe((
-        GalileanSpatialTranslation(...), VelocityBoost(...), Identity()
+        Add(...), VelocityBoost(...), Identity()
     ))
 
-    >>> cx.ops.simplify_op(pipe3)
-    Pipe(( GalileanSpatialTranslation(...), VelocityBoost(...) ))
+    >>> cx.ops.simplify(pipe3)
+    Pipe(( Add(...), VelocityBoost(...) ))
 
     Now let's call the operator on a position:
 
@@ -91,7 +124,7 @@ class Pipe(AbstractCompositeOperator):
     """
 
     operators: tuple[AbstractOperator, ...] = eqx.field(
-        converter=convert_to_pipe_operators
+        converter=convert_to_operator_tuple
     )
 
     # ---------------------------------------------------------------
@@ -103,13 +136,12 @@ class Pipe(AbstractCompositeOperator):
         --------
         >>> import coordinax as cx
 
-        >>> shift = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-        >>> boost = cx.ops.GalileanBoost.from_([1, 2, 3], "km/s")
+        >>> shift = cx.ops.Add.from_([1, 2, 3], "km")
+        >>> boost = cx.ops.Add.from_([1, 2, 3], "km/s")
         >>> pipe = cx.ops.Pipe((shift, boost))
 
         >>> pipe | pipe
-        Pipe(( GalileanSpatialTranslation(...), GalileanBoost(...),
-               GalileanSpatialTranslation(...), GalileanBoost(...) ))
+        Pipe(( Add(...), Add(...), Add(...), Add(...) ))
 
         """
         # Concatenate sequences
@@ -124,10 +156,30 @@ class Pipe(AbstractCompositeOperator):
         return replace(self, operators=(other, *self))
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
-        """Return the Wadler-Lindig representation."""
+        """Return the Wadler-Lindig representation.
+
+        This is used to generate the documentation for the operator.
+
+        Examples
+        --------
+        >>> import wadler_lindig as wl
+        >>> import coordinax.ops as cxo
+
+        >>> shift = cxo.Add.from_([1, 2, 3], "km")
+        >>> pipe = cxo.Pipe((shift, boost))
+        >>> print(wl.pdoc(shift))
+
+        >>> boost = cxo.Add.from_([1, 2, 3], "km/s")
+        >>> pipe = cxo.Pipe((shift, boost))
+        >>> print(wl.pdoc(pipe))
+
+        """
+        # Build docs for each operator
         docs = [wl.pdoc(op, **kwargs) for op in self.operators]
+        # Wrap in ((...)) if more than one operator
         begin = wl.TextDoc("((" if len(docs) > 1 else "(")
         end = wl.TextDoc("))" if len(docs) > 1 else ")")
+        # Assemble in Pipe(...)
         return wl.bracketed(
             begin=wl.TextDoc(f"{self.__class__.__name__}") + begin,
             docs=docs,
@@ -137,58 +189,63 @@ class Pipe(AbstractCompositeOperator):
         )
 
 
-# ==============================================================
-# Constructor
+# ===================================================================
+# Call
+# TODO: simplify dispatches
+
+
+@dispatch(precedence=1)  # type: ignore[call-overload,misc]
+def operate(
+    self: AbstractCompositeOperator, tau: Any, /, arg: object, **kw: object
+) -> object:
+    """Apply the operators in a sequence."""
+    for op in self.operators:
+        arg = op(tau, arg, **kw)
+    return arg
+
+
+@dispatch(precedence=1)  # type: ignore[call-overload,misc]
+def operate(
+    self: AbstractCompositeOperator, tau: Any, /, *args: object, **kw: object
+) -> tuple[object, ...]:
+    """Apply the operators in a sequence."""
+    for op in self.operators:
+        args = op(tau, *args, **kw)
+    return args
+
+
+# ===================================================================
+# Simplification
 
 
 @dispatch
-def convert_to_pipe_operators(
-    inp: tuple[AbstractOperator, ...] | list[AbstractOperator],
-) -> tuple[AbstractOperator, ...]:
-    """Convert to a tuple of operators.
+def simplify(op: Pipe, /) -> AbstractOperator:
+    """Simplify a Pipe operator.
 
     Examples
     --------
     >>> import coordinax as cx
 
-    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-    >>> op2 = cx.ops.Identity()
-    >>> convert_to_pipe_operators((op1, op2))
-    (GalileanRotation(rotation=i32[3,3]), Identity())
+    >>> shift = cx.ops.Add.from_([1, 2, 3], "km")
+    >>> identity = cx.ops.Identity()
+    >>> pipe = cx.ops.Pipe((shift, identity))
+    >>> pipe
+    Pipe((
+        Add(...), Identity()
+    ))
+
+    >>> cx.ops.simplify(pipe)
+    Add(...)
 
     """
-    return tuple(inp)
-
-
-@dispatch
-def convert_to_pipe_operators(inp: AbstractOperator) -> tuple[AbstractOperator, ...]:
-    """Convert to a tuple of operators.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> op1 = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
-    >>> convert_to_pipe_operators(op1)
-    (GalileanRotation(rotation=i32[3,3]),)
-
-    """
-    return (inp,)
-
-
-@dispatch
-def convert_to_pipe_operators(inp: Pipe) -> tuple[AbstractOperator, ...]:
-    """Convert to a tuple of operators.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> op1 = cx.ops.Identity()
-    >>> op2 = cx.ops.Identity()
-    >>> pipe = cx.ops.Pipe((op1, op2))
-    >>> convert_to_pipe_operators(pipe)
-    (Identity(), Identity())
-
-    """
-    return inp.operators
+    # TODO: figure out how to do pairwise simplifications
+    # Remove identity operators
+    simplified_ops = tuple(o for o in op.operators if not isinstance(o, Identity))
+    # If no operators remain, return identity
+    if not simplified_ops:
+        return Identity()
+    # If only one operator remains, return it
+    if len(simplified_ops) == 1:
+        return simplified_ops[0]
+    # Otherwise, return simplified pipe
+    return replace(op, operators=simplified_ops)

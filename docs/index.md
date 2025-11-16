@@ -315,7 +315,7 @@ set of vector operations that work seamlessly with all `coordinax` vector types.
 ```{code-block} python
 >>> import coordinax.ops as cxo
 
->>> op = cxo.GalileanSpatialTranslation.from_([10, 10, 10], "kpc")
+>>> op = cxo.GalileanOp.from_([10, 10, 10], "kpc")
 
 >>> print(op(q))
 <CartesianPos3D: (x, y, z) [kpc]

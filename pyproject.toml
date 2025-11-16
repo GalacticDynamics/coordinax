@@ -40,7 +40,7 @@
     "quax-blocks>=0.4.0",
     "quaxed>=0.10.2",
     "typing-extensions>=4.13.2",
-    "unxt>=1.7.3",
+    "unxt>=1.7.6",
     "wadler-lindig>=0.1.6",
     "xmmutablemap>=0.1",
 ]

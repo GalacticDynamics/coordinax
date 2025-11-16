@@ -67,7 +67,7 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
 
 
 @register(jax.lax.dot_general_p)
-def dot_p_general_poss(
+def dot_p_poss(
     lhs: AbstractPos, rhs: AbstractPos, /, **kwargs: Any
 ) -> u.AbstractQuantity:
     """Dot product of two vectors.
@@ -89,6 +89,48 @@ def dot_p_general_poss(
     """
     cart_cls = lhs.cartesian_type
     return qlax.dot_general(lhs.vconvert(cart_cls), rhs.vconvert(cart_cls), **kwargs)  # type: ignore[arg-type]
+
+@register(jax.lax.dot_general_p)
+def dot_general_p_array_pos(
+    lhs: ArrayLike, rhs: AbstractPos, /, **kwargs: Any
+) -> AbstractPos:
+    """Apply rotation matrix to position vector.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    >>> # 90 degree rotation around z-axis
+    >>> rot = jnp.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]], dtype=float)
+    >>> pos = cx.CartesianPos3D.from_([1, 0, 0], "m")
+    >>> rotated = jnp.dot(rot, pos)
+    >>> print(rotated)
+    <CartesianPos3D: (x, y, z) [m]
+        [0. 1. 0.]>
+
+    """
+    # Check LHS is a rotation matrix
+    dim = rhs._dimensionality()
+    expected_shape = (dim, dim)
+    lhs = eqx.error_if(
+        lhs,
+        (lhs.shape != expected_shape)
+        | (~jnp.allclose(jnp.dot(lhs, lhs.T), jnp.eye(dim), atol=1e-6))
+        | (~jnp.allclose(jnp.linalg.det(lhs), 1.0, atol=1e-6)),
+        f"Invalid rotation matrix: must have shape {expected_shape} (got {lhs.shape}), "
+        f"be orthogonal (R @ R.T = I), and have determinant 1",
+    )
+    # Convert to cartesian for the operation
+    cart_cls = rhs.cartesian_type
+    cart_pos = rhs.vconvert(cart_cls)
+
+    # Apply the rotation in cartesian coordinates
+    rotated_cart = qlax.dot_general(lhs, cart_pos, **kwargs)
+
+    # Convert back to original coordinate system
+    return cast(AbstractPos, rotated_cart.vconvert(type(rhs), **rhs._auxiliary_data))
 
 
 # ------------------------------------------------
