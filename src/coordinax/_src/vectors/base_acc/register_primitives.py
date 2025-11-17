@@ -38,7 +38,7 @@ def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
 
     """
     fs = {k: jnp.multiply(v, rhs) for k, v in field_items(lhs)}
-    return cast(AbstractVel, lhs.time_antiderivative_cls.from_(fs))
+    return cast("AbstractVel", lhs.time_antiderivative_cls.from_(fs))
 
 
 @register(jax.lax.mul_p)
@@ -58,7 +58,7 @@ def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
         [2]>
 
     """
-    return cast(AbstractVel, qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # pylint: disable=arguments-out-of-order
+    return cast("AbstractVel", qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # pylint: disable=arguments-out-of-order
 
 
 @register(jax.lax.mul_p)
@@ -84,7 +84,7 @@ def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
     """
     pos_cls = lhs.time_nth_derivative_cls(-2)
     fs = {k: v * rhs for k, v in field_items(lhs)}
-    return cast(AbstractPos, pos_cls.from_(fs))
+    return cast("AbstractPos", pos_cls.from_(fs))
 
 
 @register(jax.lax.mul_p)

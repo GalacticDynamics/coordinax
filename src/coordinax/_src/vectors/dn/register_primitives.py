@@ -35,7 +35,7 @@ def add_p_cartnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND
     Quantity(Array([3, 5, 7], dtype=int32), unit='km')
 
     """
-    cart = cast(CartesianPosND, rhs.vconvert(CartesianPosND))
+    cart = cast("CartesianPosND", rhs.vconvert(CartesianPosND))
     return replace(lhs, q=lhs.q + cart.q)
 
 
@@ -133,5 +133,5 @@ def sub_p_cartnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND
          [-1]]>
 
     """
-    cart = cast(CartesianPosND, rhs.vconvert(CartesianPosND))
+    cart = cast("CartesianPosND", rhs.vconvert(CartesianPosND))
     return replace(lhs, q=lhs.q - cart.q)

@@ -1,4 +1,3 @@
-# ruff: noqa: ERA001
 """Galilean coordinate transformations."""
 
 __all__ = ["GalileanBoost"]
