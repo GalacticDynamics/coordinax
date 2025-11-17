@@ -70,7 +70,7 @@ def normalize_vector(
 def time_nth_derivative_vector_type(
     obj: type[AbstractVector] | AbstractVector, /, *, n: int
 ) -> type[AbstractVector]:
-    out = cast(type[AbstractVector], obj if isclass(obj) else type(obj))
+    out = cast("type[AbstractVector]", obj if isclass(obj) else type(obj))
     if n == 0:
         pass
     elif n < 0:

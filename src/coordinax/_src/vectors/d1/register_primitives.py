@@ -41,7 +41,7 @@ def add_qq(lhs: CartesianPos1D, rhs: AbstractPos, /) -> CartesianPos1D:
         [2]>
 
     """
-    rhs = cast(CartesianPos1D, rhs.vconvert(CartesianPos1D))
+    rhs = cast("CartesianPos1D", rhs.vconvert(CartesianPos1D))
     return jax.tree.map(jnp.add, lhs, rhs)
 
 

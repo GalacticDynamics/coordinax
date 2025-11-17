@@ -123,7 +123,7 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D
     )
 
     """
-    return cast(cx.CartesianPos3D, cx.CartesianPos3D.from_(obj))
+    return cast("cx.CartesianPos3D", cx.CartesianPos3D.from_(obj))
 
 
 # =====================================
@@ -177,7 +177,7 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.Cylindrical
     )
 
     """
-    return cast(cx.vecs.CylindricalPos, cx.vecs.CylindricalPos.from_(obj))
+    return cast("cx.vecs.CylindricalPos", cx.vecs.CylindricalPos.from_(obj))
 
 
 # =====================================
@@ -228,7 +228,7 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
     )
 
     """
-    return cast(cx.SphericalPos, cx.SphericalPos.from_(obj))
+    return cast("cx.SphericalPos", cx.SphericalPos.from_(obj))
 
 
 # =====================================
@@ -284,7 +284,7 @@ def apysph_to_lonlatsph(
     )
 
     """
-    return cast(cx.vecs.LonLatSphericalPos, cx.vecs.LonLatSphericalPos.from_(obj))
+    return cast("cx.vecs.LonLatSphericalPos", cx.vecs.LonLatSphericalPos.from_(obj))
 
 
 # =====================================
@@ -334,7 +334,7 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
     )
 
     """
-    return cast(cx.CartesianVel3D, cx.CartesianVel3D.from_(obj))
+    return cast("cx.CartesianVel3D", cx.CartesianVel3D.from_(obj))
 
 
 # =====================================
@@ -393,7 +393,7 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.vecs.Cylindric
     )
 
     """
-    return cast(cx.vecs.CylindricalVel, cx.vecs.CylindricalVel.from_(obj))
+    return cast("cx.vecs.CylindricalVel", cx.vecs.CylindricalVel.from_(obj))
 
 
 # =====================================
@@ -451,7 +451,7 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.Spherical
     )
 
     """
-    return cast(cx.SphericalVel, cx.SphericalVel.from_(obj))
+    return cast("cx.SphericalVel", cx.SphericalVel.from_(obj))
 
 
 # =====================================
@@ -513,7 +513,7 @@ def apysph_to_difflonlatsph(
     )
 
     """
-    return cast(cx.vecs.LonLatSphericalVel, cx.vecs.LonLatSphericalVel.from_(obj))
+    return cast("cx.vecs.LonLatSphericalVel", cx.vecs.LonLatSphericalVel.from_(obj))
 
 
 # =====================================
@@ -576,4 +576,6 @@ def apysph_to_diffloncoslatsph(
     )
 
     """
-    return cast(cx.vecs.LonCosLatSphericalVel, cx.vecs.LonCosLatSphericalVel.from_(obj))
+    return cast(
+        "cx.vecs.LonCosLatSphericalVel", cx.vecs.LonCosLatSphericalVel.from_(obj)
+    )

@@ -72,7 +72,7 @@ def vconvert(
         [1.    2.236 1.107 3.   ]>
 
     """
-    q = cast(AbstractPos3D, api.vconvert(spatial_target, current.q, **kwargs))
+    q = cast("AbstractPos3D", api.vconvert(spatial_target, current.q, **kwargs))
     return replace(current, q=q)
 
 

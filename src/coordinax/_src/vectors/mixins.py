@@ -170,7 +170,9 @@ class IPythonReprMixin:
             keys = [key for key in include if key in SUPPORTED_IPYTHON_REPR_FORMATS]
         else:
             keys = [
-                k for k in SUPPORTED_IPYTHON_REPR_FORMATS if k not in cast(str, exclude)
+                k
+                for k in SUPPORTED_IPYTHON_REPR_FORMATS
+                if k not in cast("str", exclude)
             ]
 
         # Create the MIME bundle

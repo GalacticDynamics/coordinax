@@ -77,7 +77,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         Quantity(Array(1.0003046, dtype=float32), unit='km / s')
 
         """
-        cart_vel = cast(AbstractVel, self.vconvert(self.cartesian_type, q))
+        cart_vel = cast("AbstractVel", self.vconvert(self.cartesian_type, q))
         return cart_vel.norm(q)  # type: ignore[call-arg,misc]
 
 

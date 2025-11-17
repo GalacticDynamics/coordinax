@@ -57,7 +57,7 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
         f"must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
     add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)
-    return cast(AbstractPos, add.vconvert(type(lhs), **lhs._auxiliary_data))
+    return cast("AbstractPos", add.vconvert(type(lhs), **lhs._auxiliary_data))
 
 
 # ------------------------------------------------
@@ -129,7 +129,7 @@ def eq_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> Array:
 
     """
     # Convert to the same type (left-hand side)
-    rhs = cast(AbstractPos, rhs.vconvert(type(lhs)))
+    rhs = cast("AbstractPos", rhs.vconvert(type(lhs)))
     # Check if the two positions are equal. This directly calls the appropriate
     # primitive, bypassing this dispatch to avoid infinite recursion.
     return eq_p_absvecs(lhs, rhs)
@@ -225,8 +225,8 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     )
 
     rc = rhs.vconvert(cart_cls)
-    nr = cast(AbstractPos, qlax.mul(lhs, rc))  # type: ignore[arg-type]
-    return cast(AbstractPos, nr.vconvert(type(rhs)))
+    nr = cast("AbstractPos", qlax.mul(lhs, rc))  # type: ignore[arg-type]
+    return cast("AbstractPos", nr.vconvert(type(rhs)))
 
 
 @register(jax.lax.mul_p)
@@ -248,7 +248,7 @@ def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
         [2 4 6]>
 
     """
-    return cast(AbstractPos, qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # re-dispatch on the other side
+    return cast("AbstractPos", qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # re-dispatch on the other side
 
 
 @register(jax.lax.mul_p)
@@ -376,4 +376,4 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # is a safe default. We restore aux data from the lhs.
     cart_cls = lhs.cartesian_type
     diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)
-    return cast(AbstractPos, diff.vconvert(type(lhs), **lhs._auxiliary_data))
+    return cast("AbstractPos", diff.vconvert(type(lhs), **lhs._auxiliary_data))

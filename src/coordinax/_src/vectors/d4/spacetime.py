@@ -211,7 +211,7 @@ class FourVector(AbstractPos4D):
                 tuple(
                     u.ustrip(v)
                     for v in cast(
-                        list[u.AbstractQuantity],
+                        "list[u.AbstractQuantity]",
                         jnp.broadcast_arrays(self.t, *field_values(AttrFilter, self.q)),
                     )
                 ),

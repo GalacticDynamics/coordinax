@@ -125,7 +125,7 @@ class VelocityBoost(AbstractOperator):
             [1 2 3]>
 
         """
-        return cast(AbstractVel, p + self.velocity)
+        return cast("AbstractVel", p + self.velocity)
 
     # -------------------------------------------
     # Arithmetic operations

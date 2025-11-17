@@ -2,7 +2,7 @@
 
 __all__: tuple[str, ...] = ()
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import jax
 from jaxtyping import Array, Bool
@@ -12,7 +12,9 @@ import quaxed.numpy as jnp
 from dataclassish import replace
 
 from .spacetime import FourVector
-from coordinax._src.vectors.d3 import AbstractPos3D
+
+if TYPE_CHECKING:
+    import coordinax  # noqa: ICN001
 
 
 @register(jax.lax.add_p)
@@ -32,7 +34,11 @@ def add_p_4vs(self: FourVector, other: FourVector, /) -> FourVector:
         [3 5 7 9]>
 
     """
-    return replace(self, t=self.t + other.t, q=cast(AbstractPos3D, self.q + other.q))
+    return replace(
+        self,
+        t=self.t + other.t,
+        q=cast("coordinax.vecs.AbstractPos3D", self.q + other.q),
+    )
 
 
 @register(jax.lax.broadcast_in_dim_p)
@@ -44,7 +50,7 @@ def broadcast_in_dim_p_4v(
     return replace(
         obj,
         t=jnp.broadcast_to(obj.t, batch),
-        q=cast(AbstractPos3D, jnp.broadcast_to(obj.q, (*batch, 3))),  # type: ignore[arg-type]
+        q=cast("coordinax.vecs.AbstractPos3D", jnp.broadcast_to(obj.q, (*batch, 3))),  # type: ignore[arg-type]
     )
 
 
@@ -83,7 +89,7 @@ def neg_p_4v(self: FourVector, /) -> FourVector:
         [-1 -1 -2 -3]>
 
     """
-    return replace(self, t=-self.t, q=cast(AbstractPos3D, -self.q))
+    return replace(self, t=-self.t, q=cast("coordinax.vecs.AbstractPos3D", -self.q))
 
 
 @register(jax.lax.sub_p)
@@ -103,4 +109,6 @@ def sub_p_4v_4v(lhs: FourVector, rhs: FourVector, /) -> FourVector:
         [-1 -3 -3 -3]>
 
     """
-    return replace(lhs, t=lhs.t - rhs.t, q=cast(AbstractPos3D, lhs.q - rhs.q))
+    return replace(
+        lhs, t=lhs.t - rhs.t, q=cast("coordinax.vecs.AbstractPos3D", lhs.q - rhs.q)
+    )

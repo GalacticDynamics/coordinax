@@ -1,4 +1,3 @@
-# ruff: noqa: ERA001
 """Galilean coordinate transformations."""
 
 __all__ = ["GalileanTranslation"]
@@ -138,7 +137,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         )
 
         """
-        delta_q = cast(AbstractPos3D, -self.delta_q)
+        delta_q = cast("AbstractPos3D", -self.delta_q)
         return GalileanTranslation(-self.delta_t, delta_q)
 
     # -------------------------------------------

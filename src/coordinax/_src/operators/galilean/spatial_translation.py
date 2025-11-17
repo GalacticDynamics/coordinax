@@ -1,4 +1,3 @@
-# ruff: noqa: ERA001
 """Galilean coordinate transformations."""
 
 __all__ = ["GalileanSpatialTranslation"]
@@ -41,11 +40,11 @@ def converter(x: Any) -> AbstractPos:
         shape: tuple[int, ...] = x.shape
         match shape:
             case (1,):
-                out = cast(AbstractPos, CartesianPos1D.from_(x))
+                out = cast("AbstractPos", CartesianPos1D.from_(x))
             case (2,):
-                out = cast(AbstractPos, CartesianPos2D.from_(x))
+                out = cast("AbstractPos", CartesianPos2D.from_(x))
             case (3,):
-                out = cast(AbstractPos, CartesianPos3D.from_(x))
+                out = cast("AbstractPos", CartesianPos3D.from_(x))
             case _:
                 msg = f"Cannot convert {x} to a spatial translation vector."
                 raise TypeError(msg)
@@ -275,7 +274,7 @@ def call(self: GalileanSpatialTranslation, q: AbstractPos, /, **__: Any) -> Abst
         [2 3 4]>
 
     """
-    return cast(AbstractPos, q + self.delta_q)
+    return cast("AbstractPos", q + self.delta_q)
 
 
 @AbstractOperator.__call__.dispatch

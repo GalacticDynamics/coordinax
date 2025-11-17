@@ -1,5 +1,4 @@
 """Galilean coordinate transformations."""
-# ruff: noqa: N806
 
 __all__ = ["GalileanRotation"]
 

@@ -3,16 +3,18 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from plum import dispatch
 
 import quaxed.numpy as jnp
-import unxt as u
 
 from coordinax._src.vectors.collection import KinematicSpace
 from coordinax._src.vectors.d3 import CylindricalPos, CylindricalVel
 from coordinax._src.vectors.dn import PoincarePolarVector
+
+if TYPE_CHECKING:
+    import unxt  # noqa: ICN001
 
 
 @dispatch  # TODO: KinematicSpace[CylindricalPos] -- plum#212
@@ -53,7 +55,7 @@ def vconvert(target: type[KinematicSpace], w: PoincarePolarVector, /) -> Kinemat
     })
 
     """
-    phi = cast(u.AbstractQuantity, jnp.atan2(w.dt_pp_phi, w.pp_phi))
+    phi = cast("unxt.AbstractQuantity", jnp.atan2(w.dt_pp_phi, w.pp_phi))
     dt_phi = (w.pp_phi**2 + w.dt_pp_phi**2) / 2 / w.rho**2  # TODO: note the abs
 
     return KinematicSpace(

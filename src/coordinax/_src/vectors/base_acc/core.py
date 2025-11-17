@@ -82,7 +82,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         """
         cart_cls = self.cartesian_type
-        cart_acc = cast(AbstractAcc, self.vconvert(cart_cls, p, q))
+        cart_acc = cast("AbstractAcc", self.vconvert(cart_cls, p, q))
         return cart_acc.norm(p, q)
 
 

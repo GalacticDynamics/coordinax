@@ -138,7 +138,7 @@ def mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
         lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
     )
     # Scale the radial distance
-    return replace(rhs, r=cast(u.AbstractQuantity, lhs * rhs.r))
+    return replace(rhs, r=cast("u.AbstractQuantity", lhs * rhs.r))
 
 
 @register(jax.lax.mul_p)

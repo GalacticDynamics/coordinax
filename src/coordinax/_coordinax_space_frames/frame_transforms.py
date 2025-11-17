@@ -1,5 +1,4 @@
 """Astronomy reference frames."""
-# ruff:noqa: N806
 
 __all__: tuple[str, ...] = ()
 
