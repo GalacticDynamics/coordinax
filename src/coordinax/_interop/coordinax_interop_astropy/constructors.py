@@ -244,10 +244,10 @@ def vector(obj: apyc.SphericalCosLatDifferential, /) -> cx.vecs.LonCosLatSpheric
 
 
 @dispatch
-def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereVel:
+def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereLonLatVel:
     """Construct from a `astropy.coordinates.UnitSphericalDifferential`.
 
-    This re-dispatches to :meth:`coordinax.vecs.TwoSphereVel.from_`.
+    This re-dispatches to :meth:`coordinax.vecs.TwoSphereLonLatVel.from_`.
 
     Examples
     --------
@@ -258,11 +258,35 @@ def vector(obj: apyc.UnitSphericalDifferential) -> cx.vecs.TwoSphereVel:
     >>> dsph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
     >>> vel = cx.vector(dsph)
     >>> print(vel)
-    <TwoSphereVel: (theta, phi) [deg / s]
-        [2. 3.]>
+    <TwoSphereLonLatVel: (lon, lat) [deg / s]
+        [3. 2.]>
 
     """
-    return vector(cx.vecs.TwoSphereVel, obj)
+    return vector(cx.vecs.TwoSphereLonLatVel, obj)
+
+
+@dispatch
+def vector(obj: apyc.UnitSphericalCosLatDifferential) -> cx.vecs.TwoSphereLonCosLatVel:
+    """Construct from a `astropy.coordinates.UnitSphericalCosLatDifferential`.
+
+    This re-dispatches to :meth:`coordinax.vecs.TwoSphereLonCosLatVel.from_`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import UnitSphericalCosLatDifferential
+
+    >>> dsph = UnitSphericalCosLatDifferential(
+    ...     d_lon_coslat=3 * u.deg/u.s, d_lat=2 * u.deg/u.s
+    ... )
+    >>> vel = cx.vector(dsph)
+    >>> print(vel)
+    <TwoSphereLonCosLatVel: (lon_coslat, lat) [deg / s]
+        [3. 2.]>
+
+    """
+    return vector(cx.vecs.TwoSphereLonCosLatVel, obj)
 
 
 # ============================================================================
@@ -365,8 +389,8 @@ def vector(
 
 @dispatch
 def vector(
-    cls: type[cx.vecs.TwoSpherePos], obj: apyc.BaseRepresentation, /
-) -> cx.vecs.TwoSpherePos:
+    cls: type[cx.vecs.TwoSphereLonLatPos], obj: apyc.BaseRepresentation, /
+) -> cx.vecs.TwoSphereLonLatPos:
     """Construct from a `astropy.coordinates.BaseRepresentation`.
 
     Examples
@@ -376,14 +400,14 @@ def vector(
     >>> from astropy.coordinates import UnitSphericalRepresentation
 
     >>> sph = UnitSphericalRepresentation(lon=3 * u.deg, lat=2 * u.deg)
-    >>> vec = cx.vecs.TwoSpherePos.from_(sph)
+    >>> vec = cx.vecs.TwoSphereLonLatPos.from_(sph)
     >>> print(vec)
-    <TwoSpherePos: (theta, phi) [deg]
-        [2. 3.]>
+    <TwoSphereLonLatPos: (lon, lat) [deg]
+        [3. 2.]>
 
     """
     obj = obj.represent_as(apyc.UnitSphericalRepresentation)
-    return cls(phi=obj.lon, theta=obj.lat)
+    return cls(lon=obj.lon, lat=obj.lat)
 
 
 @dispatch
@@ -401,8 +425,7 @@ def vector(
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> dif = cx.CartesianVel3D.from_(dcart)
     >>> print(vec)
-    <TwoSpherePos: (theta, phi) [deg]
-        [2. 3.]>
+    # TODO
 
     """
     return cls(x=obj.d_x, y=obj.d_y, z=obj.d_z)
@@ -504,8 +527,8 @@ def vector(
 
 @dispatch
 def vector(
-    cls: type[cx.vecs.TwoSphereVel], obj: apyc.UnitSphericalDifferential, /
-) -> cx.vecs.TwoSphereVel:
+    cls: type[cx.vecs.TwoSphereLonLatVel], obj: apyc.UnitSphericalDifferential, /
+) -> cx.vecs.TwoSphereLonLatVel:
     """Construct from a `astropy.coordinates.BaseDifferential`.
 
     Examples
@@ -515,13 +538,37 @@ def vector(
     >>> from astropy.coordinates import UnitSphericalDifferential
 
     >>> sph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
-    >>> vec = cx.vecs.TwoSphereVel.from_(sph)
+    >>> vec = cx.vecs.TwoSphereLonLatVel.from_(sph)
     >>> print(vec)
-    <TwoSphereVel: (theta, phi) [deg / s]
-        [2. 3.]>
+    <TwoSphereLonLatVel: (lon, lat) [deg / s]
+        [3. 2.]>
 
     """
-    return cls(phi=obj.d_lon, theta=obj.d_lat)
+    return cls(lon=obj.d_lon, lat=obj.d_lat)
+
+
+@dispatch
+def vector(
+    cls: type[cx.vecs.TwoSphereLonCosLatVel],
+    obj: apyc.UnitSphericalCosLatDifferential,
+    /,
+) -> cx.vecs.TwoSphereLonCosLatVel:
+    """Construct from a `astropy.coordinates.BaseDifferential`.
+
+    Examples
+    --------
+    >>> import astropy.units as u
+    >>> import coordinax as cx
+    >>> from astropy.coordinates import UnitSphericalDifferential
+
+    >>> sph = UnitSphericalDifferential(d_lon=3 * u.deg/u.s, d_lat=2 * u.deg/u.s)
+    >>> vec = cx.vecs.TwoSphereLonCosLatVel.from_(sph)
+    >>> print(vec)
+    <TwoSphereLonCosLatVel: (lon_coslat, lat) [deg / s]
+        [3. 2.]>
+
+    """
+    return cls(lon_coslat=obj.d_lon_coslat, lat=obj.d_lat)
 
 
 #####################################################################

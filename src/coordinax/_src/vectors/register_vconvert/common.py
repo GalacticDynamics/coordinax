@@ -117,6 +117,7 @@ def vconvert(
     (type[d2.CartesianPos2D], type[d2.CartesianPos2D], ct.ParamsDict),
     (type[d2.PolarPos], type[d2.PolarPos], ct.ParamsDict),
     (type[d2.TwoSpherePos], type[d2.TwoSpherePos], ct.ParamsDict),
+    (type[d2.TwoSphereLonLatPos], type[d2.TwoSphereLonLatPos], ct.ParamsDict),
     (type[d3.CartesianPos3D], type[d3.CartesianPos3D], ct.ParamsDict),
     (type[d3.CylindricalPos], type[d3.CylindricalPos], ct.ParamsDict),
     (type[d3.SphericalPos], type[d3.SphericalPos], ct.ParamsDict),
@@ -130,6 +131,8 @@ def vconvert(
     (type[d2.CartesianVel2D], type[d2.CartesianVel2D], ct.ParamsDict),
     (type[d2.PolarVel], type[d2.PolarVel], ct.ParamsDict),
     (type[d2.TwoSphereVel], type[d2.TwoSphereVel], ct.ParamsDict),
+    (type[d2.TwoSphereLonLatVel], type[d2.TwoSphereLonLatVel], ct.ParamsDict),
+    (type[d2.TwoSphereLonCosLatVel], type[d2.TwoSphereLonCosLatVel], ct.ParamsDict),
     (type[d3.CartesianVel3D], type[d3.CartesianVel3D], ct.ParamsDict),
     (type[d3.CylindricalVel], type[d3.CylindricalVel], ct.ParamsDict),
     (type[d3.SphericalVel], type[d3.SphericalVel], ct.ParamsDict),
@@ -231,6 +234,7 @@ def vconvert(
     (type[d2.CartesianPos2D], d2.CartesianPos2D),
     (type[d2.PolarPos], d2.PolarPos),
     (type[d2.TwoSpherePos], d2.TwoSpherePos),
+    (type[d2.TwoSphereLonLatPos], d2.TwoSphereLonLatPos),
     (type[d3.CartesianPos3D], d3.CartesianPos3D),
     (type[d3.CylindricalPos], d3.CylindricalPos),
     (type[d3.SphericalPos], d3.SphericalPos),
@@ -250,6 +254,8 @@ def vconvert(
     (type[d2.PolarVel], d2.PolarVel),
     (type[d2.TwoSphereVel], d2.TwoSphereVel, d2.AbstractPos2D),
     (type[d2.TwoSphereVel], d2.TwoSphereVel),  # q not needed
+    (type[d2.TwoSphereLonLatVel], d2.TwoSphereLonLatVel, d2.AbstractPos2D),
+    (type[d2.TwoSphereLonLatVel], d2.TwoSphereLonLatVel),  # q not needed
     (type[d3.CartesianVel3D], d3.CartesianVel3D, AbstractPos),
     (type[d3.CartesianVel3D], d3.CartesianVel3D),  # q not needed
     (type[d3.CylindricalVel], d3.CylindricalVel, AbstractPos),

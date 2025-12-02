@@ -44,6 +44,10 @@ __all__ = (
     "TwoSpherePos",
     "TwoSphereVel",
     "TwoSphereAcc",
+    "TwoSphereLonLatPos",
+    "TwoSphereLonLatVel",
+    "TwoSphereLonLatAcc",
+    "TwoSphereLonCosLatVel",
     # Polar
     "PolarPos",
     "PolarVel",
@@ -155,6 +159,10 @@ with install_import_hook("coordinax.vecs"):
         PolarPos,
         PolarVel,
         TwoSphereAcc,
+        TwoSphereLonCosLatVel,
+        TwoSphereLonLatAcc,
+        TwoSphereLonLatPos,
+        TwoSphereLonLatVel,
         TwoSpherePos,
         TwoSphereVel,
     )
