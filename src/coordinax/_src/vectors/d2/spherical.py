@@ -1,6 +1,14 @@
 """Built-in vector classes."""
 
-__all__ = ("TwoSphereAcc", "TwoSpherePos", "TwoSphereVel")
+__all__ = (
+    "TwoSphereAcc",
+    "TwoSpherePos",
+    "TwoSphereVel",
+    "TwoSphereLonLatAcc",
+    "TwoSphereLonLatPos",
+    "TwoSphereLonLatVel",
+    "TwoSphereLonCosLatVel",
+)
 
 from typing import final
 
@@ -14,6 +22,9 @@ from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from coordinax._src.angles import BatchableAngle
 from coordinax._src.vectors.checks import check_polar_range
 from coordinax._src.vectors.converters import converter_azimuth_to_range
+
+_n90 = u.Angle(-90, "deg")
+_p90 = u.Angle(90, "deg")
 
 
 @final
@@ -182,3 +193,213 @@ class TwoSphereAcc(AbstractAcc2D):
         converter=u.Quantity["angular acceleration"].from_
     )
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
+
+
+@final
+class TwoSphereLonLatPos(AbstractPos2D):
+    r"""Pos on the 2-Sphere.
+
+    The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
+    It is a two-dimensional surface embedded in three-dimensional space, defined
+    by the set of all points at a unit distance from a central point.
+    Mathematically, this is:
+
+    $$ S^2 = \{ \mathbf{x} \in \mathbb{R}^3 |  \|\mathbf{x}\| = 1 \}. $$
+
+    Parameters
+    ----------
+    lon
+        Longitude angle [0, 360] [deg] where 0 is the x-axis.
+    lat
+        Latitude angle [-90, 90] [deg] where 0 is the equator.
+
+    See Also
+    --------
+    `coordinax.vecs.TwoSpherePos`
+        The counterpart in colatitude/azimuth coordinates.
+    `coordinax.vecs.SphericalPos`
+        The counterpart in $R^3$, adding the polar distance coordinate $r$.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    We can construct a 2-spherical coordinate:
+
+    >>> s2 = cx.vecs.TwoSphereLonLatPos(lon=u.Quantity(0, "deg"),
+    ...                                 lat=u.Quantity(0, "deg"))
+
+    This coordinate has corresponding velocity class:
+
+    >>> s2.time_derivative_cls
+    <class 'coordinax...TwoSphereLonLatVel'>
+
+    """
+
+    lon: BatchableAngle = eqx.field(
+        converter=Unless(
+            u.Angle, lambda x: converter_azimuth_to_range(u.Angle.from_(x))
+        )
+    )
+    r"""Longitude angle lon in [0,360] deg."""
+
+    lat: BatchableAngle = eqx.field(converter=u.Angle.from_)
+    r"""Latitude angle lat in [-90,90] deg."""
+
+    def __check_init__(self) -> None:
+        """Check the validity of the initialization."""
+        check_polar_range(self.lat, _n90, _p90)
+
+
+@final
+class TwoSphereLonLatVel(AbstractVel2D):
+    r"""Vel on the 2-Sphere.
+
+    The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
+    It is a two-dimensional surface embedded in three-dimensional space, defined
+    by the set of all points at a unit distance from a central point.
+    Mathematically, this is:
+
+    $$ S^2 = \{ \mathbf{x} \in \mathbb{R}^3 |  \|\mathbf{x}\| = 1 \}. $$
+
+    Parameters
+    ----------
+    lon
+        Longitude speed $`d\lon/dt \in [-\infty, \infty]$.
+    lat
+        Latitude speed $d\lat/dt \in [-\infty, \infty]$.
+
+    See Also
+    --------
+    `coordinax.vecs.SphericalVel`
+        The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    We can construct a 2-spherical velocity:
+
+    >>> s2 = cx.vecs.TwoSphereLonLatVel(lon=u.Quantity(0, "deg/s"),
+    ...                                 lat=u.Quantity(2, "deg/s"))
+
+    This coordinate has corresponding position and acceleration class:
+
+    >>> s2.time_antiderivative_cls
+    <class 'coordinax...TwoSphereLonLatPos'>
+
+    >>> s2.time_derivative_cls
+    <class 'coordinax...TwoSphereLonLatAcc'>
+
+    """
+
+    lon: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    r"""Longitude speed :math:`d\lon/dt \in [-\infty, \infty]."""
+
+    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    r"""Latitude speed :math:`d\lat/dt \in [-\infty, \infty]."""
+
+
+@final
+class TwoSphereLonLatAcc(AbstractAcc2D):
+    r"""Vel on the 2-Sphere.
+
+    The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
+    It is a two-dimensional surface embedded in three-dimensional space, defined
+    by the set of all points at a unit distance from a central point.
+    Mathematically, this is:
+
+    $$ S^2 = \{ \mathbf{x} \in \mathbb{R}^3 |  \|\mathbf{x}\| = 1 \}. $$
+
+    Parameters
+    ----------
+    lon
+        Longitude acceleration $`d^2\lon/dt^2 \in [-\infty, \infty]$.
+    lat
+        Latitude acceleration $d^2\lat/dt^2 \in [-\infty, \infty]$.
+
+    See Also
+    --------
+    `coordinax.vecs.SphericalAcc`
+        The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    We can construct a 2-spherical acceleration:
+
+    >>> s2 = cx.vecs.TwoSphereLonLatAcc(lon=u.Quantity(0, "deg/s2"),
+    ...                                 lat=u.Quantity(2, "deg/s2"))
+
+    This coordinate has corresponding velocity class:
+
+    >>> s2.time_antiderivative_cls
+    <class 'coordinax...TwoSphereLonLatVel'>
+
+    """
+
+    lon: ct.BBtAngularAcc = eqx.field(
+        converter=u.Quantity["angular acceleration"].from_
+    )
+    r"""Longitude acceleration :math:`d^2\lon/dt^2 \in [-\infty, \infty]."""
+
+    lat: ct.BBtAngularAcc = eqx.field(
+        converter=u.Quantity["angular acceleration"].from_
+    )
+    r"""Latitude acceleration :math:`d^2\lat/dt^2 \in [-\infty, \infty]."""
+
+
+@final
+class TwoSphereLonCosLatVel(AbstractVel2D):
+    r"""Vel on the 2-Sphere where the longitude component is scaled by cos(latitude).
+
+    The space of coordinates on the unit sphere is called the 2-sphere or $S^2$.
+    It is a two-dimensional surface embedded in three-dimensional space, defined
+    by the set of all points at a unit distance from a central point.
+    Mathematically, this is:
+
+    $$ S^2 = \{ \mathbf{x} \in \mathbb{R}^3 |  \|\mathbf{x}\| = 1 \}. $$
+
+    Parameters
+    ----------
+    lon_coslat
+        Longitude * cos(Latitude) speed $`d\lon/dt \in [-\infty, \infty]$.
+    lat
+        Latitude speed $d\lat/dt \in [-\infty, \infty]$.
+
+    See Also
+    --------
+    `coordinax.vecs.SphericalVel`
+        The counterpart in $R^3$, adding the polar distance coordinate $d_r$.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    We can construct a 2-spherical velocity:
+
+    >>> s2 = cx.vecs.TwoSphereLonCosLatVel(lon_coslat=u.Quantity(0, "deg/s"),
+    ...                                    lat=u.Quantity(2, "deg/s"))
+
+    This coordinate has corresponding position and acceleration class:
+
+    >>> s2.time_antiderivative_cls
+    <class 'coordinax...TwoSphereLonLatPos'>
+
+    >>> s2.time_derivative_cls
+    <class 'coordinax...TwoSphereLonLatAcc'>
+
+    """
+
+    lon_coslat: ct.BBtAngularSpeed = eqx.field(
+        converter=u.Quantity["angular speed"].from_
+    )
+    r"""Longitude * cos(Latitude) speed :math:`d\lon/dt \in [-\infty, \infty]."""
+
+    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    r"""Latitude speed :math:`d\lat/dt \in [-\infty, \infty]."""
