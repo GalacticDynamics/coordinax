@@ -15,7 +15,7 @@ from coordinax._src.vectors.base import AbstractVector
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)  # type: ignore[misc,call-overload]
+@dispatch(precedence=1)  # type: ignore[call-overload, untyped-decorator]
 def fields(obj: KinematicSpace, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
     """Return the items from a Space.
 
@@ -41,7 +41,7 @@ def fields(obj: KinematicSpace, /) -> tuple[Field, ...]:  # type: ignore[type-ar
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)  # type: ignore[misc,call-overload]
+@dispatch(precedence=1)  # type: ignore[call-overload, untyped-decorator]
 def field_keys(obj: KinematicSpace, /) -> KeysView[str]:
     """Return the keys from a Space.
 
@@ -65,7 +65,7 @@ def field_keys(obj: KinematicSpace, /) -> KeysView[str]:
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)  # type: ignore[misc,call-overload]
+@dispatch(precedence=1)  # type: ignore[call-overload, untyped-decorator]
 def field_values(obj: KinematicSpace, /) -> ValuesView[AbstractVector]:
     """Return the values from a Space.
 
@@ -89,7 +89,7 @@ def field_values(obj: KinematicSpace, /) -> ValuesView[AbstractVector]:
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)  # type: ignore[misc,call-overload]
+@dispatch(precedence=1)  # type: ignore[call-overload, untyped-decorator]
 def field_items(obj: KinematicSpace, /) -> ItemsView[str, AbstractVector]:
     """Return the items from a Space.
 
@@ -115,7 +115,7 @@ def field_items(obj: KinematicSpace, /) -> ItemsView[str, AbstractVector]:
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `replace` dispatch table.
-@dispatch(precedence=1)  # type: ignore[misc,call-overload]
+@dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def replace(obj: KinematicSpace, /, **kwargs: AbstractVector) -> KinematicSpace:
     """Replace the components of the vector.
 

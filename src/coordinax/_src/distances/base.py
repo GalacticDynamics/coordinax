@@ -32,7 +32,7 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
         Distance(Array(1., dtype=float32, ...), unit='kpc')
 
         """
-        from coordinax.distance import Distance
+        from coordinax.distance import Distance  # noqa: PLC0415
 
         return Distance.from_(self)
 
@@ -56,7 +56,7 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
         DistanceModulus(Array(10., dtype=float32), unit='mag')
 
         """
-        from coordinax.distance import DistanceModulus
+        from coordinax.distance import DistanceModulus  # noqa: PLC0415
 
         return DistanceModulus.from_(self)
 
@@ -85,7 +85,7 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
         True
 
         """
-        from coordinax.angle import Parallax
+        from coordinax.angle import Parallax  # noqa: PLC0415
 
         return Parallax.from_(self)
 

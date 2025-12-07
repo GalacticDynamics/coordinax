@@ -65,7 +65,7 @@ class MathSphericalPos(AbstractSphericalPos):
 
     @override
     @ft.partial(eqx.filter_jit)
-    def norm(self) -> BatchableDistance:
+    def norm(self, /) -> BatchableDistance:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples

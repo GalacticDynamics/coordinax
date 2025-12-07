@@ -24,8 +24,7 @@ def broadcast_in_dim_p_space(  # TODO: KinematicSpace[PosT] -- plum#212
     return replace(
         obj,
         **{
-            k: jnp.broadcast_to(v, (*batch, v.aval().shape[-1]))  # type: ignore[arg-type]
-            for k, v in obj.items()
+            k: jnp.broadcast_to(v, (*batch, v.aval().shape[-1])) for k, v in obj.items()
         },
     )
 

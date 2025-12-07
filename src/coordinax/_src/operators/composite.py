@@ -63,11 +63,11 @@ class AbstractCompositeOperator(AbstractOperator):
         Pipe(( GalileanBoost(...), GalileanSpatialTranslation(...) ))
 
         """
-        from .pipe import Pipe
+        from .pipe import Pipe  # noqa: PLC0415
 
         return Pipe(tuple(op.inverse for op in reversed(self.operators)))
 
-    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[misc]
+    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[untyped-decorator]
     def __call__(
         self: "AbstractCompositeOperator", *args: object, **kwargs: Any
     ) -> tuple[object, ...]:
@@ -114,7 +114,7 @@ class AbstractCompositeOperator(AbstractOperator):
 # Call dispatches
 
 
-@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[misc]
+@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[untyped-decorator]
 def call(
     self: AbstractCompositeOperator, x: AbstractVectorLike, /, **kwargs: Any
 ) -> AbstractVectorLike:

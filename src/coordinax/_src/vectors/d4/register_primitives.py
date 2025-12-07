@@ -50,7 +50,7 @@ def broadcast_in_dim_p_4v(
     return replace(
         obj,
         t=jnp.broadcast_to(obj.t, batch),
-        q=cast("coordinax.vecs.AbstractPos3D", jnp.broadcast_to(obj.q, (*batch, 3))),  # type: ignore[arg-type]
+        q=cast("coordinax.vecs.AbstractPos3D", jnp.broadcast_to(obj.q, (*batch, 3))),
     )
 
 
@@ -71,7 +71,7 @@ def _eq_4v_4v(lhs: FourVector, rhs: FourVector, /) -> Bool[Array, "..."]:
     Array([False, False], dtype=bool)
 
     """
-    return jnp.logical_and(jnp.equal(lhs.q, rhs.q), jnp.equal(lhs.t, rhs.t))  # type: ignore[arg-type]
+    return jnp.logical_and(jnp.equal(lhs.q, rhs.q), jnp.equal(lhs.t, rhs.t))
 
 
 @register(jax.lax.neg_p)

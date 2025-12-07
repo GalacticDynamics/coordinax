@@ -73,7 +73,7 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPos3D | None = None, /) -> ct.BBtSpeed:
+    def norm(self, _: AbstractPos3D | None = None, /) -> ct.BBtSpeed:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples
