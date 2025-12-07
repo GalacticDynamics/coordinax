@@ -102,7 +102,7 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractVel2D | None = None, /) -> ct.BBtAcc:  # type: ignore[override]
+    def norm(self, _: AbstractVel2D | None = None, /) -> ct.BBtAcc:  # type: ignore[misc, override]
         """Return the norm of the vector.
 
         Examples

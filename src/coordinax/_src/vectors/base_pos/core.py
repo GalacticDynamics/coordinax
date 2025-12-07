@@ -124,7 +124,7 @@ class AbstractPos(
     # Convenience methods
 
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BBtScalarQ:
+    def norm(self, /) -> BBtScalarQ:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Returns

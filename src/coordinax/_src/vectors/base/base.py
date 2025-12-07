@@ -3,7 +3,7 @@
 __all__ = ("AbstractVectorLike", "is_vectorlike")
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, NoReturn, TypeGuard, TypeVar
+from typing import TYPE_CHECKING, Any, NoReturn, TypeGuard, TypeVar, cast
 
 import jax
 import quax_blocks
@@ -438,7 +438,7 @@ class AbstractVectorLike(
         if type(other) is not type(self):
             return NotImplemented
 
-        return jnp.equal(self, other)  # type: ignore[arg-type]
+        return jnp.equal(self, cast("AbstractVectorLike", other))
 
     # ---------------------------------
     # methods

@@ -73,7 +73,7 @@ class Cartesian3D(AvalMixin, AbstractVector):
 
     @override
     @property
-    def dimensions(self) -> dict[str, u.dims.AbstractDimension]:  # type: ignore[override]
+    def dimensions(self) -> dict[str, u.dims.AbstractDimension]:
         """Vector physical dimensions.
 
         Examples

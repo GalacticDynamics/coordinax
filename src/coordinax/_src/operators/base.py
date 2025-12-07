@@ -198,7 +198,7 @@ class AbstractOperator(eqx.Module):
         Pipe((Identity(), GalileanRotation(rotation=i32[3,3]), Identity()))
 
         """
-        from .pipe import Pipe
+        from .pipe import Pipe  # noqa: PLC0415
 
         if isinstance(other, Pipe):
             return other.__ror__(self)

@@ -142,7 +142,7 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     # -------------------------------------------
 
-    @AbstractOperator.__call__.dispatch  # type: ignore[misc]
+    @AbstractOperator.__call__.dispatch  # type: ignore[untyped-decorator]
     def __call__(
         self: "GalileanTranslation",
         t: u.Quantity["time"],
@@ -180,7 +180,7 @@ class GalileanTranslation(AbstractGalileanOperator):
         return t + self.delta_t, x + self.delta_q
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[misc]
+@AbstractOperator.from_.dispatch  # type: ignore[untyped-decorator]
 def from_(
     cls: type[GalileanTranslation], delta: u.AbstractQuantity, /
 ) -> GalileanTranslation:

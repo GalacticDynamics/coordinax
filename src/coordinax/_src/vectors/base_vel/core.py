@@ -63,7 +63,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # Convenience methods
 
     @ft.partial(eqx.filter_jit)
-    def norm(self: "AbstractVel", q: AbstractPos, /) -> u.Quantity["speed"]:
+    def norm(self, q: AbstractPos, /) -> u.Quantity["speed"]:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples

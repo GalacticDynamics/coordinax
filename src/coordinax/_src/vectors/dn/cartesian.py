@@ -112,7 +112,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BBtLength:
+    def norm(self, /) -> BBtLength:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples
@@ -210,7 +210,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPosND | None = None, /) -> ct.BBtSpeed:
+    def norm(self, _: AbstractPosND | None = None, /) -> ct.BBtSpeed:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples
@@ -308,7 +308,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(  # type: ignore[override]
+    def norm(  # type: ignore[misc, override]
         self,
         velocity: AbstractVelND | None = None,
         position: AbstractPosND | None = None,

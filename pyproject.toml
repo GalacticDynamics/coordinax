@@ -15,7 +15,6 @@
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
@@ -38,7 +37,7 @@
     "plum-dispatch>=2.5.7",
     "quax>=0.2.1",
     "quax-blocks>=0.4.0",
-    "quaxed>=0.10.2",
+    "quaxed>=0.10.4",
     "typing-extensions>=4.13.2",
     "unxt>=1.7.3",
     "wadler-lindig>=0.1.6",
@@ -87,7 +86,10 @@ build-backend = "hatchling.build"
   lint = [
       "pylint>=3.3.2",
   ]
-  nox = ["nox>=2024.10.9"]
+  nox = [
+    "nox>=2024.10.9",
+    "nox-uv",
+]
   test = [
     "hypothesis[numpy]>=6.112.2",
     "pytest>=8.3.3",
@@ -226,7 +228,7 @@ skip = ["uv.lock"]
     "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available",
     "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
   ]
-  log_cli_level = "INFO"
+  log_level = "INFO"
   minversion = "8.3"
   testpaths = ["README", "src/", "docs/", "tests/"]
   norecursedirs = [

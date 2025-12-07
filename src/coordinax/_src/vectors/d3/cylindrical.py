@@ -46,7 +46,7 @@ class CylindricalPos(AbstractPos3D):
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BBtLength:
+    def norm(self, /) -> BBtLength:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples

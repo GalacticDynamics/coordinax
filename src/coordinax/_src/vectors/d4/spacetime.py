@@ -119,7 +119,7 @@ class FourVector(AbstractPos4D):
     # -------------------------------------------
 
     @ft.partial(eqx.filter_jit, inline=True)
-    def _norm2(self) -> Shaped[u.Quantity["area"], "*#batch"]:
+    def _norm2(self, /) -> Shaped[u.Quantity["area"], "*#batch"]:  # type: ignore[misc]
         r"""Return the squared vector norm :math:`(ct)^2 - (x^2 + y^2 + z^2)`.
 
         Examples
@@ -136,7 +136,7 @@ class FourVector(AbstractPos4D):
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self) -> BBtLength:
+    def norm(self, /) -> BBtLength:  # type: ignore[misc]
         r"""Return the vector norm :math:`\sqrt{(ct)^2 - (x^2 + y^2 + z^2)}`.
 
         Examples
@@ -154,7 +154,7 @@ class FourVector(AbstractPos4D):
 
     @override
     @property
-    def dimensions(self) -> dict[str, u.dims.AbstractDimension]:  # type: ignore[override]
+    def dimensions(self) -> dict[str, u.dims.AbstractDimension]:
         """Vector physical dimensions.
 
         Examples

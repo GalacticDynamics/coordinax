@@ -1,5 +1,4 @@
 version = 1
-revision = 1
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.13'",
@@ -396,6 +395,7 @@ dev = [
     { name = "myst-nb" },
     { name = "myst-parser" },
     { name = "nox" },
+    { name = "nox-uv" },
     { name = "pylint" },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
@@ -440,6 +440,7 @@ lint = [
 ]
 nox = [
     { name = "nox" },
+    { name = "nox-uv" },
 ]
 test = [
     { name = "hypothesis", extra = ["numpy"] },
@@ -473,7 +474,7 @@ requires-dist = [
     { name = "plum-dispatch", specifier = ">=2.5.7" },
     { name = "quax", specifier = ">=0.2.1" },
     { name = "quax-blocks", specifier = ">=0.4.0" },
-    { name = "quaxed", specifier = ">=0.10.2" },
+    { name = "quaxed", specifier = ">=0.10.4" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
     { name = "unxt", specifier = ">=1.7.3" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
@@ -488,6 +489,7 @@ dev = [
     { name = "myst-nb", specifier = ">=1.1.2" },
     { name = "myst-parser", specifier = ">=0.13" },
     { name = "nox", specifier = ">=2024.10.9" },
+    { name = "nox-uv" },
     { name = "pylint", specifier = ">=3.3.2" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
@@ -526,7 +528,10 @@ docs = [
 ]
 ide = [{ name = "ipykernel", specifier = ">=6.29.5" }]
 lint = [{ name = "pylint", specifier = ">=3.3.2" }]
-nox = [{ name = "nox", specifier = ">=2024.10.9" }]
+nox = [
+    { name = "nox", specifier = ">=2024.10.9" },
+    { name = "nox-uv" },
+]
 test = [
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "pytest", specifier = ">=8.3.3" },
@@ -1383,6 +1388,18 @@ wheels = [
 ]
 
 [[package]]
+name = "nox-uv"
+version = "0.6.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nox" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/70/af/ebc522c51facc3b7d26df1c5bc0b72baadb33ce4d539cf66758f22008f6c/nox_uv-0.6.3.tar.gz", hash = "sha256:7940dc4fed7326d00c9687d6dac65d625db21064dd02631af64cfdfa738e817b", size = 4992 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/98/cc/32317fd187febd9b2c5dc6cad4d25b358bd3c289958a00b78d94dbddf481/nox_uv-0.6.3-py3-none-any.whl", hash = "sha256:650cc4dafcde281a77d0526ac9ff9c92de5cd7759ecc9fdbf98393e4ab24490f", size = 5315 },
+]
+
+[[package]]
 name = "numpy"
 version = "2.3.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1931,7 +1948,7 @@ wheels = [
 
 [[package]]
 name = "quaxed"
-version = "0.10.2"
+version = "0.10.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "equinox" },
@@ -1942,9 +1959,9 @@ dependencies = [
     { name = "plum-dispatch" },
     { name = "quax" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/32/3d/79857c170ff6ddfb5fb590a563c93837aa1e2f41c5016ccbc85e8d5c7c7b/quaxed-0.10.2.tar.gz", hash = "sha256:7260533a5212a109bd61d29e7789c5d7bd1fd16a2a1ab0d2d821b47043945c2e", size = 134153 }
+sdist = { url = "https://files.pythonhosted.org/packages/be/10/1a8ad41af9e0cee70cedb6091c274a2c466e28df434248ed8adf5ff19198/quaxed-0.10.4.tar.gz", hash = "sha256:8f12df2fc938e39e2a9b809e660a287c6d26c46c700bfcbb5bc2fbd7f1741924", size = 139122 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5a/09/9a54bd735dfefe7c02577345bd68502a9a8111c9cf41d6816c1dfcffb939/quaxed-0.10.2-py3-none-any.whl", hash = "sha256:b8e6453ada2947c66ae62a1df9e47bcda402961318b5719de7d16d7dfe957f8a", size = 28924 },
+    { url = "https://files.pythonhosted.org/packages/f0/08/04cae4a2357439dbf0f98ceb60855557ed23739f565fbaccbc2e2c93e9ca/quaxed-0.10.4-py3-none-any.whl", hash = "sha256:5153a3aa96969df2c36b6eb31419b794020ecb104202106540020dec0c20b4aa", size = 33943 },
 ]
 
 [[package]]

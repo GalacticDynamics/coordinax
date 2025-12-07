@@ -55,7 +55,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtSpeed:
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtSpeed:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples
@@ -78,7 +78,7 @@ class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
 
     @override
     @ft.partial(eqx.filter_jit, inline=True)
-    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtAcc:  # type: ignore[override]
+    def norm(self, _: AbstractPos1D | None = None, /) -> ct.BBtAcc:  # type: ignore[misc, override]
         """Return the norm of the vector.
 
         Examples
