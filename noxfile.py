@@ -1,9 +1,8 @@
 #!/usr/bin/env -S uv run --script  # noqa: EXE001
 # /// script
-#    dependencies = ["nox"]
+#    dependencies = ["nox", "nox_uv"]
 # ///
-# pylint: disable=import-error
-"""Nox sessions."""
+"""Nox setup."""
 
 import argparse
 import shutil
@@ -12,23 +11,20 @@ from pathlib import Path
 import nox
 from nox_uv import session
 
-DIR = Path(__file__).parent.resolve()
-
 nox.needs_version = ">=2024.3.2"
 nox.options.default_venv_backend = "uv"
 
+DIR = Path(__file__).parent.resolve()
 
 # =============================================================================
 # Linting
 
 
-session(uv_groups=["lint"], reuse_venv=True)
-
-
+@session(uv_groups=["lint"], reuse_venv=True, default=True)
 def lint(s: nox.Session, /) -> None:
     """Run the linter."""
-    precommit(s)  # reuse pre-commit session
-    pylint(s)  # reuse pylint session
+    s.notify("precommit")
+    s.notify("pylint")
 
 
 @session(uv_groups=["lint"], reuse_venv=True)
@@ -40,12 +36,18 @@ def precommit(s: nox.Session, /) -> None:
 @session(uv_groups=["lint"], reuse_venv=True)
 def pylint(s: nox.Session, /) -> None:
     """Run PyLint."""
-    s.install(".", "pylint")
-    s.run("pylint", "quaxed", *s.posargs)
+    s.run("pylint", "coordinax", *s.posargs)
 
 
 # =============================================================================
 # Testing
+
+
+@session(uv_groups=["test"], reuse_venv=True, default=True)
+def test(s: nox.Session, /) -> None:
+    """Run the unit and regular tests."""
+    s.notify("pytest", posargs=s.posargs)
+    # s.notify("benchmark", posargs=s.posargs)
 
 
 @session(uv_groups=["test"], reuse_venv=True)
@@ -54,10 +56,10 @@ def pytest(s: nox.Session, /) -> None:
     s.run("pytest", *s.posargs)
 
 
-@session(uv_groups=["test"], reuse_venv=True)
-def benchmark(s: nox.Session, /) -> None:
-    """Run the benchmarks."""
-    s.run("pytest", "tests/benchmark", "--codspeed", *s.posargs)
+# @session(uv_groups=["test"], reuse_venv=True)
+# def benchmark(s: nox.Session, /) -> None:
+#     """Run the benchmarks."""
+#     s.run("pytest", "tests/benchmark", "--codspeed", *s.posargs)
 
 
 # =============================================================================
@@ -75,24 +77,12 @@ def docs(s: nox.Session, /) -> None:
         default="html",
         help="Build target (default: html)",
     )
-    parser.add_argument("--offline", action="store_true", help="run in offline mode")
     parser.add_argument("--output-dir", dest="output_dir", default="_build")
     args, posargs = parser.parse_known_args(s.posargs)
 
     if args.builder != "html" and args.serve:
         s.error("Must not specify non-HTML builder with --serve")
 
-    offline_command = ["--offline"] if args.offline else []
-
-    s.run_install(
-        "uv",
-        "sync",
-        "--group=docs",
-        f"--python={s.virtualenv.location}",
-        "--active",
-        *offline_command,
-        env={"UV_PROJECT_ENVIRONMENT": s.virtualenv.location},
-    )
     s.chdir("docs")
 
     if args.builder == "linkcheck":
@@ -126,7 +116,6 @@ def docs(s: nox.Session, /) -> None:
 @session(uv_groups=["docs"], reuse_venv=True)
 def build_api_docs(s: nox.Session, /) -> None:
     """Build (regenerate) API docs."""
-    s.install("sphinx")
     s.chdir("docs")
     s.run(
         "sphinx-apidoc",
@@ -148,8 +137,6 @@ def build(s: nox.Session, /) -> None:
     build_path = DIR.joinpath("build")
     if build_path.exists():
         shutil.rmtree(build_path)
-
-    s.install("build")
     s.run("python", "-m", "build")
 
 

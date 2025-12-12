@@ -1,0 +1,306 @@
+# .github/labels.yml
+# Gitmoji labels for GitHub issues and pull requests
+
+- name: "🎨 Improve code structure / format"
+  color: "e3d7ff"
+  description: "Improve structure / format of the code."
+
+- name: "⚡️ Improve performance"
+  color: "fbca04"
+  description: "Improve performance."
+
+- name: "🔥 Remove code or files"
+  color: "d73a4a"
+  description: "Remove code or files."
+
+- name: "🐛 Fix a bug"
+  color: "d73a4a"
+  description: "Fix a bug."
+
+- name: "🚑️ Critical hotfix"
+  color: "b60205"
+  description: "Critical hotfix."
+
+- name: "✨ Introduce new features"
+  color: "0e8a16"
+  description: "Introduce new features."
+
+- name: "📝 Add / update documentation"
+  color: "0075ca"
+  description: "Add or update documentation."
+
+- name: "🚀 Deploy"
+  color: "5319e7"
+  description: "Deploy stuff."
+
+- name: "💄 Add / update UI and styles"
+  color: "f9d0c4"
+  description: "Add or update the UI and style files."
+
+- name: "🎉 Begin a project"
+  color: "0e8a16"
+  description: "Begin a project."
+
+- name: "✅ Add / update / pass tests"
+  color: "0e8a16"
+  description: "Add, update, or pass tests."
+
+- name: "🔒️ Fix security / privacy issues"
+  color: "d73a4a"
+  description: "Fix security or privacy issues."
+
+- name: "🔐 Add / update secrets"
+  color: "d4c5f9"
+  description: "Add or update secrets."
+
+- name: "🔖 Release / version tags"
+  color: "fbca04"
+  description: "Release / Version tags."
+
+- name: "🚨 Fix compiler / linter warnings"
+  color: "fbca04"
+  description: "Fix compiler / linter warnings."
+
+- name: "🚧 Work in progress"
+  color: "fbca04"
+  description: "Work in progress."
+
+- name: "💚 Fix CI build"
+  color: "0e8a16"
+  description: "Fix CI Build."
+
+- name: "⬇️ Downgrade dependencies"
+  color: "0366d6"
+  description: "Downgrade dependencies."
+
+- name: "⬆️ Upgrade dependencies"
+  color: "0366d6"
+  description: "Upgrade dependencies."
+
+- name: "📌 Pin dependencies"
+  color: "0366d6"
+  description: "Pin dependencies to specific versions."
+
+- name: "👷 Add / update CI build system"
+  color: "1d76db"
+  description: "Add or update CI build system."
+
+- name: "📈 Add / update analytics"
+  color: "c5def5"
+  description: "Add or update analytics or track code."
+
+- name: "♻️ Refactor code"
+  color: "e3d7ff"
+  description: "Refactor code."
+
+- name: "➕ Add a dependency"
+  color: "0366d6"
+  description: "Add a dependency."
+
+- name: "➖ Remove a dependency"
+  color: "0366d6"
+  description: "Remove a dependency."
+
+- name: "🔧 Add / update configuration"
+  color: "d4c5f9"
+  description: "Add or update configuration files."
+
+- name: "🔨 Add / update development scripts"
+  color: "bfd4f2"
+  description: "Add or update development scripts."
+
+- name: "🌐 Internationalization / localization"
+  color: "c5def5"
+  description: "Internationalization and localization."
+
+- name: "✏️ Fix typos"
+  color: "ffffff"
+  description: "Fix typos."
+
+- name: "💩 Bad code (needs improvement)"
+  color: "7057ff"
+  description: "Write bad code that needs to be improved."
+
+- name: "⏪️ Revert changes"
+  color: "fbca04"
+  description: "Revert changes."
+
+- name: "🔀 Merge branches"
+  color: "e99695"
+  description: "Merge branches."
+
+- name: "📦️ Add / update packages"
+  color: "bfd4f2"
+  description: "Add or update compiled files or packages."
+
+- name: "👽️ Update due to external API changes"
+  color: "5319e7"
+  description: "Update code due to external API changes."
+
+- name: "🚚 Move / rename resources"
+  color: "e3d7ff"
+  description: "Move or rename resources (e.g.: files, paths, routes)."
+
+- name: "📄 Add / update license"
+  color: "d4c5f9"
+  description: "Add or update license."
+
+- name: "💥 Introduce breaking changes"
+  color: "b60205"
+  description: "Introduce breaking changes."
+
+- name: "🍱 Add / update assets"
+  color: "f9d0c4"
+  description: "Add or update assets."
+
+- name: "♿️ Improve accessibility"
+  color: "c5def5"
+  description: "Improve accessibility."
+
+- name: "💡 Add / update source code comments"
+  color: "fef2c0"
+  description: "Add or update comments in source code."
+
+- name: "🍻 Write code drunkenly"
+  color: "fbca04"
+  description: "Write code drunkenly."
+
+- name: "💬 Add / update text and literals"
+  color: "c5def5"
+  description: "Add or update text and literals."
+
+- name: "🗃️ Database changes"
+  color: "bfdadc"
+  description: "Perform database related changes."
+
+- name: "🔊 Add / update logs"
+  color: "c5def5"
+  description: "Add or update logs."
+
+- name: "🔇 Remove logs"
+  color: "c5def5"
+  description: "Remove logs."
+
+- name: "👥 Add / update contributors"
+  color: "bfdadc"
+  description: "Add or update contributor(s)."
+
+- name: "🚸 Improve UX / usability"
+  color: "fbca04"
+  description: "Improve user experience / usability."
+
+- name: "🏗️ Architectural changes"
+  color: "e3d7ff"
+  description: "Make architectural changes."
+
+- name: "📱 Work on responsive design"
+  color: "f9d0c4"
+  description: "Work on responsive design."
+
+- name: "🤡 Mock things"
+  color: "fef2c0"
+  description: "Mock things."
+
+- name: "🥚 Add / update easter egg"
+  color: "fef2c0"
+  description: "Add or update an easter egg."
+
+- name: "🙈 Add / update .gitignore"
+  color: "d4c5f9"
+  description: "Add or update a .gitignore file."
+
+- name: "📸 Add / update snapshots"
+  color: "bfdadc"
+  description: "Add or update snapshots."
+
+- name: "⚗️ Perform experiments"
+  color: "d876e3"
+  description: "Perform experiments."
+
+- name: "🔍️ Improve SEO"
+  color: "c5def5"
+  description: "Improve SEO."
+
+- name: "🏷️ Add / update types"
+  color: "c5def5"
+  description: "Add or update types."
+
+- name: "🌱 Add / update seed files"
+  color: "0e8a16"
+  description: "Add or update seed files."
+
+- name: "🚩 Add / update / remove feature flags"
+  color: "fbca04"
+  description: "Add, update, or remove feature flags."
+
+- name: "🥅 Catch errors"
+  color: "d73a4a"
+  description: "Catch errors."
+
+- name: "💫 Add / update animations"
+  color: "f9d0c4"
+  description: "Add or update animations and transitions."
+
+- name: "🗑️ Deprecate code"
+  color: "d73a4a"
+  description: "Deprecate code that needs to be cleaned up."
+
+- name: "🛂 Authorization / roles / permissions"
+  color: "d4c5f9"
+  description: "Work on code related to authorization, roles and permissions."
+
+- name: "🩹 Simple fix (non-critical)"
+  color: "d73a4a"
+  description: "Simple fix for a non-critical issue."
+
+- name: "🧐 Data exploration / inspection"
+  color: "c5def5"
+  description: "Data exploration/inspection."
+
+- name: "⚰️ Remove dead code"
+  color: "d73a4a"
+  description: "Remove dead code."
+
+- name: "🧪 Add a failing test"
+  color: "0e8a16"
+  description: "Add a failing test."
+
+- name: "👔 Add / update business logic"
+  color: "1d76db"
+  description: "Add or update business logic."
+
+- name: "🩺 Add / update healthcheck"
+  color: "0e8a16"
+  description: "Add or update healthcheck."
+
+- name: "🧱 Infrastructure changes"
+  color: "bfdadc"
+  description: "Infrastructure related changes."
+
+- name: "🧑‍💻 Improve developer experience"
+  color: "c5def5"
+  description: "Improve developer experience."
+
+- name: "💸 Add sponsorships / financial infrastructure"
+  color: "0e8a16"
+  description: "Add sponsorships or money related infrastructure."
+
+- name: "🧵 Add / update multithreading / concurrency"
+  color: "d876e3"
+  description: "Add or update code related to multithreading or concurrency."
+
+- name: "🦺 Add / update validation"
+  color: "fbca04"
+  description: "Add or update code related to validation."
+
+- name: "✈️ Improve offline support"
+  color: "c5def5"
+  description: "Improve offline support."
+
+- name: "🦖 Add backwards compatibility"
+  color: "0e8a16"
+  description: "Code that adds backwards compatibility."
+
+- name: "⏱️ Run benchmarks"
+  color: "d876e3"
+  description: "Run benchmarks."

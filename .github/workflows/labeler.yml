@@ -1,0 +1,68 @@
+name: Auto-label PRs
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/labeler@v5
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          configuration-path: .github/labeler.yml
+      - name: Label from commit emojis
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // Get repository labels and build emoji-to-label map
+            const { data: repoLabels } = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+
+            const labelMap = {};
+            for (const label of repoLabels) {
+              // Extract the emoji from the label name (first character(s))
+              const match = label.name.match(/^(\p{Emoji}[\u200d\ufe0f]*)/u);
+              if (match) {
+                const emoji = match[1];
+                labelMap[emoji] = label.name;
+              }
+            }
+
+            const { data: commits } = await github.rest.pulls.listCommits({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+            });
+
+            const labelsToAdd = new Set();
+            for (const commit of commits) {
+              const message = commit.commit.message;
+              // Check if message starts with an emoji
+              for (const [emoji, label] of Object.entries(labelMap)) {
+                if (message.startsWith(emoji)) {
+                  labelsToAdd.add(label);
+                  break;
+                }
+              }
+            }
+
+            if (labelsToAdd.size > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: Array.from(labelsToAdd)
+              });
+            }
