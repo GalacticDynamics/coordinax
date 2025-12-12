@@ -88,8 +88,9 @@ build-backend = "hatchling.build"
     "ipykernel>=6.29.5",
   ]
   lint = [
+      "pre-commit>=4.5.0",
       "pylint>=3.3.2",
-  ]
+]
   nox = [
     "nox>=2024.10.9",
     "nox-uv",
