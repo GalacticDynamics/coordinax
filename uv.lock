@@ -505,7 +505,7 @@ requires-dist = [
     { name = "quax-blocks", specifier = ">=0.4.0" },
     { name = "quaxed", specifier = ">=0.10.4" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
-    { name = "unxt", specifier = ">=1.7.3" },
+    { name = "unxt", specifier = ">=1.8.0" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
@@ -2737,7 +2737,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "1.7.3"
+version = "1.8.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -2752,13 +2752,27 @@ dependencies = [
     { name = "quax" },
     { name = "quax-blocks" },
     { name = "quaxed" },
+    { name = "unxt-api" },
     { name = "wadler-lindig" },
     { name = "xmmutablemap" },
     { name = "zeroth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/25/7c/ac52bf66959e67ca6d25d77aa6d4fbea5b4d9f76379fdb443f8c8b26b0bc/unxt-1.7.3.tar.gz", hash = "sha256:24534e90ebbe43ba08fc1b87844af0c83cc5b67a889d5ba0aabdf707ca9c21f2", size = 886633 }
+sdist = { url = "https://files.pythonhosted.org/packages/d4/f5/97d7b4d9e51c2cca69f9fa73ceb9ff6ccc66376f1f93ab2010d3b567bb66/unxt-1.8.1.tar.gz", hash = "sha256:b5c6fe41ee008c6c1ffcf5411b80ffd60d6d3e82edd82e15f586879384297f81", size = 961068 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/a9/119a0dbe680e41d6fa15af5d5ae75ed1291a1643d74f90aa3f2099bee99e/unxt-1.7.3-py3-none-any.whl", hash = "sha256:b6d885cbf361e4116869420e481468d48ea0921c1e004871487093b4865b29d0", size = 74286 },
+    { url = "https://files.pythonhosted.org/packages/9a/24/d1e6539b6f8f47d4aa1280f955dd33783b9baa27fb4349d685d5db88ebb8/unxt-1.8.1-py3-none-any.whl", hash = "sha256:1640a1bd20aa323e432ce01f25b73c99e7b29af18675c7f554f08f07f6ddba1e", size = 73915 },
+]
+
+[[package]]
+name = "unxt-api"
+version = "1.8.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astropy" },
+    { name = "plum-dispatch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5e/50/034a6d8571c060a2d05eacc66abd0d44ee7bd37969fd82d07ab4011ace02/unxt_api-1.8.1.tar.gz", hash = "sha256:e8dd6a5f9846d3d9685218fefa811f1a8b130f016481beaba0fb432e1dc93b6e", size = 19488 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/43/da/616b74161e28e9ed380f2477a6a51ce1ca493aad5df6dedb119483109275/unxt_api-1.8.1-py3-none-any.whl", hash = "sha256:acdb7bf813326db241e3c2bc0342f71148c2767004af590950a42dbbd59f7e15", size = 5477 },
 ]
 
 [[package]]
