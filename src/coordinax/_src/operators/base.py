@@ -123,7 +123,7 @@ class AbstractOperator(eqx.Module):
             if not jnp.all(v == getattr(self.__class__, k, _sentinel))
         ]
         # Make the field docs list
-        if len(fitems) == 1 and kwargs.get("compact_arrays", False):
+        if len(fitems) == 1 and kwargs.get("short_arrays") == "compact":
             docs = [wl.TextDoc(str(fitems[0][1]))]
         else:
             docs = wl.named_objs(fitems, **kwargs)
@@ -173,9 +173,7 @@ class AbstractOperator(eqx.Module):
         )
 
         """
-        return wl.pformat(
-            self, width=88, vector_form=True, short_arrays=False, compact_arrays=True
-        )
+        return wl.pformat(self, width=88, vector_form=True, short_arrays="compact")
 
     # ===========================================
     # Operator Composition
