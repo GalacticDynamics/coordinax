@@ -226,6 +226,7 @@ filterwarnings = [
   "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",               # from Sybil
   "ignore:Attribute s is deprecated and will be removed in Python 3\\.14:DeprecationWarning",             # from Sybil
   "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available",
+  "ignore:jax\\.core\\.get_aval is deprecated:DeprecationWarning",
   "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
 ]
 log_level = "INFO"
