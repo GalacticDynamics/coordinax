@@ -84,7 +84,7 @@ docs = [
 ]
 ide = ["ipykernel>=6.29.5"]
 lint = ["pre-commit>=4.5.0", "pylint>=3.3.2"]
-nox = ["nox>=2024.10.9", "nox-uv"]
+nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
   "hypothesis[numpy]>=6.112.2",
   "pytest>=8.3.3",
@@ -92,7 +92,7 @@ test = [
   "pytest-cov>=6.2.1",
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
-  "sybil>=8.0.0",
+  "sybil[pytest]>=8.0.0",
 ]
 test-all = [{ include-group = "test" }]
 
