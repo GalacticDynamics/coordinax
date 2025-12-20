@@ -300,3 +300,7 @@ known-first-party = [
   "xmmutablemap",
 ]
 known-local-folder = ["coordinax"]
+
+[tool.uv]
+# Temporary constraint to restrict JAX version
+constraint-dependencies = ["numpy<2.4.0"]
