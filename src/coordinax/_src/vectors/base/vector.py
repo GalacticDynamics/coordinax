@@ -374,6 +374,18 @@ class AbstractVector(
         >>> pprint(cx.vecs.TwoSphereAcc.dimensions)
         {'theta': 'angular acceleration', 'phi': 'angular acceleration'}
 
+        >>> pprint(cx.vecs.TwoSphereLonLatPos.dimensions)
+        {'lon': 'angle', 'lat': 'angle'}
+
+        >>> pprint(cx.vecs.TwoSphereLonLatVel.dimensions)
+        {'lon': 'angular frequency', 'lat': 'angular frequency'}
+
+        >>> pprint(cx.vecs.TwoSphereLonLatAcc.dimensions)
+        {'lon': 'angular acceleration', 'lat': 'angular acceleration'}
+
+        >>> pprint(cx.vecs.TwoSphereLonCosLatVel.dimensions)
+        {'lon_coslat': 'angular frequency', 'lat': 'angular frequency'}
+
         >>> pprint(cx.vecs.CartesianPos3D.dimensions)
         {'x': 'length', 'y': 'length', 'z': 'length'}
 

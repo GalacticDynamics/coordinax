@@ -10,6 +10,10 @@ __all__ = (
     "TwoSpherePos",
     "TwoSphereVel",
     "TwoSphereAcc",
+    "TwoSphereLonLatPos",
+    "TwoSphereLonLatVel",
+    "TwoSphereLonLatAcc",
+    "TwoSphereLonCosLatVel",
     # Polar
     "PolarPos",
     "PolarVel",
@@ -23,7 +27,15 @@ __all__ = (
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarAcc, PolarPos, PolarVel
-from .spherical import TwoSphereAcc, TwoSpherePos, TwoSphereVel
+from .spherical import (
+    TwoSphereAcc,
+    TwoSphereLonCosLatVel,
+    TwoSphereLonLatAcc,
+    TwoSphereLonLatPos,
+    TwoSphereLonLatVel,
+    TwoSpherePos,
+    TwoSphereVel,
+)
 
 # isort: split
 from . import (

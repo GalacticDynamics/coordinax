@@ -13,7 +13,14 @@ import coordinax._src.vectors.custom_types as ct
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarAcc, PolarPos, PolarVel
-from .spherical import TwoSphereAcc, TwoSpherePos, TwoSphereVel
+from .spherical import (
+    TwoSphereAcc,
+    TwoSphereLonLatAcc,
+    TwoSphereLonLatPos,
+    TwoSphereLonLatVel,
+    TwoSpherePos,
+    TwoSphereVel,
+)
 from coordinax._src.vectors.private_api import combine_aux, wrap_vconvert_impl_params
 
 ###############################################################################
@@ -146,6 +153,14 @@ def time_derivative_vector_type(
     return TwoSphereVel
 
 
+@dispatch
+def time_derivative_vector_type(
+    obj: type[TwoSphereLonLatPos] | TwoSphereLonLatPos, /
+) -> type[TwoSphereLonLatVel]:
+    """Return the corresponding time derivative class."""
+    return TwoSphereLonLatVel
+
+
 # -----------------------------------------------
 # Velocity -> Position
 
@@ -174,6 +189,14 @@ def time_antiderivative_vector_type(
     return TwoSpherePos
 
 
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[TwoSphereLonLatVel] | TwoSphereLonLatVel, /
+) -> type[TwoSphereLonLatPos]:
+    """Return the corresponding time antiderivative class."""
+    return TwoSphereLonLatPos
+
+
 # -----------------------------------------------
 # Velocity -> Acceleration
 
@@ -198,6 +221,14 @@ def time_derivative_vector_type(
 ) -> type[TwoSphereAcc]:
     """Return the corresponding time derivative class."""
     return TwoSphereAcc
+
+
+@dispatch
+def time_derivative_vector_type(
+    obj: type[TwoSphereLonLatVel] | TwoSphereLonLatVel, /
+) -> type[TwoSphereLonLatAcc]:
+    """Return the corresponding time derivative class."""
+    return TwoSphereLonLatAcc
 
 
 # -----------------------------------------------
@@ -226,3 +257,11 @@ def time_antiderivative_vector_type(
 ) -> type[TwoSphereVel]:
     """Return the corresponding time antiderivative class."""
     return TwoSphereVel
+
+
+@dispatch
+def time_antiderivative_vector_type(
+    obj: type[TwoSphereLonLatAcc] | TwoSphereLonLatAcc, /
+) -> type[TwoSphereLonLatVel]:
+    """Return the corresponding time antiderivative class."""
+    return TwoSphereLonLatVel
