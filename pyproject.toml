@@ -32,7 +32,7 @@ dependencies = [
   "quax-blocks>=0.4.0",
   "quaxed>=0.10.4",
   "typing-extensions>=4.13.2",
-  "unxt>=1.7.3",
+  "unxt>=1.8.0",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
@@ -82,9 +82,9 @@ docs = [
   "sphinxext-opengraph>=0.9.1",
   "sphinxext-rediraffe>=0.2.7",
 ]
-ide = ["ipykernel>=6.29.5"]
+ide = ["ipykernel>=7.1.0"]
 lint = ["pre-commit>=4.5.0", "pylint>=3.3.2"]
-nox = ["nox>=2024.10.9", "nox-uv"]
+nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
   "hypothesis[numpy]>=6.112.2",
   "pytest>=8.3.3",
@@ -92,7 +92,7 @@ test = [
   "pytest-cov>=6.2.1",
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
-  "sybil>=8.0.0",
+  "sybil[pytest]>=8.0.0",
 ]
 test-all = [{ include-group = "test" }]
 
@@ -226,6 +226,7 @@ filterwarnings = [
   "ignore:ast\\.Str is deprecated and will be removed in Python 3\\.14:DeprecationWarning",               # from Sybil
   "ignore:Attribute s is deprecated and will be removed in Python 3\\.14:DeprecationWarning",             # from Sybil
   "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available",
+  "ignore:jax\\.core\\.get_aval is deprecated:DeprecationWarning",
   "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
 ]
 log_level = "INFO"
@@ -235,7 +236,7 @@ norecursedirs = [
   "__pycache__",
   "docs/_build",
 ]
-testpaths = ["README", "src/", "docs/", "tests/"]
+testpaths = ["README", "src/", "docs/", "tests/", "packages/coordinax-api/"]
 xfail_strict = true
 
 [tool.pytest_env]
@@ -300,7 +301,6 @@ known-first-party = [
 ]
 known-local-folder = ["coordinax"]
 
-
 [tool.uv]
 # Temporary constraint to restrict JAX version
-constraint-dependencies = ["jax<0.7", "jaxlib<0.7"]
+constraint-dependencies = ["numpy<2.4.0"]

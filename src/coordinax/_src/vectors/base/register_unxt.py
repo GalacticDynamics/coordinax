@@ -177,7 +177,7 @@ def uconvert(
     units_ = {}
     for k, v in field_items(AttrFilter, vector):
         pt = u.dimension_of(v)
-        if pt not in dim2unit:
+        if pt not in dim2unit:  # pylint: disable=unreachable
             dim2unit[pt] = u.unit_of(v)
         units_[k] = dim2unit[pt]
 

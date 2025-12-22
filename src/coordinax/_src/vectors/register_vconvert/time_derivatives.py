@@ -324,7 +324,7 @@ def vconvert(
     to_pos_cls = to_dif_cls.time_nth_derivative_cls(n=n)
     out_aux = (
         {k: getattr(from_pos, k) for k in to_pos_cls._AUX_FIELDS}
-        if to_pos_cls is type(from_pos)
+        if to_pos_cls is type(from_pos)  # pylint: disable=unidiomatic-typecheck
         else {}
     )
     out_aux |= {k: v for k, v in kwargs.items() if k in to_pos_cls._AUX_FIELDS}
