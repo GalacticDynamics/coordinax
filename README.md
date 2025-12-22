@@ -93,7 +93,7 @@ print(p2)
 # Transforming between frames
 icrs_frame = cx.frames.ICRS()
 gc_frame = cx.frames.Galactocentric()
-op = cxf.frame_transform_op(icrs_frame, gc_frame)
+op = cx.frames.frame_transform_op(icrs_frame, gc_frame)
 q_gc, p_gc = op(q, p)
 print(q_gc, p_gc, sep="\n")
 # <CartesianPos3D: (x, y, z) [kpc]
