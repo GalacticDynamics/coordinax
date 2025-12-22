@@ -1,12 +1,12 @@
 """Test :mod:`coordinax.d2`."""
 
 import pytest
+from test_base import AbstractPosTest, AbstractVelTest
 
 import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax as cx
-from .test_base import AbstractPosTest, AbstractVelTest
 
 
 class AbstractPos2DTest(AbstractPosTest):

@@ -6,12 +6,12 @@ import pytest
 from astropy.coordinates.tests.test_representation import representation_equal
 from astropy.units import Quantity as APYQuantity
 from plum import convert
+from test_base import AbstractPosTest, AbstractVelTest
 
 import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax as cx
-from .test_base import AbstractPosTest, AbstractVelTest
 from coordinax.distance import Distance
 
 
