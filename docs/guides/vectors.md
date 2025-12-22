@@ -121,7 +121,7 @@ once:
 
 ```{code-block} python
 >>> space_sph = space.vconvert(cxv.SphericalPos)
->>> print(space_sph)
+>>> print(space_sph.round(3))
 KinematicSpace({
        'length':
        <SphericalPos: (r[kpc], theta[rad], phi[rad])
@@ -131,7 +131,7 @@ KinematicSpace({
            [ 8.552  0.383 -0.6  ]>,
        'acceleration':
        <SphericalAcc: (r[kpc / Myr2], theta[rad / Myr2], phi[rad / Myr2])
-           [ 3.742e-01 -9.355e-09  1.639e-09]>
+           [ 0.374 -0.     0.   ]>
     })
 ```
 

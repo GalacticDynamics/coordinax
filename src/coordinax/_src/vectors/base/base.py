@@ -176,9 +176,9 @@ class AbstractVectorLike(
 
         >>> v_cart = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
         >>> v_sph = v_cart.vconvert(cxv.SphericalVel, q_cart)
-        >>> print(v_sph)
+        >>> print(v_sph.round(2))
         <SphericalVel: (r[m / s], theta[rad / s], phi[rad / s])
-            [ 3.742e+00 -8.941e-08  0.000e+00]>
+            [ 3.74 -0.    0.  ]>
 
         Transforming an Acceleration:
 
