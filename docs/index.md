@@ -11,6 +11,7 @@ sd_hide_title: true
 
 coordinax-api <packages/coordinax-api/index>
 coordinax <self>
+coordinax-astro <packages/coordinax-astro/index>
 ```
 
 ```{toctree}
@@ -42,6 +43,7 @@ interop/*
 
 coordinax-api <packages/coordinax-api/api>
 coordinax <api/index.md>
+coordinax-astro <packages/coordinax-astro/api>
 ```
 
 ```{toctree}

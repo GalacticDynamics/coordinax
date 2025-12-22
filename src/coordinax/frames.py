@@ -63,6 +63,8 @@ True
 
 """
 
+import sys
+
 from .setup_package import install_import_hook
 
 with install_import_hook("coordinax.frames"):
@@ -80,13 +82,8 @@ with install_import_hook("coordinax.frames"):
         frame_transform_op,
     )
 
-    # Frames from external packages
-    # isort: split
-    from . import _coordinax_space_frames
-    from ._coordinax_space_frames import *  # noqa: F403
 
-
-# Defined here b/c it's mutated by `_coordinax_space_frames`
+# Defined here b/c it's mutated by optional imports
 __all__ = [
     # Frames
     "AbstractReferenceFrame",
@@ -103,7 +100,27 @@ __all__ = [
     "AbstractCoordinate",
     "Coordinate",
 ]
-__all__ += _coordinax_space_frames.__all__
+
+# Try to import astronomy frames - use lazy import to avoid circular dependency
+try:
+    import coordinax_astro as _coordinax_astro
+
+except ImportError:
+    _coordinax_astro = None  # type: ignore[assignment]
+else:
+    __all__ += list(_coordinax_astro.__all__)
+
+
+def __getattr__(name: str, /) -> object:
+    """Lazy import for coordinax_astro frames."""
+    if (_coordinax_astro is None) or (name not in _coordinax_astro.__all__):  # type: ignore[redundant-expr]
+        msg = f"module {__name__!r} has no attribute {name!r}"
+        raise AttributeError(msg)
+
+    obj = getattr(_coordinax_astro, name)  # get from coordinax_astro
+    setattr(sys.modules[__name__], name, obj)  # cache in this module
+    return obj
+
 
 # clean up namespace
-del _coordinax_space_frames, install_import_hook
+del install_import_hook

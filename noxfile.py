@@ -31,6 +31,7 @@ class PackageEnum(StrEnum):
 
     coordinax = auto()
     api = auto()
+    astro = auto()
 
 
 # =============================================================================
@@ -76,6 +77,8 @@ def pylint(s: nox.Session, /, package: PackageEnum) -> None:
             package_path = "src/coordinax"
         case PackageEnum.api:
             package_path = "packages/coordinax-api/"
+        case PackageEnum.astro:
+            package_path = "packages/coordinax-astro/"
         case _:
             assert_never(package)
     s.run("pylint", package_path, *s.posargs)
@@ -98,6 +101,8 @@ def _parse_pytest_paths(package: PackageEnum, /) -> list[str]:
             package_paths = ["README.md", "docs", "src/", "tests/"]
         case PackageEnum.api:
             package_paths = ["packages/coordinax-api/"]
+        case PackageEnum.astro:
+            package_paths = ["packages/coordinax-astro/"]
         case _:
             assert_never(package)
 

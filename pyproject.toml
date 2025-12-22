@@ -45,6 +45,9 @@ name = "coordinax"
 readme = "README.md"
 requires-python = ">=3.11"
 
+[project.optional-dependencies]
+astro = ["coordinax-astro"]
+
 [project.urls]
 "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
 Changelog     = "https://github.com/GalacticDynamics/coordinax/releases"
@@ -99,7 +102,7 @@ test = [
   { include-group = "workspace" },
 ]
 test-all = [{ include-group = "test" }]
-workspace = ["coordinax-api"]
+workspace = ["coordinax-api", "coordinax-astro"]
 
 
 [tool.hatch]
@@ -242,7 +245,14 @@ norecursedirs = [
   "docs/_build",
   "docs/packages", # symlinks to package docs, don't test twice
 ]
-testpaths = ["README", "src/", "docs/", "tests/", "packages/coordinax-api/"]
+testpaths = [
+  "README",
+  "src/",
+  "docs/",
+  "tests/",
+  "packages/coordinax-api/",
+  "packages/coordinax-astro",
+]
 xfail_strict = true
 
 [tool.pytest_env]
