@@ -9,8 +9,8 @@ import equinox as eqx
 from plum import dispatch
 
 import coordinax._src.vectors.custom_types as ct
+import coordinax_api as cxapi
 from coordinax._src.vectors import d1, d2, d3, d4, dn
-from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -64,7 +64,7 @@ def vconvert(
     p = p | p_by_kw
 
     # Convert the parameters, using the auxiliary data
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         target, type(current), p, in_aux=in_aux, out_aux=out_aux, units=units
     )
 
@@ -103,7 +103,7 @@ def vconvert(
         not isinstance(current, from_vector),
         f"{from_vector} expected, got {type(current)}.",
     )
-    return vconvert(to_vector, current, **out_aux)
+    return cxapi.vconvert(to_vector, current, **out_aux)
 
 
 # =============================================================================
@@ -491,7 +491,7 @@ def vconvert(
     units: ct.OptUSys = None,
 ) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """AbstractPos -> CartesianPos1D -> AbstractPos."""
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         from_vector.cartesian_type,
         from_vector,
         params,
@@ -499,7 +499,7 @@ def vconvert(
         out_aux=None,
         units=units,
     )
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         to_vector.cartesian_type,
         from_vector.cartesian_type,
         params,
@@ -507,7 +507,7 @@ def vconvert(
         out_aux=aux,
         units=units,
     )
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         to_vector,
         to_vector.cartesian_type,
         params,

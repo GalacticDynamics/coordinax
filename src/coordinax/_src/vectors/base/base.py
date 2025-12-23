@@ -16,8 +16,8 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items, field_values, replace
 
+import coordinax_api as cxapi
 from .flags import AttrFilter
-from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.utils import full_shaped
 
 if TYPE_CHECKING:
@@ -189,7 +189,7 @@ class AbstractVectorLike(
             [13.363  0.767 -1.2  ]>
 
         """
-        return vconvert(target, self, *args, **kwargs)
+        return cxapi.vconvert(target, self, *args, **kwargs)
 
     # ===============================================================
     # Quantity API

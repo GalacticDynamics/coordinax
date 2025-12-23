@@ -6,7 +6,9 @@
 
 import argparse
 import shutil
+from enum import StrEnum, auto
 from pathlib import Path
+from typing import assert_never
 
 import nox
 from nox_uv import session
@@ -16,11 +18,45 @@ nox.options.default_venv_backend = "uv"
 
 DIR = Path(__file__).parent.resolve()
 
+
+class PackageEnum(StrEnum):
+    """Enum for package names."""
+
+    @staticmethod
+    def _generate_next_value_(name: str, *_: object, **__: object) -> str:
+        return name
+
+    def __repr__(self) -> str:
+        return f"{self.value!r}"
+
+    coordinax = auto()
+    api = auto()
+    astro = auto()
+    hypothesis = auto()
+
+
+# =============================================================================
+# Comprehensive sessions
+
+
+@session(
+    uv_groups=["lint", "test", "docs"],
+    uv_extras=["all"],
+    reuse_venv=True,
+    default=True,
+)
+def all(s: nox.Session, /) -> None:  # noqa: A001
+    """Run all default sessions."""
+    s.notify("lint")
+    s.notify("test")
+    s.notify("docs")
+
+
 # =============================================================================
 # Linting
 
 
-@session(uv_groups=["lint"], reuse_venv=True, default=True)
+@session(uv_groups=["lint"], reuse_venv=True)
 def lint(s: nox.Session, /) -> None:
     """Run the linter."""
     s.notify("precommit")
@@ -34,9 +70,21 @@ def precommit(s: nox.Session, /) -> None:
 
 
 @session(uv_groups=["lint"], reuse_venv=True)
-def pylint(s: nox.Session, /) -> None:
+@nox.parametrize("package", list(PackageEnum))
+def pylint(s: nox.Session, /, package: PackageEnum) -> None:
     """Run PyLint."""
-    s.run("pylint", "coordinax", *s.posargs)
+    match package:
+        case PackageEnum.coordinax:
+            package_path = "src/coordinax"
+        case PackageEnum.api:
+            package_path = "packages/coordinax-api/"
+        case PackageEnum.astro:
+            package_path = "packages/coordinax-astro/"
+        case PackageEnum.hypothesis:
+            package_path = "packages/coordinax-hypothesis/"
+        case _:
+            assert_never(package)
+    s.run("pylint", package_path, *s.posargs)
 
 
 # =============================================================================
@@ -47,19 +95,31 @@ def pylint(s: nox.Session, /) -> None:
 def test(s: nox.Session, /) -> None:
     """Run the unit and regular tests."""
     s.notify("pytest", posargs=s.posargs)
-    # s.notify("benchmark", posargs=s.posargs)
+    # s.notify("pytest_benchmark", posargs=s.posargs)
+
+
+def _parse_pytest_paths(package: PackageEnum, /) -> list[str]:
+    match package:
+        case PackageEnum.coordinax:
+            package_paths = ["README.md", "docs", "src/", "tests/"]
+        case PackageEnum.api:
+            package_paths = ["packages/coordinax-api/"]
+        case PackageEnum.astro:
+            package_paths = ["packages/coordinax-astro/"]
+        case PackageEnum.hypothesis:
+            package_paths = ["packages/coordinax-hypothesis/"]
+        case _:
+            assert_never(package)
+
+    return package_paths
 
 
 @session(uv_groups=["test"], reuse_venv=True)
-def pytest(s: nox.Session, /) -> None:
+@nox.parametrize("package", list(PackageEnum))
+def pytest(s: nox.Session, /, package: PackageEnum) -> None:
     """Run the unit and regular tests."""
-    s.run("pytest", *s.posargs)
-
-
-# @session(uv_groups=["test"], reuse_venv=True)
-# def benchmark(s: nox.Session, /) -> None:
-#     """Run the benchmarks."""
-#     s.run("pytest", "tests/benchmark", "--codspeed", *s.posargs)
+    package_paths = _parse_pytest_paths(package)
+    s.run("pytest", *package_paths, *s.posargs)
 
 
 # =============================================================================
@@ -129,9 +189,10 @@ def build_api_docs(s: nox.Session, /) -> None:
 
 
 # =============================================================================
+# Packaging
 
 
-@session(uv_groups=["build"], reuse_venv=True)
+@session(uv_groups=["build"])
 def build(s: nox.Session, /) -> None:
     """Build an SDist and wheel."""
     build_path = DIR.joinpath("build")

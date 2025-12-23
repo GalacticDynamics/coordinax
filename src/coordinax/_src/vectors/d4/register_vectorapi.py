@@ -10,8 +10,8 @@ from plum import dispatch
 
 import unxt as u
 
+import coordinax_api as cxapi
 from .spacetime import FourVector
-from coordinax._src.vectors import api
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 
 
@@ -72,7 +72,7 @@ def vconvert(
         [1.    2.236 1.107 3.   ]>
 
     """
-    q = cast("AbstractPos3D", api.vconvert(spatial_target, current.q, **kwargs))
+    q = cast("AbstractPos3D", cxapi.vconvert(spatial_target, current.q, **kwargs))
     return replace(current, q=q)
 
 

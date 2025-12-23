@@ -1,0 +1,51 @@
+[project]
+authors = [
+  { name = "Coordinax Devs", email = "nstarman@users.noreply.github.com" },
+  { name = "Nathaniel Starkman", email = "nstarman@users.noreply.github.com" },
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Scientific/Engineering",
+  "Typing :: Typed",
+]
+dependencies = ["coordinax", "optional-dependencies>=0.4.0"]
+description = "Astronomy-specific reference frames for coordinax"
+license = "MIT"
+name = "coordinax-astro"
+readme = "README.md"
+requires-python = ">=3.11"
+version = "0.1.0"
+
+[project.optional-dependencies]
+astropy = ["astropy>=7.2.0"]
+
+
+[build-system]
+build-backend = "hatchling.build"
+requires      = ["hatch-vcs", "hatchling"]
+
+
+[tool.hatch.version]
+raw-options = { root = "../..", search_parent_directories = true, git_describe_command = "git describe --dirty --tags --long --match 'coordinax-astro-v*'", local_scheme = "no-local-version" }
+source      = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/coordinax_astro/_version.py"
+version-file-template = """\
+version: str = {version!r}
+version_tuple: tuple[int, int, int] | tuple[int, int, int, str, str]
+version_tuple = {version_tuple!r}
+"""
+
+
+[tool.uv.sources]
+coordinax = { workspace = true }

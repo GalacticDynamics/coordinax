@@ -17,8 +17,8 @@ import unxt as u
 from dataclassish import field_items
 from unxt.quantity import BareQuantity
 
+import coordinax_api as cxapi
 from .core import AbstractPos
-from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AttrFilter
 from coordinax._src.vectors.base.register_primitives import eq_p_absvecs
 
@@ -300,9 +300,9 @@ def neg_p_pos(obj: AbstractPos, /) -> AbstractPos:
         [-1 -2 -3]>
 
     """
-    cart = vconvert(obj.cartesian_type, obj)
+    cart = cxapi.vconvert(obj.cartesian_type, obj)
     negcart = jnp.negative(cart)
-    return vconvert(type(obj), negcart)
+    return cxapi.vconvert(type(obj), negcart)
 
 
 # ------------------------------------------------

@@ -7,12 +7,24 @@ sd_hide_title: true
 ```{toctree}
 :maxdepth: 1
 :hidden:
+:caption: 📦 Packages
+
+coordinax-api <packages/coordinax-api/index>
+coordinax <self>
+coordinax-astro <packages/coordinax-astro/index>
+coordinax-hypothesis <packages/coordinax-hypothesis/index>
+```
+
+```{toctree}
+:maxdepth: 1
+:hidden:
 :caption: 📚 Guides
 
 guides/quantities.md
 guides/vectors.md
 guides/operators.md
 guides/coordinates_and_frames.md
+packages/coordinax-hypothesis/testing-guide
 ```
 
 <!--
@@ -31,7 +43,10 @@ interop/*
 :hidden:
 :caption: 🔌 API Reference
 
-api/index.md
+coordinax-api <packages/coordinax-api/api>
+coordinax <api/index.md>
+coordinax-astro <packages/coordinax-astro/api>
+coordinax-hypothesis <packages/coordinax-hypothesis/api>
 ```
 
 ```{toctree}

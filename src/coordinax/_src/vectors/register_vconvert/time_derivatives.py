@@ -16,7 +16,8 @@ import unxt as u
 from unxt.quantity import BareQuantity, is_any_quantity
 
 import coordinax._src.vectors.custom_types as ct
-from coordinax._src.vectors import api, d1, d2, d3
+import coordinax_api as cxapi
+from coordinax._src.vectors import d1, d2, d3
 from coordinax._src.vectors.base import AbstractVector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
@@ -24,7 +25,7 @@ from coordinax._src.vectors.base_vel import AbstractVel
 
 pos_jac_fn = jax.vmap(
     jax.jacfwd(  # ↓ aux as positional argument
-        lambda to_cls, from_cls, p, in_aux, out_aux: api.vconvert(
+        lambda to_cls, from_cls, p, in_aux, out_aux: cxapi.vconvert(
             to_cls, from_cls, p, in_aux=in_aux, out_aux=out_aux
         ),
         argnums=2,
@@ -307,7 +308,7 @@ def vconvert(
     # position must be transformed to CartesianPos1D.
     n = -2 if issubclass(to_dif_cls, AbstractAcc) else -1
     in_pos_cls = from_dif.time_nth_derivative_cls(n=n)
-    from_posv = vconvert(in_pos_cls, from_pos, **kwargs)
+    from_posv = cxapi.vconvert(in_pos_cls, from_pos, **kwargs)
 
     # The position dictionary contains both the fields and the auxiliary
     # data. We need to separate them.
@@ -331,7 +332,7 @@ def vconvert(
 
     # Perform the transformation
     # TODO: add  df(q)/dt, which is 0 for all current transforms
-    to_dif_p, to_dif_aux = vconvert(
+    to_dif_p, to_dif_aux = cxapi.vconvert(
         to_dif_cls,
         type(from_dif),
         from_dif.asdict(),
@@ -444,4 +445,4 @@ def vconvert(
 
     """
     del from_vel  # unused
-    return vconvert(to_acc_cls, from_acc, from_pos, **kwargs)
+    return cxapi.vconvert(to_acc_cls, from_acc, from_pos, **kwargs)

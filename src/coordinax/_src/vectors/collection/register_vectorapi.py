@@ -9,8 +9,9 @@ from plum import dispatch
 
 import quaxed.numpy as jnp
 
+import coordinax_api as cxapi
 from .core import KinematicSpace
-from coordinax._src.vectors.api import vconvert, vector
+from coordinax._src.vectors.api import vector
 from coordinax._src.vectors.base_acc import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
@@ -138,7 +139,7 @@ def vconvert(
     SphericalPos( ... )
 
     """
-    return vconvert(target, current)  # space is unnecessary
+    return cxapi.vconvert(target, current)  # space is unnecessary
 
 
 @dispatch
@@ -158,7 +159,7 @@ def vconvert(
     SphericalVel( ... )
 
     """
-    return vconvert(target, current, space["length"])
+    return cxapi.vconvert(target, current, space["length"])
 
 
 @dispatch
@@ -179,7 +180,7 @@ def vconvert(
     SphericalAcc( ... )
 
     """
-    return vconvert(target, current, space["speed"], space["length"])
+    return cxapi.vconvert(target, current, space["speed"], space["length"])
 
 
 # =============================================================== Temporary
@@ -200,7 +201,7 @@ def temp_vconvert(
     target: type[AbstractPos], current: AbstractPos, space: KinematicSpace, /
 ) -> AbstractPos:
     """Transform of Poss."""
-    return vconvert(target, current)  # space is unnecessary
+    return cxapi.vconvert(target, current)  # space is unnecessary
 
 
 # TODO: should this be moved to a different file?
@@ -210,7 +211,7 @@ def temp_vconvert(
 ) -> AbstractVel:
     """Transform of Velocities."""
     q, p = jnp.broadcast_arrays(space["length"], current)
-    return vconvert(target.time_derivative_cls, p, q)
+    return cxapi.vconvert(target.time_derivative_cls, p, q)
 
 
 # TODO: should this be moved to a different file?
@@ -220,4 +221,4 @@ def temp_vconvert(
 ) -> AbstractAcc:
     """Transform of Accs."""
     q, p, a = jnp.broadcast_arrays(space["length"], space["speed"], current)
-    return vconvert(target.time_nth_derivative_cls(2), a, p, q)
+    return cxapi.vconvert(target.time_nth_derivative_cls(2), a, p, q)

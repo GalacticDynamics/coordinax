@@ -21,13 +21,14 @@ classifiers = [
 dependencies = [
   "astropy>=7.0.0",
   "beartype>=0.21.0",
+  "coordinax-api",
   "dataclassish>=0.8.0",
   "equinox>=0.13.2",
   "jax>=0.6.0",
   "jaxlib>=0.6.0",
   "jaxtyping>=0.3.3",
   "optional-dependencies>=0.3.2",
-  "plum-dispatch>=2.5.7",
+  "plum-dispatch>=2.6.1",
   "quax>=0.2.1",
   "quax-blocks>=0.4.0",
   "quaxed>=0.10.4",
@@ -43,6 +44,9 @@ license-files = ["LICENSE"]
 name = "coordinax"
 readme = "README.md"
 requires-python = ">=3.11"
+
+[project.optional-dependencies]
+astro = ["coordinax-astro"]
 
 [project.urls]
 "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
@@ -65,6 +69,7 @@ dev = [
   { include-group = "lint" },
   { include-group = "nox" },
   { include-group = "test-all" },
+  { include-group = "workspace" },
 ]
 docs = [
   "myst-nb>=1.1.2",
@@ -81,11 +86,13 @@ docs = [
   "sphinx_togglebutton>=0.3.2",
   "sphinxext-opengraph>=0.9.1",
   "sphinxext-rediraffe>=0.2.7",
+  { include-group = "workspace" },
 ]
 ide = ["ipykernel>=7.1.0"]
 lint = ["pre-commit>=4.5.0", "pylint>=3.3.2"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
+  "coordinax-hypothesis",
   "hypothesis[numpy]>=6.112.2",
   "pytest>=8.3.3",
   "pytest-arraydiff>=0.6.1",
@@ -93,8 +100,10 @@ test = [
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
   "sybil[pytest]>=8.0.0",
+  { include-group = "workspace" },
 ]
 test-all = [{ include-group = "test" }]
+workspace = ["coordinax-api", "coordinax-astro", "coordinax-hypothesis"]
 
 
 [tool.hatch]
@@ -232,11 +241,20 @@ filterwarnings = [
 log_level = "INFO"
 minversion = "8.3"
 norecursedirs = [
-  ".*",          # ignores .hypothesis, .git, etc.
+  ".*",            # ignores .hypothesis, .git, etc.
   "__pycache__",
   "docs/_build",
+  "docs/packages", # symlinks to package docs, don't test twice
 ]
-testpaths = ["README", "src/", "docs/", "tests/", "packages/coordinax-api/"]
+testpaths = [
+  "README",
+  "src/",
+  "docs/",
+  "tests/",
+  "packages/coordinax-api/",
+  "packages/coordinax-astro",
+  "packages/coordinax-hypothesis/",
+]
 xfail_strict = true
 
 [tool.pytest_env]
@@ -275,16 +293,17 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"**/tests/**"  = ["ANN", "INP001", "S101", "T20"]
 "__init__.py"  = ["F403"]
 "docs/conf.py" = ["A001", "INP001"]
 "noxfile.py"   = ["T20"]
-"tests/**"     = ["ANN", "S101", "T20"]
 
 [tool.ruff.lint.flake8-import-conventions.aliases]
 coordinax          = "cx"
 "coordinax.frames" = "cxf"
 "coordinax.ops"    = "cxo"
 "coordinax.vecs"   = "cxv"
+coordinax_api      = "cxapi"
 equinox            = "eqx"
 functools          = "ft"
 unxt               = "u"
@@ -299,8 +318,17 @@ known-first-party = [
   "unxt",
   "xmmutablemap",
 ]
-known-local-folder = ["coordinax"]
+known-local-folder = ["coordinax", "coordinax_api"]
 
 [tool.uv]
 # Temporary constraint to restrict JAX version
 constraint-dependencies = ["numpy<2.4.0"]
+
+[tool.uv.sources]
+coordinax-api        = { workspace = true }
+coordinax-astro      = { workspace = true }
+coordinax-hypothesis = { workspace = true }
+
+
+[tool.uv.workspace]
+members = ["packages/*"]

@@ -5,7 +5,8 @@ __all__: tuple[str, ...] = ()
 import astropy.coordinates as apyc
 import equinox as eqx
 
-from coordinax._coordinax_space_frames import ICRS, Galactocentric
+from coordinax_astro import ICRS, Galactocentric
+
 from coordinax._src.frames.base import AbstractReferenceFrame
 from coordinax._src.vectors.d3 import LonLatSphericalPos
 

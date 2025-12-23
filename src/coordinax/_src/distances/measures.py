@@ -43,7 +43,7 @@ class Distance(AbstractDistance):
     value: Shaped[Array, "*shape"] = eqx.field(
         converter=u.quantity.convert_to_quantity_value
     )
-    """The value of the `unxt.AbstractQuantity`."""
+    """The distance value."""
 
     unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""

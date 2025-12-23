@@ -10,6 +10,7 @@ from plum import dispatch
 import quaxed.numpy as jnp
 
 import coordinax._src.vectors.custom_types as ct
+import coordinax_api as cxapi
 from .base import AbstractAcc2D, AbstractPos2D, AbstractVel2D
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarAcc, PolarPos, PolarVel
@@ -33,10 +34,10 @@ def vconvert(
     units: ct.OptUSys = None,
 ) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """AbstractPos -> CartesianPos1D -> AbstractPos."""
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         CartesianPos2D, from_vector, params, in_aux=in_aux, out_aux=None, units=units
     )
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         to_vector, CartesianPos2D, params, in_aux=aux, out_aux=out_aux, units=units
     )
     return params, aux
