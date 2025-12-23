@@ -4,12 +4,13 @@ __all__ = ("AbstractPos", "POSITION_CLASSES")
 
 import functools as ft
 from inspect import isabstract
+
+from jaxtyping import Array, Shaped
 from typing import TYPE_CHECKING, Any
 
 import equinox as eqx
 import jax
 import quax_blocks
-from jaxtyping import Array, Shaped
 from plum import convert
 from quax import quaxify
 

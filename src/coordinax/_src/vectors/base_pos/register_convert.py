@@ -4,6 +4,7 @@ __all__: tuple[str, ...] = ()
 
 
 from jaxtyping import Shaped
+
 from plum import conversion_method, convert
 
 import quaxed.numpy as jnp

@@ -4,6 +4,7 @@ __all__ = ["GalileanBoost"]
 
 
 from dataclasses import replace
+
 from typing import Any, Literal, final
 
 import equinox as eqx

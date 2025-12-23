@@ -2,9 +2,10 @@
 
 __all__ = ("VectorAttribute",)
 
-from collections.abc import Callable
 from dataclasses import KW_ONLY, dataclass, field, is_dataclass
 from enum import Enum, auto
+
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, final, overload
 
 if TYPE_CHECKING:

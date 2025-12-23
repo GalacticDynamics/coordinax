@@ -3,10 +3,10 @@
 __all__: tuple[str, ...] = ()
 
 
+from jaxtyping import Shaped
 from typing import TypeVar
 
 from jax import Array
-from jaxtyping import Shaped
 from plum import conversion_method
 from zeroth import zeroth
 

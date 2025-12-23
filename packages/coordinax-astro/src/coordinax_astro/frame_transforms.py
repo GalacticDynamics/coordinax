@@ -3,9 +3,9 @@
 __all__: tuple[str, ...] = ()
 
 
+from jaxtyping import Array, Shaped
 from typing import TypeAlias
 
-from jaxtyping import Array, Shaped
 from plum import dispatch
 
 import quaxed.numpy as jnp

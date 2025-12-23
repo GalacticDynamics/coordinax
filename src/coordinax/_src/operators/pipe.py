@@ -3,6 +3,7 @@
 __all__ = ("Pipe", "convert_to_pipe_operators")
 
 from dataclasses import replace
+
 from typing import Any, final
 
 import equinox as eqx

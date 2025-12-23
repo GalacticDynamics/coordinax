@@ -3,9 +3,10 @@
 __all__ = ("spatial_component",)
 
 import functools as ft
-from typing import Any, TypeAlias
 
 from jaxtyping import Array, ArrayLike
+from typing import Any, TypeAlias
+
 from plum import dispatch
 
 import unxt as u

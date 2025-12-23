@@ -7,10 +7,11 @@ __all__ = (
 )
 
 from dataclasses import KW_ONLY
+
+from jaxtyping import Shaped
 from typing import final
 
 import equinox as eqx
-from jaxtyping import Shaped
 
 import quaxed.numpy as jnp
 import unxt as u

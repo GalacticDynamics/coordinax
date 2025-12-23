@@ -3,14 +3,15 @@
 __all__ = ["GalileanRotation"]
 
 
-from collections.abc import Mapping
 from dataclasses import replace
+
+from collections.abc import Mapping
+from jaxtyping import Array, Shaped
 from typing import Any, Literal, TypeAlias, final
 
 import equinox as eqx
 import jax
 from jax.scipy.spatial.transform import Rotation
-from jaxtyping import Array, Shaped
 from plum import convert, dispatch
 from quax import quaxify
 

@@ -4,11 +4,11 @@ __all__: tuple[str, ...] = ()
 
 
 from collections.abc import Callable
+from jaxtyping import Shaped
+from jaxtyping._array_types import _MetaAbstractArray
 from typing import TypeVar, Union
 
 import equinox as eqx
-from jaxtyping import Shaped
-from jaxtyping._array_types import _MetaAbstractArray
 from plum import conversion_method as _conversion_method, convert, dispatch
 
 import quaxed.numpy as jnp

@@ -5,11 +5,11 @@
 __all__: tuple[str, ...] = ()
 
 
+from jaxtyping import Shaped
 from typing import cast
 
 import astropy.coordinates as apyc
 import astropy.units as apyu
-from jaxtyping import Shaped
 from plum import conversion_method, convert
 
 import unxt as u

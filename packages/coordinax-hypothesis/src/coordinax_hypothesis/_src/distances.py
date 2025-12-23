@@ -3,6 +3,7 @@
 __all__ = ("distances", "distance_moduli", "parallaxes")
 
 import warnings
+
 from collections.abc import Mapping
 from typing import Any, assert_never
 

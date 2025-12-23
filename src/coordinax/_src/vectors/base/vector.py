@@ -3,6 +3,7 @@
 __all__ = ("AbstractVector", "is_vector")
 
 from abc import abstractmethod
+
 from collections.abc import Callable, Mapping
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, ClassVar, TypeGuard, TypeVar

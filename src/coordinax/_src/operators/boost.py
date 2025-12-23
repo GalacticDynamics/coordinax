@@ -4,6 +4,7 @@ __all__ = ["VelocityBoost"]
 
 
 from dataclasses import replace
+
 from typing import Any, Literal, cast, final
 
 import equinox as eqx

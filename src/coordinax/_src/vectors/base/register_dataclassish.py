@@ -3,8 +3,9 @@
 __all__: tuple[str, ...] = ()
 
 
-from collections.abc import Callable
 from dataclasses import Field
+
+from collections.abc import Callable
 from typing import Any
 
 from plum import dispatch

@@ -4,10 +4,11 @@ __all__: tuple[str, ...] = ()
 
 import functools as ft
 from inspect import isclass
+
+from jaxtyping import Array, Shaped
 from typing import cast
 
 import equinox as eqx
-from jaxtyping import Array, Shaped
 from plum import dispatch
 
 import quaxed.numpy as jnp
