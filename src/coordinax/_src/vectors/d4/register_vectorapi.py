@@ -3,6 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 from dataclasses import replace
+
 from typing import Any, cast
 
 import equinox as eqx

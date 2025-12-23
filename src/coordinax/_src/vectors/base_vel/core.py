@@ -3,6 +3,7 @@
 __all__ = ("AbstractVel", "VELOCITY_CLASSES")
 
 import functools as ft
+
 from typing import TYPE_CHECKING, Any, cast
 
 import equinox as eqx

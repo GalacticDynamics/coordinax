@@ -3,11 +3,12 @@
 __all__ = ("AbstractPos",)
 
 from dataclasses import replace
+
+from jaxtyping import Array, ArrayLike
 from typing import Any, cast
 
 import equinox as eqx
 import jax
-from jaxtyping import Array, ArrayLike
 from plum import convert
 from quax import quaxify, register
 

@@ -3,9 +3,8 @@
 __all__ = ("ICRS",)
 
 
-from typing import TypeAlias, final
-
 from jaxtyping import Array, Shaped
+from typing import TypeAlias, final
 
 import unxt as u
 

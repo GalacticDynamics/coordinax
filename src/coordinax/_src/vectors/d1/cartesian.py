@@ -3,6 +3,7 @@
 __all__ = ("CartesianAcc1D", "CartesianPos1D", "CartesianVel1D")
 
 import functools as ft
+
 from typing import final
 from typing_extensions import override
 

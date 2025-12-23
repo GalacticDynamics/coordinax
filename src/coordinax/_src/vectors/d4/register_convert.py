@@ -3,8 +3,9 @@
 __all__: tuple[str, ...] = ()
 
 
-import jax.numpy as jnp
 from jaxtyping import Shaped
+
+import jax.numpy as jnp
 from plum import conversion_method, convert
 
 import quaxed.numpy as jnp

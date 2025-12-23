@@ -2,11 +2,11 @@
 
 __all__: tuple[str, ...] = ()
 
+from jaxtyping import Array, Bool
 from typing import Any, TypeAlias
 
 import jax
 from jax import tree as jtu
-from jaxtyping import Array, Bool
 from quax import quaxify, register
 
 import quaxed.numpy as jnp

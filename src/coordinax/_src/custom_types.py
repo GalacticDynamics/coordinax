@@ -2,6 +2,7 @@
 
 __all__: tuple[str, ...] = ()
 
+from jaxtyping import Real, Shaped
 from typing import TypeAlias
 
 from astropy.units import (
@@ -9,7 +10,6 @@ from astropy.units import (
     Unit as AstropyUnit,
     UnitBase as AstropyUnitBase,
 )
-from jaxtyping import Real, Shaped
 
 import unxt as u
 

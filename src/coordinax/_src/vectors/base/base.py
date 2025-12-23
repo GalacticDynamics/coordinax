@@ -3,12 +3,12 @@
 __all__ = ("AbstractVectorLike", "is_vectorlike")
 
 from collections.abc import Mapping
+from jaxtyping import DTypeLike
 from typing import TYPE_CHECKING, Any, NoReturn, TypeGuard, TypeVar, cast
 
 import jax
 import quax_blocks
 import wadler_lindig as wl
-from jaxtyping import DTypeLike
 from plum import dispatch
 from quax import ArrayValue
 

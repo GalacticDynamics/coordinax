@@ -1,7 +1,8 @@
 """Doctest configuration."""
 
-from collections.abc import Callable, Iterable, Sequence
 from doctest import ELLIPSIS, NORMALIZE_WHITESPACE
+
+from collections.abc import Callable, Iterable, Sequence
 
 from sybil import Document, Region, Sybil
 from sybil.parsers import myst, rest

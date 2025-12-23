@@ -8,6 +8,7 @@ import argparse
 import shutil
 from enum import StrEnum, auto
 from pathlib import Path
+
 from typing import assert_never
 
 import nox

@@ -3,10 +3,10 @@
 __all__ = ("Galactocentric",)
 
 
+from jaxtyping import Array, Shaped
 from typing import ClassVar, TypeAlias, final
 
 import equinox as eqx
-from jaxtyping import Array, Shaped
 
 import unxt as u
 from dataclassish.converters import Unless

@@ -2,10 +2,10 @@
 
 __all__ = ("PoincarePolarVector",)
 
+from jaxtyping import Real
 from typing import final
 
 import equinox as eqx
-from jaxtyping import Real
 
 import unxt as u
 

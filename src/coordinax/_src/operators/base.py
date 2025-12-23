@@ -3,13 +3,14 @@
 __all__ = ("AbstractOperator",)
 
 from abc import abstractmethod
+
 from collections.abc import Mapping
+from jaxtyping import ArrayLike
 from typing import TYPE_CHECKING, Any, Final
 
 import equinox as eqx
 import jax.numpy as jnp
 import wadler_lindig as wl
-from jaxtyping import ArrayLike
 from plum import dispatch
 
 import unxt as u

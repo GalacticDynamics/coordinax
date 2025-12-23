@@ -3,9 +3,9 @@
 __all__: list[str] = []
 
 
+from jaxtyping import Shaped
 from typing import Any, Final, TypeAlias
 
-from jaxtyping import Shaped
 from plum import convert
 
 import unxt as u

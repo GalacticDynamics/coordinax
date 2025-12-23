@@ -7,6 +7,7 @@ __all__ = (
 )
 
 import functools as ft
+
 from typing import final
 from typing_extensions import override
 

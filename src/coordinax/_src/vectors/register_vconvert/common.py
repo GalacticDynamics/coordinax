@@ -2,8 +2,9 @@
 
 __all__: tuple[str, ...] = ()
 
-from typing import Any, cast
 from warnings import warn
+
+from typing import Any, cast
 
 import equinox as eqx
 from plum import dispatch

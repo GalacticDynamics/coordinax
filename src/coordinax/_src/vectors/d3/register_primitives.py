@@ -4,11 +4,12 @@ __all__: tuple[str, ...] = ()
 
 
 from dataclasses import replace
+
+from jaxtyping import ArrayLike
 from typing import Any, cast
 
 import equinox as eqx
 import jax
-from jaxtyping import ArrayLike
 from quax import register
 
 import quaxed.lax as qlax

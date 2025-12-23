@@ -3,12 +3,13 @@
 __all__ = ("Distance", "DistanceModulus", "Parallax")
 
 from dataclasses import KW_ONLY
+
+from jaxtyping import Array, Shaped
 from typing import Any, final
 
 import equinox as eqx
 import jax.numpy as jnp
 import wadler_lindig as wl
-from jaxtyping import Array, Shaped
 
 import quaxed.numpy as jnp
 import unxt as u

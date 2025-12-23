@@ -3,6 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 import functools as ft
+
 from typing import Any
 
 import equinox as eqx

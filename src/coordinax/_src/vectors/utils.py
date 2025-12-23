@@ -3,6 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 from dataclasses import replace as _dataclass_replace
+
 from typing import TYPE_CHECKING
 
 import quaxed.numpy as jnp

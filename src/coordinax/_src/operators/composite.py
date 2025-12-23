@@ -2,8 +2,9 @@
 
 __all__ = ("AbstractCompositeOperator",)
 
-from collections.abc import Iterator
 from dataclasses import replace
+
+from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
 
 import equinox as eqx

@@ -4,6 +4,8 @@ __all__ = ("FourVector",)
 
 import functools as ft
 from dataclasses import KW_ONLY
+
+from jaxtyping import Shaped
 from typing import Any, cast, final
 from typing_extensions import override
 
@@ -12,7 +14,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import wadler_lindig as wl
-from jaxtyping import Shaped
 
 import quaxed.numpy as jnp
 import unxt as u

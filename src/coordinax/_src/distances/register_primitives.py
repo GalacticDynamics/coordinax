@@ -3,10 +3,10 @@
 
 __all__: tuple[str, ...] = ()
 
+from jaxtyping import ArrayLike
 from typing import Any, TypeVar
 
 from jax import lax
-from jaxtyping import ArrayLike
 from quax import register
 
 import unxt as u

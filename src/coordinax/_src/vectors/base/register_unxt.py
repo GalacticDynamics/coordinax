@@ -3,8 +3,9 @@
 __all__ = ("ToUnitsOptions",)
 
 
-from collections.abc import Mapping
 from enum import Enum
+
+from collections.abc import Mapping
 from typing import Any, Literal
 
 from astropy.units import PhysicalType as Dimension

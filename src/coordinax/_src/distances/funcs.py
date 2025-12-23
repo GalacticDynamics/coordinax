@@ -7,9 +7,9 @@ __all__ = (
 )
 
 
+from jaxtyping import ArrayLike
 from typing import Any
 
-from jaxtyping import ArrayLike
 from plum import dispatch
 
 import quaxed.numpy as jnp

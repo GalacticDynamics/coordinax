@@ -2,8 +2,9 @@
 
 __all__: tuple[str, ...] = ()
 
-from collections.abc import Callable
 from dataclasses import dataclass
+
+from collections.abc import Callable
 from typing import Any, Generic, TypeVar
 
 GetterRetT = TypeVar("GetterRetT")

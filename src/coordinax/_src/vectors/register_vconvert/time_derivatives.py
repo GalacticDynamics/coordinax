@@ -3,12 +3,13 @@
 __all__: tuple[str, ...] = ()
 
 import functools as ft
+
+from jaxtyping import Array, Float, Real
 from typing import Any
 
 import equinox as eqx
 import jax
 import jax.tree as jtu
-from jaxtyping import Array, Float, Real
 from plum import dispatch
 
 import quaxed.numpy as jnp
