@@ -7,6 +7,10 @@ resolution-markers = [
 ]
 
 [manifest]
+members = [
+    "coordinax",
+    "coordinax-api",
+]
 constraints = [{ name = "numpy", specifier = "<2.4.0" }]
 
 [[package]]
@@ -95,11 +99,11 @@ wheels = [
 
 [[package]]
 name = "astropy-iers-data"
-version = "0.2025.12.15.0.40.51"
+version = "0.2025.12.22.0.40.30"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/76/c5/fb4e76d883b4f9601e545c372ae1ab3c6159d412fc6f2b61b6b89f25b26c/astropy_iers_data-0.2025.12.15.0.40.51.tar.gz", hash = "sha256:d9f3e7ffc670d2de2ae8c9f152be7360bd4c5f6bb2873cecf1c544eb9c79a591", size = 1916795 }
+sdist = { url = "https://files.pythonhosted.org/packages/a5/6f/4e58a807384ed69690420b45a850c9117376d1a4558e2d88521fb0a5dd0b/astropy_iers_data-0.2025.12.22.0.40.30.tar.gz", hash = "sha256:19b570afb1396fc4bce302f299f994a4df53d1ecad27bdd73ffef88d5dd70c8d", size = 1917473 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e1/2b/a3d75e4a8966460a9f79635797bb3e85e29c3bff86640087c7814429d917/astropy_iers_data-0.2025.12.15.0.40.51-py3-none-any.whl", hash = "sha256:5f89c4b9d711638005407b4b57f76d82484f0182e459df91fcdfc354c3a34d8e", size = 1973429 },
+    { url = "https://files.pythonhosted.org/packages/1f/07/50501947849e780cb5580ebcd7af08c14d431640562e18a8ac2b055c90ec/astropy_iers_data-0.2025.12.22.0.40.30-py3-none-any.whl", hash = "sha256:2fbc71988d96aa29566667c6568a2bc5ca00748174b1f8ac3e9f7b09d4c27cac", size = 1974071 },
 ]
 
 [[package]]
@@ -397,6 +401,7 @@ source = { editable = "." }
 dependencies = [
     { name = "astropy" },
     { name = "beartype" },
+    { name = "coordinax-api" },
     { name = "dataclassish" },
     { name = "equinox" },
     { name = "jax" },
@@ -419,6 +424,7 @@ build = [
 ]
 dev = [
     { name = "build" },
+    { name = "coordinax-api" },
     { name = "cz-conventional-gitmoji" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "ipykernel" },
@@ -448,6 +454,7 @@ dev = [
     { name = "sybil", extra = ["pytest"] },
 ]
 docs = [
+    { name = "coordinax-api" },
     { name = "myst-nb" },
     { name = "myst-parser" },
     { name = "pytz" },
@@ -475,6 +482,7 @@ nox = [
     { name = "nox-uv" },
 ]
 test = [
+    { name = "coordinax-api" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
@@ -484,6 +492,7 @@ test = [
     { name = "sybil", extra = ["pytest"] },
 ]
 test-all = [
+    { name = "coordinax-api" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
@@ -492,11 +501,15 @@ test-all = [
     { name = "pytest-github-actions-annotate-failures" },
     { name = "sybil", extra = ["pytest"] },
 ]
+workspace = [
+    { name = "coordinax-api" },
+]
 
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
     { name = "beartype", specifier = ">=0.21.0" },
+    { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "dataclassish", specifier = ">=0.8.0" },
     { name = "equinox", specifier = ">=0.13.2" },
     { name = "jax", specifier = ">=0.6.0" },
@@ -517,6 +530,7 @@ requires-dist = [
 build = [{ name = "build", specifier = ">=1.3.0" }]
 dev = [
     { name = "build", specifier = ">=1.3.0" },
+    { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "cz-conventional-gitmoji", specifier = ">=0.6.1" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "ipykernel", specifier = ">=7.1.0" },
@@ -546,6 +560,7 @@ dev = [
     { name = "sybil", extras = ["pytest"], specifier = ">=8.0.0" },
 ]
 docs = [
+    { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "myst-nb", specifier = ">=1.1.2" },
     { name = "myst-parser", specifier = ">=0.13" },
     { name = "pytz", specifier = ">=2024.2" },
@@ -571,6 +586,7 @@ nox = [
     { name = "nox-uv", specifier = ">=0.6.3" },
 ]
 test = [
+    { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
@@ -580,6 +596,7 @@ test = [
     { name = "sybil", extras = ["pytest"], specifier = ">=8.0.0" },
 ]
 test-all = [
+    { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
@@ -588,6 +605,17 @@ test-all = [
     { name = "pytest-github-actions-annotate-failures", specifier = ">=0.3.0" },
     { name = "sybil", extras = ["pytest"], specifier = ">=8.0.0" },
 ]
+workspace = [{ name = "coordinax-api", editable = "packages/coordinax-api" }]
+
+[[package]]
+name = "coordinax-api"
+source = { editable = "packages/coordinax-api" }
+dependencies = [
+    { name = "plum-dispatch" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "plum-dispatch", specifier = ">=2.5.7" }]
 
 [[package]]
 name = "coverage"
@@ -954,14 +982,14 @@ wheels = [
 
 [[package]]
 name = "importlib-metadata"
-version = "8.7.0"
+version = "8.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "zipp" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641 }
+sdist = { url = "https://files.pythonhosted.org/packages/f3/49/3b30cad09e7771a4982d9975a8cbf64f00d4a1ececb53297f1d9a7be1b10/importlib_metadata-8.7.1.tar.gz", hash = "sha256:49fef1ae6440c182052f407c8d34a68f72efc36db9ca90dc0113398f2fdde8bb", size = 57107 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/b0/36bd937216ec521246249be3bf9855081de4c5e06a0c9b4219dbeda50373/importlib_metadata-8.7.0-py3-none-any.whl", hash = "sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd", size = 27656 },
+    { url = "https://files.pythonhosted.org/packages/fa/5e/f8e9a1d23b9c20a551a8a02ea3637b4642e22c2626e3a13a9a29cdea99eb/importlib_metadata-8.7.1-py3-none-any.whl", hash = "sha256:5a1f80bf1daa489495071efbb095d75a634cf28a8bc299581244063b53176151", size = 27865 },
 ]
 
 [[package]]
@@ -2866,15 +2894,15 @@ wheels = [
 
 [[package]]
 name = "uvicorn"
-version = "0.38.0"
+version = "0.40.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "h11" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/cb/ce/f06b84e2697fef4688ca63bdb2fdf113ca0a3be33f94488f2cadb690b0cf/uvicorn-0.38.0.tar.gz", hash = "sha256:fd97093bdd120a2609fc0d3afe931d4d4ad688b6e75f0f929fde1bc36fe0e91d", size = 80605 }
+sdist = { url = "https://files.pythonhosted.org/packages/c3/d1/8f3c683c9561a4e6689dd3b1d345c815f10f86acd044ee1fb9a4dcd0b8c5/uvicorn-0.40.0.tar.gz", hash = "sha256:839676675e87e73694518b5574fd0f24c9d97b46bea16df7b8c05ea1a51071ea", size = 81761 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ee/d9/d88e73ca598f4f6ff671fb5fde8a32925c2e08a637303a1d12883c7305fa/uvicorn-0.38.0-py3-none-any.whl", hash = "sha256:48c0afd214ceb59340075b4a052ea1ee91c16fbc2a9b1469cca0e54566977b02", size = 68109 },
+    { url = "https://files.pythonhosted.org/packages/3d/d8/2083a1daa7439a66f3a48589a57d576aa117726762618f6bb09fe3798796/uvicorn-0.40.0-py3-none-any.whl", hash = "sha256:c6c8f55bc8bf13eb6fa9ff87ad62308bbbc33d0b67f84293151efe87e0d5f2ee", size = 68502 },
 ]
 
 [[package]]

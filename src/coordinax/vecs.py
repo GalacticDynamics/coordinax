@@ -117,7 +117,6 @@ with install_import_hook("coordinax.vecs"):
         time_antiderivative_vector_type,
         time_derivative_vector_type,
         time_nth_derivative_vector_type,
-        vconvert,
         vector,
     )
     from ._src.vectors.base import (
@@ -197,6 +196,7 @@ with install_import_hook("coordinax.vecs"):
         PoincarePolarVector,
     )
     from ._src.vectors.exceptions import IrreversibleDimensionChange
+    from coordinax_api import vconvert
 
 
 del vectors, install_import_hook, RUNTIME_TYPECHECKER

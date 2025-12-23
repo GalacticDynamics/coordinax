@@ -11,6 +11,7 @@ from plum import dispatch
 import quaxed.numpy as jnp
 
 import coordinax._src.vectors.custom_types as ct
+import coordinax_api as cxapi
 from coordinax._src.vectors import d1, d2, d3
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
@@ -667,10 +668,10 @@ def vconvert(
      {})
 
     """
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         d3.CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         to_vector, d3.CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux

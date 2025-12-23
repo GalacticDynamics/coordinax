@@ -10,7 +10,7 @@ import jax
 import quaxed.numpy as jnp
 from dataclassish import field_keys, field_values
 
-from .api import vconvert
+import coordinax_api as cxapi
 from .base.flags import AttrFilter
 
 
@@ -258,4 +258,4 @@ class AstropyRepresentationAPIMixin:
             [13.363  0.767 -1.2  ]>
 
         """
-        return vconvert(target, self, *args, **kwargs)
+        return cxapi.vconvert(target, self, *args, **kwargs)

@@ -7,6 +7,15 @@ sd_hide_title: true
 ```{toctree}
 :maxdepth: 1
 :hidden:
+:caption: 📦 Packages
+
+coordinax-api <packages/coordinax-api/index>
+coordinax <self>
+```
+
+```{toctree}
+:maxdepth: 1
+:hidden:
 :caption: 📚 Guides
 
 guides/quantities.md
@@ -31,7 +40,8 @@ interop/*
 :hidden:
 :caption: 🔌 API Reference
 
-api/index.md
+coordinax-api <packages/coordinax-api/api>
+coordinax <api/index.md>
 ```
 
 ```{toctree}

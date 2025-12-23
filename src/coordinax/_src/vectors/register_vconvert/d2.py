@@ -9,6 +9,7 @@ from plum import dispatch
 import quaxed.numpy as jnp
 
 import coordinax._src.vectors.custom_types as ct
+import coordinax_api as cxapi
 from coordinax._src.vectors import d1, d2, d3
 from coordinax._src.vectors.exceptions import IrreversibleDimensionChange
 from coordinax._src.vectors.private_api import wrap_vconvert_impl_params
@@ -57,12 +58,14 @@ def vconvert(
         [14.177  1.107  0.158]>
 
     """
-    p, aux = vconvert(d3.CartesianPos3D, from_vector, p, in_aux=in_aux, out_aux=None)
+    p, aux = cxapi.vconvert(
+        d3.CartesianPos3D, from_vector, p, in_aux=in_aux, out_aux=None
+    )
     # The z coordinate needs to be provided for the total conversion, however it
     # can either be consumed in the previous sub-conversion or appear in
     # out_aux, so we need to handle both cases.
     p["z"] = out_aux.pop("z", p["z"])
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         to_vector, d3.CartesianPos3D, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux

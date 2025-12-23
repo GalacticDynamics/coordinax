@@ -14,6 +14,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax._src.vectors.custom_types as ct
+import coordinax_api as cxapi
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 from .base_spherical import AbstractSphericalPos, _90d, _180d, _360d
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
@@ -385,10 +386,10 @@ def vconvert(
     units: ct.OptUSys = None,
 ) -> tuple[ct.ParamsDict, ct.AuxDict]:
     """AbstractPos -> CartesianPos3D -> AbstractPos."""
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         CartesianPos3D, from_vector, params, in_aux=in_aux, out_aux=None, units=units
     )
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         to_vector, CartesianPos3D, params, in_aux=aux, out_aux=out_aux, units=units
     )
     return params, aux
@@ -516,10 +517,10 @@ def vconvert(
      {})
 
     """
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         SphericalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         to_vector, SphericalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux
@@ -637,10 +638,10 @@ def vconvert(
      {})
 
     """
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         SphericalPos, from_vector, p, in_aux=in_aux, out_aux=out_aux, units=units
     )
-    params, aux = vconvert(
+    params, aux = cxapi.vconvert(
         to_vector, SphericalPos, params, in_aux=aux, out_aux=out_aux, units=units
     )
     return params, aux
@@ -951,10 +952,10 @@ def vconvert(
      {})
 
     """
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         SphericalPos, from_vector, p, in_aux=in_aux, out_aux=out_aux, units=units
     )
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         to_vector, SphericalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux
@@ -987,10 +988,10 @@ def vconvert(
      {})
 
     """
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         SphericalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         to_vector, SphericalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux
@@ -1322,10 +1323,10 @@ def vconvert(
         return p, combine_aux(in_aux, out_aux)
 
     # If Delta is provided, we can proceed with the conversion
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         to_vector, CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux
@@ -1362,10 +1363,10 @@ def vconvert(
      {'Delta': Array(0.5, dtype=float32, ...)})
 
     """
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         CylindricalPos, from_vector, p, in_aux=in_aux, out_aux=None, units=units
     )
-    p, aux = vconvert(
+    p, aux = cxapi.vconvert(
         to_vector, CylindricalPos, p, in_aux=aux, out_aux=out_aux, units=units
     )
     return p, aux
@@ -1406,10 +1407,10 @@ def vconvert(
     del kwargs  # unused
 
     # Transform the differential to LonLatSphericalVel
-    current = vconvert(LonLatSphericalVel, current, position)
+    current = cxapi.vconvert(LonLatSphericalVel, current, position)
 
     # Transform the position to the required type
-    position = vconvert(current.time_antiderivative_cls, position)
+    position = cxapi.vconvert(current.time_antiderivative_cls, position)
 
     # Calculate the differential in the new system
     return target(
@@ -1430,7 +1431,7 @@ def vconvert(
     """LonCosLatSphericalVel -> LonLatSphericalVel."""
     del kwargs  # unused
     # Transform the position to the required type
-    position = vconvert(current.time_antiderivative_cls, position)
+    position = cxapi.vconvert(current.time_antiderivative_cls, position)
     # Calculate the differential in the new system
     return target(
         lon=current.lon_coslat / jnp.cos(position.lat),
@@ -1450,9 +1451,9 @@ def vconvert(
     """LonCosLatSphericalVel -> AbstractVel3D."""
     del kwargs  # unused
     # Transform the differential to LonLatSphericalVel
-    current = vconvert(LonLatSphericalVel, current, position)
+    current = cxapi.vconvert(LonLatSphericalVel, current, position)
     # Transform the position to the required type
-    return vconvert(target, current, position)
+    return cxapi.vconvert(target, current, position)
 
 
 #####################################################################
