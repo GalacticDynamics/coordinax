@@ -534,7 +534,7 @@ requires-dist = [
     { name = "jaxlib", specifier = ">=0.6.0" },
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "optional-dependencies", specifier = ">=0.3.2" },
-    { name = "plum-dispatch", specifier = ">=2.5.7" },
+    { name = "plum-dispatch", specifier = ">=2.6.1" },
     { name = "quax", specifier = ">=0.2.1" },
     { name = "quax-blocks", specifier = ">=0.4.0" },
     { name = "quaxed", specifier = ">=0.10.4" },
