@@ -11,6 +11,7 @@ members = [
     "coordinax",
     "coordinax-api",
     "coordinax-astro",
+    "coordinax-hypothesis",
 ]
 constraints = [{ name = "numpy", specifier = "<2.4.0" }]
 
@@ -432,6 +433,7 @@ dev = [
     { name = "build" },
     { name = "coordinax-api" },
     { name = "coordinax-astro" },
+    { name = "coordinax-hypothesis" },
     { name = "cz-conventional-gitmoji" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "ipykernel" },
@@ -463,6 +465,7 @@ dev = [
 docs = [
     { name = "coordinax-api" },
     { name = "coordinax-astro" },
+    { name = "coordinax-hypothesis" },
     { name = "myst-nb" },
     { name = "myst-parser" },
     { name = "pytz" },
@@ -492,6 +495,7 @@ nox = [
 test = [
     { name = "coordinax-api" },
     { name = "coordinax-astro" },
+    { name = "coordinax-hypothesis" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
@@ -503,6 +507,7 @@ test = [
 test-all = [
     { name = "coordinax-api" },
     { name = "coordinax-astro" },
+    { name = "coordinax-hypothesis" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
@@ -514,6 +519,7 @@ test-all = [
 workspace = [
     { name = "coordinax-api" },
     { name = "coordinax-astro" },
+    { name = "coordinax-hypothesis" },
 ]
 
 [package.metadata]
@@ -544,6 +550,7 @@ dev = [
     { name = "build", specifier = ">=1.3.0" },
     { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "coordinax-astro", editable = "packages/coordinax-astro" },
+    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
     { name = "cz-conventional-gitmoji", specifier = ">=0.6.1" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "ipykernel", specifier = ">=7.1.0" },
@@ -575,6 +582,7 @@ dev = [
 docs = [
     { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "coordinax-astro", editable = "packages/coordinax-astro" },
+    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
     { name = "myst-nb", specifier = ">=1.1.2" },
     { name = "myst-parser", specifier = ">=0.13" },
     { name = "pytz", specifier = ">=2024.2" },
@@ -602,6 +610,7 @@ nox = [
 test = [
     { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "coordinax-astro", editable = "packages/coordinax-astro" },
+    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
@@ -613,6 +622,7 @@ test = [
 test-all = [
     { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "coordinax-astro", editable = "packages/coordinax-astro" },
+    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
@@ -624,6 +634,7 @@ test-all = [
 workspace = [
     { name = "coordinax-api", editable = "packages/coordinax-api" },
     { name = "coordinax-astro", editable = "packages/coordinax-astro" },
+    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
 ]
 
 [[package]]
@@ -655,6 +666,23 @@ requires-dist = [
     { name = "astropy", marker = "extra == 'astropy'", specifier = ">=7.2.0" },
     { name = "coordinax", editable = "." },
     { name = "optional-dependencies", specifier = ">=0.4.0" },
+]
+
+[[package]]
+name = "coordinax-hypothesis"
+version = "0.1.0"
+source = { editable = "packages/coordinax-hypothesis" }
+dependencies = [
+    { name = "coordinax" },
+    { name = "hypothesis" },
+    { name = "unxt-hypothesis" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "coordinax", editable = "." },
+    { name = "hypothesis", specifier = ">=6.0" },
+    { name = "unxt-hypothesis", specifier = ">=1.8.0" },
 ]
 
 [[package]]
@@ -2921,6 +2949,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/5e/50/034a6d8571c060a2d05eacc66abd0d44ee7bd37969fd82d07ab4011ace02/unxt_api-1.8.1.tar.gz", hash = "sha256:e8dd6a5f9846d3d9685218fefa811f1a8b130f016481beaba0fb432e1dc93b6e", size = 19488 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/43/da/616b74161e28e9ed380f2477a6a51ce1ca493aad5df6dedb119483109275/unxt_api-1.8.1-py3-none-any.whl", hash = "sha256:acdb7bf813326db241e3c2bc0342f71148c2767004af590950a42dbbd59f7e15", size = 5477 },
+]
+
+[[package]]
+name = "unxt-hypothesis"
+version = "1.8.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "hypothesis", extra = ["numpy"] },
+    { name = "jax" },
+    { name = "unxt" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ae/4f/a6e70db7c4dbf67dd92f2094ce51c0d69da1760199a7c1132ae72c098511/unxt_hypothesis-1.8.0.tar.gz", hash = "sha256:8207d5ae2a9195e5b4d4f003accaf83dab54d906895fd21743dc39a8d2097592", size = 20883 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8d/39/911fe1c53706344d9a1630a57fc7c52bd5a8853d054673d6d23a1453aa96/unxt_hypothesis-1.8.0-py3-none-any.whl", hash = "sha256:5608ebae51b0906954fb4ee52ce747a1dbff71bfd9722b55d456a61322142d9b", size = 10576 },
 ]
 
 [[package]]

@@ -92,6 +92,7 @@ ide = ["ipykernel>=7.1.0"]
 lint = ["pre-commit>=4.5.0", "pylint>=3.3.2"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
+  "coordinax-hypothesis",
   "hypothesis[numpy]>=6.112.2",
   "pytest>=8.3.3",
   "pytest-arraydiff>=0.6.1",
@@ -102,7 +103,7 @@ test = [
   { include-group = "workspace" },
 ]
 test-all = [{ include-group = "test" }]
-workspace = ["coordinax-api", "coordinax-astro"]
+workspace = ["coordinax-api", "coordinax-astro", "coordinax-hypothesis"]
 
 
 [tool.hatch]
@@ -252,6 +253,7 @@ testpaths = [
   "tests/",
   "packages/coordinax-api/",
   "packages/coordinax-astro",
+  "packages/coordinax-hypothesis/",
 ]
 xfail_strict = true
 
@@ -323,8 +325,9 @@ known-local-folder = ["coordinax", "coordinax_api"]
 constraint-dependencies = ["numpy<2.4.0"]
 
 [tool.uv.sources]
-coordinax-api   = { workspace = true }
-coordinax-astro = { workspace = true }
+coordinax-api        = { workspace = true }
+coordinax-astro      = { workspace = true }
+coordinax-hypothesis = { workspace = true }
 
 
 [tool.uv.workspace]
