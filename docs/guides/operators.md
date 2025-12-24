@@ -20,7 +20,7 @@ import jax.numpy as jnp
 Galilean operators represent the basic transformations in classical mechanics:
 translations, rotations, and boosts.
 
-### GalileanSpatialTranslation
+### GalileanOp
 
 Translates position vectors by a fixed offset:
 
@@ -36,22 +36,22 @@ Translates position vectors by a fixed offset:
 CartPos3D(x=Q(11, 'kpc'), y=Q(12, 'kpc'), z=Q(13, 'kpc'))
 ```
 
-### GalileanBoost
+### Galilean Boost
 
 Applies a velocity boost to a velocity vector:
 
 ```{code-block} python
->>> boost = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
+>>> boost = cxo.Add.from_([1, 1, 1], "km/s")
 >>> boost(u.Q(1.0, "s"), q)[1]
 CartPos3D(x=Q(1., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 ```
 
-### GalileanRotation
+### Rotate
 
 Rotates vectors in space:
 
 ```{code-block} python
->>> rot = cxo.GalileanRotation.from_euler("z", u.Q(90, "deg"))
+>>> rot = cxo.Rotate.from_euler("z", u.Q(90, "deg"))
 >>> rot(q).round(2)
 CartPos3D(x=Q(-2., 'kpc'), y=Q(1., 'kpc'), z=Q(3., 'kpc'))
 ```
@@ -64,8 +64,8 @@ Operators can be composed using the {class}`~coordinax.ops.Pipe` class or the
 `|` operator:
 
 ```{code-block} python
->>> op1 = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
->>> op2 = cxo.GalileanRotation.from_euler("z", u.Q(90, "deg"))
+>>> op1 = cxo.GalileanOp.from_([1, 0, 0], "kpc")
+>>> op2 = cxo.Rotate.from_euler("z", u.Q(90, "deg"))
 >>> pipe = cxo.Pipe([op1, op2])
 >>> pipe(q).round(2)
 CartPos3D(x=Q(-2., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
@@ -85,17 +85,13 @@ CartPos3D(x=Q(-2., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 
 - {class}`~coordinax.ops.Identity`: The do-nothing operator, useful for generic
   code.
-- {class}`~coordinax.ops.AbstractCompositeOperator`: Base for building custom
-  operator pipelines.
+- {class}`~coordinax.ops.Pipe`: Base for building custom operator pipelines.
 
 ---
 
 ## Utilities and Advanced Usage
 
-- {class}`~coordinax.ops.simplify_op`: Simplifies composed operators when
-  possible.
-- {class}`~coordinax.ops.convert_to_pipe_operators`: Utility to convert a list
-  of operators into a {class}`~coordinax.ops.Pipe`.
+- {class}`~coordinax.ops.simplify`: Simplifies composed operators when possible.
 
 ---
 

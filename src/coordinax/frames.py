@@ -14,10 +14,7 @@ Let's transform a position from Alice's frame to Bob's frame:
 
 >>> op = cxf.frame_transform_op(frame1, frame2)
 >>> op
-Pipe((
-    GalileanSpatialTranslation(CartPos3D( ... )),
-    GalileanBoost(CartVel3D( ... ))
-))
+Pipe(( Add(CartPos3D( ... )), Add(CartVel3D( ... )) ))
 
 >>> q_alice = cx.Vector.from_([0, 0, 0], "km")
 >>> t = u.Q(2.5, "yr")
@@ -28,11 +25,11 @@ Pipe((
 
 Now let's create a new transformed frame and work with it:
 
->>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+>>> R = cx.ops.Rotate([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
 >>> frame = cxf.TransformedReferenceFrame(frame1, R)
 >>> frame
 TransformedReferenceFrame(
-    base_frame=Alice(), xop=GalileanRotation(rotation=f32[3,3])
+    base_frame=Alice(), xop=Rotate(rotation=f32[3,3])
 )
 
 Let's transform a position from the base frame to the transformed frame:
