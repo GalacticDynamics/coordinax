@@ -66,19 +66,17 @@ def uconvert(
 
     We can convert a vector to the given units:
 
-    >>> cart = cx.vecs.CartesianPos2D(x=u.Quantity(1, "m"), y=u.Quantity(2, "km"))
+    >>> cart = cx.vecs.CartesianPos2D(x=u.Q(1, "m"), y=u.Q(2, "km"))
     >>> cart.uconvert({u.dimension("length"): "km"})
-    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2, unit='km'))
+    CartesianPos2D(x=Q(0.001, 'km'), y=Q(2, 'km'))
 
     This also works for vectors with different units:
 
-    >>> sph = cx.SphericalPos(r=u.Quantity(1, "m"), theta=u.Quantity(45, "deg"),
-    ...                       phi=u.Quantity(3, "rad"))
+    >>> sph = cx.SphericalPos(r=u.Q(1, "m"), theta=u.Q(45, "deg"),
+    ...                       phi=u.Q(3, "rad"))
     >>> sph.uconvert({u.dimension("length"): "km", u.dimension("angle"): "deg"})
     SphericalPos(
-      r=Distance(0.001, unit='km'),
-      theta=Angle(45, unit='deg'),
-      phi=Angle(171.88734, unit='deg')
+      r=Distance(0.001, 'km'), theta=Angle(45, 'deg'), phi=Angle(171.88734, 'deg')
     )
 
     """
@@ -105,25 +103,22 @@ def uconvert(units: Mapping[str, Any], vector: AbstractVector, /) -> AbstractVec
 
     We can convert a vector to the given units:
 
-    >>> cart = cx.vecs.CartesianPos2D(x=u.Quantity(1, "m"), y=u.Quantity(2, "km"))
+    >>> cart = cx.vecs.CartesianPos2D(x=u.Q(1, "m"), y=u.Q(2, "km"))
     >>> cart.uconvert({"x": "km", "y": "m"})
-    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2000., unit='m'))
+    CartesianPos2D(x=Q(0.001, 'km'), y=Q(2000., 'm'))
 
     This also works for converting just some of the components:
 
     >>> cart.uconvert({"x": "km"})
-    CartesianPos2D(x=Quantity(0.001, unit='km'), y=Quantity(2, unit='km'))
+    CartesianPos2D(x=Q(0.001, 'km'), y=Q(2, 'km'))
 
     This also works for vectors with different units:
 
-    >>> sph = cx.SphericalPos(r=u.Quantity(1, "m"), theta=u.Quantity(45, "deg"),
-    ...                       phi=u.Quantity(3, "rad"))
+    >>> sph = cx.SphericalPos(r=u.Q(1, "m"), theta=u.Q(45, "deg"),
+    ...                       phi=u.Q(3, "rad"))
     >>> sph.uconvert({"r": "km", "theta": "rad"})
-    SphericalPos(
-      r=Distance(0.001, unit='km'),
-      theta=Angle(0.7853982, unit='rad'),
-      phi=Angle(3., unit='rad')
-    )
+    SphericalPos( r=Distance(0.001, 'km'), theta=Angle(0.7853982, 'rad'),
+                  phi=Angle(3., 'rad') )
 
     """
     return replace(
@@ -163,15 +158,12 @@ def uconvert(
     ``"consistent"``:
 
     >>> cart.uconvert(cx.vecs.ToUnitsOptions.consistent)
-    CartesianPos2D(x=Quantity(1, unit='m'), y=Quantity(2, unit='m'))
+    CartesianPos2D(x=Q(1, 'm'), y=Q(2, 'm'))
 
     >>> sph = cart.vconvert(cx.SphericalPos)
     >>> sph.uconvert(cx.vecs.ToUnitsOptions.consistent)
-    SphericalPos(
-      r=Distance(2.236068, unit='m'),
-      theta=Angle(1.5707964, unit='rad'),
-      phi=Angle(1.1071488, unit='rad')
-    )
+    SphericalPos( r=Distance(2.236068, 'm'), theta=Angle(1.5707964, 'rad'),
+                  phi=Angle(1.1071488, 'rad') )
 
     """
     dim2unit = {}
@@ -207,11 +199,8 @@ def uconvert(usys: str, vector: AbstractVector, /) -> AbstractVector:
     >>> usys = "galactic"
     >>> vector = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> u.uconvert(usys, vector)
-    CartesianPos3D(
-      x=Quantity(3.2407793e-20, unit='kpc'),
-      y=Quantity(6.4815585e-20, unit='kpc'),
-      z=Quantity(9.722338e-20, unit='kpc')
-    )
+    CartesianPos3D( x=Q(3.2407793e-20, 'kpc'), y=Q(6.4815585e-20, 'kpc'),
+                    z=Q(9.722338e-20, 'kpc') )
 
     """
     usys = u.unitsystem(usys)

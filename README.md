@@ -46,9 +46,9 @@ import unxt as u
 import coordinax as cx
 
 q = cx.CartesianPos3D(
-    x=u.Quantity(jnp.arange(0, 10.0), "kpc"),
-    y=u.Quantity(jnp.arange(5, 15.0), "kpc"),
-    z=u.Quantity(jnp.arange(10, 20.0), "kpc"),
+    x=u.Q(jnp.arange(0, 10.0), "kpc"),
+    y=u.Q(jnp.arange(5, 15.0), "kpc"),
+    z=u.Q(jnp.arange(10, 20.0), "kpc"),
 )
 print(q)
 # <CartesianPos3D: (x, y, z) [kpc]
@@ -68,9 +68,9 @@ print(q2)
 #      [25.259  0.719  0.999]]>
 
 p = cx.CartesianVel3D(
-    x=u.Quantity(jnp.arange(0, 10.0), "km/s"),
-    y=u.Quantity(jnp.arange(5, 15.0), "km/s"),
-    z=u.Quantity(jnp.arange(10, 20.0), "km/s"),
+    x=u.Q(jnp.arange(0, 10.0), "km/s"),
+    y=u.Q(jnp.arange(5, 15.0), "km/s"),
+    z=u.Q(jnp.arange(10, 20.0), "km/s"),
 )
 print(p)
 # <CartesianVel3D: (x, y, z) [km / s]

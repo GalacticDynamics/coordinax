@@ -78,9 +78,7 @@ def test_degrees(angle):
 
 
 # Angles with wrapping
-@given(
-    angle=cxst.angles(wrap_to=st.just((u.Quantity(0, "deg"), u.Quantity(360, "deg"))))
-)
+@given(angle=cxst.angles(wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg")))))
 def test_wrapped(angle):
     assert angle.wrap_to is not None
 ```

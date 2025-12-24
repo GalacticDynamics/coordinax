@@ -36,20 +36,20 @@ def vec_to_q(obj: cx.vecs.AbstractPos3D, /) -> Shaped[apyu.Quantity, "*batch 3"]
     >>> convert(vec, apyu.Quantity)
     <Quantity [1., 2., 3.] km>
 
-    >>> vec = cx.SphericalPos(r=apyu.Quantity(1, unit="km"),
-    ...                       theta=apyu.Quantity(2, unit="deg"),
-    ...                       phi=apyu.Quantity(3, unit="deg"))
+    >>> vec = cx.SphericalPos(r=apyu.Quantity(1, "km"),
+    ...                       theta=apyu.Quantity(2, "deg"),
+    ...                       phi=apyu.Quantity(3, "deg"))
     >>> convert(vec, apyu.Quantity)
     <Quantity [0.03485167, 0.0018265 , 0.99939084] km>
 
-    >>> vec = cx.vecs.CylindricalPos(rho=apyu.Quantity(1, unit="km"),
-    ...                              phi=apyu.Quantity(2, unit="deg"),
-    ...                              z=apyu.Quantity(3, unit="m"))
+    >>> vec = cx.vecs.CylindricalPos(rho=apyu.Quantity(1, "km"),
+    ...                              phi=apyu.Quantity(2, "deg"),
+    ...                              z=apyu.Quantity(3, "m"))
     >>> convert(vec, apyu.Quantity)
     <Quantity [0.99939084, 0.0348995 , 0.003     ] km>
 
     """
-    return convert(convert(obj, u.Quantity), apyu.Quantity)
+    return convert(convert(obj, u.Q), apyu.Quantity)
 
 
 @conversion_method(cx.vecs.CartesianAcc3D, apyu.Quantity)  # type: ignore[arg-type]
@@ -74,7 +74,7 @@ def vec_diff_to_q(
     <Quantity [1., 2., 3.] km / s2>
 
     """
-    return convert(convert(obj, u.Quantity), apyu.Quantity)
+    return convert(convert(obj, u.Q), apyu.Quantity)
 
 
 # =====================================
@@ -118,9 +118,7 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.CartesianPos3D
 
     >>> vec = CartesianRepresentation(1, 2, 3, unit="km")
     >>> convert(vec, cx.CartesianPos3D)
-    CartesianPos3D(
-      x=Quantity(1., unit='km'), y=Quantity(2., unit='km'), z=Quantity(3., unit='km')
-    )
+    CartesianPos3D(x=Q(1., 'km'), y=Q(2., 'km'), z=Q(3., 'km'))
 
     """
     return cast("cx.CartesianPos3D", cx.CartesianPos3D.from_(obj))
@@ -140,9 +138,8 @@ def cyl_to_apycyl(obj: cx.vecs.CylindricalPos, /) -> apyc.CylindricalRepresentat
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalPos(rho=u.Quantity(1, unit="km"),
-    ...                              phi=u.Quantity(2, unit="deg"),
-    ...                              z=u.Quantity(3, unit="m"))
+    >>> vec = cx.vecs.CylindricalPos(rho=u.Q(1, "km"), phi=u.Q(2, "deg"),
+    ...                              z=u.Q(3, "m"))
     >>> convert(vec, apyc.CylindricalRepresentation)
     <CylindricalRepresentation (rho, phi, z) in (km, deg, m)
         (1., 2., 3.)>
@@ -171,10 +168,7 @@ def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cx.vecs.Cylindrical
 
     >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
     >>> convert(cyl, cx.vecs.CylindricalPos)
-    CylindricalPos(
-      rho=Distance(1., unit='km'), phi=Angle(2., unit='deg'),
-      z=Quantity(30., unit='m')
-    )
+    CylindricalPos(rho=Distance(1., 'km'), phi=Angle(2., 'deg'), z=Q(30., 'm'))
 
     """
     return cast("cx.vecs.CylindricalPos", cx.vecs.CylindricalPos.from_(obj))
@@ -194,9 +188,7 @@ def sph_to_apysph(obj: cx.SphericalPos, /) -> apyc.PhysicsSphericalRepresentatio
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.SphericalPos(r=u.Quantity(1, unit="m"),
-    ...                       theta=u.Quantity(2, unit="deg"),
-    ...                       phi=u.Quantity(3, unit="deg"))
+    >>> vec = cx.SphericalPos(r=u.Q(1, "m"), theta=u.Q(2, "deg"), phi=u.Q(3, "deg"))
     >>> convert(vec, apyc.PhysicsSphericalRepresentation)
     <PhysicsSphericalRepresentation (phi, theta, r) in (deg, deg, m)
         (3., 2., 1.)>
@@ -222,10 +214,7 @@ def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cx.SphericalPo
     >>> sph = PhysicsSphericalRepresentation(r=1 * u.km, theta=2 * u.deg,
     ...                                      phi=3 * u.deg)
     >>> convert(sph, cx.SphericalPos)
-    SphericalPos(
-      r=Distance(1., unit='km'), theta=Angle(2., unit='deg'),
-      phi=Angle(3., unit='deg')
-    )
+    SphericalPos(r=Distance(1., 'km'), theta=Angle(2., 'deg'), phi=Angle(3., 'deg'))
 
     """
     return cast("cx.SphericalPos", cx.SphericalPos.from_(obj))
@@ -247,9 +236,8 @@ def lonlatsph_to_apysph(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(2, unit="deg"),
-    ...                                  lat=u.Quantity(3, unit="deg"),
-    ...                                  distance=u.Quantity(1, unit="km"))
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(2, "deg"), lat=u.Q(3, "deg"),
+    ...                                  distance=u.Q(1, "km"))
     >>> convert(vec, apyc.SphericalRepresentation)
     <SphericalRepresentation (lon, lat, distance) in (deg, deg, km)
         (2., 3., 1.)>
@@ -278,9 +266,7 @@ def apysph_to_lonlatsph(
     ...                               distance=1 * u.km)
     >>> convert(sph, cx.vecs.LonLatSphericalPos)
     LonLatSphericalPos(
-      lon=Angle(2., unit='deg'),
-      lat=Angle(3., unit='deg'),
-      distance=Distance(1., unit='km')
+      lon=Angle(2., 'deg'), lat=Angle(3., 'deg'), distance=Distance(1., 'km')
     )
 
     """
@@ -327,11 +313,7 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.CartesianVel
 
     >>> dcart = CartesianDifferential(1, 2, 3, unit="km/s")
     >>> convert(dcart, cx.CartesianVel3D)
-    CartesianVel3D(
-      x=Quantity(1., unit='km / s'),
-      y=Quantity(2., unit='km / s'),
-      z=Quantity(3., unit='km / s')
-    )
+    CartesianVel3D(x=Q(1., 'km / s'), y=Q(2., 'km / s'), z=Q(3., 'km / s'))
 
     """
     return cast("cx.CartesianVel3D", cx.CartesianVel3D.from_(obj))
@@ -352,9 +334,8 @@ def diffcyl_to_apycyl(obj: cx.vecs.CylindricalVel, /) -> apyc.CylindricalDiffere
     >>> import coordinax as cx
     >>> import astropy.coordinates as apyc
 
-    >>> dif = cx.vecs.CylindricalVel(rho=u.Quantity(1, unit="km/s"),
-    ...                              phi=u.Quantity(2, unit="mas/yr"),
-    ...                              z=u.Quantity(3, unit="km/s"))
+    >>> dif = cx.vecs.CylindricalVel(rho=u.Q(1, "km/s"), phi=u.Q(2, "mas/yr"),
+    ...                              z=u.Q(3, "km/s"))
     >>> convert(dif, apyc.CylindricalDifferential)
     <CylindricalDifferential (d_rho, d_phi, d_z) in (km / s, mas / yr, km / s)
         (1., 2., 3.)>
@@ -386,11 +367,7 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.vecs.Cylindric
     >>> dcyl = apyc.CylindricalDifferential(d_rho=1 * u.km / u.s, d_phi=2 * u.mas/u.yr,
     ...                                     d_z=2 * u.km / u.s)
     >>> convert(dcyl, cx.vecs.CylindricalVel)
-    CylindricalVel(
-      rho=Quantity(1., unit='km / s'),
-      phi=Quantity(2., unit='mas / yr'),
-      z=Quantity(2., unit='km / s')
-    )
+    CylindricalVel(rho=Q(1., 'km / s'), phi=Q(2., 'mas / yr'), z=Q(2., 'km / s'))
 
     """
     return cast("cx.vecs.CylindricalVel", cx.vecs.CylindricalVel.from_(obj))
@@ -410,9 +387,8 @@ def diffsph_to_apysph(obj: cx.SphericalVel, /) -> apyc.PhysicsSphericalDifferent
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> dif = cx.SphericalVel(r=u.Quantity(1, unit="km/s"),
-    ...                       theta=u.Quantity(2, unit="mas/yr"),
-    ...                       phi=u.Quantity(3, unit="mas/yr"))
+    >>> dif = cx.SphericalVel(r=u.Q(1, "km/s"),
+    ...                       theta=u.Q(2, "mas/yr"), phi=u.Q(3, "mas/yr"))
     >>> convert(dif, apyc.PhysicsSphericalDifferential)
     <PhysicsSphericalDifferential (d_phi, d_theta, d_r) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
@@ -444,11 +420,7 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.Spherical
     >>> dif = PhysicsSphericalDifferential(d_r=1 * u.km / u.s, d_theta=2 * u.mas/u.yr,
     ...                                    d_phi=3 * u.mas/u.yr)
     >>> convert(dif, cx.SphericalVel)
-    SphericalVel(
-      r=Quantity(1., unit='km / s'),
-      theta=Quantity(2., unit='mas / yr'),
-      phi=Quantity(3., unit='mas / yr')
-    )
+    SphericalVel(r=Q(1., 'km / s'), theta=Q(2., 'mas / yr'), phi=Q(3., 'mas / yr'))
 
     """
     return cast("cx.SphericalVel", cx.SphericalVel.from_(obj))
@@ -470,9 +442,8 @@ def difflonlatsph_to_apysph(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> dif = cx.vecs.LonLatSphericalVel(distance=u.Quantity(1, unit="km/s"),
-    ...                                  lat=u.Quantity(2, unit="mas/yr"),
-    ...                                  lon=u.Quantity(3, unit="mas/yr"))
+    >>> dif = cx.vecs.LonLatSphericalVel(lat=u.Q(2, "mas/yr"), lon=u.Q(3, "mas/yr"),
+    ...                                  distance=u.Q(1, "km/s"))
     >>> convert(dif, apyc.SphericalDifferential)
     <SphericalDifferential (d_lon, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
@@ -507,9 +478,7 @@ def apysph_to_difflonlatsph(
     ...                             d_lon=3 * u.mas/u.yr)
     >>> convert(dif, cx.vecs.LonLatSphericalVel)
     LonLatSphericalVel(
-      lon=Quantity(3., unit='mas / yr'),
-      lat=Quantity(2., unit='mas / yr'),
-      distance=Quantity(1., unit='km / s')
+      lon=Q(3., 'mas / yr'), lat=Q(2., 'mas / yr'), distance=Q(1., 'km / s')
     )
 
     """
@@ -532,9 +501,9 @@ def diffloncoslatsph_to_apysph(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> dif = cx.vecs.LonCosLatSphericalVel(distance=u.Quantity(1, unit="km/s"),
-    ...                                     lat=u.Quantity(2, unit="mas/yr"),
-    ...                                     lon_coslat=u.Quantity(3, unit="mas/yr"))
+    >>> dif = cx.vecs.LonCosLatSphericalVel(distance=u.Q(1, "km/s"),
+    ...                                     lat=u.Q(2, "mas/yr"),
+    ...                                     lon_coslat=u.Q(3, "mas/yr"))
     >>> convert(dif, apyc.SphericalCosLatDifferential)
     <SphericalCosLatDifferential (d_lon_coslat, d_lat, d_distance) in (mas / yr, mas / yr, km / s)
         (3., 2., 1.)>
@@ -570,9 +539,9 @@ def apysph_to_diffloncoslatsph(
     ...                                   d_lon_coslat=3 * u.mas/u.yr)
     >>> convert(dif, cx.vecs.LonCosLatSphericalVel)
     LonCosLatSphericalVel(
-      lon_coslat=Quantity(3., unit='mas / yr'),
-      lat=Quantity(2., unit='mas / yr'),
-      distance=Quantity(1., unit='km / s')
+      lon_coslat=Q(3., 'mas / yr'),
+      lat=Q(2., 'mas / yr'),
+      distance=Q(1., 'km / s')
     )
 
     """

@@ -31,7 +31,7 @@ def test_angle_radians(angle: u.Angle) -> None:
     assert angle.unit == "rad"
 
 
-@given(angle=angles(wrap_to=st.just((u.Quantity(0, "deg"), u.Quantity(360, "deg")))))
+@given(angle=angles(wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg")))))
 @settings(max_examples=50)
 def test_angle_with_wrapping(angle: u.Angle) -> None:
     """Test angle generation with wrapping."""
@@ -42,7 +42,7 @@ def test_angle_with_wrapping(angle: u.Angle) -> None:
     assert 0 <= angle_deg <= 360
 
 
-@given(angle=angles(wrap_to=st.just((u.Quantity(-180, "deg"), u.Quantity(180, "deg")))))
+@given(angle=angles(wrap_to=st.just((u.Q(-180, "deg"), u.Q(180, "deg")))))
 @settings(max_examples=50)
 def test_angle_with_symmetric_wrapping(angle: u.Angle) -> None:
     """Test angle generation with symmetric wrapping."""

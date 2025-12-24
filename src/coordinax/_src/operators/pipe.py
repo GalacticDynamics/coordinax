@@ -126,7 +126,13 @@ class Pipe(AbstractCompositeOperator):
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig representation."""
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("use_short_name", True)
+        kwargs.setdefault("named_unit", False)
+
+        # Build the docs for each operator
         docs = [wl.pdoc(op, **kwargs) for op in self.operators]
+        # Bracket depending on number of operators
         begin = wl.TextDoc("((" if len(docs) > 1 else "(")
         end = wl.TextDoc("))" if len(docs) > 1 else ")")
         return wl.bracketed(

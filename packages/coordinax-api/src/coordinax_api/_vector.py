@@ -39,7 +39,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     - Quantity-valued:
 
-    >>> params = {"x": u.Quantity([1.0, 2.0], "m")}
+    >>> params = {"x": u.Q([1.0, 2.0], "m")}
     >>> cxv.vconvert(cxv.RadialPos, cxv.CartesianPos1D, params)
     ({'r': Quantity(Array([1., 2.], dtype=float32), unit='m')},
      {})
@@ -74,7 +74,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     - Quantity-valued:
 
-    >>> params = {"r": u.Quantity([1.0, 2.0], "m"), "phi": u.Quantity(3, "deg")}
+    >>> params = {"r": u.Q([1.0, 2.0], "m"), "phi": u.Q(3, "deg")}
     >>> cxv.vconvert(cxv.CartesianPos2D, cxv.PolarPos, params)
     ({'x': Quantity(Array([0.9986295, 1.997259 ], dtype=float32), unit='m'),
       'y': Quantity(Array([0.05233596, 0.10467192], dtype=float32), unit='m')},
@@ -107,9 +107,8 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     - Quantity-valued:
 
-    >>> params = {"x": u.Quantity([1.0, 2.0], "m"),
-    ...           "y": u.Quantity([3.0, 4.0], "m"),
-    ...           "z": u.Quantity([5.0, 6.0], "m")}
+    >>> params = {"x": u.Q([1.0, 2.0], "m"), "y": u.Q([3.0, 4.0], "m"),
+    ...           "z": u.Q([5.0, 6.0], "m")}
     >>> params, aux = cxv.vconvert(cxv.SphericalPos, cxv.CartesianPos3D, params)
     >>> jax.tree.map(lambda x: jnp.round(x, 4), params)
     {'phi': Quantity(Array([1.249 , 1.1071], dtype=float32), unit='rad'),

@@ -45,8 +45,8 @@ class AbstractPosND(AbstractPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianPosND(u.Quantity([[[1, 2, 3]],
-        ...                                          [[4, 5, 6]]], "m"))
+        >>> vec = cx.vecs.CartesianPosND(u.Q([[[1, 2, 3]],
+        ...                                   [[4, 5, 6]]], "m"))
         >>> vec.shape
         (2, 1)
 
@@ -228,8 +228,7 @@ class AbstractVelND(AbstractVel):
 
         >>> vec = cx.vecs.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.flatten()
-        CartesianVelND(q=Quantity([[1, 2],
-                                   [3, 4]], unit='m / s'))
+        CartesianVelND(q=Q([[1, 2], [3, 4]], 'm / s'))
 
         """
         return replace(self, q=self.q.reshape(-1, self.q.shape[-1]))
@@ -241,7 +240,7 @@ class AbstractVelND(AbstractVel):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3], "m/s"))
+        >>> vec = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "m/s"))
         >>> vec.shape
         ()
 
@@ -274,8 +273,8 @@ class AbstractAccND(AbstractAcc):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianAccND(u.Quantity([[[1, 2, 3]],
-        ...                                          [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.vecs.CartesianAccND(u.Q([[[1, 2, 3]],
+        ...                                   [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
 
@@ -303,8 +302,8 @@ class AbstractAccND(AbstractAcc):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianAccND(u.Quantity([[[1, 2, 3]],
-        ...                                          [[4, 5, 6]]], "m/s2"))
+        >>> vec = cx.vecs.CartesianAccND(u.Q([[[1, 2, 3]],
+        ...                                   [[4, 5, 6]]], "m/s2"))
         >>> vec.shape
         (2, 1)
 

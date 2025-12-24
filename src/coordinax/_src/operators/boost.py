@@ -151,6 +151,10 @@ class VelocityBoost(AbstractOperator):
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig representation."""
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("use_short_name", True)
+        kwargs.setdefault("named_unit", False)
+
         return (
             wl.TextDoc(f"{self.__class__.__name__}(")
             + wl.pdoc(self.velocity, **kwargs)
@@ -193,8 +197,8 @@ def call(
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: VelocityBoost, q: u.Quantity["length"], p: u.Quantity["speed"], /
-) -> tuple[u.Quantity["length"], u.Quantity["speed"]]:
+    self: VelocityBoost, q: u.Q["length"], p: u.Q["speed"], /
+) -> tuple[u.Q["length"], u.Q["speed"]]:
     r"""Apply the boost to the coordinates.
 
     This does nothing to the position, as the boost is to the velocity only.
@@ -205,8 +209,8 @@ def call(
 
     >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
 
-    >>> q = u.Quantity([0., 0, 0], "m")
-    >>> p = u.Quantity([0., 0, 0], "m/s")
+    >>> q = u.Q([0., 0, 0], "m")
+    >>> p = u.Q([0., 0, 0], "m/s")
     >>> newq, newp = op(q, p)
     >>> (newq, newp)
     (Quantity(Array([0., 0., 0.], dtype=float32), unit='m'),
@@ -215,7 +219,7 @@ def call(
     """
     pvec = CartesianVel3D.from_(p)
     newpvec = pvec + self.velocity
-    return q, convert(newpvec, u.Quantity)
+    return q, convert(newpvec, u.Q)
 
 
 @AbstractOperator.__call__.dispatch(precedence=-1)
@@ -240,8 +244,8 @@ def call(self: VelocityBoost, q: AbstractPos, /) -> AbstractPos:
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: VelocityBoost, t: u.Quantity["time"], q: AbstractPos, /
-) -> tuple[u.Quantity["time"], AbstractPos]:
+    self: VelocityBoost, t: u.Q["time"], q: AbstractPos, /
+) -> tuple[u.Q["time"], AbstractPos]:
     """Apply the boost to the coordinates.
 
     This does nothing to the position, as the boost is to the velocity only.
@@ -254,7 +258,7 @@ def call(
     >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "m")
-    >>> t = u.Quantity(1, "s")
+    >>> t = u.Q(1, "s")
 
     >>> newt, newq = op(t, q)
     >>> newt is t, newq is q

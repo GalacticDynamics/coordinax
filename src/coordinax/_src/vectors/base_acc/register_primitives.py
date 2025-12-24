@@ -21,7 +21,7 @@ from coordinax._src.vectors.base_vel import AbstractVel
 
 
 @register(jax.lax.mul_p)
-def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
+def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Q["time"], /) -> AbstractVel:
     """Multiply the vector by a `unxt.Quantity`.
 
     Examples
@@ -30,8 +30,8 @@ def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(d2r, u.Quantity(2, "s"))
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
+    >>> vec = lax.mul(d2r, u.Q(2, "s"))
     >>> print(vec)
     <RadialVel: (r) [m / s]
         [2]>
@@ -42,7 +42,7 @@ def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
 
 
 @register(jax.lax.mul_p)
-def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
+def mul_p_time_acc(lhs: u.Q["time"], rhs: AbstractAcc, /) -> AbstractVel:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -51,8 +51,8 @@ def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(u.Quantity(2, "s"), d2r)
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
+    >>> vec = lax.mul(u.Q(2, "s"), d2r)
     >>> print(vec)
     <RadialVel: (r) [m / s]
         [2]>
@@ -62,7 +62,7 @@ def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
 
 
 @register(jax.lax.mul_p)
-def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
+def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Q["s2"], /) -> AbstractPos:
     """Multiply an acceleration by a scalar.
 
     Examples
@@ -71,13 +71,13 @@ def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(d2r, u.Quantity(2, "s2"))
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
+    >>> vec = lax.mul(d2r, u.Q(2, "s2"))
     >>> print(vec)
     <RadialPos: (r) [m]
         [2]>
 
-    >>> print(d2r * u.Quantity(2, "s2"))
+    >>> print(d2r * u.Q(2, "s2"))
     <RadialPos: (r) [m]
         [2]>
 
@@ -88,7 +88,7 @@ def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
 
 
 @register(jax.lax.mul_p)
-def mul_p_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc, /) -> AbstractPos:
+def mul_p_time2_acc(lhs: u.Q["s2"], rhs: AbstractAcc, /) -> AbstractPos:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -97,8 +97,8 @@ def mul_p_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc, /) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
-    >>> vec = lax.mul(u.Quantity(2, "s2"), d2r)
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
+    >>> vec = lax.mul(u.Q(2, "s2"), d2r)
     >>> print(vec)
     <RadialPos: (r) [m]
         [2]>
@@ -120,7 +120,7 @@ def neg_p_acc(vec: AbstractAcc, /) -> AbstractAcc:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> d2r = cx.vecs.RadialAcc(u.Quantity(1, "m/s2"))
+    >>> d2r = cx.vecs.RadialAcc(u.Q(1, "m/s2"))
     >>> vec = lax.neg(d2r)
     >>> print(vec)
     <RadialAcc: (r) [m / s2]

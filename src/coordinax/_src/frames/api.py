@@ -32,7 +32,7 @@ def frame_transform_op(from_frame: Any, to_frame: Any, /) -> Any:
     Pipe(( ... ))
 
     >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
-    >>> t = u.Quantity(1, "yr")
+    >>> t = u.Q(1, "yr")
     >>> print(op(t, q)[1])
     <CartesianPos3D: (x, y, z) [kpc]
         [1. 2. 3.]>

@@ -105,9 +105,7 @@ def test_angle_degrees(angle):
 
 
 # Generate angles with wrapping bounds [0, 360) degrees
-@given(
-    angle=cxst.angles(wrap_to=st.just((u.Quantity(0, "deg"), u.Quantity(360, "deg"))))
-)
+@given(angle=cxst.angles(wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg")))))
 def test_angle_with_wrapping(angle):
     assert angle.wrap_to is not None
     min_bound, max_bound = angle.wrap_to

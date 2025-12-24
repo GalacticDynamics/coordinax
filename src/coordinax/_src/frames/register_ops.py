@@ -20,10 +20,8 @@ def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
     >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
     ...                       cx.frames.ICRS())
     >>> coord
-    Coordinate(
-        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
-    )
+    Coordinate( KinematicSpace({ 'length': CartesianPos3D(...) }),
+                frame=ICRS() )
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([-1, -1, -1], "kpc")
 

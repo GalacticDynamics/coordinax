@@ -81,7 +81,7 @@ def mul_p_arraylike_cartnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianP
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> v = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], "km"))
+    >>> v = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4, 5], "km"))
     >>> jnp.multiply(2, v).q
     Quantity(Array([ 2,  4,  6,  8, 10], dtype=int32), unit='km')
 
@@ -106,7 +106,7 @@ def neg_p_cartnd(obj: CartesianPosND, /) -> CartesianPosND:
 
     A 3D vector:
 
-    >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
+    >>> vec = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
     >>> (-vec).q
     Quantity(Array([-1, -2, -3], dtype=int32), unit='km')
 
@@ -125,8 +125,8 @@ def sub_p_cartnd_pos(lhs: CartesianPosND, rhs: AbstractPos, /) -> CartesianPosND
 
     A 3D vector:
 
-    >>> q1 = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3], "km"))
-    >>> q2 = cx.vecs.CartesianPosND(u.Quantity([2, 3, 4], "km"))
+    >>> q1 = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
+    >>> q2 = cx.vecs.CartesianPosND(u.Q([2, 3, 4], "km"))
     >>> print(q1 - q2)
     <CartesianPosND: (q) [km]
         [[-1]

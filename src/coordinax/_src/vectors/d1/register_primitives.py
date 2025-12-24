@@ -132,11 +132,11 @@ def mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     >>> import coordinax as cx
 
     >>> v = cx.vecs.CartesianPos1D.from_(1, "m")
-    >>> jnp.multiply(2, v).x
-    Quantity(Array(2, dtype=int32), unit='m')
+    >>> jnp.multiply(2, v)
+    CartesianPos1D(x=Q(2, 'm'))
 
-    >>> (2 * v).x
-    Quantity(Array(2, dtype=int32, ...), unit='m')
+    >>> (2 * v)
+    CartesianPos1D(x=Q(2, 'm'))
 
     """
     # Validation
@@ -217,8 +217,8 @@ def neg_p_cart1d_pos(obj: CartesianPos1D, /) -> CartesianPos1D:
     --------
     >>> import coordinax as cx
     >>> q = cx.vecs.CartesianPos1D.from_([1], "km")
-    >>> (-q).x
-    Quantity(Array(-1, dtype=int32), unit='km')
+    >>> -q
+    CartesianPos1D(x=Q(-1, 'km'))
 
     """
     return jax.tree.map(qlax.neg, obj)

@@ -50,8 +50,7 @@ class TwoSpherePos(AbstractPos2D):
 
     We can construct a 2-spherical coordinate:
 
-    >>> s2 = cx.vecs.TwoSpherePos(theta=u.Quantity(0, "deg"),
-    ...                           phi=u.Quantity(180, "deg"))
+    >>> s2 = cx.vecs.TwoSpherePos(theta=u.Q(0, "deg"), phi=u.Q(180, "deg"))
 
     This coordinate has corresponding velocity class:
 
@@ -109,8 +108,7 @@ class TwoSphereVel(AbstractVel2D):
 
     We can construct a 2-spherical velocity:
 
-    >>> s2 = cx.vecs.TwoSphereVel(theta=u.Quantity(0, "deg/s"),
-    ...                           phi=u.Quantity(2, "deg/s"))
+    >>> s2 = cx.vecs.TwoSphereVel(theta=u.Q(0, "deg/s"), phi=u.Q(2, "deg/s"))
 
     This coordinate has corresponding position and acceleration class:
 
@@ -122,10 +120,10 @@ class TwoSphereVel(AbstractVel2D):
 
     """
 
-    theta: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    theta: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Inclination speed :math:`d\theta/dt \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
 
@@ -163,8 +161,7 @@ class TwoSphereAcc(AbstractAcc2D):
 
     We can construct a 2-spherical acceleration:
 
-    >>> s2 = cx.vecs.TwoSphereAcc(theta=u.Quantity(0, "deg/s2"),
-    ...                           phi=u.Quantity(2, "deg/s2"))
+    >>> s2 = cx.vecs.TwoSphereAcc(theta=u.Q(0, "deg/s2"), phi=u.Q(2, "deg/s2"))
 
     This coordinate has corresponding velocity class:
 
@@ -173,12 +170,8 @@ class TwoSphereAcc(AbstractAcc2D):
 
     """
 
-    theta: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    theta: ct.BBtAngularAcc = eqx.field(converter=u.Q["angular acceleration"].from_)
     r"""Inclination acceleration :math:`d^2\theta/dt^2 \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    phi: ct.BBtAngularAcc = eqx.field(converter=u.Q["angular acceleration"].from_)
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""

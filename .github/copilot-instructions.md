@@ -90,6 +90,8 @@ This is a UV workspace repository containing multiple packages:
 - Docstrings should be concise and include testable usage examples
 - `__all__` should always be a tuple (not list) unless it needs to be mutated
   with `+=` - prefer immutable by default
+- Prefer `u.Q` over `u.Quantity` for creating quantities (shorter and more
+  concise)
 
 ### JAX Integration via Quax
 

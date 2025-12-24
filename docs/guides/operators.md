@@ -33,9 +33,7 @@ Translates position vectors by a fixed offset:
 >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
 >>> op = cxo.GalileanSpatialTranslation.from_([10, 10, 10], "kpc")
 >>> op(q)
-CartesianPos3D(
-    x=Quantity(11, unit='kpc'), y=Quantity(12, unit='kpc'), z=Quantity(13, unit='kpc')
-)
+CartesianPos3D(x=Q(11, 'kpc'), y=Q(12, 'kpc'), z=Q(13, 'kpc'))
 ```
 
 ### GalileanBoost
@@ -44,10 +42,8 @@ Applies a velocity boost to a velocity vector:
 
 ```{code-block} python
 >>> boost = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
->>> boost(u.Quantity(1.0, "s"), q)[1]
-CartesianPos3D(
-    x=Quantity(1., unit='kpc'), y=Quantity(2., unit='kpc'), z=Quantity(3., unit='kpc')
-)
+>>> boost(u.Q(1.0, "s"), q)[1]
+CartesianPos3D(x=Q(1., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 ```
 
 ### GalileanRotation
@@ -55,13 +51,9 @@ CartesianPos3D(
 Rotates vectors in space:
 
 ```{code-block} python
->>> rot = cxo.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+>>> rot = cxo.GalileanRotation.from_euler("z", u.Q(90, "deg"))
 >>> rot(q).round(2)
-CartesianPos3D(
-    x=Quantity(-2., unit='kpc'),
-    y=Quantity(1., unit='kpc'),
-    z=Quantity(3., unit='kpc')
-)
+CartesianPos3D(x=Q(-2., 'kpc'), y=Q(1., 'kpc'), z=Q(3., 'kpc'))
 ```
 
 ---
@@ -73,12 +65,10 @@ Operators can be composed using the {class}`~coordinax.ops.Pipe` class or the
 
 ```{code-block} python
 >>> op1 = cxo.GalileanSpatialTranslation.from_([1, 0, 0], "kpc")
->>> op2 = cxo.GalileanRotation.from_euler("z", u.Quantity(90, "deg"))
+>>> op2 = cxo.GalileanRotation.from_euler("z", u.Q(90, "deg"))
 >>> pipe = cxo.Pipe([op1, op2])
 >>> pipe(q).round(2)
-CartesianPos3D(
-    x=Quantity(-2., unit='kpc'), y=Quantity(2., unit='kpc'), z=Quantity(3., unit='kpc')
-)
+CartesianPos3D(x=Q(-2., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 ```
 
 Or using the pipe operator:
@@ -86,9 +76,7 @@ Or using the pipe operator:
 ```{code-block} python
 >>> combined = op1 | op2
 >>> combined(q).round(2)
-CartesianPos3D(
-    x=Quantity(-2., unit='kpc'), y=Quantity(2., unit='kpc'), z=Quantity(3., unit='kpc')
-)
+CartesianPos3D(x=Q(-2., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 ```
 
 ---

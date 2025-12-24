@@ -9,5 +9,5 @@ import unxt as u
 
 from .base import AbstractDistance
 
-BBtLength = Shaped[u.Quantity["length"], "*#batch"]
+BBtLength = Shaped[u.Q["length"], "*#batch"]
 BatchableDistance = Shaped[AbstractDistance, "*#batch"]

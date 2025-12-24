@@ -62,7 +62,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"))
+        >>> vec = cx.vecs.PolarPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"))
         >>> vec.aval()
         ShapedArray(float32[2])
 
@@ -70,7 +70,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(0, "rad/s"))
+        >>> vec = cx.vecs.PolarVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
@@ -78,7 +78,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarAcc(r=u.Quantity(1, "m/s2"), phi=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.PolarAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
@@ -92,7 +92,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[2,3])
 
-        >>> vec = cx.SphericalPos(r=u.Quantity(1, "m"), phi=u.Quantity(0, "rad"), theta=u.Quantity(0, "rad"))
+        >>> vec = cx.SphericalPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"), theta=u.Q(0, "rad"))
         >>> vec.aval()
         ShapedArray(float32[3])
 
@@ -100,7 +100,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.SphericalVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(0, "rad/s"), theta=u.Quantity(0, "rad/s"))
+        >>> vec = cx.SphericalVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"), theta=u.Q(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[3])
 
@@ -108,7 +108,7 @@ class AvalMixin:
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.vecs.SphericalAcc(r=u.Quantity(1, "m/s2"), phi=u.Quantity(0, "rad/s2"), theta=u.Quantity(0, "rad/s2"))
+        >>> vec = cx.vecs.SphericalAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"), theta=u.Q(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[3])
 
@@ -151,15 +151,15 @@ class IPythonReprMixin:
 
         >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
         >>> vec._repr_mimebundle_()
-        {'text/plain': "CartesianPos2D(x=Quantity(1, unit='m'),
-                                       y=Quantity(2, unit='m'))",
+        {'text/plain': "CartesianPos2D(x=Q(1, 'm'),
+                                       y=Q(2, 'm'))",
          'text/latex': '$\\left( \\begin{matrix}\\mathrm{ x } \\\\ \\mathrm{ y }\\end{matrix} \\right)=\\left( \\begin{matrix}1 \\; \\mathrm{m} \\\\ 2 \\; \\mathrm{m}\\end{matrix} \\right)$'}
 
         >>> vec._repr_mimebundle_(include=["text/plain"])
-        {'text/plain': "CartesianPos2D(x=Quantity(1, unit='m'), y=Quantity(2, unit='m'))"}
+        {'text/plain': "CartesianPos2D(x=Q(1, 'm'), y=Q(2, 'm'))"}
 
         >>> vec._repr_mimebundle_(exclude=["text/latex"])
-        {'text/plain': "CartesianPos2D(x=Quantity(1, unit='m'), y=Quantity(2, unit='m'))"}
+        {'text/plain': "CartesianPos2D(x=Q(1, 'm'), y=Q(2, 'm'))"}
 
         """  # noqa: E501
         # Determine the set of keys to include in the MIME bundle

@@ -99,12 +99,9 @@ class AbstractOperator(eqx.Module):
         >>> op.simplify()
         Identity()
 
-        >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
+        >>> op = cxo.GalileanOperator(translation=u.Q([0., 2., 3., 4.], "km"))
         >>> op.simplify()
-        GalileanTranslation(
-            delta_t=Quantity(f32[], unit='s'),
-            delta_q=CartesianPos3D( ... )
-        )
+        GalileanTranslation( delta_t=Q(f32[], 's'), delta_q=CartesianPos3D(...) )
 
         """
         return simplify_op(self)
@@ -114,6 +111,9 @@ class AbstractOperator(eqx.Module):
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
         """Return the documentation for the operator."""
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("use_short_name", True)
+        kwargs.setdefault("named_unit", False)
         # Get the field items, excluding those that should not be shown and
         # those that are equal to the default value.
         # TODO: better filtering using `fields`
@@ -155,8 +155,8 @@ class AbstractOperator(eqx.Module):
                           [0 0 1]])
 
         >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Quantity([0., 2, 3, 4], "km"),
-        ...     velocity=u.Quantity([1., 2, 3], "km/s"),
+        ...     translation=u.Q([0., 2, 3, 4], "km"),
+        ...     velocity=u.Q([1., 2, 3], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
         ... )
         >>> print(op)
@@ -165,7 +165,7 @@ class AbstractOperator(eqx.Module):
                                        [0. 1. 0.]
                                        [0. 0. 1.]]),
             translation=GalileanTranslation(
-                delta_t=Quantity(0., unit='s'),
+                delta_t=Q(0., 's'),
                 delta_q=<CartesianPos3D: (x, y, z) [km]
                     [2. 3. 4.]>
             ),
@@ -258,7 +258,7 @@ def from_(
     >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
     >>> print(op)
     GalileanTranslation(
-      delta_t=Quantity(1.0006922, unit='s'),
+      delta_t=Q(1.0006922, 's'),
       delta_q=<CartesianPos3D: (x, y, z) [km]
           [1. 1. 1.]>
     )
@@ -269,7 +269,7 @@ def from_(
         [1 1 1]>)
 
     """
-    return cls.from_(u.Quantity(x, unit))
+    return cls.from_(u.Q(x, unit))
 
 
 @AbstractOperator.from_.dispatch

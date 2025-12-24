@@ -60,7 +60,7 @@ def angles(
     With wrapping:
 
     >>> from hypothesis import strategies as st
-    >>> wrap_bounds = st.just((u.Quantity(0, "deg"), u.Quantity(360, "deg")))
+    >>> wrap_bounds = st.just((u.Q(0, "deg"), u.Q(360, "deg")))
     >>> @given(angle=angles(wrap_to=wrap_bounds))
     ... def test_wrapped_angle(angle):
     ...     assert angle.wrap_to is not None

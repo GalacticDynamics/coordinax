@@ -42,7 +42,7 @@ def ustrip_to_internal_units(
     dim = dims[k]
     from_unit = usys[dim]
     to_unit = internal_units.get(dim, from_unit)
-    return u.Quantity(v, from_unit).ustrip(to_unit)
+    return u.Q(v, from_unit).ustrip(to_unit)
 
 
 def vconvert_parse_input(
@@ -102,7 +102,7 @@ def ustrip_from_internal_units(
     dim = dims[k]
     to_unit = usys[dim]
     from_unit = internal_units.get(dim, to_unit)
-    return u.Quantity(v, from_unit).ustrip(to_unit)
+    return u.Q(v, from_unit).ustrip(to_unit)
 
 
 def vconvert_parse_output(

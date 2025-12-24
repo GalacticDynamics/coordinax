@@ -29,18 +29,18 @@ def check_polar_range(
 
     Pass through the input if it's in the range.
 
-    >>> x = u.Quantity([0., 1, 2], "deg")
+    >>> x = u.Q([0., 1, 2], "deg")
     >>> check_polar_range(x)
     Quantity(Array([0., 1., 2.], dtype=float32), unit='deg')
 
     Raise an error if anything is outside the range.
 
-    >>> x = u.Quantity([0., 1, 2], "m")
+    >>> x = u.Q([0., 1, 2], "m")
     >>> try: check_polar_range(x)
     ... except Exception as e: print("wrong units")
     wrong units
 
-    >>> x = u.Quantity([-1., 1, 2], "deg")
+    >>> x = u.Q([-1., 1, 2], "deg")
     >>> try: check_polar_range(x)
     ... except Exception: pass
 
@@ -68,13 +68,13 @@ def check_non_negative(
 
     Pass through the input if the value is non-negative.
 
-    >>> x = u.Quantity([0, 1, 2], "m")
+    >>> x = u.Q([0, 1, 2], "m")
     >>> check_non_negative(x)
     Quantity(Array([0, 1, 2], dtype=int32), unit='m')
 
     Raise an error if any value is negative.
 
-    >>> x = u.Quantity([-1, 1, 2], "m")
+    >>> x = u.Q([-1, 1, 2], "m")
     >>> try: check_non_negative(x)
     ... except Exception: pass
 
@@ -94,17 +94,17 @@ def check_non_negative_non_zero(
 
     Pass through the input if the value is non-negative.
 
-    >>> x = u.Quantity([1, 2, 3], "m")
+    >>> x = u.Q([1, 2, 3], "m")
     >>> check_non_negative_non_zero(x)
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if any value is negative or zero.
 
-    >>> x = u.Quantity([-1, 1, 2], "m")
+    >>> x = u.Q([-1, 1, 2], "m")
     >>> try: check_non_negative_non_zero(x)
     ... except Exception: pass
 
-    >>> x = u.Quantity([0, 1, 2], "m")
+    >>> x = u.Q([0, 1, 2], "m")
     >>> try: check_non_negative_non_zero(x)
     ... except Exception: pass
 
@@ -131,13 +131,13 @@ def check_less_than_equal(
 
     Pass through the input if the value is less than or equal to the max value:
 
-    >>> x = u.Quantity([1, 2, 3], "m")
-    >>> check_less_than_equal(x, u.Quantity(3, "m"))
+    >>> x = u.Q([1, 2, 3], "m")
+    >>> check_less_than_equal(x, u.Q(3, "m"))
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is larger than the maximum value.
 
-    >>> try: check_less_than_equal(x, u.Quantity(2, "m"))
+    >>> try: check_less_than_equal(x, u.Q(2, "m"))
     ... except Exception: pass
 
     """
@@ -162,13 +162,13 @@ def check_greater_than_equal(
 
     Pass through the input if the value is greater than or equal to the min value:
 
-    >>> x = u.Quantity([1, 2, 3], "m")
-    >>> check_greater_than_equal(x, u.Quantity(1, "m"))
+    >>> x = u.Q([1, 2, 3], "m")
+    >>> check_greater_than_equal(x, u.Q(1, "m"))
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is smaller than the minimum value.
 
-    >>> try: check_greater_than_equal(x, u.Quantity(2, "m"))
+    >>> try: check_greater_than_equal(x, u.Q(2, "m"))
     ... except Exception: pass
 
     """

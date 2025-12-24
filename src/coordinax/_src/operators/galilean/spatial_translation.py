@@ -91,9 +91,8 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     constructed from a 1D array, using `coordinax.vecs.CartesianPos3D.from_`. We
     can also construct it directly, which allows for other vector types.
 
-    >>> shift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
-    ...                         theta=u.Quantity(jnp.pi/2, "rad"),
-    ...                         phi=u.Quantity(0, "rad"))
+    >>> shift = cx.SphericalPos(r=u.Q(1.0, "km"),
+    ...                         theta=u.Q(jnp.pi/2, "rad"), phi=u.Q(0, "rad"))
     >>> op = cx.ops.GalileanSpatialTranslation(shift)
     >>> op
     GalileanSpatialTranslation(SphericalPos( ... ))
@@ -102,14 +101,14 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
     >>> op(q)
-    CartesianPos3D( ... )
+    CartesianPos3D(x=Q(1., 'km'), y=Q(0., 'km'), z=Q(-4.371139e-08, 'km'))
 
     Actually, the operator is very flexible and can be applied to many types of
     input. Let's work up the type ladder:
 
     - `unxt.Quantity`:
 
-    >>> q = u.Quantity([0, 0, 0], "km")
+    >>> q = u.Q([0, 0, 0], "km")
     >>> op(q).value.round(2)
     Array([ 1.,  0., -0.], dtype=float32)
 
@@ -119,44 +118,42 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     - 1D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
-    >>> q = u.Quantity([0], "km")
+    >>> q = u.Q([0], "km")
     >>> op(q)
     Quantity(Array([1], dtype=int32), unit='km')
 
     >>> vec = cx.vecs.CartesianPos1D.from_(q).vconvert(cx.vecs.RadialPos)
     >>> op(vec)
-    RadialPos(r=Distance(1, unit='km'))
+    RadialPos(r=Distance(1, 'km'))
 
     - 2D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2], "km")
-    >>> q = u.Quantity([0, 0], "km")
+    >>> q = u.Q([0, 0], "km")
     >>> op(q)
     Quantity(Array([1, 2], dtype=int32), unit='km')
 
     >>> vec = cx.vecs.CartesianPos2D.from_(q).vconvert(cx.vecs.PolarPos)
     >>> op(vec)
-    PolarPos(r=Distance(2.236068, unit='km'), phi=Angle(1.1071488, unit='rad'))
+    PolarPos(r=Distance(2.236068, 'km'), phi=Angle(1.1071488, 'rad'))
 
     - 3D:
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
-    >>> q = u.Quantity([0, 0, 0], "km")
+    >>> q = u.Q([0, 0, 0], "km")
     >>> op(q)
     Quantity(Array([1, 2, 3], dtype=int32), unit='km')
 
     >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
     >>> op(vec)
-    SphericalPos(
-      r=Distance(3.7416575, unit='km'),
-      theta=Angle(0.64052236, unit='rad'),
-      phi=Angle(1.1071488, unit='rad')
+    SphericalPos( r=Distance(3.7416575, 'km'),
+      theta=Angle(0.64052236, 'rad'), phi=Angle(1.1071488, 'rad')
     )
 
     Many operators are time dependent and require a time argument. This operator
     is time independent and will pass through the time argument:
 
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> op(t, q)[0] is t
     True
 
@@ -242,6 +239,10 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig representation."""
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("use_short_name", True)
+        kwargs.setdefault("named_unit", False)
+
         return (
             wl.TextDoc(f"{self.__class__.__name__}(")
             + wl.pdoc(self.delta_q, **kwargs)
@@ -268,7 +269,7 @@ def call(self: GalileanSpatialTranslation, q: AbstractPos, /, **__: Any) -> Abst
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> newq = op(q)
     >>> print(newq)
     <CartesianPos3D: (x, y, z) [km]
@@ -296,7 +297,7 @@ def call(
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 1, 1], "km")
 
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> newt, newq = op(t, q)
     >>> print(newq)
     <CartesianPos3D: (x, y, z) [km]
@@ -304,7 +305,7 @@ def call(
 
     This spatial translation is time independent.
 
-    >>> t = u.Quantity(1, "Gyr")
+    >>> t = u.Q(1, "Gyr")
     >>> op(t, q)[1].x == newq.x
     Array(True, dtype=bool)
 
@@ -410,7 +411,7 @@ def call(
 def call(
     self: GalileanSpatialTranslation,
     q: u.AbstractQuantity,
-    p: u.Quantity["speed"],
+    p: u.Q["speed"],
     /,
     **__: Any,
 ) -> tuple[u.AbstractQuantity, u.AbstractQuantity]:

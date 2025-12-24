@@ -46,10 +46,10 @@ def from_(cls: type[Galactocentric], obj: apyc.Galactocentric, /) -> Galactocent
     >>> gcf = cxf.Galactocentric.from_(apy_gcf)
     >>> gcf
     Galactocentric(
-        galcen=LonLatSphericalPos( ... ),
+        galcen=LonLatSphericalPos(...),
         roll=Quantity(f32[], unit='deg'),
         z_sun=Quantity(f32[], unit='pc'),
-        galcen_v_sun=CartesianVel3D( ... )
+        galcen_v_sun=CartesianVel3D(...)
     )
 
     Checking equality

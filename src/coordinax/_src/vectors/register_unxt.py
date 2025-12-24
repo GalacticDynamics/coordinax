@@ -78,76 +78,76 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> print(cx.vecs.vector(u.Quantity(1, "km")))
+    >>> print(cx.vecs.vector(u.Q(1, "km")))
     <CartesianPos1D: (x) [km]
         [1]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1], "km")))
+    >>> print(cx.vecs.vector(u.Q([1], "km")))
     <CartesianPos1D: (x) [km]
         [1]>
 
-    >>> print(cx.vecs.vector(u.Quantity(1, "km/s")))
+    >>> print(cx.vecs.vector(u.Q(1, "km/s")))
     <CartesianVel1D: (x) [km / s]
         [1]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1], "km/s")))
+    >>> print(cx.vecs.vector(u.Q([1], "km/s")))
     <CartesianVel1D: (x) [km / s]
         [1]>
 
-    >>> print(cx.vecs.vector(u.Quantity(1, "km/s2")))
+    >>> print(cx.vecs.vector(u.Q(1, "km/s2")))
     <CartesianAcc1D: (x) [km / s2]
         [1]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1], "km/s2")))
+    >>> print(cx.vecs.vector(u.Q([1], "km/s2")))
     <CartesianAcc1D: (x) [km / s2]
         [1]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1, 2], "km")))
+    >>> print(cx.vecs.vector(u.Q([1, 2], "km")))
     <CartesianPos2D: (x, y) [km]
         [1 2]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s")))
+    >>> print(cx.vecs.vector(u.Q([1, 2], "km/s")))
     <CartesianVel2D: (x, y) [km / s]
         [1 2]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1, 2], "km/s2")))
+    >>> print(cx.vecs.vector(u.Q([1, 2], "km/s2")))
     <CartesianAcc2D: (x, y) [km / s2]
         [1 2]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km")))
+    >>> print(cx.vecs.vector(u.Q([1, 2, 3], "km")))
     <CartesianPos3D: (x, y, z) [km]
         [1 2 3]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s")))
+    >>> print(cx.vecs.vector(u.Q([1, 2, 3], "km/s")))
     <CartesianVel3D: (x, y, z) [km / s]
         [1 2 3]>
 
-    >>> print(cx.vecs.vector(u.Quantity([1, 2, 3], "km/s2")))
+    >>> print(cx.vecs.vector(u.Q([1, 2, 3], "km/s2")))
     <CartesianAcc3D: (x, y, z) [km / s2]
         [1 2 3]>
 
-    >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km")))
+    >>> print(cx.vecs.vector(u.Q([0, 1, 2, 3], "km")))
     <CartesianPosND: (q) [km]
         [[0]
          [1]
          [2]
          [3]]>
 
-    >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s")))
+    >>> print(cx.vecs.vector(u.Q([0, 1, 2, 3], "km/s")))
     <CartesianVelND: (q) [km / s]
         [[0]
          [1]
          [2]
          [3]]>
 
-    >>> print(cx.vecs.vector(u.Quantity([0, 1, 2, 3], "km/s2")))
+    >>> print(cx.vecs.vector(u.Q([0, 1, 2, 3], "km/s2")))
     <CartesianAccND: (q) [km / s2]
         [[0]
          [1]
          [2]
          [3]]>
 
-    >>> try: print(cx.vecs.vector(u.Quantity([1], "Msun")))
+    >>> try: print(cx.vecs.vector(u.Q([1], "Msun")))
     ... except ValueError as e: print(e)
     Cannot construct a Cartesian vector from Quantity['mass']([1], unit='solMass').
 

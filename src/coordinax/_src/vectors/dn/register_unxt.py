@@ -13,7 +13,7 @@ from .cartesian import CartesianPosND
 
 
 @conversion_method(CartesianPosND, u.Quantity)  # type: ignore[arg-type]
-def vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Quantity["length"], "*batch N"]:
+def vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Q["length"], "*batch N"]:
     """`coordinax.AbstractPos3D` -> `unxt.Quantity`.
 
     Examples
@@ -22,7 +22,7 @@ def vec_to_q(obj: CartesianPosND, /) -> Shaped[u.Quantity["length"], "*batch N"]
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], unit="km"))
+    >>> vec = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4, 5], unit="km"))
     >>> convert(vec, u.Quantity)
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
 

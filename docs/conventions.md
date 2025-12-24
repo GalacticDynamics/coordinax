@@ -40,9 +40,9 @@ First we'll show the object-oriented API:
 
 >>> q.vconvert(cxv.SphericalPos)
 SphericalPos(
-  r=Distance(3.7416575, unit='m'),
-  theta=Angle(0.64052236, unit='rad'),
-  phi=Angle(1.1071488, unit='rad')
+  r=Distance(3.7416575, 'm'),
+  theta=Angle(0.64052236, 'rad'),
+  phi=Angle(1.1071488, 'rad')
 )
 
 ```
@@ -53,9 +53,9 @@ And now the function-oriented API:
 
 >>> cxv.vconvert(cxv.SphericalPos, q)
 SphericalPos(
-  r=Distance(3.7416575, unit='m'),
-  theta=Angle(0.64052236, unit='rad'),
-  phi=Angle(1.1071488, unit='rad')
+  r=Distance(3.7416575, 'm'),
+  theta=Angle(0.64052236, 'rad'),
+  phi=Angle(1.1071488, 'rad')
 )
 
 ```

@@ -337,11 +337,11 @@ def vconvert(
     >>> cxv.vconvert(cxv.CartesianPos2D, q) is q
     True
 
-    >>> q = cxv.PolarPos(r=u.Quantity(1, "m"), phi=u.Quantity(10, "deg"))
+    >>> q = cxv.PolarPos(r=u.Q(1, "m"), phi=u.Q(10, "deg"))
     >>> cxv.vconvert(cxv.PolarPos, q) is q
     True
 
-    >>> q = cxv.TwoSpherePos(theta=u.Quantity(10, "deg"), phi=u.Quantity(14, "deg"))
+    >>> q = cxv.TwoSpherePos(theta=u.Q(10, "deg"), phi=u.Q(14, "deg"))
     >>> cxv.vconvert(cxv.TwoSpherePos, q) is q
     True
 
@@ -349,7 +349,7 @@ def vconvert(
     >>> cxv.vconvert(cxv.CartesianVel2D, p) is p
     True
 
-    >>> p = cxv.PolarVel(r=u.Quantity(1, "m/s"), phi=u.Quantity(10, "deg/s"))
+    >>> p = cxv.PolarVel(r=u.Q(1, "m/s"), phi=u.Q(10, "deg/s"))
     >>> cxv.vconvert(cxv.PolarVel, p) is p
     True
 
@@ -367,33 +367,29 @@ def vconvert(
 
     Cylindrical to Cylindrical:
 
-    >>> vec = cxv.CylindricalPos(rho=u.Quantity(1, "km"),
-    ...                          phi=u.Quantity(2, "deg"),
-    ...                          z=u.Quantity(3, "km"))
+    >>> vec = cxv.CylindricalPos(rho=u.Q(1, "km"), phi=u.Q(2, "deg"),
+    ...                          z=u.Q(3, "km"))
     >>> cxv.vconvert(cxv.CylindricalPos, vec) is vec
     True
 
     Spherical to Spherical:
 
-    >>> vec = cxv.SphericalPos(r=u.Quantity(1, "km"),
-    ...                        theta=u.Quantity(2, "deg"),
-    ...                        phi=u.Quantity(3, "deg"))
+    >>> vec = cxv.SphericalPos(r=u.Q(1, "km"), theta=u.Q(2, "deg"),
+    ...                        phi=u.Q(3, "deg"))
     >>> cxv.vconvert(cxv.SphericalPos, vec) is vec
     True
 
     LonLatSpherical to LonLatSpherical:
 
-    >>> vec = cxv.LonLatSphericalPos(lon=u.Quantity(1, "deg"),
-    ...                              lat=u.Quantity(2, "deg"),
-    ...                              distance=u.Quantity(3, "km"))
+    >>> vec = cxv.LonLatSphericalPos(lon=u.Q(1, "deg"), lat=u.Q(2, "deg"),
+    ...                              distance=u.Q(3, "km"))
     >>> cxv.vconvert(cxv.LonLatSphericalPos, vec) is vec
     True
 
     MathSpherical to MathSpherical:
 
-    >>> vec = cxv.MathSphericalPos(r=u.Quantity(1, "km"),
-    ...                            theta=u.Quantity(2, "deg"),
-    ...                            phi=u.Quantity(3, "deg"))
+    >>> vec = cxv.MathSphericalPos(r=u.Q(1, "km"), theta=u.Q(2, "deg"),
+    ...                            phi=u.Q(3, "deg"))
     >>> cxv.vconvert(cxv.MathSphericalPos, vec) is vec
     True
 
@@ -410,41 +406,37 @@ def vconvert(
 
     Cylindrical to Cylindrical velocity:
 
-    >>> dif = cxv.CylindricalVel(rho=u.Quantity(1, "km/s"),
-    ...                          phi=u.Quantity(2, "mas/yr"),
-    ...                          z=u.Quantity(3, "km/s"))
+    >>> dif = cxv.CylindricalVel(rho=u.Q(1, "km/s"), phi=u.Q(2, "mas/yr"),
+    ...                          z=u.Q(3, "km/s"))
     >>> cxv.vconvert(cxv.CylindricalVel, dif, vec) is dif
     True
 
     Spherical to Spherical velocity:
 
-    >>> dif = cxv.SphericalVel(r=u.Quantity(1, "km/s"),
-    ...                        theta=u.Quantity(2, "mas/yr"),
-    ...                        phi=u.Quantity(3, "mas/yr"))
+    >>> dif = cxv.SphericalVel(r=u.Q(1, "km/s"), theta=u.Q(2, "mas/yr"),
+    ...                        phi=u.Q(3, "mas/yr"))
     >>> cxv.vconvert(cxv.SphericalVel, dif, vec) is dif
     True
 
     LonLatSpherical to LonLatSpherical velocity:
 
-    >>> dif = cxv.LonLatSphericalVel(lon=u.Quantity(1, "mas/yr"),
-    ...                              lat=u.Quantity(2, "mas/yr"),
-    ...                              distance=u.Quantity(3, "km/s"))
+    >>> dif = cxv.LonLatSphericalVel(lon=u.Q(1, "mas/yr"), lat=u.Q(2, "mas/yr"),
+    ...                              distance=u.Q(3, "km/s"))
     >>> cxv.vconvert(cxv.LonLatSphericalVel, dif, vec) is dif
     True
 
     LonCosLatSpherical to LonCosLatSpherical velocity:
 
-    >>> dif = cxv.LonCosLatSphericalVel(lon_coslat=u.Quantity(1, "mas/yr"),
-    ...                                 lat=u.Quantity(2, "mas/yr"),
-    ...                                 distance=u.Quantity(3, "km/s"))
+    >>> dif = cxv.LonCosLatSphericalVel(lon_coslat=u.Q(1, "mas/yr"),
+    ...                                 lat=u.Q(2, "mas/yr"),
+    ...                                 distance=u.Q(3, "km/s"))
     >>> cxv.vconvert(cxv.LonCosLatSphericalVel, dif, vec) is dif
     True
 
     MathSpherical to MathSpherical velocity:
 
-    >>> dif = cxv.MathSphericalVel(r=u.Quantity(1, "km/s"),
-    ...                            theta=u.Quantity(2, "mas/yr"),
-    ...                            phi=u.Quantity(3, "mas/yr"))
+    >>> dif = cxv.MathSphericalVel(r=u.Q(1, "km/s"), theta=u.Q(2, "mas/yr"),
+    ...                            phi=u.Q(3, "mas/yr"))
     >>> cxv.vconvert(cxv.MathSphericalVel, dif, vec) is dif
     True
 
@@ -567,7 +559,7 @@ def vconvert(
     <CartesianPos1D: (x) [km]
         [1]>
 
-    >>> x = cxv.PolarPos(r=u.Quantity(1, "km"), phi=u.Quantity(10, "deg"))
+    >>> x = cxv.PolarPos(r=u.Q(1, "km"), phi=u.Q(10, "deg"))
 
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.RadialPos, x)
@@ -610,9 +602,8 @@ def vconvert(
     ...                       params, units=usys)
     ({'r': Array(1, dtype=int32, ...)}, {})
 
-    >>> x = cxv.SphericalPos(r=u.Quantity(1, "km"),
-    ...                     theta=u.Quantity(14, "deg"),
-    ...                     phi=u.Quantity(10, "deg"))
+    >>> x = cxv.SphericalPos(r=u.Q(1, "km"),
+    ...                     theta=u.Q(14, "deg"), phi=u.Q(10, "deg"))
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
@@ -627,9 +618,8 @@ def vconvert(
     ...                  params, units=usys)
     ({'r': Array(1, dtype=int32, ...)}, {})
 
-    >>> x = cxv.MathSphericalPos(r=u.Quantity(1, "km"),
-    ...                          theta=u.Quantity(10, "deg"),
-    ...                          phi=u.Quantity(14, "deg"))
+    >>> x = cxv.MathSphericalPos(r=u.Q(1, "km"), theta=u.Q(10, "deg"),
+    ...                          phi=u.Q(14, "deg"))
 
     >>> with warnings.catch_warnings(action="ignore"):
     ...     y = cxv.vconvert(cxv.RadialPos, x)

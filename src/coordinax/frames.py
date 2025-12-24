@@ -20,7 +20,7 @@ Pipe((
 ))
 
 >>> q_alice = cx.CartesianPos3D.from_([0, 0, 0], "km")
->>> t = u.Quantity(2.5, "yr")
+>>> t = u.Q(2.5, "yr")
 >>> _, q_bob = op(t, q_alice)
 >>> print(q_bob)
 <CartesianPos3D: (x, y, z) [km]

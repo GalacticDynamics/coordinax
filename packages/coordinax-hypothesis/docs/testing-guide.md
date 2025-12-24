@@ -94,9 +94,7 @@ def test_vector_angle_has_correct_shape(angle):
 ### Testing Angle Wrapping
 
 ```python
-@given(
-    angle=cxst.angles(wrap_to=st.just((u.Quantity(0, "deg"), u.Quantity(360, "deg"))))
-)
+@given(angle=cxst.angles(wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg")))))
 def test_angle_with_wrapping_bounds(angle):
     """Angles with wrapping have valid wrap_to bounds."""
     assert angle.wrap_to is not None
@@ -104,11 +102,7 @@ def test_angle_with_wrapping_bounds(angle):
     assert min_bound < max_bound
 
 
-@given(
-    angle=cxst.angles(
-        wrap_to=st.just((u.Quantity(-180, "deg"), u.Quantity(180, "deg")))
-    )
-)
+@given(angle=cxst.angles(wrap_to=st.just((u.Q(-180, "deg"), u.Q(180, "deg")))))
 def test_symmetric_wrapping(angle):
     """Symmetric wrapping bounds work correctly."""
     assert angle.wrap_to is not None

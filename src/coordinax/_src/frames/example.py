@@ -125,16 +125,14 @@ def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> Pipe:
     ))
 
     >>> q_alice = cx.vecs.CartesianPos3D.from_([0, 0, 0], "m")
-    >>> q_friend = op(u.Quantity(1, "s"), q_alice)
+    >>> q_friend = op(u.Q(1, "s"), q_alice)
     >>> q_friend
     (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D( x=Quantity(0., unit='m'), y=Quantity(9.999999, unit='m'),
-                     z=Quantity(0., unit='m')
-     ))
+     CartesianPos3D(x=Q(0., 'm'), y=Q(9.999999, 'm'), z=Q(0., 'm')))
 
     """
     shift = GalileanSpatialTranslation.from_([10, 0, 0], "m")
-    rotation = GalileanRotation.from_euler("Z", u.Quantity(90, "deg"))
+    rotation = GalileanRotation.from_euler("Z", u.Q(90, "deg"))
     return shift | rotation
 
 
@@ -162,17 +160,15 @@ def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Pipe:
 
     >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "m")
 
-    >>> q_bob = op(u.Quantity(0, "s"), q)
+    >>> q_bob = op(u.Q(0, "s"), q)
     >>> q_bob
     (Quantity(Array(0, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D( x=Quantity(1.e+08, unit='m'), ... z=Quantity(0., unit='m')
-    ))
+     CartesianPos3D(x=Q(1.e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
 
-    >>> q_bob = op(u.Quantity(1, "s"), q)
+    >>> q_bob = op(u.Q(1, "s"), q)
     >>> q_bob
     (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D( x=Quantity(3.6981322e+08, unit='m'), ... z=Quantity(0., unit='m')
-    ))
+     CartesianPos3D(x=Q(3.6981322e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
 
     """
     shift = GalileanSpatialTranslation.from_([100_000, 10_000, 0], "km")
@@ -208,12 +204,10 @@ def frame_transform_op(
     ))
 
     >>> q_friend = cx.vecs.CartesianPos3D.from_([0, 0, 0], "m")
-    >>> q_alice = op(u.Quantity(1, "s"), q_friend)
+    >>> q_alice = op(u.Q(1, "s"), q_friend)
     >>> q_alice
     (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D( x=Quantity(-10., unit='m'), y=Quantity(0., unit='m'),
-                     z=Quantity(0., unit='m')
-    ))
+     CartesianPos3D(x=Q(-10., 'm'), y=Q(0., 'm'), z=Q(0., 'm')))
 
     """
     return api.frame_transform_op(to_frame, from_frame).inverse  # pylint: disable=W1114

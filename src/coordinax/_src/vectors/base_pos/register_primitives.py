@@ -33,13 +33,13 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(2.0, "kpc"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(2.0, "kpc"))
 
     >>> px2 = px + px
     >>> print(px2)
     <ProlateSpheroidalPos: (mu[kpc2], nu[kpc2], phi[rad])
-     Delta=Quantity(2., unit='kpc')
+     Delta=Q(2., 'kpc')
         [57.495  2.505  1.107]>
 
     >>> print(px2.vconvert(cxv.CartesianPos3D))
@@ -79,10 +79,8 @@ def dot_p_general_poss(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.SphericalPos(
-    ...     r=u.Quantity([1, 2, 3], "m"),
-    ...     theta=u.Quantity([0, 0, 0], "rad"),
-    ...     phi=u.Quantity([0, 0, 0], "rad"))
+    >>> vec = cx.vecs.SphericalPos(r=u.Q([1, 2, 3], "m"),
+    ...     theta=u.Q([0, 0, 0], "rad"), phi=u.Q([0, 0, 0], "rad"))
 
     >>> jnp.dot(vec, vec)
     Quantity(Array([1., 4., 9.], dtype=float32), unit='m2')
@@ -182,9 +180,7 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     ... def vconvert(target: type[MyCartesian], current: MyCartesian, /) -> MyCartesian:
     ...     return current
 
-    >>> vec = MyCartesian(x=u.Quantity([1], "m"),
-    ...                   y=u.Quantity([2], "m"),
-    ...                   z=u.Quantity([3], "m"))
+    >>> vec = MyCartesian(x=u.Q([1], "m"), y=u.Q([2], "m"), z=u.Q([3], "m"))
 
     First hit the non-scalar error:
 
@@ -265,9 +261,9 @@ def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D(
-    ...     x=u.Quantity([1, 2, 3], "m"),
-    ...     y=u.Quantity([4, 5, 6], "m"),
-    ...     z=u.Quantity([7, 8, 9], "m"))
+    ...     x=u.Q([1, 2, 3], "m"),
+    ...     y=u.Q([4, 5, 6], "m"),
+    ...     z=u.Q([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
     BareQuantity(Array([[ 1, 16, 49],
@@ -321,9 +317,9 @@ def reshape_p_pos(
     >>> import coordinax as cx
     >>> import quaxed.numpy as jnp
 
-    >>> vec = cx.CartesianPos3D(x=u.Quantity([1, 2, 3], "m"),
-    ...                         y=u.Quantity([4, 5, 6], "m"),
-    ...                         z=u.Quantity([7, 8, 9], "m"))
+    >>> vec = cx.CartesianPos3D(x=u.Q([1, 2, 3], "m"),
+    ...                         y=u.Q([4, 5, 6], "m"),
+    ...                         z=u.Q([7, 8, 9], "m"))
     >>> vec = jnp.reshape(vec, shape=(3, 1, 3))  # (n_components *shape)
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
@@ -357,13 +353,13 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(2.0, "kpc"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(2.0, "kpc"))
 
     >>> px2 = px - px
     >>> print(px2)
     <ProlateSpheroidalPos: (mu[kpc2], nu[kpc2], phi[rad])
-      Delta=Quantity(2., unit='kpc')
+      Delta=Q(2., 'kpc')
         [4. 0. 0.]>
 
     >>> print(px2.vconvert(cxv.CartesianPos3D))

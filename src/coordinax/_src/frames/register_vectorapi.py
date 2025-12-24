@@ -33,10 +33,8 @@ def vector(
 
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_(data, cx.frames.ICRS())
-    Coordinate(
-        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
-    )
+    Coordinate( KinematicSpace({ 'length': CartesianPos3D(...) }),
+                frame=ICRS() )
 
     """
     return cls(data=data, frame=frame)
@@ -59,7 +57,7 @@ def vector(
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_(data, cx.frames.ICRS(), cx.ops.Identity())
     Coordinate(
-        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+        KinematicSpace({ 'length': CartesianPos3D(...) }),
         frame=TransformedReferenceFrame(base_frame=ICRS(), xop=Identity())
     )
 

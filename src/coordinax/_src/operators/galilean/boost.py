@@ -54,7 +54,7 @@ class GalileanBoost(AbstractGalileanOperator):
 
     >>> vec = cx.CartesianPos3D.from_([0.0, 0.0, 0.0], "m")
 
-    >>> delta_t = u.Quantity(1.0, "s")
+    >>> delta_t = u.Q(1.0, "s")
     >>> _, newvec = op(delta_t, vec)
     >>> print(newvec)
     <CartesianPos3D: (x, y, z) [m]
@@ -147,6 +147,10 @@ class GalileanBoost(AbstractGalileanOperator):
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig representation."""
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("use_short_name", True)
+        kwargs.setdefault("named_unit", False)
+
         return (
             wl.TextDoc(f"{self.__class__.__name__}(")
             + wl.pdoc(self.velocity, **kwargs)
@@ -161,8 +165,8 @@ class GalileanBoost(AbstractGalileanOperator):
 # Higher precedence than the compat.py:: (Op, t, Q3) dispatch.
 @AbstractOperator.__call__.dispatch(precedence=1)
 def call(
-    self: GalileanBoost, delta_t: u.Quantity["time"], q: u.AbstractQuantity, /
-) -> tuple[u.Quantity["time"], u.AbstractQuantity]:
+    self: GalileanBoost, delta_t: u.Q["time"], q: u.AbstractQuantity, /
+) -> tuple[u.Q["time"], u.AbstractQuantity]:
     """Apply the boost to the quantities.
 
     Examples
@@ -170,9 +174,9 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> q = u.Quantity([1, 0, 0], "m")
+    >>> q = u.Q([1, 0, 0], "m")
     >>> op = cx.ops.GalileanBoost.from_([1, -1, 3], "m/s")
-    >>> delta_t = u.Quantity(1, "s")
+    >>> delta_t = u.Q(1, "s")
 
     The position is updated by the boost velocity times the time interval:
 
@@ -181,14 +185,14 @@ def call(
     Quantity(Array([ 2, -1,  3], dtype=int32), unit='m')
 
     """
-    vel = convert(self.velocity, u.Quantity)
+    vel = convert(self.velocity, u.Q)
     return delta_t, q + vel * delta_t
 
 
 @AbstractOperator.__call__.dispatch
 def call(
-    self: GalileanBoost, delta_t: u.Quantity["time"], q: AbstractPos, /
-) -> tuple[u.Quantity["time"], AbstractPos]:
+    self: GalileanBoost, delta_t: u.Q["time"], q: AbstractPos, /
+) -> tuple[u.Q["time"], AbstractPos]:
     """Apply the boost to the coordinates.
 
     Examples
@@ -203,7 +207,7 @@ def call(
     Define a boost operator and the time interval to apply it:
 
     >>> op = cx.ops.GalileanBoost.from_([1, 2, 3], "m/s")
-    >>> dt = u.Quantity(1, "s")
+    >>> dt = u.Q(1, "s")
 
     >>> _, newq = op(dt, q)
 

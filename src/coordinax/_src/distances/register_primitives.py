@@ -32,7 +32,7 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> d = Distance(8, "m")
     >>> jnp.cbrt(d)
-     BareQuantity(Array(2., dtype=float32, ...), unit='m(1/3)')
+    BareQuantity(Array(2., dtype=float32, ...), unit='m(1/3)')
 
     """
     value = lax.cbrt_p.bind(x.value, accuracy=accuracy)
@@ -57,7 +57,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Qu
     Quantity(Array(0.5, dtype=float32, ...), unit='')
 
     """
-    return u.Quantity(lax.div(x.value, y.value), unit=x.unit / y.unit)
+    return u.Q(lax.div(x.value, y.value), unit=x.unit / y.unit)
 
 
 # ==============================================================================
@@ -87,7 +87,7 @@ def dot_general_p_abstractdistances(
     This rule is also used by `jnp.matmul` for quantities.
 
     >>> Rz = jnp.asarray([[0, -1,  0], [1,  0,  0], [0,  0,  1]])
-    >>> q = u.Quantity([1, 0, 0], "m")
+    >>> q = u.Q([1, 0, 0], "m")
     >>> Rz @ q
     Quantity(Array([0, 1, 0], dtype=int32), unit='m')
 
@@ -123,7 +123,7 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQua
 
 
 @register(lax.neg_p)
-def neg_p_distance(x: Distance, /) -> u.Quantity:
+def neg_p_distance(x: Distance, /) -> u.Q:
     """Negation of a Distance degrades to a Quantity.
 
     Examples
@@ -134,7 +134,7 @@ def neg_p_distance(x: Distance, /) -> u.Quantity:
     Quantity(Array(-10, dtype=int32, ...), unit='m')
 
     """
-    return u.Quantity(-x.value, x.unit)
+    return u.Q(-x.value, x.unit)
 
 
 # ==============================================================================

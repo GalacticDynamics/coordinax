@@ -52,11 +52,11 @@ def normalize_vector(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> x = u.Quantity(jnp.asarray([2, 0]), "km")
+    >>> x = u.Q(jnp.asarray([2, 0]), "km")
     >>> cx.vecs.normalize_vector(x)
     Quantity(Array([1., 0.], dtype=float32), unit='')
 
-    >>> x = u.Quantity(jnp.asarray([0, 2]), "s")
+    >>> x = u.Q(jnp.asarray([0, 2]), "s")
     >>> cx.vecs.normalize_vector(x)
     Quantity(Array([0., 1.], dtype=float32), unit='')
 
