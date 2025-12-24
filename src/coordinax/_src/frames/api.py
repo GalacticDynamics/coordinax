@@ -29,12 +29,12 @@ def frame_transform_op(from_frame: Any, to_frame: Any, /) -> Any:
 
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> op
-    Pipe(( ... ))
+    Pipe((Add(Q(i64[3], 'km')), Add(Q(f64[3], 'm / s'))))
 
-    >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
+    >>> q = cxv.Vector.from_([1, 2, 3], "kpc")
     >>> t = u.Q(1, "yr")
     >>> print(op(t, q)[1])
-    <CartesianPos3D: (x, y, z) [kpc]
+    <Cart3D: (x, y, z) [kpc]
         [1. 2. 3.]>
 
     """

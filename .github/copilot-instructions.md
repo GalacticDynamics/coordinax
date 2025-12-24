@@ -16,9 +16,10 @@ This is a UV workspace repository containing multiple packages:
 
 - **Language**: Python 3.11+
 - **Main API**: Vector types, coordinate transformations, and reference frames
-  - Vector types: `CartesianPos3D`, `SphericalPos`, `CylindricalPos`, etc.
-  - Angle and Distance types with units via `unxt`
-  - `vconvert()`: Transform between coordinate representations
+  - `coordinax.angle.Angle` and `coordinax.distance.Distance` types with units
+    via `unxt`
+  - Vector types `coordinax.Vector` with representations in `coordinax.r`.
+  - `vconvert()`: Transform between vector representations
   - Operators on vectors: `GalileanRotateOp`, `GalileanBoostOp`, etc.
   - Frame and their transformations: `frames.frame_transform_op()`
   - Coordinates with frames: `Coordinate`.
@@ -30,9 +31,7 @@ This is a UV workspace repository containing multiple packages:
 ## Architecture & Core Components
 
 - **Vector types** (hierarchical):
-  - `AbstractPos`: Base class for position vectors
-  - `AbstractVel`: Base class for velocity vectors
-  - `AbstractAcc`: Base class for acceleration vectors
+  - `AbstractRep`: Base class for coordinate vectors
   - Concrete implementations: Cartesian, Spherical, Cylindrical, etc.
   - All vectors are `ArrayValue` subclasses (Quax protocol) for JAX integration
 - **Angle and Distance types**: Specialized scalar types with units
@@ -68,9 +67,9 @@ This is a UV workspace repository containing multiple packages:
 ### Main Package Structure (`/src/coordinax/`)
 
 - `_src/`: Private implementation code
-  - `vectors/`: Vector classes (position, velocity, acceleration)
   - `angles.py`: Angle type implementation
   - `distances/`: Distance type implementations
+  - `vectors/`: Vector classes (position, velocity, acceleration)
   - `frames/`: Reference frame definitions and transformations
   - `operators/`: Frame-aware operators
 - `_coordinax_space_frames/`: Frame-specific coordinate spaces
@@ -81,6 +80,8 @@ This is a UV workspace repository containing multiple packages:
 
 - Always use type hints (standard typing, `jaxtyping.Array`, `ArrayLike`, shape
   annotations)
+- **NEVER use `from __future__ import annotations`** - causes issues with plum
+  dispatch and runtime type introspection
 - Extensive use of Plum multiple dispatch - check `.methods` on any function to
   see all dispatches
 - Runtime type checking via `beartype` for validation
@@ -92,6 +93,151 @@ This is a UV workspace repository containing multiple packages:
   with `+=` - prefer immutable by default
 - Prefer `u.Q` over `u.Quantity` for creating quantities (shorter and more
   concise)
+
+### Multiple Dispatch with Plum
+
+This project heavily relies on `plum-dispatch` for multiple dispatch, which
+allows different implementations of the same function based on argument types.
+Understanding how plum works is critical for working with this codebase.
+
+#### Multiple Dispatch Mechanism
+
+- **Single-dispatch vs Multiple-dispatch**: Unlike single dispatch (e.g.,
+  `functools.singledispatch`), plum selects implementations based on ALL
+  argument types, not just the first one
+- **Type-based routing**: Plum examines the runtime types of all arguments and
+  selects the most specific matching implementation
+- **Dispatch decorator**: Use `@dispatch` to register multiple implementations
+  of the same function name
+
+Example:
+
+```python
+from plum import dispatch
+
+
+@dispatch
+def process(x: int) -> str:
+    return f"integer: {x}"
+
+
+@dispatch
+def process(x: float) -> str:
+    return f"float: {x}"
+
+
+@dispatch
+def process(x: int, y: int) -> str:
+    return f"two integers: {x}, {y}"
+```
+
+#### Finding All Dispatches
+
+**CRITICAL**: When working with dispatched functions, you MUST check all
+registered implementations. A function may have dozens of overloads.
+
+**Two methods to find all dispatches:**
+
+1. **Use `.methods` attribute** (preferred in Python REPL/notebooks):
+
+   ```python
+   from coordinax import vconvert
+
+   print(vconvert.methods)  # Shows all registered dispatch signatures
+   ```
+
+2. **Search the codebase** (preferred when coding):
+   - Search for `@dispatch` followed by the function name
+   - Look for all `def function_name(...)` definitions with `@dispatch`
+   - Example: searching for `@dispatch\ndef vconvert` finds all vconvert
+     overloads
+
+**Why this matters:**
+
+- You might find a more specific dispatch that handles your exact case
+- Prevents accidentally adding duplicate dispatches
+- Reveals the complete API surface and supported type combinations
+- Essential for understanding how different vector types interact
+
+#### Parametric Classes
+
+Plum's `@parametric` decorator enables type parametrization, creating distinct
+types for different parameters:
+
+```python
+from plum import parametric
+
+
+@parametric
+class Container(type_parameter):
+    def __init__(self, value):
+        self.value = value
+
+
+# Creates distinct types:
+IntContainer = Container[int]
+FloatContainer = Container[float]
+```
+
+**In this codebase:**
+
+- Vector types can be parametric (though less common than in `unxt`)
+- Enables type-aware multiple dispatch for vector transformations
+- Example: Different dispatch paths based on vector representation type
+
+**Key properties:**
+
+- Parametric types are cached (same parameters = same type object)
+- Type parameters can be strings, tuples, or other hashable objects
+- Use `get_type_parameter(obj)` to retrieve the parameter from an instance
+- Parametric classes enable representation checking at dispatch time
+
+#### Type Promotion with `plum.promote`
+
+`plum.promote` implements automatic type promotion for mixed-type operations:
+
+```python
+from plum import dispatch, promote
+
+
+@dispatch
+def add(x: int, y: int) -> int:
+    return x + y
+
+
+@dispatch
+def add(x: float, y: float) -> float:
+    return x + y
+
+
+# Without promotion:
+add(1, 2.5)  # Error: no dispatch for (int, float)
+
+
+# With promotion (defined separately):
+@dispatch
+def add(x: promote(int, float), y: float) -> float:
+    return add(float(x), y)
+```
+
+**In this codebase:**
+
+- `plum.promote` is used to convert between vector types and representations
+- Common pattern: promote scalars to distance/angle types
+- Enables natural operations like `vector + CartesianPos3D(...)`
+
+**Usage pattern:**
+
+1. Define core implementations for specific types
+2. Add promotion dispatches to handle mixed types
+3. Promotion dispatches typically convert arguments and redispatch
+
+**Important notes:**
+
+- Promotion order matters: `promote(int, float)` != `promote(float, int)`
+- Keep promotion logic explicit and minimal
+- Prefer concrete dispatches over heavy promotion use
+- Document promotion behavior when it's non-obvious
 
 ### JAX Integration via Quax
 
@@ -127,11 +273,18 @@ This is a UV workspace repository containing multiple packages:
   - `nox -s docs`: build documentation (add `--serve` to preview)
   - `nox -s pytest_benchmark`: run CodSpeed benchmarks
 
+**IMPORTANT**: Never write temporary files outside the repository (e.g., to
+`/tmp/` or other system directories). Always use paths within the repository for
+any file operations, including temporary or scratch files.
+
 ## Testing
 
 - Use `pytest` for all test suites with Sybil for doctests in code and markdown
 - Add unit tests for every new function or class
 - Test organization: `unit/`, `integration/`, `benchmark/`
+- **All tests must actually test something**: Every test function must include
+  `assert` statements or return values that pytest can validate. Empty test
+  bodies or tests that only call functions without verification are not valid.
 - Optional dependencies handled via
   `optional_dependencies.OptionalDependencyEnum`
   - Tests requiring optional deps auto-skip if not installed

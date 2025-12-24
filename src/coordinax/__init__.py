@@ -5,6 +5,7 @@ __all__ = (
     # modules
     "angle",
     "distance",
+    "r",
     "vecs",
     "ops",
     "frames",
@@ -13,11 +14,7 @@ __all__ = (
     # common vecs objects
     "vector",
     "vconvert",
-    "CartesianPos3D",
-    "CartesianVel3D",
-    "SphericalPos",
-    "SphericalVel",
-    "FourVector",
+    "Vector",
     "KinematicSpace",
     # frame objects
     "Coordinate",
@@ -26,20 +23,11 @@ __all__ = (
 from .setup_package import install_import_hook
 
 with install_import_hook("coordinax"):
-    from . import angle, distance, frames, ops, vecs
+    from . import angle, distance, frames, ops, r, vecs
     from ._version import version as __version__  # noqa: F401
     from .distance import Distance
     from .frames import Coordinate
-    from .vecs import (
-        CartesianPos3D,
-        CartesianVel3D,
-        FourVector,
-        KinematicSpace,
-        SphericalPos,
-        SphericalVel,
-        vconvert,
-        vector,
-    )
+    from .vecs import KinematicSpace, Vector, vconvert
 
 # isort: split
 # Interoperability - import the module but don't trigger registration yet

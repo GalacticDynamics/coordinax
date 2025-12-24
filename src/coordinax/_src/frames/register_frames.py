@@ -36,7 +36,7 @@ def frame_of(obj: AbstractCoordinate) -> AbstractReferenceFrame:
     --------
     >>> import coordinax as cx
 
-    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
+    >>> coord = cx.Coordinate(cx.Vector.from_([1, 2, 3], "kpc"),
     ...                       cx.frames.ICRS())
     >>> cx.frames.frame_of(coord)
     ICRS()

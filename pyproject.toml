@@ -33,7 +33,7 @@ dependencies = [
   "quax-blocks>=0.4.0",
   "quaxed>=0.10.4",
   "typing-extensions>=4.13.2",
-  "unxt>=1.8.0",
+  "unxt>=1.9.0",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
@@ -76,7 +76,6 @@ dev = [
   { include-group = "lint" },
   { include-group = "nox" },
   { include-group = "test-all" },
-  { include-group = "workspace" },
 ]
 docs = [
   "myst-nb>=1.1.2",
@@ -93,10 +92,9 @@ docs = [
   "sphinx_togglebutton>=0.3.2",
   "sphinxext-opengraph>=0.9.1",
   "sphinxext-rediraffe>=0.2.7",
-  { include-group = "workspace" },
 ]
 ide = ["ipykernel>=7.1.0"]
-lint = ["pre-commit>=4.5.0", "pylint>=3.3.2"]
+lint = ["mypy>=1.19.1", "pre-commit>=4.5.0", "pylint>=3.3.2"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
   "coordinax-hypothesis",
@@ -107,10 +105,8 @@ test = [
   "pytest-env>=1.1.5",
   "pytest-github-actions-annotate-failures>=0.3.0",
   "sybil[pytest]>=8.0.0",
-  { include-group = "workspace" },
 ]
 test-all = [{ include-group = "test" }]
-workspace = ["coordinax-api", "coordinax-astro", "coordinax-hypothesis"]
 
 
 [tool.hatch]
@@ -244,6 +240,8 @@ filterwarnings = [
   "ignore:Explicitly requested dtype <class 'jax.numpy\\.float64'> requested in astype is not available",
   "ignore:jax\\.core\\.get_aval is deprecated:DeprecationWarning",
   "ignore:jax\\.core\\.pp_eqn_rules is deprecated:DeprecationWarning",
+  # hypothesis
+  "ignore:Do not use the `random` module inside strategies:hypothesis.errors.HypothesisDeprecationWarning",
 ]
 log_level = "INFO"
 minversion = "8.3"
@@ -265,6 +263,7 @@ testpaths = [
 xfail_strict = true
 
 [tool.pytest_env]
+JAX_ENABLE_X64 = "1"
 COORDINAX_ENABLE_RUNTIME_TYPECHECKING = "beartype.beartype"
 
 [tool.ruff]
@@ -361,6 +360,7 @@ coordinax-api             = { workspace = true }
 coordinax-astro           = { workspace = true }
 coordinax-hypothesis      = { workspace = true }
 coordinax-interop-astropy = { workspace = true }
+unxt = { git = "https://github.com/GalacticDynamics/unxt" }
 
 
 [tool.uv.workspace]
