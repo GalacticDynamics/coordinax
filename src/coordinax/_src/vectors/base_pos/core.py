@@ -146,7 +146,7 @@ class AbstractPos(
         >>> v.norm()
         BareQuantity(Array(5., dtype=float32), unit='km')
 
-        >>> v = cx.vecs.PolarPos(r=u.Quantity(3, "km"), phi=u.Quantity(90, "deg"))
+        >>> v = cx.vecs.PolarPos(r=u.Q(3, "km"), phi=u.Q(90, "deg"))
         >>> v.norm()
         Distance(Array(3, dtype=int32, ...), unit='km')
 

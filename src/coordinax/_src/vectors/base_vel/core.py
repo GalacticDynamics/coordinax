@@ -64,7 +64,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     # Convenience methods
 
     @ft.partial(eqx.filter_jit)
-    def norm(self, q: AbstractPos, /) -> u.Quantity["speed"]:  # type: ignore[misc]
+    def norm(self, q: AbstractPos, /) -> u.Q["speed"]:  # type: ignore[misc]
         """Return the norm of the vector.
 
         Examples
@@ -72,7 +72,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> import coordinax as cx
 
         >>> q = cx.vecs.CartesianPos2D.from_([1, 1], "km")
-        >>> p = cx.vecs.PolarVel(r=u.Quantity(1, "km/s"), phi=u.Quantity(1, "deg/s"))
+        >>> p = cx.vecs.PolarVel(r=u.Q(1, "km/s"), phi=u.Q(1, "deg/s"))
 
         >>> p.norm(q).uconvert('km / s')
         Quantity(Array(1.0003046, dtype=float32), unit='km / s')

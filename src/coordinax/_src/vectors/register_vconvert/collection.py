@@ -26,8 +26,8 @@ def vconvert(target: type[KinematicSpace], w: KinematicSpace, /) -> KinematicSpa
     ... )
 
     >>> cx.vconvert(cx.KinematicSpace, w)
-    KinematicSpace({ 'length': CartesianPos3D( ... ),
-             'speed': CartesianVel3D( ... ) })
+    KinematicSpace({ 'length': CartesianPos3D(...),
+             'speed': CartesianVel3D(...) })
 
     """
     return w
@@ -50,12 +50,12 @@ def vconvert(
 
     >>> cx.vconvert(cx.vecs.PoincarePolarVector, w)
     PoincarePolarVector(
-      rho=Quantity([[2.23606801, 6.40312433]], unit='m'),
-      pp_phi=Quantity([[0., 0.]], unit='m / s(1/2)'),
-      z=Quantity([[3, 6]], unit='m'),
-      dt_rho=Quantity([[2.23606801, 6.40312433]], unit='m / s'),
-      dt_pp_phi=Quantity([[0., 0.]], unit='m / s(1/2)'),
-      dt_z=Quantity([[3, 6]], unit='m / s')
+      rho=Q([[2.23606801, 6.40312433]], 'm'),
+      pp_phi=Q([[0., 0.]], 'm / s(1/2)'),
+      z=Q([[3, 6]], 'm'),
+      dt_rho=Q([[2.23606801, 6.40312433]], 'm / s'),
+      dt_pp_phi=Q([[0., 0.]], 'm / s(1/2)'),
+      dt_z=Q([[3, 6]], 'm / s')
     )
 
     """

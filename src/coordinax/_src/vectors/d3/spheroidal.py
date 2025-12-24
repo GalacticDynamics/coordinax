@@ -52,33 +52,27 @@ class ProlateSpheroidalPos(AbstractPos3D):
     >>> import coordinax.vecs as cxv
 
     >>> vec = cxv.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(3.0, "km2"),
-    ...     nu=u.Quantity(0.5, "km2"),
-    ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(1.5, "km"),
+    ...     mu=u.Q(3.0, "km2"), nu=u.Q(0.5, "km2"), phi=u.Q(0.25, "rad"),
+    ...     Delta=u.Q(1.5, "km"),
     ... )
     >>> print(vec)
     <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
-     Delta=Quantity(1.5, unit='km')
+     Delta=Q(1.5, 'km')
         [3.   0.5  0.25]>
 
     This fails with a zero or negative Delta:
 
     >>> try: vec = cxv.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(3.0, "km2"),
-    ...     nu=u.Quantity(0.5, "km2"),
-    ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(0.0, "km"),
+    ...     mu=u.Q(3.0, "km2"), nu=u.Q(0.5, "km2"), phi=u.Q(0.25, "rad"),
+    ...     Delta=u.Q(0.0, "km"),
     ... )
     ... except Exception as e: pass
 
     Or with invalid mu and nu:
 
     >>> try: vec = cxv.ProlateSpheroidalPos(
-    ...     mu=u.Quantity(0.5, "km2"),
-    ...     nu=u.Quantity(0.5, "km2"),
-    ...     phi=u.Quantity(0.25, "rad"),
-    ...     Delta=u.Quantity(1.5, "km"),
+    ...     mu=u.Q(0.5, "km2"), nu=u.Q(0.5, "km2"), phi=u.Q(0.25, "rad"),
+    ...     Delta=u.Q(1.5, "km"),
     ... )
     ... except Exception as e: pass
 
@@ -93,10 +87,10 @@ class ProlateSpheroidalPos(AbstractPos3D):
     parameter `Delta` is not retained through the conversion. To convert back to
     prolate spheroidal coordinates, we need to provide the focal length again:
 
-    >>> vec2 = sph.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "km"))
+    >>> vec2 = sph.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(1.5, "km"))
     >>> print(vec2.round(3))
     <ProlateSpheroidalPos: (mu[km2], nu[km2], phi[rad])
-     Delta=Quantity(1.5, unit='km')
+     Delta=Q(1.5, 'km')
         [3.   0.5  0.25]>
 
     >>> print((vec2 - vec).vconvert(cxv.CartesianPos3D))
@@ -105,11 +99,11 @@ class ProlateSpheroidalPos(AbstractPos3D):
 
     """
 
-    mu: ct.BBtArea = eqx.field(converter=u.Quantity["area"].from_)
+    mu: ct.BBtArea = eqx.field(converter=u.Q["area"].from_)
     r"""Spheroidal mu coordinate :math:`\mu \in [0,+\infty)` (called :math:`\lambda` in
      some Galactic dynamics contexts)."""
 
-    nu: ct.BBtArea = eqx.field(converter=u.Quantity["area"].from_)
+    nu: ct.BBtArea = eqx.field(converter=u.Q["area"].from_)
     r"""Spheroidal nu coordinate :math:`\lambda \in [-\infty,+\infty)`."""
 
     phi: BatchableAngleQ = eqx.field(
@@ -120,7 +114,7 @@ class ProlateSpheroidalPos(AbstractPos3D):
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
     _: KW_ONLY
-    Delta: Shaped[u.Quantity["length"], ""] = VectorAttribute()
+    Delta: Shaped[u.Q["length"], ""] = VectorAttribute()
     """Focal length of the coordinate system."""
 
     def __check_init__(self) -> None:
@@ -152,29 +146,29 @@ class ProlateSpheroidalVel(AbstractVel3D):
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> v = cxv.CartesianVel3D.from_(u.Quantity([4, 5, 6], "km/s"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> v = cxv.CartesianVel3D.from_(u.Q([4, 5, 6], "km/s"))
 
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(4, "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(4, "kpc"))
     >>> pv = v.vconvert(cxv.ProlateSpheroidalVel, px)
 
     >>> print(pv.vconvert(cxv.CartesianVel3D, px))
     <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
-    >>> print(pv.vconvert(cxv.CartesianVel3D, x, Delta=u.Quantity(4, "kpc")))
+    >>> print(pv.vconvert(cxv.CartesianVel3D, x, Delta=u.Q(4, "kpc")))
     <CartesianVel3D: (x, y, z) [km / s]
         [4. 5. 6.]>
 
     """
 
-    mu: ct.BBtKinematicFlux = eqx.field(converter=u.Quantity["diffusivity"].from_)
+    mu: ct.BBtKinematicFlux = eqx.field(converter=u.Q["diffusivity"].from_)
     r"""Prolate spheroidal mu speed $d\mu/dt \in [-\infty, \infty]$."""
 
-    nu: ct.BBtKinematicFlux = eqx.field(converter=u.Quantity["diffusivity"].from_)
+    nu: ct.BBtKinematicFlux = eqx.field(converter=u.Q["diffusivity"].from_)
     r"""Prolate spheroidal nu speed $d\nu/dt \in [-\infty, \infty]$."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Azimuthal speed $d\phi/dt \in [-\infty, \infty]$."""
 
 
@@ -196,30 +190,28 @@ class ProlateSpheroidalAcc(AbstractAcc3D):
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos3D.from_(u.Quantity([1, 2, 3], "kpc"))
-    >>> v = cxv.CartesianVel3D.from_(u.Quantity([4, 5, 6], "km/s"))
-    >>> a = cxv.CartesianAcc3D.from_(u.Quantity([4, 5, 6], "km/s2"))
+    >>> x = cxv.CartesianPos3D.from_(u.Q([1, 2, 3], "kpc"))
+    >>> v = cxv.CartesianVel3D.from_(u.Q([4, 5, 6], "km/s"))
+    >>> a = cxv.CartesianAcc3D.from_(u.Q([4, 5, 6], "km/s2"))
 
-    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(4, "kpc"))
+    >>> px = x.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Q(4, "kpc"))
     >>> pa = a.vconvert(cxv.ProlateSpheroidalAcc, v, px)
 
     >>> print(pa.vconvert(cxv.CartesianAcc3D, v, px))
     <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 
-    >>> print(pa.vconvert(cxv.CartesianAcc3D, v, x, Delta=u.Quantity(4, "kpc")))
+    >>> print(pa.vconvert(cxv.CartesianAcc3D, v, x, Delta=u.Q(4, "kpc")))
     <CartesianAcc3D: (x, y, z) [km / s2]
         [4. 5. 6.]>
 
     """
 
-    mu: ct.BBtSpecificEnergy = eqx.field(converter=u.Quantity["specific energy"].from_)
+    mu: ct.BBtSpecificEnergy = eqx.field(converter=u.Q["specific energy"].from_)
     r"""Prolate spheroidal mu acceleration $d^2\mu/dt^2 \in [-\infty, \infty]$."""
 
-    nu: ct.BBtSpecificEnergy = eqx.field(converter=u.Quantity["specific energy"].from_)
+    nu: ct.BBtSpecificEnergy = eqx.field(converter=u.Q["specific energy"].from_)
     r"""Prolate spheroidal nu acceleration $d^2\nu/dt^2 \in [-\infty, \infty]$."""
 
-    phi: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    phi: ct.BBtAngularAcc = eqx.field(converter=u.Q["angular acceleration"].from_)
     r"""Azimuthal acceleration $d^2\phi/dt^2 \in [-\infty, \infty]$."""

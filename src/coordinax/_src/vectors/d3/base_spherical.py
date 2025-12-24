@@ -11,9 +11,9 @@ import unxt as u
 
 from .base import AbstractAcc3D, AbstractPos3D, AbstractVel3D
 
-_90d = u.Quantity(90, "deg")
-_180d = u.Quantity(180, "deg")
-_360d = u.Quantity(360, "deg")
+_90d = u.Q(90, "deg")
+_180d = u.Q(180, "deg")
+_360d = u.Q(360, "deg")
 
 
 class AbstractSphericalPos(AbstractPos3D):

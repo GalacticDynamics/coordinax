@@ -41,21 +41,13 @@ Vector objects support arithmetic and mathematical operations:
 
 ```{code-block} python
 >>> q3 + q3
-CartesianPos3D(
-    x=Quantity(2, unit='kpc'), y=Quantity(4, unit='kpc'), z=Quantity(6, unit='kpc')
-)
+CartesianPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
 
 >>> 2 * q3
-CartesianPos3D(
-    x=Quantity(2, unit='kpc'), y=Quantity(4, unit='kpc'), z=Quantity(6, unit='kpc')
-)
+CartesianPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
 
 >>> v3 - v3
-CartesianVel3D(
-    x=Quantity(0, unit='kpc / Myr'),
-    y=Quantity(0, unit='kpc / Myr'),
-    z=Quantity(0, unit='kpc / Myr')
-)
+CartesianVel3D(x=Q(0, 'kpc / Myr'), y=Q(0, 'kpc / Myr'), z=Q(0, 'kpc / Myr'))
 ```
 
 ## Dimensionality: 1,N-D
@@ -88,11 +80,8 @@ All vector types support batch operations and broadcasting:
 ```{code-block} python
 >>> arr = cxv.CartesianPos3D.from_([[1,2,3],[4,5,6]], "kpc")
 >>> arr * 2
-CartesianPos3D(
-    x=Quantity([2, 8], unit='kpc'),
-    y=Quantity([ 4, 10], unit='kpc'),
-    z=Quantity([ 6, 12], unit='kpc')
-)
+CartesianPos3D(x=Q([2, 8], 'kpc'), y=Q([ 4, 10], 'kpc'),
+               z=Q([ 6, 12], 'kpc'))
 ```
 
 ## Space Objects: Grouping Related Vectors
@@ -104,14 +93,11 @@ position, velocity, acceleration):
 >>> space = cxv.KinematicSpace(length=q3, speed=v3, acceleration=a3)
 >>> print(space)
 KinematicSpace({
-    'length':
-    <CartesianPos3D: (x, y, z) [kpc]
-         [1 2 3]>,
-    'speed':
-    <CartesianVel3D: (x, y, z) [kpc / Myr]
+    'length': <CartesianPos3D: (x, y, z) [kpc]
+        [1 2 3]>,
+    'speed': <CartesianVel3D: (x, y, z) [kpc / Myr]
         [4 5 6]>,
-    'acceleration':
-    <CartesianAcc3D: (x, y, z) [kpc / Myr2]
+    'acceleration': <CartesianAcc3D: (x, y, z) [kpc / Myr2]
         [0.1 0.2 0.3]>
 })
 ```

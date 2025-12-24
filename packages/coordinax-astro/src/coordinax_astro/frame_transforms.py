@@ -24,10 +24,10 @@ from coordinax._src.operators import (
     simplify_op,
 )
 
-ScalarAngle: TypeAlias = Shaped[u.Quantity["angle"] | u.Angle, ""]
+ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
-LengthVector: TypeAlias = Shaped[u.Quantity["length"], "3"] | Shaped[Distance, "3"]
-VelocityVector: TypeAlias = Shaped[u.Quantity["speed"], "3"]
+LengthVector: TypeAlias = Shaped[u.Q["length"], "3"] | Shaped[Distance, "3"]
+VelocityVector: TypeAlias = Shaped[u.Q["speed"], "3"]
 
 
 # ---------------------------------------------------------------
@@ -53,7 +53,7 @@ def frame_transform_op(
 
     >>> @dispatch
     ... def frame_transform_op(from_frame: MySpaceFrame, to_frame: ICRS, /) -> cx.ops.AbstractOperator:
-    ...     return cx.ops.GalileanRotation.from_euler("z", u.Quantity(10, "deg"))
+    ...     return cx.ops.GalileanRotation.from_euler("z", u.Q(10, "deg"))
 
     We can transform from `MySpaceFrame` to a Galacocentric frame, even though
     we don't have a direct transformation defined:
@@ -111,7 +111,7 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) 
     >>> frame_op
     Pipe(Identity())
 
-    >>> gcf_frame2 = cxf.Galactocentric(roll=u.Quantity(10, "deg"))
+    >>> gcf_frame2 = cxf.Galactocentric(roll=u.Q(10, "deg"))
     >>> frame_op2 = cxf.frame_transform_op(gcf_frame, gcf_frame2)
     >>> frame_op2
     Pipe((
@@ -214,11 +214,11 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     Let's do it again for a few different input types:
 
-    >>> q = u.Quantity([0, 0, 0], "pc")
+    >>> q = u.Q([0, 0, 0], "pc")
     >>> frame_op(q)
     Quantity(Array([-8121.972, 0. , 20.8 ], dtype=float32), unit='pc')
 
-    >>> p = u.Quantity([0., 0, 0], "km/s")
+    >>> p = u.Q([0., 0, 0], "km/s")
 
     >>> newq, newp = frame_op(q, p)
     >>> newq, newp
@@ -247,7 +247,7 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
     # Translation by Sun-Galactic center distance around x' and rotate about y'
     # to account for tilt due to Sun's height above the plane
     z_d = u.ustrip("", to_frame.z_sun / to_frame.galcen.distance)  # [radian]
-    H = GalileanRotation.from_euler("y", u.Quantity(jnp.asin(z_d), "rad"))
+    H = GalileanRotation.from_euler("y", u.Q(jnp.asin(z_d), "rad"))
 
     # Post-rotation spatial offset to Galactic center.
     offset_q = GalileanSpatialTranslation(
@@ -335,11 +335,11 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
 
     Let's do it again for a few different input types:
 
-    >>> q = u.Quantity([0, 0, 0], "pc")
+    >>> q = u.Q([0, 0, 0], "pc")
     >>> frame_op(q).round(0)
     Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
 
-    >>> p = u.Quantity([0., 0, 0], "km/s")
+    >>> p = u.Q([0., 0, 0], "km/s")
 
     >>> newq, newp = frame_op(q, p)
     >>> newq.round(0), newp.round(0)

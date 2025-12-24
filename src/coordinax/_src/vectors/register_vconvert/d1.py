@@ -42,13 +42,13 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos1D(x=u.Quantity(1.0, "km"))
+    >>> x = cxv.CartesianPos1D(x=u.Q(1.0, "km"))
     >>> x2 = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(x2)
     <CartesianPos2D: (x, y) [km]
         [1. 0.]>
 
-    >>> x3 = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Quantity(14, "km"))
+    >>> x3 = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Q(14, "km"))
     >>> print(x3)
     <CartesianPos3D: (x, y, z) [km]
         [ 1. 14.  0.]>
@@ -80,20 +80,20 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos1D(x=u.Quantity(1.0, "km"))
+    >>> x = cxv.CartesianPos1D(x=u.Q(1.0, "km"))
     >>> x2 = cxv.vconvert(cxv.PolarPos, x)
     >>> print(x2)
     <PolarPos: (r[km], phi[rad])
         [1. 0.]>
 
-    >>> x3 = cxv.vconvert(cxv.PolarPos, x, phi=u.Quantity(14, "deg"))
+    >>> x3 = cxv.vconvert(cxv.PolarPos, x, phi=u.Q(14, "deg"))
     >>> print(x3)
     <PolarPos: (r[km], phi[deg])
         [ 1. 14.]>
 
     """
     r = p["x"]
-    phi = p.get("phi", u.Quantity(0, "rad") if is_any_quantity(r) else 0)
+    phi = p.get("phi", u.Q(0, "rad") if is_any_quantity(r) else 0)
     return {"r": r, "phi": phi}, (p.get("out_aux", {}) or {})
 
 
@@ -123,13 +123,13 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos1D(x=u.Quantity(1, "km"))
+    >>> x = cxv.CartesianPos1D(x=u.Q(1, "km"))
     >>> x2 = cxv.vconvert(cxv.CartesianPos3D, x)
     >>> print(x2)
     <CartesianPos3D: (x, y, z) [km]
         [1 0 0]>
 
-    >>> x3 = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Quantity(14, "km"))
+    >>> x3 = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Q(14, "km"))
     >>> print(x3)
     <CartesianPos3D: (x, y, z) [km]
         [ 1 14  0]>
@@ -166,13 +166,13 @@ def vconvert(
 
     SphericalPos:
 
-    >>> x = cxv.CartesianPos1D(x=u.Quantity(1, "km"))
+    >>> x = cxv.CartesianPos1D(x=u.Q(1, "km"))
     >>> x2 = cxv.vconvert(cxv.SphericalPos, x)
     >>> print(x2)
     <SphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
-    >>> x3 = cxv.vconvert(cxv.SphericalPos, x, phi=u.Quantity(14, "deg"))
+    >>> x3 = cxv.vconvert(cxv.SphericalPos, x, phi=u.Q(14, "deg"))
     >>> print(x3)
     <SphericalPos: (r[km], theta[rad], phi[deg])
         [ 1  0 14]>
@@ -185,15 +185,15 @@ def vconvert(
     <MathSphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
-    >>> x3 = cxv.vconvert(cxv.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
+    >>> x3 = cxv.vconvert(cxv.MathSphericalPos, x, phi=u.Q(14, "deg"))
     >>> print(x3)
     <MathSphericalPos: (r[km], theta[rad], phi[deg])
         [ 1.  0. 14.]>
 
     """
     r = p["x"]
-    theta = p.get("theta", u.Quantity(0, "rad") if is_any_quantity(r) else 0)
-    phi = p.get("phi", u.Quantity(0, "rad") if is_any_quantity(r) else 0)
+    theta = p.get("theta", u.Q(0, "rad") if is_any_quantity(r) else 0)
+    phi = p.get("phi", u.Q(0, "rad") if is_any_quantity(r) else 0)
     return {"r": r, "theta": theta, "phi": phi}, (out_aux or {})
 
 
@@ -219,20 +219,20 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.CartesianPos1D(x=u.Quantity(1, "km"))
+    >>> x = cxv.CartesianPos1D(x=u.Q(1, "km"))
     >>> x2 = cxv.vconvert(cxv.CylindricalPos, x)
     >>> print(x2)
     <CylindricalPos: (rho[km], phi[rad], z[km])
         [1. 0. 0.]>
 
-    >>> x3 = cxv.vconvert(cxv.CylindricalPos, x, phi=u.Quantity(14, "deg"))
+    >>> x3 = cxv.vconvert(cxv.CylindricalPos, x, phi=u.Q(14, "deg"))
     >>> print(x3)
     <CylindricalPos: (rho[km], phi[deg], z[km])
         [ 1 14  0]>
 
     """
     rho = p["x"]
-    phi = p.get("phi", u.Quantity(0, "rad") if is_any_quantity(rho) else 0)
+    phi = p.get("phi", u.Q(0, "rad") if is_any_quantity(rho) else 0)
     z = p.get("z", 0 * rho)
     return {"rho": rho, "phi": phi, "z": z}, (out_aux or {})
 
@@ -266,13 +266,13 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.RadialPos(r=u.Quantity(1, "km"))
+    >>> x = cxv.RadialPos(r=u.Q(1, "km"))
     >>> x2 = cxv.vconvert(cxv.CartesianPos2D, x)
     >>> print(x2)
     <CartesianPos2D: (x, y) [km]
         [1 0]>
 
-    >>> x3 = cxv.vconvert(cxv.CartesianPos2D, x, y=u.Quantity(14, "km"))
+    >>> x3 = cxv.vconvert(cxv.CartesianPos2D, x, y=u.Q(14, "km"))
     >>> print(x3)
     <CartesianPos2D: (x, y) [km]
         [ 1 14]>
@@ -304,13 +304,13 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.RadialPos(r=u.Quantity(1, "km"))
+    >>> x = cxv.RadialPos(r=u.Q(1, "km"))
     >>> x2 = cxv.vconvert(cxv.PolarPos, x)
     >>> print(x2)
     <PolarPos: (r[km], phi[rad])
         [1. 0.]>
 
-    >>> x3 = cxv.vconvert(cxv.PolarPos, x, phi=u.Quantity(14, "deg"))
+    >>> x3 = cxv.vconvert(cxv.PolarPos, x, phi=u.Q(14, "deg"))
     >>> print(x3)
     <PolarPos: (r[km], phi[deg])
         [ 1 14]>
@@ -318,7 +318,7 @@ def vconvert(
     """
     newp = {
         "r": p["r"],
-        "phi": p.get("phi", u.Quantity(0, "rad") if is_any_quantity(p["r"]) else 0),
+        "phi": p.get("phi", u.Q(0, "rad") if is_any_quantity(p["r"]) else 0),
     }
     return newp, (out_aux or {})
 
@@ -351,13 +351,13 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.RadialPos(r=u.Quantity(1.0, "km"))
+    >>> x = cxv.RadialPos(r=u.Q(1.0, "km"))
     >>> y = cxv.vconvert(cxv.CartesianPos3D, x)
     >>> print(y)
     <CartesianPos3D: (x, y, z) [km]
         [1. 0. 0.]>
 
-    >>> y = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Quantity(14, "km"))
+    >>> y = cxv.vconvert(cxv.CartesianPos3D, x, y=u.Q(14, "km"))
     >>> print(y)
     <CartesianPos3D: (x, y, z) [km]
         [ 1. 14.  0.]>
@@ -393,7 +393,7 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.RadialPos(r=u.Quantity(1, "km"))
+    >>> x = cxv.RadialPos(r=u.Q(1, "km"))
 
     SphericalPos:
 
@@ -402,7 +402,7 @@ def vconvert(
     <SphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
-    >>> y = cxv.vconvert(cxv.SphericalPos, x, phi=u.Quantity(14, "deg"))
+    >>> y = cxv.vconvert(cxv.SphericalPos, x, phi=u.Q(14, "deg"))
     >>> print(y)
     <SphericalPos: (r[km], theta[rad], phi[deg])
         [ 1  0 14]>
@@ -414,7 +414,7 @@ def vconvert(
     <MathSphericalPos: (r[km], theta[rad], phi[rad])
         [1. 0. 0.]>
 
-    >>> y = cxv.vconvert(cxv.MathSphericalPos, x, phi=u.Quantity(14, "deg"))
+    >>> y = cxv.vconvert(cxv.MathSphericalPos, x, phi=u.Q(14, "deg"))
     >>> print(y)
     <MathSphericalPos: (r[km], theta[rad], phi[deg])
         [ 1.  0. 14.]>
@@ -423,8 +423,8 @@ def vconvert(
     r = p["r"]
     newp = {
         "r": r,
-        "theta": p.get("theta", u.Quantity(0, "rad") if is_any_quantity(r) else 0),
-        "phi": p.get("phi", u.Quantity(0, "rad") if is_any_quantity(r) else 0),
+        "theta": p.get("theta", u.Q(0, "rad") if is_any_quantity(r) else 0),
+        "phi": p.get("phi", u.Q(0, "rad") if is_any_quantity(r) else 0),
     }
     return newp, (out_aux or {})
 
@@ -451,13 +451,13 @@ def vconvert(
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
 
-    >>> x = cxv.RadialPos(r=u.Quantity(1.0, "km"))
+    >>> x = cxv.RadialPos(r=u.Q(1.0, "km"))
     >>> y = cxv.vconvert(cxv.CylindricalPos, x)
     >>> print(y)
     <CylindricalPos: (rho[km], phi[rad], z[km])
         [1. 0. 0.]>
 
-    >>> y = cxv.vconvert(cxv.CylindricalPos, x, phi=u.Quantity(14, "deg"))
+    >>> y = cxv.vconvert(cxv.CylindricalPos, x, phi=u.Q(14, "deg"))
     >>> print(y)
     <CylindricalPos: (rho[km], phi[deg], z[km])
         [ 1. 14.  0.]>
@@ -466,7 +466,7 @@ def vconvert(
     r = p["r"]
     newp = {
         "rho": r,
-        "phi": p.get("phi", u.Quantity(0, "rad") if is_any_quantity(r) else 0),
+        "phi": p.get("phi", u.Q(0, "rad") if is_any_quantity(r) else 0),
         "z": p.get("z", 0 * r),
     }
     return newp, (out_aux or {})

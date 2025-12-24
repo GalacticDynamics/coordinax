@@ -44,11 +44,7 @@ import coordinax_astro as cxa
 import unxt as u
 
 # Create a position in ICRS frame
-pos = cx.SphericalPos(
-    r=u.Quantity(10, "kpc"),
-    theta=u.Quantity(45, "deg"),
-    phi=u.Quantity(30, "deg"),
-)
+pos = cx.SphericalPos(r=u.Q(10, "kpc"), theta=u.Q(45, "deg"), phi=u.Q(30, "deg"))
 icrs_coord = cx.Coordinate({"length": pos}, frame=cxa.ICRS())
 
 # Transform to Galactocentric frame
@@ -73,11 +69,11 @@ A reference frame centered on the Galactic center with configurable parameters.
 ```python
 frame = cxa.Galactocentric(
     galcen={
-        "lon": u.Quantity(266, "deg"),
-        "lat": u.Quantity(-29, "deg"),
-        "distance": u.Quantity(8.122, "kpc"),
+        "lon": u.Q(266, "deg"),
+        "lat": u.Q(-29, "deg"),
+        "distance": u.Q(8.122, "kpc"),
     },
-    z_sun=u.Quantity(20.8, "pc"),
+    z_sun=u.Q(20.8, "pc"),
 )
 ```
 

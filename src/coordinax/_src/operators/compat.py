@@ -36,13 +36,13 @@ def call(self: AbstractOperator, x: Q1, /, **kwargs: Any) -> Q1:
     >>> import coordinax as cx
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
-    >>> q = u.Quantity([0], "km")
+    >>> q = u.Q([0], "km")
     >>> op(q)
     Quantity(Array([1], dtype=int32), unit='km')
 
     """
     # Quantity -> CartesianPos1D -> [Operator] -> Quantity
-    return convert(self(CartesianPos1D.from_(x), **kwargs), u.Quantity)
+    return convert(self(CartesianPos1D.from_(x), **kwargs), u.Q)
 
 
 @AbstractOperator.__call__.dispatch
@@ -57,15 +57,15 @@ def call(
     >>> import coordinax as cx
 
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
-    >>> q = u.Quantity([0], "km")
-    >>> t = u.Quantity(0, "s")
+    >>> q = u.Q([0], "km")
+    >>> t = u.Q(0, "s")
     >>> op(t, q)
     (Quantity(Array(0, dtype=int32, ...), unit='s'),
      Quantity(Array([1], dtype=int32), unit='km'))
 
     """
     t, vec = self(t, CartesianPos1D.from_(x), **kwargs)
-    return t, convert(vec, u.Quantity)
+    return t, convert(vec, u.Q)
 
 
 # ============================================================================
@@ -84,13 +84,13 @@ def call(self: AbstractOperator, x: Q2, /, **kwargs: Any) -> Q2:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> q = u.Quantity([1, 2], "m")
-    >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
+    >>> q = u.Q([1, 2], "m")
+    >>> op = cx.ops.GalileanSpatialTranslation(u.Q([-1, -1], "m"))
     >>> op(q)
     Quantity(Array([0, 1], dtype=int32), unit='m')
 
     """
-    return convert(self(CartesianPos2D.from_(x), **kwargs), u.Quantity)
+    return convert(self(CartesianPos2D.from_(x), **kwargs), u.Q)
 
 
 @AbstractOperator.__call__.dispatch
@@ -104,16 +104,16 @@ def call(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> q = u.Quantity([1, 2], "m")
-    >>> t = u.Quantity(0, "s")
-    >>> op = cx.ops.GalileanSpatialTranslation(u.Quantity([-1, -1], "m"))
+    >>> q = u.Q([1, 2], "m")
+    >>> t = u.Q(0, "s")
+    >>> op = cx.ops.GalileanSpatialTranslation(u.Q([-1, -1], "m"))
     >>> op(t, q)
     (Quantity(Array(0, dtype=int32, ...), unit='s'),
      Quantity(Array([0, 1], dtype=int32), unit='m'))
 
     """
     t, vec = self(t, CartesianPos2D.from_(x), **kwargs)
-    return t, convert(vec, u.Quantity)
+    return t, convert(vec, u.Q)
 
 
 # ============================================================================
@@ -143,17 +143,17 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> shift = u.Quantity([1.0, 2.0, 3.0], "km")
+    >>> shift = u.Q([1.0, 2.0, 3.0], "km")
     >>> op = cx.ops.GalileanSpatialTranslation(shift)
 
-    >>> q = u.Quantity([0.0, 0, 0], "km")
+    >>> q = u.Q([0.0, 0, 0], "km")
     >>> op(q)
     Quantity(Array([1., 2., 3.], dtype=float32), unit='km')
 
     """
     cart = CartesianPos3D.from_(q)
     result = self(cart, **kwargs)
-    return convert(result.vconvert(CartesianPos3D), u.Quantity)
+    return convert(result.vconvert(CartesianPos3D), u.Q)
 
 
 @AbstractOperator.__call__.dispatch
@@ -175,8 +175,8 @@ def call(
 
     We can then apply the operator to a position:
 
-    >>> q = u.Quantity([1.0, 2.0, 3.0], "km")
-    >>> t = u.Quantity(0.0, "Gyr")
+    >>> q = u.Q([1.0, 2.0, 3.0], "km")
+    >>> t = u.Q(0.0, "Gyr")
 
     >>> op(t, q)
     (Quantity(Array(0., dtype=float32, ...), unit='Gyr'),
@@ -184,7 +184,7 @@ def call(
 
     """
     t, vec = self(t, CartesianPos3D.from_(x), **kwargs)
-    return t, convert(vec, u.Quantity)
+    return t, convert(vec, u.Q)
 
 
 # ============================================================================
@@ -209,13 +209,12 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
 
     >>> pos = cx.FourVector.from_([0, 1.0, 2.0, 3.0], "km")
     >>> pos
-    FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
+    FourVector(t=Q(0., 's'), q=CartesianPos3D(...))
 
     >>> newpos = op(pos)
     >>> newpos
-    FourVector( t=Quantity(...), q=CartesianPos3D( ... ) )
-    >>> newpos.q.x
-    Quantity(Array(2., dtype=float32), unit='km')
+    FourVector(t=Q(0., 's'),
+               q=CartesianPos3D(x=Q(2., 'km'), y=Q(4., 'km'), z=Q(6., 'km')))
 
     Now on a VelocityBoost:
 
@@ -235,10 +234,10 @@ def call(self: AbstractOperator, v4: FourVector, /, **kwargs: Any) -> FourVector
 @AbstractOperator.__call__.dispatch
 def call(
     self: AbstractOperator,
-    x: Shaped[u.Quantity["length"], "*batch 4"],
+    x: Shaped[u.Q["length"], "*batch 4"],
     /,
     **kwargs: Any,
-) -> Shaped[u.Quantity["length"], "*batch 4"]:
+) -> Shaped[u.Q["length"], "*batch 4"]:
     """Dispatch to the operator's `__call__` method.
 
     Examples
@@ -254,7 +253,7 @@ def call(
 
     We can then apply the operator to a position:
 
-    >>> pos = u.Quantity([0, 1.0, 2.0, 3.0], "km")
+    >>> pos = u.Q([0, 1.0, 2.0, 3.0], "km")
     >>> pos
     Quantity(Array([0., 1., 2., 3.], dtype=float32), unit='km')
 
@@ -264,7 +263,7 @@ def call(
 
     """
     q4 = FourVector.from_(x)
-    return convert(self(q4, **kwargs), u.Quantity)
+    return convert(self(q4, **kwargs), u.Q)
 
 
 # ============================================================================
@@ -301,7 +300,10 @@ def call(op: AbstractOperator, space: KinematicSpace, /, **__: Any) -> Kinematic
     >>> v = cx.CartesianVel3D.from_([4., 5, 6], "m/s")
     >>> space = cx.KinematicSpace(length=x, speed=v)
     >>> space
-    KinematicSpace({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
+    KinematicSpace({
+      'length': CartesianPos3D(x=Q(1., 'm'), y=Q(2., 'm'), z=Q(3., 'm')),
+      'speed': CartesianVel3D(x=Q(4., 'm / s'), y=Q(5., 'm / s'), z=Q(6., 'm / s'))
+    })
 
     >>> new_space = op(space)
     >>> new_space.keys()
@@ -331,7 +333,7 @@ def call(
     >>> space = cx.KinematicSpace(length=cx.CartesianPos3D.from_([1., 2, 3], "m"))
 
     >>> op = cx.ops.GalileanRotation.from_([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> t = u.Quantity(0.0, "s")
+    >>> t = u.Q(0.0, "s")
     >>> _, new_space = op(t, space)
     >>> print(new_space["length"])
     <CartesianPos3D: (x, y, z) [m]

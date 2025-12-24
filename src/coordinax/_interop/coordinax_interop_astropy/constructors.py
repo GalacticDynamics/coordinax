@@ -539,7 +539,7 @@ def vector(obj: apyu.Quantity, /) -> cx.vecs.AbstractVector:
     >>> from astropy.units import Quantity
     >>> import coordinax as cx
 
-    >>> vec = cx.vector(Quantity([1, 2, 3], "meter"))
+    >>> vec = cx.vector(Quantity([1, 2, 3], "m"))
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
         [1. 2. 3.]>

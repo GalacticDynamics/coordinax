@@ -32,20 +32,20 @@ class CartesianPos3D(AbstractCartesian, AbstractPos3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.CartesianPos3D.from_(u.Quantity([1, 2, 3], "m"))
+    >>> vec = cx.CartesianPos3D.from_(u.Q([1, 2, 3], "m"))
     >>> print(vec)
     <CartesianPos3D: (x, y, z) [m]
         [1 2 3]>
 
     """
 
-    x: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    x: BBtLength = eqx.field(converter=u.Q["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
-    y: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    y: BBtLength = eqx.field(converter=u.Q["length"].from_)
     r"""Y coordinate :math:`y \in (-\infty,+\infty)`."""
 
-    z: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    z: BBtLength = eqx.field(converter=u.Q["length"].from_)
     r"""Z coordinate :math:`z \in (-\infty,+\infty)`."""
 
 
@@ -64,13 +64,13 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
 
     """
 
-    x: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""X speed :math:`dx/dt \in [-\infty, \infty]."""
 
-    y: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    y: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""Y speed :math:`dy/dt \in [-\infty, \infty]."""
 
-    z: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    z: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""Z speed :math:`dz/dt \in [-\infty, \infty]."""
 
     @ft.partial(eqx.filter_jit, inline=True)
@@ -92,13 +92,13 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
 class CartesianAcc3D(AbstractCartesian, AbstractAcc3D):
     """Cartesian differential representation."""
 
-    x: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BBtAcc = eqx.field(converter=u.Q["acceleration"].from_)
     r"""X acceleration :math:`d^2x/dt^2 \in [-\infty, \infty]."""
 
-    y: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    y: ct.BBtAcc = eqx.field(converter=u.Q["acceleration"].from_)
     r"""Y acceleration :math:`d^2y/dt^2 \in [-\infty, \infty]."""
 
-    z: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    z: ct.BBtAcc = eqx.field(converter=u.Q["acceleration"].from_)
     r"""Z acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""
 
     @override

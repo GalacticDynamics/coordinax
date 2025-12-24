@@ -73,8 +73,8 @@ class KinematicSpace(
     (brodcastable) batch shapes:
 
     >>> w = cx.KinematicSpace(
-    ...     length=u.Quantity([[8.5, 0, 0], [10, 0, 0]], "kpc"),
-    ...     speed=u.Quantity([0, 200, 0], "km/s"))
+    ...     length=u.Q([[8.5, 0, 0], [10, 0, 0]], "kpc"),
+    ...     speed=u.Q([0, 200, 0], "km/s"))
     >>> print(w)
     KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [kpc]
@@ -87,7 +87,7 @@ class KinematicSpace(
     The vectors can then be accessed by key:
 
     >>> space["length"]
-    CartesianPos3D( ... )
+    CartesianPos3D(x=Q(1, 'km'), y=Q(2, 'km'), z=Q(3, 'km'))
 
     The space can also be converted to different representations. If the
     conversion is on the primary vector, the other vectors will be
@@ -128,8 +128,8 @@ class KinematicSpace(
 
     There are convenience ways to initialize the vectors in the space:
 
-    >>> space = cx.KinematicSpace.from_({"length": u.Quantity([1, 2, 3], "km"),
-    ...                         "speed": u.Quantity([4, 5, 6], "km/s")})
+    >>> space = cx.KinematicSpace.from_({"length": u.Q([1, 2, 3], "km"),
+    ...                         "speed": u.Q([4, 5, 6], "km/s")})
     >>> print(space)
     KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [km]
@@ -218,62 +218,38 @@ class KinematicSpace(
 
         >>> w[0]
         KinematicSpace({
-            'length': CartesianPos3D(
-                x=Quantity([1, 4], unit='m'),
-                y=Quantity([2, 5], unit='m'),
-                z=Quantity([3, 6], unit='m')
-            ),
-            'speed': CartesianVel3D(
-                x=Quantity([1, 4], unit='m / s'),
-                y=Quantity([2, 5], unit='m / s'),
-                z=Quantity([3, 6], unit='m / s')
-            )
+            'length': CartesianPos3D(x=Q([1, 4], 'm'), y=Q([2, 5], 'm'),
+                                     z=Q([3, 6], 'm')),
+            'speed': CartesianVel3D(x=Q([1, 4], 'm / s'), y=Q([2, 5], 'm / s'),
+                                    z=Q([3, 6], 'm / s'))
         })
 
         By slice:
 
         >>> w[1:]
         KinematicSpace({
-            'length': CartesianPos3D(
-                x=Quantity([], unit='m'), y=Quantity([], unit='m'),
-                z=Quantity([], unit='m')
-            ),
-            'speed': CartesianVel3D(
-                x=Quantity([], unit='m / s'),
-                y=Quantity([], unit='m / s'),
-                z=Quantity([], unit='m / s')
-            )
+            'length': CartesianPos3D(x=Q([], 'm'), y=Q([], 'm'), z=Q([], 'm')),
+            'speed': CartesianVel3D(x=Q([], 'm / s'), y=Q([], 'm / s'),
+                                    z=Q([], 'm / s'))
         })
 
         By Ellipsis:
 
         >>> w[...]
         KinematicSpace({
-            'length': CartesianPos3D(
-                x=Quantity([[1, 4]], unit='m'),
-                y=Quantity([[2, 5]], unit='m'),
-                z=Quantity([[3, 6]], unit='m')
-            ),
-            'speed': CartesianVel3D(
-                x=Quantity([[1, 4]], unit='m / s'),
-                y=Quantity([[2, 5]], unit='m / s'),
-                z=Quantity([[3, 6]], unit='m / s')
-            )
+            'length': CartesianPos3D(x=Q([[1, 4]], 'm'), y=Q([[2, 5]], 'm'),
+                                     z=Q([[3, 6]], 'm')),
+            'speed': CartesianVel3D(x=Q([[1, 4]], 'm / s'), y=Q([[2, 5]], 'm / s'),
+                                    z=Q([[3, 6]], 'm / s'))
         })
 
         By tuple[int, ...]:
 
         >>> w[(0, 1)]
         KinematicSpace({
-            'length': CartesianPos3D(
-                x=Quantity(4, unit='m'), y=Quantity(5, unit='m'),
-                z=Quantity(6, unit='m')
-            ),
-            'speed': CartesianVel3D(
-                x=Quantity(4, unit='m / s'),
-                y=Quantity(5, unit='m / s'),
-                z=Quantity(6, unit='m / s')
-            )
+            'length': CartesianPos3D(x=Q(4, 'm'), y=Q(5, 'm'), z=Q(6, 'm')),
+            'speed': CartesianVel3D(x=Q(4, 'm / s'), y=Q(5, 'm / s'),
+                                    z=Q(6, 'm / s'))
         })
 
         This also supports numpy index arrays. But this example section
@@ -447,19 +423,16 @@ class KinematicSpace(
         >>> w = cx.KinematicSpace(length=q, speed=p)
         >>> w
         KinematicSpace({
-            'length': CartesianPos3D(
-                x=Quantity(1, unit='m'),
-                y=Quantity(2, unit='m'),
-                z=Quantity(3, unit='m')
-            ),
-            'speed': CartesianVel3D(
-                x=Quantity(1, unit='m / s'),
-                y=Quantity(2, unit='m / s'),
-                z=Quantity(3, unit='m / s')
-            )
+            'length': CartesianPos3D(x=Q(1, 'm'), y=Q(2, 'm'), z=Q(3, 'm')),
+            'speed': CartesianVel3D(x=Q(1, 'm / s'), y=Q(2, 'm / s'),
+                                    z=Q(3, 'm / s'))
         })
 
         """
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("use_short_name", True)
+        kwargs.setdefault("named_unit", False)
+
         data_pdoc = wl.pdoc(self._data, **kwargs)
         data_pdoc = replace(  # remove the "{}""
             data_pdoc, {"child": {"children": data_pdoc.child.children[1:-1]}}

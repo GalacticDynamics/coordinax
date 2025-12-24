@@ -62,7 +62,7 @@ class AbstractCoordinate(AbstractVector):
         >>> cgcf = cicrs.to_frame(cx.frames.Galactocentric())
         >>> cgcf
         Coordinate(
-            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            KinematicSpace({ 'length': CartesianPos3D(...) }),
             frame=Galactocentric( ... )
         )
 
@@ -122,25 +122,22 @@ class AbstractCoordinate(AbstractVector):
 
         >>> wl.pprint(coord, include_data_name="named")
         Coordinate(
-            data=KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            data=KinematicSpace({ 'length': CartesianPos3D(...) }),
             frame=ICRS()
         )
 
         >>> wl.pprint(coord, include_data_name="vector")
         Coordinate(
-            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            KinematicSpace({ 'length': CartesianPos3D(...) }),
             frame=ICRS()
         )
 
         >>> wl.pprint(coord, include_data_name="map")
-        Coordinate(
-            { 'length': CartesianPos3D( ... ) },
-            frame=ICRS()
-        )
+        Coordinate( {'length': CartesianPos3D(...)}, frame=ICRS() )
 
         >>> print(repr(coord))
         Coordinate(
-            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            KinematicSpace({ 'length': CartesianPos3D(...) }),
             frame=ICRS()
         )
 
@@ -155,6 +152,11 @@ class AbstractCoordinate(AbstractVector):
         )
 
         """
+        # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("use_short_name", True)
+        kwargs.setdefault("named_unit", False)
+
+        # Different ways to show the data
         match include_data_name:
             case "named":
                 docs = wl.named_objs(tuple(field_items(self)), **kwargs)
@@ -192,7 +194,7 @@ class AbstractCoordinate(AbstractVector):
         ...                       cx.frames.ICRS())
         >>> print(repr(coord))
         Coordinate(
-            KinematicSpace({ 'length': CartesianPos3D( ... ) }),
+            KinematicSpace({ 'length': CartesianPos3D(...) }),
             frame=ICRS()
         )
 
@@ -239,20 +241,16 @@ class Coordinate(AbstractCoordinate):
     >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
     ...                       cx.frames.ICRS())
     >>> coord
-    Coordinate(
-        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
-    )
+    Coordinate( KinematicSpace({ 'length': CartesianPos3D(...) }),
+                frame=ICRS() )
 
     Alternative Construction:
 
     >>> frame = cx.frames.ICRS()
     >>> data = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_({"data": data, "frame": frame})
-    Coordinate(
-        KinematicSpace({ 'length': CartesianPos3D( ... ) }),
-        frame=ICRS()
-    )
+    Coordinate( KinematicSpace({ 'length': CartesianPos3D(...) }),
+                frame=ICRS() )
 
     Changing Representation:
 
@@ -261,10 +259,8 @@ class Coordinate(AbstractCoordinate):
     >>> coord = cx.Coordinate(data, frame)
 
     >>> coord.vconvert(cx.SphericalPos)
-    Coordinate(
-        KinematicSpace({ 'length': SphericalPos( ... ) }),
-        frame=ICRS()
-    )
+    Coordinate( KinematicSpace({ 'length': SphericalPos( ... ) }),
+                frame=ICRS() )
 
     Showing Frame Transformation:
 
@@ -288,11 +284,7 @@ class Coordinate(AbstractCoordinate):
     )
 
     >>> w.to_frame(cx.frames.ICRS()).data["length"]
-    CartesianPos3D(
-      x=Quantity(-1587.6683, unit='pc'),
-      y=Quantity(-24573.762, unit='pc'),
-      z=Quantity(-13583.504, unit='pc')
-    )
+    CartesianPos3D(x=Q(-1587.6683, 'pc'), y=Q(-24573.762, 'pc'), z=Q(-13583.504, 'pc'))
 
     """
 

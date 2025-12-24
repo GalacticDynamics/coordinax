@@ -131,7 +131,7 @@ def call(
     >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
     >>> op(vec)
-    CartesianPos3D( ... )
+    CartesianPos3D(x=Q(1, 'km'), y=Q(2, 'km'), z=Q(3, 'km'))
 
     """
     # TODO: with lax.for_i

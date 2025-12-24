@@ -16,7 +16,7 @@ import unxt as u
 
 from .base import AbstractDistance
 
-parallax_base_length = u.Quantity(1, "AU")
+parallax_base_length = u.Q(1, "AU")
 angle_dimension = u.dimension("angle")
 length_dimension = u.dimension("length")
 

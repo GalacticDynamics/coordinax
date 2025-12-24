@@ -52,8 +52,8 @@ def compute_jac(
     # NOTE: this is using Quantities. Using raw arrays is ~20x faster.
     jac, _ = pos_jac_fn(to_pos_cls, from_pos_cls, p_pos, in_aux, out_aux)
     # Restructure the Jacobian:
-    # from: ``{to_k: Quantity({from_k: Quantity(dto/dfrom, u_from)}, u_to)}``
-    # to  : ``{to_k: {from_k: Quantity(dto/dfrom, u_to/u_from)}}``.
+    # from: ``{to_k: Q({from_k: Q(dto/dfrom, u_from)}, u_to)}``
+    # to  : ``{to_k: {from_k: Q(dto/dfrom, u_to/u_from)}}``.
     jac = {
         out_k: {
             k: BareQuantity(v.value, out_v.unit / v.unit)
@@ -111,10 +111,10 @@ def dot_jac_vec(
     --------
     >>> import unxt as u
 
-    >>> J = {"r": {"x": u.Quantity(1, ""), "y": u.Quantity(2, "")},
-    ...      "phi": {"x": u.Quantity(3, "rad/km"), "y": u.Quantity(4, "rad/km")}}
+    >>> J = {"r": {"x": u.Q(1, ""), "y": u.Q(2, "")},
+    ...      "phi": {"x": u.Q(3, "rad/km"), "y": u.Q(4, "rad/km")}}
 
-    >>> v = {"x": u.Quantity(1, "km"), "y": u.Quantity(2, "km")}
+    >>> v = {"x": u.Q(1, "km"), "y": u.Q(2, "km")}
 
     >>> dot_jac_vec(J, v)
     {'phi': Quantity(Array(11, dtype=int32, ...), unit='rad'),
@@ -172,14 +172,14 @@ def vconvert(
 
     Let's start in 1D:
 
-    >>> q = {"x": u.Quantity([1.0], "km")}
-    >>> p = {"x": u.Quantity([1.0], "km/s")}
+    >>> q = {"x": u.Q([1.0], "km")}
+    >>> p = {"x": u.Q([1.0], "km/s")}
     >>> newp = cxv.vconvert(cxv.RadialVel, cxv.CartesianVel1D, p, q)
     >>> print(newp)
     ({'r': Quantity(Array([1.], dtype=float32), unit='km / s')}, {})
 
-    >>> q = {"x": u.Quantity([1.0], "km")}
-    >>> a = {"x": u.Quantity([1.0], "km/s2")}
+    >>> q = {"x": u.Q([1.0], "km")}
+    >>> a = {"x": u.Q([1.0], "km/s2")}
     >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, q)
     >>> print(newa)
     ({'r': Quantity(Array([1.], dtype=float32), unit='km / s2')}, {})
@@ -269,7 +269,7 @@ def vconvert(
     <RadialVel: (r) [km / s]
         [1.]>
 
-    >>> a = cxv.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
+    >>> a = cxv.CartesianAcc1D(x=u.Q(1.0, "km/s2"))
     >>> print(cxv.vconvert(cxv.RadialAcc, a, p, q))
     <RadialAcc: (r) [km / s2]
         [1.]>
@@ -419,9 +419,9 @@ def vconvert(
 
     Let's start in 1D:
 
-    >>> q = cxv.CartesianPos1D(x=u.Quantity(1.0, "km"))
-    >>> p = cxv.CartesianVel1D(x=u.Quantity(1.0, "km/s"))
-    >>> a = cxv.CartesianAcc1D(x=u.Quantity(1.0, "km/s2"))
+    >>> q = cxv.CartesianPos1D(x=u.Q(1.0, "km"))
+    >>> p = cxv.CartesianVel1D(x=u.Q(1.0, "km/s"))
+    >>> a = cxv.CartesianAcc1D(x=u.Q(1.0, "km/s2"))
     >>> print(cxv.vconvert(cxv.RadialAcc, a, p, q))
     <RadialAcc: (r) [km / s2]
         [1.]>

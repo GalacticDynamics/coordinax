@@ -51,40 +51,37 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     >>> op = cx.ops.GalileanTranslation.from_([1.0, 2.0, 3.0, 4.0], "km")
     >>> op
-    GalileanTranslation(
-      delta_t=Quantity(f32[], unit='s'),
-      delta_q=CartesianPos3D( ... )
-    )
+    GalileanTranslation( delta_t=Q(f32[], 's'), delta_q=CartesianPos3D(...) )
 
     Note that the translation is a `unxt.Quantity` and a
     `coordinax.vecs.AbstractPos`, which was constructed from a 1D array, using
     :meth:`coordinax.vecs.AbstractPos.from_`.  We can also construct it
     directly, which allows for other vector types.
 
-    >>> qshift = cx.SphericalPos(r=u.Quantity(1.0, "km"),
-    ...                          theta=u.Quantity(jnp.pi/2, "rad"),
-    ...                          phi=u.Quantity(0, "rad"))
-    >>> op = cx.ops.GalileanTranslation(u.Quantity(1.0, "Gyr"), qshift)
+    >>> qshift = cx.SphericalPos(r=u.Q(1.0, "km"),
+    ...                          theta=u.Q(jnp.pi/2, "rad"),
+    ...                          phi=u.Q(0, "rad"))
+    >>> op = cx.ops.GalileanTranslation(u.Q(1.0, "Gyr"), qshift)
     >>> op
     GalileanTranslation(
-      delta_t=Quantity(weak_f32[], unit='Gyr'),
-      delta_q=SphericalPos( ... )
+      delta_t=Q(weak_f32[], 'Gyr'),
+      delta_q=SphericalPos(...)
     )
 
     Translation operators can be applied to `coordinax.vecs.AbstractPos` and
     `unxt.Quantity`:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> newt, newq = op(t, q)
-    >>> newq.x
-    Quantity(Array(1., dtype=float32, ...), unit='km')
+    >>> newq
+    CartesianPos3D(x=Q(1., 'km'), y=Q(0., 'km'), z=Q(-4.371139e-08, 'km'))
     >>> newt
     Quantity(Array(1., dtype=float32, ...), unit='Gyr')
 
     """
 
-    delta_t: u.Quantity["time"] = eqx.field(converter=u.Quantity.from_)
+    delta_t: u.Q["time"] = eqx.field(converter=u.Q.from_)
     """The time translation.
 
     This parameter uses :meth:`unxt.Quantity.from_` to enable a variety of more
@@ -127,11 +124,11 @@ class GalileanTranslation(AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
-        >>> op = cx.ops.GalileanTranslation(u.Quantity(1, "Gyr"), qshift)
+        >>> op = cx.ops.GalileanTranslation(u.Q(1, "Gyr"), qshift)
 
         >>> print(op.inverse)
         GalileanTranslation(
-            delta_t=Quantity(-1, unit='Gyr'),
+            delta_t=Q(-1, 'Gyr'),
             delta_q=<CartesianPos3D: (x, y, z) [km]
                 [-1 -1 -1]>
         )
@@ -145,11 +142,11 @@ class GalileanTranslation(AbstractGalileanOperator):
     @AbstractOperator.__call__.dispatch  # type: ignore[untyped-decorator]
     def __call__(
         self: "GalileanTranslation",
-        t: u.Quantity["time"],
+        t: u.Q["time"],
         x: AbstractPos3D,
         /,
         **__: Any,
-    ) -> tuple[u.Quantity["time"], AbstractPos3D]:
+    ) -> tuple[u.Q["time"], AbstractPos3D]:
         """Apply the translation to the coordinates.
 
         Examples
@@ -161,17 +158,17 @@ class GalileanTranslation(AbstractGalileanOperator):
         Explicitly construct the translation operator:
 
         >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
-        >>> tshift = u.Quantity(1, "Gyr")
+        >>> tshift = u.Q(1, "Gyr")
         >>> op = cx.ops.GalileanTranslation(tshift, qshift)
 
         Construct a vector to translate
 
         >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> t = u.Quantity(1, "Gyr")
+        >>> t = u.Q(1, "Gyr")
         >>> newt, newq = op(t, q)
 
-        >>> newq.x
-        Quantity(Array(2, dtype=int32), unit='km')
+        >>> newq
+        CartesianPos3D(x=Q(2, 'km'), y=Q(3, 'km'), z=Q(4, 'km'))
 
         >>> newt
         Quantity(Array(2, dtype=int32, ...), unit='Gyr')
@@ -191,13 +188,12 @@ def from_(
     >>> import unxt as u
     >>> import coordinax.ops as cxo
 
-    >>> q = u.Quantity([1.0, 2.0, 3.0, 4.0], "km")
+    >>> q = u.Q([1.0, 2.0, 3.0, 4.0], "km")
     >>> op = cxo.GalileanTranslation.from_(q)
 
     """
     return cls(
-        delta_t=delta[0]
-        / u.Quantity(299_792.458, "km/s"),  # TODO: couple to FourVector value
+        delta_t=delta[0] / u.Q(299_792.458, "km/s"),  # TODO: couple to FourVector value
         delta_q=CartesianPos3D.from_(delta[1:]),
     )
 
@@ -220,8 +216,8 @@ def simplify_op(
     >>> op = cxo.GalileanTranslation.from_([3e8, 1, 0, 0], "m")
     >>> cxo.simplify_op(op)
     GalileanTranslation(
-      delta_t=Quantity(f32[], unit='m s / km'),
-      delta_q=CartesianPos3D( ... )
+      delta_t=Q(f32[], 'm s / km'),
+      delta_q=CartesianPos3D(...)
     )
 
     An operator with no effect can be simplified:
@@ -253,7 +249,7 @@ def simplify_op(
     >>> import coordinax as cx
 
     >>> qshift = cx.CartesianPos3D.from_([1, 0, 0], "km")
-    >>> tshift = u.Quantity(1, "Gyr")
+    >>> tshift = u.Q(1, "Gyr")
     >>> op1 = cx.ops.GalileanTranslation(tshift, qshift)
 
     >>> qshift = cx.CartesianPos3D.from_([0, 1, 0], "km")
@@ -262,8 +258,8 @@ def simplify_op(
     >>> op3 = cx.ops.simplify_op(op1, op2)
     >>> op3
     GalileanTranslation(
-      delta_t=Quantity(weak_i32[], unit='Gyr'),
-      delta_q=CartesianPos3D( ... )
+      delta_t=Q(weak_i32[], 'Gyr'),
+      delta_q=CartesianPos3D(...)
     )
 
     """

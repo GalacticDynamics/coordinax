@@ -51,9 +51,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                  lat=u.Quantity(0, "deg"),
-    ...                                  distance=u.Quantity(3, "km"))
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"), lat=u.Q(0, "deg"),
+    ...                                  distance=u.Q(3, "km"))
     >>> print(vec)
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[km])
         [0 0 3]>
@@ -62,9 +61,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     and the radial distance is non-negative.
     When initializing, the longitude is wrapped to the [0, 360) degrees range.
 
-    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Quantity(365, "deg"),
-    ...                                  lat=u.Quantity(90, "deg"),
-    ...                                  distance=u.Quantity(3, "km"))
+    >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(365, "deg"), lat=u.Q(90, "deg"),
+    ...                                  distance=u.Q(3, "km"))
     >>> vec.lon
     Angle(Array(5, dtype=int32, ...), unit='deg')
 
@@ -73,9 +71,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> import jax
     >>> with jax.disable_jit():
     ...     try:
-    ...         cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                    lat=u.Quantity(100, "deg"),
-    ...                                    distance=u.Quantity(3, "km"))
+    ...         cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"), lat=u.Q(100, "deg"),
+    ...                                    distance=u.Q(3, "km"))
     ...     except Exception as e:
     ...         print(e)
     The inclination angle must be in the range [0, pi]...
@@ -84,9 +81,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
 
     >>> with jax.disable_jit():
     ...     try:
-    ...         cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-    ...                                    lat=u.Quantity(0, "deg"),
-    ...                                    distance=u.Quantity(-3, "km"))
+    ...         cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"), lat=u.Q(0, "deg"),
+    ...                                    distance=u.Q(-3, "km"))
     ...     except Exception as e:
     ...         print(e)
     Distance must be non-negative.
@@ -121,9 +117,8 @@ class LonLatSphericalPos(AbstractSphericalPos):
         --------
         >>> import unxt as u
         >>> import coordinax as cx
-        >>> s = cx.vecs.LonLatSphericalPos(lon=u.Quantity(0, "deg"),
-        ...                                lat=u.Quantity(90, "deg"),
-        ...                                distance=u.Quantity(3, "km"))
+        >>> s = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"), lat=u.Q(90, "deg"),
+        ...                                distance=u.Q(3, "km"))
         >>> s.norm()
         Distance(Array(3, dtype=int32, ...), unit='km')
 
@@ -135,13 +130,13 @@ class LonLatSphericalPos(AbstractSphericalPos):
 class LonLatSphericalVel(AbstractSphericalVel):
     """Spherical velocity."""
 
-    lon: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    lon: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Longitude speed :math:`dlon/dt \in [-\infty, \infty]."""
 
-    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    distance: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    distance: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
 
@@ -149,15 +144,13 @@ class LonLatSphericalVel(AbstractSphericalVel):
 class LonCosLatSphericalVel(AbstractSphericalVel):
     """Spherical differential representation."""
 
-    lon_coslat: ct.BBtAngularSpeed = eqx.field(
-        converter=u.Quantity["angular speed"].from_
-    )
+    lon_coslat: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Longitude * cos(Latitude) speed :math:`dlon/dt \in [-\infty, \infty]."""
 
-    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    lat: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Latitude speed :math:`dlat/dt \in [-\infty, \infty]."""
 
-    distance: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    distance: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""Radial speed :math:`dr/dt \in [-\infty, \infty]."""
 
 
@@ -165,15 +158,11 @@ class LonCosLatSphericalVel(AbstractSphericalVel):
 class LonLatSphericalAcc(AbstractSphericalAcc):
     """Spherical acceleration representation."""
 
-    lon: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    lon: ct.BBtAngularAcc = eqx.field(converter=u.Q["angular acceleration"].from_)
     r"""Longitude acceleration :math:`d^2lon/dt^2 \in [-\infty, \infty]."""
 
-    lat: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    lat: ct.BBtAngularAcc = eqx.field(converter=u.Q["angular acceleration"].from_)
     r"""Latitude acceleration :math:`d^2lat/dt^2 \in [-\infty, \infty]."""
 
-    distance: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    distance: ct.BBtAcc = eqx.field(converter=u.Q["acceleration"].from_)
     r"""Radial acceleration :math:`d^2r/dt^2 \in [-\infty, \infty]."""

@@ -49,7 +49,7 @@ def from_(cls: type[KinematicSpace], obj: AbstractPos, /) -> KinematicSpace:
     >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
     >>> w = cx.KinematicSpace.from_(q)
     >>> w
-    KinematicSpace({ 'length': CartesianPos3D( ... ) })
+    KinematicSpace({'length': CartesianPos3D(x=Q(1, 'm'), y=Q(2, 'm'), z=Q(3, 'm'))})
 
     """
     return KinematicSpace(length=obj)
@@ -69,7 +69,7 @@ def from_(
     >>> p = cx.CartesianVel3D.from_([4, 5, 6], "m/s")
     >>> w = cx.KinematicSpace.from_(q, p)
     >>> w
-    KinematicSpace({ 'length': CartesianPos3D( ... ), 'speed': CartesianVel3D( ... ) })
+    KinematicSpace({ 'length': CartesianPos3D(...), 'speed': CartesianVel3D(...) })
 
     """
     return cls(length=q, speed=p)
@@ -90,9 +90,9 @@ def from_(
     >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
     >>> w = cx.KinematicSpace.from_(q, p, a)
     >>> w
-    KinematicSpace({ 'length': CartesianPos3D( ... ),
-            'speed': CartesianVel3D( ... ),
-            'acceleration': CartesianAcc3D( ... ) })
+    KinematicSpace({ 'length': CartesianPos3D(...),
+            'speed': CartesianVel3D(...),
+            'acceleration': CartesianAcc3D(...) })
 
     """
     return cls(length=q, speed=p, acceleration=a)
@@ -107,7 +107,7 @@ def from_(cls: type[KinematicSpace], obj: Mapping[str, Any]) -> KinematicSpace:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> space = cx.KinematicSpace.from_({ 'length': u.Quantity([1, 2, 3], "m") })
+    >>> space = cx.KinematicSpace.from_({ 'length': u.Q([1, 2, 3], "m") })
     >>> print(space)
     KinematicSpace({
        'length': <CartesianPos3D: (x, y, z) [m]

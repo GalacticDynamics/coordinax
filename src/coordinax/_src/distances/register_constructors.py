@@ -10,17 +10,14 @@ from .base import AbstractDistance
 from .funcs import distance, distance_modulus, parallax
 from .measures import Distance, DistanceModulus, Parallax
 
-parallax_base_length = u.Quantity(1, "AU")
-distance_modulus_base_distance = u.Quantity(10, "pc")
+parallax_base_length = u.Q(1, "AU")
+distance_modulus_base_distance = u.Q(10, "pc")
 
 
 @u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[Distance],
-    obj: AbstractDistance
-    | u.Quantity["length"]
-    | u.Quantity["angle"]
-    | u.Quantity["mag"],
+    obj: AbstractDistance | u.Q["length"] | u.Q["angle"] | u.Q["mag"],
     /,
     **kw: Any,
 ) -> Distance:
@@ -31,10 +28,7 @@ def from_(
 @u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[DistanceModulus],
-    dm: AbstractDistance
-    | u.Quantity["mag"]
-    | u.Quantity["length"]
-    | u.Quantity["angle"],
+    dm: AbstractDistance | u.Q["mag"] | u.Q["length"] | u.Q["angle"],
     /,
     **kwargs: Any,
 ) -> DistanceModulus:
@@ -45,10 +39,7 @@ def from_(
 @u.AbstractQuantity.from_.dispatch
 def from_(
     cls: type[Parallax],
-    obj: AbstractDistance
-    | u.Quantity["angle"]
-    | u.Quantity["length"]
-    | u.Quantity["mag"],
+    obj: AbstractDistance | u.Q["angle"] | u.Q["length"] | u.Q["mag"],
     /,
     **kwargs: Any,
 ) -> Parallax:

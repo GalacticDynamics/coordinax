@@ -8,7 +8,7 @@ from jaxtyping import Shaped
 import unxt as u
 
 #: Batchable angular-type Quantity.
-BatchableAngularQuantity = Shaped[u.Quantity["angle"], "*#batch"]
+BatchableAngularQuantity = Shaped[u.Q["angle"], "*#batch"]
 
 #: Batchable Angle.
 BatchableAngle = Shaped[u.quantity.AbstractAngle, "*#batch"]

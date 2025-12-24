@@ -59,8 +59,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     >>> import coordinax as cx
 
     >>> op = cx.ops.GalileanOperator(
-    ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
-    ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
+    ...     translation=u.Q([0., 2., 3., 4.], "km"),
+    ...     velocity=u.Q([1., 2., 3.], "km/s"))
     >>> op
     GalileanOperator(
       translation=GalileanTranslation( delta_t=..., delta_q=... ),
@@ -74,10 +74,10 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
 
     >>> op = cx.ops.GalileanOperator(
     ...     translation=cx.ops.GalileanTranslation(
-    ...         delta_t=u.Quantity(2.5, "Gyr"),
-    ...         delta_q=cx.SphericalPos(r=u.Quantity(1, "km"),
-    ...                                 theta=u.Quantity(90, "deg"),
-    ...                                 phi=u.Quantity(0, "rad") ) ),
+    ...         delta_t=u.Q(2.5, "Gyr"),
+    ...         delta_q=cx.SphericalPos(r=u.Q(1, "km"),
+    ...                                 theta=u.Q(90, "deg"),
+    ...                                 phi=u.Q(0, "rad") ) ),
     ...     velocity=cx.ops.GalileanBoost(
     ...         cx.CartesianVel3D.from_([1, 2, 3], "km/s") )
     ... )
@@ -101,7 +101,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
     and `unxt.Quantity`:
 
     >>> q = cx.CartesianPos3D.from_([0, 0, 0], "km")
-    >>> t = u.Quantity(0, "s")
+    >>> t = u.Q(0, "s")
     >>> newt, newq = op(t, q)
     >>> print(newq)
     <CartesianPos3D: (x, y, z) [km]
@@ -165,8 +165,8 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         >>> import coordinax as cx
 
         >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
-        ...     velocity=u.Quantity([1., 2., 3.], "km/s"))
+        ...     translation=u.Q([0., 2., 3., 4.], "km"),
+        ...     velocity=u.Q([1., 2., 3.], "km/s"))
 
         >>> op[0]
         GalileanRotation(rotation=f32[3,3])
@@ -205,8 +205,8 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
     This Galilean operator cannot be simplified:
 
     >>> op = cxo.GalileanOperator(
-    ...     translation=u.Quantity([0., 2., 3., 4.], "km"),
-    ...     velocity=u.Quantity([1., 2., 3.], "km/s"),
+    ...     translation=u.Q([0., 2., 3., 4.], "km"),
+    ...     velocity=u.Q([1., 2., 3.], "km/s"),
     ...     rotation=jnp.eye(3).at[0, 2].set(1),
     ... )
     >>> op
@@ -222,9 +222,9 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
     This Galilean operator can be simplified in all its components except the
     translation:
 
-    >>> op = cxo.GalileanOperator(translation=u.Quantity([0., 2., 3., 4.], "km"))
+    >>> op = cxo.GalileanOperator(translation=u.Q([0., 2., 3., 4.], "km"))
     >>> cxo.simplify_op(op)
-    GalileanTranslation( delta_t=..., delta_q=CartesianPos3D( ... ) )
+    GalileanTranslation( delta_t=Q(..., 's'), delta_q=CartesianPos3D(...) )
 
     """
     simple_ops = tuple(api.simplify_op(x, **kwargs) for x in op.operators)

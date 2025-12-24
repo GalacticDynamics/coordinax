@@ -42,7 +42,7 @@ class CylindricalPos(AbstractPos3D):
     )
     r"""Azimuthal angle, generally :math:`\phi \in [0,360)`."""
 
-    z: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    z: BBtLength = eqx.field(converter=u.Q["length"].from_)
     r"""Height :math:`z \in (-\infty,+\infty)`."""
 
     @override
@@ -54,9 +54,8 @@ class CylindricalPos(AbstractPos3D):
         --------
         >>> import unxt as u
         >>> import coordinax.vecs as cxv
-        >>> c = cxv.CylindricalPos(rho=u.Quantity(3, "km"),
-        ...                        phi=u.Quantity(0, "deg"),
-        ...                        z=u.Quantity(4, "km"))
+        >>> c = cxv.CylindricalPos(rho=u.Q(3, "km"), phi=u.Q(0, "deg"),
+        ...                        z=u.Q(4, "km"))
         >>> c.norm()
         Quantity(Array(5., dtype=float32, ...), unit='km')
 
@@ -73,22 +72,21 @@ class CylindricalVel(AbstractVel3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalVel(rho=u.Quantity(1, "km/s"),
-    ...                              phi=u.Quantity(2, "deg/s"),
-    ...                              z=u.Quantity(3, "km/s"))
+    >>> vec = cx.vecs.CylindricalVel(rho=u.Q(1, "km/s"), phi=u.Q(2, "deg/s"),
+    ...                              z=u.Q(3, "km/s"))
     >>> print(vec)
     <CylindricalVel: (rho[km / s], phi[deg / s], z[km / s])
         [1 2 3]>
 
     """
 
-    rho: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    rho: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""Cyindrical radial speed :math:`d\rho/dt \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Quantity["angular speed"].from_)
+    phi: ct.BBtAngularSpeed = eqx.field(converter=u.Q["angular speed"].from_)
     r"""Azimuthal speed :math:`d\phi/dt \in [-\infty, \infty]."""
 
-    z: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    z: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""Vertical speed :math:`dz/dt \in [-\infty, \infty]."""
 
 
@@ -101,22 +99,19 @@ class CylindricalAcc(AbstractAcc3D):
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CylindricalAcc(rho=u.Quantity(1, "km/s2"),
-    ...                              phi=u.Quantity(2, "deg/s2"),
-    ...                              z=u.Quantity(3, "km/s2"))
+    >>> vec = cx.vecs.CylindricalAcc(rho=u.Q(1, "km/s2"), phi=u.Q(2, "deg/s2"),
+    ...                              z=u.Q(3, "km/s2"))
     >>> print(vec)
     <CylindricalAcc: (rho[km / s2], phi[deg / s2], z[km / s2])
         [1 2 3]>
 
     """
 
-    rho: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    rho: ct.BBtAcc = eqx.field(converter=u.Q["acceleration"].from_)
     r"""Cyindrical radial acceleration :math:`d^2\rho/dt^2 \in [-\infty, \infty]."""
 
-    phi: ct.BBtAngularAcc = eqx.field(
-        converter=u.Quantity["angular acceleration"].from_
-    )
+    phi: ct.BBtAngularAcc = eqx.field(converter=u.Q["angular acceleration"].from_)
     r"""Azimuthal acceleration :math:`d^2\phi/dt^2 \in [-\infty, \infty]."""
 
-    z: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    z: ct.BBtAcc = eqx.field(converter=u.Q["acceleration"].from_)
     r"""Vertical acceleration :math:`d^2z/dt^2 \in [-\infty, \infty]."""

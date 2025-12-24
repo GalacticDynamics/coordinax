@@ -18,21 +18,21 @@ Unit: TypeAlias = AstropyUnit | AstropyUnitBase | AstropyCompositeUnit
 
 BBtScalarQ = Shaped[u.AbstractQuantity, "*#batch"]
 
-ScalarTime = Real[u.Quantity["time"], ""]
+ScalarTime = Real[u.Q["time"], ""]
 
-BBtTime = Real[u.Quantity["time"], "*#batch"]
+BBtTime = Real[u.Q["time"], "*#batch"]
 
-BBtArea = Real[u.Quantity["area"], "*#batch"]
-BBtKinematicFlux = Real[u.Quantity["diffusivity"], "*#batch"]
-BBtSpecificEnergy = Real[u.Quantity["specific energy"], "*#batch"]
+BBtArea = Real[u.Q["area"], "*#batch"]
+BBtKinematicFlux = Real[u.Q["diffusivity"], "*#batch"]
+BBtSpecificEnergy = Real[u.Q["specific energy"], "*#batch"]
 
-BBtLength = Real[u.Quantity["length"], "*#batch"]
+BBtLength = Real[u.Q["length"], "*#batch"]
 
-BBtSpeed = Real[u.Quantity["speed"], "*#batch"]
-BBtAngularSpeed = Real[u.Quantity["angular speed"], "*#batch"]
+BBtSpeed = Real[u.Q["speed"], "*#batch"]
+BBtAngularSpeed = Real[u.Q["angular speed"], "*#batch"]
 
-BBtAcc = Real[u.Quantity["acceleration"], "*#batch"]
-BBtAngularAcc = Real[u.Quantity["angular acceleration"], "*#batch"]
+BBtAcc = Real[u.Q["acceleration"], "*#batch"]
+BBtAngularAcc = Real[u.Q["angular acceleration"], "*#batch"]
 
 
 TimeBatchOrScalar = ScalarTime | BBtTime

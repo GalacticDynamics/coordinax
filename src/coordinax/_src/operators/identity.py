@@ -29,7 +29,7 @@ class Identity(AbstractOperator):
 
     And the common objects we will use:
 
-    >>> q = u.Quantity([1, 2, 3], "km")
+    >>> q = u.Q([1, 2, 3], "km")
     >>> vec = cx.CartesianPos3D.from_(q)
 
     The first call signature is for the case where the input is a vector:
@@ -46,28 +46,28 @@ class Identity(AbstractOperator):
 
     - 1D:
 
-    >>> q = u.Quantity([1], "km")
+    >>> q = u.Q([1], "km")
     >>> vec = cx.vecs.CartesianPos1D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 2D:
 
-    >>> q = u.Quantity([1, 2], "km")
+    >>> q = u.Q([1, 2], "km")
     >>> vec = cx.vecs.CartesianPos2D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 3D: (not using a `~coordinax.CartesianPos3D` instance):
 
-    >>> q = u.Quantity([1, 2, 3], "km")
+    >>> q = u.Q([1, 2, 3], "km")
     >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
     >>> op(vec) is vec and op(q) is q
     True
 
     - 4D:
 
-    >>> q = u.Quantity([1, 2, 3, 4], "km")  # 0th elt is ct
+    >>> q = u.Q([1, 2, 3, 4], "km")  # 0th elt is ct
     >>> vec4 = cx.FourVector.from_(q)
     >>> op(vec4) is vec4 and op(q) is q
     True
@@ -75,11 +75,11 @@ class Identity(AbstractOperator):
     Lastly, many operators are time dependent and support a time argument. The`
     `Identity` operator will also pass through the time argument:
 
-    >>> t = u.Quantity(0, "Gyr")
+    >>> t = u.Q(0, "Gyr")
     >>> op(t, vec) == (t, vec)
     True
 
-    >>> q = u.Quantity([1, 2, 3], "km")
+    >>> q = u.Q([1, 2, 3], "km")
     >>> op(t, q) == (t, q)
     True
 
@@ -135,7 +135,7 @@ class Identity(AbstractOperator):
 
         >>> op = cx.ops.Identity()
 
-        >>> q = u.Quantity([1, 2, 3], "km")
+        >>> q = u.Q([1, 2, 3], "km")
         >>> op(q) is q
         True
 
@@ -159,9 +159,9 @@ class Identity(AbstractOperator):
 
         >>> op = cx.ops.Identity()
 
-        >>> q = u.Quantity([1, 2, 3], "km")
+        >>> q = u.Q([1, 2, 3], "km")
         >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> t = u.Quantity(10, "Gyr")
+        >>> t = u.Q(10, "Gyr")
 
         >>> op(t, q) == (t, q)
         True

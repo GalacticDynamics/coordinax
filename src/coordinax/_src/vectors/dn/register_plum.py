@@ -26,15 +26,15 @@ def vec_to_q(
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.CartesianPosND(u.Quantity([1, 2, 3, 4, 5], unit="km"))
+    >>> vec = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4, 5], unit="km"))
     >>> convert(vec, u.Quantity)
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
 
-    >>> vec = cx.vecs.CartesianVelND(u.Quantity([1, 2, 3, 4, 5], unit="km/s"))
+    >>> vec = cx.vecs.CartesianVelND(u.Q([1, 2, 3, 4, 5], unit="km/s"))
     >>> convert(vec, u.Quantity)
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
 
-    >>> vec = cx.vecs.CartesianAccND(u.Quantity([1, 2, 3, 4, 5], unit="km/s2"))
+    >>> vec = cx.vecs.CartesianAccND(u.Q([1, 2, 3, 4, 5], unit="km/s2"))
     >>> convert(vec, u.Quantity)
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
 

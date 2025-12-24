@@ -195,7 +195,7 @@ conform to a branch cut (e.g., 0 to 2π or -180º to 180º).
 >>> a
 Angle(Array(370, dtype=int32, weak_type=True), unit='deg')
 
->>> a.wrap_to(u.Quantity(0, "deg"), u.Quantity(360, "deg"))
+>>> a.wrap_to(u.Q(0, "deg"), u.Q(360, "deg"))
 Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
 ```
 
@@ -247,7 +247,7 @@ as lists, tuples, or NumPy arrays. Direct construction is also possible by
 specifying values for all components:
 
 ```{code-block} python
->>> q = cxv.CartesianPos3D(x=u.Quantity(1, "kpc"), y=u.Quantity(2, "kpc"), z=u.Quantity(3, "kpc"))
+>>> q = cxv.CartesianPos3D(x=u.Q(1, "kpc"), y=u.Q(2, "kpc"), z=u.Q(3, "kpc"))
 >>> print(q)
 <CartesianPos3D: (x, y, z) [kpc]
     [1 2 3]>
@@ -362,7 +362,7 @@ transform a position vector from the Alice frame to the Bob frame:
 ```{code-block} python
 
 >>> op = cxf.frame_transform_op(alice, bob)
->>> t = u.Quantity(1, "yr")
+>>> t = u.Q(1, "yr")
 >>> print(op(t, q)[1])
 <CartesianPos3D: (x, y, z) [kpc]
     [1. 2. 3.]>
@@ -384,21 +384,18 @@ Coordinate(
 
 >>> coord.to_frame(bob, t)
 Coordinate(
-    KinematicSpace({ 'length': CartesianPos3D(
-        x=Quantity(f32[], unit='kpc'),
-        y=Quantity(f32[], unit='kpc'),
-        z=Quantity(f32[], unit='kpc')
-    ) }),
+    KinematicSpace({
+        'length': CartesianPos3D(x=Q(f32[], 'kpc'), y=Q(f32[], 'kpc'),
+                                 z=Q(f32[], 'kpc')) }),
     frame=Bob()
 )
 
 >>> coord.vconvert(cxv.SphericalPos)
 Coordinate(
-    KinematicSpace({ 'length': SphericalPos(
-          r=Distance(f32[], unit='kpc'),
-          theta=Angle(f32[], unit='rad'),
-          phi=Angle(f32[], unit='rad')
-        ) }),
+    KinematicSpace({
+        'length': SphericalPos( r=Distance(f32[], 'kpc'), theta=Angle(f32[], 'rad'),
+                                phi=Angle(f32[], 'rad') )
+    }),
     frame=Alice()
 )
 

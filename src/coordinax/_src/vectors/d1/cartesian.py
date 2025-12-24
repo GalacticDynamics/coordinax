@@ -28,22 +28,22 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 
     >>> vec = cx.vecs.CartesianPos1D.from_([2], "m")
     >>> vec
-    CartesianPos1D(x=Quantity(2, unit='m'))
+    CartesianPos1D(x=Q(2, 'm'))
 
     Vectors support the basic math operations:
 
-    >>> (vec + vec).x
-    Quantity(Array(4, dtype=int32), unit='m')
+    >>> (vec + vec)
+    CartesianPos1D(x=Q(4, 'm'))
 
-    >>> (vec - vec).x
-    Quantity(Array(0, dtype=int32), unit='m')
+    >>> (vec - vec)
+    CartesianPos1D(x=Q(0, 'm'))
 
-    >>> (3 * vec).x
-    Quantity(Array(6, dtype=int32), unit='m')
+    >>> (3 * vec)
+    CartesianPos1D(x=Q(6, 'm'))
 
     """
 
-    x: BBtLength = eqx.field(converter=u.Quantity["length"].from_)
+    x: BBtLength = eqx.field(converter=u.Q["length"].from_)
     r"""X coordinate :math:`x \in (-\infty,+\infty)`."""
 
 
@@ -51,7 +51,7 @@ class CartesianPos1D(AbstractCartesian, AbstractPos1D):
 class CartesianVel1D(AbstractCartesian, AbstractVel1D):
     """Cartesian differential representation."""
 
-    x: ct.BBtSpeed = eqx.field(converter=u.Quantity["speed"].from_)
+    x: ct.BBtSpeed = eqx.field(converter=u.Q["speed"].from_)
     r"""X differential :math:`dx/dt \in (-\infty,+\infty`)`."""
 
     @override
@@ -74,7 +74,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
     """Cartesian differential representation."""
 
-    x: ct.BBtAcc = eqx.field(converter=u.Quantity["acceleration"].from_)
+    x: ct.BBtAcc = eqx.field(converter=u.Q["acceleration"].from_)
     r"""X differential :math:`d^2x/dt^2 \in (-\infty,+\infty`)`."""
 
     @override
