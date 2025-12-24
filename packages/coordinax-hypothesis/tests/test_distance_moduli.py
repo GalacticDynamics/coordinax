@@ -4,11 +4,11 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given, settings
 
-import coordinax.distance as cxd
-from coordinax_hypothesis import distance_moduli
+import coordinax.distances as cxd
+import coordinax_hypothesis as cxst
 
 
-@given(dm=distance_moduli())
+@given(dm=cxst.distance_moduli())
 @settings(max_examples=50)
 def test_basic_distance_modulus(dm: cxd.DistanceModulus) -> None:
     """Test basic distance modulus generation."""
@@ -17,7 +17,7 @@ def test_basic_distance_modulus(dm: cxd.DistanceModulus) -> None:
     assert dm.unit == "mag"
 
 
-@given(dm=distance_moduli(shape=5))
+@given(dm=cxst.distance_moduli(shape=5))
 @settings(max_examples=30)
 def test_distance_modulus_vector(dm: cxd.DistanceModulus) -> None:
     """Test vector distance modulus generation."""
@@ -26,7 +26,7 @@ def test_distance_modulus_vector(dm: cxd.DistanceModulus) -> None:
     assert dm.unit == "mag"
 
 
-@given(dm=distance_moduli(shape=(2, 3)))
+@given(dm=cxst.distance_moduli(shape=(2, 3)))
 @settings(max_examples=30)
 def test_distance_modulus_2d(dm: cxd.DistanceModulus) -> None:
     """Test 2D distance modulus array generation."""
@@ -35,7 +35,7 @@ def test_distance_modulus_2d(dm: cxd.DistanceModulus) -> None:
     assert dm.unit == "mag"
 
 
-@given(dm=distance_moduli(elements=st.floats(min_value=0, max_value=30, width=32)))
+@given(dm=cxst.distance_moduli(elements=st.floats(min_value=0, max_value=30, width=32)))
 @settings(max_examples=30)
 def test_distance_modulus_with_custom_elements(dm: cxd.DistanceModulus) -> None:
     """Test distance modulus with custom elements range."""

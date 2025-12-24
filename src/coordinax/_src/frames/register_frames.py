@@ -5,15 +5,14 @@ __all__: tuple[str, ...] = ()
 
 from typing import NoReturn
 
-from plum import dispatch
+import plum
 
 from .base import AbstractReferenceFrame
-from .coordinate import AbstractCoordinate
 from .errors import FrameTransformError
 from .null import NoFrame
 
 
-@dispatch
+@plum.dispatch
 def frame_of(obj: AbstractReferenceFrame, /) -> AbstractReferenceFrame:
     """Get the frame of an `coordinax.frames.AbstractReferenceFrame`.
 
@@ -28,27 +27,10 @@ def frame_of(obj: AbstractReferenceFrame, /) -> AbstractReferenceFrame:
     return obj
 
 
-@dispatch
-def frame_of(obj: AbstractCoordinate) -> AbstractReferenceFrame:
-    """Return the frame of the coordinate.
-
-    Examples
-    --------
-    >>> import coordinax as cx
-
-    >>> coord = cx.Coordinate(cx.CartesianPos3D.from_([1, 2, 3], "kpc"),
-    ...                       cx.frames.ICRS())
-    >>> cx.frames.frame_of(coord)
-    ICRS()
-
-    """
-    return obj.frame
-
-
 # ===============================================================
 
 
-@dispatch(precedence=1)
+@plum.dispatch(precedence=1)
 def frame_transform_op(
     from_frame: NoFrame, to_frame: AbstractReferenceFrame, /
 ) -> NoReturn:
@@ -72,7 +54,7 @@ def frame_transform_op(
     raise FrameTransformError(msg)
 
 
-@dispatch
+@plum.dispatch
 def frame_transform_op(
     from_frame: AbstractReferenceFrame, to_frame: NoFrame, /
 ) -> NoReturn:

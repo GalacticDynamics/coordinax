@@ -32,7 +32,7 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> d = Distance(8, "m")
     >>> jnp.cbrt(d)
-    BareQuantity(Array(2., dtype=float32, ...), unit='m(1/3)')
+    BareQuantity(Array(2., dtype=float64, ...), unit='m(1/3)')
 
     """
     value = lax.cbrt_p.bind(x.value, accuracy=accuracy)
@@ -43,7 +43,7 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
 
 
 @register(lax.div_p)
-def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Quantity:
+def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
     """Division of two Distances.
 
     Examples
@@ -54,7 +54,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Qu
     >>> q1 = Distance(2, "m")
     >>> q2 = Distance(4, "m")
     >>> jnp.divide(q1, q2)
-    Quantity(Array(0.5, dtype=float32, ...), unit='')
+    Quantity(Array(0.5, dtype=float64, ...), unit='')
 
     """
     return u.Q(lax.div(x.value, y.value), unit=x.unit / y.unit)
@@ -80,21 +80,21 @@ def dot_general_p_abstractdistances(
     >>> q1 = Distance([1, 2, 3], "m")
     >>> q2 = Distance([4, 5, 6], "m")
     >>> jnp.vecdot(q1, q2)
-    BareQuantity(Array(32, dtype=int32), unit='m2')
+    BareQuantity(Array(32, dtype=int64), unit='m2')
     >>> q1 @ q2
-    BareQuantity(Array(32, dtype=int32), unit='m2')
+    BareQuantity(Array(32, dtype=int64), unit='m2')
 
     This rule is also used by `jnp.matmul` for quantities.
 
     >>> Rz = jnp.asarray([[0, -1,  0], [1,  0,  0], [0,  0,  1]])
     >>> q = u.Q([1, 0, 0], "m")
     >>> Rz @ q
-    Quantity(Array([0, 1, 0], dtype=int32), unit='m')
+    Quantity(Array([0, 1, 0], dtype=int64), unit='m')
 
     This uses `matmul` for quantities.
 
     >>> jnp.linalg.matmul(Rz, q)
-    Quantity(Array([0, 1, 0], dtype=int32), unit='m')
+    Quantity(Array([0, 1, 0], dtype=int64), unit='m')
 
     """
     value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
@@ -113,7 +113,7 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
-    BareQuantity(Array(8, dtype=int32, ...), unit='m3')
+    BareQuantity(Array(8, dtype=int64, ...), unit='m3')
 
     """
     return BareQuantity(lax.integer_pow(x.value, y), unit=x.unit**y)
@@ -131,7 +131,7 @@ def neg_p_distance(x: Distance, /) -> u.Q:
     >>> from coordinax.distance import Distance
     >>> q = Distance(10, "m")
     >>> -q
-    Quantity(Array(-10, dtype=int32, ...), unit='m')
+    Quantity(Array(-10, dtype=int64, ...), unit='m')
 
     """
     return u.Q(-x.value, x.unit)
@@ -154,7 +154,7 @@ def pow_p_abstractdistance_arraylike(
     >>> q1 = Distance(10.0, "m")
     >>> y = 3.0
     >>> q1 ** y
-    BareQuantity(Array(1000., dtype=float32, ...), unit='m3')
+    BareQuantity(Array(1000., dtype=float64, ...), unit='m3')
 
     """
     return BareQuantity(x.value, x.unit) ** y  # TODO: better call to power
@@ -174,12 +174,12 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     >>> from coordinax.distance import Distance
     >>> q = Distance(9, "m")
     >>> jnp.sqrt(q)
-    BareQuantity(Array(3., dtype=float32, ...), unit='m(1/2)')
+    BareQuantity(Array(3., dtype=float64, ...), unit='m(1/2)')
 
     >>> from coordinax.distance import Parallax
     >>> q = Parallax(9, "mas")
     >>> jnp.sqrt(q)
-    BareQuantity(Array(3., dtype=float32, ...), unit='mas(1/2)')
+    BareQuantity(Array(3., dtype=float64, ...), unit='mas(1/2)')
 
     """
     # Promote to something that supports sqrt units.

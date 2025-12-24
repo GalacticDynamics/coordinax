@@ -9,7 +9,7 @@ frame metadata to your data.
 
 {mod}`coordinax.frames` includes several standard astronomical frames:
 
-```{code-block} python
+```{code-block} text
 >>> import coordinax.frames as cxf
 >>> icrs = cxf.ICRS()
 >>> icrs
@@ -18,52 +18,52 @@ ICRS()
 >>> gc = cxf.Galactocentric()
 >>> gc
 Galactocentric(
-  galcen=LonLatSphericalPos(...),
+  galcen=LonLatSpherical3D(...),
   roll=Quantity(...),
   z_sun=Quantity(...),
-  galcen_v_sun=CartesianVel3D(...)
+  galcen_v_sun=Vector(...)
 )
 ```
 
 ## Creating Coordinate Objects
 
-Coordinate objects attach a vector (or {class}`~coordinax.vecs.KinematicSpace`)
-to a frame:
+Coordinate objects attach a vector (or {class}`~coordinax.FiberPoint`) to a
+frame:
 
-```{code-block} python
->>> import coordinax.vecs as cxv
->>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
+```{code-block} text
+>>> import coordinax as cx
+>>> q = cx.Vector.from_([1, 2, 3], "kpc")
 >>> coord = cxf.Coordinate(q, frame=icrs)
 >>> print(coord)
 Coordinate(
     {
-        'length': <CartesianPos3D: (x, y, z) [kpc]
+        'base': <Cart3D: (x, y, z) [kpc]
             [1 2 3]>
     },
     frame=ICRS()
 )
 ```
 
-You can also create coordinates from a {class}`~coordinax.vecs.KinematicSpace`
-object containing multiple vectors.
+You can also create coordinates from an {class}`~coordinax.FiberPoint` object
+containing multiple vectors.
 
 ## Transforming Between Frames
 
 You can transform coordinates or vectors between frames using transformation
 operators:
 
-```{code-block} python
+```{code-block} text
 >>> op = cxf.frame_transform_op(icrs, gc)
 >>> q_gc = op(q)
 >>> print(q_gc)
-<CartesianPos3D: (x, y, z) [kpc]
+<Cart3D: (x, y, z) [kpc]
     [-11.375   1.845   0.133]>
 
 >>> coord_gc = coord.to_frame(gc)
 >>> print(coord_gc)
 Coordinate(
     {
-        'length': <CartesianPos3D: (x, y, z) [kpc]
+        'length': <Cart3D: (x, y, z) [kpc]
             [-11.375   1.845   0.133]>
     },
     frame=Galactocentric(...)
@@ -75,12 +75,12 @@ Coordinate(
 You can convert the internal representation of a coordinate (e.g., Cartesian to
 Spherical) without changing its frame:
 
-```{code-block} python
->>> coord_sph = coord.vconvert(cxv.SphericalPos)
+```{code-block} text
+>>> coord_sph = coord.vconvert(cx.charts.sph3d)
 >>> print(coord_sph)
 Coordinate(
     {
-        'length': <SphericalPos: (r[kpc], theta[rad], phi[rad])
+        'length': <Spherical3D: (r[kpc], theta[rad], phi[rad])
             [3.742 0.641 1.107]>
     },
     frame=ICRS()

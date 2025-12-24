@@ -1,10 +1,14 @@
-"""Base classes for operators on coordinates and potentials."""
+"""Identity operator."""
 
 __all__ = ("Identity",)
 
-from typing import Any, Literal, final
+from typing import Any, final
 
+import plum
+
+import coordinax._src.roles as cxr
 from .base import AbstractOperator
+from .utils import _require_role_for_pdict
 
 
 @final
@@ -15,31 +19,23 @@ class Identity(AbstractOperator):
 
     Examples
     --------
-    We will work through many of the registered call signatures for the
-    `Identity` class. Note that more call signatures may be registered.
-
-    First, we make an instance of the operator:
-
-    >>> import unxt as u
     >>> import coordinax as cx
 
     >>> op = cx.ops.Identity()
     >>> op
     Identity()
 
-    And the common objects we will use:
+    For example, applying the `Identity` operator to a `unxt.Quantity`:
 
+    >>> import unxt as u
     >>> q = u.Q([1, 2, 3], "km")
-    >>> vec = cx.CartesianPos3D.from_(q)
-
-    The first call signature is for the case where the input is a vector:
-
-    >>> op(vec) is vec
+    >>> op(q) is q
     True
 
-    The second call signature is for a Quantity:
+    We apply it to a :class:`coordinax.Cart3D` instance:
 
-    >>> op(q) is q
+    >>> vec = cx.Vector.from_(q)
+    >>> op(vec) is vec
     True
 
     Actually, the `Identity` operator works for any vector or quantity:
@@ -54,14 +50,14 @@ class Identity(AbstractOperator):
     - 2D:
 
     >>> q = u.Q([1, 2], "km")
-    >>> vec = cx.vecs.CartesianPos2D.from_(q)
+    >>> vec = cx.vecs.Cart2D.from_(q)
     >>> op(vec) is vec and op(q) is q
     True
 
-    - 3D: (not using a `~coordinax.CartesianPos3D` instance):
+    - 3D: (not using a `~coordinax.Cart3D` instance):
 
     >>> q = u.Q([1, 2, 3], "km")
-    >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
+    >>> vec = cx.Vector.from_(q).vconvert(cx.charts.sph3d)
     >>> op(vec) is vec and op(q) is q
     True
 
@@ -72,102 +68,92 @@ class Identity(AbstractOperator):
     >>> op(vec4) is vec4 and op(q) is q
     True
 
-    Lastly, many operators are time dependent and support a time argument. The`
-    `Identity` operator will also pass through the time argument:
+    Lastly, many operators are time dependent and support a time argument. The
+    `Identity` operator will also work with a time argument:
 
-    >>> t = u.Q(0, "Gyr")
-    >>> op(t, vec) == (t, vec)
-    True
+    >>> tau = u.Q(0, "Gyr")
+    >>> op(tau, vec)
 
-    >>> q = u.Q([1, 2, 3], "km")
-    >>> op(t, q) == (t, q)
-    True
+    >>> op(tau, q)
 
     """
 
-    @property
-    def is_inertial(self) -> Literal[True]:
-        """Identity operation is an inertial-frame preserving transform.
+    @classmethod
+    def operate(cls, _: dict[str, Any], arg: Any, /, **__: Any) -> Any:
+        """Apply the :class:`coordinax.ops.Identity` operation.
+
+        This is the identity operation, which does nothing to the input.
 
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax as cx
+        >>> import coordinax.ops as cxo
 
-        >>> op = cx.ops.Identity()
-        >>> op.is_inertial
+        >>> q = u.Q([1, 2, 3], "km")
+        >>> cxo.operate(cxo.Identity, {}, q) is q
+        True
+
+        >>> vec = cxo.Cart3D.from_([1, 2, 3], "km")
+        >>> cxo.operate(cxo.Identity, {}, vec) is vec
         True
 
         """
-        return True
+        return arg
 
     @property
     def inverse(self) -> "Identity":
-        """The inverse of the operator.
+        """The inverse of the operator is the operator itself.
 
         Examples
         --------
         >>> import coordinax as cx
 
         >>> op = cx.ops.Identity()
-        >>> op.inverse
-        Identity()
         >>> op.inverse is op
         True
 
         """
         return self
 
-    # -------------------------------------------
-    # Dispatched call signatures
-    # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", arg: Any, /, **__: Any) -> Any:
-        """Apply the Identity operation.
+# ===================================================================
 
-        This is the identity operation, which does nothing to the input.
 
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
+@plum.dispatch
+def simplify(op: Identity, /, **__: Any) -> Identity:
+    """Simplify a :class:`coordinax.ops.Identity` operator.
 
-        >>> op = cx.ops.Identity()
+    Examples
+    --------
+    The :class:`coordinax.ops.Identity` operator is the simplest operator and
+    cannot be simplified further:
 
-        >>> q = u.Q([1, 2, 3], "km")
-        >>> op(q) is q
-        True
+    >>> import coordinax.ops as cxo
 
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> op(vec) is vec
-        True
+    >>> op = cxo.Identity()
+    >>> simplified = cxo.simplify(op)
+    >>> simplified == op
+    True
 
-        """
-        return arg
+    """
+    return op
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", *args: Any, **__: Any) -> tuple[Any, ...]:
-        """Apply the Identity operation.
 
-        This is the identity operation, which does nothing to the input.
+# ===================================================================
+# apply_op dispatches
 
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
 
-        >>> op = cx.ops.Identity()
-
-        >>> q = u.Q([1, 2, 3], "km")
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> t = u.Q(10, "Gyr")
-
-        >>> op(t, q) == (t, q)
-        True
-
-        >>> op(t, vec) == (t, vec)
-        True
-
-        """
-        return args
+@plum.dispatch
+def apply_op(
+    op: Identity,
+    tau: Any,
+    x: dict,  # type: ignore[type-arg]
+    /,
+    *,
+    role: cxr.AbstractRole | None = None,
+    at: Any = None,
+) -> dict:  # type: ignore[type-arg]
+    """Identity operator on CsDict - returns input unchanged."""
+    _require_role_for_pdict(role)
+    del tau, role, at  # unused
+    return x

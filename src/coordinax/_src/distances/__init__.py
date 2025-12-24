@@ -30,6 +30,7 @@ from .measures import Distance, DistanceModulus, Parallax
 # isort: split
 # Register the dispatching
 from . import (  # noqa: F401
+    promotion_rule,
     register_constructors,
     register_converters,
     register_primitives,

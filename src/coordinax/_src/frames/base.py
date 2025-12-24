@@ -6,10 +6,10 @@ from collections.abc import Mapping
 from typing import Any
 
 import equinox as eqx
-from plum import dispatch
+import plum
 
-from .api import frame_transform_op
-from coordinax._src.operators import AbstractOperator
+import coordinax._src.operators as cxo
+from coordinax._src import api
 
 
 class AbstractReferenceFrame(eqx.Module):
@@ -19,7 +19,7 @@ class AbstractReferenceFrame(eqx.Module):
     # Constructors
 
     @classmethod
-    @dispatch.abstract
+    @plum.dispatch.abstract
     def from_(
         cls: "type[AbstractReferenceFrame]", obj: Any, /
     ) -> "AbstractReferenceFrame":
@@ -30,7 +30,9 @@ class AbstractReferenceFrame(eqx.Module):
     # Transformations
 
     # TODO: rename?
-    def transform_op(self, to_frame: "AbstractReferenceFrame", /) -> AbstractOperator:
+    def transform_op(
+        self, to_frame: "AbstractReferenceFrame", /
+    ) -> cxo.AbstractOperator:
         """Make a frame transform operator.
 
         Parameters
@@ -59,7 +61,7 @@ class AbstractReferenceFrame(eqx.Module):
         Pipe(( ... ))
 
         """
-        return frame_transform_op(self, to_frame)
+        return api.frame_transform_op(self, to_frame)
 
 
 # =============================================================================

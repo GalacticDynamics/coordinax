@@ -23,41 +23,24 @@ use and call the functional APIs, so lose none of the power.
 
 As an example, consider the following code snippets:
 
-```{code-block} python
+```
+import coordinax as cx
+import unxt as u
 
->>> import coordinax.vecs as cxv
-
->>> q = cxv.CartesianPos3D.from_([1, 2, 3], "m")
->>> print(q)
-<CartesianPos3D: (x, y, z) [m]
-    [1 2 3]>
-
+q = cx.Vector.from_([1, 2, 3], "m")
+print(q)
 ```
 
 First we'll show the object-oriented API:
 
-```{code-block} python
-
->>> q.vconvert(cxv.SphericalPos)
-SphericalPos(
-  r=Distance(3.7416575, 'm'),
-  theta=Angle(0.64052236, 'rad'),
-  phi=Angle(1.1071488, 'rad')
-)
-
+```
+q.vconvert(cx.charts.sph3d)
 ```
 
 And now the function-oriented API:
 
-```{code-block} python
-
->>> cxv.vconvert(cxv.SphericalPos, q)
-SphericalPos(
-  r=Distance(3.7416575, 'm'),
-  theta=Angle(0.64052236, 'rad'),
-  phi=Angle(1.1071488, 'rad')
-)
-
+```
+cx.vconvert(cx.charts.sph3d, q)
 ```
 
 ## Multiple Dispatch
@@ -69,9 +52,8 @@ uses multiple dispatch to enable deep interoperability between {mod}`coordinax`
 and other libraries, like {mod}`astropy` (and anything user-defined).
 
 For example, if {mod}`coordinax-interop-astropy` is installed, {mod}`coordinax`
-registers to {meth}`~coordinax.vecs.AbstractVector.from_` a method that can
-convert an `astropy.Representation` to a
-{class}`~coordinax.vecs.AbstractVector`:
+registers to {meth}`~coordinax.Vector.from_` a method that can convert an
+`astropy.Representation` to a {class}`~coordinax.Vector`:
 
 <!-- invisible-code-block: python
 import importlib.util
@@ -81,25 +63,28 @@ import importlib.util
 
 ```{code-block} python
 >>> import astropy.coordinates as apyc
->>> import coordinax.vecs as cxv
+>>> import coordinax as cx
 
 >>> aq = apyc.CartesianRepresentation([1, 2, 3], unit="m")
 >>> aq
 <CartesianRepresentation (x, y, z) in m
     (1., 2., 3.)>
 
->>> xq = cxv.CartesianPos3D.from_(aq)
+>>> xq = cx.Vector.from_(aq)
 >>> print(xq)
-<CartesianPos3D: (x, y, z) [m]
+<CartPos3D: (x, y, z) [m]
     [1. 2. 3.]>
 
+aq = apyc.CartesianRepresentation([1, 2, 3], unit="m")
+xq = cx.Vector.from_(aq)
+print(xq)
 ```
 
 <!-- skip: end -->
 
 This easy interoperability is enabled by multiple dispatch, which allows the
-{meth}`~coordinax.vecs.AbstractVector.from_` method to dispatch to the correct
-implementation based on the types of the arguments.
+{meth}`~coordinax.Vector.from_` method to dispatch to the correct implementation
+based on the types of the arguments.
 
 For more information on multiple dispatch, see the
 [plum documentation](https://beartype.github.io/plum/).

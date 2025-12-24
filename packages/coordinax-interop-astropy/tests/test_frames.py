@@ -12,7 +12,7 @@ import quaxed.numpy as jnp
 import unxt as u
 import unxt_hypothesis as ust
 
-import coordinax.vecs as cxv
+import coordinax as cx
 import coordinax_astro as cxastro
 
 float32s = ft.partial(st.floats, width=32, allow_subnormal=False)
@@ -35,13 +35,13 @@ def apyqf32s(
     unit: str | apyu.Unit | None = None,
     min_value: float | None = None,
     max_value: float | None = None,
-) -> st.SearchStrategy[apyu.Quantity]:
+) -> st.SearchStrategy[apyu.Q]:
     """Hypothesis strategy for generating float32 Astropy Quantities."""
     return ust.quantities(
         elements=float32s(min_value=min_value, max_value=max_value),
         dtype=jnp.float32,
         unit=unit,
-    ).map(lambda q: convert(q, apyu.Quantity))
+    ).map(lambda q: convert(q, apyu.Q))
 
 
 class TestICRSFrameConversions:
@@ -106,11 +106,28 @@ class TestGalactocentricFrameConversions:
     ) -> None:
         """Test round-trip conversion starting from coordinax Galactocentric."""
         # Create coordinax Galactocentric frame
+        # Convert Astropy Quantities to unxt Quantities
         original = cxastro.Galactocentric(
-            galcen=cxv.LonLatSphericalPos(lon=lon, lat=lat, distance=distance),
-            z_sun=z_sun,
-            roll=roll,
-            galcen_v_sun=cxv.CartesianVel3D(x=vx, y=vy, z=vz),
+            galcen=cx.Vector.from_(
+                {
+                    "lon": convert(lon, u.Q),
+                    "lat": convert(lat, u.Q),
+                    "distance": convert(distance, u.Q),
+                },
+                cx.charts.lonlatsph3d,
+                cx.roles.point,
+            ),
+            z_sun=convert(z_sun, u.Q),
+            roll=convert(roll, u.Q),
+            galcen_v_sun=cx.Vector.from_(
+                {
+                    "x": convert(vx, u.Q),
+                    "y": convert(vy, u.Q),
+                    "z": convert(vz, u.Q),
+                },
+                cx.charts.cart3d,
+                cx.roles.vel,
+            ),
         )
 
         # Convert to Astropy and back
@@ -122,14 +139,20 @@ class TestGalactocentricFrameConversions:
 
         # Check values are close (accounting for unit conversions and floating point)
         assert jnp.allclose(
-            result.galcen.lon, original.galcen.lon, rtol=1e-10, atol=u.Q(1e-10, "deg")
+            result.galcen["lon"],
+            original.galcen["lon"],
+            rtol=1e-10,
+            atol=u.Q(1e-10, "deg"),
         )
         assert jnp.allclose(
-            result.galcen.lat, original.galcen.lat, rtol=1e-10, atol=u.Q(1e-10, "deg")
+            result.galcen["lat"],
+            original.galcen["lat"],
+            rtol=1e-10,
+            atol=u.Q(1e-10, "deg"),
         )
         assert jnp.allclose(
-            result.galcen.distance,
-            original.galcen.distance,
+            result.galcen["distance"],
+            original.galcen["distance"],
             rtol=1e-10,
             atol=u.Q(1e-10, "kpc"),
         )
@@ -140,20 +163,20 @@ class TestGalactocentricFrameConversions:
             result.roll, original.roll, rtol=1e-10, atol=u.Q(1e-10, "deg")
         )
         assert jnp.allclose(
-            result.galcen_v_sun.x,
-            original.galcen_v_sun.x,
+            result.galcen_v_sun["x"],
+            original.galcen_v_sun["x"],
             rtol=1e-10,
             atol=u.Q(1e-10, "km/s"),
         )
         assert jnp.allclose(
-            result.galcen_v_sun.y,
-            original.galcen_v_sun.y,
+            result.galcen_v_sun["y"],
+            original.galcen_v_sun["y"],
             rtol=1e-10,
             atol=u.Q(1e-10, "km/s"),
         )
         assert jnp.allclose(
-            result.galcen_v_sun.z,
-            original.galcen_v_sun.z,
+            result.galcen_v_sun["z"],
+            original.galcen_v_sun["z"],
             rtol=1e-10,
             atol=u.Q(1e-10, "km/s"),
         )

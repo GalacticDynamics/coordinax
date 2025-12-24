@@ -31,7 +31,7 @@ class Distance(AbstractDistance):
     --------
     >>> from coordinax.distance import Distance
     >>> Distance(10, "km")
-    Distance(Array(10, dtype=int32, ...), unit='km')
+    Distance(Array(10, dtype=int64, ...), unit='km')
 
     The units are checked to have length dimensions.
 
@@ -88,7 +88,7 @@ class DistanceModulus(AbstractDistance):
     --------
     >>> from coordinax.distance import DistanceModulus
     >>> DistanceModulus(10, "mag")
-    DistanceModulus(Array(10, dtype=int32, ...), unit='mag')
+    DistanceModulus(Array(10, dtype=int64, ...), unit='mag')
 
     The units are checked to have magnitude dimensions.
 
@@ -121,7 +121,7 @@ class Parallax(AbstractDistance):
     --------
     >>> from coordinax.distance import Parallax
     >>> Parallax(1, "mas")
-    Parallax(Array(1, dtype=int32, ...), unit='mas')
+    Parallax(Array(1, dtype=int64, ...), unit='mas')
 
     The units are checked to have angle dimensions.
 
@@ -138,7 +138,7 @@ class Parallax(AbstractDistance):
     To disable this check, set `check_negative=False`.
 
     >>> Parallax(-1, "mas", check_negative=False)
-    Parallax(Array(-1, dtype=int32, ...), unit='mas', check_negative=False)
+    Parallax(Array(-1, dtype=int64, ...), unit='mas', check_negative=False)
 
     """
 
@@ -154,8 +154,8 @@ class Parallax(AbstractDistance):
     check_negative: bool = eqx.field(default=True, static=True, compare=False)
     """Whether to check that the parallax is strictly non-negative.
 
-    Theoretically the parallax must be strictly non-negative (:math:`\tan(p) = 1
-    AU / d`), however noisy direct measurements of the parallax can be negative.
+    Theoretically the parallax must be strictly non-negative ($\tan(p) = 1
+    AU / d$), however noisy direct measurements of the parallax can be negative.
     """
 
     def __check_init__(self) -> None:

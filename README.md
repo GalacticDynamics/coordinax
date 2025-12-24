@@ -38,104 +38,238 @@ pip install coordinax
 
 [![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://coordinax.readthedocs.io/en/)
 
-## Quick example
+## Concepts
 
-```python
-import jax.numpy as jnp
+- Representation (Rep): a coordinate chart / component schema (names + physical
+  dimensions). A rep does not store numerical values.
+- Vector: data + rep + role. Data are the coordinate values or physical
+  components.
+- Role: semantic interpretation of vector data (Pos, Vel, Acc, etc.). A role is
+  not a rep.
+- Metric: a bilinear form g on the tangent space defining inner products and
+  norms (Euclidean, sphere intrinsic, Minkowski).
+- Physical components: components of a geometric vector expressed in an
+  orthonormal frame with respect to the active metric. Components have uniform
+  units (e.g. all speed or all acceleration).
+- Coordinate derivatives: time derivatives of coordinate components (e.g.
+  \dot\theta, \ddot\phi); these may have heterogeneous units and are not what
+  diff_map/vconvert uses for physical vectors.
+
+## Quantities
+
+Distances and angles are first-class quantities:
+
+```
+import coordinax as cx
 import unxt as u
+
+d = cx.Distance(10.0, "kpc")
+a = u.Angle(30.0, "deg")
+```
+
+## Representations and coordinate maps
+
+Transform coordinate dictionaries between reps:
+
+```
+import coordinax.charts as cxc
+import coordinax.transforms as cxt
+import unxt as u
+
+q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+q_sph = cxt.point_transform(cxc.sph3d, cxc.cart3d, q)
+```
+
+We can also transform physical vector components between reps:
+
+```
+v = {"x": u.Q(4.0, "km/s"), "y": u.Q(5.0, "km/s"), "z": u.Q(6.0, "km/s")}
+v_sph = cxt.tangent_transform(cxc.sph3d, cxc.cart3d, v, at=q)
+```
+
+## Metrics
+
+- Euclidean metric is default for Euclidean reps exposed in `cx.metrics`.
+- `TwoSphere` uses intrinsic sphere metric.
+- `SpaceTimeCT` uses Minkowski metric with signature `(-,+,+,+)`.
+- `SpaceTimeEuclidean` uses Euclidean metric in 4D.
+
+## Embedded manifolds
+
+`EmbeddedManifold` wraps an intrinsic chart and an ambient rep. Use
+`embed_point` and `project_point` for positions, and `embed_tangent` /
+`project_tangent` for physical components.
+
+```
+import jax.numpy as jnp
+
+rep = cxc.EmbeddedManifold(
+    intrinsic_chart=cxc.twosphere,
+    ambient_chart=cxc.cart3d,
+    params={"R": u.Q(2.0, "km")},
+)
+p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+q = cx.embeddings.embed_point(rep, p)
+r2 = (
+    u.uconvert("km", q["x"]) ** 2
+    + u.uconvert("km", q["y"]) ** 2
+    + u.uconvert("km", q["z"]) ** 2
+)
+bool(jnp.allclose(r2.value, 4.0))
+```
+
+## Physical vector conversion (vconvert)
+
+Physical components (not coordinate derivatives) transform via orthonormal
+frames.
+
+```
+import jax.numpy as jnp
+import coordinax as cx
+import unxt as u
+
+q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+v = {
+    "x": u.Q(4.0, "km/s"),
+    "y": u.Q(5.0, "km/s"),
+    "z": u.Q(6.0, "km/s"),
+}
+qvec = cx.Vector(data=q, chart=cx.charts.cart3d, role=cx.roles.Pos())
+vvec = cx.Vector(data=v, chart=cx.charts.cart3d, role=cx.roles.Vel())
+v_sph = vvec.vconvert(cx.charts.sph3d, qvec)
+v_back = v_sph.vconvert(cx.charts.cart3d, qvec)
+bool(
+    jnp.allclose(
+        u.uconvert("km/s", v_back.data["x"]).value,
+        u.uconvert("km/s", vvec.data["x"]).value,
+    )
+)
+```
+
+Different vector roles transform via different mechanisms:
+
+| Role           | Transformation                      | Requires Base Point? |
+| -------------- | ----------------------------------- | -------------------- |
+| `Pos`          | Position transform (coordinate map) | No                   |
+| `Displacement` | Tangent transform (physical vector) | Sometimes[^1]        |
+| `Vel`          | Tangent transform (physical vector) | Sometimes[^1]        |
+| `Acc`          | Tangent transform (physical vector) | Sometimes[^1]        |
+
+[^1]:
+    Required when converting between representations (e.g., Cartesian ↔
+    Spherical), not required for unit conversions within the same
+    representation.
+
+## FiberPoint: Ergonomic Tangent Vector Conversions
+
+`FiberPoint` provides a container for vectors anchored at a common base point,
+automatically managing the base point dependency required for tangent vector
+transformations:
+
+```
 import coordinax as cx
 
-q = cx.CartesianPos3D(
-    x=u.Q(jnp.arange(0, 10.0), "kpc"),
-    y=u.Q(jnp.arange(5, 15.0), "kpc"),
-    z=u.Q(jnp.arange(10, 20.0), "kpc"),
-)
-print(q)
-# <CartesianPos3D: (x, y, z) [kpc]
-#     [[ 0.  5. 10.]
-#      [ 1.  6. 11.]
-#      ...
-#      [ 8. 13. 18.]
-#      [ 9. 14. 19.]]>
+base = cx.Vector.from_([1, 2, 3], "km")
+vel = cx.Vector.from_([10, 20, 30], "km/s")
+acc = cx.Vector.from_([0.1, 0.2, 0.3], "km/s^2")
 
-q2 = cx.vconvert(cx.SphericalPos, q)
-print(q2)
-# <SphericalPos: (r[kpc], theta[rad], phi[rad])
-#     [[11.18   0.464  1.571]
-#      [12.57   0.505  1.406]
-#      ...
-#      [23.601  0.703  1.019]
-#      [25.259  0.719  0.999]]>
+# Create bundle - base is explicit, fields are tangent vectors
+bundle = cx.FiberPoint(base=base, velocity=vel, acceleration=acc)
 
-p = cx.CartesianVel3D(
-    x=u.Q(jnp.arange(0, 10.0), "km/s"),
-    y=u.Q(jnp.arange(5, 15.0), "km/s"),
-    z=u.Q(jnp.arange(10, 20.0), "km/s"),
-)
-print(p)
-# <CartesianVel3D: (x, y, z) [km / s]
-#     [[ 0.  5. 10.]
-#      [ 1.  6. 11.]
-#      ...
-#      [ 8. 13. 18.]
-#      [ 9. 14. 19.]]>
+# Convert entire bundle - automatically handles `at=` for tangent vectors
+sph_bundle = bundle.vconvert(cx.charts.sph3d)
 
-p2 = cx.vconvert(cx.SphericalVel, p, q)
-print(p2)
-# <SphericalVel: (r[km / s], theta[km rad / (km s)], phi[km rad / (km s)])
-#     [[ 1.118e+01 -3.886e-16  0.000e+00]
-#      [ 1.257e+01 -1.110e-16  0.000e+00]
-#      ...
-#      [ 2.360e+01  0.000e+00  0.000e+00]
-#      [ 2.526e+01 -2.776e-16  0.000e+00]]>
-
-
-# Transforming between frames
-icrs_frame = cx.frames.ICRS()
-gc_frame = cx.frames.Galactocentric()
-op = cx.frames.frame_transform_op(icrs_frame, gc_frame)
-q_gc, p_gc = op(q, p)
-print(q_gc, p_gc, sep="\n")
-# <CartesianPos3D: (x, y, z) [kpc]
-#     [[-1.732e+01  5.246e+00  3.614e+00]
-#      ...
-#      [-3.004e+01  1.241e+01 -1.841e+00]]>
-# <CartesianVel3D: (x, y, z) [km / s]
-#      [[  3.704 250.846  11.373]
-#       ...
-#       [ -9.02  258.012   5.918]]>
-
-coord = cx.Coordinate({"length": q, "speed": p}, frame=icrs_frame)
-print(coord)
-# Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>
-#     }),
-#     frame=ICRS()
-# )
-
-print(coord.to_frame(gc_frame))
-# Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[-1.732e+01  5.246e+00  3.614e+00]
-#              ...
-#              [-3.004e+01  1.241e+01 -1.841e+00]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[  3.704 250.846  11.373]
-#              ...
-#              [ -9.02  258.012   5.918]]>
-#     }),
-#     frame=Galactocentric( ... )
-# )
+# Equivalent to manual:
+# base_sph = base.vconvert(cx.charts.sph3d)
+# at_for_vel = base.vconvert(vel.chart)
+# vel_sph = vel.vconvert(cx.charts.sph3d, at_for_vel)
+# (and similarly for acc)
 ```
+
+**Key features:**
+
+- Base must have role `Pos`; fields must not (enforced at construction)
+- Automatic `at=` parameter handling for tangent transformations
+- JAX-compatible (works with `jax.jit`, `vmap`)
+- Physical components with uniform units (not coordinate derivatives)
+
+See the
+[FiberPoint guide](https://coordinax.readthedocs.io/en/latest/guides/anchored_vector_bundle.html)
+for details.
+
+## Vector Algebra: Points vs Displacements
+
+`coordinax` distinguishes between **positions** (points) and **displacements**
+(tangent vectors). Vector addition follows affine geometry rules:
+
+```
+import coordinax as cx
+import unxt as u
+
+# A position (point)
+pos = cx.Vector.from_([0, 0, 0], "m")
+
+# A displacement (offset / tangent vector)
+disp = cx.Vector(
+    {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")},
+    cx.charts.cart3d,
+    cx.charts.displacement,
+)
+
+# Position + Displacement → Position
+new_pos = pos.add(disp)  # role is Pos
+
+# Displacement + Displacement → Displacement
+d1 = cx.Vector(
+    {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
+    cx.charts.cart3d,
+    cx.charts.displacement,
+)
+d2 = cx.Vector(
+    {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")},
+    cx.charts.cart3d,
+    cx.charts.displacement,
+)
+d_sum = d1.add(d2)  # role is Displacement
+
+# Convert position to displacement from origin
+disp_from_origin = cx.as_pos(new_pos)
+```
+
+| Operation                     | Result         | Allowed? |
+| ----------------------------- | -------------- | -------- |
+| `Displacement + Displacement` | `Displacement` | ✅       |
+| `Pos + Displacement`          | `Pos`          | ✅       |
+| `Displacement + Pos`          | —              | ❌       |
+| `Pos + Pos`                   | —              | ❌       |
+
+> **⚠️ Critical: Physical Components with Uniform Units**
+>
+> `Displacement` stores **physical vector components in an orthonormal frame**,
+> not coordinate increments. All components must have uniform dimension
+> `[length]`.
+>
+> For example, in cylindrical coordinates:
+>
+> - ✅ **Correct**: `Displacement(rho=1m, phi=2m, z=3m)` — physical components,
+>   where `phi=2m` means "2 meters in the tangential direction"
+> - ❌ **Wrong**: `Displacement(rho=1m, phi=0.5rad, z=3m)` — coordinate
+>   increments with mixed units
+>
+> This applies to all tangent vectors (`Displacement`, `Vel`, `Acc`), which
+> transform via orthonormal frame transformations, not coordinate chart
+> transformations.
+
+## Metrics and Representations
+
+Representations are coordinate charts; roles (Pos, Vel, Acc, ...) give vectors
+their physical meaning. A chart’s default metric defines how physical components
+are interpreted.
+
+- Euclidean charts are exposed in `cx.r` (Cart, Cylindrical, Spherical, etc.).
+- Manifold charts are exposed in `cx.r` (e.g. `TwoSphere`).
+- Spacetime charts are exposed in `cx.r` (Minkowski `SpaceTimeCT`, Euclidean
+  `SpaceTimeEuclidean`).
 
 ## Citation
 
@@ -174,3 +308,7 @@ We welcome contributions!
 [zenodo-link]:              https://zenodo.org/doi/10.5281/zenodo.10850557
 
 <!-- prettier-ignore-end -->
+
+```
+
+```

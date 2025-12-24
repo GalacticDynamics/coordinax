@@ -11,9 +11,11 @@ import equinox as eqx
 import unxt as u
 from dataclassish.converters import Unless
 
+import coordinax.charts as cxc
+import coordinax.roles as cxr
 from .base import AbstractSpaceFrame
 from coordinax._src.distances import Distance
-from coordinax._src.vectors.d3 import CartesianVel3D, LonLatSphericalPos
+from coordinax._src.objects.vector import Vector
 
 ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
@@ -33,10 +35,10 @@ class Galactocentric(AbstractSpaceFrame):
     >>> frame = cx.frames.Galactocentric()
     >>> frame
     Galactocentric(
-      galcen=LonLatSphericalPos( ... ),
+      galcen=LonLatSpherical3D( ... ),
       roll=Quantity(weak_i32[], unit='deg'),
       z_sun=Quantity(weak_f32[], unit='pc'),
-      galcen_v_sun=CartesianVel3D( ... )
+      galcen_v_sun=CartVel3D( ... )
     )
 
     """
@@ -44,12 +46,16 @@ class Galactocentric(AbstractSpaceFrame):
     #: RA, Dec, and distance of the Galactic center from an ICRS origin.
     #: ra, dec: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
     #: distance: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
-    galcen: LonLatSphericalPos = eqx.field(
-        converter=LonLatSphericalPos.from_,
-        default_factory=lambda: LonLatSphericalPos(
-            lon=u.Angle(266.4051, "deg"),
-            lat=u.Angle(-28.936175, "degree"),
-            distance=Distance(8.122, "kpc"),
+    galcen: Vector[cxc.LonLatSpherical3D, cxr.Point] = eqx.field(
+        converter=Vector[cxc.LonLatSpherical3D, cxr.Point].from_,
+        default_factory=lambda: Vector(
+            {
+                "lon": u.Angle(266.4051, "deg"),
+                "lat": u.Angle(-28.936175, "degree"),
+                "distance": Distance(8.122, "kpc"),
+            },
+            chart=cxc.lonlatsph3d,
+            role=cxr.point,
         ),
     )
 
@@ -69,9 +75,9 @@ class Galactocentric(AbstractSpaceFrame):
     #: https://ui.adsabs.harvard.edu/abs/2018RNAAS...2..210D
     #: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
     #: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
-    galcen_v_sun: CartesianVel3D = eqx.field(
-        converter=CartesianVel3D.from_,
-        default_factory=lambda: CartesianVel3D.from_([12.9, 245.6, 7.78], "km/s"),
+    galcen_v_sun: Vector[cxc.Cart3D, cxr.Vel] = eqx.field(
+        converter=Vector[cxc.Cart3D, cxr.Vel].from_,
+        default_factory=lambda: Vector.from_([12.9, 245.6, 7.78], "km/s"),
     )
 
     # --------

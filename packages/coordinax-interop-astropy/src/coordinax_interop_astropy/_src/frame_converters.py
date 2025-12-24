@@ -27,23 +27,23 @@ True
 
 Galactocentric conversion with custom parameters:
 
->>> import coordinax.vecs as cxv
+>>> import coordinax as cx
 >>> import unxt as u
 
->>> galcen = cxv.LonLatSphericalPos(
-...     lon=u.Quantity(0, "deg"),
-...     lat=u.Quantity(0, "deg"),
-...     distance=u.Quantity(8.122, "kpc"),
+>>> galcen = cx.Vector.from_(
+...     {"lon": u.Q(0, "deg"), "lat": u.Q(0, "deg"),
+...      "distance": u.Q(8.122, "kpc")},
+...     cx.charts.lonlatsph3d, cx.roles.point
 ... )
->>> galcen_v_sun = cxv.CartesianVel3D(
-...     x=u.Quantity(11.1, "km/s"),
-...     y=u.Quantity(244, "km/s"),
-...     z=u.Quantity(7.25, "km/s"),
+>>> galcen_v_sun = cx.Vector.from_(
+...     {"x": u.Q(11.1, "km/s"), "y": u.Q(244, "km/s"),
+...      "z": u.Q(7.25, "km/s")},
+...     cx.charts.cart3d, cx.roles.vel
 ... )
 >>> cx_galcen = cxastro.Galactocentric(
 ...     galcen=galcen,
-...     z_sun=u.Quantity(20.8, "pc"),
-...     roll=u.Quantity(0, "deg"),
+...     z_sun=u.Q(20.8, "pc"),
+...     roll=u.Q(0, "deg"),
 ...     galcen_v_sun=galcen_v_sun,
 ... )
 >>> apy_galcen = convert(cx_galcen, apyc.Galactocentric)
@@ -68,8 +68,8 @@ from plum import conversion_method, convert
 
 import unxt as u
 
+import coordinax as cx
 import coordinax.frames as cxf
-import coordinax.vecs as cxv
 import coordinax_astro as cxastro
 
 # =============================================================================
@@ -183,8 +183,8 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     Examples
     --------
     >>> import astropy.coordinates as apyc
+    >>> import coordinax as cx
     >>> import coordinax_astro as cxa
-    >>> import coordinax.vecs as cxv
     >>> from plum import convert
     >>> import unxt as u
 
@@ -197,11 +197,13 @@ def coordinax_galactocentric_to_astropy_galactocentric(
 
     Convert with custom parameters:
 
-    >>> galcen = cxv.LonLatSphericalPos(
-    ...     lon=u.Q(0, "deg"), lat=u.Q(0, "deg"), distance=u.Q(8.122, "kpc"),
+    >>> galcen = cx.Vector.from_(
+    ...     {"lon": u.Q(0, "deg"), "lat": u.Q(0, "deg"), "distance": u.Q(8.122, "kpc")},
+    ...     cx.charts.lonlatsph3d, cx.roles.point
     ... )
-    >>> galcen_v_sun = cxv.CartesianVel3D(
-    ...     x=u.Q(11.1, "km/s"), y=u.Q(244, "km/s"), z=u.Q(7.25, "km/s")
+    >>> galcen_v_sun = cx.Vector.from_(
+    ...     {"x": u.Q(11.1, "km/s"), "y": u.Q(244, "km/s"), "z": u.Q(7.25, "km/s")},
+    ...     cx.charts.cart3d, cx.roles.vel
     ... )
     >>> cx_frame = cxastro.Galactocentric(
     ...     galcen=galcen,
@@ -224,10 +226,10 @@ def coordinax_galactocentric_to_astropy_galactocentric(
 
     return apyc.Galactocentric(
         galcen_coord=galcen_coord,
-        galcen_distance=convert(frame.galcen.distance, apyu.Quantity),
+        galcen_distance=convert(frame.galcen["distance"], apyu.Q),
         galcen_v_sun=galcen_v_sun,
-        z_sun=convert(frame.z_sun, apyu.Quantity),
-        roll=convert(frame.roll, apyu.Quantity),
+        z_sun=convert(frame.z_sun, apyu.Q),
+        roll=convert(frame.roll, apyu.Q),
     )
 
 
@@ -267,16 +269,22 @@ def from_(
     """  # noqa: E501
     frame = eqx.error_if(frame, frame.has_data, "Astropy frame must not have data.")
 
-    # Convert galcen_coord to LonLatSphericalPos
+    # Convert galcen_coord to Vector with lonlatsph3d chart and point role
     # galcen_coord is an ICRS coordinate, so access ra/dec from representation
-    galcen = cxv.LonLatSphericalPos(
-        lon=convert(frame.galcen_coord.ra, u.Q),
-        lat=convert(frame.galcen_coord.dec, u.Q),
-        distance=convert(frame.galcen_distance, u.Q),
+    galcen = cx.Vector(
+        {
+            "lon": convert(frame.galcen_coord.ra, u.Q),
+            "lat": convert(frame.galcen_coord.dec, u.Q),
+            "distance": convert(frame.galcen_distance, u.Q),
+        },
+        cx.charts.lonlatsph3d,
+        cx.roles.point,
     )
 
     # Convert galcen_v_sun to CartesianVel3D
-    galcen_v_sun = cxv.CartesianVel3D.from_(frame.galcen_v_sun)
+    galcen_v_sun = cx.Vector(
+        frame.galcen_v_sun, chart=cx.charts.cart3d, role=cx.roles.vel
+    )
 
     return cxastro.Galactocentric(
         galcen=galcen,

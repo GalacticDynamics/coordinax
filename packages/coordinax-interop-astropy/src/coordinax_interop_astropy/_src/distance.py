@@ -12,7 +12,7 @@ from coordinax.distance import Distance, DistanceModulus, Parallax
 # Distance
 
 
-@conversion_method(type_from=AstropyQuantity, type_to=Distance)  # type: ignore[arg-type]
+@conversion_method(type_from=AstropyQuantity, type_to=Distance)
 def convert_astropy_quantity_to_unxt_distance(q: AstropyQuantity, /) -> Distance:
     """Convert a `astropy.units.Quantity` to a `coordinax.Distance`.
 
@@ -33,7 +33,7 @@ def convert_astropy_quantity_to_unxt_distance(q: AstropyQuantity, /) -> Distance
 # Parallax
 
 
-@conversion_method(type_from=AstropyQuantity, type_to=Parallax)  # type: ignore[arg-type]
+@conversion_method(type_from=AstropyQuantity, type_to=Parallax)
 def convert_astropy_quantity_to_unxt_parallax(q: AstropyQuantity, /) -> Parallax:
     """Convert a `astropy.units.Quantity` to a `coordinax.distance.Parallax`.
 
@@ -54,7 +54,7 @@ def convert_astropy_quantity_to_unxt_parallax(q: AstropyQuantity, /) -> Parallax
 # Distance Modulus
 
 
-@conversion_method(type_from=AstropyQuantity, type_to=DistanceModulus)  # type: ignore[arg-type]
+@conversion_method(type_from=AstropyQuantity, type_to=DistanceModulus)
 def convert_astropy_quantity_to_unxt_distmod(q: AstropyQuantity, /) -> DistanceModulus:
     """Convert a `astropy.units.Quantity` to a `coordinax.distance.DistanceModulus`.
 

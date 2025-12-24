@@ -25,7 +25,7 @@ You can create an {class}`~coordinax.angle.Angle` just like a
 dimensions:
 
 ```{code-block} python
->>> import coordinax.angle as cxa
+>>> import coordinax.angles as cxa
 >>> a = cxa.Angle(45, "deg")
 >>> a
 Angle(Array(45, dtype=int32, weak_type=True), unit='deg')
@@ -115,7 +115,7 @@ You can create a {class}`~coordinax.distance.Distance` just like a
 dimensions:
 
 ```{code-block} python
->>> import coordinax.distance as cxd
+>>> import coordinax.distances as cxd
 >>> d = cxd.Distance(10, "kpc")
 >>> d
 Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')

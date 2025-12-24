@@ -23,9 +23,9 @@ uv add coordinax-interop-astropy
 
 ## Features
 
-- **Position vectors**: Convert between coordinax position vectors and Astropy
+- **Position vectors**: Convert between coordinax vectors and Astropy
   `BaseRepresentation` objects
-- **Velocity vectors**: Convert between coordinax velocity vectors and Astropy
+- **Velocity vectors**: Convert between coordinax vectors (role=vel) and Astropy
   `BaseDifferential` objects
 - **Distance types**: Convert between coordinax distance types (`Distance`,
   `Parallax`, `DistanceModulus`) and Astropy `Quantity` objects
@@ -37,30 +37,30 @@ uv add coordinax-interop-astropy
 
 ### Converting Astropy to coordinax
 
-```python
+```
 from plum import convert
 import astropy.coordinates as apyc
-import coordinax.vecs as cxv
+import coordinax as cx
 
 # Create an Astropy representation
 cart = apyc.CartesianRepresentation(1, 2, 3, unit="km")
 
-# Convert to coordinax
-vec = convert(cart, cxv.CartesianPos3D)
+# Convert to coordinax Vector
+vec = convert(cart, cx.Vector)
 print(vec)
-# <CartesianPos3D: (x, y, z) [km]
+# <Vector: chart=Cart3D, role=Pos (x, y, z) [km]
 #     [1. 2. 3.]>
 ```
 
 ### Converting coordinax to Astropy
 
-```python
+```
 from plum import convert
 import astropy.coordinates as apyc
-import coordinax.vecs as cxv
+import coordinax as cx
 
 # Create a coordinax vector
-vec = cxv.CartesianPos3D.from_([1, 2, 3], "km")
+vec = cx.Vector.from_([1, 2, 3], "km")
 
 # Convert to Astropy
 apy_vec = convert(vec, apyc.CartesianRepresentation)
@@ -71,9 +71,9 @@ print(apy_vec)
 
 ### Distance Conversions
 
-```python
+```
 import coordinax as cx
-import coordinax.distance as cxd
+import coordinax.distances as cxd
 import astropy.units as u
 from plum import convert
 
@@ -82,7 +82,7 @@ q = 10 * u.kpc
 dist = convert(q, cxd.Distance)
 
 # Convert coordinax Distance to Astropy Quantity
-apy_q = convert(dist, u.Quantity)
+apy_q = convert(dist, u.Q
 
 # Works with specialized distance types
 parallax = cxd.Parallax.from_(5 * u.mas)
@@ -94,9 +94,8 @@ dist_from_distmod = convert(15 * u.mag, cxd.DistanceModulus)
 
 ### Frame Conversions
 
-```python
+```
 import coordinax as cx
-import coordinax.vecs as cxv
 import coordinax_astro as cxa
 import astropy.coordinates as apyc
 from plum import convert
@@ -108,21 +107,17 @@ apy_icrs = convert(cx_icrs, apyc.ICRS)
 back_to_cx = convert(apy_icrs, cxa.ICRS)
 
 # Convert Galactocentric frames with custom parameters
-galcen = cxv.LonLatSphericalPos(
-    lon=u.Quantity(0, "deg"),
-    lat=u.Quantity(0, "deg"),
-    distance=u.Quantity(8.122, "kpc"),
+galcen = cx.Vector.from_(
+    {"lon": u.Q(0, "deg"), "lat": u.Q(0, "deg"), "distance": u.Q(8.122, "kpc")},
+    cx.charts.lonlatsph3d,
+    cx.roles.point,
 )
-galcen_v_sun = cxv.CartesianVel3D(
-    x=u.Quantity(11.1, "km/s"),
-    y=u.Quantity(244, "km/s"),
-    z=u.Quantity(7.25, "km/s"),
-)
+galcen_v_sun = cx.Vector.from_(u.Q([11.1, 244, 7.25], "km/s"))
 
 cx_galcen = cxa.Galactocentric(
     galcen=galcen,
-    z_sun=u.Quantity(20.8, "pc"),
-    roll=u.Quantity(0, "deg"),
+    z_sun=u.Q(20.8, "pc"),
+    roll=u.Q(0, "deg"),
     galcen_v_sun=galcen_v_sun,
 )
 
@@ -135,22 +130,21 @@ cx_result = convert(apy_galcen, cxa.Galactocentric)
 
 ## Supported Representations
 
-### Position Types
+### Position Types (coordinax Vector → Astropy)
 
-- `CartesianPos3D` ↔ `CartesianRepresentation`
-- `CylindricalPos` ↔ `CylindricalRepresentation`
-- `SphericalPos` ↔ `PhysicsSphericalRepresentation`
-- `LonLatSphericalPos` ↔ `SphericalRepresentation`
-- `TwoSpherePos` ↔ `UnitSphericalRepresentation`
+- `Vector(chart=cart3d, role=pos)` ↔ `CartesianRepresentation`
+- `Vector(chart=cyl3d, role=pos)` ↔ `CylindricalRepresentation`
+- `Vector(chart=sph3d, role=pos)` ↔ `PhysicsSphericalRepresentation`
+- `Vector(chart=lonlatsph3d, role=pos)` ↔ `SphericalRepresentation`
+- `Vector(chart=twosphere, role=pos)` ↔ `UnitSphericalRepresentation`
 
-### Velocity Types
+### Velocity Types (coordinax Vector → Astropy)
 
-- `CartesianVel3D` ↔ `CartesianDifferential`
-- `CylindricalVel` ↔ `CylindricalDifferential`
-- `SphericalVel` ↔ `PhysicsSphericalDifferential`
-- `LonLatSphericalVel` ↔ `SphericalDifferential`
-- `LonCosLatSphericalVel` ↔ `SphericalCosLatDifferential`
-- `TwoSphereVel` ↔ `UnitSphericalDifferential`
+- `Vector(chart=cart3d, role=vel)` ↔ `CartesianDifferential`
+- `Vector(chart=cyl3d, role=vel)` ↔ `CylindricalDifferential`
+- `Vector(chart=sph3d, role=vel)` ↔ `PhysicsSphericalDifferential`
+- `Vector(chart=lonlatsph3d, role=vel)` ↔ `SphericalDifferential`
+- `Vector(chart=loncoslatsph3d, role=vel)` ↔ `SphericalCosLatDifferential`
 
 ### Distance Types
 

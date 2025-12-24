@@ -2,6 +2,7 @@
 authors = [
   { name = "Coordinax Devs", email = "nstarman@users.noreply.github.com" },
   { name = "Nathaniel Starkman", email = "nstarman@users.noreply.github.com" },
+  { name = "Adrian Price-Whelan", email = "adrn@users.noreply.github.com" },
 ]
 classifiers = [
   "Development Status :: 3 - Alpha",

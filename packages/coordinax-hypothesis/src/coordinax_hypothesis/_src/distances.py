@@ -14,7 +14,7 @@ from hypothesis.extra.array_api import make_strategies_namespace
 import unxt as u
 import unxt_hypothesis as ust
 
-import coordinax.distance as cxd
+import coordinax.distances as cxd
 
 xps = make_strategies_namespace(jnp)
 
@@ -119,17 +119,17 @@ def distances(
     Examples
     --------
     >>> from hypothesis import given
-    >>> from coordinax_hypothesis import distances
-    >>> import coordinax.distance as cxd
+    >>> import coordinax_hypothesis as cxst
+    >>> import coordinax.distances as cxd
 
-    >>> @given(dist=distances())
+    >>> @given(dist=cxst.distances())
     ... def test_distance(dist):
     ...     assert isinstance(dist, cxd.Distance)
     ...     assert dist.value >= 0  # default check_negative=True
 
     With negative distances allowed:
 
-    >>> @given(dist=distances(check_negative=False))
+    >>> @given(dist=cxst.distances(check_negative=False))
     ... def test_signed_distance(dist):
     ...     assert isinstance(dist, cxd.Distance)
 
@@ -192,17 +192,17 @@ def distance_moduli(
     Examples
     --------
     >>> from hypothesis import given
-    >>> from coordinax_hypothesis import distance_moduli
-    >>> import coordinax.distance as cxd
+    >>> import coordinax_hypothesis as cxst
+    >>> import coordinax.distances as cxd
 
-    >>> @given(dm=distance_moduli())
+    >>> @given(dm=cxst.distance_moduli())
     ... def test_distance_modulus(dm):
     ...     assert isinstance(dm, cxd.DistanceModulus)
     ...     assert dm.unit == "mag"
 
     Generate distance modulus arrays:
 
-    >>> @given(dm=distance_moduli(shape=10))
+    >>> @given(dm=cxst.distance_moduli(shape=10))
     ... def test_dm_array(dm):
     ...     assert dm.shape == (10,)
 
@@ -261,23 +261,23 @@ def parallaxes(
     Examples
     --------
     >>> from hypothesis import given
-    >>> from coordinax_hypothesis import parallaxes
-    >>> import coordinax.distance as cxd
+    >>> import coordinax_hypothesis as cxst
+    >>> import coordinax.distances as cxd
 
-    >>> @given(plx=parallaxes())
+    >>> @given(plx=cxst.parallaxes())
     ... def test_parallax(plx):
     ...     assert isinstance(plx, cxd.Parallax)
     ...     assert plx.value >= 0  # default check_negative=True
 
     With negative parallaxes allowed (for noisy measurements):
 
-    >>> @given(plx=parallaxes(check_negative=False))
+    >>> @given(plx=cxst.parallaxes(check_negative=False))
     ... def test_noisy_parallax(plx):
     ...     assert isinstance(plx, cxd.Parallax)
 
     Generate parallax in specific units:
 
-    >>> @given(plx=parallaxes(unit="mas"))
+    >>> @given(plx=cxst.parallaxes(unit="mas"))
     ... def test_parallax_mas(plx):
     ...     assert plx.unit == "mas"
 
@@ -306,3 +306,10 @@ def parallaxes(
             **kwargs,
         )
     )
+
+
+# Register type strategy for Hypothesis's st.from_type()
+# Note: Pass the callable, not an invoked strategy
+st.register_type_strategy(cxd.Distance, lambda _: distances())
+st.register_type_strategy(cxd.DistanceModulus, lambda _: distance_moduli())
+st.register_type_strategy(cxd.Parallax, lambda _: parallaxes())
