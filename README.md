@@ -45,13 +45,15 @@ import jax.numpy as jnp
 import unxt as u
 import coordinax as cx
 
-q = cx.CartesianPos3D(
-    x=u.Q(jnp.arange(0, 10.0), "kpc"),
-    y=u.Q(jnp.arange(5, 15.0), "kpc"),
-    z=u.Q(jnp.arange(10, 20.0), "kpc"),
+q = cx.Vector(
+    {
+        "x": u.Q(jnp.arange(0, 10.0), "kpc"),
+        "y": u.Q(jnp.arange(5, 15.0), "kpc"),
+        "z": u.Q(jnp.arange(10, 20.0), "kpc"),
+    },
 )
 print(q)
-# <CartesianPos3D: (x, y, z) [kpc]
+# <CartPos3D: (x, y, z) [kpc]
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -67,13 +69,13 @@ print(q2)
 #      [23.601  0.703  1.019]
 #      [25.259  0.719  0.999]]>
 
-p = cx.CartesianVel3D(
+p = cx.CartVel3D(
     x=u.Q(jnp.arange(0, 10.0), "km/s"),
     y=u.Q(jnp.arange(5, 15.0), "km/s"),
     z=u.Q(jnp.arange(10, 20.0), "km/s"),
 )
 print(p)
-# <CartesianVel3D: (x, y, z) [km / s]
+# <CartVel3D: (x, y, z) [km / s]
 #     [[ 0.  5. 10.]
 #      [ 1.  6. 11.]
 #      ...
@@ -96,11 +98,11 @@ gc_frame = cx.frames.Galactocentric()
 op = cx.frames.frame_transform_op(icrs_frame, gc_frame)
 q_gc, p_gc = op(q, p)
 print(q_gc, p_gc, sep="\n")
-# <CartesianPos3D: (x, y, z) [kpc]
+# <CartPos3D: (x, y, z) [kpc]
 #     [[-1.732e+01  5.246e+00  3.614e+00]
 #      ...
 #      [-3.004e+01  1.241e+01 -1.841e+00]]>
-# <CartesianVel3D: (x, y, z) [km / s]
+# <CartVel3D: (x, y, z) [km / s]
 #      [[  3.704 250.846  11.373]
 #       ...
 #       [ -9.02  258.012   5.918]]>
@@ -109,11 +111,11 @@ coord = cx.Coordinate({"length": q, "speed": p}, frame=icrs_frame)
 print(coord)
 # Coordinate(
 #     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
+#        'length': <CartPos3D: (x, y, z) [kpc]
 #             [[ 0.  5. 10.]
 #              ...
 #              [ 9. 14. 19.]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
+#        'speed': <CartVel3D: (x, y, z) [km / s]
 #             [[ 0.  5. 10.]
 #              ...
 #              [ 9. 14. 19.]]>
@@ -124,11 +126,11 @@ print(coord)
 print(coord.to_frame(gc_frame))
 # Coordinate(
 #     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
+#        'length': <CartPos3D: (x, y, z) [kpc]
 #             [[-1.732e+01  5.246e+00  3.614e+00]
 #              ...
 #              [-3.004e+01  1.241e+01 -1.841e+00]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
+#        'speed': <CartVel3D: (x, y, z) [km / s]
 #             [[  3.704 250.846  11.373]
 #              ...
 #              [ -9.02  258.012   5.918]]>

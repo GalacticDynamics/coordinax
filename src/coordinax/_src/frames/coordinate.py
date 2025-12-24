@@ -15,16 +15,15 @@ import unxt as u
 from dataclassish import field_items, replace
 from dataclassish.converters import Unless
 
+import coordinax.vecs as cxv
 from .base import AbstractReferenceFrame
 from .xfm import TransformedReferenceFrame
 from coordinax._src.operators import Identity
-from coordinax._src.vectors.base import AbstractVector
-from coordinax._src.vectors.collection.core import KinematicSpace
 
 
 # TODO: parametrize by the vector type(s), when Space is parametrized,
 # and the frame type(s)
-class AbstractCoordinate(AbstractVector):
+class AbstractCoordinate(cxv.AbstractVectorLike):
     """Coordinates are vectors in a reference frame.
 
     See Also
@@ -35,7 +34,7 @@ class AbstractCoordinate(AbstractVector):
 
     #: The data of the coordinate. This is a `coordinax.KinematicSpace` object,
     #: which is a collection of vectors.
-    data: eqx.AbstractVar[KinematicSpace]  # TODO: KinematicSpace[PosT] -- plum#212
+    data: eqx.AbstractVar[cxv.KinematicSpace]  # TODO: KinematicSpace[PosT] -- plum#212
 
     #: The reference frame of the coordinate as a
     #: `coordinax.frames.AbstractReferenceFrame` object.
@@ -292,8 +291,8 @@ class Coordinate(AbstractCoordinate):
     # which is a collection of vectors. This can be constructed from a space
     # object, or any input that can construct a `coordinax.KinematicSpace` via
     # `coordinax.KinematicSpace.from_`.
-    data: KinematicSpace = eqx.field(
-        converter=Unless(KinematicSpace, KinematicSpace.from_)
+    data: cxv.KinematicSpace = eqx.field(
+        converter=Unless(cxv.KinematicSpace, cxv.KinematicSpace.from_)
     )
 
     #: The reference frame of the coordinate as a
@@ -345,7 +344,7 @@ class Coordinate(AbstractCoordinate):
         return replace(self, data=self.data[index])
 
     @dispatch
-    def __getitem__(self: "Coordinate", index: str) -> AbstractVector:
+    def __getitem__(self: "Coordinate", index: str) -> cxv.Vector:
         """Return the data of the coordinate.
 
         Examples

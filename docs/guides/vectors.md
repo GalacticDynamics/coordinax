@@ -12,16 +12,16 @@ supported dimension:
 ```{code-block} python
 >>> import coordinax.vecs as cxv
 >>> q1 = cxv.CartesianPos1D.from_(1, "kpc")
->>> q2 = cxv.CartesianPos2D.from_([1, 2], "kpc")
->>> q3 = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
->>> v3 = cxv.CartesianVel3D.from_([4, 5, 6], "kpc/Myr")
+>>> q2 = cxv.CartPos2D.from_([1, 2], "kpc")
+>>> q3 = cxv.CartPos3D.from_([1, 2, 3], "kpc")
+>>> v3 = cxv.CartVel3D.from_([4, 5, 6], "kpc/Myr")
 >>> a3 = cxv.CartesianAcc3D.from_([0.1, 0.2, 0.3], "kpc/Myr^2")
 ```
 
 You can also create N-D vectors:
 
 ```{code-block} python
->>> qn = cxv.CartesianPosND.from_([1, 2, 3, 4], "kpc")
+>>> qn = cxv.CartPosND.from_([1, 2, 3, 4], "kpc")
 ```
 
 All vector types support flexible input: scalars, lists, arrays, or
@@ -31,7 +31,7 @@ The component values can be multidimensional arrays, allowing for batch
 operations:
 
 ```{code-block} python
->>> arr = cxv.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
+>>> arr = cxv.CartPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
 
 ```
 
@@ -41,25 +41,23 @@ Vector objects support arithmetic and mathematical operations:
 
 ```{code-block} python
 >>> q3 + q3
-CartesianPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
+CartPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
 
 >>> 2 * q3
-CartesianPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
+CartPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
 
 >>> v3 - v3
-CartesianVel3D(x=Q(0, 'kpc / Myr'), y=Q(0, 'kpc / Myr'), z=Q(0, 'kpc / Myr'))
+CartVel3D(x=Q(0, 'kpc / Myr'), y=Q(0, 'kpc / Myr'), z=Q(0, 'kpc / Myr'))
 ```
 
 ## Dimensionality: 1,N-D
 
 `coordinax` provides vector classes for many dimensions:
 
-- {class}`~coordinax.vecs.CartesianPos1D`,
-  {class}`~coordinax.vecs.CartesianPos2D`,
-  {class}`~coordinax.vecs.CartesianPos3D`,
-  {class}`~coordinax.vecs.CartesianPosND`
-- Similar classes for velocities (`CartesianVel*`), accelerations
-  (`CartesianAcc*`), etc.
+- {class}`~coordinax.vecs.CartesianPos1D`, {class}`~coordinax.vecs.CartPos2D`,
+  {class}`~coordinax.vecs.CartPos3D`, {class}`~coordinax.vecs.CartPosND`
+- Similar classes for velocities (`CartVel*`), accelerations (`CartesianAcc*`),
+  etc.
 - Spacetime vectors {class}`~coordinax.vecs.FourVector`
 
 ## Conversion Between Representations
@@ -78,9 +76,9 @@ Vectors can be converted between coordinate systems:
 All vector types support batch operations and broadcasting:
 
 ```{code-block} python
->>> arr = cxv.CartesianPos3D.from_([[1,2,3],[4,5,6]], "kpc")
+>>> arr = cxv.CartPos3D.from_([[1,2,3],[4,5,6]], "kpc")
 >>> arr * 2
-CartesianPos3D(x=Q([2, 8], 'kpc'), y=Q([ 4, 10], 'kpc'),
+CartPos3D(x=Q([2, 8], 'kpc'), y=Q([ 4, 10], 'kpc'),
                z=Q([ 6, 12], 'kpc'))
 ```
 
@@ -93,9 +91,9 @@ position, velocity, acceleration):
 >>> space = cxv.KinematicSpace(length=q3, speed=v3, acceleration=a3)
 >>> print(space)
 KinematicSpace({
-    'length': <CartesianPos3D: (x, y, z) [kpc]
+    'length': <CartPos3D: (x, y, z) [kpc]
         [1 2 3]>,
-    'speed': <CartesianVel3D: (x, y, z) [kpc / Myr]
+    'speed': <CartVel3D: (x, y, z) [kpc / Myr]
         [4 5 6]>,
     'acceleration': <CartesianAcc3D: (x, y, z) [kpc / Myr2]
         [0.1 0.2 0.3]>

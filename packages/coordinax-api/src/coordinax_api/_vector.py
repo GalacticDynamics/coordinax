@@ -28,25 +28,26 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.vecs as cxv
+    >>> import coordinax as cx
 
     ## 1D:
 
     - Array-valued:
 
     >>> params = {"x": jnp.array([1.0, 2.0])}
-    >>> cxv.vconvert(cxv.RadialPos, cxv.CartesianPos1D, params)
+    >>> cx.vconvert(cx.r.RadialPos, cx.r.CartesianPos1D, params)
     ({'r': Array([1., 2.], dtype=float32)}, {})
 
     - Quantity-valued:
 
     >>> params = {"x": u.Q([1.0, 2.0], "m")}
-    >>> cxv.vconvert(cxv.RadialPos, cxv.CartesianPos1D, params)
+    >>> cx.vconvert(cx.r.RadialPos, cx.r.CartesianPos1D, params)
     ({'r': Quantity(Array([1., 2.], dtype=float32), unit='m')},
      {})
 
     - Vector-valued:
 
-    >>> x = cxv.CartesianPos1D.from_(1, "km")
+    >>> x = cxv.Vector.from_(1, "km")
     >>> y = cxv.vconvert(cxv.RadialPos, x)
     >>> print(y)
     <RadialPos: (r) [km]
@@ -59,7 +60,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     Without unit information "phi" is assumed to be in radians.
 
     >>> params = {"r": jnp.array([1.0, 2.0]), "phi": jnp.array(3)}
-    >>> cxv.vconvert(cxv.CartesianPos2D, cxv.PolarPos, params)
+    >>> cx.vconvert(cx.r.CartPos2D, cx.r.PolarPos, params)
     ({'x': Array([-0.9899925, -1.979985 ], dtype=float32),
       'y': Array([0.14112, 0.28224], dtype=float32)},
      {})
@@ -67,7 +68,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     We can provide that unit information so that "phi" is in degrees:
 
     >>> usys = u.unitsystem("kpc", "deg")
-    >>> cxv.vconvert(cxv.CartesianPos2D, cxv.PolarPos, params, units=usys)
+    >>> cx.vconvert(cx.r.CartPos2D, cx.r.PolarPos, params, units=usys)
     ({'x': Array([0.9986295, 1.997259 ], dtype=float32),
       'y': Array([0.05233596, 0.10467192], dtype=float32)},
      {})
@@ -75,15 +76,15 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     - Quantity-valued:
 
     >>> params = {"r": u.Q([1.0, 2.0], "m"), "phi": u.Q(3, "deg")}
-    >>> cxv.vconvert(cxv.CartesianPos2D, cxv.PolarPos, params)
+    >>> cx.vconvert(cx.r.CartPos2D, cx.r.PolarPos, params)
     ({'x': Quantity(Array([0.9986295, 1.997259 ], dtype=float32), unit='m'),
       'y': Quantity(Array([0.05233596, 0.10467192], dtype=float32), unit='m')},
      {})
 
     - Vector-valued:
 
-    >>> x = cxv.CartesianPos2D.from_([3, 4], "km")
-    >>> y = cxv.vconvert(cxv.PolarPos, x)
+    >>> x = cx.Vector.from_([3, 4], "km")
+    >>> y = cxv.vconvert(cxv.polarpos, x)
     >>> print(y)
     <PolarPos: (r[km], phi[rad])
         [5.    0.927]>
@@ -99,7 +100,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     >>> params = {"x": jnp.array([1.0, 2.0]), "y": jnp.array([3.0, 4.0]),
     ...           "z": jnp.array([5.0, 6.0])}
-    >>> params, aux = cxv.vconvert(cxv.SphericalPos, cxv.CartesianPos3D, params)
+    >>> params, aux = cxv.vconvert(cxv.SphericalPos, cxv.CartPos3D, params)
     >>> jax.tree.map(lambda x: jnp.round(x, 4), params)
     {'phi': Array([1.249 , 1.1071], dtype=float32),
      'r': Array([5.9161   , 7.4832997], dtype=float32),
@@ -109,7 +110,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     >>> params = {"x": u.Q([1.0, 2.0], "m"), "y": u.Q([3.0, 4.0], "m"),
     ...           "z": u.Q([5.0, 6.0], "m")}
-    >>> params, aux = cxv.vconvert(cxv.SphericalPos, cxv.CartesianPos3D, params)
+    >>> params, aux = cxv.vconvert(cxv.SphericalPos, cxv.CartPos3D, params)
     >>> jax.tree.map(lambda x: jnp.round(x, 4), params)
     {'phi': Quantity(Array([1.249 , 1.1071], dtype=float32), unit='rad'),
      'r': Quantity(Array([5.9161   , 7.4832997], dtype=float32), unit='m'),
@@ -117,7 +118,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     - Vector-valued:
 
-    >>> x = cxv.CartesianPos3D.from_([[1, 3, 5], [2, 4, 6]], "km")
+    >>> x = cxv.CartPos3D.from_([[1, 3, 5], [2, 4, 6]], "km")
     >>> y = cxv.vconvert(cxv.SphericalPos, x)
     >>> print(y)
     <SphericalPos: (r[km], theta[rad], phi[rad])

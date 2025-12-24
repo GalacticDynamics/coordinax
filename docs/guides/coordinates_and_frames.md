@@ -21,7 +21,7 @@ Galactocentric(
   galcen=LonLatSphericalPos(...),
   roll=Quantity(...),
   z_sun=Quantity(...),
-  galcen_v_sun=CartesianVel3D(...)
+  galcen_v_sun=Vector(...)
 )
 ```
 
@@ -32,12 +32,12 @@ to a frame:
 
 ```{code-block} python
 >>> import coordinax.vecs as cxv
->>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
+>>> q = cxv.CartPos3D.from_([1, 2, 3], "kpc")
 >>> coord = cxf.Coordinate(q, frame=icrs)
 >>> print(coord)
 Coordinate(
     {
-        'length': <CartesianPos3D: (x, y, z) [kpc]
+        'length': <CartPos3D: (x, y, z) [kpc]
             [1 2 3]>
     },
     frame=ICRS()
@@ -56,14 +56,14 @@ operators:
 >>> op = cxf.frame_transform_op(icrs, gc)
 >>> q_gc = op(q)
 >>> print(q_gc)
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [-11.375   1.845   0.133]>
 
 >>> coord_gc = coord.to_frame(gc)
 >>> print(coord_gc)
 Coordinate(
     {
-        'length': <CartesianPos3D: (x, y, z) [kpc]
+        'length': <CartPos3D: (x, y, z) [kpc]
             [-11.375   1.845   0.133]>
     },
     frame=Galactocentric(...)

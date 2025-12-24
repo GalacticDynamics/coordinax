@@ -13,9 +13,9 @@ import unxt as u
 from dataclassish.converters import Unless
 
 from .base import AbstractGalileanOperator
+from coordinax._src.new_vectors import api
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.vectors import api
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.d3 import AbstractPos3D, CartesianPos3D
 

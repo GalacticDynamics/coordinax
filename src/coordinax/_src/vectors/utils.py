@@ -1,39 +1,26 @@
-"""Representation of coordinates in different systems."""
+"""Utilities for Space. Private module."""
 
 __all__: tuple[str, ...] = ()
 
-from dataclasses import replace as _dataclass_replace
 
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
 
 import quaxed.numpy as jnp
-from dataclassish import field_values
+import unxt as u
+from unxt._src.dimensions import name_of
 
-from .base.flags import AttrFilter
-
-if TYPE_CHECKING:
-    import coordinax.vecs  # noqa: ICN001
+from .custom_types import DimensionLike, Shape
 
 
-def full_shaped(
-    obj: "coordinax.vecsAbstractVector", /
-) -> "coordinax.vecsAbstractVector":
-    """Return the vector, fully broadcasting all components.
+def dimension_name(dim: DimensionLike, /) -> str:
+    return name_of(u.dimension(dim))
 
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax as cx
-    >>> v = cx.vecs.CartesianPos2D(u.Q([1], "m"), u.Q([3, 4], "m"))
-    >>> v.x.shape
-    (1,)
-    >>> v.y.shape
-    (2,)
 
-    >>> from coordinax._src.vectors.utils import full_shaped
-    >>> full_shaped(v).x.shape
-    (2,)
-
-    """
-    arrays = jnp.broadcast_arrays(*field_values(AttrFilter, obj))
-    return _dataclass_replace(obj, **dict(zip(obj.components, arrays, strict=True)))
+def can_broadcast_shapes(shapes: Sequence[Shape], /) -> bool:
+    """Check if the shapes can be broadcasted together."""
+    try:
+        jnp.broadcast_shapes(*shapes)
+    except ValueError:
+        return False
+    else:
+        return True

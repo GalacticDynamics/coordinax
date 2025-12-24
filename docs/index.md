@@ -139,13 +139,12 @@ transforming coordinate objects, such as:
 - vector objects
   - 1D, 2D, 3D and N-dimensional vector classes in many different representation
     types (e.g., {class}`~coordinax.vecs.CartesianPos1D`,
-    {class}`~coordinax.vecs.CartesianPos2D`,
-    {class}`~coordinax.vecs.CartesianPos3D`,
+    {class}`~coordinax.vecs.CartPos2D`, {class}`~coordinax.vecs.CartPos3D`,
     {class}`~coordinax.vecs.SphericalPos`,
     {class}`~coordinax.vecs.ProlateSpheroidalPos`, etc.)
   - time-differential vector objects, like velocities and accelerations (e.g.,
-    {class}`~coordinax.vecs.CartesianVel3D`,
-    {class}`~coordinax.vecs.SphericalVel`, etc.)
+    {class}`~coordinax.vecs.CartVel3D`, {class}`~coordinax.vecs.SphericalVel`,
+    etc.)
   - collections of vector objects like {class}`~coordinax.vecs.KinematicSpace`
 - transformations of vector types ({func}`~coordinax.vecs.vconvert`)
 - operations on vectors ({mod}`~coordinax.ops`)
@@ -235,9 +234,9 @@ You can create a vector by specifying its components and units:
 ```{code-block} python
 >>> import coordinax.vecs as cxv
 
->>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
+>>> q = cxv.CartPos3D.from_([1, 2, 3], "kpc")
 >>> print(q)
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [1 2 3]>
 ```
 
@@ -247,9 +246,9 @@ as lists, tuples, or NumPy arrays. Direct construction is also possible by
 specifying values for all components:
 
 ```{code-block} python
->>> q = cxv.CartesianPos3D(x=u.Q(1, "kpc"), y=u.Q(2, "kpc"), z=u.Q(3, "kpc"))
+>>> q = cxv.CartPos3D(x=u.Q(1, "kpc"), y=u.Q(2, "kpc"), z=u.Q(3, "kpc"))
 >>> print(q)
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [1 2 3]>
 ```
 
@@ -260,7 +259,7 @@ based on the provided inputs:
 ```{code-block} python
 >>> q = cxv.vector([1, 2, 3], "kpc")
 >>> print(q)
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [1 2 3]>
 ```
 
@@ -283,7 +282,7 @@ Velocity vectors can also be converted to other representations, but require
 specifying the corresponding position:
 
 ```{code-block} python
->>> v = cxv.CartesianVel3D.from_([4, 5, 6], "kpc/Myr")
+>>> v = cxv.CartVel3D.from_([4, 5, 6], "kpc/Myr")
 >>> v_sph = v.vconvert(cxv.SphericalVel, q)
 >>> print(v_sph)
 <SphericalVel: (r[kpc / Myr], theta[rad / Myr], phi[rad / Myr])
@@ -301,9 +300,9 @@ position, velocity, acceleration) into a single container:
 >>> space = cx.KinematicSpace(length=q, speed=v)
 >>> print(space)
 KinematicSpace({
-   'length': <CartesianPos3D: (x, y, z) [kpc]
+   'length': <CartPos3D: (x, y, z) [kpc]
        [1 2 3]>,
-   'speed': <CartesianVel3D: (x, y, z) [kpc / Myr]
+   'speed': <CartVel3D: (x, y, z) [kpc / Myr]
        [4 5 6]>
 })
 ```
@@ -333,7 +332,7 @@ set of vector operations that work seamlessly with all `coordinax` vector types.
 >>> op = cxo.GalileanSpatialTranslation.from_([10, 10, 10], "kpc")
 
 >>> print(op(q))
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [11 12 13]>
 
 ```
@@ -364,7 +363,7 @@ transform a position vector from the Alice frame to the Bob frame:
 >>> op = cxf.frame_transform_op(alice, bob)
 >>> t = u.Q(1, "yr")
 >>> print(op(t, q)[1])
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [1. 2. 3.]>
 
 ```
@@ -377,7 +376,7 @@ frame:
 >>> coord = cxf.Coordinate(q, frame=alice)
 >>> print(coord)
 Coordinate(
-    { 'length': <CartesianPos3D: (x, y, z) [kpc]
+    { 'length': <CartPos3D: (x, y, z) [kpc]
                     [1 2 3]> },
     frame=Alice()
 )
@@ -385,7 +384,7 @@ Coordinate(
 >>> coord.to_frame(bob, t)
 Coordinate(
     KinematicSpace({
-        'length': CartesianPos3D(x=Q(f32[], 'kpc'), y=Q(f32[], 'kpc'),
+        'length': CartPos3D(x=Q(f32[], 'kpc'), y=Q(f32[], 'kpc'),
                                  z=Q(f32[], 'kpc')) }),
     frame=Bob()
 )

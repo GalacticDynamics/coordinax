@@ -16,9 +16,10 @@ This is a UV workspace repository containing multiple packages:
 
 - **Language**: Python 3.11+
 - **Main API**: Vector types, coordinate transformations, and reference frames
-  - Vector types: `CartesianPos3D`, `SphericalPos`, `CylindricalPos`, etc.
-  - Angle and Distance types with units via `unxt`
-  - `vconvert()`: Transform between coordinate representations
+  - `coordinax.angle.Angle` and `coordinax.distance.Distance` types with units
+    via `unxt`
+  - Vector types `coordinax.Vector` with representations in `coordinax.r`.
+  - `vconvert()`: Transform between vector representations
   - Operators on vectors: `GalileanRotateOp`, `GalileanBoostOp`, etc.
   - Frame and their transformations: `frames.frame_transform_op()`
   - Coordinates with frames: `Coordinate`.
@@ -68,9 +69,9 @@ This is a UV workspace repository containing multiple packages:
 ### Main Package Structure (`/src/coordinax/`)
 
 - `_src/`: Private implementation code
-  - `vectors/`: Vector classes (position, velocity, acceleration)
   - `angles.py`: Angle type implementation
   - `distances/`: Distance type implementations
+  - `vectors/`: Vector classes (position, velocity, acceleration)
   - `frames/`: Reference frame definitions and transformations
   - `operators/`: Frame-aware operators
 - `_coordinax_space_frames/`: Frame-specific coordinate spaces

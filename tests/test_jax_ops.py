@@ -4,10 +4,10 @@ import equinox as eqx
 import pytest
 
 import unxt as u
+from conftest import POSITION_CLASSES
 from dataclassish import field_items
 
 import coordinax as cx
-from coordinax._src.vectors.base_pos import POSITION_CLASSES
 
 POSITION_CLASSES_3D = [
     c for c in POSITION_CLASSES if issubclass(c, cx.vecs.AbstractPos3D)
@@ -18,7 +18,7 @@ POSITION_CLASSES_3D = [
 @pytest.fixture(params=POSITION_CLASSES_3D)
 def q(request) -> cx.vecs.AbstractPos:
     """Fixture for 3D Vectors."""
-    q = cx.CartesianPos3D.from_([1, 2, 3], "kpc")
+    q = cx.Vector.from_([1, 2, 3], "kpc")
 
     # Special case ProlateSpheroidalPos, which requires a value of Delta to define the
     # coordinate system

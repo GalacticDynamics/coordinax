@@ -15,15 +15,15 @@ Let's transform a position from Alice's frame to Bob's frame:
 >>> op = cxf.frame_transform_op(frame1, frame2)
 >>> op
 Pipe((
-    GalileanSpatialTranslation(CartesianPos3D( ... )),
-    GalileanBoost(CartesianVel3D( ... ))
+    GalileanSpatialTranslation(CartPos3D( ... )),
+    GalileanBoost(CartVel3D( ... ))
 ))
 
->>> q_alice = cx.CartesianPos3D.from_([0, 0, 0], "km")
+>>> q_alice = cx.Vector.from_([0, 0, 0], "km")
 >>> t = u.Q(2.5, "yr")
 >>> _, q_bob = op(t, q_alice)
 >>> print(q_bob)
-<CartesianPos3D: (x, y, z) [km]
+<CartPos3D: (x, y, z) [km]
     [2.129e+13 1.000e+04 0.000e+00]>
 
 Now let's create a new transformed frame and work with it:
@@ -39,10 +39,10 @@ Let's transform a position from the base frame to the transformed frame:
 
 >>> op = cxf.frame_transform_op(cxf.Alice(), frame)
 
->>> q_icrs = cx.CartesianPos3D.from_([1, 0, 0], "kpc")
+>>> q_icrs = cx.Vector.from_([1, 0, 0], "kpc")
 >>> q_frame = op(q_icrs)
 >>> print(q_frame)
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [ 0. -1.  0.]>
 
 >>> op.inverse(q_frame) == q_icrs
@@ -50,12 +50,12 @@ Array(True, dtype=bool)
 
 This can also transform a velocity:
 
->>> v_icrs = cx.CartesianVel3D.from_([1, 0, 0], "km/s")
+>>> v_icrs = cx.CartVel3D.from_([1, 0, 0], "km/s")
 >>> q_frame, v_frame = op(q_icrs, v_icrs)
 >>> print(q_frame, v_frame, sep="\n")
-<CartesianPos3D: (x, y, z) [kpc]
+<CartPos3D: (x, y, z) [kpc]
     [ 0. -1.  0.]>
-<CartesianVel3D: (x, y, z) [km / s]
+<CartVel3D: (x, y, z) [km / s]
     [ 0. -1.  0.]>
 
 >>> op.inverse(q_frame, v_frame) == (q_icrs, v_icrs)

@@ -1,7 +1,6 @@
 """Representation of coordinates in different systems."""
 
-__all__: tuple[str, ...] = ()
-
+__all__ = ("polar_range", "strictly_positive", "leq", "geq")
 
 import equinox as eqx
 
@@ -14,7 +13,7 @@ _0d = u.Angle(0, "rad")
 _pid = u.Angle(180, "deg")
 
 
-def check_polar_range(
+def polar_range(
     polar: BatchableAngleQ,
     /,
     _l: u.Angle = _0d,
@@ -30,18 +29,18 @@ def check_polar_range(
     Pass through the input if it's in the range.
 
     >>> x = u.Q([0., 1, 2], "deg")
-    >>> check_polar_range(x)
+    >>> polar_range(x)
     Quantity(Array([0., 1., 2.], dtype=float32), unit='deg')
 
     Raise an error if anything is outside the range.
 
     >>> x = u.Q([0., 1, 2], "m")
-    >>> try: check_polar_range(x)
+    >>> try: polar_range(x)
     ... except Exception as e: print("wrong units")
     wrong units
 
     >>> x = u.Q([-1., 1, 2], "deg")
-    >>> try: check_polar_range(x)
+    >>> try: polar_range(x)
     ... except Exception: pass
 
     """
@@ -57,33 +56,7 @@ def check_polar_range(
     )
 
 
-def check_non_negative(
-    x: u.AbstractQuantity, /, *, name: str = ""
-) -> u.AbstractQuantity:
-    """Check that the input is non-negative.
-
-    Examples
-    --------
-    >>> import unxt as u
-
-    Pass through the input if the value is non-negative.
-
-    >>> x = u.Q([0, 1, 2], "m")
-    >>> check_non_negative(x)
-    Quantity(Array([0, 1, 2], dtype=int32), unit='m')
-
-    Raise an error if any value is negative.
-
-    >>> x = u.Q([-1, 1, 2], "m")
-    >>> try: check_non_negative(x)
-    ... except Exception: pass
-
-    """
-    name = f" {name}" if name else name
-    return eqx.error_if(x, jnp.any(x < 0), f"The input{name} must be non-negative.")
-
-
-def check_non_negative_non_zero(
+def strictly_positive(
     x: u.AbstractQuantity, /, *, name: str = ""
 ) -> u.AbstractQuantity:
     """Check that the input is non-negative and non-zero.
@@ -95,17 +68,17 @@ def check_non_negative_non_zero(
     Pass through the input if the value is non-negative.
 
     >>> x = u.Q([1, 2, 3], "m")
-    >>> check_non_negative_non_zero(x)
+    >>> strictly_positive(x)
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if any value is negative or zero.
 
     >>> x = u.Q([-1, 1, 2], "m")
-    >>> try: check_non_negative_non_zero(x)
+    >>> try: strictly_positive(x)
     ... except Exception: pass
 
     >>> x = u.Q([0, 1, 2], "m")
-    >>> try: check_non_negative_non_zero(x)
+    >>> try: strictly_positive(x)
     ... except Exception: pass
 
     """
@@ -115,13 +88,13 @@ def check_non_negative_non_zero(
     )
 
 
-def check_less_than_equal(
+def leq(
     x: u.AbstractQuantity,
     max_val: u.AbstractQuantity,
     /,
     *,
     name: str = "",
-    comparison_name: str = "the specified maximum value",
+    comp_name: str = "the specified maximum value",
 ) -> u.AbstractQuantity:
     """Check that the input value is less than or equal to the input maximum value.
 
@@ -132,27 +105,27 @@ def check_less_than_equal(
     Pass through the input if the value is less than or equal to the max value:
 
     >>> x = u.Q([1, 2, 3], "m")
-    >>> check_less_than_equal(x, u.Q(3, "m"))
+    >>> leq(x, u.Q(3, "m"))
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is larger than the maximum value.
 
-    >>> try: check_less_than_equal(x, u.Q(2, "m"))
+    >>> try: leq(x, u.Q(2, "m"))
     ... except Exception: pass
 
     """
     name = f" {name}" if name else name
-    msg = f"The input{name} must be less than or equal to {comparison_name}."
+    msg = f"The input{name} must be less than or equal to {comp_name}."
     return eqx.error_if(x, jnp.any(x > max_val), msg)
 
 
-def check_greater_than_equal(
+def geq(
     x: u.AbstractQuantity,
     min_val: u.AbstractQuantity,
     /,
     *,
     name: str = "",
-    comparison_name: str = "the specified minimum value",
+    comp_name: str = "the specified minimum value",
 ) -> u.AbstractQuantity:
     """Check that the input value is greater than or equal to the input minimum value.
 
@@ -163,15 +136,15 @@ def check_greater_than_equal(
     Pass through the input if the value is greater than or equal to the min value:
 
     >>> x = u.Q([1, 2, 3], "m")
-    >>> check_greater_than_equal(x, u.Q(1, "m"))
+    >>> geq(x, u.Q(1, "m"))
     Quantity(Array([1, 2, 3], dtype=int32), unit='m')
 
     Raise an error if the input is smaller than the minimum value.
 
-    >>> try: check_greater_than_equal(x, u.Q(2, "m"))
+    >>> try: geq(x, u.Q(2, "m"))
     ... except Exception: pass
 
     """
     name = f" {name}" if name else name
-    msg = f"The input{name} must be greater than or equal to {comparison_name}."
+    msg = f"The input{name} must be greater than or equal to {comp_name}."
     return eqx.error_if(x, jnp.any(x < min_val), msg)

@@ -110,7 +110,7 @@ Use `coordinax-api` when you:
 
 Use the full `coordinax` package when you:
 
-- Need concrete vector implementations (CartesianPos3D, SphericalPos, etc.)
+- Need concrete vector implementations (CartPos3D, SphericalPos, etc.)
 - Want to perform actual coordinate transformations
 - Are writing application code rather than library code
 
