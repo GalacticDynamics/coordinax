@@ -7,12 +7,11 @@ from plum import dispatch
 
 from dataclassish import replace
 
+import coordinax.vecs as cxv
 from .base import AbstractReferenceFrame
 from .coordinate import Coordinate
 from .xfm import TransformedReferenceFrame
 from coordinax._src.operators import AbstractOperator
-from coordinax._src.vectors.base_pos import AbstractPos
-from coordinax._src.vectors.collection.core import KinematicSpace
 
 # ===============================================================
 # Constructors
@@ -21,7 +20,7 @@ from coordinax._src.vectors.collection.core import KinematicSpace
 @dispatch  # TODO: KinematicSpace[PosT] -- plum#212
 def vector(
     cls: type[Coordinate],
-    data: KinematicSpace | AbstractPos,
+    data: cxv.KinematicSpace | cxv.Vector,
     frame: AbstractReferenceFrame,
     /,
 ) -> Coordinate:
@@ -43,7 +42,7 @@ def vector(
 @dispatch  # TODO: KinematicSpace[PosT] -- plum#212
 def vector(
     cls: type[Coordinate],
-    data: KinematicSpace | AbstractPos,
+    data: cxv.KinematicSpace | cxv.Vector,
     base_frame: AbstractReferenceFrame,
     ops: AbstractOperator,
     /,
@@ -71,7 +70,7 @@ def vector(
 
 
 @dispatch
-def vconvert(target: type[AbstractPos], w: Coordinate, /) -> Coordinate:
+def vconvert(target: type[cxv.Vector], w: Coordinate, /) -> Coordinate:
     """Transform the vector representation of a coordinate.
 
     Examples

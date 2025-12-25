@@ -27,9 +27,9 @@ As an example, consider the following code snippets:
 
 >>> import coordinax.vecs as cxv
 
->>> q = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+>>> q = cxv.Vector.from_([1, 2, 3], "m")
 >>> print(q)
-<CartesianPos3D: (x, y, z) [m]
+<CartPos3D: (x, y, z) [m]
     [1 2 3]>
 
 ```
@@ -82,9 +82,9 @@ method that can convert an `astropy.Representation` to a
 <CartesianRepresentation (x, y, z) in m
     (1., 2., 3.)>
 
->>> xq = cxv.CartesianPos3D.from_(aq)  # unxt Quantity
+>>> xq = cxv.Vector.from_(aq)  # unxt Quantity
 >>> print(xq)
-<CartesianPos3D: (x, y, z) [m]
+<CartPos3D: (x, y, z) [m]
     [1. 2. 3.]>
 
 ```

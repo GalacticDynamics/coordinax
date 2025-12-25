@@ -17,30 +17,30 @@ import coordinax as cx
 
 BUILTIN_VECTORS = [
     # 1D
-    cx.vecs.CartesianPos1D,
-    cx.vecs.RadialPos,
+    cx.r.CartesianPos1D,
+    cx.r.RadialPos,
     # 2D
-    cx.vecs.CartesianPos2D,
-    cx.vecs.PolarPos,
+    cx.r.CartesianPos2D,
+    cx.r.PolarPos,
     # 3D
-    cx.CartesianPos3D,
-    cx.SphericalPos,
-    cx.vecs.CylindricalPos,
+    cx.r.CartPos3D,
+    cx.r.SphericalPos,
+    cx.r.CylindricalPos,
 ]
 
 BUILTIN_DIFFERENTIALS = [
     # 1D
-    cx.vecs.CartesianVel1D,
-    cx.vecs.RadialVel,
+    cx.r.CartesianVel1D,
+    cx.r.RadialVel,
     # 2D
-    cx.vecs.CartesianVel2D,
-    cx.vecs.PolarVel,
+    cx.r.CartesianVel2D,
+    cx.r.PolarVel,
     # LnPolarVel,
     # Log10PolarVel,
     # 3D
-    cx.CartesianVel3D,
-    cx.SphericalVel,
-    cx.vecs.CylindricalVel,
+    cx.r.CartVel3D,
+    cx.r.SphericalVel,
+    cx.r.CylindricalVel,
 ]
 
 
