@@ -53,9 +53,9 @@ def add_p_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> v = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
+    >>> v = cxv.CartesianVel2D.from_([1, 2], "km/s")
     >>> print(v + v)
     <CartesianVel2D: (x, y) [km / s]
         [2 4]>

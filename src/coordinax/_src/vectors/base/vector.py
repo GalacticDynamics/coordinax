@@ -323,126 +323,126 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
         >>> def pprint(d):
         ...     print({k: str(v).split("/")[0] for k, v in d.items()})
 
-        >>> pprint(cx.vecs.CartesianPos1D.dimensions)
+        >>> pprint(cxv.CartesianPos1D.dimensions)
         {'x': 'length'}
 
-        >>> pprint(cx.vecs.CartesianVel1D.dimensions)
+        >>> pprint(cxv.CartesianVel1D.dimensions)
         {'x': 'speed'}
 
-        >>> pprint(cx.vecs.CartesianAcc1D.dimensions)
+        >>> pprint(cxv.CartesianAcc1D.dimensions)
         {'x': 'acceleration'}
 
-        >>> pprint(cx.vecs.RadialPos.dimensions)
+        >>> pprint(cxv.RadialPos.dimensions)
         {'r': 'length'}
 
-        >>> pprint(cx.vecs.RadialVel.dimensions)
+        >>> pprint(cxv.RadialVel.dimensions)
         {'r': 'speed'}
 
-        >>> pprint(cx.vecs.RadialAcc.dimensions)
+        >>> pprint(cxv.RadialAcc.dimensions)
         {'r': 'acceleration'}
 
-        >>> pprint(cx.vecs.CartesianPos2D.dimensions)
+        >>> pprint(cxv.CartesianPos2D.dimensions)
         {'x': 'length', 'y': 'length'}
 
-        >>> pprint(cx.vecs.CartesianVel2D.dimensions)
+        >>> pprint(cxv.CartesianVel2D.dimensions)
         {'x': 'speed', 'y': 'speed'}
 
-        >>> pprint(cx.vecs.CartesianAcc2D.dimensions)
+        >>> pprint(cxv.CartesianAcc2D.dimensions)
         {'x': 'acceleration', 'y': 'acceleration'}
 
-        >>> pprint(cx.vecs.PolarPos.dimensions)
+        >>> pprint(cxv.PolarPos.dimensions)
         {'r': 'length', 'phi': 'angle'}
 
-        >>> pprint(cx.vecs.PolarVel.dimensions)
+        >>> pprint(cxv.PolarVel.dimensions)
         {'r': 'speed', 'phi': 'angular frequency'}
 
-        >>> pprint(cx.vecs.PolarAcc.dimensions)
+        >>> pprint(cxv.PolarAcc.dimensions)
         {'r': 'acceleration', 'phi': 'angular acceleration'}
 
-        >>> pprint(cx.vecs.TwoSpherePos.dimensions)
+        >>> pprint(cxv.TwoSpherePos.dimensions)
         {'theta': 'angle', 'phi': 'angle'}
 
-        >>> pprint(cx.vecs.TwoSphereVel.dimensions)
+        >>> pprint(cxv.TwoSphereVel.dimensions)
         {'theta': 'angular frequency', 'phi': 'angular frequency'}
 
-        >>> pprint(cx.vecs.TwoSphereAcc.dimensions)
+        >>> pprint(cxv.TwoSphereAcc.dimensions)
         {'theta': 'angular acceleration', 'phi': 'angular acceleration'}
 
-        >>> pprint(cx.vecs.CartesianPos3D.dimensions)
+        >>> pprint(cxv.CartesianPos3D.dimensions)
         {'x': 'length', 'y': 'length', 'z': 'length'}
 
-        >>> pprint(cx.vecs.CartesianVel3D.dimensions)
+        >>> pprint(cxv.CartesianVel3D.dimensions)
         {'x': 'speed', 'y': 'speed', 'z': 'speed'}
 
-        >>> pprint(cx.vecs.CartesianAcc3D.dimensions)
+        >>> pprint(cxv.CartesianAcc3D.dimensions)
         {'x': 'acceleration', 'y': 'acceleration', 'z': 'acceleration'}
 
-        >>> pprint(cx.vecs.CylindricalPos.dimensions)
+        >>> pprint(cxv.CylindricalPos.dimensions)
         {'rho': 'length', 'phi': 'angle', 'z': 'length'}
 
-        >>> pprint(cx.vecs.CylindricalVel.dimensions)
+        >>> pprint(cxv.CylindricalVel.dimensions)
         {'rho': 'speed', 'phi': 'angular frequency', 'z': 'speed'}
 
-        >>> pprint(cx.vecs.CylindricalAcc.dimensions)
+        >>> pprint(cxv.CylindricalAcc.dimensions)
         {'rho': 'acceleration', 'phi': 'angular acceleration', 'z': 'acceleration'}
 
-        >>> pprint(cx.vecs.SphericalPos.dimensions)
+        >>> pprint(cxv.SphericalPos.dimensions)
         {'r': 'length', 'theta': 'angle', 'phi': 'angle'}
 
-        >>> pprint(cx.vecs.SphericalVel.dimensions)
+        >>> pprint(cxv.SphericalVel.dimensions)
         {'r': 'speed', 'theta': 'angular frequency', 'phi': 'angular frequency'}
 
-        >>> pprint(cx.vecs.SphericalAcc.dimensions)
+        >>> pprint(cxv.SphericalAcc.dimensions)
         {'r': 'acceleration', 'theta': 'angular acceleration', 'phi': 'angular acceleration'}
 
-        >>> pprint(cx.vecs.LonLatSphericalPos.dimensions)
+        >>> pprint(cxv.LonLatSphericalPos.dimensions)
         {'lon': 'angle', 'lat': 'angle', 'distance': 'length'}
 
-        >>> pprint(cx.vecs.LonLatSphericalVel.dimensions)
+        >>> pprint(cxv.LonLatSphericalVel.dimensions)
         {'lon': 'angular frequency', 'lat': 'angular frequency', 'distance': 'speed'}
 
-        >>> pprint(cx.vecs.LonLatSphericalAcc.dimensions)
+        >>> pprint(cxv.LonLatSphericalAcc.dimensions)
         {'lon': 'angular acceleration', 'lat': 'angular acceleration', 'distance': 'acceleration'}
 
-        >>> pprint(cx.vecs.MathSphericalPos.dimensions)
+        >>> pprint(cxv.MathSphericalPos.dimensions)
         {'r': 'length', 'theta': 'angle', 'phi': 'angle'}
 
-        >>> pprint(cx.vecs.MathSphericalVel.dimensions)
+        >>> pprint(cxv.MathSphericalVel.dimensions)
         {'r': 'speed', 'theta': 'angular frequency', 'phi': 'angular frequency'}
 
-        >>> pprint(cx.vecs.MathSphericalAcc.dimensions)
+        >>> pprint(cxv.MathSphericalAcc.dimensions)
         {'r': 'acceleration', 'theta': 'angular acceleration', 'phi': 'angular acceleration'}
 
-        >>> pprint(cx.vecs.ProlateSpheroidalPos.dimensions)
+        >>> pprint(cxv.ProlateSpheroidalPos.dimensions)
         {'mu': 'area', 'nu': 'area', 'phi': 'angle'}
 
-        >>> pprint(cx.vecs.ProlateSpheroidalVel.dimensions)
+        >>> pprint(cxv.ProlateSpheroidalVel.dimensions)
         {'mu': 'diffusivity', 'nu': 'diffusivity', 'phi': 'angular frequency'}
 
-        >>> pprint(cx.vecs.ProlateSpheroidalAcc.dimensions)
+        >>> pprint(cxv.ProlateSpheroidalAcc.dimensions)
         {'mu': 'dose of ionizing radiation', 'nu': 'dose of ionizing radiation', 'phi': 'angular acceleration'}
 
-        >>> cx.vecs.Cartesian3D.dimensions
+        >>> cxv.Cartesian3D.dimensions
         <property object at ...>
 
-        >>> cx.vecs.FourVector.dimensions
+        >>> cxv.FourVector.dimensions
         <property object at ...>
 
-        >>> pprint(cx.vecs.CartesianPosND.dimensions)
+        >>> pprint(cxv.CartesianPosND.dimensions)
         {'q': 'length'}
 
-        >>> pprint(cx.vecs.CartesianVelND.dimensions)
+        >>> pprint(cxv.CartesianVelND.dimensions)
         {'q': 'speed'}
 
-        >>> pprint(cx.vecs.CartesianAccND.dimensions)
+        >>> pprint(cxv.CartesianAccND.dimensions)
         {'q': 'acceleration'}
 
-        >>> pprint(cx.vecs.PoincarePolarVector.dimensions)
+        >>> pprint(cxv.PoincarePolarVector.dimensions)
         {'rho': 'length', 'pp_phi': 'unknown', 'z': 'length',
          'dt_rho': 'speed', 'dt_pp_phi': 'unknown', 'dt_z': 'speed'}
 
@@ -455,8 +455,8 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax as cx
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> import coordinax.vecs as cxv
+        >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "km")
         >>> vec.dtypes
         mappingproxy({'x': dtype('int32'), 'y': dtype('int32'),
                       'z': dtype('int32')})
@@ -470,8 +470,8 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax as cx
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> import coordinax.vecs as cxv
+        >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "km")
         >>> vec.devices
         mappingproxy({'x': CpuDevice(id=0), 'y': CpuDevice(id=0),
                       'z': CpuDevice(id=0)})
@@ -485,8 +485,8 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax as cx
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+        >>> import coordinax.vecs as cxv
+        >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "km")
         >>> vec.shapes
         mappingproxy({'x': (), 'y': (), 'z': ()})
 
@@ -499,12 +499,12 @@ class AbstractVector(
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
-        >>> cx.vecs.CartesianPos2D.from_([1, 2], "m").sizes
+        >>> cxv.CartesianPos2D.from_([1, 2], "m").sizes
         mappingproxy({'x': 1, 'y': 1})
 
-        >>> cx.vecs.CartesianPos2D.from_([[1, 2], [1, 2]], "m").sizes
+        >>> cxv.CartesianPos2D.from_([[1, 2], [1, 2]], "m").sizes
         mappingproxy({'x': 2, 'y': 2})
 
         """
@@ -623,21 +623,22 @@ def is_vector(obj: Any, /) -> TypeGuard[AbstractVector]:
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
+    >>> import coordinax.frames as cxf
 
-    >>> vec = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
-    >>> cx.vecs.is_vector(vec)
+    >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> cxv.is_vector(vec)
     True
 
-    >>> space = cx.vecs.KinematicSpace.from_(vec)
-    >>> cx.vecs.is_vector(space)
+    >>> space = cxv.KinematicSpace.from_(vec)
+    >>> cxv.is_vector(space)
     False
 
-    >>> coord = cx.Coordinate.from_(vec, cx.frames.ICRS())
-    >>> cx.vecs.is_vector(coord)
+    >>> coord = cxf.Coordinate.from_(vec, cxf.ICRS())
+    >>> cxv.is_vector(coord)
     True
 
-    >>> cx.vecs.is_vector(42)
+    >>> cxv.is_vector(42)
     False
 
     """

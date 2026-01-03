@@ -29,25 +29,25 @@ def broadcast_in_dim_p_absvec(
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     Cartesian 1D position, velocity, and acceleration:
 
-    >>> q = cx.vecs.CartesianPos1D.from_([1], "m")
+    >>> q = cxv.CartesianPos1D.from_([1], "m")
     >>> q.x
     Quantity(Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 1)).x
     Quantity(Array([1], dtype=int32), unit='m')
 
-    >>> p = cx.vecs.CartesianVel1D.from_([1], "m/s")
+    >>> p = cxv.CartesianVel1D.from_([1], "m/s")
     >>> p.x
     Quantity(Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).x
     Quantity(Array([1], dtype=int32), unit='m / s')
 
-    >>> a = cx.vecs.CartesianAcc1D.from_([1], "m/s2")
+    >>> a = cxv.CartesianAcc1D.from_([1], "m/s2")
     >>> a.x
     Quantity(Array(1, dtype=int32), unit='m / s2')
 
@@ -57,21 +57,21 @@ def broadcast_in_dim_p_absvec(
 
     Radial 1D position, velocity, and acceleration:
 
-    >>> q = cx.vecs.RadialPos.from_([1], "m")
+    >>> q = cxv.RadialPos.from_([1], "m")
     >>> q.r
     Distance(Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 1)).r
     Distance(Array([1], dtype=int32), unit='m')
 
-    >>> p = cx.vecs.RadialVel.from_([1], "m/s")
+    >>> p = cxv.RadialVel.from_([1], "m/s")
     >>> p.r
     Quantity(Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).r
     Quantity(Array([1], dtype=int32), unit='m / s')
 
-    >>> a = cx.vecs.RadialAcc.from_([1], "m/s2")
+    >>> a = cxv.RadialAcc.from_([1], "m/s2")
     >>> a.r
     Quantity(Array(1, dtype=int32), unit='m / s2')
 
@@ -81,7 +81,7 @@ def broadcast_in_dim_p_absvec(
 
     Cartesian 2D position, velocity, and acceleration:
 
-    >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "m")
+    >>> q = cxv.CartesianPos2D.from_([1, 2], "m")
     >>> print(q)
     <CartesianPos2D: (x, y) [m]
         [1 2]>
@@ -90,7 +90,7 @@ def broadcast_in_dim_p_absvec(
     <CartesianPos2D: (x, y) [m]
         [[1 2]]>
 
-    >>> p = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
+    >>> p = cxv.CartesianVel2D.from_([1, 2], "m/s")
     >>> print(p)
     <CartesianVel2D: (x, y) [m / s]
         [1 2]>
@@ -99,7 +99,7 @@ def broadcast_in_dim_p_absvec(
     <CartesianVel2D: (x, y) [m / s]
         [[1 2]]>
 
-    >>> a = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
+    >>> a = cxv.CartesianAcc2D.from_([1, 2], "m/s2")
     >>> print(a)
     <CartesianAcc2D: (x, y) [m / s2]
         [1 2]>
@@ -110,21 +110,21 @@ def broadcast_in_dim_p_absvec(
 
     Cartesian 3D position, velocity, and acceleration:
 
-    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "m")
     >>> q.x
     Quantity(Array(1, dtype=int32), unit='m')
 
     >>> jnp.broadcast_to(q, (1, 3)).x
     Quantity(Array([1], dtype=int32), unit='m')
 
-    >>> p = cx.CartesianVel3D.from_([1, 2, 3], "m/s")
+    >>> p = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
     >>> p.x
     Quantity(Array(1, dtype=int32), unit='m / s')
 
     >>> jnp.broadcast_to(p, (1, 3)).x
     Quantity(Array([1], dtype=int32), unit='m / s')
 
-    >>> a = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "m/s2")
+    >>> a = cxv.CartesianAcc3D.from_([1, 2, 3], "m/s2")
     >>> print(a)
     <CartesianAcc3D: (x, y, z) [m / s2]
         [1 2 3]>

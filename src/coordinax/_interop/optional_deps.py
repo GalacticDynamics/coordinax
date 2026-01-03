@@ -8,4 +8,4 @@ from optional_dependencies import OptionalDependencyEnum, auto
 class OptDeps(OptionalDependencyEnum):  # pylint: disable=invalid-enum-extension
     """Optional dependencies for ``coordinax``."""
 
-    ASTROPY = auto()
+    COORDINAX_INTEROP_ASTROPY = auto()

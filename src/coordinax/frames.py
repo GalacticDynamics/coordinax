@@ -103,21 +103,21 @@ __all__ = [
 
 # Try to import astronomy frames - use lazy import to avoid circular dependency
 try:
-    import coordinax_astro as _coordinax_astro
+    import coordinax_astro as _cxastro  # noqa: ICN001
 
 except ImportError:
-    _coordinax_astro = None  # type: ignore[assignment]
+    _cxastro = None  # type: ignore[assignment]
 else:
-    __all__ += list(_coordinax_astro.__all__)
+    __all__ += list(_cxastro.__all__)
 
 
 def __getattr__(name: str, /) -> object:
     """Lazy import for coordinax_astro frames."""
-    if (_coordinax_astro is None) or (name not in _coordinax_astro.__all__):  # type: ignore[redundant-expr]
+    if (_cxastro is None) or (name not in _cxastro.__all__):  # type: ignore[redundant-expr]
         msg = f"module {__name__!r} has no attribute {name!r}"
         raise AttributeError(msg)
 
-    obj = getattr(_coordinax_astro, name)  # get from coordinax_astro
+    obj = getattr(_cxastro, name)  # get from coordinax_astro
     setattr(sys.modules[__name__], name, obj)  # cache in this module
     return obj
 

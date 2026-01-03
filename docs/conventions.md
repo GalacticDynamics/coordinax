@@ -2,8 +2,8 @@
 
 ## Naming Conventions
 
-`coordinax` uses a few conventions to make the code more readable and to avoid
-verbosity. Many of these are also found in the [Glossary](glossary.md).
+{mod}`coordinax` uses a few conventions to make the code more readable and to
+avoid verbosity. Many of these are also found in the [Glossary](glossary.md).
 
 - `Abstract...`: a class that is not meant to be instantiated directly, but
   rather to be subclassed. Abstract classes are prefixed with 'Abstract'.
@@ -16,10 +16,10 @@ verbosity. Many of these are also found in the [Glossary](glossary.md).
 
 ## Functional vs Object-Oriented APIs
 
-As `JAX` is function-oriented, but Python is generally object-oriented,
-`coordinax` provides both functional and object-oriented APIs. The functional
-APIs are the primary APIs, but the object-oriented APIs are easy to use and call
-the functional APIs, so lose none of the power.
+As {mod}`JAX` is function-oriented, but Python is generally object-oriented,
+{mod}`coordinax` provides both functional and object-oriented APIs. The
+functional APIs are the primary APIs, but the object-oriented APIs are easy to
+use and call the functional APIs, so lose none of the power.
 
 As an example, consider the following code snippets:
 
@@ -64,16 +64,22 @@ SphericalPos(
 
 `coordinax` uses [multiple dispatch](https://beartype.github.io/plum/) to hook
 into `quax`'s flexible and extensible system to enable custom array-ish objects,
-like {class}`~unxt.quantity.Quantity`, in `JAX`. Also, `coordinax` uses multiple
-dispatch to enable deep interoperability between `coordinax` and other
-libraries, like `astropy` (and anything user-defined).
+like {class}`~unxt.quantity.Quantity`, in {mod}`JAX`. Also, {mod}`coordinax`
+uses multiple dispatch to enable deep interoperability between {mod}`coordinax`
+and other libraries, like {mod}`astropy` (and anything user-defined).
 
-For example, `coordinax` provides a {meth}`~coordinax.vecs.AbstractVector.from_`
-method that can convert an `astropy.Representation` to a
+For example, if {mod}`coordinax-interop-astropy` is installed, {mod}`coordinax`
+registers to {meth}`~coordinax.vecs.AbstractVector.from_` a method that can
+convert an `astropy.Representation` to a
 {class}`~coordinax.vecs.AbstractVector`:
 
-```{code-block} python
+<!-- invisible-code-block: python
+import importlib.util
+-->
 
+<!-- skip: start if(importlib.util.find_spec('coordinax_interop_astropy') is None, reason="coordinax-interop-astropy not installed") -->
+
+```{code-block} python
 >>> import astropy.coordinates as apyc
 >>> import coordinax.vecs as cxv
 
@@ -82,12 +88,14 @@ method that can convert an `astropy.Representation` to a
 <CartesianRepresentation (x, y, z) in m
     (1., 2., 3.)>
 
->>> xq = cxv.CartesianPos3D.from_(aq)  # unxt Quantity
+>>> xq = cxv.CartesianPos3D.from_(aq)
 >>> print(xq)
 <CartesianPos3D: (x, y, z) [m]
     [1. 2. 3.]>
 
 ```
+
+<!-- skip: end -->
 
 This easy interoperability is enabled by multiple dispatch, which allows the
 {meth}`~coordinax.vecs.AbstractVector.from_` method to dispatch to the correct

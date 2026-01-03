@@ -28,87 +28,87 @@ class AvalMixin:
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
         1 dimensional vectors:
 
-        >>> vec = cx.vecs.CartesianPos1D.from_([1], "m")
+        >>> vec = cxv.CartesianPos1D.from_([1], "m")
         >>> vec.aval()
         ShapedArray(int32[1])
 
-        >>> vec = cx.vecs.RadialPos.from_([1], "m")
+        >>> vec = cxv.RadialPos.from_([1], "m")
         >>> vec.aval()
         ShapedArray(int32[1])
 
-        >>> vec = cx.vecs.CartesianVel1D.from_([1], "m/s")
+        >>> vec = cxv.CartesianVel1D.from_([1], "m/s")
         >>> vec.aval()
         ShapedArray(int32[1])
 
-        >>> vec = cx.vecs.RadialVel.from_([1], "m/s")
+        >>> vec = cxv.RadialVel.from_([1], "m/s")
         >>> vec.aval()
         ShapedArray(int32[1])
 
-        >>> vec = cx.vecs.CartesianAcc1D.from_([1], "m/s2")
+        >>> vec = cxv.CartesianAcc1D.from_([1], "m/s2")
         >>> vec.aval()
         ShapedArray(int32[1])
 
-        >>> vec = cx.vecs.RadialAcc.from_([1], "m/s2")
+        >>> vec = cxv.RadialAcc.from_([1], "m/s2")
         >>> vec.aval()
         ShapedArray(int32[1])
 
         2 dimensional vectors:
 
-        >>> vec = cx.vecs.CartesianPos2D.from_([1, 2], "m")
+        >>> vec = cxv.CartesianPos2D.from_([1, 2], "m")
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"))
+        >>> vec = cxv.PolarPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"))
         >>> vec.aval()
         ShapedArray(float32[2])
 
-        >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
+        >>> vec = cxv.CartesianVel2D.from_([1, 2], "m/s")
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"))
+        >>> vec = cxv.PolarVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.CartesianAcc2D.from_([1,2], "m/s2")
+        >>> vec = cxv.CartesianAcc2D.from_([1,2], "m/s2")
         >>> vec.aval()
         ShapedArray(int32[2])
 
-        >>> vec = cx.vecs.PolarAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"))
+        >>> vec = cxv.PolarAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[2])
 
         3 dimensional vectors:
 
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "m")
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "m")
+        >>> vec = cxv.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "m")
         >>> vec.aval()
         ShapedArray(int32[2,3])
 
-        >>> vec = cx.SphericalPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"), theta=u.Q(0, "rad"))
+        >>> vec = cxv.SphericalPos(r=u.Q(1, "m"), phi=u.Q(0, "rad"), theta=u.Q(0, "rad"))
         >>> vec.aval()
         ShapedArray(float32[3])
 
-        >>> vec = cx.CartesianVel3D.from_([1,2,3], "m/s")
+        >>> vec = cxv.CartesianVel3D.from_([1,2,3], "m/s")
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.SphericalVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"), theta=u.Q(0, "rad/s"))
+        >>> vec = cxv.SphericalVel(r=u.Q(1, "m/s"), phi=u.Q(0, "rad/s"), theta=u.Q(0, "rad/s"))
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.vecs.CartesianAcc3D.from_([1,2,3], "m/s2")
+        >>> vec = cxv.CartesianAcc3D.from_([1,2,3], "m/s2")
         >>> vec.aval()
         ShapedArray(int32[3])
 
-        >>> vec = cx.vecs.SphericalAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"), theta=u.Q(0, "rad/s2"))
+        >>> vec = cxv.SphericalAcc(r=u.Q(1, "m/s2"), phi=u.Q(0, "rad/s2"), theta=u.Q(0, "rad/s2"))
         >>> vec.aval()
         ShapedArray(int32[3])
 

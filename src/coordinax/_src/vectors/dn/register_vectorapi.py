@@ -28,58 +28,59 @@ def vector(
     --------
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     1D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Q(1, "km"))
+    >>> cxv.CartesianPosND.from_(u.Q(1, "km"))
     CartesianPosND(q=Q([1], 'km'))
 
-    >>> cx.vecs.CartesianPosND.from_(u.Q([1], "km"))
+    >>> cxv.CartesianPosND.from_(u.Q([1], "km"))
     CartesianPosND(q=Q([1], 'km'))
 
-    >>> cx.vecs.CartesianVelND.from_(u.Q(1, "km/s"))
+    >>> cxv.CartesianVelND.from_(u.Q(1, "km/s"))
     CartesianVelND(q=Q([1], 'km / s'))
 
-    >>> cx.vecs.CartesianVelND.from_(u.Q([1], "km/s"))
+    >>> cxv.CartesianVelND.from_(u.Q([1], "km/s"))
     CartesianVelND(q=Q([1], 'km / s'))
 
-    >>> cx.vecs.CartesianAccND.from_(u.Q(1, "km/s2"))
+    >>> cxv.CartesianAccND.from_(u.Q(1, "km/s2"))
     CartesianAccND(q=Q([1], 'km / s2'))
 
-    >>> cx.vecs.CartesianAccND.from_(u.Q([1], "km/s2"))
+    >>> cxv.CartesianAccND.from_(u.Q([1], "km/s2"))
     CartesianAccND(q=Q([1], 'km / s2'))
 
     2D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Q([1, 2], "km"))
+    >>> cxv.CartesianPosND.from_(u.Q([1, 2], "km"))
     CartesianPosND(q=Q([1, 2], 'km'))
 
-    >>> cx.vecs.CartesianVelND.from_(u.Q([1, 2], "km/s"))
+    >>> cxv.CartesianVelND.from_(u.Q([1, 2], "km/s"))
     CartesianVelND(q=Q([1, 2], 'km / s'))
 
-    >>> cx.vecs.CartesianAccND.from_(u.Q([1, 2], "km/s2"))
+    >>> cxv.CartesianAccND.from_(u.Q([1, 2], "km/s2"))
     CartesianAccND(q=Q([1, 2], 'km / s2'))
 
     3D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Q([1, 2, 3], "km"))
+    >>> cxv.CartesianPosND.from_(u.Q([1, 2, 3], "km"))
     CartesianPosND(q=Q([1, 2, 3], 'km'))
 
-    >>> cx.vecs.CartesianVelND.from_(u.Q([1, 2, 3], "km/s"))
+    >>> cxv.CartesianVelND.from_(u.Q([1, 2, 3], "km/s"))
     CartesianVelND(q=Q([1, 2, 3], 'km / s'))
 
-    >>> cx.vecs.CartesianAccND.from_(u.Q([1, 2, 3], "km/s2"))
+    >>> cxv.CartesianAccND.from_(u.Q([1, 2, 3], "km/s2"))
     CartesianAccND(q=Q([1, 2, 3], 'km / s2'))
 
     4D vector:
 
-    >>> cx.vecs.CartesianPosND.from_(u.Q([1, 2, 3, 4], "km"))
+    >>> cxv.CartesianPosND.from_(u.Q([1, 2, 3, 4], "km"))
     CartesianPosND(q=Q([1, 2, 3, 4], 'km'))
 
-    >>> cx.vecs.CartesianVelND.from_(u.Q([1, 2, 3, 4], "km/s"))
+    >>> cxv.CartesianVelND.from_(u.Q([1, 2, 3, 4], "km/s"))
     CartesianVelND(q=Q([1, 2, 3, 4], 'km / s'))
 
-    >>> cx.vecs.CartesianAccND.from_(u.Q([1, 2, 3, 4], "km/s2"))
+    >>> cxv.CartesianAccND.from_(u.Q([1, 2, 3, 4], "km/s2"))
     CartesianAccND(q=Q([1, 2, 3, 4], 'km / s2'))
 
     """
@@ -122,8 +123,8 @@ def cartesian_vector_type(
 
     Examples
     --------
-    >>> import coordinax as cx
-    >>> try: cx.vecs.cartesian_vector_type(cx.vecs.PoincarePolarVector)
+    >>> import coordinax.vecs as cxv
+    >>> try: cxv.cartesian_vector_type(cxv.PoincarePolarVector)
     ... except NotImplementedError as e:
     ...     print(e)
     PoincarePolarVector does not have a corresponding Cartesian class.

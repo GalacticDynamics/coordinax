@@ -127,7 +127,7 @@ def pytest(s: nox.Session, /, package: PackageEnum) -> None:
 # Documentation
 
 
-@session(uv_groups=["docs"], reuse_venv=True)
+@session(uv_groups=["docs"], uv_extras=["workspace"], reuse_venv=True)
 def docs(s: nox.Session, /) -> None:
     """Build the docs. Pass "--serve" to serve. Pass "-b linkcheck" to check links."""
     parser = argparse.ArgumentParser()

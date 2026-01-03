@@ -26,69 +26,69 @@ def vec_diff_to_array(obj: AbstractVector, /) -> Shaped[Array, "*batch N"]:
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
     >>> from plum import convert
     >>> import unxt as u
 
-    >>> pos = cx.vecs.CartesianPos1D.from_([1.0], "km")
+    >>> pos = cxv.CartesianPos1D.from_([1.0], "km")
     >>> convert(pos, Array)
     Array([1.], dtype=float32)
 
-    >>> vel = cx.vecs.CartesianVel1D.from_([1.0], "km/s")
+    >>> vel = cxv.CartesianVel1D.from_([1.0], "km/s")
     >>> convert(vel, Array)
     Array([1.], dtype=float32)
 
-    >>> acc = cx.vecs.CartesianAcc1D.from_([1.0], "km/s2")
+    >>> acc = cxv.CartesianAcc1D.from_([1.0], "km/s2")
     >>> convert(acc, Array)
     Array([1.], dtype=float32)
 
-    >>> pos = cx.vecs.RadialPos.from_([1.0], "km")
+    >>> pos = cxv.RadialPos.from_([1.0], "km")
     >>> convert(pos, Array)
     Array([1.], dtype=float32)
 
-    >>> pos = cx.vecs.CartesianPos2D.from_([1, 2], "km")
+    >>> pos = cxv.CartesianPos2D.from_([1, 2], "km")
     >>> convert(pos, Array)
     Array([1, 2], dtype=int32)
 
-    >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
+    >>> vel = cxv.CartesianVel2D.from_([1, 2], "km/s")
     >>> convert(vel, Array)
     Array([1, 2], dtype=int32)
 
-    >>> acc = cx.vecs.CartesianAcc2D.from_([1, 2], "km/s2")
+    >>> acc = cxv.CartesianAcc2D.from_([1, 2], "km/s2")
     >>> convert(acc, Array)
     Array([1, 2], dtype=int32)
 
-    >>> pos = cx.vecs.PolarPos(u.Q(1, "km"), u.Q(0, "deg"))
+    >>> pos = cxv.PolarPos(u.Q(1, "km"), u.Q(0, "deg"))
     >>> convert(pos, Array)
     Array([1., 0.], dtype=float32, ...)
 
-    >>> pos = cx.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
+    >>> pos = cxv.CartesianPos3D.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, Array)
     Array([1., 2., 3.], dtype=float32)
 
-    >>> vel = cx.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
+    >>> vel = cxv.CartesianVel3D.from_([1.0, 2.0, 3.0], "km/s")
     >>> convert(vel, Array)
     Array([1., 2., 3.], dtype=float32)
 
-    >>> acc = cx.vecs.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
+    >>> acc = cxv.CartesianAcc3D.from_([1.0, 2.0, 3.0], "km/s2")
     >>> convert(acc, Array)
     Array([1., 2., 3.], dtype=float32)
 
-    >>> pos = cx.SphericalPos(u.Q(1.0, "km"), u.Q(0, "deg"), u.Q(0, "deg"))
+    >>> pos = cxv.SphericalPos(u.Q(1.0, "km"), u.Q(0, "deg"), u.Q(0, "deg"))
     >>> convert(pos, Array)
     Array([0., 0., 1.], dtype=float32, ...)
 
-    >>> pos = cx.vecs.CylindricalPos(u.Q(1, "km"), u.Q(0, "deg"), u.Q(0, "km"))
+    >>> pos = cxv.CylindricalPos(u.Q(1, "km"), u.Q(0, "deg"), u.Q(0, "km"))
     >>> convert(pos, Array)
     Array([1., 0., 0.], dtype=float32, ...)
 
-    >>> pos = cx.vecs.CartesianPosND.from_([1.0, 2.0, 3.0], "km")
+    >>> pos = cxv.CartesianPosND.from_([1.0, 2.0, 3.0], "km")
     >>> convert(pos, Array)
     Array([[1.],
            [2.],
            [3.]], dtype=float32)
 
-    >>> vel = cx.vecs.CartesianVelND.from_([1.0, 2.0, 3.0], "km/s")
+    >>> vel = cxv.CartesianVelND.from_([1.0, 2.0, 3.0], "km/s")
     >>> convert(vel, Array)
     Array([[1.],
            [2.],

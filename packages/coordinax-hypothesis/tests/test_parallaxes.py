@@ -1,10 +1,10 @@
 """Tests for the parallaxes strategy."""
 
 import hypothesis.strategies as st
-from coordinax_hypothesis import parallaxes
 from hypothesis import given, settings
 
 import coordinax.distance as cxd
+from coordinax_hypothesis import parallaxes
 
 
 @given(plx=parallaxes())

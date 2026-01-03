@@ -50,9 +50,9 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> vec = cx.vecs.CartesianVel2D.from_([1, 2], "m/s")
+    >>> vec = cxv.CartesianVel2D.from_([1, 2], "m/s")
     >>> print(vec)
     <CartesianVel2D: (x, y) [m / s]
         [1 2]>
@@ -71,8 +71,8 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
 
         Examples
         --------
-        >>> import coordinax as cx
-        >>> v = cx.vecs.CartesianVel2D.from_([3, 4], "km/s")
+        >>> import coordinax.vecs as cxv
+        >>> v = cxv.CartesianVel2D.from_([3, 4], "km/s")
         >>> v.norm()
         Quantity(Array(5., dtype=float32), unit='km / s')
 
@@ -86,9 +86,9 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> vec = cx.vecs.CartesianAcc2D.from_([1, 2], "m/s2")
+    >>> vec = cxv.CartesianAcc2D.from_([1, 2], "m/s2")
     >>> print(vec)
     <CartesianAcc2D: (x, y) [m / s2]
         [1 2]>

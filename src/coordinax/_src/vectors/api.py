@@ -80,75 +80,75 @@ def time_derivative_vector_type(obj: Any, /) -> "type[coordinax.vecs.AbstractVec
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianPos1D)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianPos1D)
     <class 'coordinax...CartesianVel1D'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianVel1D)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianVel1D)
     <class 'coordinax...CartesianAcc1D'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.RadialPos)
+    >>> cxv.time_derivative_vector_type(cxv.RadialPos)
     <class 'coordinax...RadialVel'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.RadialVel)
+    >>> cxv.time_derivative_vector_type(cxv.RadialVel)
     <class 'coordinax...RadialAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianPos2D)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianPos2D)
     <class 'coordinax...CartesianVel2D'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianVel2D)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianVel2D)
     <class 'coordinax...CartesianAcc2D'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.PolarPos)
+    >>> cxv.time_derivative_vector_type(cxv.PolarPos)
     <class 'coordinax...PolarVel'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.PolarVel)
+    >>> cxv.time_derivative_vector_type(cxv.PolarVel)
     <class 'coordinax...PolarAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianPos3D)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianPos3D)
     <class 'coordinax...CartesianVel3D'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianVel3D)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianVel3D)
     <class 'coordinax...CartesianAcc3D'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CylindricalPos)
+    >>> cxv.time_derivative_vector_type(cxv.CylindricalPos)
     <class 'coordinax...CylindricalVel'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CylindricalVel)
+    >>> cxv.time_derivative_vector_type(cxv.CylindricalVel)
     <class 'coordinax...CylindricalAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.SphericalPos)
+    >>> cxv.time_derivative_vector_type(cxv.SphericalPos)
     <class 'coordinax...SphericalVel'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.SphericalVel)
+    >>> cxv.time_derivative_vector_type(cxv.SphericalVel)
     <class 'coordinax...SphericalAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.MathSphericalPos)
+    >>> cxv.time_derivative_vector_type(cxv.MathSphericalPos)
     <class 'coordinax...MathSphericalVel'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.MathSphericalVel)
+    >>> cxv.time_derivative_vector_type(cxv.MathSphericalVel)
     <class 'coordinax...MathSphericalAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.LonLatSphericalPos)
+    >>> cxv.time_derivative_vector_type(cxv.LonLatSphericalPos)
     <class 'coordinax...LonLatSphericalVel'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.LonLatSphericalVel)
+    >>> cxv.time_derivative_vector_type(cxv.LonLatSphericalVel)
     <class 'coordinax...LonLatSphericalAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.LonCosLatSphericalVel)
+    >>> cxv.time_derivative_vector_type(cxv.LonCosLatSphericalVel)
     <class 'coordinax...LonLatSphericalAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.ProlateSpheroidalPos)
+    >>> cxv.time_derivative_vector_type(cxv.ProlateSpheroidalPos)
     <class 'coordinax...ProlateSpheroidalVel'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.ProlateSpheroidalVel)
+    >>> cxv.time_derivative_vector_type(cxv.ProlateSpheroidalVel)
     <class 'coordinax...ProlateSpheroidalAcc'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianPosND)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianPosND)
     <class 'coordinax...CartesianVelND'>
 
-    >>> cx.vecs.time_derivative_vector_type(cx.vecs.CartesianVelND)
+    >>> cxv.time_derivative_vector_type(cxv.CartesianVelND)
     <class 'coordinax...CartesianAccND'>
 
     """
@@ -163,75 +163,75 @@ def time_antiderivative_vector_type(
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianVel1D)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianVel1D)
     <class 'coordinax...CartesianPos1D'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianAcc1D)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianAcc1D)
     <class 'coordinax...CartesianVel1D'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.RadialVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.RadialVel)
     <class 'coordinax...RadialPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.RadialAcc)
+    >>> cxv.time_antiderivative_vector_type(cxv.RadialAcc)
     <class 'coordinax...RadialVel'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianVel2D)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianVel2D)
     <class 'coordinax...CartesianPos2D'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianAcc2D)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianAcc2D)
     <class 'coordinax...CartesianVel2D'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.PolarVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.PolarVel)
     <class 'coordinax...PolarPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.PolarAcc)
+    >>> cxv.time_antiderivative_vector_type(cxv.PolarAcc)
     <class 'coordinax...PolarVel'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianVel3D)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianVel3D)
     <class 'coordinax...CartesianPos3D'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianAcc3D)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianAcc3D)
     <class 'coordinax...CartesianVel3D'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CylindricalVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.CylindricalVel)
     <class 'coordinax...CylindricalPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CylindricalAcc)
+    >>> cxv.time_antiderivative_vector_type(cxv.CylindricalAcc)
     <class 'coordinax...CylindricalVel'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.SphericalVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.SphericalVel)
     <class 'coordinax...SphericalPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.SphericalAcc)
+    >>> cxv.time_antiderivative_vector_type(cxv.SphericalAcc)
     <class 'coordinax...SphericalVel'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.MathSphericalVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.MathSphericalVel)
     <class 'coordinax...MathSphericalPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.MathSphericalAcc)
+    >>> cxv.time_antiderivative_vector_type(cxv.MathSphericalAcc)
     <class 'coordinax...MathSphericalVel'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.LonLatSphericalVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.LonLatSphericalVel)
     <class 'coordinax...LonLatSphericalPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.LonCosLatSphericalVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.LonCosLatSphericalVel)
     <class 'coordinax...LonLatSphericalPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.LonLatSphericalAcc)
+    >>> cxv.time_antiderivative_vector_type(cxv.LonLatSphericalAcc)
     <class 'coordinax...LonLatSphericalVel'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.ProlateSpheroidalVel)
+    >>> cxv.time_antiderivative_vector_type(cxv.ProlateSpheroidalVel)
     <class 'coordinax...ProlateSpheroidalPos'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.ProlateSpheroidalAcc)
+    >>> cxv.time_antiderivative_vector_type(cxv.ProlateSpheroidalAcc)
     <class 'coordinax...ProlateSpheroidalVel'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianVelND)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianVelND)
     <class 'coordinax...CartesianPosND'>
 
-    >>> cx.vecs.time_antiderivative_vector_type(cx.vecs.CartesianAccND)
+    >>> cxv.time_antiderivative_vector_type(cxv.CartesianAccND)
     <class 'coordinax...CartesianVelND'>
 
     """
@@ -246,33 +246,33 @@ def time_nth_derivative_vector_type(
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> cx.vecs.RadialPos.time_nth_derivative_cls(n=0)
+    >>> cxv.RadialPos.time_nth_derivative_cls(n=0)
     <class 'coordinax...RadialPos'>
 
-    >>> cx.vecs.RadialPos.time_nth_derivative_cls(n=1)
+    >>> cxv.RadialPos.time_nth_derivative_cls(n=1)
     <class 'coordinax...RadialVel'>
 
-    >>> cx.vecs.RadialPos.time_nth_derivative_cls(n=2)
+    >>> cxv.RadialPos.time_nth_derivative_cls(n=2)
     <class 'coordinax...RadialAcc'>
 
-    >>> cx.vecs.RadialVel.time_nth_derivative_cls(n=-1)
+    >>> cxv.RadialVel.time_nth_derivative_cls(n=-1)
     <class 'coordinax...RadialPos'>
 
-    >>> cx.vecs.RadialVel.time_nth_derivative_cls(n=0)
+    >>> cxv.RadialVel.time_nth_derivative_cls(n=0)
     <class 'coordinax...RadialVel'>
 
-    >>> cx.vecs.RadialVel.time_nth_derivative_cls(n=1)
+    >>> cxv.RadialVel.time_nth_derivative_cls(n=1)
     <class 'coordinax...RadialAcc'>
 
-    >>> cx.vecs.RadialAcc.time_nth_derivative_cls(n=-2)
+    >>> cxv.RadialAcc.time_nth_derivative_cls(n=-2)
     <class 'coordinax...RadialPos'>
 
-    >>> cx.vecs.RadialAcc.time_nth_derivative_cls(n=-1)
+    >>> cxv.RadialAcc.time_nth_derivative_cls(n=-1)
     <class 'coordinax...RadialVel'>
 
-    >>> cx.vecs.RadialAcc.time_nth_derivative_cls(n=0)
+    >>> cxv.RadialAcc.time_nth_derivative_cls(n=0)
     <class 'coordinax...RadialAcc'>
 
     """

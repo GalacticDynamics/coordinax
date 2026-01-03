@@ -2,10 +2,10 @@
 
 import hypothesis.strategies as st
 import pytest
-from coordinax_hypothesis import distance_moduli
 from hypothesis import given, settings
 
 import coordinax.distance as cxd
+from coordinax_hypothesis import distance_moduli
 
 
 @given(dm=distance_moduli())

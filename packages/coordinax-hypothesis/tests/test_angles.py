@@ -1,10 +1,11 @@
 """Tests for the angles strategy."""
 
 import hypothesis.strategies as st
-from coordinax_hypothesis import angles
 from hypothesis import given, settings
 
 import unxt as u
+
+from coordinax_hypothesis import angles
 
 
 @given(angle=angles())

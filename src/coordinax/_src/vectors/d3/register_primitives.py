@@ -17,9 +17,14 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
+from .cylindrical import CylindricalPos
 from .generic import Cartesian3D
+from .lonlatspherical import LonLatSphericalPos
 from .mathspherical import MathSphericalPos
+from .spherical import SphericalPos
+from .spheroidal import ProlateSpheroidalPos
 from coordinax._src.vectors.base_pos import AbstractPos
+from coordinax._src.vectors.converters import converter_azimuth_to_range
 
 # ------------------------------------------------
 
@@ -203,6 +208,51 @@ def neg_p_genericcart3d(obj: Cartesian3D, /) -> Cartesian3D:
 
     """
     return jax.tree.map(jnp.negative, obj)
+
+
+# ------------------------------------------------
+
+_half_rev = u.Angle(180, "deg")
+
+
+@register(jax.lax.neg_p)
+def neg_p_cylindrical_pos(obj: CylindricalPos, /) -> CylindricalPos:
+    """Negate the `coordinax.vecs.CylindricalPos` without a Cartesian round-trip."""
+    return replace(
+        obj,
+        phi=cast("u.Angle", converter_azimuth_to_range(obj.phi + _half_rev)),
+        z=qlax.neg(obj.z),
+    )
+
+
+@register(jax.lax.neg_p)
+def neg_p_spherical_pos(obj: SphericalPos, /) -> SphericalPos:
+    """Negate the `coordinax.SphericalPos` without a Cartesian round-trip."""
+    return replace(
+        obj,
+        theta=_half_rev - obj.theta,
+        phi=cast("u.Angle", converter_azimuth_to_range(obj.phi + _half_rev)),
+    )
+
+
+@register(jax.lax.neg_p)
+def neg_p_lonlat_spherical_pos(obj: LonLatSphericalPos, /) -> LonLatSphericalPos:
+    """Negate `coordinax.vecs.LonLatSphericalPos` without a Cartesian round-trip."""
+    return replace(
+        obj,
+        lon=cast("u.Angle", converter_azimuth_to_range(obj.lon + _half_rev)),
+        lat=qlax.neg(obj.lat),
+    )
+
+
+@register(jax.lax.neg_p)
+def neg_p_prolate_spheroidal_pos(obj: ProlateSpheroidalPos, /) -> ProlateSpheroidalPos:
+    """Negate `coordinax.vecs.ProlateSpheroidalPos` without a Cartesian round-trip."""
+    return replace(
+        obj,
+        nu=qlax.neg(obj.nu),
+        phi=cast("u.Angle", converter_azimuth_to_range(obj.phi + _half_rev)),
+    )
 
 
 # ------------------------------------------------

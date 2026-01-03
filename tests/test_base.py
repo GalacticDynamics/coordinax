@@ -13,50 +13,49 @@ import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
 
-import coordinax as cx
+import coordinax.vecs as cxv
 
 BUILTIN_VECTORS = [
     # 1D
-    cx.vecs.CartesianPos1D,
-    cx.vecs.RadialPos,
+    cxv.CartesianPos1D,
+    cxv.RadialPos,
     # 2D
-    cx.vecs.CartesianPos2D,
-    cx.vecs.PolarPos,
+    cxv.CartesianPos2D,
+    cxv.PolarPos,
     # 3D
-    cx.CartesianPos3D,
-    cx.SphericalPos,
-    cx.vecs.CylindricalPos,
+    cxv.CartesianPos3D,
+    cxv.SphericalPos,
+    cxv.CylindricalPos,
 ]
 
 BUILTIN_DIFFERENTIALS = [
     # 1D
-    cx.vecs.CartesianVel1D,
-    cx.vecs.RadialVel,
+    cxv.CartesianVel1D,
+    cxv.RadialVel,
     # 2D
-    cx.vecs.CartesianVel2D,
-    cx.vecs.PolarVel,
+    cxv.CartesianVel2D,
+    cxv.PolarVel,
     # LnPolarVel,
     # Log10PolarVel,
     # 3D
-    cx.CartesianVel3D,
-    cx.SphericalVel,
-    cx.vecs.CylindricalVel,
+    cxv.CartesianVel3D,
+    cxv.SphericalVel,
+    cxv.CylindricalVel,
 ]
 
 
 def context_dimension_reduction(
-    vector: cx.vecs.AbstractPos, target: type[cx.vecs.AbstractPos]
+    vector: cxv.AbstractPos, target: type[cxv.AbstractPos]
 ) -> AbstractContextManager[Any]:
     """Return a context manager that checks for dimensionality reduction."""
     context: AbstractContextManager[Any]
     if (
-        isinstance(vector, cx.vecs.AbstractPos2D)
-        and issubclass(target, cx.vecs.AbstractPos1D)
+        isinstance(vector, cxv.AbstractPos2D) and issubclass(target, cxv.AbstractPos1D)
     ) or (
-        isinstance(vector, cx.vecs.AbstractPos3D)
-        and issubclass(target, cx.vecs.AbstractPos2D | cx.vecs.AbstractPos1D)
+        isinstance(vector, cxv.AbstractPos3D)
+        and issubclass(target, cxv.AbstractPos2D | cxv.AbstractPos1D)
     ):
-        context = pytest.warns(cx.vecs.IrreversibleDimensionChange)
+        context = pytest.warns(cxv.IrreversibleDimensionChange)
     else:
         context = nullcontext()
     return context
@@ -92,7 +91,7 @@ class AbstractVectorTest:
             vector,
             **{
                 k: replace(v, value=jnp.ones((2, 4)))
-                for k, v in field_items(cx.vecs.AttrFilter, vector)
+                for k, v in field_items(cxv.AttrFilter, vector)
             },
         )
         flat = vec.flatten()
@@ -116,7 +115,7 @@ class AbstractVectorTest:
             vector,
             **{
                 k: replace(v, value=jnp.ones((2, 4)))
-                for k, v in field_items(cx.vecs.AttrFilter, vector)
+                for k, v in field_items(cxv.AttrFilter, vector)
             },
         )
         reshaped = vec.reshape(1, 8)
@@ -165,7 +164,7 @@ class AbstractPosTest(AbstractVectorTest):
     """Test `coordinax.AbstractPos`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    def vector(self) -> cxv.AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
@@ -188,12 +187,12 @@ class AbstractVelTest(AbstractVectorTest):
     """Test `coordinax.AbstractVel`."""
 
     @pytest.fixture(scope="class")
-    def vector(self) -> cx.vecs.AbstractPos:
+    def vector(self) -> cxv.AbstractPos:
         """Return a vector."""
         raise NotImplementedError
 
     @pytest.fixture(scope="class")
-    def difntl(self) -> cx.vecs.AbstractVel:
+    def difntl(self) -> cxv.AbstractVel:
         """Return a vector."""
         raise NotImplementedError
 
@@ -207,16 +206,16 @@ class AbstractVelTest(AbstractVectorTest):
         # TODO: have all the conversions
         if (
             (
-                isinstance(difntl, cx.vecs.AbstractVel1D)
-                and not issubclass(target, cx.vecs.AbstractVel1D)
+                isinstance(difntl, cxv.AbstractVel1D)
+                and not issubclass(target, cxv.AbstractVel1D)
             )
             or (
-                isinstance(difntl, cx.vecs.AbstractVel2D)
-                and not issubclass(target, cx.vecs.AbstractVel2D)
+                isinstance(difntl, cxv.AbstractVel2D)
+                and not issubclass(target, cxv.AbstractVel2D)
             )
             or (
-                isinstance(difntl, cx.vecs.AbstractVel3D)
-                and not issubclass(target, cx.vecs.AbstractVel3D)
+                isinstance(difntl, cxv.AbstractVel3D)
+                and not issubclass(target, cxv.AbstractVel3D)
             )
         ):
             pytest.xfail("Not implemented yet")

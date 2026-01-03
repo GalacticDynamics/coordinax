@@ -61,8 +61,8 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
 
         Examples
         --------
-        >>> import coordinax as cx
-        >>> q = cx.vecs.CartesianVel1D.from_([-1], "km/s")
+        >>> import coordinax.vecs as cxv
+        >>> q = cxv.CartesianVel1D.from_([-1], "km/s")
         >>> q.norm()
         Quantity(Array(1, dtype=int32), unit='km / s')
 

@@ -255,43 +255,43 @@ def vec_diff_to_uncheckedq(obj: AbstractVector, /) -> Shaped[BareQuantity, "*bat
     --------
     >>> from plum import convert
     >>> from unxt.quantity import BareQuantity
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     ## 1D
 
-    >>> cart_vel = cx.vecs.CartesianVel1D.from_([1], "km/s")
+    >>> cart_vel = cxv.CartesianVel1D.from_([1], "km/s")
     >>> convert(cart_vel, BareQuantity)
     BareQuantity(Array([1], dtype=int32), unit='km / s')
 
-    >>> cart_acc = cx.vecs.CartesianAcc1D.from_([1], "km/s2")
+    >>> cart_acc = cxv.CartesianAcc1D.from_([1], "km/s2")
     >>> convert(cart_acc, BareQuantity)
     BareQuantity(Array([1], dtype=int32), unit='km / s2')
 
-    >>> rad_vel = cx.vecs.RadialVel.from_([1], "km/s")
+    >>> rad_vel = cxv.RadialVel.from_([1], "km/s")
     >>> convert(rad_vel, BareQuantity)
     BareQuantity(Array([1], dtype=int32), unit='km / s')
 
-    >>> rad_acc = cx.vecs.RadialAcc.from_([1], "km/s2")
+    >>> rad_acc = cxv.RadialAcc.from_([1], "km/s2")
     >>> convert(rad_acc, BareQuantity)
     BareQuantity(Array([1], dtype=int32), unit='km / s2')
 
     ## 2D
 
-    >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
+    >>> vel = cxv.CartesianVel2D.from_([1, 2], "km/s")
     >>> convert(vel, BareQuantity)
     BareQuantity(Array([1, 2], dtype=int32), unit='km / s')
 
-    >>> acc = cx.vecs.CartesianAcc2D.from_([1, 2], "km/s2")
+    >>> acc = cxv.CartesianAcc2D.from_([1, 2], "km/s2")
     >>> convert(acc, BareQuantity)
     BareQuantity(Array([1, 2], dtype=int32), unit='km / s2')
 
     # 3D
 
-    >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
+    >>> vel = cxv.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, BareQuantity)
     BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s')
 
-    >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> acc = cxv.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, BareQuantity)
     BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
 
@@ -314,43 +314,43 @@ def vec_diff_to_q(obj: AbstractVector, /) -> Shaped[u.Quantity, "*batch N"]:
     --------
     >>> from plum import convert
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     ## 1D
 
-    >>> cart_vel = cx.vecs.CartesianVel1D.from_([1], "km/s")
+    >>> cart_vel = cxv.CartesianVel1D.from_([1], "km/s")
     >>> convert(cart_vel, u.Quantity)
     Quantity(Array([1], dtype=int32), unit='km / s')
 
-    >>> cart_acc = cx.vecs.CartesianAcc1D.from_([1], "km/s2")
+    >>> cart_acc = cxv.CartesianAcc1D.from_([1], "km/s2")
     >>> convert(cart_acc, u.Quantity)
     Quantity(Array([1], dtype=int32), unit='km / s2')
 
-    >>> rad_vel = cx.vecs.RadialVel.from_([1], "km/s")
+    >>> rad_vel = cxv.RadialVel.from_([1], "km/s")
     >>> convert(rad_vel, u.Quantity)
     Quantity(Array([1], dtype=int32), unit='km / s')
 
-    >>> rad_acc = cx.vecs.RadialAcc.from_([1], "km/s2")
+    >>> rad_acc = cxv.RadialAcc.from_([1], "km/s2")
     >>> convert(rad_acc, u.Quantity)
     Quantity(Array([1], dtype=int32), unit='km / s2')
 
     ## 2D
 
-    >>> vel = cx.vecs.CartesianVel2D.from_([1, 2], "km/s")
+    >>> vel = cxv.CartesianVel2D.from_([1, 2], "km/s")
     >>> convert(vel, u.Quantity)
     Quantity(Array([1, 2], dtype=int32), unit='km / s')
 
-    >>> acc = cx.vecs.CartesianAcc2D.from_([1, 2], "km/s2")
+    >>> acc = cxv.CartesianAcc2D.from_([1, 2], "km/s2")
     >>> convert(acc, u.Quantity)
     Quantity(Array([1, 2], dtype=int32), unit='km / s2')
 
     # 3D
 
-    >>> vel = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
+    >>> vel = cxv.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, u.Quantity)
     Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
 
-    >>> acc = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
+    >>> acc = cxv.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, u.Quantity)
     Quantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
 

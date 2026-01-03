@@ -9,17 +9,17 @@ When opening an issue to report a problem, please try to provide:
 
 ## Contributing Code and Documentation
 
-So you are interested in contributing to the `coordinax`? Excellent! We love
-contributions! `coordinax` is open source, built on open source, and we'd love
-to have you hang out in our community.
+So you are interested in contributing to the {mod}`coordinax`? Excellent! We
+love contributions! {mod}`coordinax` is open source, built on open source, and
+we'd love to have you hang out in our community.
 
 ## How to Contribute, Best Practices
 
-Most contributions to `coordinax` are done via
+Most contributions to {mod}`coordinax` are done via
 [pull requests](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests)
 from GitHub users' forks of the
-[`coordinax` repository](https://github.com/GalacticDynamics/coordinax). If you
-are new to this style of development, check out Astropy's
+[{mod}`coordinax` repository](https://github.com/GalacticDynamics/coordinax). If
+you are new to this style of development, check out {mod}`astropy`'s
 [development workflow](https://docs.astropy.org/en/latest/development/quickstart.html).
 
 Once you open a pull request (which should be opened against the `main` branch,
@@ -38,8 +38,8 @@ following:
   description in the main documentation (in `docs/`).
 
 - **Performance improvements**: if you are making changes that impact
-  `coordinax` performance, consider adding a performance benchmark in `tests`. A
-  maintainer will also be able to run comparative benchmarks to catch
+  {mod}`coordinax` performance, consider adding a performance benchmark in
+  `tests`. A maintainer will also be able to run comparative benchmarks to catch
   performance changes. The PR needs to have the `run-benchmarks` label to run
   the workflow.
 
@@ -48,12 +48,12 @@ following:
 Before being merged, a pull request for a new feature will be reviewed to see if
 it meets the following requirements. If you are unsure about how to meet all of
 these requirements, please submit the PR and ask for help and/or guidance. A
-`coordinax` maintainer will collaborate with you to make sure that the pull
+{mod}`coordinax` maintainer will collaborate with you to make sure that the pull
 request meets the requirements for inclusion in the package:
 
 **Relevance:**
 
-- Is the submission relevant to `coordinax`?
+- Is the submission relevant to {mod}`coordinax`?
 - Does the code perform as expected?
 - If applicable, are references included to the origin source for the algorithm?
 - Has the code been tested against previously existing implementations?
@@ -63,7 +63,7 @@ request meets the requirements for inclusion in the package:
 - Are the coding guidelines followed?
 - Is the code compatible with the supported versions of Python?
 - Are there dependencies other than the run-time dependencies listed in
-  pyproject.toml?
+  `pyproject.toml`?
 
 **Testing:**
 
