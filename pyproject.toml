@@ -47,6 +47,13 @@ requires-python = ">=3.11"
 
 [project.optional-dependencies]
 astro = ["coordinax-astro"]
+interop-astropy = ["coordinax-interop-astropy"]
+workspace = [
+  "coordinax-api",
+  "coordinax-astro",
+  "coordinax-hypothesis",
+  "coordinax-interop-astropy",
+]
 
 [project.urls]
 "Bug Tracker" = "https://github.com/GalacticDynamics/coordinax/issues"
@@ -299,14 +306,17 @@ ignore = [
 "noxfile.py"   = ["T20"]
 
 [tool.ruff.lint.flake8-import-conventions.aliases]
-coordinax          = "cx"
-"coordinax.frames" = "cxf"
-"coordinax.ops"    = "cxo"
-"coordinax.vecs"   = "cxv"
-coordinax_api      = "cxapi"
-equinox            = "eqx"
-functools          = "ft"
-unxt               = "u"
+coordinax            = "cx"
+"coordinax.angle"    = "cxa"
+"coordinax.distance" = "cxd"
+"coordinax.frames"   = "cxf"
+"coordinax.ops"      = "cxo"
+"coordinax.vecs"     = "cxv"
+coordinax_api        = "cxapi"
+coordinax_astro      = "cxastro"
+equinox              = "eqx"
+functools            = "ft"
+unxt                 = "u"
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
@@ -316,11 +326,16 @@ known-first-party = [
   "optional_dependencies",
   "quaxed",
   "unxt",
+  "unxt_hypothesis",
   "xmmutablemap",
-  "coordinax-astro",
-  "coordinax-hypothesis",
 ]
-known-local-folder = ["coordinax", "coordinax_api"]
+known-local-folder = [
+  "coordinax",
+  "coordinax_api",
+  "coordinax_astro",
+  "coordinax_hypothesis",
+  "coordinax_interop_astropy",
+]
 section-order = [
   "future",
   "standard-library",
@@ -342,9 +357,10 @@ sections = { typing = [
 constraint-dependencies = ["numpy<2.4.0"]
 
 [tool.uv.sources]
-coordinax-api        = { workspace = true }
-coordinax-astro      = { workspace = true }
-coordinax-hypothesis = { workspace = true }
+coordinax-api             = { workspace = true }
+coordinax-astro           = { workspace = true }
+coordinax-hypothesis      = { workspace = true }
+coordinax-interop-astropy = { workspace = true }
 
 
 [tool.uv.workspace]

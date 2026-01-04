@@ -159,9 +159,9 @@ class AbstractVelND(AbstractVel):
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
-        >>> vec = cx.vecs.CartesianVelND.from_([[[1, 2]], [[3, 4]]], "m/s")
+        >>> vec = cxv.CartesianVelND.from_([[[1, 2]], [[3, 4]]], "m/s")
         >>> vec.shape
         (2, 1)
 
@@ -187,9 +187,9 @@ class AbstractVelND(AbstractVel):
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
-        >>> vec = cx.vecs.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
+        >>> vec = cxv.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.shape
         (2,)
 
@@ -202,9 +202,9 @@ class AbstractVelND(AbstractVel):
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
-        >>> vec = cx.vecs.CartesianVelND.from_([[[1, 2]], [[3, 4]]], "m/s")
+        >>> vec = cxv.CartesianVelND.from_([[[1, 2]], [[3, 4]]], "m/s")
         >>> vec.shape
         (2, 1)
 
@@ -224,9 +224,9 @@ class AbstractVelND(AbstractVel):
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
-        >>> vec = cx.vecs.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
+        >>> vec = cxv.CartesianVelND.from_([[1, 2], [3, 4]], "m/s")
         >>> vec.flatten()
         CartesianVelND(q=Q([[1, 2], [3, 4]], 'm / s'))
 
@@ -239,8 +239,8 @@ class AbstractVelND(AbstractVel):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax as cx
-        >>> vec = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "m/s"))
+        >>> import coordinax.vecs as cxv
+        >>> vec = cxv.CartesianVelND(u.Q([1, 2, 3], "m/s"))
         >>> vec.shape
         ()
 

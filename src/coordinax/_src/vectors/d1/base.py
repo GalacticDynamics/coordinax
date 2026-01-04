@@ -35,9 +35,9 @@ class AbstractVel1D(AbstractVel):
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
-        >>> cx.vecs.CartesianVel1D._dimensionality()
+        >>> cxv.CartesianVel1D._dimensionality()
         1
 
         """

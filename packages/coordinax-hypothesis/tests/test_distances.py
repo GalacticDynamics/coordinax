@@ -1,10 +1,10 @@
 """Tests for the distances strategy."""
 
 import hypothesis.strategies as st
-from coordinax_hypothesis import distances
 from hypothesis import given, settings
 
 import coordinax.distance as cxd
+from coordinax_hypothesis import distances
 
 
 @given(dist=distances())

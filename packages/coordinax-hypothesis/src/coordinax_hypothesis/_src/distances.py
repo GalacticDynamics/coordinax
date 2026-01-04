@@ -8,11 +8,11 @@ from collections.abc import Mapping
 from typing import Any, assert_never
 
 import jax.numpy as jnp
-import unxt_hypothesis as ust
 from hypothesis import strategies as st
 from hypothesis.extra.array_api import make_strategies_namespace
 
 import unxt as u
+import unxt_hypothesis as ust
 
 import coordinax.distance as cxd
 

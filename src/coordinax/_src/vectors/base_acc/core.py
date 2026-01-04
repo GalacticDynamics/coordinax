@@ -70,13 +70,12 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
-        >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "kpc")
-        >>> p = cx.vecs.CartesianVel3D.from_([4, 5, 6], "km/s")
-        >>> a = cx.vecs.CartesianAcc3D.from_([3, 4, 0], "m/s2")
-
-        >>> a = a.vconvert(cx.vecs.CylindricalAcc, p, q)
+        >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
+        >>> p = cxv.CartesianVel3D.from_([4, 5, 6], "km/s")
+        >>> a = cxv.CartesianAcc3D.from_([3, 4, 0], "m/s2")
+        >>> a = a.vconvert(cxv.CylindricalAcc, p, q)
 
         >>> a.norm(p, q)
         Quantity(Array(5..., dtype=float32), unit='m / s2')

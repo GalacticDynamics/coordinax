@@ -52,9 +52,9 @@ def add_pp(lhs: CartesianVel1D, rhs: CartesianVel1D, /) -> CartesianVel1D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> v = cx.vecs.CartesianVel1D.from_([1], "km/s")
+    >>> v = cxv.CartesianVel1D.from_([1], "km/s")
     >>> vec = jnp.add(v, v)
     >>> print(vec)
     <CartesianVel1D: (x) [km / s]
@@ -155,9 +155,9 @@ def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> v = cx.vecs.CartesianVel1D.from_(1, "m/s")
+    >>> v = cxv.CartesianVel1D.from_(1, "m/s")
     >>> vec = jnp.multiply(2, v)
     >>> print(vec)
     <CartesianVel1D: (x) [m / s]

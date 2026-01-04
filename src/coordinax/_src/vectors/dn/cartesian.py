@@ -142,11 +142,11 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
     A 1D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Q([[1]], "km/s"))
+    >>> q = cxv.CartesianVelND(u.Q([[1]], "km/s"))
     >>> q.q
     Quantity(Array([[1]], dtype=int32), unit='km / s')
     >>> q.shape
@@ -154,7 +154,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 2D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2], "km/s"))
+    >>> q = cxv.CartesianVelND(u.Q([1, 2], "km/s"))
     >>> q.q
     Quantity(Array([1, 2], dtype=int32), unit='km / s')
     >>> q.shape
@@ -162,7 +162,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 3D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))
+    >>> q = cxv.CartesianVelND(u.Q([1, 2, 3], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
     >>> q.shape
@@ -170,7 +170,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 4D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3, 4], "km/s"))
+    >>> q = cxv.CartesianVelND(u.Q([1, 2, 3, 4], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km / s')
     >>> q.shape
@@ -178,7 +178,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     A 5D vector:
 
-    >>> q = cx.vecs.CartesianVelND(u.Q([1, 2, 3, 4, 5], "km/s"))
+    >>> q = cxv.CartesianVelND(u.Q([1, 2, 3, 4, 5], "km/s"))
     >>> q.q
     Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
     >>> q.shape
@@ -199,11 +199,11 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
         Examples
         --------
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
         A 3D vector:
 
-        >>> cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))._dimensionality()
+        >>> cxv.CartesianVelND(u.Q([1, 2, 3], "km/s"))._dimensionality()
         3
 
         """
@@ -217,11 +217,11 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
         Examples
         --------
         >>> import unxt as u
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
         A 3D vector:
 
-        >>> c = cx.vecs.CartesianVelND(u.Q([1, 2, 3], "km/s"))
+        >>> c = cxv.CartesianVelND(u.Q([1, 2, 3], "km/s"))
         >>> c.norm()
         Quantity(Array(3.7416575, dtype=float32), unit='km / s')
 

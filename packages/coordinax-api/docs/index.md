@@ -104,11 +104,12 @@ The `coordinax-api` package follows these principles:
 
 Use `coordinax-api` when you:
 
-- Want to implement coordinax protocols in your own package
-- Need coordinax integration without the full coordinax dependency
-- Are building a library that provides vector types compatible with coordinax
+- Want to implement {mod}`coordinax` protocols in your own package
+- Need {mod}`coordinax` integration without the full {mod}`coordinax` dependency
+- Are building a library that provides vector types compatible with
+  {mod}`coordinax`
 
-Use the full `coordinax` package when you:
+Use the full {mod}`coordinax` package when you:
 
 - Need concrete vector implementations (CartesianPos3D, SphericalPos, etc.)
 - Want to perform actual coordinate transformations

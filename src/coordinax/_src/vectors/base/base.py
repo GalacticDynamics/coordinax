@@ -332,11 +332,11 @@ class AbstractVectorLike(
         --------
         >>> import quaxed.numpy as jnp
         >>> import unxt as u
-        >>> import coordinax as cx
+        >>> import coordinax.vecs as cxv
 
         We can compare non-vector objects:
 
-        >>> vec = cx.vecs.CartesianPos1D(u.Q([1, 2], "m"))
+        >>> vec = cxv.CartesianPos1D(u.Q([1, 2], "m"))
         >>> vec == 2
         False
 
@@ -350,63 +350,63 @@ class AbstractVectorLike(
 
         Showing the broadcasting, then element-wise comparison of two vectors:
 
-        >>> vec1 = cx.CartesianPos3D.from_([[1, 2, 3], [1, 2, 4]], "m")
-        >>> vec2 = cx.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> vec1 = cxv.CartesianPos3D.from_([[1, 2, 3], [1, 2, 4]], "m")
+        >>> vec2 = cxv.CartesianPos3D.from_([1, 2, 3], "m")
         >>> jnp.equal(vec1, vec2)
         Array([ True, False], dtype=bool)
 
         Showing the change of representation:
 
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-        >>> vec1 = vec.vconvert(cx.SphericalPos)
-        >>> vec2 = vec.vconvert(cx.vecs.MathSphericalPos)
+        >>> vec = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+        >>> vec1 = vec.vconvert(cxv.SphericalPos)
+        >>> vec2 = vec.vconvert(cxv.MathSphericalPos)
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
         Quick run-through of each dimensionality:
 
-        >>> vec1 = cx.vecs.CartesianPos1D.from_([1], "m")
-        >>> vec2 = cx.vecs.RadialPos.from_([1], "m")
+        >>> vec1 = cxv.CartesianPos1D.from_([1], "m")
+        >>> vec2 = cxv.RadialPos.from_([1], "m")
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
-        >>> vec1 = cx.vecs.CartesianPos2D.from_([2, 0], "m")
-        >>> vec2 = cx.vecs.PolarPos(r=u.Q(2, "m"), phi=u.Q(0, "rad"))
+        >>> vec1 = cxv.CartesianPos2D.from_([2, 0], "m")
+        >>> vec2 = cxv.PolarPos(r=u.Q(2, "m"), phi=u.Q(0, "rad"))
         >>> jnp.equal(vec1, vec2)
         Array(True, dtype=bool)
 
         Now we show velocities and accelerations:
 
-        >>> vel1 = cx.vecs.CartesianVel1D(u.Q([1, 2, 3], "km/s"))
-        >>> vel2 = cx.vecs.CartesianVel1D(u.Q([1, 0, 3], "km/s"))
+        >>> vel1 = cxv.CartesianVel1D(u.Q([1, 2, 3], "km/s"))
+        >>> vel2 = cxv.CartesianVel1D(u.Q([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.vecs.CartesianAcc1D(u.Q([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.vecs.CartesianAcc1D(u.Q([1, 0, 3], "km/s2"))
+        >>> acc1 = cxv.CartesianAcc1D(u.Q([1, 2, 3], "km/s2"))
+        >>> acc2 = cxv.CartesianAcc1D(u.Q([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.vecs.RadialVel(u.Q([1, 2, 3], "km/s"))
-        >>> vel2 = cx.vecs.RadialVel(u.Q([1, 0, 3], "km/s"))
+        >>> vel1 = cxv.RadialVel(u.Q([1, 2, 3], "km/s"))
+        >>> vel2 = cxv.RadialVel(u.Q([1, 0, 3], "km/s"))
         >>> jnp.equal(vel1, vel2)
         Array([ True,  False,  True], dtype=bool)
         >>> vel1 == vel2
         Array([ True, False,  True], dtype=bool)
 
-        >>> acc1 = cx.vecs.RadialAcc(u.Q([1, 2, 3], "km/s2"))
-        >>> acc2 = cx.vecs.RadialAcc(u.Q([1, 0, 3], "km/s2"))
+        >>> acc1 = cxv.RadialAcc(u.Q([1, 2, 3], "km/s2"))
+        >>> acc2 = cxv.RadialAcc(u.Q([1, 0, 3], "km/s2"))
         >>> jnp.equal(acc1, acc2)
         Array([ True,  False,  True], dtype=bool)
         >>> acc1 == acc2
         Array([ True, False,  True], dtype=bool)
 
-        >>> vel1 = cx.vecs.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
-        >>> vel2 = cx.vecs.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
+        >>> vel1 = cxv.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
+        >>> vel2 = cxv.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
         >>> vel1.x
         Quantity(Array([1, 2], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)
@@ -414,8 +414,8 @@ class AbstractVectorLike(
         >>> vel1 == vel2
         Array([ True, False], dtype=bool)
 
-        >>> acc1 = cx.vecs.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
-        >>> acc2 = cx.vecs.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
+        >>> acc1 = cxv.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
+        >>> acc2 = cxv.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
         >>> acc1.x
         Quantity(Array([1, 2], dtype=int32), unit='km / s2')
         >>> jnp.equal(acc1, acc2)
@@ -423,8 +423,8 @@ class AbstractVectorLike(
         >>> acc1 == acc2
         Array([ True, False], dtype=bool)
 
-        >>> vel1 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 6]], "km/s")
-        >>> vel2 = cx.CartesianVel3D.from_([[1, 2, 3], [4, 5, 0]], "km/s")
+        >>> vel1 = cxv.CartesianVel3D.from_([[1, 2, 3], [4, 5, 6]], "km/s")
+        >>> vel2 = cxv.CartesianVel3D.from_([[1, 2, 3], [4, 5, 0]], "km/s")
         >>> vel1.x
         Quantity(Array([1, 4], dtype=int32), unit='km / s')
         >>> jnp.equal(vel1, vel2)

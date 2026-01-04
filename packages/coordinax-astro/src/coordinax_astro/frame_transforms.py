@@ -142,50 +142,26 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) 
 def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
     r"""Return an ICRS to Galactocentric frame transformation operator.
 
+    This transformation applies a series of Galilean transformations to convert
+    coordinates from the ICRS frame to a Galactocentric frame. The transformation
+    accounts for:
+
+    1. Rotation to align with the Galactic coordinate system
+    2. Translation to the Galactic center
+    3. Tilt correction for the Sun's height above the Galactic plane
+    4. Velocity boost to the Galactocentric rest frame
+
+
     Examples
     --------
-    For this example we compare against the Astropy implementation of the
-    frame transformation:
-
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> import astropy.coordinates as apyc
+    >>> import coordinax.vecs as cxv
 
-    The location of Vega in ICRS coordinates:
-
-    >>> vega = apyc.SkyCoord(
-    ...     ra=279.23473479 * u.unit("deg"), dec=38.78368896 * u.unit("deg"),
-    ...     distance=25 * u.unit("pc"),
-    ...     pm_ra_cosdec=200 * u.unit("mas / yr"), pm_dec=-286 * u.unit("mas / yr"),
-    ...     radial_velocity=-13.9 * u.unit("km / s"))
-    >>> print(vega)
-    <SkyCoord (ICRS): (ra, dec, distance) in (deg, deg, pc)
-        (279.23473479, 38.78368896, 25.)
-     (pm_ra_cosdec, pm_dec, radial_velocity) in (mas / yr, mas / yr, km / s)
-        (200., -286., -13.9)>
-
-    Transforming to a Galactocentric frame:
-
-    >>> apy_gcf = apyc.Galactocentric()
-    >>> apy_gcf
-    <Galactocentric Frame (galcen_coord=<ICRS Coordinate: (ra, dec) in deg
-        (266.4051, -28.936175)>, galcen_distance=8.122 kpc, galcen_v_sun=(12.9, 245.6, 7.78) km / s, z_sun=20.8 pc, roll=0.0 deg)>
-
-    >>> vega.transform_to(apy_gcf)
-    <SkyCoord (Galactocentric: ...): (x, y, z) in pc
-        (-8112.89970167, 21.79911216, 29.01384942)
-     (v_x, v_y, v_z) in km / s
-        (34.06711868, 234.61647066, -28.75976702)>
-
-    Now we can use `coordinax` to perform the same transformation!
-
-    Converting the Astropy objects to `coordinax`:
-
-    >>> vega_q = cx.vecs.LonLatSphericalPos.from_(vega.icrs.data)
-    >>> vega_p = cx.vecs.LonCosLatSphericalVel.from_(vega.icrs.data.differentials["s"])
+    Create the frames:
 
     >>> icrs_frame = cx.frames.ICRS()
-    >>> gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
+    >>> gcf_frame = cx.frames.Galactocentric()
 
     Define the transformation operator:
 
@@ -198,36 +174,21 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
         VelocityBoost(CartesianVel3D( ... ))
     ))
 
-    Apply the transformation:
+    Transform a position at the origin of ICRS to Galactocentric:
 
-    >>> vega_gcf_q, vega_gcf_p = frame_op(vega_q, vega_p)
-    >>> vega_gcf_q = vega_gcf_q.vconvert(cx.vecs.CartesianPos3D)
-    >>> vega_gcf_p = vega_gcf_p.vconvert(cx.vecs.CartesianVel3D, vega_gcf_q)
-    >>> print(vega_gcf_q)
+    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "pc")
+    >>> print(frame_op(q))
     <CartesianPos3D: (x, y, z) [pc]
-        [-8112.898    21.799    29.01...]>
-    >>> print(vega_gcf_p.uconvert({u.dimension("speed"): "km/s"}))
-    <CartesianVel3D: (x, y, z) [km / s]
-        [ 34.067 234.616 -28.76 ]>
+        [-8121.972     0.       20.8  ]>
 
-    It matches!
+    The result shows the Sun's position in Galactocentric coordinates: the Sun
+    is about 8.1 kpc from the Galactic center along the x-axis and about 21 pc
+    above the Galactic plane.
 
-    Let's do it again for a few different input types:
+    Transform both position and velocity:
 
-    >>> q = u.Q([0, 0, 0], "pc")
-    >>> frame_op(q)
-    Quantity(Array([-8121.972, 0. , 20.8 ], dtype=float32), unit='pc')
-
-    >>> p = u.Q([0., 0, 0], "km/s")
-
-    >>> newq, newp = frame_op(q, p)
-    >>> newq, newp
-    (Quantity(Array([-8121.972,     0.   ,    20.8  ], dtype=float32), unit='pc'),
-     Quantity(Array([ 12.9 , 245.6 ,   7.78], dtype=float32), unit='km / s'))
-
-    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
-    >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
-
+    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "pc")
+    >>> p = cxv.CartesianVel3D.from_([0, 0, 0], "km/s")
     >>> newq, newp = frame_op(q, p)
     >>> print(newq, newp, sep="\n")
     <CartesianPos3D: (x, y, z) [pc]
@@ -235,7 +196,55 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
     <CartesianVel3D: (x, y, z) [km / s]
         [ 12.9  245.6    7.78]>
 
-    """  # noqa: E501
+    The velocity shows the Sun's motion in the Galactocentric frame.
+
+    Works with unxt Quantities too:
+
+    >>> q = u.Q([0, 0, 0], "pc")
+    >>> frame_op(q)
+    Quantity(Array([-8121.972, 0. , 20.8 ], dtype=float32), unit='pc')
+
+    >>> p = u.Q([0., 0, 0], "km/s")
+    >>> newq, newp = frame_op(q, p)
+    >>> newq, newp
+    (Quantity(Array([-8121.972,     0.   ,    20.8  ], dtype=float32), unit='pc'),
+     Quantity(Array([ 12.9 , 245.6 ,   7.78], dtype=float32), unit='km / s'))
+
+    Transform a star position in spherical coordinates:
+
+    >>> star_q = cxv.LonLatSphericalPos(
+    ...     lon=u.Q(279.23, "deg"),
+    ...     lat=u.Q(38.78, "deg"),
+    ...     distance=u.Q(25, "pc")
+    ... )
+    >>> star_p = cxv.LonCosLatSphericalVel(
+    ...     lon_coslat=u.Q(200, "mas/yr"),
+    ...     lat=u.Q(-286, "mas/yr"),
+    ...     distance=u.Q(-13.9, "km/s")
+    ... )
+    >>> gcf_q, gcf_p = frame_op(star_q, star_p)
+    >>> gcf_q = gcf_q.vconvert(cxv.CartesianPos3D)
+    >>> gcf_p = gcf_p.vconvert(cxv.CartesianVel3D, gcf_q)
+    >>> print(gcf_q)
+    <CartesianPos3D: (x, y, z) [pc]
+        [-8112.897    21.799    29.015]>
+    >>> print(gcf_p.uconvert({u.dimension("speed"): "km/s"}))
+    <CartesianVel3D: (x, y, z) [km / s]
+        [ 34.067 234.615 -28.759]>
+
+    Notes
+    -----
+    The transformation is composed of:
+
+    - R: Combined rotation matrix (roll x latitude x longitude)
+    - offset_q: Translation by the Galactic center distance
+    - H: Rotation to account for Sun's height above plane
+    - offset_v: Velocity boost to Galactocentric rest frame
+
+    The default Galactocentric frame uses parameters from the Astropy default
+    values (as of v4.0), which are based on various literature sources.
+
+    """
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
     rot_lat = GalileanRotation.from_euler("y", to_frame.galcen.lat)
     rot_lon = GalileanRotation.from_euler("z", -to_frame.galcen.lon)
@@ -268,93 +277,84 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
     r"""Return a Galactocentric to ICRS frame transformation operator.
 
+    This transformation inverts the ICRS→Galactocentric transformation,
+    converting coordinates from a Galactocentric frame back to ICRS.
+
     Examples
     --------
-    For this example we compare against the Astropy implementation of the
-    frame transformation:
-
     >>> import unxt as u
     >>> import coordinax as cx
-    >>> import astropy.coordinates as apyc
+    >>> import coordinax.vecs as cxv
 
-    The location of Vega in Galactocentric coordinates:
-
-    >>> apy_gcf = apyc.Galactocentric()
-    >>> apy_gcf
-    <Galactocentric Frame (galcen_coord=<ICRS Coordinate: (ra, dec) in deg
-        (266.4051, -28.936175)>, galcen_distance=8.122 kpc, galcen_v_sun=(12.9, 245.6, 7.78) km / s, z_sun=20.8 pc, roll=0.0 deg)>
-
-    >>> vega = apyc.SkyCoord(
-    ...     ra=279.23473479 * u.unit("deg"), dec=38.78368896 * u.unit("deg"),
-    ...     distance=25 * u.unit("pc"),
-    ...     pm_ra_cosdec=200 * u.unit("mas / yr"), pm_dec=-286 * u.unit("mas / yr"),
-    ...     radial_velocity=-13.9 * u.unit("km / s")
-    ... ).transform_to(apy_gcf)
-    >>> print(vega)
-    <SkyCoord (Galactocentric: ...): (x, y, z) in pc
-        (-8112.89970167, 21.79911216, 29.01384942)
-     (v_x, v_y, v_z) in km / s
-        (34.06711868, 234.61647066, -28.75976702)>
-
-    Transforming to an ICRS frame:
-
-    >>> vega.transform_to(apyc.ICRS())
-    <SkyCoord (ICRS): (ra, dec, distance) in (deg, deg, pc)
-        (279.23473479, 38.78368896, 25.)
-     (pm_ra_cosdec, pm_dec, radial_velocity) in (mas / yr, mas / yr, km / s)
-        (200., -286., -13.9)>
-
-    Now we can use `coordinax` to perform the same transformation!
-
-    Converting the Astropy objects to `coordinax`:
-
-    >>> vega_q = cx.CartesianPos3D.from_(vega.galactocentric.data)
-    >>> vega_p = cx.CartesianVel3D.from_(vega.galactocentric.data.differentials["s"])
+    Create the frames:
 
     >>> icrs_frame = cx.frames.ICRS()
-    >>> gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
+    >>> gcf_frame = cx.frames.Galactocentric()
 
     Define the transformation operator:
 
     >>> frame_op = cx.frames.frame_transform_op(gcf_frame, icrs_frame)
 
-    Apply the transformation:
+    Transform from Galactocentric origin to ICRS:
 
-    >>> vega_icrs_q, vega_icrs_p = frame_op(vega_q, vega_p)
+    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "pc")
+    >>> print(frame_op(q).round(0))
+    <CartesianPos3D: (x, y, z) [pc]
+        [ -446. -7094. -3930.]>
 
-    >>> vega_icrs_q = vega_icrs_q.vconvert(cx.vecs.LonLatSphericalPos)
-    >>> vega_icrs_p = vega_icrs_p.vconvert(cx.vecs.LonCosLatSphericalVel, vega_icrs_q)
-    >>> print(vega_icrs_q.uconvert({u.dimension("angle"): "deg", u.dimension("length"): "pc"}))
-    <LonLatSphericalPos: (lon[deg], lat[deg], distance[pc])
-        [279.235  38.784  25.   ]>
-    >>> print(vega_icrs_p.uconvert({u.dimension("angular speed"): "mas / yr", u.dimension("speed"): "km/s"}))
-    <LonCosLatSphericalVel: (lon_coslat[mas / yr], lat[mas / yr], distance[km / s])
-        [ 200.001 -286.  -13.9  ]>
+    This shows the Galactic center's position in ICRS coordinates from the
+    Sun's perspective.
 
-    It matches!
+    Transform both position and velocity:
 
-    Let's do it again for a few different input types:
-
-    >>> q = u.Q([0, 0, 0], "pc")
-    >>> frame_op(q).round(0)
-    Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
-
-    >>> p = u.Q([0., 0, 0], "km/s")
-
-    >>> newq, newp = frame_op(q, p)
-    >>> newq.round(0), newp.round(0)
-    (Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc'),
-     Quantity(Array([-114.,  122., -181.], dtype=float32), unit='km / s'))
-
-    >>> q = cx.CartesianPos3D.from_([0, 0, 0], "pc")
-    >>> p = cx.CartesianVel3D.from_([0, 0, 0], "km/s")
-
+    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "pc")
+    >>> p = cxv.CartesianVel3D.from_([0, 0, 0], "km/s")
     >>> newq, newp = frame_op(q, p)
     >>> print(newq, newp, sep="\n")
     <CartesianPos3D: (x, y, z) [pc]
         [ -445.689 -7094.056 -3929.708]>
     <CartesianVel3D: (x, y, z) [km / s]
         [-113.868  122.047 -180.79 ]>
+
+    Works with unxt Quantities:
+
+    >>> q = u.Q([0, 0, 0], "pc")
+    >>> frame_op(q).round(0)
+    Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
+
+    >>> p = u.Q([0., 0, 0], "km/s")
+    >>> newq, newp = frame_op(q, p)
+    >>> newq.round(0), newp.round(0)
+    (Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc'),
+     Quantity(Array([-114.,  122., -181.], dtype=float32), unit='km / s'))
+
+    Transform a star in Galactocentric coordinates back to ICRS:
+
+    >>> star_q = cxv.CartesianPos3D(
+    ...     x=u.Q(-8112.9, "pc"),
+    ...     y=u.Q(21.8, "pc"),
+    ...     z=u.Q(29.0, "pc")
+    ... )
+    >>> star_p = cxv.CartesianVel3D(
+    ...     x=u.Q(34.07, "km/s"),
+    ...     y=u.Q(234.62, "km/s"),
+    ...     z=u.Q(-28.76, "km/s")
+    ... )
+    >>> icrs_q, icrs_p = frame_op(star_q, star_p)
+    >>> icrs_q = icrs_q.vconvert(cxv.LonLatSphericalPos)
+    >>> icrs_p = icrs_p.vconvert(cxv.LonCosLatSphericalVel, icrs_q)
+    >>> print(icrs_q.uconvert({u.dimension("angle"): "deg", u.dimension("length"): "pc"}))
+    <LonLatSphericalPos: (lon[deg], lat[deg], distance[pc])
+        [279.272  38.775  24.996]>
+    >>> print(icrs_p.uconvert({u.dimension("angular speed"): "mas / yr", u.dimension("speed"): "km/s"}))
+    <LonCosLatSphericalVel: (lon_coslat[mas / yr], lat[mas / yr], distance[km / s])
+        [ 199.983 -286.16   -13.879]>
+
+    Notes
+    -----
+    This transformation is implemented by computing the inverse of the
+    ICRS→Galactocentric transformation. The operator pipeline is simplified
+    automatically for computational efficiency.
 
     """  # noqa: E501
     icrs2gcf = frame_transform_op(to_frame, from_frame)  # pylint: disable=W1114

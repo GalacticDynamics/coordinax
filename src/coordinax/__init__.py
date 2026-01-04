@@ -41,10 +41,13 @@ with install_import_hook("coordinax"):
         vector,
     )
 
-    # isort: split
-    # Interoperability
-    from . import _interop
+# isort: split
+# Interoperability - import the module but don't trigger registration yet
+from . import _interop
 
+# Now that coordinax is fully loaded, register interop packages
+# This avoids circular import issues since interop packages depend on coordinax
+_interop._register_interop_packages()
 
 # Cleanup
 del _interop, install_import_hook

@@ -4,10 +4,10 @@ __all__ = ("angles",)
 
 from typing import Any, TypeAlias
 
-import unxt_hypothesis as ust
 from hypothesis import strategies as st
 
 import unxt as u
+import unxt_hypothesis as ust
 
 import coordinax as cx
 

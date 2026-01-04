@@ -83,11 +83,11 @@ def from_(
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.vecs as cxv
 
-    >>> q = cx.vecs.CartesianPos3D.from_([1, 2, 3], "m")
-    >>> p = cx.vecs.CartesianVel3D.from_([4, 5, 6], "m/s")
-    >>> a = cx.vecs.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+    >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+    >>> p = cxv.CartesianVel3D.from_([4, 5, 6], "m/s")
+    >>> a = cxv.CartesianAcc3D.from_([7, 8, 9], "m/s2")
     >>> w = cx.KinematicSpace.from_(q, p, a)
     >>> w
     KinematicSpace({ 'length': CartesianPos3D(...),

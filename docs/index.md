@@ -13,6 +13,7 @@ coordinax-api <packages/coordinax-api/index>
 coordinax <self>
 coordinax-astro <packages/coordinax-astro/index>
 coordinax-hypothesis <packages/coordinax-hypothesis/index>
+coordinax-interop-astropy <packages/coordinax-interop-astropy/index>
 ```
 
 ```{toctree}
@@ -41,12 +42,13 @@ interop/*
 ```{toctree}
 :maxdepth: 2
 :hidden:
-:caption: 🔌 API Reference
+:caption: 📘 API Reference
 
 coordinax-api <packages/coordinax-api/api>
 coordinax <api/index.md>
 coordinax-astro <packages/coordinax-astro/api>
 coordinax-hypothesis <packages/coordinax-hypothesis/api>
+coordinax-interop-astropy <packages/coordinax-interop-astropy/api>
 ```
 
 ```{toctree}
