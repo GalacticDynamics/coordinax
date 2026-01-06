@@ -306,3 +306,10 @@ def parallaxes(
             **kwargs,
         )
     )
+
+
+# Register type strategy for Hypothesis's st.from_type()
+# Note: Pass the callable, not an invoked strategy
+st.register_type_strategy(cxd.Distance, lambda _: distances())
+st.register_type_strategy(cxd.DistanceModulus, lambda _: distance_moduli())
+st.register_type_strategy(cxd.Parallax, lambda _: parallaxes())

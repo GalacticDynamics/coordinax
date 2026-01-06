@@ -34,7 +34,7 @@ def distance(value: ArrayLike, unit: Any, /, **kw: Any) -> Distance:
     >>> import coordinax.distance as cxd
 
     >>> cxd.distance(1, "kpc")
-    Distance(Array(1, dtype=int32, ...), unit='kpc')
+    Distance(Array(1, dtype=int64, ...), unit='kpc')
 
     """
     return Distance(jnp.asarray(value, **kw), unit)
@@ -54,7 +54,7 @@ def distance(d: Distance, /, **kw: Any) -> Distance:
     True
 
     >>> cxd.distance(d, dtype=float)
-    Distance(Array(1., dtype=float32), unit='kpc')
+    Distance(Array(1., dtype=float64), unit='kpc')
 
     """
     if len(kw) == 0:
@@ -73,7 +73,7 @@ def distance(d: u.Q["length"], /, **kw: Any) -> Distance:
 
     >>> q = u.Q(1, "kpc")
     >>> cxd.distance(q, dtype=float)
-    Distance(Array(1., dtype=float32), unit='kpc')
+    Distance(Array(1., dtype=float64), unit='kpc')
 
     """
     unit = u.unit_of(d)
@@ -91,12 +91,11 @@ def distance(p: Parallax | u.Q["angle"], /, **kw: Any) -> Distance:
 
     >>> p = cxd.Parallax(1, "mas")
     >>> cxd.distance(p).uconvert("pc").round(2)
-    Distance(Array(1000., dtype=float32, ...), unit='pc')
+    Distance(Array(1000., dtype=float64, ...), unit='pc')
 
     >>> q = u.Q(1, "mas")
     >>> cxd.distance(q).uconvert("pc").round(2)
-    Distance(Array(1000., dtype=float32, ...), unit='pc')
-
+    Distance(Array(1000., dtype=float64, ...), unit='pc')
     """
     d = parallax_base_length / jnp.tan(p)  # [AU]
     unit = u.unit_of(d)
@@ -114,11 +113,11 @@ def distance(dm: DistanceModulus | u.Q["mag"], /, **kw: Any) -> Distance:
 
     >>> dm = cxd.DistanceModulus(10, "mag")
     >>> cxd.distance(dm).uconvert("pc").round(2)
-    Distance(Array(1000., dtype=float32, ...), unit='pc')
+    Distance(Array(1000., dtype=float64, ...), unit='pc')
 
     >>> q = u.Q(10, "mag")
     >>> cxd.distance(q).uconvert("pc").round(2)
-    Distance(Array(1000., dtype=float32, ...), unit='pc')
+    Distance(Array(1000., dtype=float64, ...), unit='pc')
 
     """
     d = 10 ** (1 + dm.ustrip("mag") / 5)
@@ -139,7 +138,7 @@ def parallax(value: ArrayLike, unit: Any, /, **kw: Any) -> Parallax:
     >>> import coordinax.distance as cxd
 
     >>> cxd.parallax(1, "mas")
-    Parallax(Array(1, dtype=int32, ...), unit='mas')
+    Parallax(Array(1, dtype=int64, ...), unit='mas')
 
     """
     return Parallax(jnp.asarray(value, **kw), unit)
@@ -159,7 +158,7 @@ def parallax(p: Parallax, /, **kw: Any) -> Parallax:
     True
 
     >>> cxd.parallax(p, dtype=float)
-    Parallax(Array(1., dtype=float32), unit='mas')
+    Parallax(Array(1., dtype=float64), unit='mas')
 
     """
     if len(kw) == 0:
@@ -178,7 +177,7 @@ def parallax(p: u.Q["angle"], /, **kw: Any) -> Parallax:
 
     >>> q = u.Q(1, "mas")
     >>> cxd.parallax(q, dtype=float)
-    Parallax(Array(1., dtype=float32), unit='mas')
+    Parallax(Array(1., dtype=float64), unit='mas')
 
     """
     unit = u.unit_of(p)
@@ -196,11 +195,11 @@ def parallax(d: Distance | u.Q["length"], /, **kw: Any) -> Parallax:
 
     >>> d = cxd.Distance(10, "pc")
     >>> cxd.parallax(d).uconvert("mas").round(2)
-    Parallax(Array(100., dtype=float32, ...), unit='mas')
+    Parallax(Array(100., dtype=float64, ...), unit='mas')
 
     >>> q = u.Q(10, "pc")
     >>> cxd.parallax(q).uconvert("mas").round(2)
-    Parallax(Array(100., dtype=float32, ...), unit='mas')
+    Parallax(Array(100., dtype=float64, ...), unit='mas')
 
     """
     p = jnp.atan2(parallax_base_length, d)
@@ -218,7 +217,7 @@ def parallax(dm: DistanceModulus | u.Q["mag"], /, **kw: Any) -> Parallax:
 
     >>> dm = cxd.DistanceModulus(10, "mag")
     >>> cxd.parallax(dm).uconvert("mas").round(2)
-    Parallax(Array(1., dtype=float32, ...), unit='mas')
+    Parallax(Array(1., dtype=float64, ...), unit='mas')
 
     """
     d = BareQuantity(10 ** (1 + dm.ustrip("mag") / 5), "pc")
@@ -241,7 +240,7 @@ def distance_modulus(value: ArrayLike, unit: Any, /, **kw: Any) -> DistanceModul
     >>> import coordinax.distance as cxd
 
     >>> cxd.distance_modulus(1, "mag")
-    DistanceModulus(Array(1, dtype=int32, ...), unit='mag')
+    DistanceModulus(Array(1, dtype=int64, ...), unit='mag')
 
     """
     return DistanceModulus(jnp.asarray(value, **kw), unit)
@@ -261,7 +260,7 @@ def distance_modulus(dm: DistanceModulus, /, **kw: Any) -> DistanceModulus:
     True
 
     >>> cxd.distance_modulus(dm, dtype=float)
-    DistanceModulus(Array(1., dtype=float32), unit='mag')
+    DistanceModulus(Array(1., dtype=float64), unit='mag')
 
     """
     if len(kw) == 0:
@@ -280,7 +279,7 @@ def distance_modulus(dm: u.Q["mag"], /, **kw: Any) -> DistanceModulus:
 
     >>> q = u.Q(1, "mag")
     >>> cxd.distance_modulus(q)
-    DistanceModulus(Array(1, dtype=int32, ...), unit='mag')
+    DistanceModulus(Array(1, dtype=int64, ...), unit='mag')
 
     """
     unit = u.unit_of(dm)
@@ -298,11 +297,11 @@ def distance_modulus(d: Distance | u.Q["length"], /, **kw: Any) -> DistanceModul
 
     >>> d = cxd.Distance(1, "pc")
     >>> cxd.distance_modulus(d)
-    DistanceModulus(Array(-5., dtype=float32), unit='mag')
+    DistanceModulus(Array(-5., dtype=float64), unit='mag')
 
     >>> q = u.Q(1, "pc")
     >>> cxd.distance_modulus(q)
-    DistanceModulus(Array(-5., dtype=float32), unit='mag')
+    DistanceModulus(Array(-5., dtype=float64), unit='mag')
 
     """
     dm = 5 * jnp.log10(d.ustrip("pc")) - 5
@@ -320,11 +319,11 @@ def distance_modulus(p: Parallax | u.Q["angle"], /, **kw: Any) -> DistanceModulu
 
     >>> p = cxd.Parallax(1, "mas")
     >>> cxd.distance_modulus(p)
-    DistanceModulus(Array(10., dtype=float32), unit='mag')
+    DistanceModulus(Array(10., dtype=float64), unit='mag')
 
     >>> q = u.Q(1, "mas")
     >>> cxd.distance_modulus(q)
-    DistanceModulus(Array(10., dtype=float32), unit='mag')
+    DistanceModulus(Array(10., dtype=float64), unit='mag')
 
     """
     d = parallax_base_length / jnp.tan(p)  # [AU]

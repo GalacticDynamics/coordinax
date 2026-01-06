@@ -44,7 +44,7 @@ import coordinax_astro as cxa
 import unxt as u
 
 # Create a position in ICRS frame
-pos = cx.SphericalPos(r=u.Q(10, "kpc"), theta=u.Q(45, "deg"), phi=u.Q(30, "deg"))
+pos = cx.Spherical3D(r=u.Q(10, "kpc"), theta=u.Q(45, "deg"), phi=u.Q(30, "deg"))
 icrs_coord = cx.Coordinate({"length": pos}, frame=cxa.ICRS())
 
 # Transform to Galactocentric frame

@@ -166,11 +166,271 @@ def test_dynamic_shaped_angles(angle):
     assert 1 <= angle.shape[1] <= 10
 ```
 
-## Integration with unxt-hypothesis
+## Testing Representation Classes
 
-The `coordinax-hypothesis` package builds on top of
-[unxt-hypothesis](https://github.com/GalacticDynamics/unxt) strategies. You can
-use both packages together:
+### Basic Representation Class Testing
+
+```python
+from hypothesis import given
+import coordinax as cx
+import coordinax_hypothesis as cxst
+
+
+@given(rep_class=cxst.representation_classes())
+def test_any_representation_class(rep_class):
+    """Any representation class can be tested."""
+    assert issubclass(rep_class, cx.r.AbstractRep)
+```
+
+### Testing Multiple Representation Types
+
+```python
+@given(
+    rep_class=cxst.representation_classes(
+        filter=(cx.r.Abstract3D, cx.r.AbstractSpherical3D)
+    )
+)
+def test_spherical_3d_representations(rep_class):
+    """Test representations that are spherical 3D."""
+    assert issubclass(rep_class, (cx.r.Abstract3D, cx.r.AbstractSpherical3D))
+```
+
+### Dynamically Choosing Representation Types
+
+```python
+from hypothesis import strategies as st
+
+
+@given(
+    rep_class=cxst.representation_classes(
+        filter=st.sampled_from(
+            [
+                cx.r.Abstract1D,
+                cx.r.Abstract2D,
+                cx.r.Abstract3D,
+            ]
+        )
+    )
+)
+def test_random_representation_type(rep_class):
+    """Test with randomly chosen representation category."""
+    assert issubclass(rep_class, (cx.r.Abstract1D, cx.r.Abstract2D, cx.r.Abstract3D))
+```
+
+## Testing Coordinate Transformations
+
+### Testing with `representations_like`
+
+The `representations_like` strategy generates representations that match the
+flags of a template, making it easy to test transformations across compatible
+representations:
+
+```python
+from hypothesis import given
+import coordinax as cx
+import coordinax_hypothesis as cxst
+
+
+# Test that 3D representations can be converted to each other
+@given(
+    source_rep=cxst.representations(filter=cx.r.Abstract3D),
+    target_rep=cxst.representations_like(
+        cxst.representations(filter=cx.r.Abstract3D)
+    ),
+)
+def test_3d_rep_conversions(source_rep, target_rep):
+    """Test conversions between 3D representations."""
+    # Both representations are 3D
+    assert isinstance(source_rep, cx.r.Abstract3D)
+    assert isinstance(target_rep, cx.r.Abstract3D)
+    assert source_rep.dimensionality == target_rep.dimensionality == 3
+
+
+# Test 2D representation transformations
+@given(rep=cxst.representations_like(cx.r.polar2d))
+def test_reps_like_polar(rep):
+    """Generate representations with same flags as Polar2D."""
+    assert isinstance(rep, cx.r.Abstract2D)
+    # Could be Cart2D, Polar2D, TwoSphere, etc.
+```
+
+### Testing with `representation_time_chain`
+
+The `representation_time_chain` strategy generates chains of time
+antiderivatives given a role flag and a representation, useful for testing
+conversions across acceleration → velocity → position:
+
+```python
+# Test that acceleration representations have valid time derivative chains
+@given(chain=cxst.representation_time_chain(cx.r.Acc, cx.r.cart3d))
+def test_acceleration_chain(chain):
+    """Test the full time derivative chain from acceleration."""
+    acc_rep, vel_rep, pos_rep = chain
+
+    # Verify types
+    # All maintain dimensionality
+    assert isinstance(acc_rep, cx.r.Abstract3D)
+    assert isinstance(vel_rep, cx.r.Abstract3D)
+    assert isinstance(pos_rep, cx.r.Abstract3D)
+
+
+# Test velocity chains
+@given(chain=cxst.representation_time_chain(cx.r.Vel, cx.r.polar2d))
+def test_velocity_chain(chain):
+    """Test time derivative chain from velocity."""
+    vel_rep, pos_rep = chain
+
+    assert isinstance(vel_rep, cx.r.Abstract2D)
+    assert isinstance(pos_rep, cx.r.Abstract2D)
+    assert vel_rep.dimensionality == pos_rep.dimensionality
+
+
+# Test that position representations return single-element chains
+@given(chain=cxst.representation_time_chain(cx.r.Pos, cx.r.sph3d))
+def test_position_chain_is_singleton(chain):
+    """Position representations have no time antiderivative."""
+    assert len(chain) == 1
+    (pos_rep,) = chain
+    assert isinstance(pos_rep, cx.r.Abstract3D)
+```
+
+### Testing with `vectors_with_target_rep`
+
+The `vectors_with_target_rep` strategy generates a vector and a full chain of
+compatible target representations, perfect for testing conversions. The target
+chain automatically matches the flags of the source vector:
+
+```python
+# Test position vector conversions
+@given(
+    vec_and_chain=cxst.vectors_with_target_rep(
+        rep=cxst.representations(filter=cx.r.Abstract3D),
+        role=cx.r.Pos,
+    )
+)
+def test_position_vector_conversions(vec_and_chain):
+    """Test that position vectors can convert to compatible representations."""
+    vec, (target_rep,) = vec_and_chain
+
+    # Verify source and target are compatible
+    assert isinstance(vec.role, cx.r.Pos)
+    assert isinstance(vec.rep, cx.r.Abstract3D)
+    assert isinstance(target_rep, cx.r.Abstract3D)
+    assert vec.rep.dimensionality == target_rep.dimensionality
+
+    # Test conversion
+    converted = vec.vconvert(target_rep)
+    assert converted.rep == target_rep
+
+
+# Test velocity vector conversions with full chain
+@given(
+    vec_and_chain=cxst.vectors_with_target_rep(
+        rep=cx.r.cart3d,
+        role=cx.r.Vel,
+    ),
+    pos_vec=cxst.vectors(rep=cx.r.cart3d, role=cx.r.Pos),
+)
+def test_velocity_vector_conversion_chain(vec_and_chain, pos_vec):
+    """Test velocity vectors can convert to velocity and position reps."""
+    vec, target_chain = vec_and_chain
+
+    # Chain is (vel_rep, pos_rep)
+    assert len(target_chain) == 2
+    vel_target, pos_target = target_chain
+
+    # Test conversion to each target
+    vel_converted = vec.vconvert(vel_target, pos_vec)
+    assert vel_converted.rep == vel_target
+
+    pos_converted = vec.vconvert(pos_target, pos_vec)
+    assert pos_converted.rep == pos_target
+
+
+# Test acceleration vectors with full chain
+@given(
+    vec_and_chain=cxst.vectors_with_target_rep(
+        rep=cx.r.cart3d,
+        role=cx.r.Acc,
+        shape=(5,),  # Test with batched vectors
+    ),
+    pos_vec=cxst.vectors(rep=cx.r.cart3d, role=cx.r.Pos, shape=(5,)),
+)
+def test_batched_acceleration_conversions(vec_and_chain, pos_vec):
+    """Test batched acceleration vector conversions."""
+    vec, target_chain = vec_and_chain
+
+    # Verify shape is preserved
+    assert vec.shape == (5,)
+
+    # Chain is (acc_rep, vel_rep, pos_rep)
+    assert len(target_chain) == 3
+
+    # Test all conversions preserve shape
+    for target_rep in target_chain:
+        converted = vec.vconvert(target_rep, pos_vec)
+        assert converted.shape == (5,)
+        assert converted.rep == target_rep
+```
+
+### Testing Conversion Properties
+
+Use these strategies to test mathematical properties of coordinate
+transformations:
+
+```python
+# Test that conversions are invertible
+@given(
+    vec_and_chain=cxst.vectors_with_target_rep(
+        rep=cx.r.cart3d,
+        role=cx.r.Pos,
+    )
+)
+def test_conversion_roundtrip(vec_and_chain):
+    """Test that converting and converting back preserves the vector."""
+    vec, (target_rep,) = vec_and_chain
+
+    # Convert to target and back
+    converted = vec.vconvert(target_rep)
+    back = converted.vconvert(vec.rep)
+
+    # Should be close to original (within numerical precision)
+    import jax.numpy as jnp
+
+    for key in vec.data.keys():
+        assert jnp.allclose(vec.data[key].value, back.data[key].value, rtol=1e-5)
+
+
+# Test that conversions preserve norms for position vectors
+@given(
+    vec_and_chain=cxst.vectors_with_target_rep(
+        rep=cxst.representations(filter=cx.r.Abstract3D),
+        role=cx.r.Pos,
+    )
+)
+def test_conversion_preserves_norm(vec_and_chain):
+    """Test that coordinate transformations preserve vector norms."""
+    vec, (target_rep,) = vec_and_chain
+
+    # Get norms (requires both to support norm calculation)
+    try:
+        original_norm = vec.norm()
+        converted = vec.vconvert(target_rep)
+        converted_norm = converted.norm()
+
+        # Norms should be identical
+        import jax.numpy as jnp
+
+        assert jnp.allclose(original_norm.value, converted_norm.value, rtol=1e-6)
+    except (AttributeError, NotImplementedError):
+        # Not all representations support norm calculation
+        pass
+```
+
+## Integration with `unxt-hypothesis`
+
+The {mod}`coordinax-hypothesis` package builds on top of {mod}`unxt-hypothesis`
+strategies. You can use both packages together:
 
 ```python
 from hypothesis import given
@@ -257,6 +517,128 @@ def test_distance_properties_with_edge_cases(distance):
 
 The `@example` decorator runs before the property-based examples, ensuring your
 edge cases are always tested even if Hypothesis doesn't generate them randomly.
+
+## Using `st.from_type()` with Distance Types
+
+The `coordinax-hypothesis` package automatically registers strategies for
+distance types with Hypothesis's `st.from_type()` function. This allows you to
+use these types in function annotations and let Hypothesis automatically
+generate test values.
+
+### Registered Types
+
+The following coordinax types work with `st.from_type()`:
+
+- `coordinax.Distance`
+- `coordinax.DistanceModulus`
+- `coordinax.Parallax`
+
+### Basic Usage
+
+```python
+from hypothesis import given, strategies as st
+import coordinax.distance as cxd
+
+
+# Hypothesis automatically knows how to generate these types
+@given(dist=st.from_type(cxd.Distance))
+def test_distance_conversion(dist):
+    """Test that distances can be converted between units."""
+    assert isinstance(dist, cxd.Distance)
+    # Convert to different units
+    dist_kpc = dist.to("kpc")
+    assert dist_kpc.unit == "kpc"
+
+
+@given(dm=st.from_type(cxd.DistanceModulus))
+def test_distance_modulus_properties(dm):
+    """Test distance modulus properties."""
+    assert isinstance(dm, cxd.DistanceModulus)
+    assert dm.unit == "mag"  # Always in magnitudes
+
+
+@given(plx=st.from_type(cxd.Parallax))
+def test_parallax_to_distance(plx):
+    """Test converting parallax to distance."""
+    assert isinstance(plx, cxd.Parallax)
+    # Can convert to distance
+    dist = cxd.Distance.from_(1 / plx.value, "pc")
+    assert isinstance(dist, cxd.Distance)
+```
+
+### With `st.builds()`
+
+The `st.from_type()` integration works seamlessly with `st.builds()` for testing
+functions that take distance types as arguments:
+
+```python
+from hypothesis import given, strategies as st
+import coordinax.distance as cxd
+
+
+def compute_absolute_magnitude(dist: cxd.Distance, apparent_mag: float) -> float:
+    """Compute absolute magnitude from distance and apparent magnitude."""
+    dm = dist.distance_modulus
+    return apparent_mag - dm.value.item()
+
+
+# Hypothesis automatically generates Distance instances
+@given(
+    result=st.builds(
+        compute_absolute_magnitude,
+        dist=st.from_type(cxd.Distance),
+        apparent_mag=st.floats(min_value=-5, max_value=25),
+    )
+)
+def test_absolute_magnitude(result):
+    """Test absolute magnitude calculation."""
+    assert isinstance(result, float)
+    assert -30 < result < 30  # Reasonable range
+
+
+def distance_from_parallax(plx: cxd.Parallax) -> cxd.Distance:
+    """Convert parallax to distance."""
+    return cxd.Distance.from_(1 / plx.value, "pc")
+
+
+@given(result=st.builds(distance_from_parallax, plx=st.from_type(cxd.Parallax)))
+def test_parallax_conversion(result):
+    """Test parallax to distance conversion."""
+    assert isinstance(result, cxd.Distance)
+    assert result.value > 0
+```
+
+### Combining with Other Strategies
+
+You can combine `from_type()` with other Hypothesis features:
+
+```python
+@given(
+    distances=st.lists(st.from_type(cxd.Distance), min_size=1, max_size=10),
+)
+def test_distance_statistics(distances):
+    """Test statistical properties of distance collections."""
+    import jax.numpy as jnp
+
+    values = jnp.array([d.value.item() for d in distances])
+    assert jnp.all(values >= 0)
+    assert len(values) == len(distances)
+
+
+@given(
+    data=st.data(),
+)
+def test_interactive_generation(data):
+    """Test using data.draw() with from_type()."""
+    # Generate one of each type
+    dist = data.draw(st.from_type(cxd.Distance))
+    dm = data.draw(st.from_type(cxd.DistanceModulus))
+    plx = data.draw(st.from_type(cxd.Parallax))
+
+    assert isinstance(dist, cxd.Distance)
+    assert isinstance(dm, cxd.DistanceModulus)
+    assert isinstance(plx, cxd.Parallax)
+```
 
 ## Debugging Failed Tests
 

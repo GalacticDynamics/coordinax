@@ -15,14 +15,7 @@ from .base import AbstractSpaceFrame
 from .galactocentric import Galactocentric
 from .icrs import ICRS
 from coordinax._src.distances import Distance
-from coordinax._src.operators import (
-    GalileanRotation,
-    GalileanSpatialTranslation,
-    Identity,
-    Pipe,
-    VelocityBoost,
-    simplify_op,
-)
+from coordinax._src.operators import Add, Identity, Pipe, Rotate, simplify
 
 ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
@@ -53,7 +46,7 @@ def frame_transform_op(
 
     >>> @dispatch
     ... def frame_transform_op(from_frame: MySpaceFrame, to_frame: ICRS, /) -> cx.ops.AbstractOperator:
-    ...     return cx.ops.GalileanRotation.from_euler("z", u.Q(10, "deg"))
+    ...     return cx.ops.Rotate.from_euler("z", u.Q(10, "deg"))
 
     We can transform from `MySpaceFrame` to a Galacocentric frame, even though
     we don't have a direct transformation defined:
@@ -64,7 +57,7 @@ def frame_transform_op(
     >>> op = cx.frames.frame_transform_op(my_frame, gcf_frame)
     >>> op
     Pipe((
-        GalileanRotation(rotation=f32[3,3]),
+        Rotate(rotation=f32[3,3]),
         ...
     ))
 
@@ -72,7 +65,7 @@ def frame_transform_op(
     fromframe_to_icrs = frame_transform_op(from_frame, _icrs_frame)
     icrs_to_toframe = frame_transform_op(_icrs_frame, to_frame)
     pipe = fromframe_to_icrs | icrs_to_toframe
-    return simplify_op(pipe)
+    return simplify(pipe)
 
 
 # ---------------------------------------------------------------
@@ -115,14 +108,14 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) 
     >>> frame_op2 = cxf.frame_transform_op(gcf_frame, gcf_frame2)
     >>> frame_op2
     Pipe((
-        VelocityBoost(CartesianVel3D( ... )),
-        GalileanRotation(rotation=f32[3,3]),
-        GalileanSpatialTranslation(CartesianPos3D( ... )),
-        GalileanRotation(rotation=f32[3,3]),
-        GalileanRotation(rotation=f32[3,3]),
-        GalileanSpatialTranslation(CartesianPos3D( ... )),
-        GalileanRotation(rotation=f32[3,3]),
-        VelocityBoost(CartesianVel3D( ... ))
+        Add(CartVel3D( ... )),
+        Rotate(rotation=f32[3,3]),
+        Add(Cart3D( ... )),
+        Rotate(rotation=f32[3,3]),
+        Rotate(rotation=f32[3,3]),
+        Add(Cart3D( ... )),
+        Rotate(rotation=f32[3,3]),
+        Add(CartVel3D( ... ))
     ))
 
     """
@@ -130,7 +123,7 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: Galactocentric, /) 
         return Pipe((Identity(),))
 
     # TODO: not go through ICRS for the self-transformation
-    return simplify_op(
+    return simplify(
         frame_transform_op(from_frame, ICRS()) | frame_transform_op(ICRS(), to_frame)
     )
 
@@ -168,15 +161,15 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
     >>> frame_op = cx.frames.frame_transform_op(icrs_frame, gcf_frame)
     >>> frame_op
     Pipe((
-        GalileanRotation(rotation=f32[3,3]),
-        GalileanSpatialTranslation(CartesianPos3D( ... )),
-        GalileanRotation(rotation=f32[3,3]),
-        VelocityBoost(CartesianVel3D( ... ))
+        Rotate(rotation=f32[3,3]),
+        Add(Cart3D( ... )),
+        Rotate(rotation=f32[3,3]),
+        Add(CartVel3D( ... ))
     ))
 
     Transform a position at the origin of ICRS to Galactocentric:
 
-    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "pc")
+    >>> q = cxv.Vector.from_([0, 0, 0], "pc")
     >>> print(frame_op(q))
     <CartesianPos3D: (x, y, z) [pc]
         [-8121.972     0.       20.8  ]>
@@ -187,13 +180,13 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     Transform both position and velocity:
 
-    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "pc")
-    >>> p = cxv.CartesianVel3D.from_([0, 0, 0], "km/s")
+    >>> q = cxv.Vector.from_([0, 0, 0], "pc")
+    >>> p = cxv.Vector.from_([0, 0, 0], "km/s")
     >>> newq, newp = frame_op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D: (x, y, z) [pc]
+    <Cart3D: (x, y, z) [pc]
         [-8121.972     0.       20.8  ]>
-    <CartesianVel3D: (x, y, z) [km / s]
+    <CartVel3D: (x, y, z) [km / s]
         [ 12.9  245.6    7.78]>
 
     The velocity shows the Sun's motion in the Galactocentric frame.
@@ -246,25 +239,23 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     """
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
-    rot_lat = GalileanRotation.from_euler("y", to_frame.galcen.lat)
-    rot_lon = GalileanRotation.from_euler("z", -to_frame.galcen.lon)
+    rot_lat = Rotate.from_euler("y", to_frame.galcen.lat)
+    rot_lon = Rotate.from_euler("z", -to_frame.galcen.lon)
     # extra roll away from the Galactic x-z plane
-    roll = GalileanRotation.from_euler("x", to_frame.roll - to_frame.roll0)
+    roll = Rotate.from_euler("x", to_frame.roll - to_frame.roll0)
     # construct transformation matrix
     R = (roll @ rot_lat @ rot_lon).simplify()
 
     # Translation by Sun-Galactic center distance around x' and rotate about y'
     # to account for tilt due to Sun's height above the plane
     z_d = u.ustrip("", to_frame.z_sun / to_frame.galcen.distance)  # [radian]
-    H = GalileanRotation.from_euler("y", u.Q(jnp.asin(z_d), "rad"))
+    H = Rotate.from_euler("y", u.Q(jnp.asin(z_d), "rad"))
 
     # Post-rotation spatial offset to Galactic center.
-    offset_q = GalileanSpatialTranslation(
-        -to_frame.galcen.distance * jnp.asarray([1, 0, 0])
-    )
+    offset_q = Add(-to_frame.galcen.distance * jnp.asarray([1, 0, 0]))
 
     # Post-rotation velocity offset
-    offset_v = VelocityBoost(to_frame.galcen_v_sun)
+    offset_v = Add(to_frame.galcen_v_sun)
 
     # Total Operator
     return R | offset_q | H | offset_v
@@ -311,9 +302,9 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
     >>> p = cxv.CartesianVel3D.from_([0, 0, 0], "km/s")
     >>> newq, newp = frame_op(q, p)
     >>> print(newq, newp, sep="\n")
-    <CartesianPos3D: (x, y, z) [pc]
+    <Cart3D: (x, y, z) [pc]
         [ -445.689 -7094.056 -3929.708]>
-    <CartesianVel3D: (x, y, z) [km / s]
+    <CartVel3D: (x, y, z) [km / s]
         [-113.868  122.047 -180.79 ]>
 
     Works with unxt Quantities:
@@ -341,8 +332,8 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
     ...     z=u.Q(-28.76, "km/s")
     ... )
     >>> icrs_q, icrs_p = frame_op(star_q, star_p)
-    >>> icrs_q = icrs_q.vconvert(cxv.LonLatSphericalPos)
-    >>> icrs_p = icrs_p.vconvert(cxv.LonCosLatSphericalVel, icrs_q)
+    >>> icrs_q = icrs_q.vconvert(cxv.lonlatsphericalpos)
+    >>> icrs_p = icrs_p.vconvert(cxv.loncoslatsphericalvel, icrs_q)
     >>> print(icrs_q.uconvert({u.dimension("angle"): "deg", u.dimension("length"): "pc"}))
     <LonLatSphericalPos: (lon[deg], lat[deg], distance[pc])
         [279.272  38.775  24.996]>

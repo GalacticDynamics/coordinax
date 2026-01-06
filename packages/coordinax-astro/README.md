@@ -36,7 +36,7 @@ import coordinax_astro as cxa
 import unxt as u
 
 # Create a position in ICRS frame
-pos = cx.SphericalPos(
+pos = cx.Spherical3D(
     r=u.Q(10, "kpc"),
     theta=u.Q(45, "deg"),
     phi=u.Q(30, "deg"),

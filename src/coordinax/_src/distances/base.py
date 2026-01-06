@@ -24,12 +24,12 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 
         >>> from coordinax.distance import DistanceModulus
         >>> DistanceModulus(10, "mag").distance
-        Distance(Array(1000., dtype=float32, ...), unit='pc')
+        Distance(Array(1000., dtype=float64, ...), unit='pc')
 
         >>> from coordinax.distance import Parallax
         >>> p = Parallax(1, "mas")
         >>> p.distance.to("kpc")
-        Distance(Array(1., dtype=float32, ...), unit='kpc')
+        Distance(Array(1., dtype=float64, ...), unit='kpc')
 
         """
         from coordinax.distance import Distance  # noqa: PLC0415
@@ -45,15 +45,15 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
         >>> from coordinax.distance import Distance
         >>> d = Distance(1, "pc")
         >>> d.distance_modulus
-        DistanceModulus(Array(-5., dtype=float32), unit='mag')
+        DistanceModulus(Array(-5., dtype=float64), unit='mag')
 
         >>> from coordinax.distance import DistanceModulus
         >>> DistanceModulus(10, "mag").distance_modulus
-        DistanceModulus(Array(10, dtype=int32, ...), unit='mag')
+        DistanceModulus(Array(10, dtype=int64, ...), unit='mag')
 
         >>> from coordinax.distance import Parallax
         >>> Parallax(1, "mas").distance_modulus
-        DistanceModulus(Array(10., dtype=float32), unit='mag')
+        DistanceModulus(Array(10., dtype=float64), unit='mag')
 
         """
         from coordinax.distance import DistanceModulus  # noqa: PLC0415
@@ -73,11 +73,11 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 
         >>> d = Distance(1, "pc")
         >>> jnp.round(d.parallax.to("arcsec"), 2)
-        Parallax(Array(1., dtype=float32, ...), unit='arcsec')
+        Parallax(Array(1., dtype=float64, ...), unit='arcsec')
 
         >>> from coordinax.distance import DistanceModulus
         >>> DistanceModulus(10, "mag").parallax.to("mas")
-        Parallax(Array(0.99999994, dtype=float32, ...), unit='mas')
+        Parallax(Array(1., dtype=float64, ...), unit='mas')
 
         >>> from coordinax.distance import Parallax
         >>> p = Parallax(1, "mas")

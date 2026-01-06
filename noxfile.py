@@ -88,6 +88,25 @@ def pylint(s: nox.Session, /, package: PackageEnum) -> None:
     s.run("pylint", package_path, *s.posargs)
 
 
+@session(uv_groups=["lint"], reuse_venv=True)
+@nox.parametrize("package", list(PackageEnum))
+def mypy(s: nox.Session, /, package: PackageEnum) -> None:
+    """Run MyPy."""
+    package_paths: tuple[str, ...]
+    match package:
+        case PackageEnum.coordinax:
+            package_paths = ("src/coordinax", "packages/coordinax-api/")
+        case PackageEnum.api:
+            package_paths = ("packages/coordinax-api/",)
+        case PackageEnum.astro:
+            package_paths = ("packages/coordinax-astro/",)
+        case PackageEnum.hypothesis:
+            package_paths = ("packages/coordinax-hypothesis/",)
+        case _:
+            assert_never(package)
+    s.run("mypy", *package_paths, *s.posargs)
+
+
 # =============================================================================
 # Testing
 

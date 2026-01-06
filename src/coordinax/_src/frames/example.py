@@ -11,13 +11,7 @@ import unxt as u
 
 from .base import AbstractReferenceFrame
 from coordinax._src.frames import api
-from coordinax._src.operators import (
-    GalileanBoost,
-    GalileanRotation,
-    GalileanSpatialTranslation,
-    Identity,
-    Pipe,
-)
+from coordinax._src.operators import Add, Identity, Pipe, Rotate
 
 
 @final
@@ -34,9 +28,9 @@ class Alice(AbstractReferenceFrame):
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
+      Add(<Cart3D: (x, y, z) [km]
           [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
+      Add(<CartVel3D: (x, y, z) [m / s]
           [2.698e+08 0.000e+00 0.000e+00]>)
     ))
 
@@ -62,9 +56,9 @@ class Bob(AbstractReferenceFrame):
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
+      Add(<Cart3D: (x, y, z) [km]
           [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
+      Add(<CartVel3D: (x, y, z) [m / s]
           [2.698e+08 0.000e+00 0.000e+00]>)
     ))
 
@@ -117,22 +111,22 @@ def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> Pipe:
     >>> op = cx.frames.frame_transform_op(alice, friend)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [m]
+      Add(<Cart3D: (x, y, z) [m]
           [10  0  0]>),
-      GalileanRotation([[ 0.         -0.99999994  0.        ]
+      Rotate([[ 0.         -0.99999994  0.        ]
                         [ 0.99999994  0.          0.        ]
                         [ 0.          0.          0.99999994]])
     ))
 
-    >>> q_alice = cx.vecs.CartesianPos3D.from_([0, 0, 0], "m")
+    >>> q_alice = cx.vecs.Cart3D.from_([0, 0, 0], "m")
     >>> q_friend = op(u.Q(1, "s"), q_alice)
     >>> q_friend
     (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(0., 'm'), y=Q(9.999999, 'm'), z=Q(0., 'm')))
+     Cart3D(x=Q(0., 'm'), y=Q(9.999999, 'm'), z=Q(0., 'm')))
 
     """
-    shift = GalileanSpatialTranslation.from_([10, 0, 0], "m")
-    rotation = GalileanRotation.from_euler("Z", u.Q(90, "deg"))
+    shift = Add.from_([10, 0, 0], "m")
+    rotation = Rotate.from_euler("Z", u.Q(90, "deg"))
     return shift | rotation
 
 
@@ -152,27 +146,27 @@ def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Pipe:
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
+      Add(<Cart3D: (x, y, z) [km]
           [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
+      Add(<CartVel3D: (x, y, z) [m / s]
           [2.698e+08 0.000e+00 0.000e+00]>)
     ))
 
-    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "m")
+    >>> q = cxv.Cart3D.from_([0, 0, 0], "m")
 
     >>> q_bob = op(u.Q(0, "s"), q)
     >>> q_bob
     (Quantity(Array(0, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(1.e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
+     Cart3D(x=Q(1.e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
 
     >>> q_bob = op(u.Q(1, "s"), q)
     >>> q_bob
     (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(3.6981322e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
+     Cart3D(x=Q(3.6981322e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
 
     """
-    shift = GalileanSpatialTranslation.from_([100_000, 10_000, 0], "km")
-    boost = GalileanBoost.from_([269_813_212.2, 0, 0], "m/s")
+    shift = Add.from_([100_000, 10_000, 0], "km")
+    boost = Add.from_([269_813_212.2, 0, 0], "m/s")
     return shift | boost
 
 
@@ -196,18 +190,18 @@ def frame_transform_op(
     >>> op = cx.frames.frame_transform_op(friend, alice)
     >>> print(op)
     Pipe((
-      GalileanRotation([[ 0.          0.99999994  0.        ]
+      Rotate([[ 0.          0.99999994  0.        ]
                         [-0.99999994  0.          0.        ]
                         [ 0.          0.          0.99999994]]),
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [m]
+      Add(<Cart3D: (x, y, z) [m]
           [-10   0   0]>)
     ))
 
-    >>> q_friend = cx.vecs.CartesianPos3D.from_([0, 0, 0], "m")
+    >>> q_friend = cx.vecs.Cart3D.from_([0, 0, 0], "m")
     >>> q_alice = op(u.Q(1, "s"), q_friend)
     >>> q_alice
     (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(-10., 'm'), y=Q(0., 'm'), z=Q(0., 'm')))
+     Cart3D(x=Q(-10., 'm'), y=Q(0., 'm'), z=Q(0., 'm')))
 
     """
     return api.frame_transform_op(to_frame, from_frame).inverse  # pylint: disable=W1114
