@@ -27,7 +27,7 @@ Galactocentric(
 
 ## Creating Coordinate Objects
 
-Coordinate objects attach a vector (or {class}`~coordinax.FiberPoint`) to a
+Coordinate objects attach a vector (or {class}`~coordinax.PointedVector`) to a
 frame:
 
 ```{code-block} text
@@ -44,7 +44,7 @@ Coordinate(
 )
 ```
 
-You can also create coordinates from an {class}`~coordinax.FiberPoint` object
+You can also create coordinates from an {class}`~coordinax.PointedVector` object
 containing multiple vectors.
 
 ## Transforming Between Frames

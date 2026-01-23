@@ -24,13 +24,13 @@ def polar_range(
     Examples
     --------
     >>> import unxt as u
-    >>> from coordinax._src.geometries.checks import polar_range
+    >>> from coordinax._src.charts.checks import polar_range
 
     Pass through the input if it's in the range.
 
     >>> x = u.Q([0., 1, 2], "deg")
     >>> polar_range(x)
-    Quantity(Array([0., 1., 2.], dtype=float32), unit='deg')
+    Quantity(Array([0., 1., 2.], dtype=float64), unit='deg')
 
     Raise an error if anything is outside the range.
 
@@ -69,17 +69,17 @@ def strictly_positive(
 
     >>> x = u.Q([1, 2, 3], "m")
     >>> strictly_positive(x)
-    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
+    Quantity(Array([1, 2, 3], dtype=int64), unit='m')
 
     Raise an error if any value is negative or zero.
 
     >>> x = u.Q([-1, 1, 2], "m")
     >>> try: strictly_positive(x)
-    ... except Exception: pass
+    ... except Exception as e: pass
 
     >>> x = u.Q([0, 1, 2], "m")
     >>> try: strictly_positive(x)
-    ... except Exception: pass
+    ... except Exception as e: pass
 
     """
     name = f" {name}" if name else name
@@ -106,7 +106,7 @@ def leq(
 
     >>> x = u.Q([1, 2, 3], "m")
     >>> leq(x, u.Q(3, "m"))
-    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
+    Quantity(Array([1, 2, 3], dtype=int64), unit='m')
 
     Raise an error if the input is larger than the maximum value.
 
@@ -137,7 +137,7 @@ def geq(
 
     >>> x = u.Q([1, 2, 3], "m")
     >>> geq(x, u.Q(1, "m"))
-    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
+    Quantity(Array([1, 2, 3], dtype=int64), unit='m')
 
     Raise an error if the input is smaller than the minimum value.
 

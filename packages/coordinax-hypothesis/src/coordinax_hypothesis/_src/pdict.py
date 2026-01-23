@@ -48,20 +48,20 @@ def _get_role_dimension_constraint(
     >>> _get_role_dimension_constraint(cx.roles.point)
     None  # Point has no constraint; chart.coord_dimensions apply
 
-    >>> _get_role_dimension_constraint(cx.roles.pos)
+    >>> _get_role_dimension_constraint(cx.roles.phys_disp)
     <Unit "m">  # Pos requires length dimension
 
     """
     if isinstance(role, cx.roles.Point):
         return None  # Point: no additional constraint; use chart.coord_dimensions
-    if isinstance(role, cx.roles.Pos):
+    if isinstance(role, cx.roles.PhysDisp):
         # Pos requires physical dimension = length
         return u.dimension("length")
-    if isinstance(role, cx.roles.Vel):
+    if isinstance(role, cx.roles.PhysVel):
         # Vel requires physical dimension = length/time
         return u.dimension("speed")
-    if isinstance(role, cx.roles.Acc):
-        # Acc requires physical dimension = length/time^2
+    if isinstance(role, cx.roles.PhysAcc):
+        # PhysAcc requires physical dimension = length/time^2
         return u.dimension("acceleration")
     # For unknown/future roles, return None (unconstrained)
     return None
@@ -84,7 +84,7 @@ def pdicts(
     A CsDict is a mapping from component-name strings to quantity-like values,
     constrained by:
     - Keys must exactly match `chart.components`
-    - For physical tangent roles (Pos, Vel, Acc), all component values must
+    - For physical tangent roles (Pos, Vel, PhysAcc), all component values must
       have the same physical dimension (length, length/time, or length/time²)
     - For Point role, component dimensions follow `chart.coord_dimensions`
 
@@ -124,8 +124,8 @@ def pdicts(
 
     Generate CsDict with Pos role (uniform length dimension):
 
-    >>> @given(p=cxst.pdicts(cx.charts.cart3d, cx.roles.pos))
-    ... def test_pos_pdict(p):
+    >>> @given(p=cxst.pdicts(cx.charts.cart3d, cx.roles.phys_disp))
+    ... def test_disp_pdict(p):
     ...     assert all(u.dimension_of(v) == u.dimension("length") for v in p.values())
 
     """

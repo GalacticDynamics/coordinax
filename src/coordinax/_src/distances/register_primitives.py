@@ -29,7 +29,7 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
     >>> d = Distance(8, "m")
     >>> jnp.cbrt(d)
     BareQuantity(Array(2., dtype=float64, ...), unit='m(1/3)')
@@ -49,7 +49,7 @@ def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
     Examples
     --------
     >>> import quaxed.numpy as jnp
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
 
     >>> q1 = Distance(2, "m")
     >>> q2 = Distance(4, "m")
@@ -75,7 +75,7 @@ def dot_general_p_abstractdistances(
 
     >>> import quaxed.numpy as jnp
     >>> import unxt as u
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
 
     >>> q1 = Distance([1, 2, 3], "m")
     >>> q2 = Distance([4, 5, 6], "m")
@@ -110,7 +110,7 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQua
 
     Examples
     --------
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
     BareQuantity(Array(8, dtype=int64, ...), unit='m3')
@@ -128,7 +128,7 @@ def neg_p_distance(x: Distance, /) -> u.Q:
 
     Examples
     --------
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
     >>> q = Distance(10, "m")
     >>> -q
     Quantity(Array(-10, dtype=int64, ...), unit='m')
@@ -149,7 +149,7 @@ def pow_p_abstractdistance_arraylike(
     Examples
     --------
     >>> import math
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
 
     >>> q1 = Distance(10.0, "m")
     >>> y = 3.0
@@ -171,12 +171,12 @@ def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
     --------
     >>> import quaxed.numpy as jnp
 
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
     >>> q = Distance(9, "m")
     >>> jnp.sqrt(q)
     BareQuantity(Array(3., dtype=float64, ...), unit='m(1/2)')
 
-    >>> from coordinax.distance import Parallax
+    >>> from coordinax.distances import Parallax
     >>> q = Parallax(9, "mas")
     >>> jnp.sqrt(q)
     BareQuantity(Array(3., dtype=float64, ...), unit='mas(1/2)')

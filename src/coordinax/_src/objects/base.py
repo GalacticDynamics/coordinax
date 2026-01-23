@@ -378,7 +378,7 @@ def is_vectorlike(obj: Any, /) -> TypeIs[AbstractVectorLike]:
     >>> is_vectorlike(vec)
     True
 
-    >>> space = cx.FiberPoint.from_(vec)
+    >>> space = cx.PointedVector.from_(vec)
     >>> is_vectorlike(space)
     True
 

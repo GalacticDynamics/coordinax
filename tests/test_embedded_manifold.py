@@ -204,8 +204,8 @@ def test_vconvert_roundtrip_with_embedded(
         "phi": u.Q(v_phi, "km/s"),
     }
 
-    qvec = cx.Vector(data=p, chart=rep, role=cxr.pos)
-    vvec = cx.Vector(data=v, chart=rep, role=cxr.vel)
+    qvec = cx.Vector(data=p, chart=rep, role=cxr.phys_disp)
+    vvec = cx.Vector(data=v, chart=rep, role=cxr.phys_vel)
 
     v_cart = vvec.vconvert(cxc.cart3d, qvec)
     v_back = v_cart.vconvert(rep, qvec)

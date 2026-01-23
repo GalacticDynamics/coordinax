@@ -121,7 +121,7 @@ Velocity transforms use the Jacobian:
 
 $$v'^i = \frac{\partial q'^i}{\partial q^j} v^j$$
 
-### Acceleration (Acc)
+### Acceleration (PhysAcc)
 
 Acceleration transforms include connection terms for correct geometric behavior.
 

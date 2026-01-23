@@ -26,10 +26,10 @@ differently under coordinate changes.
 
 | Role           | Geometric Object              | Transformation Rule                            | Function                     | Base Point? |
 | -------------- | ----------------------------- | ---------------------------------------------- | ---------------------------- | ----------- |
-| `Pos`          | Point $p \in M$               | Position transform: $p_S = f_{R \to S}(p_R)$   | `point_transform`            | No          |
-| `Displacement` | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
-| `Vel`          | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
-| `Acc`          | Physical vector $a \in T_p M$ | Tangent transform: $a_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
+| `Point`        | Point $p \in M$               | Position transform: $p_S = f_{R \to S}(p_R)$   | `point_transform`            | No          |
+| `PhysDisp`     | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
+| `PhysVel`      | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
+| `PhysAcc`      | Physical vector $a \in T_p M$ | Tangent transform: $a_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
 
 \*Base point required for:
 
@@ -44,7 +44,7 @@ through two separate functions:
 
 1. **`point_transform(to_chart, from_chart, p)`**: Chart-to-chart mapping
    - Maps points between coordinate charts: $p_{\text{new}} = f(p_{\text{old}})$
-   - Used for: Position vectors (role `Pos`)
+   - Used for: Position vectors (role `PhysDisp`)
    - Does not require a base point
    - Example: Converting a position from Cartesian to spherical coordinates
 
@@ -52,8 +52,8 @@ through two separate functions:
    Frame-based mapping at a point
    - Maps tangent vectors at a point via the frame transformation:
      $v_S = B_S(p)^T B_R(p) v_R$
-   - Used for: Displacements, velocities, accelerations (roles `Displacement`,
-     `Vel`, `Acc`)
+   - Used for: Displacements, velocities, accelerations (roles `PhysDisp`,
+     `PhysVel`, `PhysAcc`)
    - Requires base point `at=p_base` for non-Euclidean spaces
    - Example: Converting a velocity vector from cylindrical to Cartesian
      coordinates
@@ -80,7 +80,7 @@ through two separate functions:
 
 ### Physical Components: Uniform Units
 
-**CRITICAL**: Displacement, Vel, and Acc store **physical vector components in
+**CRITICAL**: PhysDisp, PhysVel, and PhysAcc store **physical vector components in
 an orthonormal frame**, NOT coordinate increments. All components must have
 uniform physical dimension.
 
@@ -133,7 +133,7 @@ transformation.
 
 ## Vector Addition
 
-### Displacement + Displacement → Displacement
+### PhysDisp + PhysDisp → PhysDisp
 
 Two displacements can be added to yield another displacement:
 
@@ -153,7 +153,7 @@ d2 = cx.Vector(
 )
 
 result = d1.add(d2)
-# result.role is Displacement
+# result.role is PhysDisp
 # result["x"] = 1.0 m, result["y"] = 2.0 m
 ```
 
@@ -169,7 +169,7 @@ import unxt as u
 pos = cx.Vector(
     {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
     cx.charts.cart3d,
-    cx.roles.pos,
+    cx.roles.phys_disp,
 )
 disp = cx.Vector(
     {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
@@ -239,7 +239,7 @@ import jax.numpy as jnp
 pos_sph = cx.Vector(
     {"r": u.Q(2.0, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")},
     cx.charts.sph3d,
-    cx.roles.pos,
+    cx.roles.phys_disp,
 )
 
 # Displacement from origin (converted to Cartesian: x=2, y=0, z=0)
@@ -251,7 +251,7 @@ disp = cx.as_pos(pos_sph)
 **Requesting a specific representation:**
 
 Use the `rep` parameter to convert the resulting displacement to a different
-representation (uses `Displacement.vconvert` with tangent transform):
+representation (uses `PhysDisp.vconvert` with tangent transform):
 
 ```
 pos = cx.Vector.from_([1, 0, 0], "m")
@@ -290,7 +290,7 @@ For non-Euclidean representations, use `Vector.add(other, at=base_point)`:
 
 ## Velocity and Acceleration
 
-Velocity (`Vel`) and acceleration (`Acc`) vectors represent time derivatives and
+Velocity (`PhysVel`) and acceleration (`PhysAcc`) vectors represent time derivatives and
 follow standard vector addition rules (same role + same role):
 
 ```
@@ -300,12 +300,12 @@ import unxt as u
 v1 = cx.Vector(
     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
     cx.charts.cart3d,
-    cx.roles.vel,
+    cx.roles.phys_vel,
 )
 v2 = cx.Vector(
     {"x": u.Q(0.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(0.0, "m/s")},
     cx.charts.cart3d,
-    cx.roles.vel,
+    cx.roles.phys_vel,
 )
 
 v_total = v1.add(v2)
@@ -316,12 +316,12 @@ v_total = v1.add(v2)
 
 | Operation                     | Result         | Allowed?                          |
 | ----------------------------- | -------------- | --------------------------------- |
-| `Displacement + Displacement` | `Displacement` | ✅                                |
-| `Pos + Displacement`          | `Pos`          | ✅                                |
-| `Displacement + Pos`          | —              | ❌ Use `Pos + Displacement`       |
-| `Pos + Pos`                   | —              | ❌ Subtract to get `Displacement` |
-| `Vel + Vel`                   | `Vel`          | ✅                                |
-| `Acc + Acc`                   | `Acc`          | ✅                                |
+| `PhysDisp + PhysDisp`         | `PhysDisp`     | ✅                                |
+| `Point + PhysDisp`            | `PhysDisp`     | ✅                                |
+| `PhysDisp + Point`            | —              | ❌ Use `Point + PhysDisp`         |
+| `Point + Point`               | —              | ❌ Subtract to get `PhysDisp`     |
+| `PhysVel + PhysVel`           | `PhysVel`      | ✅                                |
+| `PhysAcc + PhysAcc`           | `PhysAcc`      | ✅                                |
 
 ---
 

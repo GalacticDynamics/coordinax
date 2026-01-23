@@ -3,12 +3,13 @@
 __all__ = (
     "AbstractVectorLike",
     "Vector",
-    "FiberPoint",
+    "PointedVector",
     "AbstractCoordinate",
     "Coordinate",
     "as_pos",
     "vconvert",
     "cdict",
+    "ToUnitsOptions",
 )
 
 from .setup_package import RUNTIME_TYPECHECKER, install_import_hook
@@ -19,7 +20,8 @@ with install_import_hook("coordinax.objs"):
         AbstractCoordinate,
         AbstractVectorLike,
         Coordinate,
-        FiberPoint,
+        PointedVector,
+        ToUnitsOptions,
         Vector,
     )
     from coordinax_api import vconvert

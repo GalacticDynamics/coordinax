@@ -33,9 +33,8 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 
     Examples
     --------
-    >>> from coordinax._src.charts.base import CartesianProductChart
-    >>> from coordinax._src.charts.euclidean import cart3d
-    >>> product = CartesianProductChart((cart3d, cart3d), ("q", "p"))
+    >>> import coordinax.charts as cxc
+    >>> product = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
     >>> product.components
     (('q', 'x'), ('q', 'y'), ('q', 'z'), ('p', 'x'), ('p', 'y'), ('p', 'z'))
     >>> product.ndim
@@ -70,6 +69,10 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 
         """
         kw["include_params"] = False
+        kw.setdefault("short_arrays", "compact")
+        kw.setdefault("use_short_names", True)
+        kw.setdefault("named_units", False)
+
         # TODO: figure out why super().__pdoc__ isn't working
         return AbstractCartesianProductChart.__pdoc__(self, **kw)
 
@@ -87,11 +90,11 @@ def cartesian_chart(obj: CartesianProductChart) -> CartesianProductChart:  # typ
 
     Examples
     --------
-    >>> from coordinax._src.charts.base import CartesianProductChart, cartesian_chart
-    >>> from coordinax._src.charts.euclidean import sph3d
-    >>> product = CartesianProductChart((sph3d, sph3d), ("q", "p"))
-    >>> cart_product = cartesian_chart(product)
+    >>> import coordinax.charts as cxc
+    >>> product = cxc.CartesianProductChart((cxc.sph3d, cxc.sph3d), ("q", "p"))
+    >>> cart_product = cxc.cartesian_chart(product)
     >>> cart_product
+    CartesianProductChart(factors=(Cart3D(), Cart3D()), factor_names=('q', 'p'))
 
     """
     cart_factors = tuple(api.cartesian_chart(f) for f in obj.factors)

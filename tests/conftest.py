@@ -7,6 +7,6 @@ from typing import Final
 
 import coordinax as cx
 
-POSITION_CLASSES: Final = (cx.roles.Pos,)
-VELOCITY_CLASSES: Final = (cx.roles.Vel,)
-ACCELERATION_CLASSES: Final = (cx.roles.Acc,)
+POSITION_CLASSES: Final = (cx.roles.PhysDisp,)
+VELOCITY_CLASSES: Final = (cx.roles.PhysVel,)
+ACCELERATION_CLASSES: Final = (cx.roles.PhysAcc,)

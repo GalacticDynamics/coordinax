@@ -55,7 +55,7 @@ class AstropyRepresentationAPIMixin:
         >>> a_cart = cx.Vector.from_([7, 8, 9], "m/s2")
         >>> a_sph = a_cart.represent_as(cx.charts.sph3d, q_cart)
         >>> print(a_sph)
-        <Vector: chart=Spherical3D, role=Acc (r, theta, phi) [m / s2]
+        <Vector: chart=Spherical3D, role=PhysAcc (r, theta, phi) [m / s2]
             [13.363  2.869 -2.683]>
 
         """

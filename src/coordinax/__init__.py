@@ -20,7 +20,7 @@ __all__ = (
     "as_pos",
     "vconvert",
     "Vector",
-    "FiberPoint",
+    "PointedVector",
     "Coordinate",
     "cdict",
     # Convenience access to charts
@@ -46,7 +46,7 @@ with install_import_hook("coordinax"):
     from .angles import Angle
     from .charts import cart3d
     from .distances import Distance
-    from .objs import Coordinate, FiberPoint, Vector, as_pos, cdict, vconvert
+    from .objs import Coordinate, PointedVector, Vector, as_pos, cdict, vconvert
 
 # isort: split
 # Interoperability - import the module but don't trigger registration yet

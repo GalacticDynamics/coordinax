@@ -3,6 +3,7 @@
 __all__ = (
     # Charts
     "cartesian_chart",
+    "guess_chart",
     # Embeddings
     "embed_point",
     "project_point",
@@ -19,10 +20,11 @@ __all__ = (
     "frame_transform_op",
     # Roles
     "as_pos",
+    "guess_role",
     # Transformations
     "point_transform",
     "physical_tangent_transform",
-    "coordderiv_transform",
+    "coord_transform",
     "cotangent_transform",
     "frame_cart",
     "pushforward",
@@ -37,9 +39,7 @@ from typing import TYPE_CHECKING, Any
 
 import plum
 
-import unxt as u
-
-from .custom_types import CsDict
+from .custom_types import CsDict, OptUSys
 
 if TYPE_CHECKING:
     import coordinax.charts  # noqa: ICN001
@@ -153,6 +153,22 @@ def cartesian_chart(obj: Any, /) -> "coordinax.charts.AbstractChart":  # type: i
     raise NotImplementedError  # pragma: no cover
 
 
+@plum.dispatch.abstract
+def guess_chart(*args: Any) -> "coordinax.charts.AbstractChart":  # type: ignore[type-arg]
+    """Infer a Cartesian chart from the shape of a value / quantity.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> q = u.Q([1.0, 2.0, 3.0], "m")
+    >>> cx.charts.guess_chart(q)
+    Cart3D()
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
 # ===================================================================
 # Embedding
 
@@ -163,7 +179,7 @@ def embed_point(
     p_pos: CsDict,
     /,
     *,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Embed intrinsic point coordinates into ambient coordinates.
 
@@ -300,7 +316,7 @@ def embed_point(
 
 
 @plum.dispatch.abstract
-def project_point(*args: Any, usys: u.AbstractUnitSystem | None = None) -> CsDict:
+def project_point(*args: Any, usys: OptUSys = None) -> CsDict:
     r"""Project ambient space coordinates onto intrinsic chart coordinates.
 
     This function performs the inverse operation of ``embed_point``, taking coordinates
@@ -475,7 +491,7 @@ def embed_tangent(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Embed intrinsic physical tangent components into ambient physical components.
 
@@ -619,7 +635,7 @@ def project_tangent(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Project ambient physical components onto the manifold tangent space.
 
@@ -944,20 +960,25 @@ def frame_transform_op(from_frame: Any, to_frame: Any, /) -> Any:
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> op
     Pipe((
-      Translate(Q(i64[3], 'km')),
-      Boost(Q(f64[3], 'm / s'), StaticQuantity(i64[](numpy), 's'))
+      Translate(
+          {'x': Q(i64[], 'km'), 'y': Q(i64[], 'km'), 'z': Q(i64[], 'km')}, chart=Cart3D()
+      ),
+      Boost(
+        {'x': Q(f64[], 'm / s'), 'y': Q(f64[], 'm / s'), 'z': Q(f64[], 'm / s')},
+        Cart3D[('x', 'y', 'z'), ('length', 'length', 'length')]()
+      )
     ))
 
-    Apply to a Point vector at time tau=1 year:
+    Apply to a {class}`coordinax.roles.PhysVel` vector at time tau=1 year:
 
-    >>> q = cx.Vector.from_([1, 2, 3], "kpc")  # Point role by default
+    >>> v = cx.Vector.from_(u.Q([10, 20, 30], "km/s"), cx.roles.phys_vel)
     >>> t = u.Q(1, "yr")
-    >>> result = op(t, q)
+    >>> result = op(t, v)
     >>> print(result)
-    <Vector: chart=Cart3D, role=Point (x, y, z) [kpc]
-        [1. 2. 3.]>
+    <Vector: chart=Cart3D, role=PhysVel (x, y, z) [km / s]
+        [2.698e+05 2.000e+01 3.000e+01]>
 
-    The Boost contributes v0 * tau to the position (since tau0=0).
+    The Translate doesn't affect PhysVel (identity), and Boost adds its velocity offset.
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -992,11 +1013,36 @@ def as_pos(x: Any, /) -> Any:
     Returns
     -------
     displacement_vector
-        A vector with ``Displacement`` role.
+        A vector with ``PhsDisp`` role.
 
     See Also
     --------
     Vector.add : Add vectors with role semantics.
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def guess_role(obj: Any, /) -> "coordinax.roles.AbstractRole":
+    """Infer role flag from the physical dimension of a Quantity.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.roles as cxr
+
+    >>> r1 = cxr.guess_role(u.dimension("length"))
+    >>> r1
+    Point()
+
+    >>> r2 = cxr.guess_role(u.dimension("speed"))
+    >>> r2
+    PhysVel()
+
+    >>> r3 = cxr.guess_role(u.dimension("acceleration"))
+    >>> r3
+    PhysAcc()
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -1012,7 +1058,7 @@ def point_transform(
     from_chart: "coordinax.charts.AbstractChart",  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Transform position coordinates from one representation to another.
 
@@ -1149,175 +1195,166 @@ def point_transform(
 
 
 @plum.dispatch.abstract
-def tangent_transform(
+def physical_tangent_transform(
     to_chart: "coordinax.charts.AbstractChart",  # type: ignore[type-arg]
     from_chart: "coordinax.charts.AbstractChart",  # type: ignore[type-arg]
-    p_dif: CsDict,
-    p_pos: CsDict,
+    v_phys: CsDict,
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Transform physical tangent components between coordinate representations.
 
-    This function transforms velocity, acceleration, or displacement vectors from
-    one coordinate system to another while preserving their physical meaning as
-    geometric vectors in the tangent space. Unlike ``point_transform`` which converts
-    position coordinates, this handles vectors with uniform physical dimensions
-    (e.g., all components in m/s for velocity).
+    Overview:
 
-    Mathematical Definition:
+    This transforms physical tangent-vector components (e.g., velocity or
+    acceleration) from one coordinate representation to another, evaluated at a
+    specific base point ``at``. Components are understood as physical components
+    in an orthonormal frame with respect to the active metric for the
+    representation, not as coordinate derivatives.
 
-    Given a tangent vector $\mathbf{v}$ with components
-    $v = (v^1, \ldots, v^n)$ in the orthonormal frame of
-    ``from_chart`` at position $q$, compute components
-    $w = (w^1, \ldots, w^m)$ in the orthonormal frame of ``to_chart``
-    at the same physical point $p$:
+    Let $v$ be a tangent vector at point $q$ in chart $\mathcal R_\text{from}$
+    and suppose the active metric for both charts is known via ``metric_of``.
+    Define the orthonormal-frame matrices $B_\text{from}(q)$ and
+    $B_\text{to}(p)$ whose columns are the orthonormal basis vectors expressed
+    in the ambient or chart coordinates.  Then the physical components satisfy
 
     $$
-        w = (e_{\text{to}})^{-1} \cdot e_{\text{from}} \cdot v
+        v_\text{cart} = B_\text{from}(q)\, v_\text{phys,from}
+        \qquad\text{and}\qquad
+        v_\text{phys,to} = B_\text{to}(p)^{\mathsf T} \, v_\text{cart},
     $$
-    where $e_{\text{from}}$ and $e_{\text{to}}$ are matrices whose
-    columns are the orthonormal frame vectors (in Cartesian components) for the
-    source and target representations.
+    where $p$ is the same physical point expressed in
+    $\mathcal R_\text{to}$, i.e.
 
-    The transformation proceeds as:
+    $$
+        p = \text{point\_transform}(\mathcal R_\text{to}, \mathcal R_\text{from}, q).
+    $$
+    Eliminating $v_\text{cart}$ gives the core relation:
 
-    1. Convert position $q \to p$ using ``point_transform``
-    2. Compute orthonormal frames
-       $B_{\text{from}}(q)$ and $B_{\text{to}}(p)$
-    3. Push forward to Cartesian:
-       $\mathbf{v}_{\text{cart}} = B_{\text{from}} \cdot v$
-    4. Pull back to target frame:
-       $w = g_{\text{to}}^{-1} B_{\text{to}}^T \cdot \mathbf{v}_{\text{cart}}$
+    $$
+        v_\text{phys,to}
+        = B_\text{to}(p)^{\mathsf T} \, B_\text{from}(q) \, v_\text{phys,from}.
+    $$
+    This is the operation implemented by ``physical_tangent_transform``.
 
-    where $g_{\text{to}}$ is the metric of the target representation.
+    Important distinctions:
+
+    - Physical vs coordinate derivatives: Inputs/outputs are uniform-dimension
+        physical components (e.g., all speed or all acceleration). They are NOT
+        coordinate time-derivatives, which may mix dimensions. For coordinate
+        derivatives, see ``coord_transform``.
+    - Position dependence: Frames depend on the evaluation point. The
+        parameter ``at`` provides the base point in the ``from_chart`` chart.
+    - Metrics: Orthonormal frames arise from the active metric resolved by
+        ``metric_of``. Euclidean charts use Euclidean frames; spherical charts
+        use the metric-induced frames, etc. Embedded manifolds use the ambient
+        Euclidean metric for their tangent frames unless specified otherwise.
 
     Parameters
     ----------
-    to_chart
-        Target coordinate representation for the output components.
-    from_chart
-        Source coordinate representation for the input components.
-    p_dif
-        Dictionary of differential components (velocity, acceleration, or
-        displacement) in the source representation's orthonormal frame. All
-        components must have **uniform physical dimensions** (e.g., all in m/s
-        for velocity, not mixed like [m/s, rad/s, m/s]). Keys match
-        ``from_chart.components``.
-    p_pos
-        Dictionary of position coordinates in the source representation where
-        the vector is defined. Required because the transformation depends on
-        the local geometry. Keys match ``from_chart.components``.
-    at
-        Dictionary of position coordinates in the target representation for
-        evaluation of the target orthonormal frame. Keys match
-        ``to_chart.components``.
-    usys
+    to_chart : coordinax.charts.AbstractChart
+        Target coordinate representation whose physical components are desired.
+    from_chart : coordinax.charts.AbstractChart
+        Source coordinate representation in which ``v_phys`` is currently
+        expressed as physical components.
+    v_phys : CsDict
+        Physical tangent components keyed by ``from_chart.components``. All
+        values must share a consistent physical dimension (e.g., all speed for
+        velocity, all acceleration for acceleration).
+    at : CsDict
+        Base-point coordinates where frames are evaluated, keyed by
+        ``from_chart.components``. This point will be transformed to
+        ``to_chart`` internally as needed.
+    usys : unxt.AbstractUnitSystem, optional
         Unit system for the transformation. This is sometimes required for
-        transformations that depend on physical constants (e.g., speed of light
-        or ``Delta`` in {class}`~coordinax.charts.ProlateSpheroidal3D`) but
-        `p_pos` and `at` are raw values without units.
+        transformations that depend on physical constants (e.g., speed of
+        light).
 
     Returns
     -------
     CsDict
-        Dictionary of differential components in the target representation's
-        orthonormal frame. All components have the same physical dimension as
-        the input. Keys match ``to_chart.components``.
+        Physical tangent components keyed by ``to_chart.components`` with the
+        same physical dimension as the input.
 
     Raises
     ------
     NotImplementedError
-        If transformation between the given representations is not implemented.
+        If no transformation rule is registered for the specific pair of
+        representations ``(to_chart, from_chart)``.
     ValueError
-        If ``p_dif`` components do not have uniform physical dimensions.
+        If components in ``v_phys`` do not share a uniform physical dimension,
+        or ``at`` does not provide a valid evaluation point.
 
     Notes
     -----
-    - **Physical vs. coordinate components**: This transforms *physical* vector
-      components in orthonormal frames, NOT coordinate time derivatives like
-      $d\theta/dt$. For cylindrical velocity, use $v_\phi$ in m/s
-      (arc length per time), not $d\phi/dt$ in rad/s.
-
-    - **Homogeneous dimensions**: All input components in ``v_phys`` must share
-      the same dimension (length/time for velocity, length/time² for acceleration,
-      length for displacement). Mixed units like [m/s, rad/s, m/s] are not valid.
-
-    - **Metric-aware**: The transformation uses the metric tensor of each
-      representation to ensure proper orthonormal frame calculations.
-
-    - **Position-dependent**: The same velocity vector at different positions
-      generally transforms differently in curvilinear coordinates.
-
-    - **Frame basis**: Orthonormal frames are computed via ``frame_cart``,
-      which provides basis vectors in Cartesian coordinates normalized by the
-      metric.
+    - JAX compatibility: This is intended to operate on scalar-like leaves and
+        composes with ``vmap``/``jit`` upstream. It does not assume batch shapes.
+    - Embedded manifolds: ``embed_tangent`` and ``project_tangent`` are thin
+        wrappers around this routine where one side is an ``EmbeddedManifold``
+        and the other is the ambient chart.
+    - Identity: If ``to_chart is from_chart``, the input is returned unchanged.
 
     See Also
     --------
-    point_transform : Transform position coordinates
-    frame_cart : Compute orthonormal frame in Cartesian components
-    metric_of : Get the metric tensor for a representation
+    point_transform : Transform position coordinates between charts
+    coord_transform : Transform coordinate time-derivatives
+    embed_tangent : Embed intrinsic physical components into ambient components
+    project_tangent : Project ambient physical components to intrinsic components
+    metric_of : Resolve the active metric used to build orthonormal frames
 
     Examples
     --------
-    >>> import quaxed.numpy as jnp
-    >>> import coordinax as cx
+    Transform a velocity from Cartesian to spherical components (physical):
+
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.embeddings as cxe
+    >>> import coordinax.transforms as cxt
     >>> import unxt as u
 
-    Transform velocity from cylindrical to Cartesian coordinates.
-    In cylindrical coords at position $(\rho, \phi, z) = (2, \pi/4, 1)$ m,
-    consider a velocity pointing purely tangentially with $v_\phi = 3$ m/s:
+    >>> q_cart = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+    >>> v_cart = {"x": u.Q(0.0, "km/s"), "y": u.Q(1.0, "km/s"), "z": u.Q(0.0, "km/s")}
+    >>> v_sph = cxt.physical_tangent_transform(
+    ...     cxc.sph3d, cxc.cart3d, v_cart, at=q_cart
+    ... )
+    >>> v_sph
+    {'phi': Quantity(Array(1., dtype=float64), unit='km / s'),
+     'r': Quantity(Array(0., dtype=float64), unit='km / s'),
+     'theta': Quantity(Array(0., dtype=float64), unit='km / s')}
 
-    >>> p_pos_cyl = {
-    ...     "rho": u.Q(2.0, "m"),
-    ...     "phi": u.Angle(jnp.pi / 4, "rad"),
-    ...     "z": u.Q(1.0, "m"),
-    ... }
-    >>> v_cyl = {
-    ...     "rho": u.Q(0.0, "m/s"),      # no radial motion
-    ...     "phi": u.Q(3.0, "m/s"),      # tangential velocity (physical)
-    ...     "z": u.Q(0.0, "m/s"),        # no vertical motion
-    ... }
-    >>> v_cart = cxt.physical_tangent_transform(
-    ...     cx.charts.cart3d, cx.charts.cyl3d, v_cyl, at=p_pos_cyl)
-    >>> v_cart
-    {'x': Quantity(Array(-2.12132034, dtype=float64), unit='m / s'),
-     'y': Quantity(Array(2.12132034, dtype=float64), unit='m / s'),
-     'z': Quantity(Array(0., dtype=float64), unit='m / s')}
+    Transform an acceleration from spherical to Cartesian:
 
-    >>> # Tangential direction at phi=pi/4 is (-sin(pi/4), cos(pi/4), 0)
-    >>> # So v_x ≈ -3*sin(pi/4) ≈ -2.12, v_y ≈ 3*cos(pi/4) ≈ 2.12
-    >>> exp = u.Q(3 * jnp.sin(jnp.pi / 4), "m/s")
-    >>> jnp.allclose(v_cart["x"], -exp, atol=u.Q(1e-6, "m/s"))
-    Array(True, dtype=bool)
-
-    Transform acceleration from spherical to Cartesian.
-    At the north pole $(\theta=0)$ with radial acceleration:
-
-    >>> p_pos_sph = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(0.0, "rad"),
-    ...              "r": u.Q(5.0, "km")}  # position at north pole
-    >>> a_sph = {"theta": u.Q(0.0, "m/s2"), "phi": u.Q(0.0, "m/s2"),
-    ...          "r": u.Q(9.8, "m/s2")}
+    >>> p_sph = {"theta": u.Q(jnp.pi/3, "rad"), "phi": u.Q(0.0, "rad"),
+    ...          "r": u.Q(2.0, "km")}
+    >>> a_sph = {"theta": u.Q(0.0, "km/s2"), "phi": u.Q(0.0, "km/s2"),
+    ...          "r": u.Q(1.0, "km/s2")}
     >>> a_cart = cxt.physical_tangent_transform(
-    ...     cx.charts.cart3d, cx.charts.sph3d, a_sph, at=p_pos_sph)
+    ...     cxc.cart3d, cxc.sph3d, a_sph, at=p_sph)
     >>> a_cart
-    {'x': Quantity(Array(0., dtype=float64), unit='m / s2'),
-     'y': Quantity(Array(0., dtype=float64), unit='m / s2'),
-     'z': Quantity(Array(9.8, dtype=float64), unit='m / s2')}
+    {'x': Quantity(Array(0.8660254, dtype=float64), unit='km / s2'),
+     'y': Quantity(Array(0., dtype=float64), unit='km / s2'),
+     'z': Quantity(Array(0.5, dtype=float64), unit='km / s2')}
 
-    >>> # At north pole, radial direction is +z
-    >>> jnp.allclose(a_cart["z"].value, 9.8)
-    Array(True, dtype=bool)
+    Embedded manifold convenience via wrappers:
+
+    >>> emb = cxc.EmbeddedManifold(cxc.twosphere, cxc.cart3d,
+    ...                            params={"R": u.Q(1.0, "km")})
+    >>> p = {"theta": u.Angle(jnp.pi/2, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> v_tan = {"theta": u.Q(1.0, "km/s"), "phi": u.Q(0.0, "km/s")}
+    >>> v_cart2 = cxe.embed_tangent(emb, v_tan, at=p)
+    >>> # uses physical_tangent_transform under the hood
+    >>> cxe.project_tangent(emb, v_cart2, at=p)
+    {'phi': Quantity(Array(0., dtype=float64), unit='km / s'),
+     'theta': Quantity(Array(1., dtype=float64), unit='km / s')}
 
     """
     raise NotImplementedError  # pragma: no cover
 
 
 @plum.dispatch.abstract
-def coordderiv_transform(
+def coord_transform(
     to_chart: "coordinax.chart.AbstractChart",
     from_chart: "coordinax.chart.AbstractChart",
     dqdt: CsDict,
@@ -1373,7 +1410,7 @@ def coordderiv_transform(
 
     """
     msg = (
-        "No coordderiv_transform rule registered for "
+        "No coord_transform rule registered for "
         f"{(type(to_chart), type(from_chart))!r}."
     )
     raise NotImplementedError(msg)
@@ -1480,7 +1517,7 @@ def physicalize(
     -----
     - **Scale factors**: In orthogonal coordinates, E is diagonal with scale factors
       (e.g., h_r=1, h_θ=r, h_φ=r sin(θ) in spherical).
-    - **Homogeneous output**: Unlike `coordderiv_transform`, output has uniform units.
+    - **Homogeneous output**: Unlike `coord_transform`, output has uniform units.
 
     See Also
     --------
@@ -1533,7 +1570,7 @@ def coordinateize(
     See Also
     --------
     physicalize : Inverse operation (coordinate to physical components)
-    coordderiv_transform : Transform coordinate derivatives between representations
+    coord_transform : Transform coordinate derivatives between representations
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -1623,171 +1660,12 @@ def raise_index(
 
 
 @plum.dispatch.abstract
-def physical_tangent_transform(
-    to_chart: "coordinax.charts.AbstractChart",  # type: ignore[type-arg]
-    from_chart: "coordinax.charts.AbstractChart",  # type: ignore[type-arg]
-    v_phys: CsDict,
-    /,
-    *,
-    at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
-) -> CsDict:
-    r"""Transform physical tangent components between coordinate representations.
-
-    Overview:
-
-    This transforms physical tangent-vector components (e.g., velocity or
-    acceleration) from one coordinate representation to another, evaluated at a
-    specific base point ``at``. Components are understood as physical components
-    in an orthonormal frame with respect to the active metric for the
-    representation, not as coordinate derivatives.
-
-    Let $v$ be a tangent vector at point $q$ in chart $\mathcal R_\text{from}$
-    and suppose the active metric for both charts is known via ``metric_of``.
-    Define the orthonormal-frame matrices $B_\text{from}(q)$ and
-    $B_\text{to}(p)$ whose columns are the orthonormal basis vectors expressed
-    in the ambient or chart coordinates.  Then the physical components satisfy
-
-    $$
-        v_\text{cart} = B_\text{from}(q)\, v_\text{phys,from}
-        \qquad\text{and}\qquad
-        v_\text{phys,to} = B_\text{to}(p)^{\mathsf T} \, v_\text{cart},
-    $$
-    where $p$ is the same physical point expressed in
-    $\mathcal R_\text{to}$, i.e.
-
-    $$
-        p = \text{point\_transform}(\mathcal R_\text{to}, \mathcal R_\text{from}, q).
-    $$
-    Eliminating $v_\text{cart}$ gives the core relation:
-
-    $$
-        v_\text{phys,to}
-        = B_\text{to}(p)^{\mathsf T} \, B_\text{from}(q) \, v_\text{phys,from}.
-    $$
-    This is the operation implemented by ``physical_tangent_transform``.
-
-    Important distinctions:
-
-    - Physical vs coordinate derivatives: Inputs/outputs are uniform-dimension
-        physical components (e.g., all speed or all acceleration). They are NOT
-        coordinate time-derivatives, which may mix dimensions. For coordinate
-        derivatives, see ``coordderiv_transform``.
-    - Position dependence: Frames depend on the evaluation point. The
-        parameter ``at`` provides the base point in the ``from_chart`` chart.
-    - Metrics: Orthonormal frames arise from the active metric resolved by
-        ``metric_of``. Euclidean charts use Euclidean frames; spherical charts
-        use the metric-induced frames, etc. Embedded manifolds use the ambient
-        Euclidean metric for their tangent frames unless specified otherwise.
-
-    Parameters
-    ----------
-    to_chart : coordinax.charts.AbstractChart
-        Target coordinate representation whose physical components are desired.
-    from_chart : coordinax.charts.AbstractChart
-        Source coordinate representation in which ``v_phys`` is currently
-        expressed as physical components.
-    v_phys : CsDict
-        Physical tangent components keyed by ``from_chart.components``. All
-        values must share a consistent physical dimension (e.g., all speed for
-        velocity, all acceleration for acceleration).
-    at : CsDict
-        Base-point coordinates where frames are evaluated, keyed by
-        ``from_chart.components``. This point will be transformed to
-        ``to_chart`` internally as needed.
-    usys : unxt.AbstractUnitSystem, optional
-        Unit system for the transformation. This is sometimes required for
-        transformations that depend on physical constants (e.g., speed of
-        light).
-
-    Returns
-    -------
-    CsDict
-        Physical tangent components keyed by ``to_chart.components`` with the
-        same physical dimension as the input.
-
-    Raises
-    ------
-    NotImplementedError
-        If no transformation rule is registered for the specific pair of
-        representations ``(to_chart, from_chart)``.
-    ValueError
-        If components in ``v_phys`` do not share a uniform physical dimension,
-        or ``at`` does not provide a valid evaluation point.
-
-    Notes
-    -----
-    - JAX compatibility: This is intended to operate on scalar-like leaves and
-        composes with ``vmap``/``jit`` upstream. It does not assume batch shapes.
-    - Embedded manifolds: ``embed_tangent`` and ``project_tangent`` are thin
-        wrappers around this routine where one side is an ``EmbeddedManifold``
-        and the other is the ambient chart.
-    - Identity: If ``to_chart is from_chart``, the input is returned unchanged.
-
-    See Also
-    --------
-    point_transform : Transform position coordinates between charts
-    coordderiv_transform : Transform coordinate time-derivatives
-    embed_tangent : Embed intrinsic physical components into ambient components
-    project_tangent : Project ambient physical components to intrinsic components
-    metric_of : Resolve the active metric used to build orthonormal frames
-
-    Examples
-    --------
-    Transform a velocity from Cartesian to spherical components (physical):
-
-    >>> import jax.numpy as jnp
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.embeddings as cxe
-    >>> import coordinax.transforms as cxt
-    >>> import unxt as u
-
-    >>> q_cart = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
-    >>> v_cart = {"x": u.Q(0.0, "km/s"), "y": u.Q(1.0, "km/s"), "z": u.Q(0.0, "km/s")}
-    >>> v_sph = cxt.physical_tangent_transform(
-    ...     cxc.sph3d, cxc.cart3d, v_cart, at=q_cart
-    ... )
-    >>> v_sph
-    {'phi': Quantity(Array(1., dtype=float64), unit='km / s'),
-     'r': Quantity(Array(0., dtype=float64), unit='km / s'),
-     'theta': Quantity(Array(0., dtype=float64), unit='km / s')}
-
-    Transform an acceleration from spherical to Cartesian:
-
-    >>> p_sph = {"theta": u.Q(jnp.pi/3, "rad"), "phi": u.Q(0.0, "rad"),
-    ...          "r": u.Q(2.0, "km")}
-    >>> a_sph = {"theta": u.Q(0.0, "km/s2"), "phi": u.Q(0.0, "km/s2"),
-    ...          "r": u.Q(1.0, "km/s2")}
-    >>> a_cart = cxt.physical_tangent_transform(
-    ...     cxc.cart3d, cxc.sph3d, a_sph, at=p_sph)
-    >>> a_cart
-    {'x': Quantity(Array(0.8660254, dtype=float64), unit='km / s2'),
-     'y': Quantity(Array(0., dtype=float64), unit='km / s2'),
-     'z': Quantity(Array(0.5, dtype=float64), unit='km / s2')}
-
-    Embedded manifold convenience via wrappers:
-
-    >>> emb = cxc.EmbeddedManifold(cxc.twosphere, cxc.cart3d,
-    ...                            params={"R": u.Q(1.0, "km")})
-    >>> p = {"theta": u.Angle(jnp.pi/2, "rad"), "phi": u.Angle(0.0, "rad")}
-    >>> v_tan = {"theta": u.Q(1.0, "km/s"), "phi": u.Q(0.0, "km/s")}
-    >>> v_cart2 = cxe.embed_tangent(emb, v_tan, at=p)
-    >>> # uses physical_tangent_transform under the hood
-    >>> cxe.project_tangent(emb, v_cart2, at=p)
-    {'phi': Quantity(Array(0., dtype=float64), unit='km / s'),
-     'theta': Quantity(Array(1., dtype=float64), unit='km / s')}
-
-    """
-    raise NotImplementedError  # pragma: no cover
-
-
-@plum.dispatch.abstract
 def frame_cart(
     chart: "coordinax.charts.AbstractChart",  # type: ignore[type-arg]
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> Array:
     r"""Return an orthonormal frame expressed in ambient Cartesian components.
 
@@ -1888,7 +1766,6 @@ def apply_op(op: "coordinax.ops.AbstractOperator", tau: Any, x: Any, /) -> Any:
 
         - ``Translate``: Spatial translation (Point role)
         - ``Boost``: Velocity offset (Vel role)
-        - ``AccelShift``: Acceleration offset (Acc role)
         - ``Rotate``: Spatial rotation
         - ``Identity``: No-op
         - ``Pipe``: Sequential composition
@@ -1917,14 +1794,14 @@ def apply_op(op: "coordinax.ops.AbstractOperator", tau: Any, x: Any, /) -> Any:
     -------
     Any
         The transformed input, same type as ``x``. For role-specialized
-        operators (``Translate``, ``Boost``, ``AccelShift``), the role of
-        the output matches the input.
+        operators (``Translate``, ``Boost``), the role of the output matches the
+        input.
 
     Raises
     ------
     TypeError
         If a role-specialized operator is applied to an incompatible role.
-        For example, applying ``Translate`` to a ``Vel``-role vector raises
+        For example, applying ``Translate`` to a ``PhysVel``-role vector raises
         ``TypeError``.
     NotImplementedError
         If no dispatch is registered for the given ``(operator, input)`` types.
@@ -1932,7 +1809,7 @@ def apply_op(op: "coordinax.ops.AbstractOperator", tau: Any, x: Any, /) -> Any:
     Notes
     -----
     - **Role enforcement**: ``Translate`` only acts on ``Point`` role,
-      ``Boost`` only on ``Vel`` role, ``AccelShift`` only on ``Acc`` role.
+      ``Boost`` only on ``PhysVel`` role.
       This ensures geometric correctness (points translate, velocities boost).
 
     - **Operator.__call__**: The ``__call__`` method of operators delegates
@@ -1950,7 +1827,6 @@ def apply_op(op: "coordinax.ops.AbstractOperator", tau: Any, x: Any, /) -> Any:
     coordinax.ops.simplify : Simplify operators to canonical form
     coordinax.ops.Translate : Point translation operator
     coordinax.ops.Boost : Velocity boost operator
-    coordinax.ops.AccelShift : Acceleration offset operator
 
     Examples
     --------
@@ -1988,7 +1864,7 @@ def apply_op(op: "coordinax.ops.AbstractOperator", tau: Any, x: Any, /) -> Any:
     ... )
     >>> q = u.Q([0, 0, 0], "km")
     >>> cxo.apply_op(op, None, q)
-    Quantity['length'](Array([1., 0., 0.], dtype=float32), unit='km')
+    Quantity(Array([1., 0., 0.], dtype=float64), unit='km')
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -2021,7 +1897,9 @@ def simplify(op: Any, /) -> Any:
     To see all available dispatches::
 
         >>> import coordinax.ops as cxo
-        >>> cxo.simplify.methods
+        >>> cxo.simplify.methods  # doctest: +ELLIPSIS
+        List of ... method(s):
+        ...
 
     Examples
     --------

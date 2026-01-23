@@ -1,6 +1,6 @@
 # Anchored Vector Bundle
 
-A `FiberPoint` provides an ergonomic container for working with collections of
+A `PointedVector` provides an ergonomic container for working with collections of
 vectors anchored at a common base point, automatically handling the coordinate
 transformation dependencies required for tangent vectors.
 
@@ -23,13 +23,13 @@ at_for_vel = base.vconvert(vel.chart)  # Ensure base matches vel's rep
 vel_sph = vel.vconvert(cx.charts.sph3d, at_for_vel)
 ```
 
-`FiberPoint` automates this bookkeeping:
+`PointedVector` automates this bookkeeping:
 
 ```
 import coordinax as cx
 
 # Bundle approach - concise and safe
-bundle = cx.FiberPoint(base=base, velocity=vel)
+bundle = cx.PointedVector(base=base, velocity=vel)
 sph_bundle = bundle.vconvert(cx.charts.sph3d)  # Handles at= automatically
 ```
 
@@ -46,9 +46,9 @@ $$
 
 where:
 
-- $q$ is the **base point** (role `Pos`)
+- $q$ is the **base point** (role `Point`)
 - $F_i|_q$ are **fibres** at $q$ (typically $T_q M$, the tangent space)
-- Common fibre types: `Displacement`, `Vel`, `Acc`
+- Common fibre types: `PhysDisp`, `PhysVel`, `PhysAcc`
 
 ###Transformation Rules
 
@@ -86,7 +86,7 @@ $$
 \text{at} = q_{\text{bundle}}.\text{vconvert}(R_v) \quad \text{(position conversion)}
 $$
 
-`FiberPoint.vconvert()` handles this automatically.
+`PointedVector.vconvert()` handles this automatically.
 
 ## Core Concepts
 
@@ -100,7 +100,7 @@ base = cx.Vector.from_([1, 2, 3], "m")
 vel = cx.Vector.from_([4, 5, 6], "m/s")
 acc = cx.Vector.from_([0.1, 0.2, 0.3], "m/s^2")
 
-bundle = cx.FiberPoint(
+bundle = cx.PointedVector(
     base=base,  # Position (role: Pos)
     velocity=vel,  # Tangent vector (role: Vel)
     acceleration=acc,  # Tangent vector (role: Acc)
@@ -114,18 +114,18 @@ bundle["acceleration"]
 
 **Requirements:**
 
-- `base` must have role `Pos`
-- Fields must NOT have role `Pos` (enforced at construction)
+- `base` must have role `PhysDisp`
+- Fields must NOT have role `PhysDisp` (enforced at construction)
 - All vectors must have compatible (broadcastable) shapes
 
 ### Role-Based Transformation
 
 | Role           | Transformation                       | Requires `at=`?       | Example               |
 | -------------- | ------------------------------------ | --------------------- | --------------------- |
-| `Pos`          | Position map $f(q)$                  | No                    | Base point conversion |
-| `Displacement` | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Displacement vector   |
-| `Vel`          | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Velocity vector       |
-| `Acc`          | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Acceleration vector   |
+| `Point`        | Position map $f(q)$                  | No                    | Base point conversion |
+| `PhysDisp`     | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Displacement vector   |
+| `PhysVel`      | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Velocity vector       |
+| `PhysAcc`      | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Acceleration vector   |
 
 ## Usage Examples
 
@@ -137,7 +137,7 @@ import coordinax as cx
 # Create bundle in Cartesian coordinates
 base = cx.Vector.from_([1, 1, 1], "m")
 vel = cx.Vector.from_([10, 10, 10], "m/s")
-bundle = cx.FiberPoint(base=base, velocity=vel)
+bundle = cx.PointedVector(base=base, velocity=vel)
 
 # Convert entire bundle to spherical
 sph_bundle = bundle.vconvert(cx.charts.sph3d)
@@ -190,7 +190,7 @@ bases = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "kpc")
 # Single velocity (broadcasts to all bases)
 vel = cx.Vector.from_([10, 20, 30], "km/s")
 
-bundle = cx.FiberPoint(base=bases, velocity=vel)
+bundle = cx.PointedVector(base=bases, velocity=vel)
 print(bundle.shape)  # (2,)
 
 # Index to get sub-bundles
@@ -207,7 +207,7 @@ data = {
     "acceleration": u.Q([0.1, 0.2, 0.3], "km/s^2"),
 }
 
-bundle = cx.FiberPoint.from_(data)
+bundle = cx.PointedVector.from_(data)
 ```
 
 Or with explicit base:
@@ -219,7 +219,7 @@ fields = {
     "momentum": u.Q([40, 50, 60], "kg*m/s"),  # Any tangent-like vector
 }
 
-bundle = cx.FiberPoint.from_(fields, base=base)
+bundle = cx.PointedVector.from_(fields, base=base)
 ```
 
 ## JAX Compatibility
@@ -250,7 +250,7 @@ Bundles support `vmap` naturally through indexing:
 
 ```
 # Batch bundle
-bundle_batch = cx.FiberPoint(
+bundle_batch = cx.PointedVector(
     base=cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m"),
     velocity=cx.Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "m/s"),
 )
@@ -262,14 +262,14 @@ sub1 = bundle_batch[1]
 
 ## Integration with Frames
 
-`FiberPoint` stores vectors without reference frames. To attach frames, use
+`PointedVector` stores vectors without reference frames. To attach frames, use
 `coordinax.Coordinate`:
 
 ```
 import coordinax as cx
 
 # Create bundle
-bundle = cx.FiberPoint(base=..., velocity=...)
+bundle = cx.PointedVector(base=..., velocity=...)
 
 # Wrap in coordinate with frame
 from coordinax.frames import ICRS
@@ -289,21 +289,21 @@ system by managing base point dependencies.
 ```
 # ✓ Good: Fixed field names
 for data in dataset:
-    bundle = cx.FiberPoint(base=data.pos, velocity=data.vel)
+    bundle = cx.PointedVector(base=data.phys_disp, velocity=data.phys_vel)
     process_jit(bundle)
 
 # ✗ Avoid: Changing field structure
 for data in dataset:
-    fields = {"velocity": data.vel}
+    fields = {"velocity": data.phys_vel}
     if data.has_acc:
-        fields["acceleration"] = data.acc  # Structure changes
-    bundle = cx.FiberPoint(base=data.pos, **fields)
+        fields["acceleration"] = data.phys_acc  # Structure changes
+    bundle = cx.PointedVector(base=data.phys_disp, **fields)
 ```
 
 ### 2. **Use Appropriate Roles**
 
-- `Pos` → only for base
-- `Displacement`, `Vel`, `Acc` → for tangent vectors
+- `Point` → only for base
+- `PhysDisp`, `PhysVel`, `PhysAcc` → for tangent vectors
 - Future: `Momentum`, `Force`, etc. as needed
 
 ### 3. **Physical Components**
@@ -357,5 +357,5 @@ See [API Documentation](../api/vecs.md) for detailed method signatures.
 - [Vectors Guide](vectors.md) - Understanding roles and representations
 - [Coordinate Representations](charts.md) - Available coordinate systems
 - [Operators](operators.md) - Geometric operations on vectors
-- API: `coordinax.FiberPoint`
+- API: `coordinax.PointedVector`
 - API: `coordinax.transforms.physical_tangent_transform`

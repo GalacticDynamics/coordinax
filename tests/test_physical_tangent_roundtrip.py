@@ -107,7 +107,7 @@ def test_physical_tangent_roundtrip_velocity(charts_pair, data):
     p_B = data.draw(cxst.pdicts(chart_B, cx.roles.point))
     if not base_point_valid(chart_B, p_B):
         reject()
-    v_B = data.draw(cxst.pdicts(chart_B, cx.roles.vel))
+    v_B = data.draw(cxst.pdicts(chart_B, cx.roles.phys_vel))
 
     # Forward transform to chart_A
     v_A = cxc.physical_tangent_transform(chart_A, chart_B, v_B, at=p_B)

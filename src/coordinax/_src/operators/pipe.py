@@ -15,7 +15,7 @@ import unxt as u
 from .base import AbstractOperator
 from .composite import AbstractCompositeOperator
 from .identity import Identity
-from coordinax._src.api import apply_op, simplify
+from coordinax._src import api, charts as cxc, roles as cxr
 from coordinax._src.custom_types import CsDict
 
 
@@ -178,37 +178,18 @@ class Pipe(AbstractCompositeOperator):
 
 
 # ===================================================================
-# Call
-# TODO: simplify dispatches
-
-
-@plum.dispatch(precedence=1)
-def operate(
-    self: AbstractCompositeOperator, tau: Any, /, arg: object, **kw: object
-) -> object:
-    """Apply the operators in a sequence."""
-    for op in self.operators:
-        arg = op(tau, arg, **kw)
-    return arg
-
-
-@plum.dispatch(precedence=1)
-def operate(
-    self: AbstractCompositeOperator, tau: Any, /, *args: object, **kw: object
-) -> tuple[object, ...]:
-    """Apply the operators in a sequence."""
-    for op in self.operators:
-        args = op(tau, *args, **kw)
-    return args
-
-
-# ===================================================================
 # apply_op for Pipe
 
 
 @plum.dispatch
 def apply_op(
-    op: Pipe, tau: Any, x: CsDict, /, *, role: Any = None, at: Any = None
+    op: Pipe,
+    tau: Any,
+    role: cxr.AbstractRole,
+    chart: cxc.AbstractChart,
+    x: CsDict,
+    /,
+    **kw: object,
 ) -> CsDict:
     """Apply Pipe to a CsDict by sequentially applying each operator.
 
@@ -227,13 +208,13 @@ def apply_op(
     """
     result = x
     for sub_op in op.operators:
-        result = apply_op(sub_op, tau, result, role=role, at=at)
+        result = api.apply_op(sub_op, tau, role, chart, result, **kw)
     return result
 
 
 @plum.dispatch
 def apply_op(
-    op: Pipe, tau: Any, x: u.AbstractQuantity, /, *, role: Any = None, at: Any = None
+    op: Pipe, tau: Any, x: u.AbstractQuantity, /, **kw: object
 ) -> u.AbstractQuantity:
     """Apply Pipe to a Quantity by sequentially applying each operator.
 
@@ -251,7 +232,7 @@ def apply_op(
     """
     result = x
     for sub_op in op.operators:
-        result = apply_op(sub_op, tau, result, role=role, at=at)
+        result = api.apply_op(sub_op, tau, result, **kw)
     return result
 
 

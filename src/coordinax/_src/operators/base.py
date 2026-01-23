@@ -36,7 +36,7 @@ class Neg:
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Call the parameter and negate the result."""
-        return -self.param(*args, **kwargs)
+        return jtu.map(jnp.negative, self.param(*args, **kwargs))
 
     def __neg__(self) -> Any:
         """Return the original parameter."""
@@ -295,11 +295,6 @@ def from_(
     Examples
     --------
     >>> import coordinax.ops as cxo
-
-    >>> op = cxo.GalileanOp.from_([1, 1, 1], "km")
-    >>> print(op)
-    GalileanOp(<Cart3D: (x, y, z) [km]
-        [1 1 1]>)
 
     >>> op = cxo.Translate.from_([1, 1, 1], "km")
     >>> print(op)

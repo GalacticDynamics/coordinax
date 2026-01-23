@@ -13,7 +13,7 @@ and shows how to transform parameter dictionaries and vectors.
   dimensions). A rep does not store numerical values.
 - Vector: data + rep + role. Data are the coordinate values or physical
   components.
-- Role: semantic interpretation of vector data (Pos, Vel, Acc, etc.). A role is
+- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role is
   not a rep.
 - Metric: a bilinear form g on the tangent space defining inner products and
   norms (Euclidean, sphere intrinsic, Minkowski).
@@ -132,8 +132,8 @@ v = {
     "z": u.Q(6.0, "km/s"),
 }
 
-qvec = cx.Vector(data=q, chart=cx.charts.cart3d, role=cx.roles.Pos())
-vvec = cx.Vector(data=v, chart=cx.charts.cart3d, role=cx.roles.Vel())
+qvec = cx.Vector(data=q, chart=cx.charts.cart3d, role=cx.roles.PhysDisp())
+vvec = cx.Vector(data=v, chart=cx.charts.cart3d, role=cx.roles.PhysVel())
 
 q_sph = qvec.vconvert(cx.charts.sph3d)
 v_sph = vvec.vconvert(cx.charts.sph3d, qvec)

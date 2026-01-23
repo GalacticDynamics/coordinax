@@ -19,20 +19,9 @@ from unxt.quantity import BareQuantity, is_any_quantity
 from coordinax._src.charts import AbstractChart
 from coordinax._src.custom_types import CsDict
 
-
-@plum.dispatch.abstract
-def coorddiff_map(
-    to_chart: AbstractChart,  # type: ignore[type-arg]
-    from_chart: AbstractChart,  # type: ignore[type-arg]
-    p_dif: CsDict,
-    p_pos: CsDict,
-    /,
-) -> CsDict:
-    """Return the differential mapping dictionary from one representation to another."""
-    raise NotImplementedError  # pragma: no cover
-
-
-jac_pos_fn_scalar = jax.jit(jax.jacfwd(coorddiff_map, argnums=2), static_argnums=(0, 1))
+jac_pos_fn_scalar = jax.jit(
+    jax.jacfwd(coord_transform, argnums=2), static_argnums=(0, 1)
+)
 
 
 def jac_pos_fn(
@@ -104,7 +93,7 @@ def dot_jac_vec(
 ) -> dict[str, u.AbstractQuantity]:
     """Dot product of a Jacobian dict and a vector dict.
 
-    This is a helper function for the `coorddiff_map` function.
+    This is a helper function for the `coord_transform` function.
 
     Parameters
     ----------
@@ -134,7 +123,7 @@ def dot_jac_vec(
 
 
 @plum.dispatch
-def coorddiff_map(
+def coord_transform(
     to_chart: AbstractChart,  # type: ignore[type-arg]
     from_chart: AbstractChart,  # type: ignore[type-arg]
     p_dif: CsDict,

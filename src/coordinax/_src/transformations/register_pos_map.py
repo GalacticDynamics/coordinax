@@ -1,4 +1,5 @@
 """Conversion functions for vector charts."""
+from jaxtyping import ArrayLike, Array
 
 __all__: tuple[str, ...] = ()
 
@@ -18,7 +19,7 @@ import coordinax._src.charts as cxc
 import coordinax._src.embed as cxe
 import coordinax._src.roles as cxr
 from coordinax._src import api
-from coordinax._src.custom_types import ComponentsKey, CsDict
+from coordinax._src.custom_types import ComponentsKey, CsDict, OptUSys
 from coordinax._src.utils import uconvert_to_rad
 
 # ===================================================================
@@ -33,7 +34,7 @@ def vconvert(
     p: CsDict,
     /,
     *_: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Convert a point from one representation to another.
 
@@ -126,7 +127,7 @@ def point_transform(
     from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     p: CsDict,  # type: ignore[type-arg]
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:  # type: ignore[type-arg]
     """Identity conversion for matching representations.
 
@@ -161,7 +162,7 @@ def point_transform(
     from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """AbstractChart -> Cartesian -> AbstractChart."""
     p_cart = api.point_transform(to_chart.cartesian, from_chart, p, usys=usys)
@@ -177,11 +178,7 @@ def point_transform(
 
 @plum.dispatch
 def point_transform(
-    to_chart: cxc.Cart1D,
-    from_chart: cxc.Radial1D,
-    p: CsDict,
-    /,
-    usys: u.AbstractUnitSystem | None = None,
+    to_chart: cxc.Cart1D, from_chart: cxc.Radial1D, p: CsDict, /, usys: OptUSys = None
 ) -> CsDict:
     """Radial1D -> Cartesian1D.
 
@@ -208,11 +205,7 @@ def point_transform(
 
 @plum.dispatch
 def point_transform(
-    to_chart: cxc.Radial1D,
-    from_chart: cxc.Cart1D,
-    p: CsDict,
-    /,
-    usys: u.AbstractUnitSystem | None = None,
+    to_chart: cxc.Radial1D, from_chart: cxc.Cart1D, p: CsDict, /, usys: OptUSys = None
 ) -> CsDict:
     """Cartesian1D -> Radial1D.
 
@@ -243,11 +236,7 @@ def point_transform(
 
 @plum.dispatch
 def point_transform(
-    to_chart: cxc.Cart2D,
-    from_chart: cxc.Polar2D,
-    p: CsDict,
-    /,
-    usys: u.AbstractUnitSystem | None = None,
+    to_chart: cxc.Cart2D, from_chart: cxc.Polar2D, p: CsDict, /, usys: OptUSys = None
 ) -> CsDict:
     """Polar2D -> Cart2D.
 
@@ -280,11 +269,7 @@ def point_transform(
 
 @plum.dispatch
 def point_transform(
-    to_chart: cxc.Polar2D,
-    from_chart: cxc.Cart2D,
-    p: CsDict,
-    /,
-    usys: u.AbstractUnitSystem | None = None,
+    to_chart: cxc.Polar2D, from_chart: cxc.Cart2D, p: CsDict, /, usys: OptUSys = None
 ) -> CsDict:
     """Cart2D -> Polar2D.
 
@@ -324,7 +309,7 @@ def point_transform(
     from_chart: cxc.Cylindrical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Cylindrical3D -> Cart3D.
 
@@ -361,7 +346,7 @@ def point_transform(
     from_chart: cxc.Spherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Spherical3D -> Cart3D.
 
@@ -406,7 +391,7 @@ def point_transform(
     from_chart: cxc.LonLatSpherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """LonLatSpherical3D -> Cart3D.
 
@@ -449,7 +434,7 @@ def point_transform(
     from_chart: cxc.LonCosLatSpherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """LonCosLatSpherical3D -> Cart3D.
 
@@ -502,7 +487,7 @@ def point_transform(
     from_chart: cxc.MathSpherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """MathSpherical3D -> Cart3D.
 
@@ -548,7 +533,7 @@ def point_transform(
     from_chart: cxc.ProlateSpheroidal3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""ProlateSpheroidal3D -> Cart3D.
 
@@ -613,7 +598,7 @@ def point_transform(
     from_chart: cxc.Cart3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Cart3D -> Cylindrical3D.
 
@@ -650,7 +635,7 @@ def point_transform(
     from_chart: cxc.Cart3D | cxc.Cylindrical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Cart3D -> Spherical3D -> AbstractSpherical3D.
 
@@ -684,7 +669,7 @@ def point_transform(
     from_chart: cxc.Cart3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Cart3D -> Spherical3D.
 
@@ -712,12 +697,13 @@ def point_transform(
 
     """
     del to_chart, from_chart  # Unused
-    r_ = jnp.sqrt(p["x"] ** 2 + p["y"] ** 2 + p["z"] ** 2)
+    x, y, z = p["x"], p["y"], p["z"]
+    r = jnp.sqrt(x**2 + y**2 + z**2)
     # Avoid division by zero: when r == 0, set theta = 0 by convention
-    theta = jnp.acos(jnp.where(r_ == 0, jnp.ones(r_.shape), p["z"] / r_))
+    theta = jnp.acos(jnp.where(r == 0, jnp.ones(r.shape), z / r))
     # atan2 handles the case when x = y = 0, returning phi = 0
-    phi = jnp.atan2(p["y"], p["x"])
-    return {"r": r_, "theta": theta, "phi": phi}
+    phi = jnp.atan2(y, x)
+    return {"r": r, "theta": theta, "phi": phi}
 
 
 @plum.dispatch
@@ -726,7 +712,7 @@ def point_transform(
     from_chart: cxc.Cylindrical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Cylindrical3D -> Spherical3D.
 
@@ -765,7 +751,7 @@ def point_transform(
     from_chart: cxc.Spherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Spherical3D -> Cylindrical3D.
 
@@ -805,7 +791,7 @@ def point_transform(
     from_chart: cxc.Spherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Spherical3D -> LonLatSpherical3D.
 
@@ -843,7 +829,7 @@ def point_transform(
     from_chart: cxc.Spherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Spherical3D -> LonCosLatSpherical3D.
 
@@ -884,7 +870,7 @@ def point_transform(
     from_chart: cxc.Spherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Spherical3D -> MathSpherical3D.
 
@@ -919,7 +905,7 @@ def point_transform(
     from_chart: cxc.MathSpherical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """MathSpherical3D -> Spherical3D.
 
@@ -953,7 +939,7 @@ def point_transform(
     from_chart: cxc.ProlateSpheroidal3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""ProlateSpheroidal3D -> Cylindrical3D.
 
@@ -1014,7 +1000,7 @@ def point_transform(
     from_chart: cxc.Cylindrical3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Cylindrical3D -> ProlateSpheroidal3D.
 
@@ -1119,7 +1105,7 @@ def point_transform(
     from_chart: cxc.ProlateSpheroidal3D,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""ProlateSpheroidal3D -> ProlateSpheroidal3D.
 
@@ -1184,7 +1170,7 @@ def point_transform(
     from_chart: cxc.SpaceTimeEuclidean,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """SpaceTimeEuclidean[SpatialKind1] -> SpaceTimeEuclidean[SpatialKind2].
 
@@ -1250,7 +1236,7 @@ def point_transform(
     from_chart: cxc.CartND,
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """CartND -> AbstractChart.
 
@@ -1302,7 +1288,7 @@ def point_transform(
         raise TypeError(msg)
 
     # Get the corresponding fixed-dimensional Cartesian chart
-    cart_chart = api.cartesian_chart(to_chart)
+    cart_chart = to_chart.cartesian
 
     # If cartesian_chart returns CartND, we don't support this conversion
     if isinstance(cart_chart, cxc.CartND):
@@ -1351,7 +1337,7 @@ def point_transform(
     from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """AbstractChart -> CartND.
 
@@ -1398,7 +1384,7 @@ def point_transform(
         raise TypeError(msg)
 
     # Get the corresponding fixed-dimensional Cartesian chart
-    cart_chart = api.cartesian_chart(from_chart)
+    cart_chart = from_chart.cartesian
 
     # If cartesian_chart returns CartND, we don't support this conversion
     if isinstance(cart_chart, cxc.CartND):
@@ -1422,7 +1408,7 @@ def point_transform(
     from_chart: cxe.EmbeddedManifold,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Convert between embedded manifolds with a shared ambient space.
 
@@ -1478,7 +1464,7 @@ def point_transform(
     from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Project an ambient position into an embedded chart.
 
@@ -1526,7 +1512,7 @@ def point_transform(
     from_chart: cxe.EmbeddedManifold,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Embed intrinsic coordinates into an ambient representation.
 
@@ -1577,7 +1563,7 @@ def point_transform(
     from_chart: cxc.AbstractCartesianProductChart,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """AbstractCartesianProductChart -> AbstractCartesianProductChart (factorwise).
 
@@ -1636,7 +1622,7 @@ def point_transform(
     from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """AbstractChart -> Cartesian -> AbstractChart."""
     msg = (
@@ -1653,7 +1639,7 @@ def point_transform(
     from_chart: cxc.AbstractCartesianProductChart,  # type: ignore[type-arg]
     p: CsDict,
     /,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """AbstractChart -> Cartesian -> AbstractChart."""
     msg = (
@@ -1662,3 +1648,28 @@ def point_transform(
         "non-product conversions."
     )
     raise NotImplementedError(msg)
+
+
+# ===================================================================
+# Point Transform an Array
+
+
+@plum.dispatch
+def point_transform(
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,
+    p: ArrayLike,
+    /,
+    usys: OptUSys,
+) -> Array:
+    r"""Point transform for array input."""
+    # Build a dict of arrays for each component
+    p_dict = api.cdict(p, from_chart)
+
+    # Transform the point dict
+    p_transformed = api.point_transform(to_chart, from_chart, p_dict, usys=usys)
+
+    # Stack the transformed components into an array
+    p_out = jnp.stack([p_transformed[comp] for comp in to_chart.components], axis=-1)
+
+    return p_out

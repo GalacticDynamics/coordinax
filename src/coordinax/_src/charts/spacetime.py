@@ -13,9 +13,12 @@ import plum
 import unxt as u
 from dataclassish import replace
 
-from .base import AbstractChart, AbstractFlatCartesianProductChart
+from .base import (
+    AbstractChart,
+    AbstractFixedComponentsChart,
+    AbstractFlatCartesianProductChart,
+)
 from .euclidean import cart3d, time1d
-from coordinax._src import api
 from coordinax._src.custom_types import CDict, Ds, Ks
 
 
@@ -72,7 +75,7 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     """
 
-    spatial_chart: AbstractChart[Any, Any] = field(default=cart3d)
+    spatial_chart: AbstractFixedComponentsChart[Any, Any] = field(default=cart3d)
     """Spatial part of the representation. Defaults: `coordinax.charts.cart3d`."""
 
     _: KW_ONLY
@@ -122,9 +125,6 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         """
         return {**parts[0], **parts[1]}
 
-    # def __hash__(self) -> int:
-    #     # TODO: better hash, including more information
-    #     return hash((self.__class__, self.spatial_chart.__class__))
 
 
 @plum.dispatch
@@ -136,16 +136,14 @@ def cartesian_chart(obj: SpaceTimeCT, /) -> SpaceTimeCT:  # type: ignore[type-ar
     >>> import coordinax as cx
     >>> rep = cx.charts.SpaceTimeCT(cx.charts.sph3d)
     >>> rep
-    SpaceTimeCT(
-        spatial_chart=Spherical3D(), c=Quantity(299792.458, 'km / s')
-    )
+    SpaceTimeCT(spatial_chart=Spherical3D(),
+                c=StaticQuantity(array(299792.458), unit='km / s'))
     >>> cx.charts.cartesian_chart(rep)
-    SpaceTimeCT(
-        spatial_chart=Cart3D(), c=Quantity(299792.458, 'km / s')
-    )
+    SpaceTimeCT(spatial_chart=Cart3D(),
+                c=StaticQuantity(array(299792.458), unit='km / s'))
 
     """
-    spatial_cart = api.cartesian_chart(obj.spatial_chart)
+    spatial_cart = obj.spatial_chart.cartesian
     # Return same object if already cartesian
     if spatial_cart == obj.spatial_chart:
         return obj

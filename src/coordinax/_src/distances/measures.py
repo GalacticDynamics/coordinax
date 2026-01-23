@@ -29,7 +29,7 @@ class Distance(AbstractDistance):
 
     Examples
     --------
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
     >>> Distance(10, "km")
     Distance(Array(10, dtype=int64, ...), unit='km')
 
@@ -86,7 +86,7 @@ class DistanceModulus(AbstractDistance):
 
     Examples
     --------
-    >>> from coordinax.distance import DistanceModulus
+    >>> from coordinax.distances import DistanceModulus
     >>> DistanceModulus(10, "mag")
     DistanceModulus(Array(10, dtype=int64, ...), unit='mag')
 
@@ -119,7 +119,7 @@ class Parallax(AbstractDistance):
 
     Examples
     --------
-    >>> from coordinax.distance import Parallax
+    >>> from coordinax.distances import Parallax
     >>> Parallax(1, "mas")
     Parallax(Array(1, dtype=int64, ...), unit='mas')
 

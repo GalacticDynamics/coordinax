@@ -391,8 +391,8 @@ position).
 
 **Parameters:**
 
-- `role`: The starting role flag (`cx.roles.Pos`, `cx.roles.Vel`, or
-  `cx.roles.Acc`).
+- `role`: The starting role flag (`cx.roles.PhysDisp`, `cx.roles.PhysVel`, or
+  `cx.roles.PhysAcc`).
 - `rep`: The starting representation or a strategy that generates one.
 
 **Returns:**
@@ -411,7 +411,7 @@ import coordinax_hypothesis as cxst
 
 
 # Generate a chain from acceleration
-@given(chain=cxst.chart_time_chain(cx.roles.Acc, cx.charts.cart3d))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
 def test_acc_chain(chain):
     acc_rep, vel_rep, pos_rep = chain
     # All are 3D Cartesian-like representations
@@ -421,7 +421,7 @@ def test_acc_chain(chain):
 
 
 # Generate a chain from velocity
-@given(chain=cxst.chart_time_chain(cx.roles.Vel, cx.charts.polar2d))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
 def test_vel_chain(chain):
     vel_rep, pos_rep = chain
     # All are 2D representations
@@ -430,13 +430,13 @@ def test_vel_chain(chain):
 
 
 # Position just returns itself
-@given(chain=cxst.chart_time_chain(cx.roles.Pos, cx.charts.sph3d))
-def test_pos_chain(chain):
+@given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
+def test_disp_chain(chain):
     (pos_rep,) = chain
     assert isinstance(pos_rep, cx.charts.Abstract3D)
 ```
 
-### `vectors_with_target_chart(chart=charts(), role=cx.roles.Pos, dtype=jnp.float32, shape=(), elements=None)`
+### `vectors_with_target_chart(chart=charts(), role=cx.roles.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
 
 Generate a vector and a time-derivative chain with matching flags.
 
@@ -449,8 +449,8 @@ automatically matches the flags of the source vector's representation.
 
 - `rep`: A representation instance or strategy for the source vector (default:
   uses `charts()` strategy)
-- `role`: The role flag for the source vector (`cx.roles.Pos`, `cx.roles.Vel`,
-  `cx.roles.Acc`)
+- `role`: The role flag for the source vector (`cx.roles.PhysDisp`, `cx.roles.PhysVel`,
+  `cx.roles.PhysAcc`)
 - `dtype`: The data type for array components (default: `jnp.float32`)
 - `shape`: The shape for the vector components (default: scalar shape `()`)
 - `elements`: Strategy for generating element values
@@ -472,7 +472,7 @@ import coordinax_hypothesis as cxst
 # Test vector conversions to a full chain of targets
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
-        chart=cx.charts.cart3d, role=cx.roles.Pos
+        chart=cx.charts.cart3d, role=cx.roles.PhysDisp
     )
 )
 def test_position_conversion(vec_and_chain):
@@ -486,9 +486,9 @@ def test_position_conversion(vec_and_chain):
 # Test velocity vector with full chain (requires a position vector)
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
-        chart=cx.charts.cart3d, role=cx.roles.Vel
+        chart=cx.charts.cart3d, role=cx.roles.PhysVel
     ),
-    pos_vec=cxst.vectors(chart=cx.charts.cart3d, role=cx.roles.Pos),
+    pos_vec=cxst.vectors(chart=cx.charts.cart3d, role=cx.roles.PhysDisp),
 )
 def test_velocity_conversion_chain(vec_and_chain, pos_vec):
     vec, target_chain = vec_and_chain
@@ -550,7 +550,7 @@ def test_parallax_to_distance(result):
     assert isinstance(result, cxd.Distance)
 ```
 
-### `vectors(chart=t=charts(), role=cx.roles.Pos, dtype=jnp.float32, shape=(), elements=None)`
+### `vectors(chart=t=charts(), role=cx.roles.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
 
 Generate random `coordinax.Vector` instances.
 
@@ -559,8 +559,8 @@ Generate random `coordinax.Vector` instances.
 - `rep`: A representation instance or strategy to generate one (default: uses
   `charts()` strategy). This determines the coordinate chart and dimensionality
   of the vector.
-- `role`: The role flag for the vector (`cx.roles.Pos`, `cx.roles.Vel`,
-  `cx.roles.Acc`).
+- `role`: The role flag for the vector (`cx.roles.PhysDisp`, `cx.roles.PhysVel`,
+  `cx.roles.PhysAcc`).
 - `dtype`: The data type for array components (default: `jnp.float32`). Can be a
   dtype or a strategy.
 - `shape`: The shape for the vector components. Can be an integer (for 1D), a
@@ -601,10 +601,10 @@ def test_batched_vectors(vec):
 
 # Generate position vectors only
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.Pos)
+    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.PhysDisp)
 )
 def test_position_vectors(vec):
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
     assert isinstance(vec.chart, cx.charts.Abstract3D)
 
 
@@ -612,11 +612,11 @@ def test_position_vectors(vec):
 @given(
     vec=cxst.vectors(
         chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Vel,
+        role=cx.roles.PhysVel,
     )
 )
 def test_3d_velocity_vectors(vec):
-    assert isinstance(vec.role, cx.roles.Vel)
+    assert isinstance(vec.role, cx.roles.PhysVel)
     assert isinstance(vec.chart, cx.charts.Abstract3D)
 
 

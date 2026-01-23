@@ -384,7 +384,7 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> cx.Vector:
 @conversion_method(cx.Vector, apyc.BaseDifferential)
 @conversion_method(cx.Vector, apyc.CartesianDifferential)  # type: ignore[arg-type]
 def diffcart3_to_apycart3(
-    obj: cx.Vector[cxc.Cart3D, cxr.Vel], /
+    obj: cx.Vector[cxc.Cart3D, cxr.PhysVel], /
 ) -> apyc.CartesianDifferential:
     """`coordinax.CartVel3D` -> `astropy.CartesianDifferential`.
 
@@ -418,7 +418,7 @@ def from_astropy_cartesian_differential(
             "z": convert(obj.d_z, u.Q),
         },
         cxc.cart3d,
-        cxr.vel,
+        cxr.phys_vel,
     )
 
 
@@ -452,7 +452,7 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.Vector:
     Vector(...)
 
     """
-    return cx.Vector.from_(obj, cxc.cart3d, cxr.vel)
+    return cx.Vector.from_(obj, cxc.cart3d, cxr.phys_vel)
 
 
 # =====================================
@@ -462,7 +462,7 @@ def apycart3_to_diffcart3(obj: apyc.CartesianDifferential, /) -> cx.Vector:
 @conversion_method(cx.Vector, apyc.BaseDifferential)
 @conversion_method(cx.Vector, apyc.CylindricalDifferential)  # type: ignore[arg-type]
 def diffcyl_to_apycyl(
-    obj: cx.Vector[cxc.Cylindrical3D, cxr.Vel], /
+    obj: cx.Vector[cxc.Cylindrical3D, cxr.PhysVel], /
 ) -> apyc.CylindricalDifferential:
     """`coordinax.CylindricalVel` -> `astropy.CylindricalDifferential`.
 
@@ -502,7 +502,7 @@ def from_astropy_cylindrical_differential(
             "z": convert(obj.d_z, u.Q),
         },
         chart=cxc.cyl3d,
-        role=cxr.vel,
+        role=cxr.phys_vel,
     )
 
 
@@ -522,7 +522,7 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.Vector:
     Vector(...)
 
     """
-    return cx.Vector.from_(obj, cxc.cyl3d, cxr.vel)
+    return cx.Vector.from_(obj, cxc.cyl3d, cxr.phys_vel)
 
 
 # =====================================
@@ -532,7 +532,7 @@ def apycyl_to_diffcyl(obj: apyc.CylindricalDifferential, /) -> cx.Vector:
 @conversion_method(cx.Vector, apyc.BaseDifferential)
 @conversion_method(cx.Vector, apyc.PhysicsSphericalDifferential)  # type: ignore[arg-type]
 def diffsph_to_apysph(
-    obj: cx.Vector[cxc.Spherical3D, cxr.Vel], /
+    obj: cx.Vector[cxc.Spherical3D, cxr.PhysVel], /
 ) -> apyc.PhysicsSphericalDifferential:
     """SphericalVel -> `astropy.PhysicsSphericalDifferential`.
 
@@ -571,7 +571,7 @@ def from_astropy_physics_spherical_differential(
             "phi": convert(obj.d_phi, u.Q),
         },
         chart=cxc.sph3d,
-        role=cxr.vel,
+        role=cxr.phys_vel,
     )
 
 
@@ -591,7 +591,7 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.Vector:
     Vector(...)
 
     """
-    return cx.Vector.from_(obj, cxc.sph3d, cxr.vel)
+    return cx.Vector.from_(obj, cxc.sph3d, cxr.phys_vel)
 
 
 # =====================================
@@ -601,7 +601,7 @@ def apysph_to_diffsph(obj: apyc.PhysicsSphericalDifferential, /) -> cx.Vector:
 @conversion_method(cx.Vector, apyc.BaseDifferential)
 @conversion_method(cx.Vector, apyc.SphericalDifferential)  # type: ignore[arg-type]
 def difflonlatsph_to_apysph(
-    obj: cx.Vector[cxc.LonLatSpherical3D, cxr.Vel], /
+    obj: cx.Vector[cxc.LonLatSpherical3D, cxr.PhysVel], /
 ) -> apyc.SphericalDifferential:
     """LonLatSphericalVel -> `astropy.SphericalVel`.
 
@@ -640,7 +640,7 @@ def from_astropy_spherical_differential(
             "distance": convert(obj.d_distance, u.Q),
         },
         chart=cxc.lonlatsph3d,
-        role=cxr.vel,
+        role=cxr.phys_vel,
     )
 
 
@@ -660,7 +660,7 @@ def apysph_to_difflonlatsph(obj: apyc.SphericalDifferential, /) -> cx.Vector:
     Vector(...)
 
     """
-    return cx.Vector.from_(obj, cxc.lonlatsph3d, cxr.vel)
+    return cx.Vector.from_(obj, cxc.lonlatsph3d, cxr.phys_vel)
 
 
 # =====================================
@@ -670,7 +670,7 @@ def apysph_to_difflonlatsph(obj: apyc.SphericalDifferential, /) -> cx.Vector:
 @conversion_method(cx.Vector, apyc.BaseDifferential)
 @conversion_method(cx.Vector, apyc.SphericalCosLatDifferential)  # type: ignore[arg-type]
 def diffloncoslatsph_to_apysph(
-    obj: cx.Vector[cxc.LonCosLatSpherical3D, cxr.Vel], /
+    obj: cx.Vector[cxc.LonCosLatSpherical3D, cxr.PhysVel], /
 ) -> apyc.SphericalCosLatDifferential:
     """LonCosLatSphericalVel -> `astropy.SphericalCosLatDifferential`.
 
@@ -710,7 +710,7 @@ def from_astropy_spherical_coslat_differential(
             "distance": convert(obj.d_distance, u.Q),
         },
         chart=cxc.loncoslatsph3d,
-        role=cxr.vel,
+        role=cxr.phys_vel,
     )
 
 
@@ -731,4 +731,4 @@ def apysph_to_diffloncoslatsph(obj: apyc.SphericalCosLatDifferential, /) -> cx.V
     Vector(...)
 
     """
-    return cx.Vector.from_(obj, cxc.loncoslatsph3d, cxr.vel)
+    return cx.Vector.from_(obj, cxc.loncoslatsph3d, cxr.phys_vel)

@@ -2,8 +2,7 @@
 
 This module defines primitive operators that are specialized by role:
 
-- ``Boost``: Velocity boost (acts on ``Vel`` role)
-- ``AccelShift``: Acceleration offset (acts on ``Acc`` role)
+- ``Boost``: Velocity boost (acts on ``Point``, ``PhysDisp``, ``PhysVel``, ``PhysAcc`` roles)
 
 These operators provide:
 
@@ -19,202 +18,127 @@ coordinax.ops.Pipe : Compose operators into a pipeline
 
 """
 
-__all__ = ("Boost", "AccelShift")
+__all__ = ("Boost",)
 
-
-from dataclasses import KW_ONLY
 
 from collections.abc import Callable
-from typing import Any, Union, final
+from jaxtyping import Array, ArrayLike
+from typing import Any, Final, final
 
 import equinox as eqx
+import jax
+import jax.tree as jtu
 import plum
 
 import quaxed.numpy as jnp
 import unxt as u
-from dataclassish.converters import Unless
 from unxt.quantity import AllowValue
 
-import coordinax._src.roles as cxr
-from .base import AbstractOperator, Neg, eval_op
+from .add import AbstractAdd
+from .base import eval_op
 from .identity import Identity
-from .pipe import Pipe
-from .translate import CanAddandNeg
-from .utils import _require_role_for_pdict
-from coordinax._src.custom_types import CsDict
+from coordinax._src import api, charts as cxc, roles as cxr
+from coordinax._src.custom_types import CsDict, OptUSys, Unit
+from coordinax._src.transformations.utils import pack_uniform_unit
 
 
 @final
-class Boost(AbstractOperator):
-    r"""Operator for velocity boosts (Galilean frame transformations).
+class Boost(AbstractAdd):
+    r"""Operator for Galilean velocity boosts.
 
-    This operator implements a constant-velocity boost with well-defined
-    actions on all kinematic roles:
+    A boost represents a reference-frame velocity offset operator. It is a
+    time-parameterized affine transformation acting on events/points as well
+    as on physical tangent quantities.
 
-    **Point (position) action:**
+    Per the spec, it has distinct actions on different roles:
 
-    $$ x'(\tau) = x(\tau) + v_0 \cdot (\tau - \tau_0) $$
+    **Point (event/position)**: Time-dependent translation
 
-    The boost translates points by an amount proportional to elapsed time.
+        $$ p'(\tau) = p(\tau) + (\tau - \tau_0) \Delta v $$
 
-    **Displacement (Pos) action:**
+        where $\tau_0$ is the reference epoch (assumed to be 0).
 
-    $$ \Delta x' = \Delta x $$
+    **Pos (physical displacement)**: Identity (invariant under Galilean boost)
 
-    Displacements at the same $\tau$ are invariant under Galilean boosts.
+        $$ \Delta x' = \Delta x $$
 
-    **Velocity action:**
+    **Vel (velocity)**: Adds the boost velocity
 
-    $$ v' = v + v_0 $$
+        $$ v'(\tau) = v(\tau) + \Delta v $$
 
-    **Acceleration action:**
+    **Acc (acceleration)**:
+      - If $\Delta v$ is time-independent: Identity
+      - If $\Delta v(\tau)$ is time-dependent: Adds time derivative
 
-    $$ a' = a $$
-
-    Accelerations are invariant under constant boosts.
+        $$ a'(\tau) = a(\tau) + \frac{d}{d\tau}\Delta v(\tau) $$
 
     Parameters
     ----------
-    delta : Vector | Quantity | CsDict | Callable
-        The velocity offset $v_0$ to apply. Must have speed dimension.
+    delta : CsDict | Callable[[tau], CsDict]
+        The velocity offset to apply. Must have velocity dimension.
         If callable, will be evaluated at the time parameter ``tau``.
-    tau0 : Quantity['time'] | None
-        Reference epoch for the boost. Defaults to 0.
-        The boost translation for Point role is $v_0 \cdot (\tau - \tau_0)$.
+    chart : AbstractChart
+        Chart in which delta is expressed.
 
     Notes
     -----
-    The ``tau0`` parameter defaults to zero, meaning the point-action
-    translation is simply $v_0 \cdot \tau$. To change reference frames at a
-    specific epoch, pass an explicit ``tau0``.
+    - Applicable to ``Point``, ``PhysDisp``, ``PhysVel``, and ``PhysAcc`` roles
+    - For Point role, requires tau to be a time Quantity when delta is nonzero
+    - The ``delta`` is interpreted as a velocity offset
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.ops as cxo
+    >>> import coordinax as cx
 
     Create a boost operator:
 
-    >>> boost = cxo.Boost.from_([100, 0, 0], "km/s")
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
     >>> boost
-    Boost(Q(...[3], 'km / s'), ...)
+    Boost({'x': Q(100, 'km / s'), 'y': Q(0, 'km / s'),
+           'z': Q(0, 'km / s')}, chart=Cart3D())
 
-    With explicit reference epoch:
+    Apply to velocity:
 
-    >>> boost_epoch = cxo.Boost.from_([100, 0, 0], "km/s", tau0=u.Q(10, "yr"))
-    >>> boost_epoch.tau0
-    Quantity...10...'yr')
+    >>> v = u.Q([10, 20, 30], "km/s")
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_vel, cx.cart3d, v)
+    Quantity(Array([110., 120., 130.], dtype=float64), unit='km / s')
 
-    In a pipeline (shift + boost):
+    Apply to point (requires tau):
 
-    >>> shift = cxo.Translate.from_([1, 0, 0], "km")
-    >>> pipeline = shift | boost
+    >>> p = u.Q([0, 0, 0], "km")
+    >>> tau = u.Q(1.0, "s")
+    >>> cx.ops.apply_op(boost, tau, cx.roles.point, cx.cart3d, p)
+    Quantity(Array([100., 0., 0.], dtype=float64), unit='km')
 
     See Also
     --------
-    Translate : Point translation operator
-    AccelShift : Acceleration offset operator
+    Translate : Position translation operator
 
     """
 
-    delta: CanAddandNeg | Callable[[Any], Any]
-    """The velocity offset $v_0$ (speed units)."""
+    # delta, chart, and right_add inherited from AbstractAdd
 
-    tau0: u.AbstractQuantity = eqx.field(
-        default_factory=lambda: u.StaticQuantity(0, "s"),
-        converter=Unless(u.AbstractQuantity, u.Q.from_),
-    )
-    r"""Reference epoch $\tau_0$ for the boost (time units)."""
-
-    _: KW_ONLY
-
-    right_add: bool = eqx.field(default=True, static=True)
-
-    # -------------------------------------------
-
-    @property
-    def inverse(self) -> "Boost":
-        """The inverse boost (negated velocity offset).
-
-        Examples
-        --------
-        >>> import coordinax.ops as cxo
-
-        >>> boost = cxo.Boost.from_([100, 0, 0], "km/s")
-        >>> boost.inverse
-        Boost(Q(...[3], 'km / s'), ...)
-
-        """
-        delta = self.delta
-        inv = -delta if (not callable(delta) or isinstance(delta, Neg)) else Neg(delta)
-        return Boost(inv, tau0=self.tau0)
-
-    # -------------------------------------------
-    # Python API
-
-    def __add__(self, other: object, /) -> Union["Boost", Pipe]:
-        """Combine two boosts into a single boost."""
-        if not isinstance(other, Boost):
-            return NotImplemented
-
-        if not callable(self.delta) and not callable(other.delta):
-            # Use self.tau0 for the combined boost
-            return Boost(self.delta + other.delta, tau0=self.tau0)
-        return Pipe((self, other))
-
-    def __neg__(self, /) -> "Boost":
-        """Return negative of the boost."""
-        return self.inverse
+    # inverse, __add__, and __neg__ inherited from AbstractAdd
 
 
-@Boost.from_.dispatch(precedence=1)
-def from_(
-    cls: type[Boost],
-    x: list,  # type: ignore[type-arg]
-    unit: str,
-    /,
-    *,
-    tau0: u.AbstractQuantity = u.StaticQuantity(0, "s"),
-) -> Boost:
-    """Construct a Boost from a list and unit string.
+@Boost.from_.dispatch
+def from_(cls: type[Boost], obj: Boost, /) -> Boost:
+    """Construct a Boost from another Boost.
 
     Examples
     --------
-    >>> import unxt as u
-    >>> import coordinax.ops as cxo
-
-    >>> cxo.Boost.from_([100, 0, 0], "km/s")
-    Boost(Q(...[3], 'km / s'), ...)
-
-    With explicit reference epoch:
-
-    >>> cxo.Boost.from_([100, 0, 0], "km/s", tau0=u.Q(1, "yr"))
-    Boost(Q(...[3], 'km / s'), ...)
+    >>> import coordinax as cx
+    >>> boost1 = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> cx.ops.Boost.from_(boost1) is boost1
+    True
 
     """
-    return Boost(u.Q(x, unit), tau0=tau0)
+    return obj
 
 
 @Boost.from_.dispatch
-def from_(
-    cls: type[Boost],
-    delta: Any,
-    /,
-    *,
-    tau0: u.AbstractQuantity = u.StaticQuantity(0, "s"),
-) -> Boost:
-    """Construct a Boost from a Vector or similar."""
-    return Boost(delta, tau0=tau0)
-
-
-@Boost.from_.dispatch
-def from_(
-    cls: type[Boost],
-    q: u.AbstractQuantity,
-    /,
-    *,
-    tau0: u.AbstractQuantity = u.StaticQuantity(0, "s"),
-) -> Boost:
+def from_(cls: type[Boost], q: u.AbstractQuantity, /) -> Boost:
     """Construct a Boost from a Quantity.
 
     Examples
@@ -223,22 +147,20 @@ def from_(
     >>> import coordinax.ops as cxo
 
     >>> cxo.Boost.from_(u.Q([100, 0, 0], "km/s"))
-    Boost(...)
-
-    With explicit reference epoch:
-
-    >>> cxo.Boost.from_(u.Q([100, 0, 0], "km/s"), tau0=u.Q(1, "yr"))
-    Boost(Q(...[3], 'km / s'), ...)
+    Boost({'x': Q(100, 'km / s'), 'y': Q(0, 'km / s'),
+           'z': Q(0, 'km / s')}, chart=Cart3D())
 
     """
-    return Boost(q, tau0=tau0)
+    chart = api.guess_chart(q)
+    x = api.cdict(q, chart)
+    return cls(x, chart=chart)
 
 
 @plum.dispatch
-def simplify(op: Boost, /, **kwargs: Any) -> Boost | Identity:
+def simplify(op: Boost, /, **kw: Any) -> Boost | Identity:
     """Simplify a Boost operator.
 
-    A boost with zero delta simplifies to Identity.
+    A boost with zero dv simplifies to Identity.
 
     Examples
     --------
@@ -253,348 +175,734 @@ def simplify(op: Boost, /, **kwargs: Any) -> Boost | Identity:
     Identity()
 
     """
-    if jnp.allclose(u.ustrip(AllowValue, op.delta), 0, **kwargs):
+    delta_vals = jnp.stack([u.ustrip(AllowValue, v) for v in op.delta.values()])
+    if jnp.allclose(delta_vals, 0, **kw):
         return Identity()
     return op
 
 
-@plum.dispatch
-def apply_op(
-    op: Boost,
-    tau: Any,
-    x: u.AbstractQuantity,
-    /,
-    *,
-    role: Any = None,
-    at: Any = None,
-) -> u.AbstractQuantity:
-    """Apply Boost to a Quantity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax.ops as cxo
-
-    >>> boost = cxo.Boost.from_([100, 0, 0], "km/s")
-    >>> v = u.Q([0, 0, 0], "km/s")
-    >>> cxo.apply_op(boost, None, v)
-    Quantity(...[100..., 0..., 0...]...'km / s')
-
-    """
-    op_eval: Boost = eval_op(op, tau)
-    delta = op_eval.delta
-    if op.right_add:
-        return x + delta
-    return delta + x
+# ============================================================================
+# Helper functions
 
 
-def _compute_boost_displacement(
-    op: Boost, tau: Any, tau0: u.AbstractQuantity
-) -> u.AbstractQuantity:
-    r"""Compute the displacement $v_0 \cdot (\tau - \tau_0)$ for boost on Point.
+def _require_tau_time(tau: Any, /) -> tuple[Array, Unit]:
+    """Return (tau_value, tau_unit), requiring tau to be a time quantity."""
+    # We require a Quantity-like tau with time dimension so we can form d/dtau.
+    tau = eqx.error_if(
+        tau,
+        not u.quantity.is_any_quantity(tau),
+        "Boost requires tau as a time Quantity when delta is time-dependent",
+    )
+    tau_unit = u.unit_of(tau)
+    tau = eqx.error_if(
+        tau,
+        u.dimension_of(tau_unit) != u.dimension_of(u.unit("s")),
+        "Boost requires tau to have time dimension",
+    )
+    # Differentiate with respect to the numeric tau in its own unit.
+    # Ensure float dtype for jacfwd
+    return jnp.asarray(u.ustrip(tau_unit, tau), dtype=float), tau_unit
 
-    Parameters
-    ----------
-    op : Boost
-        The boost operator (with velocity delta).
-    tau : Any
-        Current time parameter.
-    tau0 : Quantity['time']
-        Reference epoch.
+
+def _delta_values_fn(
+    delta_fn: Callable[[Any], Any], chart: cxc.AbstractChart, tau_unit: Unit, /
+) -> tuple[Callable[[Array], Array], Unit | None]:
+    """Build a pure-JAX function returning packed delta values.
 
     Returns
     -------
-    Quantity['length']
-        The displacement to apply.
-
-    """
-    v0 = eval_op(op, tau).delta
-    dt = tau - tau0
-    return v0 * dt
-
-
-@plum.dispatch
-def apply_op(
-    op: Boost,
-    tau: Any,
-    x: CsDict,
-    /,
-    *,
-    role: cxr.AbstractRole | None = None,
-    at: Any = None,
-) -> CsDict:
-    r"""Apply Boost to a CsDict.
-
-    The action depends on the role:
-
-    - **Point**: $x'(\tau) = x(\tau) + v_0 \cdot (\tau - \tau_0)$
-    - **Pos**: Identity (displacement invariant under boost)
-    - **Vel**: $v' = v + v_0$
-    - **Acc**: Identity (constant boost leaves acceleration invariant)
-
-    Parameters
-    ----------
-    op : Boost
-        The boost operator.
-    tau : Any
-        Time parameter. Required for Point role to compute $\tau - \tau_0$.
-    x : CsDict
-        The data to boost.
-    role : AbstractRole
-        The geometric role. Required for CsDict inputs.
-    at : Any
-        Base point for non-Euclidean charts.
-
-    Returns
-    -------
-    CsDict
-        The transformed data.
-
-    Raises
-    ------
-    TypeError
-        If ``role`` is not provided.
-
-    """
-    _require_role_for_pdict(role)
-    del at  # may be needed for non-Euclidean; currently unused
-
-    # Point role: translate by v0 * (tau - tau0)
-    if isinstance(role, cxr.Point):
-        displacement = _compute_boost_displacement(op, tau, op.tau0)
-        return _apply_add_to_pdict(displacement, x)
-
-    # Pos role: identity (displacement invariant)
-    if isinstance(role, cxr.Pos):
-        return x
-
-    # Vel role: add boost velocity
-    if isinstance(role, cxr.Vel):
-        op_eval: Boost = eval_op(op, tau)
-        return _apply_add_to_pdict(op_eval.delta, x)
-
-    # Acc role: identity (constant boost)
-    if isinstance(role, cxr.Acc):
-        return x
-
-    # Unknown role
-    msg = f"Boost does not know how to act on role {role}."
-    raise TypeError(msg)
-
-
-#####################################################################
-# AccelShift: Acceleration offset
-
-
-@final
-class AccelShift(AbstractOperator):
-    r"""Operator for acceleration offsets.
-
-    This operator applies an acceleration offset to acceleration-role vectors.
-    Mathematically, it implements:
-
-    $$
-    a' = a + \Delta a
-    $$
-
-    where $a$ is an acceleration and $\Delta a$ is the offset.
-
-    Parameters
-    ----------
-    delta : Vector | Quantity | CsDict | Callable
-        The acceleration offset to apply. Must have acceleration dimension.
-        If callable, will be evaluated at the time parameter ``tau``.
+    (f, unit)
+        f: tau_value -> Array[... , n] of dv values in `chart.components` order.
+        unit: common velocity unit returned by `pack_uniform_unit`.
 
     Notes
     -----
-    - Only applicable to ``Acc`` role vectors
-    - Raises ``TypeError`` when applied to other roles
-    - When applied to a ``FiberPoint``, acts on the acceleration field
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax.ops as cxo
-
-    Create an acceleration shift operator:
-
-    >>> accel = cxo.AccelShift.from_([0, 0, -9.8], "m/s^2")
-    >>> accel
-    AccelShift(Q(f64[3], 'm / s2'))
-
-    See Also
-    --------
-    Translate : Point translation operator
-    Boost : Velocity boost operator
+    We wrap `tau_value` back into a Quantity with unit `tau_unit` before calling
+    the user-provided `delta_fn`.
 
     """
+    keys = chart.components
 
-    delta: CanAddandNeg | Callable[[Any], Any]
-    """The acceleration offset (acceleration units)."""
+    def f(tau_value: Array) -> Array:
+        tau_q = u.Q(tau_value, tau_unit)
+        d = delta_fn(tau_q)
+        vals, _unit = pack_uniform_unit(d, keys=keys)
+        # Ensure an array output for JAX differentiation.
+        return jnp.asarray(vals)
 
-    _: KW_ONLY
+    # One eager call to learn the unit.
+    vals0, unit0 = pack_uniform_unit(delta_fn(u.Q(jnp.zeros(()), tau_unit)), keys=keys)
+    del vals0
 
-    right_add: bool = eqx.field(default=True, static=True)
-
-    # -------------------------------------------
-
-    @property
-    def inverse(self) -> "AccelShift":
-        """The inverse acceleration shift (negated offset).
-
-        Examples
-        --------
-        >>> import coordinax.ops as cxo
-
-        >>> accel = cxo.AccelShift.from_([0, 0, -9.8], "m/s^2")
-        >>> accel.inverse
-        AccelShift(Q(...[3], 'm / s2'))
-
-        """
-        delta = self.delta
-        inv = -delta if (not callable(delta) or isinstance(delta, Neg)) else Neg(delta)
-        return AccelShift(inv)
-
-    # -------------------------------------------
-    # Python API
-
-    def __add__(self, other: object, /) -> Union["AccelShift", Pipe]:
-        """Combine two acceleration shifts into a single shift."""
-        if not isinstance(other, AccelShift):
-            return NotImplemented
-
-        if not callable(self.delta) and not callable(other.delta):
-            return AccelShift(self.delta + other.delta)
-        return Pipe((self, other))
-
-    def __neg__(self, /) -> "AccelShift":
-        """Return negative of the acceleration shift."""
-        return self.inverse
+    return f, unit0
 
 
-@AccelShift.from_.dispatch
-def from_(cls: type[AccelShift], delta: Any, /) -> AccelShift:
-    """Construct an AccelShift from a Vector or similar."""
-    return AccelShift(delta)
-
-
-@AccelShift.from_.dispatch
-def from_(cls: type[AccelShift], q: u.AbstractQuantity, /) -> AccelShift:
-    """Construct an AccelShift from a Quantity.
-
-    Examples
-    --------
-    >>> import unxt as u
-    >>> import coordinax.ops as cxo
-
-    >>> cxo.AccelShift.from_(u.Q([0, 0, -9.8], "m/s^2"))
-    AccelShift(...)
-
-    """
-    return AccelShift(q)
-
-
-@plum.dispatch
-def simplify(op: AccelShift, /, **kwargs: Any) -> AccelShift | Identity:
-    """Simplify an AccelShift operator.
-
-    An acceleration shift with zero delta simplifies to Identity.
-
-    Examples
-    --------
-    >>> import coordinax.ops as cxo
-
-    >>> op = cxo.AccelShift.from_([0, 0, -9.8], "m/s^2")
-    >>> cxo.simplify(op)
-    AccelShift(...)
-
-    >>> op = cxo.AccelShift.from_([0, 0, 0], "m/s^2")
-    >>> cxo.simplify(op)
-    Identity()
-
-    """
-    if jnp.allclose(u.ustrip(AllowValue, op.delta), 0, **kwargs):
-        return Identity()
-    return op
-
-
-@plum.dispatch
-def apply_op(
-    op: AccelShift,
-    tau: Any,
-    x: CsDict,
-    /,
-    *,
-    role: cxr.AbstractRole | None = None,
-    at: Any = None,
-) -> CsDict:
-    """Apply AccelShift to a CsDict.
+def _time_derivative_delta(
+    op: Boost, tau: Any, /, order: int
+) -> tuple[CsDict, cxc.AbstractChart]:
+    """Compute d^order/dtau^order delta(tau) as a CsDict in op.chart.
 
     Parameters
     ----------
-    op : AccelShift
-        The acceleration shift operator.
+    op : Boost
+        The boost operator with callable delta.
     tau : Any
-        Time parameter for time-dependent operators.
-    x : CsDict
-        The acceleration data to shift.
-    role : AbstractRole
-        Must be ``Acc``. Required for CsDict inputs.
-    at : Any
-        Base point for non-Euclidean charts.
+        Time parameter (must be a Quantity with time dimension).
+    order
+        1 for acceleration shift.
 
     Returns
     -------
-    CsDict
-        The shifted acceleration data.
-
-    Raises
-    ------
-    TypeError
-        If ``role`` is not ``Acc`` or not provided.
+    (deltas, chart)
+        `deltas` has the same component keys as `op.chart.components`.
+        Units are `velocity / time^order`.
 
     """
-    _require_role_for_pdict(role)
-    del at  # may be needed for non-Euclidean; currently unused
+    if not callable(op.delta):
+        raise TypeError("_time_derivative_delta requires callable delta")
 
-    # Validate that role is Acc
-    if not isinstance(role, cxr.Acc):
-        msg = (
-            f"AccelShift can only act on Acc role, got {role}. "
-            "Use Translate for Point or Boost for Vel."
-        )
-        raise TypeError(msg)
+    tau_value, tau_unit = _require_tau_time(tau)
 
-    # Materialize and apply
-    op_eval: AccelShift = eval_op(op, tau)
-    return _apply_add_to_pdict(op_eval.delta, x)
+    f, vel_unit = _delta_values_fn(op.delta, op.chart, tau_unit)
+
+    if order == 1:
+        df = jax.jacfwd(f)(tau_value)
+        out_vals = df
+        out_unit = None if vel_unit is None else (vel_unit / tau_unit)
+    else:
+        msg = f"unsupported derivative order={order}"
+        raise ValueError(msg)
+
+    # Unpack back into a component dict.
+    comps = op.chart.components
+    if out_unit is None:
+        out = {k: out_vals[..., i] for i, k in enumerate(comps)}
+    else:
+        out = {k: u.Q(out_vals[..., i], out_unit) for i, k in enumerate(comps)}
+
+    return out, op.chart
+
+
+# ============================================================================
+# apply_op dispatches
+
+# ------------------------------
+# ArrayLike dispatches
 
 
 @plum.dispatch
 def apply_op(
-    op: AccelShift,
+    op: Boost,
     tau: Any,
-    x: u.AbstractQuantity,
+    role: cxr.Point,
+    chart: cxc.AbstractChart,
+    x: ArrayLike,
     /,
-    *,
-    role: Any = None,
-    at: Any = None,
-) -> u.AbstractQuantity:
-    """Apply AccelShift to a Quantity.
+    usys: OptUSys = None,
+    **kw: Any,
+) -> Array:
+    r"""Apply Boost to a Point-valued ArrayLike.
+
+    Per spec: Boost acts on Point as a time-dependent translation:
+    $$ p'(\tau) = p(\tau) + (\tau - \tau_0) * \Delta_v $$
+
+    For constant boost, this is a translation by $(\tau - \tau_0) * \Delta_v$.
+    Requires tau to be a time Quantity when delta is nonzero.
 
     Examples
     --------
+    >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.ops as cxo
+    >>> import coordinax as cx
 
-    >>> accel = cxo.AccelShift.from_([0, 0, -9.8], "m/s^2")
-    >>> a = u.Q([0, 0, 0], "m/s^2")
-    >>> cxo.apply_op(accel, None, a)
-    Quantity(...[ 0. ,  0. , -9.8]...'m / s2')
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> x = jnp.array([0.0, 0.0, 0.0])
+    >>> tau = u.Q(1.0, "s")
+    >>> usys = u.unitsystems.si
+    >>> cx.ops.apply_op(boost, tau, cx.roles.point, cx.cart3d, x, usys=usys)
+    Array([100000., 0., 0.], dtype=float64)
 
     """
-    op_eval: AccelShift = eval_op(op, tau)
-    delta = op_eval.delta
-    if op.right_add:
-        return x + delta
-    return delta + x
+    del role, kw
+    usys = eqx.error_if(usys, usys is None, "usys required")
+
+    # For ArrayLike, we only support Cartesian charts.
+    cart = chart.cartesian
+    chart = eqx.error_if(
+        chart, chart != cart, "Boost(Point, ArrayLike) requires a Cartesian chart"
+    )
+
+    x_arr = jnp.asarray(x)
+
+    # Materialize dv
+    op_eval = eval_op(op, tau)
+
+    # Restrict to matching Cartesian charts for ArrayLike.
+    op_chart = op.chart
+    op_cart = op_chart.cartesian
+    _ = eqx.error_if(
+        op_chart,
+        op_chart != op_cart or op_cart != chart,
+        "Boost(Point, ArrayLike) requires op.chart to match the input "
+        "Cartesian chart; use CsDict/Quantity for nontrivial chart conversions.",
+    )
+
+    dv_vals, dv_unit = pack_uniform_unit(op_eval.delta, keys=chart.components)
+
+    # Check if dv is nonzero - if so, require tau to be a time Quantity
+    if not jnp.allclose(dv_vals, 0):
+        tau_value, tau_unit = _require_tau_time(tau)
+
+        # Convert dv to canonical velocity unit
+        vel_unit = usys[u.dimension_of(u.unit("m/s"))]
+        if dv_unit is not None:
+            dv_vals = u.uconvert_value(vel_unit, dv_unit, dv_vals)
+
+        # Compute displacement: delta_x = (tau - tau0) * delta_v
+        # Assuming tau0 = 0 for simplicity (as per common convention)
+        displacement = tau_value * dv_vals
+
+        # Convert to position unit
+        pos_unit = usys[u.dimension_of(u.unit("m"))]
+        # displacement has units of time * velocity = length
+        # dv_vals is already in vel_unit, so tau_value * dv_vals has correct dimension
+
+        return x_arr + displacement if op_eval.right_add else displacement + x_arr
+    else:
+        # Zero boost: identity on points
+        return x_arr
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysDisp,
+    chart: cxc.AbstractChart,
+    x: ArrayLike,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> Array:
+    """Apply Boost to a Pos-valued ArrayLike.
+
+    Per spec: Galilean boost is identity on Pos (physical displacements).
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import coordinax as cx
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> d = jnp.array([10.0, 20.0, 30.0])
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_disp, cx.cart3d, d)
+    Array([10., 20., 30.], dtype=float64)
+
+    """
+    del op, tau, role, chart, usys, kw
+    return jnp.asarray(x)
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysVel,
+    chart: cxc.AbstractChart,
+    x: ArrayLike,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> Array:
+    """Apply Boost to a Vel-valued ArrayLike.
+
+    ArrayLike is interpreted as Cartesian velocity components in the canonical
+    velocity unit from `usys`. This dispatch only supports the case `op.chart`
+    matches the input Cartesian chart.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import coordinax as cx
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> v = jnp.array([10.0, 20.0, 30.0])
+    >>> usys = u.unitsystems.si
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_vel, cx.cart3d, v, usys=usys)
+    Array([100010., 100020., 100030.], dtype=float64)
+
+    """
+    del role, kw
+    usys = eqx.error_if(usys, usys is None, "usys required")
+
+    # For ArrayLike, we only support Cartesian charts.
+    cart = chart.cartesian
+    chart = eqx.error_if(
+        chart, chart != cart, "Boost(Vel, ArrayLike) requires a Cartesian chart"
+    )
+
+    x_arr = jnp.asarray(x)
+
+    # Materialize dv
+    op_eval = eval_op(op, tau)
+
+    # Restrict to matching Cartesian charts for ArrayLike.
+    op_chart = op.chart
+    op_cart = op_chart.cartesian
+    _ = eqx.error_if(
+        op_chart,
+        op_chart != op_cart or op_cart != chart,
+        "Boost(Vel, ArrayLike) requires op.chart to match the input "
+        "Cartesian chart; use CsDict/Quantity for nontrivial chart conversions.",
+    )
+
+    dv_vals, dv_unit = pack_uniform_unit(op_eval.delta, keys=chart.components)
+
+    # Convert to canonical velocity unit in usys, then strip to a raw array.
+    vel_unit = usys[u.dimension_of(u.unit("m/s"))]
+    if dv_unit is not None:
+        dv_vals = u.uconvert_value(vel_unit, dv_unit, dv_vals)
+
+    return x_arr + dv_vals if op_eval.right_add else dv_vals + x_arr
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysAcc,
+    chart: cxc.AbstractChart,
+    x: ArrayLike,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> Array:
+    """Apply Boost to an PhysAcc-valued ArrayLike.
+
+    ArrayLike is interpreted as Cartesian acceleration components in the
+    canonical acceleration unit from `usys`. For time-dependent `dv`, `tau`
+    must be a time Quantity. This dispatch only supports the case `op.chart`
+    matches the input Cartesian chart.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import coordinax as cx
+
+    Time-independent boost is identity on acceleration:
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> a = jnp.array([1.0, 2.0, 3.0])
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_acc, cx.cart3d, a)
+    Array([1., 2., 3.], dtype=float64)
+
+    """
+    del role, kw
+
+    usys = eqx.error_if(usys, usys is None, "usys required")
+
+    cart = chart.cartesian
+    chart = eqx.error_if(
+        chart, chart != cart, "Boost(Acc, ArrayLike) requires a Cartesian chart"
+    )
+
+    x_arr = jnp.asarray(x)
+
+    # Time-independent boost: identity on acceleration.
+    if not callable(op.delta):
+        return x_arr
+
+    # Restrict to matching Cartesian charts for ArrayLike.
+    op_chart = op.chart
+    op_cart = op_chart.cartesian
+    _ = eqx.error_if(
+        op_chart,
+        op_chart != op_cart or op_cart != chart,
+        "Boost(Acc, ArrayLike) with time-dependent dv requires op.chart to "
+        "match the input Cartesian chart; use CsDict/Quantity for nontrivial "
+        "chart conversions.",
+    )
+
+    d1_op, _ = _time_derivative_delta(op, tau, order=1)
+    da_vals, da_unit = pack_uniform_unit(d1_op, keys=chart.components)
+
+    # Convert to canonical acceleration unit in usys, then strip to a raw array.
+    acc_unit = usys[u.dimension_of(u.unit("m/s2"))]
+    if da_unit is not None:
+        da_vals = u.uconvert_value(acc_unit, da_unit, da_vals)
+
+    return x_arr + da_vals if eval_op(op, tau).right_add else da_vals + x_arr
+
+
+# ------------------------------
+# Quantity dispatches
+
+_MSG_NEEDS_AT_BOOST: Final = (
+    "Boost on physical tangent roles requires `at=` (base point) when chart "
+    "conversion is needed. Provide `at` as a Point-valued CsDict in the same "
+    "`chart` as `x`."
+)
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.Point,
+    chart: cxc.AbstractChart,
+    x: u.AbstractQuantity,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> u.AbstractQuantity:
+    """Apply Boost to a Point-valued Quantity.
+
+    Per spec: Boost acts on Point as a time-dependent translation:
+    p'(tau) = p(tau) + (tau - tau0) * delta_v
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> x = u.Q([0.0, 0.0, 0.0], "km")
+    >>> tau = u.Q(1.0, "s")
+    >>> cx.ops.apply_op(boost, tau, cx.roles.point, cx.cart3d, x)
+    Quantity(Array([100., 0., 0.], dtype=float64), unit='km')
+
+    """
+    del role, kw, usys
+
+    op_eval = eval_op(op, tau)
+    dv = jnp.stack([op_eval.delta[k] for k in op.chart.components], axis=-1)
+
+    # Check if dv is nonzero - if so, require tau to be a time Quantity
+    if not jnp.allclose(u.ustrip(AllowValue, dv), 0):
+        tau_value, tau_unit = _require_tau_time(tau)
+
+        # Compute displacement: delta_x = (tau - tau0) * delta_v
+        # Assuming tau0 = 0 for simplicity
+        displacement = tau_value * dv
+
+        return x + displacement if op_eval.right_add else displacement + x
+    else:
+        # Zero boost: identity on points
+        return x
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysDisp,
+    chart: cxc.AbstractChart,
+    x: u.AbstractQuantity,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> u.AbstractQuantity:
+    """Apply Boost to a Pos-valued Quantity.
+
+    Per spec: Galilean boost is identity on PhysDisp.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> d = u.Q([10.0, 20.0, 30.0], "km")
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_disp, cx.cart3d, d)
+    Quantity(Array([10., 20., 30.], dtype=float64), unit='km')
+
+    """
+    del op, tau, role, chart, usys, kw
+    return x
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysVel,
+    chart: cxc.AbstractChart,
+    x: u.AbstractQuantity,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> u.AbstractQuantity:
+    """Apply Boost to a Vel-valued Quantity.
+
+    The dv is added to the velocity. For time-dependent dv, it is evaluated
+    at tau.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> v = u.Q([10.0, 20.0, 30.0], "km/s")
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_vel, cx.cart3d, v)
+    Quantity(Array([110., 120., 130.], dtype=float64), unit='km / s')
+
+    """
+    del role, kw, usys
+
+    op_eval = eval_op(op, tau)
+    dv = jnp.stack([op_eval.delta[k] for k in op.chart.components], axis=-1)
+
+    return x + dv if op_eval.right_add else dv + x
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysAcc,
+    chart: cxc.AbstractChart,
+    x: u.AbstractQuantity,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> u.AbstractQuantity:
+    """Apply Boost to an PhysAcc-valued Quantity.
+
+    If `dv` is time-independent, this is a no-op.
+
+    If `dv` is time-dependent, the induced acceleration shift is
+
+        a' = a + d(dv)/dt.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    Time-independent boost is a no-op on acceleration:
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> a = u.Q([1.0, 2.0, 3.0], "m/s**2")
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_acc, cx.cart3d, a)
+    Quantity(Array([1., 2., 3.], dtype=float64), unit='m / s2')
+
+    """
+    del role, kw, usys
+
+    if not callable(op.delta):
+        return x
+
+    d1, _ = _time_derivative_delta(op, tau, order=1)
+    da = jnp.stack([d1[k] for k in op.chart.components], axis=-1)
+
+    return x + da if eval_op(op, tau).right_add else da + x
+
+
+# ------------------------------
+# CsDict dispatches
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.Point,
+    chart: cxc.AbstractChart,
+    x: CsDict,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CsDict:
+    """Apply Boost to a Point-valued CsDict.
+
+    Per spec: Boost acts on Point as a time-dependent translation:
+    p'(tau) = p(tau) + (tau - tau0) * delta_v
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> x = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
+    >>> tau = u.Q(1.0, "s")
+    >>> result = cx.ops.apply_op(boost, tau, cx.roles.point, cx.cart3d, x)
+    >>> result["x"]
+    Quantity(Array(100., dtype=float64), unit='km')
+
+    """
+    del role, kw, usys
+
+    op_eval = eval_op(op, tau)
+
+    # Check if dv is nonzero - if so, require tau to be a time Quantity
+    dv_vals = jnp.stack([u.ustrip(AllowValue, v) for v in op_eval.delta.values()])
+    if not jnp.allclose(dv_vals, 0):
+        tau_value, tau_unit = _require_tau_time(tau)
+
+        # Compute displacement: delta_x = (tau - tau0) * delta_v
+        # Assuming tau0 = 0 for simplicity
+        displacement = {k: tau_value * op_eval.delta[k] for k in chart.components}
+
+        # Add displacement to point
+        if op_eval.right_add:
+            return {k: x[k] + displacement[k] for k in chart.components}
+        else:
+            return {k: displacement[k] + x[k] for k in chart.components}
+    else:
+        # Zero boost: identity on points
+        return x
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysDisp,
+    chart: cxc.AbstractChart,
+    x: CsDict,
+    /,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CsDict:
+    """Apply Boost to a Pos-valued CsDict.
+
+    Per spec: Galilean boost is identity on Pos (physical displacements).
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> d = {"x": u.Q(10, "km"), "y": u.Q(20, "km"), "z": u.Q(30, "km")}
+    >>> result = cx.ops.apply_op(boost, None, cx.roles.phys_disp, cx.cart3d, d)
+    >>> result == d
+    True
+
+    """
+    del op, tau, role, chart, usys, kw
+    return x
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysVel,
+    chart: cxc.AbstractChart,
+    x: CsDict,
+    /,
+    *,
+    at: CsDict | None = None,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CsDict:
+    r"""Apply Boost to a Vel-valued CsDict.
+
+    The velocity boost $\Delta v$ is added to the velocity. The shift is
+    computed in `op.chart` and converted to `chart` as a *physical tangent
+    vector* evaluated at the base point `at`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> v = {"x": u.Q(10, "km/s"), "y": u.Q(20, "km/s"),
+    ...      "z": u.Q(30, "km/s")}
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_vel, cx.cart3d, v)
+    {'x': Quantity(..., unit='km / s'), ...}
+
+    """
+    del role, kw
+
+    op_eval = eval_op(op, tau)
+
+    # Need a base point if any physical tangent transform is required.
+    needs_at = (chart != chart.cartesian) or (op.chart != op.chart.cartesian)
+    x = eqx.error_if(x, needs_at and at is None, _MSG_NEEDS_AT_BOOST)
+
+    if not needs_at:
+        # Both charts are Cartesian; components align by convention.
+        dv = op_eval.delta
+    else:
+        # Express base point in the operator chart for the tangent transform.
+        at0 = at if at is not None else {}
+        at_in_op = api.point_transform(op.chart, chart, at0, usys=usys)
+        dv = api.physical_tangent_transform(
+            chart, op.chart, op_eval.delta, at=at_in_op, usys=usys
+        )
+
+    return jtu.map(
+        jnp.add,
+        *((x, dv) if op_eval.right_add else (dv, x)),
+        is_leaf=u.quantity.is_any_quantity,
+    )
+
+
+@plum.dispatch
+def apply_op(
+    op: Boost,
+    tau: Any,
+    role: cxr.PhysAcc,
+    chart: cxc.AbstractChart,
+    x: CsDict,
+    /,
+    *,
+    at: CsDict | None = None,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CsDict:
+    r"""Apply Boost to an PhysAcc-valued CsDict.
+
+    If `dv` is time-independent: no-op.
+
+    If `dv` is time-dependent, the induced acceleration shift is
+
+        a'(\tau) = a(\tau) + d(dv)/dt.
+
+    The shift is computed in `op.chart` and converted to `chart` as a
+    *physical tangent vector* evaluated at the base point `at`.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import unxt as u
+
+    Time-independent boost is a no-op on acceleration:
+
+    >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
+    >>> a = {"x": u.Q(1, "m/s**2"), "y": u.Q(2, "m/s**2"),
+    ...      "z": u.Q(3, "m/s**2")}
+    >>> result = cx.ops.apply_op(boost, None, cx.roles.phys_acc, cx.cart3d, a)
+    >>> result == a
+    True
+
+    """
+    del role, kw
+
+    if not callable(op.delta):
+        return x
+
+    needs_at = (chart != chart.cartesian) or (op.chart != op.chart.cartesian)
+    x = eqx.error_if(x, needs_at and at is None, _MSG_NEEDS_AT_BOOST)
+
+    d1_op, _ = _time_derivative_delta(op, tau, order=1)
+
+    if not needs_at:
+        da = d1_op
+    else:
+        at0 = at if at is not None else {}
+        at_in_op = api.point_transform(op.chart, chart, at0, usys=usys)
+        da = api.physical_tangent_transform(
+            chart, op.chart, d1_op, at=at_in_op, usys=usys
+        )
+
+    return jtu.map(
+        jnp.add,
+        *((x, da) if eval_op(op, tau).right_add else (da, x)),
+        is_leaf=u.quantity.is_any_quantity,
+    )

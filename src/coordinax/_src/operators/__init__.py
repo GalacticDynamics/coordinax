@@ -6,18 +6,18 @@ __all__ = (
     # Classes
     "AbstractOperator",
     "AbstractCompositeOperator",
+    "AbstractAdd",
     "Pipe",
     "Identity",
     "Rotate",
     # Role-specialized primitive operators
     "Translate",
     "Boost",
-    "AccelShift",
     # Composite
     "GalileanOp",
 )
 
-from .accelshift import AccelShift
+from .add import AbstractAdd
 from .base import AbstractOperator, eval_op
 from .boost import Boost
 from .composite import AbstractCompositeOperator
@@ -26,3 +26,6 @@ from .identity import Identity
 from .pipe import Pipe
 from .rotate import Rotate
 from .translate import Translate
+
+# isort: split
+from . import register_apply  # noqa: F401

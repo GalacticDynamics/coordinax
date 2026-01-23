@@ -2,19 +2,55 @@
 
 __all__ = ("guess_chart",)
 
+import functools as ft
+
+from jaxtyping import Array, ArrayLike
 from typing import Any, Final
 
 import plum
 
+import quaxed.numpy as jnp
 import unxt as u
 
-from .base import CHART_CLASSES, AbstractChart
+from .base import NON_ABC_CHART_CLASSES, AbstractChart
 from .euclidean import cart0d, cart1d, cart2d, cart3d
 from coordinax._src import api
 from coordinax._src.custom_types import CsDict
 
 # ==============================================================
 # Chart guessing utilities
+
+
+@plum.dispatch
+@ft.cache
+def guess_chart(obj: frozenset[str], /) -> AbstractChart:  # type: ignore[type-arg]
+    """Infer a chart from the keys of a component dictionary.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> d = {"x": 1.0, "y": 2.0, "z": 3.0}
+    >>> chart = cx.charts.guess_chart(d)
+    >>> chart
+    Cart3D()
+
+    """
+    # Infer the representation from the keys
+    chart = None
+    for chart_cls in NON_ABC_CHART_CLASSES:
+        try:
+            chart_instance = chart_cls()
+        except TypeError:  # TODO: more efficient way to generate components list
+            continue
+        if frozenset(chart_instance.components) == obj:
+            chart = chart_instance
+            break
+
+    if chart is None:
+        msg = f"Cannot infer representation from keys {obj}"
+        raise ValueError(msg)
+
+    return chart
 
 
 @plum.dispatch
@@ -30,20 +66,7 @@ def guess_chart(obj: CsDict, /) -> AbstractChart:  # type: ignore[type-arg]
     Cart3D()
 
     """
-    # Infer the representation from the keys
-    obj_keys = set(obj.keys())
-    chart = None
-    for chart_cls in CHART_CLASSES:
-        chart_instance = chart_cls()
-        if set(chart_instance.components) == obj_keys:
-            chart = chart_instance
-            break
-
-    if chart is None:
-        msg = f"Cannot infer representation from keys {obj_keys}"
-        raise ValueError(msg)
-
-    return chart
+    return api.guess_chart(frozenset(obj.keys()))
 
 
 SHAPE_CHART_MAP: Final[dict[int, AbstractChart[Any, Any]]] = {
@@ -55,8 +78,8 @@ SHAPE_CHART_MAP: Final[dict[int, AbstractChart[Any, Any]]] = {
 
 
 @plum.dispatch
-def guess_chart(obj: u.AbstractQuantity, /) -> AbstractChart:  # type: ignore[type-arg]
-    """Infer a Cartesian chart from the shape of a quantity.
+def guess_chart(obj: Array | u.AbstractQuantity, /) -> AbstractChart:  # type: ignore[type-arg]
+    """Infer a Cartesian chart from the shape of a value / quantity.
 
     Examples
     --------
@@ -158,6 +181,42 @@ def cdict(obj: u.AbstractQuantity, chart: AbstractChart, /) -> CsDict:  # type: 
     if obj.shape[-1] != len(chart.components):
         msg = (
             f"Quantity last dimension {obj.shape[-1]} does not match "
+            f"chart with {len(chart.components)} components."
+        )
+        raise ValueError(msg)
+    return {k: obj[..., i] for i, k in enumerate(chart.components)}
+
+
+@plum.dispatch
+def cdict(obj: ArrayLike, chart: AbstractChart, /) -> CsDict:  # type: ignore[type-arg]
+    """Extract component dictionary from an array.
+
+    Treats the array as a Cartesian vector with components in the last
+    dimension. The appropriate Cartesian chart is determined from the last
+    dimension of the quantity.
+
+    Raises
+    ------
+    ValueError
+        If the last dimension of the quantity doesn't match a known Cartesian
+        chart (0D, 1D, 2D, or 3D).
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import jax.numpy as jnp
+    >>> arr = jnp.array([1.0, 2.0, 3.0])
+    >>> d = cx.cdict(arr, cx.charts.cart3d)
+    >>> d
+    {'x': Array(1., dtype=float32),
+     'y': Array(2., dtype=float32),
+     'z': Array(3., dtype=float32)}
+
+    """
+    obj = jnp.asarray(obj)
+    if obj.shape[-1] != len(chart.components):
+        msg = (
+            f"Array last dimension {obj.shape[-1]} does not match "
             f"chart with {len(chart.components)} components."
         )
         raise ValueError(msg)

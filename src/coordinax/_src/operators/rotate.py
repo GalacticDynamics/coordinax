@@ -1,10 +1,11 @@
 """Galilean coordinate transformations."""
-from jax.typing import ArrayLike
+# ruff:noqa: N803
 
 __all__ = ("Rotate",)
 
 
 from dataclasses import replace
+from operator import itemgetter
 
 from collections.abc import Callable
 from jaxtyping import Array, Shaped
@@ -12,27 +13,35 @@ from typing import Any, Final, TypeAlias, final, get_type_hints
 
 import equinox as eqx
 import jax
+import jax.scipy.spatial.transform as jtransform
+import jax.tree as jtu
 import plum
-from jax.scipy.spatial.transform import Rotation
+from jax.typing import ArrayLike
 from quax import quaxify
 
 import quaxed.numpy as jnp
 import unxt as u
+from unxt import AbstractQuantity as AbcQ
 
 from .base import AbstractOperator, Neg, eval_op
-from coordinax._src import api, charts as cxc, roles as cxr
-from coordinax._src.custom_types import CsDict
+from coordinax._src import api, charts as cxc, roles as cxr, transformations as cxt
+from coordinax._src.custom_types import CsDict, HasShape, OptUSys
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.identity import Identity
-from coordinax._src.transformations import frames as cxf
-from coordinax._src.transformations.register_physicaldiff_map import (
-    _pack_uniform_unit,
-    _unpack_with_unit,
+from coordinax._src.transformations.utils import pack_uniform_unit, unpack_with_unit
+
+vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)->(N)"))
+
+RMatrix: TypeAlias = Shaped[Array, " N N"]
+
+_MSG_R_SHAPE: Final = "Rotate requires a square rotation matrix; got shape={shape!r}."
+
+_MSG_R_X_SHAPE_MISMATCH: Final = (
+    "Rotate() requires the chart's canonical Cartesian chart "
+    "to have dimension matching the rotation matrix. "
+    "Got R.shape={R.shape} and cartesian_chart={cart.__class__.__name__} "
+    "with ndim={cart.ndim!r}."
 )
-
-vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(3,3),(3)->(3)"))
-
-RMatrix: TypeAlias = Shaped[Array, "3 3"]
 
 
 @final
@@ -71,16 +80,60 @@ class Rotate(AbstractOperator):
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax as cx
+    >>> import wadler_lindig as wl
 
-    We can then create a time-invariant rotation operator:
+    We can then create a rotation operator:
 
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
     >>> op = cx.ops.Rotate(Rz)
     >>> op
     Rotate(i64[3,3](jax))
 
-    Rotation operators can be applied to a `unxt.Quantity`, taken to represent a
-    Cartesian vector:
+    Rotation operators can be applied to {class}`~coordinax.Vector` and other
+    higher-level objects, with behavior depending on the role:
+
+    >>> v = cx.Vector.from_([1, 0, 0], "m")  # A cxr.Point vector
+    >>> t = u.Q(1, "s")
+
+    >>> print(op(t, v))  # equivalent to `cx.apply_op(op, t, v)`
+    <Vector: chart=Cart3D, role=Point (x, y, z) [m]
+        [0 1 0]>
+
+    >>> v_pos = cx.as_pos(v)  # A cxr.PhysDisp vector
+    >>> print(op(t, v_pos))
+    <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+        [0. 1. 0.]>
+
+    >>> v = cx.Vector.from_([1, 0, 0], "m/s")  # A cxr.PhysVel vector
+    >>> print(op(t, v))
+    <Vector: chart=Cart3D, role=Vel (x, y, z) [m / s]
+        [0. 1. 0.]>
+
+    This also works for a batch of vectors (as a note, it is more efficient to
+    `jax.vmap` over the `jax.jit`ted operator):
+
+    >>> v = cx.Vector.from_([[1, 0, 0], [0, 1, 0]], "m")  # A cxr.Point vector
+    >>> print(op(t, v))
+    <Vector: chart=Cart3D, role=Point (x, y, z) [m]
+        [[ 0  1  0]
+         [-1  0  0]]>
+
+    Rotations can also be applied to low-level coordinate dictionaries:
+
+    >>> q = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
+    >>> nq = op(t, q)  # inferred chart & role -> cxr.Point
+    >>> wl.pprint(nq, short_arrays="compact", use_short_name=True)
+    {'x': Q(0, unit='m'), 'y': Q(1, unit='m'), 'z': Q(0, unit='m')}
+
+    >>> q = {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")}
+    >>> nq = cx.ops.apply_op(op, t, cxr.phys_vel, cxc.cart3d, q)  # explicit role & chart
+    >>> wl.pprint(nq, short_arrays="compact", use_short_name=True)
+    {'x': Q(0., unit='m / s'), 'y': Q(1., unit='m / s'), 'z': Q(0., unit='m / s')}
+
+    In addition to the standard low-level objects, Rotation operators can be
+    applied to {class}`~unxt.Quantity` and Array-like objects, taken to
+    represent a Cartesian vectors. For Quantity, the role is inferred from the
+    units, for Arrays it is always {class}`~coordinax.roles.Point`:
 
     >>> q = u.Q([1, 0, 0], "m")
     >>> t = u.Q(1, "s")
@@ -94,12 +147,6 @@ class Rotate(AbstractOperator):
     Quantity(Array([[ 0,  1,  0],
                     [-1,  0,  0]], dtype=int64), unit='m')
 
-    Rotation operators can be applied to `coordinax.Vector`:
-
-    >>> q = cx.Vector.from_(q)  # from the previous example
-    >>> op(t, q)
-    Quantity(Array([ 0, -1], dtype=int32), unit='m')
-
     You can make the rotation matrix time-dependent:
 
     >>> from jaxtyping import Array, Real
@@ -110,9 +157,12 @@ class Rotate(AbstractOperator):
 
     >>> R_op = cx.ops.Rotate.from_(R_func)
     >>> R_op
+    Rotate(<function R_func>)
 
-    >>> t = u.Q(2, "s")
-    >>> op(t, q)
+    >>> t = u.Q(4, "s")  # R_func -> 180 degrees rotation
+    >>> R_op(t, q).round(3)
+    Quantity(Array([[-1.,  0.,  0.],
+                    [-0., -1.,  0.]], dtype=float64), unit='m')
 
     """
 
@@ -120,6 +170,7 @@ class Rotate(AbstractOperator):
     """The rotation vector."""
 
     # -----------------------------------------------------
+    # Constructors
 
     @classmethod
     def from_euler(
@@ -142,52 +193,12 @@ class Rotate(AbstractOperator):
                [ 0.,  0.,  1.]], dtype=float32)
 
         """
-        R = Rotation.from_euler(seq, u.ustrip("deg", angles), degrees=True).as_matrix()
+        R = jtransform.Rotation.from_euler(
+            seq, u.ustrip("deg", angles), degrees=True
+        ).as_matrix()
         return cls(R)
 
-    @classmethod
-    @AbstractOperator.from_.dispatch  # type: ignore[untyped-decorator]
-    def from_(cls: type["Rotate"], obj: Rotation, /) -> "Rotate":
-        """Initialize from a `jax.scipy.spatial.transform.Rotation`.
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> from jax.scipy.spatial.transform import Rotation
-        >>> import coordinax as cx
-
-        >>> R = Rotation.from_euler("z", 90, degrees=True)
-        >>> op = cx.ops.Rotate.from_(R)
-
-        >>> jnp.allclose(op.R, R.as_matrix())
-        Array(True, dtype=bool)
-
-        """
-        return cls(obj.as_matrix())
-
     # -----------------------------------------------------
-
-    @classmethod
-    def operate(cls, params: dict[str, Any], arg: Any, /, **__: Any) -> Any:
-        """Apply the :class:`coordinax.ops.Rotate` operation.
-
-        This is the identity operation, which does nothing to the input.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax.ops as cxo
-
-        >>> q = u.Q([1, 2, 3], "km")
-        >>> R = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
-        >>> cxo.operate(cxo.Rotate, {"R": R}, q)
-
-        >>> vec = cxo.Cart3D.from_([1, 2, 3], "km")
-        >>> cxo.operate(cxo.Rotate, {"R": R}, vec)
-
-        """
-        return params["R"] @ arg
-        # return vec_matmul(params["R"], arg)
 
     @property
     def inverse(self) -> "Rotate":
@@ -209,8 +220,38 @@ class Rotate(AbstractOperator):
         """
         R = self.R
         return replace(  # TODO: a transposition wrapper
-            self, R=R.T if not callable(R) else lambda x: R(x).T
+            self,
+            R=jnp.swapaxes(R, -2, -1)
+            if not callable(R)
+            else lambda x: jnp.swapaxes(R(x), -2, -1),
         )
+
+    # -----------------------------------------------------
+
+    @staticmethod
+    def _validate_square(R: HasShape, /) -> RMatrix:
+        shape = R.shape
+        R = eqx.error_if(
+            R, len(shape) != 2 or shape[0] != shape[1], _MSG_R_SHAPE.format(shape=shape)
+        )
+        return R
+
+    @staticmethod
+    def _validate_shape_match(R: HasShape, cart: cxc.AbstractChart, /) -> RMatrix:
+        n = R.shape[0]
+        R = eqx.error_if(
+            R,
+            cart.ndim != n or len(cart.components) != n,
+            _MSG_R_X_SHAPE_MISMATCH.format(R=R, cart=cart),
+        )
+        return R
+
+    def _get_R(self, cart: cxc.AbstractChart, /) -> RMatrix:
+        R = self.R
+        R = eqx.error_if(R, callable(R), "need to call `eval_op`.")
+        R = self._validate_square(R)
+        R = self._validate_shape_match(R, cart)
+        return R
 
     # -----------------------------------------------------
     # Arithmetic operations
@@ -239,7 +280,7 @@ class Rotate(AbstractOperator):
         return replace(self, R=R)
 
     def __matmul__(self: "Rotate", other: Any, /) -> Any:
-        """Combine two Galilean rotations.
+        """Combine two Rotations.
 
         Examples
         --------
@@ -269,11 +310,17 @@ class Rotate(AbstractOperator):
         Array(True, dtype=bool)
 
         """
+        if not isinstance(other, Rotate):
+            return NotImplemented
         return replace(self, R=self.R @ other.R)
 
 
+# ============================================================================
+# Constructors
+
+
 @Rotate.from_.dispatch
-def from_(obj: Rotate, /) -> Rotate:
+def from_(cls: type[Rotate], obj: Rotate, /) -> Rotate:
     """Construct a Rotate from another Rotate.
 
     Examples
@@ -290,7 +337,7 @@ def from_(obj: Rotate, /) -> Rotate:
 
 
 @Rotate.from_.dispatch
-def from_(obj: Callable, /) -> Rotate:
+def from_(cls: type[Rotate], obj: Callable, /) -> Rotate:
     """Construct a Rotate from a callable.
 
     The callable must have a return type annotation with shape ending in NxN
@@ -340,11 +387,11 @@ def from_(obj: Callable, /) -> Rotate:
         )
         raise ValueError(msg)
 
-    return Rotate(obj)
+    return cls(obj)
 
 
 @Rotate.from_.dispatch
-def from_(obj: u.AbstractQuantity, /) -> Rotate:
+def from_(cls: type[Rotate], obj: AbcQ, /) -> Rotate:
     """Construct a Rotate from a Quantity.
 
     Examples
@@ -357,11 +404,11 @@ def from_(obj: u.AbstractQuantity, /) -> Rotate:
     Rotate(rotation=i32[3,3])
 
     """
-    return Rotate(u.ustrip("", obj))
+    return cls(u.ustrip("", obj))
 
 
 @Rotate.from_.dispatch
-def from_(obj: ArrayLike, /) -> Rotate:
+def from_(cls: type[Rotate], obj: ArrayLike, /) -> Rotate:
     """Construct a Rotate from an Array.
 
     Examples
@@ -373,7 +420,27 @@ def from_(obj: ArrayLike, /) -> Rotate:
     Rotate(rotation=i32[3,3])
 
     """
-    return Rotate(jnp.asarray(obj))
+    return cls(jnp.asarray(obj))
+
+
+@Rotate.from_.dispatch
+def from_(cls: type[Rotate], obj: jtransform.Rotation, /) -> Rotate:
+    """Initialize from a `jax.scipy.spatial.transform.Rotation`.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from jax.scipy.spatial.transform import Rotation
+    >>> import coordinax as cx
+
+    >>> R = Rotation.from_euler("z", 90, degrees=True)
+    >>> op = cx.ops.Rotate.from_(R)
+
+    >>> jnp.allclose(op.R, R.as_matrix())
+    Array(True, dtype=bool)
+
+    """
+    return cls(obj.as_matrix())
 
 
 # ============================================================================
@@ -417,87 +484,154 @@ def simplify(op: Rotate, /, **kw: Any) -> AbstractOperator:
 
 
 # ============================================================================
-# apply_op for Rotate on Quantity
+# apply_op
+
+# -----------------------------------------------
+# Special dispatches for Array.
+# These are interpreted as Cartesian coordinates in a Euclidean metric
 
 
 @plum.dispatch
 def apply_op(
     op: Rotate,
     tau: Any,
+    role: cxr.AbstractRole,
+    chart: cxc.AbstractChart,
     x: ArrayLike,
     /,
-    at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
     **kw: Any,
 ) -> Array:
-    """Apply Rotate to an Array(like) object.
+    """Apply Rotate to an Array(like) object."""
+    del kw  # Does not require an anchoring base-point.
 
-    The Array is interpreted as equivalent to the data for a
-    {class}`~coordinax.Vector` with a Cartesian chart (e.g.
-    {class}`~coordinax.charts.Cartesian3D`) and {class}`~coordinax.roles.Point`
-    role.
+    # Process Value
+    x_arr = jnp.asarray(x)
+    chart = api.guess_chart(x_arr)
+    if chart != chart.cartesian:
+        msg = "apply_op for Rotate with ArrayLike x requires a Cartesian chart."
+        raise ValueError(msg)
+    if not isinstance(role, cxr.Point):
+        msg = "apply_op for Rotate with ArrayLike x requires Point role."
+        raise TypeError(msg)
 
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.ops as cxo
-
-    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> op = cxo.Rotate(Rz)
-    >>> q = u.Q([1, 0, 0], "km")
-    >>> cxo.apply_op(op, None, q)
-    Quantity['length'](Array([0, 1, 0], dtype=int32), unit='km')
-
-    """
-    del at, usys, kw  # Does not require an anchoring base-point.
+    # Process rotation
     op_eval = eval_op(op, tau)
-    return vec_matmul(op_eval.R, jnp.asarray(x))
+    R = op_eval._get_R(chart)
+
+    return jnp.einsum("ij,...j->...i", R, x_arr)
+
+
+# -----------------------------------------------
+# Special dispatches for Quantity.
+# These are interpreted as Cartesian coordinates in a Euclidean metric
+# The role is inferred from the dimensions.
+
+_MSG_NOT_CART: Final = (
+    "apply_op({op}, ..., Quantity) requires Cartesian components. "
+    "chart {name} is not its cartesian_chart."
+)
 
 
 @plum.dispatch
 def apply_op(
     op: Rotate,
     tau: Any,
-    x: u.AbstractQuantity,
+    role: cxr.Point,
+    chart: cxc.AbstractChart,
+    x: AbcQ,
     /,
-    *,
-    at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
     **kw: Any,
-) -> u.AbstractQuantity:
-    """Apply Rotate to a Quantity.
+) -> AbcQ:
+    """Apply Rotate to a Point-roled Quantity."""
+    del role, kw
 
-    The Quantity is interpreted as equivalent to the data for a
-    {class}`~coordinax.Vector` with a Cartesian chart (e.g.
-    {class}`~coordinax.charts.Cartesian3D`) and {class}`~coordinax.roles.Point`
-    role.
+    # Process Value
+    cart = chart.cartesian
+    if chart != cart:
+        msg = _MSG_NOT_CART.format(op=type(op).__name__, name=type(chart).__name__)
+        raise ValueError(msg)
 
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.ops as cxo
+    # Rotation matrix
+    op_eval = eval_op(op, tau)
+    R = op_eval._get_R(chart)
+    return jnp.einsum("ij,...j->...i", R, x)
 
-    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> op = cxo.Rotate(Rz)
-    >>> q = u.Q([1, 0, 0], "km")
-    >>> cxo.apply_op(op, None, q)
-    Quantity['length'](Array([0, 1, 0], dtype=int32), unit='km')
+
+@plum.dispatch
+def apply_op(
+    op: Rotate,
+    tau: Any,
+    role: cxr.PhysDisp,
+    chart: cxc.AbstractChart,
+    x: AbcQ,
+    /,
+    **kw: Any,
+) -> AbcQ:
+    """Apply Rotate to a Pos-roled Quantity.
+
+    Interprets ``x`` as Cartesian physical displacement components in the
+    chart inferred from its shape. Therefore the inferred chart must already be
+    the canonical Cartesian chart.
 
     """
-    del at, usys, kw  # Does not require an anchoring base-point.
+    del role, kw
+
+    # Infer chart from shape; must be Cartesian.
+    cart = chart.cartesian
+    if chart != cart:
+        raise ValueError(
+            _MSG_NOT_CART.format(op=type(op).__name__, name=type(chart).__name__)
+        )
+
+    # Materialize and validate rotation against that Cartesian chart.
     op_eval = eval_op(op, tau)
-    return vec_matmul(op_eval.R, x)
+    R = op_eval._get_R(cart)
+
+    return jnp.einsum("ij,...j->...i", R, x)
 
 
-_MSG_R_SHAPE: Final = "Rotate requires a square rotation matrix; got shape={shape!r}."
-_MSG_R_X_SHAPE_MISMATCH: Final = (
-    "Rotate(Point, chart=...) requires the chart's canonical Cartesian chart "
-    "to have dimension matching the rotation matrix. "
-    "Got R.shape={R.shape} and cartesian_chart={type(cart).__name__} "
-    "with ndim={getattr(cart, 'ndim', None)!r} and components={comps!r}."
-)
+@plum.dispatch
+def apply_op(
+    op: Rotate,
+    tau: Any,
+    role: cxr.PhysVel,
+    chart: cxc.AbstractChart,
+    x: AbcQ,
+    /,
+    **kw: Any,
+) -> AbcQ:
+    """Apply Rotate to a Vel-roled Quantity.
+
+    Interprets ``x`` as Cartesian physical displacement components in the
+    chart inferred from its shape. Therefore the inferred chart must already be
+    the canonical Cartesian chart.
+
+    """
+    raise NotImplementedError("TODO")  # noqa: EM101
+
+
+@plum.dispatch
+def apply_op(
+    op: Rotate,
+    tau: Any,
+    role: cxr.PhysAcc,
+    chart: cxc.AbstractChart,
+    x: AbcQ,
+    /,
+    **kw: Any,
+) -> AbcQ:
+    """Apply Rotate to a PhysAcc-roled Quantity.
+
+    Interprets ``x`` as Cartesian physical displacement components in the
+    chart inferred from its shape. Therefore the inferred chart must already be
+    the canonical Cartesian chart.
+
+    """
+    raise NotImplementedError("TODO")  # noqa: EM101
+
+
+# -----------------------------------------------
+# On CsDict
 
 
 @plum.dispatch
@@ -508,9 +642,7 @@ def apply_op(
     chart: cxc.AbstractChart,
     x: CsDict,
     /,
-    *,
-    at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
     **kw: Any,
 ) -> CsDict:
     """Apply a spatial rotation to a Point-valued coordinate dictionary.
@@ -528,45 +660,292 @@ def apply_op(
       rotation and restoring that unit afterward.
 
     """
-    del role, at, kw  # Does not require an anchoring base-point.
+    del role, kw  # Does not require an anchoring base-point.
+
+    cart = chart.cartesian
+    comps_cart = cart.components
 
     op_eval = eval_op(op, tau)
-    R = op_eval.R
-
-    cart = api.cartesian_chart(chart)
-    comps = cart.components
-    n = R.shape[0]
-
-    if cart.ndim != n or len(comps) != n:
-        msg = _MSG_R_X_SHAPE_MISMATCH.format(R=R, cart=cart, comps=comps)
-        raise NotImplementedError(msg)
+    R = op_eval._get_R(cart)
 
     # Convert point to canonical Cartesian chart.
     p_cart = api.point_transform(cart, chart, x, usys=usys)
 
-    # Pack -> rotate -> unpack (batch-safe), preserving a shared unit.
-    v, unit = _pack_uniform_unit(p_cart, keys=comps)  # (..., n)
+    # Pack -> rotate -> unpack (batch-safe)
+    v, unit = pack_uniform_unit(p_cart, keys=comps_cart)  # (..., n)
     v_rot = jnp.einsum("ij,...j->...i", R, v)  # (..., n)
-    p_cart_rot = _unpack_with_unit(v_rot, unit, comps)
+    p_cart_rot = unpack_with_unit(v_rot, unit, comps_cart)
 
     # Convert back to original chart.
     return api.point_transform(chart, cart, p_cart_rot, usys=usys)
+
+
+_MSG_NEEDS_AT: Final = (
+    "Rotate(x) requires `at=` (the base point) when chart conversion is needed. "
+    "Provide `at` as a Point-valued components dictionary in the same `chart` as `x`."
+)
+
+_MSG_NEEDS_AT_VEL: Final = (
+    "Rotate(x) requires `at_vel=`, the velocity at the base point."
+)
 
 
 @plum.dispatch
 def apply_op(
     op: Rotate,
     tau: Any,
-    role: cxr.Point,
-    chart: cxc.AbstractCartesianProductChart,
+    role: cxr.PhysDisp,
+    chart: cxc.AbstractChart,
     x: CsDict,
     /,
     *,
     at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
-    **__: Any,
+    usys: OptUSys = None,
+    **kw: Any,
 ) -> CsDict:
-    """Apply a spatial rotation to a Point-valued coordinate dictionary.
+    """Apply Rotate to a Pos-valued CsDict.
+
+    For non-Cartesian charts, we must convert via physical tangent transforms,
+    which depend on the base point `at`.
+    """
+    del role, kw
+
+    # Process Value
+    cart = chart.cartesian
+    x = eqx.error_if(x, chart != cart and at is None, _MSG_NEEDS_AT)
+
+    # Process Rotation
+    op_eval = eval_op(op, tau)
+    R = op_eval._get_R(cart)
+
+    # Rotate base point to express output components in the chart frame at p'.
+    # None only for charts whose frame ignores `at` (Cartesian)
+    at0 = {} if at is None else at
+    at_rot = (
+        {} if at is None else api.apply_op(op, tau, cxr.point, chart, at=at, usys=usys)
+    )
+
+    # Pack chart components -> ambient Cartesian components via the orthonormal
+    # frame at p.
+    keys_chart = chart.components
+    v_chart, unit = pack_uniform_unit(x, keys=keys_chart)  # (..., n)
+
+    # B (..., N, n)
+    B = api.frame_cart(chart, at=at0, usys=usys)
+    v_cart = cxt.pushforward(B, v_chart)  # (..., N)
+
+    # Rotate in ambient Cartesian components.
+    v_cart_rot = jnp.einsum("ij,...j->...i", R, v_cart)  # (..., N)
+
+    # Pull back into chart physical components at p'.
+    B_rot = api.frame_cart(chart, at=at_rot, usys=usys)
+    g = api.metric_of(chart)
+    v_chart_rot = cxt.pullback(g, B_rot, v_cart_rot)  # (..., n)
+
+    return unpack_with_unit(v_chart_rot, unit, keys_chart)
+
+
+def _dR_dt(R: RMatrix | Callable, tau: Any, /) -> Array:
+    """Time derivative of the materialized rotation matrix.
+
+    convention:
+    - If `op.R` is a constant matrix, derivative is 0.
+    - If `op.R` is callable, we interpret it as R(tau_numeric) and differentiate
+      w.r.t. the (already-stripped) tau argument.
+
+    """
+    # Evaluate jacobian or return constant matrix (d/dt = 0)
+    return jax.jacfwd(R)(tau) if callable(R) else jnp.zeros_like(R)
+
+
+@plum.dispatch
+def apply_op(
+    op: Rotate,
+    tau: Any,
+    role: cxr.PhysVel,
+    chart: cxc.AbstractChart,
+    x: CsDict,
+    /,
+    *,
+    at: CsDict | None = None,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CsDict:
+    r"""Apply Rotate to a Vel-valued CsDict.
+
+    Correct Euclidean law (in Cartesian components):
+    $$
+        v'(\tau) = R(\tau)\,v(\tau) + \dot R(\tau)\,x(\tau).
+    $$
+
+    Therefore this dispatch requires `at=` (the base point coordinates) unless
+    \dot R is identically zero (constant rotation) AND no chart conversion is needed.
+    """
+    del role, kw
+
+    cart = chart.cartesian
+    tau = jnp.astype(tau, float)
+
+    # Process Rotation
+    op_eval = eval_op(op, tau)
+    R = op_eval._get_R(cart)
+
+    # Time dependence introduces + dR/dt * x, which requires the base point.
+    dR = _dR_dt(op.R, tau)
+    needs_at_for_dR = jnp.logical_not(jnp.allclose(dR, 0))
+    needs_at = (chart != cart) or needs_at_for_dR
+    x = eqx.error_if(x, needs_at and at is None, _MSG_NEEDS_AT)
+
+    # Rotate base point to express output components in the chart frame at p'.
+    # required if chart!=cart or time-dependent
+    # The only reason at0 -> 0 is safe is because we've already checked `x`!
+    at0 = {k: jnp.zeros(()) for k in chart.components} if at is None else at
+    at_rot = (
+        {k: jnp.zeros(()) for k in chart.components}
+        if at is None
+        else api.apply_op(op, tau, cxr.point, chart, at=at, usys=usys)
+    )
+
+    # Pack velocity chart components -> ambient Cartesian via frame at p.
+    keys_chart = chart.components
+    v_chart, v_unit = pack_uniform_unit(x, keys=keys_chart)  # (..., n)
+
+    B = api.frame_cart(chart, at=at0, usys=usys)
+    v_cart = cxt.pushforward(B, v_chart)  # (..., N)
+
+    # Rotate the R v term.
+    v_cart_rot = jnp.einsum("ij,...j->...i", R, v_cart)
+
+    # Add + dR/dt * x for time-dependent rotations.
+    x_cart_dict = api.point_transform(cart, chart, at0, usys=usys)
+    x_cart, _ = pack_uniform_unit(x_cart_dict, keys=cart.components)  # (..., n)
+    v_cart_rot = jax.lax.select(
+        needs_at_for_dR,
+        v_cart_rot + jnp.einsum("ij,...j->...i", dR, x_cart),
+        v_cart_rot,
+    )
+
+    # Pull back into chart velocity components at p'.
+    B_rot = api.frame_cart(chart, at=at_rot, usys=usys)
+    g = api.metric_of(chart)
+    v_chart_rot = cxt.pullback(g, B_rot, v_cart_rot)  # (..., n)
+
+    return unpack_with_unit(v_chart_rot, v_unit, keys_chart)
+
+
+def _d2R_dt2(R: RMatrix | Callable[..., RMatrix], tau: Any, /) -> Array:
+    return jax.jacfwd(jax.jacfwd(R))(tau) if callable(R) else jnp.zeros_like(R)
+
+
+@plum.dispatch
+def apply_op(
+    op: Rotate,
+    tau: Any,
+    role: cxr.PhysAcc,
+    chart: cxc.AbstractChart,
+    x: CsDict,
+    /,
+    *,
+    at: CsDict | None = None,
+    at_vel: CsDict | None = None,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CsDict:
+    r"""Apply Rotate to an PhysAcc-valued CsDict (physical acceleration).
+
+    In ambient Cartesian components (Euclidean metric), the correct law is:
+    $$
+        a'(\tau) = R(\tau)\,a(\tau) + 2\dot R(\tau)\,v(\tau) + \ddot R(\tau)\,x(\tau).
+    $$
+
+    Therefore this dispatch requires:
+
+    - `at=` whenever chart conversion is needed OR \dot R/\ddot R is nonzero,
+    - `at_vel=` whenever \dot R is nonzero (Coriolis-like term) OR chart
+      conversion is needed to interpret v in the correct physical frame.
+    """
+    del role, kw
+
+    cart = chart.cartesian
+    comps_cart = cart.components
+
+    op_eval = eval_op(op, tau)
+    R = op_eval._get_R(cart)
+
+    # Time dependence introduces + dR/dt * x, which requires the base point.
+    dR = _dR_dt(op.R, tau)
+    ddR = _d2R_dt2(op.R, tau)
+
+    needs_at_for_dR = jnp.logical_not(jnp.allclose(dR, 0))
+    needs_at_for_ddR = jnp.logical_not(jnp.allclose(ddR, 0))
+    needs_at = (chart != cart) or needs_at_for_dR or needs_at_for_ddR
+    x = eqx.error_if(x, needs_at and at is None, _MSG_NEEDS_AT)
+
+    needs_vel = (chart != cart) or needs_at_for_dR  # v-term appears if dR != 0
+    x = eqx.error_if(x, needs_vel and at_vel is None, _MSG_NEEDS_AT_VEL)
+
+    # Rotate base point to express output components in the chart frame at p'.
+    # required if chart!=cart or time-dependent
+    at0 = {} if at is None else at
+    vel0 = {} if at_vel is None else at_vel
+    at_rot = (
+        {} if at is None else api.apply_op(op, tau, cxr.point, chart, at=at, usys=usys)
+    )
+
+    # Pack acceleration chart components -> ambient Cartesian via frame at p.
+    keys_chart = chart.components
+    a_chart, a_unit = pack_uniform_unit(x, keys=keys_chart)  # (..., n)
+
+    B = api.frame_cart(chart, at=at0, usys=usys)
+    a_cart = cxt.pushforward(B, a_chart)  # (..., N)
+
+    # Base term: R a
+    a_cart_rot = jnp.einsum("ij,...j->...i", R, a_cart)
+
+    # Add + 2 dR v term (requires vel)
+    # Convert vel (chart physical components at p) -> ambient Cartesian.
+    v_chart, _v_unit = pack_uniform_unit(vel0, keys=keys_chart)  # (..., n)
+    v_cart = cxt.pushforward(B, v_chart)  # (..., N)
+    a_cart_rot = jax.lax.select(
+        needs_at_for_dR,
+        a_cart_rot + 2.0 * jnp.einsum("ij,...j->...i", dR, v_cart),
+        a_cart_rot,
+    )
+
+    # Add + ddR x term (requires at)
+    x_cart_dict = api.point_transform(cart, chart, at0, usys=usys)
+    x_cart, _x_unit = pack_uniform_unit(x_cart_dict, keys=comps_cart)  # (..., n)
+    a_cart_rot = jax.lax.select(
+        needs_at_for_ddR,
+        a_cart_rot + jnp.einsum("ij,...j->...i", ddR, x_cart),
+        a_cart_rot,
+    )
+
+    # Pull back into chart acceleration components at p'.
+    B_rot = api.frame_cart(chart, at=at_rot, usys=usys)
+    g = api.metric_of(chart)
+    a_chart_rot = cxt.pullback(g, B_rot, a_cart_rot)  # (..., n)
+
+    return unpack_with_unit(a_chart_rot, a_unit, keys_chart)
+
+
+# -----------------------------------------------
+# On CsDict with Cartesian-product charts
+
+
+@plum.dispatch
+def apply_op(
+    op: Rotate,
+    tau: Any,
+    role: cxr.AbstractRole,
+    chart: cxc.AbstractCartesianProductChart,
+    x: CsDict,
+    /,
+    *,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CsDict:
+    """Apply a spatial rotation to a coordinate dictionary.
 
     For Cartesian-product charts, this applies the rotation factorwise: each
     factor is rotated in its canonical Cartesian chart *iff* that Cartesian
@@ -575,435 +954,38 @@ def apply_op(
 
     Notes
     -----
-    - Points do not require an anchoring base-point.
     - The rotation matrix must be square.
-    - Units are handled by packing Cartesian components into a shared unit before
-      rotation and restoring that unit afterward.
+    - Units are handled by packing Cartesian components into a shared unit
+      before rotation and restoring that unit afterward.
+    - Kwarg requirements depend on role; eg. Points do not require an anchoring
+      base-point.
 
     """
     op_eval = eval_op(op, tau)
-    n = op_eval.R.shape[-1]
+    n = op_eval._validate_square(op_eval.R).shape[-1]
 
+    # Factorize the inputs
+    n_factors = len(chart.factors)
     parts = chart.split_components(x)
-
-    def _maybe_rotate_factor(factor_chart: cxc.AbstractChart, part: CsDict) -> CsDict:
-        cart = api.cartesian_chart(factor_chart)
-        if cart.ndim != n or len(cart.components) != n:
-            return part
-        return api.apply_op(op, tau, role, factor_chart, part, at=at, usys=usys)
-
-    rotated_parts = tuple(
-        _maybe_rotate_factor(f, p) for f, p in zip(chart.factors, parts, strict=True)
-    )
-    return chart.merge_components(rotated_parts)
-
-
-_MSG_R_NEEDS_AT: Final = (
-    "Rotate({role}, chart={chart}) requires `at=` (the base point) when chart "
-    "conversion is needed. Provide `at` as a Point-valued components dictionary in the "
-    "same `chart` as `x`."
-)
-
-_MSG_R_VEL_NEEDS_AT: Final = (
-    "Rotate(Vel, ...) requires `at=` (the base point) because the correct law "
-    "depends on position for time-dependent rotations."
-)
-
-_MSG_R_ACC_NEEDS_AT_AND_VEL: Final = (
-    "Rotate(Acc, ...) requires `at=` (base point) and `vel=` (the velocity at the same "
-    "base point) because the correct law for time-dependent rotations depends on x "
-    "and v."
-)
-
-
-def _validate_square(R: Any, /) -> int:
-    if R.ndim != 2 or R.shape[0] != R.shape[1]:
-        raise ValueError(_MSG_R_SHAPE.format(shape=getattr(R, "shape", None)))
-    return int(R.shape[0])
-
-
-def _dR_dt(op: Rotate, tau: Any):
-    """Time derivative of the materialized rotation matrix.
-
-    Normative convention:
-    - If `op.R` is a constant matrix, derivative is 0.
-    - If `op.R` is callable, we interpret it as R(tau_numeric) and differentiate
-      w.r.t. the (already-stripped) tau argument.
-    """
-    if callable(op.R):
-        # If tau is a Quantity, treat the callable as expecting stripped tau.
-        tau0 = u.ustrip("", tau) if isinstance(tau, u.AbstractQuantity) else tau
-        return jax.jacfwd(op.R)(tau0)
-    # constant matrix: d/dt = 0
-    R = op.R
-    return jnp.zeros_like(R)
-
-
-def _d2R_dt2(op: Rotate, tau: Any):
-    if callable(op.R):
-        tau0 = u.ustrip("", tau) if isinstance(tau, u.AbstractQuantity) else tau
-        return jax.jacfwd(jax.jacfwd(op.R))(tau0)
-    R = op.R
-    return jnp.zeros_like(R)
-
-
-@plum.dispatch
-def apply_op(
-    op: Rotate,
-    tau: Any,
-    role: cxr.Pos,
-    chart: cxc.AbstractChart,
-    x: CsDict,
-    /,
-    *,
-    at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
-    **__: Any,
-) -> CsDict:
-    """Apply Rotate to a Pos-valued CsDict.
-
-    For non-Cartesian charts, we must convert via physical tangent transforms,
-    which depend on the base point `at`.
-    """
-    del role
-    op_eval = eval_op(op, tau)
-    R = op_eval.R
-    n = _validate_square(R)
-
-    cart = api.cartesian_chart(chart)
-    comps_cart = cart.components
-    if cart.ndim != n or len(comps_cart) != n:
-        msg = (
-            f"Rotate(Pos, chart=...) requires cartesian_chart(chart) to match R. "
-            f"Got R.shape={R.shape}, cart={type(cart).__name__}, ndim={cart.ndim!r}, "
-            f"components={comps_cart!r}."
-        )
-        raise NotImplementedError(msg)
-
-    # If the chart basis depends on position (i.e. chart != cart), we need `at`.
-    if chart != cart:
-        x = eqx.error_if(
-            x,
-            at is None,
-            _MSG_R_NEEDS_AT.format(role="Pos", chart=type(chart).__name__),
-        )
-    at0 = at  # may be None only for charts whose frame ignores `at` (Cartesian)
-
-    # Rotate the base point to express output components in the chart frame at p'.
-    at_rot = None
-    if at0 is not None:
-        at_rot = api.apply_op(op, tau, cxr.point, chart, at0, usys=usys)
-
-    # Pack chart components -> ambient Cartesian components via the orthonormal
-    # frame at p.
-    keys_chart = chart.components
-    v_chart, unit = _pack_uniform_unit(x, keys=keys_chart)  # (..., n)
-
-    B = api.frame_cart(
-        chart, at=at0 if at0 is not None else {}, usys=usys
-    )  # (..., N, n)
-    v_cart = cxf.pushforward(B, v_chart)  # (..., N)
-
-    # Rotate in ambient Cartesian components.
-    v_cart_rot = jnp.einsum("ij,...j->...i", R, v_cart)  # (..., N)
-
-    # Pull back into chart physical components at p'.
-    B_rot = api.frame_cart(chart, at=at_rot if at_rot is not None else {}, usys=usys)
-    g = api.metric_of(chart)
-    v_chart_rot = cxf.pullback(g, B_rot, v_cart_rot)  # (..., n)
-
-    return _unpack_with_unit(v_chart_rot, unit, keys_chart)
-
-
-@plum.dispatch
-def apply_op(
-    op: Rotate,
-    tau: Any,
-    role: cxr.Pos,
-    chart: cxc.AbstractCartesianProductChart,
-    x: CsDict,
-    /,
-    *,
-    at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
-    **kw: Any,
-) -> CsDict:
-    """Apply Rotate to Pos on a Cartesian-product chart, factorwise.
-
-    Rotates only those factors whose canonical Cartesian chart dimension matches
-    `R`; leaves other factors unchanged.
-    """
-    del role
-    op_eval = eval_op(op, tau)
-    n = _validate_square(op_eval.R)
-
-    parts = chart.split_components(x)
-    at_parts = chart.split_components(at) if at is not None else None
+    ats = {
+        k: chart.split_components(v) if v is not None else [None] * n_factors
+        for k, v in kw.items()
+        if k.startswith("at")
+    }
 
     def _maybe(
-        factor_chart: cxc.AbstractChart, part: CsDict, at_part: CsDict | None
+        factor_chart: cxc.AbstractChart, part: CsDict, /, **ats: CsDict | None
     ) -> CsDict:
-        cart = api.cartesian_chart(factor_chart)
+        # Determine if this factor's chart should be rotated.
+        cart = factor_chart.cartesian
         if cart.ndim != n or len(cart.components) != n:
             return part
-        # Re-dispatch to the non-product Pos rule for the factor.
-        return api.apply_op(
-            op, tau, cxr.pos, factor_chart, part, at=at_part, usys=usys, **kw
-        )
+
+        # Apply rotation
+        return api.apply_op(op_eval, tau, role, factor_chart, part, usys=usys, **ats)
 
     rotated_parts = tuple(
-        _maybe(f, p, (None if at_parts is None else at_parts[i]))
-        for i, (f, p) in enumerate(zip(chart.factors, parts, strict=True))
-    )
-    return chart.merge_components(rotated_parts)
-
-
-@plum.dispatch
-def apply_op(
-    op: Rotate,
-    tau: Any,
-    role: cxr.Vel,
-    chart: cxc.AbstractChart,
-    x: CsDict,
-    /,
-    *,
-    at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
-    **__: Any,
-) -> CsDict:
-    r"""Apply Rotate to a Vel-valued CsDict.
-
-    Correct Euclidean law (in Cartesian components):
-    \[
-        v'(\tau) = R(\tau)\,v(\tau) + \dot R(\tau)\,x(\tau).
-    \]
-
-    Therefore this dispatch requires `at=` (the base point coordinates) unless
-    \dot R is identically zero (constant rotation) AND no chart conversion is needed.
-    """
-    del role
-    op_eval = eval_op(op, tau)
-    R = op_eval.R
-    n = _validate_square(R)
-
-    cart = api.cartesian_chart(chart)
-    comps_cart = cart.components
-    if cart.ndim != n or len(comps_cart) != n:
-        msg = (
-            f"Rotate(Vel, chart=...) requires cartesian_chart(chart) to match R. "
-            f"Got R.shape={R.shape}, cart={type(cart).__name__}, ndim={cart.ndim!r}, "
-            f"components={comps_cart!r}."
-        )
-        raise NotImplementedError(msg)
-
-    # Time dependence introduces + dR/dt * x, which requires the base point.
-    dR = _dR_dt(op, tau)
-    needs_at_for_dR = not jnp.allclose(dR, 0)
-
-    if chart != cart or needs_at_for_dR:
-        x = eqx.error_if(x, at is None, _MSG_R_VEL_NEEDS_AT)
-    at0 = at  # required if chart!=cart or time-dependent
-
-    # Rotate the base point to express output components in the chart frame at p'.
-    at_rot = None
-    if at0 is not None:
-        at_rot = api.apply_op(op, tau, cxr.point, chart, at0, usys=usys)
-
-    # Pack velocity chart components -> ambient Cartesian via frame at p.
-    keys_chart = chart.components
-    v_chart, v_unit = _pack_uniform_unit(x, keys=keys_chart)  # (..., n)
-
-    B = api.frame_cart(chart, at=at0 if at0 is not None else {}, usys=usys)
-    v_cart = cxf.pushforward(B, v_chart)  # (..., N)
-
-    # Rotate the R v term.
-    v_cart_rot = jnp.einsum("ij,...j->...i", R, v_cart)
-
-    # Add + dR/dt * x for time-dependent rotations.
-    if needs_at_for_dR:
-        x_cart_dict = api.point_transform(cart, chart, at0, usys=usys)  # type: ignore[arg-type]
-        x_cart, _x_unit = _pack_uniform_unit(x_cart_dict, keys=comps_cart)  # (..., n)
-        v_cart_rot = v_cart_rot + jnp.einsum("ij,...j->...i", dR, x_cart)
-
-    # Pull back into chart velocity components at p'.
-    B_rot = api.frame_cart(chart, at=at_rot if at_rot is not None else {}, usys=usys)
-    g = api.metric_of(chart)
-    v_chart_rot = cxf.pullback(g, B_rot, v_cart_rot)  # (..., n)
-
-    return _unpack_with_unit(v_chart_rot, v_unit, keys_chart)
-
-
-@plum.dispatch
-def apply_op(
-    op: Rotate,
-    tau: Any,
-    role: cxr.Vel,
-    chart: cxc.AbstractCartesianProductChart,
-    x: CsDict,
-    /,
-    *,
-    at: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
-    **kw: Any,
-) -> CsDict:
-    """Apply Rotate to Vel on a Cartesian-product chart, factorwise."""
-    del role
-    op_eval = eval_op(op, tau)
-    n = _validate_square(op_eval.R)
-
-    parts = chart.split_components(x)
-    at_parts = chart.split_components(at) if at is not None else None
-
-    def _maybe(chart: cxc.AbstractChart, part: CsDict, at: CsDict | None) -> CsDict:
-        cart = api.cartesian_chart(chart)
-        if cart.ndim != n or len(cart.components) != n:
-            return part
-        return api.apply_op(op, tau, cxr.vel, chart, part, at=at, usys=usys, **kw)
-
-    rotated_parts = tuple(
-        _maybe(f, p, (None if at_parts is None else at_parts[i]))
-        for i, (f, p) in enumerate(zip(chart.factors, parts, strict=True))
-    )
-    return chart.merge_components(rotated_parts)
-
-
-@plum.dispatch
-def apply_op(
-    op: Rotate,
-    tau: Any,
-    role: cxr.Acc,
-    chart: cxc.AbstractChart,
-    x: CsDict,
-    /,
-    *,
-    at: CsDict | None = None,
-    vel: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
-    **__: Any,
-) -> CsDict:
-    r"""Apply Rotate to an Acc-valued CsDict (physical acceleration).
-
-    In ambient Cartesian components (Euclidean metric), the correct law is:
-    \[
-        a'(\tau) = R(\tau)\,a(\tau) + 2\dot R(\tau)\,v(\tau) + \ddot R(\tau)\,x(\tau).
-    \]
-
-    Therefore this dispatch requires:
-    - `at=` whenever chart conversion is needed OR \dot R/\ddot R is nonzero,
-    - `vel=` whenever \dot R is nonzero (Coriolis-like term) OR chart conversion
-      is needed to interpret v in the correct physical frame.
-    """
-    del role
-    op_eval = eval_op(op, tau)
-    R = op_eval.R
-    n = _validate_square(R)
-
-    cart = api.cartesian_chart(chart)
-    comps_cart = cart.components
-    if cart.ndim != n or len(comps_cart) != n:
-        msg = (
-            f"Rotate(Acc, chart=...) requires cartesian_chart(chart) to match R. "
-            f"Got R.shape={R.shape}, cart={type(cart).__name__}, ndim={cart.ndim!r}, "
-            f"components={comps_cart!r}."
-        )
-        raise NotImplementedError(msg)
-
-    dR = _dR_dt(op, tau)
-    ddR = _d2R_dt2(op, tau)
-    needs_at_for_ddR = not jnp.allclose(ddR, 0)
-    needs_at_for_dR = not jnp.allclose(dR, 0)
-    needs_at = (chart != cart) or needs_at_for_dR or needs_at_for_ddR
-    needs_vel = (chart != cart) or needs_at_for_dR  # v-term appears if dR != 0
-
-    x = eqx.error_if(x, needs_at and at is None, _MSG_R_ACC_NEEDS_AT_AND_VEL)
-    x = eqx.error_if(x, needs_vel and vel is None, _MSG_R_ACC_NEEDS_AT_AND_VEL)
-
-    at0 = at  # required if needs_at
-    vel0 = vel  # required if needs_vel
-
-    # Rotate the base point to express output components in the chart frame at p'.
-    at_rot = None
-    if at0 is not None:
-        at_rot = api.apply_op(op, tau, cxr.point, chart, at0, usys=usys)
-
-    # Pack acceleration chart components -> ambient Cartesian via frame at p.
-    keys_chart = chart.components
-    a_chart, a_unit = _pack_uniform_unit(x, keys=keys_chart)  # (..., n)
-
-    B = api.frame_cart(
-        chart, at=at0 if at0 is not None else {}, usys=usys
-    )  # (..., N, n)
-    a_cart = cxf.pushforward(B, a_chart)  # (..., N)
-
-    # Base term: R a
-    a_cart_rot = jnp.einsum("ij,...j->...i", R, a_cart)
-
-    # Add + 2 dR v term (requires vel)
-    if needs_at_for_dR:
-        # Convert vel (chart physical components at p) -> ambient Cartesian.
-        v_chart, _v_unit = _pack_uniform_unit(vel0, keys=keys_chart)  # (..., n)
-        v_cart = cxf.pushforward(B, v_chart)  # (..., N)
-        a_cart_rot = a_cart_rot + 2.0 * jnp.einsum("ij,...j->...i", dR, v_cart)
-
-    # Add + ddR x term (requires at)
-    if needs_at_for_ddR:
-        x_cart_dict = api.point_transform(cart, chart, at0, usys=usys)  # type: ignore[arg-type]
-        x_cart, _x_unit = _pack_uniform_unit(x_cart_dict, keys=comps_cart)  # (..., n)
-        a_cart_rot = a_cart_rot + jnp.einsum("ij,...j->...i", ddR, x_cart)
-
-    # Pull back into chart acceleration components at p'.
-    B_rot = api.frame_cart(chart, at=at_rot if at_rot is not None else {}, usys=usys)
-    g = api.metric_of(chart)
-    a_chart_rot = cxf.pullback(g, B_rot, a_cart_rot)  # (..., n)
-
-    return _unpack_with_unit(a_chart_rot, a_unit, keys_chart)
-
-
-@plum.dispatch
-def apply_op(
-    op: Rotate,
-    tau: Any,
-    role: cxr.Acc,
-    chart: cxc.AbstractCartesianProductChart,
-    x: CsDict,
-    /,
-    *,
-    at: CsDict | None = None,
-    vel: CsDict | None = None,
-    usys: u.AbstractUnitSystem | None = None,
-    **kw: Any,
-) -> CsDict:
-    """Apply Rotate to Acc on a Cartesian-product chart, factorwise.
-
-    Rotates only those factors whose canonical Cartesian chart dimension matches `R`;
-    leaves other factors unchanged. `at` and `vel` are partitioned factorwise and
-    passed through to the factor re-dispatch.
-    """
-    del role
-    op_eval = eval_op(op, tau)
-    n = _validate_square(op_eval.R)
-
-    parts = chart.split_components(x)
-    at_parts = chart.split_components(at) if at is not None else None
-    vel_parts = chart.split_components(vel) if vel is not None else None
-
-    def _maybe(
-        chart: cxc.AbstractChart, part: CsDict, at: CsDict | None, vel: CsDict | None
-    ) -> CsDict:
-        cart = api.cartesian_chart(chart)
-        if cart.ndim != n or len(cart.components) != n:
-            return part
-        return api.apply_op(
-            op, tau, cxr.acc, chart, part, at=at, vel=vel, usys=usys, **kw
-        )
-
-    rotated_parts = tuple(
-        _maybe(
-            f,
-            p,
-            (None if at_parts is None else at_parts[i]),
-            (None if vel_parts is None else vel_parts[i]),
-        )
+        _maybe(f, p, **jtu.map(itemgetter(i), ats))
         for i, (f, p) in enumerate(zip(chart.factors, parts, strict=True))
     )
     return chart.merge_components(rotated_parts)

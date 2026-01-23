@@ -44,7 +44,7 @@ pip install coordinax
   dimensions). A rep does not store numerical values.
 - Vector: data + rep + role. Data are the coordinate values or physical
   components.
-- Role: semantic interpretation of vector data (Pos, Vel, Acc, etc.). A role is
+- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role is
   not a rep.
 - Metric: a bilinear form g on the tangent space defining inner products and
   norms (Euclidean, sphere intrinsic, Minkowski).
@@ -134,8 +134,8 @@ v = {
     "y": u.Q(5.0, "km/s"),
     "z": u.Q(6.0, "km/s"),
 }
-qvec = cx.Vector(data=q, chart=cx.charts.cart3d, role=cx.roles.Pos())
-vvec = cx.Vector(data=v, chart=cx.charts.cart3d, role=cx.roles.Vel())
+qvec = cx.Vector(data=q, chart=cx.charts.cart3d, role=cx.roles.PhysDisp())
+vvec = cx.Vector(data=v, chart=cx.charts.cart3d, role=cx.roles.PhysVel())
 v_sph = vvec.vconvert(cx.charts.sph3d, qvec)
 v_back = v_sph.vconvert(cx.charts.cart3d, qvec)
 bool(
@@ -150,19 +150,19 @@ Different vector roles transform via different mechanisms:
 
 | Role           | Transformation                      | Requires Base Point? |
 | -------------- | ----------------------------------- | -------------------- |
-| `Pos`          | Position transform (coordinate map) | No                   |
-| `Displacement` | Tangent transform (physical vector) | Sometimes[^1]        |
-| `Vel`          | Tangent transform (physical vector) | Sometimes[^1]        |
-| `Acc`          | Tangent transform (physical vector) | Sometimes[^1]        |
+| `Point`        | Position transform (coordinate map) | No                   |
+| `PhysDisp`     | Tangent transform (physical vector) | Sometimes[^1]        |
+| `PhysVel`      | Tangent transform (physical vector) | Sometimes[^1]        |
+| `PhysAcc`      | Tangent transform (physical vector) | Sometimes[^1]        |
 
 [^1]:
     Required when converting between representations (e.g., Cartesian ↔
     Spherical), not required for unit conversions within the same
     representation.
 
-## FiberPoint: Ergonomic Tangent Vector Conversions
+## PointedVector: Ergonomic Tangent Vector Conversions
 
-`FiberPoint` provides a container for vectors anchored at a common base point,
+`PointedVector` provides a container for vectors anchored at a common base point,
 automatically managing the base point dependency required for tangent vector
 transformations:
 
@@ -174,7 +174,7 @@ vel = cx.Vector.from_([10, 20, 30], "km/s")
 acc = cx.Vector.from_([0.1, 0.2, 0.3], "km/s^2")
 
 # Create bundle - base is explicit, fields are tangent vectors
-bundle = cx.FiberPoint(base=base, velocity=vel, acceleration=acc)
+bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
 
 # Convert entire bundle - automatically handles `at=` for tangent vectors
 sph_bundle = bundle.vconvert(cx.charts.sph3d)
@@ -188,13 +188,13 @@ sph_bundle = bundle.vconvert(cx.charts.sph3d)
 
 **Key features:**
 
-- Base must have role `Pos`; fields must not (enforced at construction)
+- Base must have role `PhysDisp`; fields must not (enforced at construction)
 - Automatic `at=` parameter handling for tangent transformations
 - JAX-compatible (works with `jax.jit`, `vmap`)
 - Physical components with uniform units (not coordinate derivatives)
 
 See the
-[FiberPoint guide](https://coordinax.readthedocs.io/en/latest/guides/anchored_vector_bundle.html)
+[PointedVector guide](https://coordinax.readthedocs.io/en/latest/guides/anchored_vector_bundle.html)
 for details.
 
 ## Vector Algebra: Points vs Displacements
@@ -238,33 +238,33 @@ disp_from_origin = cx.as_pos(new_pos)
 
 | Operation                     | Result         | Allowed? |
 | ----------------------------- | -------------- | -------- |
-| `Displacement + Displacement` | `Displacement` | ✅       |
-| `Pos + Displacement`          | `Pos`          | ✅       |
-| `Displacement + Pos`          | —              | ❌       |
-| `Pos + Pos`                   | —              | ❌       |
+| `PhysDisp + PhysDisp`         | `PhysDisp`     | ✅       |
+| `Point + PhysDisp`            | `Point`        | ✅       |
+| `PhysDisp + Point`            | —              | ❌       |
+| `Point + Point`               | —              | ❌       |
 
 > **⚠️ Critical: Physical Components with Uniform Units**
 >
-> `Displacement` stores **physical vector components in an orthonormal frame**,
+> `PhysDisp` stores **physical vector components in an orthonormal frame**,
 > not coordinate increments. All components must have uniform dimension
 > `[length]`.
 >
 > For example, in cylindrical coordinates:
 >
-> - ✅ **Correct**: `Displacement(rho=1m, phi=2m, z=3m)` — physical components,
+> - ✅ **Correct**: `PhysDisp(rho=1m, phi=2m, z=3m)` — physical components,
 >   where `phi=2m` means "2 meters in the tangential direction"
-> - ❌ **Wrong**: `Displacement(rho=1m, phi=0.5rad, z=3m)` — coordinate
+> - ❌ **Wrong**: `PhysDisp(rho=1m, phi=0.5rad, z=3m)` — coordinate
 >   increments with mixed units
 >
-> This applies to all tangent vectors (`Displacement`, `Vel`, `Acc`), which
+> This applies to all tangent vectors (`PhysDisp`, `PhysVel`, `PhysAcc`), which
 > transform via orthonormal frame transformations, not coordinate chart
 > transformations.
 
 ## Metrics and Representations
 
-Representations are coordinate charts; roles (Pos, Vel, Acc, ...) give vectors
-their physical meaning. A chart’s default metric defines how physical components
-are interpreted.
+Representations are coordinate charts; roles (PhysDisp, PhysVel, PhysAcc, ...)
+give vectors their physical meaning. A chart’s default metric defines how
+physical components are interpreted.
 
 - Euclidean charts are exposed in `cx.r` (Cart, Cylindrical, Spherical, etc.).
 - Manifold charts are exposed in `cx.r` (e.g. `TwoSphere`).

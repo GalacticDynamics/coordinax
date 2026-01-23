@@ -95,10 +95,10 @@ def test_rep_has_cartesian(rep) -> None:
 
 def test_role_derivative_chain() -> None:
     """Test derivative/antiderivative relationships between roles."""
-    assert cx.roles.Pos.derivative() is cx.roles.Vel
-    assert cx.roles.Vel.derivative() is cx.roles.Acc
-    assert cx.roles.Vel.antiderivative() is cx.roles.Pos
-    assert cx.roles.Acc.antiderivative() is cx.roles.Vel
+    assert isinstance(cx.roles.phys_disp.derivative(), cx.roles.PhysVel)
+    assert isinstance(cx.roles.phys_vel.derivative(), cx.roles.PhysAcc)
+    assert isinstance(cx.roles.phys_vel.antiderivative(), cx.roles.PhysDisp)
+    assert isinstance(cx.roles.phys_acc.antiderivative(), cx.roles.PhysVel)
 
 
 def test_twosphere_cartesian_chart_raises() -> None:

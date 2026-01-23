@@ -23,7 +23,7 @@ from unxt.quantity import AllowValue
 
 import coordinax._src.charts as cxc
 from coordinax._src import api
-from coordinax._src.custom_types import CsDict, Ds, Ks
+from coordinax._src.custom_types import CsDict, Ds, Ks, OptUSys
 from coordinax._src.utils import uconvert_to_rad
 
 AmbT = TypeVar("AmbT", bound=cxc.AbstractChart[Any, Any])
@@ -131,7 +131,7 @@ def embed_point(
     p_pos: CsDict,
     /,
     *,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Embed intrinsic point coordinates into ambient coordinates.
 
@@ -206,7 +206,7 @@ def embed_point(
     params: Mapping[str, Any],
     /,
     *,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     msg = (
         "No embed_point rule registered for "
@@ -223,7 +223,7 @@ def embed_point(
     params: Mapping[str, Any],
     /,
     *,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     del intrinsic_chart, ambient_chart
     R = params.get("R")
@@ -255,7 +255,7 @@ def project_point(
     p_ambient: CsDict,
     /,
     *,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Project ambient coordinates onto intrinsic chart coordinates.
 
@@ -332,7 +332,7 @@ def project_point(
     params: Mapping[str, Any],
     /,
     *,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     msg = (
         "No project_point rule registered for "
@@ -349,7 +349,7 @@ def project_point(
     params: Mapping[str, Any],
     /,
     *,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     del intrinsic_chart, ambient_chart, params, usys
     x, y, z = p_ambient["x"], p_ambient["y"], p_ambient["z"]
@@ -381,7 +381,7 @@ def embed_tangent(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Embed intrinsic physical tangent components into ambient physical components.
 
@@ -449,7 +449,7 @@ def project_tangent(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     r"""Project ambient physical components onto the manifold tangent space.
 

@@ -1,17 +1,18 @@
 """Test :mod:`coordinax.distance`."""
 
+import hypothesis.strategies as st
 import plum
-import pytest
+from hypothesis import given
 
 import unxt as u
 
-import coordinax as cx
+import coordinax_hypothesis as cxst
 
 
-def test_promote_distance():
+@given(cxst.distances())
+def test_promote_distance(d):
     """Test the promotion rule for distance."""
     # Quantities
-    d = cx.distances.Distance(90.0, "pc")
     q = u.Q(1.0, "kpc")
 
     # Explicit promotion test
@@ -24,9 +25,7 @@ def test_promote_distance():
     assert isinstance(q * d, u.Q)
 
 
-@pytest.mark.parametrize(
-    "d", [cx.distances.Distance(90, "pc"), cx.distances.DistanceModulus(26, "mag")]
-)
+@given(st.one_of(cxst.distances(), cxst.distance_moduli()))
 def test_convert_distance_to_quantity(d):
     """Test converting distance types to general quantity types.
 

@@ -78,13 +78,13 @@ def from_(
     --------
     >>> import coordinax.frames as cxf
 
-    >>> icrs = cxf.ICRS.from_({})
-    >>> icrs
-    ICRS()
+    >>> alice = cxf.Alice.from_({})
+    >>> alice
+    Alice()
 
-    >>> gcf = cxf.Galactocentric.from_({})
-    >>> print(gcf)
-    Galactocentric( ... )
+    >>> bob = cxf.Bob.from_({})
+    >>> print(bob)
+    Bob()
 
     """
     return cls(**obj)

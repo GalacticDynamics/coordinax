@@ -75,7 +75,6 @@ from .base import (
     AbstractFixedComponentsChart,
     AbstractFlatCartesianProductChart,
 )
-from coordinax._src import api
 from coordinax._src.custom_types import Ang, CDict, Ds, Ks, Len, Spd
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # type: ignore[misc]
@@ -613,7 +612,7 @@ class SpaceTimeEuclidean(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     """
 
-    spatial_chart: AbstractChart[Any, Any] = field(default=cart3d)
+    spatial_chart: AbstractFixedComponentsChart[Any, Any] = field(default=cart3d)
     """Spatial part of the representation. Defaults: `coordinax.charts.cart3d`."""
 
     _: KW_ONLY
@@ -663,10 +662,6 @@ class SpaceTimeEuclidean(AbstractFlatCartesianProductChart[Ks, Ds]):
         """
         return {**parts[0], **parts[1]}
 
-    # def __hash__(self) -> int:
-    #     # TODO: better hash, including more information
-    #     return hash((self.__class__, self.spatial_chart.__class__))
-
 
 @plum.dispatch
 def cartesian_chart(obj: SpaceTimeEuclidean, /) -> SpaceTimeEuclidean: # type: ignore[type-arg]
@@ -675,18 +670,16 @@ def cartesian_chart(obj: SpaceTimeEuclidean, /) -> SpaceTimeEuclidean: # type: i
     Examples
     --------
     >>> import coordinax as cx
-    >>> rep = cx.charts.SpaceTimeEuclidean(cx.charts.sph3d)
-    >>> rep
-    SpaceTimeEuclidean(
-        spatial_chart=Spherical3D(), c=StaticQuantity(299792.458, 'km / s')
-    )
-    >>> cx.charts.cartesian_chart(rep)
-    SpaceTimeEuclidean(
-        spatial_chart=Cart3D(), c=StaticQuantity(299792.458, 'km / s')
-    )
+    >>> chart = cx.charts.SpaceTimeEuclidean(cx.charts.sph3d)
+    >>> chart
+    SpaceTimeEuclidean(spatial_chart=Spherical3D(),
+                       c=StaticQuantity(array(299792.458), unit='km / s'))
+    >>> chart.cartesian
+    SpaceTimeEuclidean(spatial_chart=Cart3D(),
+                       c=StaticQuantity(array(299792.458), unit='km / s'))
 
     """
-    spatial_cart = api.cartesian_chart(obj.spatial_chart)
+    spatial_cart = obj.spatial_chart.cartesian
     # Return same object if already cartesian
     if spatial_cart == obj.spatial_chart:
         return obj

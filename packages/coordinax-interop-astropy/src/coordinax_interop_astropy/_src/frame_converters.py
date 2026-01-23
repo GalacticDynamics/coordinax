@@ -38,7 +38,7 @@ Galactocentric conversion with custom parameters:
 >>> galcen_v_sun = cx.Vector.from_(
 ...     {"x": u.Q(11.1, "km/s"), "y": u.Q(244, "km/s"),
 ...      "z": u.Q(7.25, "km/s")},
-...     cx.charts.cart3d, cx.roles.vel
+...     cx.charts.cart3d, cx.roles.phys_vel
 ... )
 >>> cx_galcen = cxastro.Galactocentric(
 ...     galcen=galcen,
@@ -203,7 +203,7 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     ... )
     >>> galcen_v_sun = cx.Vector.from_(
     ...     {"x": u.Q(11.1, "km/s"), "y": u.Q(244, "km/s"), "z": u.Q(7.25, "km/s")},
-    ...     cx.charts.cart3d, cx.roles.vel
+    ...     cx.charts.cart3d, cx.roles.phys_vel
     ... )
     >>> cx_frame = cxastro.Galactocentric(
     ...     galcen=galcen,
@@ -283,7 +283,7 @@ def from_(
 
     # Convert galcen_v_sun to CartesianVel3D
     galcen_v_sun = cx.Vector(
-        frame.galcen_v_sun, chart=cx.charts.cart3d, role=cx.roles.vel
+        frame.galcen_v_sun, chart=cx.charts.cart3d, role=cx.roles.phys_vel
     )
 
     return cxastro.Galactocentric(

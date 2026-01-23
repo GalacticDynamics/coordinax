@@ -17,22 +17,22 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from coordinax.distance import Distance
+        >>> from coordinax.distances import Distance
         >>> d = Distance(10, "km")
         >>> d.distance is d
         True
 
-        >>> from coordinax.distance import DistanceModulus
+        >>> from coordinax.distances import DistanceModulus
         >>> DistanceModulus(10, "mag").distance
         Distance(Array(1000., dtype=float64, ...), unit='pc')
 
-        >>> from coordinax.distance import Parallax
+        >>> from coordinax.distances import Parallax
         >>> p = Parallax(1, "mas")
         >>> p.distance.to("kpc")
         Distance(Array(1., dtype=float64, ...), unit='kpc')
 
         """
-        from coordinax.distance import Distance  # noqa: PLC0415
+        from coordinax.distances import Distance  # noqa: PLC0415
 
         return Distance.from_(self)
 
@@ -42,21 +42,21 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from coordinax.distance import Distance
+        >>> from coordinax.distances import Distance
         >>> d = Distance(1, "pc")
         >>> d.distance_modulus
         DistanceModulus(Array(-5., dtype=float64), unit='mag')
 
-        >>> from coordinax.distance import DistanceModulus
+        >>> from coordinax.distances import DistanceModulus
         >>> DistanceModulus(10, "mag").distance_modulus
         DistanceModulus(Array(10, dtype=int64, ...), unit='mag')
 
-        >>> from coordinax.distance import Parallax
+        >>> from coordinax.distances import Parallax
         >>> Parallax(1, "mas").distance_modulus
         DistanceModulus(Array(10., dtype=float64), unit='mag')
 
         """
-        from coordinax.distance import DistanceModulus  # noqa: PLC0415
+        from coordinax.distances import DistanceModulus  # noqa: PLC0415
 
         return DistanceModulus.from_(self)
 
@@ -69,23 +69,23 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from coordinax.distance import Distance
+        >>> from coordinax.distances import Distance
 
         >>> d = Distance(1, "pc")
         >>> jnp.round(d.parallax.to("arcsec"), 2)
         Parallax(Array(1., dtype=float64, ...), unit='arcsec')
 
-        >>> from coordinax.distance import DistanceModulus
+        >>> from coordinax.distances import DistanceModulus
         >>> DistanceModulus(10, "mag").parallax.to("mas")
         Parallax(Array(1., dtype=float64, ...), unit='mas')
 
-        >>> from coordinax.distance import Parallax
+        >>> from coordinax.distances import Parallax
         >>> p = Parallax(1, "mas")
         >>> p.parallax is p
         True
 
         """
-        from coordinax.angle import Parallax  # noqa: PLC0415
+        from coordinax.angles import Parallax  # noqa: PLC0415
 
         return Parallax.from_(self)
 

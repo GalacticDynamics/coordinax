@@ -43,11 +43,6 @@ class AbstractCompositeOperator(AbstractOperator):
     # ===========================================
     # Operator API
 
-    @classmethod
-    def operate(cls, *args: Any, **kwargs: Any) -> Any:
-        msg = "Use `coordinax.operate(op, *args, **kw)`"
-        raise NotImplementedError(msg)
-
     @property
     def inverse(self: "AbstractCompositeOperator") -> "coordinax.ops.Pipe":
         """The inverse of the operator.

@@ -6,6 +6,8 @@ import pytest
 import unxt as u
 
 import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.roles as cxr
 
 
 class TestVectorSubtraction:
@@ -15,24 +17,24 @@ class TestVectorSubtraction:
         """Point - Point -> Pos (affine difference)."""
         p1 = cx.Vector(
             {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.point,
+            cxc.cart3d,
+            cxr.point,
         )
         p2 = cx.Vector(
             {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.point,
+            cxc.cart3d,
+            cxr.point,
         )
 
         # Using method
         result = p1.sub(p2)
-        assert isinstance(result.role, cx.roles.Pos)
+        assert isinstance(result.role, cxr.PhysDisp)
         assert jnp.allclose(result.data["x"].value, 2.0)
         assert jnp.allclose(result.data["y"].value, 3.0)
 
         # Using operator
         result = p1 - p2
-        assert isinstance(result.role, cx.roles.Pos)
+        assert isinstance(result.role, cxr.PhysDisp)
         assert jnp.allclose(result.data["x"].value, 2.0)
         assert jnp.allclose(result.data["y"].value, 3.0)
 
@@ -40,63 +42,63 @@ class TestVectorSubtraction:
         """Point - Pos -> Point (backwards translation)."""
         point = cx.Vector(
             {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.point,
+            cxc.cart3d,
+            cxr.point,
         )
         disp = cx.Vector(
             {"x": u.Q(0.5, "m"), "y": u.Q(0.5, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.pos,
+            cxc.cart3d,
+            cxr.phys_disp,
         )
 
         # Using method
         result = point.sub(disp)
-        assert isinstance(result.role, cx.roles.Point)
+        assert isinstance(result.role, cxr.Point)
         assert jnp.allclose(result.data["x"].value, 2.5)
         assert jnp.allclose(result.data["y"].value, 3.5)
 
         # Using operator
         result = point - disp
-        assert isinstance(result.role, cx.roles.Point)
+        assert isinstance(result.role, cxr.Point)
         assert jnp.allclose(result.data["x"].value, 2.5)
         assert jnp.allclose(result.data["y"].value, 3.5)
 
-    def test_pos_minus_pos_gives_pos(self):
+    def test_disp_minus_pos_gives_pos(self):
         """Pos - Pos -> Pos (vector subtraction)."""
         d1 = cx.Vector(
             {"x": u.Q(2.0, "m"), "y": u.Q(3.0, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.pos,
+            cxc.cart3d,
+            cxr.phys_disp,
         )
         d2 = cx.Vector(
             {"x": u.Q(0.5, "m"), "y": u.Q(1.5, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.pos,
+            cxc.cart3d,
+            cxr.phys_disp,
         )
 
         # Using method
         result = d1.sub(d2)
-        assert isinstance(result.role, cx.roles.Pos)
+        assert isinstance(result.role, cxr.PhysDisp)
         assert jnp.allclose(result.data["x"].value, 1.5)
         assert jnp.allclose(result.data["y"].value, 1.5)
 
         # Using operator
         result = d1 - d2
-        assert isinstance(result.role, cx.roles.Pos)
+        assert isinstance(result.role, cxr.PhysDisp)
         assert jnp.allclose(result.data["x"].value, 1.5)
         assert jnp.allclose(result.data["y"].value, 1.5)
 
-    def test_pos_minus_point_raises_error(self):
+    def test_disp_minus_point_raises_error(self):
         """Pos - Point is not allowed."""
         disp = cx.Vector(
             {"x": u.Q(2.0, "m"), "y": u.Q(3.0, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.pos,
+            cxc.cart3d,
+            cxr.phys_disp,
         )
         point = cx.Vector(
             {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.point,
+            cxc.cart3d,
+            cxr.point,
         )
 
         with pytest.raises(TypeError, match="Cannot subtract Point from Pos"):
@@ -117,14 +119,14 @@ class TestVectorSubtraction:
                 "theta": u.Q(jnp.pi / 2, "rad"),
                 "phi": u.Q(0.0, "rad"),
             },
-            cx.charts.sph3d,
-            cx.roles.point,
+            cxc.sph3d,
+            cxr.point,
         )
 
         # Subtract - should get ~zero displacement
         result = p1_cart - p2_sph
-        assert isinstance(result.role, cx.roles.Pos)
-        assert isinstance(result.chart, cx.charts.Cart3D)
+        assert isinstance(result.role, cxr.PhysDisp)
+        assert isinstance(result.chart, cxc.Cart3D)
         assert jnp.allclose(result.data["x"].value, 0.0, atol=1e-10)
         assert jnp.allclose(result.data["y"].value, 0.0, atol=1e-10)
         assert jnp.allclose(result.data["z"].value, 0.0, atol=1e-10)

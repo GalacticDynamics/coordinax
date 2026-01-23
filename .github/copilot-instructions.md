@@ -19,11 +19,11 @@ This is a UV workspace repository containing multiple packages:
 Before making _any_ change to:
 
 - charts / geometries
-- roles (Point / Pos / Vel / Acc)
+- roles (Point / PhysDisp / PhysVel / PhysAcc)
 - metrics
 - embeddings / manifolds
 - operators / reference frames
-- Vector / FiberPoint / Coordinate semantics
+- Vector / PointedVector / Coordinate semantics
 
 You MUST:
 
@@ -409,7 +409,7 @@ def add_p_vec_qty(lhs: Vector, rhs: Quantity, /) -> Vector:
     """Handle Vector + Quantity via desugaring to Vector + Vector."""
     # Desugar: convert Quantity to Vector with appropriate role
     if u.dimension_of(rhs) == u.dimension("length"):
-        rhs_vec = Vector.from_(rhs, r.Pos)
+        rhs_vec = Vector.from_(rhs, r.PhysDisp)
     else:
         rhs_vec = Vector.from_(rhs)
     return add(lhs.role, rhs_vec.role, lhs, rhs_vec, at=None)

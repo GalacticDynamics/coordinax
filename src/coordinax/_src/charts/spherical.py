@@ -38,16 +38,10 @@ class TwoSphere(AbstractFixedComponentsChart[TwoSphereKeys, TwoSphereDims], Abst
     phi
         Azimuthal angle with angular units.
 
-    Returns
-    -------
-    Rep
-        Representation with components ``("theta","phi")`` and dimensions
-        ``("angle","angle")``.
-
     Notes
     -----
     - ``TwoSphere`` is a curved 2D manifold; there is no global Cartesian 2D
-      rep. ``cartesian_chartTwoSphere)`` raises.
+      chart. ``cartesian_chartTwoSphere)`` raises.
     - The intrinsic metric is ``diag(1, sin^2 theta)``.
     - The longitude is undefined at the poles ``theta=0,pi``.
 
@@ -56,13 +50,13 @@ class TwoSphere(AbstractFixedComponentsChart[TwoSphereKeys, TwoSphereDims], Abst
     >>> import jax.numpy as jnp
     >>> import coordinax as cx
     >>> import unxt as u
-    >>> rep = cx.charts.EmbeddedManifold(
+    >>> chart = cx.charts.EmbeddedManifold(
     ...     intrinsic_chart=cx.charts.twosphere,
     ...     ambient_chart=cx.charts.cart3d,
     ...     params={"R": u.Q(2.0, "km")},
     ... )
     >>> p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
-    >>> q = cx.embeddings.embed_point(rep, p)
+    >>> q = cx.embeddings.embed_point(chart, p)
     >>> r2 = (u.uconvert("km", q["x"])**2 + u.uconvert("km", q["y"])**2
     ...       + u.uconvert("km", q["z"])**2)
     >>> bool(jnp.allclose(r2.value, 4.0))

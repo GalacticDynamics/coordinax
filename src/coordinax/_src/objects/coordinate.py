@@ -19,7 +19,7 @@ import coordinax._src.charts as cxc
 import coordinax._src.frames as cxf
 import coordinax._src.operators as cxo
 from .base import AbstractVectorLike
-from .bundle import FiberPoint
+from .bundle import PointedVector
 from .vector import Vector
 
 
@@ -34,9 +34,9 @@ class AbstractCoordinate(AbstractVectorLike):
 
     """
 
-    #: The data of the coordinate. This is a `coordinax.FiberPoint` object,
+    #: The data of the coordinate. This is a `coordinax.PointedVector` object,
     #: which is a collection of vectors.
-    data: eqx.AbstractVar[FiberPoint]  # TODO: FiberPoint[PosT] -- plum#212
+    data: eqx.AbstractVar[PointedVector]  # TODO: PointedVector[PosT] -- plum#212
 
     #: The reference frame of the coordinate as a
     #: `coordinax.frames.AbstractReferenceFrame` object.
@@ -63,7 +63,7 @@ class AbstractCoordinate(AbstractVectorLike):
         >>> cgcf = cicrs.to_frame(cx.frames.Galactocentric())
         >>> cgcf
         Coordinate(
-            FiberPoint({ 'base': Cart3D(...) }),
+            PointedVector({ 'base': Cart3D(...) }),
             frame=Galactocentric( ... )
         )
 
@@ -106,7 +106,7 @@ class AbstractCoordinate(AbstractVectorLike):
         ----------
         include_data_name : {'named', 'vector', 'map'}, optional
             If `named`, include the name of the data field.
-            If `vector`, only include the data itself as an `FiberPoint`.
+            If `vector`, only include the data itself as an `PointedVector`.
             If `map`, only include the data as dict-like representation.
         **kwargs : Any, optional
             Additional keyword arguments to pass to `wl.pdoc`.
@@ -123,13 +123,13 @@ class AbstractCoordinate(AbstractVectorLike):
 
         >>> wl.pprint(coord, include_data_name="named")
         Coordinate(
-            data=FiberPoint({ 'base': Cart3D(...) }),
+            data=PointedVector({ 'base': Cart3D(...) }),
             frame=ICRS()
         )
 
         >>> wl.pprint(coord, include_data_name="vector")
         Coordinate(
-            FiberPoint({ 'base': Cart3D(...) }),
+            PointedVector({ 'base': Cart3D(...) }),
             frame=ICRS()
         )
 
@@ -138,7 +138,7 @@ class AbstractCoordinate(AbstractVectorLike):
 
         >>> print(repr(coord))
         Coordinate(
-            FiberPoint({ 'base': Cart3D(...) }),
+            PointedVector({ 'base': Cart3D(...) }),
             frame=ICRS()
         )
 
@@ -195,7 +195,7 @@ class AbstractCoordinate(AbstractVectorLike):
         ...                       cx.frames.ICRS())
         >>> print(repr(coord))
         Coordinate(
-            FiberPoint({ 'length': Cart3D(...) }),
+            PointedVector({ 'length': Cart3D(...) }),
             frame=ICRS()
         )
 
@@ -259,7 +259,7 @@ class Coordinate(AbstractCoordinate):
     >>> coord = cx.Coordinate(cx.Vector.from_([1, 2, 3], "kpc"),
     ...                       cx.frames.ICRS())
     >>> coord
-    Coordinate( FiberPoint({ 'base': Cart3D(...) }),
+    Coordinate( PointedVector({ 'base': Cart3D(...) }),
                 frame=ICRS() )
 
     Alternative Construction:
@@ -267,7 +267,7 @@ class Coordinate(AbstractCoordinate):
     >>> frame = cx.frames.ICRS()
     >>> data = cx.Vector.from_([1, 2, 3], "kpc")
     >>> cx.Coordinate.from_({"data": data, "frame": frame})
-    Coordinate( FiberPoint({ 'base': Cart3D(...) }),
+    Coordinate( PointedVector({ 'base': Cart3D(...) }),
                 frame=ICRS() )
 
     Changing Representation:
@@ -277,12 +277,12 @@ class Coordinate(AbstractCoordinate):
     >>> coord = cx.Coordinate(data, frame)
 
     >>> coord.vconvert(cx.charts.sph3d)
-    Coordinate( FiberPoint({ 'base': Spherical3D( ... ) }),
+    Coordinate( PointedVector({ 'base': Spherical3D( ... ) }),
                 frame=ICRS() )
 
     Showing Frame Transformation:
 
-    >>> space = cx.FiberPoint(
+    >>> space = cx.PointedVector(
     ...     base=cx.Vector.from_([1.0, 0, 0], "pc"),
     ...     speed=cx.Vector.from_([1.0, 0, 0], "km/s", cx.charts.CartVel3D))
 
@@ -296,7 +296,7 @@ class Coordinate(AbstractCoordinate):
 
     >>> w.to_frame(cx.frames.ICRS())
     Coordinate(
-        FiberPoint({
+        PointedVector({
             'base': Cart3D(...), 'speed': CartVel3D(...) }),
         frame=ICRS()
     )
@@ -306,11 +306,13 @@ class Coordinate(AbstractCoordinate):
 
     """
 
-    # The data of the coordinate. This is a `coordinax.FiberPoint` object,
+    # The data of the coordinate. This is a `coordinax.PointedVector` object,
     # which is a collection of vectors. This can be constructed from a space
-    # object, or any input that can construct a `coordinax.FiberPoint` via
-    # `coordinax.FiberPoint.from_`.
-    data: FiberPoint = eqx.field(converter=Unless(FiberPoint, FiberPoint.from_))
+    # object, or any input that can construct a `coordinax.PointedVector` via
+    # `coordinax.PointedVector.from_`.
+    data: PointedVector = eqx.field(
+        converter=Unless(PointedVector, PointedVector.from_)
+    )
 
     #: The reference frame of the coordinate as a :
     # `coordinax.frames.AbstractReferenceFrame` object. This can be : from a
@@ -378,7 +380,7 @@ def vconvert(target: cxc.AbstractChart, w: Coordinate, /) -> Coordinate:  # type
 
     >>> cx.vconvert(cx.charts.sph3d, w)
     Coordinate(
-        FiberPoint({ 'base': Spherical3D( ... ) }),
+        PointedVector({ 'base': Spherical3D( ... ) }),
         frame=NoFrame()
     )
 
@@ -436,7 +438,7 @@ def add_p_coord_pos(x: Coordinate, y: Vector, /) -> Coordinate:
 
 
 @plum.dispatch
-def operate(self: cxo.AbstractOperator, obj: Coordinate, /) -> Coordinate:
+def apply_op(self: cxo.AbstractOperator, obj: Coordinate, /) -> Coordinate:
     """Apply the operator to a coordinate.
 
     Examples
@@ -446,7 +448,7 @@ def operate(self: cxo.AbstractOperator, obj: Coordinate, /) -> Coordinate:
     >>> coord = cx.Coordinate(cx.Vector.from_([1, 2, 3], "kpc"),
     ...                       cx.frames.ICRS())
     >>> coord
-    Coordinate( FiberPoint({ 'base': Cart3D(...) }),
+    Coordinate( PointedVector({ 'base': Cart3D(...) }),
                 frame=ICRS() )
 
     >>> op = cx.ops.GalileanOp.from_([-1, -1, -1], "kpc")
@@ -457,5 +459,4 @@ def operate(self: cxo.AbstractOperator, obj: Coordinate, /) -> Coordinate:
         [0 1 2]>
 
     """
-    # TODO: take the frame into account
-    return replace(obj, data=self(obj.data))
+    raise NotImplementedError("TODO")  # noqa: EM101

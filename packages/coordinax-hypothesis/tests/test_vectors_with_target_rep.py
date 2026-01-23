@@ -10,7 +10,7 @@ import coordinax_hypothesis as cxst
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 @settings(max_examples=30)
@@ -19,7 +19,7 @@ def test_position_vector_with_chain(vec_and_chain: tuple) -> None:
     vec, target_chain = vec_and_chain
 
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
 
     assert len(target_chain) == 1
     (target_chart,) = target_chain
@@ -31,7 +31,7 @@ def test_position_vector_with_chain(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Vel,
+        role=cx.roles.PhysVel,
     )
 )
 @settings(max_examples=30)
@@ -40,7 +40,7 @@ def test_velocity_vector_with_chain(vec_and_chain: tuple) -> None:
     vec, target_chain = vec_and_chain
 
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Vel)
+    assert isinstance(vec.role, cx.roles.PhysVel)
 
     assert len(target_chain) == 2
     vel_target, pos_target = target_chain
@@ -54,7 +54,7 @@ def test_velocity_vector_with_chain(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Acc,
+        role=cx.roles.PhysAcc,
     )
 )
 @settings(max_examples=30)
@@ -63,7 +63,7 @@ def test_acceleration_vector_with_chain(vec_and_chain: tuple) -> None:
     vec, target_chain = vec_and_chain
 
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Acc)
+    assert isinstance(vec.role, cx.roles.PhysAcc)
 
     assert len(target_chain) == 3
     acc_target, vel_target, pos_target = target_chain
@@ -79,7 +79,7 @@ def test_acceleration_vector_with_chain(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cx.charts.cart3d,
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 @settings(max_examples=20)
@@ -97,7 +97,7 @@ def test_specific_3d_position_vector(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cx.charts.polar2d,
-        role=cx.roles.Vel,
+        role=cx.roles.PhysVel,
     )
 )
 @settings(max_examples=20)
@@ -106,7 +106,7 @@ def test_specific_2d_velocity_vector(vec_and_chain: tuple) -> None:
     vec, target_chain = vec_and_chain
 
     assert vec.chart == cx.charts.polar2d
-    assert isinstance(vec.role, cx.roles.Vel)
+    assert isinstance(vec.role, cx.roles.PhysVel)
 
     vel_target, pos_target = target_chain
     assert isinstance(vel_target, cx.charts.Abstract2D)
@@ -116,7 +116,7 @@ def test_specific_2d_velocity_vector(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cx.charts.radial1d,
-        role=cx.roles.Acc,
+        role=cx.roles.PhysAcc,
     )
 )
 @settings(max_examples=20)
@@ -125,7 +125,7 @@ def test_specific_1d_acceleration_vector(vec_and_chain: tuple) -> None:
     vec, target_chain = vec_and_chain
 
     assert vec.chart == cx.charts.radial1d
-    assert isinstance(vec.role, cx.roles.Acc)
+    assert isinstance(vec.role, cx.roles.PhysAcc)
 
     assert len(target_chain) == 3
     for target_chart in target_chain:
@@ -135,7 +135,7 @@ def test_specific_1d_acceleration_vector(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
         shape=(5,),
     )
 )
@@ -154,7 +154,7 @@ def test_batched_position_vectors(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Vel,
+        role=cx.roles.PhysVel,
         shape=(3, 4),
     )
 )
@@ -164,7 +164,7 @@ def test_batched_3d_velocity_vectors(vec_and_chain: tuple) -> None:
     vec, target_chain = vec_and_chain
 
     assert vec.shape == (3, 4)
-    assert isinstance(vec.role, cx.roles.Vel)
+    assert isinstance(vec.role, cx.roles.PhysVel)
     assert isinstance(vec.chart, cx.charts.Abstract3D)
 
     vel_target, pos_target = target_chain
@@ -175,7 +175,7 @@ def test_batched_3d_velocity_vectors(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
         dtype=jnp.float32,
     )
 )
@@ -192,7 +192,7 @@ def test_float32_dtype(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract2D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 @settings(max_examples=20, deadline=400)
@@ -209,7 +209,7 @@ def test_vector_conversion_to_target(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cxst.charts(filter=cx.charts.Abstract2D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 @settings(max_examples=20)
@@ -217,7 +217,7 @@ def test_position_with_any_target(vec_and_chain: tuple) -> None:
     """Test position vector with unrestricted target."""
     vec, target_chain = vec_and_chain
 
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
     assert isinstance(target_chain, tuple)
     assert len(target_chain) >= 1
 
@@ -228,7 +228,7 @@ def test_position_with_any_target(vec_and_chain: tuple) -> None:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=cx.charts.radial1d,
-        role=cx.roles.Acc,
+        role=cx.roles.PhysAcc,
         shape=(),
     )
 )

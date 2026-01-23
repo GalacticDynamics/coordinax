@@ -75,8 +75,8 @@ class Galactocentric(AbstractSpaceFrame):
     #: https://ui.adsabs.harvard.edu/abs/2018RNAAS...2..210D
     #: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
     #: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
-    galcen_v_sun: Vector[cxc.Cart3D, cxr.Vel] = eqx.field(
-        converter=Vector[cxc.Cart3D, cxr.Vel].from_,
+    galcen_v_sun: Vector[cxc.Cart3D, cxr.PhysVel] = eqx.field(
+        converter=Vector[cxc.Cart3D, cxr.PhysVel].from_,
         default_factory=lambda: Vector.from_([12.9, 245.6, 7.78], "km/s"),
     )
 

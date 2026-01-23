@@ -1,5 +1,4 @@
 """Conversion functions for vector representations."""
-from unxt.quantity import AllowValue
 
 __all__: tuple[str, ...] = ()
 
@@ -7,10 +6,10 @@ import jax.tree as jtu
 import plum
 
 import quaxed.numpy as jnp
-import unxt as u
 
+from .utils import pack_uniform_unit, unpack_with_unit
 from coordinax._src import api, charts, roles
-from coordinax._src.custom_types import CsDict
+from coordinax._src.custom_types import CsDict, OptUSys
 from coordinax._src.embed import EmbeddedManifold
 
 # ===================================================================
@@ -19,14 +18,14 @@ from coordinax._src.embed import EmbeddedManifold
 
 @plum.dispatch
 def vconvert(
-    role: roles.Pos | roles.Vel | roles.Acc,
+    role: roles.PhysDisp | roles.PhysVel | roles.PhysAcc,
     to_chart: charts.AbstractChart,  # type: ignore[type-arg]
     from_chart: charts.AbstractChart,  # type: ignore[type-arg]
     p_dif: CsDict,
     p_pos: CsDict,
     /,
     *_: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Convert a differential vector from one chart to another.
 
@@ -35,7 +34,7 @@ def vconvert(
 
     - Pos: physical vector with uniform length units
     - Vel: physical vector with uniform velocity units (length/time)
-    - Acc: physical vector with uniform acceleration units (length/time²)
+    - PhysAcc: physical vector with uniform acceleration units (length/time²)
 
     All components must have homogeneous physical dimension. For example, in
     cylindrical coordinates, a Pos has components (rho[m], phi[m], z[m]) where
@@ -52,29 +51,6 @@ def vconvert(
 # ===================================================================
 
 
-def _pack_uniform_unit(
-    p: CsDict, /, keys: tuple[str, ...]
-) -> tuple[jnp.ndarray, u.AbstractUnit | None]:
-    """Pack dict-of-quantities into an array.
-
-    Converting all entries to a common unit.
-    """
-    # Choose a reference unit from the first key.
-    v0 = p[keys[0]]
-    unit = v0.unit if isinstance(v0, u.AbstractQuantity) else u.unit("")
-    vals = [u.ustrip(AllowValue, unit, p[k]) for k in keys]
-    return jnp.stack(vals, axis=-1), unit
-
-
-def _unpack_with_unit(
-    vals: jnp.ndarray, unit: u.AbstractUnit | None, keys: tuple[str, ...]
-) -> CsDict:
-    """Unpack an array into dict-of-quantities with a shared unit."""
-    if unit is None:
-        return {k: vals[..., i] for i, k in enumerate(keys)}
-    return {k: u.Q(vals[..., i], unit) for i, k in enumerate(keys)}
-
-
 @plum.dispatch
 def physical_tangent_transform(
     to_chart: charts.AbstractChart,  # type: ignore[type-arg]
@@ -83,7 +59,7 @@ def physical_tangent_transform(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Transform **physical** differential components by orthonormal-frame change.
 
@@ -137,10 +113,7 @@ def physical_tangent_transform(
 
     # Pack vector components (uniform unit: speed or acceleration)
     # in rep component order.
-    from_keys = tuple(from_chart.components)
-    to_keys = tuple(to_chart.components)
-
-    v_from, unit = _pack_uniform_unit(v_phys, from_keys)
+    v_from, unit = pack_uniform_unit(v_phys, from_chart.components)
 
     # v_cart = B_from @ v_from
     v_cart = api.pushforward(B_from, v_from)
@@ -149,7 +122,7 @@ def physical_tangent_transform(
     v_to = api.pullback(api.metric_of(to_chart), B_to, v_cart)
 
     # Unpack to dict with shared unit
-    out = _unpack_with_unit(v_to, unit, to_keys)
+    out = unpack_with_unit(v_to, unit, to_chart.components)
 
     # Reshape outputs to broadcast shape of inputs
     shape = jnp.broadcast_shapes(*[jnp.shape(v) for v in v_phys.values()])
@@ -164,7 +137,7 @@ def physical_tangent_transform(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Transform physical tangent components from an embedded manifold to ambient chart.
 
@@ -199,7 +172,7 @@ def physical_tangent_transform(
     # Pack vector components (uniform unit: speed or acceleration)
     to_keys = tuple(to_chart.components)
 
-    v_from, unit = _pack_uniform_unit(v_phys, from_embedded.components)
+    v_from, unit = pack_uniform_unit(v_phys, from_embedded.components)
 
     # Push forward to Cartesian: v_cart = B_from @ v_from
     v_cart = api.pushforward(B_from, v_from)
@@ -215,7 +188,7 @@ def physical_tangent_transform(
     B_to = api.frame_cart(to_chart, at=p_to, usys=usys)
     # Pull back
     v_to = api.pullback(api.metric_of(to_chart), B_to, v_cart)
-    out = _unpack_with_unit(v_to, unit, to_keys)
+    out = unpack_with_unit(v_to, unit, to_keys)
 
     # Reshape outputs to broadcast shape of inputs
     shape = jnp.broadcast_shapes(*[v.shape for v in v_phys.values()])
@@ -230,7 +203,7 @@ def physical_tangent_transform(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> CsDict:
     """Transform physical tangent components from an embedded manifold to ambient chart.
 
@@ -266,13 +239,13 @@ def physical_tangent_transform(
     from_keys = tuple(from_embedded.components)
     to_keys = tuple(to_chart.components)
 
-    v_from, unit = _pack_uniform_unit(v_phys, from_keys)
+    v_from, unit = pack_uniform_unit(v_phys, from_keys)
 
     # Push forward to Cartesian: v_cart = B_from @ v_from
     v_cart = api.pushforward(B_from, v_from)
 
     # If target is Cartesian, we're done (just unpack)
-    out = _unpack_with_unit(v_cart, unit, to_keys)
+    out = unpack_with_unit(v_cart, unit, to_keys)
 
     # Reshape outputs to broadcast shape of inputs
     shape = jnp.broadcast_shapes(*[v.shape for v in v_phys.values()])

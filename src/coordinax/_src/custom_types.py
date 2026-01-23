@@ -11,6 +11,7 @@ __all__ = (
     "AngAcc",
     # Units-related
     "Unit",
+    "OptUSys",
     # Array-related
     "Shape",
     "BatchableAngleQ",
@@ -21,10 +22,11 @@ __all__ = (
     "CsDict",
     "Ks",
     "Ds",
+    "HasShape",
 )
 
 from jaxtyping import Real, Shaped
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, Protocol, TypeAlias, runtime_checkable
 from typing_extensions import TypeVar
 
 import unxt as u
@@ -43,6 +45,7 @@ AngAcc: TypeAlias = Literal["angular acceleration"]
 
 # Units
 Unit: TypeAlias = u.AbstractUnit
+OptUSys: TypeAlias = u.AbstractUnitSystem | None
 
 # =========================================================
 # Array-related Types
@@ -99,3 +102,13 @@ CsDict: TypeAlias = dict[ComponentsKey, Any]
 
 Ks = TypeVar("Ks", bound=tuple[ComponentsKey, ...])
 Ds = TypeVar("Ds", bound=tuple[str | None, ...])
+
+
+@runtime_checkable
+class HasShape(Protocol):
+    """A protocol for objects that have a shape attribute."""
+
+    @property
+    def shape(self) -> Shape:
+        """The shape of the object."""
+        raise NotImplementedError  # pragma: no cover

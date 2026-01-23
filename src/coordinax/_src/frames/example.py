@@ -124,12 +124,12 @@ def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> cxo.Pipe:
     This is an example of a reference frame transformation that includes
     both a spatial translation (Translate) and a velocity boost (Boost).
 
-    The Boost has a well-defined action on all kinematic roles:
+    The Boost has well-defined actions on kinematic roles:
 
-    - **Point**: translates by $v_0 \cdot (\tau - \tau_0)$
-    - **Pos**: identity (displacements are invariant)
+    - **Point**: Not applicable (raises TypeError)
+    - **Pos**: identity (displacements are Galilean invariant)
     - **Vel**: adds $v_0$
-    - **Acc**: identity (constant boost)
+    - **PhysAcc**: identity (for constant boost)
 
     Examples
     --------

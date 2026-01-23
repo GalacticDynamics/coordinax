@@ -57,14 +57,14 @@ def roles(
         The draw function provided by Hypothesis.
     include
         If provided, only generate roles from this tuple. Otherwise, all roles
-        are considered (Pos, Displacement, Vel, Acc).
+        are considered (Point, PhysDisp, PhysVel, PhysAcc).
     exclude
         Roles to exclude from generation. Default is empty (no exclusions).
 
     Returns
     -------
     cx.roles.AbstractRole
-        A role flag instance (e.g., ``cx.roles.pos``, ``cx.charts.displacement``).
+        A role flag instance (e.g., ``cx.roles.phys_disp``, ``cx.charts.displacement``).
 
     Examples
     --------
@@ -76,17 +76,17 @@ def roles(
     ... def test_any_role(role):
     ...     assert isinstance(role, cx.roles.AbstractRole)
 
-    >>> @given(role=cxst.roles(include=(cx.roles.Pos, cx.roles.Pos)))
+    >>> @given(role=cxst.roles(include=(cx.roles.PhysDisp, cx.roles.PhysDisp)))
     ... def test_position_like_roles(role):
-    ...     assert isinstance(role, (cx.roles.Pos, cx.roles.Pos))
+    ...     assert isinstance(role, (cx.roles.PhysDisp, cx.roles.PhysDisp))
 
     """
     # TODO: dynamic discovery of all roles?
     all_roles: tuple[type[cx.roles.AbstractRole], ...] = (
         cx.roles.Point,
-        cx.roles.Pos,
-        cx.roles.Vel,
-        cx.roles.Acc,
+        cx.roles.PhysDisp,
+        cx.roles.PhysVel,
+        cx.roles.PhysAcc,
     )
     candidates = all_roles if include is None else include
 
@@ -103,7 +103,7 @@ def roles(
 
 @st.composite  # type: ignore[untyped-decorator]
 def physical_roles(draw: st.DrawFn) -> cx.roles.AbstractRole:
-    """Generate physical tangent role flags (Pos, Vel, Acc).
+    """Generate physical tangent role flags (Pos, Vel, PhysAcc).
 
     These are roles representing physical tangent vectors that require uniform
     physical dimension across components.
@@ -116,8 +116,8 @@ def physical_roles(draw: st.DrawFn) -> cx.roles.AbstractRole:
     Returns
     -------
     cx.roles.AbstractRole
-        A physical tangent role instance: `coordinax.roles.pos`,
-        `coordinax.roles.vel`, or `coordinax.roles.acc`.
+        A physical tangent role instance: `coordinax.roles.phys_disp`,
+        `coordinax.roles.phys_vel`, or `coordinax.roles.phys_acc`.
 
     Examples
     --------
@@ -127,8 +127,8 @@ def physical_roles(draw: st.DrawFn) -> cx.roles.AbstractRole:
 
     >>> @given(role=cxst.physical_roles())
     ... def test_tangent_role(role):
-    ...     # Only Pos, Vel, Acc (not Point)
-    ...     assert isinstance(role, (cx.roles.Pos, cx.roles.Vel, cx.roles.Acc))
+    ...     # Only PhysDisp, Vel, PhysAcc (not Point)
+    ...     assert isinstance(role, (cx.roles.PhysDisp, cx.roles.PhysVel, cx.roles.PhysAcc))
 
     """
     # Discover non-abstract physical role classes dynamically
@@ -189,7 +189,7 @@ def vectors(
         exclude=(cx.charts.Abstract0D,)
     ),
     role: type[cx.roles.AbstractRole]
-    | st.SearchStrategy[type[cx.roles.AbstractRole]] = st.just(cx.roles.Pos),
+    | st.SearchStrategy[type[cx.roles.AbstractRole]] = st.just(cx.roles.PhysDisp),
     *,
     dtype: Any | st.SearchStrategy = jnp.float32,
     shape: int | tuple[int, ...] | st.SearchStrategy[tuple[int, ...]] = (),
@@ -205,7 +205,7 @@ def vectors(
         A Coordinax chart instance or a strategy to generate one. By
         default, a random chart is drawn using the `charts` strategy.
     role
-        The role flag for the vector. By default, the position role (`cx.roles.Pos`)
+        The role flag for the vector. By default, the position role (`cx.roles.PhysDisp`)
         is used.
     dtype
         The data type for array components (default: jnp.float32).
@@ -268,7 +268,7 @@ def vectors_with_target_chart(
     chart: cx.charts.AbstractChart[Ks, Ds]
     | st.SearchStrategy[cx.charts.AbstractChart[Ks, Ds]] = charts(),
     role: type[cx.roles.AbstractRole]
-    | st.SearchStrategy[type[cx.roles.AbstractRole]] = st.just(cx.roles.Pos),
+    | st.SearchStrategy[type[cx.roles.AbstractRole]] = st.just(cx.roles.PhysDisp),
     *,
     dtype: Any | st.SearchStrategy = jnp.float32,
     shape: int | tuple[int, ...] | st.SearchStrategy[tuple[int, ...]] = (),
@@ -292,7 +292,7 @@ def vectors_with_target_chart(
         for the source vector. By default, a random chart is drawn.
     role
         The role flag for the source vector. By default, the position role
-        (`cx.roles.Pos`) is used.
+        (`cx.roles.PhysDisp`) is used.
     dtype
         The data type for array components (default: jnp.float32).
     shape
@@ -316,7 +316,7 @@ def vectors_with_target_chart(
     >>> # Generate a position vector and target chain for conversion
     >>> @given(
     ...     vec_reps=cxst.vectors_with_target_chart(
-    ...         chart=cx.charts.cart3d, role=cx.roles.Pos
+    ...         chart=cx.charts.cart3d, role=cx.roles.PhysDisp
     ...     )
     ... )
     ... def test_conversion(vec_reps):
@@ -337,7 +337,7 @@ def vectors_with_target_chart(
     target_chart = draw(charts_like(vec.chart))
 
     # For Point role, there is no time-antiderivative chain; just return the
-    # single chart. For physical tangent roles (Pos, Vel, Acc), generate the
+    # single chart. For physical tangent roles (Pos, Vel, PhysAcc), generate the
     # full time-derivative chain.
     if role_cls is cx.roles.Point:
         target_chain = (target_chart,)
@@ -367,8 +367,8 @@ def bundles(
     dtype: Any | st.SearchStrategy = jnp.float32,
     shape: int | tuple[int, ...] | st.SearchStrategy[tuple[int, ...]] = (),
     elements: st.SearchStrategy[float] | None = None,
-) -> cx.FiberPoint:
-    """Generate random FiberPoint instances.
+) -> cx.PointedVector:
+    """Generate random PointedVector instances.
 
     Parameters
     ----------
@@ -381,8 +381,8 @@ def bundles(
         Names of field vectors. Default is ("velocity",).
     field_roles
         Tuple of role types for field vectors, matching length of field_keys.
-        If None, generates tangent-like roles (Vel, Acc) randomly.
-        Cannot include Point role (enforced by FiberPoint validation).
+        If None, generates tangent-like roles (Vel, PhysAcc) randomly.
+        Cannot include Point role (enforced by PointedVector validation).
     dtype
         Data type for array components (default: jnp.float32).
     shape
@@ -393,7 +393,7 @@ def bundles(
 
     Returns
     -------
-    cx.FiberPoint
+    cx.PointedVector
         A bundle with base (role=Point) and field vectors.
 
     Raises
@@ -411,7 +411,7 @@ def bundles(
 
     >>> @given(bundle=cxst.bundles())
     ... def test_bundle(bundle):
-    ...     assert isinstance(bundle, cx.FiberPoint)
+    ...     assert isinstance(bundle, cx.PointedVector)
     ...     assert isinstance(bundle.base.role, cx.roles.Point)
     ...     assert "velocity" in bundle.keys()
 
@@ -419,7 +419,7 @@ def bundles(
 
     >>> @given(bundle=cxst.bundles(
     ...     field_keys=("velocity", "acceleration"),
-    ...     field_roles=(cx.roles.Vel, cx.roles.Acc),
+    ...     field_roles=(cx.roles.PhysVel, cx.roles.PhysAcc),
     ... ))
     ... def test_multi_field(bundle):
     ...     assert "velocity" in bundle.keys()
@@ -448,10 +448,10 @@ def bundles(
 
     # Determine field roles
     if field_roles is None:
-        # Generate random tangent-like roles (exclude Point - only Vel, Acc)
+        # Generate random tangent-like roles (exclude Point - only Vel, PhysAcc)
         tangent_roles: tuple[type[cx.roles.AbstractRole], ...] = (
-            cx.roles.Vel,
-            cx.roles.Acc,
+            cx.roles.PhysVel,
+            cx.roles.PhysAcc,
         )
         field_roles = tuple(draw(st.sampled_from(tangent_roles)) for _ in field_keys)
     else:
@@ -485,7 +485,7 @@ def bundles(
         )
         fields[key] = field_vec
 
-    return cx.FiberPoint(base=base, **fields)
+    return cx.PointedVector(base=base, **fields)
 
 
 # Alias for spec alignment (spec uses fiber_points instead of bundles)

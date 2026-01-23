@@ -38,7 +38,7 @@ This spec is intentionally **subordinate** to the core Coordinax spec:
   - Chart dimensionality is `chart.ndim` (formerly `dimensionality`).
 - **Role**: Coordinax role object. Roles are partitioned into:
   - `Point` (affine points; mixed coordinate dimensions allowed), and
-  - physical tangent roles `Pos`, `Vel`, `Acc` (uniform physical dimensions;
+  - physical tangent roles `PhysDisp`, `PhysVel`, `PhysAcc` (uniform physical dimensions;
     require a base point for operations via `at=`), plus planned `CoordDeriv`
     and `Covector`.
 - **CsDict**: mapping `dict[str, QuantityLike]` keyed by `chart.components`.
@@ -73,11 +73,11 @@ unconstrained).
 
 - `Point` role:
   - mixed coordinate dimensions allowed (e.g. length + angle).
-- Physical tangent roles (`Pos`, `Vel`, `Acc`):
+- Physical tangent roles (`PhysDisp`, `PhysVel`, `PhysAcc`):
   - **uniform physical dimension** across components:
-    - `Pos`: length
-    - `Vel`: length/time
-    - `Acc`: length/time^2
+    - `PhysDisp`: length
+    - `PhysVel`: length/time
+    - `PhysAcc`: length/time^2
   - must be generated together with an admissible base point for operations that
     require `at=`.
 - Coordinate-derivative role `CoordDeriv` (planned):
@@ -96,22 +96,22 @@ implements them.
 Some tests need a _role-consistent_ chain representing the time-antiderivative
 relationship among **physical tangent roles**:
 
-- `Acc` → `Vel` → `Pos`
+- `PhysAcc` → `PhysVel` → `PhysDisp`
 
 This chain is **entirely within the physical tangent family**. The `Point` role
 is **not** part of this chain: it is an affine point and does not arise from
 integrating a physical tangent without additional structure (choice of origin /
 integration constant). Therefore:
 
-- A “time chain” helper must accept only starting roles in `{Pos, Vel, Acc}`.
-- The chain must terminate at `Pos`.
+- A “time chain” helper must accept only starting roles in `{Pos, PhysVel, PhysAcc}`.
+- The chain must terminate at `PhysDisp`.
 - The chain must never include `Point`.
 
 Normative output shapes (by starting role):
 
-- start role `Pos`: `(pos_chart,)`
-- start role `Vel`: `(vel_chart, pos_chart)`
-- start role `Acc`: `(acc_chart, vel_chart, pos_chart)`
+- start role `PhysDisp`: `(pos_chart,)`
+- start role `PhysVel`: `(vel_chart, pos_chart)`
+- start role `PhysAcc`: `(acc_chart, vel_chart, pos_chart)`
 
 Here `*_chart` refers to chart _instances_ in the same “chart family” (e.g. all
 Euclidean 3D charts), suitable for testing the corresponding conversion
@@ -150,11 +150,11 @@ physical tangent roles. `coordinax-hypothesis` should expose a helper strategy
 acceptable) with the following contract:
 
 - Inputs:
-  - a starting **role class** in `{Pos, Vel, Acc}`,
+  - a starting **role class** in `{Pos, PhysVel, PhysAcc}`,
   - a chart (or chart strategy) that fixes the intended family (e.g. 3D
     Euclidean).
 - Output:
-  - a tuple of chart instances following the chain `Acc → Vel → Pos`, truncated
+  - a tuple of chart instances following the chain `PhysAcc → PhysVel → Pos`, truncated
     appropriately, and **never** including `Point`.
 
 If the caller supplies `Point` as the starting role, the helper should either:
@@ -163,7 +163,7 @@ If the caller supplies `Point` as the starting role, the helper should either:
 - `assume(False)` to discard such cases (acceptable in Hypothesis).
 
 This helper exists to avoid accidental generation of nonsensical chains after
-the `Point` vs `Pos` role split.
+the `Point` vs `PhysDisp` role split.
 
 ### 1) Chart strategies
 
@@ -212,8 +212,8 @@ When generating CsDicts for product charts:
 
 ### 2) Role strategies
 
-- `roles()` generates available roles (`Point`, `Pos`, `Vel`, `Acc`, …).
-- `physical_roles()` generates `{Pos, Vel, Acc}`.
+- `roles()` generates available roles (`Point`, `PhysDisp`, `PhysVel`, `PhysAcc`, …).
+- `physical_roles()` generates `{Pos, PhysVel, PhysAcc}`.
 - `point_role()` generates `Point`.
 
 ### 3) CsDict strategies
@@ -233,10 +233,10 @@ When generating CsDicts for product charts:
   - For physical roles, may optionally generate a paired base-point (see
     `fiber_points`).
 
-### 5) FiberPoint strategies
+### 5) PointedVector strategies
 
 - `fiber_points(chart: AbstractChart | None = None, role: Role | None = None, *, scalar: bool = True)`
-  - Returns: `st.SearchStrategy[FiberPoint]`
+  - Returns: `st.SearchStrategy[PointedVector]`
   - Must generate consistent bundles (base point + tangent/cotangent objects
     anchored at that point).
 
@@ -285,7 +285,7 @@ then `coordinax-hypothesis` should:
    - `charts(ndim=3)` only yields charts with `chart.ndim == 3`.
 3. Generated `Vector`s are constructible using the canonical constructor:
    - `Vector(data, chart=chart, role=role)` succeeds for generated data.
-4. When generating FiberPoints:
+4. When generating PointedVectors:
    - base point chart compatibility and anchoring invariants hold.
 
 ---

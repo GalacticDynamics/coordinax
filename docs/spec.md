@@ -4,7 +4,7 @@ This document is the **normative** specification for the mathematical and
 software design of the `coordinax` coordinate and vector system. It defines a
 low-level, mathematically correct framework—**Charts**, **Metrics**, **Frames**,
 **Embeddings**, and **Maps**—and a high-level user API built on top of them --
-**Vector**, **vconvert**, **FiberPoint**, **Reference Frames**, **Coordinate** .
+**Vector**, **vconvert**, **PointedVector**, **Reference Frames**, **Coordinate** .
 
 The goals are:
 
@@ -60,12 +60,12 @@ The goals are:
   - [Low-level concepts](#low-level-concepts)
     - [Charts](#charts)
       - [`AbstractFixedComponentsChart`](#abstractfixedcomponentschart)
-        - [`AbstractFixedComponentsChart` is therefore the **preferred base class** wherever applicable.](#abstractfixedcomponentschart-is-therefore-the-preferred-base-class-wherever-applicable)
+        - [`AbstractFixedComponentsChart` is therefore the **preferred base class** wherever applicable](#abstractfixedcomponentschart-is-therefore-the-preferred-base-class-wherever-applicable)
       - [`cartesian_chart`](#cartesian_chart)
         - [Normative semantics](#normative-semantics)
         - [Implementation guidance (dispatch)](#implementation-guidance-dispatch)
         - [Recommended usage patterns](#recommended-usage-patterns)
-          - [Do not use `cartesian_chart` as a proxy for metric selection; `metric_of` is the source of truth for geometry.](#do-not-use-cartesian_chart-as-a-proxy-for-metric-selection-metric_of-is-the-source-of-truth-for-geometry)
+          - [Do not use `cartesian_chart` as a proxy for metric selection; `metric_of` is the source of truth for geometry](#do-not-use-cartesian_chart-as-a-proxy-for-metric-selection-metric_of-is-the-source-of-truth-for-geometry)
     - [Cartesian products](#cartesian-products-1)
       - [Mathematical definition (normative)](#mathematical-definition-normative)
 - [\\frac{\\partial u}{\\partial q}(q)](#fracpartial-upartial-qq-1)
@@ -89,7 +89,7 @@ The goals are:
         - [Role-specialized primitive operators (normative)](#role-specialized-primitive-operators-normative)
           - [`Add` with a static role flag](#add-with-a-static-role-flag)
           - [Domain rules (normative)](#domain-rules-normative)
-          - [Boost action on `Point` vs `Pos` (normative)](#boost-action-on-point-vs-pos-normative)
+          - [Boost](#boost)
           - [Worked example (normative semantics)](#worked-example-normative-semantics)
         - [Anchoring rules](#anchoring-rules)
         - [Chart discipline](#chart-discipline)
@@ -97,9 +97,9 @@ The goals are:
       - [Implementation guidance (normative)](#implementation-guidance-normative)
     - [Rotation operator: role-dependent mathematical action (normative)](#rotation-operator-role-dependent-mathematical-action-normative)
       - [Action on `Point` (normative)](#action-on-point-normative)
-      - [Action on `Pos` (physical displacement) (normative)](#action-on-pos-physical-displacement-normative)
-      - [Action on `Vel` (physical velocity) (normative)](#action-on-vel-physical-velocity-normative)
-      - [Action on `Acc` (physical acceleration) (normative)](#action-on-acc-physical-acceleration-normative)
+      - [Action on `PhysDisp` (physical displacement) (normative)](#action-on-physdisp-physical-displacement-normative)
+      - [Action on `PhysVel` (physical velocity) (normative)](#action-on-physvel-physical-velocity-normative)
+      - [Action on `PhysAcc` (physical acceleration) (normative)](#action-on-physacc-physical-acceleration-normative)
       - [Summary table (normative)](#summary-table-normative)
       - [Normative implications for implementation](#normative-implications-for-implementation)
     - [Embeddings](#embeddings)
@@ -124,7 +124,7 @@ The goals are:
       - [`Vector.from_` for `Quantity` inputs (normative)](#vectorfrom_-for-quantity-inputs-normative)
         - [Explicit role constructor for `Quantity`](#explicit-role-constructor-for-quantity)
       - [`Vector + Quantity` (normative convenience)](#vector--quantity-normative-convenience)
-    - [FiberPoint](#fiberpoint)
+    - [PointedVector](#pointedvector)
   - [Multiple dispatch and JAX compatibility](#multiple-dispatch-and-jax-compatibility)
   - [Design invariants](#design-invariants)
 
@@ -143,7 +143,7 @@ downward.
 These modules provide the objects most users interact with directly:
 
 - `coordinax` (top-level re-exports)
-  - `Vector`, `FiberPoint`, `Coordinate`
+  - `Vector`, `PointedVector`, `Coordinate`
   - `vconvert`, `as_pos`
 - `coordinax.objects`
   - high-level container implementations and ergonomic constructors
@@ -176,7 +176,7 @@ These modules define the mathematically precise building blocks of the system.
     `AbstractCartesianProductChart`, `CartesianProductChart`, concrete charts)
   - Canonical chart utilities (`cartesian_chart`)
 - `coordinax.roles` (import as `cxr`)
-  - Role flags and role semantics (`Point`, `Pos`, `Vel`, `Acc`, etc.)
+  - Role flags and role semantics (`Point`, `PhysDisp`, `PhysVel`, `PhysAcc`, etc.)
 - `coordinax.metrics` (import as `cxm`)
   - Metrics (`AbstractMetric`, `EuclideanMetric`, `MinkowskyMetric`, etc.)
   - metric-dependent operations (`metric_of`, `raise_index`, `lower_index`)
@@ -224,7 +224,7 @@ charts / roles / metrics / embeddings
             ↓
       operators / frames
             ↓
-   Vector / FiberPoint / Coordinate
+   Vector / PointedVector / Coordinate
 ```
 
 - Low-level modules must not import high-level containers.
@@ -480,8 +480,8 @@ the ambient space is affine.
 Consequences:
 
 - Points on $M$ cannot be added or subtracted intrinsically.
-- Displacements (`Pos`) must live in tangent spaces and require anchoring.
-- Operations like `Point + Pos` are only defined via exponential-map-like
+- Displacements (`PhysDisp`) must live in tangent spaces and require anchoring.
+- Operations like `Point + PhysDisp` are only defined via exponential-map-like
   constructions, which are **not assumed** unless explicitly specified.
 
 Therefore, embedded manifolds impose stricter requirements on arithmetic and
@@ -687,7 +687,7 @@ In particular:
 - tangent vectors inherit independent geometric meaning per factor.
 
 This distinction is essential for later sections on **roles**, especially the
-difference between `Point` and `Pos`.
+difference between `Point` and `PhysDisp`.
 
 #### Role of Cartesian products in this specification
 
@@ -767,7 +767,7 @@ This class exists primarily to:
 - support faster, simpler validation of `CsDict` keys and per-component
   dimensions.
 
-##### `AbstractFixedComponentsChart` is therefore the **preferred base class** wherever applicable.
+##### `AbstractFixedComponentsChart` is therefore the **preferred base class** wherever applicable
 
 Charts provide (structurally) a canonical Cartesian chart of the same ambient
 space when applicable:
@@ -845,7 +845,7 @@ suffice:
   - `from -> cartesian -> to` where both legs are implemented and numerically
     stable.
 
-###### Do not use `cartesian_chart` as a proxy for metric selection; `metric_of` is the source of truth for geometry.
+###### Do not use `cartesian_chart` as a proxy for metric selection; `metric_of` is the source of truth for geometry
 
 ### Cartesian products
 
@@ -1207,8 +1207,8 @@ For non-Euclidean ambient metrics (e.g. Minkowski), `pullback` is defined to
 include the metric signature so that the returned components remain physically
 consistent with the metric; see the metric-specialized `pullback` dispatches.
 
-**Normative use in role transforms.** For physical tangent roles (`Pos`,
-`Vel`, `Acc`) the canonical way to move between chart components and ambient
+**Normative use in role transforms.** For physical tangent roles (`PhysDisp`,
+`PhysVel`, `PhysAcc`) the canonical way to move between chart components and ambient
 Cartesian components is:
 
 $$
@@ -1234,7 +1234,7 @@ A _reference frame_ is a choice of observer/coordinate system that induces a
 (possibly time-dependent) transformation of points and derived objects. In
 Coordinax, reference-frame transformations are expressed via **operators** that
 act on low-level objects (`CsDict`), intermediate objects (`Vector`,
-`FiberPoint`), and high-level objects (`Coordinate`).
+`PointedVector`), and high-level objects (`Coordinate`).
 
 #### Mathematical model
 
@@ -1266,11 +1266,11 @@ $$
 with $R(\tau)\in SO(n)$ and translation $b(\tau)\in\mathbb{R}^n$. The
 pushforward on physical tangents depends on the intended geometric object:
 
-- For **physical displacement** (`Pos`): $\Delta x' = R(\tau)\,\Delta x$.
-- For **physical velocity** (`Vel`):
+- For **physical displacement** (`PhysDisp`): $\Delta x' = R(\tau)\,\Delta x$.
+- For **physical velocity** (`PhysVel`):
   $v' = R(\tau)\,v + \dot R(\tau)\,x + \dot b(\tau)$ (Galilean kinematics; the
   extra terms encode the time-dependence of the frame).
-- For **physical acceleration** (`Acc`): similarly includes $\ddot R(\tau)\,x$,
+- For **physical acceleration** (`PhysAcc`): similarly includes $\ddot R(\tau)\,x$,
   $2\dot R(\tau)\,v$, and $\ddot b(\tau)$.
 
 These additional terms are exactly why reference frames are a distinct concept:
@@ -1345,7 +1345,7 @@ All behavior is defined by registrations of `apply_op`.
 `apply_op` must be extended by multiple dispatch on:
 
 - `op` (or equivalently `(op.from_frame, op.to_frame)`),
-- the _structural type_ of `x` (`CsDict`, `Vector`, `FiberPoint`, `Coordinate`),
+- the _structural type_ of `x` (`CsDict`, `Vector`, `PointedVector`, `Coordinate`),
 - and, where relevant, the `role` carried by `x`.
 
 Canonical signatures:
@@ -1355,9 +1355,11 @@ apply_op(op: Operator, tau, p: CsDict, /) -> CsDict
 apply_op(op: Operator, tau, v: CsDict, /, *, at: CsDict) -> CsDict
 
 apply_op(op: Operator, tau, v: Vector, /, *, at: Vector | None = None) -> Vector
-apply_op(op: Operator, tau, fp: FiberPoint, /) -> FiberPoint
+apply_op(op: Operator, tau, fp: PointedVector, /) -> PointedVector
 apply_op(op: Operator, tau, coord: Coordinate, /) -> Coordinate
 ```
+
+**Normative note on `CsDict` (raw dictionary) inputs:** When applying operators to raw `CsDict` objects (low-level component dictionaries), the caller MUST provide explicit `role=` and `chart=` keyword arguments to disambiguate the geometric type. This includes `Boost` applied to `Point`-role dictionaries, which is allowed and defined per the Boost specification above.
 
 `Operator.__call__` is required only to normalize arguments and forward to
 `apply_op`.
@@ -1369,7 +1371,7 @@ The role of the input determines _which induced geometric map is applied_:
 - `Point`:
   - `apply_op(op, tau, p)` applies the **point map**
     $p' = \Phi_{F\to G}(\tau)(p)$.
-- Physical tangent roles (`Pos`, `Vel`, `Acc`):
+- Physical tangent roles (`PhysDisp`, `PhysVel`, `PhysAcc`):
   - `apply_op(op, tau, v, at=p)` applies the **pushforward**
     $(\Phi_{F\to G}(\tau))_{*p}(v)$.
   - If the transformation law depends on the base point or on time derivatives
@@ -1416,7 +1418,7 @@ Normative interpretation:
   be called `Translate`).
 - `Add(delta, role=Vel)` is a **velocity boost** (what might otherwise be called
   `Boost`).
-- `Add(delta, role=Acc)` is an **acceleration offset**.
+- `Add(delta, role=PhysAcc)` is an **acceleration offset**.
 
 Role-specialization via a `role` attribute is valid because the attribute is
 **static metadata** on the operator object (it must not depend on runtime array
@@ -1451,75 +1453,72 @@ an `Add(..., role=Vel)`).
   - `apply_op(op(role=Point), tau, v: Vector[Point])` is permitted.
   - `apply_op(op(role=Vel), tau, v: Vector[Point])` is **not** permitted and
     must raise `TypeError` (do not silently ignore).
-- If `x` is a `FiberPoint`, then applying `op` must act on **all fields whose
+- If `x` is a `PointedVector`, then applying `op` must act on **all fields whose
   role matches** the operator’s role:
   - point-like primitives update the base point,
   - tangent-like primitives update the corresponding fibre fields (e.g.
     velocity), using the base point as anchoring when required by the law. If
-    the `FiberPoint` does not contain any matching field, the operator must
+    the `PointedVector` does not contain any matching field, the operator must
     raise `TypeError`.
-- If `x` is a `Coordinate`, `apply_op` must apply to the contained `FiberPoint`
+- If `x` is a `Coordinate`, `apply_op` must apply to the contained `PointedVector`
   and return a `Coordinate` in the target reference frame.
 
 These rules ensure that pipelines like `Translate | Boost` behave “simply” for
 anchored kinematic states, while preventing category errors on bare points.
 
-###### Boost action on `Point` vs `Pos` (normative)
+###### Boost
 
-A **boost** is a change of reference frame that modifies how **time** relates
-coordinates of a moving system. In general, a boost is **not** purely a map on
-$TM$; it is a time-parameterized action on the _kinematic state_.
+A **Boost** is a _reference-frame velocity offset_ operator. It is **not** merely a linear map on tangent vectors; it is a time-parameterized affine transformation acting on events/points as well as on physical tangent quantities.
 
-In the Newtonian/Galilean case on Euclidean $\mathbb{R}^n$, a constant-velocity
-boost by $v_0\in\mathbb{R}^n$ at reference epoch $\tau_0$ is:
+Let $\tau$ be the affine parameter (typically physical time), let $\Delta v(\tau)$ be the boost velocity field expressed as **physical tangent components** (units of velocity), and fix an epoch $\tau_0$ (the time at which the two frames coincide in position).
 
-- **Point (position) action**:
+**Mathematical action by role**
 
-$$
- x'(\tau) = x(\tau) + v_0\,(\tau-\tau_0),
-$$
+- **Point** (event / position of a point): the boost acts as a time-dependent translation
 
-so applying a boost to a point **is not** a no-op: it is a translation whose
-magnitude depends on $\tau$.
+  $$
+  p'(\tau) = p(\tau) + \Delta x(\tau),\qquad \Delta x(\tau) = \int_{\tau_0}^{\tau} \Delta v(s)\,ds.
+  $$
 
-- **Displacement (`Pos`) action** (difference of points at the _same_ $\tau$):
+  In the common **constant boost** case $\Delta v(\tau)=\Delta v_0$ this reduces to
 
-$$
- \Delta x'(\tau) = \bigl(x_1(\tau)-x_2(\tau)\bigr)' = \Delta x(\tau),
-$$
+  $$
+  \Delta x(\tau) = (\tau-\tau_0)\,\Delta v_0,
+  \qquad p'(\tau)=p(\tau)+(\tau-\tau_0)\,\Delta v_0.
+  $$
 
-so a Galilean boost acts as the identity on `Pos` (physical displacements),
-provided both points are compared at the same $\tau$.
+  **Implementation rule (normative):** `apply_op(Boost, tau, role=Point, ...)` MUST be defined. It MUST require a time-like `tau` when $\Delta v$ is nonzero. The point update MUST be implemented via the chart's canonical Cartesian chart (or via the product chart's spatial factors) to ensure correctness under non-linear point transforms.
 
-- **Velocity action**:
+- **PhysDisp** (physical displacement; difference of points at fixed $\tau$): Galilean boosts leave spatial displacements invariant
 
-$$
- v'(\tau) = v(\tau) + v_0,
-$$
+  $$
+  \Delta p' = \Delta p.
+  $$
 
-and (for completeness) acceleration is invariant under constant boosts.
+  **Normative:** `apply_op(Boost, tau, role=PhysDisp, ...)` is the identity.
 
-**Normative implications for Coordinax operators:**
+- **Vel** (physical velocity): add the boost velocity
 
-1. A primitive `Boost` operator must support a well-defined action on `Point`
-   _in addition to_ `Vel`, using the formula above (translation by
-   $v_0(\tau-\tau_0)$).
-2. `Boost` acting on `Pos` must be the identity in the Galilean constant-boost
-   model.
-3. For time-dependent boosts and/or non-Euclidean geometries, the above
-   equations generalize to a time-dependent map $\Phi(\tau)$ and its induced
-   pushforward, but the key distinction remains: `Point` and `Pos` transform
-   differently.
+  $$
+  v'(\tau) = v(\tau) + \Delta v(\tau).
+  $$
 
-This design is required so that a frame transform operator pipeline can be
-applied to:
+- **Acc** (physical acceleration): add the time derivative of the boost velocity
 
-- `Vector[Point]` (a point at time `tau`),
-- `Vector[Pos]` (a displacement),
-- `Vector[Vel]` (a velocity),
-- `FiberPoint` / `Coordinate` (anchored kinematic state),
+  $$
+  a'(\tau) = a(\tau) + \frac{d}{d\tau}\Delta v(\tau).
+  $$
 
-with correct behavior and without conflating points with displacements.
+  In particular, for constant $\Delta v$ this is the identity on acceleration.
+
+**Chart conversion rule (normative)**
+
+- The boost field $\Delta v$ is stored in an operator chart `op.chart`. To apply it to an input expressed in `chart`, convert $\Delta v$ using `physical_tangent_transform(chart, op.chart, dv, at=...)` (base-point required when chart conversion is nontrivial).
+- For the **Point** rule, the translation $\Delta x(\tau)$ MUST be computed and applied in the canonical Cartesian chart of the relevant spatial chart, then transformed back with `point_transform`.
+
+**Cartesian-product charts (normative)**
+
+For `AbstractCartesianProductChart` inputs, Boost acts **only on spatial factor(s)** (e.g. leaving time unchanged). Special spacetime charts (e.g. `SpaceTimeCT`, `SpaceTimeEuclidean`) may expose un-prefixed time components like `("t",)`; these MUST remain unchanged under Boost.
 
 ###### Worked example (normative semantics)
 
@@ -1529,7 +1528,7 @@ With role-specialized `Add`:
 @plum.dispatch
 def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Operator:
     shift = Add.from_([100_000, 10_000, 0], "km", role=r.Point)   # translate points
-    boost = Add.from_([269_813_212.2, 0, 0], "m/s", role=r.Vel)   # boost velocities
+    boost = Add.from_([269_813_212.2, 0, 0], "m/s", role=r.PhysVel)   # boost velocities
     return shift | boost
 ```
 
@@ -1545,13 +1544,13 @@ op(tau, q)                           # succeeds: Boost contributes v0*(tau-tau0)
 
 ```
 base = Vector.from_([1, 2, 3], "kpc")          # Point
-vel  = Vector.from_([10, 20, 30], "km/s", role=r.vel)
+vel  = Vector.from_([10, 20, 30], "km/s", role=r.phys_vel)
 
-fp = FiberPoint(base=base, velocity=vel)
+fp = PointedVector(base=base, velocity=vel)
 fp2 = op(tau, fp)
 ```
 
-When applied to `FiberPoint`, the same `Boost` updates both the base point and
+When applied to `PointedVector`, the same `Boost` updates both the base point and
 the velocity consistently under the chosen kinematic model.
 
 The operator calling convention is always:
@@ -1568,7 +1567,7 @@ and is normatively implemented by delegation to `apply_op(op, tau, x, ...)`.
 
 - If `x` is a `Vector` with a tangent-like role and `at` is required but not
   provided, `apply_op` must raise `TypeError`.
-- `FiberPoint` and `Coordinate` are _anchored containers_ and therefore supply
+- `PointedVector` and `Coordinate` are _anchored containers_ and therefore supply
   the base point implicitly; their `apply_op` implementations must _not_ require
   an explicit `at=` argument.
 
@@ -1663,9 +1662,9 @@ $\Phi(\tau): M \to M, \quad \Phi(\tau)(x) = R(\tau)x.$
 
 ---
 
-#### Action on `Pos` (physical displacement) (normative)
+#### Action on `PhysDisp` (physical displacement) (normative)
 
-A `Pos` represents a **physical displacement** (difference of two points at the
+A `PhysDisp` represents a **physical displacement** (difference of two points at the
 same $\tau$):
 
 $$ \Delta \mathbf{x} = \mathbf{x}_1 - \mathbf{x}_2 \in T_p M. $$
@@ -1676,7 +1675,7 @@ $$ \Delta \mathbf{x}' = R(\tau)\,\Delta \mathbf{x}. $$
 
 Normative properties:
 
-- `Pos` transforms as a **physical tangent vector**.
+- `PhysDisp` transforms as a **physical tangent vector**.
 - The transformation is **independent of the base point** (but the base point
   may still be required by the API for general manifolds).
 - Units (length) are preserved.
@@ -1687,9 +1686,9 @@ This is the pushforward of the rotation map restricted to tangent vectors.
 
 ---
 
-#### Action on `Vel` (physical velocity) (normative)
+#### Action on `PhysVel` (physical velocity) (normative)
 
-A `Vel` represents a physical velocity:
+A `PhysVel` represents a physical velocity:
 
 $$ \mathbf{v}(\tau) = \frac{d\mathbf{x}}{d\tau}. $$
 
@@ -1703,7 +1702,7 @@ Normative properties:
 - Velocity transformation **depends on the base point** $\mathbf{x}(\tau)$.
 - Therefore:
   - `apply_op(Rotate, tau, vel, at=point)` **must** use `at`.
-  - Applying `Rotate` to a bare `Vel` without anchoring must raise `TypeError`.
+  - Applying `Rotate` to a bare `PhysVel` without anchoring must raise `TypeError`.
 - For **time-independent rotations** ($\dot R = 0$), the law reduces to:
   $\mathbf{v}' = R\,\mathbf{v}.$
 
@@ -1712,7 +1711,7 @@ when the frame is time-dependent.
 
 ---
 
-#### Action on `Acc` (physical acceleration) (normative)
+#### Action on `PhysAcc` (physical acceleration) (normative)
 
 A physical acceleration is:
 
@@ -1731,9 +1730,9 @@ Normative properties:
   - the velocity $\mathbf{v}(\tau)$,
   - and time derivatives of $R$.
 - Therefore:
-  - Applying `Rotate` to `Acc` **requires anchoring** and access to the full
-    kinematic state (typically via `FiberPoint` or `Coordinate`).
-  - Applying `Rotate` to a bare `Acc` must raise `TypeError`.
+  - Applying `Rotate` to `PhysAcc` **requires anchoring** and access to the full
+    kinematic state (typically via `PointedVector` or `Coordinate`).
+  - Applying `Rotate` to a bare `PhysAcc` must raise `TypeError`.
 
 This ensures consistency with Newtonian and relativistic kinematics.
 
@@ -1744,9 +1743,9 @@ This ensures consistency with Newtonian and relativistic kinematics.
 | Role | Mathematical object | Transformation law | Requires `at` |
 |:-----|:--------------------|:-------------------|:--------------|
 | `Point` | $x \in M$ | $x' = R x$ | No |
-| `Pos` | $\Delta x \in T_p M$ | $\Delta x' = R\,\Delta x$ | No (Euclidean); Yes (general) |
-| `Vel` | $\dot x \in T_p M$ | $\dot x' = R\dot x + \dot R\,x$ | Yes |
-| `Acc` | $\ddot x \in T_p M$ | $\ddot x' = R\ddot x + 2\dot R\dot x + \ddot R\,x$ | Yes |
+| `PhysDisp` | $\Delta x \in T_p M$ | $\Delta x' = R\,\Delta x$ | No (Euclidean); Yes (general) |
+| `PhysVel` | $\dot x \in T_p M$ | $\dot x' = R\dot x + \dot R\,x$ | Yes |
+| `PhysAcc` | $\ddot x \in T_p M$ | $\ddot x' = R\ddot x + 2\dot R\dot x + \ddot R\,x$ | Yes |
 
 ---
 
@@ -1756,8 +1755,8 @@ This ensures consistency with Newtonian and relativistic kinematics.
 2. Separate `apply_op` dispatches (or equivalent role-specialized kernels)
    **must** exist for:
    - `Point`,
-   - physical tangent roles (`Pos`, `Vel`, `Acc`).
-3. For `FiberPoint` / `Coordinate`, `Rotate` must:
+   - physical tangent roles (`PhysDisp`, `PhysVel`, `PhysAcc`).
+3. For `PointedVector` / `Coordinate`, `Rotate` must:
    - rotate the base point,
    - rotate velocity and acceleration consistently using the above formulas.
 4. Time-dependence of `R` is not optional: even if a particular instance is
@@ -1810,13 +1809,13 @@ which algebraic operations are valid.
 ### Core roles (current)
 
 - `Point`: a point $p \in M$ (affine). Components may have mixed dimensions.
-- `Pos`: a physical tangent vector $\Delta p \in T_pM$ with units of length.
+- `PhysDisp`: a physical tangent vector $\Delta p \in T_pM$ with units of length.
   (This role represents a _position difference_ / physical displacement,
   anchored at a base point.)
-- `Vel`: a physical tangent vector $v\in T_pM$ with units length/time.
-- `Acc`: a physical tangent vector $a\in T_pM$ with units length/time$^2$.
+- `PhysVel`: a physical tangent vector $v\in T_pM$ with units length/time.
+- `PhysAcc`: a physical tangent vector $a\in T_pM$ with units length/time$^2$.
 
-`Pos`, `Vel`, and `Acc` are all **physical tangent** roles: their components are
+`PhysDisp`, `PhysVel`, and `PhysAcc` are all **physical tangent** roles: their components are
 expressed in an orthonormal frame, and thus have uniform physical dimension
 across components.
 
@@ -1829,9 +1828,9 @@ across components.
   require uniform physical dimensions.
 - Concrete roles:
   - `Point(AbstractRole)`
-  - `Pos(AbstractPhysicalRole)`
-  - `Vel(AbstractPhysicalRole)`
-  - `Acc(AbstractPhysicalRole)`
+  - `PhysDisp(AbstractPhysicalRole)`
+  - `PhysVel(AbstractPhysicalRole)`
+  - `PhysAcc(AbstractPhysicalRole)`
 
 This hierarchy enables dynamic discovery of physical roles (e.g., for test and
 strategy generation) by inspecting subclasses of `AbstractPhysicalRole`.
@@ -1848,9 +1847,9 @@ Additional role families have distinct transformation laws:
 ### Role → transformation law (normative)
 
 - `Point` converts by `point_transform` and does not require `at=`.
-- physical tangent roles (`Pos`, `Vel`, `Acc`) convert by
+- physical tangent roles (`PhysDisp`, `PhysVel`, `PhysAcc`) convert by
   `physical_tangent_transform` and require `at=`.
-- coordinate-derivative roles (`CoordDeriv`) convert by `coordderiv_transform`
+- coordinate-derivative roles (`CoordDeriv`) convert by `coord_transform`
   and require `at=`.
 - cotangent roles (`Covector`) convert by `cotangent_transform` and require
   `at=`.
@@ -1861,7 +1860,7 @@ Physical tangent roles are anchored at a base point $p$ (an element of $T_pM$).
 In code this anchoring is carried explicitly by `at=` in operations requiring
 tangent/cotangent spaces.
 
-`as_pos(p, origin=o)` is a coercion from a point $p\in M$ to a `Pos` (physical
+`as_pos(p, origin=o)` is a coercion from a point $p\in M$ to a `PhysDisp` (physical
 displacement / position-difference tangent vector) in $T_oM$. In Euclidean
 affine spaces it is canonically $p-o$. On a general manifold it requires an
 explicit log-map-like choice and is otherwise not defined.
@@ -1959,11 +1958,11 @@ consistent with `embed_tangent`/`project_tangent`. A normative choice is:
 
 ### Coordinate-derivative transforms
 
-`coordderiv_transform` maps coordinate-basis derivatives (e.g. $dq^i/dt$)
+`coord_transform` maps coordinate-basis derivatives (e.g. $dq^i/dt$)
 between charts.
 
 ```
-coordderiv_transform(
+coord_transform(
     to_chart: AbstractChart, from_chart: AbstractChart, dqdt: CsDict, *, at: CsDict
 ) -> CsDict
 ```
@@ -2107,9 +2106,9 @@ that would be mathematically underdetermined.
 
 **Algebraic meaning (normative):**
 
-- `Pos - Pos -> Pos`, `Vel - Vel -> Vel`, `Acc - Acc -> Acc` are vector-space
+- `PhysDisp - PhysDisp -> PhysDisp`, `PhysVel - PhysVel -> PhysVel`, `PhysAcc - PhysAcc -> PhysAcc` are vector-space
   operations in a single tangent space $T_pM$.
-- `Point - Point -> Pos` is an affine difference that yields a displacement (a
+- `Point - Point -> PhysDisp` is an affine difference that yields a displacement (a
   tangent vector) anchored at the chosen base point.
 
 **Chart discipline (normative):**
@@ -2117,14 +2116,14 @@ that would be mathematically underdetermined.
 - If `lhs.chart == rhs.chart`, component-wise subtraction is permitted _after_
   role-compatibility checks.
 - If `lhs.chart != rhs.chart` and the operation involves any **physical
-  tangent** role (`Pos`, `Vel`, `Acc`) or produces one (e.g.
-  `Point - Point -> Pos`), then a base point is required to compare the two
+  tangent** role (`PhysDisp`, `PhysVel`, `PhysAcc`) or produces one (e.g.
+  `Point - Point -> PhysDisp`), then a base point is required to compare the two
   objects in the same tangent space. Therefore the implementation **must not**
   “convert both sides to Cartesian” unless an explicit base point is available.
 
 Concretely:
 
-- For tangent-like operations (`Pos/Vel/Acc`): `rhs` must be converted to
+- For tangent-like operations (`PhysDisp/PhysVel/PhysAcc`): `rhs` must be converted to
   `lhs.chart` using `vconvert(..., at=base_point)` and only then subtracted.
 - For `Point - Point`: if charts differ, first convert `rhs` to `lhs.chart` via
   `point_transform` (which does _not_ require `at=`), then perform the affine
@@ -2133,7 +2132,7 @@ Concretely:
 If a required base point is not provided, subtraction must raise
 `TypeError`/`ValueError` with an error message that explicitly mentions that
 cross-chart tangent operations require `at=` (or an anchored container like
-`FiberPoint`).
+`PointedVector`).
 
 **No implicit Cartesian fallback (normative):**
 
@@ -2160,22 +2159,22 @@ dimension of `q`:
 
 - **Normative rule:** for an `N`-component quantity `q`:
   - **Length dimension** (`u.dimension("length")`): `Vector.from_(q)` **must**
-    return a `Vector` with role `Point` (not `Pos`), in the inferred canonical
+    return a `Vector` with role `Point` (not `PhysDisp`), in the inferred canonical
     Cartesian chart of dimension `N`. This preserves the affine/tangent
     distinction: a bare length-valued coordinate tuple is not, by itself, a
     displacement.
   - **Speed dimension** (`u.dimension("speed")`): `Vector.from_(q)` **must**
-    return a `Vector` with role `Vel`, representing a velocity vector.
+    return a `Vector` with role `PhysVel`, representing a velocity vector.
   - **Acceleration dimension** (`u.dimension("acceleration")`):
-    `Vector.from_(q)` **must** return a `Vector` with role `Acc`, representing
+    `Vector.from_(q)` **must** return a `Vector` with role `PhysAcc`, representing
     an acceleration vector.
 
 Formally:
 
 ```
 Vector.from_(u.Q([...], "m")) -> Vector[Any, Point, u.Q]      # length → Point
-Vector.from_(u.Q([...], "m/s")) -> Vector[Any, Vel, u.Q]      # speed → Vel
-Vector.from_(u.Q([...], "m/s^2")) -> Vector[Any, Acc, u.Q]    # acceleration → Acc
+Vector.from_(u.Q([...], "m/s")) -> Vector[Any, PhysVel, u.Q]      # speed → PhysVel
+Vector.from_(u.Q([...], "m/s^2")) -> Vector[Any, PhysAcc, u.Q]    # acceleration → PhysAcc
 ```
 
 This dimension-based inference provides ergonomic construction while maintaining
@@ -2201,9 +2200,9 @@ Normative semantics:
      handled when constructed from mappings; the `Quantity` constructor uses a
      packed vector, so it is taken to represent an `N`-tuple in the inferred
      chart).
-   - `Pos`: require `dimension_of(q) == length`.
-   - `Vel`: require `dimension_of(q) == length/time`.
-   - `Acc`: require `dimension_of(q) == length/time^2`.
+   - `PhysDisp`: require `dimension_of(q) == length`.
+   - `PhysVel`: require `dimension_of(q) == length/time`.
+   - `PhysAcc`: require `dimension_of(q) == length/time^2`.
    - other roles (planned) define their own compatibility rules.
 3. Construct and return `Vector(data=..., chart=..., role=role)`.
 
@@ -2241,7 +2240,7 @@ Normative rule:
    and construct:
 
 ```
-rhs = Vector.from_(q, r.pos)
+rhs = Vector.from_(q, r.phys_disp)
 ```
 
 2. Otherwise, construct using the default `Quantity` overload:
@@ -2265,23 +2264,23 @@ Notes:
 - The dimension check (`dimension_of(q) == length`) is static with respect to
   JAX tracing and may be used inside `jit` as an ordinary Python branch.
 - The `Vector + Vector` addition path is responsible for enforcing chart
-  compatibility and role validity (e.g. `Point + Pos -> Point`,
-  `Pos + Pos -> Pos`, and rejecting invalid combinations).
+  compatibility and role validity (e.g. `Point + PhysDisp -> Point`,
+  `PhysDisp + PhysDisp -> PhysDisp`, and rejecting invalid combinations).
 
 For non-Euclidean charts where addition requires a base point (`at=`),
 `Vector + Quantity` must raise an error directing the user to
-`Vector.add(..., at=...)` or to an anchored container (e.g. `FiberPoint`).
+`Vector.add(..., at=...)` or to an anchored container (e.g. `PointedVector`).
 
 Normative `Vector.vconvert` is a thin wrapper over the functional API:
 
 - uses `point_transform` for `Point`,
 - uses `physical_tangent_transform` for physical tangent roles,
-- uses `coordderiv_transform` for `CoordDeriv`,
+- uses `coord_transform` for `CoordDeriv`,
 - uses `cotangent_transform` for `Covector`.
 
-### FiberPoint
+### PointedVector
 
-`FiberPoint` binds a base `Point` with one or more anchored fibre vectors at the
+`PointedVector` binds a base `Point` with one or more anchored fibre vectors at the
 same point, reducing the need to pass `at=` repeatedly.
 
 Conceptually:
@@ -2289,10 +2288,10 @@ Conceptually:
 - $(p, v) \in TM$,
 - $(p, \alpha) \in T^*M$.
 
-`FiberPoint` may expose convenience methods:
+`PointedVector` may expose convenience methods:
 
 - `.vconvert(...)` that supplies `at=` automatically,
-- `.pos`, `.vel`, `.acc`, `.displacement`, etc.
+- `.phys_disp`, `.phys_vel`, `.phys_acc`, `.displacement`, etc.
 
 ---
 
@@ -2323,7 +2322,7 @@ only.
 1. **Stateless charts/roles**: chart and role objects are immutable and
    hashable.
 2. **Explicit base points**: operations on tangent/cotangent objects require
-   `at=` (or a `FiberPoint` supplying it).
+   `at=` (or a `PointedVector` supplying it).
 3. **Uniform-dimension physical tangents**: physical tangent roles have uniform
    physical dimensions across components.
 4. **Coordinate derivatives are separate**: $dq^i/dt$ are not physical tangent

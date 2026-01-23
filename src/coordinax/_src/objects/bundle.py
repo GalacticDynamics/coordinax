@@ -1,11 +1,11 @@
 """Anchored vector bundle: vector bundle over a base point.
 
-A `FiberPoint` stores a base position (role `Pos`) and a collection
-of additional vectors (typically tangent/physical roles such as `Displacement`,
-`Vel`, `Acc`) that are interpreted at the base point.
+A `PointedVector` stores a base position (role `Point`) and a collection
+of additional vectors (typically tangent/physical roles such as `PhysDisp`,
+`PhysVel`, `PhysAcc`) that are interpreted at the base point.
 """
 
-__all__ = ("FiberPoint",)
+__all__ = ("PointedVector",)
 
 from collections.abc import ItemsView, KeysView, Mapping, ValuesView
 from typing import Any, Generic, cast, final
@@ -37,7 +37,7 @@ def _vconvert_field(
     v: Vector[cxc.AbstractChart[Any, Any], cxr.AbstractPhysicalRole, Any],
     *,
     to_chart: ChartT,
-    base: Vector[cxc.AbstractChart[Any, Any], cxr.Pos, Any],
+    base: Vector[cxc.AbstractChart[Any, Any], cxr.PhysDisp, Any],
 ) -> Vector[ChartT, cxr.AbstractPhysicalRole, Any]:
     """Convert a fibre vector to a new representation.
 
@@ -71,17 +71,17 @@ def _vconvert_field(
 
 
 @final
-class FiberPoint(
+class PointedVector(
     AbstractVectorLike,
     ImmutableMap[str, Vector],  # type: ignore[misc]
     Generic[ChartT],
 ):
     r"""A vector bundle anchored at a base point.
 
-    An ``FiberPoint`` represents a mathematical vector bundle over a single base
+    An ``PointedVector`` represents a mathematical vector bundle over a single base
     point, consisting of:
 
-    - A base point $q \in M$ (a ``Vector`` with role ``Pos``)
+    - A base point $q \in M$ (a ``Vector`` with role ``PhysDisp``)
     - A collection of fibre vectors $\{v_i\}$ in the associated fibres at
       $q$, typically elements of $T_q M$ (tangent vectors such as
       displacement, velocity, or acceleration)
@@ -118,18 +118,19 @@ class FiberPoint(
     Parameters
     ----------
     base : Vector
-        Base point of the bundle. Must have role ``Pos``.
+        Base point of the bundle. Must have role ``PhysDisp``.
     **fields : Vector
         Named fibre vectors anchored at ``base``. Keys are user-defined names
         (e.g., ``"velocity"``, ``"acceleration"``). Values must be ``Vector``
-        instances with tangent-like roles (``Displacement``, ``Vel``, ``Acc``).
+        instances with tangent-like roles (``PhysDisp``, ``PhysVel``,
+        ``PhysAcc``).
         All vectors must have compatible (broadcastable) shapes.
 
     Raises
     ------
     TypeError
-        If ``base`` does not have role ``Pos``, or if any field has role
-        ``Pos``.
+        If ``base`` does not have role ``Point``, or if any field has role
+        ``Point``.
     ValueError
         If vector shapes are not broadcastable.
 
@@ -137,7 +138,7 @@ class FiberPoint(
     -----
     - **Role separation**: Base must have role ``Point`` (affine location);
       fields must not have role {class}`coordinax.charts.Point` (must have tangent
-      roles like Pos, Vel, Acc). This enforces the mathematical distinction
+      roles like PhysDisp, Vel, PhysAcc). This enforces the mathematical distinction
       between points and tangent vectors.
 
     - **Automatic ``at=`` handling**: The ``vconvert`` method automatically
@@ -174,14 +175,14 @@ class FiberPoint(
     >>> base = cx.Vector.from_([1, 2, 3], "km")
     >>> vel = cx.Vector.from_([10, 20, 30], "km/s")
     >>> acc = cx.Vector.from_([0.1, 0.2, 0.3], "km/s^2")
-    >>> bundle = cx.FiberPoint(base=base, velocity=vel, acceleration=acc)
+    >>> bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
     >>> print(bundle)
-    FiberPoint({
+    PointedVector({
        base: <Vector: chart=Cart3D role=Pos (x, y, z) [km]
            [1 2 3]>,
        'velocity': <Vector: chart=Cart3D role=Vel (x, y, z) [km / s]
            [10 20 30]>,
-       'acceleration': <Vector: chart=Cart3D role=Acc (x, y, z) [km / s2]
+       'acceleration': <Vector: chart=Cart3D role=PhysAcc (x, y, z) [km / s2]
            [0.1 0.2 0.3]>
     })
 
@@ -214,7 +215,7 @@ class FiberPoint(
 
     >>> batch_base = cx.Vector.from_([[1, 2, 3], [4, 5, 6]], "kpc")  # (2,)
     >>> batch_vel = cx.Vector.from_([10, 20, 30], "km/s")  # ()
-    >>> batch_bundle = cx.FiberPoint(base=batch_base, velocity=batch_vel)
+    >>> batch_bundle = cx.PointedVector(base=batch_base, velocity=batch_vel)
     >>> batch_bundle.shape
     (2,)
     >>> batch_bundle[0].base.shape
@@ -223,7 +224,7 @@ class FiberPoint(
     Index the bundle to get sub-bundles:
 
     >>> batch_bundle[0]
-    FiberPoint({base: ..., 'velocity': ...})
+    PointedVector({base: ..., 'velocity': ...})
 
     Create from dictionaries:
 
@@ -231,12 +232,12 @@ class FiberPoint(
     ...     "base": u.Q([1, 2, 3], "km"),
     ...     "velocity": u.Q([4, 5, 6], "km/s"),
     ... }
-    >>> bundle2 = cx.FiberPoint.from_(data)
+    >>> bundle2 = cx.PointedVector.from_(data)
 
     """
 
-    base: Vector[ChartT, cxr.Pos, Any]
-    """Base point (position) of the bundle. Role must be ``Pos``."""
+    base: Vector[ChartT, cxr.PhysDisp, Any]
+    """Base point (position) of the bundle. Role must be ``PhysDisp``."""
 
     _data: dict[str, Vector[Any, Any, Any]] = eqx.field(repr=False)
     """Fibre vectors (fields) anchored at the base."""
@@ -245,7 +246,7 @@ class FiberPoint(
         self,
         /,
         *,
-        base: Vector[ChartT, cxr.Pos, Any],
+        base: Vector[ChartT, cxr.PhysDisp, Any],
         **fields: Any,
     ) -> None:
         """Initialize an anchored vector bundle.
@@ -276,7 +277,7 @@ class FiberPoint(
                 vec,
                 isinstance(vec.role, cxr.Point),
                 f"Field '{name}' has role Point. "
-                "FiberPoint stores fibre vectors anchored at base; "
+                "PointedVector stores fibre vectors anchored at base; "
                 "store additional points elsewhere.",
             )
 
@@ -295,7 +296,7 @@ class FiberPoint(
     # Mapping API
 
     @plum.dispatch
-    def __getitem__(self, key: Any, /) -> "FiberPoint":
+    def __getitem__(self, key: Any, /) -> "PointedVector":
         """Index the bundle's batch dimensions.
 
         Returns a new bundle with indexed base and fields.
@@ -306,9 +307,9 @@ class FiberPoint(
         >>> import coordinax as cx
         >>> base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")
         >>> vel = cx.Vector.from_(jnp.array([[7, 8, 9], [10, 11, 12]]), "m/s")
-        >>> bundle = cx.FiberPoint(base=base, velocity=vel)
+        >>> bundle = cx.PointedVector(base=base, velocity=vel)
         >>> bundle[0]
-        FiberPoint(base=..., velocity=...)
+        PointedVector(base=..., velocity=...)
 
         """
         # Use jax.tree.map to apply indexing only to array leaves
@@ -322,7 +323,7 @@ class FiberPoint(
             for k, v in self._data.items()
         }
 
-        return FiberPoint(base=indexed_base, **indexed_fields)
+        return PointedVector(base=indexed_base, **indexed_fields)
 
     @plum.dispatch
     def __getitem__(self, key: str) -> Vector:
@@ -343,7 +344,7 @@ class FiberPoint(
         >>> import coordinax as cx
         >>> base = cx.Vector.from_([1, 2, 3], "m")
         >>> vel = cx.Vector.from_([4, 5, 6], "m/s")
-        >>> bundle = cx.FiberPoint(base=base, velocity=vel)
+        >>> bundle = cx.PointedVector(base=base, velocity=vel)
         >>> bundle["velocity"]
         Vector(...)
 
@@ -366,7 +367,7 @@ class FiberPoint(
     # Convenience accessors
 
     @property
-    def q(self) -> Vector[ChartT, cxr.Pos, Any]:
+    def q(self) -> Vector[ChartT, cxr.PhysDisp, Any]:
         """Alias for base (position vector).
 
         Returns
@@ -386,7 +387,7 @@ class FiberPoint(
         /,
         *,
         field_charts: Mapping[str, cxc.AbstractChart] | None = None,  # type: ignore[type-arg]
-    ) -> "FiberPoint":
+    ) -> "PointedVector":
         r"""Convert the bundle to a new representation.
 
         This method automatically handles the base point dependency required for
@@ -421,7 +422,7 @@ class FiberPoint(
 
         Returns
         -------
-        FiberPoint
+        PointedVector
             New bundle in the target representation(s).
 
         Notes
@@ -431,9 +432,9 @@ class FiberPoint(
           The representations can vary, but field names should not change
           between JIT compilations.
 
-        - **Role-aware conversion**: The base converts as ``Pos`` (position map),
-          fields convert according to their roles (``Displacement``, ``Vel``,
-          ``Acc`` use tangent transformation).
+        - **Role-aware conversion**: The base converts as ``Point`` (position
+          map), fields convert according to their roles (``PhysDisp``,
+          ``PhysVel``, ``PhysAcc`` use tangent transformation).
 
         - **Representation matching**: The base is automatically converted to match
           each field's representation before using it as ``at=``, ensuring the
@@ -444,7 +445,7 @@ class FiberPoint(
         >>> import coordinax as cx
         >>> base = cx.Vector.from_([1, 1, 1], "m")
         >>> vel = cx.Vector.from_([10, 10, 10], "m/s")
-        >>> bundle = cx.FiberPoint(base=base, velocity=vel)
+        >>> bundle = cx.PointedVector(base=base, velocity=vel)
 
         Convert to spherical:
 
@@ -458,7 +459,7 @@ class FiberPoint(
         >>> at_for_vel = base.vconvert(vel.chart)  # cart3d (already matches)
         >>> vel_sph = vel.vconvert(
         ...     cxc.sph3d, at_for_vel
-        ... )  # Vel tangent transform
+        ... )  # PhysVel tangent transform
 
         Specify different target reps for fields:
 
@@ -474,7 +475,7 @@ class FiberPoint(
         """
         # Convert base (position map, no 'at' needed)
         new_base = cast(
-            "Vector[cxc.AbstractChart[Any, Any], cxr.Pos, Any]",
+            "Vector[cxc.AbstractChart[Any, Any], cxr.PhysDisp, Any]",
             self.base.vconvert(to_chart),
         )
 
@@ -496,7 +497,7 @@ class FiberPoint(
             for name, vec in self._data.items()
         }
 
-        return FiberPoint(base=new_base, **new_fields)
+        return PointedVector(base=new_base, **new_fields)
 
     # ===============================================================
     # Quax API
@@ -521,12 +522,12 @@ class FiberPoint(
     # ===============================================================
     # Array API
 
-    def __eq__(self: "FiberPoint", other: object) -> Any:
+    def __eq__(self: "PointedVector", other: object) -> Any:
         """Check equality of bundles."""
         if type(other) is not type(self):
             return NotImplemented
 
-        other_bundle = cast("FiberPoint", other)
+        other_bundle = cast("PointedVector", other)
 
         # Compare base
         base_eq = jnp.equal(self.base, other_bundle.base)
@@ -554,14 +555,14 @@ class FiberPoint(
 
 @AbstractVectorLike.from_.dispatch  # type: ignore[untyped-decorator]
 def from_(
-    cls: type[FiberPoint], data: Mapping[str, Any], /, *, base: Vector | None = None
-) -> FiberPoint:
-    """Create an FiberPoint from a mapping.
+    cls: type[PointedVector], data: Mapping[str, Any], /, *, base: Vector | None = None
+) -> PointedVector:
+    """Create an PointedVector from a mapping.
 
     Parameters
     ----------
     cls
-        The FiberPoint class.
+        The PointedVector class.
     data
         Dictionary of vectors. Must contain a ``"base"`` key unless
         ``base`` is provided separately. Values are normalized via
@@ -577,17 +578,25 @@ def from_(
     ...     "base": u.Q([1, 2, 3], "km"),
     ...     "velocity": u.Q([4, 5, 6], "km/s"),
     ... }
-    >>> bundle = cx.FiberPoint.from_(data)
+    >>> bundle = cx.PointedVector.from_(data)
 
     """
     data_dict = dict(data)
 
-    # Get base
+    # Get base: from parameter or from data_dict
     if base is None:
-        msg = "base must be provided"
+        base = data_dict.pop("base", None)
+    else:
+        data_dict.pop("base", None)  # Remove from data_dict to avoid conflict
+
+    if base is None:
+        msg = "base must be provided either as a parameter or in data['base']"
         raise ValueError(msg)
 
+    # Normalize base to Vector
+    base = Vector.from_(base)
+
     return cls(
-        base=cast("Vector[cxc.AbstractChart[Any, Any], cxr.Pos, Any]", base),
+        base=cast("Vector[cxc.AbstractChart[Any, Any], cxr.PhysDisp, Any]", base),
         **data_dict,
     )

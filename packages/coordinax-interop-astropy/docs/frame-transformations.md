@@ -67,7 +67,7 @@ the {mod}`astropy` objects to {mod}`coordinax`:
 
 ```
 vega_q = cx.Vector.from_(vega.icrs.data, cx.charts.lonlatsph3d, cx.roles.point)
-vega_p = cx.Vector.from_(vega.icrs.data.differentials["s"], cx.charts.loncoslatsph3d, cx.roles.vel)
+vega_p = cx.Vector.from_(vega.icrs.data.differentials["s"], cx.charts.loncoslatsph3d, cx.roles.phys_vels_vel)
 
 icrs_frame = cx.frames.ICRS()
 gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
@@ -159,7 +159,7 @@ vega_gcf = apyc.SkyCoord(
 
 # Convert to coordinax
 vega_gcf_q = cx.Vector.from_(vega_gcf.galactocentric.data, cx.charts.cart3d, cx.roles.point)
-vega_gcf_p = cx.Vector.from_(vega_gcf.galactocentric.data.differentials["s"], cx.charts.cart3d, cx.roles.vel)
+vega_gcf_p = cx.Vector.from_(vega_gcf.galactocentric.data.differentials["s"], cx.charts.cart3d, cx.roles.phys_vels_vel)
 
 # Apply transformation
 vega_icrs_q, vega_icrs_p = frame_op_reverse(vega_gcf_q, vega_gcf_p)

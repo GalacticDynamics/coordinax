@@ -1,14 +1,15 @@
 """Test :mod:`coordinax.angles`."""
 
-import pytest
+import hypothesis.strategies as st
+from hypothesis import given
 from plum import convert, promote
 
 import unxt as u
 
-import coordinax as cx
+import coordinax_hypothesis as cxst
 
 
-@pytest.mark.parametrize("a", [cx.Angle(90, "deg"), cx.angles.Parallax(26, "mas")])
+@given(st.one_of(cxst.angles(), cxst.parallaxes()))
 def test_promotion_rule(a):
     """Test the promotion rule for angles."""
     # Quantities
@@ -24,7 +25,7 @@ def test_promotion_rule(a):
     assert isinstance(q * a, u.Q)
 
 
-@pytest.mark.parametrize("a", [cx.Angle(90, "deg"), cx.angles.Parallax(26, "mas")])
+@given(st.one_of(cxst.angles(), cxst.parallaxes()))
 def test_convert_angle_to_quantity(a):
     """Test converting angle types to general quantity types.
 

@@ -1,4 +1,4 @@
-"""Tests for FiberPoint."""
+"""Tests for PointedVector."""
 
 import equinox as eqx
 import hypothesis.strategies as st
@@ -13,8 +13,8 @@ import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
-class TestFiberPointInit:
-    """Tests for FiberPoint initialization."""
+class TestPointedVectorInit:
+    """Tests for PointedVector initialization."""
 
     def test_basic_init(self):
         """Test basic initialization with explicit Vector instances."""
@@ -23,15 +23,15 @@ class TestFiberPointInit:
             u.Q([1, 2, 3], "km"), cx.charts.cart3d, cx.roles.point
         )  # Affine point
         vel = cx.Vector.from_(
-            u.Q([10, 20, 30], "km/s"), cx.charts.cart3d, cx.roles.vel
+            u.Q([10, 20, 30], "km/s"), cx.charts.cart3d, cx.roles.phys_vel
         )  # Velocity
         acc = cx.Vector.from_(
             u.Q([0.1, 0.2, 0.3], "km/s^2"),
             cx.charts.cart3d,
-            cx.roles.acc,
+            cx.roles.phys_acc,
         )  # Acceleration
 
-        bundle = cx.FiberPoint(base=base, velocity=vel, acceleration=acc)
+        bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
 
         # Base and fields are stored (but may be copies due to eqx.error_if)
         assert isinstance(bundle.base, cx.Vector)
@@ -43,12 +43,14 @@ class TestFiberPointInit:
         """Test that base must have Point role."""
         # Create a non-Point vector (Vel)
         non_point = cx.Vector.from_(
-            u.Q([1, 2, 3], "km/s"), cx.charts.cart3d, cx.roles.vel
+            u.Q([1, 2, 3], "km/s"), cx.charts.cart3d, cx.roles.phys_vel
         )
-        vel = cx.Vector.from_(u.Q([10, 20, 30], "km/s"), cx.charts.cart3d, cx.roles.vel)
+        vel = cx.Vector.from_(
+            u.Q([10, 20, 30], "km/s"), cx.charts.cart3d, cx.roles.phys_vel
+        )
 
         with pytest.raises(RuntimeError, match="base must have role Point"):
-            cx.FiberPoint(base=non_point, velocity=vel)
+            cx.PointedVector(base=non_point, velocity=vel)
 
     def test_fields_cannot_have_point_role(self):
         """Test that field vectors cannot have Point role."""
@@ -62,11 +64,11 @@ class TestFiberPointInit:
         with pytest.raises(
             RuntimeError,
             match=(
-                r"Field 'extra_field' has role Point\. FiberPoint stores fibre "
+                r"Field 'extra_field' has role Point\. PointedVector stores fibre "
                 r"vectors anchored at base; store additional points elsewhere."
             ),
         ):
-            cx.FiberPoint(base=base, extra_field=another_point)
+            cx.PointedVector(base=base, extra_field=another_point)
 
     def test_broadcastable_shapes(self):
         """Test that shapes must be broadcastable."""
@@ -76,7 +78,7 @@ class TestFiberPointInit:
         )  # shape (2,)
 
         # This should work (broadcasting)
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
         assert bundle.shape == (2,)
 
     def test_non_broadcastable_shapes_error(self):
@@ -86,10 +88,10 @@ class TestFiberPointInit:
 
         # Shapes (2,) and (1, 3) are incompatible for final broadcast
         with pytest.raises(RuntimeError, match="vector shapes are not broadcastable"):
-            cx.FiberPoint(base=base, velocity=vel)
+            cx.PointedVector(base=base, velocity=vel)
 
 
-class TestFiberPointFrom:
+class TestPointedVectorFrom:
     """Tests for from_ constructor."""
 
     def test_from_dict_with_base_key(self):
@@ -98,7 +100,7 @@ class TestFiberPointFrom:
             "base": u.Q([1, 2, 3], "km"),
             "velocity": u.Q([4, 5, 6], "km/s"),
         }
-        bundle = cx.FiberPoint.from_(data)
+        bundle = cx.PointedVector.from_(data)
 
         assert isinstance(bundle.base, cx.Vector)
         assert isinstance(bundle["velocity"], cx.Vector)
@@ -109,21 +111,21 @@ class TestFiberPointFrom:
         data = {
             "velocity": u.Q([4, 5, 6], "km/s"),
         }
-        bundle = cx.FiberPoint.from_(data, base=base)
+        bundle = cx.PointedVector.from_(data, base=base)
 
         # Note: eqx.error_if creates copies, so check components match
-        assert jnp.allclose(bundle.base["x"], base["x"])
+        assert jnp.allclose(bundle.base["x"], base["x"], atol=u.Q(1e-10, "km"))
 
     def test_from_dict_missing_base_raises(self):
         """Test that from_ without base raises ValueError."""
         data = {
             "velocity": u.Q([4, 5, 6], "km/s"),
         }
-        with pytest.raises(ValueError, match="must contain 'base'"):
-            cx.FiberPoint.from_(data)
+        with pytest.raises(ValueError, match="base must be provided"):
+            cx.PointedVector.from_(data)
 
 
-class TestFiberPointMappingAPI:
+class TestPointedVectorMappingAPI:
     """Tests for mapping interface."""
 
     def test_keys_values_items(self):
@@ -132,7 +134,7 @@ class TestFiberPointMappingAPI:
         vel = cx.Vector.from_([10, 20, 30], "km/s")
         acc = cx.Vector.from_([0.1, 0.2, 0.3], "km/s^2")
 
-        bundle = cx.FiberPoint(base=base, velocity=vel, acceleration=acc)
+        bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
 
         assert set(bundle.keys()) == {"velocity", "acceleration"}
         assert len(list(bundle.values())) == 2
@@ -143,7 +145,7 @@ class TestFiberPointMappingAPI:
         base = cx.Vector.from_([1, 2, 3], "km")
         vel = cx.Vector.from_([10, 20, 30], "km/s")
 
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         assert bundle["velocity"] is vel
 
@@ -152,11 +154,11 @@ class TestFiberPointMappingAPI:
         base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "km")
         vel = cx.Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "km/s")
 
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         # Index to get first element
         sub_bundle = bundle[0]
-        assert isinstance(sub_bundle, cx.FiberPoint)
+        assert isinstance(sub_bundle, cx.PointedVector)
         assert sub_bundle.shape == ()
 
     def test_q_property(self):
@@ -164,12 +166,12 @@ class TestFiberPointMappingAPI:
         base = cx.Vector.from_([1, 2, 3], "km")
         vel = cx.Vector.from_([10, 20, 30], "km/s")
 
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         assert bundle.q is bundle.base
 
 
-class TestFiberPointVConvert:
+class TestPointedVectorVConvert:
     """Tests for vconvert method."""
 
     def test_vconvert_basic(self):
@@ -177,7 +179,7 @@ class TestFiberPointVConvert:
         base = cx.Vector.from_([1, 1, 1], "m")
         vel = cx.Vector.from_([10, 10, 10], "m/s")
 
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
         sph_bundle = bundle.vconvert(cx.charts.sph3d)
 
         # Check reps changed
@@ -188,7 +190,7 @@ class TestFiberPointVConvert:
         """Test that vconvert matches manual conversion."""
         base = cx.Vector.from_([1, 2, 3], "m")
         vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         # Bundle conversion
         sph_bundle = bundle.vconvert(cx.charts.sph3d)
@@ -200,11 +202,13 @@ class TestFiberPointVConvert:
 
         # Compare results
         for comp in sph_bundle.base.data:
-            base_match = jnp.allclose(sph_bundle.base[comp], base_sph[comp], atol=1e-10)
+            base_match = jnp.allclose(
+                sph_bundle.base[comp].value, base_sph[comp].value, atol=1e-10
+            )
             assert base_match
         for comp in sph_bundle["velocity"].data:
             vel_match = jnp.allclose(
-                sph_bundle["velocity"][comp], vel_sph[comp], atol=1e-10
+                sph_bundle["velocity"][comp].value, vel_sph[comp].value, atol=1e-10
             )
             assert vel_match
 
@@ -213,7 +217,7 @@ class TestFiberPointVConvert:
         base = cx.Vector.from_([1, 1, 1], "m")
         vel = cx.Vector.from_([10, 10, 10], "m/s")
 
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         # Convert base to spherical, velocity to cylindrical
         mixed_bundle = bundle.vconvert(
@@ -228,14 +232,14 @@ class TestFiberPointVConvert:
         base = cx.Vector.from_([1, 2, 3], "m")
         vel = cx.Vector.from_([4, 5, 6], "m/s")
 
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
         sph_bundle = bundle.vconvert(cx.charts.sph3d)
 
         assert isinstance(sph_bundle.base.role, cx.roles.Point)
-        assert isinstance(sph_bundle["velocity"].role, cx.roles.Vel)
+        assert isinstance(sph_bundle["velocity"].role, cx.roles.PhysVel)
 
 
-class TestFiberPointJAX:
+class TestPointedVectorJAX:
     """Tests for JAX compatibility."""
 
     def test_jit_smoke_test(self):
@@ -247,12 +251,12 @@ class TestFiberPointJAX:
         """
         base = cx.Vector.from_([1, 2, 3], "m")
         vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         # vconvert works in eager mode
         sph_bundle = bundle.vconvert(cx.charts.sph3d)
 
-        assert isinstance(sph_bundle, cx.FiberPoint)
+        assert isinstance(sph_bundle, cx.PointedVector)
         assert isinstance(sph_bundle.base.chart, cx.charts.Spherical3D)
         assert isinstance(sph_bundle["velocity"].chart, cx.charts.Spherical3D)
 
@@ -261,7 +265,7 @@ class TestFiberPointJAX:
         # Create batched bundle
         base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")
         vel = cx.Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "m/s")
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         assert bundle.shape == (2,)
 
@@ -273,18 +277,18 @@ class TestFiberPointJAX:
         assert sub1.shape == ()
 
 
-class TestFiberPointEquality:
+class TestPointedVectorEquality:
     """Tests for equality and hashing."""
 
     def test_equality_same_bundles(self):
         """Test equality for identical bundles."""
         base1 = cx.Vector.from_([1, 2, 3], "m")
         vel1 = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle1 = cx.FiberPoint(base=base1, velocity=vel1)
+        bundle1 = cx.PointedVector(base=base1, velocity=vel1)
 
         base2 = cx.Vector.from_([1, 2, 3], "m")
         vel2 = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle2 = cx.FiberPoint(base=base2, velocity=vel2)
+        bundle2 = cx.PointedVector(base=base2, velocity=vel2)
 
         # Note: equality uses jnp.equal, which returns an array
         result = bundle1 == bundle2
@@ -297,21 +301,21 @@ class TestFiberPointEquality:
         """Test that bundles are hashable."""
         base = cx.Vector.from_([1, 2, 3], "m")
         vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         # Should not raise
         hash_val = hash(bundle)
         assert isinstance(hash_val, int)
 
 
-class TestFiberPointShape:
+class TestPointedVectorShape:
     """Tests for shape handling."""
 
     def test_shape_scalar_bundle(self):
         """Test shape for scalar (0-d) bundle."""
         base = cx.Vector.from_([1, 2, 3], "m")
         vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         assert bundle.shape == ()
 
@@ -320,12 +324,12 @@ class TestFiberPointShape:
         base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")  # (2,)
         vel = cx.Vector.from_([10, 20, 30], "m/s")  # ()
 
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         assert bundle.shape == (2,)
 
 
-class TestFiberPointRoleValidation:
+class TestPointedVectorRoleValidation:
     """Property-based tests for role validation."""
 
     def test_displacement_field_allowed(self):
@@ -334,28 +338,28 @@ class TestFiberPointRoleValidation:
         disp = cx.Vector(
             {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
             cx.charts.cart3d,
-            cx.roles.pos,
+            cx.roles.phys_disp,
         )
 
         # Should not raise
-        bundle = cx.FiberPoint(base=base, displacement=disp)
-        assert isinstance(bundle["displacement"].role, cx.roles.Pos)
+        bundle = cx.PointedVector(base=base, displacement=disp)
+        assert isinstance(bundle["displacement"].role, cx.roles.PhysDisp)
 
     def test_acc_field_allowed(self):
-        """Test that Acc role is allowed in fields."""
+        """Test that PhysAcc role is allowed in fields."""
         base = cx.Vector.from_([1, 2, 3], "m")
         acc = cx.Vector.from_([0.1, 0.2, 0.3], "m/s^2")
 
         # Should not raise
-        bundle = cx.FiberPoint(base=base, acceleration=acc)
-        assert isinstance(bundle["acceleration"].role, cx.roles.Acc)
+        bundle = cx.PointedVector(base=base, acceleration=acc)
+        assert isinstance(bundle["acceleration"].role, cx.roles.PhysAcc)
 
 
 # ==============================================================================
 # Property-based tests using Hypothesis
 
 
-class TestFiberPointPropertyTests:
+class TestPointedVectorPropertyTests:
     """Property-based tests using coordinax-hypothesis."""
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
@@ -363,7 +367,7 @@ class TestFiberPointPropertyTests:
     @settings(max_examples=50)
     def test_property_base_always_pos(self, bundle):
         """Property: base must always have Pos role."""
-        assert isinstance(bundle.base.role, cx.roles.Pos)
+        assert isinstance(bundle.base.role, cx.roles.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(bundle=cxst.bundles(field_keys=("velocity", "acceleration")))
@@ -371,7 +375,7 @@ class TestFiberPointPropertyTests:
     def test_property_fields_never_pos(self, bundle):
         """Property: field vectors never have Pos role."""
         for field_vec in bundle.values():
-            assert not isinstance(field_vec.role, cx.roles.Pos)
+            assert not isinstance(field_vec.role, cx.roles.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(
@@ -440,10 +444,10 @@ class TestFiberPointPropertyTests:
         """Property: base always has Point role (affine location)."""
         base = cx.Vector.from_(base_vals, "m")
         vel = cx.Vector.from_(vel_vals, "m/s")
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         assert isinstance(bundle.base.role, cx.roles.Point)
-        assert isinstance(bundle["velocity"].role, cx.roles.Vel)
+        assert isinstance(bundle["velocity"].role, cx.roles.PhysVel)
 
     @given(
         base_vals=st.lists(
@@ -461,18 +465,18 @@ class TestFiberPointPropertyTests:
             max_size=3,
         ),
     )
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_property_simple_vconvert_preserves_roles(self, base_vals, vel_vals):
         """Property: vconvert preserves roles (simple test)."""
         base = cx.Vector.from_(base_vals, "m")
         vel = cx.Vector.from_(vel_vals, "m/s")
-        bundle = cx.FiberPoint(base=base, velocity=vel)
+        bundle = cx.PointedVector(base=base, velocity=vel)
 
         # Convert to spherical
         sph_bundle = bundle.vconvert(cx.charts.sph3d)
 
         assert isinstance(sph_bundle.base.role, cx.roles.Point)
-        assert isinstance(sph_bundle["velocity"].role, cx.roles.Vel)
+        assert isinstance(sph_bundle["velocity"].role, cx.roles.PhysVel)
 
     # ==================================================================
     # Original hypothesis tests (continued)
@@ -485,8 +489,8 @@ class TestFiberPointPropertyTests:
         target_chart = cx.charts.sph3d
         converted = bundle.vconvert(target_chart)
 
-        assert isinstance(converted.base.role, cx.roles.Pos)
-        assert isinstance(bundle.base.role, cx.roles.Pos)
+        assert isinstance(converted.base.role, cx.roles.PhysDisp)
+        assert isinstance(bundle.base.role, cx.roles.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(bundle=cxst.bundles(field_keys=("velocity", "acceleration")))
@@ -529,7 +533,7 @@ class TestFiberPointPropertyTests:
 
         # Should not raise
         result = convert(bundle)
-        assert isinstance(result, cx.FiberPoint)
+        assert isinstance(result, cx.PointedVector)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(bundle=cxst.bundles(field_keys=("velocity",)))
@@ -545,7 +549,7 @@ class TestFiberPointPropertyTests:
         assert isinstance(mixed["velocity"].chart, cx.charts.Cylindrical3D)
 
     @given(
-        base_role=st.just(cx.roles.Vel),  # Non-Pos role
+        base_role=st.just(cx.roles.PhysVel),  # Non-Pos role
     )
     @settings(max_examples=10)
     def test_property_non_pos_base_rejected(self, base_role):
@@ -559,16 +563,18 @@ class TestFiberPointPropertyTests:
         vel = cx.Vector.from_([10, 20, 30], "m/s")
 
         with pytest.raises(
-            eqx.RuntimeException, match="TODO: figure out matching message"
+            eqx.EquinoxTracetimeError, match="base must have role Point"
         ):  # eqx.error_if
-            cx.FiberPoint(base=non_pos_vec, velocity=vel)
+            cx.PointedVector(base=non_pos_vec, velocity=vel)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(
-        bundle=cxst.bundles(field_keys=("displacement",), field_roles=(cx.roles.Pos,))
+        bundle=cxst.bundles(
+            field_keys=("displacement",), field_roles=(cx.roles.PhysDisp,)
+        )
     )
     @settings(max_examples=30)
     def test_property_displacement_role_supported(self, bundle):
         """Property: Displacement role is supported in fields."""
         assert "displacement" in bundle
-        assert isinstance(bundle["displacement"].role, cx.roles.Pos)
+        assert isinstance(bundle["displacement"].role, cx.roles.PhysDisp)

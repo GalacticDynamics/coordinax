@@ -1,29 +1,31 @@
 """Vector."""
 
-from typing import ClassVar, final, overload
-
 __all__ = (
     "AbstractRole",
     "AbstractPhysicalRole",
     "Point",
     "point",
-    "Pos",
-    "pos",
-    "Vel",
-    "vel",
-    "Acc",
-    "acc",
+    "PhysDisp",
+    "phys_disp",
+    "PhysVel",
+    "phys_vel",
+    "PhysAcc",
+    "phys_acc",
     "DIM_TO_ROLE_MAP",
+    "guess_role",
 )
 
 import abc
 import functools as ft
 
-from typing import Any
+from typing import Any, ClassVar, final, overload
+
+import plum
 
 import unxt as u
 
 import coordinax._src.charts as cxc
+from coordinax._src.custom_types import CsDict
 
 Time = u.dimension("time")
 
@@ -65,15 +67,13 @@ class AbstractRole:
             for c, d in zip(chart.components, chart.coord_dimensions, strict=True)
         }
 
-    @classmethod
     @abc.abstractmethod
-    def derivative(cls) -> type["AbstractRole"]:
+    def derivative(self) -> "AbstractRole":
         """Return role flag for the time derivative of this role."""
         raise NotImplementedError  # pragma: no cover
 
-    @classmethod
     @abc.abstractmethod
-    def antiderivative(cls) -> type["AbstractRole"]:
+    def antiderivative(self) -> "AbstractRole":
         """Return role flag for the time antiderivative of this role."""
         raise NotImplementedError  # pragma: no cover
 
@@ -84,6 +84,10 @@ class AbstractPhysicalRole(AbstractRole, abc.ABC):
     Physical tangent roles have uniform physical dimensions across components
     and transform via `physical_tangent_transform`.
     """
+
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f"{self.__class__.__name__}()"
 
 
 @final
@@ -110,23 +114,25 @@ class Point(AbstractRole):
 
     order: ClassVar[int] = 0
 
-    @classmethod
-    def derivative(cls) -> type[AbstractRole]:
+    def derivative(self) -> AbstractRole:
         """Return role flag for the time derivative of this role."""
-        return Vel
+        return phys_vel
 
-    @classmethod
-    def antiderivative(cls) -> type[AbstractRole]:
+    def antiderivative(self) -> AbstractRole:
         """Return role flag for the time antiderivative of this role."""
         return NotImplemented
+
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f"{self.__class__.__name__}()"
 
 
 point = Point()
 
 
 @final
-class Pos(AbstractPhysicalRole):
-    r"""Pos role flag: physical displacement vectors with uniform length units.
+class PhysDisp(AbstractPhysicalRole):
+    r"""Displacement role flag: physical displacement vectors with uniform length units.
 
     Mathematical Definition
     -----------------------
@@ -134,7 +140,7 @@ class Pos(AbstractPhysicalRole):
     **physical vector** in the tangent space T_pM, expressed using
     **orthonormal frame components** at a base point p.
 
-    CRITICAL: All Pos components must have uniform dimension [length].
+    CRITICAL: All PhysDisp components must have uniform dimension [length].
     This is NOT a coordinate increment (which would have mixed units in curvilinear
     coordinates).
 
@@ -157,23 +163,23 @@ class Pos(AbstractPhysicalRole):
     | Role         | Transform via                | Base point needed? |
     |--------------|-----------------------------|--------------------|
     | Point        | point_transform              | No                 |
-    | Pos          | physical_tangent_transform  | Sometimes*         |
-    | Vel          | physical_tangent_transform  | Sometimes*         |
-    | Acc          | physical_tangent_transform  | Sometimes*         |
+    | PhysDisp     | physical_tangent_transform  | Sometimes*         |
+    | PhysVel      | physical_tangent_transform  | Sometimes*         |
+    | PhysAcc      | physical_tangent_transform  | Sometimes*         |
 
     *Required for embedded/manifold charts; optional for Euclidean spaces.
 
-    Pos, Velocity, and Acceleration are geometrically the same
+    PhysDisp, Velocity, and Acceleration are geometrically the same
     (tangent vectors), differing only in physical units:
-    - Pos: [length]
+    - PhysDisp: [length]
     - Velocity: [length/time]
     - Acceleration: [length/time²]
 
     Addition Rules
     --------------
-    - ``Pos + Pos -> Pos`` (same tangent space)
-    - ``Point + Pos -> Point`` (affine translation)
-    - ``Pos + Point`` is **not** defined (not commutative)
+    - ``PhysDisp + PhysDisp -> PhysDisp`` (same tangent space)
+    - ``Point + PhysDisp -> Point`` (affine translation)
+    - ``PhysDisp + Point`` is **not** defined (not commutative)
     - ``Point + Point`` is **not** defined
 
     Examples
@@ -186,7 +192,7 @@ class Pos(AbstractPhysicalRole):
     >>> disp = cx.Vector(
     ...     {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")},
     ...     cx.charts.cart3d,
-    ...     cx.roles.pos,
+    ...     cx.roles.phys_disp,
     ... )
 
     In cylindrical coordinates, ALL components have length units:
@@ -194,7 +200,7 @@ class Pos(AbstractPhysicalRole):
     >>> disp_cyl = cx.Vector(
     ...     {"rho": u.Q(1.0, "m"), "phi": u.Q(2.0, "m"), "z": u.Q(0.0, "m")},
     ...     cx.charts.cyl3d,
-    ...     cx.roles.pos,
+    ...     cx.roles.phys_disp,
     ... )
 
     The phi=2m means "2 meters in the tangential direction", not "2 radians".
@@ -202,72 +208,153 @@ class Pos(AbstractPhysicalRole):
     See Also
     --------
     Point : An affine point on a manifold.
-    Vel : A velocity vector (position-difference per unit time).
+    PhysVel : A velocity vector (position-difference per unit time).
 
     """
 
     order: ClassVar[int] = 0  # Same dimension as position (length)
 
-    @classmethod
-    def derivative(cls) -> type[AbstractRole]:
+    def derivative(self) -> AbstractRole:
         """Return role flag for the time derivative of this role."""
-        return Vel  # d(pos)/dt has velocity units
+        return phys_vel  # d(pos)/dt has velocity units
 
-    @classmethod
-    def antiderivative(cls) -> type[AbstractRole]:
+    def antiderivative(self) -> AbstractRole:
         """Return role flag for the time antiderivative of this role."""
         return NotImplemented  # No standard meaning
 
 
-pos = Pos()
+phys_disp = PhysDisp()
 
 
 @final
-class Vel(AbstractPhysicalRole):
+class PhysVel(AbstractPhysicalRole):
     """Velocity role flag (1st time derivative)."""
 
     order: ClassVar[int] = 1
 
-    @classmethod
-    def derivative(cls) -> type[AbstractRole]:
+    def derivative(self) -> AbstractRole:
         """Return role flag for the time derivative of this role."""
-        return Acc
+        return phys_acc
 
-    @classmethod
-    def antiderivative(cls) -> type[AbstractRole]:
+    def antiderivative(self) -> AbstractRole:
         """Return role flag for the time antiderivative of this role."""
-        return Pos  # Now Pos is the physical displacement role
+        return phys_disp
 
 
-vel = Vel()
+phys_vel = PhysVel()
 
 
 @final
-class Acc(AbstractPhysicalRole):
+class PhysAcc(AbstractPhysicalRole):
     """Acceleration role flag (2nd time derivative)."""
 
     order: ClassVar[int] = 2
 
-    @classmethod
-    def derivative(cls) -> type[AbstractRole]:
+    def derivative(self) -> AbstractRole:
         """Return role flag for the time derivative of this role."""
         return NotImplemented
 
-    @classmethod
-    def antiderivative(cls) -> type[AbstractRole]:
+    def antiderivative(self) -> AbstractRole:
         """Return role flag for the time antiderivative of this role."""
-        return Vel
+        return phys_vel
 
 
-acc = Acc()
+phys_acc = PhysAcc()
 
+
+# ============================================================================
+# Helpers
 
 # Mapping from dimension to role flag
 DIM_TO_ROLE_MAP: dict[u.AbstractDimension, type["AbstractRole"]] = {
     u.dimension("length"): Point,  # Length → Point (affine location, per spec)
     u.dimension("angle"): Point,  # Angles → affine (mixed with other coords)
-    u.dimension("speed"): Vel,  # Length/time → velocity
-    u.dimension("angular speed"): Vel,  # Angle/time → velocity
-    u.dimension("acceleration"): Acc,  # Length/time² → acceleration
-    u.dimension("angular acceleration"): Acc,  # Angle/time² → acceleration
+    u.dimension("speed"): PhysVel,  # Length/time → velocity
+    u.dimension("angular speed"): PhysVel,  # Angle/time → velocity
+    u.dimension("acceleration"): PhysAcc,  # Length/time² → acceleration
+    u.dimension("angular acceleration"): PhysAcc,  # Angle/time² → acceleration
 }
+
+
+@plum.dispatch
+def guess_role(obj: u.AbstractDimension, /) -> AbstractRole:
+    """Infer role flag from the physical dimension of a Quantity.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.roles as cxr
+
+    >>> r1 = cxr.guess_role(u.dimension("length"))
+    >>> r1
+    Point()
+
+    >>> r2 = cxr.guess_role(u.dimension("speed"))
+    >>> r2
+    Vel()
+
+    >>> r3 = cxr.guess_role(u.dimension("acceleration"))
+    >>> r3
+    Acc()
+
+    """
+    try:
+        role_cls = DIM_TO_ROLE_MAP[obj]
+    except KeyError as e:
+        msg = f"Cannot infer role from dimension {obj}"
+        raise ValueError(msg) from e
+    return role_cls()
+
+
+@plum.dispatch
+def guess_role(x: u.AbstractQuantity, /) -> AbstractRole:
+    """Infer role flag from the physical dimension of a Quantity.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.roles as cxr
+
+    >>> r1 = cxr.guess_role(u.Q(1.0, "m"))
+    >>> r1
+    Point()
+
+    >>> r2 = cxr.guess_role(u.Q(2.0, "m / s"))
+    >>> r2
+    Vel()
+
+    >>> r3 = cxr.guess_role(u.Q(3.0, "m / s ** 2"))
+    >>> r3
+    Acc()
+
+    """
+    dim = u.dimension_of(x)
+    return guess_role(dim)
+
+
+@plum.dispatch
+def guess_role(obj: CsDict, /) -> AbstractRole:
+    """Infer role flag from the physical dimensions of a component dictionary.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.roles as cxr
+
+    >>> d1 = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+    >>> r1 = cxr.guess_role(d1)
+    >>> r1
+    Point()
+
+    >>> d2 = {"x": u.Q(1.0, "m / s"), "y": u.Q(2.0, "m / s")}
+    >>> r2 = cxr.guess_role(d2)
+    >>> r2
+    Vel()
+
+    """
+    dims = {u.dimension_of(v) for v in obj.values()}
+    if len(dims) != 1:
+        msg = f"Cannot infer role from mixed dimensions: {dims}"
+        raise ValueError(msg)
+    dim = dims.pop()
+    return guess_role(dim)

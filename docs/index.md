@@ -144,8 +144,8 @@ transforming coordinate objects, such as:
   {class}`~coordinax.angle.Angle` and {class}`~coordinax.distance.Distance`
 - representation charts exposed in {mod}`coordinax.charts` (Cartesian,
   cylindrical, spherical, manifolds, spacetime)
-- vector objects ({class}`~coordinax.Vector`, {class}`~coordinax.FiberPoint`)
-  that pair data with reps and roles (Pos, Vel, Acc, ...)
+- vector objects ({class}`~coordinax.Vector`, {class}`~coordinax.PointedVector`)
+  that pair data with reps and roles (Pos, Vel, PhysAcc, ...)
 - coordinate and physical conversions
   ({func}`~coordinax.transforms.point_transform`,
   {func}`~coordinax.transforms.physical_tangent_transform`,
@@ -229,7 +229,7 @@ DistanceModulus(Array(15., dtype=float32), unit='mag')
 
 ### Creating and Working with Vector Objects
 
-Vectors combine data, a representation, and a role (Pos, Vel, Acc). Here's a
+Vectors combine data, a representation, and a role (Pos, Vel, PhysAcc). Here's a
 Cartesian 3D position and velocity:
 
 ```
@@ -239,12 +239,12 @@ import unxt as u
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.Pos(),
+    role=cx.roles.PhysDisp(),
 )
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
     chart=cx.charts.cart3d,
-    role=cx.roles.Vel(),
+    role=cx.roles.PhysVel(),
 )
 ```
 
@@ -255,10 +255,10 @@ q_sph = q.vconvert(cx.charts.sph3d)
 v_sph = v.vconvert(cx.charts.sph3d, q)
 ```
 
-#### Creating an `FiberPoint` Object
+#### Creating an `PointedVector` Object
 
 ```
-space = cx.FiberPoint(base=q, speed=v)
+space = cx.PointedVector(base=q, speed=v)
 space_sph = space.vconvert(cx.charts.sph3d)
 ```
 
@@ -324,7 +324,7 @@ Coordinate(
 
 >>> coord.to_frame(bob, t)
 Coordinate(
-    FiberPoint({
+    PointedVector({
         'base': Cart3D(x=Q(f32[], 'kpc'), y=Q(f32[], 'kpc'),
                                  z=Q(f32[], 'kpc')) }),
     frame=Bob()
@@ -332,7 +332,7 @@ Coordinate(
 
 >>> coord.vconvert(cx.charts.sph3d)
 Coordinate(
-    FiberPoint({
+    PointedVector({
         'base': Spherical3D( r=Distance(f32[], 'kpc'), theta=Angle(f32[], 'rad'),
                                 phi=Angle(f32[], 'rad') )
     }),

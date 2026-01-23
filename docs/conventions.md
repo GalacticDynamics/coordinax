@@ -10,9 +10,9 @@ avoid verbosity. Many of these are also found in the [Glossary](glossary.md).
   Concrete (or 'final') classes are not so prefixed. As a further rule, no
   abstract class inherits from a concrete class and no concrete class inherits
   from any other concrete class.
-- `Pos`: a shorthand for "position", used in class names for concision.
-- `Vel`: a shorthand for "velocity", used in class names for concision.
-- `Acc`: a shorthand for "acceleration", used in class names for concision.
+- `PhysDisp`: a shorthand for "position", used in class names for concision.
+- `PhysVel`: a shorthand for "velocity", used in class names for concision.
+- `PhysAcc`: a shorthand for "acceleration", used in class names for concision.
 
 ## Functional vs Object-Oriented APIs
 

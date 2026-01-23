@@ -5,10 +5,7 @@ from hypothesis.strategies import data as st_data
 
 import coordinax as cx
 import coordinax_hypothesis as cxst
-from coordinax_hypothesis._src.utils import (
-    build_init_kwargs_strategy,
-    get_all_subclasses,
-)
+from coordinax_hypothesis._src.utils import get_all_subclasses
 
 # =============================================================================
 # Benchmark: chart_classes strategy
@@ -114,7 +111,7 @@ def test_benchmark_build_init_kwargs_cart3d(benchmark):
     """Benchmark building init kwargs strategy for Cart3D."""
 
     def build_kwargs():
-        return build_init_kwargs_strategy(cx.charts.Cart3D, dim=3)
+        return cxst.build_init_kwargs_strategy(cx.charts.Cart3D, dim=3)
 
     strategy = benchmark(build_kwargs)
     assert strategy is not None
@@ -124,7 +121,7 @@ def test_benchmark_build_init_kwargs_spacetimect(benchmark):
     """Benchmark building init kwargs strategy for SpaceTimeCT (recursive case)."""
 
     def build_kwargs():
-        return build_init_kwargs_strategy(cx.charts.SpaceTimeCT, dim=4)
+        return cxst.build_init_kwargs_strategy(cx.charts.SpaceTimeCT, dim=4)
 
     strategy = benchmark(build_kwargs)
     assert strategy is not None

@@ -388,8 +388,8 @@ flags.
 
 **Parameters:**
 
-- `role` (AbstractRole): The starting role (`cx.roles.Pos`, `cx.roles.Vel`,
-  `cx.roles.Acc`).
+- `role` (AbstractRole): The starting role (`cx.roles.PhysDispsDisp`, `cx.roles.PhysVel`,
+  `cx.roles.PhysAcc`).
 - `rep` (AbstractChart | SearchStrategy): The starting representation or a
   strategy that generates one.
 
@@ -411,7 +411,7 @@ import coordinax_hypothesis as cxst
 
 
 # Generate a chain from acceleration
-@given(chain=cxst.chart_time_chain(cx.roles.Acc, cx.charts.cart3d))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
 def test_acc_chain(chain):
     acc_rep, vel_rep, pos_rep = chain
     # All are 3D Cartesian-like representations
@@ -421,7 +421,7 @@ def test_acc_chain(chain):
 
 
 # Generate a chain from velocity
-@given(chain=cxst.chart_time_chain(cx.roles.Vel, cx.charts.polar2d))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
 def test_vel_chain(chain):
     vel_rep, pos_rep = chain
     # All are 2D representations
@@ -430,21 +430,21 @@ def test_vel_chain(chain):
 
 
 # Position just returns itself
-@given(chain=cxst.chart_time_chain(cx.roles.Pos, cx.charts.sph3d))
-def test_pos_chain(chain):
+@given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
+def test_disp_chain(chain):
     (pos_rep,) = chain
     assert isinstance(pos_rep, cx.charts.Abstract3D)
 
 
 # Use with dynamic representation type
-@given(chain=cxst.chart_time_chain(cx.roles.Vel, cxst.charts()))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cxst.charts()))
 def test_dynamic_vel_chain(chain):
     assert len(chain) == 2  # (vel, pos)
     assert isinstance(chain[0], cx.charts.AbstractChart)
     assert isinstance(chain[1], cx.charts.AbstractChart)
 ```
 
-### `vectors_with_target_chart(chart=t=charts(), role=cx.roles.Pos, dtype=jnp.float32, shape=(), elements=None)`
+### `vectors_with_target_chart(chart=t=charts(), role=cx.roles.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
 
 Generate a vector and a time-derivative chain with matching flags.
 
@@ -458,8 +458,8 @@ target chain automatically matches the flags of the source vector.
 
 - `rep` (AbstractChart | SearchStrategy): A representation instance or strategy
   for the source vector (default: uses `charts()` strategy).
-- `role` (AbstractRole): The role flag for the source vector (`cx.roles.Pos`,
-  `cx.roles.Vel`, `cx.roles.Acc`).
+- `role` (AbstractRole): The role flag for the source vector (`cx.roles.PhysDisp`,
+  `cx.roles.PhysVel`, `cx.roles.PhysAcc`).
 - `dtype` (dtype | SearchStrategy): The data type for array components (default:
   `jnp.float32`). Can be a dtype or a strategy.
 - `shape` (int | tuple | SearchStrategy): The shape for the vector components
@@ -483,7 +483,7 @@ import coordinax_hypothesis as cxst
 
 
 # Test vector conversions to a full chain of targets
-@given(vec_and_chain=cxst.vectors_with_target_chart(chart=t=cx.charts.cart3d, role=cx.roles.Pos))
+@given(vec_and_chain=cxst.vectors_with_target_chart(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp))
 def test_position_conversion(vec_and_chain):
     vec, target_chain = vec_and_chain
     # target_chain is just (pos_rep,) for position sources
@@ -494,8 +494,8 @@ def test_position_conversion(vec_and_chain):
 
 # Test velocity vector with full chain (requires a position vector)
 @given(
-    vec_and_chain=cxst.vectors_with_target_chart(chart=t=cx.charts.cart3d, role=cx.roles.Vel),
-    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.Pos),
+    vec_and_chain=cxst.vectors_with_target_chart(chart=t=cx.charts.cart3d, role=cx.roles.PhysVel),
+    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp),
 )
 def test_velocity_conversion_chain(vec_and_chain, pos_vec):
     vec, target_chain = vec_and_chain
@@ -509,7 +509,7 @@ def test_velocity_conversion_chain(vec_and_chain, pos_vec):
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=t=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 def test_3d_position_conversions(vec_and_chain):

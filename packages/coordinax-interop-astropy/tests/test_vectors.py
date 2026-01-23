@@ -17,7 +17,7 @@ cart = cx.Vector(
         "z": u.Q([9, 10, 11, 12], "kpc"),
     },
     cx.charts.cart3d,
-    cx.roles.pos,
+    cx.roles.phys_disp,
 )
 apycart = convert(cart, apyc.CartesianRepresentation)
 
@@ -28,7 +28,7 @@ cyl = cx.Vector(
         "z": u.Q([9, 10, 11, 12], "m"),
     },
     cx.charts.cyl3d,
-    cx.roles.pos,
+    cx.roles.phys_disp,
 )
 apycyl = convert(cyl, apyc.CylindricalRepresentation)
 
@@ -39,7 +39,7 @@ sph = cx.Vector(
         "phi": u.Q([0, 65, 135, 270], "deg"),
     },
     cx.charts.sph3d,
-    cx.roles.pos,
+    cx.roles.phys_disp,
 )
 apysph = convert(sph, apyc.PhysicsSphericalRepresentation)
 
@@ -50,7 +50,7 @@ prolatesph = cx.Vector(
         "phi": u.Q([0, 1, 2, 3], "rad"),
     },
     cx.charts.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "kpc")),
-    cx.roles.pos,
+    cx.roles.phys_disp,
 )
 apyprolatesph = None  # No corresponding Astropy representation
 
@@ -62,7 +62,7 @@ cartvel = cx.Vector(
         "z": u.Q([13, 14, 15, 16], "km/s"),
     },
     cx.charts.cart3d,
-    cx.roles.vel,
+    cx.roles.phys_vel,
 )
 apycartvel = convert(cartvel, apyc.CartesianDifferential)
 
@@ -73,7 +73,7 @@ cylvel = cx.Vector(
         "z": u.Q([13, 14, 15, 16], "km/s"),
     },
     cx.charts.cyl3d,
-    cx.roles.vel,
+    cx.roles.phys_vel,
 )
 apycylvel = convert(cylvel, apyc.CylindricalDifferential)
 
@@ -84,7 +84,7 @@ sphvel = cx.Vector(
         "phi": u.Q([9, 10, 11, 12], "mas/yr"),
     },
     cx.charts.sph3d,
-    cx.roles.vel,
+    cx.roles.phys_vel,
 )
 apysphvel = convert(sphvel, apyc.PhysicsSphericalDifferential)
 
@@ -120,7 +120,7 @@ def test_negation_astropy_pos_roundtrip(
 
 # TODO: rewrite this test to use hypothesis
 @pytest.mark.parametrize(
-    ("vel", "pos", "apyv_cls"),
+    ("phys_vel", "phys_disp", "apyv_cls"),
     [
         (cartvel, cart, apyc.CartesianDifferential),
         (cylvel, cyl, apyc.CylindricalDifferential),

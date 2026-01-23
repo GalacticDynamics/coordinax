@@ -8,8 +8,7 @@ can be combined and simplified. Most powerfully, they can be time dependent.
 **Role-Specialized Primitive Operators:**
 
 - ``Translate``: Translates points (acts on ``Point`` role)
-- ``Boost``: Boosts velocities (acts on ``Vel`` role)
-- ``AccelShift``: Shifts accelerations (acts on ``Acc`` role)
+- ``Boost``: Boosts velocities (acts on ``PhysVel`` role)
 - ``Rotate``: Rotates all spatial components
 
 Let's work through the built-in operations.
@@ -82,25 +81,15 @@ Translate(Q(f64[3], 'km'))
 
 # Boost Operator
 
-The ``Boost`` operator boosts velocities. It only acts on ``Vel`` role vectors.
+The ``Boost`` operator boosts velocities. It only acts on ``PhysVel`` role vectors.
 
 >>> boost = cxo.Boost.from_([10.0, 0.0, 0.0], "km/s")
 >>> boost
 Boost(Q(f64[3], 'km / s'))
 
-Applying to a Vel vector:
+Applying to a PhysVel vector:
 
 >>> boosted = cxo.apply_op(boost, None, vel)
-
-
-# AccelShift Operator
-
-The ``AccelShift`` operator shifts accelerations. It only acts on ``Acc`` role
-vectors.
-
->>> accel = cxo.AccelShift.from_([0.0, 0.0, -9.8], "m/s^2")
->>> accel
-AccelShift(Q(f64[3], 'm / s2'))
 
 
 # Rotate Operator
@@ -184,7 +173,7 @@ both a spatial shift and a velocity boost:
 >>> frame_op = shift | boost
 
 This pipeline will translate points and boost velocities. When applied
-to a ``FiberPoint`` with both position and velocity, both operators act
+to a ``PointedVector`` with both position and velocity, both operators act
 on their respective fields.
 
 
@@ -207,7 +196,6 @@ __all__ = (
     # Role-specialized primitive operators
     "Translate",
     "Boost",
-    "AccelShift",
     # Composite
     "GalileanOp",
 )
@@ -219,7 +207,6 @@ with install_import_hook("coordinax.ops"):
     from ._src.operators import (
         AbstractCompositeOperator,
         AbstractOperator,
-        AccelShift,
         Boost,
         GalileanOp,
         Identity,

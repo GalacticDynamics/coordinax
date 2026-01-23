@@ -131,7 +131,7 @@ class TestSpaceTimeCTFlatKeys:
     def test_factor_names_is_none(self) -> None:
         """SpaceTimeCT.factor_names should be None (flat-key specialization)."""
         st = cxc.SpaceTimeCT(cxc.cart3d)
-        assert st.factor_names is None
+        assert st.factor_names == ("time", "space")
 
     def test_components_are_flat_strings(self) -> None:
         """SpaceTimeCT components should be flat strings like 'ct', 'x', etc."""

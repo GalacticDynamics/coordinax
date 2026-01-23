@@ -13,7 +13,7 @@ physical components are pushed forward and projected using orthonormal frames.
   dimensions). A rep does not store numerical values.
 - Vector: data + rep + role. Data are the coordinate values or physical
   components.
-- Role: semantic interpretation of vector data (Pos, Vel, Acc, etc.). A role is
+- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role is
   not a rep.
 - Metric: a bilinear form g on the tangent space defining inner products and
   norms (Euclidean, sphere intrinsic, Minkowski).

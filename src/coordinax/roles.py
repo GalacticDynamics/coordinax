@@ -7,29 +7,31 @@ __all__ = (
     "point",
     "as_pos",  # For an object, reinterpret a Point as a Pos
     # Physical roles
-    "Pos",
-    "pos",
-    "Vel",
-    "vel",
-    "Acc",
-    "acc",
+    "PhysDisp",
+    "phys_disp",
+    "PhysVel",
+    "phys_vel",
+    "PhysAcc",
+    "phys_acc",
+    # Helpers
+    "guess_role",
 )
 
 from .setup_package import RUNTIME_TYPECHECKER, install_import_hook
 
 with install_import_hook("coordinax.roles"):
-    from ._src.api import as_pos
+    from ._src.api import as_pos, guess_role
     from ._src.roles import (
         AbstractPhysicalRole,
         AbstractRole,
-        Acc,
+        PhysAcc,
+        PhysVel,
         Point,
-        Pos,
-        Vel,
-        acc,
+        PhysDisp,
+        phys_acc,
+        phys_disp,
+        phys_vel,
         point,
-        pos,
-        vel,
     )
 
 

@@ -126,7 +126,7 @@ class TestGalactocentricFrameConversions:
                     "z": convert(vz, u.Q),
                 },
                 cx.charts.cart3d,
-                cx.roles.vel,
+                cx.roles.phys_vel,
             ),
         )
 

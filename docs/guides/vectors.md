@@ -1,7 +1,7 @@
 # Vectors
 
 This guide covers vector objects in `coordinax`. A vector is _data_ plus a
-representation (coordinate chart) and a role (Pos, Vel, Acc, ...).
+representation (coordinate chart) and a role (Pos, Vel, PhysAcc, ...).
 
 ## Creating Vector Objects
 
@@ -12,13 +12,13 @@ import unxt as u
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
     chart=cx.charts.cart3d,
-    role=cx.roles.vel,
+    role=cx.roles.phys_vel,
 )
 ```
 
@@ -36,7 +36,7 @@ q3 = cx.Vector(
         "z": u.Q([5.0, 6.0], "kpc"),
     },
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 v3 = cx.Vector(
     data={
@@ -45,7 +45,7 @@ v3 = cx.Vector(
         "z": u.Q([8.0, 9.0], "kpc/Myr"),
     },
     chart=cx.charts.cart3d,
-    role=cx.roles.vel,
+    role=cx.roles.phys_vel,
 )
 ```
 
@@ -61,12 +61,12 @@ import unxt as u
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
     chart=cx.charts.cart3d,
-    role=cx.roles.vel,
+    role=cx.roles.phys_vel,
 )
 
 # q and v are ready for use in JAX operations.
@@ -91,12 +91,12 @@ import unxt as u
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
     chart=cx.charts.cart3d,
-    role=cx.roles.vel,
+    role=cx.roles.phys_vel,
 )
 
 q_sph = q.vconvert(cx.charts.sph3d)
@@ -118,14 +118,14 @@ arr = cx.Vector(
         "z": u.Q([3.0, 6.0], "kpc"),
     },
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 # arr can be used in batched JAX computations.
 ```
 
 ## Space Objects: Grouping Related Vectors
 
-A {class}`~coordinax.FiberPoint` object collects related vectors (e.g.,
+A {class}`~coordinax.PointedVector` object collects related vectors (e.g.,
 position, velocity, acceleration) anchored at a common base point:
 
 ```
@@ -135,15 +135,15 @@ import unxt as u
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
     chart=cx.charts.cart3d,
-    role=cx.roles.vel,
+    role=cx.roles.phys_vel,
 )
 
-space = cx.FiberPoint(base=q, speed=v)
+space = cx.PointedVector(base=q, speed=v)
 ```
 
 ---

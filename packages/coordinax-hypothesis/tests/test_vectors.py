@@ -61,44 +61,50 @@ def test_vectors_with_dtype(vec: cx.Vector) -> None:
 # Tests with position roles
 
 
-@given(vec=cxst.vectors(role=cx.roles.Pos))
+@given(vec=cxst.vectors(role=cx.roles.PhysDisp))
 @settings(max_examples=30)
 def test_vectors_position(vec: cx.Vector) -> None:
     """Test vector generation with position roles."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
 
 
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract1D), role=cx.roles.Pos)
+    vec=cxst.vectors(
+        chart=cxst.charts(filter=cx.charts.Abstract1D), role=cx.roles.PhysDisp
+    )
 )
 @settings(max_examples=20)
 def test_vectors_position_1d(vec: cx.Vector) -> None:
     """Test 1D position vector generation."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
     assert isinstance(vec.chart, cx.charts.Abstract1D)
 
 
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract2D), role=cx.roles.Pos)
+    vec=cxst.vectors(
+        chart=cxst.charts(filter=cx.charts.Abstract2D), role=cx.roles.PhysDisp
+    )
 )
 @settings(max_examples=20)
 def test_vectors_position_2d(vec: cx.Vector) -> None:
     """Test 2D position vector generation."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
     assert isinstance(vec.chart, cx.charts.Abstract2D)
 
 
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.Pos)
+    vec=cxst.vectors(
+        chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.PhysDisp
+    )
 )
 @settings(max_examples=20)
 def test_vectors_position_3d(vec: cx.Vector) -> None:
     """Test 3D position vector generation."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
     assert isinstance(vec.chart, cx.charts.Abstract3D)
 
 
@@ -106,33 +112,37 @@ def test_vectors_position_3d(vec: cx.Vector) -> None:
 # Tests with velocity roles
 
 
-@given(vec=cxst.vectors(role=cx.roles.Vel))
+@given(vec=cxst.vectors(role=cx.roles.PhysVel))
 @settings(max_examples=30)
 def test_vectors_velocity(vec: cx.Vector) -> None:
     """Test vector generation with velocity roles."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Vel)
+    assert isinstance(vec.role, cx.roles.PhysVel)
 
 
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract1D), role=cx.roles.Vel)
+    vec=cxst.vectors(
+        chart=cxst.charts(filter=cx.charts.Abstract1D), role=cx.roles.PhysVel
+    )
 )
 @settings(max_examples=20)
 def test_vectors_velocity_1d(vec: cx.Vector) -> None:
     """Test 1D velocity vector generation."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Vel)
+    assert isinstance(vec.role, cx.roles.PhysVel)
     assert isinstance(vec.chart, cx.charts.Abstract1D)
 
 
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.Vel)
+    vec=cxst.vectors(
+        chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.PhysVel
+    )
 )
 @settings(max_examples=20)
 def test_vectors_velocity_3d(vec: cx.Vector) -> None:
     """Test 3D velocity vector generation."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Vel)
+    assert isinstance(vec.role, cx.roles.PhysVel)
     assert isinstance(vec.chart, cx.charts.Abstract3D)
 
 
@@ -140,33 +150,37 @@ def test_vectors_velocity_3d(vec: cx.Vector) -> None:
 # Tests with acceleration roles
 
 
-@given(vec=cxst.vectors(role=cx.roles.Acc))
+@given(vec=cxst.vectors(role=cx.roles.PhysAcc))
 @settings(max_examples=30)
 def test_vectors_acceleration(vec: cx.Vector) -> None:
     """Test vector generation with acceleration roles."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Acc)
+    assert isinstance(vec.role, cx.roles.PhysAcc)
 
 
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract1D), role=cx.roles.Acc)
+    vec=cxst.vectors(
+        chart=cxst.charts(filter=cx.charts.Abstract1D), role=cx.roles.PhysAcc
+    )
 )
 @settings(max_examples=20)
 def test_vectors_acceleration_1d(vec: cx.Vector) -> None:
     """Test 1D acceleration vector generation."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Acc)
+    assert isinstance(vec.role, cx.roles.PhysAcc)
     assert isinstance(vec.chart, cx.charts.Abstract1D)
 
 
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.Acc)
+    vec=cxst.vectors(
+        chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.PhysAcc
+    )
 )
 @settings(max_examples=20)
 def test_vectors_acceleration_3d(vec: cx.Vector) -> None:
     """Test 3D acceleration vector generation."""
     assert isinstance(vec, cx.Vector)
-    assert isinstance(vec.role, cx.roles.Acc)
+    assert isinstance(vec.role, cx.roles.PhysAcc)
     assert isinstance(vec.chart, cx.charts.Abstract3D)
 
 

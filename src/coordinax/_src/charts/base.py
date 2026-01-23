@@ -1,4 +1,5 @@
 """Vector."""
+from unxt.quantity import is_any_quantity
 
 __all__ = (
     "AbstractChart",
@@ -11,6 +12,8 @@ __all__ = (
 )
 
 import abc
+import weakref
+from itertools import chain
 
 from collections.abc import Mapping
 from typing import (
@@ -28,6 +31,7 @@ import wadler_lindig as wl
 
 import unxt as u
 from dataclassish import field_items
+from unxt.quantity import is_any_quantity
 
 from coordinax._src import api
 from coordinax._src.custom_types import CDict, CsDict, Ds, Ks
@@ -35,7 +39,10 @@ from coordinax._src.custom_types import CDict, CsDict, Ds, Ks
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # type: ignore[misc]
 V = TypeVar("V")
 
-CHART_CLASSES: list[type["AbstractChart[Any, Any]"]] = []
+CHART_CLASSES: weakref.WeakSet[type["AbstractChart[Any, Any]"]] = weakref.WeakSet()
+NON_ABC_CHART_CLASSES: weakref.WeakSet[type["AbstractChart[Any, Any]"]] = (
+    weakref.WeakSet()
+)
 
 MISSING = object()
 
@@ -50,7 +57,9 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
             super().__init_subclass__(**kw)
 
         # Register the representation/chart
-        CHART_CLASSES.append(cls)
+        CHART_CLASSES.add(cls)
+        if not cls.__name__.startswith("Abstract"):
+            NON_ABC_CHART_CLASSES.add(cls)
 
     # ===============================================================
     # Vector API
@@ -117,7 +126,7 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
         >>> cx.charts.cart3d.is_euclidean
         True
 
-        >>> cx.charts.sph.is_euclidean
+        >>> cx.charts.sph3d.is_euclidean
         True
 
         >>> cx.charts.twosphere.is_euclidean
@@ -129,20 +138,22 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
         return isinstance(api.metric_of(self), EuclideanMetric)
 
-    def check_data(self, data: Mapping[str, Any], /) -> None:
-        # Check that the keys of data match kind.components
+    def check_data(self, data: CsDict, /) -> None:
+        # Check that the keys of data match chart.components
         if set(data.keys()) != set(self.components):
             msg = (
-                "Data keys do not match kind components: "
+                "Data keys do not match chart components: "
                 f"{set(data.keys())} != {set(self.components)}"
             )
             raise ValueError(msg)
 
-        # Check that the dimensions match kind.coord_dimensions
-        for v, d in zip(data.values(), self.coord_dimensions, strict=True):
-            if d is not None and u.dimension_of(v) != d:
-                msg = "Data dimensions do not match"
-                raise ValueError(msg)
+        # Allowing for data to be a Array-dict
+        # Check that the dimensions match chart.coord_dimensions
+        if any(map(is_any_quantity, data.values())):
+            for v, d in zip(data.values(), self.coord_dimensions, strict=True):
+                if d is not None and u.dimension_of(v) != d:
+                    msg = "Data dimensions do not match"
+                    raise ValueError(msg)
 
     # ===============================================================
     # Wadler-Lindig API
@@ -167,20 +178,27 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")))
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            StaticQuantity(i64[](numpy), unit='km')
+            Delta=StaticQuantity(i64[](numpy), unit='km')
         )
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")),
         ... short_arrays=False)
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            StaticQuantity(array(20), unit='km')
+            Delta=StaticQuantity(array(20), unit='km')
         )
 
         """
+        kw.setdefault("short_arrays", "compact")
+        kw.setdefault("use_short_names", True)
+        kw.setdefault("named_units", False)
+
         if include_params:
             cls_name = wl.bracketed(
                 begin=wl.TextDoc(f"{self.__class__.__name__}["),
-                docs=[wl.pdoc(self.components), wl.pdoc(self.coord_dimensions)],
+                docs=[
+                    wl.pdoc(self.components, **kw),
+                    wl.pdoc(self.coord_dimensions, **kw),
+                ],
                 sep=wl.comma,
                 end=wl.TextDoc("]("),
                 indent=2,
@@ -405,7 +423,7 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
 MSG_COMPONENT_KEY_COLLISION = (
     "Component key collision in flat-key product chart "
     "{chart.__class__.__name__}. Factors have overlapping component "
-    "names: {flat_components + [c]}. Use factor_names for namespacing."
+    "names: {comps} + {c}. Use factor_names for namespacing."
 )
 
 
@@ -448,15 +466,16 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         # Flat keys (specialized products like SpaceTimeCT)
         seen: set[str] = set()
         flat_components: list[str] = []
-        for factor in self.factors:
-            for c in factor.components:
-                if c in seen:
-                    msg = MSG_COMPONENT_KEY_COLLISION.format(
-                        chart=self, flat_components=flat_components, c=c
-                    )
-                    raise ValueError(msg)
-                seen.add(c)
-                flat_components.append(c)
+        seen_add = seen.add
+        fc_append = flat_components.append
+        for c in chain.from_iterable(f.components for f in self.factors):
+            if c in seen:
+                msg = MSG_COMPONENT_KEY_COLLISION.format(
+                    chart=self, comps=flat_components, c=c
+                )
+                raise ValueError(msg)
+            seen_add(c)
+            fc_append(c)
         return tuple(flat_components)  # type: ignore[return-value]
 
     def split_components(self, p: CsDict, /) -> tuple[CDict, ...]:

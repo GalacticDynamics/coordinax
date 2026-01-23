@@ -8,7 +8,7 @@ vectors and coordinates.
 This module contains the main user-facing objects:
 
 - **Vector**: A geometric vector with data, chart, and role
-- **FiberPoint**: A collection of related vectors anchored at a common point
+- **PointedVector**: A collection of related vectors anchored at a common point
 - **Coordinate**: A vector attached to a reference frame
 
 ## Quick Start
@@ -21,14 +21,14 @@ import unxt as u
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 
 # Create a velocity vector
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
     chart=cx.charts.cart3d,
-    role=cx.roles.vel,
+    role=cx.roles.phys_vel,
 )
 
 # Convert to spherical coordinates
@@ -36,7 +36,7 @@ q_sph = q.vconvert(cx.charts.sph3d)
 v_sph = v.vconvert(cx.charts.sph3d, q)
 
 # Group related vectors
-space = cx.FiberPoint(base=q, speed=v)
+space = cx.PointedVector(base=q, speed=v)
 
 # Attach to a frame
 import coordinax.frames as cxf
@@ -53,14 +53,14 @@ The `Vector` class is the primary object for representing geometric vectors:
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.pos,
+    role=cx.roles.phys_disp,
 )
 
 # From array (auto-detect chart and role)
 q = cx.Vector.from_([1, 2, 3], "kpc")
 
 # From array with explicit chart and role
-v = cx.Vector.from_([10, 20, 30], "km/s", cx.charts.cart3d, cx.roles.vel)
+v = cx.Vector.from_([10, 20, 30], "km/s", cx.charts.cart3d, cx.roles.phys_vel)
 
 # Access components
 print(q["x"])  # Quantity
@@ -74,13 +74,13 @@ print(q.role)  # Role instance
 - `vconvert(to_chart, at=None)`: Convert to a different chart
 - `uconvert(units)`: Convert units of components
 
-## FiberPoint
+## PointedVector
 
-The `FiberPoint` class groups related vectors (position, velocity, acceleration)
+The `PointedVector` class groups related vectors (position, velocity, acceleration)
 at a common point:
 
 ```python
-space = cx.FiberPoint(base=q, speed=v, acceleration=a)
+space = cx.PointedVector(base=q, speed=v, acceleration=a)
 
 # Access vectors
 space.base  # position
@@ -117,7 +117,7 @@ v_sph = cx.vconvert(cx.charts.sph3d, v, q)
 
 ## as_pos Function
 
-Convert a Point role to a Pos role (interpret location as displacement from
+Convert a Point role to a PhysDisp role (interpret location as displacement from
 origin):
 
 ```python

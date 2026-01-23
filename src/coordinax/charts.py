@@ -66,7 +66,7 @@ between different representations while respecting their physical meaning.
 >>> import coordinax as cx
 >>> cx.vconvert(cxr.point, cxc.sph3d, cxc.cart3d, q) == q_sph
 True
->>> cx.vconvert(cxr.vel, cxc.sph3d, cxc.cart3d, v, q) == v_sph
+>>> cx.vconvert(cxr.phys_vel, cxc.sph3d, cxc.cart3d, v, q) == v_sph
 True
 
 """
@@ -81,6 +81,7 @@ __all__ = (
     "AbstractFlatCartesianProductChart",
     "CartesianProductChart",
     "cartesian_chart",
+    "guess_chart",
     # = 0D ======================================
     "Abstract0D",
     "Cart0D",
@@ -134,7 +135,7 @@ __all__ = (
 from .setup_package import RUNTIME_TYPECHECKER, install_import_hook
 
 with install_import_hook("coordinax.charts"):
-    from ._src.api import cartesian_chart
+    from ._src.api import cartesian_chart, guess_chart
     from ._src.charts import (
         DIMENSIONAL_FLAGS,
         Abstract0D,

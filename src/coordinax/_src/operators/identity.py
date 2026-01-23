@@ -5,10 +5,14 @@ __all__ = ("Identity",)
 from typing import Any, final
 
 import plum
+from jax.typing import ArrayLike
 
-import coordinax._src.roles as cxr
+import unxt as u
+
 from .base import AbstractOperator
 from .utils import _require_role_for_pdict
+from coordinax._src import charts as cxc, roles as cxr
+from coordinax._src.custom_types import CsDict
 
 
 @final
@@ -78,28 +82,6 @@ class Identity(AbstractOperator):
 
     """
 
-    @classmethod
-    def operate(cls, _: dict[str, Any], arg: Any, /, **__: Any) -> Any:
-        """Apply the :class:`coordinax.ops.Identity` operation.
-
-        This is the identity operation, which does nothing to the input.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax.ops as cxo
-
-        >>> q = u.Q([1, 2, 3], "km")
-        >>> cxo.operate(cxo.Identity, {}, q) is q
-        True
-
-        >>> vec = cxo.Cart3D.from_([1, 2, 3], "km")
-        >>> cxo.operate(cxo.Identity, {}, vec) is vec
-        True
-
-        """
-        return arg
-
     @property
     def inverse(self) -> "Identity":
         """The inverse of the operator is the operator itself.
@@ -147,13 +129,12 @@ def simplify(op: Identity, /, **__: Any) -> Identity:
 def apply_op(
     op: Identity,
     tau: Any,
-    x: dict,  # type: ignore[type-arg]
+    role: cxr.AbstractRole | None,
+    chart: cxc.AbstractChart,
+    x: CsDict | u.AbstractQuantity | ArrayLike,
     /,
-    *,
-    role: cxr.AbstractRole | None = None,
-    at: Any = None,
-) -> dict:  # type: ignore[type-arg]
+) -> CsDict | u.AbstractQuantity | ArrayLike:
     """Identity operator on CsDict - returns input unchanged."""
     _require_role_for_pdict(role)
-    del tau, role, at  # unused
+    del tau, role, chart  # unused
     return x

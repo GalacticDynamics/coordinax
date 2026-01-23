@@ -1,18 +1,27 @@
 """Utilities."""
 
-from is_annotated import isannotated
+__all__ = ("get_all_subclasses", "draw_if_strategy")
 
-__all__ = ("get_all_subclasses", "draw_if_strategy", "build_init_kwargs_strategy")
-
+import dataclasses
 import functools as ft
 import inspect
+import sys
 import warnings
 from dataclasses import dataclass
 
 import jaxtyping
 from collections.abc import Callable, Mapping
 from types import SimpleNamespace
-from typing import Any, Final, Generic, TypedDict, TypeVar, final
+from typing import (
+    Any,
+    Final,
+    Generic,
+    TypedDict,
+    TypeVar,
+    _GenericAlias,
+    final,
+    get_origin,
+)
 
 import beartype
 import equinox as eqx
@@ -20,17 +29,91 @@ import hypothesis.strategies as st
 import jax.numpy as jaxnp
 import plum
 from hypothesis.extra.array_api import make_strategies_namespace
+from is_annotated import isannotated
 
 import unxt as u
 import unxt_hypothesis as ust
 
-import coordinax as cx
+import coordinax.charts as cxc
 
 T = TypeVar("T")
 
 xps: SimpleNamespace = make_strategies_namespace(jaxnp)
 
 BeartypeValidator = beartype.vale.Is[lambda x: x].__class__
+
+
+def _canonicalize_coordinax_class(cls: type) -> type:
+    """Resolve a coordinax class to its canonical version.
+
+    In editable installs with uv-workspaces, the same class can exist as
+    multiple Python objects due to import path duplication. This function
+    returns the canonical version by looking it up via its __qualname__ in
+    the coordinax.charts module.
+
+    This is particularly needed for slotted dataclasses (equinox modules)
+    which seem more prone to this duplication.
+
+    Parameters
+    ----------
+    cls : type
+        The class to canonicalize.
+
+    Returns
+    -------
+    type
+        The canonical version of the class from coordinax.charts, or the
+        original class if it can't be resolved.
+
+    """
+    module = getattr(cls, "__module__", "")
+
+    # Only process coordinax classes
+    if not module.startswith("coordinax"):
+        return cls
+
+    # Check if it's a slotted dataclass (equinox Module or has __slots__)
+    # These are the ones that tend to get duplicated
+    is_slotted = (
+        hasattr(cls, "__slots__")
+        or (dataclasses.is_dataclass(cls) and getattr(cls, "__dataclass_fields__", {}))
+        or issubclass(cls, eqx.Module)
+    )
+
+    if not is_slotted:
+        return cls
+
+    # Try to resolve via coordinax.charts using __qualname__
+    qualname = cls.__qualname__
+
+    # Handle nested classes (e.g., "Outer.Inner")
+    parts = qualname.split(".")
+
+    # Try to find the class in cxc (coordinax.charts)
+    try:
+        resolved = cxc
+        for part in parts:
+            resolved = getattr(resolved, part)
+        if isinstance(resolved, type) and issubclass(resolved, cls.__bases__[0] if cls.__bases__ else object):
+            return resolved
+    except AttributeError:
+        pass
+
+    # If not in cxc, try the module directly from sys.modules
+    # Use the public module path if available
+    public_module = module.replace("._src.", ".")
+    if public_module in sys.modules:
+        try:
+            mod = sys.modules[public_module]
+            resolved = mod
+            for part in parts:
+                resolved = getattr(resolved, part)
+            if isinstance(resolved, type):
+                return resolved
+        except AttributeError:
+            pass
+
+    return cls
 
 
 @ft.cache
@@ -61,7 +144,9 @@ def get_all_subclasses(
         A tuple of all subclasses of the base class.
 
     """
-    subclasses = []
+    # Use a dict keyed by (module, qualname) to deduplicate classes that appear
+    # multiple times due to import path issues in editable installs.
+    seen: dict[tuple[str, str], type] = {}
 
     # Normalize filter to a tuple
     filter_tuple = filter if isinstance(filter, tuple) else (filter,)
@@ -79,16 +164,21 @@ def get_all_subclasses(
                     or subclass.__name__.startswith("Abstract")
                 )
             ):
-                # Harden against multiple coordinax copies, which can happy in
-                # editable installs for uv-workspaces.
-                if hasattr(cx.charts.cart3d, subclass.__name__):
-                    subclass = getattr(cx.charts.cart3d, subclass.__name__)  # noqa: PLW2901
+                # Canonicalize the class to handle duplicates from editable
+                # installs in uv-workspaces.
+                canonical = _canonicalize_coordinax_class(subclass)
 
-                subclasses.append(subclass)
+                # Deduplicate by (module, qualname) - only keep first seen
+                key = (canonical.__module__, canonical.__qualname__)
+                if key not in seen:
+                    seen[key] = canonical
+
             # Always recurse to find deeper subclasses
             recurse(subclass)
 
     recurse(base_class)
+
+    subclasses = list(seen.values())
 
     if not subclasses:
         warnings.warn(
@@ -326,6 +416,23 @@ def wrap_if_not_inspectable(ann: T, /) -> T | Wrapper[T]:
     return ann
 
 
+# ===================================================================
+# Strategy generation for type annotations
+
+
+@ft.lru_cache(maxsize=256)
+def cached_strategy_for_annotation(ann_type: type | Wrapper[Any]) -> st.SearchStrategy:
+    """Cache strategy_for_annotation calls with empty metadata.
+
+    This is a performance optimization - strategy_for_annotation is expensive
+    and is often called with the same annotation types repeatedly.
+    """
+    return strategy_for_annotation(ann_type, meta=Metadata())
+
+
+# -----------------------------------------------
+
+
 @plum.dispatch
 def strategy_for_annotation(ann: type, /, *, meta: Metadata) -> st.SearchStrategy:
     """Generate a strategy for a type annotation (base case).
@@ -333,6 +440,17 @@ def strategy_for_annotation(ann: type, /, *, meta: Metadata) -> st.SearchStrateg
     We ignore the Metadata here.
     """
     return st.from_type(ann)
+
+
+@plum.dispatch
+def strategy_for_annotation(
+    ann: _GenericAlias, /, *, meta: Metadata
+) -> st.SearchStrategy:
+    """Generate a strategy for a type annotation (base case).
+
+    We ignore the Metadata here.
+    """
+    return strategy_for_annotation(get_origin(ann), meta=meta)
 
 
 @plum.dispatch
@@ -427,54 +545,3 @@ def strategy_for_annotation(
         strategy = strategy.filter(validator)
 
     return strategy
-
-
-@ft.lru_cache(maxsize=256)
-def _cached_strategy_for_annotation(ann_type: type | Wrapper[Any]) -> st.SearchStrategy:
-    """Cache strategy_for_annotation calls with empty metadata.
-
-    This is a performance optimization - strategy_for_annotation is expensive
-    and is often called with the same annotation types repeatedly.
-    """
-    return strategy_for_annotation(ann_type, meta=Metadata())
-
-
-@plum.dispatch
-def build_init_kwargs_strategy(cls: type, *, dim: int | None) -> st.SearchStrategy:
-    """Build a strategy that generates valid __init__ kwargs for a class.
-
-    Parameters
-    ----------
-    cls : type
-        The class to generate kwargs for.
-    dim : int | None
-        Optional dimensionality constraint for the generated arguments.
-
-    Returns
-    -------
-    st.SearchStrategy[dict[str, Any]]
-        A strategy that generates dictionaries of keyword arguments
-        suitable for passing to cls.__init__().
-
-    """
-    required_params = get_init_params(cls)
-
-    if not required_params:
-        # No required parameters
-        return st.just({})
-
-    # Build a strategy for each parameter
-    strategies = {}
-    for k, param in required_params.items():
-        ann = param.annotation
-        if ann is inspect.Parameter.empty:
-            msg = f"Parameter '{k}' of {cls} has no type annotation"
-            raise ValueError(msg)
-
-        # Generate strategy for this parameter's annotation
-        # Use cached version for performance
-        wrapped_ann = wrap_if_not_inspectable(ann)
-        strategies[k] = _cached_strategy_for_annotation(wrapped_ann)
-
-    # Combine all parameter strategies into a single kwargs dict strategy
-    return st.fixed_dictionaries(strategies)

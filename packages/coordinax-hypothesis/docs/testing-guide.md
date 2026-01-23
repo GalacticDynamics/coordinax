@@ -217,6 +217,61 @@ def test_random_representation_type(rep_class):
     assert issubclass(rep_class, (cx.charts.Abstract1D, cx.charts.Abstract2D, cx.charts.Abstract3D))
 ```
 
+### Testing Chart Construction with `chart_init_kwargs`
+
+The `chart_init_kwargs` strategy generates valid initialization arguments for
+chart classes. This is useful when you want to test chart construction or need
+to create charts dynamically with varying parameters:
+
+```
+from hypothesis import given
+import coordinax.charts as cxc
+import coordinax_hypothesis as cxst
+
+
+# Generate valid kwargs for specific chart classes
+@given(kwargs=cxst.chart_init_kwargs(cxc.SpaceTimeCT))
+def test_spacetime_construction(kwargs):
+    """Test SpaceTimeCT construction with generated kwargs."""
+    # kwargs will contain 'spatial_chart' and 'c'
+    assert 'spatial_chart' in kwargs
+    chart = cxc.SpaceTimeCT(**kwargs)
+    assert isinstance(chart, cxc.SpaceTimeCT)
+    assert chart.ndim == kwargs['spatial_chart'].ndim + 1
+
+
+# Test embedded manifold construction
+@given(kwargs=cxst.chart_init_kwargs(cxc.EmbeddedManifold))
+def test_embedded_manifold_construction(kwargs):
+    """Test EmbeddedManifold construction with generated kwargs."""
+    assert 'intrinsic_chart' in kwargs
+    assert 'ambient_chart' in kwargs
+    assert 'params' in kwargs
+    chart = cxc.EmbeddedManifold(**kwargs)
+    assert isinstance(chart, cxc.EmbeddedManifold)
+
+
+# Combine with chart_classes for generic testing
+@given(chart_cls=st.sampled_from([cxc.Cart1D, cxc.Polar2D, cxc.Spherical3D]))
+def test_various_chart_construction(chart_cls):
+    """Test construction of various chart classes."""
+    kwargs = cxst.chart_init_kwargs(chart_cls).example()
+    chart = chart_cls(**kwargs)
+    assert isinstance(chart, chart_cls)
+
+
+# Test that kwargs can be used with different instances
+@given(kwargs=cxst.chart_init_kwargs(cxc.Cylindrical3D))
+def test_kwargs_reusable(kwargs):
+    """Test that generated kwargs can create multiple instances."""
+    chart1 = cxc.Cylindrical3D(**kwargs)
+    chart2 = cxc.Cylindrical3D(**kwargs)
+    # Both should be valid instances
+    assert isinstance(chart1, cxc.Cylindrical3D)
+    assert isinstance(chart2, cxc.Cylindrical3D)
+    assert chart1.ndim == chart2.ndim == 3
+```
+
 ## Testing Coordinate Transformations
 
 ### Testing with `charts_like`
@@ -260,7 +315,7 @@ acceleration → velocity → position:
 
 ```
 # Test that acceleration representations have valid time derivative chains
-@given(chain=cxst.chart_time_chain(cx.roles.Acc, cx.charts.cart3d))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
 def test_acceleration_chain(chain):
     """Test the full time derivative chain from acceleration."""
     acc_rep, vel_rep, pos_rep = chain
@@ -273,7 +328,7 @@ def test_acceleration_chain(chain):
 
 
 # Test velocity chains
-@given(chain=cxst.chart_time_chain(cx.roles.Vel, cx.charts.polar2d))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
 def test_velocity_chain(chain):
     """Test time derivative chain from velocity."""
     vel_rep, pos_rep = chain
@@ -284,7 +339,7 @@ def test_velocity_chain(chain):
 
 
 # Test that position representations return single-element chains
-@given(chain=cxst.chart_time_chain(cx.roles.Pos, cx.charts.sph3d))
+@given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
 def test_position_chain_is_singleton(chain):
     """Position representations have no time antiderivative."""
     assert len(chain) == 1
@@ -303,7 +358,7 @@ chain automatically matches the flags of the source vector:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=t=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 def test_position_vector_conversions(vec_and_chain):
@@ -311,7 +366,7 @@ def test_position_vector_conversions(vec_and_chain):
     vec, (target_chart,) = vec_and_chain
 
     # Verify source and target are compatible
-    assert isinstance(vec.role, cx.roles.Pos)
+    assert isinstance(vec.role, cx.roles.PhysDisp)
     assert isinstance(vec.chart, cx.charts.Abstract3D)
     assert isinstance(target_chart, cx.charts.Abstract3D)
     assert vec.chart.ndim == target_chart.ndim
@@ -325,9 +380,9 @@ def test_position_vector_conversions(vec_and_chain):
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=t=cx.charts.cart3d,
-        role=cx.roles.Vel,
+        role=cx.roles.PhysVel,
     ),
-    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.Pos),
+    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp),
 )
 def test_velocity_vector_conversion_chain(vec_and_chain, pos_vec):
     """Test velocity vectors can convert to velocity and position reps."""
@@ -349,10 +404,10 @@ def test_velocity_vector_conversion_chain(vec_and_chain, pos_vec):
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=t=cx.charts.cart3d,
-        role=cx.roles.Acc,
+        role=cx.roles.PhysAcc,
         shape=(5,),  # Test with batched vectors
     ),
-    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.Pos, shape=(5,)),
+    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp, shape=(5,)),
 )
 def test_batched_acceleration_conversions(vec_and_chain, pos_vec):
     """Test batched acceleration vector conversions."""
@@ -381,7 +436,7 @@ transformations:
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=t=cx.charts.cart3d,
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 def test_conversion_roundtrip(vec_and_chain):
@@ -403,7 +458,7 @@ def test_conversion_roundtrip(vec_and_chain):
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
         chart=t=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.Pos,
+        role=cx.roles.PhysDisp,
     )
 )
 def test_conversion_preserves_norm(vec_and_chain):

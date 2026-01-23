@@ -11,46 +11,11 @@ import unxt as u
 from unxt.quantity import AllowValue
 
 from coordinax._src import api, charts as cxc, embed as cxe, metrics as cxm
-from coordinax._src.custom_types import CsDict
+from coordinax._src.custom_types import CsDict, OptUSys
 from coordinax._src.utils import uconvert_to_rad
 
-
-@plum.dispatch
-def frame_cart(
-    chart: cxe.EmbeddedManifold,  # type: ignore[type-arg]
-    /,
-    *,
-    at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
-) -> Array:
-    """Return the orthonormal tangent frame in ambient Cartesian components.
-
-    Redispatches to (`intrinsic_chart`, `ambient_chart`, at=at, usys=usys).
-
-    """
-    return api.frame_cart(chart.intrinsic_chart, chart.ambient_chart, at=at, usys=usys)
-
-
-@plum.dispatch
-def frame_cart(
-    intrinsic_chart: cxc.TwoSphere,
-    ambient_chart: cxc.Cart3D,
-    /,
-    *,
-    at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
-) -> Array:
-    """Return the orthonormal tangent frame in ambient Cartesian components."""
-    theta = u.ustrip(AllowValue, uconvert_to_rad(at["theta"], usys))
-    phi = u.ustrip(AllowValue, uconvert_to_rad(at["phi"], usys))
-
-    ctheta = jnp.cos(theta)
-    cphi, sphi = jnp.cos(phi), jnp.sin(phi)
-    e_theta = jnp.array([ctheta * cphi, ctheta * sphi, -jnp.sin(theta)])
-    e_phi = jnp.array([-sphi, cphi, jnp.zeros_like(phi)])
-
-    return jnp.stack([e_theta, e_phi], axis=-1)
-
+#####################################################################
+# Orthonormal Frame in Cartesian Components
 
 @plum.dispatch
 def frame_cart(
@@ -58,7 +23,7 @@ def frame_cart(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> Array:
     del at, usys
     return jnp.eye(chart.ndim)
@@ -66,33 +31,24 @@ def frame_cart(
 
 @plum.dispatch
 def frame_cart(
-    chart: cxc.Cylindrical3D, /, *, at: CsDict, usys: u.AbstractUnitSystem | None = None
+    chart: cxc.Cylindrical3D, /, *, at: CsDict, usys: OptUSys = None
 ) -> Array:
     """Cylindrical orthonormal frame (e_rho, e_phi, e_z) in Cartesian components."""
     del chart
     phi = u.ustrip(AllowValue, uconvert_to_rad(at["phi"], usys))
-    c = jnp.cos(phi)
-    s = jnp.sin(phi)
+    s, c = jnp.sin(phi), jnp.cos(phi)
     return jnp.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
 
 
 @plum.dispatch
-def frame_cart(
-    chart: cxc.Spherical3D,
-    /,
-    *,
-    at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
-) -> Array:
+def frame_cart(chart: cxc.Spherical3D, /, *, at: CsDict, usys: OptUSys = None) -> Array:
     """Spherical (physics convention) orthonormal frame in Cartesian components."""
     del chart
     theta = u.ustrip(AllowValue, uconvert_to_rad(at["theta"], usys))
     phi = u.ustrip(AllowValue, uconvert_to_rad(at["phi"], usys))
 
-    st = jnp.sin(theta)
-    ct = jnp.cos(theta)
-    sp = jnp.sin(phi)
-    cp = jnp.cos(phi)
+    st, ct = jnp.sin(theta), jnp.cos(theta)
+    sp, cp = jnp.sin(phi), jnp.cos(phi)
 
     e_r = jnp.array([st * cp, st * sp, ct])
     e_th = jnp.array([ct * cp, ct * sp, -st])
@@ -102,11 +58,7 @@ def frame_cart(
 
 @plum.dispatch
 def frame_cart(
-    chart: cxc.LonLatSpherical3D,
-    /,
-    *,
-    at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    chart: cxc.LonLatSpherical3D, /, *, at: CsDict, usys: OptUSys = None
 ) -> Array:
     """Lon/Lat spherical orthonormal frame in Cartesian components."""
     del chart
@@ -119,11 +71,7 @@ def frame_cart(
 
 @plum.dispatch
 def frame_cart(
-    chart: cxc.MathSpherical3D,
-    /,
-    *,
-    at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    chart: cxc.MathSpherical3D, /, *, at: CsDict, usys: OptUSys = None
 ) -> Array:
     """MathSpherical3D orthonormal frame in Cartesian components."""
     del chart
@@ -133,11 +81,7 @@ def frame_cart(
 
 @plum.dispatch
 def frame_cart(
-    chart: cxc.LonCosLatSpherical3D,
-    /,
-    *,
-    at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    chart: cxc.LonCosLatSpherical3D, /, *, at: CsDict, usys: OptUSys = None
 ) -> Array:
     """Lon*cos(lat), lat, distance spherical orthonormal frame in Cartesian."""
     del chart
@@ -158,6 +102,50 @@ def frame_cart(
     sph_pos = {"r": dist, "theta": theta, "phi": lon}
     return api.frame_cart(cxc.sph3d, at=sph_pos, usys=usys)
 
+# ---------------------------------------------------------
+# Embedded Manifolds
+
+
+@plum.dispatch
+def frame_cart(
+    chart: cxe.EmbeddedManifold,  # type: ignore[type-arg]
+    /,
+    *,
+    at: CsDict,
+    usys: OptUSys = None,
+) -> Array:
+    """Return the orthonormal tangent frame in ambient Cartesian components.
+
+    Redispatches to (`intrinsic_chart`, `ambient_chart`, at=at, usys=usys).
+
+    """
+    return api.frame_cart(chart.intrinsic_chart, chart.ambient_chart, at=at, usys=usys)
+
+
+@plum.dispatch
+def frame_cart(
+    intrinsic_chart: cxc.TwoSphere,
+    ambient_chart: cxc.Cart3D,
+    /,
+    *,
+    at: CsDict,
+    usys: OptUSys = None,
+) -> Array:
+    """Return the orthonormal tangent frame in ambient Cartesian components."""
+    theta = u.ustrip(AllowValue, uconvert_to_rad(at["theta"], usys))
+    phi = u.ustrip(AllowValue, uconvert_to_rad(at["phi"], usys))
+
+    ctheta = jnp.cos(theta)
+    cphi, sphi = jnp.cos(phi), jnp.sin(phi)
+    e_theta = jnp.array([ctheta * cphi, ctheta * sphi, -jnp.sin(theta)])
+    e_phi = jnp.array([-sphi, cphi, jnp.zeros_like(phi)])
+
+    return jnp.stack([e_theta, e_phi], axis=-1)
+
+
+# ---------------------------------------------------------
+# Product Charts
+
 
 @plum.dispatch
 def frame_cart(
@@ -165,7 +153,7 @@ def frame_cart(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> Array:
     """Product chart orthonormal frame (block diagonal of factor frames).
 
@@ -226,7 +214,7 @@ def frame_cart(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> Array:
     """SpaceTimeCT orthonormal frame in Cartesian (ct,x,y,z) components."""
     sp = chart.spatial_chart
@@ -246,7 +234,7 @@ def frame_cart(
     /,
     *,
     at: CsDict,
-    usys: u.AbstractUnitSystem | None = None,
+    usys: OptUSys = None,
 ) -> Array:
     """SpaceTimeEuclidean orthonormal frame in Cartesian (ct,x,y,z) components."""
     sp = chart.spatial_chart
@@ -258,6 +246,10 @@ def frame_cart(
     z1 = jnp.zeros((1, n_sp), dtype=B_sp.dtype)
     z3 = jnp.zeros((n_sp, 1), dtype=B_sp.dtype)
     return jnp.block([[one, z1], [z3, B_sp]])
+
+
+#####################################################################
+# Pushforward and Pullback
 
 
 @plum.dispatch

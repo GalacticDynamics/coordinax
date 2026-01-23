@@ -9,6 +9,8 @@ __all__ = (
     "parallaxes",
     "can_point_transform",
     "chart_classes",
+    "chart_init_kwargs",
+    "build_init_kwargs_strategy",
     "charts",
     "charts_like",
     "chart_time_chain",
@@ -23,8 +25,10 @@ __all__ = (
 
 from ._src.angles import angles
 from ._src.charts import (
+    build_init_kwargs_strategy,
     can_point_transform,
     chart_classes,
+    chart_init_kwargs,
     chart_time_chain,
     charts,
     charts_like,
