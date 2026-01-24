@@ -6,19 +6,13 @@ import equinox as eqx
 
 import quaxed.numpy as jnp
 import unxt as u
+from unxt import AbstractQuantity as AbcQ
 
-from coordinax._src.custom_types import BatchableAngleQ
-
-_0d = u.Angle(0, "rad")
-_pid = u.Angle(180, "deg")
+_0d = u.Angle(jnp.array(0), "rad")
+_pid = u.Angle(jnp.array(180), "deg")
 
 
-def polar_range(
-    polar: BatchableAngleQ,
-    /,
-    _l: u.Angle = _0d,
-    _u: u.Angle = _pid,
-) -> BatchableAngleQ:
+def polar_range(polar: AbcQ, _l: AbcQ = _0d, _u: AbcQ = _pid, /) -> AbcQ:
     """Check that the polar angle is in the range.
 
     Examples

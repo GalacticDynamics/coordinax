@@ -50,15 +50,15 @@ def test_distance_property(dist):
 
 ### `chart_classes(filter=object, exclude_abstract=True)`
 
-Generate random representation class types from `coordinax`.
+Generate random chart class types from `coordinax`.
 
 **Parameters:**
 
-- `filter`: A class or tuple of classes to limit the representations to, or a
-  strategy generating such values. Use dimensional flags like
-  `cx.charts.Abstract1D`, `cx.charts.Abstract2D`, `cx.charts.Abstract3D`, or
-  more specific mixins like `cx.charts.AbstractSpherical3D`. Tuples apply all
-  filters simultaneously (default: `object` includes all)
+- `filter`: A class or tuple of classes to limit the charts to, or a strategy
+  generating such values. Use dimensional flags like `cx.charts.Abstract1D`,
+  `cx.charts.Abstract2D`, `cx.charts.Abstract3D`, or more specific mixins like
+  `cx.charts.AbstractSpherical3D`. Tuples apply all filters simultaneously
+  (default: `object` includes all)
 - `exclude_abstract`: Whether to exclude abstract classes (default: `True`)
 
 **Examples:**
@@ -69,31 +69,31 @@ import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
-# Any representation class
-@given(rep_class=cxst.chart_classes())
-def test_any_rep(rep_class):
-    assert issubclass(rep_class, cx.charts.AbstractChart)
+# Any chart class
+@given(chart_class=cxst.chart_classes())
+def test_any_chart(chart_class):
+    assert issubclass(chart_class, cx.charts.AbstractChart)
 
 
-# Only 3D representations
-@given(rep_class=cxst.chart_classes(filter=cx.charts.Abstract3D))
-def test_3d_chart(rep_class):
-    assert issubclass(rep_class, cx.charts.Abstract3D)
+# Only 3D charts
+@given(chart_class=cxst.chart_classes(filter=cx.charts.Abstract3D))
+def test_3d_chart(chart_class):
+    assert issubclass(chart_class, cx.charts.Abstract3D)
 
 
-# Only spherical 3D representations
+# Only spherical 3D charts
 @given(
-    rep_class=cxst.chart_classes(
+    chart_class=cxst.chart_classes(
         filter=(cx.charts.Abstract3D, cx.charts.AbstractSpherical3D)
     )
 )
-def test_spherical_3d_chart(rep_class):
-    assert issubclass(rep_class, (cx.charts.Abstract3D, cx.charts.AbstractSpherical3D))
+def test_spherical_3d_chart(chart_class):
+    assert issubclass(chart_class, (cx.charts.Abstract3D, cx.charts.AbstractSpherical3D))
 
 
 # Dynamically choose dimensionality
 @given(
-    rep_class=cxst.chart_classes(
+    chart_class=cxst.chart_classes(
         filter=st.sampled_from(
             [
                 cx.charts.Abstract1D,
@@ -103,9 +103,9 @@ def test_spherical_3d_chart(rep_class):
         )
     )
 )
-def test_dynamic(rep_class):
+def test_dynamic(chart_class):
     assert issubclass(
-        rep_class, (cx.charts.Abstract1D, cx.charts.Abstract2D, cx.charts.Abstract3D)
+        chart_class, (cx.charts.Abstract1D, cx.charts.Abstract2D, cx.charts.Abstract3D)
     )
 ```
 
@@ -247,16 +247,15 @@ def test_noisy(plx):
 
 ### `charts(filter=(), dimensionality=None)`
 
-Generate random representation instances from `coordinax`.
+Generate random chart instances from `coordinax`.
 
 **Parameters:**
 
-- `filter`: A class or tuple of classes to limit the representations to, or a
-  strategy generating such values (default: `()` applies no extra filter). For
-  example, `cx.charts.Abstract1D` for 1D representations, `cx.charts.Abstract2D`
-  for 2D, or `cx.charts.Abstract3D` for 3D. Tuples apply all filters
-  simultaneously.
-- `dimensionality`: Constraint on representation dimensionality. Can be:
+- `filter`: A class or tuple of classes to limit the charts to, or a strategy
+  generating such values (default: `()` applies no extra filter). For example,
+  `cx.charts.Abstract1D` for 1D charts, `cx.charts.Abstract2D` for 2D, or
+  `cx.charts.Abstract3D` for 3D. Tuples apply all filters simultaneously.
+- `dimensionality`: Constraint on chart dimensionality. Can be:
   - `None`: No constraint
   - An integer: Exact dimensionality match (e.g., `dimensionality=2`)
   - A strategy: Draw dimensionality from strategy (e.g.,
@@ -271,41 +270,41 @@ import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
-# Any representation instance
+# Any chart instance
 @given(chart=cxst.charts())
-def test_any_rep(rep):
-    assert isinstance(rep, cx.charts.AbstractChart)
+def test_any_chart(chart):
+    assert isinstance(chart, cx.charts.AbstractChart)
 
 
-# Only 3D representations
+# Only 3D charts
 @given(chart=cxst.charts(filter=cx.charts.Abstract3D))
-def test_3d_chart(rep):
-    assert isinstance(rep, cx.charts.Abstract3D)
+def test_3d_chart(chart):
+    assert isinstance(chart, cx.charts.Abstract3D)
 
 
-# Spherical 3D representations
+# Spherical 3D charts
 @given(chart=cxst.charts(filter=(cx.charts.Abstract3D, cx.charts.AbstractSpherical3D)))
-def test_spherical_3d(rep):
-    assert isinstance(rep, cx.charts.Abstract3D)
-    assert isinstance(rep, cx.charts.AbstractSpherical3D)
+def test_spherical_3d(chart):
+    assert isinstance(chart, cx.charts.Abstract3D)
+    assert isinstance(chart, cx.charts.AbstractSpherical3D)
 
 
 # Exact dimensionality
 @given(chart=cxst.charts(dimensionality=2))
-def test_exact_2d(rep):
-    assert rep.ndim == 2
+def test_exact_2d(chart):
+    assert chart.ndim == 2
 
 
 # Dimensionality using strategy
 @given(chart=cxst.charts(dimensionality=st.integers(min_value=1, max_value=2)))
-def test_strategy_dim(rep):
-    assert 1 <= rep.ndim <= 2
+def test_strategy_dim(chart):
+    assert 1 <= chart.ndim <= 2
 
 
-# Include 0-dimensional representations
+# Include 0-dimensional charts
 @given(chart=cxst.charts(dimensionality=None, exclude=()))
-def test_with_0d(rep):
-    assert isinstance(rep, cx.charts.AbstractChart)
+def test_with_0d(chart):
+    assert isinstance(chart, cx.charts.AbstractChart)
 
 
 # Dynamically choose dimensionality
@@ -314,25 +313,25 @@ def test_with_0d(rep):
         filter=st.sampled_from([cx.charts.Abstract1D, cx.charts.Abstract2D])
     )
 )
-def test_dynamic_dim(rep):
-    assert isinstance(rep, (cx.charts.Abstract1D, cx.charts.Abstract2D))
+def test_dynamic_dim(chart):
+    assert isinstance(chart, (cx.charts.Abstract1D, cx.charts.Abstract2D))
 ```
 
-### `charts_like(representation)`
+### `charts_like(chart)`
 
-Generate representations matching the flags of a template representation.
+Generate charts matching the flags of a template chart.
 
-This strategy inspects a template representation to determine its type flags
-(e.g., `Abstract1D`, `Abstract2D`, `Abstract3D`, `AbstractSpherical3D`, etc.)
-and dimensionality, then generates new representations matching those same
-criteria. This is useful for generating varied test cases while preserving key
-structural properties.
+This strategy inspects a template chart to determine its type flags (e.g.,
+`Abstract1D`, `Abstract2D`, `Abstract3D`, `AbstractSpherical3D`, etc.) and
+dimensionality, then generates new charts matching those same criteria. This is
+useful for generating varied test cases while preserving key structural
+properties.
 
 **Parameters:**
 
-- `representation`: A representation instance to use as a template, or a
-  strategy that generates one. The generated representations will match all the
-  flags and dimensionality of the template.
+- `chart`: A chart instance to use as a template, or a strategy that generates
+  one. The generated charts will match all the flags and dimensionality of the
+  template.
 
 **Examples:**
 
@@ -342,27 +341,27 @@ import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
-# Generate 3D representations like Cart3D
+# Generate 3D charts like Cart3D
 @given(chart=cxst.charts_like(cx.charts.cart3d))
-def test_3d_chart(rep):
-    assert isinstance(rep, cx.charts.Abstract3D)
-    assert rep.ndim == 3
+def test_3d_chart(chart):
+    assert isinstance(chart, cx.charts.Abstract3D)
+    assert chart.ndim == 3
     # Could be Cart3D, Spherical3D, Cylindrical3D, etc.
 
 
-# Generate 2D representations like Polar2D
+# Generate 2D charts like Polar2D
 @given(chart=cxst.charts_like(cx.charts.polar2d))
-def test_2d_chart(rep):
-    assert isinstance(rep, cx.charts.Abstract2D)
-    assert rep.ndim == 2
+def test_2d_chart(chart):
+    assert isinstance(chart, cx.charts.Abstract2D)
+    assert chart.ndim == 2
     # Could be Cart2D, Polar2D, TwoSphere, etc.
 
 
-# Generate 1D representations
+# Generate 1D charts
 @given(chart=cxst.charts_like(cx.charts.radial1d))
-def test_1d_chart(rep):
-    assert isinstance(rep, cx.charts.Abstract1D)
-    assert rep.ndim == 1
+def test_1d_chart(chart):
+    assert isinstance(chart, cx.charts.Abstract1D)
+    assert chart.ndim == 1
 
 
 # Use with a dynamic template
@@ -370,20 +369,20 @@ def test_1d_chart(rep):
     template=cxst.charts(filter=cx.charts.Abstract3D),
     chart=cxst.charts_like(cxst.charts(filter=cx.charts.Abstract3D)),
 )
-def test_matching_3d(template, rep):
-    assert rep.ndim == template.ndim
-    assert isinstance(rep, cx.charts.Abstract3D)
+def test_matching_3d(template, chart):
+    assert chart.ndim == template.ndim
+    assert isinstance(chart, cx.charts.Abstract3D)
 ```
 
-### `chart_time_chain(role, rep)`
+### `chart_time_chain(role, chart)`
 
-Generate a chain of representations following the time antiderivative pattern.
+Generate a chain of charts following the time antiderivative pattern.
 
-Given a role flag (position, velocity, or acceleration) and a representation,
-this strategy returns a tuple containing representations that match the flags of
-each time antiderivative up to and including a position representation. Each
-element in the chain is generated using `charts_like()` to match the flags of
-the corresponding time antiderivative.
+Given a role flag (position, velocity, or acceleration) and a chart, this
+strategy returns a tuple containing charts that match the flags of each time
+antiderivative up to and including a position chart. Each element in the chain
+is generated using `charts_like()` to match the flags of the corresponding time
+antiderivative.
 
 This is particularly useful for testing coordinate transformations across
 different time derivatives (e.g., converting from acceleration to velocity to
@@ -393,14 +392,14 @@ position).
 
 - `role`: The starting role flag (`cx.roles.PhysDisp`, `cx.roles.PhysVel`, or
   `cx.roles.PhysAcc`).
-- `rep`: The starting representation or a strategy that generates one.
+- `chart`: The starting chart or a strategy that generates one.
 
 **Returns:**
 
-- A tuple of representations following the time antiderivative chain:
-  - If input is position: `(pos_rep,)`
-  - If input is velocity: `(vel_rep, pos_rep)`
-  - If input is acceleration: `(acc_rep, vel_rep, pos_rep)`
+- A tuple of charts following the time antiderivative chain:
+  - If input is position: `(pos_chart,)`
+  - If input is velocity: `(vel_chart, pos_chart)`
+  - If input is acceleration: `(acc_chart, vel_chart, pos_chart)`
 
 **Examples:**
 
@@ -413,27 +412,75 @@ import coordinax_hypothesis as cxst
 # Generate a chain from acceleration
 @given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
 def test_acc_chain(chain):
-    acc_rep, vel_rep, pos_rep = chain
-    # All are 3D Cartesian-like representations
-    assert isinstance(acc_rep, cx.charts.Abstract3D)
-    assert isinstance(vel_rep, cx.charts.Abstract3D)
-    assert isinstance(pos_rep, cx.charts.Abstract3D)
+    acc_chart, vel_chart, pos_chart = chain
+    # All are 3D Cartesian-like charts
+    assert isinstance(acc_chart, cx.charts.Abstract3D)
+    assert isinstance(vel_chart, cx.charts.Abstract3D)
+    assert isinstance(pos_chart, cx.charts.Abstract3D)
 
 
 # Generate a chain from velocity
 @given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
 def test_vel_chain(chain):
-    vel_rep, pos_rep = chain
-    # All are 2D representations
-    assert isinstance(vel_rep, cx.charts.Abstract2D)
-    assert isinstance(pos_rep, cx.charts.Abstract2D)
+    vel_chart, pos_chart = chain
+    # All are 2D charts
+    assert isinstance(vel_chart, cx.charts.Abstract2D)
+    assert isinstance(pos_chart, cx.charts.Abstract2D)
 
 
 # Position just returns itself
 @given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
 def test_disp_chain(chain):
-    (pos_rep,) = chain
-    assert isinstance(pos_rep, cx.charts.Abstract3D)
+    (pos_chart,) = chain
+    assert isinstance(pos_chart, cx.charts.Abstract3D)
+```
+
+### `cdicts(chart, role=None, dtype=jnp.float32, shape=(), elements=None)`
+
+Generate valid CsDict objects matching chart components and role constraints.
+
+A CsDict is a mapping from component-name strings to quantity-like values. This
+strategy is useful for testing functions that accept component dictionaries.
+
+**Parameters:**
+
+- `chart`: Chart instance or strategy generating one, defining the component
+  schema. When a strategy is provided, the chart is drawn first, then the CsDict
+  is built to match its components.
+- `role`: Role instance or strategy generating one. If `None`, defaults to
+  `Point` role. Physical roles (`PhysDisp`, `PhysVel`, `PhysAcc`) enforce
+  uniform dimensions across all components.
+- `dtype`: Data type for array components (default: `jnp.float32`)
+- `shape`: Shape for array components. Can be int, tuple of ints, or strategy.
+  Default is scalar `()`
+- `elements`: Strategy for generating individual float values. If `None`, uses
+  finite floats.
+
+**Examples:**
+
+```python
+from hypothesis import given
+import coordinax as cx
+import coordinax_hypothesis as cxst
+
+
+# CsDict for specific chart with Point role
+@given(p=cxst.cdicts(cx.charts.cart3d, cx.roles.point))
+def test_cart3d_point(p):
+    assert set(p.keys()) == {"x", "y", "z"}
+
+
+# CsDict with PhysDisp role (uniform length dimension)
+@given(p=cxst.cdicts(cx.charts.cart3d, cx.roles.phys_disp))
+def test_disp_uniform_dim(p):
+    for v in p.values():
+        assert u.dimension_of(v) == u.dimension("length")
+
+
+# CsDict with chart as a strategy - draws chart first, then builds CsDict
+@given(p=cxst.cdicts(cxst.charts(filter=cx.charts.Abstract3D), cx.roles.point))
+def test_any_3d_chart(p):
+    assert len(p) == 3  # All 3D charts have 3 components
 ```
 
 ### `vectors_with_target_chart(chart=charts(), role=cx.roles.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
@@ -441,25 +488,25 @@ def test_disp_chain(chain):
 Generate a vector and a time-derivative chain with matching flags.
 
 This strategy is useful for testing conversion operations where you need a
-source vector and a full set of target representations (following the time
-antiderivative chain) that it can be converted to. The target chain
-automatically matches the flags of the source vector's representation.
+source vector and a full set of target charts (following the time antiderivative
+chain) that it can be converted to. The target chain automatically matches the
+flags of the source vector's chart.
 
 **Parameters:**
 
-- `rep`: A representation instance or strategy for the source vector (default:
-  uses `charts()` strategy)
-- `role`: The role flag for the source vector (`cx.roles.PhysDisp`, `cx.roles.PhysVel`,
-  `cx.roles.PhysAcc`)
+- `chart`: A chart instance or strategy for the source vector (default: uses
+  `charts()` strategy)
+- `role`: The role flag for the source vector (`cx.roles.PhysDisp`,
+  `cx.roles.PhysVel`, `cx.roles.PhysAcc`)
 - `dtype`: The data type for array components (default: `jnp.float32`)
 - `shape`: The shape for the vector components (default: scalar shape `()`)
 - `elements`: Strategy for generating element values
 
 **Returns:**
 
-- A tuple of `(vector, target_chain)` where `target_chain` is a tuple of
-  representations following the time antiderivative pattern, all matching the
-  flags of the source vector's representation.
+- A tuple of `(vector, target_chain)` where `target_chain` is a tuple of charts
+  following the time antiderivative pattern, all matching the flags of the
+  source vector's chart.
 
 **Examples:**
 
@@ -477,7 +524,7 @@ import coordinax_hypothesis as cxst
 )
 def test_position_conversion(vec_and_chain):
     vec, target_chain = vec_and_chain
-    # target_chain is just (pos_rep,) for position sources
+    # target_chain is just (pos_chart,) for position sources
     (target_chart,) = target_chain
     converted = vec.vconvert(target_chart)
     assert converted.chart == target_chart
@@ -492,7 +539,7 @@ def test_position_conversion(vec_and_chain):
 )
 def test_velocity_conversion_chain(vec_and_chain, pos_vec):
     vec, target_chain = vec_and_chain
-    # target_chain is (vel_rep, pos_rep)
+    # target_chain is (vel_chart, pos_chart)
     for target_chart in target_chain:
         converted = vec.vconvert(target_chart, pos_vec)
         assert converted.chart == target_chart
@@ -556,7 +603,7 @@ Generate random `coordinax.Vector` instances.
 
 **Parameters:**
 
-- `rep`: A representation instance or strategy to generate one (default: uses
+- `chart`: A chart instance or strategy to generate one (default: uses
   `charts()` strategy). This determines the coordinate chart and dimensionality
   of the vector.
 - `role`: The role flag for the vector (`cx.roles.PhysDisp`, `cx.roles.PhysVel`,
@@ -586,7 +633,7 @@ def test_any_vector(vec):
     assert isinstance(vec, cx.Vector)
 
 
-# Generate vectors with a specific representation
+# Generate vectors with a specific chart
 @given(vec=cxst.vectors(chart=cx.charts.cart3d))
 def test_cartesian_3d(vec):
     assert vec.chart == cx.charts.cart3d

@@ -8,7 +8,7 @@ import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
-def test_representations_strategy_performance():
+def test_charts_strategy_performance():
     """Test that charts() strategy completes in reasonable time.
 
     This test verifies that the caching optimizations are working.
@@ -48,7 +48,7 @@ def test_chart_classes_performance():
 
 
 @pytest.mark.filterwarnings("ignore::hypothesis.errors.NonInteractiveExampleWarning")
-def test_drawing_representations_is_fast():
+def test_drawing_charts_is_fast():
     """Test that we can draw multiple examples without excessive delay.
 
     This tests the end-to-end performance of the strategy.
@@ -62,5 +62,5 @@ def test_drawing_representations_is_fast():
     # Drawing 10 examples should complete in < 1 second
     assert elapsed < 1.0, f"Drawing 10 examples took {elapsed:.3f}s"
 
-    # Verify we got valid representations
-    assert all(isinstance(rep, cx.charts.AbstractChart) for rep in examples)
+    # Verify we got valid charts
+    assert all(isinstance(chart, cx.charts.AbstractChart) for chart in examples)

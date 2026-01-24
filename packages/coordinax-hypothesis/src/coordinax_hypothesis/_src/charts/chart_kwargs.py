@@ -14,7 +14,6 @@ import plum
 import unxt as u
 
 import coordinax.charts as cxc
-import coordinax.embeddings as cxe
 from coordinax_hypothesis._src.utils import (
     cached_strategy_for_annotation,
     draw_if_strategy,
@@ -27,8 +26,9 @@ from coordinax_hypothesis._src.utils import (
 def chart_init_kwargs(
     draw: st.DrawFn,
     /,
-    chart_class: type[cxc.AbstractChart] | st.SearchStrategy[type[cxc.AbstractChart]],
+    chart_class: type[cxc.AbstractChart] | st.SearchStrategy[type[cxc.AbstractChart]],  # type: ignore[type-arg]
     *,
+    ndim: (int | None | st.SearchStrategy[int | None]) = None,
     dimensionality: (int | None | st.SearchStrategy[int | None]) = None,
 ) -> dict[str, Any]:
     """Strategy to draw initialization kwargs for a chart class.
@@ -45,9 +45,11 @@ def chart_init_kwargs(
     chart_class
         The chart class to generate init kwargs for, or a strategy that
         generates one. Must be a subclass of `AbstractChart`.
+    ndim
+        Optional `chart.ndim` constraint (currently unused, reserved for future
+        functionality). By default None.
     dimensionality
-        Optional dimensionality constraint (currently unused, reserved for
-        future functionality). By default None.
+        Deprecated alias for `ndim`.
 
     Returns
     -------
@@ -85,8 +87,10 @@ def chart_init_kwargs(
 
     """
     chart_class = draw_if_strategy(draw, chart_class)
-    dimensionality = draw_if_strategy(draw, dimensionality)
-    kwargs_strategy = cached_build_init_kwargs_strategy(chart_class, dim=dimensionality)
+    if ndim is None and dimensionality is not None:
+        ndim = dimensionality
+    ndim = draw_if_strategy(draw, ndim)
+    kwargs_strategy = cached_build_init_kwargs_strategy(chart_class, dim=ndim)
     return draw(kwargs_strategy)
 
 
@@ -97,7 +101,9 @@ def chart_init_kwargs(
 # Strategies are immutable and deterministic, so this is safe
 @ft.lru_cache(maxsize=128)
 def cached_build_init_kwargs_strategy(
-    cls: type[cxc.AbstractChart], *, dim: int | None
+    cls: type[cxc.AbstractChart],  # type: ignore[type-arg]
+    *,
+    dim: int | None,
 ) -> st.SearchStrategy:
     """Return cached wrapper around build_init_kwargs_strategy."""
     return build_init_kwargs_strategy(cls, dim=dim)
@@ -113,7 +119,10 @@ def build_init_kwargs_strategy(cls: type, /, *, dim: int | None) -> st.SearchStr
 
 @plum.dispatch(precedence=-1)
 def build_init_kwargs_strategy(
-    cls: type[cxc.AbstractChart], /, *, dim: int | None
+    cls: type[cxc.AbstractChart],  # type: ignore[type-arg]
+    /,
+    *,
+    dim: int | None,
 ) -> st.SearchStrategy:
     """Build a strategy that generates valid __init__ kwargs for a class.
 
@@ -185,7 +194,7 @@ def build_init_kwargs_strategy(
 # Helper for generating product chart factors
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def _generate_product_factors(
     draw: st.DrawFn,
     /,
@@ -215,9 +224,9 @@ def _generate_product_factors(
 
     """
     # Determine target dimensionality
-    target_dim = draw(st.integers(min_value=2, max_value=6)) if ndim is None else ndim
+    target_dim = ndim if ndim is not None else draw(st.integers(2, 6))
 
-    # Determine number of factors (at least min_factors, at most min(target_dim, max_factors))
+    # Determine number of factors (at least min_factors, at most max_factors)
     n_factors = draw(
         st.integers(min_value=min_factors, max_value=min(target_dim, max_factors))
     )
@@ -245,9 +254,10 @@ def _generate_product_factors(
     for factor_dim in factor_dims:
         # Exclude abstract charts, product charts (to avoid recursion), and
         # charts with unresolvable TypeVars
-        chart = draw(
-            charts(filter=cxc.AbstractFixedComponentsChart, dimensionality=factor_dim)
-        )
+        # Late import to avoid circular import (core.py imports from this module)
+        from coordinax_hypothesis._src.charts.core import charts  # noqa: PLC0415
+
+        chart = draw(charts(filter=cxc.AbstractFixedComponentsChart, ndim=factor_dim))
         factors.append(chart)
 
     # Generate names for each factor

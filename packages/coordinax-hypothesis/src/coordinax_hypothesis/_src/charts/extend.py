@@ -8,13 +8,14 @@ from typing import Any, Final
 import hypothesis.strategies as st
 from hypothesis import assume
 
-import coordinax as cx
 import coordinax.charts as cxc
+import coordinax.roles as cxr
+from .core import charts
 from .utils import can_point_transform
 from coordinax_hypothesis._src.utils import draw_if_strategy
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def charts_like(
     draw: st.DrawFn,
     /,
@@ -43,20 +44,21 @@ def charts_like(
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.roles as cxr
     >>> import coordinax_hypothesis as cxst
     >>> from hypothesis import given
 
     >>> # Generate representations
-    >>> @given(chart=cxst.charts_like(r.cart3d))
+    >>> @given(chart=cxst.charts_like(cxc.cart3d))
     ... def test_3d(rep):
-    ...     assert isinstance(rep, r.Abstract3D)
+    ...     assert isinstance(rep, cxc.Abstract3D)
     ...     assert rep.ndim == 3
 
     >>> # Generate representations like a 2D representation
-    >>> @given(chart=cxst.charts_like(r.polar2d))
+    >>> @given(chart=cxst.charts_like(cxc.polar2d))
     ... def test_2d(rep):
-    ...     assert isinstance(rep, r.Abstract2D)
+    ...     assert isinstance(rep, cxc.Abstract2D)
     ...     assert rep.ndim == 2
 
     """
@@ -64,6 +66,7 @@ def charts_like(
     template = draw_if_strategy(draw, representation)
 
     # Extract flags by looking through the MRO for AbstractDimensionalFlag subclasses
+    flags: tuple[type[cxc.AbstractDimensionalFlag | cxc.AbstractChart[Any, Any]], ...]
     flags = tuple(
         base
         for base in type(template).mro()
@@ -82,7 +85,7 @@ def charts_like(
     exclude = tuple(
         ex for ex in (cxc.Abstract0D, cxc.TwoSphere) if not isinstance(template, ex)
     )
-    chart = draw(charts(filter=flags, dimensionality=template.ndim, exclude=exclude))
+    chart = draw(charts(filter=flags, ndim=template.ndim, exclude=exclude))
     assume(can_point_transform(chart, template))
     assume(can_point_transform(template, chart))
     return chart
@@ -96,10 +99,10 @@ MAX_TIME_CHAIN_ITER_MSG: Final = (
 )
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def chart_time_chain(
     draw: st.DrawFn,
-    role_cls: type[cx.roles.AbstractRole],
+    role: cxr.AbstractRole,
     chart: cxc.AbstractChart[Any, Any] | st.SearchStrategy[cxc.AbstractChart[Any, Any]],
     /,
 ) -> tuple[cxc.AbstractChart[Any, Any], ...]:
@@ -116,9 +119,10 @@ def chart_time_chain(
     draw
         The draw function used by the hypothesis composite strategy.
         Automatically provided by hypothesis.
-    role_cls
-        The role flag for the starting representation (e.g., `cx.roles.PhysDisp`,
-        `cx.roles.PhysVel`, or `cx.roles.PhysAcc`).
+    role
+        The role flag for the starting representation (e.g.,
+        `coordinax.roles.PhysDisp`, `coordinax.roles.PhysVel`, or
+        `coordinax.roles.PhysAcc`).
     chart
         The starting chart or a strategy that generates one.
 
@@ -128,36 +132,44 @@ def chart_time_chain(
         A tuple of representations matching the time antiderivative chain.
         Each representation matches the flags of the corresponding time
         antiderivative but may be a different instance.
-        - If input is position: (pos_rep,)
-        - If input is velocity: (vel_rep, pos_rep)
-        - If input is acceleration: (acc_rep, vel_rep, pos_rep)
+        - If input is position: (Point,)
+        - If input is velocity: (PhysVel, Point)
+        - If input is acceleration: (PhysAcc, PhysVel, Point)
 
     Examples
     --------
-    >>> import coordinax as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.roles as cxr
     >>> import coordinax_hypothesis as cxst
 
-    >>> # Given an acceleration, get (acc, vel, pos) chain
-    >>> @given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cxc.cart3d))
+    >>> # Given an acceleration, get (acc, vel, point) chain
+    >>> @given(chain=cxst.chart_time_chain(cxr.PhysAcc, cxc.cart3d))
     ... def test_chain(chain):
-    ...     acc_rep, vel_rep, pos_rep = chain
-    ...     assert isinstance(acc_rep, cxc.AbstractChart)
-    ...     assert isinstance(vel_rep, cxc.AbstractChart)
-    ...     assert isinstance(pos_rep, cxc.AbstractChart)
+    ...     PhysAcc, PhysVel, Point = chain
+    ...     assert isinstance(PhysAcc, cxc.AbstractChart)
+    ...     assert isinstance(PhysVel, cxc.AbstractChart)
+    ...     assert isinstance(Point, cxc.AbstractChart)
 
     """
+    if not isinstance(role, cxr.AbstractPhysRole):
+        msg = (
+            "chart_time_chain only supports physical tangent roles "
+            "(PhysDisp, PhysVel, PhysAcc)."
+        )
+        raise TypeError(msg)
+
     # Draw the starting representation if it's a strategy
     start_chart = draw_if_strategy(draw, chart)
 
     # Build the chain by following time_antiderivative until we reach position
     chain = [start_chart]
-    current_role = role_cls()
+    current_role: cxc.AbstractRole = role
 
     # Keep getting time antiderivatives until we reach a position representation
     # Safety: limit iterations to prevent infinite loops (no representation
     # should have more than a few time antiderivatives)
     i = 0
-    while not isinstance(current_role, cx.roles.PhysDisp):
+    while not isinstance(current_role, cxr.Point):
         i += 1
         if i > MAX_TIME_CHAIN_ITERS:
             raise RuntimeError(MAX_TIME_CHAIN_ITER_MSG)
@@ -168,5 +180,9 @@ def chart_time_chain(
         # Store and move to next role
         chain.append(current)
         current_role = current_role.antiderivative()
+
+        # Safety: if we reach PhysDisp, next is Point
+        if isinstance(current_role, cxr.PhysDisp):
+            current_role = cxr.point
 
     return tuple(chain)

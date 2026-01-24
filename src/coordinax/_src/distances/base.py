@@ -8,7 +8,7 @@ from plum import add_promotion_rule
 import unxt as u
 
 
-class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
+class AbstractDistance(u.AbstractQuantity):
     """Distance quantities."""
 
     @property
@@ -17,17 +17,15 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from coordinax.distances import Distance
-        >>> d = Distance(10, "km")
+        >>> import coordinax.distances as cxd
+        >>> d = cxd.Distance(10, "km")
         >>> d.distance is d
         True
 
-        >>> from coordinax.distances import DistanceModulus
-        >>> DistanceModulus(10, "mag").distance
+        >>> cxd.DistanceModulus(10, "mag").distance
         Distance(Array(1000., dtype=float64, ...), unit='pc')
 
-        >>> from coordinax.distances import Parallax
-        >>> p = Parallax(1, "mas")
+        >>> p = cxd.Parallax(1, "mas")
         >>> p.distance.to("kpc")
         Distance(Array(1., dtype=float64, ...), unit='kpc')
 

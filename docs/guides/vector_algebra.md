@@ -24,12 +24,12 @@ displacement can be added to a point** to yield a new point.
 **This is the most important concept**: positions and displacements transform
 differently under coordinate changes.
 
-| Role           | Geometric Object              | Transformation Rule                            | Function                     | Base Point? |
-| -------------- | ----------------------------- | ---------------------------------------------- | ---------------------------- | ----------- |
-| `Point`        | Point $p \in M$               | Position transform: $p_S = f_{R \to S}(p_R)$   | `point_transform`            | No          |
-| `PhysDisp`     | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
-| `PhysVel`      | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
-| `PhysAcc`      | Physical vector $a \in T_p M$ | Tangent transform: $a_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
+| Role       | Geometric Object              | Transformation Rule                            | Function                     | Base Point? |
+| ---------- | ----------------------------- | ---------------------------------------------- | ---------------------------- | ----------- |
+| `Point`    | Point $p \in M$               | Position transform: $p_S = f_{R \to S}(p_R)$   | `point_transform`            | No          |
+| `PhysDisp` | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
+| `PhysVel`  | Physical vector $v \in T_p M$ | Tangent transform: $v_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
+| `PhysAcc`  | Physical vector $a \in T_p M$ | Tangent transform: $a_S = B_S(p)^T B_R(p) v_R$ | `physical_tangent_transform` | Sometimes\* |
 
 \*Base point required for:
 
@@ -80,8 +80,8 @@ through two separate functions:
 
 ### Physical Components: Uniform Units
 
-**CRITICAL**: PhysDisp, PhysVel, and PhysAcc store **physical vector components in
-an orthonormal frame**, NOT coordinate increments. All components must have
+**CRITICAL**: PhysDisp, PhysVel, and PhysAcc store **physical vector components
+in an orthonormal frame**, NOT coordinate increments. All components must have
 uniform physical dimension.
 
 In cylindrical coordinates (ρ, φ, z):
@@ -290,8 +290,8 @@ For non-Euclidean representations, use `Vector.add(other, at=base_point)`:
 
 ## Velocity and Acceleration
 
-Velocity (`PhysVel`) and acceleration (`PhysAcc`) vectors represent time derivatives and
-follow standard vector addition rules (same role + same role):
+Velocity (`PhysVel`) and acceleration (`PhysAcc`) vectors represent time
+derivatives and follow standard vector addition rules (same role + same role):
 
 ```
 import coordinax as cx
@@ -314,14 +314,14 @@ v_total = v1.add(v2)
 
 ## Summary
 
-| Operation                     | Result         | Allowed?                          |
-| ----------------------------- | -------------- | --------------------------------- |
-| `PhysDisp + PhysDisp`         | `PhysDisp`     | ✅                                |
-| `Point + PhysDisp`            | `PhysDisp`     | ✅                                |
-| `PhysDisp + Point`            | —              | ❌ Use `Point + PhysDisp`         |
-| `Point + Point`               | —              | ❌ Subtract to get `PhysDisp`     |
-| `PhysVel + PhysVel`           | `PhysVel`      | ✅                                |
-| `PhysAcc + PhysAcc`           | `PhysAcc`      | ✅                                |
+| Operation             | Result     | Allowed?                      |
+| --------------------- | ---------- | ----------------------------- |
+| `PhysDisp + PhysDisp` | `PhysDisp` | ✅                            |
+| `Point + PhysDisp`    | `PhysDisp` | ✅                            |
+| `PhysDisp + Point`    | —          | ❌ Use `Point + PhysDisp`     |
+| `Point + Point`       | —          | ❌ Subtract to get `PhysDisp` |
+| `PhysVel + PhysVel`   | `PhysVel`  | ✅                            |
+| `PhysAcc + PhysAcc`   | `PhysAcc`  | ✅                            |
 
 ---
 

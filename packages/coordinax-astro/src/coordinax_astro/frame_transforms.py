@@ -18,10 +18,10 @@ from coordinax._src.api import simplify
 from coordinax._src.distances import Distance
 from coordinax._src.operators import Boost, Identity, Pipe, Rotate, Translate
 
-ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]
+ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]  # type: ignore[type-arg]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
-LengthVector: TypeAlias = Shaped[u.Q["length"], "3"] | Shaped[Distance, "3"]
-VelocityVector: TypeAlias = Shaped[u.Q["speed"], "3"]
+LengthVector: TypeAlias = Shaped[u.Q["length"], "3"] | Shaped[Distance, "3"]  # type: ignore[type-arg]
+VelocityVector: TypeAlias = Shaped[u.Q["speed"], "3"]  # type: ignore[type-arg]
 
 
 # ---------------------------------------------------------------
@@ -235,8 +235,9 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     """
     # rotation matrix to align x(ICRS) with the vector to the Galactic center
-    rot_lat = Rotate.from_euler("y", to_frame.galcen.lat)
-    rot_lon = Rotate.from_euler("z", -to_frame.galcen.lon)
+    galcen = to_frame.galcen
+    rot_lat = Rotate.from_euler("y", galcen["lat"])
+    rot_lon = Rotate.from_euler("z", -galcen["lon"])
     # extra roll away from the Galactic x-z plane
     roll = Rotate.from_euler("x", to_frame.roll - to_frame.roll0)
     # construct transformation matrix
@@ -244,14 +245,15 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     # Translation by Sun-Galactic center distance around x' and rotate about y'
     # to account for tilt due to Sun's height above the plane
-    z_d = u.ustrip("", to_frame.z_sun / to_frame.galcen.distance)  # [radian]
+    z_d = u.ustrip("", to_frame.z_sun / galcen["distance"])  # [radian]
     H = Rotate.from_euler("y", u.Q(jnp.asin(z_d), "rad"))
 
     # Post-rotation spatial offset to Galactic center.
-    offset_q = Translate(-to_frame.galcen.distance * jnp.asarray([1, 0, 0]))
+    offset_q = Translate.from_(-galcen["distance"] * jnp.asarray([1, 0, 0]))
 
     # Post-rotation velocity offset
-    offset_v = Boost(to_frame.galcen_v_sun)
+    galcen_v_sun = to_frame.galcen_v_sun
+    offset_v = Boost(galcen_v_sun.data, chart=galcen_v_sun.chart)
 
     # Total Operator
     return R | offset_q | H | offset_v

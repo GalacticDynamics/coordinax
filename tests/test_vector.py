@@ -8,9 +8,9 @@ import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax as cx
-import coordinax_hypothesis as cxst
-import coordinax.roles as cxr
 import coordinax.charts as cxc
+import coordinax.roles as cxr
+import coordinax_hypothesis as cxst
 
 
 @given(
@@ -279,14 +279,14 @@ class TestAsDisplacement:
         with pytest.raises(TypeError, match="Cannot convert vector with role"):
             cx.as_pos(vel)
 
-    def test_as_pos_with_rep_parameter(self):
-        """Test as_pos with target representation conversion."""
+    def test_as_pos_with_chart_parameter(self):
+        """Test as_pos with target chart conversion."""
         # Create a position in Cartesian
-        pos = cx.Vector.from_([1, 0, 0], "m")
+        point = cx.Vector.from_([1, 0, 0], "m")
         origin = cx.Vector.from_([0, 0, 0], "m")
 
-        # Request displacement in spherical representation
-        disp_sph = cx.as_pos(pos, origin, chart=cxc.sph3d, at=pos)
+        # Request displacement in spherical chart
+        disp_sph = cx.as_pos(point, origin, chart=cxc.sph3d, at=point)
 
         # Should be Displacement role in spherical rep
         assert isinstance(disp_sph.role, cxr.PhysDisp)
@@ -294,7 +294,7 @@ class TestAsDisplacement:
 
         # The displacement should still represent the same physical vector
         # Convert back to Cartesian to verify (using positional from_pos)
-        disp_cart = disp_sph.vconvert(cxc.cart3d, pos)
+        disp_cart = disp_sph.vconvert(cxc.cart3d, point)
         assert jnp.allclose(u.ustrip("m", disp_cart["x"]), 1.0)
         assert jnp.allclose(u.ustrip("m", disp_cart["y"]), 0.0)
 
@@ -483,8 +483,8 @@ def test_disp_plus_displacement_with_coordinate_conversion():
     assert jnp.allclose(u.ustrip("m", result["z"]), 0.0, atol=1e-10)
 
 
-def test_physdisp_plus_physdisp_different_reps_raises():
-    """Test that PhysDisp + PhysDisp in different reps requires base point.
+def test_physdisp_plus_physdisp_different_charts_raises():
+    """Test that PhysDisp + PhysDisp in different charts requires base point.
 
     Since displacements transform via tangent_transform (which needs a base point),
     adding displacements in different representations is ambiguous without

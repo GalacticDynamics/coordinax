@@ -107,8 +107,8 @@ class TestVectorSubtraction:
         with pytest.raises(TypeError):
             disp - point
 
-    def test_cross_representation_subtraction(self):
-        """Subtract points in different representations."""
+    def test_cross_chart_subtraction(self):
+        """Subtract points in different charts."""
         # Cartesian point at (1, 0, 0)
         p1_cart = cx.Vector.from_([1, 0, 0], "m")
 

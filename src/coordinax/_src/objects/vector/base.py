@@ -13,7 +13,7 @@ import jax
 import numpy as np
 import plum
 import quax_blocks
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 from zeroth import zeroth
 
 import quaxed.numpy as jnp
@@ -24,7 +24,8 @@ import coordinax.charts as cxc
 import coordinax.roles as cxr
 import coordinax_api as cxapi
 from coordinax._src import api
-from coordinax._src.custom_types import HasShape
+from coordinax._src.constants import ACCELERATION, LENGTH, SPEED
+from coordinax._src.custom_types import ComponentsKey, HasShape
 from coordinax._src.objects.base import AbstractVectorLike
 from coordinax._src.objects.mixins import AstropyRepresentationAPIMixin
 from coordinax._src.roles import DIM_TO_ROLE_MAP
@@ -34,10 +35,6 @@ ChartT = TypeVar(
 )
 RoleT = TypeVar("RoleT", bound=cxr.AbstractRole, default=cxr.AbstractRole)
 V = TypeVar("V", bound=HasShape, default=u.Q)
-
-LENGTH = u.dimension("length")
-SPEED = u.dimension("speed")
-ACCELERATION = u.dimension("acceleration")
 
 
 @final
@@ -64,21 +61,8 @@ class Vector(
     index) while keeping the **mathematics correct** and the numerical kernels
     JAX-friendly (operate on scalar leaves; rely on `jit`/`vmap`).
 
-    Parameters
-    ----------
-    data
-        Mapping from chart component name to scalar value. Each leaf may be a
-        `unxt.Quantity` (recommended) or an array-like. Components are expected
-        to be *scalar leaves*; batching happens via broadcasting of these leaves.
-    chart
-        A chart instance (e.g. `cxc.cart3d`, `cxc.sph3d`) that defines component
-        names and per-component physical dimensions.
-    role
-        A role flag instance (e.g. `cxr.point`, `cxr.phys_disp`, `cxr.phys_vel`,
-        `cxr.phys_acc`) that selects the correct transformation semantics.
+    Mathematical background:
 
-    Mathematical background
-    -----------------------
     Let $M$ be a manifold and let $(U,\varphi)$ be a chart with
     coordinate map $\varphi: U \to \mathbb{R}^n$. Coordinax distinguishes:
 
@@ -110,27 +94,18 @@ class Vector(
         **Vel** (physical velocity), and **PhysAcc** (physical acceleration). The
         difference is their units: length, length/time, and length/time^2.
 
-    Notes on units and array shape
-    ------------------------------
-    - A `Vector` does **not** require that all components share one unit. This
-      is essential for charts like spherical coordinates where point components
-      naturally mix dimensions.
-    - For physical tangent roles (``pos/vel/acc``), components are expected to
-      be mutually compatible with a single physical dimension (length, speed,
-      acceleration), even if expressed in different *units* (e.g. m vs km).
-    - Batching is represented by broadcasting the component leaves; the
-      conceptual shape of the `Vector` is `broadcast_shapes(*(v.shape for v in
-      data.values()))`.
-
-    Core operations
-    ---------------
-    - Indexing: ``vec["x"]`` returns a component leaf.
-    - Conversion: ``vec.vconvert(target_chart, at=...)`` converts the vector to
-      `target_chart`. For ``Point`` this is a coordinate transform. For physical
-      tangent roles it is a tangent basis transform evaluated at ``at``.
-    - Addition: use ``vec.add(other, at=...)`` for role-aware addition. In
-      Euclidean charts, ``Point + Pos -> Point`` and ``Pos + Pos -> Pos`` are
-      supported; ``Point + Point`` is not.
+    Parameters
+    ----------
+    data
+        Mapping from chart component name to scalar value. Each leaf may be a
+        `unxt.Quantity` (recommended) or an array-like. Components are expected
+        to be *scalar leaves*; batching happens via broadcasting of these leaves.
+    chart
+        A chart instance (e.g. `cxc.cart3d`, `cxc.sph3d`) that defines component
+        names and per-component physical dimensions.
+    role
+        A role flag instance (e.g. `cxr.point`, `cxr.phys_disp`, `cxr.phys_vel`,
+        `cxr.phys_acc`) that selects the correct transformation semantics.
 
     Examples
     --------
@@ -150,26 +125,54 @@ class Vector(
     >>> d = cx.Vector({"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")},
     ...               chart=cxc.cart3d, role=cxr.phys_disp)
     >>> p = cart  # base point (must have Point role)
-    >>> d_sph = d.vconvert(cxc.sph3d, at=p)
+    >>> d_sph = d.vconvert(cxc.sph3d, p)
     >>> d_sph.role
-    <...PhysDisp object at ...>
+    PhysDisp()
 
     Add a displacement to a point (Euclidean case):
 
     >>> p2 = cart.add(d)
     >>> p2.role
-    <...Point object at ...>
+    Point()
 
-    Convenience construction via multiple-dispatch:
+    Construct a velocity vector:
 
-    >>> v = cx.Vector.from_([1, 2, 3], "m/s")  # infers cart3d and PhysVel role
+    >>> v = cx.Vector(
+    ...     {"x": u.Q(1, "m/s"), "y": u.Q(2, "m/s"), "z": u.Q(3, "m/s")},
+    ...     chart=cxc.cart3d,
+    ...     role=cxr.phys_vel,
+    ... )
     >>> v.role
-    <...PhysVel object at ...>
+    PhysVel()
+
+    Notes
+    -----
+    Notes on units and array shape:
+
+    - A `Vector` does **not** require that all components share one unit. This
+      is essential for charts like spherical coordinates where point components
+      naturally mix dimensions.
+    - For physical tangent roles (``pos/vel/acc``), components are expected to
+      be mutually compatible with a single physical dimension (length, speed,
+      acceleration), even if expressed in different *units* (e.g. m vs km).
+    - Batching is represented by broadcasting the component leaves; the
+      conceptual shape of the `Vector` is `broadcast_shapes(*(v.shape for v in
+      data.values()))`.
+
+    Core operations:
+
+    - Indexing: ``vec["x"]`` returns a component leaf.
+    - Conversion: ``vec.vconvert(target_chart, at=...)`` converts the vector to
+      `target_chart`. For ``Point`` this is a coordinate transform. For physical
+      tangent roles it is a tangent basis transform evaluated at ``at``.
+    - Addition: use ``vec.add(other, at=...)`` for role-aware addition. In
+      Euclidean charts, ``Point + Pos -> Point`` and ``Pos + Pos -> Pos`` are
+      supported; ``Point + Point`` is not.
 
     """
 
-    data: dict[str, V]
-    """The data for each """
+    data: dict[ComponentsKey, V]
+    """The data for each component."""
 
     chart: ChartT = eqx.field(static=True)
     """The chart of the vector, e.g. `cxc.cart3d`."""
@@ -210,6 +213,7 @@ class Vector(
         # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
         kwargs.setdefault("use_short_name", True)
         kwargs.setdefault("named_unit", False)
+        kwargs.setdefault("include_params", False)
 
         if not vector_form:
             docs = wl.named_objs(
@@ -326,11 +330,6 @@ class Vector(
             might be used, depending on the dispatched method.
 
         """
-        # Support 'at=' keyword for tangent-like roles by forwarding it
-        # positionally to the underlying multiple-dispatch function.
-        at = kwargs.pop("at", None)
-        if at is not None:
-            return cxapi.vconvert(self.role, target, self, at, *args, **kwargs)
         return cxapi.vconvert(self.role, target, self, *args, **kwargs)
 
     # ===============================================================
@@ -424,7 +423,7 @@ class Vector(
         ... )
         >>> result = d1.add(d2)
         >>> result.role
-        <...PhysDisp object at ...>
+        PhysDisp()
 
         Adding a Pos to a Point:
 
@@ -434,10 +433,13 @@ class Vector(
         ... )
         >>> result = point.add(d1)
         >>> result.role
-        <...Point object at ...>
+        Point()
 
         """
-        return add(self.role, other.role, self, other, at=at)
+        # Local import to avoid circular import with `register_quax`.
+        from .register_quax import add as _add  # noqa: PLC0415
+
+        return _add(self.role, other.role, self, other, at=at)
 
     def sub(self, other: "Vector", /, *, at: "Vector | None" = None) -> "Vector":
         r"""Subtract another vector with role-aware semantics.
@@ -502,7 +504,7 @@ class Vector(
         ... )
         >>> result = p1.sub(p2)
         >>> result.role
-        <...PhysDisp object at ...>
+        PhysDisp()
 
         Subtracting a Pos from a Point:
 
@@ -512,10 +514,13 @@ class Vector(
         ... )
         >>> result = p1.sub(disp)
         >>> result.role
-        <...Point object at ...>
+        Point()
 
         """
-        return sub(self.role, other.role, self, other, at=at)
+        # Local import to avoid circular import with `register_quax`.
+        from .register_quax import sub as _sub  # noqa: PLC0415
+
+        return _sub(self.role, other.role, self, other, at=at)
 
     # ===============================================================
     # Misc
@@ -580,7 +585,7 @@ def _validate_dimension_for_role(
 
 
 @Vector.from_.dispatch
-def from_(cls: type[Vector], obj: Vector, /) -> Vector:
+def from_(cls: type[Vector], obj: Vector, /) -> Any:
     """Construct a vector from another vector.
 
     Examples
@@ -603,7 +608,7 @@ def from_(
     chart: cxc.AbstractChart,  # type: ignore[type-arg]
     role: cxr.AbstractRole,
     /,
-) -> Vector:
+) -> Any:
     """Construct a vector from a mapping.
 
     Examples
@@ -621,7 +626,7 @@ def from_(
     >>> xs = {"x": u.Q([1, 2], "m"), "y": u.Q([3, 4], "m"), "z": u.Q([5, 6], "m")}
     >>> vec = cx.Vector.from_(xs, cxc.cart3d, cxr.phys_disp)
     >>> print(vec)
-    <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+    <Vector: chart=Cart3D, role=PhysDisp (x, y, z) [m]
         [[1 3 5]
          [2 4 6]]>
 
@@ -630,7 +635,7 @@ def from_(
 
 
 @Vector.from_.dispatch
-def from_(cls: type[Vector], obj: Mapping, chart: cxc.AbstractChart, /) -> Vector:  # type: ignore[type-arg]
+def from_(cls: type[Vector], obj: Mapping, chart: cxc.AbstractChart, /) -> Any:  # type: ignore[type-arg]
     """Construct a vector from a mapping.
 
     Examples
@@ -661,7 +666,7 @@ def from_(cls: type[Vector], obj: Mapping, chart: cxc.AbstractChart, /) -> Vecto
 
 
 @Vector.from_.dispatch
-def from_(cls: type[Vector], obj: Mapping, /) -> Vector:  # type: ignore[type-arg]
+def from_(cls: type[Vector], obj: Mapping, /) -> Any:  # type: ignore[type-arg]
     """Construct a vector from just a mapping.
 
     Note that this is a pretty limited constructor and can only match
@@ -699,7 +704,7 @@ def from_(
     chart: cxc.AbstractChart,  # type: ignore[type-arg]
     role: cxr.AbstractRole,
     /,
-) -> Vector:
+) -> Any:
     """Construct a vector from a quantity, chart, and role.
 
     Validates that the physical dimension of obj is compatible with the role.
@@ -744,7 +749,7 @@ def from_(
     obj: u.AbstractQuantity,
     chart: cxc.AbstractChart,  # type: ignore[type-arg]
     /,
-) -> Vector:
+) -> Any:
     """Construct a vector from a quantity and chart, inferring role from dimension.
 
     The role is inferred from the physical dimension:
@@ -774,7 +779,7 @@ def from_(
 
 
 @Vector.from_.dispatch
-def from_(cls: type[Vector], obj: u.AbstractQuantity, /) -> Vector:
+def from_(cls: type[Vector], obj: u.AbstractQuantity, /) -> Any:
     """Construct a Cartesian vector from a quantity, inferring role from dimension.
 
     The role is inferred from the physical dimension:
@@ -792,19 +797,19 @@ def from_(cls: type[Vector], obj: u.AbstractQuantity, /) -> Vector:
 
     >>> vec = cx.Vector.from_(u.Q([1, 2, 3], "m"))
     >>> print(vec.role)
-    <...Point object at ...>
+    Point()
 
     Velocity quantity → Velocity role:
 
     >>> vec = cx.Vector.from_(u.Q([1, 2, 3], "m/s"))
     >>> print(vec.role)
-    <...PhysVel object at ...>
+    PhysVel()
 
     To override role, use Vector.from_(q, chart, role):
 
     >>> vec = cx.Vector.from_(u.Q([1, 2, 3], "m/s"), cxc.cart3d, cxr.point)
     >>> print(vec.role)
-    <coordinax...roles.Point object at ...>
+    Point()
 
     """
     obj = jnp.atleast_1d(obj)
@@ -813,9 +818,7 @@ def from_(cls: type[Vector], obj: u.AbstractQuantity, /) -> Vector:
 
 
 @Vector.from_.dispatch
-def from_(
-    cls: type[Vector], obj: u.AbstractQuantity, role: cxr.AbstractRole, /
-) -> Vector:
+def from_(cls: type[Vector], obj: u.AbstractQuantity, role: cxr.AbstractRole, /) -> Any:
     """Construct a Cartesian vector from a quantity and an explicit role.
 
     The chart is inferred from the quantity's shape. The role must be compatible
@@ -849,13 +852,13 @@ def from_(
 
     >>> vec = cx.Vector.from_(u.Q([1, 2, 3], "m"), cxr.phys_disp)
     >>> print(vec.role)
-    <...PhysDisp object at ...>
+    PhysDisp()
 
     Construct a PhysVel from a velocity quantity:
 
     >>> vec = cx.Vector.from_(u.Q([1, 2, 3], "m/s"), cxr.phys_vel)
     >>> print(vec.role)
-    <...PhysVel object at ...>
+    PhysVel()
 
     Attempting to construct a Pos from a velocity quantity raises an error:
 
@@ -872,7 +875,7 @@ def from_(
 @Vector.from_.dispatch
 def from_(
     cls: type[Vector], obj: ArrayLike | list[Any], unit: u.AbstractUnit | str, /
-) -> Vector:
+) -> Any:
     """Construct a cartesian vector from an array and unit.
 
     The ``ArrayLike[Any, (*#batch, N), "..."]`` is expected to have the
@@ -902,7 +905,7 @@ def from_(
 @Vector.from_.dispatch
 def from_(
     cls: type[Vector], obj: ArrayLike | list[Any], unit: u.AbstractUnit | str, /
-) -> Vector:
+) -> Any:
     """Construct a cartesian vector from an array and unit.
 
     The ``ArrayLike[Any, (*#batch, N), "..."]`` is expected to have the
@@ -936,7 +939,7 @@ def from_(
     unit: u.AbstractUnit | str,
     chart: cxc.AbstractChart,  # type: ignore[type-arg]
     /,
-) -> Vector:
+) -> Any:
     """Construct a cartesian vector from an array and unit."""
     return cls.from_(u.Q(obj, u.unit(unit)), chart)  # re-dispatch
 
@@ -949,6 +952,6 @@ def from_(
     chart: cxc.AbstractChart,  # type: ignore[type-arg]
     role: cxr.AbstractRole,
     /,
-) -> Vector:
+) -> Any:
     """Construct a cartesian vector from an array and unit."""
     return cls.from_(u.Q(obj, u.unit(unit)), chart, role)  # re-dispatch

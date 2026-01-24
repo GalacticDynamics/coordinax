@@ -1,16 +1,16 @@
 """Hypothesis strategies for Coordinax vectors."""
 
 __all__ = (
-    "bundles",
-    "fiber_points",
-    "physical_roles",
-    "point_role",
+    "pointedvectors",
     "roles",
+    "point_role",
+    "physical_roles",
+    "coord_roles",
     "vectors",
     "vectors_with_target_chart",
 )
 
-from typing import Any, TypeVar
+from typing import Any, Final, TypeVar
 
 import hypothesis.strategies as st
 import jax.numpy as jnp
@@ -19,12 +19,19 @@ from hypothesis.extra.array_api import make_strategies_namespace
 import unxt as u
 
 import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.roles as cxr
+from .cdict import cdicts
 from .charts import chart_time_chain, charts, charts_like
-from .pdict import pdicts
 from .utils import draw_if_strategy, get_all_subclasses
+from coordinax._src.constants import TIME
 
 Ks = TypeVar("Ks", bound=tuple[str, ...])
 Ds = TypeVar("Ds", bound=tuple[str | None, ...])
+
+ROLES: Final = get_all_subclasses(cxr.AbstractPhysRole, exclude_abstract=True)
+PHYS_ROLES: Final = tuple(r for r in ROLES if issubclass(r, cxr.AbstractPhysRole))
+COORD_ROLES: Final = tuple(r for r in ROLES if issubclass(r, cxr.AbstractCoordRole))
 
 # Create array API strategies namespace for JAX
 xps = make_strategies_namespace(jnp)
@@ -35,20 +42,20 @@ def _d_dt_dim(
 ) -> u.AbstractDimension | None:
     if dim is None:
         return None
-    return u.dimension(dim) / (u.dimension("time") ** order)
+    return u.dimension(dim) / (TIME**order)
 
 
 # ==============================================================================
 # Role strategies
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def roles(
     draw: st.DrawFn,
     *,
-    include: tuple[type[cx.roles.AbstractRole], ...] | None = None,
-    exclude: tuple[type[cx.roles.AbstractRole], ...] = (),
-) -> cx.roles.AbstractRole:
+    include: tuple[type[cxr.AbstractRole], ...] | None = None,
+    exclude: tuple[type[cxr.AbstractRole], ...] = (),
+) -> cxr.AbstractRole:
     """Generate random Coordinax role flags.
 
     Parameters
@@ -57,14 +64,9 @@ def roles(
         The draw function provided by Hypothesis.
     include
         If provided, only generate roles from this tuple. Otherwise, all roles
-        are considered (Point, PhysDisp, PhysVel, PhysAcc).
+        are considered (Point, PhysDisp, etc.).
     exclude
         Roles to exclude from generation. Default is empty (no exclusions).
-
-    Returns
-    -------
-    cx.roles.AbstractRole
-        A role flag instance (e.g., ``cx.roles.phys_disp``, ``cx.charts.displacement``).
 
     Examples
     --------
@@ -74,21 +76,15 @@ def roles(
 
     >>> @given(role=cxst.roles())
     ... def test_any_role(role):
-    ...     assert isinstance(role, cx.roles.AbstractRole)
+    ...     assert isinstance(role, cxr.AbstractRole)
 
-    >>> @given(role=cxst.roles(include=(cx.roles.PhysDisp, cx.roles.PhysDisp)))
+    >>> @given(role=cxst.roles(include=(cxr.PhysDisp, cxr.PhysDisp)))
     ... def test_position_like_roles(role):
-    ...     assert isinstance(role, (cx.roles.PhysDisp, cx.roles.PhysDisp))
+    ...     assert isinstance(role, (cxr.PhysDisp, cxr.PhysDisp))
 
     """
-    # TODO: dynamic discovery of all roles?
-    all_roles: tuple[type[cx.roles.AbstractRole], ...] = (
-        cx.roles.Point,
-        cx.roles.PhysDisp,
-        cx.roles.PhysVel,
-        cx.roles.PhysAcc,
-    )
-    candidates = all_roles if include is None else include
+    # Determine candidate roles
+    candidates = ROLES if include is None else include
 
     # Filter out excluded roles
     candidates = tuple(r for r in candidates if r not in exclude)
@@ -97,118 +93,112 @@ def roles(
         msg = "No roles left after exclusions"
         raise ValueError(msg)
 
+    # Sample one role class and instantiate it
     role_cls = draw(st.sampled_from(candidates))
     return role_cls()
 
 
-@st.composite  # type: ignore[untyped-decorator]
-def physical_roles(draw: st.DrawFn) -> cx.roles.AbstractRole:
-    """Generate physical tangent role flags (Pos, Vel, PhysAcc).
+@st.composite
+def point_role(draw: st.DrawFn) -> cxr.Point:
+    """Generate the Point role.
+
+    Point represents an affine point on the manifold (not a tangent vector).
+    This strategy always returns the Point role instance.
+
+    Examples
+    --------
+    >>> from hypothesis import given
+    >>> import coordinax.roles as cxr
+    >>> import coordinax_hypothesis as cxst
+
+    >>> @given(role=cxst.point_role())
+    ... def test_point_only(role):
+    ...     assert isinstance(role, cxr.Point)
+
+    """
+    # Return Point role (use draw with st.just for consistency with Hypothesis patterns)
+    return draw(st.just(cxr.point))
+
+
+@st.composite
+def physical_roles(draw: st.DrawFn) -> cxr.AbstractRole:
+    """Generate physical tangent role flags (PhysDisp, PhysVel, PhysAcc).
 
     These are roles representing physical tangent vectors that require uniform
     physical dimension across components.
 
-    Parameters
-    ----------
-    draw
-        The draw function provided by Hypothesis.
-
     Returns
     -------
-    cx.roles.AbstractRole
+    cxr.AbstractRole
         A physical tangent role instance: `coordinax.roles.phys_disp`,
         `coordinax.roles.phys_vel`, or `coordinax.roles.phys_acc`.
 
     Examples
     --------
     >>> from hypothesis import given
-    >>> import coordinax as cx
+    >>> import coordinax.roles as cxr
     >>> import coordinax_hypothesis as cxst
 
     >>> @given(role=cxst.physical_roles())
     ... def test_tangent_role(role):
     ...     # Only PhysDisp, Vel, PhysAcc (not Point)
-    ...     assert isinstance(role, (cx.roles.PhysDisp, cx.roles.PhysVel, cx.roles.PhysAcc))
+    ...     assert isinstance(role, cxr.AbstractPhysRole)
 
     """
-    # Discover non-abstract physical role classes dynamically
-    classes = get_all_subclasses(cx.roles.AbstractPhysicalRole, exclude_abstract=True)
-    role_cls = draw(st.sampled_from(tuple(classes)))
+    role_cls = draw(st.sampled_from(PHYS_ROLES))
     return role_cls()
 
 
-@st.composite  # type: ignore[untyped-decorator]
-def point_role(draw: st.DrawFn) -> cx.roles.AbstractRole:
-    """Generate the Point role.
-
-    Point represents an affine point on the manifold (not a tangent vector).
-    This strategy always returns the Point role instance.
-
-    Parameters
-    ----------
-    draw
-        The draw function provided by Hypothesis.
-
-    Returns
-    -------
-    cx.roles.AbstractRole
-        The ``cx.roles.point`` role instance.
+@st.composite
+def coord_roles(draw: st.DrawFn) -> cxr.AbstractCoordRole:
+    """Generate coordinate role flags (CoordDisp, CoordVel, CoordAcc).
 
     Examples
     --------
     >>> from hypothesis import given
-    >>> import coordinax as cx
+    >>> import coordinax.roles as cxr
     >>> import coordinax_hypothesis as cxst
 
-    >>> @given(role=cxst.point_role())
-    ... def test_point_only(role):
-    ...     assert isinstance(role, cx.roles.Point)
+    >>> @given(role=cxst.coord_roles())
+    ... def test_tangent_role(role):
+    ...     # Only CoordDisp, CoordVel, CoordAcc (not Point)
+    ...     assert isinstance(role, cxr.AbstractCoordRole)
 
     """
-    # Return Point role (use draw with st.just for consistency with Hypothesis patterns)
-    return draw(st.just(cx.roles.point))
+    role_cls = draw(st.sampled_from(COORD_ROLES))
+    return role_cls()
 
 
 # ==============================================================================
 # Vector strategies
 
 
-def _d_dt_dim(
-    dim: u.AbstractDimension | str | None, order: int
-) -> u.AbstractDimension | None:
-    if dim is None:
-        return None
-    return u.dimension(dim) / (u.dimension("time") ** order)
-
-
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def vectors(
     draw: st.DrawFn,
-    chart: cx.charts.AbstractChart[Ks, Ds]
-    | st.SearchStrategy[cx.charts.AbstractChart[Ks, Ds]] = charts(
-        exclude=(cx.charts.Abstract0D,)
-    ),
-    role: type[cx.roles.AbstractRole]
-    | st.SearchStrategy[type[cx.roles.AbstractRole]] = st.just(cx.roles.PhysDisp),
+    chart: cxc.AbstractChart[Ks, Ds]
+    | st.SearchStrategy[cxc.AbstractChart[Ks, Ds]] = charts(exclude=(cxc.Abstract0D,)),
+    role: cxr.AbstractRole | st.SearchStrategy[cxr.AbstractRole] = point_role(),
     *,
     dtype: Any | st.SearchStrategy = jnp.float32,
     shape: int | tuple[int, ...] | st.SearchStrategy[tuple[int, ...]] = (),
     elements: st.SearchStrategy[float] | None = None,
-) -> cx.Vector[cx.charts.AbstractChart[Any, Any], Any, Any]:
-    """Generate random Coordinax vectors of specified dimension.
+) -> cx.Vector[cxc.AbstractChart[Any, Any], Any, Any]:
+    """Generate random `coordinax` vectors of specified dimension.
 
     Parameters
     ----------
     draw
-        The draw function provided by Hypothesis.
+        The draw function provided by {mod}`hypothesis`.
     chart
-        A Coordinax chart instance or a strategy to generate one. By
-        default, a random chart is drawn using the `charts` strategy.
+        A {mod}`coordinax` chart instance or a strategy to generate one.
+        By default, a random chart is drawn using the
+        {func}`~coordinax_hypothesis.charts` strategy.
     role
-        The role flag for the vector. By default, the position role (`cx.roles.PhysDisp`)
-        is used.
+        The role flag for the vector. By default, the position role
+        ({class}`~coordinax.roles.Point`) is used.
     dtype
-        The data type for array components (default: jnp.float32).
+        The data type for array components (default: `~jax.numpy.float32`).
     shape
         The shape for the vector components. Can be an integer (for 1D), a tuple
         of integers, or a strategy. Default is scalar (shape=()).
@@ -218,7 +208,7 @@ def vectors(
     Returns
     -------
     cx.Vector
-        A Coordinax vector of the specified dimension.
+        A {mod}`coordinax` vector of the specified dimension.
 
     Examples
     --------
@@ -232,9 +222,9 @@ def vectors(
     ...     assert isinstance(vec, cx.Vector)
 
     >>> # Generate vectors with a specific representation
-    >>> @given(vec=cxst.vectors(chart=cx.charts.cart3d))
+    >>> @given(vec=cxst.vectors(chart=cxc.cart3d))
     ... def test_cartesian_3d(vec):
-    ...     assert vec.chart == cx.charts.cart3d
+    ...     assert vec.chart == cxc.cart3d
 
     >>> # Generate vectors with specific shape
     >>> @given(vec=cxst.vectors(shape=(10,)))
@@ -247,9 +237,9 @@ def vectors(
     role = draw_if_strategy(draw, role)
     role_inst = role() if isinstance(role, type) else role
 
-    # Generate CsDict data using the pdict strategy
+    # Generate CsDict data using the cdict strategy
     data = draw(
-        pdicts(
+        cdicts(
             chart=chart,
             role=role_inst,
             dtype=dtype,
@@ -261,21 +251,19 @@ def vectors(
     return cx.Vector(data=data, chart=chart, role=role_inst)
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def vectors_with_target_chart(
     draw: st.DrawFn,
     /,
-    chart: cx.charts.AbstractChart[Ks, Ds]
-    | st.SearchStrategy[cx.charts.AbstractChart[Ks, Ds]] = charts(),
-    role: type[cx.roles.AbstractRole]
-    | st.SearchStrategy[type[cx.roles.AbstractRole]] = st.just(cx.roles.PhysDisp),
+    chart: cxc.AbstractChart[Ks, Ds]
+    | st.SearchStrategy[cxc.AbstractChart[Ks, Ds]] = charts(),
+    role: cxr.AbstractRole | st.SearchStrategy[cxr.AbstractRole] = point_role(),
     *,
     dtype: Any | st.SearchStrategy = jnp.float32,
     shape: int | tuple[int, ...] | st.SearchStrategy[tuple[int, ...]] = (),
     elements: st.SearchStrategy[float] | None = None,
 ) -> tuple[
-    cx.Vector[cx.charts.AbstractChart[Any, Any], Any],
-    tuple[cx.charts.AbstractChart[Any, Any], ...],
+    cx.Vector[cxc.AbstractChart[Any, Any], Any], tuple[cxc.AbstractChart[Any, Any], ...]
 ]:
     """Generate a vector and a time-derivative chain with matching flags.
 
@@ -292,7 +280,7 @@ def vectors_with_target_chart(
         for the source vector. By default, a random chart is drawn.
     role
         The role flag for the source vector. By default, the position role
-        (`cx.roles.PhysDisp`) is used.
+        ({class}`~coordinax.roles.Point`) is used.
     dtype
         The data type for array components (default: jnp.float32).
     shape
@@ -302,7 +290,7 @@ def vectors_with_target_chart(
 
     Returns
     -------
-    tuple[cx.Vector, tuple[cx.charts.AbstractChart, ...]]
+    tuple[cx.Vector, tuple[cxc.AbstractChart, ...]]
         A tuple of (vector, target_chain) where target_chain is a tuple of
         representations following the time antiderivative pattern, all matching
         the flags of the source vector's representation.
@@ -315,23 +303,22 @@ def vectors_with_target_chart(
 
     >>> # Generate a position vector and target chain for conversion
     >>> @given(
-    ...     vec_reps=cxst.vectors_with_target_chart(
-    ...         chart=cx.charts.cart3d, role=cx.roles.PhysDisp
+    ...     vec_charts=cxst.vectors_with_target_chart(
+    ...         chart=cxc.cart3d, role=cxr.Point
     ...     )
     ... )
-    ... def test_conversion(vec_reps):
-    ...     vec, target_chain = vec_reps
-    ...     # target_chain is (pos_rep,)
+    ... def test_conversion(vec_charts):
+    ...     vec, target_chain = vec_charts
+    ...     # target_chain is (Point,)
     ...     for target_chart in target_chain:
     ...         converted = vec.vconvert(target_chart)
     ...         assert converted.chart == target_chart
 
     """
     role = draw_if_strategy(draw, role)
-    role_cls = role if isinstance(role, type) else type(role)
 
     # Draw the source vector
-    vec = draw(vectors(chart, role_cls, dtype=dtype, shape=shape, elements=elements))
+    vec = draw(vectors(chart, role, dtype=dtype, shape=shape, elements=elements))
 
     # Draw a target representation with matching dimensionality
     target_chart = draw(charts_like(vec.chart))
@@ -339,11 +326,12 @@ def vectors_with_target_chart(
     # For Point role, there is no time-antiderivative chain; just return the
     # single chart. For physical tangent roles (Pos, Vel, PhysAcc), generate the
     # full time-derivative chain.
-    if role_cls is cx.roles.Point:
+    target_chain: tuple[cxc.AbstractChart[Any, Any], ...]
+    if isinstance(role, cxr.Point):
         target_chain = (target_chart,)
     else:
         # Generate the full time-derivative chain from the target representation
-        target_chain = draw(chart_time_chain(role_cls, target_chart))
+        target_chain = draw(chart_time_chain(role, target_chart))
 
     return vec, target_chain
 
@@ -352,17 +340,17 @@ def vectors_with_target_chart(
 # Bundle strategies
 
 
-@st.composite  # type: ignore[untyped-decorator]
-def bundles(
+@st.composite
+def pointedvectors(
     draw: st.DrawFn,
     *,
-    base_chart: cx.charts.AbstractChart[Any, Any]
-    | st.SearchStrategy[cx.charts.AbstractChart[Any, Any]] = charts(
-        exclude=(cx.charts.Abstract0D,)
+    base_chart: cxc.AbstractChart[Any, Any]
+    | st.SearchStrategy[cxc.AbstractChart[Any, Any]] = charts(
+        exclude=(cxc.Abstract0D,)
     ),
     field_keys: tuple[str, ...] = ("velocity",),
-    field_roles: tuple[type[cx.roles.AbstractRole], ...]
-    | st.SearchStrategy[tuple[type[cx.roles.AbstractRole], ...]]
+    field_roles: tuple[cxr.AbstractRole, ...]
+    | st.SearchStrategy[tuple[cxr.AbstractRole, ...]]
     | None = None,
     dtype: Any | st.SearchStrategy = jnp.float32,
     shape: int | tuple[int, ...] | st.SearchStrategy[tuple[int, ...]] = (),
@@ -380,8 +368,8 @@ def bundles(
     field_keys
         Names of field vectors. Default is ("velocity",).
     field_roles
-        Tuple of role types for field vectors, matching length of field_keys.
-        If None, generates tangent-like roles (Vel, PhysAcc) randomly.
+        Tuple of roles for field vectors, matching length of field_keys.
+        If `None`, generates tangent-like roles (Vel, PhysAcc) randomly.
         Cannot include Point role (enforced by PointedVector validation).
     dtype
         Data type for array components (default: jnp.float32).
@@ -409,17 +397,17 @@ def bundles(
 
     Generate default bundle with velocity:
 
-    >>> @given(bundle=cxst.bundles())
+    >>> @given(bundle=cxst.pointedvectors())
     ... def test_bundle(bundle):
     ...     assert isinstance(bundle, cx.PointedVector)
-    ...     assert isinstance(bundle.base.role, cx.roles.Point)
+    ...     assert isinstance(bundle.base.role, cxr.Point)
     ...     assert "velocity" in bundle.keys()
 
     Generate bundle with multiple fields:
 
-    >>> @given(bundle=cxst.bundles(
+    >>> @given(bundle=cxst.pointedvectors(
     ...     field_keys=("velocity", "acceleration"),
-    ...     field_roles=(cx.roles.PhysVel, cx.roles.PhysAcc),
+    ...     field_roles=(cxr.PhysVel, cxr.PhysAcc),
     ... ))
     ... def test_multi_field(bundle):
     ...     assert "velocity" in bundle.keys()
@@ -427,7 +415,7 @@ def bundles(
 
     Generate batched bundles:
 
-    >>> @given(bundle=cxst.bundles(shape=(5,)))
+    >>> @given(bundle=cxst.pointedvectors(shape=(5,)))
     ... def test_batched(bundle):
     ...     assert bundle.shape == (5,)
 
@@ -439,7 +427,7 @@ def bundles(
     base = draw(
         vectors(
             chart=base_chart,
-            role=cx.roles.point,
+            role=cxr.point,
             dtype=dtype,
             shape=shape,
             elements=elements,
@@ -449,16 +437,13 @@ def bundles(
     # Determine field roles
     if field_roles is None:
         # Generate random tangent-like roles (exclude Point - only Vel, PhysAcc)
-        tangent_roles: tuple[type[cx.roles.AbstractRole], ...] = (
-            cx.roles.PhysVel,
-            cx.roles.PhysAcc,
-        )
+        tangent_roles: tuple[cxr.AbstractRole, ...] = (cxr.phys_vel, cxr.phys_acc)
         field_roles = tuple(draw(st.sampled_from(tangent_roles)) for _ in field_keys)
     else:
         field_roles = draw_if_strategy(draw, field_roles)
 
     # Validate: no Point in field_roles
-    if any(role is cx.roles.point for role in field_roles):
+    if any(role is cxr.point for role in field_roles):
         msg = "field_roles cannot contain Point role (base already has it)"
         raise ValueError(msg)
 
@@ -486,10 +471,6 @@ def bundles(
         fields[key] = field_vec
 
     return cx.PointedVector(base=base, **fields)
-
-
-# Alias for spec alignment (spec uses fiber_points instead of bundles)
-fiber_points = bundles
 
 
 # ==============================================================================

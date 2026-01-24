@@ -8,7 +8,7 @@ from typing import Any, final
 from typing_extensions import override
 
 import plum
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 
 from .base import AbstractCartesianProductChart, AbstractChart
 from coordinax._src import api

@@ -1,8 +1,8 @@
 # Anchored Vector Bundle
 
-A `PointedVector` provides an ergonomic container for working with collections of
-vectors anchored at a common base point, automatically handling the coordinate
-transformation dependencies required for tangent vectors.
+A `PointedVector` provides an ergonomic container for working with collections
+of vectors anchored at a common base point, automatically handling the
+coordinate transformation dependencies required for tangent vectors.
 
 ## Motivation
 
@@ -120,12 +120,12 @@ bundle["acceleration"]
 
 ### Role-Based Transformation
 
-| Role           | Transformation                       | Requires `at=`?       | Example               |
-| -------------- | ------------------------------------ | --------------------- | --------------------- |
-| `Point`        | Position map $f(q)$                  | No                    | Base point conversion |
-| `PhysDisp`     | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Displacement vector   |
-| `PhysVel`      | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Velocity vector       |
-| `PhysAcc`      | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Acceleration vector   |
+| Role       | Transformation                       | Requires `at=`?       | Example               |
+| ---------- | ------------------------------------ | --------------------- | --------------------- |
+| `Point`    | Position map $f(q)$                  | No                    | Base point conversion |
+| `PhysDisp` | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Displacement vector   |
+| `PhysVel`  | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Velocity vector       |
+| `PhysAcc`  | Tangent transform $\mathrm{d}f_q(v)$ | Yes (for curvilinear) | Acceleration vector   |
 
 ## Usage Examples
 
@@ -193,7 +193,7 @@ vel = cx.Vector.from_([10, 20, 30], "km/s")
 bundle = cx.PointedVector(base=bases, velocity=vel)
 print(bundle.shape)  # (2,)
 
-# Index to get sub-bundles
+# Index to get sub-vectors
 bundle[0]  # First point-velocity pair
 bundle[1]  # Second point-velocity pair
 ```
@@ -255,7 +255,7 @@ bundle_batch = cx.PointedVector(
     velocity=cx.Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "m/s"),
 )
 
-# Index gives sub-bundles
+# Index gives sub-vectors
 sub0 = bundle_batch[0]
 sub1 = bundle_batch[1]
 ```

@@ -13,30 +13,30 @@ from coordinax_hypothesis._src.utils import get_all_subclasses
 
 @given(rep_class=cxst.chart_classes())
 @settings(max_examples=50)
-def test_basic_representation_class(
+def test_basic_chart_class(
     rep_class: type[cx.charts.AbstractChart],
 ) -> None:
-    """Test basic representation class generation."""
+    """Test basic chart class generation."""
     assert issubclass(rep_class, cx.charts.AbstractChart)
     assert not issubclass(rep_class, type)  # Not a metaclass
 
 
 @given(rep_class=cxst.chart_classes(filter=cx.charts.Abstract3D))
 @settings(max_examples=50)
-def test_3d_chartresentation_classes(
+def test_3d_chart_classes(
     rep_class: type[cx.charts.AbstractChart],
 ) -> None:
-    """Test 3D representation class generation."""
+    """Test 3D chart class generation."""
     assert issubclass(rep_class, cx.charts.Abstract3D)
     assert issubclass(rep_class, cx.charts.AbstractChart)
 
 
 @given(rep_class=cxst.chart_classes(filter=cx.charts.Abstract1D))
 @settings(max_examples=50)
-def test_1d_chartresentation_classes(
+def test_1d_chart_classes(
     rep_class: type[cx.charts.AbstractChart],
 ) -> None:
-    """Test 1D representation class generation."""
+    """Test 1D chart class generation."""
     assert issubclass(rep_class, cx.charts.Abstract1D)
     assert issubclass(rep_class, cx.charts.AbstractChart)
 
@@ -60,7 +60,7 @@ def test_concrete_classes_only(rep_class: type[cx.charts.AbstractChart]) -> None
 )
 @settings(max_examples=50)
 def test_dynamic_filter(rep_class: type[cx.charts.AbstractChart]) -> None:
-    """Test representation class generation with dynamic union class."""
+    """Test chart class generation with dynamic union class."""
     assert issubclass(rep_class, cx.charts.AbstractChart)
     assert issubclass(rep_class, (cx.charts.Abstract1D, cx.charts.Abstract2D))
 

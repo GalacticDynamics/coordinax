@@ -1,6 +1,7 @@
 """Tests for chart APIs: AbstractFixedComponentsChart and cartesian_chart."""
 
 import hypothesis.strategies as st
+import pytest
 from hypothesis import given, settings
 
 import coordinax.charts as cxc
@@ -12,7 +13,7 @@ fixedchart_classes = cxst.chart_classes(
 fixedcharts = cxst.charts(filter=cxc.AbstractFixedComponentsChart)
 
 
-class TestAbstractFixedComponentsChart:
+class TestFixedComponentsChart:
     """Behavior of charts with fixed components."""
 
     @given(data=st.data(), chart_class=fixedchart_classes)
@@ -28,3 +29,21 @@ class TestAbstractFixedComponentsChart:
 
         assert chart1.components == chart2.components
         assert len(chart1.components) == chart1.ndim
+
+    def test_instances_share_components(self) -> None:
+        """All instances of a chart class share the same components."""
+        chart1 = cxc.Cart3D()
+        chart2 = cxc.Cart3D()
+        assert chart1.components is chart2.components
+
+    @pytest.mark.parametrize(
+        ("chart", "components"),
+        [
+            (cxc.cart3d, ("x", "y", "z")),
+            (cxc.sph3d, ("r", "theta", "phi")),
+            (cxc.polar2d, ("r", "theta")),
+        ],
+    )
+    def test_excpected_components(self, chart, components) -> None:
+        """Cart3D has expected components."""
+        assert chart.components == components

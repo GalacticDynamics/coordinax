@@ -7,7 +7,7 @@ chart component schemas and role dimension requirements.
 
 from coordinax._src.custom_types import CsDict
 
-__all__ = ("pdicts",)
+__all__ = ("cdicts",)
 
 from typing import Any
 
@@ -20,6 +20,8 @@ import unxt_hypothesis as ust
 
 import coordinax as cx
 from .utils import draw_if_strategy
+from coordinax._src.constants import ACCELERATION, LENGTH, SPEED
+from coordinax._src.custom_types import Shape
 
 # Create array API strategies namespace for JAX
 xps = make_strategies_namespace(jnp)
@@ -45,32 +47,36 @@ def _get_role_dimension_constraint(
     --------
     >>> import coordinax as cx
     >>> import unxt as u
-    >>> _get_role_dimension_constraint(cx.roles.point)
-    None  # Point has no constraint; chart.coord_dimensions apply
+    >>> _get_role_dimension_constraint(cx.roles.point) is None
+    True
 
     >>> _get_role_dimension_constraint(cx.roles.phys_disp)
-    <Unit "m">  # Pos requires length dimension
+    PhysicalType('length')
 
     """
     if isinstance(role, cx.roles.Point):
         return None  # Point: no additional constraint; use chart.coord_dimensions
     if isinstance(role, cx.roles.PhysDisp):
         # Pos requires physical dimension = length
-        return u.dimension("length")
+        return LENGTH
     if isinstance(role, cx.roles.PhysVel):
         # Vel requires physical dimension = length/time
-        return u.dimension("speed")
+        return SPEED
     if isinstance(role, cx.roles.PhysAcc):
         # PhysAcc requires physical dimension = length/time^2
-        return u.dimension("acceleration")
+        return ACCELERATION
+    if isinstance(role, (cx.roles.CoordDisp, cx.roles.CoordVel, cx.roles.CoordAcc)):
+        # Coordinate-basis roles have heterogeneous per-component dimensions.
+        return None
     # For unknown/future roles, return None (unconstrained)
     return None
 
 
-@st.composite  # type: ignore[untyped-decorator]
-def pdicts(
+@st.composite
+def cdicts(
     draw: st.DrawFn,
-    chart: cx.charts.AbstractChart[Any, Any],
+    chart: cx.charts.AbstractChart[Any, Any]
+    | st.SearchStrategy[cx.charts.AbstractChart[Any, Any]],
     role: cx.roles.AbstractRole
     | st.SearchStrategy[cx.roles.AbstractRole]
     | None = None,
@@ -93,7 +99,7 @@ def pdicts(
     draw
         The Hypothesis draw function (provided automatically)
     chart
-        Chart instance defining the component schema
+        Chart instance or strategy generating one, defining the component schema.
     role
         Role instance or strategy generating one. If None, defaults to Point role.
     dtype
@@ -117,23 +123,32 @@ def pdicts(
 
     Generate CsDict for Cartesian chart with Point role:
 
-    >>> @given(p=cxst.pdicts(cx.charts.cart3d, cx.roles.point))
+    >>> @given(p=cxst.cdicts(cx.charts.cart3d, cx.roles.point))
     ... def test_point_pdict(p):
     ...     assert set(p.keys()) == {"x", "y", "z"}
     ...     assert all(isinstance(v, u.Q) for v in p.values())
 
     Generate CsDict with Pos role (uniform length dimension):
 
-    >>> @given(p=cxst.pdicts(cx.charts.cart3d, cx.roles.phys_disp))
+    >>> @given(p=cxst.cdicts(cx.charts.cart3d, cx.roles.phys_disp))
     ... def test_disp_pdict(p):
     ...     assert all(u.dimension_of(v) == u.dimension("length") for v in p.values())
 
+    Generate CsDict with chart as a strategy (draws chart first, then builds CsDict):
+
+    >>> @given(p=cxst.cdicts(cxst.charts(filter=cx.charts.Abstract3D), cx.roles.point))
+    ... def test_any_3d_chart_pdict(p):
+    ...     assert len(p) == 3  # 3D charts have 3 components
+
     """
+    # Draw chart if it's a strategy
+    chart = draw_if_strategy(draw, chart)
+
     # Draw role if it's a strategy
     role = cx.roles.point if role is None else draw_if_strategy(draw, role)
 
     # Draw shape if it's a strategy
-    shape = draw_if_strategy(draw, shape)
+    shape: Shape = draw_if_strategy(draw, shape)
 
     # Get dimension constraint from role
     role_dim = _get_role_dimension_constraint(role)
@@ -141,10 +156,18 @@ def pdicts(
     # Build data dictionary
     data: CsDict = {}
 
+    role_dims = (
+        role.dimensions(chart)
+        if isinstance(role, (cx.roles.CoordDisp, cx.roles.CoordVel, cx.roles.CoordAcc))
+        else None
+    )
+
     for component_name, component_dim in zip(
         chart.components, chart.coord_dimensions, strict=True
     ):
-        if role_dim is not None:
+        if role_dims is not None:
+            dim = role_dims[component_name]
+        elif role_dim is not None:
             # Physical tangent role: use role dimension for all components
             dim = role_dim
         else:

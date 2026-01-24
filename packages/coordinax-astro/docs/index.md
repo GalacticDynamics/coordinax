@@ -44,11 +44,11 @@ import coordinax_astro as cxastro
 import unxt as u
 
 # Create a position in ICRS frame
-pos = cx.Spherical3D(r=u.Q(10, "kpc"), theta=u.Q(45, "deg"), phi=u.Q(30, "deg"))
-icrs_coord = cx.Coordinate({"length": pos}, frame=cxastro.ICRS())
+pnt = cx.Vector.from_({"r": u.Q(10, "kpc"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")})
+crd_icrs = cx.Coordinate({"base": pnt}, frame=cxastro.ICRS())
 
 # Transform to Galactocentric frame
-galactocentric = icrs_coord.to_frame(cxastro.Galactocentric())
+crd_gc = crd_icrs.to_frame(cxastro.Galactocentric())
 ```
 
 ## Available Frames
@@ -68,11 +68,8 @@ A reference frame centered on the Galactic center with configurable parameters.
 
 ```
 frame = cxastro.Galactocentric(
-    galcen={
-        "lon": u.Q(266, "deg"),
-        "lat": u.Q(-29, "deg"),
-        "distance": u.Q(8.122, "kpc"),
-    },
+    galcen={"lon": u.Q(266, "deg"), "lat": u.Q(-29, "deg"),
+            "distance": u.Q(8.122, "kpc")},
     z_sun=u.Q(20.8, "pc"),
 )
 ```
@@ -84,24 +81,10 @@ coordinate system:
 
 ```
 # Create a coordinate in one frame
-coord_icrs = cx.Coordinate({"length": pos}, frame=cxastro.ICRS())
+crd_icrs = cx.Coordinate({"base": pnt}, frame=cxastro.ICRS())
 
 # Transform to another frame
-coord_gal = coord_icrs.to_frame(cxastro.Galactocentric())
-```
-
-## Integration with Astropy
-
-When `astropy` is installed, `coordinax-astro` can interoperate with astropy's
-coordinate frames:
-
-```
-from astropy.coordinates import SkyCoord
-import coordinax_astro as cxastro
-
-# Convert from astropy SkyCoord (requires astropy)
-# skycoord = SkyCoord(ra=10*u.deg, dec=20*u.deg, distance=100*u.pc)
-# coord = cxastro.ICRS.from_skycoord(skycoord)
+crd_gc = crd_icrs.to_frame(cxastro.Galactocentric())
 ```
 
 ## API Reference

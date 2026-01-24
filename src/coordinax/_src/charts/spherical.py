@@ -2,16 +2,15 @@
 
 __all__ = ("TwoSphere", "twosphere")
 
-from collections.abc import Mapping
-from typing import Any, Final, Literal as L, final  # noqa: N817
+from typing import Final, Literal as L, final  # noqa: N817
 
 import plum
 
 from . import checks
 from .base import AbstractFixedComponentsChart
 from .euclidean import Abstract2D, Cart2D
-from coordinax._src.constants import PiRad, ZeroRad
-from coordinax._src.custom_types import Ang
+from coordinax._src.constants import Deg0, Deg180
+from coordinax._src.custom_types import Ang, CsDict
 
 # -----------------------------------------------
 # TwoSphere
@@ -64,9 +63,9 @@ class TwoSphere(AbstractFixedComponentsChart[TwoSphereKeys, TwoSphereDims], Abst
 
     """
 
-    def check_data(self, data: Mapping[str, Any], /) -> None:
+    def check_data(self, data: CsDict, /) -> None:
         super().check_data(data)  # call base check
-        checks.polar_range(data["theta"], ZeroRad, PiRad)
+        checks.polar_range(data["theta"], Deg0, Deg180)
 
 
 twosphere: Final = TwoSphere()

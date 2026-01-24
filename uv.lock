@@ -548,7 +548,7 @@ requires-dist = [
     { name = "quaxed", specifier = ">=0.10.4" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
     { name = "unxt", specifier = ">=1.10.0" },
-    { name = "unxt-api", specifier = ">=1.10.0" },
+    { name = "unxt-api", specifier = ">=1.10.1" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
@@ -679,7 +679,7 @@ dependencies = [
 requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "hypothesis", specifier = ">=6.0" },
-    { name = "unxt-hypothesis", specifier = ">=1.9.1" },
+    { name = "unxt-hypothesis", specifier = ">=1.10.1" },
 ]
 
 [[package]]
@@ -718,7 +718,7 @@ requires-dist = [
 test = [
     { name = "hypothesis", specifier = ">=6.148.7" },
     { name = "pytest", specifier = ">=9.0.2" },
-    { name = "unxt-hypothesis", specifier = ">=1.9.1" },
+    { name = "unxt-hypothesis", specifier = ">=1.10.1" },
 ]
 
 [[package]]
@@ -3120,28 +3120,28 @@ wheels = [
 
 [[package]]
 name = "unxt-api"
-version = "1.10.0"
+version = "1.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "plum-dispatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ce/30/82718f6a67a40645ff16a76fff6aaaed17d8c03cd7cab0714980eb7a2ce7/unxt_api-1.10.0.tar.gz", hash = "sha256:0cb095a329f474f4f9eeb486dde9ea300c7d222f8076932a74418aa75ce1f872", size = 21250 }
+sdist = { url = "https://files.pythonhosted.org/packages/59/55/a9e4f226a3d2f26a8bafc55868b8b8ec290cdf3766d9dc378b3b2dd0eb0c/unxt_api-1.10.1.tar.gz", hash = "sha256:dae10d19edc0b96b225dfa122d0ed5999ad8523d3b0e63f33a3acc2ccdff0cbc", size = 21341 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/53/fd/29f17b4839265c5df55b4d7d9ccd6bc2f3848c865e072c0ecf767e74cd97/unxt_api-1.10.0-py3-none-any.whl", hash = "sha256:4cb28901e2d6fff1b8eb1c55715906d076362b2986d1a4ac860d9d30cc413126", size = 6109 },
+    { url = "https://files.pythonhosted.org/packages/63/64/4f4fb51ee7558784a566fb30d8e0d04c689501f7856aa47d279bf6d745cf/unxt_api-1.10.1-py3-none-any.whl", hash = "sha256:7cc4ed4b4d22a9a93fe185add206861a5931f45e892d68d86c8034c445e28ba6", size = 6266 },
 ]
 
 [[package]]
 name = "unxt-hypothesis"
-version = "1.9.1"
+version = "1.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hypothesis", extra = ["numpy"] },
     { name = "jax" },
     { name = "unxt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/4a/ba/081fa1e5dc7dd2a723be448df3413bb1fffe14f60cec6740f8f0633d7a99/unxt_hypothesis-1.9.1.tar.gz", hash = "sha256:9797a9762403d0a658ec876968c480093a252de96eff138452fa675975f65621", size = 24667 }
+sdist = { url = "https://files.pythonhosted.org/packages/dc/7f/7d31af03944203b5608c63d8263998f730cfd44cb083272ce84707e0535c/unxt_hypothesis-1.10.1.tar.gz", hash = "sha256:f76668766a31fa059cf70e350a29ad6acd9ea08451c610aed5f77ecc684fac4b", size = 28453 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f1/37/2348c31abeb8a49be0ddfc4ce64c777d5a36287fded8874d7997a40664e6/unxt_hypothesis-1.9.1-py3-none-any.whl", hash = "sha256:dc8dfcb48d2665d0802b2a31ae0e0a4889bef07a7bb60d1ff2e1b9f5caef6762", size = 12048 },
+    { url = "https://files.pythonhosted.org/packages/06/1e/21b0938c668ec01899aa9cb9160a7a2e759ee4aa9fe66d7cb8f77034929a/unxt_hypothesis-1.10.1-py3-none-any.whl", hash = "sha256:c85e29e565d4c0a8556934790608dd87c1eb3b2a49436f933a6c40ad26f53d02", size = 15198 },
 ]
 
 [[package]]

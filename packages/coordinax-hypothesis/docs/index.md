@@ -366,7 +366,7 @@ def test_1d_chart(rep):
 
 # Use with a dynamic template
 @given(chart=t=cxst.charts_like(cxst.charts(filter=cx.charts.Abstract3D)))
-def test_reps_like(rep):
+def test_charts_like(rep):
     # Will match the template's flags
     assert isinstance(rep, cx.charts.Abstract3D)
 ```
@@ -388,8 +388,8 @@ flags.
 
 **Parameters:**
 
-- `role` (AbstractRole): The starting role (`cx.roles.PhysDispsDisp`, `cx.roles.PhysVel`,
-  `cx.roles.PhysAcc`).
+- `role` (AbstractRole): The starting role (`cx.roles.PhysDispsDisp`,
+  `cx.roles.PhysVel`, `cx.roles.PhysAcc`).
 - `rep` (AbstractChart | SearchStrategy): The starting representation or a
   strategy that generates one.
 
@@ -397,9 +397,9 @@ flags.
 
 The returned tuple follows this pattern:
 
-- If input is position: `(pos_rep,)`
-- If input is velocity: `(vel_rep, pos_rep)`
-- If input is acceleration: `(acc_rep, vel_rep, pos_rep)`
+- If input is position: `(Point,)`
+- If input is velocity: `(PhysVel, Point)`
+- If input is acceleration: `(PhysAcc, PhysVel, Point)`
 
 **Examples:**
 
@@ -413,33 +413,33 @@ import coordinax_hypothesis as cxst
 # Generate a chain from acceleration
 @given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
 def test_acc_chain(chain):
-    acc_rep, vel_rep, pos_rep = chain
+    acc_chart, vel_chart, point_chart = chain
     # All are 3D Cartesian-like representations
-    assert isinstance(acc_rep, cx.charts.Abstract3D)
-    assert isinstance(vel_rep, cx.charts.Abstract3D)
-    assert isinstance(pos_rep, cx.charts.Abstract3D)
+    assert isinstance(acc_chart, cx.charts.Abstract3D)
+    assert isinstance(vel_chart, cx.charts.Abstract3D)
+    assert isinstance(point_chart, cx.charts.Abstract3D)
 
 
 # Generate a chain from velocity
 @given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
 def test_vel_chain(chain):
-    vel_rep, pos_rep = chain
+    vel_chart, point_chart = chain
     # All are 2D representations
-    assert isinstance(vel_rep, cx.charts.Abstract2D)
-    assert isinstance(pos_rep, cx.charts.Abstract2D)
+    assert isinstance(vel_chart, cx.charts.Abstract2D)
+    assert isinstance(point_chart, cx.charts.Abstract2D)
 
 
 # Position just returns itself
 @given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
 def test_disp_chain(chain):
-    (pos_rep,) = chain
-    assert isinstance(pos_rep, cx.charts.Abstract3D)
+    (point_chart,) = chain
+    assert isinstance(point_chart, cx.charts.Abstract3D)
 
 
 # Use with dynamic representation type
 @given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cxst.charts()))
 def test_dynamic_vel_chain(chain):
-    assert len(chain) == 2  # (vel, pos)
+    assert len(chain) == 2  # (vel, point)
     assert isinstance(chain[0], cx.charts.AbstractChart)
     assert isinstance(chain[1], cx.charts.AbstractChart)
 ```
@@ -458,8 +458,8 @@ target chain automatically matches the flags of the source vector.
 
 - `rep` (AbstractChart | SearchStrategy): A representation instance or strategy
   for the source vector (default: uses `charts()` strategy).
-- `role` (AbstractRole): The role flag for the source vector (`cx.roles.PhysDisp`,
-  `cx.roles.PhysVel`, `cx.roles.PhysAcc`).
+- `role` (AbstractRole): The role flag for the source vector
+  (`cx.roles.PhysDisp`, `cx.roles.PhysVel`, `cx.roles.PhysAcc`).
 - `dtype` (dtype | SearchStrategy): The data type for array components (default:
   `jnp.float32`). Can be a dtype or a strategy.
 - `shape` (int | tuple | SearchStrategy): The shape for the vector components
@@ -486,7 +486,7 @@ import coordinax_hypothesis as cxst
 @given(vec_and_chain=cxst.vectors_with_target_chart(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp))
 def test_position_conversion(vec_and_chain):
     vec, target_chain = vec_and_chain
-    # target_chain is just (pos_rep,) for position sources
+    # target_chain is just (pos_chart,) for position sources
     (target_chart,) = target_chain
     converted = vec.vconvert(target_chart)
     assert converted.chart == target_chart
@@ -499,7 +499,7 @@ def test_position_conversion(vec_and_chain):
 )
 def test_velocity_conversion_chain(vec_and_chain, pos_vec):
     vec, target_chain = vec_and_chain
-    # target_chain is (vel_rep, pos_rep)
+    # target_chain is (vel_chart, pos_chart)
     for target_chart in target_chain:
         converted = vec.vconvert(target_chart, pos_vec)
         assert converted.chart == target_chart

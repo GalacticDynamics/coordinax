@@ -33,7 +33,7 @@ frame:
 ```{code-block} text
 >>> import coordinax as cx
 >>> q = cx.Vector.from_([1, 2, 3], "kpc")
->>> coord = cxf.Coordinate(q, frame=icrs)
+>>> coord = cx.Coordinate(q, frame=icrs)
 >>> print(coord)
 Coordinate(
     {

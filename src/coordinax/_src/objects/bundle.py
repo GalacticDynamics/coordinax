@@ -14,15 +14,18 @@ from typing_extensions import TypeVar
 import equinox as eqx
 import jax
 import plum
+from plum.resolver import NotFoundLookupError
+from quax import register
 
 import quaxed.numpy as jnp
 from xmmutablemap import ImmutableMap
 
-import coordinax.charts as cxc
-import coordinax.roles as cxr
+import coordinax._src.operators as cxo
 from .base import AbstractVectorLike
 from .utils import can_broadcast_shapes
 from .vector import Vector
+from coordinax._src import charts as cxc, roles as cxr
+from coordinax._src.api import apply_op
 
 ChartT = TypeVar(
     "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
@@ -34,11 +37,11 @@ ChartT = TypeVar(
 
 
 def _vconvert_field(
-    v: Vector[cxc.AbstractChart[Any, Any], cxr.AbstractPhysicalRole, Any],
+    v: Vector[cxc.AbstractChart[Any, Any], cxr.AbstractPhysRole, Any],
     *,
     to_chart: ChartT,
     base: Vector[cxc.AbstractChart[Any, Any], cxr.PhysDisp, Any],
-) -> Vector[ChartT, cxr.AbstractPhysicalRole, Any]:
+) -> Vector[ChartT, cxr.AbstractPhysRole, Any]:
     """Convert a fibre vector to a new representation.
 
     This is an internal helper that handles the at= parameter computation
@@ -62,8 +65,10 @@ def _vconvert_field(
     # Convert base to match the field's current rep (position conversion)
     at = base.vconvert(v.chart)
     # Convert the field vector using the matched base point
-    out = v.vconvert(to_chart, at=at)
-    return cast("Vector[ChartT, cxr.AbstractPhysicalRole, Any]", out)
+    # Note: Pass `at` as positional argument, not keyword, to match the dispatch
+    # signature: vconvert(role, to_chart, from_dif, from_pos)
+    out = v.vconvert(to_chart, at)
+    return cast("Vector[ChartT, cxr.AbstractPhysRole, Any]", out)
 
 
 # ==============================================================================
@@ -73,7 +78,7 @@ def _vconvert_field(
 @final
 class PointedVector(
     AbstractVectorLike,
-    ImmutableMap[str, Vector],  # type: ignore[misc]
+    ImmutableMap[str, Vector],
     Generic[ChartT],
 ):
     r"""A vector bundle anchored at a base point.
@@ -90,8 +95,8 @@ class PointedVector(
     tangent vectors, automatically managing the base point dependency required
     for coordinate conversions in curvilinear systems.
 
-    Mathematical Definition
-    -----------------------
+    Mathematical Definition:
+
     For a $k$-dimensional manifold $M$, an anchored vector bundle at
     point $q \in M$ is the disjoint union:
 
@@ -100,8 +105,8 @@ class PointedVector(
     $$
     where $F_i|_q$ are fibres (typically $T_q M$) at $q$.
 
-    Coordinate Transformation Semantics
-    ------------------------------------
+    Coordinate Transformation Semantics:
+
     When converting the bundle to a new representation:
 
     1. **Base conversion** (position): $q' = f(q)$ where $f: M \to
@@ -152,14 +157,14 @@ class PointedVector(
     - **Homogeneous components**: Tangent vectors store *physical* components in
       orthonormal frames with uniform dimensions (e.g., velocity has all
       components in m/s, not mixed [m/s, rad/s, m/s]). See
-      ``coordinax.charts.tangent_transform`` for details.
+      ``coordinax.charts.physical_tangent_transform`` for details.
 
     - **Frame compatibility**: This structure does not re-implement reference
       frames. Use ``coordinax.Coordinate`` to attach frames to vectors.
 
     See Also
     --------
-    Vector : Individual coordinate vectors coordinax.charts.tangent_transform :
+    Vector : Individual coordinate vectors coordinax.charts.physical_tangent_transform :
     Transformation for tangent vectors coordinax.Coordinate : Vectors with
     reference frames
 
@@ -177,14 +182,7 @@ class PointedVector(
     >>> acc = cx.Vector.from_([0.1, 0.2, 0.3], "km/s^2")
     >>> bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
     >>> print(bundle)
-    PointedVector({
-       base: <Vector: chart=Cart3D role=Pos (x, y, z) [km]
-           [1 2 3]>,
-       'velocity': <Vector: chart=Cart3D role=Vel (x, y, z) [km / s]
-           [10 20 30]>,
-       'acceleration': <Vector: chart=Cart3D role=PhysAcc (x, y, z) [km / s2]
-           [0.1 0.2 0.3]>
-    })
+    PointedVector(base=<Vector: chart=Cart3D, role=Point (x, y, z) [km] ...>)
 
     Access individual vectors:
 
@@ -198,9 +196,9 @@ class PointedVector(
 
     >>> sph_bundle = bundle.vconvert(cxc.sph3d)
     >>> sph_bundle.base.chart
-    <Sph3D object at ...>
+    Spherical3D()
     >>> sph_bundle["velocity"].chart
-    <Sph3D object at ...>
+    Spherical3D()
 
     This is equivalent to manually specifying:
 
@@ -224,7 +222,7 @@ class PointedVector(
     Index the bundle to get sub-bundles:
 
     >>> batch_bundle[0]
-    PointedVector({base: ..., 'velocity': ...})
+    PointedVector( base=... )
 
     Create from dictionaries:
 
@@ -309,16 +307,29 @@ class PointedVector(
         >>> vel = cx.Vector.from_(jnp.array([[7, 8, 9], [10, 11, 12]]), "m/s")
         >>> bundle = cx.PointedVector(base=base, velocity=vel)
         >>> bundle[0]
-        PointedVector(base=..., velocity=...)
+        PointedVector( base=... )
 
         """
-        # Use jax.tree.map to apply indexing only to array leaves
+        nindex = len(key) if isinstance(key, tuple) else 1
+
+        def index_leaf(x: Any) -> Any:
+            if not eqx.is_array(x):
+                return x
+            if getattr(x, "ndim", 0) < nindex:
+                return x
+            return x[key]
+
+        # Apply indexing only to array leaves (respect broadcasting)
         indexed_base = jax.tree.map(
-            lambda x: x[key] if eqx.is_array(x) else x, self.base, is_leaf=eqx.is_array
+            index_leaf,
+            self.base,
+            is_leaf=eqx.is_array,
         )
         indexed_fields = {
             k: jax.tree.map(
-                lambda x: x[key] if eqx.is_array(x) else x, v, is_leaf=eqx.is_array
+                index_leaf,
+                v,
+                is_leaf=eqx.is_array,
             )
             for k, v in self._data.items()
         }
@@ -349,6 +360,8 @@ class PointedVector(
         Vector(...)
 
         """
+        if key == "base":
+            return self.base
         return ImmutableMap.__getitem__(self, key)
 
     def keys(self) -> KeysView[str]:
@@ -378,6 +391,37 @@ class PointedVector(
         """
         return self.base
 
+    @property
+    def chart(self) -> cxc.CartesianProductChart:
+        """Return the chart of the bundle as a CartesianProductChart.
+
+        The product chart is constructed from the base vector's chart and
+        the charts of all field vectors, using "base" and the field names
+        as factor names.
+
+        Returns
+        -------
+        CartesianProductChart
+            Product chart with factors (base_chart, field1_chart, ...) and
+            factor_names ("base", field1_name, ...).
+
+        Examples
+        --------
+        >>> import coordinax as cx
+        >>> base = cx.Vector.from_([1, 2, 3], "m")
+        >>> vel = cx.Vector.from_([4, 5, 6], "m/s")
+        >>> bundle = cx.PointedVector(base=base, velocity=vel)
+        >>> bundle.chart
+        CartesianProductChart(factors=(Cart3D(), Cart3D()), factor_names=('base', 'velocity'))
+
+        >>> bundle.chart.components
+        (('base', 'x'), ('base', 'y'), ('base', 'z'), ('velocity', 'x'), ('velocity', 'y'), ('velocity', 'z'))
+
+        """
+        factors = (self.base.chart, *(v.chart for v in self._data.values()))
+        names = ("base", *self._data.keys())
+        return cxc.CartesianProductChart(factors, names)
+
     # ===============================================================
     # Vector API
 
@@ -388,25 +432,25 @@ class PointedVector(
         *,
         field_charts: Mapping[str, cxc.AbstractChart] | None = None,  # type: ignore[type-arg]
     ) -> "PointedVector":
-        r"""Convert the bundle to a new representation.
+        r"""Convert the bundle to a new chart.
 
         This method automatically handles the base point dependency required for
         tangent vector transformations. For each fibre vector, it:
 
-        1. Converts the base to match the fibre's current representation
+        1. Converts the base to match the fibre's current chart
            (position conversion)
         2. Uses that converted base as the ``at=`` parameter for the fibre's
            tangent transformation
 
-        Algorithm
-        ---------
+        Algorithm:
+
         1. Convert base: $q' = f(q)$ (position map, no ``at=`` needed)
         2. For each field $v$:
 
-           a. Compute $\text{at} = q.\text{vconvert}(v.\text{rep})$
-              (position conversion to fibre's rep)
+           a. Compute $\text{at} = q.\text{vconvert}(v.\text{chart})$
+              (position conversion to fibre's chart)
            b. Convert fibre:
-              $v' = v.\text{vconvert}(\text{to\_rep}, \text{at}=\text{at})$
+              $v' = v.\text{vconvert}(\text{to\_chart}, \text{at}=\text{at})$
               (tangent transformation at the base)
 
         3. Return new bundle with $q'$ and $\{v'_i\}$
@@ -414,30 +458,30 @@ class PointedVector(
         Parameters
         ----------
         to_chart : AbstractChart
-            Target representation instance for the base and (by default) all fields.
+            Target chart instance for the base and (by default) all fields.
         field_charts : Mapping[str, AbstractChart], optional
-            Override target representation for specific fields. Keys are field
-            names, values are target reps for those fields. If not provided,
+            Override target chart for specific fields. Keys are field
+            names, values are target charts for those fields. If not provided,
             all fields use ``to_chart``.
 
         Returns
         -------
         PointedVector
-            New bundle in the target representation(s).
+            New bundle in the target chart(s).
 
         Notes
         -----
         - **Static structure for JIT**: For best performance with ``jax.jit``,
           keep the bundle's field structure (keys and number of fields) static.
-          The representations can vary, but field names should not change
+          The charts can vary, but field names should not change
           between JIT compilations.
 
         - **Role-aware conversion**: The base converts as ``Point`` (position
           map), fields convert according to their roles (``PhysDisp``,
           ``PhysVel``, ``PhysAcc`` use tangent transformation).
 
-        - **Representation matching**: The base is automatically converted to match
-          each field's representation before using it as ``at=``, ensuring the
+        - **Chart matching**: The base is automatically converted to match
+          each field's chart before using it as ``at=``, ensuring the
           tangent transformation evaluates at the correct point.
 
         Examples
@@ -451,7 +495,7 @@ class PointedVector(
 
         >>> sph_bundle = bundle.vconvert(cxc.sph3d)
         >>> sph_bundle.base.chart
-        <Sph3D object at ...>
+        Spherical3D()
 
         This is equivalent to:
 
@@ -461,16 +505,16 @@ class PointedVector(
         ...     cxc.sph3d, at_for_vel
         ... )  # PhysVel tangent transform
 
-        Specify different target reps for fields:
+        Specify different target charts for fields:
 
         >>> mixed_bundle = bundle.vconvert(
         ...     cxc.sph3d,
         ...     field_charts={"velocity": cxc.cyl3d}
         ... )
         >>> mixed_bundle.base.chart  # sph3d
-        <Sph3D object at ...>
+        Spherical3D()
         >>> mixed_bundle["velocity"].chart  # cyl3d
-        <Cyl3D object at ...>
+        Cylindrical3D()
 
         """
         # Convert base (position map, no 'at' needed)
@@ -479,7 +523,7 @@ class PointedVector(
             self.base.vconvert(to_chart),
         )
 
-        # Prepare field target reps
+        # Prepare field target charts
         if field_charts is None:
             field_charts = {}
 
@@ -553,10 +597,10 @@ class PointedVector(
         return jnp.broadcast_shapes(*shapes)
 
 
-@AbstractVectorLike.from_.dispatch  # type: ignore[untyped-decorator]
+@PointedVector.from_.dispatch
 def from_(
     cls: type[PointedVector], data: Mapping[str, Any], /, *, base: Vector | None = None
-) -> PointedVector:
+) -> Any:
     """Create an PointedVector from a mapping.
 
     Parameters
@@ -600,3 +644,55 @@ def from_(
         base=cast("Vector[cxc.AbstractChart[Any, Any], cxr.PhysDisp, Any]", base),
         **data_dict,
     )
+
+
+@PointedVector.from_.dispatch
+def from_(cls: type[PointedVector], base: Vector, /) -> Any:
+    """Create a PointedVector from a single base Vector."""
+    return cls(base=base)
+
+
+@plum.dispatch
+def apply_op(
+    op: cxo.AbstractOperator,
+    tau: Any,
+    fp: PointedVector,
+    /,
+    **kw: Any,
+) -> PointedVector:
+    """Apply an operator to a PointedVector.
+
+    The operator is applied to the base point when supported, and to any fibre
+    vectors for which the operator supports that role. Fibre-vector operations
+    receive the base point as `at=` (converted to the fibre chart when needed).
+    """
+    applied = False
+
+    try:
+        new_base = apply_op(op, tau, fp.base, **kw)
+        applied = True
+    except (NotFoundLookupError, TypeError):
+        new_base = fp.base
+
+    new_fields: dict[str, Vector] = {}
+    for name, vec in fp._data.items():
+        try:
+            at_vec = (
+                fp.base if fp.base.chart == vec.chart else fp.base.vconvert(vec.chart)
+            )
+            new_fields[name] = apply_op(op, tau, vec, at=at_vec, **kw)
+            applied = True
+        except (NotFoundLookupError, TypeError):
+            new_fields[name] = vec
+
+    if not applied:
+        msg = f"{type(op).__name__} does not apply to PointedVector"
+        raise TypeError(msg)
+
+    return PointedVector(base=new_base, **new_fields)
+
+
+@register(jax.lax.neg_p)
+def neg_p_pointedvector(x: PointedVector, /) -> PointedVector:
+    """Negate a PointedVector componentwise."""
+    return PointedVector(base=-x.base, **{k: -v for k, v in x._data.items()})

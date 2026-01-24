@@ -38,9 +38,12 @@ This spec is intentionally **subordinate** to the core Coordinax spec:
   - Chart dimensionality is `chart.ndim` (formerly `dimensionality`).
 - **Role**: Coordinax role object. Roles are partitioned into:
   - `Point` (affine points; mixed coordinate dimensions allowed), and
-  - physical tangent roles `PhysDisp`, `PhysVel`, `PhysAcc` (uniform physical dimensions;
-    require a base point for operations via `at=`), plus planned `CoordDeriv`
-    and `Covector`.
+  - physical tangent roles `PhysDisp`, `PhysVel`, `PhysAcc` (uniform physical
+    dimensions; require a base point for operations via `at=`),
+  - coordinate-basis tangent roles `CoordDisp`, `CoordVel`, `CoordAcc`
+    (heterogeneous per-component dimensions; require a base point for operations
+    via `at=`),
+  - planned `Covector`.
 - **CsDict**: mapping `dict[str, QuantityLike]` keyed by `chart.components`.
 - **Vector**: `Vector(data: CsDict, chart: Chart, role: Role)` (canonical
   constructor).
@@ -80,9 +83,11 @@ unconstrained).
     - `PhysAcc`: length/time^2
   - must be generated together with an admissible base point for operations that
     require `at=`.
-- Coordinate-derivative role `CoordDeriv` (planned):
-  - heterogeneous units allowed; values correspond to `dq^i/dt` in the
-    coordinate basis.
+- Coordinate-basis tangent roles (`CoordDisp`, `CoordVel`, `CoordAcc`):
+  - heterogeneous units allowed; per-component dimensions follow
+    `role.dimensions(chart)`.
+  - must be generated together with an admissible base point for operations that
+    require `at=`.
 - Cotangent role `Covector` (planned):
   - heterogeneous units allowed; values correspond to covector components in the
     coordinate cobasis.
@@ -103,7 +108,8 @@ is **not** part of this chain: it is an affine point and does not arise from
 integrating a physical tangent without additional structure (choice of origin /
 integration constant). Therefore:
 
-- A “time chain” helper must accept only starting roles in `{Pos, PhysVel, PhysAcc}`.
+- A “time chain” helper must accept only starting roles in
+  `{Pos, PhysVel, PhysAcc}`.
 - The chain must terminate at `PhysDisp`.
 - The chain must never include `Point`.
 
@@ -154,8 +160,8 @@ acceptable) with the following contract:
   - a chart (or chart strategy) that fixes the intended family (e.g. 3D
     Euclidean).
 - Output:
-  - a tuple of chart instances following the chain `PhysAcc → PhysVel → Pos`, truncated
-    appropriately, and **never** including `Point`.
+  - a tuple of chart instances following the chain `PhysAcc → PhysVel → Pos`,
+    truncated appropriately, and **never** including `Point`.
 
 If the caller supplies `Point` as the starting role, the helper should either:
 
@@ -212,7 +218,8 @@ When generating CsDicts for product charts:
 
 ### 2) Role strategies
 
-- `roles()` generates available roles (`Point`, `PhysDisp`, `PhysVel`, `PhysAcc`, …).
+- `roles()` generates available roles (`Point`, `PhysDisp`, `PhysVel`,
+  `PhysAcc`, …).
 - `physical_roles()` generates `{Pos, PhysVel, PhysAcc}`.
 - `point_role()` generates `Point`.
 

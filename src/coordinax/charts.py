@@ -36,20 +36,21 @@ With charts we can transform mappings between different coordinate systems.
 >>> q = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
 >>> q_sph = cxt.point_transform(cxc.sph3d, cxc.cart3d, q)
 >>> q_sph
-{'r': Quantity(Array(3.7416575, dtype=float32, ...), unit='km'),
- 'theta': Quantity(Array(1.1071487, dtype=float32, ...), unit='rad'),
- 'phi': Quantity(Array(1.1071487, dtype=float32, ...), unit='rad')}
+{'r': Quantity(Array(3.74165739, dtype=float64, ...), unit='km'),
+ 'theta': Quantity(Array(0.64052231, dtype=float64), unit='rad'),
+ 'phi': Quantity(Array(1.10714872, dtype=float64, ...), unit='rad')}
 
 
 For a transformation of a physical velocity vector, we can use
 `physical_tangent_transform`:
 
+>>> import jax
 >>> v = {"x": u.Q(10, "km/s"), "y": u.Q(20, "km/s"), "z": u.Q(30, "km/s")}
 >>> v_sph = cxt.physical_tangent_transform(cxc.sph3d, cxc.cart3d, v, at=q)
->>> v_sph
-{'r': Quantity(Array(37.416573, dtype=float32, ...), unit='km/s'),
- 'theta': Quantity(Array(5.773502, dtype=float32, ...), unit='rad/s'),
- 'phi': Quantity(Array(3.3333333, dtype=float32, ...), unit='rad/s')}
+>>> jax.tree.map(lambda x: x.round(2), v_sph)
+{'phi': Quantity(Array(0., dtype=float64), unit='km / s'),
+ 'r': Quantity(Array(37.42, dtype=float64), unit='km / s'),
+ 'theta': Quantity(Array(0., dtype=float64), unit='km / s')}
 
 
 Roles define the physical meaning of vectors, such as point,

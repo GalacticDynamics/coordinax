@@ -3,6 +3,7 @@
 __all__ = (
     "point_transform",
     "physical_tangent_transform",
+    "coord_transform",
     "frame_cart",
     "cartesian_chart",
     "apply_op",
@@ -18,6 +19,7 @@ with install_import_hook("coordinax.transforms"):
     from ._src.api import (
         apply_op,
         cartesian_chart,
+        coord_transform,
         frame_cart,
         physical_tangent_transform,
         point_transform,

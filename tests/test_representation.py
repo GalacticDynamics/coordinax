@@ -36,61 +36,61 @@ def func_has_method(f: plum.Function, sig: tuple[type, ...], /) -> bool:
 
 
 @given(chart=cxst.charts())
-def test_rep_has_init_subclass(rep) -> None:
-    """Test that generated representations have init subclasses."""
-    assert hasattr(rep, "__init_subclass__")
-    assert callable(rep.__init_subclass__)
+def test_chart_has_init_subclass(chart) -> None:
+    """Test that generated charts have init subclasses."""
+    assert hasattr(chart, "__init_subclass__")
+    assert callable(chart.__init_subclass__)
 
 
 @given(chart=cxst.charts())
-def test_rep_has_components(rep) -> None:
-    """Test that generated representations have components."""
+def test_chart_has_components(chart) -> None:
+    """Test that generated charts have components."""
     # Has components attribute
-    assert hasattr(rep, "components")
+    assert hasattr(chart, "components")
     # It's a tuple of strings
-    assert isinstance(rep.components, tuple)
-    assert all(isinstance(comp, str) for comp in rep.components)
+    assert isinstance(chart.components, tuple)
+    assert all(isinstance(comp, str) for comp in chart.components)
     # Number of components matches expected dims
-    assert len(rep.components) == len(rep.coord_dimensions) == rep.ndim
+    assert len(chart.components) == len(chart.coord_dimensions) == chart.ndim
 
 
 @given(chart=cxst.charts())
-def test_rep_has_coord_dimensions(rep) -> None:
-    """Test that generated representations have coord_dimensions."""
+def test_chart_has_coord_dimensions(chart) -> None:
+    """Test that generated charts have coord_dimensions."""
     # Has coord_dimensions attribute
-    assert hasattr(rep, "coord_dimensions")
+    assert hasattr(chart, "coord_dimensions")
     # It's a tuple of strings | None
-    assert isinstance(rep.coord_dimensions, tuple)
-    assert all(isinstance(comp, str | None) for comp in rep.coord_dimensions)
+    assert isinstance(chart.coord_dimensions, tuple)
+    assert all(isinstance(comp, str | None) for comp in chart.coord_dimensions)
     # Number of dimensions matches expected dims
-    assert len(rep.coord_dimensions) == len(rep.components) == rep.ndim
+    assert len(chart.coord_dimensions) == len(chart.components) == chart.ndim
 
 
 @given(chart=cxst.charts())
-def test_rep_has_ndim(rep) -> None:
-    """Test that generated representations expose ndim."""
+def test_chart_has_ndim(chart) -> None:
+    """Test that generated charts expose ndim."""
     # Has ndim attribute
-    assert hasattr(rep, "ndim")
+    assert hasattr(chart, "ndim")
     # It's an int
-    assert isinstance(rep.ndim, int)
+    assert isinstance(chart.ndim, int)
     # Dimension matches lengths
-    assert rep.ndim == len(rep.components) == len(rep.coord_dimensions)
+    assert chart.ndim == len(chart.components) == len(chart.coord_dimensions)
 
 
 @given(chart=cxst.charts())
-def test_rep_has_cartesian(rep) -> None:
-    """Test that generated representations have cartesian."""
+def test_chart_has_cartesian(chart) -> None:
+    """Test that generated charts have cartesian."""
     # Check that `cx.charts.cartesian_chart` has a method registered for this type. If
     # it doesn't, skip the rest of the test.
-    if not func_has_method(cx.charts.cartesian_chart, (type(rep),)):
+    if not func_has_method(cx.charts.cartesian_chart, (type(chart),)):
         return
 
     # Has cartesian attribute
-    assert hasattr(rep, "cartesian")
-    # It's a representation
-    assert isinstance(rep.cartesian, cx.charts.AbstractChart)
-    # The representation is the same dimensionality
-    assert rep.cartesian.ndim == rep.ndim
+    assert hasattr(chart, "cartesian")
+    # It's a chart
+    assert isinstance(chart.cartesian, cx.charts.AbstractChart)
+    # The chart is the same dimensionality
+    assert chart.cartesian.ndim == chart.ndim
 
 
 def test_role_derivative_chain() -> None:
@@ -102,9 +102,9 @@ def test_role_derivative_chain() -> None:
 
 
 def test_twosphere_cartesian_chart_raises() -> None:
-    """TwoSphere does not have a global Cartesian 2D representation."""
+    """TwoSphere does not have a global Cartesian 2D chart."""
     with pytest.raises(
         NotImplementedError,
-        match="TwoSphere has no global Cartesian 2D representation",
+        match="TwoSphere has no global Cartesian 2D chart",
     ):
         _ = cx.charts.twosphere.cartesian

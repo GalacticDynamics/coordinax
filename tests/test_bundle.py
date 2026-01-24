@@ -245,7 +245,7 @@ class TestPointedVectorJAX:
     def test_jit_smoke_test(self):
         """Test that bundle vconvert works (JIT has limitations).
 
-        Note: Due to representation objects being non-static, bundles can't
+        Note: Due to representation objects being non-static, pointedvectors can't
         be directly passed through JIT boundaries. The vconvert method itself
         works correctly in eager mode.
         """
@@ -269,7 +269,7 @@ class TestPointedVectorJAX:
 
         assert bundle.shape == (2,)
 
-        # Index should give sub-bundles
+        # Index should give sub-pointedvectors
         sub0 = bundle[0]
         sub1 = bundle[1]
 
@@ -280,8 +280,8 @@ class TestPointedVectorJAX:
 class TestPointedVectorEquality:
     """Tests for equality and hashing."""
 
-    def test_equality_same_bundles(self):
-        """Test equality for identical bundles."""
+    def test_equality_same_pointedvectors(self):
+        """Test equality for identical pointedvectors."""
         base1 = cx.Vector.from_([1, 2, 3], "m")
         vel1 = cx.Vector.from_([4, 5, 6], "m/s")
         bundle1 = cx.PointedVector(base=base1, velocity=vel1)
@@ -298,7 +298,7 @@ class TestPointedVectorEquality:
         reason="Vector contains dict which is unhashable - known limitation"
     )
     def test_hash(self):
-        """Test that bundles are hashable."""
+        """Test that pointedvectors are hashable."""
         base = cx.Vector.from_([1, 2, 3], "m")
         vel = cx.Vector.from_([4, 5, 6], "m/s")
         bundle = cx.PointedVector(base=base, velocity=vel)
@@ -363,14 +363,14 @@ class TestPointedVectorPropertyTests:
     """Property-based tests using coordinax-hypothesis."""
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
-    @given(bundle=cxst.bundles())
+    @given(bundle=cxst.pointedvectors())
     @settings(max_examples=50)
     def test_property_base_always_pos(self, bundle):
         """Property: base must always have Pos role."""
         assert isinstance(bundle.base.role, cx.roles.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
-    @given(bundle=cxst.bundles(field_keys=("velocity", "acceleration")))
+    @given(bundle=cxst.pointedvectors(field_keys=("velocity", "acceleration")))
     @settings(max_examples=50)
     def test_property_fields_never_pos(self, bundle):
         """Property: field vectors never have Pos role."""
@@ -379,7 +379,7 @@ class TestPointedVectorPropertyTests:
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(
-        bundle=cxst.bundles(field_keys=("velocity",)),
+        bundle=cxst.pointedvectors(field_keys=("velocity",)),
         target_chart=cxst.charts(exclude=(cx.charts.Abstract0D,)),
     )
     @settings(max_examples=30, deadline=None)
@@ -482,7 +482,7 @@ class TestPointedVectorPropertyTests:
     # Original hypothesis tests (continued)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
-    @given(bundle=cxst.bundles())
+    @given(bundle=cxst.pointedvectors())
     @settings(max_examples=50)
     def test_property_base_role_preserved_after_conversion(self, bundle):
         """Property: base role is preserved after conversion."""
@@ -493,7 +493,7 @@ class TestPointedVectorPropertyTests:
         assert isinstance(bundle.base.role, cx.roles.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
-    @given(bundle=cxst.bundles(field_keys=("velocity", "acceleration")))
+    @given(bundle=cxst.pointedvectors(field_keys=("velocity", "acceleration")))
     @settings(max_examples=50)
     def test_property_field_roles_preserved_after_conversion(self, bundle):
         """Property: field roles are preserved after conversion."""
@@ -510,7 +510,7 @@ class TestPointedVectorPropertyTests:
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(
-        bundle=cxst.bundles(shape=st.just((3,))),  # Fixed batch shape
+        bundle=cxst.pointedvectors(shape=st.just((3,))),  # Fixed batch shape
     )
     @settings(max_examples=30)
     def test_property_batch_shape_preserved(self, bundle):
@@ -521,10 +521,10 @@ class TestPointedVectorPropertyTests:
         assert converted.shape == original_shape
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
-    @given(bundle=cxst.bundles())
+    @given(bundle=cxst.pointedvectors())
     @settings(max_examples=30, deadline=None)
     def test_property_jit_compilable(self, bundle):
-        """Property: bundles can be JIT-compiled."""
+        """Property: pointedvectors can be JIT-compiled."""
         target_chart = cx.charts.cyl3d
 
         @jax.jit
@@ -536,7 +536,7 @@ class TestPointedVectorPropertyTests:
         assert isinstance(result, cx.PointedVector)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
-    @given(bundle=cxst.bundles(field_keys=("velocity",)))
+    @given(bundle=cxst.pointedvectors(field_keys=("velocity",)))
     @settings(max_examples=30)
     def test_property_mixed_target_charts(self, bundle):
         """Property: can specify different target reps for different fields."""
@@ -569,7 +569,7 @@ class TestPointedVectorPropertyTests:
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(
-        bundle=cxst.bundles(
+        bundle=cxst.pointedvectors(
             field_keys=("displacement",), field_roles=(cx.roles.PhysDisp,)
         )
     )

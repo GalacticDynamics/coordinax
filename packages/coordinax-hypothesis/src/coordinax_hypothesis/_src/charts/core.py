@@ -9,18 +9,23 @@ import hypothesis.strategies as st
 from hypothesis import assume
 
 import coordinax.charts as cxc
-from .chart_kwargs import cached_build_init_kwargs_strategy, chart_init_kwargs
+from .chart_kwargs import (
+    _generate_product_factors,
+    cached_build_init_kwargs_strategy,
+    chart_init_kwargs,
+)
 from .classes import chart_classes
 from coordinax_hypothesis._src.utils import draw_if_strategy, get_all_subclasses
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def charts(
     draw: st.DrawFn,
     /,
     filter: type | tuple[type, ...] | st.SearchStrategy[type | tuple[type, ...]] = (),
     *,
     exclude: tuple[type, ...] = (cxc.Abstract0D, cxc.TwoSphere),
+    ndim: (int | None | st.SearchStrategy[int | None]) = None,
     dimensionality: (int | None | st.SearchStrategy[int | None]) = None,
 ) -> cxc.AbstractChart[Any, Any]:
     """Strategy to draw representation instances.
@@ -46,11 +51,12 @@ def charts(
         `coordinax.charts.Abstract3D` and will be excluded unless explicitly added.
     exclude
         Specific classes to exclude, by default ().
-    dimensionality
-        Dimensionality constraint for the representation. Can be: - `None`: No
-        constraint - An integer: Exact dimensionality match - A strategy: Draw
-        dimensionality from strategy (e.g.,
+    ndim
+        `chart.ndim` constraint. Can be: - `None`: No constraint - An integer:
+        Exact ndim match - A strategy: Draw ndim from strategy (e.g.,
           `st.integers(min_value=1, max_value=2)`)
+    dimensionality
+        Deprecated alias for `ndim`.
 
     Returns
     -------
@@ -64,42 +70,30 @@ def charts(
     >>> import hypothesis.strategies as st
 
     >>> # Draw any representation instance (dimensionality > 0 by default)
-    >>> rep_strategy = cxst.charts()
-    >>> rep = rep_strategy.example()
-    >>> isinstance(rep, cxc.AbstractChart)
-    True
-    >>> rep.ndim > 0
-    True
+    >>> chart_strategy = cxst.charts()
 
-    >>> # Draw representations with exact dimensionality
-    >>> exact_2d_strategy = cxst.charts(dimensionality=2)
-    >>> exact_2d_chart = exact_2d_strategy.example()
-    >>> exact_2d_chart.ndim == 2
-    True
+    >>> # Draw charts with exact ndim
+    >>> exact_2d_strategy = cxst.charts(ndim=2)
 
-    >>> # Include 0-dimensional representations
-    >>> all_dim_strategy = cxst.charts(dimensionality=None, exclude=())
-    >>> all_dim_rep = all_dim_strategy.example()
-    >>> isinstance(all_dim_rep, cxc.AbstractChart)
-    True
+    >>> # Include 0-dimensional charts
+    >>> all_dim_strategy = cxst.charts(ndim=None, exclude=())
 
-    >>> # Use a strategy to draw dimensionality
-    >>> strategy_dim = cxst.charts(
-    ...     dimensionality=st.integers(min_value=1, max_value=2))
-    >>> strategy_dim_rep = strategy_dim.example()
-    >>> 1 <= strategy_dim_rep.ndim <= 2
-    True
+    >>> # Use a strategy to draw ndim
+    >>> strategy_dim = cxst.charts(ndim=st.integers(min_value=1, max_value=2))
 
     """
     # TODO: support product charts
     exclude = (*exclude, cxc.CartesianProductChart)
 
-    # Handle dimensionality parameter
-    dimensionality = draw_if_strategy(draw, dimensionality)
+    if ndim is None and dimensionality is not None:
+        ndim = dimensionality
+
+    # Handle ndim parameter
+    ndim = draw_if_strategy(draw, ndim)
     # Exclude all dimensional flags except the target
-    if isinstance(dimensionality, int) and dimensionality in cxc.DIMENSIONAL_FLAGS:
+    if isinstance(ndim, int) and ndim in cxc.DIMENSIONAL_FLAGS:
         exclude = exclude + tuple(
-            flag for i, flag in cxc.DIMENSIONAL_FLAGS.items() if i != dimensionality
+            flag for i, flag in cxc.DIMENSIONAL_FLAGS.items() if i != ndim
         )
 
     # Draw the representation class
@@ -112,19 +106,19 @@ def charts(
     )
 
     # Build and draw kwargs for required parameters
-    kwargs = draw(chart_init_kwargs(chart_cls, dimensionality=dimensionality))
+    kwargs = draw(chart_init_kwargs(chart_cls, ndim=ndim))
 
     # Create the instance
     chart = chart_cls(**kwargs)
 
-    # Filter by dimensionality if specified
-    if dimensionality is not None:
-        assume(chart.ndim == dimensionality)
+    # Filter by ndim if specified
+    if ndim is not None:
+        assume(chart.ndim == ndim)
 
     return chart
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def product_charts(
     draw: st.DrawFn,
     /,

@@ -12,7 +12,7 @@ import jax
 import jax.tree as jtu
 import plum
 import quax_blocks
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 from quax import ArrayValue
 
 import quaxed.numpy as jnp
@@ -57,32 +57,6 @@ class AbstractVectorLike(
         """Create a vector-like object from arguments."""
         raise NotImplementedError  # pragma: no cover
 
-    # # ===============================================================
-    # # Vector API
-
-    # @plum.dispatch
-    # def vconvert(
-    #     self,
-    #     target: AbstractChart,  # type: ignore[type-arg]
-    #     /,
-    #     *args: Any,
-    #     **kwargs: Any,
-    # ) -> "AbstractVectorLike":
-    #     """Represent the vector as another type.
-
-    #     This just forwards to `coordinax.vconvert`.
-
-    #     Parameters
-    #     ----------
-    #     target : type[`coordinax.AbstractVectorLike`]
-    #         The type to represent the vector as.
-    #     *args, **kwargs
-    #         Extra arguments. These are passed to `coordinax.vconvert` and
-    #         might be used, depending on the dispatched method.
-
-    #     """
-    #     return cxapi.vconvert(target, self, *args, **kwargs)
-
     # ===============================================================
     # Quantity API
 
@@ -99,7 +73,7 @@ class AbstractVectorLike(
 
         >>> vec = cx.Vector.from_([1, 2, 3], "km")
         >>> print(vec.uconvert({"length": "km"}))
-        <Vector: chart=Cart3D, role=Pos (x, y, z) [km]
+        <Vector: chart=Cart3D, role=Point (x, y, z) [km]
             [1 2 3]>
 
         """
@@ -125,11 +99,11 @@ class AbstractVectorLike(
         >>> vec = cx.Vector.from_([1, 2, 3], "km")
 
         >>> print(vec.uconvert(usys))
-        <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+        <Vector: chart=Cart3D, role=Point (x, y, z) [m]
             [1000. 2000. 3000.]>
 
         >>> print(vec.uconvert("galactic"))
-        <Vector: chart=Cart3D, role=Pos (x, y, z) [kpc]
+        <Vector: chart=Cart3D, role=Point (x, y, z) [kpc]
             [3.241e-17 6.482e-17 9.722e-17]>
 
         """
@@ -268,11 +242,11 @@ class AbstractVectorLike(
 
         >>> vec = cx.Vector.from_(u.Q([1, 2, 3], "m"))
         >>> print(vec.astype(jnp.float32))
-        <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+        <Vector: chart=Cart3D, role=Point (x, y, z) [m]
             [1. 2. 3.]>
 
         >>> print(jnp.astype(vec, jnp.float32))
-        <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+        <Vector: chart=Cart3D, role=Point (x, y, z) [m]
             [1. 2. 3.]>
 
         """
@@ -291,7 +265,7 @@ class AbstractVectorLike(
 
         >>> vec = cx.Vector.from_([1, 2, 3], "m")
         >>> print(vec.copy())
-        <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+        <Vector: chart=Cart3D, role=Point (x, y, z) [m]
             [1 2 3]>
 
         """
@@ -346,7 +320,7 @@ class AbstractVectorLike(
         ...     hash(vec)
         ... except TypeError as e:
         ...     print(e)
-        unhashable type: 'jaxlib...ArrayImpl'
+        unhashable type: 'dict'
 
         """
         return hash(tuple(field_items(self)))
@@ -372,20 +346,20 @@ def is_vectorlike(obj: Any, /) -> TypeIs[AbstractVectorLike]:
     Examples
     --------
     >>> import coordinax as cx
-    >>> from coordinax._src.vectors.base import is_vectorlike
+    >>> from coordinax._src.objects.base import is_vectorlike
 
     >>> vec = cx.Vector.from_([1, 2, 3], "m")
     >>> is_vectorlike(vec)
     True
 
-    >>> space = cx.PointedVector.from_(vec)
-    >>> is_vectorlike(space)
-    True
+    >>> space = cx.PointedVector.from_({"base": vec})
+        >>> is_vectorlike(space)
+        True
 
-    >>> import coordinax.frames as cxf
-    >>> coord = cxf.Coordinate.from_(vec, cxf.ICRS())
-    >>> is_vectorlike(coord)
-    True
+        >>> import coordinax.frames as cxf
+        >>> coord = cx.Coordinate(vec, cxf.ICRS())
+        >>> is_vectorlike(coord)
+        True
 
     >>> is_vectorlike(42)
     False

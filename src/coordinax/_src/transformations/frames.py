@@ -17,6 +17,7 @@ from coordinax._src.utils import uconvert_to_rad
 #####################################################################
 # Orthonormal Frame in Cartesian Components
 
+
 @plum.dispatch
 def frame_cart(
     chart: cxc.Cart1D | cxc.Cart2D | cxc.Cart3D | cxc.CartND,
@@ -101,6 +102,7 @@ def frame_cart(
     theta = (jnp.pi / 2) - lat
     sph_pos = {"r": dist, "theta": theta, "phi": lon}
     return api.frame_cart(cxc.sph3d, at=sph_pos, usys=usys)
+
 
 # ---------------------------------------------------------
 # Embedded Manifolds

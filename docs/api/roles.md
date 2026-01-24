@@ -8,13 +8,15 @@ meaning of vectors.
 A **role** defines what a vector represents mathematically and physically:
 
 - **Point**: A location in space (affine, not a vector space element)
-- **Pos** (Position): A displacement vector from an origin
-- **Vel** (Velocity): A tangent vector representing rate of change of position
-- **PhysAcc** (Acceleration): A tangent vector representing rate of change of
-  velocity
+- **PhysDisp**: A physical displacement (tangent) vector in an orthonormal frame
+- **PhysVel**: A physical velocity (tangent) vector in an orthonormal frame
+- **PhysAcc**: A physical acceleration (tangent) vector in an orthonormal frame
+- **CoordDisp / CoordVel / CoordAcc**: Coordinate-basis tangent components in a
+  chart basis
 
 Roles determine transformation laws: positions transform as points, while
-velocities transform using the Jacobian of the coordinate transformation.
+tangent vectors transform using the Jacobian (and, for physical roles, the local
+orthonormal frame), evaluated at a base point `at=`.
 
 ## Quick Start
 
@@ -24,9 +26,10 @@ import coordinax.roles as cxr
 
 # Use predefined role instances
 point = cxr.point  # Point role
-pos = cxr.phys_disp  # Position role
+pos = cxr.phys_disp  # Physical displacement role
 vel = cxr.phys_vel  # Velocity role
 acc = cxr.phys_acc  # Acceleration role
+coord_vel = cxr.coord_vel  # Coordinate-basis velocity role
 
 # Or instantiate classes directly
 point_role = cxr.Point()
@@ -38,21 +41,26 @@ pos_role = cxr.PhysDisp()
 ```
 AbstractRole
 ├── Point         # Affine location (transforms via point_transform)
-└── AbstractPhysicalRole
-    ├── PhysDisp       # Position/displacement (transforms via point_transform)
-    ├── PhysVel       # Velocity (transforms via physical_tangent_transform)
-    └── PhysAcc       # Acceleration (transforms via physical_tangent_transform)
+├── AbstractPhysRole
+│   ├── PhysDisp       # Physical displacement (physical_tangent_transform; needs at=)
+│   ├── PhysVel        # Physical velocity (physical_tangent_transform; needs at=)
+│   └── PhysAcc        # Physical acceleration (physical_tangent_transform; needs at=)
+└── AbstractCoordRole
+    ├── CoordDisp      # Coordinate-basis displacement (coord_transform; needs at=)
+    ├── CoordVel       # Coordinate-basis velocity (coord_transform; needs at=)
+    └── CoordAcc       # Coordinate-basis acceleration (coord_transform; needs at=)
 ```
 
 ## Role Semantics
 
-### Point vs Pos
+### Point vs PhysDisp
 
 - **Point**: An absolute location; cannot be added to other points
-- **Pos**: A displacement from an origin; forms a vector space
+- **PhysDisp**: A physical displacement vector in a tangent space; can translate
+  a point
 
-Use `as_pos(point)` to convert a Point to a PhysDisp (interpreting the point as a
-displacement from the origin).
+Use `as_pos(point)` to convert a Point to a PhysDisp (interpreting the point as
+a displacement from the origin).
 
 ### Physical Roles (Vel, PhysAcc)
 
@@ -63,10 +71,10 @@ Jacobian of the coordinate transformation, not by simple coordinate conversion.
 import coordinax as cx
 import unxt as u
 
-q = cx.Vector.from_(
+p = cx.Vector.from_(
     {"x": u.Q(1, "kpc"), "y": u.Q(2, "kpc"), "z": u.Q(3, "kpc")},
     cx.charts.cart3d,
-    cx.roles.phys_disp,
+    cx.roles.point,
 )
 v = cx.Vector.from_(
     {"x": u.Q(10, "km/s"), "y": u.Q(20, "km/s"), "z": u.Q(30, "km/s")},
@@ -74,11 +82,25 @@ v = cx.Vector.from_(
     cx.roles.phys_vel,
 )
 
-# Position converts directly
-q_sph = q.vconvert(cx.charts.sph3d)
-
 # Velocity requires the base point for correct transformation
-v_sph = v.vconvert(cx.charts.sph3d, q)
+v_sph = v.vconvert(cx.charts.sph3d, p)
+```
+
+### Coordinate-Basis Roles
+
+Coordinate-basis tangent roles (`CoordDisp`, `CoordVel`, `CoordAcc`) transform
+by the Jacobian pushforward and also require a base point `at=`:
+
+```python
+import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.roles as cxr
+import unxt as u
+
+at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
+v = {"x": u.Q(2.0, "m/s"), "y": u.Q(0.0, "m/s")}
+
+v_pol = cx.vconvert(cxr.coord_vel, cxc.polar2d, cxc.cart2d, v, at=at)
 ```
 
 ```{eval-rst}

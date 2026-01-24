@@ -3,7 +3,6 @@
 __all__ = ("Translate",)
 
 
-
 from collections.abc import Callable
 from jaxtyping import Array, ArrayLike
 from typing import Any, Final, Protocol, final, runtime_checkable
@@ -13,7 +12,7 @@ import jax
 import jax.tree as jtu
 import numpy as np
 import plum
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -115,6 +114,8 @@ class Translate(AbstractAdd):
         """Wadler-Lindig documentation for Translate operator."""
         kw.setdefault("include_params", False)
         kw.setdefault("short_arrays", "compact")
+        kw.setdefault("use_short_names", False)
+        kw.setdefault("named_unit", False)
         return wl.bracketed(
             begin=wl.TextDoc(f"{self.__class__.__name__}("),
             docs=[
@@ -135,7 +136,7 @@ class Translate(AbstractAdd):
         )
 
     def __repr__(self) -> str:
-        """String representation of Translate operator."""
+        """Return string representation of Translate operator."""
         return wl.pformat(
             self.__pdoc__(
                 short_arrays="compact",
@@ -209,9 +210,11 @@ def simplify(op: Translate, /, **kw: Any) -> Translate | Identity:
     Identity()
 
     """
-    delta_vals = jnp.stack([u.ustrip(AllowValue, v) for v in op.delta.values()])
-    if jnp.allclose(delta_vals, 0, **kw):
-        return Identity()
+    is_zero = jtu.all(
+        jtu.map(lambda v: jnp.allclose(u.ustrip(AllowValue, v), 0, **kw), op.delta)
+    )
+    if is_zero:
+        return Identity()  # type: ignore[no-untyped-call]
     return op
 
 
@@ -224,7 +227,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     usys: OptUSys = None,
@@ -271,7 +274,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.PhysDisp,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: Any,
     /,
     **kw: Any,
@@ -312,7 +315,10 @@ def _require_tau_time(tau: Any, /) -> tuple[Array, Unit]:
 
 
 def _delta_values_fn(
-    delta_fn: Callable[[Any], Any], chart: cxc.AbstractChart, tau_unit: Unit, /
+    delta_fn: Callable[[Any], Any],
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    tau_unit: Unit,
+    /,
 ) -> tuple[Callable[[Array], Array], Unit | None]:
     """Build a pure-JAX function returning packed delta values.
 
@@ -344,15 +350,10 @@ def _delta_values_fn(
     return f, unit0
 
 
-def _time_derivative_delta(
-    op: Translate, tau: Any, /, order: int
-) -> tuple[CsDict, cxc.AbstractChart]:
+def _dt_delta(
+    op: Translate, tau: Any, /, *, order: int
+) -> tuple[CsDict, cxc.AbstractChart[Any, Any]]:
     """Compute d^order/dtau^order delta(tau) as a CsDict in op.chart.
-
-    Parameters
-    ----------
-    order
-        1 for velocity shift, 2 for acceleration shift.
 
     Returns
     -------
@@ -362,7 +363,7 @@ def _time_derivative_delta(
 
     """
     if not callable(op.delta):
-        raise TypeError("_time_derivative_delta requires callable delta")
+        raise TypeError("_dt_delta requires callable delta")
 
     tau_value, tau_unit = _require_tau_time(tau)
 
@@ -377,7 +378,8 @@ def _time_derivative_delta(
         out_vals = ddf
         out_unit = None if length_unit is None else (length_unit / (tau_unit**2))
     else:
-        raise ValueError(f"unsupported derivative order={order}")
+        msg = f"unsupported derivative order={order}"
+        raise ValueError(msg)
 
     # Unpack back into a component dict.
     comps = op.chart.components
@@ -394,7 +396,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     usys: OptUSys = None,
@@ -402,9 +404,10 @@ def apply_op(
 ) -> Array:
     """Apply Translate to a Vel-valued ArrayLike.
 
-    ArrayLike is interpreted as Cartesian velocity components in the canonical velocity unit from `usys`.
-    For time-dependent `delta`, `tau` must be a time Quantity.
-    This dispatch only supports the case `op.chart` matches the input Cartesian chart; otherwise users must pass `Quantity` or `CsDict`.
+    ArrayLike is interpreted as Cartesian velocity components in the canonical
+    velocity unit from `usys`. For time-dependent `delta`, `tau` must be a time
+    Quantity. This dispatch only supports the case `op.chart` matches the input
+    Cartesian chart; otherwise users must pass `Quantity` or `CsDict`.
     """
     del role, kw
 
@@ -432,10 +435,12 @@ def apply_op(
     _ = eqx.error_if(
         op_chart,
         op_chart != op_cart or op_cart != chart,
-        "Translate(Vel, ArrayLike) with time-dependent delta requires op.chart to match the input Cartesian chart; use CsDict/Quantity for nontrivial chart conversions.",
+        "Translate(Vel, ArrayLike) with time-dependent delta requires "
+        "op.chart to match the input Cartesian chart; use CsDict/Quantity "
+        "for nontrivial chart conversions.",
     )
 
-    d1_op, _ = _time_derivative_delta(op, tau, order=1)
+    d1_op, _ = _dt_delta(op, tau, order=1)
     dv_vals, dv_unit = pack_uniform_unit(d1_op, keys=chart.components)
 
     # Convert to canonical velocity unit in usys, then strip to a raw array.
@@ -451,7 +456,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     usys: OptUSys = None,
@@ -486,10 +491,12 @@ def apply_op(
     _ = eqx.error_if(
         op_chart,
         op_chart != op_cart or op_cart != chart,
-        "Translate(Acc, ArrayLike) with time-dependent delta requires op.chart to match the input Cartesian chart; use CsDict/Quantity for nontrivial chart conversions.",
+        "Translate(Acc, ArrayLike) with time-dependent delta requires "
+        "op.chart to match the input Cartesian chart; use CsDict/Quantity "
+        "for nontrivial chart conversions.",
     )
 
-    d2_op, _ = _time_derivative_delta(op, tau, order=2)
+    d2_op, _ = _dt_delta(op, tau, order=2)
     da_vals, da_unit = pack_uniform_unit(d2_op, keys=chart.components)
 
     # Convert to canonical acceleration unit in usys, then strip to a raw array.
@@ -511,7 +518,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: u.AbstractQuantity,
     /,
     usys: OptUSys = None,
@@ -548,7 +555,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: u.AbstractQuantity,
     /,
     usys: OptUSys = None,
@@ -583,7 +590,7 @@ def apply_op(
         return x
 
     # Compute d(delta)/dt in op.chart, then pack in op.chart component order.
-    d1, _ = _time_derivative_delta(op, tau, order=1)
+    d1, _ = _dt_delta(op, tau, order=1)
     dv = jnp.stack([d1[k] for k in op.chart.components], axis=-1)
 
     return x + dv if eval_op(op, tau).right_add else dv + x
@@ -594,7 +601,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: u.AbstractQuantity,
     /,
     usys: OptUSys = None,
@@ -606,7 +613,7 @@ def apply_op(
 
     If `delta` is time-dependent, the induced acceleration shift is
 
-        a' = a + d^2(delta)/dt^2.
+        $$ a' = a + d^2(delta)/dt^2. $$
 
     Examples
     --------
@@ -626,7 +633,7 @@ def apply_op(
     if not callable(op.delta):
         return x
 
-    d2, _ = _time_derivative_delta(op, tau, order=2)
+    d2, _ = _dt_delta(op, tau, order=2)
     da = jnp.stack([d2[k] for k in op.chart.components], axis=-1)
 
     return x + da if eval_op(op, tau).right_add else da + x
@@ -641,7 +648,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     usys: OptUSys = None,
@@ -714,7 +721,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,
@@ -743,7 +750,7 @@ def apply_op(
     >>> shift = cx.ops.Translate.from_([1, 2, 3], "km")
     >>> v = {"x": u.Q(10, "km/s"), "y": u.Q(20, "km/s"), "z": u.Q(30, "km/s")}
     >>> cx.ops.apply_op(shift, None, cx.roles.phys_vel, cx.cart3d, v)
-    {'x': Quantity(..., unit='km / s'), 'y': Quantity(..., unit='km / s'), 'z': Quantity(..., unit='km / s')}
+    {'x': Quantity(..., unit='km / s'), 'y': Quantity(...), 'z': Quantity(...)}
 
     """
     del role, kw
@@ -755,7 +762,7 @@ def apply_op(
     needs_at = (chart != chart.cartesian) or (op.chart != op.chart.cartesian)
     x = eqx.error_if(x, needs_at and at is None, _MSG_NEEDS_AT_TRANSLATE)
 
-    d1_op, _ = _time_derivative_delta(op, tau, order=1)
+    d1_op, _ = _dt_delta(op, tau, order=1)
 
     if not needs_at:
         # Both charts are Cartesian; components align by convention.
@@ -780,7 +787,7 @@ def apply_op(
     op: Translate,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,
@@ -809,7 +816,7 @@ def apply_op(
     >>> shift = cx.ops.Translate.from_([1, 2, 3], "km")
     >>> a = {"x": u.Q(1, "m/s**2"), "y": u.Q(2, "m/s**2"), "z": u.Q(3, "m/s**2")}
     >>> cx.ops.apply_op(shift, None, cx.roles.phys_acc, cx.cart3d, a)
-    {'x': Quantity(..., unit='m / s2'), 'y': Quantity(..., unit='m / s2'), 'z': Quantity(..., unit='m / s2')}
+    {'x': Quantity(..., unit='m / s2'), 'y': Quantity(...), 'z': Quantity(...)}
 
     """
     del role, kw
@@ -820,7 +827,7 @@ def apply_op(
     needs_at = (chart != chart.cartesian) or (op.chart != op.chart.cartesian)
     x = eqx.error_if(x, needs_at and at is None, _MSG_NEEDS_AT_TRANSLATE)
 
-    d2_op, _ = _time_derivative_delta(op, tau, order=2)
+    d2_op, _ = _dt_delta(op, tau, order=2)
 
     if not needs_at:
         da = d2_op

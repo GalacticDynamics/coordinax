@@ -23,6 +23,7 @@ from unxt.quantity import AllowValue
 
 import coordinax._src.charts as cxc
 from coordinax._src import api
+from coordinax._src.constants import LENGTH
 from coordinax._src.custom_types import CsDict, Ds, Ks, OptUSys
 from coordinax._src.utils import uconvert_to_rad
 
@@ -232,7 +233,7 @@ def embed_point(
         R is None,
         "TwoSphere -> Cart3D embedding requires params['R'] for length scale.",
     )
-    if u.dimension_of(R) != u.dimension("length"):
+    if u.dimension_of(R) != LENGTH:
         msg = "params['R'] must have length units for TwoSphere -> Cart3D embedding."
         raise ValueError(msg)
 

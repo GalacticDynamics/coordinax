@@ -2,8 +2,7 @@
 
 __all__ = (
     "angles",
-    "bundles",
-    "fiber_points",
+    "pointedvectors",
     "distances",
     "distance_moduli",
     "parallaxes",
@@ -15,15 +14,17 @@ __all__ = (
     "charts_like",
     "chart_time_chain",
     "product_charts",
-    "pdicts",
+    "cdicts",
     "physical_roles",
     "point_role",
     "roles",
+    "coord_roles",
     "vectors",
     "vectors_with_target_chart",
 )
 
 from ._src.angles import angles
+from ._src.cdict import cdicts
 from ._src.charts import (
     build_init_kwargs_strategy,
     can_point_transform,
@@ -35,12 +36,11 @@ from ._src.charts import (
     product_charts,
 )
 from ._src.distances import distance_moduli, distances, parallaxes
-from ._src.pdict import pdicts
 from ._src.vectors import (
-    bundles,
-    fiber_points,
+    coord_roles,
     physical_roles,
     point_role,
+    pointedvectors,
     roles,
     vectors,
     vectors_with_target_chart,

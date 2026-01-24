@@ -1,11 +1,11 @@
-"""Conversion functions for vector charts."""
-from jaxtyping import ArrayLike, Array
+"""Point-roled transformations."""
 
 __all__: tuple[str, ...] = ()
 
 
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Callable, Mapping
+from jaxtyping import Array
+from typing import Any, Final, final
 
 import equinox as eqx
 import jax
@@ -15,12 +15,17 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as ABCQ  # noqa: N814
 
-import coordinax._src.charts as cxc
-import coordinax._src.embed as cxe
-import coordinax._src.roles as cxr
-from coordinax._src import api
+from coordinax._src import api, charts as cxc, embed as cxe, roles as cxr
 from coordinax._src.custom_types import ComponentsKey, CsDict, OptUSys
 from coordinax._src.utils import uconvert_to_rad
+
+
+@final
+class MissingType:
+    """Sentinel for missing arguments."""
+
+
+MISSING: Final[MissingType] = MissingType()
 
 # ===================================================================
 # Support for the higher-level `vconvert` function
@@ -87,49 +92,95 @@ def vconvert(
     return api.point_transform(to_chart, from_chart, p, usys=usys)
 
 
+#####################################################################
+# Point transformations
+
+# ===================================================================
+# Partial application
+
+
+@plum.dispatch
+def point_transform(
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    /,
+    *,
+    usys: OptUSys | MissingType = MISSING,
+) -> Callable[..., Any]:
+    """Return a partial function for point transformation.
+
+    Examples
+    --------
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.transforms as cxt
+    >>> import unxt as u
+
+    >>> p = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> transform_func = cxt.point_transform(cxc.sph3d, cxc.cart3d)
+    >>> transform_func(p)
+    {'r': Quantity(Array(1., dtype=float64, ...), unit='m'),
+     'theta': Quantity(Array(1.57079633, dtype=float64), unit='rad'),
+     'phi': Quantity(Array(0., dtype=float64, ...), unit='rad')}
+
+    >>> p = {"x": 1.0, "y": 0.0, "z": 0.0}  # No units
+    >>> transform_func = cxt.point_transform(cxc.sph3d, cxc.cart3d,
+    ...                                      usys=u.unitsystems.si)
+    >>> transform_func(p)
+    {'r': Array(1., dtype=float64, ...),
+     'theta': Array(1.57079633, dtype=float64),
+     'phi': Array(0., dtype=float64, ...)}
+
+    """
+    # NOT: lambda is much faster than ft.partial here
+    if usys is not MISSING:
+        return lambda *args, **kw: api.point_transform(
+            to_chart, from_chart, *args, usys=usys, **kw
+        )
+    return lambda *args, **kw: api.point_transform(to_chart, from_chart, *args, **kw)
+
+
 # ===================================================================
 # Self representation conversions
 
+IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[cxc.AbstractChart[Any, Any]], ...]] = (
+    # 0D
+    cxc.Cart0D,
+    # 1D
+    cxc.Cart1D,
+    cxc.Radial1D,
+    cxc.Time1D,
+    # 2D
+    cxc.Cart2D,
+    cxc.Polar2D,
+    cxc.TwoSphere,
+    # 3D
+    cxc.Cart3D,
+    cxc.Cylindrical3D,
+    cxc.Spherical3D,
+    cxc.LonLatSpherical3D,
+    cxc.LonCosLatSpherical3D,
+    cxc.MathSpherical3D,
+    # cxc.ProlateSpheroidal3D,  # requires Delta
+    # 6D
+    cxc.PoincarePolar6D,
+    # N-D
+    cxc.CartND,
+    # SpaceTimeCT,  # depends on spatial chart
+    # SpaceTimeEuclidean,  # depends on spatial chart
+)
+
 
 @plum.dispatch.multi(
-    *(
-        (typ, typ, dict[ComponentsKey, Any])
-        for typ in [
-            # 0D
-            cxc.Cart0D,
-            # 1D
-            cxc.Cart1D,
-            cxc.Radial1D,
-            cxc.Time1D,
-            # 2D
-            cxc.Cart2D,
-            cxc.Polar2D,
-            cxc.TwoSphere,
-            # 3D
-            cxc.Cart3D,
-            cxc.Cylindrical3D,
-            cxc.Spherical3D,
-            cxc.LonLatSpherical3D,
-            cxc.LonCosLatSpherical3D,
-            cxc.MathSpherical3D,
-            # cxc.ProlateSpheroidal3D,  # requires Delta
-            # 4D
-            # SpaceTimeCT,  # depends on spatial representation
-            # 6D
-            cxc.PoincarePolar6D,
-            # N-D
-            cxc.CartND,
-        ]
-    )
+    *((typ, typ, dict[ComponentsKey, Any]) for typ in IDENTITY_TRANSFORM_CHARTS)
 )
 def point_transform(
     to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
-    p: CsDict,  # type: ignore[type-arg]
+    p: CsDict,
     /,
     usys: OptUSys = None,
-) -> CsDict:  # type: ignore[type-arg]
-    """Identity conversion for matching representations.
+) -> CsDict:
+    """Identity conversion for matching charts.
 
     Examples
     --------
@@ -1651,25 +1702,156 @@ def point_transform(
 
 
 # ===================================================================
+# Point Transform a Quantity
+# Only quantities which have the same units for all components can be
+# transformed as a single Quantity.
+
+
+@plum.dispatch.multi(
+    *(
+        (typ, typ, u.AbstractQuantity, OptUSys)
+        for typ in (cxc.Abstract0D, cxc.Abstract1D, cxc.Cart2D, cxc.Cart3D, cxc.CartND)
+    ),
+    *(
+        (typ, typ, u.AbstractQuantity)  # usys is optional
+        for typ in (cxc.Abstract0D, cxc.Abstract1D, cxc.Cart2D, cxc.Cart3D, cxc.CartND)
+    ),
+)
+def point_transform(
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    q: u.AbstractQuantity,
+    /,
+    usys: OptUSys = None,
+) -> u.AbstractQuantity:
+    """Identity point transform for Quantity inputs on uniform-unit charts.
+
+    For charts where all components share the same unit (Cartesian charts,
+    0D/1D charts), a Quantity can be passed directly and is returned unchanged
+    when the source and target charts are the same type.
+
+    This dispatch only handles identity transformations (same chart type).
+    For transformations between different chart types with Quantity input,
+    the Quantity must first be converted to a coordinate dictionary.
+
+    Examples
+    --------
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.transforms as cxt
+    >>> import unxt as u
+
+    **1D Cartesian (identity):**
+
+    >>> q = u.Q([5.0], "m")
+    >>> cxt.point_transform(cxc.cart1d, cxc.cart1d, q, None) is q
+    True
+
+    **2D Cartesian (identity):**
+
+    >>> q = u.Q([3.0, 4.0], "m")
+    >>> cxt.point_transform(cxc.cart2d, cxc.cart2d, q, None) is q
+    True
+
+    **3D Cartesian (identity):**
+
+    >>> q = u.Q([1.0, 2.0, 3.0], "km")
+    >>> cxt.point_transform(cxc.cart3d, cxc.cart3d, q, None) is q
+    True
+
+    **N-D Cartesian (identity):**
+
+    >>> q = u.Q([1.0, 2.0, 3.0, 4.0], "m")
+    >>> cxt.point_transform(cxc.cartnd, cxc.cartnd, q, None) is q
+    True
+
+    """
+    return q
+
+
+# ===================================================================
 # Point Transform an Array
 
 
 @plum.dispatch
 def point_transform(
     to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
-    from_chart: cxc.AbstractChart,
-    p: ArrayLike,
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    p: Array | list,
     /,
+    *,
     usys: OptUSys,
 ) -> Array:
-    r"""Point transform for array input."""
+    r"""Point transform for array input.
+
+    Transforms a point represented as a raw array (without units) from one
+    chart to another. The unit system ``usys`` provides the units for
+    interpreting the array components.
+
+    Returns
+    -------
+    Array
+        Array of shape ``(..., ndim)`` containing the transformed coordinates
+        in ``to_chart``.
+
+    Examples
+    --------
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.transforms as cxt
+    >>> import unxt as u
+    >>> import jax.numpy as jnp
+
+    **Cartesian to Spherical (3D):**
+
+    >>> usys = u.unitsystem("m", "rad")
+    >>> p = jnp.array([1.0, 0.0, 0.0])  # Point on x-axis
+    >>> cxt.point_transform(cxc.sph3d, cxc.cart3d, p, usys=usys)
+    Array([1.        , 1.57079633, 0.        ], dtype=float64)
+
+    The result is [r, theta, phi] = [1, pi/2, 0] (on equator, x-axis).
+
+    **Spherical to Cartesian (3D):**
+
+    >>> p = jnp.array([2.0, jnp.pi/4, 0.0])  # r=2, theta=45°, phi=0
+    >>> cxt.point_transform(cxc.cart3d, cxc.sph3d, p, usys=usys)
+    Array([1.41421356, 0.        , 1.41421356], dtype=float64)
+
+    **Cartesian to Cylindrical:**
+
+    >>> p = jnp.array([3.0, 4.0, 5.0])
+    >>> cxt.point_transform(cxc.cyl3d, cxc.cart3d, p, usys=usys)
+    Array([5.        , 0.92729522, 5.        ], dtype=float64)
+
+    The result is [rho, phi, z] = [5, arctan(4/3), 5].
+
+    **Batched transformation:**
+
+    >>> p_batch = jnp.array([[1.0, 0.0, 0.0],
+    ...                      [0.0, 1.0, 0.0],
+    ...                      [0.0, 0.0, 1.0]])
+    >>> cxt.point_transform(cxc.sph3d, cxc.cart3d, p_batch, usys=usys)
+    Array([[1.        , 1.57079633, 0.        ],
+           [1.        , 1.57079633, 1.57079633],
+           [1.        , 0.        , 0.        ]], dtype=float64)
+
+    **2D Cartesian to Polar:**
+
+    >>> usys_2d = u.unitsystem("m", "rad")
+    >>> p = jnp.array([3.0, 4.0])
+    >>> cxt.point_transform(cxc.polar2d, cxc.cart2d, p, usys=usys_2d)
+    Array([5.        , 0.92729522], dtype=float64)
+
+    """
+    usys = eqx.error_if(usys, usys is None, "usys must be provided for array input.")
+
     # Build a dict of arrays for each component
-    p_dict = api.cdict(p, from_chart)
+    p_dict = api.cdict(jnp.asarray(p), from_chart)
 
     # Transform the point dict
     p_transformed = api.point_transform(to_chart, from_chart, p_dict, usys=usys)
 
     # Stack the transformed components into an array
-    p_out = jnp.stack([p_transformed[comp] for comp in to_chart.components], axis=-1)
+    p_out: Array = jnp.stack(
+        [p_transformed[comp] for comp in to_chart.components], axis=-1
+    )
 
     return p_out

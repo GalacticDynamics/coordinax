@@ -11,7 +11,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue
 
-from coordinax._src.custom_types import ComponentsKey, CsDict
+from coordinax._src.custom_types import CDict, ComponentsKey, CsDict
 
 
 @overload
@@ -43,7 +43,7 @@ def pack_uniform_unit(
 
 def unpack_with_unit(
     vals: jnp.ndarray, unit: u.AbstractUnit | None, keys: tuple[str, ...]
-) -> CsDict:
+) -> CDict:
     """Unpack an array into dict-of-quantities with a shared unit."""
     data = {k: vals[..., i] for i, k in enumerate(keys)}
     if unit is None:
