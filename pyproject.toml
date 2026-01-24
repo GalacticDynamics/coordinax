@@ -34,7 +34,7 @@ dependencies = [
   "quaxed>=0.10.4",
   "typing-extensions>=4.13.2",
   "unxt>=1.10.0",
-  "unxt-api>=1.10.0",
+  "unxt-api>=1.10.1",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
@@ -125,6 +125,10 @@ version.source = "vcs"
 skip = ["uv.lock"]
 
 
+[tool.repo-review]
+ignore = ["PC140"] # mypy is run via nox, not pre-commit
+
+
 [tool.commitizen]
 name = "cz_gitmoji"
 
@@ -154,7 +158,13 @@ disable_error_code = [
 disallow_incomplete_defs = false
 disallow_untyped_defs = false
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
-files = ["src", "tests"]
+files = [
+  "src",
+  "packages/coordinax-api/src",
+  "packages/coordinax-astro/src",
+  "packages/coordinax-hypothesis/src",
+  "packages/coordinax-interop-astropy/src",
+]
 python_version = "3.11"
 strict = true
 warn_return_any = false
@@ -229,11 +239,12 @@ similarities.ignore-imports = "yes"
 [tool.pytest.ini_options]
 addopts = [
   "--arraydiff",
+  "--import-mode=importlib",
   "--showlocals",
   "--strict-config",
   "--strict-markers",
-  "-p no:doctest",    # using sybil
-  "-ra",              # Display extra test summary info for all outcomes
+  "-p no:doctest",           # using sybil
+  "-ra",                     # Display extra test summary info for all outcomes
 ]
 filterwarnings = [
   "error",
@@ -289,6 +300,7 @@ ignore = [
   "F821",    # undefined name '...'  <- jaxtyping
   "FIX002",  # Line contains TODO
   "ISC001",  # Conflicts with formatter
+  "N802",    # Function name should be lowercase
   "N806",    # Variable in function should be lowercase
   "PD",      # Pandas
   "PLR09",   # Too many <...>

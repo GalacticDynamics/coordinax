@@ -7,9 +7,8 @@ from typing_extensions import TypeVar
 
 import plum
 
-import coordinax._src.operators as cxo
 from .base import AbstractReferenceFrame
-from coordinax._src import api
+from coordinax._src import api, operators as cxo
 
 FrameT = TypeVar("FrameT", bound=AbstractReferenceFrame, default=AbstractReferenceFrame)
 

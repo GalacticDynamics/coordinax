@@ -13,7 +13,7 @@ import equinox as eqx
 import jax.numpy as jnp
 import jax.tree as jtu
 import plum
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 
 import unxt as u
 from dataclassish import field_items, flags
@@ -113,9 +113,12 @@ class AbstractOperator(eqx.Module):
         >>> pipe.simplify()
         Identity()
 
-        >>> op = cxo.GalileanOp(translation=u.Q([0., 2., 3., 4.], "km"))
+        >>> op = cxo.GalileanOp(translation=u.Q([0., 2., 3.], "km"))
         >>> op.simplify()
-        Add(delta=Q(f32[4], 'km'))
+        Translate(
+            {'x': Q(0., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')},
+            chart=Cart3D()
+        )
 
         """
         return api.simplify(self)
@@ -140,8 +143,10 @@ class AbstractOperator(eqx.Module):
 
         """
         # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("short_arrays", "compact")
         kwargs.setdefault("use_short_name", True)
         kwargs.setdefault("named_unit", False)
+        kwargs.setdefault("include_params", False)
 
         # Get the field items, excluding those that should not be shown and
         # those that are equal to the default value.
@@ -200,21 +205,26 @@ class AbstractOperator(eqx.Module):
         >>> op = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> print(op)
         Rotate([[1 0 0]
-                          [0 1 0]
-                          [0 0 1]])
+                [0 1 0]
+                [0 0 1]])
 
         >>> op = cx.ops.GalileanOp(
-        ...     translation=u.Q([0., 2, 3, 4], "km"),
+        ...     translation=u.Q([0., 2, 3], "km"),
         ...     velocity=u.Q([1., 2, 3], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
         ... )
         >>> print(op)
         GalileanOp(
             rotation=Rotate([[1. 0. 1.]
-                            [0. 1. 0.]
-                            [0. 0. 1.]]),
-            translation=Add( delta_t=..., delta_q=... ),
-            velocity=Boost(CartVel3D( ... ))
+                             [0. 1. 0.]
+                             [0. 0. 1.]]),
+            translation=Translate(
+                {'x': Q(0., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')}, chart=Cart3D()
+            ),
+            velocity=Boost(
+                delta={'x': Q(1., 'km / s'), 'y': Q(2., 'km / s'), 'z': Q(3., 'km / s')},
+                chart=Cart3D()
+            )
         )
 
         """
@@ -234,11 +244,11 @@ class AbstractOperator(eqx.Module):
         >>> op2 = cxo.Identity()
         >>> op3 = op1 | op2
         >>> op3
-        Pipe((Rotate(R=i32[3,3]), Identity()))
+        Pipe((Rotate(i64[3,3](jax)), Identity()))
 
         >>> op4 = cxo.Identity() | op3
         >>> op4
-        Pipe((Identity(), Rotate(R=i32[3,3]), Identity()))
+        Pipe((Identity(), Rotate(i64[3,3](jax)), Identity()))
 
         """
         from .pipe import Pipe  # noqa: PLC0415
@@ -298,11 +308,17 @@ def from_(
 
     >>> op = cxo.Translate.from_([1, 1, 1], "km")
     >>> print(op)
-    Translate(Cart3D( ... ))
+    Translate(
+        {'x': Quantity(1, 'km'), 'y': Quantity(1, 'km'), 'z': Quantity(1, 'km')},
+        chart=Cart3D()
+    )
 
     >>> op = cxo.Boost.from_([1, 1, 1], "km/s")
     >>> print(op)
-    Boost(CartVel3D( ... ))
+    Boost(
+      delta={'x': Q(1, 'km / s'), 'y': Q(1, 'km / s'), 'z': Q(1, 'km / s')},
+      chart=Cart3D()
+    )
 
     """
     return cls.from_(u.Q(x, unit))
@@ -417,22 +433,24 @@ def eval_op(op: OpT, tau: Any, /) -> OpT:
     Examples
     --------
     >>> import unxt as u
+    >>> import coordinax as cx
     >>> import coordinax.ops as cxo
 
     **Time-dependent operator:**
 
-    >>> op = cxo.Translate(lambda t: u.Q(t.ustrip("s"), "km"))
+    >>> op = cxo.Translate(lambda t: cx.cdict(u.Q([t.ustrip("s"), 0, 0], "km")),
+    ...                    chart=cx.cart3d)
     >>> tau = u.Q(5.0, "s")
     >>> op_eval = cxo.eval_op(op, tau)
-    >>> op_eval.delta
-    Quantity['length'](Array(5., dtype=float64, weak_type=True), unit='km')
+    >>> op_eval.delta["x"]
+    Quantity(Array(5., dtype=float64), unit='km')
 
     **Static operator (no change):**
 
-    >>> op_static = cxo.Translate(u.Q([1, 2, 3], "km"))
+    >>> op_static = cxo.Translate(cx.cdict(u.Q([1, 2, 3], "km")), chart=cx.cart3d)
     >>> op_eval_static = cxo.eval_op(op_static, tau)
-    >>> op_eval_static.delta
-    Quantity['length'](Array([1, 2, 3], dtype=int32), unit='km')
+    >>> op_eval_static.delta["x"]
+    Quantity(Array(1, dtype=int64), unit='km')
 
     **Identity operator:**
 

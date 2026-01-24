@@ -3,24 +3,25 @@
 __all__ = ("AbstractCoordinate", "Coordinate")
 
 
-from typing import Any, ClassVar, Literal, assert_never, cast, final
+from collections.abc import Mapping
+from typing import Any, ClassVar, Literal, assert_never, final
 
 import equinox as eqx
 import jax
 import plum
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 from quax import register
 
+import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items, replace
 from dataclassish.converters import Unless
 
-import coordinax._src.charts as cxc
-import coordinax._src.frames as cxf
-import coordinax._src.operators as cxo
 from .base import AbstractVectorLike
 from .bundle import PointedVector
 from .vector import Vector
+from coordinax._src import charts as cxc, frames as cxf, operators as cxo
+from coordinax._src.api import apply_op
 
 
 # TODO: parametrize by the vector type(s), when Space is parametrized,
@@ -63,7 +64,7 @@ class AbstractCoordinate(AbstractVectorLike):
         >>> cgcf = cicrs.to_frame(cx.frames.Galactocentric())
         >>> cgcf
         Coordinate(
-            PointedVector({ 'base': Cart3D(...) }),
+            PointedVector( base=Vector( ... ) ),
             frame=Galactocentric( ... )
         )
 
@@ -71,13 +72,93 @@ class AbstractCoordinate(AbstractVectorLike):
         op = self.frame.transform_op(toframe)
 
         # Special case for identity operations
-        if isinstance(op, Identity):
+        if isinstance(op, cxo.Identity):
             return self
 
         # Otherwise, apply the transformation and return a new coordinate
-        new_data = op(self.data) if t is None else op(t, self.data)[1]
-        out = self.__class__.from_(new_data, toframe)
-        return cast("AbstractCoordinate", out)
+        tau = u.Q(jnp.array(0.0), "s") if t is None else t
+        new_data = op(tau, self.data)
+        out: AbstractCoordinate = self.__class__(new_data, toframe)
+        return out
+
+    def vconvert(
+        self,
+        to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+        /,
+        *,
+        field_charts: Mapping[str, cxc.AbstractChart] | None = None,  # type: ignore[type-arg]
+    ) -> "AbstractCoordinate":
+        r"""Convert the coordinate's data to a new chart.
+
+        This method converts the underlying `PointedVector` data to a new chart
+        while preserving the reference frame. The conversion follows the same
+        semantics as `PointedVector.vconvert`:
+
+        1. The base point converts as a `Point` (position map)
+        2. Fibre vectors convert according to their roles using tangent
+           transformations with the base as the reference point
+
+        Parameters
+        ----------
+        to_chart : AbstractChart
+            Target chart instance for the base and (by default) all fields.
+        field_charts : Mapping[str, AbstractChart], optional
+            Override target chart for specific fields. Keys are field names,
+            values are target charts for those fields. If not provided, all
+            fields use ``to_chart``.
+
+        Returns
+        -------
+        AbstractCoordinate
+            New coordinate with data in the target chart(s), same frame.
+
+        Examples
+        --------
+        >>> import coordinax as cx
+
+        >>> coord = cx.Coordinate(
+        ...     cx.Vector.from_([1, 2, 3], "kpc"),
+        ...     cx.frames.ICRS()
+        ... )
+        >>> coord.data.base.chart
+        Cart3D()
+
+        Convert to spherical coordinates:
+
+        >>> sph_coord = coord.vconvert(cx.charts.sph3d)
+        >>> sph_coord.data.base.chart
+        Spherical3D()
+        >>> sph_coord.frame
+        ICRS()
+
+        With velocity data:
+
+        >>> space = cx.PointedVector(
+        ...     base=cx.Vector.from_([1, 0, 0], "kpc"),
+        ...     velocity=cx.Vector.from_([10, 20, 30], "km/s"),
+        ... )
+        >>> coord = cx.Coordinate(space, cx.frames.ICRS())
+
+        >>> sph_coord = coord.vconvert(cx.charts.sph3d)
+        >>> sph_coord.data.base.chart
+        Spherical3D()
+        >>> sph_coord.data["velocity"].chart
+        Spherical3D()
+
+        Specify different charts for fields:
+
+        >>> mixed = coord.vconvert(
+        ...     cx.charts.sph3d,
+        ...     field_charts={"velocity": cx.charts.cyl3d}
+        ... )
+        >>> mixed.data.base.chart
+        Spherical3D()
+        >>> mixed.data["velocity"].chart
+        Cylindrical3D()
+
+        """
+        new_data = self.data.vconvert(to_chart, field_charts=field_charts)
+        return self.__class__(new_data, self.frame)
 
     # ===============================================================
     # Quax API
@@ -123,34 +204,27 @@ class AbstractCoordinate(AbstractVectorLike):
 
         >>> wl.pprint(coord, include_data_name="named")
         Coordinate(
-            data=PointedVector({ 'base': Cart3D(...) }),
+            data=PointedVector( base=Vector( ... ) ),
             frame=ICRS()
         )
 
         >>> wl.pprint(coord, include_data_name="vector")
         Coordinate(
-            PointedVector({ 'base': Cart3D(...) }),
+            PointedVector( base=Vector( ... ) ),
             frame=ICRS()
         )
 
         >>> wl.pprint(coord, include_data_name="map")
-        Coordinate( {'base': Cart3D(...)}, frame=ICRS() )
+        Coordinate({}, frame=ICRS())
 
         >>> print(repr(coord))
         Coordinate(
-            PointedVector({ 'base': Cart3D(...) }),
+            PointedVector( base=Vector( ... ) ),
             frame=ICRS()
         )
 
         >>> print(str(coord))
-        Coordinate(
-            {
-                'base':
-                <Cart3D: (x, y, z) [kpc]
-                    [1 2 3]>
-            },
-            frame=ICRS()
-        )
+        Coordinate({}, frame=ICRS())
 
         """
         # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
@@ -195,7 +269,7 @@ class AbstractCoordinate(AbstractVectorLike):
         ...                       cx.frames.ICRS())
         >>> print(repr(coord))
         Coordinate(
-            PointedVector({ 'length': Cart3D(...) }),
+            PointedVector( base=Vector( ... ) ),
             frame=ICRS()
         )
 
@@ -211,13 +285,7 @@ class AbstractCoordinate(AbstractVectorLike):
         >>> coord = cx.Coordinate(cx.Vector.from_([1, 2, 3], "kpc"),
         ...                       cx.frames.ICRS())
         >>> print(coord)
-        Coordinate(
-            {
-            'length': <Cart3D: (x, y, z) [kpc]
-                [1 2 3]>
-            },
-            frame=ICRS()
-        )
+        Coordinate({}, frame=ICRS())
 
         """
         return wl.pformat(self, width=88, include_data_name="map", vector_form=True)
@@ -259,16 +327,14 @@ class Coordinate(AbstractCoordinate):
     >>> coord = cx.Coordinate(cx.Vector.from_([1, 2, 3], "kpc"),
     ...                       cx.frames.ICRS())
     >>> coord
-    Coordinate( PointedVector({ 'base': Cart3D(...) }),
-                frame=ICRS() )
+    Coordinate( PointedVector( base=Vector( ... ) ), frame=ICRS() )
 
     Alternative Construction:
 
     >>> frame = cx.frames.ICRS()
     >>> data = cx.Vector.from_([1, 2, 3], "kpc")
-    >>> cx.Coordinate.from_({"data": data, "frame": frame})
-    Coordinate( PointedVector({ 'base': Cart3D(...) }),
-                frame=ICRS() )
+    >>> cx.Coordinate(data, frame)
+    Coordinate( PointedVector( base=Vector( ... ) ), frame=ICRS() )
 
     Changing Representation:
 
@@ -276,33 +342,32 @@ class Coordinate(AbstractCoordinate):
     >>> data = cx.Vector.from_([1, 2, 3], "kpc")
     >>> coord = cx.Coordinate(data, frame)
 
-    >>> coord.vconvert(cx.charts.sph3d)
-    Coordinate( PointedVector({ 'base': Spherical3D( ... ) }),
-                frame=ICRS() )
+    >>> cx.vconvert(cx.charts.sph3d, coord)
+    Coordinate( PointedVector( base=Vector( ... ) ), frame=ICRS() )
 
     Showing Frame Transformation:
 
     >>> space = cx.PointedVector(
     ...     base=cx.Vector.from_([1.0, 0, 0], "pc"),
-    ...     speed=cx.Vector.from_([1.0, 0, 0], "km/s", cx.charts.CartVel3D))
+    ...     speed=cx.Vector.from_([1.0, 0, 0], "km/s"))
 
     >>> w=cx.Coordinate(
     ...     data=space,
     ...     frame=cx.frames.TransformedReferenceFrame(
-    ...         cx.frames.Galactocentric(),
-    ...         cx.ops.GalileanOp.from_([20, 0, 0], "kpc"),
+    ...         cx.frames.ICRS(),
+    ...         cx.ops.Translate.from_([20, 0, 0], "pc"),
     ...     ),
     ... )
 
     >>> w.to_frame(cx.frames.ICRS())
-    Coordinate(
-        PointedVector({
-            'base': Cart3D(...), 'speed': CartVel3D(...) }),
-        frame=ICRS()
-    )
+    Coordinate(..., frame=ICRS()...)
 
-    >>> w.to_frame(cx.frames.ICRS()).data["base"]
-    Cart3D(x=Q(-1587.6683, 'pc'), y=Q(-24573.762, 'pc'), z=Q(-13583.504, 'pc'))
+    >>> w.to_frame(cx.frames.ICRS()).data.base
+    Vector(
+      data={'x': Q(21., 'pc'), 'y': Q(0., 'pc'), 'z': Q(0., 'pc')},
+      chart=Cart3D...,
+      role=Point()
+    )
 
     """
 
@@ -336,11 +401,14 @@ class Coordinate(AbstractCoordinate):
         --------
         >>> import coordinax as cx
 
-        >>> data = cx.Vector.from_([[1, 2, 3], [4, 5, 6]], "kpc")
-        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+        >>> space = cx.PointedVector(
+        ...     base=cx.Vector.from_([[1, 2, 3], [4, 5, 6]], "kpc"),
+        ...     speed=cx.Vector.from_([[1, 0, 0], [0, 1, 0]], "km/s"),
+        ... )
+        >>> w = cx.Coordinate(space, cx.frames.ICRS())
 
-        >>> print(w[0].data["length"])
-        <Cart3D: (x, y, z) [kpc]
+        >>> print(w[0].data.base)
+        <Vector: chart=Cart3D, role=Point (x, y, z) [kpc]
             [1 2 3]>
 
         """
@@ -354,13 +422,16 @@ class Coordinate(AbstractCoordinate):
         --------
         >>> import coordinax as cx
 
-        >>> data = cx.Vector.from_([[1, 2, 3], [4, 5, 6]], "kpc")
-        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
+        >>> space = cx.PointedVector(
+        ...     base=cx.Vector.from_([[1, 2, 3], [4, 5, 6]], "kpc"),
+        ...     speed=cx.Vector.from_([[1, 0, 0], [0, 1, 0]], "km/s"),
+        ... )
+        >>> w = cx.Coordinate(space, cx.frames.ICRS())
 
-        >>> print(w["length"])
-        <Cart3D: (x, y, z) [kpc]
-            [[1 2 3]
-             [4 5 6]]>
+        >>> print(w["speed"])
+        <Vector: chart=Cart3D, role=PhysVel (x, y, z) [km / s]
+            [[1 0 0]
+             [0 1 0]]>
 
         """
         return self.data[index]
@@ -380,8 +451,10 @@ def vconvert(target: cxc.AbstractChart, w: Coordinate, /) -> Coordinate:  # type
 
     >>> cx.vconvert(cx.charts.sph3d, w)
     Coordinate(
-        PointedVector({ 'base': Spherical3D( ... ) }),
-        frame=NoFrame()
+      PointedVector(
+        base=Vector(... chart=Spherical3D...)
+      ),
+      frame=NoFrame()
     )
 
     """
@@ -400,13 +473,11 @@ def neg_p_coord(x: Coordinate, /) -> Coordinate:
     >>> coord = cx.Coordinate(data, cx.frames.ICRS())
 
     >>> print(-coord)
-    Coordinate(
-        {
-           'length': <Cart3D: (x, y, z) [kpc]
-               [-1 -2 -3]>
-        },
-        frame=ICRS()
-    )
+    Coordinate({}, frame=ICRS())
+
+    >>> print((-coord).data.base)
+    <Vector: chart=Cart3D, role=Point (x, y, z) [kpc]
+        [-1 -2 -3]>
 
     """
     return replace(x, data=-x.data)
@@ -438,7 +509,13 @@ def add_p_coord_pos(x: Coordinate, y: Vector, /) -> Coordinate:
 
 
 @plum.dispatch
-def apply_op(self: cxo.AbstractOperator, obj: Coordinate, /) -> Coordinate:
+def apply_op(
+    op: cxo.AbstractOperator,
+    tau: Any,
+    obj: Coordinate,
+    /,
+    **kwargs: Any,
+) -> Coordinate:
     """Apply the operator to a coordinate.
 
     Examples
@@ -447,16 +524,12 @@ def apply_op(self: cxo.AbstractOperator, obj: Coordinate, /) -> Coordinate:
 
     >>> coord = cx.Coordinate(cx.Vector.from_([1, 2, 3], "kpc"),
     ...                       cx.frames.ICRS())
-    >>> coord
-    Coordinate( PointedVector({ 'base': Cart3D(...) }),
-                frame=ICRS() )
-
-    >>> op = cx.ops.GalileanOp.from_([-1, -1, -1], "kpc")
+    >>> op = cx.ops.Translate.from_([-1, -1, -1], "kpc")
 
     >>> new_coord = op(coord)
-    >>> print(new_coord.data["base"])
-    <Cart3D: (x, y, z) [kpc]
+    >>> print(new_coord.data.base)
+    <Vector: chart=Cart3D, role=Point (x, y, z) [kpc]
         [0 1 2]>
 
     """
-    raise NotImplementedError("TODO")  # noqa: EM101
+    return replace(obj, data=apply_op(op, tau, obj.data, **kwargs))

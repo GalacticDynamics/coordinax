@@ -2,7 +2,8 @@
 
 __all__ = (
     "AbstractRole",
-    "AbstractPhysicalRole",
+    "AbstractPhysRole",
+    "AbstractCoordRole",
     "Point",
     "point",
     "PhysDisp",
@@ -11,6 +12,12 @@ __all__ = (
     "phys_vel",
     "PhysAcc",
     "phys_acc",
+    "CoordDisp",
+    "coord_disp",
+    "CoordVel",
+    "coord_vel",
+    "CoordAcc",
+    "coord_acc",
     "DIM_TO_ROLE_MAP",
     "guess_role",
 )
@@ -25,9 +32,17 @@ import plum
 import unxt as u
 
 import coordinax._src.charts as cxc
+from coordinax._src.api import guess_role
+from coordinax._src.constants import (
+    ACCELERATION,
+    ANGLE,
+    ANGULAR_ACCELERATION,
+    ANGULAR_SPEED,
+    LENGTH,
+    SPEED,
+    TIME,
+)
 from coordinax._src.custom_types import CsDict
-
-Time = u.dimension("time")
 
 
 @overload
@@ -40,7 +55,7 @@ def d_dt_dim(
     """Return the dimension of the time derivative of the given dimension."""
     if dim is None:
         return None
-    return u.dimension(dim) / (Time**order)
+    return u.dimension(dim) / (TIME**order)
 
 
 class AbstractRole:
@@ -77,17 +92,15 @@ class AbstractRole:
         """Return role flag for the time antiderivative of this role."""
         raise NotImplementedError  # pragma: no cover
 
+    def __eq__(self, other: object) -> bool:
+        """Check equality between roles."""
+        if type(self) is not type(other):
+            return NotImplemented
+        return True
 
-class AbstractPhysicalRole(AbstractRole, abc.ABC):
-    """Abstract base class for physical tangent roles.
-
-    Physical tangent roles have uniform physical dimensions across components
-    and transform via `physical_tangent_transform`.
-    """
-
-    def __repr__(self) -> str:
-        """Return string representation."""
-        return f"{self.__class__.__name__}()"
+    def __hash__(self) -> int:
+        """Hash a role based on its type."""
+        return hash(type(self))
 
 
 @final
@@ -130,8 +143,24 @@ class Point(AbstractRole):
 point = Point()
 
 
+# ===================================================================
+# Physical Roles
+
+
+class AbstractPhysRole(AbstractRole):
+    """Abstract base class for physical tangent roles.
+
+    Physical tangent roles have uniform physical dimensions across components
+    and transform via `physical_tangent_transform`.
+    """
+
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f"{self.__class__.__name__}()"
+
+
 @final
-class PhysDisp(AbstractPhysicalRole):
+class PhysDisp(AbstractPhysRole):
     r"""Displacement role flag: physical displacement vectors with uniform length units.
 
     Mathematical Definition
@@ -227,7 +256,7 @@ phys_disp = PhysDisp()
 
 
 @final
-class PhysVel(AbstractPhysicalRole):
+class PhysVel(AbstractPhysRole):
     """Velocity role flag (1st time derivative)."""
 
     order: ClassVar[int] = 1
@@ -245,7 +274,7 @@ phys_vel = PhysVel()
 
 
 @final
-class PhysAcc(AbstractPhysicalRole):
+class PhysAcc(AbstractPhysRole):
     """Acceleration role flag (2nd time derivative)."""
 
     order: ClassVar[int] = 2
@@ -262,17 +291,82 @@ class PhysAcc(AbstractPhysicalRole):
 phys_acc = PhysAcc()
 
 
+# ==================================================================
+# Coordinate-basis Tangent Roles
+
+
+class AbstractCoordRole(AbstractRole):
+    """Abstract base class for coordinate-basis tangent roles.
+
+    Coordinate-basis tangent roles transform via `coord_transform`
+    and have per-component physical dimensions according to the chart's
+    coordinate dimensions.
+    """
+
+    def __repr__(self) -> str:
+        """Return string representation."""
+        return f"{self.__class__.__name__}()"
+
+
+@final
+class CoordDisp(AbstractCoordRole):
+    """Coordinate-basis displacement components (contravariant in chart basis)."""
+
+    order: ClassVar[int] = 0
+
+    def derivative(self) -> AbstractCoordRole:
+        return coord_vel
+
+    def antiderivative(self) -> AbstractCoordRole:
+        return NotImplemented
+
+
+coord_disp = CoordDisp()
+
+
+@final
+class CoordVel(AbstractCoordRole):
+    """Coordinate-basis velocity components (contravariant in chart basis)."""
+
+    order: ClassVar[int] = 1
+
+    def derivative(self) -> AbstractCoordRole:
+        return coord_acc
+
+    def antiderivative(self) -> AbstractCoordRole:
+        return coord_disp
+
+
+coord_vel = CoordVel()
+
+
+@final
+class CoordAcc(AbstractCoordRole):
+    """Coordinate-basis acceleration components (contravariant in chart basis)."""
+
+    order: ClassVar[int] = 2
+
+    def derivative(self) -> AbstractCoordRole:
+        return NotImplemented
+
+    def antiderivative(self) -> AbstractCoordRole:
+        return coord_vel
+
+
+coord_acc = CoordAcc()
+
+
 # ============================================================================
 # Helpers
 
 # Mapping from dimension to role flag
 DIM_TO_ROLE_MAP: dict[u.AbstractDimension, type["AbstractRole"]] = {
-    u.dimension("length"): Point,  # Length → Point (affine location, per spec)
-    u.dimension("angle"): Point,  # Angles → affine (mixed with other coords)
-    u.dimension("speed"): PhysVel,  # Length/time → velocity
-    u.dimension("angular speed"): PhysVel,  # Angle/time → velocity
-    u.dimension("acceleration"): PhysAcc,  # Length/time² → acceleration
-    u.dimension("angular acceleration"): PhysAcc,  # Angle/time² → acceleration
+    LENGTH: Point,  # Length → Point (affine location, per spec)
+    ANGLE: Point,  # Angles → affine (mixed with other coords)
+    SPEED: PhysVel,  # Length/time → velocity
+    ANGULAR_SPEED: PhysVel,  # Angle/time → velocity
+    ACCELERATION: PhysAcc,  # Length/time² → acceleration
+    ANGULAR_ACCELERATION: PhysAcc,  # Angle/time² → acceleration
 }
 
 
@@ -291,11 +385,11 @@ def guess_role(obj: u.AbstractDimension, /) -> AbstractRole:
 
     >>> r2 = cxr.guess_role(u.dimension("speed"))
     >>> r2
-    Vel()
+    PhysVel()
 
     >>> r3 = cxr.guess_role(u.dimension("acceleration"))
     >>> r3
-    Acc()
+    PhysAcc()
 
     """
     try:
@@ -321,11 +415,11 @@ def guess_role(x: u.AbstractQuantity, /) -> AbstractRole:
 
     >>> r2 = cxr.guess_role(u.Q(2.0, "m / s"))
     >>> r2
-    Vel()
+    PhysVel()
 
     >>> r3 = cxr.guess_role(u.Q(3.0, "m / s ** 2"))
     >>> r3
-    Acc()
+    PhysAcc()
 
     """
     dim = u.dimension_of(x)
@@ -349,7 +443,7 @@ def guess_role(obj: CsDict, /) -> AbstractRole:
     >>> d2 = {"x": u.Q(1.0, "m / s"), "y": u.Q(2.0, "m / s")}
     >>> r2 = cxr.guess_role(d2)
     >>> r2
-    Vel()
+    PhysVel()
 
     """
     dims = {u.dimension_of(v) for v in obj.values()}

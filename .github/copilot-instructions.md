@@ -51,6 +51,9 @@ authoritative specification file:
 When working inside a workspace package:
 
 - You MUST read and follow that package’s own `docs/spec.md`.
+- Before editing any code, read the relevant `docs/spec.md` for the package you
+  are changing.
+- If changing behavior, update docstrings, docs, and tests in the same PR.
 - If behavior in a package conflicts with its local spec, the code/tests are
   wrong and must be updated to match the spec.
 - Cross-package changes (e.g. coordinax → coordinax-hypothesis) MUST keep all
@@ -148,6 +151,11 @@ Instructions:
   - read them before coding,
   - cross-reference them in docstrings and comments where appropriate,
   - update them whenever public semantics change.
+
+- Any new transform or role must include:
+  - spec-compliance checklist items (in PR description or doc),
+  - concise doctest-like examples where appropriate,
+  - property-based tests (prefer `coordinax-hypothesis`).
 
 - Never "patch around" a failing spec-driven test. Fix the implementation or
   revise the spec explicitly.

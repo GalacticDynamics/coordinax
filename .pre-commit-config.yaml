@@ -74,17 +74,6 @@ repos:
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always]
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.19.1"
-    hooks:
-      - id: mypy
-        files: src
-        additional_dependencies:
-          - optional_dependencies
-          - plum-dispatch
-          - quaxed
-          - quax-blocks
-
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.1"
     hooks:

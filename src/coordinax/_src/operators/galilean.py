@@ -17,6 +17,7 @@ from .rotate import Rotate
 from .translate import Translate
 from coordinax._src import api
 from coordinax._src.api import apply_op
+from coordinax._src.constants import LENGTH, SPEED
 from coordinax._src.operators.base import AbstractOperator
 from coordinax._src.operators.composite import AbstractCompositeOperator
 from coordinax._src.operators.identity import Identity
@@ -67,16 +68,21 @@ class GalileanOp(AbstractCompositeOperator):
     ... )
     >>> op
     GalileanOp(
-      rotation=Rotate(rotation=f32[3,3]),
-      translation=Translate(Q(f32[3], 'km')),
-      velocity=Boost(Q(f32[3], 'km / s'))
+      Translate(
+          {'x': Q(f64[], 'km'), 'y': Q(f64[], 'km'), 'z': Q(f64[], 'km')}, chart=Cart3D()
+      ),
+      Boost(
+        delta={'x': Q(f64[], 'km / s'), 'y': Q(f64[], 'km / s'), 'z': Q(f64[], 'km / s')},
+        chart=Cart3D()
+      )
     )
 
-    Apply to a Quantity:
+    Apply to a Quantity (tau=0 means no boost displacement):
 
     >>> q = u.Q([0, 0, 0], "km")
-    >>> op(None, q)
-    Quantity['length'](Array([2., 3., 4.], dtype=float32), unit='km')
+    >>> tau = u.Q(0, "s")
+    >>> op(tau, q)
+    Quantity(Array([2., 3., 4.], dtype=float64), unit='km')
 
     """
 
@@ -133,10 +139,10 @@ class GalileanOp(AbstractCompositeOperator):
         ... )
 
         >>> op[0]
-        Rotate(rotation=f32[3,3])
+        Rotate(f64[3,3](jax))
 
         >>> op[1:]
-        Pipe(( Translate(Q(f32[3], 'km')), Boost(Q(f32[3], 'km / s')) ))
+        Pipe(( Translate(...), Boost(...) ))
 
         """
         if isinstance(key, int):
@@ -167,8 +173,9 @@ def apply_op(
     ...     velocity=cxo.Boost.from_([1., 2., 3.], "km/s"),
     ... )
     >>> q = u.Q([0, 0, 0], "km")
-    >>> cxo.apply_op(op, None, q)
-    Quantity['length'](Array([2., 3., 4.], dtype=float32), unit='km')
+    >>> tau = u.Q(0, "s")  # tau=0 means no boost displacement
+    >>> cxo.apply_op(op, tau, q)
+    Quantity(Array([2., 3., 4.], dtype=float64), unit='km')
 
     """
     result = x
@@ -202,9 +209,9 @@ def simplify(op: GalileanOp, /, **kwargs: Any) -> SimplifyOpR:
     ... )
     >>> op
     GalileanOp(
-      rotation=Rotate(rotation=f32[3,3]),
-      translation=Translate(Q(f32[3], 'km')),
-      velocity=Boost(Q(f32[3], 'km / s'))
+      Rotate(R=f64[3,3](jax)),
+      Translate( {'x': Q(f64[], 'km'), 'y': Q(f64[], 'km'), 'z': Q(f64[], 'km')}, chart=Cart3D() ),
+      Boost( delta={'x': Q(f64[], 'km / s'), 'y': Q(f64[], 'km / s'), 'z': Q(f64[], 'km / s')}, chart=Cart3D() )
     )
 
     >>> cxo.simplify(op) is op
@@ -215,7 +222,9 @@ def simplify(op: GalileanOp, /, **kwargs: Any) -> SimplifyOpR:
     >>> op = cxo.GalileanOp(
     ...     translation=cxo.Translate.from_([2., 3., 4.], "km"))
     >>> cxo.simplify(op)
-    Translate(Q(f32[3], 'km'))
+    Translate(
+        {'x': Q(2., 'km'), 'y': Q(3., 'km'), 'z': Q(4., 'km')}, chart=Cart3D()
+    )
 
     """
     simple_ops = [api.simplify(x, **kwargs) for x in op.operators]
@@ -226,3 +235,47 @@ def simplify(op: GalileanOp, /, **kwargs: Any) -> SimplifyOpR:
         return cast("SimplifyOpR", Pipe(tuple(simple_ops)).simplify())
 
     return op
+
+
+# ===================================================================
+# Constructors
+
+
+@GalileanOp.from_.dispatch
+def from_(cls: type[GalileanOp], q: u.AbstractQuantity, /) -> GalileanOp:
+    """Construct a GalileanOp from a Quantity.
+
+    Length dimension -> translation, speed dimension -> velocity boost.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.ops as cxo
+
+    Length Quantity creates a translation:
+
+    >>> cxo.GalileanOp.from_(u.Q([1, 2, 3], "km"))
+    GalileanOp(
+      Translate( {'x': Q(i64[], 'km'), 'y': Q(i64[], 'km'), 'z': Q(i64[], 'km')},
+                chart=Cart3D()
+      )
+    )
+
+    Speed Quantity creates a velocity boost:
+
+    >>> cxo.GalileanOp.from_(u.Q([100, 0, 0], "km/s"))
+    GalileanOp(
+      Boost( delta={'x': Q(i64[], 'km / s'), 'y': Q(i64[], 'km / s'),
+                    'z': Q(i64[], 'km / s')},
+            chart=Cart3D()
+      )
+    )
+
+    """
+    dim = u.dimension_of(q)
+    if dim == LENGTH:
+        return cls(translation=q)
+    if dim == SPEED:
+        return cls(velocity=q)
+    msg = f"Cannot construct GalileanOp from Quantity with dimension {dim}"
+    raise TypeError(msg)

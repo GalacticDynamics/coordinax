@@ -58,7 +58,8 @@ The ``Translate`` operator translates points. It only acts on ``Point`` role vec
 
 >>> shift = cxo.Translate.from_([1.0, 1.0, 1.0], "km")
 >>> shift
-Translate(Q(f64[3], 'km'))
+Translate( {'x': Q(1., 'km'), 'y': Q(1., 'km'), 'z': Q(1., 'km')},
+          chart=Cart3D() )
 
 Translation with zero delta simplifies to Identity:
 
@@ -70,13 +71,16 @@ Applying to a Point vector:
 
 >>> shifted = cxo.apply_op(shift, None, vec)
 >>> print(shifted)
-<Cart3D: (x, y, z) [km]
+<Vector: chart=Cart3D, role=Point (x, y, z) [km]
     [2. 3. 4.]>
 
 The inverse negates the translation:
 
 >>> print(shift.inverse)
-Translate(Q(f64[3], 'km'))
+Translate(
+    {'x': Quantity(-1., 'km'), 'y': Quantity(-1., 'km'), 'z': Quantity(-1., 'km')},
+    chart=Cart3D()
+)
 
 
 # Boost Operator
@@ -85,7 +89,10 @@ The ``Boost`` operator boosts velocities. It only acts on ``PhysVel`` role vecto
 
 >>> boost = cxo.Boost.from_([10.0, 0.0, 0.0], "km/s")
 >>> boost
-Boost(Q(f64[3], 'km / s'))
+Boost(
+    {'x': Q(f64[], 'km / s'), 'y': Q(f64[], 'km / s'), 'z': Q(f64[], 'km / s')},
+    Cart3D()
+)
 
 Applying to a PhysVel vector:
 
@@ -120,7 +127,7 @@ An :class:`coordinax.ops.Rotate` operator rotates the input vector:
 Quantity['length']([-2.,  1.,  3.], unit='km')
 
 >>> print(R(vec))
-<Vector: (x, y, z) [km]
+<Vector: chart=Cart3D, role=Point (x, y, z) [km]
     [-2.  1.  3.]>
 
 The inverse of an :class:`coordinax.ops.Rotate` operator is the transpose of the
@@ -141,25 +148,33 @@ Operators can be combined using the pipe (`|`) operator, which results in a
 :class:`coordinax.ops.Pipe` operator.
 
 >>> combined_op = shift | R
->>> print(combined_op)
+>>> print(jax.tree.map(lambda x: x.round(2), combined_op))
 Pipe((
-    Translate(Q(f64[3], 'km')),
-    Rotate([[ 0.         -0.99999994  0.        ]
-            [ 0.99999994  0.          0.        ]
-            [ 0.          0.          0.99999994]])
+    Translate({'x': Q(1., 'km'), 'y': Q(1., 'km'), 'z': Q(1., 'km')}, chart=Cart3D()),
+    Rotate([[ 0. -1.  0.]
+            [ 1.  0.  0.]
+            [ 0.  0.  1.]])
 ))
 
 Combined operators can be simplified if possible:
 
 >>> print(cxo.simplify(identity_op | shift))
-Translate(Q(f64[3], 'km'))
+Translate(
+    {'x': Quantity(1., 'km'), 'y': Quantity(1., 'km'), 'z': Quantity(1., 'km')},
+    chart=Cart3D()
+)
 
 
 Combined operators have inverses that reverse the order of operations:
 
 >>> combined_inv = combined_op.inverse
 >>> combined_inv
-Pipe((Rotate(R=f32[3,3]), Translate(delta=Q(f64[3], 'km'))))
+Pipe((
+    Rotate(f64[3,3](jax)),
+    Translate(
+        {'x': Q(f64[], 'km'), 'y': Q(f64[], 'km'), 'z': Q(f64[], 'km')}, chart=Cart3D()
+    )
+))
 
 
 ## Frame Transform Operators
@@ -186,6 +201,7 @@ transformations, combining rotation, translation, and velocity boost.
 
 __all__ = (
     "apply_op",
+    "eval_op",
     "simplify",
     # Classes
     "AbstractOperator",
@@ -213,6 +229,7 @@ with install_import_hook("coordinax.ops"):
         Pipe,
         Rotate,
         Translate,
+        eval_op,
     )
 
 del install_import_hook, RUNTIME_TYPECHECKER

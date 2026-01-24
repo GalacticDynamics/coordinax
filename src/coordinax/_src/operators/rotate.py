@@ -101,12 +101,12 @@ class Rotate(AbstractOperator):
 
     >>> v_pos = cx.as_pos(v)  # A cxr.PhysDisp vector
     >>> print(op(t, v_pos))
-    <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+    <Vector: chart=Cart3D, role=PhysDisp (x, y, z) [m]
         [0. 1. 0.]>
 
     >>> v = cx.Vector.from_([1, 0, 0], "m/s")  # A cxr.PhysVel vector
     >>> print(op(t, v))
-    <Vector: chart=Cart3D, role=Vel (x, y, z) [m / s]
+    <Vector: chart=Cart3D, role=PhysVel (x, y, z) [m / s]
         [0. 1. 0.]>
 
     This also works for a batch of vectors (as a note, it is more efficient to
@@ -126,7 +126,7 @@ class Rotate(AbstractOperator):
     {'x': Q(0, unit='m'), 'y': Q(1, unit='m'), 'z': Q(0, unit='m')}
 
     >>> q = {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")}
-    >>> nq = cx.ops.apply_op(op, t, cxr.phys_vel, cxc.cart3d, q)  # explicit role & chart
+    >>> nq = cx.ops.apply_op(op, t, cxr.phys_vel, cxc.cart3d, q)  # role & chart
     >>> wl.pprint(nq, short_arrays="compact", use_short_name=True)
     {'x': Q(0., unit='m / s'), 'y': Q(1., unit='m / s'), 'z': Q(0., unit='m / s')}
 
@@ -169,12 +169,18 @@ class Rotate(AbstractOperator):
     R: Shaped[Array, " N N"] | Callable[[Any], RMatrix]
     """The rotation vector."""
 
+    def __init__(self, R: Any) -> None:
+        object.__setattr__(self, "R", jnp.asarray(R) if not callable(R) else R)
+
     # -----------------------------------------------------
     # Constructors
 
     @classmethod
     def from_euler(
-        cls: type["Rotate"], seq: str, angles: u.Q["angle"] | u.Angle, /
+        cls: type["Rotate"],
+        seq: str,
+        angles: u.Q["angle"] | u.Angle,  # type: ignore[type-arg]
+        /,
     ) -> "Rotate":
         """Initialize from Euler angles.
 
@@ -190,7 +196,7 @@ class Rotate(AbstractOperator):
         >>> op.R.round(2)
         Array([[ 0., -1.,  0.],
                [ 1.,  0.,  0.],
-               [ 0.,  0.,  1.]], dtype=float32)
+               [ 0.,  0.,  1.]], dtype=float64)
 
         """
         R = jtransform.Rotation.from_euler(
@@ -212,7 +218,7 @@ class Rotate(AbstractOperator):
         >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
         >>> op = cx.ops.Rotate(Rz)
         >>> op.inverse
-        Rotate(R=i32[3,3])
+        Rotate(i64[3,3](jax))
 
         >>> jnp.allclose(op.R, op.inverse.R.T)
         Array(True, dtype=bool)
@@ -231,27 +237,26 @@ class Rotate(AbstractOperator):
     @staticmethod
     def _validate_square(R: HasShape, /) -> RMatrix:
         shape = R.shape
-        R = eqx.error_if(
+        return eqx.error_if(
             R, len(shape) != 2 or shape[0] != shape[1], _MSG_R_SHAPE.format(shape=shape)
         )
-        return R
 
     @staticmethod
-    def _validate_shape_match(R: HasShape, cart: cxc.AbstractChart, /) -> RMatrix:
+    def _validate_shape_match(
+        R: HasShape, cart: cxc.AbstractChart[Any, Any], /
+    ) -> RMatrix:
         n = R.shape[0]
-        R = eqx.error_if(
+        return eqx.error_if(
             R,
             cart.ndim != n or len(cart.components) != n,
             _MSG_R_X_SHAPE_MISMATCH.format(R=R, cart=cart),
         )
-        return R
 
-    def _get_R(self, cart: cxc.AbstractChart, /) -> RMatrix:
+    def _get_R(self, cart: cxc.AbstractChart[Any, Any], /) -> RMatrix:
         R = self.R
         R = eqx.error_if(R, callable(R), "need to call `eval_op`.")
         R = self._validate_square(R)
-        R = self._validate_shape_match(R, cart)
-        return R
+        return self._validate_shape_match(R, cart)
 
     # -----------------------------------------------------
     # Arithmetic operations
@@ -273,7 +278,7 @@ class Rotate(AbstractOperator):
 
         """
         R = (
-            (self.R.func if isinstance(self.R, Neg) else Neg(self.R))
+            (self.R.param if isinstance(self.R, Neg) else Neg(self.R))
             if callable(self.R)
             else -self.R
         )
@@ -304,7 +309,7 @@ class Rotate(AbstractOperator):
 
         >>> op3 = op1 @ op2
         >>> op3
-        Rotate(R=f32[3,3])
+        Rotate(Q(f64[3,3], ''))
 
         >>> jnp.allclose(op3.R, op1.R @ op2.R)
         Array(True, dtype=bool)
@@ -312,6 +317,9 @@ class Rotate(AbstractOperator):
         """
         if not isinstance(other, Rotate):
             return NotImplemented
+        if callable(self.R) or callable(other.R):
+            msg = "@ is not yet implemented for Rotate with callable R."
+            raise NotImplementedError(msg)
         return replace(self, R=self.R @ other.R)
 
 
@@ -337,7 +345,7 @@ def from_(cls: type[Rotate], obj: Rotate, /) -> Rotate:
 
 
 @Rotate.from_.dispatch
-def from_(cls: type[Rotate], obj: Callable, /) -> Rotate:
+def from_(cls: type[Rotate], obj: Callable[..., Any], /) -> Rotate:
     """Construct a Rotate from a callable.
 
     The callable must have a return type annotation with shape ending in NxN
@@ -354,7 +362,7 @@ def from_(cls: type[Rotate], obj: Callable, /) -> Rotate:
 
     >>> R = cxo.Rotate.from_(R_func)
     >>> R
-    Rotate(R=<function R_func at ...>)
+    Rotate(<function R_func>)
 
     """
     # Validate return type has square matrix shape
@@ -371,7 +379,7 @@ def from_(cls: type[Rotate], obj: Callable, /) -> Rotate:
 
     if not isinstance(dims, tuple):
         msg = "Callable return type dims must be a tuple."
-        raise ValueError(msg)
+        raise TypeError(msg)
 
     if len(dims) < 2:
         msg = f"Callable return type must have matrix shape (...,NxN), got {dims}"
@@ -401,7 +409,7 @@ def from_(cls: type[Rotate], obj: AbcQ, /) -> Rotate:
     >>> import coordinax.ops as cxo
 
     >>> cxo.Rotate.from_(u.Q(jnp.eye(3), ""))
-    Rotate(rotation=i32[3,3])
+    Rotate(f64[3,3](jax))
 
     """
     return cls(u.ustrip("", obj))
@@ -417,7 +425,7 @@ def from_(cls: type[Rotate], obj: ArrayLike, /) -> Rotate:
     >>> import coordinax.ops as cxo
 
     >>> cxo.Rotate.from_(jnp.eye(3))
-    Rotate(rotation=i32[3,3])
+    Rotate(f64[3,3](jax))
 
     """
     return cls(jnp.asarray(obj))
@@ -461,7 +469,7 @@ def simplify(op: Rotate, /, **kw: Any) -> AbstractOperator:
     >>> Rz = jnp.asarray([[0, -1, 0], [1, 0,  0], [0, 0, 1]])
     >>> op = cx.ops.Rotate(Rz)
     >>> cx.ops.simplify(op)
-    Rotate(rotation=i32[3,3])
+    Rotate(i64[3,3](jax))
 
     An operator with an identity rotation matrix is simplified:
 
@@ -496,7 +504,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.AbstractRole,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     **kw: Any,
@@ -537,7 +545,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: AbcQ,
     /,
     **kw: Any,
@@ -562,7 +570,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.PhysDisp,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: AbcQ,
     /,
     **kw: Any,
@@ -595,7 +603,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: AbcQ,
     /,
     **kw: Any,
@@ -607,7 +615,7 @@ def apply_op(
     the canonical Cartesian chart.
 
     """
-    raise NotImplementedError("TODO")  # noqa: EM101
+    raise NotImplementedError("TODO")
 
 
 @plum.dispatch
@@ -615,7 +623,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: AbcQ,
     /,
     **kw: Any,
@@ -627,7 +635,7 @@ def apply_op(
     the canonical Cartesian chart.
 
     """
-    raise NotImplementedError("TODO")  # noqa: EM101
+    raise NotImplementedError("TODO")
 
 
 # -----------------------------------------------
@@ -639,7 +647,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     usys: OptUSys = None,
@@ -695,7 +703,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.PhysDisp,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,
@@ -745,7 +753,7 @@ def apply_op(
     return unpack_with_unit(v_chart_rot, unit, keys_chart)
 
 
-def _dR_dt(R: RMatrix | Callable, tau: Any, /) -> Array:
+def _dR_dt(R: RMatrix | Callable[[Any], RMatrix], tau: Any, /) -> Array:
     """Time derivative of the materialized rotation matrix.
 
     convention:
@@ -763,7 +771,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,
@@ -842,7 +850,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,
@@ -938,7 +946,7 @@ def apply_op(
     op: Rotate,
     tau: Any,
     role: cxr.AbstractRole,
-    chart: cxc.AbstractCartesianProductChart,
+    chart: cxc.AbstractCartesianProductChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,
@@ -974,7 +982,7 @@ def apply_op(
     }
 
     def _maybe(
-        factor_chart: cxc.AbstractChart, part: CsDict, /, **ats: CsDict | None
+        factor_chart: cxc.AbstractChart[Any, Any], part: CsDict, /, **ats: CsDict | None
     ) -> CsDict:
         # Determine if this factor's chart should be rotated.
         cart = factor_chart.cartesian

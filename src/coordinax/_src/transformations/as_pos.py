@@ -6,9 +6,7 @@ import plum
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax._src.charts as cxc
-import coordinax._src.embed as cxe
-from coordinax._src import api
+from coordinax._src import api, charts as cxc, embed as cxe
 from coordinax._src.custom_types import CsDict, OptUSys
 
 # ============================================================================
@@ -16,8 +14,13 @@ from coordinax._src.custom_types import CsDict, OptUSys
 
 @plum.dispatch
 def as_pos(
-    point: CsDict, chart: cxc.AbstractChart, origin: None, /, *, usys: OptUSys = None
-) -> tuple[CsDict, cxc.AbstractChart]:
+    point: CsDict,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    origin: None,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> tuple[CsDict, cxc.AbstractChart]:  # type: ignore[type-arg]
     r"""Convert a point coordinate dictionary to a displacement.
 
     Using the chart's coordinate origin.
@@ -39,6 +42,8 @@ def as_pos(
         A Euclidean chart.
     origin
         Must be ``None``.
+    usys
+        Optional unit system for the output displacement.
 
     Raises
     ------
@@ -73,8 +78,13 @@ def as_pos(
 
 @plum.dispatch
 def as_pos(
-    point: CsDict, chart: cxc.AbstractChart, origin: CsDict, /, *, usys: OptUSys = None
-) -> tuple[CsDict, cxc.AbstractChart]:
+    point: CsDict,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    origin: CsDict,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> tuple[CsDict, cxc.AbstractChart]:  # type: ignore[type-arg]
     r"""Convert a point coordinate dictionary to a displacement.
 
     Relative to an explicit origin.
@@ -92,6 +102,8 @@ def as_pos(
         A Euclidean chart.
     origin
         Coordinates of the origin $o$.
+    usys
+        Optional unit system for the output displacement.
 
     Examples
     --------
@@ -127,8 +139,13 @@ def as_pos(
 
 @plum.dispatch
 def as_pos(
-    point: CsDict, chart: cxe.EmbeddedManifold, origin: None, /, *, usys: OptUSys = None
-) -> tuple[CsDict, cxc.AbstractChart]:
+    point: CsDict,
+    chart: cxe.EmbeddedManifold,  # type: ignore[type-arg]
+    origin: None,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> tuple[CsDict, cxc.AbstractChart]:  # type: ignore[type-arg]
     """Convert a Point coordinate to a Pos-valued displacement on an embedded manifold.
 
     Raises
@@ -145,12 +162,12 @@ def as_pos(
 @plum.dispatch
 def as_pos(
     point: CsDict,
-    chart: cxe.EmbeddedManifold,
+    chart: cxe.EmbeddedManifold,  # type: ignore[type-arg]
     origin: CsDict,
     /,
     *,
     usys: OptUSys = None,
-) -> tuple[CsDict, cxc.AbstractChart]:
+) -> tuple[CsDict, cxc.AbstractChart]:  # type: ignore[type-arg]
     r"""Convert point on an embedded manifold to an ambient Cartesian displacement.
 
     Mathematical Meaning:
@@ -169,6 +186,8 @@ def as_pos(
         An embedded manifold.
     origin
         Coordinates of $o \in M$.
+    usys
+        Optional unit system for the output displacement.
 
     Returns
     -------

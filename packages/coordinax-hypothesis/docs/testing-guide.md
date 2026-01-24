@@ -176,23 +176,23 @@ import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
-@given(rep_class=cxst.chart_classes())
-def test_any_representation_class(rep_class):
-    """Any representation class can be tested."""
-    assert issubclass(rep_class, cx.charts.AbstractChart)
+@given(chart_class=cxst.chart_classes())
+def test_any_chart_class(chart_class):
+    """Any chart class can be tested."""
+    assert issubclass(chart_class, cx.charts.AbstractChart)
 ```
 
 ### Testing Multiple Representation Types
 
 ```
 @given(
-    rep_class=cxst.chart_classes(
+    chart_class=cxst.chart_classes(
         filter=(cx.charts.Abstract3D, cx.charts.AbstractSpherical3D)
     )
 )
-def test_spherical_3d_chartresentations(rep_class):
-    """Test representations that are spherical 3D."""
-    assert issubclass(rep_class, (cx.charts.Abstract3D, cx.charts.AbstractSpherical3D))
+def test_spherical_3d_chartresentations(chart_class):
+    """Test charts that are spherical 3D."""
+    assert issubclass(chart_class, (cx.charts.Abstract3D, cx.charts.AbstractSpherical3D))
 ```
 
 ### Dynamically Choosing Representation Types
@@ -202,7 +202,7 @@ from hypothesis import strategies as st
 
 
 @given(
-    rep_class=cxst.chart_classes(
+    chart_class=cxst.chart_classes(
         filter=st.sampled_from(
             [
                 cx.charts.Abstract1D,
@@ -212,9 +212,9 @@ from hypothesis import strategies as st
         )
     )
 )
-def test_random_representation_type(rep_class):
-    """Test with randomly chosen representation category."""
-    assert issubclass(rep_class, (cx.charts.Abstract1D, cx.charts.Abstract2D, cx.charts.Abstract3D))
+def test_random_chart_type(chart_class):
+    """Test with randomly chosen chart category."""
+    assert issubclass(chart_class, (cx.charts.Abstract1D, cx.charts.Abstract2D, cx.charts.Abstract3D))
 ```
 
 ### Testing Chart Construction with `chart_init_kwargs`
@@ -276,9 +276,8 @@ def test_kwargs_reusable(kwargs):
 
 ### Testing with `charts_like`
 
-The `charts_like` strategy generates representations that match the flags of a
-template, making it easy to test transformations across compatible
-representations:
+The `charts_like` strategy generates charts that match the flags of a template,
+making it easy to test transformations across compatible charts:
 
 ```
 from hypothesis import given
@@ -286,72 +285,71 @@ import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
-# Test that 3D representations can be converted to each other
+# Test that 3D charts can be converted to each other
 @given(
     source_chart=t=cxst.charts(filter=cx.charts.Abstract3D),
     target_chart=t=cxst.charts_like(cxst.charts(filter=cx.charts.Abstract3D)),
 )
-def test_3d_chart_conversions(source_rep, target_chart):
-    """Test conversions between 3D representations."""
-    # Both representations are 3D
-    assert isinstance(source_rep, cx.charts.Abstract3D)
+def test_3d_chart_conversions(source_chart, target_chart):
+    """Test conversions between 3D charts."""
+    # Both charts are 3D
+    assert isinstance(source_chart, cx.charts.Abstract3D)
     assert isinstance(target_chart, cx.charts.Abstract3D)
-    assert source_rep.ndim == target_chart.ndim == 3
+    assert source_chart.ndim == target_chart.ndim == 3
 
 
-# Test 2D representation transformations
+# Test 2D chart transformations
 @given(chart=t=cxst.charts_like(cx.charts.polar2d))
-def test_reps_like_polar(rep):
-    """Generate representations with same flags as Polar2D."""
-    assert isinstance(rep, cx.charts.Abstract2D)
+def test_charts_like_polar(chart):
+    """Generate charts with same flags as Polar2D."""
+    assert isinstance(chart, cx.charts.Abstract2D)
     # Could be Cart2D, Polar2D, TwoSphere, etc.
 ```
 
 ### Testing with `chart_time_chain`
 
 The `chart_time_chain` strategy generates chains of time antiderivatives given a
-role flag and a representation, useful for testing conversions across
-acceleration → velocity → position:
+role flag and a chart, useful for testing conversions across acceleration →
+velocity → position:
 
 ```
-# Test that acceleration representations have valid time derivative chains
+# Test that acceleration charts have valid time derivative chains
 @given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
 def test_acceleration_chain(chain):
     """Test the full time derivative chain from acceleration."""
-    acc_rep, vel_rep, pos_rep = chain
+    acc_chart, vel_chart, point_chart = chain
 
     # Verify types
     # All maintain dimensionality
-    assert isinstance(acc_rep, cx.charts.Abstract3D)
-    assert isinstance(vel_rep, cx.charts.Abstract3D)
-    assert isinstance(pos_rep, cx.charts.Abstract3D)
+    assert isinstance(acc_chart, cx.charts.Abstract3D)
+    assert isinstance(vel_chart, cx.charts.Abstract3D)
+    assert isinstance(point_chart, cx.charts.Abstract3D)
 
 
 # Test velocity chains
 @given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
 def test_velocity_chain(chain):
     """Test time derivative chain from velocity."""
-    vel_rep, pos_rep = chain
+    vel_chart, point_chart = chain
 
-    assert isinstance(vel_rep, cx.charts.Abstract2D)
-    assert isinstance(pos_rep, cx.charts.Abstract2D)
-    assert vel_rep.ndim == pos_rep.ndim
+    assert isinstance(vel_chart, cx.charts.Abstract2D)
+    assert isinstance(point_chart, cx.charts.Abstract2D)
+    assert vel_chart.ndim == point_chart.ndim
 
-
-# Test that position representations return single-element chains
+# Test that position charts return single-element chains
 @given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
 def test_position_chain_is_singleton(chain):
-    """Position representations have no time antiderivative."""
+    """Position charts have no time antiderivative."""
     assert len(chain) == 1
-    (pos_rep,) = chain
-    assert isinstance(pos_rep, cx.charts.Abstract3D)
+    (point_chart,) = chain
+    assert isinstance(point_chart, cx.charts.Abstract3D)
 ```
 
 ### Testing with `vectors_with_target_chart`
 
 The `vectors_with_target_chart` strategy generates a vector and a full chain of
-compatible target representations, perfect for testing conversions. The target
-chain automatically matches the flags of the source vector:
+compatible target charts, perfect for testing conversions. The target chain
+automatically matches the flags of the source vector:
 
 ```
 # Test position vector conversions
@@ -362,7 +360,7 @@ chain automatically matches the flags of the source vector:
     )
 )
 def test_position_vector_conversions(vec_and_chain):
-    """Test that position vectors can convert to compatible representations."""
+    """Test that position vectors can convert to compatible charts."""
     vec, (target_chart,) = vec_and_chain
 
     # Verify source and target are compatible
@@ -382,22 +380,22 @@ def test_position_vector_conversions(vec_and_chain):
         chart=t=cx.charts.cart3d,
         role=cx.roles.PhysVel,
     ),
-    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp),
+    point_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp),
 )
-def test_velocity_vector_conversion_chain(vec_and_chain, pos_vec):
+def test_velocity_vector_conversion_chain(vec_and_chain, point_vec):
     """Test velocity vectors can convert to velocity and position reps."""
     vec, target_chain = vec_and_chain
 
-    # Chain is (vel_rep, pos_rep)
+    # Chain is (vel_chart, point_chart)
     assert len(target_chain) == 2
-    vel_target, pos_target = target_chain
+    vel_target, point_target = target_chain
 
     # Test conversion to each target
-    vel_converted = vec.vconvert(vel_target, pos_vec)
+    vel_converted = vec.vconvert(vel_target, point_vec)
     assert vel_converted.chart == vel_target
 
-    pos_converted = vec.vconvert(pos_target, pos_vec)
-    assert pos_converted.chart == pos_target
+    point_converted = vec.vconvert(point_target, point_vec)
+    assert point_converted.chart == point_target
 
 
 # Test acceleration vectors with full chain
@@ -407,21 +405,21 @@ def test_velocity_vector_conversion_chain(vec_and_chain, pos_vec):
         role=cx.roles.PhysAcc,
         shape=(5,),  # Test with batched vectors
     ),
-    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp, shape=(5,)),
+    point_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp, shape=(5,)),
 )
-def test_batched_acceleration_conversions(vec_and_chain, pos_vec):
+def test_batched_acceleration_conversions(vec_and_chain, point_vec):
     """Test batched acceleration vector conversions."""
     vec, target_chain = vec_and_chain
 
     # Verify shape is preserved
     assert vec.shape == (5,)
 
-    # Chain is (acc_rep, vel_rep, pos_rep)
+    # Chain is (acc_chart, vel_chart, point_chart)
     assert len(target_chain) == 3
 
     # Test all conversions preserve shape
     for target_chart in target_chain:
-        converted = vec.vconvert(target_chart, pos_vec)
+        converted = vec.vconvert(target_chart, point_vec)
         assert converted.shape == (5,)
         assert converted.chart == target_chart
 ```
@@ -476,7 +474,7 @@ def test_conversion_preserves_norm(vec_and_chain):
 
         assert jnp.allclose(original_norm.value, converted_norm.value, rtol=1e-6)
     except (AttributeError, NotImplementedError):
-        # Not all representations support norm calculation
+        # Not all charts support norm calculation
         pass
 ```
 

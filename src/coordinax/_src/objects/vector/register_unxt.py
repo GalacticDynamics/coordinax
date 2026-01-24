@@ -65,7 +65,7 @@ def uconvert(
 
     >>> sph = cx.Vector(
     ...     data={"r": u.Q(1, "m"), "theta": u.Q(45, "deg"), "phi": u.Q(3, "rad")},
-    ...     chart=cxc.sph3d, role=cxr.Point())
+    ...     chart=cx.charts.sph3d, role=cx.roles.Point())
     >>> print(sph.uconvert({u.dimension("length"): "km", u.dimension("angle"): "deg"}))
     <Vector: chart=Spherical3D, role=Point (r[km], theta[deg], phi[deg])
         [1.000e-03 4.500e+01 1.719e+02]>
@@ -103,7 +103,7 @@ def uconvert(units: Mapping[str, Any], vec: Vector, /) -> Vector:
 
     >>> sph = cx.Vector(
     ...     data={"r": u.Q(1, "m"), "theta": u.Q(45, "deg"), "phi": u.Q(3, "rad")},
-    ...     chart=cxc.sph3d, role=cxr.Point())
+    ...     chart=cx.charts.sph3d, role=cx.roles.Point())
     >>> print(sph.uconvert({"r": "km", "theta": "rad"}))
     <Vector: chart=Spherical3D, role=Point (r[km], theta[rad], phi[rad])
         [1.000e-03 7.854e-01 3.000e+00]>
@@ -145,7 +145,7 @@ def uconvert(flag: Literal[ToUnitsOptions.consistent], vec: Vector, /) -> Vector
     <Vector: chart=Cart3D, role=Point (x, y, z) [m]
         [1 2 3]>
 
-    >>> sph = cart.vconvert(cxc.sph3d)
+    >>> sph = cart.vconvert(cx.charts.sph3d)
     >>> print(sph.uconvert(cx.objs.ToUnitsOptions.consistent))
     <Vector: chart=Spherical3D, role=Point (r[m], theta[rad], phi[rad])
         [3.742 0.641 1.107]>

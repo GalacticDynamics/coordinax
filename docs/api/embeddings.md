@@ -45,9 +45,9 @@ The `EmbeddedManifold` class represents a manifold embedded in an ambient space:
 
 ```python
 embed = cxc.EmbeddedManifold(
-    intrinsic_chart=intrinsic,  # Chart on the manifold
-    ambient_chart=ambient,  # Chart in the ambient space
-    params={"R": radius},  # Parameters (e.g., radius)
+    intrinsic_chart=cxc.twosphere,  # Chart on the manifold
+    ambient_chart=cxc.cart3d,  # Chart in the ambient space
+    params={"R": u.Q(1.0, "km")},  # Parameters (e.g., radius)
 )
 ```
 

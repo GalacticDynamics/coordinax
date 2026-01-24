@@ -13,8 +13,8 @@ and shows how to transform parameter dictionaries and vectors.
   dimensions). A rep does not store numerical values.
 - Vector: data + rep + role. Data are the coordinate values or physical
   components.
-- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role is
-  not a rep.
+- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role
+  is not a rep.
 - Metric: a bilinear form g on the tangent space defining inner products and
   norms (Euclidean, sphere intrinsic, Minkowski).
 - Physical components: components of a geometric vector expressed in an

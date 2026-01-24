@@ -21,7 +21,7 @@ import unxt as u
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    role=cx.roles.point,
 )
 
 # Create a velocity vector
@@ -41,7 +41,7 @@ space = cx.PointedVector(base=q, speed=v)
 # Attach to a frame
 import coordinax.frames as cxf
 
-coord = cxf.Coordinate({"length": q, "speed": v}, frame=cxf.ICRS())
+coord = cx.Coordinate({"base": q, "speed": v}, frame=cxf.ICRS())
 ```
 
 ## Vector
@@ -53,7 +53,7 @@ The `Vector` class is the primary object for representing geometric vectors:
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
     chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    role=cx.roles.point,
 )
 
 # From array (auto-detect chart and role)
@@ -61,6 +61,8 @@ q = cx.Vector.from_([1, 2, 3], "kpc")
 
 # From array with explicit chart and role
 v = cx.Vector.from_([10, 20, 30], "km/s", cx.charts.cart3d, cx.roles.phys_vel)
+
+a = cx.Vector.from_([0.1, 0.2, 0.3], "m/s^2", cx.charts.cart3d, cx.roles.phys_acc)
 
 # Access components
 print(q["x"])  # Quantity
@@ -76,15 +78,15 @@ print(q.role)  # Role instance
 
 ## PointedVector
 
-The `PointedVector` class groups related vectors (position, velocity, acceleration)
-at a common point:
+The `PointedVector` class groups related vectors (position, velocity,
+acceleration) at a common point:
 
 ```python
 space = cx.PointedVector(base=q, speed=v, acceleration=a)
 
 # Access vectors
 space.base  # position
-space.speed  # velocity
+space["speed"]  # velocity
 ```
 
 ## Coordinate
@@ -94,7 +96,7 @@ The `Coordinate` class attaches vectors to a reference frame:
 ```python
 import coordinax.frames as cxf
 
-coord = cxf.Coordinate({"length": q, "speed": v}, frame=cxf.ICRS())
+coord = cx.Coordinate({"base": q, "speed": v}, frame=cxf.ICRS())
 
 # Transform to another frame
 coord_gc = coord.to_frame(cxf.Galactocentric())
@@ -121,7 +123,7 @@ Convert a Point role to a PhysDisp role (interpret location as displacement from
 origin):
 
 ```python
-pos = cx.as_pos(point_vector)
+pos = cx.as_pos(q)  # q is a Point vector defined above
 ```
 
 ```{eval-rst}

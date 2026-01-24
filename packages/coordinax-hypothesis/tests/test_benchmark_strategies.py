@@ -1,5 +1,9 @@
 """Benchmark tests for coordinax-hypothesis strategies."""
 
+import pytest
+
+pytest.importorskip("pytest_benchmark")
+
 from hypothesis import given, settings
 from hypothesis.strategies import data as st_data
 
@@ -36,11 +40,11 @@ def test_benchmark_chart_classes_simple(benchmark):
 
 
 # =============================================================================
-# Benchmark: representations strategy - using direct strategy building
+# Benchmark: charts strategy - using direct strategy building
 
 
-def test_benchmark_representations_build_strategy(benchmark):
-    """Benchmark building the representations strategy."""
+def test_benchmark_charts_build_strategy(benchmark):
+    """Benchmark building the charts strategy."""
 
     def build_strategy():
         return cxst.charts()
@@ -49,8 +53,8 @@ def test_benchmark_representations_build_strategy(benchmark):
     assert strategy is not None
 
 
-def test_benchmark_representations_1d_build(benchmark):
-    """Benchmark building the representations strategy for 1D."""
+def test_benchmark_charts_1d_build(benchmark):
+    """Benchmark building the charts strategy for 1D."""
 
     def build_strategy():
         return cxst.charts(dimensionality=1)
@@ -59,8 +63,8 @@ def test_benchmark_representations_1d_build(benchmark):
     assert strategy is not None
 
 
-def test_benchmark_representations_3d_build(benchmark):
-    """Benchmark building the representations strategy for 3D."""
+def test_benchmark_charts_3d_build(benchmark):
+    """Benchmark building the charts strategy for 3D."""
 
     def build_strategy():
         return cxst.charts(dimensionality=3)

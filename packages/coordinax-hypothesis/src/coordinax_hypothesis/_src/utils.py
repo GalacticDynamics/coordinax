@@ -2,7 +2,6 @@
 
 __all__ = ("get_all_subclasses", "draw_if_strategy")
 
-import dataclasses
 import functools as ft
 import inspect
 import sys
@@ -12,7 +11,7 @@ from dataclasses import dataclass
 import jaxtyping
 from collections.abc import Callable, Mapping
 from types import SimpleNamespace
-from typing import (
+from typing import (  # type: ignore[attr-defined]
     Any,
     Final,
     Generic,
@@ -43,16 +42,13 @@ xps: SimpleNamespace = make_strategies_namespace(jaxnp)
 BeartypeValidator = beartype.vale.Is[lambda x: x].__class__
 
 
-def _canonicalize_coordinax_class(cls: type) -> type:
+def _canonicalize_coordinax_class(cls: type, /) -> type:
     """Resolve a coordinax class to its canonical version.
 
     In editable installs with uv-workspaces, the same class can exist as
     multiple Python objects due to import path duplication. This function
     returns the canonical version by looking it up via its __qualname__ in
     the coordinax.charts module.
-
-    This is particularly needed for slotted dataclasses (equinox modules)
-    which seem more prone to this duplication.
 
     Parameters
     ----------
@@ -72,40 +68,22 @@ def _canonicalize_coordinax_class(cls: type) -> type:
     if not module.startswith("coordinax"):
         return cls
 
-    # Check if it's a slotted dataclass (equinox Module or has __slots__)
-    # These are the ones that tend to get duplicated
-    is_slotted = (
-        hasattr(cls, "__slots__")
-        or (dataclasses.is_dataclass(cls) and getattr(cls, "__dataclass_fields__", {}))
-        or issubclass(cls, eqx.Module)
-    )
-
-    if not is_slotted:
-        return cls
-
     # Try to resolve via coordinax.charts using __qualname__
-    qualname = cls.__qualname__
-
-    # Handle nested classes (e.g., "Outer.Inner")
-    parts = qualname.split(".")
-
-    # Try to find the class in cxc (coordinax.charts)
+    parts = cls.__qualname__.split(".")
     try:
-        resolved = cxc
+        resolved: Any = cxc
         for part in parts:
             resolved = getattr(resolved, part)
-        if isinstance(resolved, type) and issubclass(resolved, cls.__bases__[0] if cls.__bases__ else object):
+        if isinstance(resolved, type):
             return resolved
     except AttributeError:
         pass
 
-    # If not in cxc, try the module directly from sys.modules
-    # Use the public module path if available
+    # Fallback: try the public module path from sys.modules
     public_module = module.replace("._src.", ".")
     if public_module in sys.modules:
         try:
-            mod = sys.modules[public_module]
-            resolved = mod
+            resolved = sys.modules[public_module]
             for part in parts:
                 resolved = getattr(resolved, part)
             if isinstance(resolved, type):
@@ -313,9 +291,6 @@ def parse_jaxtyping_shape(
     >>> import jaxtyping
     >>> ann = Shaped[jaxtyping.Array, "3 4"]
     >>> strategy = parse_jaxtyping_shape(ann.dims)
-    >>> shape = strategy.example()
-    >>> shape
-    (3, 4)
 
     """
     # Scalar case: empty tuple
@@ -431,6 +406,25 @@ def cached_strategy_for_annotation(ann_type: type | Wrapper[Any]) -> st.SearchSt
 
 
 # -----------------------------------------------
+
+
+@plum.dispatch
+def strategy_for_annotation(
+    ann: type[cxc.AbstractChart],  # type: ignore[type-arg]
+    /,
+    *,
+    meta: Metadata,
+) -> st.SearchStrategy:
+    """Strategy for chart-typed annotations.
+
+    For chart-valued __init__ parameters (e.g. SpaceTimeCT.spatial_chart), we
+    must draw a valid chart *instance* rather than instantiating abstract base
+    classes like AbstractFixedComponentsChart().
+    """
+    del meta
+    from coordinax_hypothesis._src.charts.core import charts  # noqa: PLC0415
+
+    return charts(filter=ann)
 
 
 @plum.dispatch

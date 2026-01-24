@@ -12,8 +12,8 @@ __all__ = (
     # Metrics
     "physicalize",
     "coordinateize",
-    "lower_index",
-    "raise_index",
+    "lower_index",  # TODO: future
+    "raise_index",  # TODO: future
     "metric_of",
     # Reference frames
     "frame_of",
@@ -25,7 +25,7 @@ __all__ = (
     "point_transform",
     "physical_tangent_transform",
     "coord_transform",
-    "cotangent_transform",
+    "cotangent_transform",  # TODO: future
     "frame_cart",
     "pushforward",
     "pullback",
@@ -53,55 +53,55 @@ if TYPE_CHECKING:
 
 @plum.dispatch.abstract
 def cartesian_chart(obj: Any, /) -> "coordinax.charts.AbstractChart":  # type: ignore[type-arg]
-    r"""Return the corresponding Cartesian representation for a given representation.
+    r"""Return the corresponding Cartesian chart for a given chart.
 
-    This function provides the canonical flat-space Cartesian representation
-    associated with any coordinate system. It maps each representation to its
+    This function provides the canonical flat-space Cartesian chart
+    associated with any coordinate system. It maps each chart to its
     natural Cartesian equivalent in the same dimensional space.
 
     Mathematical Definition
     -----------------------
-    For a coordinate representation $\mathcal{R}$ in $n$-dimensional
-    space, this returns the Cartesian representation $\mathcal{C}_n$ such that:
+    For a coordinate chart $\mathcal{R}$ in $n$-dimensional
+    space, this returns the Cartesian chart $\mathcal{C}_n$ such that:
 
     $$
-    \mathrm{cartesian\_rep}(\mathcal{R}) = \mathcal{C}_n
+    \mathrm{cartesian\_chart}(\mathcal{R}) = \mathcal{C}_n
     $$
 
     where $\mathcal{C}_n \in \{\text{Cart1D}, \text{Cart2D}, \text{Cart3D},
     \text{CartND}\}$ depending on $n = \text{ndim}$.
 
-    The Cartesian representation uses orthonormal basis vectors with components
+    The Cartesian chart uses orthonormal basis vectors with components
     typically denoted $(x)$, $(x, y)$, $(x, y, z)$, or
     $(q_1, \ldots, q_n)$ for arbitrary dimension.
 
     Parameters
     ----------
     obj : Any
-        A coordinate representation instance (e.g., `coordinax.charts.sph3d`,
+        A coordinate chart instance (e.g., `coordinax.charts.sph3d`,
         `coordinax.charts.polar2d`) or any object for which a Cartesian
         equivalent is defined.
 
     Returns
     -------
     coordinax.charts.AbstractChart
-        The Cartesian representation in the same dimensional space:
+        The Cartesian chart in the same dimensional space:
 
-        - 1D representations → ``Cart1D`` (component: ``x``)
-        - 2D representations → ``Cart2D`` (components: ``x``, ``y``)
-        - 3D representations → ``Cart3D`` (components: ``x``, ``y``, ``z``)
-        - N-D representations → ``CartND`` (components: ``q``)
+        - 1D charts → ``Cart1D`` (component: ``x``)
+        - 2D charts → ``Cart2D`` (components: ``x``, ``y``)
+        - 3D charts → ``Cart3D`` (components: ``x``, ``y``, ``z``)
+        - N-D charts → ``CartND`` (components: ``q``)
 
     Raises
     ------
     NotImplementedError
-        If no Cartesian representation is defined for the input object.
+        If no Cartesian chart is defined for the input object.
 
     Notes
     -----
-    - Cartesian representations use the Euclidean metric with orthonormal bases.
+    - Cartesian charts use the Euclidean metric with orthonormal bases.
     - This function does **not** perform coordinate transformation; it only
-      returns the representation type. Use ``point_transform`` for actual
+      returns the chart type. Use ``point_transform`` for actual
       coordinate conversion.
     - All standard Euclidean coordinate systems (spherical, cylindrical, polar)
       map to their dimensional Cartesian equivalent.
@@ -110,7 +110,7 @@ def cartesian_chart(obj: Any, /) -> "coordinax.charts.AbstractChart":  # type: i
 
     See Also
     --------
-    point_transform : Transform coordinates between representations
+    point_transform : Transform coordinates between charts
     coordinax.charts.AbstractChart : Base class for coordinate charts
 
     Examples
@@ -183,7 +183,7 @@ def embed_point(
 ) -> CsDict:
     r"""Embed intrinsic point coordinates into ambient coordinates.
 
-    This function maps point coordinates from an intrinsic chart representation
+    This function maps point coordinates from an intrinsic chart chart
     on an embedded manifold to the corresponding ambient space coordinates. It
     is the fundamental operation for working with embedded manifolds such as
     spheres, cylinders, or other submanifolds of Euclidean space.
@@ -211,12 +211,12 @@ def embed_point(
     Parameters
     ----------
     embedded
-        The embedded manifold representation, typically an
+        The embedded manifold chart, typically an
         ``coordinax.embeddings.EmbeddedManifold`` instance. This encapsulates:
 
-        - ``intrinsic_chart``: The intrinsic chart representation (e.g.,
+        - ``intrinsic_chart``: The intrinsic chart chart (e.g.,
           ``TwoSphere``)
-        - ``ambient_chart``: The ambient space representation (e.g., ``Cart3D``)
+        - ``ambient_chart``: The ambient space chart (e.g., ``Cart3D``)
         - ``params``: Embedding-specific parameters (e.g., ``{"R":
           Quantity(...)}`` for the sphere radius)
     p_pos
@@ -268,7 +268,7 @@ def embed_point(
         coordinates
     embed_tangent : Embedding for tangent vector components
     coordinax.embeddings.EmbeddedManifold : Container for embedded manifold
-        representations
+        charts
 
     Examples
     --------
@@ -322,7 +322,7 @@ def project_point(*args: Any, usys: OptUSys = None) -> CsDict:
     This function performs the inverse operation of ``embed_point``, taking coordinates
     from the ambient (embedding) space and projecting them back onto the intrinsic
     manifold chart. It's essential for converting between extrinsic and intrinsic
-    representations of points on embedded submanifolds.
+    charts of points on embedded submanifolds.
 
     Mathematical Definition:
 
@@ -360,12 +360,12 @@ def project_point(*args: Any, usys: OptUSys = None) -> CsDict:
     Parameters
     ----------
     *args
-        Typically an ``EmbeddedManifold`` representation and a dictionary of
+        Typically an ``EmbeddedManifold`` chart and a dictionary of
         ambient coordinates, but the function supports multiple dispatch patterns.
         Common signature:
 
         - ``embedded`` : EmbeddedManifold
-            The embedded manifold representation specifying the chart and ambient
+            The embedded manifold chart specifying the chart and ambient
             space
         - ``p_ambient`` : CsDict
             Ambient coordinates keyed by ``embedded.ambient_chart.components``
@@ -415,7 +415,7 @@ def project_point(*args: Any, usys: OptUSys = None) -> CsDict:
     --------
     embed_point : Embed intrinsic chart coordinates into ambient space
     project_tangent : Project ambient velocity/acceleration onto tangent space
-    physical_tangent_transform : Transform vectors between representations
+    physical_tangent_transform : Transform vectors between charts
 
     Examples
     --------
@@ -496,9 +496,9 @@ def embed_tangent(
     r"""Embed intrinsic physical tangent components into ambient physical components.
 
     This function maps physical tangent vector components from an intrinsic chart
-    representation on an embedded manifold to the corresponding ambient space
+    chart on an embedded manifold to the corresponding ambient space
     components. It is essential for transforming velocities, accelerations, and
-    other tangent vectors between intrinsic and ambient representations.
+    other tangent vectors between intrinsic and ambient charts.
 
     Mathematical Definition:
 
@@ -537,7 +537,7 @@ def embed_tangent(
     Parameters
     ----------
     embedded : coordinax.charts.AbstractChart
-        The embedded manifold representation, typically an
+        The embedded manifold chart, typically an
         {class}`coordinax.embeddings.EmbeddedManifold` instance specifying the
         intrinsic chart and ambient space.
     v_chart : CsDict
@@ -670,7 +670,7 @@ def project_tangent(
     Parameters
     ----------
     embedded
-        The embedded manifold representation specifying the intrinsic chart
+        The embedded manifold chart specifying the intrinsic chart
         and ambient space.
     v_ambient
         Ambient physical tangent components keyed by
@@ -715,7 +715,7 @@ def project_tangent(
       ``project_tangent(embed_tangent(v, at=q), at=q)`` returns ``v``.
 
     - **Not surjective from ambient**: Only ambient vectors with zero normal
-      component can be exactly represented in the intrinsic chart.
+      component can be exactly chartresented in the intrinsic chart.
 
     See Also
     --------
@@ -779,7 +779,7 @@ def project_tangent(
 
 @plum.dispatch.abstract
 def metric_of(*args: Any) -> "coordinax.metricsAbstractMetric":
-    r"""Return the metric tensor associated with a coordinate representation.
+    r"""Return the metric tensor associated with a coordinate chart.
 
     The metric tensor encodes the geometry of space in a given coordinate
     system, defining how to measure distances, angles, and volumes. It is
@@ -788,7 +788,7 @@ def metric_of(*args: Any) -> "coordinax.metricsAbstractMetric":
 
     Mathematical Definition:
 
-    For a coordinate representation with coordinates $q = (q^1, \ldots, q^n)$,
+    For a coordinate chart with coordinates $q = (q^1, \ldots, q^n)$,
     the metric tensor $g$ is a symmetric, positive-definite matrix field:
 
     $$ g_{ij}(q) = \mathbf{e}_i(q) \cdot \mathbf{e}_j(q) $$
@@ -828,14 +828,14 @@ def metric_of(*args: Any) -> "coordinax.metricsAbstractMetric":
     Parameters
     ----------
     *args
-        Typically a single coordinate representation instance (e.g.,
+        Typically a single coordinate chart instance (e.g.,
         ``cx.charts.sph3d``, ``cx.charts.cart3d``), but the function supports
         multiple dispatch patterns for more complex scenarios.
 
     Returns
     -------
     coordinax.metricsAbstractMetric
-        The metric tensor associated with the representation. Common types
+        The metric tensor associated with the chart. Common types
         include:
 
         - ``EuclideanMetric``: Flat space with $g_{ij} = \delta_{ij}$
@@ -961,11 +961,12 @@ def frame_transform_op(from_frame: Any, to_frame: Any, /) -> Any:
     >>> op
     Pipe((
       Translate(
-          {'x': Q(i64[], 'km'), 'y': Q(i64[], 'km'), 'z': Q(i64[], 'km')}, chart=Cart3D()
+          {'x': Q(i64[], 'km'), 'y': Q(i64[], 'km'), 'z': Q(i64[], 'km')},
+          chart=Cart3D()
       ),
       Boost(
         {'x': Q(f64[], 'm / s'), 'y': Q(f64[], 'm / s'), 'z': Q(f64[], 'm / s')},
-        Cart3D[('x', 'y', 'z'), ('length', 'length', 'length')]()
+        Cart3D()
       )
     ))
 
@@ -1060,19 +1061,19 @@ def point_transform(
     /,
     usys: OptUSys = None,
 ) -> CsDict:
-    r"""Transform position coordinates from one representation to another.
+    r"""Transform position coordinates from one chart to another.
 
     This function implements coordinate transformations between different
-    representations of the same geometric point in space. It is a point-wise
+    charts of the same geometric point in space. It is a point-wise
     map that preserves the physical location while changing the coordinate
     description.
 
     Mathematical Definition
     -----------------------
-    Given position coordinates $q = (q^1, \ldots, q^n)$ in representation
+    Given position coordinates $q = (q^1, \ldots, q^n)$ in chart
     $\mathcal{R}_{\text{from}}$, compute the coordinates
-    $p = (p^1, \ldots, p^m)$ in representation $\mathcal{R}_{\text{to}}$
-    representing the same physical point:
+    $p = (p^1, \ldots, p^m)$ in chart $\mathcal{R}_{\text{to}}$
+    chartresenting the same physical point:
 
     $$
         p^i = f^i(q^1, \ldots, q^n), \quad i = 1, \ldots, m
@@ -1103,13 +1104,13 @@ def point_transform(
     Parameters
     ----------
     to_chart
-        Target coordinate representation (e.g., ``cx.charts.cart3d``,
+        Target coordinate chart (e.g., ``cx.charts.cart3d``,
         ``cx.charts.sph3d``).  Defines the output coordinate system.
     from_chart
-        Source coordinate representation (e.g., ``cx.charts.cyl3d``,
+        Source coordinate chart (e.g., ``cx.charts.cyl3d``,
         ``cx.charts.polar2d``).  Defines the input coordinate system.
     p
-        Dictionary of position coordinates in the source representation. Keys
+        Dictionary of position coordinates in the source chart. Keys
         must match ``from_chart.components`` (e.g., ``"r"``, ``"theta"``,
         ``"phi"`` for spherical). Values must have appropriate physical
         dimensions.
@@ -1122,7 +1123,7 @@ def point_transform(
     Returns
     -------
     Mapping[str, Any]
-        Dictionary of position coordinates in the target representation. Keys
+        Dictionary of position coordinates in the target chart. Keys
         match ``to_chart.components`` and values preserve the physical
         dimensions appropriate for the target system.
 
@@ -1130,7 +1131,7 @@ def point_transform(
     ------
     NotImplementedError
         If no transformation rule is registered for the specific pair of
-        representations ``(to_chart, from_chart)``.
+        charts ``(to_chart, from_chart)``.
 
     Notes
     -----
@@ -1157,7 +1158,7 @@ def point_transform(
     See Also
     --------
     physical_tangent_transform : Transform velocity/acceleration in tangent space
-    cartesian_chart : Get the Cartesian representation for a coordinate system
+    cartesian_chart : Get the Cartesian chart for a coordinate system
 
     Examples
     --------
@@ -1204,15 +1205,15 @@ def physical_tangent_transform(
     at: CsDict,
     usys: OptUSys = None,
 ) -> CsDict:
-    r"""Transform physical tangent components between coordinate representations.
+    r"""Transform physical tangent components between coordinate charts.
 
     Overview:
 
     This transforms physical tangent-vector components (e.g., velocity or
-    acceleration) from one coordinate representation to another, evaluated at a
+    acceleration) from one coordinate chart to another, evaluated at a
     specific base point ``at``. Components are understood as physical components
     in an orthonormal frame with respect to the active metric for the
-    representation, not as coordinate derivatives.
+    chart, not as coordinate derivatives.
 
     Let $v$ be a tangent vector at point $q$ in chart $\mathcal R_\text{from}$
     and suppose the active metric for both charts is known via ``metric_of``.
@@ -1255,9 +1256,9 @@ def physical_tangent_transform(
     Parameters
     ----------
     to_chart : coordinax.charts.AbstractChart
-        Target coordinate representation whose physical components are desired.
+        Target coordinate chart whose physical components are desired.
     from_chart : coordinax.charts.AbstractChart
-        Source coordinate representation in which ``v_phys`` is currently
+        Source coordinate chart in which ``v_phys`` is currently
         expressed as physical components.
     v_phys : CsDict
         Physical tangent components keyed by ``from_chart.components``. All
@@ -1282,7 +1283,7 @@ def physical_tangent_transform(
     ------
     NotImplementedError
         If no transformation rule is registered for the specific pair of
-        representations ``(to_chart, from_chart)``.
+        charts ``(to_chart, from_chart)``.
     ValueError
         If components in ``v_phys`` do not share a uniform physical dimension,
         or ``at`` does not provide a valid evaluation point.
@@ -1361,8 +1362,9 @@ def coord_transform(
     /,
     *,
     at: CsDict,
+    usys: OptUSys = None,
 ) -> CsDict:
-    r"""Transform coordinate-basis derivatives between representations.
+    r"""Transform coordinate-basis derivatives between charts.
 
     Maps coordinate time-derivatives (e.g., d𝜃/dt) between charts using the
     Jacobian of the point transformation.
@@ -1380,20 +1382,23 @@ def coord_transform(
     Parameters
     ----------
     to_chart : coordinax.charts.AbstractChart
-        Target coordinate representation for the output components.
+        Target coordinate chart for the output components.
     from_chart : coordinax.charts.AbstractChart
-        Source coordinate representation for the input components.
+        Source coordinate chart for the input components.
     dqdt : CsDict
         Dictionary of coordinate-derivative components (may have heterogeneous units).
         Keys match ``from_chart.components``.
     at : CsDict
-        Position coordinates in the source representation. Keys match
+        Position coordinates in the source chart. Keys match
         ``from_chart.components``.
+    usys : unxt.AbstractUnitSystem, optional
+        Unit system used when inputs are bare arrays (no units). When provided,
+        coordinate dimensions are interpreted using ``from_chart.coord_dimensions``.
 
     Returns
     -------
     CsDict
-        Dictionary of coordinate-derivative components in the target representation.
+        Dictionary of coordinate-derivative components in the target chart.
         Keys match ``to_chart.components``.
 
     Notes
@@ -1425,7 +1430,7 @@ def cotangent_transform(
     *,
     at: CsDict,
 ) -> CsDict:
-    r"""Transform cotangent (covector) components between representations.
+    r"""Transform cotangent (covector) components between charts.
 
     Maps 1-form / dual-vector components using the inverse Jacobian (pullback).
 
@@ -1441,20 +1446,20 @@ def cotangent_transform(
     Parameters
     ----------
     to_chart : coordinax.charts.AbstractChart
-        Target coordinate representation for the output components.
+        Target coordinate chart for the output components.
     from_chart : coordinax.charts.AbstractChart
-        Source coordinate representation for the input components.
+        Source coordinate chart for the input components.
     alpha : CsDict
         Dictionary of cotangent components. Keys match
         ``from_chart.components``.
     at : CsDict
-        Position coordinates in the source representation. Keys match
+        Position coordinates in the source chart. Keys match
         ``from_chart.components``.
 
     Returns
     -------
     CsDict
-        Dictionary of cotangent components in the target representation.  Keys
+        Dictionary of cotangent components in the target chart.  Keys
         match ``to_chart.components``.
 
     Notes
@@ -1502,11 +1507,11 @@ def physicalize(
     Parameters
     ----------
     chart : coordinax.charts.AbstractChart
-        Coordinate representation.
+        Coordinate chart.
     dqdt : CsDict
-        Coordinate-basis derivatives. Keys match ``rep.components``.
+        Coordinate-basis derivatives. Keys match ``chart.components``.
     at : CsDict
-        Position coordinates. Keys match ``rep.components``.
+        Position coordinates. Keys match ``chart.components``.
 
     Returns
     -------
@@ -1551,11 +1556,11 @@ def coordinateize(
     Parameters
     ----------
     chart : coordinax.charts.AbstractChart
-        Coordinate representation.
+        Coordinate chart.
     v_phys : CsDict
-        Physical (orthonormal) components. Keys match ``rep.components``.
+        Physical (orthonormal) components. Keys match ``chart.components``.
     at : CsDict
-        Position coordinates. Keys match ``rep.components``.
+        Position coordinates. Keys match ``chart.components``.
 
     Returns
     -------
@@ -1570,7 +1575,7 @@ def coordinateize(
     See Also
     --------
     physicalize : Inverse operation (coordinate to physical components)
-    coord_transform : Transform coordinate derivatives between representations
+    coord_transform : Transform coordinate derivatives between charts
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -1592,26 +1597,26 @@ def lower_index(
     $$
         \\alpha_i = g_{ij} v^j
     $$
-    where g is the metric tensor of the representation.
+    where g is the metric tensor of the chart.
 
     Parameters
     ----------
     chart : coordinax.charts.AbstractChart
-        Coordinate representation.
+        Coordinate chart.
     v_coord : CsDict
-        Coordinate-basis tangent components. Keys match ``rep.components``.
+        Coordinate-basis tangent components. Keys match ``chart.components``.
     at : CsDict
-        Position coordinates for metric evaluation. Keys match ``rep.components``.
+        Position coordinates for metric evaluation. Keys match ``chart.components``.
 
     Returns
     -------
     CsDict
-        Cotangent (1-form) components. Keys match ``rep.components``.
+        Cotangent (1-form) components. Keys match ``chart.components``.
 
     See Also
     --------
     raise_index : Inverse operation (covector to vector)
-    metric_of : Get the metric tensor for a representation
+    metric_of : Get the metric tensor for a chart
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -1639,21 +1644,21 @@ def raise_index(
     Parameters
     ----------
     chart : coordinax.charts.AbstractChart
-        Coordinate representation.
+        Coordinate chart.
     alpha : CsDict
-        Cotangent (1-form) components. Keys match ``rep.components``.
+        Cotangent (1-form) components. Keys match ``chart.components``.
     at : CsDict
-        Position coordinates for metric evaluation. Keys match ``rep.components``.
+        Position coordinates for metric evaluation. Keys match ``chart.components``.
 
     Returns
     -------
     CsDict
-        Coordinate-basis tangent components. Keys match ``rep.components``.
+        Coordinate-basis tangent components. Keys match ``chart.components``.
 
     See Also
     --------
     lower_index : Inverse operation (vector to covector)
-    metric_of : Get the metric tensor for a representation
+    metric_of : Get the metric tensor for a chart
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -1681,7 +1686,7 @@ def frame_cart(
     chart
         Chart whose orthonormal frame is requested.
     at
-        Coordinate values keyed by ``rep.components``.
+        Coordinate values keyed by ``chart.components``.
     usys
         Unit system for the transformation. This is sometimes required for
         transformations that depend on physical constants (e.g., speed of light
@@ -1691,13 +1696,13 @@ def frame_cart(
     Returns
     -------
     Array
-        Matrix of shape ``(n_{\text{ambient}}, n_{\text{rep}})`` with columns
+        Matrix of shape ``(n_{\text{ambient}}, n_{\text{chart}})`` with columns
         equal to the orthonormal frame vectors expressed in ambient Cartesian
         components.
 
     Notes
     -----
-    - For Euclidean 3D reps, ``n_ambient = n_rep = 3``.
+    - For Euclidean 3D charts, ``n_ambient = n_chart = 3``.
     - For embedded manifolds, the frame is rectangular (e.g. ``3\times 2`` for ``S^2``).
     - For ``SpaceTimeCT``, orthonormality is with respect to the Minkowski metric
       with signature ``(-,+,+,+)``.
@@ -1722,7 +1727,7 @@ def frame_cart(
 
 @plum.dispatch.abstract
 def pushforward(frame_basis: Any, v_chart: Any, /) -> Any:
-    """Push forward components from a rep frame into Cartesian components."""
+    """Push forward components from a chart frame into Cartesian components."""
     raise NotImplementedError  # pragma: no cover
 
 
@@ -1730,7 +1735,7 @@ def pushforward(frame_basis: Any, v_chart: Any, /) -> Any:
 def pullback(
     metric: "coordinax.metrics.AbstractMetric", frame_basis: Any, v_cart: Any, /
 ) -> Any:
-    """Pull back Cartesian components into rep-frame components."""
+    """Pull back Cartesian components into chart-frame components."""
     raise NotImplementedError  # pragma: no cover
 
 
@@ -1939,7 +1944,7 @@ def simplify(op: Any, /) -> Any:
 def cdict(obj: Any, /) -> CsDict:
     """Extract component dictionary from an object.
 
-    This function converts various coordinate representations into a component
+    This function converts various coordinate charts into a component
     dictionary where keys are component names and values are the corresponding
     values.
 

@@ -2,15 +2,21 @@
 
 __all__: tuple[str, ...] = ()
 
+from collections.abc import Callable
+from typing import Any
+
 import jax.tree as jtu
 import plum
 
 import quaxed.numpy as jnp
+import unxt as u
 
 from .utils import pack_uniform_unit, unpack_with_unit
-from coordinax._src import api, charts, roles
+from coordinax._src import api, charts as cxc, roles as cxr
+from coordinax._src.api import physical_tangent_transform
 from coordinax._src.custom_types import CsDict, OptUSys
 from coordinax._src.embed import EmbeddedManifold
+from coordinax_api import vconvert
 
 # ===================================================================
 # Support for the higher-level `vconvert` function
@@ -18,11 +24,11 @@ from coordinax._src.embed import EmbeddedManifold
 
 @plum.dispatch
 def vconvert(
-    role: roles.PhysDisp | roles.PhysVel | roles.PhysAcc,
-    to_chart: charts.AbstractChart,  # type: ignore[type-arg]
-    from_chart: charts.AbstractChart,  # type: ignore[type-arg]
-    p_dif: CsDict,
-    p_pos: CsDict,
+    role: cxr.AbstractPhysRole,
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    p_tan: CsDict,
+    p_pnt: CsDict,
     /,
     *_: CsDict,
     usys: OptUSys = None,
@@ -44,7 +50,72 @@ def vconvert(
     """
     # Convert using the tangent-space transformation
     return api.physical_tangent_transform(
-        to_chart, from_chart, p_dif, at=p_pos, usys=usys
+        to_chart, from_chart, p_tan, at=p_pnt, usys=usys
+    )
+
+
+#####################################################################
+# Physical tangent transformations
+
+# ===================================================================
+# Partial application
+
+
+@plum.dispatch
+def physical_tangent_transform(
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    /,
+) -> Callable[..., Any]:
+    """Return a partial function for physical tangent transformation.
+
+    When called with only ``to_chart`` and ``from_chart``, returns a callable
+    that can be used to transform physical tangent vectors (velocities,
+    accelerations, etc.) between the orthonormal frames of the two charts.
+
+    This is useful for creating reusable transformation functions or for
+    use in higher-order functions like ``jax.vmap``.
+
+    Returns
+    -------
+    Callable
+        A function with signature ``(v_phys, *, at, usys=None) -> CsDict``
+        that transforms physical tangent components.
+
+    Examples
+    --------
+    >>> import jax
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.transforms as cxt
+    >>> import unxt as u
+
+    Create a reusable transformation function:
+
+    >>> sph_to_cart = cxt.physical_tangent_transform(cxc.cart3d, cxc.sph3d)
+
+    Use it to transform a velocity vector:
+
+    >>> point = {"r": u.Q(5, "m"), "theta": u.Q(90, "deg"), "phi": u.Q(0, "deg")}
+    >>> v_sph = {"r": u.Q(1, "m/s"), "theta": u.Q(0, "m/s"), "phi": u.Q(0, "m/s")}
+    >>> v_cart = sph_to_cart(v_sph, at=point)
+    >>> jax.tree.map(lambda x: x.round(2), v_cart)
+    {'x': Quantity(Array(1., dtype=float64), unit='m / s'),
+     'y': Quantity(Array(0., dtype=float64), unit='m / s'),
+     'z': Quantity(Array(0., dtype=float64), unit='m / s')}
+
+    The same function can be reused for different points and vectors:
+
+    >>> v_sph2 = {"r": u.Q(0, "m/s"), "theta": u.Q(1, "m/s"), "phi": u.Q(0, "m/s")}
+    >>> v_cart2 = sph_to_cart(v_sph2, at=point)
+    >>> jax.tree.map(lambda x: x.round(2), v_cart2)
+    {'x': Quantity(Array(0., dtype=float64), unit='m / s'),
+     'y': Quantity(Array(0., dtype=float64), unit='m / s'),
+     'z': Quantity(Array(-1., dtype=float64), unit='m / s')}
+
+    """
+    # NOT: lambda is much faster than ft.partial here
+    return lambda *args, **kw: api.physical_tangent_transform(
+        to_chart, from_chart, *args, **kw
     )
 
 
@@ -53,8 +124,8 @@ def vconvert(
 
 @plum.dispatch
 def physical_tangent_transform(
-    to_chart: charts.AbstractChart,  # type: ignore[type-arg]
-    from_chart: charts.AbstractChart,  # type: ignore[type-arg]
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     v_phys: CsDict,
     /,
     *,
@@ -105,11 +176,11 @@ def physical_tangent_transform(
     """
     # Convert the position into the target rep so we can evaluate its frame at
     # the same point.
-    p_pos_to = api.point_transform(to_chart, from_chart, at, usys=usys)
+    p_pnt_to = api.point_transform(to_chart, from_chart, at, usys=usys)
 
     # Orthonormal frames in Cartesian components at the same physical point.
     B_from = api.frame_cart(from_chart, at=at, usys=usys)
-    B_to = api.frame_cart(to_chart, at=p_pos_to, usys=usys)
+    B_to = api.frame_cart(to_chart, at=p_pnt_to, usys=usys)
 
     # Pack vector components (uniform unit: speed or acceleration)
     # in rep component order.
@@ -131,7 +202,7 @@ def physical_tangent_transform(
 
 @plum.dispatch
 def physical_tangent_transform(
-    to_chart: charts.AbstractChart,  # type: ignore[type-arg]
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     from_embedded: EmbeddedManifold,  # type: ignore[type-arg]
     v_phys: CsDict,
     /,
@@ -143,22 +214,6 @@ def physical_tangent_transform(
 
     This handles the embedding of intrinsic physical tangent components into the
     ambient space. The ``at`` position is given in intrinsic coordinates.
-
-    Parameters
-    ----------
-    to_chart : charts.AbstractChart
-        Target ambient chart (e.g., ``Cart3D``).
-    from_embedded : EmbeddedManifold
-        The embedded manifold defining the intrinsic chart and embedding.
-    v_phys : CsDict
-        Physical tangent components in the intrinsic orthonormal frame.
-    at : CsDict
-        Intrinsic coordinates where the tangent frame is evaluated.
-    usys
-        Unit system for the transformation. This is sometimes required for
-        transformations that depend on physical constants (e.g., speed of light
-        or ``Delta`` in {class}`~coordinax.charts.ProlateSpheroidal3D`) but `p`
-        is raw values without units.
 
     Returns
     -------
@@ -197,7 +252,7 @@ def physical_tangent_transform(
 
 @plum.dispatch
 def physical_tangent_transform(
-    to_chart: charts.Cart1D | charts.Cart2D | charts.Cart3D,
+    to_chart: cxc.Cart1D | cxc.Cart2D | cxc.Cart3D,
     from_embedded: EmbeddedManifold,  # type: ignore[type-arg]
     v_phys: CsDict,
     /,
@@ -212,7 +267,7 @@ def physical_tangent_transform(
 
     Parameters
     ----------
-    to_chart : charts.AbstractChart
+    to_chart : cxc.AbstractChart
         Target ambient chart (e.g., ``Cart3D``).
     from_embedded : EmbeddedManifold
         The embedded manifold defining the intrinsic chart and embedding.
@@ -223,7 +278,7 @@ def physical_tangent_transform(
     usys
         Unit system for the transformation. This is sometimes required for
         transformations that depend on physical constants (e.g., speed of light
-        or ``Delta`` in {class}`~coordinax.charts.ProlateSpheroidal3D`) but `p`
+        or ``Delta`` in {class}`~coordinax.cxc.ProlateSpheroidal3D`) but `p`
         is raw values without units.
 
     Returns
@@ -250,3 +305,66 @@ def physical_tangent_transform(
     # Reshape outputs to broadcast shape of inputs
     shape = jnp.broadcast_shapes(*[v.shape for v in v_phys.values()])
     return jtu.map(lambda x: jnp.reshape(x, shape), out)
+
+
+# ===================================================================
+# Tangent Transform a Quantity
+
+
+@plum.dispatch
+def physical_tangent_transform(
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    q: u.AbstractQuantity,
+    /,
+    *,
+    at: u.AbstractQuantity | CsDict,
+    usys: OptUSys = None,
+) -> u.AbstractQuantity:
+    """Transform a physical tangent Quantity between charts.
+
+    This is a convenience wrapper around `physical_tangent_transform` for
+    transforming a single Quantity representing a physical tangent vector.
+
+    """
+    # Pack input Quantity into component dict
+    q_dict = api.cdict(q, from_chart)
+    at_dict = api.cdict(at, from_chart) if isinstance(at, u.AbstractQuantity) else at
+
+    # Transform components
+    qto_dict = api.physical_tangent_transform(
+        to_chart, from_chart, q_dict, at=at_dict, usys=usys
+    )
+
+    # Reassemble output Quantity
+    qto: u.AbstractQuantity = jnp.stack(
+        [qto_dict[comp] for comp in to_chart.components], axis=-1
+    )
+    return qto
+
+
+# =================================================================
+# Tangent Transform a an Array
+
+
+@plum.dispatch
+def physical_tangent_transform(
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    v: jnp.ndarray,
+    /,
+    *,
+    at: jnp.ndarray | CsDict,
+    usys: OptUSys = None,
+) -> jnp.ndarray:
+    """Transform a physical tangent vector array between charts.
+
+    This is a convenience wrapper around `physical_tangent_transform` for
+    transforming a single array representing a physical tangent vector.
+
+    The input array `v` should have shape (..., N) where N is the number of
+    components in `from_chart`. The output array will have shape (..., M)
+    where M is the number of components in `to_chart`.
+
+    """
+    raise NotImplementedError("TODO")

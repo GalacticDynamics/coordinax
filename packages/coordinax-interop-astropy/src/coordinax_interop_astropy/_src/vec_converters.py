@@ -189,15 +189,15 @@ def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cx.Vector:
 def cyl_to_apycyl(
     obj: cx.Vector[cxc.Cylindrical3D, Any, Any], /
 ) -> apyc.CylindricalRepresentation:
-    """`coordinax.Cylindrical3D` -> `astropy.CylindricalRepresentation`.
+    """`Cyl3D` -> `astropy.CylindricalRepresentation`.
 
     Examples
     --------
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> vec = cx.vecs.Cylindrical3D(rho=u.Q(1, "km"), phi=u.Q(2, "deg"),
-    ...                              z=u.Q(3, "m"))
+    >>> vec = cx.Vector({"rho": u.Q(1, "km"), "phi": u.Q(2, "deg"),
+    ...                  "z": u.Q(3, "m")}, cxc.cyl3d, cxr.point)
     >>> convert(vec, apyc.CylindricalRepresentation)
     <CylindricalRepresentation (rho, phi, z) in (km, deg, m)
         (1., 2., 3.)>

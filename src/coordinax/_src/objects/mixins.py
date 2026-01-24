@@ -38,7 +38,7 @@ class AstropyRepresentationAPIMixin:
         >>> q_cart = cx.Vector.from_([1, 2, 3], "m")
         >>> q_sph = q_cart.represent_as(cx.charts.sph3d)
         >>> print(q_sph)
-        <Vector: chart=Spherical3D, role=Pos (r[m], theta[rad], phi[rad])
+        <Vector: chart=Spherical3D, role=Point (r[m], theta[rad], phi[rad])
             [3.742 0.641 1.107]>
 
         Transforming a Velocity:
@@ -47,7 +47,7 @@ class AstropyRepresentationAPIMixin:
         >>> q_cart = cx.Vector.from_([1, 2, 3], "m")
         >>> v_sph = v_cart.represent_as(cx.charts.sph3d, q_cart)
         >>> print(v_sph)
-        <Vector: chart=Spherical3D, role=Vel (r, theta, phi) [m / s]
+        <Vector: chart=Spherical3D, role=PhysVel (r, theta, phi) [m / s]
             [3.742e+00 3.331e-16 2.220e-16]>
 
         Transforming an Acceleration requires a velocity and position:

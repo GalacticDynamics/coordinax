@@ -14,7 +14,7 @@ from coordinax_hypothesis._src.utils import draw_if_strategy, get_all_subclasses
 # Chart classes
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def chart_classes(
     draw: st.DrawFn,
     /,

@@ -23,8 +23,8 @@ def test_vectors_basic(vec: cx.Vector) -> None:
 
 @given(vec=cxst.vectors(chart=cx.charts.cart3d))
 @settings(max_examples=20)
-def test_vectors_specific_representation(vec: cx.Vector) -> None:
-    """Test vector generation with a specific representation."""
+def test_vectors_specific_chart(vec: cx.Vector) -> None:
+    """Test vector generation with a specific chart."""
     assert isinstance(vec, cx.Vector)
     assert vec.chart == cx.charts.cart3d
 
@@ -192,7 +192,7 @@ def test_vectors_acceleration_3d(vec: cx.Vector) -> None:
 @settings(max_examples=20)
 def test_vectors_data_structure(vec: cx.Vector) -> None:
     """Test that generated vectors have the correct data structure."""
-    # The data keys should match the representation components
+    # The data keys should match the chart components
     assert set(vec.data.keys()) == set(vec.chart.components)
 
     # All data values should have the same shape (broadcastable)
@@ -207,7 +207,7 @@ def test_vectors_data_structure(vec: cx.Vector) -> None:
 
 
 # =============================================================================
-# Test dynamic representation selection
+# Test dynamic chart selection
 
 
 @given(
@@ -216,8 +216,8 @@ def test_vectors_data_structure(vec: cx.Vector) -> None:
     )
 )
 @settings(max_examples=30)
-def test_vectors_dynamic_representation(vec: cx.Vector) -> None:
-    """Test vector generation with dynamically selected representation."""
+def test_vectors_dynamic_chart(vec: cx.Vector) -> None:
+    """Test vector generation with dynamically selected chart."""
     assert isinstance(vec, cx.Vector)
     assert vec.chart in (
         cx.charts.cart3d,

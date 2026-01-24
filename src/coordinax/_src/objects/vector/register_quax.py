@@ -21,10 +21,8 @@ import coordinax.charts as cxc
 import coordinax.embeddings as cxe
 import coordinax.roles as cxr
 from .base import Vector
+from coordinax._src.constants import LENGTH
 from coordinax._src.custom_types import Shape
-
-LENGTH = u.dimension("length")
-
 
 ##############################################################################
 # Primitives
@@ -52,7 +50,7 @@ def broadcast_in_dim_p_absvec(
 
     >>> p = cx.Vector.from_([1, 2, 3], "m/s")
     >>> print(jnp.broadcast_to(p, (1, 3)))
-    <Vector: chart=Cart3D, role=Vel (x, y, z) [m / s]
+    <Vector: chart=Cart3D, role=PhysVel (x, y, z) [m / s]
         [[1 2 3]]>
 
     >>> a = cx.Vector.from_([1, 2, 3], "m/s2")
@@ -109,6 +107,16 @@ def eq_p_absvecs(lhs: Vector, rhs: Vector, /) -> Bool[Array, "..."]:
 
     # Reduce the equality over the leaves.
     return jax.tree.reduce(jnp.logical_and, comp_tree)
+
+
+@quax.register(jax.lax.neg_p)
+def neg_p_absvec(operand: Vector, /) -> Vector:
+    """Element-wise negation of a Vector."""
+    return Vector(
+        jtu.map(lambda v: -v, operand.data, is_leaf=uq.is_any_quantity),
+        chart=operand.chart,
+        role=operand.role,
+    )
 
 
 # ===============================================
@@ -506,7 +514,7 @@ def sub_p_absvecs(lhs: Vector, rhs: Vector, /) -> Vector:
     # directly and keep the role.
     if (
         (lhs.chart == rhs.chart)
-        and isinstance(lhs.role, r.AbstractPhysicalRole)
+        and isinstance(lhs.role, r.AbstractPhysRole)
         and type(lhs.role) is type(rhs.role)
     ):
         data = jtu.map(jnp.subtract, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
@@ -624,7 +632,10 @@ def sub(
     at: Vector | None = None,
 ) -> NoReturn:
     """Pos - Point is not allowed."""
-    msg = "Cannot subtract Point from PhysDisp. Use Point - Point - PhysDisp, or Point - Pos."
+    msg = (
+        "Cannot subtract Point from PhysDisp. "
+        "Use Point - Point - PhysDisp, or Point - Pos."
+    )
     raise TypeError(msg)
 
 

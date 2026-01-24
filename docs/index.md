@@ -153,7 +153,7 @@ transforming coordinate objects, such as:
 - operations on vectors ({mod}`~coordinax.ops`)
 - reference frames and coordinate systems ({mod}`~coordinax.frames`)
 - coordinates that combine vectors and frames
-  ({class}`~coordinax.frames.Coordinate`)
+  ({class}`~coordinax.objs.Coordinate`)
 - and more!
 
 This functionality is organized into submodules, which are imported into the

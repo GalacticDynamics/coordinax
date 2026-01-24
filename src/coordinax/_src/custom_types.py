@@ -55,28 +55,28 @@ Shape: TypeAlias = tuple[int, ...]
 # Shaped Arrays
 BBtScalarQ = Shaped[u.AbstractQuantity, "*#batch"]
 
-ScalarTime = Real[u.Q["time"], ""]
+ScalarTime = Real[u.Q["time"], ""]  # type: ignore[type-arg]
 
-BBtTime = Real[u.Q["time"], "*#batch"]
+BBtTime = Real[u.Q["time"], "*#batch"]  # type: ignore[type-arg]
 
-BBtArea = Real[u.Q["area"], "*#batch"]
-BBtKinematicFlux = Real[u.Q["diffusivity"], "*#batch"]
-BBtSpecificEnergy = Real[u.Q["specific energy"], "*#batch"]
+BBtArea = Real[u.Q["area"], "*#batch"]  # type: ignore[type-arg]
+BBtKinematicFlux = Real[u.Q["diffusivity"], "*#batch"]  # type: ignore[type-arg]
+BBtSpecificEnergy = Real[u.Q["specific energy"], "*#batch"]  # type: ignore[type-arg,valid-type]
 
-BBtLength = Real[u.Q["length"], "*#batch"]
+BBtLength = Real[u.Q["length"], "*#batch"]  # type: ignore[type-arg]
 
-BBtSpeed = Real[u.Q["speed"], "*#batch"]
-BBtAngularSpeed = Real[u.Q["angular speed"], "*#batch"]
+BBtSpeed = Real[u.Q["speed"], "*#batch"]  # type: ignore[type-arg]
+BBtAngularSpeed = Real[u.Q["angular speed"], "*#batch"]  # type: ignore[type-arg,valid-type]
 
-BBtAcc = Real[u.Q["acceleration"], "*#batch"]
-BBtAngularAcc = Real[u.Q["angular acceleration"], "*#batch"]
+BBtAcc = Real[u.Q["acceleration"], "*#batch"]  # type: ignore[type-arg]
+BBtAngularAcc = Real[u.Q["angular acceleration"], "*#batch"]  # type: ignore[type-arg,valid-type]
 
 
 TimeBatchOrScalar = ScalarTime | BBtTime
 
 
 #: Batchable angular-type Quantity.
-BatchableAngularQuantity = Shaped[u.Q["angle"], "*#batch"]
+BatchableAngularQuantity = Shaped[u.Q["angle"], "*#batch"]  # type: ignore[type-arg]
 
 #: Batchable Angle.
 BatchableAngle = Shaped[u.quantity.AbstractAngle, "*#batch"]

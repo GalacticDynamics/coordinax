@@ -12,7 +12,7 @@ from unxt import AbstractQuantity as AbcQ
 
 from .base import AbstractOperator
 from coordinax._src import api, charts as cxc, roles as cxr
-from coordinax._src.custom_types import CsDict, HasShape
+from coordinax._src.custom_types import CsDict
 
 # ===================================================================
 # On Array(like) inputs
@@ -88,7 +88,7 @@ def apply_op(
     op: AbstractOperator,
     tau: Any,
     role: cxr.AbstractRole,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: AbcQ,
     /,
     **kw: Any,
@@ -124,8 +124,7 @@ def apply_op(
 
     v = api.cdict(x, chart)
     nv = api.apply_op(op, tau, role, chart, v, **kw)
-    nx = jnp.stack(nv, axis=-1)  # stack back to a Quantity
-    return nx
+    return jnp.stack(nv, axis=-1)  # stack back to a Quantity
 
 
 # ===================================================================

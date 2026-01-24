@@ -35,7 +35,7 @@ class AbstractAdd(AbstractOperator):
     delta: CsDict | Callable[[Any], Any]
     """The additive offset (displacement for Translate, velocity for Boost)."""
 
-    chart: cxc.AbstractChart = eqx.field(static=True)
+    chart: cxc.AbstractChart = eqx.field(static=True)  # type: ignore[type-arg]
     """Chart in which the offset is expressed."""
 
     _: KW_ONLY
@@ -68,7 +68,7 @@ class AbstractAdd(AbstractOperator):
         """
         self_offset = self._get_offset()
         if callable(self_offset) or callable(other_offset):
-            raise ValueError("Cannot combine callable offsets")
+            raise TypeError("Cannot combine callable offsets")
         return jtu.map(
             jnp.add,
             self_offset,

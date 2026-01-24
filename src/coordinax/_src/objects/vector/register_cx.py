@@ -3,7 +3,6 @@
 __all__: tuple[str, ...] = ()
 
 
-from collections.abc import Mapping
 from typing import Any
 
 import equinox as eqx
@@ -15,13 +14,22 @@ import coordinax.roles as cxr
 import coordinax_api as cxapi
 from .base import Vector
 from coordinax._src import api
+from coordinax._src.custom_types import CsDict
 
 ##############################################################################
 # as_pos
 
 
 @plum.dispatch
-def as_pos(point: Vector, origin: Vector | None, /) -> Vector:
+def as_pos(
+    point: Vector,
+    origin: Vector | None = None,
+    /,
+    *,
+    chart: cxc.AbstractChart | None = None,  # type: ignore[type-arg]
+    at: Vector | None = None,
+    **kwargs: Any,
+) -> Vector:
     r"""Convert a position vector to a displacement from the origin.
 
     Mathematical Definition:
@@ -32,9 +40,20 @@ def as_pos(point: Vector, origin: Vector | None, /) -> Vector:
     Parameters
     ----------
     point
-        Point vector to convert. Must have ``Point`` role.
+        Point vector to convert. Must have {class}`coordinax.roles.Point` role.
     origin
         Origin point. For embedded manifolds, this parameter is required.
+    chart
+        Target chart for the output displacement vector. If `None` (default),
+        the displacement is returned in the chart computed from the input.
+        If specified, the result is converted via {func}`~coordinax.vconvert`.
+    at
+        Base point for the chart conversion when ``chart`` is specified.
+        Required for non-Cartesian target charts since tangent-space
+        transformations depend on the position. Ignored if ``chart`` is `None`.
+    **kwargs
+        Additional keyword arguments passed to {func}`~coordinax.vconvert` when
+        ``chart`` is specified.
 
     Returns
     -------
@@ -80,7 +99,7 @@ def as_pos(point: Vector, origin: Vector | None, /) -> Vector:
 
     >>> disp = cx.as_pos(point)
     >>> print(disp)
-    <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+    <Vector: chart=Cart3D, role=PhysDisp (x, y, z) [m]
         [1 2 3]>
 
     Convert with an explicit origin:
@@ -88,7 +107,7 @@ def as_pos(point: Vector, origin: Vector | None, /) -> Vector:
     >>> origin = cx.Vector.from_([0.5, 0.5, 0.5], "m")
     >>> disp = cx.as_pos(point, origin)
     >>> print(disp)
-    <Vector: chart=Cart3D, role=Pos (x, y, z) [m]
+    <Vector: chart=Cart3D, role=PhysDisp (x, y, z) [m]
         [0.5 1.5 2.5]>
 
     Request a specific representation (uses PhysDisp.vconvert):
@@ -117,6 +136,10 @@ def as_pos(point: Vector, origin: Vector | None, /) -> Vector:
 
     # Create displacement vector in computed chart
     disp_vec = Vector(disp_data, disp_chart, cxr.phys_disp)
+    if chart is not None:
+        # Pass `at` as positional argument to match dispatch signature:
+        # vconvert(role, to_chart, from_vec, from_pos)
+        disp_vec = disp_vec.vconvert(chart, at, **kwargs)
     return disp_vec
 
 
@@ -173,20 +196,18 @@ def vconvert(
 
     From one representation to another.
 
-    Mathematical Definition
-    -----------------------
-    A **position difference** (Pos role) is a tangent vector v \in T_p M.
+    Mathematical Definition:
+
+    A **position difference** (PhysDisp role) is a tangent vector v \in T_p M.
     It transforms via the pushforward (Jacobian) at the base point p:
 
-    $$
-       v_S = J_{R \to S}(p) \, v_R
-    $$
+    $$ v_S = J_{R \to S}(p) \, v_R $$
     This is the same transformation rule as velocity and acceleration, but
-    Pos has units of length (not length/time).
+    PhysDisp has units of length (not length/time).
 
     Parameters
     ----------
-    role : Pos
+    role
         The position-difference role flag.
     to_chart : AbstractChart
         Target representation.
@@ -223,7 +244,7 @@ def vconvert(
     >>> # Transform to spherical - requires base point
     >>> sph_disp = cx.vconvert(cxc.sph3d, disp, point)
     >>> sph_disp.role
-    <...PhysDisp object at ...>
+    PhysDisp()
 
     """
     from_vec = eqx.error_if(
@@ -302,6 +323,33 @@ def vconvert(
 
 @plum.dispatch
 def vconvert(
+    role: cxr.CoordDisp | cxr.CoordVel | cxr.CoordAcc,
+    to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    from_dif: Vector,
+    from_pos: Vector,
+    /,
+) -> Vector:
+    """Convert a coordinate-basis tangent vector between charts (requires at=)."""
+    from_dif = eqx.error_if(
+        from_dif,
+        isinstance(from_dif.role, cxr.Point),
+        "'from_dif' must be a differential vector",
+    )
+    from_pos = eqx.error_if(
+        from_pos,
+        not isinstance(from_pos.role, cxr.Point),
+        "'from_pos' must be a point vector",
+    )
+
+    from_pos = from_pos.vconvert(from_dif.chart)
+    p = cxapi.vconvert(
+        from_dif.role, to_chart, from_dif.chart, from_dif.data, from_pos.data
+    )
+    return Vector(data=p, chart=to_chart, role=from_dif.role)
+
+
+@plum.dispatch
+def vconvert(
     to_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     from_dif: Vector,
     from_pos: Vector,
@@ -323,7 +371,7 @@ def apply_op(
     v: Vector,
     /,
     *,
-    role: None = None,
+    at: Vector | None = None,
     **kw: Any,
 ) -> Vector:
     """Apply an operator to a Vector.
@@ -343,17 +391,61 @@ def apply_op(
         [-2.  1.  3.]>
 
     """
-    # Get the base point data if provided
-    ats = {k: v for k, v in kw.items() if k.startswith("at_")}
-    # TODO: generalize to work with any ats
-    if not all(isinstance(v, dict) for v in ats.values()):
-        raise NotImplementedError("TODO")
+    ats: dict[str, Any] = {}
+    other_kw: dict[str, Any] = {}
 
-    # Apply to the underlying data with the vector's role & chart
-    result_data = api.apply_op(op, tau, v.role, v.chart, v.data, **(kw | ats))
+    if at is not None:
+        at_vec = at if at.chart == v.chart else at.vconvert(v.chart)
+        ats["at"] = at_vec.data
+
+    for k, val in kw.items():
+        if not k.startswith("at_"):
+            other_kw[k] = val
+            continue
+
+        if val is None:
+            continue
+        if isinstance(val, Vector):
+            ats[k] = val.vconvert(v.chart).data
+        elif isinstance(val, dict):
+            ats[k] = val
+        else:
+            msg = f"{k} must be a Vector, CsDict, or None"
+            raise TypeError(msg)
+
+    # Apply to the underlying data with the vector's role & chart.
+    result_data = api.apply_op(op, tau, v.role, v.chart, v.data, **(other_kw | ats))
 
     # Return a new Vector with the same chart and role
     return Vector(data=result_data, chart=v.chart, role=v.role)
+
+
+@plum.dispatch
+def apply_op(
+    op: cxo.Identity,
+    tau: Any,
+    v: Vector,
+    /,
+    *,
+    at: Vector | None = None,
+    **kw: Any,
+) -> Vector:
+    """Apply Identity operator to a Vector - returns input unchanged.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+    >>> import coordinax.ops as cxo
+    >>> import unxt as u
+
+    >>> v = cx.Vector.from_(u.Q([1, 2, 3], "m"))
+    >>> op = cxo.Identity()
+    >>> op(v) is v
+    True
+
+    """
+    del op, tau, at, kw  # unused
+    return v
 
 
 # ===================================================================
@@ -361,7 +453,7 @@ def apply_op(
 
 
 @plum.dispatch
-def cdict(obj: Vector, /) -> Mapping[str, Any]:
+def cdict(obj: Vector, /) -> CsDict:
     """Extract component dictionary from a Vector.
 
     Parameters

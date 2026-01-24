@@ -14,13 +14,13 @@ Let's transform a position from Alice's frame to Bob's frame:
 
 >>> op = cxf.frame_transform_op(frame1, frame2)
 >>> op
-Pipe(( Add(Cart3D( ... )), Add(CartVel3D( ... )) ))
+Pipe(( Translate(...), Boost(...) ))
 
 >>> q_alice = cx.Vector.from_([0, 0, 0], "km")
 >>> t = u.Q(2.5, "yr")
->>> _, q_bob = op(t, q_alice)
+>>> q_bob = op(t, q_alice)
 >>> print(q_bob)
-<Cart3D: (x, y, z) [km]
+<Vector: chart=Cart3D, role=Point (x, y, z) [km]
     [2.129e+13 1.000e+04 0.000e+00]>
 
 Now let's create a new transformed frame and work with it:
@@ -28,9 +28,7 @@ Now let's create a new transformed frame and work with it:
 >>> R = cx.ops.Rotate([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
 >>> frame = cxf.TransformedReferenceFrame(frame1, R)
 >>> frame
-TransformedReferenceFrame(
-    base_frame=Alice(), xop=Rotate(rotation=f32[3,3])
-)
+TransformedReferenceFrame(base_frame=Alice(), xop=Rotate(R=f64[3,3]))
 
 Let's transform a position from the base frame to the transformed frame:
 
@@ -39,24 +37,11 @@ Let's transform a position from the base frame to the transformed frame:
 >>> q_icrs = cx.Vector.from_([1, 0, 0], "kpc")
 >>> q_frame = op(q_icrs)
 >>> print(q_frame)
-<Cart3D: (x, y, z) [kpc]
+<Vector: chart=Cart3D, role=Point (x, y, z) [kpc]
     [ 0. -1.  0.]>
 
 >>> op.inverse(q_frame) == q_icrs
 Array(True, dtype=bool)
-
-This can also transform a velocity:
-
->>> v_icrs = cx.CartVel3D.from_([1, 0, 0], "km/s")
->>> q_frame, v_frame = op(q_icrs, v_icrs)
->>> print(q_frame, v_frame, sep="\n")
-<Cart3D: (x, y, z) [kpc]
-    [ 0. -1.  0.]>
-<CartVel3D: (x, y, z) [km / s]
-    [ 0. -1.  0.]>
-
->>> op.inverse(q_frame, v_frame) == (q_icrs, v_icrs)
-True
 
 """
 

@@ -12,6 +12,7 @@ import plum
 
 import unxt as u
 from dataclassish import replace
+from unxt.quantity import StaticValue
 
 from .base import (
     AbstractChart,
@@ -79,8 +80,8 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     """Spatial part of the representation. Defaults: `coordinax.charts.cart3d`."""
 
     _: KW_ONLY
-    c: Float[u.StaticQuantity["speed"], ""] = field(
-        default=u.StaticQuantity(299_792.458, "km/s")
+    c: Float[u.StaticQuantity["speed"], ""] = field(  # type: ignore[type-arg]
+        default=u.StaticQuantity(StaticValue(299_792.458), "km/s")
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
@@ -124,7 +125,6 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         Expects time factor dict with 'ct' key, spatial factor dict with spatial keys.
         """
         return {**parts[0], **parts[1]}
-
 
 
 @plum.dispatch

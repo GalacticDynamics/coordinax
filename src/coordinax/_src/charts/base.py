@@ -1,4 +1,5 @@
 """Vector."""
+
 from unxt.quantity import is_any_quantity
 
 __all__ = (
@@ -27,7 +28,7 @@ from typing import (
 )
 
 import plum
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 
 import unxt as u
 from dataclassish import field_items
@@ -150,7 +151,8 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
         # Allowing for data to be a Array-dict
         # Check that the dimensions match chart.coord_dimensions
         if any(map(is_any_quantity, data.values())):
-            for v, d in zip(data.values(), self.coord_dimensions, strict=True):
+            for k, d in zip(self.components, self.coord_dimensions, strict=True):
+                v = data[k]
                 if d is not None and u.dimension_of(v) != d:
                     msg = "Data dimensions do not match"
                     raise ValueError(msg)
@@ -215,11 +217,52 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
         )
         return cls_name + fields
 
+    # ===============================================================
+    # Python API
+
     def __repr__(self) -> str:
         return wl.pformat(self, include_params=False, width=80)
 
     def __str__(self) -> str:
         return wl.pformat(self, include_params=True, width=80)
+
+    def __eq__(self, other: object) -> bool:
+        """Check equality between charts.
+
+        Two charts are equal if they are the same type and have equal field
+        values.
+
+        Examples
+        --------
+        >>> import coordinax.charts as cxc
+
+        >>> cxc.Cart3D() == cxc.cart3d
+        True
+
+        >>> cxc.Cart3D() == cxc.sph3d
+        False
+
+        """
+        if type(self) is not type(other):
+            return NotImplemented
+        return (
+            self.components == other.components
+            and self.coord_dimensions == other.coord_dimensions
+            and (field_values(self) == field_values(other))
+        )
+
+    def __hash__(self) -> int:
+        """Hash a chart based on its type and field values.
+
+        Examples
+        --------
+        >>> import coordinax.charts as cxc
+
+        >>> hash(cxc.Cart3D()) == hash(cxc.cart3d)
+        True
+
+        """
+        return hash((type(self), field_values(self)))
 
 
 @plum.dispatch
@@ -387,7 +430,7 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
         # Namespaced: extract by prefix and strip using a single pass per factor
         return tuple(
             {
-                c: v  # type: ignore[misc]
+                c: v
                 for c in factor.components
                 if (v := p_get((name, c), MISSING)) is not MISSING
             }
@@ -418,6 +461,36 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
             for name, part in zip(self.factor_names, parts, strict=True)
             for c, v in part.items()
         }
+
+    def __pdoc__(self, *, include_params: bool = False, **kw: Any) -> wl.AbstractDoc:
+        kw.setdefault("short_arrays", "compact")
+        kw.setdefault("use_short_names", True)
+        kw.setdefault("named_units", False)
+
+        if include_params:
+            cls_name = wl.bracketed(
+                begin=wl.TextDoc(f"{self.__class__.__name__}["),
+                docs=[
+                    wl.pdoc(self.components, include_params=include_params, **kw),
+                    wl.pdoc(self.coord_dimensions, include_params=include_params, **kw),
+                ],
+                sep=wl.comma,
+                end=wl.TextDoc("]("),
+                indent=2,
+            )
+        else:
+            cls_name = wl.TextDoc(f"{self.__class__.__name__}(")
+
+        fields = wl.bracketed(
+            begin=wl.TextDoc(""),
+            docs=wl.named_objs(
+                list(field_items(self)), include_params=include_params, **kw
+            ),
+            sep=wl.comma,
+            end=wl.TextDoc(")"),
+            indent=4,
+        )
+        return cls_name + fields
 
 
 MSG_COMPONENT_KEY_COLLISION = (
@@ -500,7 +573,7 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         # partition by factor.components with cached lookup
         p_get = p.get
         return tuple(
-            {c: v for c in factor.components if (v := p_get(c, MISSING)) is not MISSING}  # type: ignore[misc]
+            {c: v for c in factor.components if (v := p_get(c, MISSING)) is not MISSING}
             for factor in self.factors
         )
 

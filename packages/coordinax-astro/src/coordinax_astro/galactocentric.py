@@ -8,6 +8,7 @@ from typing import ClassVar, TypeAlias, final
 
 import equinox as eqx
 
+import quaxed.numpy as jnp
 import unxt as u
 from dataclassish.converters import Unless
 
@@ -17,10 +18,10 @@ from .base import AbstractSpaceFrame
 from coordinax._src.distances import Distance
 from coordinax._src.objects.vector import Vector
 
-ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]
+ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]  # type: ignore[type-arg]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
-LengthVector: TypeAlias = Shaped[u.Q["length"], "3"] | Shaped[Distance, "3"]
-VelocityVector: TypeAlias = Shaped[u.Q["speed"], "3"]
+LengthVector: TypeAlias = Shaped[u.Q["length"], "3"] | Shaped[Distance, "3"]  # type: ignore[type-arg]
+VelocityVector: TypeAlias = Shaped[u.Q["speed"], "3"]  # type: ignore[type-arg]
 
 
 @final
@@ -50,9 +51,9 @@ class Galactocentric(AbstractSpaceFrame):
         converter=Vector[cxc.LonLatSpherical3D, cxr.Point].from_,
         default_factory=lambda: Vector(
             {
-                "lon": u.Angle(266.4051, "deg"),
-                "lat": u.Angle(-28.936175, "degree"),
-                "distance": Distance(8.122, "kpc"),
+                "lon": u.Angle(jnp.array(266.4051), "deg"),
+                "lat": u.Angle(jnp.array(-28.936175), "degree"),
+                "distance": Distance(jnp.array(8.122), "kpc"),
             },
             chart=cxc.lonlatsph3d,
             role=cxr.point,
@@ -61,14 +62,15 @@ class Galactocentric(AbstractSpaceFrame):
 
     #: Rotation angle of the Galactic center from the ICRS x-axis.
     roll: ScalarAngle = eqx.field(
-        converter=Unless(u.Angle, u.Q["angle"].from_),
-        default=u.Q(0, "deg"),
+        converter=Unless(u.Angle, u.Q["angle"].from_),  # type: ignore[misc]
+        default=u.Q(jnp.array(0), "deg"),
     )
 
     #: Distance from the Sun to the Galactic center.
     #: https://ui.adsabs.harvard.edu/abs/2019MNRAS.482.1417B
-    z_sun: u.Q["length"] = eqx.field(
-        converter=u.Q["length"].from_, default=u.Q(20.8, "pc")
+    z_sun: u.Q["length"] = eqx.field(  # type: ignore[type-arg]
+        converter=u.Q["length"].from_,  # type: ignore[misc]
+        default=u.Q(jnp.array(20.8), "pc"),
     )
 
     #: Velocity of the Sun in the Galactic center frame.
@@ -84,6 +86,6 @@ class Galactocentric(AbstractSpaceFrame):
 
     #: The angle between the Galactic center and the ICRS x-axis.
     roll0: ClassVar[ScalarAngle] = eqx.field(
-        default=u.Q(58.5986320306, "degree"),
-        converter=Unless(u.Angle, u.Q["angle"].from_),
+        default=u.Q(jnp.array(58.5986320306), "degree"),
+        converter=Unless(u.Angle, u.Q["angle"].from_),  # type: ignore[misc]
     )

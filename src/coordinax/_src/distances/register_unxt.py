@@ -9,6 +9,7 @@ import plum
 import unxt as u
 
 from .base import AbstractDistance
+from coordinax._src.constants import LENGTH
 
 
 @plum.dispatch
@@ -24,4 +25,4 @@ def dimension_of(obj: type[AbstractDistance], /) -> u.dims.AbstractDimension:
     PhysicalType('length')
 
     """
-    return u.dimension("length")
+    return LENGTH

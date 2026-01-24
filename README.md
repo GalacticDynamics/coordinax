@@ -44,8 +44,8 @@ pip install coordinax
   dimensions). A rep does not store numerical values.
 - Vector: data + rep + role. Data are the coordinate values or physical
   components.
-- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role is
-  not a rep.
+- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role
+  is not a rep.
 - Metric: a bilinear form g on the tangent space defining inner products and
   norms (Euclidean, sphere intrinsic, Minkowski).
 - Physical components: components of a geometric vector expressed in an
@@ -84,7 +84,7 @@ We can also transform physical vector components between reps:
 
 ```
 v = {"x": u.Q(4.0, "km/s"), "y": u.Q(5.0, "km/s"), "z": u.Q(6.0, "km/s")}
-v_sph = cxt.tangent_transform(cxc.sph3d, cxc.cart3d, v, at=q)
+v_sph = cxt.physical_tangent_transform(cxc.sph3d, cxc.cart3d, v, at=q)
 ```
 
 ## Metrics
@@ -148,12 +148,12 @@ bool(
 
 Different vector roles transform via different mechanisms:
 
-| Role           | Transformation                      | Requires Base Point? |
-| -------------- | ----------------------------------- | -------------------- |
-| `Point`        | Position transform (coordinate map) | No                   |
-| `PhysDisp`     | Tangent transform (physical vector) | Sometimes[^1]        |
-| `PhysVel`      | Tangent transform (physical vector) | Sometimes[^1]        |
-| `PhysAcc`      | Tangent transform (physical vector) | Sometimes[^1]        |
+| Role       | Transformation                      | Requires Base Point? |
+| ---------- | ----------------------------------- | -------------------- |
+| `Point`    | Position transform (coordinate map) | No                   |
+| `PhysDisp` | Tangent transform (physical vector) | Sometimes[^1]        |
+| `PhysVel`  | Tangent transform (physical vector) | Sometimes[^1]        |
+| `PhysAcc`  | Tangent transform (physical vector) | Sometimes[^1]        |
 
 [^1]:
     Required when converting between representations (e.g., Cartesian ↔
@@ -162,9 +162,9 @@ Different vector roles transform via different mechanisms:
 
 ## PointedVector: Ergonomic Tangent Vector Conversions
 
-`PointedVector` provides a container for vectors anchored at a common base point,
-automatically managing the base point dependency required for tangent vector
-transformations:
+`PointedVector` provides a container for vectors anchored at a common base
+point, automatically managing the base point dependency required for tangent
+vector transformations:
 
 ```
 import coordinax as cx
@@ -236,25 +236,24 @@ d_sum = d1.add(d2)  # role is Displacement
 disp_from_origin = cx.as_pos(new_pos)
 ```
 
-| Operation                     | Result         | Allowed? |
-| ----------------------------- | -------------- | -------- |
-| `PhysDisp + PhysDisp`         | `PhysDisp`     | ✅       |
-| `Point + PhysDisp`            | `Point`        | ✅       |
-| `PhysDisp + Point`            | —              | ❌       |
-| `Point + Point`               | —              | ❌       |
+| Operation             | Result     | Allowed? |
+| --------------------- | ---------- | -------- |
+| `PhysDisp + PhysDisp` | `PhysDisp` | ✅       |
+| `Point + PhysDisp`    | `Point`    | ✅       |
+| `PhysDisp + Point`    | —          | ❌       |
+| `Point + Point`       | —          | ❌       |
 
 > **⚠️ Critical: Physical Components with Uniform Units**
 >
-> `PhysDisp` stores **physical vector components in an orthonormal frame**,
-> not coordinate increments. All components must have uniform dimension
-> `[length]`.
+> `PhysDisp` stores **physical vector components in an orthonormal frame**, not
+> coordinate increments. All components must have uniform dimension `[length]`.
 >
 > For example, in cylindrical coordinates:
 >
 > - ✅ **Correct**: `PhysDisp(rho=1m, phi=2m, z=3m)` — physical components,
 >   where `phi=2m` means "2 meters in the tangential direction"
-> - ❌ **Wrong**: `PhysDisp(rho=1m, phi=0.5rad, z=3m)` — coordinate
->   increments with mixed units
+> - ❌ **Wrong**: `PhysDisp(rho=1m, phi=0.5rad, z=3m)` — coordinate increments
+>   with mixed units
 >
 > This applies to all tangent vectors (`PhysDisp`, `PhysVel`, `PhysAcc`), which
 > transform via orthonormal frame transformations, not coordinate chart

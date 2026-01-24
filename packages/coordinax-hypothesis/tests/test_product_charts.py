@@ -165,12 +165,12 @@ class TestProductChartsIntegration:
         ),
         pdict=st.data(),
     )
-    def test_with_pdicts_strategy(
+    def test_with_cdicts_strategy(
         self, chart: cxc.CartesianProductChart, pdict: st.DataObject
     ) -> None:
-        """Generated product charts work with pdicts strategy."""
+        """Generated product charts work with cdicts strategy."""
         # Generate a matching pdict for this chart
-        data = pdict.draw(cxst.pdicts(chart=chart))
+        data = pdict.draw(cxst.cdicts(chart=chart))
 
         # Verify keys match chart components
         assert set(data.keys()) == set(chart.components)

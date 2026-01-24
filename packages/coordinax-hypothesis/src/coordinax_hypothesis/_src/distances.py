@@ -5,16 +5,16 @@ __all__ = ("distances", "distance_moduli", "parallaxes")
 import warnings
 
 from collections.abc import Mapping
-from typing import Any, assert_never
+from typing import Any, assert_never, cast
 
 import jax.numpy as jnp
 from hypothesis import strategies as st
 from hypothesis.extra.array_api import make_strategies_namespace
 
-import unxt as u
 import unxt_hypothesis as ust
 
 import coordinax.distances as cxd
+from coordinax._src.constants import ANGLE, LENGTH
 
 xps = make_strategies_namespace(jnp)
 
@@ -87,7 +87,7 @@ def make_nonnegative(draw: st.DrawFn, /, **kwargs: Any) -> dict[str, Any]:
     return kwargs
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def distances(
     draw: st.DrawFn,
     /,
@@ -143,7 +143,7 @@ def distances(
 
     # Extract unit if provided (to avoid conflicts with dimension)
     # Default to length dimension, but user can override with specific unit
-    unit = kwargs.pop("unit", u.dimension("length"))
+    unit = kwargs.pop("unit", LENGTH)
 
     # Adjust elements strategy if needed to enforce non-negative values
     if check_negative:
@@ -160,7 +160,7 @@ def distances(
     )
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def distance_moduli(
     draw: st.DrawFn,
     /,
@@ -218,16 +218,11 @@ def distance_moduli(
     kwargs.pop("unit", None)
 
     # Generate the DistanceModulus quantity
-    return draw(
-        ust.quantities(
-            unit="mag",
-            quantity_cls=cxd.DistanceModulus,
-            **kwargs,
-        )
-    )
+    out = draw(ust.quantities(unit="mag", quantity_cls=cxd.DistanceModulus, **kwargs))
+    return cast("cxd.DistanceModulus", out)
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def parallaxes(
     draw: st.DrawFn,
     /,
@@ -291,21 +286,19 @@ def parallaxes(
 
     # Extract unit if provided (to avoid conflicts with dimension)
     # Default to angle dimension, but user can override with specific unit
-    unit = kwargs.pop("unit", u.dimension("angle"))
+    unit = kwargs.pop("unit", ANGLE)
 
     # Adjust elements strategy if needed to enforce non-negative values
     if check_negative:
         kwargs = make_nonnegative(draw, **kwargs)
 
     # Generate the Parallax quantity with angle dimension
-    return draw(
+    out = draw(
         ust.quantities(
-            unit,
-            quantity_cls=cxd.Parallax,
-            check_negative=check_negative,
-            **kwargs,
+            unit, quantity_cls=cxd.Parallax, check_negative=check_negative, **kwargs
         )
     )
+    return cast("cxd.Parallax", out)
 
 
 # Register type strategy for Hypothesis's st.from_type()

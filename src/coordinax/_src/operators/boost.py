@@ -2,7 +2,8 @@
 
 This module defines primitive operators that are specialized by role:
 
-- ``Boost``: Velocity boost (acts on ``Point``, ``PhysDisp``, ``PhysVel``, ``PhysAcc`` roles)
+- ``Boost``: Velocity boost
+  (acts on ``Point``, ``PhysDisp``, ``PhysVel``, ``PhysAcc`` roles)
 
 These operators provide:
 
@@ -40,6 +41,8 @@ from .identity import Identity
 from coordinax._src import api, charts as cxc, roles as cxr
 from coordinax._src.custom_types import CsDict, OptUSys, Unit
 from coordinax._src.transformations.utils import pack_uniform_unit
+
+SEC = u.unit("s")
 
 
 @final
@@ -95,21 +98,22 @@ class Boost(AbstractAdd):
 
     >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
     >>> boost
-    Boost({'x': Q(100, 'km / s'), 'y': Q(0, 'km / s'),
-           'z': Q(0, 'km / s')}, chart=Cart3D())
+    Boost(
+      {'x': Q(i64[], 'km / s'), 'y': Q(i64[], 'km / s'), 'z': Q(i64[], 'km / s')}, Cart3D()
+    )
 
     Apply to velocity:
 
     >>> v = u.Q([10, 20, 30], "km/s")
     >>> cx.ops.apply_op(boost, None, cx.roles.phys_vel, cx.cart3d, v)
-    Quantity(Array([110., 120., 130.], dtype=float64), unit='km / s')
+    Quantity(Array([110,  20,  30], dtype=int64), unit='km / s')
 
     Apply to point (requires tau):
 
     >>> p = u.Q([0, 0, 0], "km")
     >>> tau = u.Q(1.0, "s")
     >>> cx.ops.apply_op(boost, tau, cx.roles.point, cx.cart3d, p)
-    Quantity(Array([100., 0., 0.], dtype=float64), unit='km')
+    Quantity(Array([100.,   0.,   0.], dtype=float64, ...), unit='km')
 
     See Also
     --------
@@ -147,8 +151,9 @@ def from_(cls: type[Boost], q: u.AbstractQuantity, /) -> Boost:
     >>> import coordinax.ops as cxo
 
     >>> cxo.Boost.from_(u.Q([100, 0, 0], "km/s"))
-    Boost({'x': Q(100, 'km / s'), 'y': Q(0, 'km / s'),
-           'z': Q(0, 'km / s')}, chart=Cart3D())
+    Boost(
+      {'x': Q(i64[], 'km / s'), 'y': Q(i64[], 'km / s'), 'z': Q(i64[], 'km / s')}, Cart3D()
+    )
 
     """
     chart = api.guess_chart(q)
@@ -175,9 +180,15 @@ def simplify(op: Boost, /, **kw: Any) -> Boost | Identity:
     Identity()
 
     """
-    delta_vals = jnp.stack([u.ustrip(AllowValue, v) for v in op.delta.values()])
-    if jnp.allclose(delta_vals, 0, **kw):
-        return Identity()
+    # Can't simplify callable
+    if callable(op.delta):
+        return op
+    # Compute if the boost is an identity operation
+    is_zero = jtu.all(
+        jtu.map(lambda v: jnp.allclose(u.ustrip(AllowValue, v), 0, **kw), op.delta)
+    )
+    if is_zero:
+        return Identity()  # type: ignore[no-untyped-call]
     return op
 
 
@@ -193,19 +204,22 @@ def _require_tau_time(tau: Any, /) -> tuple[Array, Unit]:
         not u.quantity.is_any_quantity(tau),
         "Boost requires tau as a time Quantity when delta is time-dependent",
     )
-    tau_unit = u.unit_of(tau)
+    unit = u.unit_of(tau)
     tau = eqx.error_if(
         tau,
-        u.dimension_of(tau_unit) != u.dimension_of(u.unit("s")),
+        u.dimension_of(unit) != u.dimension_of(SEC),
         "Boost requires tau to have time dimension",
     )
     # Differentiate with respect to the numeric tau in its own unit.
     # Ensure float dtype for jacfwd
-    return jnp.asarray(u.ustrip(tau_unit, tau), dtype=float), tau_unit
+    return jnp.asarray(u.ustrip(unit, tau), dtype=float), unit
 
 
 def _delta_values_fn(
-    delta_fn: Callable[[Any], Any], chart: cxc.AbstractChart, tau_unit: Unit, /
+    delta_fn: Callable[[Any], Any],
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
+    tau_unit: Unit,
+    /,
 ) -> tuple[Callable[[Array], Array], Unit | None]:
     """Build a pure-JAX function returning packed delta values.
 
@@ -239,7 +253,7 @@ def _delta_values_fn(
 
 def _time_derivative_delta(
     op: Boost, tau: Any, /, order: int
-) -> tuple[CsDict, cxc.AbstractChart]:
+) -> tuple[CsDict, cxc.AbstractChart[Any, Any]]:
     """Compute d^order/dtau^order delta(tau) as a CsDict in op.chart.
 
     Parameters
@@ -295,7 +309,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     usys: OptUSys = None,
@@ -351,7 +365,7 @@ def apply_op(
 
     # Check if dv is nonzero - if so, require tau to be a time Quantity
     if not jnp.allclose(dv_vals, 0):
-        tau_value, tau_unit = _require_tau_time(tau)
+        tau_value, _ = _require_tau_time(tau)
 
         # Convert dv to canonical velocity unit
         vel_unit = usys[u.dimension_of(u.unit("m/s"))]
@@ -363,14 +377,13 @@ def apply_op(
         displacement = tau_value * dv_vals
 
         # Convert to position unit
-        pos_unit = usys[u.dimension_of(u.unit("m"))]
+        usys[u.dimension_of(u.unit("m"))]
         # displacement has units of time * velocity = length
         # dv_vals is already in vel_unit, so tau_value * dv_vals has correct dimension
 
         return x_arr + displacement if op_eval.right_add else displacement + x_arr
-    else:
-        # Zero boost: identity on points
-        return x_arr
+    # Zero boost: identity on points
+    return x_arr
 
 
 @plum.dispatch
@@ -378,7 +391,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysDisp,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     usys: OptUSys = None,
@@ -408,7 +421,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     usys: OptUSys = None,
@@ -429,7 +442,7 @@ def apply_op(
     >>> v = jnp.array([10.0, 20.0, 30.0])
     >>> usys = u.unitsystems.si
     >>> cx.ops.apply_op(boost, None, cx.roles.phys_vel, cx.cart3d, v, usys=usys)
-    Array([100010., 100020., 100030.], dtype=float64)
+    Array([1.0001e+05, 2.0000e+01, 3.0000e+01], dtype=float64)
 
     """
     del role, kw
@@ -471,7 +484,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: ArrayLike,
     /,
     usys: OptUSys = None,
@@ -488,12 +501,14 @@ def apply_op(
     --------
     >>> import jax.numpy as jnp
     >>> import coordinax as cx
+    >>> import unxt as u
 
     Time-independent boost is identity on acceleration:
 
     >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
     >>> a = jnp.array([1.0, 2.0, 3.0])
-    >>> cx.ops.apply_op(boost, None, cx.roles.phys_acc, cx.cart3d, a)
+    >>> usys = u.unitsystems.si
+    >>> cx.ops.apply_op(boost, None, cx.roles.phys_acc, cx.charts.cart3d, a, usys=usys)
     Array([1., 2., 3.], dtype=float64)
 
     """
@@ -549,7 +564,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: u.AbstractQuantity,
     /,
     usys: OptUSys = None,
@@ -564,7 +579,6 @@ def apply_op(
     --------
     >>> import coordinax as cx
     >>> import unxt as u
-
     >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
     >>> x = u.Q([0.0, 0.0, 0.0], "km")
     >>> tau = u.Q(1.0, "s")
@@ -579,16 +593,16 @@ def apply_op(
 
     # Check if dv is nonzero - if so, require tau to be a time Quantity
     if not jnp.allclose(u.ustrip(AllowValue, dv), 0):
-        tau_value, tau_unit = _require_tau_time(tau)
+        _require_tau_time(tau)  # validate tau is a time Quantity
 
         # Compute displacement: delta_x = (tau - tau0) * delta_v
         # Assuming tau0 = 0 for simplicity
-        displacement = tau_value * dv
+        # Use tau directly (with time unit) so tau * velocity = length
+        displacement = tau * dv
 
         return x + displacement if op_eval.right_add else displacement + x
-    else:
-        # Zero boost: identity on points
-        return x
+    # Zero boost: identity on points
+    return x
 
 
 @plum.dispatch
@@ -596,7 +610,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysDisp,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: u.AbstractQuantity,
     /,
     usys: OptUSys = None,
@@ -626,7 +640,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: u.AbstractQuantity,
     /,
     usys: OptUSys = None,
@@ -645,7 +659,7 @@ def apply_op(
     >>> boost = cx.ops.Boost.from_([100, 0, 0], "km/s")
     >>> v = u.Q([10.0, 20.0, 30.0], "km/s")
     >>> cx.ops.apply_op(boost, None, cx.roles.phys_vel, cx.cart3d, v)
-    Quantity(Array([110., 120., 130.], dtype=float64), unit='km / s')
+    Quantity(Array([110.,  20.,  30.], dtype=float64), unit='km / s')
 
     """
     del role, kw, usys
@@ -661,7 +675,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: u.AbstractQuantity,
     /,
     usys: OptUSys = None,
@@ -708,7 +722,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.Point,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     usys: OptUSys = None,
@@ -737,22 +751,23 @@ def apply_op(
     op_eval = eval_op(op, tau)
 
     # Check if dv is nonzero - if so, require tau to be a time Quantity
-    dv_vals = jnp.stack([u.ustrip(AllowValue, v) for v in op_eval.delta.values()])
-    if not jnp.allclose(dv_vals, 0):
+    is_zero = jtu.all(
+        jtu.map(lambda v: jnp.allclose(u.ustrip(AllowValue, v), 0), op_eval.delta)
+    )
+    if not is_zero:
         tau_value, tau_unit = _require_tau_time(tau)
+        tau_q = u.Q(tau_value, tau_unit)
 
         # Compute displacement: delta_x = (tau - tau0) * delta_v
         # Assuming tau0 = 0 for simplicity
-        displacement = {k: tau_value * op_eval.delta[k] for k in chart.components}
+        displacement = {k: tau_q * op_eval.delta[k] for k in chart.components}
 
         # Add displacement to point
         if op_eval.right_add:
             return {k: x[k] + displacement[k] for k in chart.components}
-        else:
-            return {k: displacement[k] + x[k] for k in chart.components}
-    else:
-        # Zero boost: identity on points
-        return x
+        return {k: displacement[k] + x[k] for k in chart.components}
+    # Zero boost: identity on points
+    return x
 
 
 @plum.dispatch
@@ -760,7 +775,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysDisp,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     usys: OptUSys = None,
@@ -791,7 +806,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysVel,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,
@@ -848,7 +863,7 @@ def apply_op(
     op: Boost,
     tau: Any,
     role: cxr.PhysAcc,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     *,

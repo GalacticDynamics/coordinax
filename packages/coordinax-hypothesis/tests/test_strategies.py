@@ -14,45 +14,55 @@ import coordinax_hypothesis as cxst
 class TestCsDictStrategy:
     """Test pdict strategy for generating valid CsDict objects."""
 
-    @given(p=cxst.pdicts(cxc.cart3d, cxr.point))
-    def test_pdict_keys_match_chart(self, p):
+    @given(p=cxst.cdicts(cxc.cart3d, cxr.point))
+    def test_cdict_keys_match_chart(self, p):
         """CsDict keys must exactly match chart.components."""
         assert set(p.keys()) == set(cxc.cart3d.components)
 
-    @given(p=cxst.pdicts(cxc.cart3d, cxr.point))
-    def test_pdict_all_quantities(self, p):
+    @given(p=cxst.cdicts(cxc.cart3d, cxr.point))
+    def test_cdict_all_quantities(self, p):
         """All values must be quantity-like."""
         for v in p.values():
             assert hasattr(v, "unit") or isinstance(v, (int, float))
 
-    @given(p=cxst.pdicts(cxc.cart3d, cxr.phys_disp))
-    def test_pdict_pos_uniform_dimension(self, p):
+    @given(p=cxst.cdicts(cxc.cart3d, cxr.phys_disp))
+    def test_cdict_pos_uniform_dimension(self, p):
         """Pos role requires uniform length dimension across components."""
         for v in p.values():
             assert u.dimension_of(v) == u.dimension("length")
 
-    @given(p=cxst.pdicts(cxc.cart3d, cxr.phys_vel))
-    def test_pdict_vel_uniform_dimension(self, p):
+    @given(p=cxst.cdicts(cxc.cart3d, cxr.phys_vel))
+    def test_cdict_vel_uniform_dimension(self, p):
         """Vel role requires uniform length/time dimension across components."""
         expected_dim = u.dimension("length") / u.dimension("time")
         for v in p.values():
             assert u.dimension_of(v) == expected_dim
 
-    @given(p=cxst.pdicts(cxc.cart3d, cxr.phys_acc))
-    def test_pdict_acc_uniform_dimension(self, p):
+    @given(p=cxst.cdicts(cxc.cart3d, cxr.phys_acc))
+    def test_cdict_acc_uniform_dimension(self, p):
         """Acc role requires uniform length/time^2 dimension across components."""
         expected_dim = u.dimension("length") / (u.dimension("time") ** 2)
         for v in p.values():
             assert u.dimension_of(v) == expected_dim
 
-    @given(p=cxst.pdicts(cxc.sph3d, cxr.point))
-    def test_pdict_mixed_dimensions(self, p):
+    @given(p=cxst.cdicts(cxc.sph3d, cxr.point))
+    def test_cdict_mixed_dimensions(self, p):
         """Point role allows mixed dimensions from chart.coord_dimensions."""
         # Spherical has (length, angle, angle)
         assert set(p.keys()) == {"r", "theta", "phi"}
         assert u.dimension_of(p["r"]) == u.dimension("length")
         assert u.dimension_of(p["theta"]) == u.dimension("angle")
         assert u.dimension_of(p["phi"]) == u.dimension("angle")
+
+    @given(p=cxst.cdicts(cxst.charts(filter=cxc.Abstract3D), cxr.point))
+    def test_cdict_with_chart_strategy(self, p):
+        """Cdicts accepts chart as a strategy, drawing chart then building CsDict."""
+        # All 3D charts have exactly 3 components
+        assert len(p) == 3
+        # All keys should be strings
+        assert all(isinstance(k, str) for k in p)
+        # All values should be quantity-like
+        assert all(hasattr(v, "unit") for v in p.values())
 
 
 class TestRoleStrategies:
@@ -107,11 +117,11 @@ class TestVectorStrategies:
             assert u.dimension_of(v) == u.dimension("length")
 
     @given(
-        vec_reps=cxst.vectors_with_target_chart(chart=cxc.cart3d, role=cxr.phys_disp)
+        vec_charts=cxst.vectors_with_target_chart(chart=cxc.cart3d, role=cxr.phys_disp)
     )
-    def test_vectors_with_target_chart(self, vec_reps):
+    def test_vectors_with_target_chart(self, vec_charts):
         """vectors_with_target_chart() returns (vector, target_chain)."""
-        vec, target_chain = vec_reps
+        vec, target_chain = vec_charts
         assert isinstance(vec, cx.Vector)
         assert isinstance(target_chain, tuple)
         assert all(isinstance(c, cxc.AbstractChart) for c in target_chain)
@@ -120,33 +130,33 @@ class TestVectorStrategies:
 class TestPointedVectorStrategy:
     """Test fiber point / bundle generation."""
 
-    @given(fp=cxst.fiber_points(base_chart=cxc.cart3d))
+    @given(fp=cxst.pointedvectors(base_chart=cxc.cart3d))
     def test_fiber_point_construction(self, fp):
-        """fiber_points() must produce valid PointedVector instances."""
+        """pointedvectors() must produce valid PointedVector instances."""
         assert isinstance(fp, cx.PointedVector)
         assert isinstance(fp.base.role, cxr.Point)
 
     @given(
-        fp=cxst.fiber_points(
+        fp=cxst.pointedvectors(
             base_chart=cxc.cart2d,
             field_keys=("velocity", "acceleration"),
             field_roles=(cxr.PhysVel, cxr.PhysAcc),
         )
     )
     def test_fiber_point_custom_fields(self, fp):
-        """fiber_points() with custom fields must include them."""
+        """pointedvectors() with custom fields must include them."""
         assert "velocity" in fp
         assert "acceleration" in fp
 
     @given(
-        fp=cxst.fiber_points(
+        fp=cxst.pointedvectors(
             base_chart=cxc.cart1d,
             field_keys=("velocity",),
             field_roles=(cxr.PhysVel,),
         )
     )
     def test_fiber_point_custom_chart(self, fp):
-        """fiber_points() must respect base_chart parameter."""
+        """pointedvectors() must respect base_chart parameter."""
         # Base chart should be cart1d
         assert fp.base.chart == cxc.cart1d
 

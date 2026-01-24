@@ -4,10 +4,8 @@ __all__ = ("metric_of",)
 
 import plum
 
-import coordinax._src.charts as cxc
-import coordinax._src.embed as cxe
 from .metrics import AbstractMetric, EuclideanMetric, MinkowskiMetric, SphereMetric
-from coordinax._src import api
+from coordinax._src import api, charts as cxc, embed as cxe
 
 
 @plum.dispatch

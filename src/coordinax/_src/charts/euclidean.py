@@ -48,7 +48,6 @@ __all__ = (
 
 from dataclasses import KW_ONLY, dataclass, field
 
-from collections.abc import Mapping
 from jaxtyping import Float, Real
 from typing import (
     Annotated,
@@ -75,14 +74,15 @@ from .base import (
     AbstractFixedComponentsChart,
     AbstractFlatCartesianProductChart,
 )
-from coordinax._src.custom_types import Ang, CDict, Ds, Ks, Len, Spd
+from coordinax._src.constants import Deg0, Deg90, Deg180
+from coordinax._src.custom_types import Ang, CDict, CsDict, Ds, Ks, Len, Spd
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # type: ignore[misc]
 V = TypeVar("V")
 
 
-_0d = u.Angle(0, "rad")
-_pid = u.Angle(180, "deg")
+_0d = u.Angle(jnp.array(0), "rad")
+_pid = u.Angle(jnp.array(180), "deg")
 
 
 def _is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
@@ -344,7 +344,7 @@ class Spherical3D(
     coordinates.
     """
 
-    def check_data(self, data: Mapping[str, Any], /) -> None:
+    def check_data(self, data: CsDict, /) -> None:
         super().check_data(data)  # call base check
         checks.polar_range(data["theta"])
 
@@ -374,9 +374,9 @@ class LonLatSpherical3D(
     $\mathrm{lat} = \pi/2 - \theta$,  $\mathrm{lon} = \\phi$.
     """
 
-    def check_data(self, data: Mapping[str, Any], /) -> None:
+    def check_data(self, data: CsDict, /) -> None:
         super().check_data(data)  # call base check
-        checks.polar_range(data["lat"], -u.Angle(90, "deg"), u.Angle(90, "deg"))
+        checks.polar_range(data["lat"], -Deg90, Deg90)
 
 lonlatsph3d: Final = LonLatSpherical3D()
 
@@ -398,9 +398,9 @@ class LonCosLatSpherical3D(
     since $\cos(\mathrm{lat}) \to 0$ as $|\mathrm{lat}| \to \pi/2$.
     """
 
-    def check_data(self, data: Mapping[str, Any], /) -> None:
+    def check_data(self, data: CsDict, /) -> None:
         super().check_data(data)  # call base check
-        checks.polar_range(data["lat"], -u.Angle(90, "deg"), u.Angle(90, "deg"))
+        checks.polar_range(data["lat"], -Deg90, Deg90)
 
 loncoslatsph3d: Final = LonCosLatSpherical3D()
 
@@ -425,9 +425,9 @@ class MathSpherical3D(
     :class:`Spherical3D`, where $\theta$ and $\phi$ are swapped.
     """
 
-    def check_data(self, data: Mapping[str, Any], /) -> None:
+    def check_data(self, data: CsDict, /) -> None:
         super().check_data(data)  # call base check
-        checks.polar_range(data["phi"], _0d, _pid)
+        checks.polar_range(data["phi"], Deg0, Deg180)
 
 mathsph3d: Final = MathSpherical3D()
 
@@ -458,11 +458,11 @@ class ProlateSpheroidal3D(
     """
 
     _: KW_ONLY
-    Delta: Annotated[Real[u.quantity.StaticQuantity["length"], ""],
+    Delta: Annotated[Real[u.quantity.StaticQuantity["length"], ""],  # type: ignore[type-arg]
                      Is[lambda x: x.value > 0]]
     """Focal length of the coordinate system."""
 
-    def check_data(self, data: Mapping[str, Any], /) -> None:
+    def check_data(self, data: CsDict, /) -> None:
         super().check_data(data)  # call base check
         checks.strictly_positive(self.Delta, name="Delta")
         checks.geq(
@@ -616,7 +616,7 @@ class SpaceTimeEuclidean(AbstractFlatCartesianProductChart[Ks, Ds]):
     """Spatial part of the representation. Defaults: `coordinax.charts.cart3d`."""
 
     _: KW_ONLY
-    c: Float[u.StaticQuantity["speed"], ""] = field(
+    c: Float[u.StaticQuantity["speed"], ""] = field(# type: ignore[type-arg]
         default=u.StaticQuantity(299_792.458, "km/s")
     )
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""

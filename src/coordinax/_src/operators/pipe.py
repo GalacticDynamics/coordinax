@@ -8,7 +8,7 @@ from typing import Any, final
 
 import equinox as eqx
 import plum
-import wadler_lindig as wl
+import wadler_lindig as wl  # type: ignore[import-untyped]
 
 import unxt as u
 
@@ -29,11 +29,11 @@ def convert_to_operator_tuple(inp: Any, /) -> tuple[AbstractOperator, ...]:
     >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     >>> op2 = cx.ops.Identity()
     >>> convert_to_operator_tuple((op1, op2))
-    (Rotate(rotation=i32[3,3]), Identity())
+    (Rotate(i64[3,3](jax)), Identity())
 
     >>> op1 = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
     >>> convert_to_operator_tuple(op1)
-    (Rotate(rotation=i32[3,3]),)
+    (Rotate(i64[3,3](jax)),)
 
     >>> op1 = cx.ops.Identity()
     >>> op2 = cx.ops.Identity()
@@ -44,10 +44,10 @@ def convert_to_operator_tuple(inp: Any, /) -> tuple[AbstractOperator, ...]:
     """
     if isinstance(inp, (tuple, list)):
         return tuple(inp)
-    if isinstance(inp, AbstractOperator):
-        return (inp,)
     if isinstance(inp, Pipe):
         return inp.operators
+    if isinstance(inp, AbstractOperator):
+        return (inp,)
 
     msg = f"Cannot convert object of type {type(inp)} to a tuple of operators."
     raise ValueError(msg)
@@ -90,23 +90,23 @@ class Pipe(AbstractCompositeOperator):
     >>> boost = cx.ops.Boost.from_([1, 2, 3], "km/s")
     >>> pipe = cx.ops.Pipe((shift, boost))
     >>> pipe
-    Pipe((Translate(...), Boost(...)))
+    Pipe(( Translate(...), Boost(...) ))
 
     A pipe can also be constructed by ``|``:
 
     >>> pipe2 = shift | boost
     >>> pipe2
-    Pipe((Translate(...), Boost(...)))
+    Pipe(( Translate(...), Boost(...) ))
 
     The pipe can be simplified. For this example, we add an identity operator to
     the sequence and simplify, which will remove the identity operator.
 
     >>> pipe3 = pipe2 | cx.ops.Identity()
     >>> pipe3
-    Pipe((Translate(...), Boost(...), Identity()))
+    Pipe(( Translate(...), Boost(...), Identity() ))
 
     >>> cx.ops.simplify(pipe3)
-    Pipe((Translate(...), Boost(...)))
+    Pipe(( Translate(...), Boost(...) ))
 
     """
 
@@ -128,7 +128,7 @@ class Pipe(AbstractCompositeOperator):
         >>> pipe = cx.ops.Pipe((shift, boost))
 
         >>> pipe | pipe
-        Pipe((Translate(...), Boost(...), Translate(...), Boost(...)))
+        Pipe(( Translate(...), Boost(...), Translate(...), Boost(...) ))
 
         """
         # Concatenate sequences
@@ -142,7 +142,7 @@ class Pipe(AbstractCompositeOperator):
         # Append single operators
         return replace(self, operators=(other, *self))
 
-    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
+    def __pdoc__(self, **kw: Any) -> wl.AbstractDoc:
         """Return the Wadler-Lindig representation.
 
         This is used to generate the documentation for the operator.
@@ -155,15 +155,18 @@ class Pipe(AbstractCompositeOperator):
         >>> shift = cxo.Translate.from_([1, 2, 3], "km")
         >>> boost = cxo.Boost.from_([1, 2, 3], "km/s")
         >>> pipe = cxo.Pipe((shift, boost))
-        >>> print(wl.pdoc(pipe))
+        >>> wl.pprint(pipe)
+        Pipe(( Translate(...), Boost(...) ))
 
         """
         # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
-        kwargs.setdefault("use_short_name", True)
-        kwargs.setdefault("named_unit", False)
+        kw.setdefault("short_arrays", "compact")
+        kw.setdefault("use_short_name", True)
+        kw.setdefault("named_unit", False)
+        kw.setdefault("include_params", False)
 
         # Build docs for each operator
-        docs = [wl.pdoc(op, **kwargs) for op in self.operators]
+        docs = [wl.pdoc(op, **kw) for op in self.operators]
         # Wrap in ((...)) if more than one operator
         begin = wl.TextDoc("((" if len(docs) > 1 else "(")
         end = wl.TextDoc("))" if len(docs) > 1 else ")")
@@ -173,7 +176,7 @@ class Pipe(AbstractCompositeOperator):
             docs=docs,
             sep=wl.comma,
             end=end,
-            indent=kwargs.get("indent", 4),
+            indent=kw.get("indent", 4),
         )
 
 
@@ -186,7 +189,7 @@ def apply_op(
     op: Pipe,
     tau: Any,
     role: cxr.AbstractRole,
-    chart: cxc.AbstractChart,
+    chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
     **kw: object,
@@ -227,7 +230,7 @@ def apply_op(
     >>> pipe = cxo.Pipe((shift,))
     >>> q = u.Q([0, 0, 0], "km")
     >>> cxo.apply_op(pipe, None, q)
-    Quantity['length'](Array([1., 2., 3.], dtype=float32), unit='km')
+    Quantity(Array([1, 2, 3], dtype=int64), unit='km')
 
     """
     result = x
@@ -252,7 +255,7 @@ def simplify(op: Pipe, /) -> AbstractOperator:
     >>> identity = cx.ops.Identity()
     >>> pipe = cx.ops.Pipe((shift, identity))
     >>> pipe
-    Pipe((Translate(...), Identity()))
+    Pipe(( Translate(...), Identity() ))
 
     >>> cx.ops.simplify(pipe)
     Translate(...)
