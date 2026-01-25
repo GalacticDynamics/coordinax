@@ -5,19 +5,13 @@ __all__ = ("Alice", "FriendOfAlice", "Bob")
 
 from typing import final
 
-from plum import dispatch
+import plum
 
 import unxt as u
 
+import coordinax._src.operators as cxo
 from .base import AbstractReferenceFrame
-from coordinax._src.frames import api
-from coordinax._src.operators import (
-    GalileanBoost,
-    GalileanRotation,
-    GalileanSpatialTranslation,
-    Identity,
-    Pipe,
-)
+from coordinax._src import api
 
 
 @final
@@ -34,10 +28,8 @@ class Alice(AbstractReferenceFrame):
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
-          [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
-          [2.698e+08 0.000e+00 0.000e+00]>)
+      Translate(...),
+      Boost(...)
     ))
 
     """
@@ -62,10 +54,8 @@ class Bob(AbstractReferenceFrame):
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
-          [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
-          [2.698e+08 0.000e+00 0.000e+00]>)
+      Translate(...),
+      Boost(...)
     ))
 
     """
@@ -74,12 +64,12 @@ class Bob(AbstractReferenceFrame):
 # ===================================================================
 
 
-@dispatch.multi((Alice, Alice), (FriendOfAlice, FriendOfAlice), (Bob, Bob))
+@plum.dispatch.multi((Alice, Alice), (FriendOfAlice, FriendOfAlice), (Bob, Bob))
 def frame_transform_op(
     from_frame: AbstractReferenceFrame,
     to_frame: AbstractReferenceFrame,
     /,
-) -> Identity:
+) -> cxo.Identity:
     """Return an identity operator for frames that are the same.
 
     Examples
@@ -99,12 +89,12 @@ def frame_transform_op(
     Identity()
 
     """
-    return Identity()
+    return cxo.Identity()
 
 
-@dispatch
-def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> Pipe:
-    """Transform from Alice's frame to Bob's frame.
+@plum.dispatch
+def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> cxo.Pipe:
+    """Transform from Alice's frame to FriendOfAlice's frame.
 
     Examples
     --------
@@ -117,33 +107,34 @@ def frame_transform_op(from_frame: Alice, to_frame: FriendOfAlice, /) -> Pipe:
     >>> op = cx.frames.frame_transform_op(alice, friend)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [m]
-          [10  0  0]>),
-      GalileanRotation([[ 0.         -0.99999994  0.        ]
-                        [ 0.99999994  0.          0.        ]
-                        [ 0.          0.          0.99999994]])
+      Translate(...),
+      Rotate(...)
     ))
 
-    >>> q_alice = cx.vecs.CartesianPos3D.from_([0, 0, 0], "m")
-    >>> q_friend = op(u.Q(1, "s"), q_alice)
-    >>> q_friend
-    (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(0., 'm'), y=Q(9.999999, 'm'), z=Q(0., 'm')))
-
     """
-    shift = GalileanSpatialTranslation.from_([10, 0, 0], "m")
-    rotation = GalileanRotation.from_euler("Z", u.Q(90, "deg"))
+    shift = cxo.Translate.from_([10, 0, 0], "m")
+    rotation = cxo.Rotate.from_euler("Z", u.Q(90, "deg"))
     return shift | rotation
 
 
-@dispatch
-def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Pipe:
-    """Transform from Alice's frame to Bob's frame.
+@plum.dispatch
+def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> cxo.Pipe:
+    r"""Transform from Alice's frame to Bob's frame.
+
+    This is an example of a reference frame transformation that includes
+    both a spatial translation (Translate) and a velocity boost (Boost).
+
+    The Boost has well-defined actions on kinematic roles:
+
+    - **Point**: Not applicable (raises TypeError)
+    - **Pos**: identity (displacements are Galilean invariant)
+    - **Vel**: adds $v_0$
+    - **PhysAcc**: identity (for constant boost)
 
     Examples
     --------
     >>> import unxt as u
-    >>> import coordinax.vecs as cxv
+    >>> import coordinax as cx
     >>> import coordinax.frames as cxf
 
     >>> alice = cxf.Alice()
@@ -152,37 +143,23 @@ def frame_transform_op(from_frame: Alice, to_frame: Bob, /) -> Pipe:
     >>> op = cxf.frame_transform_op(alice, bob)
     >>> print(op)
     Pipe((
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
-          [100000  10000      0]>),
-      GalileanBoost(<CartesianVel3D: (x, y, z) [m / s]
-          [2.698e+08 0.000e+00 0.000e+00]>)
+      Translate(...),
+      Boost(...)
     ))
 
-    >>> q = cxv.CartesianPos3D.from_([0, 0, 0], "m")
-
-    >>> q_bob = op(u.Q(0, "s"), q)
-    >>> q_bob
-    (Quantity(Array(0, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(1.e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
-
-    >>> q_bob = op(u.Q(1, "s"), q)
-    >>> q_bob
-    (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(3.6981322e+08, 'm'), y=Q(1.e+07, 'm'), z=Q(0., 'm')))
-
     """
-    shift = GalileanSpatialTranslation.from_([100_000, 10_000, 0], "km")
-    boost = GalileanBoost.from_([269_813_212.2, 0, 0], "m/s")
+    shift = cxo.Translate.from_([100_000, 10_000, 0], "km")
+    boost = cxo.Boost.from_([269_813_212.2, 0, 0], "m/s")
     return shift | boost
 
 
-@dispatch.multi(
+@plum.dispatch.multi(
     (FriendOfAlice, Alice),
     (Bob, Alice),
 )
 def frame_transform_op(
     from_frame: AbstractReferenceFrame, to_frame: AbstractReferenceFrame, /
-) -> Pipe:
+) -> cxo.Pipe:
     """Transform back.
 
     Examples
@@ -196,18 +173,9 @@ def frame_transform_op(
     >>> op = cx.frames.frame_transform_op(friend, alice)
     >>> print(op)
     Pipe((
-      GalileanRotation([[ 0.          0.99999994  0.        ]
-                        [-0.99999994  0.          0.        ]
-                        [ 0.          0.          0.99999994]]),
-      GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [m]
-          [-10   0   0]>)
+      Rotate(...),
+      Translate(...)
     ))
-
-    >>> q_friend = cx.vecs.CartesianPos3D.from_([0, 0, 0], "m")
-    >>> q_alice = op(u.Q(1, "s"), q_friend)
-    >>> q_alice
-    (Quantity(Array(1, dtype=int32, weak_type=True), unit='s'),
-     CartesianPos3D(x=Q(-10., 'm'), y=Q(0., 'm'), z=Q(0., 'm')))
 
     """
     return api.frame_transform_op(to_frame, from_frame).inverse  # pylint: disable=W1114

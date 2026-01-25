@@ -4,14 +4,15 @@
 __all__: tuple[str, ...] = ()
 
 
-from plum import dispatch
+import plum
 
 import unxt as u
 
 from .base import AbstractDistance
+from coordinax._src.constants import LENGTH
 
 
-@dispatch
+@plum.dispatch
 def dimension_of(obj: type[AbstractDistance], /) -> u.dims.AbstractDimension:
     """Get the dimension of an angle.
 
@@ -20,8 +21,8 @@ def dimension_of(obj: type[AbstractDistance], /) -> u.dims.AbstractDimension:
     >>> import unxt as u
     >>> import coordinax as cx
 
-    >>> u.dimension_of(cx.distance.AbstractDistance)
+    >>> u.dimension_of(cx.distances.AbstractDistance)
     PhysicalType('length')
 
     """
-    return u.dimension("length")
+    return LENGTH

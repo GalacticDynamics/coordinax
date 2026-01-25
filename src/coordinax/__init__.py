@@ -3,43 +3,50 @@
 
 __all__ = (
     # modules
-    "angle",
-    "distance",
-    "vecs",
-    "ops",
+    "angles",
+    "charts",
+    "distances",
+    "embeddings",
     "frames",
-    # common distance objects
+    "metrics",
+    "objs",
+    "ops",
+    "roles",
+    "transforms",
+    # specialized Quantity objects
+    "Angle",
     "Distance",
-    # common vecs objects
-    "vector",
+    # High-level objects
+    "as_pos",
     "vconvert",
-    "CartesianPos3D",
-    "CartesianVel3D",
-    "SphericalPos",
-    "SphericalVel",
-    "FourVector",
-    "KinematicSpace",
-    # frame objects
+    "Vector",
+    "PointedVector",
     "Coordinate",
+    "cdict",
+    # Convenience access to charts
+    "cart3d",
 )
 
 from .setup_package import install_import_hook
 
 with install_import_hook("coordinax"):
-    from . import angle, distance, frames, ops, vecs
-    from ._version import version as __version__  # noqa: F401
-    from .distance import Distance
-    from .frames import Coordinate
-    from .vecs import (
-        CartesianPos3D,
-        CartesianVel3D,
-        FourVector,
-        KinematicSpace,
-        SphericalPos,
-        SphericalVel,
-        vconvert,
-        vector,
+    from . import (
+        angles,
+        charts,
+        distances,
+        embeddings,
+        frames,
+        metrics,
+        objs,
+        ops,
+        roles,
+        transforms,
     )
+    from ._version import version as __version__  # noqa: F401
+    from .angles import Angle
+    from .charts import cart3d
+    from .distances import Distance
+    from .objs import Coordinate, PointedVector, Vector, as_pos, cdict, vconvert
 
 # isort: split
 # Interoperability - import the module but don't trigger registration yet

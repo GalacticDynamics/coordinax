@@ -1,23 +1,24 @@
-"""Base classes for operators on coordinates and potentials."""
+"""Base classes for operators on coordinates."""
 
-__all__ = ("AbstractOperator",)
+__all__ = ("AbstractOperator", "eval_op")
 
 from abc import abstractmethod
+from dataclasses import dataclass, fields as dc_fields
 
 from collections.abc import Mapping
 from jaxtyping import ArrayLike
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, TypeVar, final
 
 import equinox as eqx
 import jax.numpy as jnp
-import wadler_lindig as wl
-from plum import dispatch
+import jax.tree as jtu
+import plum
+import wadler_lindig as wl  # type: ignore[import-untyped]
 
 import unxt as u
 from dataclassish import field_items, flags
 
-from .api import simplify_op
-from coordinax._src.vectors.base_pos import AbstractPos
+from coordinax._src import api
 
 if TYPE_CHECKING:
     import coordinax.ops  # noqa: ICN001
@@ -25,25 +26,29 @@ if TYPE_CHECKING:
 _sentinel: Final = object()
 
 
+@final
+@dataclass(slots=True)
+class Neg:
+    """A parameter that negates another parameter."""
+
+    param: Any
+    """The parameter to negate."""
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Call the parameter and negate the result."""
+        return jtu.map(jnp.negative, self.param(*args, **kwargs))
+
+    def __neg__(self) -> Any:
+        """Return the original parameter."""
+        return self.param
+
+
 class AbstractOperator(eqx.Module):
-    """Abstract base class for operators on coordinates and potentials.
+    """Abstract base class for operators on coordinates.
 
     An operator is an object that defines a transformation on coordinates. It
     can be applied to a set of coordinates to produce a new set of coordinates.
     Operators can be composed together to form a sequence of transformations.
-
-    When defining a new operator, it should be able to work on the following
-    types with the following semantics:
-
-    - `coordinax.vecs.AbstractVector` objects. No restrictions are placed on the
-      these arguments, except that if the operator works on
-      `coordinax.vecs.AbstractPos` and `coordinax.vecs.AbstractVel` objects, the
-      former should precede the latter.
-    - Time arguments come first, followed by spatial arguments.
-    - It should work on a set of `jax.Array` objects. If the `jax.Array` is a
-      coordinate vector then it is Cartesian and the last axis is the component
-      axis and prior axes are the batch axes.
-    - It should work on `unxt.Quantity` objects.
 
     """
 
@@ -51,7 +56,7 @@ class AbstractOperator(eqx.Module):
     # Constructors
 
     @classmethod
-    @dispatch.abstract
+    @plum.dispatch.abstract
     def from_(
         cls: "type[AbstractOperator]", *args: object, **kwargs: object
     ) -> "AbstractOperator":
@@ -61,18 +66,25 @@ class AbstractOperator(eqx.Module):
     # ===============================================================
     # Operator API
 
-    @dispatch.abstract
-    def __call__(self: "AbstractOperator", *args: Any, **kwargs: Any) -> AbstractPos:
-        """Apply the operator to the coordinates `x`."""
-        raise NotImplementedError  # pragma: no cover
+    @plum.dispatch
+    def __call__(self: "AbstractOperator", tau: Any, x: Any, /, **kwargs: Any) -> Any:
+        """Apply the operator to the arguments.
+
+        This method calls `coordinax.ops.apply_op` to apply the operator.
+
+        """
+        return api.apply_op(self, tau, x, **kwargs)
+
+    @plum.dispatch
+    def __call__(self: "AbstractOperator", x: Any, /, **kwargs: Any) -> Any:
+        """Apply the operator to the arguments with tau=None.
+
+        This method calls `coordinax.ops.apply_op` to apply the operator.
+
+        """
+        return api.apply_op(self, None, x, **kwargs)
 
     # -------------------------------------------
-
-    @property
-    @abstractmethod
-    def is_inertial(self) -> bool:
-        """Whether the operation maintains an inertial reference frame."""
-        ...
 
     @property
     @abstractmethod
@@ -83,7 +95,7 @@ class AbstractOperator(eqx.Module):
     def simplify(self) -> "AbstractOperator":
         """Simplify the operator.
 
-        This method calls `coordinax.ops.simplify_op` to simplify the
+        This method calls `coordinax.ops.simplify` to simplify the
         operator.
 
         Examples
@@ -95,37 +107,76 @@ class AbstractOperator(eqx.Module):
         >>> op.simplify() is op
         True
 
-        >>> op = cxo.Pipe((cxo.Identity(), cxo.Identity()))
-        >>> op.simplify()
+        >>> pipe = cxo.Pipe((cxo.Identity(), cxo.Identity()))
+        >>> pipe
+        Pipe((Identity(), Identity()))
+        >>> pipe.simplify()
         Identity()
 
-        >>> op = cxo.GalileanOperator(translation=u.Q([0., 2., 3., 4.], "km"))
+        >>> op = cxo.GalileanOp(translation=u.Q([0., 2., 3.], "km"))
         >>> op.simplify()
-        GalileanTranslation( delta_t=Q(f32[], 's'), delta_q=CartesianPos3D(...) )
+        Translate(
+            {'x': Q(0., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')},
+            chart=Cart3D()
+        )
 
         """
-        return simplify_op(self)
+        return api.simplify(self)
 
     # ===============================================================
     # Wadler-Lindig API
 
     def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
-        """Return the documentation for the operator."""
+        """Return the documentation for the operator.
+
+        Parameters
+        ----------
+        **kwargs : Any
+            Additional keyword arguments passed to the documentation
+            generation functions.
+
+            - compact_arrays : bool, optional
+            - indent : int, optional
+            - positional_fields : bool, optional
+                If True, introspect the dataclass to display non-keyword-only
+                fields without their parameter names (positionally).
+
+        """
         # Prefer to use short names (e.g. Quantity -> Q) and compact unit forms
+        kwargs.setdefault("short_arrays", "compact")
         kwargs.setdefault("use_short_name", True)
         kwargs.setdefault("named_unit", False)
+        kwargs.setdefault("include_params", False)
+
         # Get the field items, excluding those that should not be shown and
         # those that are equal to the default value.
-        # TODO: better filtering using `fields`
         fitems = list(field_items(flags.FilterRepr, self))
         fitems = [
             (k, v)
             for k, v in fitems
             if not jnp.all(v == getattr(self.__class__, k, _sentinel))
         ]
+
+        # Handle positional fields (fields without names)
+        use_positional = kwargs.pop("positional_fields", False)
+
         # Make the field docs list
         if len(fitems) == 1 and kwargs.get("short_arrays") == "compact":
             docs = [wl.TextDoc(str(fitems[0][1]))]
+        elif use_positional:
+            # Introspect to find which fields are keyword-only
+            kw_only_fields = {f.name for f in dc_fields(self) if f.kw_only}
+
+            # Separate positional and named fields
+            pos_items = [(k, v) for k, v in fitems if k not in kw_only_fields]
+            named_items = [(k, v) for k, v in fitems if k in kw_only_fields]
+
+            # Create docs for positional fields (without names)
+            pos_docs = [wl.pdoc(v, **kwargs) for k, v in pos_items]
+            # Create docs for named fields
+            named_docs = wl.named_objs(named_items, **kwargs) if named_items else []
+
+            docs = pos_docs + named_docs
         else:
             docs = wl.named_objs(fitems, **kwargs)
 
@@ -140,6 +191,9 @@ class AbstractOperator(eqx.Module):
     # ===============================================================
     # Python API
 
+    def __repr__(self) -> str:
+        return wl.pformat(self, use_short_name=True, positional_fields=True)
+
     def __str__(self) -> str:
         """Return a string representation of the operator.
 
@@ -148,59 +202,62 @@ class AbstractOperator(eqx.Module):
         >>> import jax.numpy as jnp
         >>> import coordinax as cx
 
-        >>> op = cx.ops.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> op = cx.ops.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> print(op)
-        GalileanRotation([[1 0 0]
-                          [0 1 0]
-                          [0 0 1]])
+        Rotate([[1 0 0]
+                [0 1 0]
+                [0 0 1]])
 
-        >>> op = cx.ops.GalileanOperator(
-        ...     translation=u.Q([0., 2, 3, 4], "km"),
+        >>> op = cx.ops.GalileanOp(
+        ...     translation=u.Q([0., 2, 3], "km"),
         ...     velocity=u.Q([1., 2, 3], "km/s"),
         ...     rotation=jnp.eye(3).at[0, 2].set(1),
         ... )
         >>> print(op)
-        GalileanOperator(
-            rotation=GalileanRotation([[1. 0. 1.]
-                                       [0. 1. 0.]
-                                       [0. 0. 1.]]),
-            translation=GalileanTranslation(
-                delta_t=Q(0., 's'),
-                delta_q=<CartesianPos3D: (x, y, z) [km]
-                    [2. 3. 4.]>
+        GalileanOp(
+            rotation=Rotate([[1. 0. 1.]
+                             [0. 1. 0.]
+                             [0. 0. 1.]]),
+            translation=Translate(
+                {'x': Q(0., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')}, chart=Cart3D()
             ),
-            velocity=GalileanBoost(<CartesianVel3D: (x, y, z) [km / s]
-                    [1. 2. 3.]>)
+            velocity=Boost(
+                delta={'x': Q(1., 'km / s'), 'y': Q(2., 'km / s'), 'z': Q(3., 'km / s')},
+                chart=Cart3D()
+            )
         )
 
         """
         return wl.pformat(self, width=88, vector_form=True, short_arrays="compact")
 
-    # ===========================================
+    # -------------------------------------------
     # Operator Composition
 
-    def __or__(self, other: "AbstractOperator") -> "coordinax.ops.Pipe":
+    def __or__(self, other: "AbstractOperator", /) -> "coordinax.ops.Pipe":
         """Compose with another operator.
 
         Examples
         --------
         >>> import coordinax.ops as cxo
 
-        >>> op1 = cxo.GalileanRotation([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+        >>> op1 = cxo.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
         >>> op2 = cxo.Identity()
         >>> op3 = op1 | op2
         >>> op3
-        Pipe((GalileanRotation(rotation=i32[3,3]), Identity()))
+        Pipe((Rotate(i64[3,3](jax)), Identity()))
 
         >>> op4 = cxo.Identity() | op3
         >>> op4
-        Pipe((Identity(), GalileanRotation(rotation=i32[3,3]), Identity()))
+        Pipe((Identity(), Rotate(i64[3,3](jax)), Identity()))
 
         """
         from .pipe import Pipe  # noqa: PLC0415
 
+        # Defer to other's __ror__ if it's a Pipe
         if isinstance(other, Pipe):
             return other.__ror__(self)
+
+        # Otherwise, create a new Pipe
         return Pipe((self, other))
 
 
@@ -229,8 +286,7 @@ def from_(cls: type[AbstractOperator], obj: Mapping[str, Any], /) -> AbstractOpe
     Examples
     --------
     >>> import coordinax.ops as cxo
-    >>> pipe = cxo.Identity() | cxo.Identity()
-    >>> cxo.Pipe.from_({"operators": pipe})
+    >>> cxo.Pipe.from_({"operators": (cxo.Identity(), cxo.Identity())})
     Pipe((Identity(), Identity()))
 
     """
@@ -250,23 +306,19 @@ def from_(
     --------
     >>> import coordinax.ops as cxo
 
-    >>> op = cxo.GalileanSpatialTranslation.from_([1, 1, 1], "km")
+    >>> op = cxo.Translate.from_([1, 1, 1], "km")
     >>> print(op)
-    GalileanSpatialTranslation(<CartesianPos3D: (x, y, z) [km]
-        [1 1 1]>)
-
-    >>> op = cxo.GalileanTranslation.from_([3e5, 1, 1, 1], "km")
-    >>> print(op)
-    GalileanTranslation(
-      delta_t=Q(1.0006922, 's'),
-      delta_q=<CartesianPos3D: (x, y, z) [km]
-          [1. 1. 1.]>
+    Translate(
+        {'x': Quantity(1, 'km'), 'y': Quantity(1, 'km'), 'z': Quantity(1, 'km')},
+        chart=Cart3D()
     )
 
-    >>> op = cxo.GalileanBoost.from_([1, 1, 1], "km/s")
+    >>> op = cxo.Boost.from_([1, 1, 1], "km/s")
     >>> print(op)
-    GalileanBoost(<CartesianVel3D: (x, y, z) [km / s]
-        [1 1 1]>)
+    Boost(
+      delta={'x': Q(1, 'km / s'), 'y': Q(1, 'km / s'), 'z': Q(1, 'km / s')},
+      chart=Cart3D()
+    )
 
     """
     return cls.from_(u.Q(x, unit))
@@ -294,10 +346,10 @@ def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOper
     If the object is a different type, it will error.
 
     >>> try:
-    ...     cx.ops.GalileanBoost.from_(op)
+    ...     cx.ops.Translate.from_(op)
     ... except TypeError as e:
     ...     print(e)
-    Cannot construct <class 'coordinax...GalileanBoost'> from <class 'coordinax...Identity'>.
+    Cannot construct <class '...Translate'> from <class '...Identity'>.
 
     Unless the object is a subclass of the target class.
 
@@ -312,14 +364,116 @@ def from_(cls: type[AbstractOperator], obj: AbstractOperator, /) -> AbstractOper
     >>> newop is op, isinstance(newop, cx.ops.Identity)
     (False, True)
 
-    """  # noqa: E501
+    """
     if not isinstance(obj, cls):
         msg = f"Cannot construct {cls} from {type(obj)}."
         raise TypeError(msg)
 
-    # avoid copying if the types are the same. Isinstance is not strict
+    # avoid copying if the types are the same. `isinstance` is not strict
     # enough, so we use type() instead.
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj
 
     return cls(**dict(field_items(obj)))
+
+
+# =============================================================================
+# eval_op: Materialization of time-dependent parameters
+
+OpT = TypeVar("OpT", bound=AbstractOperator)
+
+
+def eval_op(op: OpT, tau: Any, /) -> OpT:
+    r"""Evaluate time-dependent parameters of an operator at a given time.
+
+    This function materializes an operator by evaluating all callable
+    (time-dependent) parameters at the specified time ``tau``, returning
+    a new operator instance of the same type with purely numeric parameters.
+
+    Mathematically, if an operator $\mathrm{Op}$ has parameters that depend on
+    an affine parameter $\tau$, then:
+
+    $$
+    \mathrm{eval\_op}(\mathrm{Op}, \tau) \to \mathrm{Op}_\tau
+    $$
+
+    where $\mathrm{Op}_\tau$ is the operator with all time-dependent parameters
+    evaluated at $\tau$.
+
+    Parameters
+    ----------
+    op : AbstractOperator
+        The operator to evaluate. May contain time-dependent parameters
+        (callables that take ``tau`` as argument).
+    tau : Any
+        The time/affine parameter at which to evaluate time-dependent
+        parameters. Typically a ``unxt.Quantity`` with time units.
+
+    Returns
+    -------
+    AbstractOperator
+        A new operator of the same type with all time-dependent parameters
+        evaluated at ``tau``. If the operator has no time-dependent parameters,
+        returns a copy with equivalent parameters.
+
+    Notes
+    -----
+    This function is:
+
+    - **Pure**: No side effects, safe for JAX tracing
+    - **Structure-preserving**: Returns same operator type
+    - **Pytree-compatible**: Uses ``equinox.partition`` / ``equinox.combine``
+
+    The implementation:
+
+    1. Partitions operator fields into callable (dynamic) and static
+    2. Evaluates dynamic fields at ``tau`` via ``jax.tree_util.tree_map``
+    3. Recombines into a new operator instance
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> import coordinax.ops as cxo
+
+    **Time-dependent operator:**
+
+    >>> op = cxo.Translate(lambda t: cx.cdict(u.Q([t.ustrip("s"), 0, 0], "km")),
+    ...                    chart=cx.cart3d)
+    >>> tau = u.Q(5.0, "s")
+    >>> op_eval = cxo.eval_op(op, tau)
+    >>> op_eval.delta["x"]
+    Quantity(Array(5., dtype=float64), unit='km')
+
+    **Static operator (no change):**
+
+    >>> op_static = cxo.Translate(cx.cdict(u.Q([1, 2, 3], "km")), chart=cx.cart3d)
+    >>> op_eval_static = cxo.eval_op(op_static, tau)
+    >>> op_eval_static.delta["x"]
+    Quantity(Array(1, dtype=int64), unit='km')
+
+    **Identity operator:**
+
+    >>> identity = cxo.Identity()
+    >>> cxo.eval_op(identity, tau)
+    Identity()
+
+    See Also
+    --------
+    apply_op : Apply an operator to an input (calls ``eval_op`` internally)
+
+    """
+    # Get all parameter values from the operator
+    params = {k: getattr(op, k) for k in op.__dataclass_fields__}
+
+    # Partition into callable (time-dependent) and static parameters
+    dynamic, static = eqx.partition(params, filter_spec=callable)
+
+    # Evaluate the dynamic parameters at the given time
+    eval_dynamic = jtu.map(lambda p: p(tau), dynamic)
+
+    # Recombine the static and evaluated dynamic parameters
+    evaluated_params = eqx.combine(static, eval_dynamic)
+
+    # Create a new operator of the same type with the evaluated parameters
+    return type(op)(**evaluated_params)

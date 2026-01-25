@@ -22,9 +22,13 @@ coordinax-interop-astropy <packages/coordinax-interop-astropy/index>
 :caption: 📚 Guides
 
 guides/quantities.md
+guides/charts.md
+guides/metrics.md
 guides/vectors.md
+guides/vector_algebra.md
 guides/operators.md
 guides/coordinates_and_frames.md
+guides/embedded_manifolds.md
 packages/coordinax-hypothesis/testing-guide
 ```
 
@@ -138,22 +142,18 @@ transforming coordinate objects, such as:
 
 - specific {class}`~unxt.quantity.Quantity` subclasses like
   {class}`~coordinax.angle.Angle` and {class}`~coordinax.distance.Distance`
-- vector objects
-  - 1D, 2D, 3D and N-dimensional vector classes in many different representation
-    types (e.g., {class}`~coordinax.vecs.CartesianPos1D`,
-    {class}`~coordinax.vecs.CartesianPos2D`,
-    {class}`~coordinax.vecs.CartesianPos3D`,
-    {class}`~coordinax.vecs.SphericalPos`,
-    {class}`~coordinax.vecs.ProlateSpheroidalPos`, etc.)
-  - time-differential vector objects, like velocities and accelerations (e.g.,
-    {class}`~coordinax.vecs.CartesianVel3D`,
-    {class}`~coordinax.vecs.SphericalVel`, etc.)
-  - collections of vector objects like {class}`~coordinax.vecs.KinematicSpace`
-- transformations of vector types ({func}`~coordinax.vecs.vconvert`)
+- representation charts exposed in {mod}`coordinax.charts` (Cartesian,
+  cylindrical, spherical, manifolds, spacetime)
+- vector objects ({class}`~coordinax.Vector`, {class}`~coordinax.PointedVector`)
+  that pair data with reps and roles (Pos, Vel, PhysAcc, ...)
+- coordinate and physical conversions
+  ({func}`~coordinax.transforms.point_transform`,
+  {func}`~coordinax.transforms.physical_tangent_transform`,
+  {func}`~coordinax.vconvert`)
 - operations on vectors ({mod}`~coordinax.ops`)
 - reference frames and coordinate systems ({mod}`~coordinax.frames`)
 - coordinates that combine vectors and frames
-  ({class}`~coordinax.frames.Coordinate`)
+  ({class}`~coordinax.objs.Coordinate`)
 - and more!
 
 This functionality is organized into submodules, which are imported into the
@@ -165,13 +165,16 @@ top-level `coordinax` namespace. You can import them directly, or use the
 
 >>> from inspect import ismodule
 >>> [name for name in cx.__all__ if ismodule(getattr(cx, name))]
-['angle', 'distance', 'vecs', 'ops', 'frames']
+['angles', 'charts', 'distances', 'frames', 'metrics',
+ 'ops', 'roles', 'transforms', 'objects']
 ```
 
 We recommend importing as needed:
 
 - `coordinax` as `cx`
-- `coordinax.vecs` as `cxv`
+- `coordinax.angles` as `cxa`
+- `coordinax.distance` as `cxd`
+- `coordinax.charts` as `cxc`
 - `coordinax.ops` as `cxo`
 - `coordinax.frames` as `cxf`
 
@@ -205,7 +208,7 @@ Similarly, the {class}`~coordinax.distance.Distance` class represents distances
 in `coordinax`:
 
 ```{code-block} python
->>> d = cx.distance.Distance(10, "kpc")
+>>> d = cx.distances.Distance(10, "kpc")
 >>> d
 Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')
 ```
@@ -226,102 +229,37 @@ DistanceModulus(Array(15., dtype=float32), unit='mag')
 
 ### Creating and Working with Vector Objects
 
-Vector objects in `coordinax` represent positions, velocities, and accelerations
-in a variety of coordinate systems and dimensions. Here are some common
-operations:
+Vectors combine data, a representation, and a role (Pos, Vel, PhysAcc). Here's a
+Cartesian 3D position and velocity:
 
-#### Constructing Vector Objects
-
-You can create a vector by specifying its components and units:
-
-```{code-block} python
->>> import coordinax.vecs as cxv
-
->>> q = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
->>> print(q)
-<CartesianPos3D: (x, y, z) [kpc]
-    [1 2 3]>
 ```
+import coordinax as cx
+import unxt as u
 
-The {meth}`~coordinax.vecs.AbstractVector.from_` method is a flexible
-constructor that allows you to create vectors from various input formats, such
-as lists, tuples, or NumPy arrays. Direct construction is also possible by
-specifying values for all components:
-
-```{code-block} python
->>> q = cxv.CartesianPos3D(x=u.Q(1, "kpc"), y=u.Q(2, "kpc"), z=u.Q(3, "kpc"))
->>> print(q)
-<CartesianPos3D: (x, y, z) [kpc]
-    [1 2 3]>
-```
-
-The most flexible way to create vectors is to use the
-{meth}`~coordinax.vecs.vector` method, which infers the appropriate vector class
-based on the provided inputs:
-
-```{code-block} python
->>> q = cxv.vector([1, 2, 3], "kpc")
->>> print(q)
-<CartesianPos3D: (x, y, z) [kpc]
-    [1 2 3]>
+q = cx.Vector(
+    data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.PhysDisp(),
+)
+v = cx.Vector(
+    data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.PhysVel(),
+)
 ```
 
 #### Vector Conversion
 
-Vectors can be converted between different coordinate representations using the
-{meth}`~coordinax.vecs.AbstractVector.vconvert` method. For example, to convert
-a Cartesian position vector to spherical coordinates:
-
-```{code-block} python
->>> sph = q.vconvert(cxv.SphericalPos)
->>> print(sph)
-<SphericalPos: (r[kpc], theta[rad], phi[rad])
-    [3.742 0.641 1.107]>
+```
+q_sph = q.vconvert(cx.charts.sph3d)
+v_sph = v.vconvert(cx.charts.sph3d, q)
 ```
 
-#### Transforming Velocities
+#### Creating an `PointedVector` Object
 
-Velocity vectors can also be converted to other representations, but require
-specifying the corresponding position:
-
-```{code-block} python
->>> v = cxv.CartesianVel3D.from_([4, 5, 6], "kpc/Myr")
->>> v_sph = v.vconvert(cxv.SphericalVel, q)
->>> print(v_sph)
-<SphericalVel: (r[kpc / Myr], theta[rad / Myr], phi[rad / Myr])
-    [ 8.552  0.383 -0.6  ]>
 ```
-
-#### Creating a `KinematicSpace` Object
-
-A {class}`~coordinax.vecs.KinematicSpace` object collects related vectors (e.g.,
-position, velocity, acceleration) into a single container:
-
-```{code-block} python
->>> import coordinax as cx
-
->>> space = cx.KinematicSpace(length=q, speed=v)
->>> print(space)
-KinematicSpace({
-   'length': <CartesianPos3D: (x, y, z) [kpc]
-       [1 2 3]>,
-   'speed': <CartesianVel3D: (x, y, z) [kpc / Myr]
-       [4 5 6]>
-})
-```
-
-You can convert all vectors in a {class}`~coordinax.vecs.KinematicSpace` to a
-different representation at once:
-
-```{code-block} python
->>> space_sph = space.vconvert(cxv.SphericalPos)
->>> print(space_sph)
-KinematicSpace({
-    'length': <SphericalPos: (r[kpc], theta[rad], phi[rad])
-                [3.742 0.641 1.107]>,
-    'speed': <SphericalVel: (r[kpc / Myr], theta[rad / Myr], phi[rad / Myr])
-                [ 8.552  0.383 -0.6  ]>
-})
+space = cx.PointedVector(base=q, speed=v)
+space_sph = space.vconvert(cx.charts.sph3d)
 ```
 
 ### Operators on Vectors
@@ -329,13 +267,13 @@ KinematicSpace({
 The {mod}`coordinax.ops` module (shorthand `cxo`) provides a framework for and
 set of vector operations that work seamlessly with all `coordinax` vector types.
 
-```{code-block} python
+```{code-block} text
 >>> import coordinax.ops as cxo
 
->>> op = cxo.GalileanSpatialTranslation.from_([10, 10, 10], "kpc")
+>>> op = cxo.GalileanOp.from_([10, 10, 10], "kpc")
 
 >>> print(op(q))
-<CartesianPos3D: (x, y, z) [kpc]
+<Cart3D: (x, y, z) [kpc]
     [11 12 13]>
 
 ```
@@ -345,7 +283,7 @@ set of vector operations that work seamlessly with all `coordinax` vector types.
 {mod}`coordinax.frames` (shorthand `cxf`) provides a framework for defining and
 working with reference frames and coordinate systems.
 
-```{code-block} python
+```{code-block} text
 >>> import coordinax.frames as cxf
 
 >>> alice = cxf.Alice()
@@ -361,12 +299,12 @@ Bob()
 Frames can be used to define coordinate transformations. For example, you can
 transform a position vector from the Alice frame to the Bob frame:
 
-```{code-block} python
+```{code-block} text
 
 >>> op = cxf.frame_transform_op(alice, bob)
 >>> t = u.Q(1, "yr")
 >>> print(op(t, q)[1])
-<CartesianPos3D: (x, y, z) [kpc]
+<Cart3D: (x, y, z) [kpc]
     [1. 2. 3.]>
 
 ```
@@ -374,28 +312,28 @@ transform a position vector from the Alice frame to the Bob frame:
 Coordinate objects can also be created to represent positions in a specific
 frame:
 
-```{code-block} python
+```{code-block} text
 
 >>> coord = cxf.Coordinate(q, frame=alice)
 >>> print(coord)
 Coordinate(
-    { 'length': <CartesianPos3D: (x, y, z) [kpc]
+    { 'base': <Cart3D: (x, y, z) [kpc]
                     [1 2 3]> },
     frame=Alice()
 )
 
 >>> coord.to_frame(bob, t)
 Coordinate(
-    KinematicSpace({
-        'length': CartesianPos3D(x=Q(f32[], 'kpc'), y=Q(f32[], 'kpc'),
+    PointedVector({
+        'base': Cart3D(x=Q(f32[], 'kpc'), y=Q(f32[], 'kpc'),
                                  z=Q(f32[], 'kpc')) }),
     frame=Bob()
 )
 
->>> coord.vconvert(cxv.SphericalPos)
+>>> coord.vconvert(cx.charts.sph3d)
 Coordinate(
-    KinematicSpace({
-        'length': SphericalPos( r=Distance(f32[], 'kpc'), theta=Angle(f32[], 'rad'),
+    PointedVector({
+        'base': Spherical3D( r=Distance(f32[], 'kpc'), theta=Angle(f32[], 'rad'),
                                 phi=Angle(f32[], 'rad') )
     }),
     frame=Alice()

@@ -47,7 +47,7 @@ def test_astropy_quantity_to_distance() -> None:
 @given(unit=ust.units("length"))
 def test_astropy_quantity_to_distance(unit: str) -> None:
     """Test converting Astropy Quantity to Distance."""
-    apyq = apyu.Quantity(42.0, unit)
+    apyq = apyu.Q(42.0, unit)
     dist = convert(apyq, Distance)
 
     assert isinstance(dist, Distance)
@@ -64,9 +64,9 @@ def test_astropy_quantity_to_distance(unit: str) -> None:
 )
 def test_distance_to_astropy_quantity(dist: Distance) -> None:
     """Test converting Distance to AstropyQuantity."""
-    apyq = convert(dist, apyu.Quantity)
+    apyq = convert(dist, apyu.Q)
 
-    assert isinstance(apyq, apyu.Quantity)
+    assert isinstance(apyq, apyu.Q)
     assert apyq.value == dist.value
     assert apyq.unit == dist.unit
 
@@ -79,7 +79,7 @@ def test_distance_to_astropy_quantity(dist: Distance) -> None:
     )
 )
 def test_distance_roundtrip(dist: Distance) -> None:
-    apyq = convert(dist, apyu.Quantity)
+    apyq = convert(dist, apyu.Q)
     dist_back = convert(apyq, Distance)
 
     assert isinstance(dist_back, Distance)
@@ -104,7 +104,7 @@ def test_astropy_quantity_to_parallax() -> None:
 @given(unit=ust.units("angle"))
 def test_astropy_quantity_to_parallax(unit: str) -> None:
     """Test converting Astropy Quantity to Parallax."""
-    apyq = apyu.Quantity(0.5, unit)
+    apyq = apyu.Q(0.5, unit)
     plx = convert(apyq, Parallax)
 
     assert isinstance(plx, Parallax)
@@ -121,9 +121,9 @@ def test_astropy_quantity_to_parallax(unit: str) -> None:
 )
 def test_parallax_to_astropy_quantity(plx: Parallax) -> None:
     """Test converting Parallax to AstropyQuantity."""
-    apyq = convert(plx, apyu.Quantity)
+    apyq = convert(plx, apyu.Q)
 
-    assert isinstance(apyq, apyu.Quantity)
+    assert isinstance(apyq, apyu.Q)
     assert apyq.value == plx.value
     assert apyq.unit == plx.unit
 
@@ -136,7 +136,7 @@ def test_parallax_to_astropy_quantity(plx: Parallax) -> None:
     )
 )
 def test_parallax_roundtrip(plx: Parallax) -> None:
-    apyq = convert(plx, apyu.Quantity)
+    apyq = convert(plx, apyu.Q)
     plx_back = convert(apyq, Parallax)
 
     assert isinstance(plx_back, Parallax)
@@ -161,9 +161,9 @@ def test_astropy_quantity_to_distancemodulus() -> None:
 def test_distancemodulus_to_astropy_quantity() -> None:
     """Test converting DistanceModulus to AstropyQuantity."""
     dm = DistanceModulus(5.0, "mag")
-    apyq = convert(dm, apyu.Quantity)
+    apyq = convert(dm, apyu.Q)
 
-    assert isinstance(apyq, apyu.Quantity)
+    assert isinstance(apyq, apyu.Q)
     assert apyq.value == dm.value
     assert apyq.unit == dm.unit
 
@@ -171,7 +171,7 @@ def test_distancemodulus_to_astropy_quantity() -> None:
 def test_distancemodulus_roundtrip() -> None:
     """Test roundtrip conversion for DistanceModulus."""
     dm = DistanceModulus(5.0, "mag")
-    apyq = convert(dm, apyu.Quantity)
+    apyq = convert(dm, apyu.Q)
     dm_back = convert(apyq, DistanceModulus)
 
     assert isinstance(dm_back, DistanceModulus)

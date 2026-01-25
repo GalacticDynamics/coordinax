@@ -5,16 +5,16 @@ __all__ = ("distances", "distance_moduli", "parallaxes")
 import warnings
 
 from collections.abc import Mapping
-from typing import Any, assert_never
+from typing import Any, assert_never, cast
 
 import jax.numpy as jnp
 from hypothesis import strategies as st
 from hypothesis.extra.array_api import make_strategies_namespace
 
-import unxt as u
 import unxt_hypothesis as ust
 
-import coordinax.distance as cxd
+import coordinax.distances as cxd
+from coordinax._src.constants import ANGLE, LENGTH
 
 xps = make_strategies_namespace(jnp)
 
@@ -87,7 +87,7 @@ def make_nonnegative(draw: st.DrawFn, /, **kwargs: Any) -> dict[str, Any]:
     return kwargs
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def distances(
     draw: st.DrawFn,
     /,
@@ -119,17 +119,17 @@ def distances(
     Examples
     --------
     >>> from hypothesis import given
-    >>> from coordinax_hypothesis import distances
-    >>> import coordinax.distance as cxd
+    >>> import coordinax_hypothesis as cxst
+    >>> import coordinax.distances as cxd
 
-    >>> @given(dist=distances())
+    >>> @given(dist=cxst.distances())
     ... def test_distance(dist):
     ...     assert isinstance(dist, cxd.Distance)
     ...     assert dist.value >= 0  # default check_negative=True
 
     With negative distances allowed:
 
-    >>> @given(dist=distances(check_negative=False))
+    >>> @given(dist=cxst.distances(check_negative=False))
     ... def test_signed_distance(dist):
     ...     assert isinstance(dist, cxd.Distance)
 
@@ -143,7 +143,7 @@ def distances(
 
     # Extract unit if provided (to avoid conflicts with dimension)
     # Default to length dimension, but user can override with specific unit
-    unit = kwargs.pop("unit", u.dimension("length"))
+    unit = kwargs.pop("unit", LENGTH)
 
     # Adjust elements strategy if needed to enforce non-negative values
     if check_negative:
@@ -160,7 +160,7 @@ def distances(
     )
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def distance_moduli(
     draw: st.DrawFn,
     /,
@@ -192,17 +192,17 @@ def distance_moduli(
     Examples
     --------
     >>> from hypothesis import given
-    >>> from coordinax_hypothesis import distance_moduli
-    >>> import coordinax.distance as cxd
+    >>> import coordinax_hypothesis as cxst
+    >>> import coordinax.distances as cxd
 
-    >>> @given(dm=distance_moduli())
+    >>> @given(dm=cxst.distance_moduli())
     ... def test_distance_modulus(dm):
     ...     assert isinstance(dm, cxd.DistanceModulus)
     ...     assert dm.unit == "mag"
 
     Generate distance modulus arrays:
 
-    >>> @given(dm=distance_moduli(shape=10))
+    >>> @given(dm=cxst.distance_moduli(shape=10))
     ... def test_dm_array(dm):
     ...     assert dm.shape == (10,)
 
@@ -218,16 +218,11 @@ def distance_moduli(
     kwargs.pop("unit", None)
 
     # Generate the DistanceModulus quantity
-    return draw(
-        ust.quantities(
-            unit="mag",
-            quantity_cls=cxd.DistanceModulus,
-            **kwargs,
-        )
-    )
+    out = draw(ust.quantities(unit="mag", quantity_cls=cxd.DistanceModulus, **kwargs))
+    return cast("cxd.DistanceModulus", out)
 
 
-@st.composite  # type: ignore[untyped-decorator]
+@st.composite
 def parallaxes(
     draw: st.DrawFn,
     /,
@@ -261,23 +256,23 @@ def parallaxes(
     Examples
     --------
     >>> from hypothesis import given
-    >>> from coordinax_hypothesis import parallaxes
-    >>> import coordinax.distance as cxd
+    >>> import coordinax_hypothesis as cxst
+    >>> import coordinax.distances as cxd
 
-    >>> @given(plx=parallaxes())
+    >>> @given(plx=cxst.parallaxes())
     ... def test_parallax(plx):
     ...     assert isinstance(plx, cxd.Parallax)
     ...     assert plx.value >= 0  # default check_negative=True
 
     With negative parallaxes allowed (for noisy measurements):
 
-    >>> @given(plx=parallaxes(check_negative=False))
+    >>> @given(plx=cxst.parallaxes(check_negative=False))
     ... def test_noisy_parallax(plx):
     ...     assert isinstance(plx, cxd.Parallax)
 
     Generate parallax in specific units:
 
-    >>> @given(plx=parallaxes(unit="mas"))
+    >>> @given(plx=cxst.parallaxes(unit="mas"))
     ... def test_parallax_mas(plx):
     ...     assert plx.unit == "mas"
 
@@ -291,18 +286,23 @@ def parallaxes(
 
     # Extract unit if provided (to avoid conflicts with dimension)
     # Default to angle dimension, but user can override with specific unit
-    unit = kwargs.pop("unit", u.dimension("angle"))
+    unit = kwargs.pop("unit", ANGLE)
 
     # Adjust elements strategy if needed to enforce non-negative values
     if check_negative:
         kwargs = make_nonnegative(draw, **kwargs)
 
     # Generate the Parallax quantity with angle dimension
-    return draw(
+    out = draw(
         ust.quantities(
-            unit,
-            quantity_cls=cxd.Parallax,
-            check_negative=check_negative,
-            **kwargs,
+            unit, quantity_cls=cxd.Parallax, check_negative=check_negative, **kwargs
         )
     )
+    return cast("cxd.Parallax", out)
+
+
+# Register type strategy for Hypothesis's st.from_type()
+# Note: Pass the callable, not an invoked strategy
+st.register_type_strategy(cxd.Distance, lambda _: distances())
+st.register_type_strategy(cxd.DistanceModulus, lambda _: distance_moduli())
+st.register_type_strategy(cxd.Parallax, lambda _: parallaxes())

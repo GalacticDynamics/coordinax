@@ -30,13 +30,13 @@ uv add coordinax --extra astro
 
 ## Quick Start
 
-```python
+```
 import coordinax as cx
 import coordinax_astro as cxa
 import unxt as u
 
 # Create a position in ICRS frame
-pos = cx.SphericalPos(
+pos = cx.Spherical3D(
     r=u.Q(10, "kpc"),
     theta=u.Q(45, "deg"),
     phi=u.Q(30, "deg"),
@@ -53,7 +53,7 @@ galactocentric = icrs_coord.to_frame(cxa.Galactocentric())
 
 The International Celestial Reference System (ICRS):
 
-```python
+```
 frame = cxa.ICRS()
 ```
 
@@ -61,7 +61,7 @@ frame = cxa.ICRS()
 
 A reference frame centered on the Galactic center with configurable parameters:
 
-```python
+```
 frame = cxa.Galactocentric(
     galcen={
         "lon": u.Q(266, "deg"),
@@ -76,7 +76,7 @@ frame = cxa.Galactocentric(
 
 Transform coordinates between reference frames:
 
-```python
+```
 # Create a coordinate in one frame
 coord_icrs = cx.Coordinate(pos, frame=cxa.ICRS())
 

@@ -17,13 +17,13 @@ def convert_quantity_to_distance(q: u.AbstractQuantity, /) -> Distance:
     --------
     >>> from plum import convert
     >>> from unxt.quantity import BareQuantity
-    >>> from coordinax.distance import Distance
+    >>> from coordinax.distances import Distance
     >>> q = BareQuantity(1, "m")
     >>> q
-    BareQuantity(Array(1, dtype=int32, ...), unit='m')
+    BareQuantity(Array(1, dtype=int64, ...), unit='m')
 
     >>> convert(q, Distance)
-    Distance(Array(1, dtype=int32, ...), unit='m')
+    Distance(Array(1, dtype=int64, ...), unit='m')
 
     The self-conversion doesn't copy the object:
 
@@ -43,13 +43,13 @@ def convert_quantity_to_distmod(q: u.AbstractQuantity, /) -> DistanceModulus:
     --------
     >>> from plum import convert
     >>> import unxt as u
-    >>> from coordinax.distance import DistanceModulus
+    >>> from coordinax.distances import DistanceModulus
     >>> q = u.Q(1, "mag")
     >>> q
-    Quantity(Array(1, dtype=int32, ...), unit='mag')
+    Quantity(Array(1, dtype=int64, ...), unit='mag')
 
     >>> convert(q, DistanceModulus)
-    DistanceModulus(Array(1, dtype=int32, ...), unit='mag')
+    DistanceModulus(Array(1, dtype=int64, ...), unit='mag')
 
     The self-conversion doesn't copy the object:
 
@@ -69,13 +69,13 @@ def convert_quantity_to_parallax(q: u.AbstractQuantity, /) -> Parallax:
     --------
     >>> from plum import convert
     >>> import unxt as u
-    >>> from coordinax.distance import Parallax
+    >>> from coordinax.distances import Parallax
     >>> q = u.Q(1, "mas")
     >>> q
-    Quantity(Array(1, dtype=int32, ...), unit='mas')
+    Quantity(Array(1, dtype=int64, ...), unit='mas')
 
     >>> convert(q, Parallax)
-    Parallax(Array(1, dtype=int32, ...), unit='mas')
+    Parallax(Array(1, dtype=int64, ...), unit='mas')
 
     The self-conversion doesn't copy the object:
 

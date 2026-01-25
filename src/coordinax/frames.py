@@ -14,52 +14,34 @@ Let's transform a position from Alice's frame to Bob's frame:
 
 >>> op = cxf.frame_transform_op(frame1, frame2)
 >>> op
-Pipe((
-    GalileanSpatialTranslation(CartesianPos3D( ... )),
-    GalileanBoost(CartesianVel3D( ... ))
-))
+Pipe(( Translate(...), Boost(...) ))
 
->>> q_alice = cx.CartesianPos3D.from_([0, 0, 0], "km")
+>>> q_alice = cx.Vector.from_([0, 0, 0], "km")
 >>> t = u.Q(2.5, "yr")
->>> _, q_bob = op(t, q_alice)
+>>> q_bob = op(t, q_alice)
 >>> print(q_bob)
-<CartesianPos3D: (x, y, z) [km]
+<Vector: chart=Cart3D, role=Point (x, y, z) [km]
     [2.129e+13 1.000e+04 0.000e+00]>
 
 Now let's create a new transformed frame and work with it:
 
->>> R = cx.ops.GalileanRotation([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
+>>> R = cx.ops.Rotate([[0., -1, 0], [1, 0, 0], [0, 0, 1]])
 >>> frame = cxf.TransformedReferenceFrame(frame1, R)
 >>> frame
-TransformedReferenceFrame(
-    base_frame=Alice(), xop=GalileanRotation(rotation=f32[3,3])
-)
+TransformedReferenceFrame(base_frame=Alice(), xop=Rotate(R=f64[3,3]))
 
 Let's transform a position from the base frame to the transformed frame:
 
 >>> op = cxf.frame_transform_op(cxf.Alice(), frame)
 
->>> q_icrs = cx.CartesianPos3D.from_([1, 0, 0], "kpc")
+>>> q_icrs = cx.Vector.from_([1, 0, 0], "kpc")
 >>> q_frame = op(q_icrs)
 >>> print(q_frame)
-<CartesianPos3D: (x, y, z) [kpc]
+<Vector: chart=Cart3D, role=Point (x, y, z) [kpc]
     [ 0. -1.  0.]>
 
 >>> op.inverse(q_frame) == q_icrs
 Array(True, dtype=bool)
-
-This can also transform a velocity:
-
->>> v_icrs = cx.CartesianVel3D.from_([1, 0, 0], "km/s")
->>> q_frame, v_frame = op(q_icrs, v_icrs)
->>> print(q_frame, v_frame, sep="\n")
-<CartesianPos3D: (x, y, z) [kpc]
-    [ 0. -1.  0.]>
-<CartesianVel3D: (x, y, z) [km / s]
-    [ 0. -1.  0.]>
-
->>> op.inverse(q_frame, v_frame) == (q_icrs, v_icrs)
-True
 
 """
 
@@ -68,23 +50,20 @@ import sys
 from .setup_package import install_import_hook
 
 with install_import_hook("coordinax.frames"):
+    from ._src.api import frame_of, frame_transform_op
     from ._src.frames import (
-        AbstractCoordinate,
         AbstractReferenceFrame,
         Alice,
         Bob,
-        Coordinate,
         FrameTransformError,
         FriendOfAlice,
         NoFrame,
         TransformedReferenceFrame,
-        frame_of,
-        frame_transform_op,
     )
 
 
 # Defined here b/c it's mutated by optional imports
-__all__ = [
+__all__: list[str] = [
     # Frames
     "AbstractReferenceFrame",
     "FrameTransformError",
@@ -96,9 +75,6 @@ __all__ = [
     "Alice",
     "FriendOfAlice",
     "Bob",
-    # Coordinates
-    "AbstractCoordinate",
-    "Coordinate",
 ]
 
 # Try to import astronomy frames - use lazy import to avoid circular dependency

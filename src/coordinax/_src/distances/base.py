@@ -8,7 +8,7 @@ from plum import add_promotion_rule
 import unxt as u
 
 
-class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
+class AbstractDistance(u.AbstractQuantity):
     """Distance quantities."""
 
     @property
@@ -17,22 +17,20 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from coordinax.distance import Distance
-        >>> d = Distance(10, "km")
+        >>> import coordinax.distances as cxd
+        >>> d = cxd.Distance(10, "km")
         >>> d.distance is d
         True
 
-        >>> from coordinax.distance import DistanceModulus
-        >>> DistanceModulus(10, "mag").distance
-        Distance(Array(1000., dtype=float32, ...), unit='pc')
+        >>> cxd.DistanceModulus(10, "mag").distance
+        Distance(Array(1000., dtype=float64, ...), unit='pc')
 
-        >>> from coordinax.distance import Parallax
-        >>> p = Parallax(1, "mas")
+        >>> p = cxd.Parallax(1, "mas")
         >>> p.distance.to("kpc")
-        Distance(Array(1., dtype=float32, ...), unit='kpc')
+        Distance(Array(1., dtype=float64, ...), unit='kpc')
 
         """
-        from coordinax.distance import Distance  # noqa: PLC0415
+        from coordinax.distances import Distance  # noqa: PLC0415
 
         return Distance.from_(self)
 
@@ -42,21 +40,21 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 
         Examples
         --------
-        >>> from coordinax.distance import Distance
+        >>> from coordinax.distances import Distance
         >>> d = Distance(1, "pc")
         >>> d.distance_modulus
-        DistanceModulus(Array(-5., dtype=float32), unit='mag')
+        DistanceModulus(Array(-5., dtype=float64), unit='mag')
 
-        >>> from coordinax.distance import DistanceModulus
+        >>> from coordinax.distances import DistanceModulus
         >>> DistanceModulus(10, "mag").distance_modulus
-        DistanceModulus(Array(10, dtype=int32, ...), unit='mag')
+        DistanceModulus(Array(10, dtype=int64, ...), unit='mag')
 
-        >>> from coordinax.distance import Parallax
+        >>> from coordinax.distances import Parallax
         >>> Parallax(1, "mas").distance_modulus
-        DistanceModulus(Array(10., dtype=float32), unit='mag')
+        DistanceModulus(Array(10., dtype=float64), unit='mag')
 
         """
-        from coordinax.distance import DistanceModulus  # noqa: PLC0415
+        from coordinax.distances import DistanceModulus  # noqa: PLC0415
 
         return DistanceModulus.from_(self)
 
@@ -64,28 +62,28 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
     def parallax(self) -> "AbstractDistance":  # TODO: more specific type
         r"""The parallax from a distance.
 
-        The parallax is calculated as :math:`\arctan(1 AU / d)`.
+        The parallax is calculated as $\arctan(1 AU / d)$.
 
         Examples
         --------
         >>> import quaxed.numpy as jnp
-        >>> from coordinax.distance import Distance
+        >>> from coordinax.distances import Distance
 
         >>> d = Distance(1, "pc")
         >>> jnp.round(d.parallax.to("arcsec"), 2)
-        Parallax(Array(1., dtype=float32, ...), unit='arcsec')
+        Parallax(Array(1., dtype=float64, ...), unit='arcsec')
 
-        >>> from coordinax.distance import DistanceModulus
+        >>> from coordinax.distances import DistanceModulus
         >>> DistanceModulus(10, "mag").parallax.to("mas")
-        Parallax(Array(0.99999994, dtype=float32, ...), unit='mas')
+        Parallax(Array(1., dtype=float64, ...), unit='mas')
 
-        >>> from coordinax.distance import Parallax
+        >>> from coordinax.distances import Parallax
         >>> p = Parallax(1, "mas")
         >>> p.parallax is p
         True
 
         """
-        from coordinax.angle import Parallax  # noqa: PLC0415
+        from coordinax.angles import Parallax  # noqa: PLC0415
 
         return Parallax.from_(self)
 
@@ -94,5 +92,5 @@ class AbstractDistance(u.AbstractQuantity):  # type: ignore[misc]
 # distance degrades to a Quantity. This is necessary for many operations, e.g.
 # division of a distance by non-dimensionless quantity where the resulting units
 # are not those of a distance.
-add_promotion_rule(AbstractDistance, u.Quantity, u.Quantity)
+add_promotion_rule(AbstractDistance, u.Q, u.Q)
 add_promotion_rule(AbstractDistance, u.quantity.BareQuantity, u.quantity.BareQuantity)

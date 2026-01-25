@@ -2,9 +2,12 @@
 
 __all__ = ("OptDeps",)
 
+from typing import final
+
 from optional_dependencies import OptionalDependencyEnum, auto
 
 
+@final
 class OptDeps(OptionalDependencyEnum):  # pylint: disable=invalid-enum-extension
     """Optional dependencies for ``coordinax``."""
 

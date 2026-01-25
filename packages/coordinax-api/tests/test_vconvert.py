@@ -32,11 +32,11 @@ def test_vconvert_is_dispatchable() -> None:
 
     # Should be able to add dispatches to vconvert
     @plum.dispatch
-    def vconvert(target: type[str], value: int, **kwargs) -> str:
+    def vconvert(target: str, value: int, **kwargs) -> str:
         return f"int:{value}"
 
     # Now this dispatch should work
-    result = vconvert(str, 42)
+    result = vconvert("str", 42)
     assert result == "int:42"
 
 

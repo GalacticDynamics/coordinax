@@ -24,7 +24,7 @@ dependencies = [
   "coordinax-astro",
   "jaxtyping>=0.3.3",
   "plum-dispatch>=2.6.1",
-  "unxt>=1.8.0",
+  "unxt>=1.10.0",
 ]
 description = "Astropy interoperability for coordinax"
 license = "MIT"
@@ -58,4 +58,4 @@ coordinax-api   = { workspace = true }
 coordinax-astro = { workspace = true }
 
 [dependency-groups]
-test = ["hypothesis>=6.148.7", "pytest>=9.0.2", "unxt-hypothesis>=1.8.0"]
+test = ["hypothesis>=6.148.7", "pytest>=9.0.2", "unxt-hypothesis>=1.10.1"]

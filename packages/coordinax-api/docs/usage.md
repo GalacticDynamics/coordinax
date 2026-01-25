@@ -16,11 +16,11 @@ arguments.
 Here's how to create a custom 2D vector type and implement coordinate
 transformations:
 
-```python
+```
 import math
 from dataclasses import dataclass
 
-from plum import dispatch
+import plum
 from coordinax_api import vconvert
 
 
@@ -41,8 +41,8 @@ class MyPolar:
 
 
 # Implement conversion from Cartesian to Polar
-@dispatch
-def vconvert(target: type[MyPolar], vec: MyCartesian, **kwargs):
+@plum.dispatchpatch
+def vconvert(target: MyPolar, vec: MyCartesian, **kwargs):
     """Convert Cartesian to polar coordinates."""
     r = math.sqrt(vec.x**2 + vec.y**2)
     theta = math.atan2(vec.y, vec.x)
@@ -50,8 +50,8 @@ def vconvert(target: type[MyPolar], vec: MyCartesian, **kwargs):
 
 
 # Implement conversion from Polar to Cartesian
-@dispatch
-def vconvert(target: type[MyCartesian], vec: MyPolar, **kwargs):
+@plum.dispatchpatch
+def vconvert(target: MyCartesian, vec: MyPolar, **kwargs):
     """Convert polar to Cartesian coordinates."""
     x = vec.r * math.cos(vec.theta)
     y = vec.r * math.sin(vec.theta)
@@ -60,10 +60,10 @@ def vconvert(target: type[MyCartesian], vec: MyPolar, **kwargs):
 
 # Usage
 cart = MyCartesian(x=3.0, y=4.0)
-polar = vconvert(MyPolar, cart)
+polar = vconvert(MyPolar(), cart)
 print(f"Polar: r={polar.r:.2f}, theta={polar.theta:.2f}")  # r=5.00, theta=0.93
 
-back = vconvert(MyCartesian, polar)
+back = vconvert(MyCartesian(), polar)
 print(f"Cartesian: x={back.x:.2f}, y={back.y:.2f}")  # x=3.00, y=4.00
 ```
 

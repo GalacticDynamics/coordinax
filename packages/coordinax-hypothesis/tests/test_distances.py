@@ -3,11 +3,11 @@
 import hypothesis.strategies as st
 from hypothesis import given, settings
 
-import coordinax.distance as cxd
-from coordinax_hypothesis import distances
+import coordinax.distances as cxd
+import coordinax_hypothesis as cxst
 
 
-@given(dist=distances())
+@given(dist=cxst.distances())
 @settings(max_examples=50)
 def test_basic_distance(dist: cxd.Distance) -> None:
     """Test basic distance generation."""
@@ -16,7 +16,7 @@ def test_basic_distance(dist: cxd.Distance) -> None:
     assert dist.value >= 0  # default check_negative=True
 
 
-@given(dist=distances(check_negative=False))
+@given(dist=cxst.distances(check_negative=False))
 @settings(max_examples=50)
 def test_distance_allow_negative(dist: cxd.Distance) -> None:
     """Test distance generation with negative values allowed."""
@@ -24,7 +24,7 @@ def test_distance_allow_negative(dist: cxd.Distance) -> None:
     # Don't check sign when check_negative=False
 
 
-@given(dist=distances(unit="kpc"))
+@given(dist=cxst.distances(unit="kpc"))
 @settings(max_examples=50)
 def test_distance_with_units(dist: cxd.Distance) -> None:
     """Test distance generation with specific units."""
@@ -32,7 +32,7 @@ def test_distance_with_units(dist: cxd.Distance) -> None:
     assert dist.unit == "kpc"
 
 
-@given(dist=distances(shape=5))
+@given(dist=cxst.distances(shape=5))
 @settings(max_examples=30)
 def test_distance_vector(dist: cxd.Distance) -> None:
     """Test vector distance generation."""
@@ -41,7 +41,7 @@ def test_distance_vector(dist: cxd.Distance) -> None:
     assert all(dist.value >= 0)  # all elements should be non-negative
 
 
-@given(dist=distances(shape=(2, 3)))
+@given(dist=cxst.distances(shape=(2, 3)))
 @settings(max_examples=30)
 def test_distance_2d(dist: cxd.Distance) -> None:
     """Test 2D distance array generation."""
@@ -49,7 +49,7 @@ def test_distance_2d(dist: cxd.Distance) -> None:
     assert dist.shape == (2, 3)
 
 
-@given(dist=distances(check_negative=st.sampled_from([True, False])))
+@given(dist=cxst.distances(check_negative=st.sampled_from([True, False])))
 @settings(max_examples=50)
 def test_distance_with_strategy_check_negative(dist: cxd.Distance) -> None:
     """Test distance with check_negative as a strategy."""
@@ -57,7 +57,9 @@ def test_distance_with_strategy_check_negative(dist: cxd.Distance) -> None:
     # check_negative varies, so we can't assert about the sign
 
 
-@given(dist=distances(elements=st.floats(min_value=1.0, max_value=100.0, width=32)))
+@given(
+    dist=cxst.distances(elements=st.floats(min_value=1.0, max_value=100.0, width=32))
+)
 @settings(max_examples=30)
 def test_distance_with_custom_elements(dist: cxd.Distance) -> None:
     """Test distance with custom elements range."""
@@ -66,7 +68,7 @@ def test_distance_with_custom_elements(dist: cxd.Distance) -> None:
 
 
 @given(
-    dist=distances(
+    dist=cxst.distances(
         check_negative=True, elements=st.floats(min_value=0.0, max_value=10.0, width=32)
     )
 )

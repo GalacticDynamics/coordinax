@@ -1,130 +1,155 @@
 # Vectors
 
-This guide covers the creation and use of vector objects in `coordinax`,
-including positions, velocities, accelerations, arithmetic, dimensionality,
-spaces, and vector functions.
+This guide covers vector objects in `coordinax`. A vector is _data_ plus a
+representation (coordinate chart) and a role (Pos, Vel, PhysAcc, ...).
 
 ## Creating Vector Objects
 
-You can create vectors for positions, velocities, and accelerations in many
-supported dimension:
+```
+import coordinax as cx
+import unxt as u
 
-```{code-block} python
->>> import coordinax.vecs as cxv
->>> q1 = cxv.CartesianPos1D.from_(1, "kpc")
->>> q2 = cxv.CartesianPos2D.from_([1, 2], "kpc")
->>> q3 = cxv.CartesianPos3D.from_([1, 2, 3], "kpc")
->>> v3 = cxv.CartesianVel3D.from_([4, 5, 6], "kpc/Myr")
->>> a3 = cxv.CartesianAcc3D.from_([0.1, 0.2, 0.3], "kpc/Myr^2")
+q = cx.Vector(
+    data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_disp,
+)
+
+v = cx.Vector(
+    data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_vel,
+)
 ```
 
-You can also create N-D vectors:
+If you already have array-valued data, you can construct vectors directly from
+quantity-valued components:
 
-```{code-block} python
->>> qn = cxv.CartesianPosND.from_([1, 2, 3, 4], "kpc")
 ```
+import coordinax as cx
+import unxt as u
 
-All vector types support flexible input: scalars, lists, arrays, or
-{class}`~unxt.quantity.Quantity`.
-
-The component values can be multidimensional arrays, allowing for batch
-operations:
-
-```{code-block} python
->>> arr = cxv.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
-
+q3 = cx.Vector(
+    data={
+        "x": u.Q([1.0, 2.0], "kpc"),
+        "y": u.Q([3.0, 4.0], "kpc"),
+        "z": u.Q([5.0, 6.0], "kpc"),
+    },
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_disp,
+)
+v3 = cx.Vector(
+    data={
+        "x": u.Q([4.0, 5.0], "kpc/Myr"),
+        "y": u.Q([6.0, 7.0], "kpc/Myr"),
+        "z": u.Q([8.0, 9.0], "kpc/Myr"),
+    },
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_vel,
+)
 ```
 
 ## Arithmetic and Mathematical Operations
 
-Vector objects support arithmetic and mathematical operations:
+Vector objects are compatible with JAX primitives; see the operators guide for
+examples.
 
-```{code-block} python
->>> q3 + q3
-CartesianPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
+```
+import coordinax as cx
+import unxt as u
 
->>> 2 * q3
-CartesianPos3D(x=Q(2, 'kpc'), y=Q(4, 'kpc'), z=Q(6, 'kpc'))
+q = cx.Vector(
+    data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_disp,
+)
+v = cx.Vector(
+    data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_vel,
+)
 
->>> v3 - v3
-CartesianVel3D(x=Q(0, 'kpc / Myr'), y=Q(0, 'kpc / Myr'), z=Q(0, 'kpc / Myr'))
+# q and v are ready for use in JAX operations.
 ```
 
-## Dimensionality: 1,N-D
+## Dimensionality: 1D, 2D, 3D
 
-`coordinax` provides vector classes for many dimensions:
+Representations are available for multiple dimensions:
 
-- {class}`~coordinax.vecs.CartesianPos1D`,
-  {class}`~coordinax.vecs.CartesianPos2D`,
-  {class}`~coordinax.vecs.CartesianPos3D`,
-  {class}`~coordinax.vecs.CartesianPosND`
-- Similar classes for velocities (`CartesianVel*`), accelerations
-  (`CartesianAcc*`), etc.
-- Spacetime vectors {class}`~coordinax.vecs.FourVector`
+- 1D: `cx.charts.cart1d`, `cx.charts.radial1d`
+- 2D: `cx.charts.cart2d`, `cx.charts.polar2d`
+- 3D: `cx.charts.cart3d`, `cx.charts.cyl3d`, `cx.charts.sph3d`
 
 ## Conversion Between Representations
 
 Vectors can be converted between coordinate systems:
 
-```{code-block} python
->>> sph = q3.vconvert(cxv.SphericalPos)
->>> print(sph)
-<SphericalPos: (r[kpc], theta[rad], phi[rad])
-    [3.742 0.641 1.107]>
+```
+import coordinax as cx
+import unxt as u
+
+q = cx.Vector(
+    data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_disp,
+)
+v = cx.Vector(
+    data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_vel,
+)
+
+q_sph = q.vconvert(cx.charts.sph3d)
+v_sph = v.vconvert(cx.charts.sph3d, q)
 ```
 
 ## Batch and Broadcast Operations
 
-All vector types support batch operations and broadcasting:
+Component values can be arrays, enabling batch and broadcast behavior:
 
-```{code-block} python
->>> arr = cxv.CartesianPos3D.from_([[1,2,3],[4,5,6]], "kpc")
->>> arr * 2
-CartesianPos3D(x=Q([2, 8], 'kpc'), y=Q([ 4, 10], 'kpc'),
-               z=Q([ 6, 12], 'kpc'))
+```
+import coordinax as cx
+import unxt as u
+
+arr = cx.Vector(
+    data={
+        "x": u.Q([1.0, 4.0], "kpc"),
+        "y": u.Q([2.0, 5.0], "kpc"),
+        "z": u.Q([3.0, 6.0], "kpc"),
+    },
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_disp,
+)
+# arr can be used in batched JAX computations.
 ```
 
 ## Space Objects: Grouping Related Vectors
 
-A {class}`~coordinax.vecs.KinematicSpace` object collects related vectors (e.g.,
-position, velocity, acceleration):
+A {class}`~coordinax.PointedVector` object collects related vectors (e.g.,
+position, velocity, acceleration) anchored at a common base point:
 
-```{code-block} python
->>> space = cxv.KinematicSpace(length=q3, speed=v3, acceleration=a3)
->>> print(space)
-KinematicSpace({
-    'length': <CartesianPos3D: (x, y, z) [kpc]
-        [1 2 3]>,
-    'speed': <CartesianVel3D: (x, y, z) [kpc / Myr]
-        [4 5 6]>,
-    'acceleration': <CartesianAcc3D: (x, y, z) [kpc / Myr2]
-        [0.1 0.2 0.3]>
-})
 ```
+import coordinax as cx
+import unxt as u
 
-You can convert all vectors in a {class}`~coordinax.vecs.KinematicSpace` at
-once:
+q = cx.Vector(
+    data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_disp,
+)
+v = cx.Vector(
+    data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
+    chart=cx.charts.cart3d,
+    role=cx.roles.phys_vel,
+)
 
-```{code-block} python
->>> space_sph = space.vconvert(cxv.SphericalPos)
->>> print(space_sph.round(3))
-KinematicSpace({
-       'length':
-       <SphericalPos: (r[kpc], theta[rad], phi[rad])
-           [3.742 0.641 1.107]>,
-       'speed':
-       <SphericalVel: (r[kpc / Myr], theta[rad / Myr], phi[rad / Myr])
-           [ 8.552  0.383 -0.6  ]>,
-       'acceleration':
-       <SphericalAcc: (r[kpc / Myr2], theta[rad / Myr2], phi[rad / Myr2])
-           [ 0.374 -0.     0.   ]>
-    })
+space = cx.PointedVector(base=q, speed=v)
 ```
 
 ---
 
 :::{seealso}
 
-[API Documentation for Vectors](../api/vecs.md)
+[API Documentation for Objects](../api/objs.md)
 
 :::

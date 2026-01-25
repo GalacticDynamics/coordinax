@@ -32,28 +32,34 @@ uv add coordinax-api
 
 ## Quick Example
 
-```python
-from plum import dispatch
+```
+import plum
 from coordinax_api import vconvert
 
 
 # Define your custom vector type
-class MyVector:
+class MyCartesian:
     def __init__(self, x, y):
         self.x = x
         self.y = y
 
 
+class MyPolar:
+    def __init__(self, r, theta):
+        self.r = r
+        self.theta = theta
+
+
 # Implement vconvert for your type
-@dispatch
-def vconvert(target: type[dict], vec: MyVector, **kwargs) -> dict:
-    return {"x": vec.x, "y": vec.y}
+@plum.dispatch
+def vconvert(target: MyPolar, vec: MyCartesian, **kwargs) -> MyPolar:
+    return MyPolar(r=(vec.x**2 + vec.y**2) ** 0.5, theta=math.atan2(vec.y, vec.x))
 
 
 # Now you can use vconvert with your type
-vec = MyVector(1.0, 2.0)
-result = vconvert(dict, vec)
-print(result)  # {'x': 1.0, 'y': 2.0}
+vec = MyCartesian(1.0, 2.0)
+result = vconvert(MyPolar(), vec)
+print(result)  # MyPolar object with r and theta values
 ```
 
 ## Why Use coordinax-api?

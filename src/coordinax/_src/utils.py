@@ -1,16 +1,23 @@
 """Representation of coordinates in different systems."""
 
+from unxt.quantity import AllowValue
+
 __all__: tuple[str, ...] = ()
 
 from dataclasses import dataclass
 
 from collections.abc import Callable
-from typing import Any, Generic, TypeVar
+from jaxtyping import ArrayLike
+from typing import Any, Final, Generic, TypeVar, final
+
+import unxt as u
+from unxt import AbstractQuantity as ABCQ  # noqa: N814
 
 GetterRetT = TypeVar("GetterRetT")
 EnclosingT = TypeVar("EnclosingT")
 
 
+@final
 @dataclass(frozen=True)
 class ClassPropertyDescriptor(Generic[EnclosingT, GetterRetT]):
     """Descriptor for class properties.
@@ -135,3 +142,30 @@ def classproperty(
     fget = func if isinstance(func, classmethod | staticmethod) else classmethod(func)
     # Return the wrapped function as a class-level property
     return ClassPropertyDescriptor[Any, GetterRetT](fget)
+
+
+V = TypeVar("V", bound=ABCQ | ArrayLike)
+
+RAD: Final = u.unit("rad")
+
+
+def uconvert_to_rad(value: V, usys: u.AbstractUnitSystem | None, /) -> V:
+    """Convert an angle value to radians, handling no-usys case."""
+    return u.uconvert_value(RAD, RAD if usys is None else usys["angle"], value)
+
+
+def ustrip_value(
+    uto: u.AbstractUnit,
+    usysfrom: u.AbstractUnitSystem | None,
+    dfrom: str,
+    x: u.AbstractQuantity | ArrayLike,
+    /,
+) -> ArrayLike:
+    if not isinstance(x, u.AbstractQuantity):
+        if usysfrom is None:
+            msg = "Unit system must be provided."
+            raise ValueError(msg)
+        ufrom = usysfrom[dfrom]
+    else:
+        ufrom = x.unit
+    return u.ustrip(AllowValue, u.uconvert_value(uto, ufrom, x))
