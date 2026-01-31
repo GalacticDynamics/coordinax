@@ -545,8 +545,12 @@ class AbstractVector(
         kwargs.setdefault("named_unit", False)
 
         if not vector_form:
-            # TODO: not use private API.
-            return wl._definitions._pformat_dataclass(self, **kwargs)
+            # See https://github.com/patrick-kidger/wadler_lindig/issues/12.
+            # Since we are inside __pdoc__, we need to disable respect_pdoc and
+            # seen_ids to avoid infinite recursion.
+            kwargs["respect_pdoc"] = False
+            kwargs["seen_ids"] = None
+            return wl.pdoc(self, **kwargs)
 
         # -----------------------------
 
