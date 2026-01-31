@@ -206,8 +206,8 @@ class FourVector(AbstractPos4D):
             + wl.TextDoc(")")
         ).group()
 
-        vs = np.array2string(  # type: ignore[call-overload]  # TODO: use other method
-            jnp.stack(
+        vs = np.array2string(
+            jnp.stack(  # type: ignore[arg-type]
                 tuple(
                     u.ustrip(v)
                     for v in cast(

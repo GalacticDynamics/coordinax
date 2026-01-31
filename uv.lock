@@ -7,10 +7,7 @@ resolution-markers = [
 ]
 
 [manifest]
-constraints = [
-    { name = "jax", specifier = "<0.7" },
-    { name = "jaxlib", specifier = "<0.7" },
-]
+constraints = [{ name = "numpy", specifier = "<2.4.0" }]
 
 [[package]]
 name = "accessible-pygments"
@@ -505,7 +502,7 @@ requires-dist = [
     { name = "quax-blocks", specifier = ">=0.4.0" },
     { name = "quaxed", specifier = ">=0.10.4" },
     { name = "typing-extensions", specifier = ">=4.13.2" },
-    { name = "unxt", specifier = ">=1.7.3" },
+    { name = "unxt", specifier = ">=1.10.3" },
     { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
@@ -2737,7 +2734,7 @@ wheels = [
 
 [[package]]
 name = "unxt"
-version = "1.7.3"
+version = "1.10.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "astropy" },
@@ -2752,13 +2749,26 @@ dependencies = [
     { name = "quax" },
     { name = "quax-blocks" },
     { name = "quaxed" },
+    { name = "unxt-api" },
     { name = "wadler-lindig" },
     { name = "xmmutablemap" },
     { name = "zeroth" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/25/7c/ac52bf66959e67ca6d25d77aa6d4fbea5b4d9f76379fdb443f8c8b26b0bc/unxt-1.7.3.tar.gz", hash = "sha256:24534e90ebbe43ba08fc1b87844af0c83cc5b67a889d5ba0aabdf707ca9c21f2", size = 886633 }
+sdist = { url = "https://files.pythonhosted.org/packages/25/2f/78436064bc5112882dcf871f5a51f16a6a2b2c27c7e36e8ca146e51cab34/unxt-1.10.3.tar.gz", hash = "sha256:522318b9d19171f52faeaceb5aff9ceaa73c39ba7f7dfea434b42c1d126bc164", size = 1005379 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/5c/a9/119a0dbe680e41d6fa15af5d5ae75ed1291a1643d74f90aa3f2099bee99e/unxt-1.7.3-py3-none-any.whl", hash = "sha256:b6d885cbf361e4116869420e481468d48ea0921c1e004871487093b4865b29d0", size = 74286 },
+    { url = "https://files.pythonhosted.org/packages/15/e7/2635b0f644deb4cf9e92b3d3c10f6230ecde9814b85808b4302c8d7cf7fd/unxt-1.10.3-py3-none-any.whl", hash = "sha256:127c6a66e08126bba40e9f9383af31c089a9112d06eebabdf9eb1cdeff0f1359", size = 83510 },
+]
+
+[[package]]
+name = "unxt-api"
+version = "1.10.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "plum-dispatch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/55/a9e4f226a3d2f26a8bafc55868b8b8ec290cdf3766d9dc378b3b2dd0eb0c/unxt_api-1.10.1.tar.gz", hash = "sha256:dae10d19edc0b96b225dfa122d0ed5999ad8523d3b0e63f33a3acc2ccdff0cbc", size = 21341 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/63/64/4f4fb51ee7558784a566fb30d8e0d04c689501f7856aa47d279bf6d745cf/unxt_api-1.10.1-py3-none-any.whl", hash = "sha256:7cc4ed4b4d22a9a93fe185add206861a5931f45e892d68d86c8034c445e28ba6", size = 6266 },
 ]
 
 [[package]]
