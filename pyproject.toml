@@ -33,7 +33,7 @@ dependencies = [
   "quax-blocks>=0.4.0",
   "quaxed>=0.10.4",
   "typing-extensions>=4.13.2",
-  "unxt>=1.8.0",
+  "unxt>=1.10.3",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
