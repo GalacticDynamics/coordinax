@@ -138,7 +138,7 @@ class Parallax(AbstractDistance):
     To disable this check, set `check_negative=False`.
 
     >>> Parallax(-1, "mas", check_negative=False)
-    Parallax(Array(-1, dtype=int32, ...), unit='mas', check_negative=False)
+    Parallax(Array(-1, dtype=int32, weak_type=True), unit='mas')
 
     """
 
