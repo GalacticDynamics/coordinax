@@ -562,7 +562,7 @@ class AbstractVector(
                     begin=wl.TextDoc(" "),  # indent to opening "<"
                     docs=wl.named_objs(
                         [(k, getattr(self, k)) for k in self._AUX_FIELDS],
-                        **kwargs | {"short_arrays": False, "compact_arrays": True},
+                        **kwargs | {"short_arrays": "compact"},
                     ),
                     sep=wl.comma,
                     end=wl.TextDoc(""),  # no end bracket

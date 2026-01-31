@@ -12,7 +12,6 @@ from jaxtyping import Array, Shaped
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt._src.units.api import AstropyUnits
 
 from .base import AbstractDistance
 
@@ -46,7 +45,7 @@ class Distance(AbstractDistance):
     )
     """The value of the `unxt.AbstractQuantity`."""
 
-    unit: AstropyUnits = eqx.field(static=True, converter=u.unit)
+    unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""
 
     _: KW_ONLY
@@ -103,7 +102,7 @@ class DistanceModulus(AbstractDistance):
     )
     """The value of the `unxt.AbstractQuantity`."""
 
-    unit: AstropyUnits = eqx.field(static=True, converter=u.unit)
+    unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""
 
     def __check_init__(self) -> None:
@@ -138,7 +137,7 @@ class Parallax(AbstractDistance):
     To disable this check, set `check_negative=False`.
 
     >>> Parallax(-1, "mas", check_negative=False)
-    Parallax(Array(-1, dtype=int32, ...), unit='mas', check_negative=False)
+    Parallax(Array(-1, dtype=int32, weak_type=True), unit='mas')
 
     """
 
@@ -147,7 +146,7 @@ class Parallax(AbstractDistance):
     )
     """The value of the `unxt.AbstractQuantity`."""
 
-    unit: AstropyUnits = eqx.field(static=True, converter=u.unit)
+    unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)
     """The unit associated with this value."""
 
     _: KW_ONLY

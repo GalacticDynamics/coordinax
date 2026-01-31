@@ -9,7 +9,7 @@ from astropy.units import PhysicalType as Dimension
 
 import quaxed.numpy as jnp
 import unxt as u
-from unxt._src.dimensions.core import name_of
+from unxt._src.dimensions import name_of
 
 DimensionLike: TypeAlias = Dimension | str
 Shape: TypeAlias = tuple[int, ...]

@@ -8,10 +8,7 @@ import unxt as u
 _2pid = u.Angle(360, "deg")
 
 
-def converter_azimuth_to_range(
-    phi: u.AbstractQuantity,
-    /,
-) -> u.AbstractQuantity:
+def converter_azimuth_to_range(phi: u.AbstractQuantity, /) -> u.AbstractQuantity:
     """Wrap a polar angle to the range [0, 2pi).
 
     It's safe to do this conversion since this is a phase cut, unlike `theta`,

@@ -737,9 +737,7 @@ class AbstractVectorLike(
         representation of the vector.
 
         """
-        return wl.pformat(
-            self, vector_form=False, short_arrays=False, compact_arrays=True
-        )
+        return wl.pformat(self, vector_form=False, short_arrays="compact")
 
     def __str__(self) -> str:
         """Return a string representation of the vector-like object."""
