@@ -124,7 +124,7 @@ version.source = "vcs"
 
 
 [tool.codespell]
-skip = ["uv.lock"]
+skip = "uv.lock,paper/paper.bib"
 
 
 [tool.commitizen]
