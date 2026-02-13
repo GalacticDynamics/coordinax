@@ -15,9 +15,9 @@ import coordinax.transforms as cxt
 
 def _embedded_twosphere(
     R: u.Q | None = None,
-) -> cxc.EmbeddedManifold:
+) -> cxe.EmbeddedManifold:
     params = {} if R is None else {"R": R}
-    return cxc.EmbeddedManifold(
+    return cxe.EmbeddedManifold(
         intrinsic_chart=cxc.twosphere,
         ambient_chart=cxc.cart3d,
         params=params,

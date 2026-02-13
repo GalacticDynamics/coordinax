@@ -9,8 +9,10 @@ from hypothesis import given, settings
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.roles as cxr
 import coordinax_hypothesis as cxst
+from coordinax.objs import PointedVector, Vector
 
 
 class TestPointedVectorInit:
@@ -19,46 +21,40 @@ class TestPointedVectorInit:
     def test_basic_init(self):
         """Test basic initialization with explicit Vector instances."""
         # Create vectors with explicit chart and role
-        base = cx.Vector.from_(
-            u.Q([1, 2, 3], "km"), cx.charts.cart3d, cx.roles.point
-        )  # Affine point
-        vel = cx.Vector.from_(
-            u.Q([10, 20, 30], "km/s"), cx.charts.cart3d, cx.roles.phys_vel
+        base = Vector.from_(u.Q([1, 2, 3], "km"), cxc.cart3d, cxr.point)  # Affine point
+        vel = Vector.from_(
+            u.Q([10, 20, 30], "km/s"), cxc.cart3d, cxr.phys_vel
         )  # Velocity
-        acc = cx.Vector.from_(
+        acc = Vector.from_(
             u.Q([0.1, 0.2, 0.3], "km/s^2"),
-            cx.charts.cart3d,
-            cx.roles.phys_acc,
+            cxc.cart3d,
+            cxr.phys_acc,
         )  # Acceleration
 
-        bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
+        bundle = PointedVector(base=base, velocity=vel, acceleration=acc)
 
         # Base and fields are stored (but may be copies due to eqx.error_if)
-        assert isinstance(bundle.base, cx.Vector)
-        assert isinstance(bundle["velocity"], cx.Vector)
-        assert isinstance(bundle["acceleration"], cx.Vector)
+        assert isinstance(bundle.base, Vector)
+        assert isinstance(bundle["velocity"], Vector)
+        assert isinstance(bundle["acceleration"], Vector)
         assert set(bundle.keys()) == {"velocity", "acceleration"}
 
     def test_base_must_have_point_role(self):
         """Test that base must have Point role."""
         # Create a non-Point vector (Vel)
-        non_point = cx.Vector.from_(
-            u.Q([1, 2, 3], "km/s"), cx.charts.cart3d, cx.roles.phys_vel
-        )
-        vel = cx.Vector.from_(
-            u.Q([10, 20, 30], "km/s"), cx.charts.cart3d, cx.roles.phys_vel
-        )
+        non_point = Vector.from_(u.Q([1, 2, 3], "km/s"), cxc.cart3d, cxr.phys_vel)
+        vel = Vector.from_(u.Q([10, 20, 30], "km/s"), cxc.cart3d, cxr.phys_vel)
 
         with pytest.raises(RuntimeError, match="base must have role Point"):
-            cx.PointedVector(base=non_point, velocity=vel)
+            PointedVector(base=non_point, velocity=vel)
 
     def test_fields_cannot_have_point_role(self):
         """Test that field vectors cannot have Point role."""
-        base = cx.Vector.from_(
-            u.Q([1, 2, 3], "km"), cx.charts.cart3d, cx.roles.point
+        base = Vector.from_(
+            u.Q([1, 2, 3], "km"), cxc.cart3d, cxr.point
         )  # Has Point role
-        another_point = cx.Vector.from_(
-            u.Q([4, 5, 6], "km"), cx.charts.cart3d, cx.roles.point
+        another_point = Vector.from_(
+            u.Q([4, 5, 6], "km"), cxc.cart3d, cxr.point
         )  # Also has Point role
 
         with pytest.raises(
@@ -68,27 +64,27 @@ class TestPointedVectorInit:
                 r"vectors anchored at base; store additional points elsewhere."
             ),
         ):
-            cx.PointedVector(base=base, extra_field=another_point)
+            PointedVector(base=base, extra_field=another_point)
 
     def test_broadcastable_shapes(self):
         """Test that shapes must be broadcastable."""
-        base = cx.Vector.from_([1, 2, 3], "km")  # shape ()
-        vel = cx.Vector.from_(
+        base = Vector.from_([1, 2, 3], "km")  # shape ()
+        vel = Vector.from_(
             jnp.array([[10, 20, 30], [40, 50, 60]]), "km/s"
         )  # shape (2,)
 
         # This should work (broadcasting)
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        bundle = PointedVector(base=base, velocity=vel)
         assert bundle.shape == (2,)
 
     def test_non_broadcastable_shapes_error(self):
         """Test that non-broadcastable shapes raise error."""
-        base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "km")  # shape (2,)
-        vel = cx.Vector.from_(jnp.array([[[10, 20, 30]] * 3]), "km/s")  # shape (1, 3)
+        base = Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "km")  # shape (2,)
+        vel = Vector.from_(jnp.array([[[10, 20, 30]] * 3]), "km/s")  # shape (1, 3)
 
         # Shapes (2,) and (1, 3) are incompatible for final broadcast
         with pytest.raises(RuntimeError, match="vector shapes are not broadcastable"):
-            cx.PointedVector(base=base, velocity=vel)
+            PointedVector(base=base, velocity=vel)
 
 
 class TestPointedVectorFrom:
@@ -100,18 +96,18 @@ class TestPointedVectorFrom:
             "base": u.Q([1, 2, 3], "km"),
             "velocity": u.Q([4, 5, 6], "km/s"),
         }
-        bundle = cx.PointedVector.from_(data)
+        bundle = PointedVector.from_(data)
 
-        assert isinstance(bundle.base, cx.Vector)
-        assert isinstance(bundle["velocity"], cx.Vector)
+        assert isinstance(bundle.base, Vector)
+        assert isinstance(bundle["velocity"], Vector)
 
     def test_from_dict_with_explicit_base(self):
         """Test from_ with explicit base parameter."""
-        base = cx.Vector.from_([1, 2, 3], "km")
+        base = Vector.from_([1, 2, 3], "km")
         data = {
             "velocity": u.Q([4, 5, 6], "km/s"),
         }
-        bundle = cx.PointedVector.from_(data, base=base)
+        bundle = PointedVector.from_(data, base=base)
 
         # Note: eqx.error_if creates copies, so check components match
         assert jnp.allclose(bundle.base["x"], base["x"], atol=u.Q(1e-10, "km"))
@@ -122,7 +118,7 @@ class TestPointedVectorFrom:
             "velocity": u.Q([4, 5, 6], "km/s"),
         }
         with pytest.raises(ValueError, match="base must be provided"):
-            cx.PointedVector.from_(data)
+            PointedVector.from_(data)
 
 
 class TestPointedVectorMappingAPI:
@@ -130,11 +126,11 @@ class TestPointedVectorMappingAPI:
 
     def test_keys_values_items(self):
         """Test mapping methods."""
-        base = cx.Vector.from_([1, 2, 3], "km")
-        vel = cx.Vector.from_([10, 20, 30], "km/s")
-        acc = cx.Vector.from_([0.1, 0.2, 0.3], "km/s^2")
+        base = Vector.from_([1, 2, 3], "km")
+        vel = Vector.from_([10, 20, 30], "km/s")
+        acc = Vector.from_([0.1, 0.2, 0.3], "km/s^2")
 
-        bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
+        bundle = PointedVector(base=base, velocity=vel, acceleration=acc)
 
         assert set(bundle.keys()) == {"velocity", "acceleration"}
         assert len(list(bundle.values())) == 2
@@ -142,31 +138,31 @@ class TestPointedVectorMappingAPI:
 
     def test_getitem_string(self):
         """Test __getitem__ with string key."""
-        base = cx.Vector.from_([1, 2, 3], "km")
-        vel = cx.Vector.from_([10, 20, 30], "km/s")
+        base = Vector.from_([1, 2, 3], "km")
+        vel = Vector.from_([10, 20, 30], "km/s")
 
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        bundle = PointedVector(base=base, velocity=vel)
 
         assert bundle["velocity"] is vel
 
     def test_getitem_index(self):
         """Test __getitem__ with numeric index."""
-        base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "km")
-        vel = cx.Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "km/s")
+        base = Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "km")
+        vel = Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "km/s")
 
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        bundle = PointedVector(base=base, velocity=vel)
 
         # Index to get first element
         sub_bundle = bundle[0]
-        assert isinstance(sub_bundle, cx.PointedVector)
+        assert isinstance(sub_bundle, PointedVector)
         assert sub_bundle.shape == ()
 
     def test_q_property(self):
         """Test .q property (alias for base)."""
-        base = cx.Vector.from_([1, 2, 3], "km")
-        vel = cx.Vector.from_([10, 20, 30], "km/s")
+        base = Vector.from_([1, 2, 3], "km")
+        vel = Vector.from_([10, 20, 30], "km/s")
 
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        bundle = PointedVector(base=base, velocity=vel)
 
         assert bundle.q is bundle.base
 
@@ -176,29 +172,29 @@ class TestPointedVectorVConvert:
 
     def test_vconvert_basic(self):
         """Test basic conversion to spherical coordinates."""
-        base = cx.Vector.from_([1, 1, 1], "m")
-        vel = cx.Vector.from_([10, 10, 10], "m/s")
+        base = Vector.from_([1, 1, 1], "m")
+        vel = Vector.from_([10, 10, 10], "m/s")
 
-        bundle = cx.PointedVector(base=base, velocity=vel)
-        sph_bundle = bundle.vconvert(cx.charts.sph3d)
+        bundle = PointedVector(base=base, velocity=vel)
+        sph_bundle = bundle.vconvert(cxc.sph3d)
 
         # Check reps changed
-        assert isinstance(sph_bundle.base.chart, cx.charts.Spherical3D)
-        assert isinstance(sph_bundle["velocity"].chart, cx.charts.Spherical3D)
+        assert isinstance(sph_bundle.base.chart, cxc.Spherical3D)
+        assert isinstance(sph_bundle["velocity"].chart, cxc.Spherical3D)
 
     def test_vconvert_vs_manual(self):
         """Test that vconvert matches manual conversion."""
-        base = cx.Vector.from_([1, 2, 3], "m")
-        vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        base = Vector.from_([1, 2, 3], "m")
+        vel = Vector.from_([4, 5, 6], "m/s")
+        bundle = PointedVector(base=base, velocity=vel)
 
         # Bundle conversion
-        sph_bundle = bundle.vconvert(cx.charts.sph3d)
+        sph_bundle = bundle.vconvert(cxc.sph3d)
 
         # Manual conversion
-        base_sph = base.vconvert(cx.charts.sph3d)
+        base_sph = base.vconvert(cxc.sph3d)
         at_for_vel = base.vconvert(vel.chart)  # Should be base itself (already cart3d)
-        vel_sph = vel.vconvert(cx.charts.sph3d, at_for_vel)
+        vel_sph = vel.vconvert(cxc.sph3d, at_for_vel)
 
         # Compare results
         for comp in sph_bundle.base.data:
@@ -214,29 +210,27 @@ class TestPointedVectorVConvert:
 
     def test_vconvert_with_field_charts(self):
         """Test vconvert with different target reps for fields."""
-        base = cx.Vector.from_([1, 1, 1], "m")
-        vel = cx.Vector.from_([10, 10, 10], "m/s")
+        base = Vector.from_([1, 1, 1], "m")
+        vel = Vector.from_([10, 10, 10], "m/s")
 
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        bundle = PointedVector(base=base, velocity=vel)
 
         # Convert base to spherical, velocity to cylindrical
-        mixed_bundle = bundle.vconvert(
-            cx.charts.sph3d, field_charts={"velocity": cx.charts.cyl3d}
-        )
+        mixed_bundle = bundle.vconvert(cxc.sph3d, field_charts={"velocity": cxc.cyl3d})
 
-        assert isinstance(mixed_bundle.base.chart, cx.charts.Spherical3D)
-        assert isinstance(mixed_bundle["velocity"].chart, cx.charts.Cylindrical3D)
+        assert isinstance(mixed_bundle.base.chart, cxc.Spherical3D)
+        assert isinstance(mixed_bundle["velocity"].chart, cxc.Cylindrical3D)
 
     def test_vconvert_preserves_base_role(self):
         """Test that conversion preserves role flags."""
-        base = cx.Vector.from_([1, 2, 3], "m")
-        vel = cx.Vector.from_([4, 5, 6], "m/s")
+        base = Vector.from_([1, 2, 3], "m")
+        vel = Vector.from_([4, 5, 6], "m/s")
 
-        bundle = cx.PointedVector(base=base, velocity=vel)
-        sph_bundle = bundle.vconvert(cx.charts.sph3d)
+        bundle = PointedVector(base=base, velocity=vel)
+        sph_bundle = bundle.vconvert(cxc.sph3d)
 
-        assert isinstance(sph_bundle.base.role, cx.roles.Point)
-        assert isinstance(sph_bundle["velocity"].role, cx.roles.PhysVel)
+        assert isinstance(sph_bundle.base.role, cxr.Point)
+        assert isinstance(sph_bundle["velocity"].role, cxr.PhysVel)
 
 
 class TestPointedVectorJAX:
@@ -249,23 +243,23 @@ class TestPointedVectorJAX:
         be directly passed through JIT boundaries. The vconvert method itself
         works correctly in eager mode.
         """
-        base = cx.Vector.from_([1, 2, 3], "m")
-        vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        base = Vector.from_([1, 2, 3], "m")
+        vel = Vector.from_([4, 5, 6], "m/s")
+        bundle = PointedVector(base=base, velocity=vel)
 
         # vconvert works in eager mode
-        sph_bundle = bundle.vconvert(cx.charts.sph3d)
+        sph_bundle = bundle.vconvert(cxc.sph3d)
 
-        assert isinstance(sph_bundle, cx.PointedVector)
-        assert isinstance(sph_bundle.base.chart, cx.charts.Spherical3D)
-        assert isinstance(sph_bundle["velocity"].chart, cx.charts.Spherical3D)
+        assert isinstance(sph_bundle, PointedVector)
+        assert isinstance(sph_bundle.base.chart, cxc.Spherical3D)
+        assert isinstance(sph_bundle["velocity"].chart, cxc.Spherical3D)
 
     def test_vmap_smoke_test(self):
         """Test that bundle works with vmap."""
         # Create batched bundle
-        base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")
-        vel = cx.Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "m/s")
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        base = Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")
+        vel = Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "m/s")
+        bundle = PointedVector(base=base, velocity=vel)
 
         assert bundle.shape == (2,)
 
@@ -282,13 +276,13 @@ class TestPointedVectorEquality:
 
     def test_equality_same_pointedvectors(self):
         """Test equality for identical pointedvectors."""
-        base1 = cx.Vector.from_([1, 2, 3], "m")
-        vel1 = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle1 = cx.PointedVector(base=base1, velocity=vel1)
+        base1 = Vector.from_([1, 2, 3], "m")
+        vel1 = Vector.from_([4, 5, 6], "m/s")
+        bundle1 = PointedVector(base=base1, velocity=vel1)
 
-        base2 = cx.Vector.from_([1, 2, 3], "m")
-        vel2 = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle2 = cx.PointedVector(base=base2, velocity=vel2)
+        base2 = Vector.from_([1, 2, 3], "m")
+        vel2 = Vector.from_([4, 5, 6], "m/s")
+        bundle2 = PointedVector(base=base2, velocity=vel2)
 
         # Note: equality uses jnp.equal, which returns an array
         result = bundle1 == bundle2
@@ -299,9 +293,9 @@ class TestPointedVectorEquality:
     )
     def test_hash(self):
         """Test that pointedvectors are hashable."""
-        base = cx.Vector.from_([1, 2, 3], "m")
-        vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        base = Vector.from_([1, 2, 3], "m")
+        vel = Vector.from_([4, 5, 6], "m/s")
+        bundle = PointedVector(base=base, velocity=vel)
 
         # Should not raise
         hash_val = hash(bundle)
@@ -313,18 +307,18 @@ class TestPointedVectorShape:
 
     def test_shape_scalar_bundle(self):
         """Test shape for scalar (0-d) bundle."""
-        base = cx.Vector.from_([1, 2, 3], "m")
-        vel = cx.Vector.from_([4, 5, 6], "m/s")
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        base = Vector.from_([1, 2, 3], "m")
+        vel = Vector.from_([4, 5, 6], "m/s")
+        bundle = PointedVector(base=base, velocity=vel)
 
         assert bundle.shape == ()
 
     def test_shape_broadcasted_bundle(self):
         """Test shape for broadcasted bundle."""
-        base = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")  # (2,)
-        vel = cx.Vector.from_([10, 20, 30], "m/s")  # ()
+        base = Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")  # (2,)
+        vel = Vector.from_([10, 20, 30], "m/s")  # ()
 
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        bundle = PointedVector(base=base, velocity=vel)
 
         assert bundle.shape == (2,)
 
@@ -334,25 +328,25 @@ class TestPointedVectorRoleValidation:
 
     def test_displacement_field_allowed(self):
         """Test that Displacement role is allowed in fields."""
-        base = cx.Vector.from_([1, 2, 3], "m")
-        disp = cx.Vector(
+        base = Vector.from_([1, 2, 3], "m")
+        disp = Vector(
             {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
-            cx.charts.cart3d,
-            cx.roles.phys_disp,
+            cxc.cart3d,
+            cxr.phys_disp,
         )
 
         # Should not raise
-        bundle = cx.PointedVector(base=base, displacement=disp)
-        assert isinstance(bundle["displacement"].role, cx.roles.PhysDisp)
+        bundle = PointedVector(base=base, displacement=disp)
+        assert isinstance(bundle["displacement"].role, cxr.PhysDisp)
 
     def test_acc_field_allowed(self):
         """Test that PhysAcc role is allowed in fields."""
-        base = cx.Vector.from_([1, 2, 3], "m")
-        acc = cx.Vector.from_([0.1, 0.2, 0.3], "m/s^2")
+        base = Vector.from_([1, 2, 3], "m")
+        acc = Vector.from_([0.1, 0.2, 0.3], "m/s^2")
 
         # Should not raise
-        bundle = cx.PointedVector(base=base, acceleration=acc)
-        assert isinstance(bundle["acceleration"].role, cx.roles.PhysAcc)
+        bundle = PointedVector(base=base, acceleration=acc)
+        assert isinstance(bundle["acceleration"].role, cxr.PhysAcc)
 
 
 # ==============================================================================
@@ -367,7 +361,7 @@ class TestPointedVectorPropertyTests:
     @settings(max_examples=50)
     def test_property_base_always_pos(self, bundle):
         """Property: base must always have Pos role."""
-        assert isinstance(bundle.base.role, cx.roles.PhysDisp)
+        assert isinstance(bundle.base.role, cxr.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(bundle=cxst.pointedvectors(field_keys=("velocity", "acceleration")))
@@ -375,12 +369,12 @@ class TestPointedVectorPropertyTests:
     def test_property_fields_never_pos(self, bundle):
         """Property: field vectors never have Pos role."""
         for field_vec in bundle.values():
-            assert not isinstance(field_vec.role, cx.roles.PhysDisp)
+            assert not isinstance(field_vec.role, cxr.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(
         bundle=cxst.pointedvectors(field_keys=("velocity",)),
-        target_chart=cxst.charts(exclude=(cx.charts.Abstract0D,)),
+        target_chart=cxst.charts(exclude=(cxc.Abstract0D,)),
     )
     @settings(max_examples=30, deadline=None)
     def test_property_vconvert_vs_manual(self, bundle, target_chart):
@@ -442,12 +436,12 @@ class TestPointedVectorPropertyTests:
     @settings(max_examples=20)
     def test_property_simple_base_always_point(self, base_vals, vel_vals):
         """Property: base always has Point role (affine location)."""
-        base = cx.Vector.from_(base_vals, "m")
-        vel = cx.Vector.from_(vel_vals, "m/s")
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        base = Vector.from_(base_vals, "m")
+        vel = Vector.from_(vel_vals, "m/s")
+        bundle = PointedVector(base=base, velocity=vel)
 
-        assert isinstance(bundle.base.role, cx.roles.Point)
-        assert isinstance(bundle["velocity"].role, cx.roles.PhysVel)
+        assert isinstance(bundle.base.role, cxr.Point)
+        assert isinstance(bundle["velocity"].role, cxr.PhysVel)
 
     @given(
         base_vals=st.lists(
@@ -468,15 +462,15 @@ class TestPointedVectorPropertyTests:
     @settings(max_examples=20, deadline=None)
     def test_property_simple_vconvert_preserves_roles(self, base_vals, vel_vals):
         """Property: vconvert preserves roles (simple test)."""
-        base = cx.Vector.from_(base_vals, "m")
-        vel = cx.Vector.from_(vel_vals, "m/s")
-        bundle = cx.PointedVector(base=base, velocity=vel)
+        base = Vector.from_(base_vals, "m")
+        vel = Vector.from_(vel_vals, "m/s")
+        bundle = PointedVector(base=base, velocity=vel)
 
         # Convert to spherical
-        sph_bundle = bundle.vconvert(cx.charts.sph3d)
+        sph_bundle = bundle.vconvert(cxc.sph3d)
 
-        assert isinstance(sph_bundle.base.role, cx.roles.Point)
-        assert isinstance(sph_bundle["velocity"].role, cx.roles.PhysVel)
+        assert isinstance(sph_bundle.base.role, cxr.Point)
+        assert isinstance(sph_bundle["velocity"].role, cxr.PhysVel)
 
     # ==================================================================
     # Original hypothesis tests (continued)
@@ -486,18 +480,18 @@ class TestPointedVectorPropertyTests:
     @settings(max_examples=50)
     def test_property_base_role_preserved_after_conversion(self, bundle):
         """Property: base role is preserved after conversion."""
-        target_chart = cx.charts.sph3d
+        target_chart = cxc.sph3d
         converted = bundle.vconvert(target_chart)
 
-        assert isinstance(converted.base.role, cx.roles.PhysDisp)
-        assert isinstance(bundle.base.role, cx.roles.PhysDisp)
+        assert isinstance(converted.base.role, cxr.PhysDisp)
+        assert isinstance(bundle.base.role, cxr.PhysDisp)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(bundle=cxst.pointedvectors(field_keys=("velocity", "acceleration")))
     @settings(max_examples=50)
     def test_property_field_roles_preserved_after_conversion(self, bundle):
         """Property: field roles are preserved after conversion."""
-        target_chart = cx.charts.cyl3d
+        target_chart = cxc.cyl3d
 
         # Get original roles
         original_roles = {k: type(v.role) for k, v in bundle.items()}
@@ -516,7 +510,7 @@ class TestPointedVectorPropertyTests:
     def test_property_batch_shape_preserved(self, bundle):
         """Property: batch shape is preserved during conversion."""
         original_shape = bundle.shape
-        converted = bundle.vconvert(cx.charts.sph3d)
+        converted = bundle.vconvert(cxc.sph3d)
 
         assert converted.shape == original_shape
 
@@ -525,7 +519,7 @@ class TestPointedVectorPropertyTests:
     @settings(max_examples=30, deadline=None)
     def test_property_jit_compilable(self, bundle):
         """Property: pointedvectors can be JIT-compiled."""
-        target_chart = cx.charts.cyl3d
+        target_chart = cxc.cyl3d
 
         @jax.jit
         def convert(b):
@@ -533,7 +527,7 @@ class TestPointedVectorPropertyTests:
 
         # Should not raise
         result = convert(bundle)
-        assert isinstance(result, cx.PointedVector)
+        assert isinstance(result, PointedVector)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(bundle=cxst.pointedvectors(field_keys=("velocity",)))
@@ -541,40 +535,38 @@ class TestPointedVectorPropertyTests:
     def test_property_mixed_target_charts(self, bundle):
         """Property: can specify different target reps for different fields."""
         # Convert base to sph3d, field to cyl3d
-        mixed = bundle.vconvert(
-            cx.charts.sph3d, field_charts={"velocity": cx.charts.cyl3d}
-        )
+        mixed = bundle.vconvert(cxc.sph3d, field_charts={"velocity": cxc.cyl3d})
 
-        assert isinstance(mixed.base.chart, cx.charts.Spherical3D)
-        assert isinstance(mixed["velocity"].chart, cx.charts.Cylindrical3D)
+        assert isinstance(mixed.base.chart, cxc.Spherical3D)
+        assert isinstance(mixed["velocity"].chart, cxc.Cylindrical3D)
 
     @given(
-        base_role=st.just(cx.roles.PhysVel),  # Non-Pos role
+        base_role=st.just(cxr.PhysVel),  # Non-Pos role
     )
     @settings(max_examples=10)
     def test_property_non_pos_base_rejected(self, base_role):
         """Property: base with non-Pos role is rejected."""
         # Create vector with non-Pos role
-        non_pos_vec = cx.Vector(
+        non_pos_vec = Vector(
             {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
-            cx.charts.cart3d,
+            cxc.cart3d,
             base_role(),
         )
-        vel = cx.Vector.from_([10, 20, 30], "m/s")
+        vel = Vector.from_([10, 20, 30], "m/s")
 
         with pytest.raises(
             eqx.EquinoxTracetimeError, match="base must have role Point"
         ):  # eqx.error_if
-            cx.PointedVector(base=non_pos_vec, velocity=vel)
+            PointedVector(base=non_pos_vec, velocity=vel)
 
     @pytest.mark.skip(reason="Hypothesis strategy needs CartND representation fixes")
     @given(
         bundle=cxst.pointedvectors(
-            field_keys=("displacement",), field_roles=(cx.roles.PhysDisp,)
+            field_keys=("displacement",), field_roles=(cxr.PhysDisp,)
         )
     )
     @settings(max_examples=30)
     def test_property_displacement_role_supported(self, bundle):
         """Property: Displacement role is supported in fields."""
         assert "displacement" in bundle
-        assert isinstance(bundle["displacement"].role, cx.roles.PhysDisp)
+        assert isinstance(bundle["displacement"].role, cxr.PhysDisp)

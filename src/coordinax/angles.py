@@ -8,7 +8,7 @@ from .setup_package import install_import_hook
 with install_import_hook("coordinax.angles"):
     from unxt.quantity import AbstractAngle, Angle, wrap_to
 
-    from ._src.distances import Parallax
+    from coordinax.distances import Parallax
 
 
 del install_import_hook

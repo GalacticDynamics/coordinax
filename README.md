@@ -19,9 +19,10 @@
 ---
 
 Coordinax enables calculations with coordinates in
-[JAX](https://jax.readthedocs.io/en/latest/). Built on
-[Equinox](https://docs.kidger.site/equinox/) and
-[Quax](https://github.com/patrick-kidger/quax).
+[`JAX`](https://jax.readthedocs.io/en/latest/). Built on
+[`equinox`](https://docs.kidger.site/equinox/) and
+[`quax`](https://github.com/patrick-kidger/quax), with unit-support using
+[`unxt`](https://github.com/GalacticDynamics/unxt)
 
 ## Installation
 
@@ -40,30 +41,41 @@ pip install coordinax
 
 ## Concepts
 
-- Representation (Rep): a coordinate chart / component schema (names + physical
-  dimensions). A rep does not store numerical values.
-- Vector: data + rep + role. Data are the coordinate values or physical
+- Charts: a coordinate chart / component schema (names + physical dimensions). A
+  chart does not store numerical values.
+- Roles: semantic interpretation of vector data (`Point`, `PhysDisp`, `PhysVel`,
+  `PhysAcc`, `CoordDisp`, etc.). A role is not a chart.
+- `Vector`: data + chart + role. Data are the coordinate values or physical
   components.
-- Role: semantic interpretation of vector data (Pos, Vel, PhysAcc, etc.). A role
-  is not a rep.
-- Metric: a bilinear form g on the tangent space defining inner products and
+- Metrics: a bilinear form _g_ on the tangent space defining inner products and
   norms (Euclidean, sphere intrinsic, Minkowski).
-- Physical components: components of a geometric vector expressed in an
-  orthonormal frame with respect to the active metric. Components have uniform
-  units (e.g. all speed or all acceleration).
-- Coordinate derivatives: time derivatives of coordinate components (e.g.
-  \dot\theta, \ddot\phi); these may have heterogeneous units and are not what
-  diff_map/vconvert uses for physical vectors.
+- Transformations: convert between coordinate charts and roles, including
+  velocity and acceleration transformations
+- Operators: frame-aware vector operations (rotation, boost, translation, etc.)
+- `PointedVector`: combines a vector with a reference point or frame for context
+- Frames: reference systems (ICRS, Galactocentric, etc.) and their
+  transformations
+- `Coordinate`: encapsulates a vector with its reference frame, enabling
+  frame-aware transformations and comparisons
+
+## Modules
+
+```
+import coordinax.charts as cxc  # Charts
+import coordinax.roles as cxr  # Roles
+import coordinax.metrics as cxm  # Metric
+import coordinax.transforms as cxt  # Transformations
+```
 
 ## Quantities
 
 Distances and angles are first-class quantities:
 
 ```
-import coordinax as cx
+import coordinax.distances as cxd
 import unxt as u
 
-d = cx.Distance(10.0, "kpc")
+d = cxd.Distance(10.0, "kpc")
 a = u.Angle(30.0, "deg")
 ```
 
@@ -74,7 +86,6 @@ Transform coordinate dictionaries between reps:
 ```
 import coordinax.charts as cxc
 import coordinax.transforms as cxt
-import unxt as u
 
 q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
 q_sph = cxt.point_transform(cxc.sph3d, cxc.cart3d, q)
@@ -89,7 +100,7 @@ v_sph = cxt.physical_tangent_transform(cxc.sph3d, cxc.cart3d, v, at=q)
 
 ## Metrics
 
-- Euclidean metric is default for Euclidean reps exposed in `cx.metrics`.
+- Euclidean metric is default for Euclidean reps exposed in `coordinax.metrics`.
 - `TwoSphere` uses intrinsic sphere metric.
 - `SpaceTimeCT` uses Minkowski metric with signature `(-,+,+,+)`.
 - `SpaceTimeEuclidean` uses Euclidean metric in 4D.
@@ -102,20 +113,17 @@ v_sph = cxt.physical_tangent_transform(cxc.sph3d, cxc.cart3d, v, at=q)
 
 ```
 import jax.numpy as jnp
+import coordinax.embeddings as cxe
 
-rep = cxc.EmbeddedManifold(
+rep = cxe.EmbeddedManifold(
     intrinsic_chart=cxc.twosphere,
     ambient_chart=cxc.cart3d,
     params={"R": u.Q(2.0, "km")},
 )
 p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
-q = cx.embeddings.embed_point(rep, p)
-r2 = (
-    u.uconvert("km", q["x"]) ** 2
-    + u.uconvert("km", q["y"]) ** 2
-    + u.uconvert("km", q["z"]) ** 2
-)
-bool(jnp.allclose(r2.value, 4.0))
+q = cxe.embed_point(rep, p)
+r2 = (q["x"] ** 2 + q["y"] ** 2 + q["z"] ** 2)
+bool(jnp.allclose(r2.ustrip("km"), 4.0))
 ```
 
 ## Physical vector conversion (vconvert)
@@ -125,25 +133,17 @@ frames.
 
 ```
 import jax.numpy as jnp
-import coordinax as cx
-import unxt as u
+import coordinax.roles as cxr
+from coordinax.objs import Vector
 
 q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
-v = {
-    "x": u.Q(4.0, "km/s"),
-    "y": u.Q(5.0, "km/s"),
-    "z": u.Q(6.0, "km/s"),
-}
-qvec = cx.Vector(data=q, chart=cx.charts.cart3d, role=cx.roles.PhysDisp())
-vvec = cx.Vector(data=v, chart=cx.charts.cart3d, role=cx.roles.PhysVel())
-v_sph = vvec.vconvert(cx.charts.sph3d, qvec)
-v_back = v_sph.vconvert(cx.charts.cart3d, qvec)
-bool(
-    jnp.allclose(
-        u.uconvert("km/s", v_back.data["x"]).value,
-        u.uconvert("km/s", vvec.data["x"]).value,
-    )
-)
+v = {"x": u.Q(4.0, "km/s"), "y": u.Q(5.0, "km/s"), "z": u.Q(6.0, "km/s")}
+qvec = Vector(data=q, chart=cxc.cart3d, role=cxr.phys_disp)
+vvec = Vector(data=v, chart=cxc.cart3d, role=cxr.phys_vel)
+v_sph = vvec.vconvert(cxc.sph3d, qvec)
+v_back = v_sph.vconvert(cxc.cart3d, qvec)
+bool(jnp.allclose(u.ustrip("km/s", v_back.data["x"]),
+                  u.ustrip("km/s", vvec.data["x"])))
 ```
 
 Different vector roles transform via different mechanisms:
@@ -167,22 +167,21 @@ point, automatically managing the base point dependency required for tangent
 vector transformations:
 
 ```
-import coordinax as cx
 
-base = cx.Vector.from_([1, 2, 3], "km")
-vel = cx.Vector.from_([10, 20, 30], "km/s")
-acc = cx.Vector.from_([0.1, 0.2, 0.3], "km/s^2")
+base = Vector.from_([1, 2, 3], "km")
+vel = Vector.from_([10, 20, 30], "km/s")
+acc = Vector.from_([0.1, 0.2, 0.3], "km/s^2")
 
 # Create bundle - base is explicit, fields are tangent vectors
 bundle = cx.PointedVector(base=base, velocity=vel, acceleration=acc)
 
 # Convert entire bundle - automatically handles `at=` for tangent vectors
-sph_bundle = bundle.vconvert(cx.charts.sph3d)
+sph_bundle = bundle.vconvert(cxc.sph3d)
 
 # Equivalent to manual:
-# base_sph = base.vconvert(cx.charts.sph3d)
+# base_sph = base.vconvert(cxc.sph3d)
 # at_for_vel = base.vconvert(vel.chart)
-# vel_sph = vel.vconvert(cx.charts.sph3d, at_for_vel)
+# vel_sph = vel.vconvert(cxc.sph3d, at_for_vel)
 # (and similarly for acc)
 ```
 
@@ -207,33 +206,33 @@ import coordinax as cx
 import unxt as u
 
 # A position (point)
-pos = cx.Vector.from_([0, 0, 0], "m")
+pos = Vector.from_([0, 0, 0], "m")
 
 # A displacement (offset / tangent vector)
-disp = cx.Vector(
+disp = Vector(
     {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")},
-    cx.charts.cart3d,
-    cx.charts.displacement,
+    cxc.cart3d,
+    cxr.phys_disp,
 )
 
 # Position + Displacement → Position
 new_pos = pos.add(disp)  # role is Pos
 
 # Displacement + Displacement → Displacement
-d1 = cx.Vector(
+d1 = Vector(
     {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
-    cx.charts.cart3d,
-    cx.charts.displacement,
+    cxc.cart3d,
+    cxr.phys_disp,
 )
-d2 = cx.Vector(
+d2 = Vector(
     {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(0.0, "m")},
-    cx.charts.cart3d,
-    cx.charts.displacement,
+    cxc.cart3d,
+    cxr.phys_disp,
 )
 d_sum = d1.add(d2)  # role is Displacement
 
 # Convert position to displacement from origin
-disp_from_origin = cx.as_pos(new_pos)
+disp_from_origin = cx.as_disp(new_pos)
 ```
 
 | Operation             | Result     | Allowed? |
@@ -307,7 +306,3 @@ We welcome contributions!
 [zenodo-link]:              https://zenodo.org/doi/10.5281/zenodo.10850557
 
 <!-- prettier-ignore-end -->
-
-```
-
-```

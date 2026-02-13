@@ -21,7 +21,7 @@ import coordinax.embeddings as cxe
 import unxt as u
 
 # Create an embedded 2-sphere in 3D space
-embed = cxc.EmbeddedManifold(
+embed = cxe.EmbeddedManifold(
     intrinsic_chart=cxc.twosphere,
     ambient_chart=cxc.cart3d,
     params={"R": u.Q(1.0, "km")},
@@ -44,7 +44,7 @@ v_ambient = cxe.embed_tangent(embed, v_intrinsic, at=p_intrinsic)
 The `EmbeddedManifold` class represents a manifold embedded in an ambient space:
 
 ```python
-embed = cxc.EmbeddedManifold(
+embed = cxe.EmbeddedManifold(
     intrinsic_chart=cxc.twosphere,  # Chart on the manifold
     ambient_chart=cxc.cart3d,  # Chart in the ambient space
     params={"R": u.Q(1.0, "km")},  # Parameters (e.g., radius)
@@ -71,7 +71,7 @@ import coordinax.embeddings as cxe
 import unxt as u
 
 # Create a unit sphere
-sphere = cxc.EmbeddedManifold(
+sphere = cxe.EmbeddedManifold(
     intrinsic_chart=cxc.twosphere,
     ambient_chart=cxc.cart3d,
     params={"R": u.Q(1.0, "km")},

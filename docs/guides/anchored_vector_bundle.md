@@ -11,26 +11,27 @@ displacements) require a base point for coordinate transformations between
 curvilinear systems. Manually tracking these dependencies leads to verbose code:
 
 ```
-import coordinax as cx
+import coordinax.charts as cxc
+from coordinax.objs import Vector
 
 # Manual approach - verbose and error-prone
-base = cx.Vector.from_([1, 2, 3], "km")
-vel = cx.Vector.from_([10, 20, 30], "km/s")
+base = Vector.from_([1, 2, 3], "km")
+vel = Vector.from_([10, 20, 30], "km/s")
 
 # Convert to spherical - must manually provide base
-base_sph = base.vconvert(cx.charts.sph3d)
+base_sph = base.vconvert(cxc.sph3d)
 at_for_vel = base.vconvert(vel.chart)  # Ensure base matches vel's rep
-vel_sph = vel.vconvert(cx.charts.sph3d, at_for_vel)
+vel_sph = vel.vconvert(cxc.sph3d, at_for_vel)
 ```
 
 `PointedVector` automates this bookkeeping:
 
 ```
-import coordinax as cx
+import coordinax.objs as PointedVector
 
 # Bundle approach - concise and safe
-bundle = cx.PointedVector(base=base, velocity=vel)
-sph_bundle = bundle.vconvert(cx.charts.sph3d)  # Handles at= automatically
+bundle = PointedVector(base=base, velocity=vel)
+sph_bundle = bundle.vconvert(cxc.sph3d)  # Handles at= automatically
 ```
 
 ## Mathematical Foundation
@@ -96,9 +97,9 @@ $$
 import coordinax as cx
 import unxt as u
 
-base = cx.Vector.from_([1, 2, 3], "m")
-vel = cx.Vector.from_([4, 5, 6], "m/s")
-acc = cx.Vector.from_([0.1, 0.2, 0.3], "m/s^2")
+base = Vector.from_([1, 2, 3], "m")
+vel = Vector.from_([4, 5, 6], "m/s")
+acc = Vector.from_([0.1, 0.2, 0.3], "m/s^2")
 
 bundle = cx.PointedVector(
     base=base,  # Position (role: Pos)
@@ -135,12 +136,12 @@ bundle["acceleration"]
 import coordinax as cx
 
 # Create bundle in Cartesian coordinates
-base = cx.Vector.from_([1, 1, 1], "m")
-vel = cx.Vector.from_([10, 10, 10], "m/s")
+base = Vector.from_([1, 1, 1], "m")
+vel = Vector.from_([10, 10, 10], "m/s")
 bundle = cx.PointedVector(base=base, velocity=vel)
 
 # Convert entire bundle to spherical
-sph_bundle = bundle.vconvert(cx.charts.sph3d)
+sph_bundle = bundle.vconvert(cxc.sph3d)
 
 # Both base and velocity are now in spherical coordinates
 print(type(sph_bundle.base.chart))  # Spherical3D
@@ -152,7 +153,7 @@ print(type(sph_bundle["velocity"].chart))  # Spherical3D
 ```
 # Convert base to spherical, velocity to cylindrical
 mixed_bundle = bundle.vconvert(
-    cx.charts.sph3d, field_charts={"velocity": cx.charts.cyl3d}
+    cxc.sph3d, field_charts={"velocity": cxc.cyl3d}
 )
 
 print(type(mixed_bundle.base.chart))  # Spherical3D
@@ -185,10 +186,10 @@ for fibre conversions, which expects homogeneous physical components.
 import jax.numpy as jnp
 
 # Create batch of positions (2 points)
-bases = cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "kpc")
+bases = Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "kpc")
 
 # Single velocity (broadcasts to all bases)
-vel = cx.Vector.from_([10, 20, 30], "km/s")
+vel = Vector.from_([10, 20, 30], "km/s")
 
 bundle = cx.PointedVector(base=bases, velocity=vel)
 print(bundle.shape)  # (2,)
@@ -213,7 +214,7 @@ bundle = cx.PointedVector.from_(data)
 Or with explicit base:
 
 ```
-base = cx.Vector.from_([1, 2, 3], "km")
+base = Vector.from_([1, 2, 3], "km")
 fields = {
     "velocity": u.Q([4, 5, 6], "km/s"),
     "momentum": u.Q([40, 50, 60], "kg*m/s"),  # Any tangent-like vector
@@ -234,7 +235,7 @@ import jax
 
 @jax.jit
 def process_bundle(bundle):
-    return bundle.vconvert(cx.charts.sph3d)
+    return bundle.vconvert(cxc.sph3d)
 
 
 result = process_bundle(bundle)  # Compiles successfully
@@ -251,8 +252,8 @@ Bundles support `vmap` naturally through indexing:
 ```
 # Batch bundle
 bundle_batch = cx.PointedVector(
-    base=cx.Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m"),
-    velocity=cx.Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "m/s"),
+    base=Vector.from_(jnp.array([[1, 2, 3], [4, 5, 6]]), "m"),
+    velocity=Vector.from_(jnp.array([[10, 20, 30], [40, 50, 60]]), "m/s"),
 )
 
 # Index gives sub-vectors

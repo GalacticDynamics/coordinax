@@ -7,4 +7,4 @@ import coordinax as cx
 
 def test_version():
     """Test version."""
-    assert importlib.metadata.version("coordinax") == cx.__version__
+    assert importlib.metadata.version("coordinax") == cx._version.version

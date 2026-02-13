@@ -7,7 +7,7 @@ import unxt as u
 
 import coordinax.charts as cxc
 import coordinax_hypothesis as cxst
-from coordinax._src.charts.base import CHART_CLASSES, DIMENSIONAL_FLAGS
+from coordinax.charts._src.base import CHART_CLASSES, DIMENSIONAL_FLAGS
 
 
 @given(cxst.chart_classes())

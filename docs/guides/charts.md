@@ -27,10 +27,10 @@ and shows how to transform parameter dictionaries and vectors.
 ## Distances and Angles
 
 ```
-import coordinax as cx
+import coordinax.distances as cxd
 import unxt as u
 
-d = cx.distances.Distance(10.0, "kpc")
+d = cxd.Distance(10.0, "kpc")
 a = u.Angle(30.0, "deg")
 ```
 
@@ -46,19 +46,15 @@ When the `CsDict` contains `unxt.Quantity` objects, units are handled
 automatically:
 
 ```
-import coordinax as cx
-import unxt as u
+import coordinax.charts as cxc
+import coordinax.transforms as cxt
 
-rep_cart = cx.charts.cart3d
-rep_sph = cx.charts.sph3d
+rep_cart = cxc.cart3d
+rep_sph = cxc.sph3d
 
-q = {
-    "x": u.Q(1.0, "km"),
-    "y": u.Q(2.0, "km"),
-    "z": u.Q(3.0, "km"),
-}
+q = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
 
-q_sph = cx.transforms.point_transform(rep_sph, rep_cart, q)
+q_sph = cxt.point_transform(rep_sph, rep_cart, q)
 # Result: {'r': Quantity(..., unit='km'), 'theta': ..., 'phi': ...}
 ```
 
@@ -72,15 +68,14 @@ import coordinax as cx
 import unxt as u
 
 # 1D example: Radial to Cartesian
-to_chart, from_chart = cx.charts.cart1d, cx.charts.radial1d
-cx.transforms.point_transform(to_chart, from_chart, {"r": 5})
+to_chart, from_chart = cxc.cart1d, cxc.radial1d
+cxt.point_transform(to_chart, from_chart, {"r": 5})
 # Result: {'x': 5}
 
 # 2D example: Polar to Cartesian
 import jax.numpy as jnp
 p_polar = {"r": 1.0, "theta": jnp.pi / 4}
-p_cart = cx.transforms.point_transform(cx.charts.cart2d, cx.charts.polar2d, p_polar,
-                                       usys=u.unitsystems.galactic)
+p_cart = cxt.point_transform(cxc.cart2d, cxc.polar2d, p_polar, usys=u.unitsystems.galactic)
 # Result: {'x': 0.707..., 'y': 0.707...}
 ```
 
@@ -90,27 +85,24 @@ working with normalized/dimensionless coordinates.
 ## Embeddings and Metrics
 
 ```
-import coordinax as cx
+import coordinax.embeddings as cxe
+import coordinax.metrics as cxm
 import unxt as u
 
-embed = cx.charts.EmbeddedManifold(
-    chart_kind=cx.charts.twosphere,
-    ambient_kind=cx.charts.cart3d,
-    params={"R": u.Q(1.0, "km")},
-)
+embed = cxe.EmbeddedManifold(chart_kind=cxc.twosphere, ambient_kind=cxc.cart3d,
+                             params={"R": u.Q(1.0, "km")})
 
 p = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.5, "rad")}
-q_emb = cx.embeddings.embed_point(embed, p)
-p_back = cx.embeddings.project_point(embed, q_emb)
+q_emb = cxe.embed_point(embed, p)
+p_back = cxe.project_point(embed, q_emb)
 
-metric = cx.metrics.metric_of(cx.charts.twosphere)
-g = metric.metric_matrix(cx.charts.twosphere, p)
+metric = cxm.metric_of(cxc.twosphere)
+g = metric.metric_matrix(cxc.twosphere, p)
 ```
 
 Metric defaults:
 
-- Euclidean charts exposed in `cx.charts.cart3d` use the Euclidean metric by
-  default.
+- Euclidean charts exposed in `cxc.cart3d` use the Euclidean metric by default.
 - `TwoSphere` uses the intrinsic sphere metric.
 - `SpaceTimeCT` uses the Minkowski metric.
 - `SpaceTimeEuclidean` uses a Euclidean metric in 4D.
@@ -121,20 +113,12 @@ Metric defaults:
 import coordinax as cx
 import unxt as u
 
-q = {
-    "x": u.Q(1.0, "km"),
-    "y": u.Q(2.0, "km"),
-    "z": u.Q(3.0, "km"),
-}
-v = {
-    "x": u.Q(4.0, "km/s"),
-    "y": u.Q(5.0, "km/s"),
-    "z": u.Q(6.0, "km/s"),
-}
+q = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+v = {"x": u.Q(4, "km/s"), "y": u.Q(5, "km/s"), "z": u.Q(6, "km/s"),}
 
-qvec = cx.Vector(data=q, chart=cx.charts.cart3d, role=cx.roles.PhysDisp())
-vvec = cx.Vector(data=v, chart=cx.charts.cart3d, role=cx.roles.PhysVel())
+qvec = cx.Vector(data=q, chart=cxc.cart3d, role=cxr.PhysDisp())
+vvec = cx.Vector(data=v, chart=cxc.cart3d, role=cxr.PhysVel())
 
-q_sph = qvec.vconvert(cx.charts.sph3d)
-v_sph = vvec.vconvert(cx.charts.sph3d, qvec)
+q_sph = qvec.vconvert(cxc.sph3d)
+v_sph = vvec.vconvert(cxc.sph3d, qvec)
 ```

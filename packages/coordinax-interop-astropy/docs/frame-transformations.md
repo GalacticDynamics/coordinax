@@ -16,7 +16,7 @@ star and compare against Astropy's implementation to verify accuracy.
 
 ### Setting up the example
 
-<!-- skip: next if(importlib.util.find_spec('coordinax_interop_astropy') is None, reason="coordinax-interop-astropy not installed") -->
+<!-- skip: next if(importlib.util.find_spec('coordinax.interop.astropy') is None, reason="coordinax-interop-astropy not installed") -->
 
 First, let's define Vega's position and velocity in ICRS coordinates using
 {mod}`astropy`:
@@ -66,11 +66,11 @@ Now we can use `coordinax` to perform the same transformation! First, convert
 the {mod}`astropy` objects to {mod}`coordinax`:
 
 ```
-vega_q = cx.Vector.from_(vega.icrs.data, cx.charts.lonlatsph3d, cx.roles.point)
-vega_p = cx.Vector.from_(vega.icrs.data.differentials["s"], cx.charts.loncoslatsph3d, cx.roles.phys_vels_vel)
+vega_q = cx.Vector.from_(vega.icrs.data, cxc.lonlatsph3d, cxr.point)
+vega_p = cx.Vector.from_(vega.icrs.data.differentials["s"], cxc.loncoslatsph3d, cxr.phys_vels_vel)
 
-icrs_frame = cx.frames.ICRS()
-gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
+icrs_frame = cxf.ICRS()
+gcf_frame = cxf.Galactocentric.from_(apy_gcf)
 ```
 
 ### Defining and applying the transformation
@@ -78,7 +78,7 @@ gcf_frame = cx.frames.Galactocentric.from_(apy_gcf)
 Define the transformation operator:
 
 ```
-frame_op = cx.frames.frame_transform_op(icrs_frame, gcf_frame)
+frame_op = cxf.frame_transform_op(icrs_frame, gcf_frame)
 frame_op
 # Pipe((
 #     GalileanRotation(rotation=f32[3,3]),
@@ -92,8 +92,8 @@ Apply the transformation:
 
 ```
 vega_gcf_q, vega_gcf_p = frame_op(vega_q, vega_p)
-vega_gcf_q = vega_gcf_q.vconvert(cx.charts.cart3d)
-vega_gcf_p = vega_gcf_p.vconvert(cx.charts.cart3d, vega_gcf_q)
+vega_gcf_q = vega_gcf_q.vconvert(cxc.cart3d)
+vega_gcf_p = vega_gcf_p.vconvert(cxc.cart3d, vega_gcf_q)
 print(vega_gcf_q)
 # <CartesianPos3D: (x, y, z) [pc]
 #     [-8112.898    21.799    29.01...]>
@@ -144,7 +144,7 @@ The reverse transformation from {mod}`~coordinax_astro.Galactocentric` to
 
 ```
 # Define transformation operator in reverse direction
-frame_op_reverse = cx.frames.frame_transform_op(gcf_frame, icrs_frame)
+frame_op_reverse = cxf.frame_transform_op(gcf_frame, icrs_frame)
 
 # Starting from Galactocentric coordinates
 vega_gcf = apyc.SkyCoord(
@@ -158,15 +158,15 @@ vega_gcf = apyc.SkyCoord(
 )
 
 # Convert to coordinax
-vega_gcf_q = cx.Vector.from_(vega_gcf.galactocentric.data, cx.charts.cart3d, cx.roles.point)
-vega_gcf_p = cx.Vector.from_(vega_gcf.galactocentric.data.differentials["s"], cx.charts.cart3d, cx.roles.phys_vels_vel)
+vega_gcf_q = cx.Vector.from_(vega_gcf.galactocentric.data, cxc.cart3d, cxr.point)
+vega_gcf_p = cx.Vector.from_(vega_gcf.galactocentric.data.differentials["s"], cxc.cart3d, cxr.phys_vels_vel)
 
 # Apply transformation
 vega_icrs_q, vega_icrs_p = frame_op_reverse(vega_gcf_q, vega_gcf_p)
 
 # Convert to spherical coordinates for comparison
-vega_icrs_q = vega_icrs_q.vconvert(cx.charts.lonlatsph3d)
-vega_icrs_p = vega_icrs_p.vconvert(cx.charts.loncoslatsph3d, vega_icrs_q)
+vega_icrs_q = vega_icrs_q.vconvert(cxc.lonlatsph3d)
+vega_icrs_p = vega_icrs_p.vconvert(cxc.loncoslatsph3d, vega_icrs_q)
 print(vega_icrs_q.uconvert({u.dimension("angle"): "deg", u.dimension("length"): "pc"}))
 # <LonLatSphericalPos: (lon[deg], lat[deg], distance[pc])
 #     [279.235  38.784  25.   ]>
@@ -192,8 +192,8 @@ import coordinax_astro as cxa
 # Custom galactocentric frame
 galcen = cx.Vector.from_(
     {"lon": u.Q(266.4, "deg"), "lat": u.Q(-28.9, "deg"), "distance": u.Q(8.5, "kpc")},
-    cx.charts.lonlatsph3d,
-    cx.roles.point,
+    cxc.lonlatsph3d,
+    cxr.point,
 )
 galcen_v_sun = cx.Vector.from_(u.Q([12, 250, 8], "km/s"))
 custom_gcf = cxa.Galactocentric(
@@ -204,7 +204,7 @@ custom_gcf = cxa.Galactocentric(
 )
 
 # Create transformation with custom frame
-custom_op = cx.frames.frame_transform_op(icrs_frame, custom_gcf)
+custom_op = cxf.frame_transform_op(icrs_frame, custom_gcf)
 ```
 
 ## See Also

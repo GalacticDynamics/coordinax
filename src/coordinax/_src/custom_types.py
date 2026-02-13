@@ -15,11 +15,6 @@ __all__ = (
     # Array-related
     "Shape",
     "BatchableAngleQ",
-    # Vector-related
-    "ComponentKey",
-    "ComponentsKey",
-    "CDict",
-    "CsDict",
     "Ks",
     "Ds",
     "HasShape",
@@ -30,6 +25,8 @@ from typing import Any, Literal, Protocol, TypeAlias, runtime_checkable
 from typing_extensions import TypeVar
 
 import unxt as u
+
+from coordinax.api import ComponentsKey
 
 # Dimensions
 DimensionLike: TypeAlias = u.AbstractDimension | str
@@ -88,17 +85,8 @@ BatchableAngleQ = BatchableAngle | BatchableAngularQuantity
 # =========================================================
 # Vector-related Types
 
-# Component key type: string for simple charts, tuple for product charts
-ComponentKey: TypeAlias = str
-ProductComponentKey: TypeAlias = tuple[str, str]
-ComponentsKey: TypeAlias = ComponentKey | ProductComponentKey
-
 # Component Value Type
 V = TypeVar("V", default=Any)
-
-# Parameter dictionary type alias (supports both flat and product keys)
-CDict: TypeAlias = dict[ComponentKey, Any]
-CsDict: TypeAlias = dict[ComponentsKey, Any]
 
 Ks = TypeVar("Ks", bound=tuple[ComponentsKey, ...])
 Ds = TypeVar("Ds", bound=tuple[str | None, ...])

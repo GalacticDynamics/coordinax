@@ -6,14 +6,17 @@ This module exposes package setup information for the `unxt` package.
 
 """
 
-__all__: tuple[str, ...] = ()
+__all__: tuple[str, ...] = ("RUNTIME_TYPECHECKER", "install_import_hook", "OptDeps")
 
 import contextlib
 import os
+from importlib.metadata import entry_points
 
 from collections.abc import Sequence
 from jaxtyping import install_import_hook as _install_import_hook
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, final
+
+from optional_dependencies import OptionalDependencyEnum, auto
 
 _RUNTIME_TYPECHECKER: str | None | Literal[False]
 match os.getenv("COORDINAX_ENABLE_RUNTIME_TYPECHECKING", "False"):
@@ -59,3 +62,28 @@ def install_import_hook(
         if RUNTIME_TYPECHECKER is not False
         else contextlib.nullcontext()
     )
+
+
+@final
+class OptDeps(OptionalDependencyEnum):  # pylint: disable=invalid-enum-extension
+    """Optional dependencies for ``coordinax``."""
+
+    COORDINAX_INTEROP_ASTROPY = auto()
+
+
+def register_interop_packages() -> None:
+    """Register interoperability packages after coordinax is fully loaded.
+
+    This function discovers and imports all installed ``coordinax.interop.*``
+    packages via the ``coordinax.interop`` entry-point group.  Each interop
+    package (e.g. ``coordinax-interop-astropy``) declares an entry point
+    in its ``pyproject.toml``::
+
+        [project.entry-points."coordinax.interop"]
+        astropy = "coordinax.interop.astropy"
+
+    Importing these modules registers their plum dispatches.
+    """
+    for ep in entry_points(group="coordinax.interop"):
+        with contextlib.suppress(Exception):
+            ep.load()

@@ -208,7 +208,7 @@ Similarly, the {class}`~coordinax.distance.Distance` class represents distances
 in `coordinax`:
 
 ```{code-block} python
->>> d = cx.distances.Distance(10, "kpc")
+>>> d = cxd.Distance(10, "kpc")
 >>> d
 Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')
 ```
@@ -229,37 +229,40 @@ DistanceModulus(Array(15., dtype=float32), unit='mag')
 
 ### Creating and Working with Vector Objects
 
-Vectors combine data, a representation, and a role (Pos, Vel, PhysAcc). Here's a
-Cartesian 3D position and velocity:
+Vectors combine data, a chart, and a role ({class}`~coordinax.rolesPos`,
+{class}`~coordinax.roles.PhysDisp`, {class}`~coordinax.roles.PhysVel`,
+{class}`~coordinax.charts.PhysAcc`). Here's a Cartesian 3D position and
+velocity:
 
 ```
-import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.roles as cxr
 import unxt as u
 
 q = cx.Vector(
-    data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.PhysDisp(),
+    data={"x": u.Q(1, "kpc"), "y": u.Q(2, "kpc"), "z": u.Q(3, "kpc")},
+    chart=cxc.cart3d,
+    role=cxr.phys_disp,
 )
 v = cx.Vector(
-    data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.PhysVel(),
+    data={"x": u.Q(4, "kpc/Myr"), "y": u.Q(5, "kpc/Myr"), "z": u.Q(6, "kpc/Myr")},
+    chart=cxc.cart3d,
+    role=cxr.phys_vel,
 )
 ```
 
 #### Vector Conversion
 
 ```
-q_sph = q.vconvert(cx.charts.sph3d)
-v_sph = v.vconvert(cx.charts.sph3d, q)
+q_sph = q.vconvert(cxc.sph3d)
+v_sph = v.vconvert(cxc.sph3d, q)
 ```
 
 #### Creating an `PointedVector` Object
 
 ```
 space = cx.PointedVector(base=q, speed=v)
-space_sph = space.vconvert(cx.charts.sph3d)
+space_sph = space.vconvert(cxc.sph3d)
 ```
 
 ### Operators on Vectors
@@ -268,9 +271,9 @@ The {mod}`coordinax.ops` module (shorthand `cxo`) provides a framework for and
 set of vector operations that work seamlessly with all `coordinax` vector types.
 
 ```{code-block} text
->>> import coordinax.ops as cxo
+>>> import coordinax.ops as cxop
 
->>> op = cxo.GalileanOp.from_([10, 10, 10], "kpc")
+>>> op = cxop.GalileanOp.from_([10, 10, 10], "kpc")
 
 >>> print(op(q))
 <Cart3D: (x, y, z) [kpc]
@@ -330,7 +333,7 @@ Coordinate(
     frame=Bob()
 )
 
->>> coord.vconvert(cx.charts.sph3d)
+>>> coord.vconvert(cxc.sph3d)
 Coordinate(
     PointedVector({
         'base': Spherical3D( r=Distance(f32[], 'kpc'), theta=Angle(f32[], 'rad'),

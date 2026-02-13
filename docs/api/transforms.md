@@ -1,6 +1,6 @@
-# `coordinax.transforms`
+# `coordinaxt`
 
-The `coordinax.transforms` module provides coordinate transformation functions.
+The `coordinaxt` module provides coordinate transformation functions.
 
 ## Overview
 
@@ -15,7 +15,7 @@ mathematically precise coordinate conversions:
 
 ```python
 import coordinax.charts as cxc
-import coordinax.transforms as cxt
+import coordinaxt as cxt
 import unxt as u
 
 # Transform a point from Cartesian to spherical (with Quantities)
@@ -56,19 +56,16 @@ The `CsDict` may contain either:
 **Examples:**
 
 ```python
-import coordinax as cx
 import unxt as u
 
 # With Quantities (explicit units)
 p_qty = {"r": u.Q(10, "m")}
-p_cart = cx.transforms.point_transform(cx.charts.cart1d, cx.charts.radial1d, p_qty)
+p_cart = cxt.point_transform(cxc.cart1d, cxc.radial1d, p_qty)
 # Result: {'x': Quantity(Array(10, dtype=int64, ...), unit='m')}
 
 # With bare values (no units)
 p_arr = {"r": 5}
-p_cart = cx.transforms.point_transform(
-    cx.charts.cart1d, cx.charts.radial1d, p_arr, usys=u.unitsystems.si
-)
+p_cart = cxt.point_transform(cxc.cart1d, cxc.radial1d, p_arr, usys=u.unitsystems.si)
 # Result: {'x': 5}
 ```
 
@@ -127,9 +124,9 @@ Acceleration transforms include connection terms for correct geometric behavior.
 
 ```{eval-rst}
 
-.. currentmodule:: coordinax.transforms
+.. currentmodule:: coordinaxt
 
-.. automodule:: coordinax.transforms
+.. automodule:: coordinaxt
     :exclude-members: aval, default, materialise, enable_materialise
 
 ```

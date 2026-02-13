@@ -16,8 +16,8 @@ cart = cx.Vector(
         "y": u.Q([5, 6, 7, 8], "kpc"),
         "z": u.Q([9, 10, 11, 12], "kpc"),
     },
-    cx.charts.cart3d,
-    cx.roles.phys_disp,
+    cxc.cart3d,
+    cxr.phys_disp,
 )
 apycart = convert(cart, apyc.CartesianRepresentation)
 
@@ -27,8 +27,8 @@ cyl = cx.Vector(
         "phi": u.Q([0, 1, 2, 3], "rad"),
         "z": u.Q([9, 10, 11, 12], "m"),
     },
-    cx.charts.cyl3d,
-    cx.roles.phys_disp,
+    cxc.cyl3d,
+    cxr.phys_disp,
 )
 apycyl = convert(cyl, apyc.CylindricalRepresentation)
 
@@ -38,8 +38,8 @@ sph = cx.Vector(
         "theta": u.Q([1, 36, 142, 180 - 1e-4], "deg"),
         "phi": u.Q([0, 65, 135, 270], "deg"),
     },
-    cx.charts.sph3d,
-    cx.roles.phys_disp,
+    cxc.sph3d,
+    cxr.phys_disp,
 )
 apysph = convert(sph, apyc.PhysicsSphericalRepresentation)
 
@@ -49,8 +49,8 @@ prolatesph = cx.Vector(
         "nu": u.Q([0.1, 0.2, 0.3, 0.4], "kpc2"),
         "phi": u.Q([0, 1, 2, 3], "rad"),
     },
-    cx.charts.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "kpc")),
-    cx.roles.phys_disp,
+    cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "kpc")),
+    cxr.phys_disp,
 )
 apyprolatesph = None  # No corresponding Astropy representation
 
@@ -61,8 +61,8 @@ cartvel = cx.Vector(
         "y": u.Q([9, 10, 11, 12], "km/s"),
         "z": u.Q([13, 14, 15, 16], "km/s"),
     },
-    cx.charts.cart3d,
-    cx.roles.phys_vel,
+    cxc.cart3d,
+    cxr.phys_vel,
 )
 apycartvel = convert(cartvel, apyc.CartesianDifferential)
 
@@ -72,8 +72,8 @@ cylvel = cx.Vector(
         "phi": u.Q([9, 10, 11, 12], "mas/yr"),
         "z": u.Q([13, 14, 15, 16], "km/s"),
     },
-    cx.charts.cyl3d,
-    cx.roles.phys_vel,
+    cxc.cyl3d,
+    cxr.phys_vel,
 )
 apycylvel = convert(cylvel, apyc.CylindricalDifferential)
 
@@ -83,8 +83,8 @@ sphvel = cx.Vector(
         "theta": u.Q([13, 14, 15, 16], "mas/yr"),
         "phi": u.Q([9, 10, 11, 12], "mas/yr"),
     },
-    cx.charts.sph3d,
-    cx.roles.phys_vel,
+    cxc.sph3d,
+    cxr.phys_vel,
 )
 apysphvel = convert(sphvel, apyc.PhysicsSphericalDifferential)
 
@@ -155,7 +155,7 @@ def test_negation_astropy_vel_roundtrip(
 # TODO: rewrite this test to use hypothesis
 def test_cartesian3d_to_astropy_cartesianrepresentation():
     """Test Astropy equivalence."""
-    vec = cart.vconvert(cx.charts.cart3d)
+    vec = cart.vconvert(cxc.cart3d)
     apyvector = apycart.represent_as(apyc.CartesianRepresentation)
 
     assert np.allclose(convert(vec.x, apyu.Q), apyvector.x)
@@ -165,7 +165,7 @@ def test_cartesian3d_to_astropy_cartesianrepresentation():
 
 def test_cartesian3d_to_spherical_astropy():
     """Test Astropy equivalence."""
-    vec = cart.vconvert(cx.charts.sph3d)
+    vec = cart.vconvert(cxc.sph3d)
     apyvec = apycart.represent_as(apyc.PhysicsSphericalRepresentation)
 
     assert np.allclose(convert(vec.r, apyu.Q), apyvec.r)
@@ -175,7 +175,7 @@ def test_cartesian3d_to_spherical_astropy():
 
 def test_cartesian3d_to_cylindrical_astropy():
     """Test Astropy equivalence."""
-    vec = cart.vconvert(cx.charts.cyl3d)
+    vec = cart.vconvert(cxc.cyl3d)
     apyvec = apycart.represent_as(apyc.CylindricalRepresentation)
 
     assert np.allclose(convert(vec.rho, apyu.Q), apyvec.rho)
@@ -185,7 +185,7 @@ def test_cartesian3d_to_cylindrical_astropy():
 
 def test_cylindrical_to_cartesian3d_astropy():
     """Test Astropy equivalence."""
-    vec = cyl.vconvert(cx.charts.cart3d)
+    vec = cyl.vconvert(cxc.cart3d)
     apyvec = apycyl.represent_as(apyc.CartesianRepresentation)
 
     assert np.allclose(convert(vec.x, apyu.Q), apyvec.x)
@@ -195,7 +195,7 @@ def test_cylindrical_to_cartesian3d_astropy():
 
 def test_cylindrical_to_spherical_astropy():
     """Test Astropy equivalence."""
-    vec = cyl.vconvert(cx.charts.sph3d)
+    vec = cyl.vconvert(cxc.sph3d)
     apyvec = apycyl.represent_as(apyc.PhysicsSphericalRepresentation)
 
     assert np.allclose(convert(vec.r, apyu.Q), apyvec.r)
@@ -205,7 +205,7 @@ def test_cylindrical_to_spherical_astropy():
 
 def test_cylindrical_to_cylindrical_astropy():
     """Test Astropy equivalence."""
-    vec = cyl.vconvert(cx.charts.cyl3d)
+    vec = cyl.vconvert(cxc.cyl3d)
     apyvec = apycyl.represent_as(apyc.CylindricalRepresentation)
 
     assert np.allclose(convert(vec.rho, apyu.Q), apyvec.rho)
@@ -215,7 +215,7 @@ def test_cylindrical_to_cylindrical_astropy():
 
 def test_spherical_to_cartesian3d_astropy():
     """Test Astropy equivalence."""
-    vec = sph.vconvert(cx.charts.cart3d)
+    vec = sph.vconvert(cxc.cart3d)
     apyvec = apysph.represent_as(apyc.CartesianRepresentation)
 
     assert np.allclose(convert(vec.x, apyu.Q), apyvec.x)
@@ -226,7 +226,7 @@ def test_spherical_to_cartesian3d_astropy():
 @pytest.mark.xfail(reason="FIXME")
 def test_spherical_to_cylindrical_astropy():
     """Test ``coordinax.vconvert(CylindricalPos)``."""
-    vec = sph.vconvert(cx.charts.cyl3d)
+    vec = sph.vconvert(cxc.cyl3d)
     apyvec = apysph.represent_as(apyc.CylindricalRepresentation)
 
     # There's a 'bug' in Astropy where rho can be negative.
@@ -241,7 +241,7 @@ def test_spherical_to_cylindrical_astropy():
 
 def test_spherical_to_spherical_astropy():
     """Test Astropy equivalence."""
-    vec = sph.vconvert(cx.charts.sph3d)
+    vec = sph.vconvert(cxc.sph3d)
     apyvec = apysph.represent_as(apyc.PhysicsSphericalRepresentation)
 
     assert np.allclose(convert(vec.r, apyu.Q), apyvec.r)
@@ -251,7 +251,7 @@ def test_spherical_to_spherical_astropy():
 
 def test_spherical_to_lonlatspherical_astropy():
     """Test Astropy equivalence."""
-    vec = sph.vconvert(cx.charts.lonlatsph3d)
+    vec = sph.vconvert(cxc.lonlatsph3d)
     apyvec = apysph.represent_as(apyc.SphericalRepresentation)
 
     assert np.allclose(convert(vec.distance, apyu.Q), apyvec.distance)
@@ -261,7 +261,7 @@ def test_spherical_to_lonlatspherical_astropy():
 
 def test_cartesianvel3d_to_astropy_cartesiandifferential():
     """Test Astropy equivalence."""
-    vec = cartvel.vconvert(cx.charts.cart3d, cart)
+    vec = cartvel.vconvert(cxc.cart3d, cart)
     apyvec = apycartvel.represent_as(apyc.CartesianDifferential, apycart)
 
     assert np.allclose(convert(vec.x, apyu.Q), apyvec.d_x)
@@ -271,7 +271,7 @@ def test_cartesianvel3d_to_astropy_cartesiandifferential():
 
 def test_sphericalvel_to_astropy_physicssphericaldifferential():
     """Test Astropy equivalence."""
-    vec = sphvel.vconvert(cx.charts.sph3d, sph)
+    vec = sphvel.vconvert(cxc.sph3d, sph)
     apyvec = apysphvel.represent_as(apyc.PhysicsSphericalDifferential, apysph)
 
     assert np.allclose(convert(vec.r, apyu.Q), apyvec.d_r)
@@ -281,7 +281,7 @@ def test_sphericalvel_to_astropy_physicssphericaldifferential():
 
 def test_cartesianvel3d_to_astropy_cylindricaldifferential():
     """Test Astropy equivalence."""
-    vec = cartvel.vconvert(cx.charts.cyl3d, cart)
+    vec = cartvel.vconvert(cxc.cyl3d, cart)
     apyvec = apycartvel.represent_as(apyc.CylindricalDifferential, apycart)
 
     assert np.allclose(convert(vec.rho, apyu.Q), apyvec.d_rho)
@@ -292,7 +292,7 @@ def test_cartesianvel3d_to_astropy_cylindricaldifferential():
 @pytest.mark.xfail(reason="FIXME")
 def test_cylindricalvel_to_astropy_cartesianvel3d():
     """Test ``coordinax.vconvert(CartesianPos3D)``."""
-    vec = cylvel.vconvert(cx.charts.cart3d, cart)
+    vec = cylvel.vconvert(cxc.cart3d, cart)
     apyvec = apycylvel.represent_as(apyc.CartesianDifferential, apycyl)
 
     assert apyu.allclose(convert(vec.x, apyu.Q), apyvec.d_x)
@@ -302,7 +302,7 @@ def test_cylindricalvel_to_astropy_cartesianvel3d():
 
 def test_cylindricalvel_to_astropy_physicssphericaldifferential():
     """Test Astropy equivalence."""
-    vec = cylvel.vconvert(cx.charts.sph3d, cyl)
+    vec = cylvel.vconvert(cxc.sph3d, cyl)
     apyvec = apycylvel.represent_as(apyc.PhysicsSphericalDifferential, apycyl)
 
     assert np.allclose(convert(vec.r, apyu.Q), apyvec.d_r)
@@ -312,7 +312,7 @@ def test_cylindricalvel_to_astropy_physicssphericaldifferential():
 
 def test_cylindricalvel_to_astropy_cylindricaldifferential():
     """Test Astropy equivalence."""
-    vec = cylvel.vconvert(cx.charts.cyl3d, cyl)
+    vec = cylvel.vconvert(cxc.cyl3d, cyl)
     apyvec = apycylvel.represent_as(apyc.CylindricalDifferential, apycyl)
 
     assert np.allclose(convert(vec.rho, apyu.Q), apyvec.d_rho)
@@ -323,7 +323,7 @@ def test_cylindricalvel_to_astropy_cylindricaldifferential():
 @pytest.mark.xfail(reason="FIXME")
 def test_sphericalvel_to_astropy_cartesiandifferential():
     """Test Astropy equivalence."""
-    vec = sphvel.vconvert(cx.charts.cart3d, sph)
+    vec = sphvel.vconvert(cxc.cart3d, sph)
     apyvec = apysphvel.represent_as(apyc.CartesianDifferential, apysph)
 
     assert np.allclose(convert(vec.x, apyu.Q), apyvec.d_x)
@@ -333,7 +333,7 @@ def test_sphericalvel_to_astropy_cartesiandifferential():
 
 def test_sphericalvel_to_astropy_cylindricaldifferential():
     """Test Astropy equivalence."""
-    vec = sphvel.vconvert(cx.charts.cyl3d, sph)
+    vec = sphvel.vconvert(cxc.cyl3d, sph)
     apyvec = apysphvel.represent_as(apyc.CylindricalDifferential, apysph)
 
     assert np.allclose(convert(vec.rho, apyu.Q), apyvec.d_rho)
@@ -343,7 +343,7 @@ def test_sphericalvel_to_astropy_cylindricaldifferential():
 
 def test_sphericalvel_to_astropy_sphericaldifferential():
     """Test Astropy equivalence."""
-    vec = sphvel.vconvert(cx.charts.sph3d, sph)
+    vec = sphvel.vconvert(cxc.sph3d, sph)
     apyvec = apysphvel.represent_as(apyc.PhysicsSphericalDifferential, apysph)
 
     assert np.allclose(convert(vec.r, apyu.Q), apyvec.d_r)
@@ -353,7 +353,7 @@ def test_sphericalvel_to_astropy_sphericaldifferential():
 
 def test_sphericalvel_to_astropy_sphericaldifferential():
     """Test Astropy equivalence."""
-    vec = sphvel.vconvert(cx.charts.lonlatsph3d, sph)
+    vec = sphvel.vconvert(cxc.lonlatsph3d, sph)
     apyvec = apysphvel.represent_as(apyc.SphericalDifferential, apysph)
 
     assert np.allclose(convert(vec.distance, apyu.Q), apyvec.d_distance)

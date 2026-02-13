@@ -6,7 +6,7 @@ import hypothesis.strategies as st
 import pytest
 from hypothesis import given, settings
 
-import coordinax as cx
+import coordinax.charts as cxc
 import coordinax_hypothesis as cxst
 from coordinax_hypothesis._src.utils import get_all_subclasses
 
@@ -14,38 +14,38 @@ from coordinax_hypothesis._src.utils import get_all_subclasses
 @given(rep_class=cxst.chart_classes())
 @settings(max_examples=50)
 def test_basic_chart_class(
-    rep_class: type[cx.charts.AbstractChart],
+    rep_class: type[cxc.AbstractChart],
 ) -> None:
     """Test basic chart class generation."""
-    assert issubclass(rep_class, cx.charts.AbstractChart)
+    assert issubclass(rep_class, cxc.AbstractChart)
     assert not issubclass(rep_class, type)  # Not a metaclass
 
 
-@given(rep_class=cxst.chart_classes(filter=cx.charts.Abstract3D))
+@given(rep_class=cxst.chart_classes(filter=cxc.Abstract3D))
 @settings(max_examples=50)
 def test_3d_chart_classes(
-    rep_class: type[cx.charts.AbstractChart],
+    rep_class: type[cxc.AbstractChart],
 ) -> None:
     """Test 3D chart class generation."""
-    assert issubclass(rep_class, cx.charts.Abstract3D)
-    assert issubclass(rep_class, cx.charts.AbstractChart)
+    assert issubclass(rep_class, cxc.Abstract3D)
+    assert issubclass(rep_class, cxc.AbstractChart)
 
 
-@given(rep_class=cxst.chart_classes(filter=cx.charts.Abstract1D))
+@given(rep_class=cxst.chart_classes(filter=cxc.Abstract1D))
 @settings(max_examples=50)
 def test_1d_chart_classes(
-    rep_class: type[cx.charts.AbstractChart],
+    rep_class: type[cxc.AbstractChart],
 ) -> None:
     """Test 1D chart class generation."""
-    assert issubclass(rep_class, cx.charts.Abstract1D)
-    assert issubclass(rep_class, cx.charts.AbstractChart)
+    assert issubclass(rep_class, cxc.Abstract1D)
+    assert issubclass(rep_class, cxc.AbstractChart)
 
 
 @given(rep_class=cxst.chart_classes(exclude_abstract=True))
 @settings(max_examples=50)
-def test_concrete_classes_only(rep_class: type[cx.charts.AbstractChart]) -> None:
+def test_concrete_classes_only(rep_class: type[cxc.AbstractChart]) -> None:
     """Test that only concrete classes are generated when exclude_abstract=True."""
-    assert issubclass(rep_class, cx.charts.AbstractChart)
+    assert issubclass(rep_class, cxc.AbstractChart)
     # Should be a concrete class (can be instantiated)
     assert (
         not hasattr(rep_class, "__abstractmethods__")
@@ -55,14 +55,14 @@ def test_concrete_classes_only(rep_class: type[cx.charts.AbstractChart]) -> None
 
 @given(
     rep_class=cxst.chart_classes(
-        filter=st.sampled_from([cx.charts.Abstract1D, cx.charts.Abstract2D])
+        filter=st.sampled_from([cxc.Abstract1D, cxc.Abstract2D])
     )
 )
 @settings(max_examples=50)
-def test_dynamic_filter(rep_class: type[cx.charts.AbstractChart]) -> None:
+def test_dynamic_filter(rep_class: type[cxc.AbstractChart]) -> None:
     """Test chart class generation with dynamic union class."""
-    assert issubclass(rep_class, cx.charts.AbstractChart)
-    assert issubclass(rep_class, (cx.charts.Abstract1D, cx.charts.Abstract2D))
+    assert issubclass(rep_class, cxc.AbstractChart)
+    assert issubclass(rep_class, (cxc.Abstract1D, cxc.Abstract2D))
 
 
 def test_warning_when_no_subclasses_found() -> None:
@@ -76,7 +76,7 @@ def test_warning_when_no_subclasses_found() -> None:
     # The warning is raised when get_all_subclasses finds no matching classes
     with pytest.warns(UserWarning, match="No subclasses found"):
         result = get_all_subclasses(
-            cx.charts.AbstractChart,
+            cxc.AbstractChart,
             filter=_FakeClass,
             exclude_abstract=True,
         )

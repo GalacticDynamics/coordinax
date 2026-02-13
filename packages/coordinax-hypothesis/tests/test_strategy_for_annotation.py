@@ -7,7 +7,6 @@ from hypothesis import given, strategies as st
 
 import unxt as u
 
-import coordinax as cx
 from coordinax_hypothesis._src.utils import (
     parse_jaxtyping_annotation,
     strategy_for_annotation,
@@ -54,7 +53,7 @@ class TestAnnotationProcessing:
 
     def test_non_jaxtype_annotation(self) -> None:
         """Test that non-JaxType annotations are not special-cased."""
-        ann = cx.charts.AbstractChart
+        ann = cxc.AbstractChart
 
         # Regular types should not be subclasses of AbstractArray
         # (unless they happen to be jaxtyping-annotated)
@@ -67,7 +66,7 @@ class TestAnnotationProcessing:
         # For non-JaxType annotations, wrap_if_not_inspectable returns as-is
         if not is_jaxtype:
             wrapped = wrap_if_not_inspectable(ann)
-            assert wrapped is cx.charts.AbstractChart
+            assert wrapped is cxc.AbstractChart
 
 
 class TestStrategyForAnnotation:
@@ -77,10 +76,10 @@ class TestStrategyForAnnotation:
     def test_type_base_case(self, data: st.DataObject) -> None:
         """Test strategy_for_annotation(type, meta={}) - base case dispatch."""
         # When meta is empty, should use st.from_type
-        strategy = strategy_for_annotation(cx.charts.AbstractChart, meta={})
+        strategy = strategy_for_annotation(cxc.AbstractChart, meta={})
         assert strategy is not None
         value = data.draw(strategy)
-        assert isinstance(value, cx.charts.AbstractChart)
+        assert isinstance(value, cxc.AbstractChart)
 
     @given(st.data())
     def test_quantity_type_with_metadata(self, data: st.DataObject) -> None:

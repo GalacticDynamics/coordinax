@@ -330,7 +330,7 @@ coordinax              = "cx"
 "coordinax.frames"     = "cxf"
 "coordinax.metrics"    = "cxm"
 "coordinax.objects"    = "cxobj"
-"coordinax.ops"        = "cxo"
+"coordinax.ops"        = "cxop"
 "coordinax.roles"      = "cxr"
 "coordinax.transforms" = "cxt"
 coordinax_api          = "cxapi"
@@ -355,7 +355,6 @@ known-local-folder = [
   "coordinax_api",
   "coordinax_astro",
   "coordinax_hypothesis",
-  "coordinax_interop_astropy",
 ]
 section-order = [
   "future",

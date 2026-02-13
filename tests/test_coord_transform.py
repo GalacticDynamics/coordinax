@@ -5,10 +5,10 @@ from hypothesis import HealthCheck, given, reject, settings, strategies as st
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax as cx
 import coordinax.charts as cxc
+import coordinax.embeddings as cxe
 import coordinax_hypothesis as cxst
-from coordinax._src.custom_types import CsDict
+from coordinax.api import CsDict
 
 COORD_TRANSFORM_SUPPORTED: dict[int, tuple[cxc.AbstractChart, ...]] = {
     1: (cxc.cart1d, cxc.radial1d),
@@ -44,13 +44,13 @@ def chart_pairs_same_dim(
 @settings(
     max_examples=25, deadline=None, suppress_health_check=[HealthCheck.filter_too_much]
 )
-@given(chart=cxst.charts(exclude=(cxc.EmbeddedManifold, cxc.TwoSphere)), data=st.data())
+@given(chart=cxst.charts(exclude=(cxe.EmbeddedManifold, cxc.TwoSphere)), data=st.data())
 def test_coord_transform_identity(chart, data):
-    at = data.draw(cxst.cdicts(chart, cx.roles.point))
+    at = data.draw(cxst.cdicts(chart, cxr.point))
     if not point_ok(chart, at):
         reject()
-    x = data.draw(cxst.cdicts(chart, cx.roles.coord_vel))
-    y = cx.transforms.coord_transform(chart, chart, x, at=at)
+    x = data.draw(cxst.cdicts(chart, cxr.coord_vel))
+    y = cxt.coord_transform(chart, chart, x, at=at)
     for k in chart.components:
         assert jnp.allclose(u.ustrip(x[k].unit, y[k]), u.ustrip(x[k].unit, x[k]))
 
@@ -61,7 +61,7 @@ def test_coord_transform_identity(chart, data):
 @given(charts_pair=chart_pairs_same_dim(), data=st.data())
 def test_coord_transform_roundtrip_velocity(charts_pair, data):
     chart_a, chart_b = charts_pair
-    at_b = data.draw(cxst.cdicts(chart_b, cx.roles.point))
+    at_b = data.draw(cxst.cdicts(chart_b, cxr.point))
     if not point_ok(chart_b, at_b):
         reject()
     vel_elems = st.floats(
@@ -71,13 +71,13 @@ def test_coord_transform_roundtrip_velocity(charts_pair, data):
         allow_infinity=False,
         width=32,
     )
-    x_b = data.draw(cxst.cdicts(chart_b, cx.roles.coord_vel, elements=vel_elems))
+    x_b = data.draw(cxst.cdicts(chart_b, cxr.coord_vel, elements=vel_elems))
 
-    at_a = cx.transforms.point_transform(chart_a, chart_b, at_b)
+    at_a = cxt.point_transform(chart_a, chart_b, at_b)
     if not point_ok(chart_a, at_a):
         reject()
-    x_a = cx.transforms.coord_transform(chart_a, chart_b, x_b, at=at_b)
-    x_b2 = cx.transforms.coord_transform(chart_b, chart_a, x_a, at=at_a)
+    x_a = cxt.coord_transform(chart_a, chart_b, x_b, at=at_b)
+    x_b2 = cxt.coord_transform(chart_b, chart_a, x_a, at=at_a)
 
     for k in chart_b.components:
         assert jnp.allclose(
@@ -99,10 +99,10 @@ def test_coord_transform_roundtrip_velocity(charts_pair, data):
 )
 def test_coord_transform_linearity(charts_pair, data, a, b):
     chart_a, chart_b = charts_pair
-    at_b = data.draw(cxst.cdicts(chart_b, cx.roles.point))
+    at_b = data.draw(cxst.cdicts(chart_b, cxr.point))
     if not point_ok(chart_b, at_b):
         reject()
-    at_a = cx.transforms.point_transform(chart_a, chart_b, at_b)
+    at_a = cxt.point_transform(chart_a, chart_b, at_b)
     if not point_ok(chart_a, at_a):
         reject()
     vel_elems = st.floats(
@@ -112,15 +112,15 @@ def test_coord_transform_linearity(charts_pair, data, a, b):
         allow_infinity=False,
         width=32,
     )
-    x = data.draw(cxst.cdicts(chart_b, cx.roles.coord_vel, elements=vel_elems))
-    y = data.draw(cxst.cdicts(chart_b, cx.roles.coord_vel, elements=vel_elems))
+    x = data.draw(cxst.cdicts(chart_b, cxr.coord_vel, elements=vel_elems))
+    y = data.draw(cxst.cdicts(chart_b, cxr.coord_vel, elements=vel_elems))
 
     def lincomb(p, q):
         return {k: a * p[k] + b * q[k] for k in p}
 
-    lhs = cx.transforms.coord_transform(chart_a, chart_b, lincomb(x, y), at=at_b)
-    rhs_x = cx.transforms.coord_transform(chart_a, chart_b, x, at=at_b)
-    rhs_y = cx.transforms.coord_transform(chart_a, chart_b, y, at=at_b)
+    lhs = cxt.coord_transform(chart_a, chart_b, lincomb(x, y), at=at_b)
+    rhs_x = cxt.coord_transform(chart_a, chart_b, x, at=at_b)
+    rhs_y = cxt.coord_transform(chart_a, chart_b, y, at=at_b)
     rhs = lincomb(rhs_x, rhs_y)
 
     for k in chart_a.components:

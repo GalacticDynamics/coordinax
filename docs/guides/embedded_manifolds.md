@@ -51,8 +51,8 @@ $$
 \iota: U \subset M \to \mathbb{R}^n, \qquad q \mapsto x(q)
 $$
 
-In `coordinax`, this is represented by `cx.charts.EmbeddedManifold` with
-`chart_kind` (intrinsic) and `ambient_kind` (ambient).
+In `coordinax`, this is represented by `cxe.EmbeddedManifold` with `chart_kind`
+(intrinsic) and `ambient_kind` (ambient).
 
 ## TwoSphere embedding
 
@@ -103,14 +103,14 @@ import jax.numpy as jnp
 import coordinax as cx
 import unxt as u
 
-rep = cx.charts.EmbeddedManifold(
-    chart_kind=cx.charts.twosphere,
-    ambient_kind=cx.charts.cart3d,
+rep = cxe.EmbeddedManifold(
+    chart_kind=cxc.twosphere,
+    ambient_kind=cxc.cart3d,
     params={"R": u.Q(2.0, "km")},
 )
 
 p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
-q = cx.embeddings.embed_point(rep, p)
+q = cxe.embed_point(rep, p)
 r2 = (
     u.uconvert("km", q["x"]) ** 2
     + u.uconvert("km", q["y"]) ** 2
@@ -136,17 +136,17 @@ import jax.numpy as jnp
 import coordinax as cx
 import unxt as u
 
-rep = cx.charts.EmbeddedManifold(
-    chart_kind=cx.charts.twosphere,
-    ambient_kind=cx.charts.cart3d,
+rep = cxe.EmbeddedManifold(
+    chart_kind=cxc.twosphere,
+    ambient_kind=cxc.cart3d,
     params={"R": u.Q(1.0, "km")},
 )
 
 p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
 v = {"theta": u.Q(1.0, "km/s"), "phi": u.Q(0.0, "km/s")}
 
-v_cart = cx.embeddings.embed_tangent(rep, v, at=p)
-v_back = cx.embeddings.project_tangent(rep, v_cart, at=p)
+v_cart = cxe.embed_tangent(rep, v, at=p)
+v_back = cxe.project_tangent(rep, v_cart, at=p)
 bool(jnp.allclose(u.uconvert("km/s", v_back["theta"]).value, 1.0))
 ```
 
@@ -158,5 +158,5 @@ bool(jnp.allclose(u.uconvert("km/s", v_back["theta"]).value, 1.0))
 See also:
 
 - [Metrics guide](metrics.md)
-- `cx.charts.frame_cart`
-- `cx.metrics.metric_of`
+- `cxc.frame_cart`
+- `cxm.metric_of`

@@ -24,7 +24,7 @@ use and call the functional APIs, so lose none of the power.
 As an example, consider the following code snippets:
 
 ```
-import coordinax as cx
+import coordinax.charts as cxc
 import unxt as u
 
 q = cx.Vector.from_([1, 2, 3], "m")
@@ -34,13 +34,13 @@ print(q)
 First we'll show the object-oriented API:
 
 ```
-q.vconvert(cx.charts.sph3d)
+q.vconvert(cxc.sph3d)
 ```
 
 And now the function-oriented API:
 
 ```
-cx.vconvert(cx.charts.sph3d, q)
+cx.vconvert(cxc.sph3d, q)
 ```
 
 ## Multiple Dispatch
@@ -59,7 +59,7 @@ registers to {meth}`~coordinax.Vector.from_` a method that can convert an
 import importlib.util
 -->
 
-<!-- skip: start if(importlib.util.find_spec('coordinax_interop_astropy') is None, reason="coordinax-interop-astropy not installed") -->
+<!-- skip: start if(importlib.util.find_spec('coordinax.interop.astropy') is None, reason="coordinax-interop-astropy not installed") -->
 
 ```{code-block} python
 >>> import astropy.coordinates as apyc

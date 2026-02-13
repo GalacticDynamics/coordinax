@@ -248,45 +248,45 @@ class TestVectorAddition:
 
 
 class TestAsDisplacement:
-    """Tests for as_pos function."""
+    """Tests for as_disp function."""
 
-    def test_as_pos_no_origin(self):
-        """Test as_pos with no origin (from coordinate origin)."""
+    def test_as_disp_no_origin(self):
+        """Test as_disp with no origin (from coordinate origin)."""
         pos = cx.Vector.from_([1, 2, 3], "m")
-        disp = cx.as_pos(pos)
+        disp = cx.as_disp(pos)
         assert isinstance(disp.role, cxr.PhysDisp)
         assert jnp.allclose(u.ustrip("m", disp["x"]), 1.0)
         assert jnp.allclose(u.ustrip("m", disp["y"]), 2.0)
         assert jnp.allclose(u.ustrip("m", disp["z"]), 3.0)
 
-    def test_as_pos_with_origin(self):
-        """Test as_pos with explicit origin."""
+    def test_as_disp_with_origin(self):
+        """Test as_disp with explicit origin."""
         pos = cx.Vector.from_([3, 4, 5], "m")
         origin = cx.Vector.from_([1, 2, 3], "m")
-        disp = cx.as_pos(pos, origin)
+        disp = cx.as_disp(pos, origin)
         assert isinstance(disp.role, cxr.PhysDisp)
         assert jnp.allclose(u.ustrip("m", disp["x"]), 2.0)
         assert jnp.allclose(u.ustrip("m", disp["y"]), 2.0)
         assert jnp.allclose(u.ustrip("m", disp["z"]), 2.0)
 
-    def test_as_pos_requires_pos_role(self):
-        """Test that as_pos requires Pos role."""
+    def test_as_disp_requires_pos_role(self):
+        """Test that as_disp requires Pos role."""
         vel = cx.Vector(
             {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
             cxc.cart3d,
             cxr.phys_vel,
         )
         with pytest.raises(TypeError, match="Cannot convert vector with role"):
-            cx.as_pos(vel)
+            cx.as_disp(vel)
 
-    def test_as_pos_with_chart_parameter(self):
-        """Test as_pos with target chart conversion."""
+    def test_as_disp_with_chart_parameter(self):
+        """Test as_disp with target chart conversion."""
         # Create a position in Cartesian
         point = cx.Vector.from_([1, 0, 0], "m")
         origin = cx.Vector.from_([0, 0, 0], "m")
 
         # Request displacement in spherical chart
-        disp_sph = cx.as_pos(point, origin, chart=cxc.sph3d, at=point)
+        disp_sph = cx.as_disp(point, origin, chart=cxc.sph3d, at=point)
 
         # Should be Displacement role in spherical rep
         assert isinstance(disp_sph.role, cxr.PhysDisp)
@@ -298,8 +298,8 @@ class TestAsDisplacement:
         assert jnp.allclose(u.ustrip("m", disp_cart["x"]), 1.0)
         assert jnp.allclose(u.ustrip("m", disp_cart["y"]), 0.0)
 
-    def test_as_pos_from_non_cartesian(self):
-        """Test as_pos from a non-Cartesian position without explicit origin.
+    def test_as_disp_from_non_cartesian(self):
+        """Test as_disp from a non-Cartesian position without explicit origin.
 
         This verifies that when origin=None, the position is converted to Cartesian
         first before being interpreted as a displacement.
@@ -316,7 +316,7 @@ class TestAsDisplacement:
         )
 
         # Convert to displacement (should convert to Cartesian first)
-        disp = cx.as_pos(pos_sph)
+        disp = cx.as_disp(pos_sph)
 
         # Should be in Cartesian representation (the default for displacement
         # from origin)

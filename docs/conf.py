@@ -5,20 +5,19 @@ list see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
+import importlib.metadata
 from datetime import datetime
 
 from typing import Any
 
 import pytz
 
-from coordinax import __version__
-
 # -- Project information -----------------------------------------------------
 
 author = "Coordinax Developers"
 project = "coordinax"
 copyright = f"{datetime.now(pytz.timezone('UTC')).year}, {author}"
-version = __version__
+version = importlib.metadata.version("coordinax")
 
 master_doc = "index"
 language = "en"

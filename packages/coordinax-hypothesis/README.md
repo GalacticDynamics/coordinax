@@ -29,20 +29,21 @@ uv add coordinax-hypothesis
 
 ```
 from hypothesis import given
-import coordinax as cx
+import coordinax.angles as cxa
+import coordinax.distances as cxd
 import coordinax_hypothesis as cxst
 
 
 @given(angle=cxst.angles())
 def test_angle_property(angle):
     """Test that all angles are valid Angle objects."""
-    assert isinstance(angle, cx.Angle)
+    assert isinstance(angle, cxa.Angle)
 
 
 @given(dist=cxst.distances())
 def test_distance_property(dist):
     """Test that all distances are valid Distance objects."""
-    assert isinstance(dist, cx.Distance)
+    assert isinstance(dist, cxd.Distance)
     assert dist.value >= 0
 ```
 
@@ -55,10 +56,10 @@ Generate random chart class types from `coordinax`.
 **Parameters:**
 
 - `filter`: A class or tuple of classes to limit the charts to, or a strategy
-  generating such values. Use dimensional flags like `cx.charts.Abstract1D`,
-  `cx.charts.Abstract2D`, `cx.charts.Abstract3D`, or more specific mixins like
-  `cx.charts.AbstractSpherical3D`. Tuples apply all filters simultaneously
-  (default: `object` includes all)
+  generating such values. Use dimensional flags like `cxc.Abstract1D`,
+  `cxc.Abstract2D`, `cxc.Abstract3D`, or more specific mixins like
+  `cxc.AbstractSpherical3D`. Tuples apply all filters simultaneously (default:
+  `object` includes all)
 - `exclude_abstract`: Whether to exclude abstract classes (default: `True`)
 
 **Examples:**
@@ -72,23 +73,23 @@ import coordinax_hypothesis as cxst
 # Any chart class
 @given(chart_class=cxst.chart_classes())
 def test_any_chart(chart_class):
-    assert issubclass(chart_class, cx.charts.AbstractChart)
+    assert issubclass(chart_class, cxc.AbstractChart)
 
 
 # Only 3D charts
-@given(chart_class=cxst.chart_classes(filter=cx.charts.Abstract3D))
+@given(chart_class=cxst.chart_classes(filter=cxc.Abstract3D))
 def test_3d_chart(chart_class):
-    assert issubclass(chart_class, cx.charts.Abstract3D)
+    assert issubclass(chart_class, cxc.Abstract3D)
 
 
 # Only spherical 3D charts
 @given(
     chart_class=cxst.chart_classes(
-        filter=(cx.charts.Abstract3D, cx.charts.AbstractSpherical3D)
+        filter=(cxc.Abstract3D, cxc.AbstractSpherical3D)
     )
 )
 def test_spherical_3d_chart(chart_class):
-    assert issubclass(chart_class, (cx.charts.Abstract3D, cx.charts.AbstractSpherical3D))
+    assert issubclass(chart_class, (cxc.Abstract3D, cxc.AbstractSpherical3D))
 
 
 # Dynamically choose dimensionality
@@ -96,16 +97,16 @@ def test_spherical_3d_chart(chart_class):
     chart_class=cxst.chart_classes(
         filter=st.sampled_from(
             [
-                cx.charts.Abstract1D,
-                cx.charts.Abstract2D,
-                cx.charts.Abstract3D,
+                cxc.Abstract1D,
+                cxc.Abstract2D,
+                cxc.Abstract3D,
             ]
         )
     )
 )
 def test_dynamic(chart_class):
     assert issubclass(
-        chart_class, (cx.charts.Abstract1D, cx.charts.Abstract2D, cx.charts.Abstract3D)
+        chart_class, (cxc.Abstract1D, cxc.Abstract2D, cxc.Abstract3D)
     )
 ```
 
@@ -164,7 +165,7 @@ import coordinax_hypothesis as cxst
 # Basic non-negative distances
 @given(dist=cxst.distances())
 def test_basic(dist):
-    assert isinstance(dist, cx.Distance)
+    assert isinstance(dist, cxd.Distance)
     assert dist.value >= 0
 
 
@@ -177,7 +178,7 @@ def test_kpc(dist):
 # Allow negative distances
 @given(dist=cxst.distances(check_negative=False))
 def test_signed(dist):
-    assert isinstance(dist, cx.Distance)
+    assert isinstance(dist, cxd.Distance)
 ```
 
 ### `distance_moduli(**kwargs)`
@@ -199,7 +200,7 @@ import coordinax_hypothesis as cxst
 # Basic distance moduli
 @given(dm=cxst.distance_moduli())
 def test_basic(dm):
-    assert isinstance(dm, cx.DistanceModulus)
+    assert isinstance(dm, cxd.DistanceModulus)
     assert dm.unit == "mag"
 
 
@@ -253,8 +254,8 @@ Generate random chart instances from `coordinax`.
 
 - `filter`: A class or tuple of classes to limit the charts to, or a strategy
   generating such values (default: `()` applies no extra filter). For example,
-  `cx.charts.Abstract1D` for 1D charts, `cx.charts.Abstract2D` for 2D, or
-  `cx.charts.Abstract3D` for 3D. Tuples apply all filters simultaneously.
+  `cxc.Abstract1D` for 1D charts, `cxc.Abstract2D` for 2D, or `cxc.Abstract3D`
+  for 3D. Tuples apply all filters simultaneously.
 - `dimensionality`: Constraint on chart dimensionality. Can be:
   - `None`: No constraint
   - An integer: Exact dimensionality match (e.g., `dimensionality=2`)
@@ -273,20 +274,20 @@ import coordinax_hypothesis as cxst
 # Any chart instance
 @given(chart=cxst.charts())
 def test_any_chart(chart):
-    assert isinstance(chart, cx.charts.AbstractChart)
+    assert isinstance(chart, cxc.AbstractChart)
 
 
 # Only 3D charts
-@given(chart=cxst.charts(filter=cx.charts.Abstract3D))
+@given(chart=cxst.charts(filter=cxc.Abstract3D))
 def test_3d_chart(chart):
-    assert isinstance(chart, cx.charts.Abstract3D)
+    assert isinstance(chart, cxc.Abstract3D)
 
 
 # Spherical 3D charts
-@given(chart=cxst.charts(filter=(cx.charts.Abstract3D, cx.charts.AbstractSpherical3D)))
+@given(chart=cxst.charts(filter=(cxc.Abstract3D, cxc.AbstractSpherical3D)))
 def test_spherical_3d(chart):
-    assert isinstance(chart, cx.charts.Abstract3D)
-    assert isinstance(chart, cx.charts.AbstractSpherical3D)
+    assert isinstance(chart, cxc.Abstract3D)
+    assert isinstance(chart, cxc.AbstractSpherical3D)
 
 
 # Exact dimensionality
@@ -304,17 +305,17 @@ def test_strategy_dim(chart):
 # Include 0-dimensional charts
 @given(chart=cxst.charts(dimensionality=None, exclude=()))
 def test_with_0d(chart):
-    assert isinstance(chart, cx.charts.AbstractChart)
+    assert isinstance(chart, cxc.AbstractChart)
 
 
 # Dynamically choose dimensionality
 @given(
     chart=cxst.charts(
-        filter=st.sampled_from([cx.charts.Abstract1D, cx.charts.Abstract2D])
+        filter=st.sampled_from([cxc.Abstract1D, cxc.Abstract2D])
     )
 )
 def test_dynamic_dim(chart):
-    assert isinstance(chart, (cx.charts.Abstract1D, cx.charts.Abstract2D))
+    assert isinstance(chart, (cxc.Abstract1D, cxc.Abstract2D))
 ```
 
 ### `charts_like(chart)`
@@ -342,36 +343,36 @@ import coordinax_hypothesis as cxst
 
 
 # Generate 3D charts like Cart3D
-@given(chart=cxst.charts_like(cx.charts.cart3d))
+@given(chart=cxst.charts_like(cxc.cart3d))
 def test_3d_chart(chart):
-    assert isinstance(chart, cx.charts.Abstract3D)
+    assert isinstance(chart, cxc.Abstract3D)
     assert chart.ndim == 3
     # Could be Cart3D, Spherical3D, Cylindrical3D, etc.
 
 
 # Generate 2D charts like Polar2D
-@given(chart=cxst.charts_like(cx.charts.polar2d))
+@given(chart=cxst.charts_like(cxc.polar2d))
 def test_2d_chart(chart):
-    assert isinstance(chart, cx.charts.Abstract2D)
+    assert isinstance(chart, cxc.Abstract2D)
     assert chart.ndim == 2
     # Could be Cart2D, Polar2D, TwoSphere, etc.
 
 
 # Generate 1D charts
-@given(chart=cxst.charts_like(cx.charts.radial1d))
+@given(chart=cxst.charts_like(cxc.radial1d))
 def test_1d_chart(chart):
-    assert isinstance(chart, cx.charts.Abstract1D)
+    assert isinstance(chart, cxc.Abstract1D)
     assert chart.ndim == 1
 
 
 # Use with a dynamic template
 @given(
-    template=cxst.charts(filter=cx.charts.Abstract3D),
-    chart=cxst.charts_like(cxst.charts(filter=cx.charts.Abstract3D)),
+    template=cxst.charts(filter=cxc.Abstract3D),
+    chart=cxst.charts_like(cxst.charts(filter=cxc.Abstract3D)),
 )
 def test_matching_3d(template, chart):
     assert chart.ndim == template.ndim
-    assert isinstance(chart, cx.charts.Abstract3D)
+    assert isinstance(chart, cxc.Abstract3D)
 ```
 
 ### `chart_time_chain(role, chart)`
@@ -390,8 +391,8 @@ position).
 
 **Parameters:**
 
-- `role`: The starting role flag (`cx.roles.PhysDisp`, `cx.roles.PhysVel`, or
-  `cx.roles.PhysAcc`).
+- `role`: The starting role flag (`cxr.PhysDisp`, `cxr.PhysVel`, or
+  `cxr.PhysAcc`).
 - `chart`: The starting chart or a strategy that generates one.
 
 **Returns:**
@@ -410,29 +411,29 @@ import coordinax_hypothesis as cxst
 
 
 # Generate a chain from acceleration
-@given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
+@given(chain=cxst.chart_time_chain(cxr.PhysAcc, cxc.cart3d))
 def test_acc_chain(chain):
     acc_chart, vel_chart, pos_chart = chain
     # All are 3D Cartesian-like charts
-    assert isinstance(acc_chart, cx.charts.Abstract3D)
-    assert isinstance(vel_chart, cx.charts.Abstract3D)
-    assert isinstance(pos_chart, cx.charts.Abstract3D)
+    assert isinstance(acc_chart, cxc.Abstract3D)
+    assert isinstance(vel_chart, cxc.Abstract3D)
+    assert isinstance(pos_chart, cxc.Abstract3D)
 
 
 # Generate a chain from velocity
-@given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
+@given(chain=cxst.chart_time_chain(cxr.PhysVel, cxc.polar2d))
 def test_vel_chain(chain):
     vel_chart, pos_chart = chain
     # All are 2D charts
-    assert isinstance(vel_chart, cx.charts.Abstract2D)
-    assert isinstance(pos_chart, cx.charts.Abstract2D)
+    assert isinstance(vel_chart, cxc.Abstract2D)
+    assert isinstance(pos_chart, cxc.Abstract2D)
 
 
 # Position just returns itself
-@given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
+@given(chain=cxst.chart_time_chain(cxr.PhysDisp, cxc.sph3d))
 def test_disp_chain(chain):
     (pos_chart,) = chain
-    assert isinstance(pos_chart, cx.charts.Abstract3D)
+    assert isinstance(pos_chart, cxc.Abstract3D)
 ```
 
 ### `cdicts(chart, role=None, dtype=jnp.float32, shape=(), elements=None)`
@@ -465,25 +466,25 @@ import coordinax_hypothesis as cxst
 
 
 # CsDict for specific chart with Point role
-@given(p=cxst.cdicts(cx.charts.cart3d, cx.roles.point))
+@given(p=cxst.cdicts(cxc.cart3d, cxr.point))
 def test_cart3d_point(p):
     assert set(p.keys()) == {"x", "y", "z"}
 
 
 # CsDict with PhysDisp role (uniform length dimension)
-@given(p=cxst.cdicts(cx.charts.cart3d, cx.roles.phys_disp))
+@given(p=cxst.cdicts(cxc.cart3d, cxr.phys_disp))
 def test_disp_uniform_dim(p):
     for v in p.values():
         assert u.dimension_of(v) == u.dimension("length")
 
 
 # CsDict with chart as a strategy - draws chart first, then builds CsDict
-@given(p=cxst.cdicts(cxst.charts(filter=cx.charts.Abstract3D), cx.roles.point))
+@given(p=cxst.cdicts(cxst.charts(filter=cxc.Abstract3D), cxr.point))
 def test_any_3d_chart(p):
     assert len(p) == 3  # All 3D charts have 3 components
 ```
 
-### `vectors_with_target_chart(chart=charts(), role=cx.roles.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
+### `vectors_with_target_chart(chart=charts(), role=cxr.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
 
 Generate a vector and a time-derivative chain with matching flags.
 
@@ -496,8 +497,8 @@ flags of the source vector's chart.
 
 - `chart`: A chart instance or strategy for the source vector (default: uses
   `charts()` strategy)
-- `role`: The role flag for the source vector (`cx.roles.PhysDisp`,
-  `cx.roles.PhysVel`, `cx.roles.PhysAcc`)
+- `role`: The role flag for the source vector (`cxr.PhysDisp`, `cxr.PhysVel`,
+  `cxr.PhysAcc`)
 - `dtype`: The data type for array components (default: `jnp.float32`)
 - `shape`: The shape for the vector components (default: scalar shape `()`)
 - `elements`: Strategy for generating element values
@@ -519,7 +520,7 @@ import coordinax_hypothesis as cxst
 # Test vector conversions to a full chain of targets
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
-        chart=cx.charts.cart3d, role=cx.roles.PhysDisp
+        chart=cxc.cart3d, role=cxr.PhysDisp
     )
 )
 def test_position_conversion(vec_and_chain):
@@ -533,9 +534,9 @@ def test_position_conversion(vec_and_chain):
 # Test velocity vector with full chain (requires a position vector)
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
-        chart=cx.charts.cart3d, role=cx.roles.PhysVel
+        chart=cxc.cart3d, role=cxr.PhysVel
     ),
-    pos_vec=cxst.vectors(chart=cx.charts.cart3d, role=cx.roles.PhysDisp),
+    pos_vec=cxst.vectors(chart=cxc.cart3d, role=cxr.PhysDisp),
 )
 def test_velocity_conversion_chain(vec_and_chain, pos_vec):
     vec, target_chain = vec_and_chain
@@ -597,7 +598,7 @@ def test_parallax_to_distance(result):
     assert isinstance(result, cxd.Distance)
 ```
 
-### `vectors(chart=t=charts(), role=cx.roles.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
+### `vectors(chart=t=charts(), role=cxr.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
 
 Generate random `coordinax.Vector` instances.
 
@@ -606,8 +607,8 @@ Generate random `coordinax.Vector` instances.
 - `chart`: A chart instance or strategy to generate one (default: uses
   `charts()` strategy). This determines the coordinate chart and dimensionality
   of the vector.
-- `role`: The role flag for the vector (`cx.roles.PhysDisp`, `cx.roles.PhysVel`,
-  `cx.roles.PhysAcc`).
+- `role`: The role flag for the vector (`cxr.PhysDisp`, `cxr.PhysVel`,
+  `cxr.PhysAcc`).
 - `dtype`: The data type for array components (default: `jnp.float32`). Can be a
   dtype or a strategy.
 - `shape`: The shape for the vector components. Can be an integer (for 1D), a
@@ -634,9 +635,9 @@ def test_any_vector(vec):
 
 
 # Generate vectors with a specific chart
-@given(vec=cxst.vectors(chart=cx.charts.cart3d))
+@given(vec=cxst.vectors(chart=cxc.cart3d))
 def test_cartesian_3d(vec):
-    assert vec.chart == cx.charts.cart3d
+    assert vec.chart == cxc.cart3d
     assert isinstance(vec, cx.Vector)
 
 
@@ -648,23 +649,23 @@ def test_batched_vectors(vec):
 
 # Generate position vectors only
 @given(
-    vec=cxst.vectors(chart=cxst.charts(filter=cx.charts.Abstract3D), role=cx.roles.PhysDisp)
+    vec=cxst.vectors(chart=cxst.charts(filter=cxc.Abstract3D), role=cxr.PhysDisp)
 )
 def test_position_vectors(vec):
-    assert isinstance(vec.role, cx.roles.PhysDisp)
-    assert isinstance(vec.chart, cx.charts.Abstract3D)
+    assert isinstance(vec.role, cxr.PhysDisp)
+    assert isinstance(vec.chart, cxc.Abstract3D)
 
 
 # Generate 3D velocity vectors
 @given(
     vec=cxst.vectors(
-        chart=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.PhysVel,
+        chart=cxst.charts(filter=cxc.Abstract3D),
+        role=cxr.PhysVel,
     )
 )
 def test_3d_velocity_vectors(vec):
-    assert isinstance(vec.role, cx.roles.PhysVel)
-    assert isinstance(vec.chart, cx.charts.Abstract3D)
+    assert isinstance(vec.role, cxr.PhysVel)
+    assert isinstance(vec.chart, cxc.Abstract3D)
 
 
 # Generate vectors with specific dtype and shape

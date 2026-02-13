@@ -143,13 +143,13 @@ import unxt as u
 
 d1 = cx.Vector(
     {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
-    cx.charts.cart3d,
-    cx.charts.displacement,
+    cxc.cart3d,
+    cxc.displacement,
 )
 d2 = cx.Vector(
     {"x": u.Q(0.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")},
-    cx.charts.cart3d,
-    cx.charts.displacement,
+    cxc.cart3d,
+    cxc.displacement,
 )
 
 result = d1.add(d2)
@@ -168,13 +168,13 @@ import unxt as u
 
 pos = cx.Vector(
     {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
-    cx.charts.cart3d,
-    cx.roles.phys_disp,
+    cxc.cart3d,
+    cxr.phys_disp,
 )
 disp = cx.Vector(
     {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
-    cx.charts.cart3d,
-    cx.charts.displacement,
+    cxc.cart3d,
+    cxc.displacement,
 )
 
 new_pos = pos.add(disp)
@@ -195,8 +195,8 @@ pos1 = cx.Vector.from_([1, 0, 0], "m")
 pos2 = cx.Vector.from_([0, 1, 0], "m")
 disp = cx.Vector(
     {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
-    cx.charts.cart3d,
-    cx.charts.displacement,
+    cxc.cart3d,
+    cxc.displacement,
 )
 
 # Position + Position: TypeError
@@ -208,7 +208,7 @@ disp = cx.Vector(
 
 ## Converting Positions to Displacements
 
-Use `as_pos` to convert a position to a displacement relative to an origin:
+Use `as_disp` to convert a position to a displacement relative to an origin:
 
 ```
 import coordinax as cx
@@ -217,13 +217,13 @@ import unxt as u
 pos = cx.Vector.from_([3, 4, 5], "m")
 
 # From coordinate origin (automatically converts to Cartesian first)
-disp = cx.as_pos(pos)
+disp = cx.as_disp(pos)
 # disp represents the displacement (3, 4, 5) m from the origin
 # Result is in Cartesian representation
 
 # From an explicit origin
 origin = cx.Vector.from_([1, 1, 1], "m")
-disp = cx.as_pos(pos, origin)
+disp = cx.as_disp(pos, origin)
 # disp represents the displacement (2, 3, 4) m from origin
 ```
 
@@ -238,12 +238,12 @@ import jax.numpy as jnp
 # Position in spherical coordinates
 pos_sph = cx.Vector(
     {"r": u.Q(2.0, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")},
-    cx.charts.sph3d,
-    cx.roles.phys_disp,
+    cxc.sph3d,
+    cxr.phys_disp,
 )
 
 # Displacement from origin (converted to Cartesian: x=2, y=0, z=0)
-disp = cx.as_pos(pos_sph)
+disp = cx.as_disp(pos_sph)
 # disp.chart is cart3d
 # disp["x"] = 2.0 m
 ```
@@ -258,7 +258,7 @@ pos = cx.Vector.from_([1, 0, 0], "m")
 origin = cx.Vector.from_([0, 0, 0], "m")
 
 # Get displacement in spherical representation
-disp_sph = cx.as_pos(pos, origin, chart=cx.charts.sph3d, at=pos)
+disp_sph = cx.as_disp(pos, origin, chart=cxc.sph3d, at=pos)
 # Uses physical_tangent_transform to convert to spherical at base point 'pos'
 ```
 
@@ -276,9 +276,9 @@ spaces at specific points. Addition requires specifying the base point via the
 import coordinax as cx
 
 # Check if a representation is Euclidean
-cx.charts.cart3d.is_euclidean  # True
-cx.charts.sph3d.is_euclidean  # True (spherical coords on R^3)
-cx.charts.twosphere.is_euclidean  # False (intrinsic 2-sphere)
+cxc.cart3d.is_euclidean  # True
+cxc.sph3d.is_euclidean  # True (spherical coords on R^3)
+cxc.twosphere.is_euclidean  # False (intrinsic 2-sphere)
 ```
 
 For non-Euclidean representations, use `Vector.add(other, at=base_point)`:
@@ -299,13 +299,13 @@ import unxt as u
 
 v1 = cx.Vector(
     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
-    cx.charts.cart3d,
-    cx.roles.phys_vel,
+    cxc.cart3d,
+    cxr.phys_vel,
 )
 v2 = cx.Vector(
     {"x": u.Q(0.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(0.0, "m/s")},
-    cx.charts.cart3d,
-    cx.roles.phys_vel,
+    cxc.cart3d,
+    cxr.phys_vel,
 )
 
 v_total = v1.add(v2)

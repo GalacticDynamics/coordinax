@@ -7,7 +7,6 @@ pytest.importorskip("pytest_benchmark")
 from hypothesis import given, settings
 from hypothesis.strategies import data as st_data
 
-import coordinax as cx
 import coordinax_hypothesis as cxst
 from coordinax_hypothesis._src.utils import get_all_subclasses
 
@@ -36,7 +35,7 @@ def test_benchmark_chart_classes_simple(benchmark):
         return result[0]
 
     result = benchmark(run_draw)
-    assert issubclass(result, cx.charts.AbstractChart)
+    assert issubclass(result, cxc.AbstractChart)
 
 
 # =============================================================================
@@ -82,7 +81,7 @@ def test_benchmark_get_all_subclasses(benchmark):
 
     def run_get_subclasses():
         return get_all_subclasses(
-            cx.charts.AbstractChart,
+            cxc.AbstractChart,
             filter=object,
             exclude_abstract=True,
             exclude=(),
@@ -97,8 +96,8 @@ def test_benchmark_get_all_subclasses_filtered(benchmark):
 
     def run_get_subclasses():
         return get_all_subclasses(
-            cx.charts.AbstractChart,
-            filter=cx.charts.Abstract3D,
+            cxc.AbstractChart,
+            filter=cxc.Abstract3D,
             exclude_abstract=True,
             exclude=(),
         )
@@ -115,7 +114,7 @@ def test_benchmark_build_init_kwargs_cart3d(benchmark):
     """Benchmark building init kwargs strategy for Cart3D."""
 
     def build_kwargs():
-        return cxst.build_init_kwargs_strategy(cx.charts.Cart3D, dim=3)
+        return cxst.build_init_kwargs_strategy(cxc.Cart3D, dim=3)
 
     strategy = benchmark(build_kwargs)
     assert strategy is not None
@@ -125,7 +124,7 @@ def test_benchmark_build_init_kwargs_spacetimect(benchmark):
     """Benchmark building init kwargs strategy for SpaceTimeCT (recursive case)."""
 
     def build_kwargs():
-        return cxst.build_init_kwargs_strategy(cx.charts.SpaceTimeCT, dim=4)
+        return cxst.build_init_kwargs_strategy(cxc.SpaceTimeCT, dim=4)
 
     strategy = benchmark(build_kwargs)
     assert strategy is not None

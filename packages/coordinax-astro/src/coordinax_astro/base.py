@@ -3,7 +3,7 @@
 __all__ = ("AbstractSpaceFrame",)
 
 
-from coordinax._src.frames.base import AbstractReferenceFrame
+from coordinax.frames import AbstractReferenceFrame
 
 
 class AbstractSpaceFrame(AbstractReferenceFrame):

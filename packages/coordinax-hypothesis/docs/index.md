@@ -42,20 +42,21 @@ uv add coordinax-hypothesis
 ```
 from hypothesis import given
 
-import coordinax as cx
+import coordinax.angles as cxa
+import coordinax.distances as cxd
 import coordinax_hypothesis as cxst
 
 
 @given(angle=cxst.angles())
 def test_angle_property(angle):
     """Test that all angles are valid Angle objects."""
-    assert isinstance(angle, cx.Angle)
+    assert isinstance(angle, cxa.Angle)
 
 
 @given(dist=cxst.distances())
 def test_distance_property(dist):
     """Test that all distances are valid Distance objects."""
-    assert isinstance(dist, cx.Distance)
+    assert isinstance(dist, cxd.Distance)
     assert dist.value >= 0  # distances are non-negative by default
 ```
 
@@ -154,14 +155,14 @@ property-based testing of distance-related computations.
 ```
 from hypothesis import given, strategies as st
 
-import coordinax as cx
+import coordinax.distances as cxd
 import coordinax_hypothesis as cxst
 
 
 # Generate basic non-negative distances
 @given(dist=cxst.distances())
 def test_basic_distance(dist):
-    assert isinstance(dist, cx.Distance)
+    assert isinstance(dist, cxd.Distance)
     assert dist.value >= 0
 
 
@@ -174,7 +175,7 @@ def test_distance_kpc(dist):
 # Allow negative distances
 @given(dist=cxst.distances(check_negative=False))
 def test_signed_distance(dist):
-    assert isinstance(dist, cx.Distance)
+    assert isinstance(dist, cxd.Distance)
     # Can be positive or negative
 
 
@@ -221,7 +222,7 @@ import coordinax_hypothesis as cxst
 # Generate basic distance moduli
 @given(dm=cxst.distance_moduli())
 def test_basic_dm(dm):
-    assert isinstance(dm, cx.DistanceModulus)
+    assert isinstance(dm, cxd.DistanceModulus)
     assert dm.unit == "mag"
 
 
@@ -342,33 +343,33 @@ import coordinax_hypothesis as cxst
 
 
 # Generate 3D representations like Cart3D
-@given(chart=t=cxst.charts_like(cx.charts.cart3d))
+@given(chart=t=cxst.charts_like(cxc.cart3d))
 def test_3d_chart(rep):
-    assert isinstance(rep, cx.charts.Abstract3D)
+    assert isinstance(rep, cxc.Abstract3D)
     assert rep.ndim == 3
     # Could be Cart3D, Spherical3D, Cylindrical3D, etc.
 
 
 # Generate 2D representations like Polar2D
-@given(chart=t=cxst.charts_like(cx.charts.polar2d))
+@given(chart=t=cxst.charts_like(cxc.polar2d))
 def test_2d_chart(rep):
-    assert isinstance(rep, cx.charts.Abstract2D)
+    assert isinstance(rep, cxc.Abstract2D)
     assert rep.ndim == 2
     # Could be Cart2D, Polar2D, TwoSphere, etc.
 
 
 # Generate 1D representations
-@given(chart=t=cxst.charts_like(cx.charts.radial1d))
+@given(chart=t=cxst.charts_like(cxc.radial1d))
 def test_1d_chart(rep):
-    assert isinstance(rep, cx.charts.Abstract1D)
+    assert isinstance(rep, cxc.Abstract1D)
     assert rep.ndim == 1
 
 
 # Use with a dynamic template
-@given(chart=t=cxst.charts_like(cxst.charts(filter=cx.charts.Abstract3D)))
+@given(chart=t=cxst.charts_like(cxst.charts(filter=cxc.Abstract3D)))
 def test_charts_like(rep):
     # Will match the template's flags
-    assert isinstance(rep, cx.charts.Abstract3D)
+    assert isinstance(rep, cxc.Abstract3D)
 ```
 
 ### `chart_time_chain(role, rep)`
@@ -388,8 +389,8 @@ flags.
 
 **Parameters:**
 
-- `role` (AbstractRole): The starting role (`cx.roles.PhysDispsDisp`,
-  `cx.roles.PhysVel`, `cx.roles.PhysAcc`).
+- `role` (AbstractRole): The starting role (`cxr.PhysDispsDisp`, `cxr.PhysVel`,
+  `cxr.PhysAcc`).
 - `rep` (AbstractChart | SearchStrategy): The starting representation or a
   strategy that generates one.
 
@@ -411,40 +412,40 @@ import coordinax_hypothesis as cxst
 
 
 # Generate a chain from acceleration
-@given(chain=cxst.chart_time_chain(cx.roles.PhysAcc, cx.charts.cart3d))
+@given(chain=cxst.chart_time_chain(cxr.PhysAcc, cxc.cart3d))
 def test_acc_chain(chain):
     acc_chart, vel_chart, point_chart = chain
     # All are 3D Cartesian-like representations
-    assert isinstance(acc_chart, cx.charts.Abstract3D)
-    assert isinstance(vel_chart, cx.charts.Abstract3D)
-    assert isinstance(point_chart, cx.charts.Abstract3D)
+    assert isinstance(acc_chart, cxc.Abstract3D)
+    assert isinstance(vel_chart, cxc.Abstract3D)
+    assert isinstance(point_chart, cxc.Abstract3D)
 
 
 # Generate a chain from velocity
-@given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cx.charts.polar2d))
+@given(chain=cxst.chart_time_chain(cxr.PhysVel, cxc.polar2d))
 def test_vel_chain(chain):
     vel_chart, point_chart = chain
     # All are 2D representations
-    assert isinstance(vel_chart, cx.charts.Abstract2D)
-    assert isinstance(point_chart, cx.charts.Abstract2D)
+    assert isinstance(vel_chart, cxc.Abstract2D)
+    assert isinstance(point_chart, cxc.Abstract2D)
 
 
 # Position just returns itself
-@given(chain=cxst.chart_time_chain(cx.roles.PhysDisp, cx.charts.sph3d))
+@given(chain=cxst.chart_time_chain(cxr.PhysDisp, cxc.sph3d))
 def test_disp_chain(chain):
     (point_chart,) = chain
-    assert isinstance(point_chart, cx.charts.Abstract3D)
+    assert isinstance(point_chart, cxc.Abstract3D)
 
 
 # Use with dynamic representation type
-@given(chain=cxst.chart_time_chain(cx.roles.PhysVel, cxst.charts()))
+@given(chain=cxst.chart_time_chain(cxr.PhysVel, cxst.charts()))
 def test_dynamic_vel_chain(chain):
     assert len(chain) == 2  # (vel, point)
-    assert isinstance(chain[0], cx.charts.AbstractChart)
-    assert isinstance(chain[1], cx.charts.AbstractChart)
+    assert isinstance(chain[0], cxc.AbstractChart)
+    assert isinstance(chain[1], cxc.AbstractChart)
 ```
 
-### `vectors_with_target_chart(chart=t=charts(), role=cx.roles.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
+### `vectors_with_target_chart(chart=t=charts(), role=cxr.PhysDisp, dtype=jnp.float32, shape=(), elements=None)`
 
 Generate a vector and a time-derivative chain with matching flags.
 
@@ -458,8 +459,8 @@ target chain automatically matches the flags of the source vector.
 
 - `rep` (AbstractChart | SearchStrategy): A representation instance or strategy
   for the source vector (default: uses `charts()` strategy).
-- `role` (AbstractRole): The role flag for the source vector
-  (`cx.roles.PhysDisp`, `cx.roles.PhysVel`, `cx.roles.PhysAcc`).
+- `role` (AbstractRole): The role flag for the source vector (`cxr.PhysDisp`,
+  `cxr.PhysVel`, `cxr.PhysAcc`).
 - `dtype` (dtype | SearchStrategy): The data type for array components (default:
   `jnp.float32`). Can be a dtype or a strategy.
 - `shape` (int | tuple | SearchStrategy): The shape for the vector components
@@ -483,7 +484,7 @@ import coordinax_hypothesis as cxst
 
 
 # Test vector conversions to a full chain of targets
-@given(vec_and_chain=cxst.vectors_with_target_chart(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp))
+@given(vec_and_chain=cxst.vectors_with_target_chart(chart=t=cxc.cart3d, role=cxr.PhysDisp))
 def test_position_conversion(vec_and_chain):
     vec, target_chain = vec_and_chain
     # target_chain is just (pos_chart,) for position sources
@@ -494,8 +495,8 @@ def test_position_conversion(vec_and_chain):
 
 # Test velocity vector with full chain (requires a position vector)
 @given(
-    vec_and_chain=cxst.vectors_with_target_chart(chart=t=cx.charts.cart3d, role=cx.roles.PhysVel),
-    pos_vec=cxst.vectors(chart=t=cx.charts.cart3d, role=cx.roles.PhysDisp),
+    vec_and_chain=cxst.vectors_with_target_chart(chart=t=cxc.cart3d, role=cxr.PhysVel),
+    pos_vec=cxst.vectors(chart=t=cxc.cart3d, role=cxr.PhysDisp),
 )
 def test_velocity_conversion_chain(vec_and_chain, pos_vec):
     vec, target_chain = vec_and_chain
@@ -508,14 +509,14 @@ def test_velocity_conversion_chain(vec_and_chain, pos_vec):
 # Test with specific dimensionality
 @given(
     vec_and_chain=cxst.vectors_with_target_chart(
-        chart=t=cxst.charts(filter=cx.charts.Abstract3D),
-        role=cx.roles.PhysDisp,
+        chart=t=cxst.charts(filter=cxc.Abstract3D),
+        role=cxr.PhysDisp,
     )
 )
 def test_3d_position_conversions(vec_and_chain):
     vec, (target_chart,) = vec_and_chain
-    assert isinstance(vec.chart, cx.charts.Abstract3D)
-    assert isinstance(target_chart, cx.charts.Abstract3D)
+    assert isinstance(vec.chart, cxc.Abstract3D)
+    assert isinstance(target_chart, cxc.Abstract3D)
     converted = vec.vconvert(target_chart)
     assert converted.chart == target_chart
 ```

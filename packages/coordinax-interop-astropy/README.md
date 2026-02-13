@@ -80,8 +80,8 @@ apy_icrs = convert(cx_icrs, apyc.ICRS)
 
 galcen = cx.Vector.from_(
     {"lon": u.Q(0, "deg"), "lat": u.Q(0, "deg"), "distance": u.Q(8.122, "kpc")},
-    cx.charts.lonlatsph3d,
-    cx.roles.point,
+    cxc.lonlatsph3d,
+    cxr.point,
 )
 galcen_v_sun = cx.Vector.from_(u.Q([11.1, 244, 7.25], "km/s"))
 

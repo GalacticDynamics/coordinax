@@ -11,14 +11,14 @@ import unxt as u
 
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    chart=cxc.cart3d,
+    role=cxr.phys_disp,
 )
 
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_vel,
+    chart=cxc.cart3d,
+    role=cxr.phys_vel,
 )
 ```
 
@@ -35,8 +35,8 @@ q3 = cx.Vector(
         "y": u.Q([3.0, 4.0], "kpc"),
         "z": u.Q([5.0, 6.0], "kpc"),
     },
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    chart=cxc.cart3d,
+    role=cxr.phys_disp,
 )
 v3 = cx.Vector(
     data={
@@ -44,8 +44,8 @@ v3 = cx.Vector(
         "y": u.Q([6.0, 7.0], "kpc/Myr"),
         "z": u.Q([8.0, 9.0], "kpc/Myr"),
     },
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_vel,
+    chart=cxc.cart3d,
+    role=cxr.phys_vel,
 )
 ```
 
@@ -60,13 +60,13 @@ import unxt as u
 
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    chart=cxc.cart3d,
+    role=cxr.phys_disp,
 )
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_vel,
+    chart=cxc.cart3d,
+    role=cxr.phys_vel,
 )
 
 # q and v are ready for use in JAX operations.
@@ -76,9 +76,9 @@ v = cx.Vector(
 
 Representations are available for multiple dimensions:
 
-- 1D: `cx.charts.cart1d`, `cx.charts.radial1d`
-- 2D: `cx.charts.cart2d`, `cx.charts.polar2d`
-- 3D: `cx.charts.cart3d`, `cx.charts.cyl3d`, `cx.charts.sph3d`
+- 1D: `cxc.cart1d`, `cxc.radial1d`
+- 2D: `cxc.cart2d`, `cxc.polar2d`
+- 3D: `cxc.cart3d`, `cxc.cyl3d`, `cxc.sph3d`
 
 ## Conversion Between Representations
 
@@ -90,17 +90,17 @@ import unxt as u
 
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    chart=cxc.cart3d,
+    role=cxr.phys_disp,
 )
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_vel,
+    chart=cxc.cart3d,
+    role=cxr.phys_vel,
 )
 
-q_sph = q.vconvert(cx.charts.sph3d)
-v_sph = v.vconvert(cx.charts.sph3d, q)
+q_sph = q.vconvert(cxc.sph3d)
+v_sph = v.vconvert(cxc.sph3d, q)
 ```
 
 ## Batch and Broadcast Operations
@@ -117,8 +117,8 @@ arr = cx.Vector(
         "y": u.Q([2.0, 5.0], "kpc"),
         "z": u.Q([3.0, 6.0], "kpc"),
     },
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    chart=cxc.cart3d,
+    role=cxr.phys_disp,
 )
 # arr can be used in batched JAX computations.
 ```
@@ -134,13 +134,13 @@ import unxt as u
 
 q = cx.Vector(
     data={"x": u.Q(1.0, "kpc"), "y": u.Q(2.0, "kpc"), "z": u.Q(3.0, "kpc")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_disp,
+    chart=cxc.cart3d,
+    role=cxr.phys_disp,
 )
 v = cx.Vector(
     data={"x": u.Q(4.0, "kpc/Myr"), "y": u.Q(5.0, "kpc/Myr"), "z": u.Q(6.0, "kpc/Myr")},
-    chart=cx.charts.cart3d,
-    role=cx.roles.phys_vel,
+    chart=cxc.cart3d,
+    role=cxr.phys_vel,
 )
 
 space = cx.PointedVector(base=q, speed=v)

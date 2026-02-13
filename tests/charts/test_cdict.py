@@ -8,11 +8,10 @@ from hypothesis import given, settings
 import unxt as u
 import unxt_hypothesis as ust
 
-import coordinax as cx
 import coordinax.charts as cxc
 import coordinax_hypothesis as cxst
 from .conftest import shapes_ending_in_123, xps
-from coordinax._src.custom_types import CsDict
+from coordinax.api import CsDict
 
 
 @given(cxst.cdicts(cxst.charts()))

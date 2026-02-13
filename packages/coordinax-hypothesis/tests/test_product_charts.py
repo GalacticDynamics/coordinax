@@ -43,7 +43,7 @@ class TestProductChartsBasic:
             assert len(factor_names) == len(set(factor_names))
 
     @given(chart=cxst.product_charts())
-    def test_has_positive_dimension(
+    def test_has_dispitive_dimension(
         self, chart: cxc.AbstractCartesianProductChart
     ) -> None:
         """Product chart dimension is positive (sum of factor dimensions)."""

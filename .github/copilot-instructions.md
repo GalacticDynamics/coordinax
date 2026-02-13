@@ -738,7 +738,6 @@ Before submitting changes, verify:
 
 - [ ] All changes match the relevant `docs/spec.md`
 - [ ] The correct spec file was consulted for the package being edited
-- [ ] No legacy terminology (`representation`, `cx.charts.cart3d`) remains
 - [ ] Roles obey affine vs tangent semantics
 - [ ] All new behavior is tested
 - [ ] Tests pass under `jax.jit` and `jax.vmap`

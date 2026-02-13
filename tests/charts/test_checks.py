@@ -9,8 +9,8 @@ from hypothesis import given, settings, strategies as st
 import unxt as u
 import unxt_hypothesis as ust
 
-import coordinax as cx
-from coordinax._src.charts.checks import geq, leq, polar_range, strictly_positive
+import coordinax.angles as cxa
+from coordinax.charts._src.checks import geq, leq, polar_range, strictly_positive
 
 
 # Use width=32 for float32 compatibility with JAX
@@ -20,7 +20,7 @@ def float32s(**kwargs):
     return st.floats(**kwargs, width=32, allow_subnormal=False)
 
 
-angle_classes = st.sampled_from((u.Q, u.Angle, u.quantity.BareQuantity, cx.Angle))
+angle_classes = st.sampled_from((u.Q, u.Angle, u.quantity.BareQuantity, cxa.Angle))
 
 # Float32-representable constants
 PI_F32 = float(np.float32(np.pi))  # 3.1415927...

@@ -76,7 +76,7 @@ You can convert the internal representation of a coordinate (e.g., Cartesian to
 Spherical) without changing its frame:
 
 ```{code-block} text
->>> coord_sph = coord.vconvert(cx.charts.sph3d)
+>>> coord_sph = coord.vconvert(cxc.sph3d)
 >>> print(coord_sph)
 Coordinate(
     {

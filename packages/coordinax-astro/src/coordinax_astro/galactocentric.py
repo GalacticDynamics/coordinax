@@ -15,8 +15,8 @@ from dataclassish.converters import Unless
 import coordinax.charts as cxc
 import coordinax.roles as cxr
 from .base import AbstractSpaceFrame
-from coordinax._src.distances import Distance
-from coordinax._src.objects.vector import Vector
+from coordinax.distances import Distance
+from coordinax.objs import Vector
 
 ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]  # type: ignore[type-arg]
 RotationMatrix: TypeAlias = Shaped[Array, "3 3"]
@@ -33,7 +33,7 @@ class Galactocentric(AbstractSpaceFrame):
     Examples
     --------
     >>> import coordinax as cx
-    >>> frame = cx.frames.Galactocentric()
+    >>> frame = cxf.Galactocentric()
     >>> frame
     Galactocentric(
       galcen=LonLatSpherical3D( ... ),

@@ -1,6 +1,6 @@
 """Test module imports."""
 
-import coordinax_interop_astropy  # noqa: F401
+import coordinax.interop.astropy  # noqa: F401
 
 
 def test_import() -> None:

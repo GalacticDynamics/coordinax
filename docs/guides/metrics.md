@@ -62,8 +62,7 @@ $$
 
 ## `metric_of` defaults
 
-- Euclidean metric is the default for Euclidean reps exposed in
-  `cx.charts.cart3d`.
+- Euclidean metric is the default for Euclidean reps exposed in `cxc.cart3d`.
 - `TwoSphere` uses the intrinsic sphere metric.
 - `SpaceTimeCT` uses Minkowski metric with signature `(-,+,+,+)`.
 - `SpaceTimeEuclidean` uses Euclidean metric in 4D.
@@ -78,8 +77,8 @@ import coordinax as cx
 import unxt as u
 from unxt.quantity import AllowValue
 
-rep = cx.charts.SpaceTimeCT(cx.charts.cart3d)
-eta = cx.metrics.metric_of(rep).metric_matrix(rep, {})
+rep = cxc.SpaceTimeCT(cxc.cart3d)
+eta = cxm.metric_of(rep).metric_matrix(rep, {})
 v = u.Q([2.0, 0.0, 0.0, 0.0], "km")
 v_val = u.ustrip(AllowValue, "km", v)
 bool(jnp.allclose(v_val @ eta @ v_val, -4.0))
@@ -93,12 +92,12 @@ import coordinax as cx
 import unxt as u
 
 p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
-g = cx.metrics.metric_of(cx.charts.twosphere).metric_matrix(cx.charts.twosphere, p)
+g = cxm.metric_of(cxc.twosphere).metric_matrix(cxc.twosphere, p)
 bool(jnp.allclose(g[1, 1], 1.0))
 ```
 
 ## Cross-links
 
 - [Embedded manifolds guide](embedded_manifolds.md)
-- `cx.charts.frame_cart`
-- `cx.metrics.metric_of`
+- `cxc.frame_cart`
+- `cxm.metric_of`

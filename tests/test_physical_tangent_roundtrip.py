@@ -10,7 +10,7 @@ import coordinax.charts as cxc
 import coordinax.roles as cxr
 import coordinax.transforms as cxt
 import coordinax_hypothesis as cxst
-from coordinax._src.custom_types import CsDict
+from coordinax.api import CsDict
 
 # TODO: dynamically determine supported charts
 FRAME_CART_SUPPORTED = (
@@ -43,7 +43,7 @@ def chart_pairs_same_dim(
     chart_strategy = cxst.charts(
         ndim=dim,
         exclude=(
-            cxc.EmbeddedManifold,
+            cxe.EmbeddedManifold,
             cxc.TwoSphere,
             cxc.SpaceTimeCT,
             cxc.SpaceTimeEuclidean,
@@ -52,7 +52,7 @@ def chart_pairs_same_dim(
     charts = draw(chart_strategy), draw(chart_strategy)
     # Hypothesis sometimes still draws embedded manifolds despite the exclude
     # filter; reject those cases to avoid recursive cartesian fallback.
-    if any(isinstance(c, (cxc.EmbeddedManifold, cxc.TwoSphere)) for c in charts):
+    if any(isinstance(c, (cxe.EmbeddedManifold, cxc.TwoSphere)) for c in charts):
         reject()
     # Restrict to charts with a registered frame_cart rule to avoid
     # NotImplemented errors when mapping velocities.

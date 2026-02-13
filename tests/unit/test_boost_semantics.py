@@ -13,7 +13,6 @@ import pytest
 import unxt as u
 
 import coordinax as cx
-import coordinax.ops as cxo
 import coordinax.roles as cxr
 
 
@@ -22,7 +21,7 @@ class TestBoostOnVector:
 
     def test_boost_on_point_raises(self):
         """Boost on Point role raises TypeError."""
-        boost = cxo.Boost.from_([100, 0, 0], "km/s")
+        boost = cxop.Boost.from_([100, 0, 0], "km/s")
 
         # Create a point at origin
         p = cx.Vector.from_([0, 0, 0], "km")  # Point role by default
@@ -33,7 +32,7 @@ class TestBoostOnVector:
 
     def test_boost_on_pos_is_identity(self):
         """Boost on Pos role is identity (displacements invariant)."""
-        boost = cxo.Boost.from_([100, 0, 0], "km/s")
+        boost = cxop.Boost.from_([100, 0, 0], "km/s")
 
         # Create a displacement vector (using Quantity form for explicit role)
         dx = cx.Vector.from_(u.Q([10, 20, 30], "km"), cxr.phys_disp)
@@ -48,7 +47,7 @@ class TestBoostOnVector:
 
     def test_boost_on_vel(self):
         """Boost on PhysVel role adds dv."""
-        boost = cxo.Boost.from_([100, 0, 0], "km/s")
+        boost = cxop.Boost.from_([100, 0, 0], "km/s")
 
         # Create a velocity vector (using Quantity form for explicit role)
         v = cx.Vector.from_(u.Q([10, 20, 30], "km/s"), cxr.phys_vel)
@@ -63,7 +62,7 @@ class TestBoostOnVector:
 
     def test_boost_on_acc_is_identity(self):
         """Boost on PhysAcc role is identity (constant boost)."""
-        boost = cxo.Boost.from_([100, 0, 0], "km/s")
+        boost = cxop.Boost.from_([100, 0, 0], "km/s")
 
         # Create an acceleration vector (using Quantity form for explicit role)
         a = cx.Vector.from_(u.Q([1, 2, 3], "m/s^2"), cxr.phys_acc)
@@ -87,7 +86,7 @@ class TestBoostOnVector:
                 "z": u.Q(0, "m/s"),
             }
 
-        boost = cxo.Boost(dv_fn, chart=cx.cart3d)
+        boost = cxop.Boost(dv_fn, chart=cxc.cart3d)
 
         # Create an acceleration vector
         a = cx.Vector.from_(u.Q([1, 2, 3], "m/s^2"), cxr.phys_acc)
@@ -107,8 +106,8 @@ class TestBoostPipeline:
 
     def test_boost_addition(self):
         """Adding two boosts combines the velocity offsets."""
-        b1 = cxo.Boost.from_([100, 0, 0], "km/s")
-        b2 = cxo.Boost.from_([0, 50, 0], "km/s")
+        b1 = cxop.Boost.from_([100, 0, 0], "km/s")
+        b2 = cxop.Boost.from_([0, 50, 0], "km/s")
         combined = b1 + b2
 
         # Apply to velocity
@@ -121,7 +120,7 @@ class TestBoostPipeline:
 
     def test_boost_inverse(self):
         """Inverse boost negates the velocity offset."""
-        boost = cxo.Boost.from_([100, 0, 0], "km/s")
+        boost = cxop.Boost.from_([100, 0, 0], "km/s")
         inv_boost = boost.inverse
 
         # Apply original boost

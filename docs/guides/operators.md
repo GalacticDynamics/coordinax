@@ -26,12 +26,12 @@ Translates position vectors by a fixed offset:
 
 ```{code-block} text
 >>> import coordinax as cx
->>> import coordinax.ops as cxo
+>>> import coordinax.ops as cxop
 ```
 
 ```{code-block} text
 >>> q = cx.Vector.from_([1, 2, 3], "kpc")
->>> op = cxo.GalileanOp.from_([10, 10, 10], "kpc")
+>>> op = cxop.GalileanOp.from_([10, 10, 10], "kpc")
 >>> op(q)
 Cart3D(x=Q(11, 'kpc'), y=Q(12, 'kpc'), z=Q(13, 'kpc'))
 ```
@@ -41,7 +41,7 @@ Cart3D(x=Q(11, 'kpc'), y=Q(12, 'kpc'), z=Q(13, 'kpc'))
 Applies a velocity boost to a velocity vector:
 
 ```{code-block} text
->>> boost = cxo.Add.from_([1, 1, 1], "km/s")
+>>> boost = cxop.Add.from_([1, 1, 1], "km/s")
 >>> boost(u.Q(1.0, "s"), q)[1]
 Cart3D(x=Q(1., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 ```
@@ -51,7 +51,7 @@ Cart3D(x=Q(1., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 Rotates vectors in space:
 
 ```{code-block} text
->>> rot = cxo.Rotate.from_euler("z", u.Q(90, "deg"))
+>>> rot = cxop.Rotate.from_euler("z", u.Q(90, "deg"))
 >>> rot(q).round(2)
 Cart3D(x=Q(-2., 'kpc'), y=Q(1., 'kpc'), z=Q(3., 'kpc'))
 ```
@@ -64,9 +64,9 @@ Operators can be composed using the {class}`~coordinax.ops.Pipe` class or the
 `|` operator:
 
 ```{code-block} text
->>> op1 = cxo.GalileanOp.from_([1, 0, 0], "kpc")
->>> op2 = cxo.Rotate.from_euler("z", u.Q(90, "deg"))
->>> pipe = cxo.Pipe([op1, op2])
+>>> op1 = cxop.GalileanOp.from_([1, 0, 0], "kpc")
+>>> op2 = cxop.Rotate.from_euler("z", u.Q(90, "deg"))
+>>> pipe = cxop.Pipe([op1, op2])
 >>> pipe(q).round(2)
 Cart3D(x=Q(-2., 'kpc'), y=Q(2., 'kpc'), z=Q(3., 'kpc'))
 ```

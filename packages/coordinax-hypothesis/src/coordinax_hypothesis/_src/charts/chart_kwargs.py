@@ -14,6 +14,7 @@ import plum
 import unxt as u
 
 import coordinax.charts as cxc
+import coordinax.embeddings as cxe
 from coordinax_hypothesis._src.utils import (
     cached_strategy_for_annotation,
     draw_if_strategy,
@@ -167,7 +168,7 @@ def build_init_kwargs_strategy(
 
 @plum.dispatch
 def build_init_kwargs_strategy(
-    cls: type[cxc.EmbeddedManifold],  # type: ignore[type-arg]
+    cls: type[cxe.EmbeddedManifold],  # type: ignore[type-arg]
     /,
     *,
     dim: int | None,

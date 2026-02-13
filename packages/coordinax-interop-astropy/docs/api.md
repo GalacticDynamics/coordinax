@@ -6,16 +6,16 @@
 
 Constructors for creating coordinax vectors from Astropy objects.
 
-::: coordinax_interop_astropy.constructors
+::: coordinax.interop.astropy.constructors
 
 ### converters
 
 Converters for converting between coordinax and Astropy types.
 
-::: coordinax_interop_astropy.converters
+::: coordinax.interop.astropy.converters
 
 ### distance
 
 Distance type conversions between coordinax and Astropy.
 
-::: coordinax_interop_astropy.distance
+::: coordinax.interop.astropy.distance

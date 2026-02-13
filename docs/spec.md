@@ -107,7 +107,7 @@ The goals are:
       - [Role class hierarchy (normative)](#role-class-hierarchy-normative)
     - [Additional roles (planned)](#additional-roles-planned)
     - [Role → transformation law (normative)](#role--transformation-law-normative)
-    - [Coercions and anchoring (`as_pos`, `at=`)](#coercions-and-anchoring-as_pos-at)
+    - [Coercions and anchoring (`as_disp`, `at=`)](#coercions-and-anchoring-as_disp-at)
   - [Core functional API](#core-functional-api)
     - [Point transforms](#point-transforms)
     - [Physical tangent transforms](#physical-tangent-transforms)
@@ -144,7 +144,7 @@ These modules provide the objects most users interact with directly:
 
 - `coordinax` (top-level re-exports)
   - `Vector`, `PointedVector`, `Coordinate`
-  - `vconvert`, `as_pos`
+  - `vconvert`, `as_disp`
 - `coordinax.objects`
   - high-level container implementations and ergonomic constructors
 - `coordinax.charts`
@@ -160,10 +160,11 @@ Normative guidance:
 Example:
 
 ```
-import coordinax as cx
+import coordinax.charts as cxc
+from coordinax.objs import Vector
 
-p = cx.Vector.from_({"x": x, "y": y, "z": z})
-v = p.vconvert(cx.charts.sph3d)
+p = Vector.from_({"x": x, "y": y, "z": z})
+v = p.vconvert(cxc.sph3d)
 r = v["r"]
 ```
 
@@ -1848,13 +1849,13 @@ Additional role families have distinct transformation laws:
 - Cotangent roles (`Covector`) convert by `cotangent_transform` and require
   `at=`.
 
-### Coercions and anchoring (`as_pos`, `at=`)
+### Coercions and anchoring (`as_disp`, `at=`)
 
 Physical tangent roles are anchored at a base point $p$ (an element of $T_pM$).
 In code this anchoring is carried explicitly by `at=` in operations requiring
 tangent/cotangent spaces.
 
-`as_pos(p, origin=o)` is a coercion from a point $p\in M$ to a `PhysDisp`
+`as_disp(p, origin=o)` is a coercion from a point $p\in M$ to a `PhysDisp`
 (physical displacement / position-difference tangent vector) in $T_oM$. In
 Euclidean affine spaces it is canonically $p-o$. On a general manifold it
 requires an explicit log-map-like choice and is otherwise not defined.
@@ -1885,42 +1886,44 @@ $$
 
 A `CsDict` may contain either:
 
-1. **Quantities** (`unxt.Quantity`): Values with explicit units. No additional
-   context needed; the function uses units directly for any dimension-dependent
-   operations.
+1. **Quantities** ({class}`unxt.Quantity`): Values with explicit units. No
+   additional context needed; the function uses units directly for any
+   dimension-dependent operations.
 2. **Arrays** (JAX arrays, NumPy arrays, or Python scalars): Dimensionless
    values. For charts where components have physical dimensions (e.g. distance
    in spherical coordinates), the optional `usys` keyword argument specifies the
    unit system in which the array values should be interpreted.
 
-The `usys` parameter is a `unxt.AbstractUnitSystem` that provides default units
-for each physical dimension. When `usys` is provided and the input contains bare
-arrays, the function interprets those arrays as having units determined by the
-chart's `coord_dimensions` and the unit system.
+The `usys` parameter is a {class}`unxt.AbstractUnitSystem` that provides default
+units for each physical dimension. When `usys` is provided and the input
+contains bare arrays, the function interprets those arrays as having units
+determined by the chart's `coord_dimensions` and the unit system.
 
 **Examples:**
 
 ```python
-import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.transforms as cxt
 import unxt as u
 
 # With Quantities (explicit units)
 p_qty = {"r": u.Q(1.0, "km"), "theta": u.Q(0.5, "rad"), "phi": u.Q(1.0, "rad")}
-p_cart = cx.transforms.point_transform(cx.charts.cart3d, cx.charts.sph3d, p_qty)
+p_cart = cxt.point_transform(cxc.cart3d, cxc.sph3d, p_qty)
 # Result: {'x': Quantity(..., unit='km'), 'y': ..., 'z': ...}
 
 # With bare arrays (no units)
 p_arr = {"r": 5}
-p_cart = cx.transforms.point_transform(
-    cx.charts.cart1d, cx.charts.radial1d, p_arr, usys=u.unitsystems.galactic
+p_cart = cxt.point_transform(
+    cxc.cart1d, cxc.radial1d, p_arr, usys=u.unitsystems.galactic
 )
 # Result: {'x': 5}
 ```
 
 ### Physical tangent transforms
 
-`physical_tangent_transform` maps **physical tangent components**
-(orthonormal-frame components) between charts at a base point.
+{class}`~coordinax.transforms.physical_tangent_transform` maps **physical
+tangent components** (orthonormal-frame components) between charts at a base
+point.
 
 ```
 physical_tangent_transform(
@@ -2132,7 +2135,7 @@ and/or `role`.
 
 ```
 cart = Vector.from_({"x": x, "y": y, "z": z})  # may infer chart and role
-cart = Vector.from_({"x": x, "y": y, "z": z}, chart=cx.charts.cart3d)  # infer role
+cart = Vector.from_({"x": x, "y": y, "z": z}, chart=cxc.cart3d)  # infer role
 ... # there are many variants
 ```
 

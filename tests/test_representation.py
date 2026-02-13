@@ -4,7 +4,6 @@ import plum
 import pytest
 from hypothesis import given
 
-import coordinax as cx
 import coordinax_hypothesis as cxst
 
 
@@ -80,25 +79,25 @@ def test_chart_has_ndim(chart) -> None:
 @given(chart=cxst.charts())
 def test_chart_has_cartesian(chart) -> None:
     """Test that generated charts have cartesian."""
-    # Check that `cx.charts.cartesian_chart` has a method registered for this type. If
+    # Check that `cxc.cartesian_chart` has a method registered for this type. If
     # it doesn't, skip the rest of the test.
-    if not func_has_method(cx.charts.cartesian_chart, (type(chart),)):
+    if not func_has_method(cxc.cartesian_chart, (type(chart),)):
         return
 
     # Has cartesian attribute
     assert hasattr(chart, "cartesian")
     # It's a chart
-    assert isinstance(chart.cartesian, cx.charts.AbstractChart)
+    assert isinstance(chart.cartesian, cxc.AbstractChart)
     # The chart is the same dimensionality
     assert chart.cartesian.ndim == chart.ndim
 
 
 def test_role_derivative_chain() -> None:
     """Test derivative/antiderivative relationships between roles."""
-    assert isinstance(cx.roles.phys_disp.derivative(), cx.roles.PhysVel)
-    assert isinstance(cx.roles.phys_vel.derivative(), cx.roles.PhysAcc)
-    assert isinstance(cx.roles.phys_vel.antiderivative(), cx.roles.PhysDisp)
-    assert isinstance(cx.roles.phys_acc.antiderivative(), cx.roles.PhysVel)
+    assert isinstance(cxr.phys_disp.derivative(), cxr.PhysVel)
+    assert isinstance(cxr.phys_vel.derivative(), cxr.PhysAcc)
+    assert isinstance(cxr.phys_vel.antiderivative(), cxr.PhysDisp)
+    assert isinstance(cxr.phys_acc.antiderivative(), cxr.PhysVel)
 
 
 def test_twosphere_cartesian_chart_raises() -> None:
@@ -107,4 +106,4 @@ def test_twosphere_cartesian_chart_raises() -> None:
         NotImplementedError,
         match="TwoSphere has no global Cartesian 2D chart",
     ):
-        _ = cx.charts.twosphere.cartesian
+        _ = cxc.twosphere.cartesian

@@ -17,7 +17,7 @@ __all__ = (
     "Angle",
     "Distance",
     # High-level objects
-    "as_pos",
+    "as_disp",
     "vconvert",
     "Vector",
     "PointedVector",
@@ -27,9 +27,9 @@ __all__ = (
     "cart3d",
 )
 
-from .setup_package import install_import_hook
+from . import setup_package
 
-with install_import_hook("coordinax"):
+with setup_package.install_import_hook("coordinax"):
     from . import (
         angles,
         charts,
@@ -46,15 +46,12 @@ with install_import_hook("coordinax"):
     from .angles import Angle
     from .charts import cart3d
     from .distances import Distance
-    from .objs import Coordinate, PointedVector, Vector, as_pos, cdict, vconvert
+    from .objs import Coordinate, PointedVector, Vector, as_disp, cdict, vconvert
 
-# isort: split
-# Interoperability - import the module but don't trigger registration yet
-from . import _interop
 
 # Now that coordinax is fully loaded, register interop packages
 # This avoids circular import issues since interop packages depend on coordinax
-_interop._register_interop_packages()
+setup_package.register_interop_packages()
 
 # Cleanup
-del _interop, install_import_hook
+del setup_package

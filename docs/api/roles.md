@@ -59,7 +59,7 @@ AbstractRole
 - **PhysDisp**: A physical displacement vector in a tangent space; can translate
   a point
 
-Use `as_pos(point)` to convert a Point to a PhysDisp (interpreting the point as
+Use `as_disp(point)` to convert a Point to a PhysDisp (interpreting the point as
 a displacement from the origin).
 
 ### Physical Roles (Vel, PhysAcc)
@@ -68,22 +68,26 @@ Velocity and acceleration are **tangent vectors**. They transform using the
 Jacobian of the coordinate transformation, not by simple coordinate conversion.
 
 ```python
-import coordinax as cx
+import coordinax.charts as cxc
+import coordinax.roles as cxr
+from coordinax.objs import Vector, vconvert
 import unxt as u
+```
 
-p = cx.Vector.from_(
+```python
+p = Vector.from_(
     {"x": u.Q(1, "kpc"), "y": u.Q(2, "kpc"), "z": u.Q(3, "kpc")},
-    cx.charts.cart3d,
-    cx.roles.point,
+    cxc.cart3d,
+    cxr.point,
 )
-v = cx.Vector.from_(
+v = Vector.from_(
     {"x": u.Q(10, "km/s"), "y": u.Q(20, "km/s"), "z": u.Q(30, "km/s")},
-    cx.charts.cart3d,
-    cx.roles.phys_vel,
+    cxc.cart3d,
+    cxr.phys_vel,
 )
 
 # Velocity requires the base point for correct transformation
-v_sph = v.vconvert(cx.charts.sph3d, p)
+v_sph = v.vconvert(cxc.sph3d, p)
 ```
 
 ### Coordinate-Basis Roles
@@ -92,15 +96,10 @@ Coordinate-basis tangent roles (`CoordDisp`, `CoordVel`, `CoordAcc`) transform
 by the Jacobian pushforward and also require a base point `at=`:
 
 ```python
-import coordinax as cx
-import coordinax.charts as cxc
-import coordinax.roles as cxr
-import unxt as u
-
 at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
 v = {"x": u.Q(2.0, "m/s"), "y": u.Q(0.0, "m/s")}
 
-v_pol = cx.vconvert(cxr.coord_vel, cxc.polar2d, cxc.cart2d, v, at=at)
+v_pol = vconvert(cxr.coord_vel, cxc.polar2d, cxc.cart2d, v, at=at)
 ```
 
 ```{eval-rst}

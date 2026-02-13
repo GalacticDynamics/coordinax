@@ -114,8 +114,8 @@ class TestGalactocentricFrameConversions:
                     "lat": convert(lat, u.Q),
                     "distance": convert(distance, u.Q),
                 },
-                cx.charts.lonlatsph3d,
-                cx.roles.point,
+                cxc.lonlatsph3d,
+                cxr.point,
             ),
             z_sun=convert(z_sun, u.Q),
             roll=convert(roll, u.Q),
@@ -125,8 +125,8 @@ class TestGalactocentricFrameConversions:
                     "y": convert(vy, u.Q),
                     "z": convert(vz, u.Q),
                 },
-                cx.charts.cart3d,
-                cx.roles.phys_vel,
+                cxc.cart3d,
+                cxr.phys_vel,
             ),
         )
 

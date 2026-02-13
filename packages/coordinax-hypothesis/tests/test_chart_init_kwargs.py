@@ -4,6 +4,7 @@ import hypothesis.strategies as st
 from hypothesis import given, settings
 
 import coordinax.charts as cxc
+import coordinax.embeddings as cxe
 import coordinax_hypothesis as cxst
 
 
@@ -21,15 +22,15 @@ def test_cart3d_kwargs(kwargs: dict) -> None:
 # chart generation which causes issues with parameterized generic types
 
 
-@given(kwargs=cxst.chart_init_kwargs(cxc.EmbeddedManifold))
+@given(kwargs=cxst.chart_init_kwargs(cxe.EmbeddedManifold))
 @settings(max_examples=5)
 def test_embedded_manifold_kwargs(kwargs: dict) -> None:
     """Test chart_init_kwargs generates valid EmbeddedManifold kwargs."""
     assert "intrinsic_chart" in kwargs
     assert "ambient_chart" in kwargs
     assert "params" in kwargs
-    chart = cxc.EmbeddedManifold(**kwargs)
-    assert isinstance(chart, cxc.EmbeddedManifold)
+    chart = cxe.EmbeddedManifold(**kwargs)
+    assert isinstance(chart, cxe.EmbeddedManifold)
 
 
 @given(

@@ -8,7 +8,7 @@ from plum import convert
 
 import unxt_hypothesis as ust
 
-import coordinax_interop_astropy  # noqa: F401
+import coordinax.interop.astropy  # noqa: F401
 from coordinax.distance import Distance, DistanceModulus, Parallax
 
 # ==============================================================================
