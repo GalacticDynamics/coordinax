@@ -83,6 +83,7 @@ __all__ = (
     "CartesianProductChart",
     "cartesian_chart",
     "guess_chart",
+    "cdict",
     # = 0D ======================================
     "Abstract0D",
     "Cart0D",
@@ -183,7 +184,7 @@ with setup_package.install_import_hook("coordinax.charts"):
         time1d,
         twosphere,
     )
-    from coordinax.api import cartesian_chart, guess_chart
+    from coordinax.api import cartesian_chart, cdict, guess_chart
 
 
 del setup_package

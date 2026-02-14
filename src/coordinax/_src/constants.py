@@ -1,13 +1,6 @@
 """Internal custom types for coordinax."""
 
-__all__ = (
-    "ANGLE",
-    "LENGTH",
-    "ZeroRad",
-    "Deg0",
-    "Deg90",
-    "Deg180",
-)
+__all__ = ("ANGLE", "LENGTH", "ZeroRad", "Deg0", "Deg90", "Deg180")
 
 
 import jax.numpy as jnp

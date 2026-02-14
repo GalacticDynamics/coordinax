@@ -100,7 +100,7 @@ lint = ["mypy>=1.19.1", "pre-commit>=4.5.0", "pylint>=3.3.2"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
   "coordinax-hypothesis",
-  "hypothesis[numpy]>=6.112.2",
+  "hypothesis[numpy]>=6.151.6",
   "pytest>=8.3.3",
   "pytest-arraydiff>=0.6.1",
   "pytest-cov>=6.2.1",
@@ -316,29 +316,29 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**"  = ["ANN", "INP001", "N803", "RUF002", "S101", "T20"]
+"**/tests/**"  = ["ANN", "D102", "INP001", "N803", "RUF002", "S101", "T20"]
 "__init__.py"  = ["F403"]
 "docs/conf.py" = ["A001", "INP001"]
 "noxfile.py"   = ["T20"]
 
 [tool.ruff.lint.flake8-import-conventions.aliases]
-coordinax              = "cx"
-"coordinax.angles"     = "cxa"
-"coordinax.charts"     = "cxc"
-"coordinax.distances"  = "cxd"
-"coordinax.embeddings" = "cxe"
-"coordinax.frames"     = "cxf"
-"coordinax.metrics"    = "cxm"
-"coordinax.objects"    = "cxobj"
-"coordinax.ops"        = "cxop"
-"coordinax.roles"      = "cxr"
-"coordinax.transforms" = "cxt"
-coordinax_api          = "cxapi"
-coordinax_astro        = "cxastro"
-coordinax_hypothesis   = "cxst"
-equinox                = "eqx"
-functools              = "ft"
-unxt                   = "u"
+coordinax                   = "cx"
+"coordinax.angles"          = "cxa"
+"coordinax.charts"          = "cxc"
+"coordinax.distances"       = "cxd"
+"coordinax.embeddings"      = "cxe"
+"coordinax.frames"          = "cxf"
+"coordinax.metrics"         = "cxm"
+"coordinax.objects"         = "cxobj"
+"coordinax.ops"             = "cxop"
+"coordinax.roles"           = "cxr"
+"coordinax.transforms"      = "cxt"
+coordinax_api               = "cxapi"
+coordinax_astro             = "cxastro"
+"coordinax_hypothesis.core" = "cxst"
+equinox                     = "eqx"
+functools                   = "ft"
+unxt                        = "u"
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

@@ -105,19 +105,20 @@ class AbstractRole:
 
 @final
 class Point(AbstractRole):
-    """Point role flag (affine point data).
+    r"""Point role flag (affine point data).
 
-    Mathematical Definition
-    -----------------------
-    A **point** is an element of a manifold or affine space M.
-    Points do not form a vector space in general; e.g., on a curved manifold
-    you cannot meaningfully add two points.
+    Mathematical Definition:
 
-    - In Euclidean space ℝⁿ, points can be identified with vectors from
-      the origin, but this identification is basis-dependent.
-    - On manifolds (e.g., a sphere), points are elements of the manifold
-      and have no additive structure.
-    - Point coordinates may have mixed dimensions (e.g., spherical: length + angles).
+    A **point** is an element of a manifold or affine space $M$. Points do not
+    form a vector space in general; e.g., on a curved manifold you cannot
+    meaningfully add two points.
+
+    - In Euclidean space $\mathbb{R}^n$, points can be identified with vectors
+      from the origin, but this identification is basis-dependent.
+    - On manifolds (e.g., a sphere), points are elements of the manifold and
+      have no additive structure.
+    - Point coordinates may have mixed dimensions (e.g., spherical: length +
+      angles).
 
     See Also
     --------
@@ -161,51 +162,53 @@ class AbstractPhysRole(AbstractRole):
 
 @final
 class PhysDisp(AbstractPhysRole):
-    r"""Displacement role flag: physical displacement vectors with uniform length units.
+    r"""Physical displacement role for vectors with uniform length units.
 
-    Mathematical Definition
-    -----------------------
+    Mathematical Definition:
+
     A **position difference** or **physical displacement** represents a
-    **physical vector** in the tangent space T_pM, expressed using
+    **physical vector** in the tangent space $T_{pM}$, expressed using
     **orthonormal frame components** at a base point p.
 
-    CRITICAL: All PhysDisp components must have uniform dimension [length].
-    This is NOT a coordinate increment (which would have mixed units in curvilinear
-    coordinates).
+    CRITICAL: All {class}`~coordinax.roles.PhysDisp` components must have
+    uniform dimension [length]. This is NOT a coordinate increment (which would
+    have mixed units in curvilinear coordinates).
 
-    Physical Components vs. Coordinate Increments
-    ---------------------------------------------
-    In cylindrical coordinates ($\rho$, $\phi$, z):
+    Physical Components vs. Coordinate Increments:
 
-    - **Physical Pos** (this class): (rho=1m, phi=2m, z=3m) ✓
-      where phi is the physical tangential length component
-    - **Coordinate increment** (NOT this class): (Δrho=1m, Δphi=0.5rad, Δz=3m) ✗
+    In cylindrical coordinates ($\rho$, $\phi$, $z$):
 
-    For example, phi=2m means "2 meters in the tangential direction" at the
-    base point, NOT "2 radians of angular displacement".
+    - **Physical Pos** (this class): (rho=1m, phi=2m, z=3m) where phi is the
+      physical tangential length component
+    - **Coordinate increment** (NOT this class): (Δrho=1m, Δphi=0.5rad, Δz=3m)
 
-    Transformation Rule
-    -------------------
-    Pos transforms via **physical_tangent_transform** (pushforward / tangent_transform),
-    the SAME rule as Velocity and Acceleration:
+    For example, phi=2m means "2 meters in the tangential direction" at the base
+    point, NOT "2 radians of angular displacement".
 
-    | Role         | Transform via                | Base point needed? |
-    |--------------|-----------------------------|--------------------|
-    | Point        | point_transform              | No                 |
-    | PhysDisp     | physical_tangent_transform  | Sometimes*         |
-    | PhysVel      | physical_tangent_transform  | Sometimes*         |
-    | PhysAcc      | physical_tangent_transform  | Sometimes*         |
+    Transformation Rule:
+
+    PhysDisp transforms via
+    {func}`~coordinax.transforms.physical_tangent_transform`, the SAME rule as
+    {class}`~coordinax.roles.PhysVel` and {class}`~coordinax.roles.PhysAcc`:
+
+    | Role             | Transform via                   | Base point needed? |
+    |------------------|---------------------------------|--------------------|
+    | ``Point``        | ``point_transform``             | No                 |
+    | ``PhysDisp``     | ``physical_tangent_transform``  | Sometimes          |
+    | ``PhysVel``      | ``physical_tangent_transform``  | Sometimes          |
+    | ``PhysAcc``      | ``physical_tangent_transform``  | Sometimes          |
 
     *Required for embedded/manifold charts; optional for Euclidean spaces.
 
-    PhysDisp, Velocity, and Acceleration are geometrically the same
-    (tangent vectors), differing only in physical units:
-    - PhysDisp: [length]
-    - Velocity: [length/time]
-    - Acceleration: [length/time²]
+    PhysDisp, PhysVel, and PhysAcc are geometrically the same (tangent vectors),
+    differing only in physical units:
 
-    Addition Rules
-    --------------
+    - PhysDisp: [length]
+    - PhysVel: [length/time]
+    - PhysAcc: [length/time^2]
+
+    Addition Rules:
+
     - ``PhysDisp + PhysDisp -> PhysDisp`` (same tangent space)
     - ``Point + PhysDisp -> Point`` (affine translation)
     - ``PhysDisp + Point`` is **not** defined (not commutative)
@@ -220,26 +223,20 @@ class PhysDisp(AbstractPhysRole):
 
     Create a position-difference vector in Cartesian coordinates:
 
-    >>> disp = cx.Vector(
-    ...     {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(0.0, "m")},
-    ...     cxc.cart3d,
-    ...     cxr.phys_disp,
-    ... )
+    >>> disp = cx.Vector({"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(0, "m")},
+    ...                  cxc.cart3d, cxr.phys_disp)
 
     In cylindrical coordinates, ALL components have length units:
 
-    >>> disp_cyl = cx.Vector(
-    ...     {"rho": u.Q(1.0, "m"), "phi": u.Q(2.0, "m"), "z": u.Q(0.0, "m")},
-    ...     cxc.cyl3d,
-    ...     cxr.phys_disp,
-    ... )
+    >>> disp_cyl = cx.Vector({"rho": u.Q(1, "m"), "phi": u.Q(2, "m"), "z": u.Q(0, "m")},
+    ...                      cxc.cyl3d, cxr.phys_disp)
 
     The phi=2m means "2 meters in the tangential direction", not "2 radians".
 
     See Also
     --------
-    Point : An affine point on a manifold.
-    PhysVel : A velocity vector (position-difference per unit time).
+    Point : An affine point on a manifold.  PhysVel : A velocity vector
+    (position-difference per unit time).
 
     """
 

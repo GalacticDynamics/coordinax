@@ -1,6 +1,6 @@
-# `coordinaxt`
+# `coordinax`
 
-The `coordinaxt` module provides coordinate transformation functions.
+The `coordinax` module provides coordinate transformation functions.
 
 ## Overview
 
@@ -15,7 +15,7 @@ mathematically precise coordinate conversions:
 
 ```python
 import coordinax.charts as cxc
-import coordinaxt as cxt
+import coordinax.transforms as cxt
 import unxt as u
 
 # Transform a point from Cartesian to spherical (with Quantities)
@@ -39,6 +39,7 @@ v_sph = cxt.physical_tangent_transform(cxc.sph3d, cxc.cart3d, v_cart, at=p_cart)
 
 Transform point coordinates from one chart to another:
 
+<!-- skip: next -->
 ```python
 p_new = cxt.point_transform(to_chart, from_chart, p)
 ```
@@ -73,6 +74,7 @@ p_cart = cxt.point_transform(cxc.cart1d, cxc.radial1d, p_arr, usys=u.unitsystems
 
 Transform tangent vectors (velocities, accelerations) between charts:
 
+<!-- skip: next -->
 ```python
 v_new = cxt.physical_tangent_transform(to_chart, from_chart, v, at=p)
 ```
@@ -88,6 +90,7 @@ position.
 
 Get the orthonormal frame vectors at a point:
 
+<!-- skip: next -->
 ```python
 frame = cxt.frame_cart(chart, at=p)
 ```
@@ -99,6 +102,7 @@ coordinates.
 
 Get the canonical Cartesian chart for a given chart:
 
+<!-- skip: next -->
 ```python
 cart_chart = cxt.cartesian_chart(chart)
 # e.g., cartesian_chart(sph3d) returns cart3d
@@ -124,9 +128,9 @@ Acceleration transforms include connection terms for correct geometric behavior.
 
 ```{eval-rst}
 
-.. currentmodule:: coordinaxt
+.. currentmodule:: coordinax
 
-.. automodule:: coordinaxt
+.. automodule:: coordinax
     :exclude-members: aval, default, materialise, enable_materialise
 
 ```

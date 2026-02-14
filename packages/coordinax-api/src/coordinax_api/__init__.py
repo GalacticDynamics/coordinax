@@ -45,7 +45,7 @@ __all__ = (
     "CsDict",
 )
 
-from ._charts import cartesian_chart, guess_chart
+from ._charts import cartesian_chart, cdict, guess_chart
 from ._custom_types import (
     CDict,
     ComponentKey,
@@ -56,7 +56,7 @@ from ._custom_types import (
 from ._embeddings import embed_point, embed_tangent, project_point, project_tangent
 from ._frames import frame_of, frame_transform_op
 from ._metrics import metric_of
-from ._objs import cdict, vconvert
+from ._objs import vconvert
 from ._operators import apply_op, simplify
 from ._roles import as_disp, guess_role
 from ._transformations import (

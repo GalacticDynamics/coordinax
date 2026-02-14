@@ -92,12 +92,12 @@ def vconvert(
     from_chart: cxc.AbstractChart,  # type: ignore[type-arg]
     x: CsDict,
     /,
-    at: CsDict,
     *_: CsDict,
+    at: CsDict,
     usys: OptUSys = None,
 ) -> CsDict:
     """Convert coordinate-basis tangent components between charts."""
-    return api.coord_transform(to_chart, from_chart, x, at=at, usys=usys)
+    return cxapi.coord_transform(to_chart, from_chart, x, at=at, usys=usys)
 
 
 # =============================================================================

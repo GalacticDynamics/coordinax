@@ -218,8 +218,11 @@ When generating CsDicts for product charts:
 
 ### 2) Role strategies
 
-- `roles()` generates available roles (`Point`, `PhysDisp`, `PhysVel`,
-  `PhysAcc`, …).
+- `role_classes()` generates concrete role classes (`Point`, `PhysDisp`,
+  `PhysVel`, `PhysAcc`, …) without instantiating them. Supports `include` and
+  `exclude` filtering.
+- `roles()` generates available role instances (`Point`, `PhysDisp`, `PhysVel`,
+  `PhysAcc`, …). Delegates to `role_classes()` internally.
 - `physical_roles()` generates `{Pos, PhysVel, PhysAcc}`.
 - `point_role()` generates `Point`.
 

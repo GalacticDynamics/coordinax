@@ -44,7 +44,7 @@ from hypothesis import given
 
 import coordinax.angles as cxa
 import coordinax.distances as cxd
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 @given(angle=cxst.angles())
@@ -90,7 +90,7 @@ of angle-related computations.
 from hypothesis import given, strategies as st
 
 import unxt as u
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate basic angles (no wrapping)
@@ -156,7 +156,7 @@ property-based testing of distance-related computations.
 from hypothesis import given, strategies as st
 
 import coordinax.distances as cxd
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate basic non-negative distances
@@ -216,7 +216,7 @@ magnitude-based distance computations.
 from hypothesis import given, strategies as st
 
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate basic distance moduli
@@ -272,7 +272,7 @@ parallax-based distance computations.
 from hypothesis import given, strategies as st
 
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate basic non-negative parallaxes
@@ -339,7 +339,7 @@ representations.
 from hypothesis import given
 
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate 3D representations like Cart3D
@@ -408,7 +408,7 @@ The returned tuple follows this pattern:
 from hypothesis import given
 
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate a chain from acceleration
@@ -480,7 +480,7 @@ flags of the source vector's representation.
 from hypothesis import given
 
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Test vector conversions to a full chain of targets

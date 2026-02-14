@@ -31,7 +31,7 @@ uv add coordinax-hypothesis
 from hypothesis import given
 import coordinax.angles as cxa
 import coordinax.distances as cxd
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 @given(angle=cxst.angles())
@@ -67,7 +67,7 @@ Generate random chart class types from `coordinax`.
 ```
 from hypothesis import given, strategies as st
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Any chart class
@@ -110,6 +110,43 @@ def test_dynamic(chart_class):
     )
 ```
 
+### `role_classes(include=None, exclude=())`
+
+Generate random concrete role classes (not instances) from `coordinax.roles`.
+
+**Parameters:**
+
+- `include`: If provided, only generate role classes from this tuple. Otherwise,
+  all concrete role classes are considered.
+- `exclude`: Role classes to exclude from generation. Default is empty (no
+  exclusions).
+
+**Examples:**
+
+```
+from hypothesis import given
+import coordinax.roles as cxr
+import coordinax_hypothesis.core as cxst
+
+
+# Any concrete role class
+@given(role_cls=cxst.role_classes())
+def test_any_role_class(role_cls):
+    assert issubclass(role_cls, cxr.AbstractRole)
+
+
+# Only physical tangent role classes
+@given(role_cls=cxst.role_classes(include=(cxr.PhysDisp, cxr.PhysVel, cxr.PhysAcc)))
+def test_phys_role_classes(role_cls):
+    assert issubclass(role_cls, cxr.AbstractPhysRole)
+
+
+# Exclude Point
+@given(role_cls=cxst.role_classes(exclude=(cxr.Point,)))
+def test_non_point_role_class(role_cls):
+    assert role_cls is not cxr.Point
+```
+
 ### `angles(wrap_to=None, **kwargs)`
 
 Generate random `unxt.Angle` objects.
@@ -124,7 +161,7 @@ Generate random `unxt.Angle` objects.
 ```
 from hypothesis import given, strategies as st
 import unxt as u
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Basic angles
@@ -159,7 +196,7 @@ Generate random {class}`coordinax.Distance` objects.
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Basic non-negative distances
@@ -194,7 +231,7 @@ Generate random `coordinax.DistanceModulus` objects.
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Basic distance moduli
@@ -224,7 +261,7 @@ Generate random `coordinax.Parallax` objects.
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Basic non-negative parallaxes
@@ -268,7 +305,7 @@ Generate random chart instances from `coordinax`.
 ```
 from hypothesis import given, strategies as st
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Any chart instance
@@ -339,7 +376,7 @@ properties.
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate 3D charts like Cart3D
@@ -407,7 +444,7 @@ position).
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate a chain from acceleration
@@ -461,8 +498,9 @@ strategy is useful for testing functions that accept component dictionaries.
 
 ```python
 from hypothesis import given
-import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax.charts as cxc
+import coordinax.roles as cxr
+import coordinax_hypothesis.core as cxst
 
 
 # CsDict for specific chart with Point role
@@ -514,7 +552,7 @@ flags of the source vector's chart.
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Test vector conversions to a full chain of targets
@@ -625,7 +663,7 @@ generating Quantity components.
 import jax.numpy as jnp
 from hypothesis import given, strategies as st
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate any vector

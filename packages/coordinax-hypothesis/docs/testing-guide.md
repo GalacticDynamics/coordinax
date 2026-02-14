@@ -24,7 +24,7 @@ You write:
 
 ```
 from hypothesis import given
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 @given(angle=cxst.angles(units="deg"))
@@ -64,7 +64,7 @@ uv add coordinax-hypothesis
 
 ```
 from hypothesis import given, assume, strategies as st
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 import unxt as u
 import jax.numpy as jnp
 ```
@@ -173,7 +173,7 @@ def test_dynamic_shaped_angles(angle):
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 @given(chart_class=cxst.chart_classes())
@@ -226,7 +226,7 @@ to create charts dynamically with varying parameters:
 ```
 from hypothesis import given
 import coordinax.charts as cxc
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Generate valid kwargs for specific chart classes
@@ -282,7 +282,7 @@ making it easy to test transformations across compatible charts:
 ```
 from hypothesis import given
 import coordinax as cx
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 
 
 # Test that 3D charts can be converted to each other
@@ -486,7 +486,7 @@ strategies. You can use both packages together:
 ```
 from hypothesis import given
 import unxt_hypothesis as ust
-import coordinax_hypothesis as cxst
+import coordinax_hypothesis.core as cxst
 import unxt as u
 
 
