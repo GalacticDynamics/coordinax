@@ -77,7 +77,7 @@ class GalileanTranslation(AbstractGalileanOperator):
     >>> newq
     CartesianPos3D(x=Q(1., 'km'), y=Q(0., 'km'), z=Q(-4.371139e-08, 'km'))
     >>> newt
-    Quantity(Array(1., dtype=float32, ...), unit='Gyr')
+    Q(1., 'Gyr')
 
     """
 
@@ -139,8 +139,8 @@ class GalileanTranslation(AbstractGalileanOperator):
 
     # -------------------------------------------
 
-    @AbstractOperator.__call__.dispatch  # type: ignore[untyped-decorator]
-    def __call__(
+    @AbstractOperator.__call__.dispatch  # type: ignore[union-attr,untyped-decorator]
+    def __call__(  # type: ignore[override]
         self: "GalileanTranslation",
         t: u.Q["time"],
         x: AbstractPos3D,
@@ -171,13 +171,13 @@ class GalileanTranslation(AbstractGalileanOperator):
         CartesianPos3D(x=Q(2, 'km'), y=Q(3, 'km'), z=Q(4, 'km'))
 
         >>> newt
-        Quantity(Array(2, dtype=int32, ...), unit='Gyr')
+        Q(2, 'Gyr')
 
         """
         return t + self.delta_t, x + self.delta_q
 
 
-@AbstractOperator.from_.dispatch  # type: ignore[untyped-decorator]
+@AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
 def from_(
     cls: type[GalileanTranslation], delta: u.AbstractQuantity, /
 ) -> GalileanTranslation:
@@ -194,7 +194,7 @@ def from_(
     """
     return cls(
         delta_t=delta[0] / u.Q(299_792.458, "km/s"),  # TODO: couple to FourVector value
-        delta_q=CartesianPos3D.from_(delta[1:]),
+        delta_q=CartesianPos3D.from_(delta[1:]),  # type: ignore[arg-type]
     )
 
 

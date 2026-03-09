@@ -104,7 +104,7 @@ class AbstractOperator(eqx.Module):
         GalileanTranslation( delta_t=Q(f32[], 's'), delta_q=CartesianPos3D(...) )
 
         """
-        return simplify_op(self)
+        return simplify_op(self)  # type: ignore[return-value]
 
     # ===============================================================
     # Wadler-Lindig API

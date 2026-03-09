@@ -74,7 +74,7 @@ class CartesianVel2D(AbstractCartesian, AbstractVel2D):
         >>> import coordinax.vecs as cxv
         >>> v = cxv.CartesianVel2D.from_([3, 4], "km/s")
         >>> v.norm()
-        Quantity(Array(5., dtype=float32), unit='km / s')
+        Q(5., 'km / s')
 
         """
         return jnp.sqrt(self.x**2 + self.y**2)
@@ -111,7 +111,7 @@ class CartesianAcc2D(AbstractCartesian, AbstractAcc2D):
         >>> import coordinax as cx
         >>> v = cx.vecs.CartesianAcc2D.from_([3, 4], "km/s2")
         >>> v.norm()
-        Quantity(Array(5., dtype=float32), unit='km / s2')
+        Q(5., 'km / s2')
 
         """
         return jnp.sqrt(self.x**2 + self.y**2)

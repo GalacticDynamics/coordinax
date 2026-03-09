@@ -64,7 +64,7 @@ class CartesianVel1D(AbstractCartesian, AbstractVel1D):
         >>> import coordinax.vecs as cxv
         >>> q = cxv.CartesianVel1D.from_([-1], "km/s")
         >>> q.norm()
-        Quantity(Array(1, dtype=int32), unit='km / s')
+        Q(1, 'km / s')
 
         """
         return jnp.abs(self.x)
@@ -87,7 +87,7 @@ class CartesianAcc1D(AbstractCartesian, AbstractAcc1D):
         >>> import coordinax as cx
         >>> q = cx.vecs.CartesianAcc1D.from_([-1], "km/s2")
         >>> q.norm()
-        Quantity(Array(1, dtype=int32), unit='km / s2')
+        Q(1, 'km / s2')
 
         """
         return jnp.abs(self.x)

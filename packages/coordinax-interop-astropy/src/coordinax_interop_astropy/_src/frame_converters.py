@@ -110,7 +110,7 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     return apyc.ICRS()
 
 
-@cxf.AbstractReferenceFrame.from_.dispatch  # type: ignore[untyped-decorator]
+@cxf.AbstractReferenceFrame.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
 def from_(cls: type[cxastro.ICRS], obj: apyc.ICRS, /) -> cxastro.ICRS:
     """Construct from a `astropy.coordinates.ICRS`.
 
@@ -143,7 +143,7 @@ def astropy_icrs_to_coordinax_icrs(frame: apyc.ICRS, /) -> cxastro.ICRS:
     the conversion is straightforward.
 
     """
-    return cxastro.ICRS.from_(frame)
+    return cxastro.ICRS.from_(frame)  # type: ignore[return-value]
 
 
 # =============================================================================
@@ -231,7 +231,7 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     )
 
 
-@cxf.AbstractReferenceFrame.from_.dispatch  # type: ignore[untyped-decorator]
+@cxf.AbstractReferenceFrame.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
 def from_(
     cls: type[cxastro.Galactocentric], frame: apyc.Galactocentric, /
 ) -> cxastro.Galactocentric:
@@ -282,7 +282,7 @@ def from_(
         galcen=galcen,
         roll=convert(frame.roll, u.Q),
         z_sun=convert(frame.z_sun, u.Q),
-        galcen_v_sun=galcen_v_sun,
+        galcen_v_sun=galcen_v_sun,  # type: ignore[arg-type]
     )
 
 
@@ -343,4 +343,4 @@ def astropy_galactocentric_to_coordinax_galactocentric(
     True
 
     """
-    return cxastro.Galactocentric.from_(frame)
+    return cxastro.Galactocentric.from_(frame)  # type: ignore[return-value]

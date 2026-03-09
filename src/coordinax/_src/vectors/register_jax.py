@@ -95,7 +95,7 @@ def vec_diff_to_array(obj: AbstractVector, /) -> Shaped[Array, "*batch N"]:
            [3.]], dtype=float32)
 
     """
-    cart = obj.vconvert(cartesian_vector_type(obj))  # convert vector to Cartesian
+    cart = obj.vconvert(cartesian_vector_type(obj))  # type: ignore[arg-type]
     cart = full_shaped(cart)  # ensure full shape
     comp_qs = field_values(cart)
     unit = zeroth(comp_qs).unit

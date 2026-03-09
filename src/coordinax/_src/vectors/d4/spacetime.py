@@ -112,7 +112,7 @@ class FourVector(AbstractPos4D):
 
         >>> w = cx.FourVector(t=u.Q(1, "s"), q=u.Q([1, 2, 3], "m"))
         >>> w.x
-        Quantity(Array(1, dtype=int32), unit='m')
+        Q(1, 'm')
 
         """
         return getattr(self.q, name)
@@ -130,7 +130,7 @@ class FourVector(AbstractPos4D):
 
         >>> w = cx.FourVector(t=u.Q(1, "s"), q=u.Q([1, 2, 3], "m"))
         >>> w._norm2()
-        Quantity(Array(8.987552e+10, dtype=float32), unit='km2')
+        Q(8.987552e+10, 'km2')
 
         """
         return (self.c * self.t) ** 2 - (self.q.norm() ** 2)  # type: ignore[misc,operator]
@@ -147,7 +147,7 @@ class FourVector(AbstractPos4D):
 
         >>> w = cx.FourVector(t=u.Q(1, "s"), q=u.Q([1, 2, 3], "m"))
         >>> w.norm()
-        Quantity(Array(299792.47+0.j, dtype=complex64), unit='km')
+        Q(299792.47+0.j, 'km')
 
         """
         norm2 = jnp.asarray(self._norm2(), dtype=complex)  # type: ignore[misc]

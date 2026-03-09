@@ -168,7 +168,7 @@ class KinematicSpace(
         # Check that the shapes are broadcastable
         values = eqx.error_if(
             values,
-            not can_broadcast_shapes([v.shape for v in values]),
+            not can_broadcast_shapes([v.shape for v in values]),  # type: ignore[attr-defined]
             "vector shapes are not broadcastable.",
         )
 

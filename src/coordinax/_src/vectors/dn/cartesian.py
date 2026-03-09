@@ -40,7 +40,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     >>> q = cx.vecs.CartesianPosND.from_([[1]], "km")
     >>> q.q
-    Quantity(Array([[1]], dtype=int32), unit='km')
+    Q([[1]], 'km')
     >>> q.shape
     (1,)
 
@@ -48,7 +48,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     >>> q = cx.vecs.CartesianPosND(u.Q([1, 2], "km"))
     >>> q.q
-    Quantity(Array([1, 2], dtype=int32), unit='km')
+    Q([1, 2], 'km')
     >>> q.shape
     ()
 
@@ -56,7 +56,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
     >>> q.q
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km')
+    Q([1, 2, 3], 'km')
     >>> q.shape
     ()
 
@@ -64,7 +64,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4], "km"))
     >>> q.q
-    Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km')
+    Q([1, 2, 3, 4], 'km')
     >>> q.shape
     ()
 
@@ -72,7 +72,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
     >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3, 4, 5], "km"))
     >>> q.q
-    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
+    Q([1, 2, 3, 4, 5], 'km')
     >>> q.shape
     ()
 
@@ -125,7 +125,7 @@ class CartesianPosND(AbstractPosND, AbstractCartesian, quax_blocks.NumpyNegMixin
 
         >>> q = cx.vecs.CartesianPosND(u.Q([1, 2, 3], "km"))
         >>> q.norm()
-        Quantity(Array(3.7416575, dtype=float32), unit='km')
+        Q(3.7416575, 'km')
 
         """
         return jnp.linalg.vector_norm(self.q, axis=-1)
@@ -148,7 +148,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     >>> q = cxv.CartesianVelND(u.Q([[1]], "km/s"))
     >>> q.q
-    Quantity(Array([[1]], dtype=int32), unit='km / s')
+    Q([[1]], 'km / s')
     >>> q.shape
     (1,)
 
@@ -156,7 +156,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     >>> q = cxv.CartesianVelND(u.Q([1, 2], "km/s"))
     >>> q.q
-    Quantity(Array([1, 2], dtype=int32), unit='km / s')
+    Q([1, 2], 'km / s')
     >>> q.shape
     ()
 
@@ -164,7 +164,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     >>> q = cxv.CartesianVelND(u.Q([1, 2, 3], "km/s"))
     >>> q.q
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
+    Q([1, 2, 3], 'km / s')
     >>> q.shape
     ()
 
@@ -172,7 +172,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     >>> q = cxv.CartesianVelND(u.Q([1, 2, 3, 4], "km/s"))
     >>> q.q
-    Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km / s')
+    Q([1, 2, 3, 4], 'km / s')
     >>> q.shape
     ()
 
@@ -180,7 +180,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
     >>> q = cxv.CartesianVelND(u.Q([1, 2, 3, 4, 5], "km/s"))
     >>> q.q
-    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
+    Q([1, 2, 3, 4, 5], 'km / s')
     >>> q.shape
     ()
 
@@ -223,7 +223,7 @@ class CartesianVelND(AbstractCartesian, AbstractVelND):
 
         >>> c = cxv.CartesianVelND(u.Q([1, 2, 3], "km/s"))
         >>> c.norm()
-        Quantity(Array(3.7416575, dtype=float32), unit='km / s')
+        Q(3.7416575, 'km / s')
 
         """
         return jnp.linalg.vector_norm(self.q, axis=-1)
@@ -246,7 +246,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     >>> q = cx.vecs.CartesianAccND(u.Q([[1]], "km/s2"))
     >>> q.q
-    Quantity(Array([[1]], dtype=int32), unit='km / s2')
+    Q([[1]], 'km / s2')
     >>> q.shape
     (1,)
 
@@ -254,7 +254,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     >>> q = cx.vecs.CartesianAccND(u.Q([1, 2], "km/s2"))
     >>> q.q
-    Quantity(Array([1, 2], dtype=int32), unit='km / s2')
+    Q([1, 2], 'km / s2')
     >>> q.shape
     ()
 
@@ -262,7 +262,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))
     >>> q.q
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
+    Q([1, 2, 3], 'km / s2')
     >>> q.shape
     ()
 
@@ -270,7 +270,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3, 4], "km/s2"))
     >>> q.q
-    Quantity(Array([1, 2, 3, 4], dtype=int32), unit='km / s2')
+    Q([1, 2, 3, 4], 'km / s2')
     >>> q.shape
     ()
 
@@ -278,7 +278,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
     >>> q = cx.vecs.CartesianAccND(u.Q([1, 2, 3, 4, 5], "km/s2"))
     >>> q.q
-    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
+    Q([1, 2, 3, 4, 5], 'km / s2')
     >>> q.shape
     ()
 
@@ -326,7 +326,7 @@ class CartesianAccND(AbstractCartesian, AbstractAccND):
 
         >>> c = cx.vecs.CartesianAccND(u.Q([1, 2, 3], "km/s2"))
         >>> c.norm()
-        Quantity(Array(3.7416575, dtype=float32), unit='km / s2')
+        Q(3.7416575, 'km / s2')
 
         """
         return jnp.linalg.vector_norm(self.q, axis=-1)

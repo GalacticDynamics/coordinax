@@ -39,10 +39,8 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[BareQuantity, "*batch 4"]:
     ...                        q=u.Q([[1, 2, 3], [4, 5, 6]], "pc"))
 
     >>> convert(w, u.quantity.BareQuantity).uconvert("pc")
-    BareQuantity(Array([[0.3066014, 1. , 2. , 3. ],
-                        [0.6132028, 4. , 4.9999995, 6. ]],
-                       dtype=float32, ...),
-                 unit='pc')
+    BareQuantity([[0.30660141, 1.       , 2.       , 3.       ],
+                  [0.61320281, 4.       , 4.99999952, 6.       ]], 'pc')
 
     """
     cart = convert(obj.q, BareQuantity)
@@ -67,10 +65,8 @@ def fourvec_to_quantity(obj: FourVector, /) -> Shaped[u.Q["length"], "*batch 4"]
     ...                        q=u.Q([[1, 2, 3], [4, 5, 6]], "pc"))
 
     >>> convert(w, u.Quantity).uconvert("pc")
-    Quantity(Array([[0.3066014, 1. , 2. , 3. ],
-                              [0.6132028, 4. , 4.9999995, 6. ]],
-                             dtype=float32, ...),
-                       unit='pc')
+    Q([[0.30660141, 1.       , 2.       , 3.       ],
+       [0.61320281, 4.       , 4.99999952, 6.       ]], 'pc')
 
     """
     cart: u.Quantity = convert(obj.q, u.Quantity)

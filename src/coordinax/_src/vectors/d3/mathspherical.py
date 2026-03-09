@@ -76,7 +76,7 @@ class MathSphericalPos(AbstractSphericalPos):
         >>> s = cx.vecs.MathSphericalPos(r=u.Q(3, "km"), theta=u.Q(90, "deg"),
         ...                              phi=u.Q(0, "deg"))
         >>> s.norm()
-        Distance(Array(3, dtype=int32, ...), unit='km')
+        Distance(3, 'km')
 
         """
         return self.r

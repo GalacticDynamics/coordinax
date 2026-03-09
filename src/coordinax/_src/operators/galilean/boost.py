@@ -182,7 +182,7 @@ def call(
 
     >>> _, newq = op(delta_t, q)
     >>> newq
-    Quantity(Array([ 2, -1,  3], dtype=int32), unit='m')
+    Q([ 2, -1,  3], 'm')
 
     """
     vel = convert(self.velocity, u.Q)

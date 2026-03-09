@@ -28,7 +28,7 @@ dimensions:
 >>> import coordinax.angle as cxa
 >>> a = cxa.Angle(45, "deg")
 >>> a
-Angle(Array(45, dtype=int32, weak_type=True), unit='deg')
+Angle(45, 'deg')
 ```
 
 Just like {class}`~unxt.quantity.Quantity`, you can flexibly create
@@ -37,13 +37,13 @@ Just like {class}`~unxt.quantity.Quantity`, you can flexibly create
 
 ```{code-block} python
 >>> cxa.Angle.from_(45, "deg")
-Angle(Array(45, dtype=int32, weak_type=True), unit='deg')
+Angle(45, 'deg')
 
 >>> cxa.Angle.from_([45, 90], "deg")
-Angle(Array([45, 90], dtype=int32), unit='deg')
+Angle([45, 90], 'deg')
 
 >>> cxa.Angle.from_(jnp.array([10, 15, 20]), "deg")
-Angle(Array([10, 15, 20], dtype=int32), unit='deg')
+Angle([10, 15, 20], 'deg')
 
 ```
 
@@ -56,11 +56,11 @@ broadcasting, and most mathematical functions, just like
 ```{code-block} python
 >>> b = cxa.Angle(30, "deg")
 >>> a + b
-Angle(Array(75, dtype=int32, weak_type=True), unit='deg')
+Angle(75, 'deg')
 >>> 2 * a
-Angle(Array(90, dtype=int32, weak_type=True), unit='deg')
+Angle(90, 'deg')
 >>> a.to("rad")
-Angle(Array(0.7853982, dtype=float32, weak_type=True), unit='rad')
+Angle(0.7853982, 'rad')
 ```
 
 For more information on mathematical operations, see the unxt documentation.
@@ -87,14 +87,14 @@ to a specified range, which is useful for keeping angles within a branch cut:
 >>> import unxt as u
 >>> a = cxa.Angle(370, "deg")
 >>> a.wrap_to(u.Q(0, "deg"), u.Q(360, "deg"))
-Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
+Angle(10, 'deg')
 ```
 
 The {meth}`~coordinax.angle.Angle.wrap_to` method has a function counterpart
 
 ```{code-block} python
 >>> cxa.wrap_to(a, u.Q(0, "deg"), u.Q(360, "deg"))
-Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
+Angle(10, 'deg')
 ```
 
 ---
@@ -118,7 +118,7 @@ dimensions:
 >>> import coordinax.distance as cxd
 >>> d = cxd.Distance(10, "kpc")
 >>> d
-Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')
+Distance(10, 'kpc')
 ```
 
 ### Creating Parallax and DistanceModulus Objects
@@ -130,11 +130,11 @@ distance:
 ```{code-block} python
 >>> p = cxd.Parallax(0.1, "mas")
 >>> p
-Parallax(Array(0.1, dtype=float32, weak_type=True), unit='mas')
+Parallax(0.1, 'mas')
 
 >>> dm = cxd.DistanceModulus(15, "mag")
 >>> dm
-DistanceModulus(Array(15, dtype=int32, weak_type=True), unit='mag')
+DistanceModulus(15, 'mag')
 ```
 
 ### Properties and Conversions
@@ -143,19 +143,19 @@ Each of these classes provides properties to convert between representations:
 
 ```{code-block} python
 >>> d.parallax
-Parallax(Array(4.848137e-10, dtype=float32, weak_type=True), unit='rad')
+Parallax(4.848137e-10, 'rad')
 >>> d.distance_modulus
-DistanceModulus(Array(15., dtype=float32), unit='mag')
+DistanceModulus(15., 'mag')
 
 >>> p.distance.uconvert("kpc")
-Distance(Array(10., dtype=float32, weak_type=True), unit='kpc')
+Distance(10., 'kpc')
 >>> p.distance_modulus
-DistanceModulus(Array(15., dtype=float32), unit='mag')
+DistanceModulus(15., 'mag')
 
 >>> dm.distance.uconvert("kpc")
-Distance(Array(10., dtype=float32, weak_type=True), unit='kpc')
+Distance(10., 'kpc')
 >>> dm.parallax
-Parallax(Array(4.848137e-10, dtype=float32, weak_type=True), unit='rad')
+Parallax(4.848137e-10, 'rad')
 ```
 
 All three classes enforce that their units are appropriate for their physical

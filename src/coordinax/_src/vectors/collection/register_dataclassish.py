@@ -8,7 +8,7 @@ from dataclasses import Field
 from collections.abc import ItemsView, KeysView, Mapping, ValuesView
 from typing import Any
 
-from plum import dispatch
+import plum
 
 from .core import KinematicSpace
 from coordinax._src.vectors.base import AbstractVector
@@ -16,7 +16,7 @@ from coordinax._src.vectors.base import AbstractVector
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)
+@plum.dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def fields(obj: KinematicSpace, /) -> tuple[Field, ...]:  # type: ignore[type-arg]
     """Return the items from a Space.
 
@@ -37,12 +37,12 @@ def fields(obj: KinematicSpace, /) -> tuple[Field, ...]:  # type: ignore[type-ar
      Field(name='acceleration',type=<class 'coordinax...CartesianAcc3D'>,...))
 
     """
-    return fields.invoke(Mapping[str, Any])(obj)  # type: ignore[attr-defined]
+    return fields.invoke(Mapping[str, Any])(obj)
 
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)
+@plum.dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def field_keys(obj: KinematicSpace, /) -> KeysView[str]:
     """Return the keys from a Space.
 
@@ -66,7 +66,7 @@ def field_keys(obj: KinematicSpace, /) -> KeysView[str]:
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)
+@plum.dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def field_values(obj: KinematicSpace, /) -> ValuesView[AbstractVector]:
     """Return the values from a Space.
 
@@ -90,7 +90,7 @@ def field_values(obj: KinematicSpace, /) -> ValuesView[AbstractVector]:
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `field_items` dispatch table.
-@dispatch(precedence=1)
+@plum.dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def field_items(obj: KinematicSpace, /) -> ItemsView[str, AbstractVector]:
     """Return the items from a Space.
 
@@ -116,7 +116,7 @@ def field_items(obj: KinematicSpace, /) -> ItemsView[str, AbstractVector]:
 
 # NOTE: need to set the precedence because `Space` is both a `Mapping` and a
 #       `dataclass`, which are both in the `replace` dispatch table.
-@dispatch(precedence=1)
+@plum.dispatch(precedence=1)  # type: ignore[call-overload,untyped-decorator]
 def replace(obj: KinematicSpace, /, **kwargs: AbstractVector) -> KinematicSpace:
     """Replace the components of the vector.
 
@@ -133,7 +133,7 @@ def replace(obj: KinematicSpace, /, **kwargs: AbstractVector) -> KinematicSpace:
     >>> space = cx.KinematicSpace(length=x, speed=v, acceleration=a)
     >>> newspace = replace(space, length=cx.CartesianPos3D.from_([3, 2, 1], "km"))
     >>> newspace["length"].x
-    Quantity(Array(3, dtype=int32), unit='km')
+    Q(3, 'km')
 
     """
     return type(obj)(**{**obj, **kwargs})

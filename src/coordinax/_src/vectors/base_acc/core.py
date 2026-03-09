@@ -40,24 +40,26 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     @classmethod
     def cartesian_type(cls) -> "type[coordinax.vecs.AbstractAcc]":
         """Return the corresponding Cartesian vector class."""
-        return api.cartesian_vector_type(cls)
+        return api.cartesian_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_derivative_cls(cls) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding time derivative class."""
-        return api.time_derivative_vector_type(cls)
+        return api.time_derivative_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_antiderivative_cls(cls) -> type[AbstractVel]:
         """Return the corresponding time antiderivative class."""
-        return api.time_antiderivative_vector_type(cls)
+        return api.time_antiderivative_vector_type(cls)  # type: ignore[return-value]
 
     @classmethod
     def time_nth_derivative_cls(cls, n: int) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding time nth derivative class."""
-        return api.time_nth_derivative_vector_type(cls, n=n)
+        return api.time_nth_derivative_vector_type(  # type: ignore[return-value]
+            cls, n=n
+        )
 
     # ===============================================================
     # Convenience methods
@@ -78,7 +80,7 @@ class AbstractAcc(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> a = a.vconvert(cxv.CylindricalAcc, p, q)
 
         >>> a.norm(p, q)
-        Quantity(Array(5..., dtype=float32), unit='m / s2')
+        Q(5.0000005, 'm / s2')
 
         """
         cart_cls = self.cartesian_type

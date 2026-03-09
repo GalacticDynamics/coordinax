@@ -82,7 +82,7 @@ class CartesianVel3D(AbstractCartesian, AbstractVel3D):
         >>> import coordinax as cx
         >>> c = cx.CartesianVel3D.from_([1, 2, 3], "km/s")
         >>> c.norm()
-        Quantity(Array(3.7416575, dtype=float32), unit='km / s')
+        Q(3.7416575, 'km / s')
 
         """
         return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)
@@ -113,7 +113,7 @@ class CartesianAcc3D(AbstractCartesian, AbstractAcc3D):
         >>> import coordinax as cx
         >>> c = cx.vecs.CartesianAcc3D.from_([1, 2, 3], "km/s2")
         >>> c.norm()
-        Quantity(Array(3.7416575, dtype=float32), unit='km / s2')
+        Q(3.7416575, 'km / s2')
 
         """
         return jnp.sqrt(self.x**2 + self.y**2 + self.z**2)

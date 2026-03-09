@@ -20,10 +20,10 @@ def convert_quantity_to_distance(q: u.AbstractQuantity, /) -> Distance:
     >>> from coordinax.distance import Distance
     >>> q = BareQuantity(1, "m")
     >>> q
-    BareQuantity(Array(1, dtype=int32, ...), unit='m')
+    BareQuantity(1, 'm')
 
     >>> convert(q, Distance)
-    Distance(Array(1, dtype=int32, ...), unit='m')
+    Distance(1, 'm')
 
     The self-conversion doesn't copy the object:
 
@@ -46,10 +46,10 @@ def convert_quantity_to_distmod(q: u.AbstractQuantity, /) -> DistanceModulus:
     >>> from coordinax.distance import DistanceModulus
     >>> q = u.Q(1, "mag")
     >>> q
-    Quantity(Array(1, dtype=int32, ...), unit='mag')
+    Q(1, 'mag')
 
     >>> convert(q, DistanceModulus)
-    DistanceModulus(Array(1, dtype=int32, ...), unit='mag')
+    DistanceModulus(1, 'mag')
 
     The self-conversion doesn't copy the object:
 
@@ -72,10 +72,10 @@ def convert_quantity_to_parallax(q: u.AbstractQuantity, /) -> Parallax:
     >>> from coordinax.distance import Parallax
     >>> q = u.Q(1, "mas")
     >>> q
-    Quantity(Array(1, dtype=int32, ...), unit='mas')
+    Q(1, 'mas')
 
     >>> convert(q, Parallax)
-    Parallax(Array(1, dtype=int32, ...), unit='mas')
+    Parallax(1, 'mas')
 
     The self-conversion doesn't copy the object:
 

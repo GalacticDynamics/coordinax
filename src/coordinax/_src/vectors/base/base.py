@@ -189,7 +189,7 @@ class AbstractVectorLike(
             [13.363  0.767 -1.2  ]>
 
         """
-        return cxapi.vconvert(target, self, *args, **kwargs)
+        return cxapi.vconvert(target, self, *args, **kwargs)  # type: ignore[return-value]
 
     # ===============================================================
     # Quantity API
@@ -408,7 +408,7 @@ class AbstractVectorLike(
         >>> vel1 = cxv.CartesianVel2D.from_([[1, 3], [2, 4]], "km/s")
         >>> vel2 = cxv.CartesianVel2D.from_([[1, 3], [0, 4]], "km/s")
         >>> vel1.x
-        Quantity(Array([1, 2], dtype=int32), unit='km / s')
+        Q([1, 2], 'km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False], dtype=bool)
         >>> vel1 == vel2
@@ -417,7 +417,7 @@ class AbstractVectorLike(
         >>> acc1 = cxv.CartesianAcc2D.from_([[1, 3], [2, 4]], "km/s2")
         >>> acc2 = cxv.CartesianAcc2D.from_([[1, 3], [0, 4]], "km/s2")
         >>> acc1.x
-        Quantity(Array([1, 2], dtype=int32), unit='km / s2')
+        Q([1, 2], 'km / s2')
         >>> jnp.equal(acc1, acc2)
         Array([ True, False], dtype=bool)
         >>> acc1 == acc2
@@ -426,7 +426,7 @@ class AbstractVectorLike(
         >>> vel1 = cxv.CartesianVel3D.from_([[1, 2, 3], [4, 5, 6]], "km/s")
         >>> vel2 = cxv.CartesianVel3D.from_([[1, 2, 3], [4, 5, 0]], "km/s")
         >>> vel1.x
-        Quantity(Array([1, 4], dtype=int32), unit='km / s')
+        Q([1, 4], 'km / s')
         >>> jnp.equal(vel1, vel2)
         Array([ True, False], dtype=bool)
         >>> vel1 == vel2
@@ -471,7 +471,7 @@ class AbstractVectorLike(
         >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
         ...                              y=u.Q(0, "m"))
         >>> vec[0].x
-        Quantity(Array([1, 2], dtype=int32), unit='m')
+        Q([1, 2], 'm')
 
         """
         full = full_shaped(self)  # TODO: detect if need to make a full-shaped copy

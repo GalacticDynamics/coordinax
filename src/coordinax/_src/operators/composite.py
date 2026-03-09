@@ -6,6 +6,7 @@ from dataclasses import replace
 
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
+from typing_extensions import override
 
 import equinox as eqx
 
@@ -68,8 +69,9 @@ class AbstractCompositeOperator(AbstractOperator):
 
         return Pipe(tuple(op.inverse for op in reversed(self.operators)))
 
-    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[untyped-decorator]
-    def __call__(
+    @override
+    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[union-attr,untyped-decorator]
+    def __call__(  # type: ignore[override]
         self: "AbstractCompositeOperator", *args: object, **kwargs: Any
     ) -> tuple[object, ...]:
         """Apply the operators to the coordinates.
@@ -87,7 +89,7 @@ class AbstractCompositeOperator(AbstractOperator):
 
         """
         for op in self.operators:
-            args = op(*args, **kwargs)
+            args = op(*args, **kwargs)  # type: ignore[assignment]
         return args
 
     # ===========================================
@@ -115,7 +117,7 @@ class AbstractCompositeOperator(AbstractOperator):
 # Call dispatches
 
 
-@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[untyped-decorator]
+@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[union-attr,untyped-decorator]
 def call(
     self: AbstractCompositeOperator, x: AbstractVectorLike, /, **kwargs: Any
 ) -> AbstractVectorLike:
@@ -136,5 +138,5 @@ def call(
     """
     # TODO: with lax.for_i
     for op in self.operators:
-        x = op(x, **kwargs)
+        x = op(x, **kwargs)  # type: ignore[assignment]
     return x

@@ -108,7 +108,7 @@ class GalileanOperator(AbstractCompositeOperator, AbstractGalileanOperator):
         [7.889e+16 1.578e+17 2.367e+17]>
 
     >>> newt
-    Quantity(Array(7.8894005e+16, dtype=float32, ...), unit='s')
+    Q(7.8894005e+16, 's')
 
     """
 
@@ -232,6 +232,6 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
         not isinstance(x, type(orig))
         for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return cast("SimplifyOpR", Pipe(simple_ops).simplify())
+        return cast("SimplifyOpR", Pipe(simple_ops).simplify())  # type: ignore[arg-type]
 
     return op

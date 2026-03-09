@@ -36,7 +36,7 @@ def convert_pos3d_to_cart3d(pos: AbstractPos3D) -> CartesianPos3D:
         [1. 0. 3.]>
 
     """
-    return cxapi.vconvert(CartesianPos3D, pos)
+    return cxapi.vconvert(CartesianPos3D, pos)  # type: ignore[return-value]
 
 
 @conversion_method(type_from=AbstractPos3D, type_to=CylindricalPos)  # type: ignore[arg-type]
@@ -61,7 +61,7 @@ def convert_cart3d_to_cylindrical(pos: AbstractPos3D) -> CylindricalPos:
         [0. 0. 1.]>
 
     """
-    return cxapi.vconvert(CylindricalPos, pos)
+    return cxapi.vconvert(CylindricalPos, pos)  # type: ignore[return-value]
 
 
 @conversion_method(type_from=AbstractPos3D, type_to=SphericalPos)  # type: ignore[arg-type]
@@ -86,7 +86,7 @@ def convert_cylindrical_to_spherical(pos: AbstractPos3D) -> SphericalPos:
         [3.162 0.322 0.   ]>
 
     """
-    return cxapi.vconvert(SphericalPos, pos)
+    return cxapi.vconvert(SphericalPos, pos)  # type: ignore[return-value]
 
 
 @conversion_method(type_from=AbstractPos3D, type_to=MathSphericalPos)  # type: ignore[arg-type]
@@ -111,7 +111,7 @@ def convert_spherical_to_math_spherical(pos: AbstractPos3D) -> MathSphericalPos:
         [1 0 0]>
 
     """
-    return cxapi.vconvert(MathSphericalPos, pos)
+    return cxapi.vconvert(MathSphericalPos, pos)  # type: ignore[return-value]
 
 
 @conversion_method(type_from=AbstractPos3D, type_to=LonLatSphericalPos)  # type: ignore[arg-type]
@@ -138,4 +138,4 @@ def convert_math_spherical_to_lonlat_spherical(
         [ 0. 90.  1.]>
 
     """
-    return cxapi.vconvert(LonLatSphericalPos, pos)
+    return cxapi.vconvert(LonLatSphericalPos, pos)  # type: ignore[return-value]

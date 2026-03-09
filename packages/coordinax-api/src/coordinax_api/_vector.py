@@ -41,8 +41,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     >>> params = {"x": u.Q([1.0, 2.0], "m")}
     >>> cxv.vconvert(cxv.RadialPos, cxv.CartesianPos1D, params)
-    ({'r': Quantity(Array([1., 2.], dtype=float32), unit='m')},
-     {})
+    ({'r': Q([1., 2.], 'm')}, {})
 
     - Vector-valued:
 
@@ -76,9 +75,7 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
 
     >>> params = {"r": u.Q([1.0, 2.0], "m"), "phi": u.Q(3, "deg")}
     >>> cxv.vconvert(cxv.CartesianPos2D, cxv.PolarPos, params)
-    ({'x': Quantity(Array([0.9986295, 1.997259 ], dtype=float32), unit='m'),
-      'y': Quantity(Array([0.05233596, 0.10467192], dtype=float32), unit='m')},
-     {})
+    ({'x': Q([0.99862951, 1.99725902], 'm'), 'y': Q([0.05233596, 0.10467192], 'm')}, {})
 
     - Vector-valued:
 
@@ -111,9 +108,8 @@ def vconvert(target: type[Any], /, *args: Any, **kwargs: Any) -> Any:
     ...           "z": u.Q([5.0, 6.0], "m")}
     >>> params, aux = cxv.vconvert(cxv.SphericalPos, cxv.CartesianPos3D, params)
     >>> jax.tree.map(lambda x: jnp.round(x, 4), params)
-    {'phi': Quantity(Array([1.249 , 1.1071], dtype=float32), unit='rad'),
-     'r': Quantity(Array([5.9161   , 7.4832997], dtype=float32), unit='m'),
-     'theta': Quantity(Array([0.5639, 0.6405], dtype=float32), unit='rad')}
+    {'phi': Q([1.24899995, 1.10710001], 'rad'), 'r': Q([5.91610003, 7.48329973], 'm'),
+     'theta': Q([0.56389999, 0.64050001], 'rad')}
 
     - Vector-valued:
 

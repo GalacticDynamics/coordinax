@@ -5,11 +5,10 @@ __all__ = ("Distance", "DistanceModulus", "Parallax")
 from dataclasses import KW_ONLY
 
 from jaxtyping import Array, Shaped
-from typing import Any, final
+from typing import final
 
 import equinox as eqx
 import jax.numpy as jnp
-import wadler_lindig as wl
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -31,7 +30,7 @@ class Distance(AbstractDistance):
     --------
     >>> from coordinax.distance import Distance
     >>> Distance(10, "km")
-    Distance(Array(10, dtype=int32, ...), unit='km')
+    Distance(10, 'km')
 
     The units are checked to have length dimensions.
 
@@ -66,19 +65,6 @@ class Distance(AbstractDistance):
                 "Distance must be non-negative.",
             )
 
-    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
-        """Return a Wadler-Lindig document for the parallax."""
-        # Use the default __pdoc__ method to get the base document.
-        pdoc = super().__pdoc__(**kwargs)
-
-        # TODO: enable filtering in AbstractQuantity.__pdoc__ to avoid this.
-        # Don't show check_negative if it's the default.
-        fs = pdoc.children[2].child.child.children
-        if fs[-1].children[-1].text == str(self.__class__.check_negative):
-            object.__setattr__(pdoc.children[2].child.child, "children", fs[:-2])
-
-        return pdoc
-
 
 @final
 class DistanceModulus(AbstractDistance):
@@ -88,7 +74,7 @@ class DistanceModulus(AbstractDistance):
     --------
     >>> from coordinax.distance import DistanceModulus
     >>> DistanceModulus(10, "mag")
-    DistanceModulus(Array(10, dtype=int32, ...), unit='mag')
+    DistanceModulus(10, 'mag')
 
     The units are checked to have magnitude dimensions.
 
@@ -121,7 +107,7 @@ class Parallax(AbstractDistance):
     --------
     >>> from coordinax.distance import Parallax
     >>> Parallax(1, "mas")
-    Parallax(Array(1, dtype=int32, ...), unit='mas')
+    Parallax(1, 'mas')
 
     The units are checked to have angle dimensions.
 
@@ -138,7 +124,7 @@ class Parallax(AbstractDistance):
     To disable this check, set `check_negative=False`.
 
     >>> Parallax(-1, "mas", check_negative=False)
-    Parallax(Array(-1, dtype=int32, weak_type=True), unit='mas')
+    Parallax(-1, 'mas', check_negative=False)
 
     """
 
@@ -170,16 +156,3 @@ class Parallax(AbstractDistance):
                 jnp.any(jnp.less(self.value, 0)),
                 "Parallax must be non-negative.",
             )
-
-    def __pdoc__(self, **kwargs: Any) -> wl.AbstractDoc:
-        """Return a Wadler-Lindig document for the parallax."""
-        # Use the default __pdoc__ method to get the base document.
-        pdoc = super().__pdoc__(**kwargs)
-
-        # TODO: enable filtering in AbstractQuantity.__pdoc__ to avoid this.
-        # Don't show check_negative if it's the default.
-        fs = pdoc.children[2].child.child.children
-        if fs[-1].children[-1].text == str(self.__class__.check_negative):
-            object.__setattr__(pdoc.children[2].child.child, "children", fs[:-2])
-
-        return pdoc

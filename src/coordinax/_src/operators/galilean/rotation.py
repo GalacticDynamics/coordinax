@@ -8,6 +8,7 @@ from dataclasses import replace
 from collections.abc import Mapping
 from jaxtyping import Array, Shaped
 from typing import Any, Literal, TypeAlias, final
+from typing_extensions import override
 
 import equinox as eqx
 import jax
@@ -91,12 +92,12 @@ class GalileanRotation(AbstractGalileanOperator):
     >>> t = u.Q(1, "s")
     >>> newt, newq = op(t, q)
     >>> newq
-    Quantity(Array([0, 1, 0], dtype=int32), unit='m')
+    Q([0, 1, 0], 'm')
 
     The time is not affected by the rotation.
 
     >>> newt
-    Quantity(Array(1, dtype=int32, ...), unit='s')
+    Q(1, 's')
 
     This also works for a batch of vectors:
 
@@ -105,15 +106,15 @@ class GalileanRotation(AbstractGalileanOperator):
 
     >>> newt, newq = op(t, q)
     >>> newq
-    Quantity(Array([[ 0,  1,  0],
-                    [-1,  0,  0]], dtype=int32), unit='m')
+    Q([[ 0,  1,  0],
+       [-1,  0,  0]], 'm')
 
     Translation operators can be applied to `vector.AbstractPos3D`:
 
     >>> q = cx.CartesianPos3D.from_(q)  # from the previous example
     >>> newt, newq = op(t, q)
     >>> newq.x
-    Quantity(Array([ 0, -1], dtype=int32), unit='m')
+    Q([ 0, -1], 'm')
     >>> newq.norm().value.round(2)
     Array([1., 1.], dtype=float32)
 
@@ -168,9 +169,10 @@ class GalileanRotation(AbstractGalileanOperator):
 
         return cls(rotation=R)
 
+    @override
     @classmethod
-    @AbstractOperator.from_.dispatch  # type: ignore[untyped-decorator]
-    def from_(cls: "type[GalileanRotation]", obj: Rotation, /) -> "GalileanRotation":
+    @AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
+    def from_(cls: "type[GalileanRotation]", obj: Rotation, /) -> "GalileanRotation":  # type: ignore[override]
         """Initialize from a `jax.scipy.spatial.transform.Rotation`.
 
         Examples
@@ -249,18 +251,18 @@ class GalileanRotation(AbstractGalileanOperator):
 
         >>> q = u.Q([1, 0, 0], "m")
         >>> op(q)
-        Quantity(Array([0, 1, 0], dtype=int32), unit='m')
+        Q([0, 1, 0], 'm')
 
         THere's a related dispatch that also takes a time argument:
 
         >>> t = u.Q(1, "s")
         >>> newt, newq = op(t, q)
         >>> newq
-        Quantity(Array([0, 1, 0], dtype=int32), unit='m')
+        Q([0, 1, 0], 'm')
 
         The time is not affected by the rotation.
         >>> newt
-        Quantity(Array(1, dtype=int32, ...), unit='s')
+        Q(1, 's')
 
         """
         return vec_matmul(self.rotation, q)
@@ -283,7 +285,7 @@ class GalileanRotation(AbstractGalileanOperator):
         >>> q = cx.CartesianPos3D.from_([1, 0, 0], "m")
         >>> newq = op(q)
         >>> newq.x
-        Quantity(Array(0, dtype=int32), unit='m')
+        Q(0, 'm')
 
         """
         return self.rotation @ q
@@ -335,11 +337,11 @@ def call(
     >>> t = u.Q(1, "s")
     >>> newt, newq = op(t, q)
     >>> newq.x
-    Quantity(Array(0, dtype=int32), unit='m')
+    Q(0, 'm')
 
     The time is not affected by the rotation.
     >>> newt
-    Quantity(Array(1, dtype=int32, ...), unit='s')
+    Q(1, 's')
 
     """
     return t, self(q)
@@ -409,8 +411,7 @@ def call(
 
     >>> newq, newp = R_z(q, p)
     >>> newq, newp
-    (Quantity(Array([0., 1., 0.], dtype=float32), unit='m'),
-     Quantity(Array([0., 1., 0.], dtype=float32), unit='m / s'))
+    (Q([0., 1., 0.], 'm'), Q([0., 1., 0.], 'm / s'))
 
     """
     newq = self(q)
@@ -451,7 +452,7 @@ def simplify_op(op: GalileanRotation, /, **kwargs: Any) -> AbstractOperator:
     return op
 
 
-@GalileanRotation.__matmul__.dispatch  # type: ignore[untyped-decorator]
+@GalileanRotation.__matmul__.dispatch  # type: ignore[union-attr,untyped-decorator]
 def matmul(self: GalileanRotation, other: GalileanRotation) -> GalileanRotation:
     """Combine two Galilean rotations.
 
