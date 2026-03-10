@@ -122,6 +122,20 @@ version_tuple = {version_tuple!r}
 """
 version.source = "vcs"
 
+[tool.hatch.version.raw-options]
+local_scheme = "no-local-version"
+
+[tool.hatch.version.raw-options.scm.git]
+describe_command = [
+  "git",
+  "describe",
+  "--dirty",
+  "--tags",
+  "--long",
+  "--match",
+  "coordinax-v*",
+]
+
 
 [tool.codespell]
 skip = ["uv.lock"]
@@ -304,6 +318,7 @@ ignore = [
 "__init__.py"  = ["F403"]
 "docs/conf.py" = ["A001", "INP001"]
 "noxfile.py"   = ["T20"]
+"scripts/**"   = ["INP001"]
 
 [tool.ruff.lint.flake8-import-conventions.aliases]
 coordinax            = "cx"
@@ -320,7 +335,6 @@ unxt                 = "u"
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
-extra-standard-library = ["typing_extensions"]
 known-first-party = [
   "dataclassish",
   "optional_dependencies",

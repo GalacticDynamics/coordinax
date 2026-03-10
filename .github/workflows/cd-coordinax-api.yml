@@ -10,13 +10,15 @@ on:
     branches:
       - main
     tags:
-      - "coordinax-api-v*"
+      - "coordinax-api-v*" # Package-specific tags (coordinax-api-vX.Y.Z)
     paths:
       - "packages/coordinax-api/**"
       - ".github/workflows/cd-coordinax-api.yml"
-  release:
+  workflow_run:
+    workflows:
+      - "Create Package Tags"
     types:
-      - published
+      - completed
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -33,6 +35,14 @@ jobs:
       contents: read
       id-token: write
       attestations: write
+    # Build runs for direct tag pushes or via workflow_run from Create Package Tags
+    # (which handles coordinator tag releases)
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/'))
 
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v5.5.0
@@ -41,6 +51,33 @@ jobs:
           # Can be removed if switching to hardcoded versions.
           fetch-depth: 0
           persist-credentials: false
+          # For workflow_run events, checkout the exact commit from upstream workflow
+          ref: >-
+            ${{ github.event_name == 'workflow_run' &&
+            github.event.workflow_run.head_sha || github.ref }}
+
+      # For workflow_run events, find and export the package-specific tag
+      - name: Find package tag (workflow_run)
+        if: github.event_name == 'workflow_run'
+        uses: ./.github/actions/find-package-tag
+        with:
+          tag_glob: coordinax-api-v*
+          commit_sha: ${{ github.event.workflow_run.head_sha }}
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Validate git tag (for tagged releases)
+        if: |
+          startsWith(github.ref, 'refs/tags/') || github.event_name ==
+          'workflow_run'
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            TAG="$PACKAGE_TAG"
+          else
+            TAG=${GITHUB_REF#refs/tags/}
+          fi
+          uv run scripts/validate_tag.py "$TAG" "coordinax-api"
+        shell: bash
 
       - uses: hynek/build-and-inspect-python-package@efb823f52190ad02594531168b7a2d5790e66516 # v2.14.0
         with:
@@ -61,7 +98,7 @@ jobs:
     if: |
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/coordinax-api-v')) ||
-      (github.event_name == 'release' && github.event.action == 'published')
+      github.event_name == 'workflow_run'
 
     steps:
       - name: Download built artifact to dist/
@@ -84,9 +121,8 @@ jobs:
     permissions:
       id-token: write
     if: |
-      github.event_name == 'release' &&
-      github.event.action == 'published' &&
-      startsWith(github.event.release.tag_name, 'coordinax-api-v')
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/coordinax-api-v')) ||
+      github.event_name == 'workflow_run'
 
     steps:
       - name: Download built artifact to dist/

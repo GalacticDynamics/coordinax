@@ -666,7 +666,6 @@ requires-dist = [{ name = "plum-dispatch", specifier = ">=2.5.7" }]
 
 [[package]]
 name = "coordinax-astro"
-version = "0.1.0"
 source = { editable = "packages/coordinax-astro" }
 dependencies = [
     { name = "coordinax" },
@@ -688,7 +687,6 @@ provides-extras = ["astropy"]
 
 [[package]]
 name = "coordinax-hypothesis"
-version = "0.1.0"
 source = { editable = "packages/coordinax-hypothesis" }
 dependencies = [
     { name = "coordinax" },
@@ -705,7 +703,6 @@ requires-dist = [
 
 [[package]]
 name = "coordinax-interop-astropy"
-version = "0.1.0"
 source = { editable = "packages/coordinax-interop-astropy" }
 dependencies = [
     { name = "astropy" },
