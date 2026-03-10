@@ -9,7 +9,7 @@ from .coordinate import Coordinate
 from coordinax._src.operators import AbstractOperator
 
 
-@AbstractOperator.__call__.dispatch  # type: ignore[untyped-decorator]
+@AbstractOperator.__call__.dispatch  # type: ignore[union-attr,untyped-decorator]
 def call(self: AbstractOperator, x: Coordinate, /) -> Coordinate:
     """Apply the operator to a coordinate.
 

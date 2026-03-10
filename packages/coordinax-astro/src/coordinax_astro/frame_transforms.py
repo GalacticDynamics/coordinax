@@ -202,13 +202,13 @@ def frame_transform_op(from_frame: ICRS, to_frame: Galactocentric, /) -> Pipe:
 
     >>> q = u.Q([0, 0, 0], "pc")
     >>> frame_op(q)
-    Quantity(Array([-8121.972, 0. , 20.8 ], dtype=float32), unit='pc')
+    Q([-8121.97216797, 0. , 20.79999924], 'pc')
 
     >>> p = u.Q([0., 0, 0], "km/s")
     >>> newq, newp = frame_op(q, p)
     >>> newq, newp
-    (Quantity(Array([-8121.972,     0.   ,    20.8  ], dtype=float32), unit='pc'),
-     Quantity(Array([ 12.9 , 245.6 ,   7.78], dtype=float32), unit='km / s'))
+    (Q([-8121.97216797,     0.   ,    20.79999924], 'pc'),
+     Q([ 12.89999962, 245.6000061,   7.78000021], 'km / s'))
 
     Transform a star position in spherical coordinates:
 
@@ -320,13 +320,12 @@ def frame_transform_op(from_frame: Galactocentric, to_frame: ICRS, /) -> Pipe:
 
     >>> q = u.Q([0, 0, 0], "pc")
     >>> frame_op(q).round(0)
-    Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc')
+    Q([ -446., -7094., -3930.], 'pc')
 
     >>> p = u.Q([0., 0, 0], "km/s")
     >>> newq, newp = frame_op(q, p)
     >>> newq.round(0), newp.round(0)
-    (Quantity(Array([ -446., -7094., -3930.], dtype=float32), unit='pc'),
-     Quantity(Array([-114.,  122., -181.], dtype=float32), unit='km / s'))
+    (Q([ -446., -7094., -3930.], 'pc'), Q([-114.,  122., -181.], 'km / s'))
 
     Transform a star in Galactocentric coordinates back to ICRS:
 

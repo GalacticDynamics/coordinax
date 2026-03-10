@@ -39,26 +39,26 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
     @classmethod
     def cartesian_type(cls) -> "type[coordinax.vecs.AbstractVel]":
         """Return the corresponding Cartesian vector class."""
-        return api.cartesian_vector_type(cls)
+        return api.cartesian_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_derivative_cls(cls) -> "type[coordinax.vecs.AbstractAcc]":
         """Return the corresponding time derivative class."""
-        return api.time_derivative_vector_type(cls)
+        return api.time_derivative_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_antiderivative_cls(cls) -> type[AbstractPos]:
         """Return the corresponding time antiderivative class."""
-        return api.time_antiderivative_vector_type(cls)
+        return api.time_antiderivative_vector_type(cls)  # type: ignore[return-value]
 
     @classmethod
     def time_nth_derivative_cls(
         cls, *, n: int
     ) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding time nth derivative class."""
-        return api.time_nth_derivative_vector_type(cls, n=n)
+        return api.time_nth_derivative_vector_type(cls, n=n)  # type: ignore[return-value]
 
     # ===============================================================
     # Convenience methods
@@ -75,7 +75,7 @@ class AbstractVel(AvalMixin, AbstractVector):  # pylint: disable=abstract-method
         >>> p = cx.vecs.PolarVel(r=u.Q(1, "km/s"), phi=u.Q(1, "deg/s"))
 
         >>> p.norm(q).uconvert('km / s')
-        Quantity(Array(1.0003046, dtype=float32), unit='km / s')
+        Q(1.0003046, 'km / s')
 
         """
         cart_vel = cast("AbstractVel", self.vconvert(self.cartesian_type, q))

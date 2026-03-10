@@ -64,7 +64,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
     >>> vec = cx.vecs.LonLatSphericalPos(lon=u.Q(365, "deg"), lat=u.Q(90, "deg"),
     ...                                  distance=u.Q(3, "km"))
     >>> vec.lon
-    Angle(Array(5, dtype=int32, ...), unit='deg')
+    Angle(5, 'deg')
 
     The latitude is not wrapped, but it is checked to be in the [-90, 90] degrees range.
 
@@ -120,7 +120,7 @@ class LonLatSphericalPos(AbstractSphericalPos):
         >>> s = cx.vecs.LonLatSphericalPos(lon=u.Q(0, "deg"), lat=u.Q(90, "deg"),
         ...                                distance=u.Q(3, "km"))
         >>> s.norm()
-        Distance(Array(3, dtype=int32, ...), unit='km')
+        Distance(3, 'km')
 
         """
         return self.distance

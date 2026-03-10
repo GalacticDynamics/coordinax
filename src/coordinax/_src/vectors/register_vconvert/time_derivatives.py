@@ -117,8 +117,7 @@ def dot_jac_vec(
     >>> v = {"x": u.Q(1, "km"), "y": u.Q(2, "km")}
 
     >>> dot_jac_vec(J, v)
-    {'phi': Quantity(Array(11, dtype=int32, ...), unit='rad'),
-     'r': Quantity(Array(5, dtype=int32, ...), unit='km')}
+    {'phi': Q(11, 'rad'), 'r': Q(5, 'km')}
 
     """
     # TODO: rewrite this by separating the units and the values
@@ -176,13 +175,13 @@ def vconvert(
     >>> p = {"x": u.Q([1.0], "km/s")}
     >>> newp = cxv.vconvert(cxv.RadialVel, cxv.CartesianVel1D, p, q)
     >>> print(newp)
-    ({'r': Quantity(Array([1.], dtype=float32), unit='km / s')}, {})
+    ({'r': Q([1.], 'km / s')}, {})
 
     >>> q = {"x": u.Q([1.0], "km")}
     >>> a = {"x": u.Q([1.0], "km/s2")}
     >>> newa = cxv.vconvert(cxv.RadialAcc, cxv.CartesianAcc1D, a, q)
     >>> print(newa)
-    ({'r': Quantity(Array([1.], dtype=float32), unit='km / s2')}, {})
+    ({'r': Q([1.], 'km / s2')}, {})
 
     """
     # Check the dimensionality

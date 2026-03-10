@@ -45,7 +45,7 @@ class PolarPos(AbstractPos2D):
 
         >>> vec = cx.vecs.PolarPos(r=u.Q(1, "m"), phi=u.Q(90, "deg"))
         >>> vec.norm()
-        Distance(Array(1, dtype=int32, ...), unit='m')
+        Distance(1, 'm')
 
         """
         return self.r

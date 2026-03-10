@@ -149,7 +149,8 @@ def vector(q: u.AbstractQuantity, /) -> AbstractVector:  # noqa: C901
 
     >>> try: print(cx.vecs.vector(u.Q([1], "Msun")))
     ... except ValueError as e: print(e)
-    Cannot construct a Cartesian vector from Quantity['mass']([1], unit='solMass').
+    Cannot construct a Cartesian vector from
+    Q['mass'](Array([1], dtype=int32), unit='solMass').
 
     """
     # TODO: use dispatch instead for these matches
@@ -261,52 +262,52 @@ def vec_diff_to_uncheckedq(obj: AbstractVector, /) -> Shaped[BareQuantity, "*bat
 
     >>> cart_vel = cxv.CartesianVel1D.from_([1], "km/s")
     >>> convert(cart_vel, BareQuantity)
-    BareQuantity(Array([1], dtype=int32), unit='km / s')
+    BareQuantity([1], 'km / s')
 
     >>> cart_acc = cxv.CartesianAcc1D.from_([1], "km/s2")
     >>> convert(cart_acc, BareQuantity)
-    BareQuantity(Array([1], dtype=int32), unit='km / s2')
+    BareQuantity([1], 'km / s2')
 
     >>> rad_vel = cxv.RadialVel.from_([1], "km/s")
     >>> convert(rad_vel, BareQuantity)
-    BareQuantity(Array([1], dtype=int32), unit='km / s')
+    BareQuantity([1], 'km / s')
 
     >>> rad_acc = cxv.RadialAcc.from_([1], "km/s2")
     >>> convert(rad_acc, BareQuantity)
-    BareQuantity(Array([1], dtype=int32), unit='km / s2')
+    BareQuantity([1], 'km / s2')
 
     ## 2D
 
     >>> vel = cxv.CartesianVel2D.from_([1, 2], "km/s")
     >>> convert(vel, BareQuantity)
-    BareQuantity(Array([1, 2], dtype=int32), unit='km / s')
+    BareQuantity([1, 2], 'km / s')
 
     >>> acc = cxv.CartesianAcc2D.from_([1, 2], "km/s2")
     >>> convert(acc, BareQuantity)
-    BareQuantity(Array([1, 2], dtype=int32), unit='km / s2')
+    BareQuantity([1, 2], 'km / s2')
 
     # 3D
 
     >>> vel = cxv.CartesianVel3D.from_([1, 2, 3], "km/s")
     >>> convert(vel, BareQuantity)
-    BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s')
+    BareQuantity([1, 2, 3], 'km / s')
 
     >>> acc = cxv.CartesianAcc3D.from_([1, 2, 3], "km/s2")
     >>> convert(acc, BareQuantity)
-    BareQuantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
+    BareQuantity([1, 2, 3], 'km / s2')
 
     """
     return convert(_vec_diff_to_q(obj), BareQuantity)
 
 
-@conversion_method(type_from=RadialAcc, type_to=u.Quantity)
-@conversion_method(type_from=RadialVel, type_to=u.Quantity)
-@conversion_method(type_from=CartesianAcc1D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianVel1D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianAcc2D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianVel2D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianAcc3D, type_to=u.Quantity)
-@conversion_method(type_from=CartesianVel3D, type_to=u.Quantity)
+@conversion_method(type_from=RadialAcc, type_to=u.Q)
+@conversion_method(type_from=RadialVel, type_to=u.Q)
+@conversion_method(type_from=CartesianAcc1D, type_to=u.Q)
+@conversion_method(type_from=CartesianVel1D, type_to=u.Q)
+@conversion_method(type_from=CartesianAcc2D, type_to=u.Q)
+@conversion_method(type_from=CartesianVel2D, type_to=u.Q)
+@conversion_method(type_from=CartesianAcc3D, type_to=u.Q)
+@conversion_method(type_from=CartesianVel3D, type_to=u.Q)
 def vec_diff_to_q(obj: AbstractVector, /) -> Shaped[u.Quantity, "*batch N"]:
     """1D Differentials -> `unxt.Quantity`.
 
@@ -319,40 +320,40 @@ def vec_diff_to_q(obj: AbstractVector, /) -> Shaped[u.Quantity, "*batch N"]:
     ## 1D
 
     >>> cart_vel = cxv.CartesianVel1D.from_([1], "km/s")
-    >>> convert(cart_vel, u.Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s')
+    >>> convert(cart_vel, u.Q)
+    Q([1], 'km / s')
 
     >>> cart_acc = cxv.CartesianAcc1D.from_([1], "km/s2")
-    >>> convert(cart_acc, u.Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s2')
+    >>> convert(cart_acc, u.Q)
+    Q([1], 'km / s2')
 
     >>> rad_vel = cxv.RadialVel.from_([1], "km/s")
-    >>> convert(rad_vel, u.Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s')
+    >>> convert(rad_vel, u.Q)
+    Q([1], 'km / s')
 
     >>> rad_acc = cxv.RadialAcc.from_([1], "km/s2")
-    >>> convert(rad_acc, u.Quantity)
-    Quantity(Array([1], dtype=int32), unit='km / s2')
+    >>> convert(rad_acc, u.Q)
+    Q([1], 'km / s2')
 
     ## 2D
 
     >>> vel = cxv.CartesianVel2D.from_([1, 2], "km/s")
-    >>> convert(vel, u.Quantity)
-    Quantity(Array([1, 2], dtype=int32), unit='km / s')
+    >>> convert(vel, u.Q)
+    Q([1, 2], 'km / s')
 
     >>> acc = cxv.CartesianAcc2D.from_([1, 2], "km/s2")
-    >>> convert(acc, u.Quantity)
-    Quantity(Array([1, 2], dtype=int32), unit='km / s2')
+    >>> convert(acc, u.Q)
+    Q([1, 2], 'km / s2')
 
     # 3D
 
     >>> vel = cxv.CartesianVel3D.from_([1, 2, 3], "km/s")
-    >>> convert(vel, u.Quantity)
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s')
+    >>> convert(vel, u.Q)
+    Q([1, 2, 3], 'km / s')
 
     >>> acc = cxv.CartesianAcc3D.from_([1, 2, 3], "km/s2")
-    >>> convert(acc, u.Quantity)
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km / s2')
+    >>> convert(acc, u.Q)
+    Q([1, 2, 3], 'km / s2')
 
     """
-    return convert(_vec_diff_to_q(obj), u.Quantity)
+    return convert(_vec_diff_to_q(obj), u.Q)

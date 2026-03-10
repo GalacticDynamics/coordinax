@@ -6,6 +6,7 @@ __all__ = ["VelocityBoost"]
 from dataclasses import replace
 
 from typing import Any, Literal, cast, final
+from typing_extensions import override
 
 import equinox as eqx
 import jax.numpy as jnp
@@ -108,8 +109,9 @@ class VelocityBoost(AbstractOperator):
 
     # -----------------------------------------------------
 
-    @AbstractOperator.__call__.dispatch  # type: ignore[untyped-decorator]
-    def __call__(self: "VelocityBoost", p: AbstractVel, /) -> AbstractVel:
+    @override
+    @AbstractOperator.__call__.dispatch  # type: ignore[union-attr,untyped-decorator]
+    def __call__(self: "VelocityBoost", p: AbstractVel, /) -> AbstractVel:  # type: ignore[override]
         """Apply the boost to the coordinates.
 
         This does nothing to the position, as the boost is to the velocity only.
@@ -213,8 +215,7 @@ def call(
     >>> p = u.Q([0., 0, 0], "m/s")
     >>> newq, newp = op(q, p)
     >>> (newq, newp)
-    (Quantity(Array([0., 0., 0.], dtype=float32), unit='m'),
-     Quantity(Array([1., 2., 3.], dtype=float32), unit='m / s'))
+    (Q([0., 0., 0.], 'm'), Q([1., 2., 3.], 'm / s'))
 
     """
     pvec = CartesianVel3D.from_(p)

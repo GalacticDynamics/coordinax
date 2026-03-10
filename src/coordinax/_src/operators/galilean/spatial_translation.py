@@ -120,7 +120,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
     >>> q = u.Q([0], "km")
     >>> op(q)
-    Quantity(Array([1], dtype=int32), unit='km')
+    Q([1], 'km')
 
     >>> vec = cx.vecs.CartesianPos1D.from_(q).vconvert(cx.vecs.RadialPos)
     >>> op(vec)
@@ -131,7 +131,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2], "km")
     >>> q = u.Q([0, 0], "km")
     >>> op(q)
-    Quantity(Array([1, 2], dtype=int32), unit='km')
+    Q([1, 2], 'km')
 
     >>> vec = cx.vecs.CartesianPos2D.from_(q).vconvert(cx.vecs.PolarPos)
     >>> op(vec)
@@ -142,7 +142,7 @@ class GalileanSpatialTranslation(AbstractGalileanOperator):
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1, 2, 3], "km")
     >>> q = u.Q([0, 0, 0], "km")
     >>> op(q)
-    Quantity(Array([1, 2, 3], dtype=int32), unit='km')
+    Q([1, 2, 3], 'km')
 
     >>> vec = cx.CartesianPos3D.from_(q).vconvert(cx.SphericalPos)
     >>> op(vec)

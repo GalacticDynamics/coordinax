@@ -38,7 +38,7 @@ def call(self: AbstractOperator, x: Q1, /, **kwargs: Any) -> Q1:
     >>> op = cx.ops.GalileanSpatialTranslation.from_([1], "km")
     >>> q = u.Q([0], "km")
     >>> op(q)
-    Quantity(Array([1], dtype=int32), unit='km')
+    Q([1], 'km')
 
     """
     # Quantity -> CartesianPos1D -> [Operator] -> Quantity
@@ -60,8 +60,7 @@ def call(
     >>> q = u.Q([0], "km")
     >>> t = u.Q(0, "s")
     >>> op(t, q)
-    (Quantity(Array(0, dtype=int32, ...), unit='s'),
-     Quantity(Array([1], dtype=int32), unit='km'))
+    (Q(0, 's'), Q([1], 'km'))
 
     """
     t, vec = self(t, CartesianPos1D.from_(x), **kwargs)
@@ -87,7 +86,7 @@ def call(self: AbstractOperator, x: Q2, /, **kwargs: Any) -> Q2:
     >>> q = u.Q([1, 2], "m")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Q([-1, -1], "m"))
     >>> op(q)
-    Quantity(Array([0, 1], dtype=int32), unit='m')
+    Q([0, 1], 'm')
 
     """
     return convert(self(CartesianPos2D.from_(x), **kwargs), u.Q)
@@ -108,8 +107,7 @@ def call(
     >>> t = u.Q(0, "s")
     >>> op = cx.ops.GalileanSpatialTranslation(u.Q([-1, -1], "m"))
     >>> op(t, q)
-    (Quantity(Array(0, dtype=int32, ...), unit='s'),
-     Quantity(Array([0, 1], dtype=int32), unit='m'))
+    (Q(0, 's'), Q([0, 1], 'm'))
 
     """
     t, vec = self(t, CartesianPos2D.from_(x), **kwargs)
@@ -148,7 +146,7 @@ def call(self: AbstractOperator, q: Q3, /, **kwargs: Any) -> Q3:
 
     >>> q = u.Q([0.0, 0, 0], "km")
     >>> op(q)
-    Quantity(Array([1., 2., 3.], dtype=float32), unit='km')
+    Q([1., 2., 3.], 'km')
 
     """
     cart = CartesianPos3D.from_(q)
@@ -179,8 +177,7 @@ def call(
     >>> t = u.Q(0.0, "Gyr")
 
     >>> op(t, q)
-    (Quantity(Array(0., dtype=float32, ...), unit='Gyr'),
-     Quantity(Array([2., 4., 6.], dtype=float32), unit='km'))
+    (Q(0., 'Gyr'), Q([2., 4., 6.], 'km'))
 
     """
     t, vec = self(t, CartesianPos3D.from_(x), **kwargs)
@@ -255,11 +252,11 @@ def call(
 
     >>> pos = u.Q([0, 1.0, 2.0, 3.0], "km")
     >>> pos
-    Quantity(Array([0., 1., 2., 3.], dtype=float32), unit='km')
+    Q([0., 1., 2., 3.], 'km')
 
     >>> newpos = op(pos)
     >>> newpos
-    Quantity(Array([0., 2., 4., 6.], dtype=float32), unit='km')
+    Q([0., 2., 4., 6.], 'km')
 
     """
     q4 = FourVector.from_(x)

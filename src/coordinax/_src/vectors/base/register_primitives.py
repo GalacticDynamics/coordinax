@@ -35,48 +35,48 @@ def broadcast_in_dim_p_absvec(
 
     >>> q = cxv.CartesianPos1D.from_([1], "m")
     >>> q.x
-    Quantity(Array(1, dtype=int32), unit='m')
+    Q(1, 'm')
 
     >>> jnp.broadcast_to(q, (1, 1)).x
-    Quantity(Array([1], dtype=int32), unit='m')
+    Q([1], 'm')
 
     >>> p = cxv.CartesianVel1D.from_([1], "m/s")
     >>> p.x
-    Quantity(Array(1, dtype=int32), unit='m / s')
+    Q(1, 'm / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).x
-    Quantity(Array([1], dtype=int32), unit='m / s')
+    Q([1], 'm / s')
 
     >>> a = cxv.CartesianAcc1D.from_([1], "m/s2")
     >>> a.x
-    Quantity(Array(1, dtype=int32), unit='m / s2')
+    Q(1, 'm / s2')
 
     >>> jnp.broadcast_to(a, (1, 1)).x
-    Quantity(Array([1], dtype=int32), unit='m / s2')
+    Q([1], 'm / s2')
 
 
     Radial 1D position, velocity, and acceleration:
 
     >>> q = cxv.RadialPos.from_([1], "m")
     >>> q.r
-    Distance(Array(1, dtype=int32), unit='m')
+    Distance(1, 'm')
 
     >>> jnp.broadcast_to(q, (1, 1)).r
-    Distance(Array([1], dtype=int32), unit='m')
+    Distance([1], 'm')
 
     >>> p = cxv.RadialVel.from_([1], "m/s")
     >>> p.r
-    Quantity(Array(1, dtype=int32), unit='m / s')
+    Q(1, 'm / s')
 
     >>> jnp.broadcast_to(p, (1, 1)).r
-    Quantity(Array([1], dtype=int32), unit='m / s')
+    Q([1], 'm / s')
 
     >>> a = cxv.RadialAcc.from_([1], "m/s2")
     >>> a.r
-    Quantity(Array(1, dtype=int32), unit='m / s2')
+    Q(1, 'm / s2')
 
     >>> jnp.broadcast_to(a, (1, 1)).r
-    Quantity(Array([1], dtype=int32), unit='m / s2')
+    Q([1], 'm / s2')
 
 
     Cartesian 2D position, velocity, and acceleration:
@@ -112,17 +112,17 @@ def broadcast_in_dim_p_absvec(
 
     >>> q = cxv.CartesianPos3D.from_([1, 2, 3], "m")
     >>> q.x
-    Quantity(Array(1, dtype=int32), unit='m')
+    Q(1, 'm')
 
     >>> jnp.broadcast_to(q, (1, 3)).x
-    Quantity(Array([1], dtype=int32), unit='m')
+    Q([1], 'm')
 
     >>> p = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
     >>> p.x
-    Quantity(Array(1, dtype=int32), unit='m / s')
+    Q(1, 'm / s')
 
     >>> jnp.broadcast_to(p, (1, 3)).x
-    Quantity(Array([1], dtype=int32), unit='m / s')
+    Q([1], 'm / s')
 
     >>> a = cxv.CartesianAcc3D.from_([1, 2, 3], "m/s2")
     >>> print(a)

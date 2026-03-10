@@ -195,10 +195,10 @@ conform to a branch cut (e.g., 0 to 2π or -180º to 180º).
 
 >>> a = u.Angle(370, "deg")
 >>> a
-Angle(Array(370, dtype=int32, weak_type=True), unit='deg')
+Angle(370, 'deg')
 
 >>> a.wrap_to(u.Q(0, "deg"), u.Q(360, "deg"))
-Angle(Array(10, dtype=int32, weak_type=True), unit='deg')
+Angle(10, 'deg')
 ```
 
 Similarly, the {class}`~coordinax.distance.Distance` class represents distances
@@ -207,7 +207,7 @@ in `coordinax`:
 ```{code-block} python
 >>> d = cx.distance.Distance(10, "kpc")
 >>> d
-Distance(Array(10, dtype=int32, weak_type=True), unit='kpc')
+Distance(10, 'kpc')
 ```
 
 but other distance-like objects can be represented with the
@@ -218,10 +218,10 @@ converting between different distance representations.
 
 ```{code-block} python
 >>> d.parallax
-Parallax(Array(4.848137e-10, dtype=float32, weak_type=True), unit='rad')
+Parallax(4.848137e-10, 'rad')
 
 >>> d.distance_modulus
-DistanceModulus(Array(15., dtype=float32), unit='mag')
+DistanceModulus(15., 'mag')
 ```
 
 ### Creating and Working with Vector Objects

@@ -54,11 +54,11 @@ def normalize_vector(
 
     >>> x = u.Q(jnp.asarray([2, 0]), "km")
     >>> cx.vecs.normalize_vector(x)
-    Quantity(Array([1., 0.], dtype=float32), unit='')
+    Q([1., 0.], '')
 
     >>> x = u.Q(jnp.asarray([0, 2]), "s")
     >>> cx.vecs.normalize_vector(x)
-    Quantity(Array([0., 1.], dtype=float32), unit='')
+    Q([0., 1.], '')
 
     """
     return x / jnp.linalg.vector_norm(x, axis=-1, keepdims=True)
@@ -76,9 +76,9 @@ def time_nth_derivative_vector_type(
         pass
     elif n < 0:
         for _ in range(-n):
-            out = api.time_antiderivative_vector_type(out)
+            out = api.time_antiderivative_vector_type(out)  # type: ignore[assignment]
     else:
         for _ in range(n):
-            out = api.time_derivative_vector_type(out)
+            out = api.time_derivative_vector_type(out)  # type: ignore[assignment]
 
     return out

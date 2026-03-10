@@ -83,7 +83,7 @@ def dot_p_general_poss(
     ...     theta=u.Q([0, 0, 0], "rad"), phi=u.Q([0, 0, 0], "rad"))
 
     >>> jnp.dot(vec, vec)
-    Quantity(Array([1., 4., 9.], dtype=float32), unit='m2')
+    Q([1., 4., 9.], 'm2')
 
     """
     cart_cls = lhs.cartesian_type
@@ -103,11 +103,11 @@ def div_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike) -> AbstractPos:
     >>> import coordinax as cx
 
     >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "m")
-    >>> jnp.divide(vec, 2).x
-    Quantity(Array(0.5, dtype=float32), unit='m')
+    >>> jnp.divide(vec, 2)
+    CartesianPos3D(x=Q(0.5, 'm'), y=Q(1., 'm'), z=Q(1.5, 'm'))
 
-    >>> (vec / 2).x
-    Quantity(Array(0.5, dtype=float32), unit='m')
+    >>> (vec / 2)
+    CartesianPos3D(x=Q(0.5, 'm'), y=Q(1., 'm'), z=Q(1.5, 'm'))
 
     """
     return replace(
@@ -266,12 +266,12 @@ def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
     ...     z=u.Q([7, 8, 9], "m"))
 
     >>> jnp.multiply(vec, vec)  # element-wise multiplication
-    BareQuantity(Array([[ 1, 16, 49],
-                        [ 4, 25, 64],
-                        [ 9, 36, 81]], dtype=int32), unit='m2')
+    BareQuantity([[ 1, 16, 49],
+                  [ 4, 25, 64],
+                  [ 9, 36, 81]], 'm2')
 
     >>> jnp.linalg.vector_norm(vec, axis=-1)
-    BareQuantity(Array([ 8.124039,  9.643651, 11.224972], dtype=float32), unit='m')
+    BareQuantity([ 8.1240387,  9.64365101, 11.22497177], 'm')
 
     """
     lq: BareQuantity = convert(lhs.vconvert(lhs.cartesian_type), BareQuantity)
@@ -298,8 +298,8 @@ def neg_p_pos(obj: AbstractPos, /) -> AbstractPos:
 
     """
     cart = cxapi.vconvert(obj.cartesian_type, obj)
-    negcart = jnp.negative(cart)
-    return cxapi.vconvert(type(obj), negcart)
+    negcart = jnp.negative(cart)  # type: ignore[call-overload]
+    return cxapi.vconvert(type(obj), negcart)  # type: ignore[return-value]
 
 
 # ------------------------------------------------

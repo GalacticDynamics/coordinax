@@ -28,15 +28,15 @@ def vec_to_q(
 
     >>> vec = cxv.CartesianPosND(u.Q([1, 2, 3, 4, 5], unit="km"))
     >>> convert(vec, u.Quantity)
-    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km')
+    Q([1, 2, 3, 4, 5], 'km')
 
     >>> vec = cxv.CartesianVelND(u.Q([1, 2, 3, 4, 5], unit="km/s"))
     >>> convert(vec, u.Quantity)
-    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s')
+    Q([1, 2, 3, 4, 5], 'km / s')
 
     >>> vec = cxv.CartesianAccND(u.Q([1, 2, 3, 4, 5], unit="km/s2"))
     >>> convert(vec, u.Quantity)
-    Quantity(Array([1, 2, 3, 4, 5], dtype=int32), unit='km / s2')
+    Q([1, 2, 3, 4, 5], 'km / s2')
 
     """
     return obj.q

@@ -31,7 +31,7 @@ def check_polar_range(
 
     >>> x = u.Q([0., 1, 2], "deg")
     >>> check_polar_range(x)
-    Quantity(Array([0., 1., 2.], dtype=float32), unit='deg')
+    Q([0., 1., 2.], 'deg')
 
     Raise an error if anything is outside the range.
 
@@ -70,7 +70,7 @@ def check_non_negative(
 
     >>> x = u.Q([0, 1, 2], "m")
     >>> check_non_negative(x)
-    Quantity(Array([0, 1, 2], dtype=int32), unit='m')
+    Q([0, 1, 2], 'm')
 
     Raise an error if any value is negative.
 
@@ -96,7 +96,7 @@ def check_non_negative_non_zero(
 
     >>> x = u.Q([1, 2, 3], "m")
     >>> check_non_negative_non_zero(x)
-    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
+    Q([1, 2, 3], 'm')
 
     Raise an error if any value is negative or zero.
 
@@ -133,7 +133,7 @@ def check_less_than_equal(
 
     >>> x = u.Q([1, 2, 3], "m")
     >>> check_less_than_equal(x, u.Q(3, "m"))
-    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
+    Q([1, 2, 3], 'm')
 
     Raise an error if the input is larger than the maximum value.
 
@@ -164,7 +164,7 @@ def check_greater_than_equal(
 
     >>> x = u.Q([1, 2, 3], "m")
     >>> check_greater_than_equal(x, u.Q(1, "m"))
-    Quantity(Array([1, 2, 3], dtype=int32), unit='m')
+    Q([1, 2, 3], 'm')
 
     Raise an error if the input is smaller than the minimum value.
 

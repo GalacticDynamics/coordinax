@@ -240,7 +240,7 @@ class AstropyRepresentationAPIMixin:
         >>> q_sph
         SphericalPos( ... )
         >>> q_sph.r
-        Distance(Array(3.7416575, dtype=float32), unit='m')
+        Distance(3.7416575, 'm')
 
         Transforming a Velocity:
 

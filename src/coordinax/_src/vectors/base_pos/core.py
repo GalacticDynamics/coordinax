@@ -55,24 +55,24 @@ class AbstractPos(
     @classmethod
     def cartesian_type(cls) -> "type[coordinax.vecs.AbstractPos]":
         """Return the corresponding Cartesian vector class."""
-        return api.cartesian_vector_type(cls)
+        return api.cartesian_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_derivative_cls(cls) -> "type[coordinax.vecs.AbstractVel]":
         """Return the corresponding time derivative class."""
-        return api.time_derivative_vector_type(cls)
+        return api.time_derivative_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_antiderivative_cls(cls) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding time antiderivative class."""
-        return api.time_antiderivative_vector_type(cls)
+        return api.time_antiderivative_vector_type(cls)  # type: ignore[return-value]
 
     @classmethod
     def time_nth_derivative_cls(cls, n: int) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding time nth derivative class."""
-        return api.time_nth_derivative_vector_type(cls, n=n)
+        return api.time_nth_derivative_vector_type(cls, n=n)  # type: ignore[return-value]
 
     # ===============================================================
     # Python API
@@ -106,7 +106,7 @@ class AbstractPos(
         q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)
         newq = _vec_matmul(other, q)
         newvec = cart_cls.from_(newq)
-        return newvec.vconvert(type(self))
+        return newvec.vconvert(type(self))  # type: ignore[union-attr]
 
     def __abs__(self) -> u.AbstractQuantity:
         """Return the norm of the vector.
@@ -116,7 +116,7 @@ class AbstractPos(
         >>> import coordinax as cx
         >>> vec = cx.vecs.CartesianPos2D.from_([3, 4], "m")
         >>> abs(vec)
-        BareQuantity(Array(5., dtype=float32), unit='m')
+        BareQuantity(5., 'm')
 
         """
         return self.norm()  # type: ignore[misc]
@@ -140,19 +140,19 @@ class AbstractPos(
 
         >>> v = cx.vecs.CartesianPos1D.from_([-1], "km")
         >>> v.norm()
-        BareQuantity(Array(1., dtype=float32), unit='km')
+        BareQuantity(1., 'km')
 
         >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "km")
         >>> v.norm()
-        BareQuantity(Array(5., dtype=float32), unit='km')
+        BareQuantity(5., 'km')
 
         >>> v = cx.vecs.PolarPos(r=u.Q(3, "km"), phi=u.Q(90, "deg"))
         >>> v.norm()
-        Distance(Array(3, dtype=int32, ...), unit='km')
+        Distance(3, 'km')
 
         >>> v = cx.CartesianPos3D.from_([1, 2, 3], "m")
         >>> v.norm()
-        BareQuantity(Array(3.7416575, dtype=float32), unit='m')
+        BareQuantity(3.7416575, 'm')
 
         """
         return jnp.linalg.vector_norm(self, axis=-1)  # type: ignore[arg-type]

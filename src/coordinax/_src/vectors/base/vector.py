@@ -149,7 +149,7 @@ class AbstractVector(
         ...     mu=u.Q(3, "m2"), nu=u.Q(2, "m2"),
         ...     phi=u.Q(4, "rad"), Delta=u.Q(1.5, "m"))
         >>> vec._auxiliary_data
-        {'Delta': Quantity(Array(1.5, dtype=float32, ...), unit='m')}
+        {'Delta': Q(1.5, 'm')}
 
         """
         return {k: getattr(self, k) for k in self._AUX_FIELDS}
@@ -180,7 +180,8 @@ class AbstractVector(
         ...                         y=u.Q([[0, 1], [2, 3]], "m"),
         ...                         z=u.Q([[0, 1], [2, 3]], "m"))
         >>> vec.mT.x
-        Quantity(Array([[0, 2], [1, 3]], dtype=int32), unit='m')
+        Q([[0, 2],
+           [1, 3]], 'm')
 
         """
         return replace(self, **{k: v.mT for k, v in field_items(AttrFilter, self)})
@@ -235,7 +236,8 @@ class AbstractVector(
         ...                         y=u.Q([[0, 1], [2, 3]], "m"),
         ...                         z=u.Q([[0, 1], [2, 3]], "m"))
         >>> vec.T.x
-        Quantity(Array([[0, 2], [1, 3]], dtype=int32), unit='m')
+        Q([[0, 2],
+           [1, 3]], 'm')
 
         """
         return replace(self, **{k: v.T for k, v in field_items(AttrFilter, self)})
@@ -275,8 +277,7 @@ class AbstractVector(
         >>> vec = cx.vecs.CartesianPos2D(x=u.Q([[1, 2], [3, 4]], "m"),
         ...                              y=u.Q(0, "m"))
         >>> vec.asdict()
-        {'x': Quantity(Array([[1, 2], [3, 4]], dtype=int32), unit='m'),
-         'y': Quantity(Array(0, dtype=int32, ...), unit='m')}
+        {'x': Q([[1, 2], [3, 4]], 'm'), 'y': Q(0, 'm')}
 
         """
         return dict_factory(field_items(self))
@@ -605,14 +606,14 @@ class AbstractVector(
 # Constructors
 
 
-@AbstractVector.from_.dispatch  # type: ignore[untyped-decorator]
+@AbstractVector.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
 def from_(cls: type[AbstractVector], *args: Any, **kwargs: Any) -> AbstractVector:
     """Create a vector from arguments.
 
     See `coordinax.vector` for more information.
 
     """
-    return vector(cls, *args, **kwargs)
+    return vector(cls, *args, **kwargs)  # type: ignore[return-value]
 
 
 # ================================================================

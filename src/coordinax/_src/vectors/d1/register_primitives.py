@@ -113,7 +113,7 @@ def dot_general_cart1d(
     >>> q2 = cx.vecs.CartesianPos1D.from_([2], "m")
 
     >>> jnp.dot(q1, q2)
-    Quantity(Array(2, dtype=int32), unit='m2')
+    Q(2, 'm2')
 
     """
     return lhs.x * rhs.x

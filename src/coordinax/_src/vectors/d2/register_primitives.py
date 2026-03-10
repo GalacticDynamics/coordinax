@@ -113,7 +113,7 @@ def dot_general_p_cart2d(
     >>> q2 = cx.vecs.CartesianPos2D.from_([3, 4], "m")
 
     >>> jnp.dot(q1, q2)
-    Quantity(Array(11, dtype=int32), unit='m2')
+    Q(11, 'm2')
 
     """
     tree = jax.tree.map(jnp.multiply, lhs, rhs, is_leaf=u.quantity.is_any_quantity)
@@ -134,7 +134,7 @@ def mul_p_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
 
     >>> v = cx.vecs.CartesianPos2D.from_([3, 4], "m")
     >>> jnp.multiply(5, v).x
-    Quantity(Array(15, dtype=int32), unit='m')
+    Q(15, 'm')
 
     """
     # Validation
@@ -218,7 +218,7 @@ def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
         [ 1 90]>
 
     >>> quaxed.numpy.linalg.vector_norm(v, axis=-1)
-    BareQuantity(Array(1., dtype=float32), unit='m')
+    BareQuantity(1., 'm')
 
     >>> nv = quaxed.lax.mul(2, v)
     >>> print(nv)
@@ -246,7 +246,7 @@ def neg_p_cart2d_pos(obj: CartesianPos2D, /) -> CartesianPos2D:
     >>> import coordinax as cx
     >>> q = cx.vecs.CartesianPos2D.from_([1, 2], "km")
     >>> (-q).x
-    Quantity(Array(-1, dtype=int32), unit='km')
+    Q(-1, 'km')
 
     """
     return jax.tree.map(qlax.neg, obj)

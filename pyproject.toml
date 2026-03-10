@@ -33,7 +33,7 @@ dependencies = [
   "quax-blocks>=0.4.0",
   "quaxed>=0.10.4",
   "typing-extensions>=4.13.2",
-  "unxt>=1.10.3",
+  "unxt>=1.11.0",
   "wadler-lindig>=0.1.6",
   "xmmutablemap>=0.1",
 ]
@@ -361,6 +361,16 @@ coordinax-api             = { workspace = true }
 coordinax-astro           = { workspace = true }
 coordinax-hypothesis      = { workspace = true }
 coordinax-interop-astropy = { workspace = true }
+
+
+[tool.unxt]
+quantity.repr.named_unit     = false
+quantity.repr.short_arrays   = "compact"
+quantity.repr.use_short_name = true
+
+quantity.str.named_unit     = true
+quantity.str.short_arrays   = false
+quantity.str.use_short_name = true
 
 
 [tool.uv.workspace]
