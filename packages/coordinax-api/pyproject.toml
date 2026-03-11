@@ -35,8 +35,28 @@ build-backend = "hatchling.build"
 requires      = ["hatch-vcs", "hatchling"]
 
 [tool.hatch.version]
-raw-options = { root = "../..", search_parent_directories = true, git_describe_command = "git describe --dirty --tags --long --match 'coordinax-api-v*'", local_scheme = "no-local-version" }
-source      = "vcs"
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme              = "no-local-version"
+root                      = "../.."
+search_parent_directories = true
+
+[tool.hatch.version.raw-options.scm.git]
+describe_command = [
+  "git",
+  "describe",
+  "--dirty",
+  "--tags",
+  "--long",
+  "--match",
+  "coordinax-api-v*",
+]
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/coordinax_api/_version.py"
+version-file-template = """\
+version: str = {version!r}
+version_tuple: tuple[int, int, int] | tuple[int, int, int, str, str]
+version_tuple = {version_tuple!r}
+"""

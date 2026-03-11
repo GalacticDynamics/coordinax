@@ -19,11 +19,11 @@ classifiers = [
 ]
 dependencies = ["coordinax", "optional-dependencies>=0.4.0"]
 description = "Astronomy-specific reference frames for coordinax"
+dynamic = ["version"]
 license = "MIT"
 name = "coordinax-astro"
 readme = "README.md"
 requires-python = ">=3.11"
-version = "0.1.0"
 
 [project.optional-dependencies]
 astropy = ["astropy>=7.2.0"]
@@ -35,8 +35,23 @@ requires      = ["hatch-vcs", "hatchling"]
 
 
 [tool.hatch.version]
-raw-options = { root = "../..", search_parent_directories = true, git_describe_command = "git describe --dirty --tags --long --match 'coordinax-astro-v*'", local_scheme = "no-local-version" }
-source      = "vcs"
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+local_scheme              = "no-local-version"
+root                      = "../.."
+search_parent_directories = true
+
+[tool.hatch.version.raw-options.scm.git]
+describe_command = [
+  "git",
+  "describe",
+  "--dirty",
+  "--tags",
+  "--long",
+  "--match",
+  "coordinax-astro-v*",
+]
 
 [tool.hatch.build.hooks.vcs]
 version-file = "src/coordinax_astro/_version.py"
