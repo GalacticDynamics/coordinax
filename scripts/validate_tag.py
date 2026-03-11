@@ -95,7 +95,8 @@ def validate_tag_for_package(tag: str, package: str | None = None) -> tuple[bool
         return False, (
             f"Tag {tag}: Package CD workflows should only trigger on "
             f"package-specific tags (e.g., {package}-v{major}.{minor}.{patch}). "
-            "Shared vX.Y.Z tags are coordinator tags that auto-create package tags."
+            "Coordinator tags are bare vX.Y.0 only. Bare vX.Y.Z tags with Z>0 "
+            "must be package-specific tags."
         )
 
     if tag_package != package:
