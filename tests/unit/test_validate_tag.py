@@ -174,6 +174,7 @@ class TestValidateTagForPackage:
         """Bare vX.Y.Z tags are rejected for versions >= 0.24."""
         is_valid, error = validate_tag.validate_tag_for_package("v0.24.0", "coordinax")
         assert is_valid is False
+        assert "Coordinator tags" in error
         assert "package-specific tags" in error
 
         is_valid, error = validate_tag.validate_tag_for_package(
