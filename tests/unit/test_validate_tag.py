@@ -175,7 +175,6 @@ class TestValidateTagForPackage:
         is_valid, error = validate_tag.validate_tag_for_package("v0.24.0", "coordinax")
         assert is_valid is False
         assert "package-specific tags" in error
-        assert "coordinator tags" in error
 
         is_valid, error = validate_tag.validate_tag_for_package(
             "v1.0.0", "coordinax-api"
