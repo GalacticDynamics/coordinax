@@ -87,6 +87,193 @@ $$
 \varphi_S(r, \theta, \phi) \circ \varphi_C^{-1}(x, y, z) = (\sqrt(x^2+y^2+z^2), \arccos(z/r), \arctan(y/x))
 $$
 
+<!-- Frame Transformations -->
+
+**_Frame Transformations_**:
+
+A **frame transformation** is a smooth map
+
+$$
+F : M \to M
+$$
+
+that relates two descriptions of points on the same manifold. The map $F : M \to M$ is smooth if it is infinitely differentiable in any chart, a major boon for auto-differentiation codes.
+
+Such maps may represent either:
+
+- an **active transformation**, moving points of the manifold, or
+- a **passive transformation**, re-expressing the same geometric point in a different reference frame.
+
+_In `coordinax`, frame transformations are passive_: a point described in one reference frame can be mapped to its representation in another frame.
+
+Here we enumerate some transformations:
+
+<!-- Frame Transformations: translations -->
+
+<u>**translation**</u>:
+
+shifts all points by a constant displacement vector:
+
+$$
+F(p) = p + a .
+$$
+
+In Cartesian coordinates this is $ x’ = x + a .$
+
+<!-- Frame Transformations: rotations -->
+
+<u>**rotations**</u>:
+
+A rotation is a linear transformation preserving orientation and distances in Euclidean space. In $\mathbb{R}^n$, rotations are represented by orthogonal matrices with unit determinant:
+
+$$
+R^T R = I, \quad \det R = 1 .
+$$
+
+Rotations form the special orthogonal group $ SO(n).$
+
+<!-- Frame Transformations: rotations -->
+
+<u>**reflections**</u>:
+
+A reflection is a linear transformation that reverses orientation across a hyperplane. Reflections preserve distances but have determinant -1.
+
+Together with rotations, reflections generate the orthogonal group $ O(n). $
+
+## Transformation Groups
+
+Many useful frame transformations form **groups**[^group] under composition. Important examples include:
+
+- the very general diffeomorphism group $\mathrm{Diff}(M)$,
+- the Euclidean group of rigid motions,
+- the Lorentz group of spacetime symmetries.
+
+These groups describe families of transformations that preserve certain geometric structures.
+
+[^group]: A **group** is a set $G$ together with a binary operation $\cdot : G \times G \to G$ satisfying four axioms: (1) **Closure**: $a \cdot b \in G$ for all $a, b \in G$; (2) **Associativity**: $(a \cdot b) \cdot c = a \cdot (b \cdot c)$ for all $a, b, c \in G$; (3) **Identity**: there exists $e \in G$ such that $e \cdot a = a \cdot e = a$ for all $a \in G$; (4) **Inverses**: for each $a \in G$ there exists $a^{-1} \in G$ such that $a \cdot a^{-1} = a^{-1} \cdot a = e$.
+
+```mermaid
+flowchart TD
+    Diff["Diffeomorphism group Diff(M)"]
+    Aff["Affine group Aff(n)"]
+    E["Euclidean group E(n)"]
+    O["Orthogonal group O(n)"]
+    SO["Special orthogonal group SO(n)"]
+    Lor["Lorentz group O(1,3)"]
+    P["Poincare group O(1,3) semidirect R^4"]
+
+    SO --> O
+    O --> E
+    E --> Aff
+
+    Lor --> P
+    P -->|n4 case| Aff
+
+    Aff -->|subset| Diff
+    Lor -->|subset| Diff
+    P -->|subset| Diff
+```
+
+### Diffeomorphism Group
+
+A smooth map that is bijective and whose inverse is also smooth is called a **diffeomorphism**. Diffeomorphisms preserve the smooth structure of the manifold. The set of all diffeomorphisms of $M$ forms the diffeomorphism group.
+
+$$
+\mathrm{Diff}(M),
+$$
+
+with composition as the group operation.
+
+Frame transformations used in coordinate systems are typically diffeomorphisms (and also other more specific groups).
+
+```{admonition} Examples
+:class: dropdown
+
+- translations,
+- scalings,
+- shears,
+- coordinate wraps,
+- rotating coordinate systems,
+- accelerated frames,
+```
+
+### Affine Group
+
+If $M$ is an affine space modeled on a vector space $V$, an affine transformation has the form
+
+$$
+x \mapsto Ax + b,
+$$
+
+where $A$ is a linear transformation and $b$ is a translation vector.
+
+Affine transformations include:
+
+- translations,
+- linear transformations,
+- scalings,
+- shears.
+
+Affine transformations preserve straight lines and parallelism.
+
+### Special Orthogonal Group $SO(n)$
+
+Special Orthogonal Group.
+
+$$
+R^T R = I, \quad \det R = 1 .
+$$
+
+### Orthogonal Group $O(n)$
+
+$\det R = \pm 1$
+
+#### Euclidean Group $E(n)$
+
+In Euclidean space, isometries consist of rotations, reflections, and translations. These transformations form the Euclidean group
+
+$$
+E(n) = O(n) \ltimes \mathbb{R}^n .
+$$
+
+### Lorentz Group $O(1,3)$
+
+In relativistic spacetime, coordinates are related by Lorentz transformations that preserve the Minkowski interval
+
+$$
+s^2 = -c^2 t^2 + x^2 + y^2 + z^2 .
+$$
+
+Lorentz transformations mix spatial and temporal coordinates:
+
+$$
+x’^\mu = \Lambda^\mu{}_\nu x^\nu .
+$$
+
+The matrices $\Lambda$ satisfy
+
+$$
+\eta_{\alpha\beta}\Lambda^\alpha{}\mu \Lambda^\beta{}\nu = \eta_{\mu\nu},
+$$
+
+where $\eta$ is the Minkowski metric. These transformations form the Lorentz group
+
+$$
+O(1,3).
+$$
+
+- boosts
+
+### Poincaré Group
+
+The Poincaré group combines Lorentz transformations with spacetime translations. A general Poincaré transformation is
+
+$$
+x’^\mu = \Lambda^\mu{}_\nu x^\nu + a^\mu .
+$$
+
+The Poincaré group is the group of isometries of Minkowski spacetime.
+
 ## Higher Level Structures
 
 <!-- Representations -->
@@ -230,6 +417,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.charts` | `AbstractChart`, `AbstractFixedComponentsChart`, `DIMENSIONAL_FLAGS`, `AbstractCartesianProductChart`, `AbstractFlatCartesianProductChart`, `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `point_realization_map`, `realize_cartesian`, `point_transition_map`, </br> `Abstract0D`, `Cart0D`, `cart0d`, </br> `Abstract1D`, `Cart1D`, `cart1d`, `Radial1D`, `radial1d`, `Time1D`, `time1d`, </br> `Abstract2D`, `Cart2D`, `cart2d`, `Polar2D`, `polar2d`, </br> `SphericalTwoSphere`, `sph2`, `LonLatSphericalTwoSphere`, `lonlat_sph2`, `LonCosLatSphericalTwoSphere`, `loncoslat_sph2`, `MathSphericalTwoSphere`, `math_sph2`, </br> `Abstract3D`, `Cart3D`, `cart3d`, `Cylindrical3D`, `cyl3d`, `AbstractSpherical3D`, `Spherical3D`, `sph3d`, `LonLatSpherical3D`, `lonlat_sph3d`, `LonCosLatSpherical3D`, `loncoslat_sph3d`, `MathSpherical3D`, `math_sph3d`, `ProlateSpheroidal3D`, </br> `Abstract6D`, `PoincarePolar6D`, `poincarepolar6d`, </br> `AbstractND`, `CartND`, `cartnd`, </br> `SpaceTimeCT` |
 | `coordinax.representations` | `vconvert`, </br> `Representation`, `point`, </br> `AbstractGeometry`, `PointGeometry`, `point_geom`, </br> `AbstractBasis`, `NoBasis`, `nobasis`, </br> `AbstractSemanticKind`, `Location`, `location` |
 | `coordinax.vectors` | `AbstractVector`, `AbstractVector`, `Vector`, `ToUnitsOptions` |
+| `coordinax.frames` | `AbstractReferenceFrame` |
 
 </br>
 
