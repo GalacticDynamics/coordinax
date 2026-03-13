@@ -130,6 +130,7 @@ import coordinax.distances
 import coordinax.hypothesis
 import coordinax.interop
 import coordinax.main
+import coordinax.metrics
 import coordinax.representations
 import coordinax.vectors
 -->

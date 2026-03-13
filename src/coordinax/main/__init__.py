@@ -26,6 +26,9 @@ __all__ = (  # distances
     "loncoslat_sph3d",
     "math_sph3d",
     "cartnd",
+    # metrics
+    "EuclideanMetric",
+    "norm",
     # representations
     "vconvert",
     "AbstractGeometry",
@@ -73,6 +76,7 @@ from coordinax.distances import (
     DistanceModulus,
     Parallax,
 )
+from coordinax.metrics import EuclideanMetric, norm
 from coordinax.representations import (
     AbstractBasis,
     AbstractGeometry,

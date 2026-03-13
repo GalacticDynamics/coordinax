@@ -38,6 +38,7 @@ A **distance quantity** has dimensions of length and, in the strict metric sense
 Let $M$ be a **smooth manifold** of dimension $n$.
 
 - A **point** is an element $p \in M$.
+- A **tangent vector** at $p$ is an element $v \in T_pM$, where $T_pM$ is the **tangent space** at $p$: a vector space attached to the point that represents the infinitesimal directions in which one may move away from $p$ on the manifold.
 
 <!-- Charts -->
 
@@ -86,6 +87,37 @@ For example, considering the smooth Euclidean 3-manifold $\mathbb{R}^3$, the tra
 $$
 \varphi_S(r, \theta, \phi) \circ \varphi_C^{-1}(x, y, z) = (\sqrt(x^2+y^2+z^2), \arccos(z/r), \arctan(y/x))
 $$
+
+<!-- metric -->
+
+**_Metrics \& Reimannian Manifolds_**:
+
+A manifold _without_ a metric is just a smooth manifold $M$. We can add geometric structure to the manifold, specifically the **metric**, to obtain a **Riemannian manifold** $(M, g)$.
+
+A metric $g$ assigns to each point $p \in M$ a symmetric, non-degenerate bilinear form
+
+$$
+g_p : T_pM \times T_pM \to \mathbb{R},
+$$
+
+varying smoothly with p. This additional structure equips the manifold with notions of:
+
+- Length of tangent vectors $$\|v\|_p = \sqrt{g_p(v,v)}$$
+- Angle between tangent vectors $$ \cos\theta = \frac{g_p(u,v)}{\|u\|\_p \|v\|\_p} $$
+- Distance along curves (via integration of infinitesimal lengths)
+- Geodesics, defined as curves that locally extremize length
+- Volume elements, via $\sqrt{\det g}$
+- Raising and lowering indices, identifying $T_pM$ with $T_p^* M$
+
+Importantly, the metric acts only on tangent spaces; it does not act directly on points. Thus, it equips the manifold with intrinsic geometric meaning beyond smooth structure alone.
+
+In chart coordinates, the metric is represented by the matrix
+
+$$
+g_{ij}(q) = g\!\left(\frac{\partial}{\partial q^i},\frac{\partial}{\partial q^j}\right),
+$$
+
+evaluated at the base point $p$ with coordinates $q=\varphi(p)$.
 
 <!-- Frame Transformations -->
 
@@ -418,6 +450,8 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `vconvert`, </br> `Representation`, `point`, </br> `AbstractGeometry`, `PointGeometry`, `point_geom`, </br> `AbstractBasis`, `NoBasis`, `nobasis`, </br> `AbstractSemanticKind`, `Location`, `location` |
 | `coordinax.vectors` | `AbstractVector`, `AbstractVector`, `Vector`, `ToUnitsOptions` |
 | `coordinax.frames` | `AbstractReferenceFrame` |
+| `coordinax.manifolds` | `AbstractManifold`, `AbstractAtlas`, </br> `EuclideanManifold`, `EuclideanAtlas`, </br> `TwoSphereManifold`, `TwoSphereAtlas` |
+| `coordinax.metrics` | `AbstractMetric`, </br> `EuclideanMetric`, `MinkowskiMetric`, `SphereMetric`, </br> `norm` |
 
 </br>
 
@@ -1316,3 +1350,37 @@ A `Representation` specifies _what kind of geometric object_ component data is m
 !!! info `ToUnitsOptions`
 
     Used for `unxt.uconvert` dispatches.
+
+</br>
+
+<a id="software-spec-manifolds"></a>
+
+## Manifolds
+
+!!! info `AbstractManifold`
+
+    [HERE]
+
+!!! info `AbstractAtlas`
+
+    [HERE]
+
+### Euclidean
+
+!!! info `EuclideanManifold`
+
+    [HERE]
+
+!!! info `EuclideanAtlas`
+
+    [HERE]
+
+### TwoSphere
+
+!!! info `TwoSphereManifold`
+
+    [HERE]
+
+!!! info `TwoSphereAtlas`
+
+    [HERE]

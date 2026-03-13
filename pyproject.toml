@@ -364,6 +364,7 @@ ignore = [
 "coordinax.distances"       = "cxd"
 "coordinax.hypothesis.main" = "cxst"
 "coordinax.main"            = "cx"
+"coordinax.metrics"         = "cxm"
 "coordinax.representations" = "cxr"
 "coordinax.vectors"         = "cxv"
 equinox                     = "eqx"
