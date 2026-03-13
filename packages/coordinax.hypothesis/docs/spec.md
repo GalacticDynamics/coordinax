@@ -37,23 +37,6 @@ The package should expose a minimal, stable set of strategy constructors. Sugges
 - `coordinax.hypothesis.vectors`
   - `coordinax.hypothesis.fiber`
 
-### 6) Time-chain helper strategies
-
-Some Coordinax tests (and downstream packages) need role-consistent chains for physical tangent roles. `coordinax.hypothesis` should expose a helper strategy (name is not strictly required, but the existing `chart_time_chain` is acceptable) with the following contract:
-
-- Inputs:
-  - a starting **role class** in `{Pos, PhysVel, PhysAcc}`,
-  - a chart (or chart strategy) that fixes the intended family (e.g. 3D Euclidean).
-- Output:
-  - a tuple of chart instances following the chain `PhysAcc → PhysVel → Pos`, truncated appropriately, and **never** including `Point`.
-
-If the caller supplies `Point` as the starting role, the helper should either:
-
-- raise immediately (preferred), or
-- `assume(False)` to discard such cases (acceptable in Hypothesis).
-
-This helper exists to avoid accidental generation of nonsensical chains after the `Point` vs `PhysDisp` role split.
-
 ### 1) Chart strategies
 
 #### `charts()`

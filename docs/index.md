@@ -125,6 +125,7 @@ This functionality is organized into submodules available under the top-level `c
 import coordinax.angles
 import coordinax.api
 import coordinax.astro
+import coordinax.charts
 import coordinax.distances
 import coordinax.hypothesis
 import coordinax.interop
@@ -135,8 +136,9 @@ import coordinax.main
 >>> import coordinax
 
 >>> from inspect import ismodule
->>> [name for name in dir(coordinax) if ismodule(getattr(coordinax, name))]
-['angles', 'api', 'astro', 'distances', 'hypothesis', 'interop', 'main']
+>>> [name for name in dir(coordinax)
+...  if not name.startswith("_") and ismodule(getattr(coordinax, name))]
+['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main']
 ```
 
 We recommend importing as needed:

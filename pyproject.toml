@@ -339,16 +339,27 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"**/tests/**"  = ["ANN", "D102", "INP001", "N803", "RUF002", "S101", "T20"]
-"__init__.py"  = ["F403"]
+"**/tests/**" = [
+  "ANN",
+  "D102",
+  "FBT001",
+  "INP001",
+  "N803",
+  "RUF002",
+  "S101",
+  "T20",
+]
+"__init__.py" = ["F403"]
 "docs/conf.py" = ["A001", "INP001"]
-"noxfile.py"   = ["T20"]
-"scripts/**"   = ["INP001"]
+"noxfile.py" = ["T20"]
+"packages/coordinax.hypothesis/**" = ["S101"]
+"scripts/**" = ["INP001"]
 
 [tool.ruff.lint.flake8-import-conventions.aliases]
 "coordinax.angles"          = "cxa"
 "coordinax.api"             = "cxapi"
 "coordinax.astro"           = "cxastro"
+"coordinax.charts"          = "cxc"
 "coordinax.distances"       = "cxd"
 "coordinax.hypothesis.main" = "cxst"
 "coordinax.main"            = "cx"

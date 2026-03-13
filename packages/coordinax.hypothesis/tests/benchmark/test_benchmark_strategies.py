@@ -124,7 +124,7 @@ def test_benchmark_build_init_kwargs_spacetimect(benchmark):
     """Benchmark building init kwargs strategy for SpaceTimeCT (recursive case)."""
 
     def build_kwargs():
-        return cxst.build_init_kwargs_strategy(cxc.SpaceTimeCT, dim=4)
+        return cxst.build_init_kwargs_strategy(cxc.SpaceTimeCT, dim=None)
 
     strategy = benchmark(build_kwargs)
     assert strategy is not None

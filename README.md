@@ -33,6 +33,7 @@ pip install coordinax
 ### Concepts
 
 - Specialized Quantities: scalar coordinate quantities with units, including `Angle` (directional values on $S^1$ with explicit wrapping) and `Distance` (length-valued quantities), plus astronomy-facing forms like `Parallax` and `DistanceModulus`.
+- Charts: a coordinate chart / component schema (names + physical dimensions). A chart does not store numerical values.
 
 ## Modules
 
@@ -63,6 +64,28 @@ Distances and angles are first-class quantities:
 >>> import unxt as u
 >>> u.uconvert("rad", a)
 Angle(Array(0.52359878, dtype=float64, ...), unit='rad')
+
+```
+
+### Charts
+
+The specific sub-package, with the full functionality is:
+
+```python
+import coordinax.charts as cxc
+```
+
+Transform coordinate dictionaries between charts:
+
+```pycon
+>>> # Cartesian coordinates
+>>> q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+>>> # Transform to Spherical
+>>> q_sph = cx.point_realization_map(cxc.sph3d, cxc.cart3d, q)  # to <- from
+>>> q_sph
+{'r': Quantity(Array(3.74165739, dtype=float64, ...), unit='km'),
+ 'theta': Quantity(Array(0.64052231, dtype=float64), unit='rad'),
+ 'phi': Quantity(Array(1.10714872, dtype=float64, ...), unit='rad')}
 
 ```
 
