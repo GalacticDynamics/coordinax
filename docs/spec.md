@@ -38,7 +38,7 @@ A **distance quantity** has dimensions of length and, in the strict metric sense
 Let $M$ be a **smooth manifold** of dimension $n$.
 
 - A **point** is an element $p \in M$.
-- A **tangent vector** at $p$ is an element $v \in T_pM$, where $T_pM$ is the **tangent space** at $p$: a vector space attached to the point that represents the infinitesimal directions in which one may move away from $p$ on the manifold.
+- A **tangent vector** at $p$ is an element $v \in T_pM$, where $T_pM$ is the [**tangent space**](#math-spec-tangents) at $p$: a vector space attached to the point that represents the infinitesimal directions in which one may move away from $p$ on the manifold.
 
 <!-- Charts -->
 
@@ -87,37 +87,6 @@ For example, considering the smooth Euclidean 3-manifold $\mathbb{R}^3$, the tra
 $$
 \varphi_S(r, \theta, \phi) \circ \varphi_C^{-1}(x, y, z) = (\sqrt(x^2+y^2+z^2), \arccos(z/r), \arctan(y/x))
 $$
-
-<!-- metric -->
-
-**_Metrics \& Reimannian Manifolds_**:
-
-A manifold _without_ a metric is just a smooth manifold $M$. We can add geometric structure to the manifold, specifically the **metric**, to obtain a **Riemannian manifold** $(M, g)$.
-
-A metric $g$ assigns to each point $p \in M$ a symmetric, non-degenerate bilinear form
-
-$$
-g_p : T_pM \times T_pM \to \mathbb{R},
-$$
-
-varying smoothly with p. This additional structure equips the manifold with notions of:
-
-- Length of tangent vectors $$\|v\|_p = \sqrt{g_p(v,v)}$$
-- Angle between tangent vectors $$ \cos\theta = \frac{g_p(u,v)}{\|u\|\_p \|v\|\_p} $$
-- Distance along curves (via integration of infinitesimal lengths)
-- Geodesics, defined as curves that locally extremize length
-- Volume elements, via $\sqrt{\det g}$
-- Raising and lowering indices, identifying $T_pM$ with $T_p^* M$
-
-Importantly, the metric acts only on tangent spaces; it does not act directly on points. Thus, it equips the manifold with intrinsic geometric meaning beyond smooth structure alone.
-
-In chart coordinates, the metric is represented by the matrix
-
-$$
-g_{ij}(q) = g\!\left(\frac{\partial}{\partial q^i},\frac{\partial}{\partial q^j}\right),
-$$
-
-evaluated at the base point $p$ with coordinates $q=\varphi(p)$.
 
 <!-- Frame Transformations -->
 
@@ -171,6 +140,159 @@ Rotations form the special orthogonal group $ SO(n).$
 A reflection is a linear transformation that reverses orientation across a hyperplane. Reflections preserve distances but have determinant -1.
 
 Together with rotations, reflections generate the orthogonal group $ O(n). $
+
+<a id="math-spec-tangents"></a>
+
+## Tangents
+
+<!-- tangents -->
+
+**_Tangent Spaces_**:
+
+For a smooth manifold $M$ and a point $p \in M$, the **tangent space** $T_pM$ is the vector space of infinitesimal directions through $p$.
+
+Elements $v \in T_pM$ may be defined equivalently as
+
+- equivalence classes of curves through $p$,
+- derivations acting on smooth functions,
+- coordinate vectors induced by charts.
+
+In a chart $C=(U,\varphi)$ with coordinates $q^i$, the tangent space has a natural coordinate basis
+
+$$
+\left\{\frac{\partial}{\partial q^1},
+      \dots,
+      \frac{\partial}{\partial q^n}\right\}_p .
+$$
+
+A tangent vector can therefore be written
+
+$$
+v = v^i \frac{\partial}{\partial q^i}\Big|_p .
+$$
+
+Under a change of coordinates \(q^i \rightarrow \tilde q^j\), the components transform by the **Jacobian pushforward law**
+
+$$
+\tilde v^j = \frac{\partial \tilde q^j}{\partial q^i} v^i .
+$$
+
+The collection of all tangent spaces forms the **tangent bundle**
+
+$$
+TM = \bigsqcup_{p \in M} T_pM .
+$$
+
+Unlike points, tangent vectors form a vector space and support addition and scalar multiplication.
+
+<!-- metric -->
+
+**_Metrics \& Reimannian Manifolds_**:
+
+A manifold _without_ a metric is just a smooth manifold $M$. We can add geometric structure to the manifold, specifically the **metric**, to obtain a **Riemannian manifold** $(M, g)$.
+
+A metric $g$ assigns to each point $p \in M$ a symmetric, non-degenerate bilinear form
+
+$$
+g_p : T_pM \times T_pM \to \mathbb{R},
+$$
+
+varying smoothly with p. This additional structure equips the manifold with notions of:
+
+- Length of tangent vectors $$\|v\|_p = \sqrt{g_p(v,v)}$$
+- Angle between tangent vectors $$ \cos\theta = \frac{g_p(u,v)}{\|u\|\_p \|v\|\_p} $$
+- Distance along curves (via integration of infinitesimal lengths)
+- Geodesics, defined as curves that locally extremize length
+- Volume elements, via $\sqrt{\det g}$
+- Raising and lowering indices, identifying $T_pM$ with $T_p^* M$
+
+Importantly, the metric acts only on tangent spaces; it does not act directly on points. Thus, it equips the manifold with intrinsic geometric meaning beyond smooth structure alone.
+
+In chart coordinates, the metric is represented by the matrix
+
+$$
+g_{ij}(q) = g\!\left(\frac{\partial}{\partial q^i},\frac{\partial}{\partial q^j}\right),
+$$
+
+evaluated at the base point $p$ with coordinates $q=\varphi(p)$.
+
+<!-- transformations -->
+
+**_Transformations_**:
+
+<!-- Induced Action on Tangent Spaces -->
+
+A smooth map $F : M \to M$ induces a linear map on tangent spaces called the pushforward
+
+$$
+F_* : T_pM \to T_{F(p)}M .
+$$
+
+If $v \in T_pM$ is a tangent vector, then under the transformation
+
+$$
+v \mapsto F_* v .
+$$
+
+In coordinates $x^i$, if the transformation is written
+
+$$
+x’^i = F^i(x),
+$$
+
+then the tangent components transform according to the Jacobian
+
+$$
+v’^i = \frac{\partial F^i}{\partial x^j} v^j .
+$$
+
+Thus frame transformations act naturally on both points and tangent vectors.
+
+<!-- Isometry -->
+
+Transformations that preserve distances between points are called isometries. When a metric structure g exists on the manifold, a map F : M \to M is an isometry if
+
+$$
+g(F_* u, F_* v) = g(u,v)
+$$
+
+<!-- Frame Transformations: Lorentz boosts -->
+
+<u>**Lorentz boosts**</u>:
+
+A Lorentz boost is a Lorentz transformation corresponding to a change between inertial frames moving at constant relative velocity (see [Tangents](#math-spec-tangents) for the definition and properties of velocity).
+
+For motion in an arbitrary spatial direction with velocity vector $\mathbf{v}$,
+
+$$
+\begin{aligned}
+t' &= \gamma \left(t - \frac{\mathbf{v} \cdot \mathbf{x}}{c^2}\right), \\
+\mathbf{x}' &= \mathbf{x} + \frac{\gamma - 1}{\|\mathbf{v}\|^2} (\mathbf{v} \cdot \mathbf{x}) \, \mathbf{v} - \gamma \, \mathbf{v} \, t,
+\end{aligned}
+$$
+
+where
+
+$$
+\gamma = \frac{1}{\sqrt{1 - \|\mathbf{v}\|^2/c^2}} .
+$$
+
+<!-- Frame Transformations: Lorentz acceleration boosts -->
+
+<u>**Acceleration boosts**</u>:
+
+Uniformly accelerated observers in Minkowski spacetime use Rindler coordinates. The transformation from Minkowski coordinates (t,x) to Rindler coordinates (\tau,\rho) is
+
+$$
+\begin{aligned}
+t &= \rho \sinh(a\tau / c), \
+x &= \rho \cosh(a\tau / c),
+\end{aligned}
+$$
+
+where a is the proper acceleration.
+
+These transformations describe reference frames undergoing constant proper acceleration. Unlike Lorentz transformations, they do not correspond to global spacetime symmetries but are still smooth diffeomorphisms on appropriate regions of spacetime.
 
 ## Transformation Groups
 
@@ -353,6 +475,8 @@ Typical examples include
 - **Points**: a point is an element $$p \in M .$$ The transformation law is $$
 q_f = \Phi(q_i) $$
 
+- **Tangent vectors**: a tangent vector at $p$ is an element $$ v \in T_pM , $$ where $T_pM$ is the tangent space of $M$ at $p$. The transformation law is $$ v_f^a = \frac{\partial q_f^a}{\partial q_i^b} v_i^b $$
+
 Thus the geometry kind determines the class of transformation rule applied to the components.
 
 Importantly, the geometry kind is **independent of the coordinate chart** used to represent the components. The same geometric object may be written in any compatible chart.
@@ -379,11 +503,46 @@ The coefficients $v^a$ are the **components of the vector in the basis** $B$.
 
 **Coordinate bases** determine how components are expressed, when such a choice is meaningful.
 
+Given a chart with coordinates $q^a$, the natural coordinate basis of the tangent space is
+
+$$
+\left\{ \frac{\partial}{\partial q^a} \right\}.
+$$
+
+In this basis,
+
+$$
+v = v^a \frac{\partial}{\partial q^a}.
+$$
+
+The corresponding cotangent basis is
+
+$$
+\{ dq^a \}.
+$$
+
+#### Basis transformations
+
+If two bases ${e_a}$ and ${e’_a}$ are related by
+
+$$
+e’_a = A_a^{\ b} e_b ,
+$$
+
+then vector components transform as
+
+$$
+v’^a = (A^{-1})_b^{\ a} v^b .
+$$
+
+Thus basis transformations act **linearly**, in contrast to chart transitions, which are generally nonlinear.
+
 #### Basis relevance
 
 Not all geometric objects require a basis specification.
 
 - Points are affine objects and do not belong to a vector space. Their coordinates are chart values, not vector components.
+- Vectors and tensors require a basis because their components depend on the basis choice.
 
 Therefore the basis component of a representation may be trivial for some geometry kinds.
 
@@ -396,8 +555,19 @@ While the geometry kind determines the mathematical space of the object, the sem
 Examples include:
 
 - **Location**: a point interpreted as the position of a particle or object.
+- **Displacement**: a tangent vector interpreted as the difference between nearby points.
+- **Velocity**: a tangent vector interpreted as the derivative of a trajectory: $$ v = \frac{d\gamma}{dt}. $$
+- **Acceleration**: a tangent vector interpreted as the second derivative of a trajectory.
 
 Semantic kinds do **not** change coordinate transformation laws.
+
+For example, velocity and acceleration both transform as tangent vectors under coordinate changes:
+
+$$
+v_f^a = \frac{\partial q_f^a}{\partial q_i^b} v_i^b .
+$$
+
+Their difference lies only in interpretation and in the operations that produce them.
 
 Separating semantics from geometry provides two advantages:
 
