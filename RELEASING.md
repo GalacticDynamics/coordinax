@@ -3,10 +3,10 @@
 This workspace contains five packages that can be released:
 
 - `coordinax` - the main package
-- `coordinax-api` - abstract dispatch API
-- `coordinax-astro` - astronomy-specific reference frames
-- `coordinax-hypothesis` - hypothesis testing strategies
-- `coordinax-interop-astropy` - Astropy interoperability package
+- `coordinax.api` - abstract dispatch API
+- `coordinax.astro` - astronomy-specific reference frames
+- `coordinax.hypothesis` - hypothesis testing strategies
+- `coordinax.interop.astropy` - Astropy interoperability package
 
 All releases are automated via GitHub Actions.
 
@@ -33,15 +33,14 @@ git push origin v0.24.0
 
 **Single Package Bug-fix**
 
-Use package tag: `PACKAGE-vX.Y.Z` where `Z > 0` (for example,
-`coordinax-api-v0.24.1`)
+Use package tag: `PACKAGE-vX.Y.Z` where `Z > 0` (for example, `coordinax-api-v0.24.1`)
 
 ```bash
-# Create and push package-specific tag (example: coordinax-api)
-git tag coordinax-api-v0.24.1 -m "Release coordinax-api 0.24.1 bug-fix"
+# Create and push package-specific tag (example: coordinax.api)
+git tag coordinax-api-v0.24.1 -m "Release coordinax.api 0.24.1 bug-fix"
 git push origin coordinax-api-v0.24.1
 
-# CD automatically builds and publishes only coordinax-api
+# CD automatically builds and publishes only coordinax.api
 ```
 
 ### Tag Format Rules
@@ -73,10 +72,10 @@ Invalid:
 All packages use `hatch-vcs` with package-specific tag matching:
 
 - `coordinax` matches `coordinax-v*`
-- `coordinax-api` matches `coordinax-api-v*`
-- `coordinax-astro` matches `coordinax-astro-v*`
-- `coordinax-hypothesis` matches `coordinax-hypothesis-v*`
-- `coordinax-interop-astropy` matches `coordinax-interop-astropy-v*`
+- `coordinax.api` matches `coordinax-api-v*`
+- `coordinax.astro` matches `coordinax-astro-v*`
+- `coordinax.hypothesis` matches `coordinax-hypothesis-v*`
+- `coordinax.interop.astropy` matches `coordinax-interop-astropy-v*`
 
 ### How Releases Work
 
@@ -99,8 +98,7 @@ All packages use `hatch-vcs` with package-specific tag matching:
 
 Strict tag validation is enforced starting with `v0.24.0`.
 
-- `v0.23.x` and older tags are allowed without the modern coordinator/package
-  checks.
+- `v0.23.x` and older tags are allowed without the modern coordinator/package checks.
 - This preserves compatibility with historical release tags.
 
 ---
@@ -133,19 +131,18 @@ Expected automation:
 ### Scenario 2: Bug-fix Release (Single Package)
 
 ```bash
-git tag coordinax-api-vX.Y.Z -m "Release coordinax-api X.Y.Z bug-fix"
+git tag coordinax-api-vX.Y.Z -m "Release coordinax.api X.Y.Z bug-fix"
 git push origin coordinax-api-vX.Y.Z
 ```
 
 Expected automation:
 
-1. `cd-coordinax-api` runs.
-2. Only `coordinax-api` is built and published.
+1. `cd-coordinax.api` runs.
+2. Only `coordinax.api` is built and published.
 
 ### GitHub Release (Optional)
 
-A GitHub Release is optional and informational; publishing is triggered by tag
-push.
+A GitHub Release is optional and informational; publishing is triggered by tag push.
 
 For synchronized releases:
 
@@ -165,13 +162,13 @@ For package-specific releases:
 
 ```bash
 # Check version detection for a package
-cd packages/coordinax-api
+cd packages/coordinax.api
 hatch version
 
 # Local test tag example (do not push)
 cd ../..
 git tag coordinax-api-v0.0.0 -m "Test tag"
-cd packages/coordinax-api && hatch version
+cd packages/coordinax.api && hatch version
 cd ../..
 git tag -d coordinax-api-v0.0.0
 ```

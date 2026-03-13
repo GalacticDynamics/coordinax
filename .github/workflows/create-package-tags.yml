@@ -79,10 +79,10 @@ jobs:
           # Define package tags to create
           PACKAGES=(
             "coordinax"
-            "coordinax-api"
-            "coordinax-astro"
-            "coordinax-hypothesis"
-            "coordinax-interop-astropy"
+            "coordinax.api"
+            "coordinax.astro"
+            "coordinax.hypothesis"
+            "coordinax.interop.astropy"
           )
           TAGS_TO_PUSH=()
 

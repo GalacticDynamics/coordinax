@@ -1,6 +1,5 @@
 name: Find package tag
-description:
-  Find the single package tag pointing at a commit and export PACKAGE_TAG.
+description: Find the single package tag pointing at a commit and export PACKAGE_TAG.
 
 inputs:
   tag_glob:
