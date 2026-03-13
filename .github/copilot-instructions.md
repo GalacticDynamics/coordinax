@@ -80,7 +80,7 @@ The root `docs/spec.md` defines the **global mathematical framework**; package- 
 
 Instructions:
 
-- **ALWAYS** read the specs files -- `docs/spec.md` and `packages/coordinax.hypothesis/docs/spec.md` -- **before** implementing or changing any chart, metric, frame, embedding code, role semantics, or conversion rules (`*transform`), and before editing related docs/tests.
+- **ALWAYS** read the specs files -- `docs/spec.md` and `packages/coordinax.hypothesis/docs/spec.md` -- **before** implementing or changing any chart, metric, frame, embedding code, representation semantics, or conversion rules (`*transform`), and before editing related docs/tests.
 - If code behavior and specs file disagree, update code/docstrings/tests to match the specs file.
 - Any new public API must be documented in the specs files and preferably referenced from the user guides.
 
@@ -89,7 +89,7 @@ Instructions:
   - cross-reference them in docstrings and comments where appropriate,
   - update them whenever public semantics change.
 
-- Any new transform or role must include:
+- Any new transform or representation must include:
   - spec-compliance checklist items (in PR description or doc),
   - concise doctest-like examples where appropriate,
   - property-based tests (prefer `coordinax.hypothesis`).

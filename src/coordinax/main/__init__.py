@@ -26,6 +26,19 @@ __all__ = (  # distances
     "loncoslat_sph3d",
     "math_sph3d",
     "cartnd",
+    # representations
+    "vconvert",
+    "AbstractGeometry",
+    "PointGeometry",
+    "point_geom",
+    "AbstractBasis",
+    "NoBasis",
+    "nobasis",
+    "AbstractSemanticKind",
+    "Location",
+    "location",
+    "Representation",
+    "point",
 )
 
 from coordinax.angles import Angle
@@ -54,4 +67,18 @@ from coordinax.distances import (
     Distance,
     DistanceModulus,
     Parallax,
+)
+from coordinax.representations import (
+    AbstractBasis,
+    AbstractGeometry,
+    AbstractSemanticKind,
+    Location,
+    NoBasis,
+    PointGeometry,
+    Representation,
+    location,
+    nobasis,
+    point,
+    point_geom,
+    vconvert,
 )

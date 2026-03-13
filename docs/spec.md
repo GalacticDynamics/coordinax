@@ -87,6 +87,104 @@ $$
 \varphi_S(r, \theta, \phi) \circ \varphi_C^{-1}(x, y, z) = (\sqrt(x^2+y^2+z^2), \arccos(z/r), \arctan(y/x))
 $$
 
+## Higher Level Structures
+
+<!-- Representations -->
+
+**_Transformation Representations_**: ([software spec](#software-spec-representations))
+
+Building off transition maps and the other transformation laws we introduce a generalization over transformation laws that streamlines software implementation.
+
+A **representation** specifies _what kind of geometric object_ component data is meant to represent, independently of _which chart_ is used to write down the underlying coordinates. In `coordinax`, a representation is structured from three pieces:
+
+1. a **geometry kind**, which identifies the geometric type of the object (for example, a point, or later a tangent or cotangent object),
+2. a **basis**, which identifies the basis in which components are expressed when such a choice is meaningful, and
+3. a **semantic kind**, which identifies the physical or mathematical meaning attached to that geometric type.
+
+Formally, one may view a representation as a triple
+
+$$
+R = (K, B, S),
+$$
+
+where $K$ is the geometry kind, $B$ is the basis choice, and $S$ is the semantic kind.
+
+A representation is therefore **not** the same thing as a chart: the chart determines the coordinate system, while the representation determines the transformation law and geometric interpretation of the data.
+
+For **points**, the representation determines that the transformation law is a **transition map**.
+
+### Geometry Kinds (K)
+
+A **geometry kind** identifies the mathematical type of geometric object that component data represents.
+
+Formally, let $M$ be a smooth manifold and let $p \in M$. Geometric objects arise from structures associated with $M$ such as its tangent and cotangent bundles. A geometry kind therefore determines the **mathematical space** in which the represented object lives.
+
+Each geometry kind determines the **coordinate transformation law** for components.
+
+If two charts $C_i=(U_i,\varphi_i)$ and $C_f=(U_f,\varphi_f)$ overlap, the chart transition map is
+
+$$
+\Phi = \varphi_f \circ \varphi_i^{-1}.
+$$
+
+Then component transformations follow from the differential structure of $\Phi$.
+
+Typical examples include
+
+- **Points**: a point is an element $$p \in M .$$ The transformation law is $$
+q_f = \Phi(q_i) $$
+
+Thus the geometry kind determines the class of transformation rule applied to the components.
+
+Importantly, the geometry kind is **independent of the coordinate chart** used to represent the components. The same geometric object may be written in any compatible chart.
+
+### Bases
+
+Many geometric objects live in vector spaces. In such spaces, component values depend on the choice of basis.
+
+A **basis** $B$ for a vector space $V$ is a linearly independent set
+
+$$
+{ e_a }_{a=1}^{\dim V}
+$$
+
+such that any vector $v \in V$ can be written uniquely as
+
+$$
+v = v^a e_a .
+$$
+
+The coefficients $v^a$ are the **components of the vector in the basis** $B$.
+
+#### Coordinate Bases
+
+**Coordinate bases** determine how components are expressed, when such a choice is meaningful.
+
+#### Basis relevance
+
+Not all geometric objects require a basis specification.
+
+- Points are affine objects and do not belong to a vector space. Their coordinates are chart values, not vector components.
+
+Therefore the basis component of a representation may be trivial for some geometry kinds.
+
+#### Semantic Kinds
+
+A **semantic kind** specifies the **interpretation** attached to a geometric object.
+
+While the geometry kind determines the mathematical space of the object, the semantic kind distinguishes _how that object is interpreted physically or mathematically_.
+
+Examples include:
+
+- **Location**: a point interpreted as the position of a particle or object.
+
+Semantic kinds do **not** change coordinate transformation laws.
+
+Separating semantics from geometry provides two advantages:
+
+1. Correct transformation laws -- transformation behavior depends only on geometry kind and basis, not on semantics.
+2. Clear interpretation -- different semantic kinds distinguish objects that share the same mathematical type but represent different physical quantities.
+
 ---
 
 # Packages
@@ -109,6 +207,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance`, `DistanceModulus`, `Parallax` |
 | `coordinax.charts` | `AbstractChart`, `AbstractFixedComponentsChart`, `DIMENSIONAL_FLAGS`, `AbstractCartesianProductChart`, `AbstractFlatCartesianProductChart`, `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `point_realization_map`, `realize_cartesian`, `point_transition_map`, </br> `Abstract0D`, `Cart0D`, `cart0d`, </br> `Abstract1D`, `Cart1D`, `cart1d`, `Radial1D`, `radial1d`, `Time1D`, `time1d`, </br> `Abstract2D`, `Cart2D`, `cart2d`, `Polar2D`, `polar2d`, </br> `SphericalTwoSphere`, `sph2`, `LonLatSphericalTwoSphere`, `lonlat_sph2`, `LonCosLatSphericalTwoSphere`, `loncoslat_sph2`, `MathSphericalTwoSphere`, `math_sph2`, </br> `Abstract3D`, `Cart3D`, `cart3d`, `Cylindrical3D`, `cyl3d`, `AbstractSpherical3D`, `Spherical3D`, `sph3d`, `LonLatSpherical3D`, `lonlat_sph3d`, `LonCosLatSpherical3D`, `loncoslat_sph3d`, `MathSpherical3D`, `math_sph3d`, `ProlateSpheroidal3D`, </br> `Abstract6D`, `PoincarePolar6D`, `poincarepolar6d`, </br> `AbstractND`, `CartND`, `cartnd`, </br> `SpaceTimeCT` |
+| `coordinax.representations` | `vconvert`, </br> `Representation`, `point`, </br> `AbstractGeometry`, `PointGeometry`, `point_geom`, </br> `AbstractBasis`, `NoBasis`, `nobasis`, </br> `AbstractSemanticKind`, `Location`, `location` |
 
 </br>
 
@@ -276,6 +375,8 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - When no chart is explicitly provided, `guess_chart` is used to infer Cartesian chart dimensionality from array/quantity shape. This works for arrays/quantities with trailing axis size 1, 2, or 3 only.
     - Units are preserved: a quantity input returns a `CDict` of quantities.
+
+<a id="software-spec-transition_map"></a>
 
 !!! info `point_transition_map`
 
@@ -735,3 +836,196 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - Transition behavior currently registered in-core:
       identity transform only (`point_transition_map(PoincarePolar6D, PoincarePolar6D, p) -> p`).
     - No dedicated Cartesian projection dispatch is currently defined for this chart family.
+
+<a id="software-spec-representations"></a>
+
+## Representations
+
+A `Representation` specifies _what kind of geometric object_ component data is meant to represent, independently of _which chart_ is used to write down the underlying coordinates. In `coordinax`, a representation is structured from three pieces:
+
+1. a **geometry kind** ([`AbstractGeometry`](#software-spec-abstractgeometry)), which identifies the geometric type of the object (for example, a point, or tangent or cotangent object),
+2. a **basis** ([`AbstractBasis`](#software-spec-abstractsbasis)), which identifies the basis in which components are expressed when such a choice is meaningful, and
+3. a **semantic kind** ([`AbstractSemanticKind`](#software-spec-abstractsemantickind)), which identifies the physical or mathematical meaning attached to that geometric type.
+
+!!! info `vconvert`
+
+    `vconvert` is the highest-level part of `coordinax`'s coordinate transformation machinery.
+    It abstracts over all the specific transformation machinery:
+
+    - [`coordinax.charts.transition_map`](#software-spec-transition_map)
+    - [`coordinax.charts.point_realization_map`](#software-spec-point_realization_map)
+
+    Consequently, it uses (/needs) more structure to distinguish between transformations.
+
+    Registered Dispatches (with $f$ final and $i$ initial):
+
+    - $(C_{f}, R_{f}, C_{i}, R_{i})$ -> $(C_{f}, K_{f}, R_{f}, C_{i}, K_{i}, R_{i})$ general redispatch to use the geometric type in the transformation selection.
+    - $(C_{f}, \text{PointGeometry}, R_{f}, C_{i}, \text{PointGeometry}, R_{i})$ redispatch to use the transition map $\varphi_{C_{f}} \circ \varphi_{C_{i}}^{-1}$. $R_{i,f}$ are checked that [B=NoBasis()](#software-spec-nobasis), [S=Location()](#software-spec-location)
+
+!!! info `Representation`
+
+    ``Representation``.
+
+    Arguments:
+
+    - ``geom_kind``: ``AbstractGometry``
+    - ``basis``: ``AbstractBasis``
+    - ``semantic_kind``: ``AbstractSemanticKind``
+
+    <!-- skip: next -->
+
+    ```python
+    @jax.tree_util.register_static
+    @dataclass
+    class Representation:
+        geom_kind: AbstractGometry
+        basis: AbstractBasis
+        semantic_kind: AbstractSemanticKind
+    ```
+
+!!! info `point`
+
+    A ``Representation`` instance with:
+
+    - geom_kind = ``point_geom``,
+    - basis=``nobasis``,
+    - semantic_kind=``location``
+
+### Geometric Kind
+
+<a id="software-spec-abstractgeometry"></a>
+
+!!! info `AbstractGeometry`
+
+    Abstract base class for geometric kind. `AbstractGeometry` identifies the geometric type of represented data, independent of chart and basis. It answers: "what geometric object do these components represent?" (for example, a point). In the representation triple $R = (K, B, S)$, `AbstractGeometry` is the `K` component.
+
+    Transformation-law role:
+
+    - Geometric kind determines the abstract coordinate-change law for
+        components.
+    - Point-kind data transforms by chart transition maps.
+    - Future tangent/cotangent kinds transform by Jacobian pushforward / pullback laws, respectively.
+
+    Distinctions:
+
+    - Not a chart: charts define coordinate systems, component names, and domains.
+    - Not a semantic kind: semantics encode interpretation (for example, location, velocity) within a fixed geometric kind.
+    - Not a basis: basis selection is tracked separately and may be trivial for affine objects.
+
+    Notes:
+
+    - `AbstractGeometry` is a static dispatch object category (no runtime numerical payload).
+    - Concrete subclasses should represent immutable geometric categories.
+
+!!! info `PointGeometry` and `point_geom`
+
+    Concrete geometric kind for manifold points, and its canonical instance.
+
+    - `PointGeometry` is the final concrete subclass of `AbstractGeometry` for point-like data.
+    - It encodes that components represent a point $p \in M$ (an affine object), not a vector in a tangent/cotangent space.
+    - Point coordinates therefore transform by the ordinary chart transition map (`point_transition_map` / `point_realization_map` point behavior), with the represented geometric object unchanged.
+
+    Affine semantics:
+
+    - Point data is location data: points do not add as vectors.
+    - Any vector-space operations require a separate geometric kind (for example tangent/cotangent kinds), not `PointGeometry`.
+
+    API instance:
+
+    - `point_geom` is the pre-defined canonical `PointGeometry()` instance used by the default point representation `point = Representation(point_geom, nobasis, location)`.
+
+### Basis
+
+<a id="software-spec-abstractsbasis"></a>
+
+!!! info `AbstractBasis`
+
+    Abstract base class for basis kind.
+
+    - `AbstractBasis` identifies the component basis in which represented data is written, when basis choice is meaningful.
+    - In the representation triple $R = (K, B, S)$, `AbstractBasis` is the `B` component.
+    - It answers: "in what basis are these components expressed?"
+
+    Role in representation:
+
+    - Basis is orthogonal to chart, geometry kind, and semantic kind.
+    - Chart defines coordinates and coordinate domains.
+    - Geometry kind defines the geometric object and transformation law class.
+    - Semantic kind defines interpretation (for example location or velocity).
+
+    Basis-law role:
+
+    - For affine point data, basis choice is trivial (`NoBasis`).
+
+    Notes:
+
+    - `AbstractBasis` is a static dispatch object category.
+    - Concrete subclasses should represent immutable basis categories.
+
+<a id="software-spec-nobasis"></a>
+
+!!! info `NoBasis` and `nobasis`
+
+    Concrete no-basis kind, and its canonical instance.
+
+    - `NoBasis` is the final concrete subclass of `AbstractBasis` used when represented data is not expressed in a basis-dependent linear space.
+    - Canonical use: point data (`PointGeometry`), where coordinates describe locations on a manifold rather than vector components in $T_pM$.
+
+    Semantics:
+
+    - `NoBasis` does **not** mean "no coordinates".
+    - It means basis choice is not part of the representation semantics for the object kind.
+    - Coordinate changes for point data remain chart transition maps, not basis changes.
+
+    API instance:
+
+    - `nobasis` is the pre-defined canonical `NoBasis()` instance.
+    - It is used in the default point representation `point = Representation(point_geom, nobasis, location)`.
+
+### Semantic Kind
+
+<a id="software-spec-abstractsemantickind"></a>
+
+!!! info `AbstractSemanticKind`
+
+    Abstract base class for semantic kind.
+
+    - `AbstractSemanticKind` identifies the interpretation attached to represented data.
+    - In the representation triple $R = (K, B, S)$, `AbstractSemanticKind` is the `S` component.
+    - It answers: "what does this represented object mean?"
+
+    Role in representation:
+
+    - Semantic kind is orthogonal to chart, geometry kind, and basis.
+    - Chart defines coordinate system and component domains.
+    - Geometry kind defines the geometric object and transformation-law class.
+    - Basis defines component basis when basis choice is meaningful.
+
+    Semantic-law role:
+
+    - Semantic kind refines interpretation within a fixed geometric kind and basis without changing coordinate transformation laws.
+
+    Notes:
+
+    - `AbstractSemanticKind` is a static dispatch object category (no runtime numerical payload).
+    - Concrete subclasses should represent immutable semantic categories.
+
+<a id="software-spec-location"></a>
+
+!!! info `Location` and `location`
+
+    Concrete location semantic kind, and its canonical instance.
+
+    - `Location` is the final concrete subclass of `AbstractSemanticKind` used to denote "where" data: coordinates interpreted as position on a manifold.
+    - Canonical pairing in current `coordinax`: point geometry with no basis, i.e. `(PointGeometry, NoBasis, Location)`.
+
+    Semantics:
+
+    - `Location` records interpretation, not chart choice.
+    - It does not alter the underlying point transformation law: point coordinates still transform by chart transition maps.
+    - It distinguishes location-like point data from other possible semantics introduced for non-point geometric kinds.
+
+    API instance:
+
+    - `location` is the pre-defined canonical `Location()` instance.
+    - It is used in the default point representation `point = Representation(point_geom, nobasis, location)`.

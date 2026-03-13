@@ -130,6 +130,7 @@ import coordinax.distances
 import coordinax.hypothesis
 import coordinax.interop
 import coordinax.main
+import coordinax.representations
 -->
 
 ```{code-block} python
@@ -138,7 +139,7 @@ import coordinax.main
 >>> from inspect import ismodule
 >>> [name for name in dir(coordinax)
 ...  if not name.startswith("_") and ismodule(getattr(coordinax, name))]
-['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main']
+['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main', 'representations']
 ```
 
 We recommend importing as needed:

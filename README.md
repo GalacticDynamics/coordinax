@@ -89,6 +89,12 @@ Transform coordinate dictionaries between charts:
 
 ```
 
+### Representations
+
+```python
+import coordinax.representations as cxr
+```
+
 ## Citation
 
 [![DOI][zenodo-badge]][zenodo-link]

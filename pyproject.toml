@@ -310,6 +310,7 @@ ignore = [
   "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
   "ARG001",  # Unused function argument  # TODO: resolve
   "B008",    # Do not perform function calls in argument defaults
+  "B024",    # X is an ABC, but it has no abstract methods or properties
   "COM812",  # <- for ruff.format
   "D103",    # Missing docstring in public function  # TODO: resolve
   "D105",    # Missing docstring in magic method
@@ -363,6 +364,7 @@ ignore = [
 "coordinax.distances"       = "cxd"
 "coordinax.hypothesis.main" = "cxst"
 "coordinax.main"            = "cx"
+"coordinax.representations" = "cxr"
 equinox                     = "eqx"
 functools                   = "ft"
 unxt                        = "u"
