@@ -1,0 +1,201 @@
+"""Register Quantity support for jax primitives."""
+# pylint: disable=import-error, too-many-lines
+
+__all__: tuple[str, ...] = ()
+
+from jaxtyping import ArrayLike
+from typing import Any, TypeVar
+
+from jax import lax
+from quax import register
+
+import unxt as u
+from unxt.quantity import BareQuantity
+
+from .base import AbstractDistance
+from .measures import Distance
+
+T = TypeVar("T")
+
+one = u.unit("")
+radian = u.unit("radian")
+
+
+# TODO: can this be done with promotion/conversion instead?
+@register(lax.cbrt_p)
+def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+    """Cube root of a distance.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> from coordinax.distances import Distance
+    >>> d = Distance(8, "m")
+    >>> jnp.cbrt(d)
+    BareQuantity(2., 'm(1/3)')
+
+    """
+    value = lax.cbrt_p.bind(x.value, accuracy=accuracy)
+    return BareQuantity(value, unit=x.unit ** (1 / 3))
+
+
+# ==============================================================================
+
+
+@register(lax.div_p)
+def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
+    """Division of two Distances.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> from coordinax.distances import Distance
+
+    >>> q1 = Distance(2, "m")
+    >>> q2 = Distance(4, "m")
+    >>> jnp.divide(q1, q2)
+    Q(0.5, '')
+
+    """
+    return u.Q(lax.div(x.value, y.value), unit=x.unit / y.unit)  # type: ignore[arg-type]
+
+
+# ==============================================================================
+
+
+@register(lax.dot_general_p)
+def dot_general_p_abstractdistances(
+    lhs: AbstractDistance, rhs: AbstractDistance, /, **kwargs: Any
+) -> BareQuantity:
+    """Dot product of two Distances.
+
+    Examples
+    --------
+    This is a dot product of two Distances.
+
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> from coordinax.distances import Distance
+
+    >>> q1 = Distance([1, 2, 3], "m")
+    >>> q2 = Distance([4, 5, 6], "m")
+    >>> jnp.vecdot(q1, q2)
+    BareQuantity(32, 'm2')
+    >>> q1 @ q2
+    BareQuantity(32, 'm2')
+
+    This rule is also used by `jnp.matmul` for quantities.
+
+    >>> Rz = jnp.asarray([[0, -1,  0], [1,  0,  0], [0,  0,  1]])
+    >>> q = u.Q([1, 0, 0], "m")
+    >>> Rz @ q
+    Q([0, 1, 0], 'm')
+
+    This uses `matmul` for quantities.
+
+    >>> jnp.linalg.matmul(Rz, q)
+    Q([0, 1, 0], 'm')
+
+    """
+    value = lax.dot_general_p.bind(lhs.value, rhs.value, **kwargs)
+    return BareQuantity(value, unit=lhs.unit * rhs.unit)
+
+
+# ==============================================================================
+
+
+@register(lax.integer_pow_p)
+def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQuantity:
+    """Integer power of a Distance.
+
+    Examples
+    --------
+    >>> from coordinax.distances import Distance
+    >>> q = Distance(2, "m")
+    >>> q ** 3
+    BareQuantity(8, 'm3')
+
+    """
+    return BareQuantity(lax.integer_pow(x.value, y), unit=x.unit**y)  # type: ignore[arg-type]
+
+
+# ==============================================================================
+
+
+@register(lax.neg_p)
+def neg_p_distance(x: Distance, /) -> u.Q:
+    """Negation of a Distance degrades to a Quantity.
+
+    Examples
+    --------
+    >>> from coordinax.distances import Distance
+    >>> q = Distance(10, "m")
+    >>> -q
+    Q(-10, 'm')
+
+    """
+    return u.Q(-x.value, x.unit)
+
+
+# ==============================================================================
+
+
+@register(lax.pow_p)
+def pow_p_abstractdistance_arraylike(
+    x: AbstractDistance, y: ArrayLike, /
+) -> BareQuantity:
+    """Power of a Distance by redispatching to Quantity.
+
+    Examples
+    --------
+    >>> import math
+    >>> from coordinax.distances import Distance
+
+    >>> q1 = Distance(10.0, "m")
+    >>> y = 3.0
+    >>> q1 ** y
+    BareQuantity(1000., 'm3')
+
+    """
+    return BareQuantity(x.value, x.unit) ** y  # type: ignore[return-value]  # TODO: better call to power
+
+
+# ==============================================================================
+
+
+@register(lax.sqrt_p)
+def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+    """Square root of a quantity.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+
+    >>> from coordinax.distances import Distance
+    >>> q = Distance(9, "m")
+    >>> jnp.sqrt(q)
+    BareQuantity(3., 'm(1/2)')
+
+    >>> from coordinax.distances import Parallax
+    >>> q = Parallax(9, "mas")
+    >>> jnp.sqrt(q)
+    BareQuantity(3., 'mas(1/2)')
+
+    """
+    # Promote to something that supports sqrt units.
+    value = lax.sqrt_p.bind(x.value, accuracy=accuracy)
+    return BareQuantity(value, unit=x.unit ** (1 / 2))
+
+
+# ==============================================================================
+
+
+def to_value_rad_or_one(q: u.AbstractQuantity, /) -> ArrayLike:
+    return u.ustrip(radian if u.is_unit_convertible(q.unit, radian) else one, q)
+
+
+# TODO: figure out a promotion alternative that works in general
+@register(lax.tan_p)
+def tan_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
+    value = lax.tan_p.bind(to_value_rad_or_one(x), accuracy=accuracy)
+    return BareQuantity(value, unit=one)

@@ -1,4 +1,9 @@
+# VCS version files
 _version.py
+
+# Local agents
+/AGENTS.md
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

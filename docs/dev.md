@@ -8,8 +8,7 @@ To build the documentation, use `nox`:
 nox -s docs
 ```
 
-To build with `sphinx-autobuild` (and host a local web server for live
-reloading):
+To build with `sphinx-autobuild` (and host a local web server for live reloading):
 
 ```bash
 nox -s docs -- -serve

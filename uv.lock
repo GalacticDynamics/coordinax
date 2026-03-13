@@ -10,10 +10,10 @@ resolution-markers = [
 [manifest]
 members = [
     "coordinax",
-    "coordinax-api",
-    "coordinax-astro",
-    "coordinax-hypothesis",
-    "coordinax-interop-astropy",
+    "coordinax.api",
+    "coordinax.astro",
+    "coordinax.hypothesis",
+    "coordinax.interop.astropy",
 ]
 constraints = [{ name = "numpy", specifier = "<2.4.0" }]
 
@@ -405,7 +405,7 @@ source = { editable = "." }
 dependencies = [
     { name = "astropy" },
     { name = "beartype" },
-    { name = "coordinax-api" },
+    { name = "coordinax.api" },
     { name = "dataclassish" },
     { name = "equinox" },
     { name = "jax" },
@@ -424,16 +424,19 @@ dependencies = [
 
 [package.optional-dependencies]
 astro = [
-    { name = "coordinax-astro" },
+    { name = "coordinax.astro" },
+]
+benchmark = [
+    { name = "pytest-benchmark" },
 ]
 interop-astropy = [
-    { name = "coordinax-interop-astropy" },
+    { name = "coordinax.interop.astropy" },
 ]
 workspace = [
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
-    { name = "coordinax-hypothesis" },
-    { name = "coordinax-interop-astropy" },
+    { name = "coordinax.api" },
+    { name = "coordinax.astro" },
+    { name = "coordinax.hypothesis" },
+    { name = "coordinax.interop.astropy" },
 ]
 
 [package.dev-dependencies]
@@ -442,12 +445,11 @@ build = [
 ]
 dev = [
     { name = "build" },
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
-    { name = "coordinax-hypothesis" },
+    { name = "coordinax.hypothesis" },
     { name = "cz-conventional-gitmoji" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "ipykernel" },
+    { name = "jaxmore" },
     { name = "myst-nb" },
     { name = "myst-parser" },
     { name = "nox" },
@@ -472,11 +474,9 @@ dev = [
     { name = "sphinxext-opengraph" },
     { name = "sphinxext-rediraffe" },
     { name = "sybil", extra = ["pytest"] },
+    { name = "ty" },
 ]
 docs = [
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
-    { name = "coordinax-hypothesis" },
     { name = "myst-nb" },
     { name = "myst-parser" },
     { name = "pytz" },
@@ -494,19 +494,19 @@ docs = [
 ]
 ide = [
     { name = "ipykernel" },
+    { name = "jaxmore" },
 ]
 lint = [
     { name = "pre-commit" },
     { name = "pylint" },
+    { name = "ty" },
 ]
 nox = [
     { name = "nox" },
     { name = "nox-uv" },
 ]
 test = [
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
-    { name = "coordinax-hypothesis" },
+    { name = "coordinax.hypothesis" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
@@ -516,9 +516,7 @@ test = [
     { name = "sybil", extra = ["pytest"] },
 ]
 test-all = [
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
-    { name = "coordinax-hypothesis" },
+    { name = "coordinax.hypothesis" },
     { name = "hypothesis", extra = ["numpy"] },
     { name = "pytest" },
     { name = "pytest-arraydiff" },
@@ -527,23 +525,18 @@ test-all = [
     { name = "pytest-github-actions-annotate-failures" },
     { name = "sybil", extra = ["pytest"] },
 ]
-workspace = [
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
-    { name = "coordinax-hypothesis" },
-]
 
 [package.metadata]
 requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
     { name = "beartype", specifier = ">=0.21.0" },
-    { name = "coordinax-api", editable = "packages/coordinax-api" },
-    { name = "coordinax-api", marker = "extra == 'workspace'", editable = "packages/coordinax-api" },
-    { name = "coordinax-astro", marker = "extra == 'astro'", editable = "packages/coordinax-astro" },
-    { name = "coordinax-astro", marker = "extra == 'workspace'", editable = "packages/coordinax-astro" },
-    { name = "coordinax-hypothesis", marker = "extra == 'workspace'", editable = "packages/coordinax-hypothesis" },
-    { name = "coordinax-interop-astropy", marker = "extra == 'interop-astropy'", editable = "packages/coordinax-interop-astropy" },
-    { name = "coordinax-interop-astropy", marker = "extra == 'workspace'", editable = "packages/coordinax-interop-astropy" },
+    { name = "coordinax.api", editable = "packages/coordinax.api" },
+    { name = "coordinax.api", marker = "extra == 'workspace'", editable = "packages/coordinax.api" },
+    { name = "coordinax.astro", marker = "extra == 'astro'", editable = "packages/coordinax.astro" },
+    { name = "coordinax.astro", marker = "extra == 'workspace'", editable = "packages/coordinax.astro" },
+    { name = "coordinax.hypothesis", marker = "extra == 'workspace'", editable = "packages/coordinax.hypothesis" },
+    { name = "coordinax.interop.astropy", marker = "extra == 'interop-astropy'", editable = "packages/coordinax.interop.astropy" },
+    { name = "coordinax.interop.astropy", marker = "extra == 'workspace'", editable = "packages/coordinax.interop.astropy" },
     { name = "dataclassish", specifier = ">=0.8.0" },
     { name = "equinox", specifier = ">=0.13.2" },
     { name = "jax", specifier = ">=0.6.0" },
@@ -551,6 +544,7 @@ requires-dist = [
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "optional-dependencies", specifier = ">=0.3.2" },
     { name = "plum-dispatch", specifier = ">=2.6.1" },
+    { name = "pytest-benchmark", marker = "extra == 'benchmark'", specifier = ">=5.2.3" },
     { name = "quax", specifier = ">=0.2.1" },
     { name = "quax-blocks", specifier = ">=0.4.0" },
     { name = "quaxed", specifier = ">=0.10.4" },
@@ -559,18 +553,17 @@ requires-dist = [
     { name = "wadler-lindig", specifier = ">=0.1.6" },
     { name = "xmmutablemap", specifier = ">=0.1" },
 ]
-provides-extras = ["astro", "interop-astropy", "workspace"]
+provides-extras = ["astro", "benchmark", "interop-astropy", "workspace"]
 
 [package.metadata.requires-dev]
 build = [{ name = "build", specifier = ">=1.3.0" }]
 dev = [
     { name = "build", specifier = ">=1.3.0" },
-    { name = "coordinax-api", editable = "packages/coordinax-api" },
-    { name = "coordinax-astro", editable = "packages/coordinax-astro" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
+    { name = "coordinax.hypothesis", editable = "packages/coordinax.hypothesis" },
     { name = "cz-conventional-gitmoji", specifier = ">=0.6.1" },
-    { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
+    { name = "hypothesis", extras = ["numpy"], specifier = ">=6.151.6" },
     { name = "ipykernel", specifier = ">=7.1.0" },
+    { name = "jaxmore", specifier = ">=0.2.0" },
     { name = "myst-nb", specifier = ">=1.1.2" },
     { name = "myst-parser", specifier = ">=0.13" },
     { name = "nox", specifier = ">=2024.10.9" },
@@ -595,11 +588,9 @@ dev = [
     { name = "sphinxext-opengraph", specifier = ">=0.9.1" },
     { name = "sphinxext-rediraffe", specifier = ">=0.2.7" },
     { name = "sybil", extras = ["pytest"], specifier = ">=8.0.0" },
+    { name = "ty", specifier = ">=0.0.19" },
 ]
 docs = [
-    { name = "coordinax-api", editable = "packages/coordinax-api" },
-    { name = "coordinax-astro", editable = "packages/coordinax-astro" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
     { name = "myst-nb", specifier = ">=1.1.2" },
     { name = "myst-parser", specifier = ">=0.13" },
     { name = "pytz", specifier = ">=2024.2" },
@@ -615,20 +606,22 @@ docs = [
     { name = "sphinxext-opengraph", specifier = ">=0.9.1" },
     { name = "sphinxext-rediraffe", specifier = ">=0.2.7" },
 ]
-ide = [{ name = "ipykernel", specifier = ">=7.1.0" }]
+ide = [
+    { name = "ipykernel", specifier = ">=7.1.0" },
+    { name = "jaxmore", specifier = ">=0.2.0" },
+]
 lint = [
     { name = "pre-commit", specifier = ">=4.5.0" },
     { name = "pylint", specifier = ">=3.3.2" },
+    { name = "ty", specifier = ">=0.0.19" },
 ]
 nox = [
     { name = "nox", specifier = ">=2024.10.9" },
     { name = "nox-uv", specifier = ">=0.6.3" },
 ]
 test = [
-    { name = "coordinax-api", editable = "packages/coordinax-api" },
-    { name = "coordinax-astro", editable = "packages/coordinax-astro" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
-    { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
+    { name = "coordinax.hypothesis", editable = "packages/coordinax.hypothesis" },
+    { name = "hypothesis", extras = ["numpy"], specifier = ">=6.151.6" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
@@ -637,10 +630,8 @@ test = [
     { name = "sybil", extras = ["pytest"], specifier = ">=8.0.0" },
 ]
 test-all = [
-    { name = "coordinax-api", editable = "packages/coordinax-api" },
-    { name = "coordinax-astro", editable = "packages/coordinax-astro" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
-    { name = "hypothesis", extras = ["numpy"], specifier = ">=6.112.2" },
+    { name = "coordinax.hypothesis", editable = "packages/coordinax.hypothesis" },
+    { name = "hypothesis", extras = ["numpy"], specifier = ">=6.151.6" },
     { name = "pytest", specifier = ">=8.3.3" },
     { name = "pytest-arraydiff", specifier = ">=0.6.1" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
@@ -648,15 +639,10 @@ test-all = [
     { name = "pytest-github-actions-annotate-failures", specifier = ">=0.3.0" },
     { name = "sybil", extras = ["pytest"], specifier = ">=8.0.0" },
 ]
-workspace = [
-    { name = "coordinax-api", editable = "packages/coordinax-api" },
-    { name = "coordinax-astro", editable = "packages/coordinax-astro" },
-    { name = "coordinax-hypothesis", editable = "packages/coordinax-hypothesis" },
-]
 
 [[package]]
-name = "coordinax-api"
-source = { editable = "packages/coordinax-api" }
+name = "coordinax.api"
+source = { editable = "packages/coordinax.api" }
 dependencies = [
     { name = "plum-dispatch" },
 ]
@@ -665,8 +651,8 @@ dependencies = [
 requires-dist = [{ name = "plum-dispatch", specifier = ">=2.5.7" }]
 
 [[package]]
-name = "coordinax-astro"
-source = { editable = "packages/coordinax-astro" }
+name = "coordinax.astro"
+source = { editable = "packages/coordinax.astro" }
 dependencies = [
     { name = "coordinax" },
     { name = "optional-dependencies" },
@@ -686,8 +672,8 @@ requires-dist = [
 provides-extras = ["astropy"]
 
 [[package]]
-name = "coordinax-hypothesis"
-source = { editable = "packages/coordinax-hypothesis" }
+name = "coordinax.hypothesis"
+source = { editable = "packages/coordinax.hypothesis" }
 dependencies = [
     { name = "coordinax" },
     { name = "hypothesis" },
@@ -698,17 +684,17 @@ dependencies = [
 requires-dist = [
     { name = "coordinax", editable = "." },
     { name = "hypothesis", specifier = ">=6.0" },
-    { name = "unxt-hypothesis", specifier = ">=1.8.0" },
+    { name = "unxt-hypothesis", specifier = ">=1.10.1" },
 ]
 
 [[package]]
-name = "coordinax-interop-astropy"
-source = { editable = "packages/coordinax-interop-astropy" }
+name = "coordinax.interop.astropy"
+source = { editable = "packages/coordinax.interop.astropy" }
 dependencies = [
     { name = "astropy" },
     { name = "coordinax" },
-    { name = "coordinax-api" },
-    { name = "coordinax-astro" },
+    { name = "coordinax.api" },
+    { name = "coordinax.astro" },
     { name = "jaxtyping" },
     { name = "plum-dispatch" },
     { name = "unxt" },
@@ -725,18 +711,18 @@ test = [
 requires-dist = [
     { name = "astropy", specifier = ">=7.0.0" },
     { name = "coordinax", editable = "." },
-    { name = "coordinax-api", editable = "packages/coordinax-api" },
-    { name = "coordinax-astro", editable = "packages/coordinax-astro" },
+    { name = "coordinax.api", editable = "packages/coordinax.api" },
+    { name = "coordinax.astro", editable = "packages/coordinax.astro" },
     { name = "jaxtyping", specifier = ">=0.3.3" },
     { name = "plum-dispatch", specifier = ">=2.6.1" },
-    { name = "unxt", specifier = ">=1.8.0" },
+    { name = "unxt", specifier = ">=1.10.0" },
 ]
 
 [package.metadata.requires-dev]
 test = [
     { name = "hypothesis", specifier = ">=6.148.7" },
     { name = "pytest", specifier = ">=9.0.2" },
-    { name = "unxt-hypothesis", specifier = ">=1.8.0" },
+    { name = "unxt-hypothesis", specifier = ">=1.10.1" },
 ]
 
 [[package]]
@@ -1055,14 +1041,14 @@ wheels = [
 
 [[package]]
 name = "hypothesis"
-version = "6.148.11"
+version = "6.151.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "sortedcontainers" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/98/ccbc8a02b4e2c27e40e61718419aa0195b55bcd69260e81270b9ff39d61e/hypothesis-6.148.11.tar.gz", hash = "sha256:4f3c38030d0f0b38c8b7153d6907892e6fcac9ecb0410e627d6af2cea677f92c", size = 471909, upload-time = "2026-01-03T21:10:45.114Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/19/e1/ef365ff480903b929d28e057f57b76cae51a30375943e33374ec9a165d9c/hypothesis-6.151.9.tar.gz", hash = "sha256:2f284428dda6c3c48c580de0e18470ff9c7f5ef628a647ee8002f38c3f9097ca", size = 463534, upload-time = "2026-02-16T22:59:23.09Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/da/cf5888306ed6cfd76b50c736e996400b5ede43f28da967986b9f1138fabd/hypothesis-6.148.11-py3-none-any.whl", hash = "sha256:397b3fd13d0906cf5ece76f5da340a0fbb07bd18ab61ac41a7982ceb080312f0", size = 538838, upload-time = "2026-01-03T21:10:42.843Z" },
+    { url = "https://files.pythonhosted.org/packages/c4/f7/5cc291d701094754a1d327b44d80a44971e13962881d9a400235726171da/hypothesis-6.151.9-py3-none-any.whl", hash = "sha256:7b7220585c67759b1b1ef839b1e6e9e3d82ed468cfc1ece43c67184848d7edd9", size = 529307, upload-time = "2026-02-16T22:59:20.443Z" },
 ]
 
 [package.optional-dependencies]
@@ -1245,6 +1231,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/4d/eb/ad70fe97fda465d536625bef39ee381a7f8fed1f1bf0bc296510bac32ec5/jaxlib-0.8.2-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:964626f581beab31ee6826b228fcc2ec5181b05cecf94a528dff97921c145dbc", size = 56037334, upload-time = "2025-12-18T18:41:47.407Z" },
     { url = "https://files.pythonhosted.org/packages/34/97/0741440c66a49ec3702f6c28a5608c7543243b1728c3f465505ed5bfe7d2/jaxlib-0.8.2-cp314-cp314t-manylinux_2_27_aarch64.whl", hash = "sha256:a397ea7dcb37d689ce79173eeb99b2f1347637a36be9a27f20ae6848bfc58bfc", size = 74661591, upload-time = "2025-12-18T18:41:51.285Z" },
     { url = "https://files.pythonhosted.org/packages/7c/c4/388797324c201830ac414562eb6697fa38837f40852bdc4d0f464d65889c/jaxlib-0.8.2-cp314-cp314t-manylinux_2_27_x86_64.whl", hash = "sha256:aa8701b6356f098e8452c3cec762fb5f706fcb8f67ffd65964f63982479aa23b", size = 80236629, upload-time = "2025-12-18T18:41:56.05Z" },
+]
+
+[[package]]
+name = "jaxmore"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "equinox" },
+    { name = "jax" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/49/fb/487e7d0b23827dcd37e28bee8324936d4c5fd974055d1e1615f5fa468f72/jaxmore-0.2.0.tar.gz", hash = "sha256:f8dc5999622fdf7f6241875d1b43ffc9c615b9d809171efe297ed8ad40bddf4a", size = 158506, upload-time = "2026-02-26T21:33:22.014Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/7c/dc6861979b70f79683a7482a0e5e5cee27d0e657fd8a635a27f7f190da8c/jaxmore-0.2.0-py3-none-any.whl", hash = "sha256:b03d43dd98ecdfba637defa4d9597a077af1d91e34aa48a58c3a5159b25f7e9b", size = 13122, upload-time = "2026-02-26T21:33:20.689Z" },
 ]
 
 [[package]]
@@ -1922,6 +1921,15 @@ wheels = [
 ]
 
 [[package]]
+name = "py-cpuinfo"
+version = "9.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/37/a8/d832f7293ebb21690860d2e01d8115e5ff6f2ae8bbdc953f0eb0fa4bd2c7/py-cpuinfo-9.0.0.tar.gz", hash = "sha256:3cdbbf3fac90dc6f118bfd64384f309edeadd902d7c8fb17f02ffa1fc3f49690", size = 104716, upload-time = "2022-10-25T20:38:06.303Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e0/a9/023730ba63db1e494a271cb018dcd361bd2c917ba7004c3e49d5daf795a2/py_cpuinfo-9.0.0-py3-none-any.whl", hash = "sha256:859625bc251f64e21f077d099d4162689c762b5d6a4c3c97553d56241c9674d5", size = 22335, upload-time = "2022-10-25T20:38:27.636Z" },
+]
+
+[[package]]
 name = "pycparser"
 version = "2.23"
 source = { registry = "https://pypi.org/simple" }
@@ -2029,6 +2037,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1e/8a/c43e892759d10d134763b6cccf853e66a18cd956616bebd4b7d782471534/pytest-arraydiff-0.6.1.tar.gz", hash = "sha256:2937b1450fc935620f24709d87d40c67e055a043d7b8541a25fdfa994dda67de", size = 16907, upload-time = "2023-11-27T10:52:18.175Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cf/2a/2f8efb1ef8048aec7b44f37bc3fecb8c2c22e3238781d3e93c58d9c89268/pytest_arraydiff-0.6.1-py3-none-any.whl", hash = "sha256:64be1cc8e79874203eca80b1959134b8bb7a47b41cf7631310ba7fe6e5840694", size = 10042, upload-time = "2023-11-27T10:52:16.382Z" },
+]
+
+[[package]]
+name = "pytest-benchmark"
+version = "5.2.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "py-cpuinfo" },
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/24/34/9f732b76456d64faffbef6232f1f9dbec7a7c4999ff46282fa418bd1af66/pytest_benchmark-5.2.3.tar.gz", hash = "sha256:deb7317998a23c650fd4ff76e1230066a76cb45dcece0aca5607143c619e7779", size = 341340, upload-time = "2025-11-09T18:48:43.215Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/33/29/e756e715a48959f1c0045342088d7ca9762a2f509b945f362a316e9412b7/pytest_benchmark-5.2.3-py3-none-any.whl", hash = "sha256:bc839726ad20e99aaa0d11a127445457b4219bdb9e80a1afc4b51da7f96b0803", size = 45255, upload-time = "2025-11-09T18:48:39.765Z" },
 ]
 
 [[package]]
@@ -2961,6 +2982,30 @@ wheels = [
 ]
 
 [[package]]
+name = "ty"
+version = "0.0.21"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ee/20/2ba8fd9493c89c41dfe9dbb73bc70a28b28028463bc0d2897ba8be36230a/ty-0.0.21.tar.gz", hash = "sha256:a4c2ba5d67d64df8fcdefd8b280ac1149d24a73dbda82fa953a0dff9d21400ed", size = 5297967, upload-time = "2026-03-06T01:57:13.809Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/36/70/edf38bb37517531681d1c37f5df64744e5ad02673c02eb48447eae4bea08/ty-0.0.21-py3-none-linux_armv6l.whl", hash = "sha256:7bdf2f572378de78e1f388d24691c89db51b7caf07cf90f2bfcc1d6b18b70a76", size = 10299222, upload-time = "2026-03-06T01:57:16.64Z" },
+    { url = "https://files.pythonhosted.org/packages/72/62/0047b0bd19afeefbc7286f20a5f78a2aa39f92b4d89853f0d7185ab89edc/ty-0.0.21-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:7e9613994610431ab8625025bd2880dbcb77c5c9fabdd21134cda12d840a529d", size = 10130513, upload-time = "2026-03-06T01:57:29.93Z" },
+    { url = "https://files.pythonhosted.org/packages/a2/20/0b93a9e91aaed23155780258cdfdb4726ef68b6985378ac069bc427291a0/ty-0.0.21-py3-none-macosx_11_0_arm64.whl", hash = "sha256:56d3b198b64dd0a19b2b66e257deaed2ecea568e722ae5352f3c6fb62027f89d", size = 9605425, upload-time = "2026-03-06T01:57:27.115Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/fd/9945e2fa2996a1287b1e1d7ce050e97e1f420233b271e770934bfa0880a0/ty-0.0.21-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:d23d2c34f7a77d974bb08f0860ef700addc8a683d81a0319f71c08f87506cfd0", size = 10108298, upload-time = "2026-03-06T01:57:35.429Z" },
+    { url = "https://files.pythonhosted.org/packages/52/e7/4ec52fcb15f3200826c9f048472c062549a05b0d1ef0b51f32d527b513c4/ty-0.0.21-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:56b01fd2519637a4ca88344f61c96225f540c98ff18bca321d4eaa7bb0f7aa2f", size = 10121556, upload-time = "2026-03-06T01:57:03.242Z" },
+    { url = "https://files.pythonhosted.org/packages/ee/c0/ad457be2a8abea0f25549598bd098554540ced66229488daa0d558dad3c8/ty-0.0.21-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:e9de7e11c63c6afc40f3e9ba716374add171aee7fabc70b5146a510705c6d41b", size = 10603264, upload-time = "2026-03-06T01:56:52.134Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/5b/2ecc7a2175243a4bcb72f5298ae41feabbb93b764bb0dc45722f3752c2c2/ty-0.0.21-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:62f7f5b235c4f7876db305c36997aea07b7af29b1a068f373d0e2547e25f32ff", size = 11196428, upload-time = "2026-03-06T01:57:32.94Z" },
+    { url = "https://files.pythonhosted.org/packages/37/f5/aff507d6a901f328ef96a298032b0c11aaaf950a146ed7dd3b5bf2cd3acf/ty-0.0.21-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:ee8399f7c453a425291e6688efe430cfae7ab0ac4ffd50eba9f872bf878b54f6", size = 10866355, upload-time = "2026-03-06T01:56:57.831Z" },
+    { url = "https://files.pythonhosted.org/packages/be/30/822bbcb92d55b65989aa7ed06d9585f28ade9c9447369194ed4b0fb3b5b9/ty-0.0.21-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:210e7568c9f886c4d01308d751949ee714ad7ad9d7d928d2ba90d329dd880367", size = 10738177, upload-time = "2026-03-06T01:57:11.256Z" },
+    { url = "https://files.pythonhosted.org/packages/57/cc/46e7991b6469e93ac2c7e533a028983e402485580150ac864c56352a3a82/ty-0.0.21-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:53508e345b11569f78b21ba8e2b4e61df38a9754947fb3cd9f2ef574367338fb", size = 10079158, upload-time = "2026-03-06T01:57:00.516Z" },
+    { url = "https://files.pythonhosted.org/packages/15/c2/0bbdadfbd008240f8f1a87dc877433cb3884436097926107ccf06e618199/ty-0.0.21-py3-none-musllinux_1_2_armv7l.whl", hash = "sha256:553e43571f4a35604c36cfd07d8b61a5eb7a714e3c67f8c4ff2cf674fefbaef9", size = 10150535, upload-time = "2026-03-06T01:57:08.815Z" },
+    { url = "https://files.pythonhosted.org/packages/c5/b5/2dbdb7b57b5362200ef0a39738ebd31331726328336def0143ac097ee59d/ty-0.0.21-py3-none-musllinux_1_2_i686.whl", hash = "sha256:666f6822e3b9200abfa7e95eb0ddd576460adb8d66b550c0ad2c70abc84a2048", size = 10319803, upload-time = "2026-03-06T01:57:19.106Z" },
+    { url = "https://files.pythonhosted.org/packages/72/84/70e52c0b7abc7c2086f9876ef454a73b161d3125315536d8d7e911c94ca4/ty-0.0.21-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:a0854d008347ce4a5fb351af132f660a390ab2a1163444d075251d43e6f74b9b", size = 10826239, upload-time = "2026-03-06T01:57:21.727Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/8a/1f72480fd013bbc6cd1929002abbbcde9a0b08ead6a15154de9d7f7fa37e/ty-0.0.21-py3-none-win32.whl", hash = "sha256:bef3ab4c7b966bcc276a8ac6c11b63ba222d21355b48d471ea782c4104eee4e0", size = 9693196, upload-time = "2026-03-06T01:57:24.126Z" },
+    { url = "https://files.pythonhosted.org/packages/8d/f8/1104808b875c26c640e536945753a78562d606bef4e241d9dbf3d92477f6/ty-0.0.21-py3-none-win_amd64.whl", hash = "sha256:a709d576e5bea84b745d43058d8b9cd4f27f74a0b24acb4b0cbb7d3d41e0d050", size = 10668660, upload-time = "2026-03-06T01:56:55.06Z" },
+    { url = "https://files.pythonhosted.org/packages/1b/b8/25e0adc404bbf986977657b25318991f93097b49f8aea640d93c0b0db68e/ty-0.0.21-py3-none-win_arm64.whl", hash = "sha256:f72047996598ac20553fb7e21ba5741e3c82dee4e9eadf10d954551a5fe09391", size = 10104161, upload-time = "2026-03-06T01:57:06.072Z" },
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3011,16 +3056,16 @@ wheels = [
 
 [[package]]
 name = "unxt-hypothesis"
-version = "1.9.0"
+version = "1.11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "hypothesis", extra = ["numpy"] },
     { name = "jax" },
     { name = "unxt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a6/2c/da32f9a3dd65eb7d437c1e42eaedea13897d4edc22bfb66245f3c0a75115/unxt_hypothesis-1.9.0.tar.gz", hash = "sha256:1a28356d392b842d9e2670845aef3134f844f9121ffd3a2b1e78f00ea4589f68", size = 23423, upload-time = "2026-01-02T07:57:15.792Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/0a/449b7ecba77bf65d740966a24c4f897e9d1c7272d4de7bd13863d66b7b7c/unxt_hypothesis-1.11.0.tar.gz", hash = "sha256:159864c52eb038af8f71702d4b4f47a09eb63fdbb1d11d0e65dc8eded67d7621", size = 28314, upload-time = "2026-03-10T14:22:51.263Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/55/6b/25fb9105edea6267a81c8b320b5d34622674fed3a2d2cda240e5cff50a9c/unxt_hypothesis-1.9.0-py3-none-any.whl", hash = "sha256:b775a73708fc561faa676076fac30dfbddbd13c238f0de70339202a31f98404a", size = 11768, upload-time = "2026-01-02T07:57:14.567Z" },
+    { url = "https://files.pythonhosted.org/packages/2f/d6/ff5bcf7b2d5e5b5a9e25a4e5600ec9de2592f76004e4af5f9123c1fb587f/unxt_hypothesis-1.11.0-py3-none-any.whl", hash = "sha256:ac65f2a33eacb277282a6c10ac2dced5ccf33156be3c19226cc0439c72bd9467", size = 15161, upload-time = "2026-03-10T14:22:49.798Z" },
 ]
 
 [[package]]

@@ -71,19 +71,13 @@ repos:
     rev: "v3.8.1"
     hooks:
       - id: prettier
-        types_or: [yaml, markdown, html, css, scss, javascript, json]
-        args: [--prose-wrap=always]
+        name: prettier-markdown-no-wrap
+        types_or: [markdown]
+        args: [--prose-wrap=never]
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: "v1.19.1"
-    hooks:
-      - id: mypy
-        files: src
-        additional_dependencies:
-          - optional_dependencies
-          - plum-dispatch
-          - quaxed
-          - quax-blocks
+      - id: prettier
+        name: prettier-other
+        types_or: [yaml, html, css, scss, javascript, json]
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.1"

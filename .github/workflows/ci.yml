@@ -32,7 +32,7 @@ jobs:
       - name: Install
         run: uv sync --no-default-groups --group nox --group lint --locked
 
-      - name: Lint
+      - name: Lint & type-check
         run: uv run --frozen nox -s lint
 
   tests:

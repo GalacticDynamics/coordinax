@@ -145,7 +145,7 @@ class TestValidateTagForPackage:
         assert is_valid is True
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "v0.23.10", "coordinax-api"
+            "v0.23.10", "coordinax.api"
         )
         assert is_valid is True
 
@@ -178,7 +178,7 @@ class TestValidateTagForPackage:
         assert "package-specific tags" in error
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "v1.0.0", "coordinax-api"
+            "v1.0.0", "coordinax.api"
         )
         assert is_valid is False
 
@@ -205,11 +205,11 @@ class TestValidateTagForPackage:
             "coordinax-api-v0.24.0", "coordinax"
         )
         assert is_valid is False
-        assert "This tag is for package 'coordinax-api'" in error
+        assert "This tag is for package 'coordinax.api'" in error
         assert "but this workflow is for package 'coordinax'" in error
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-v0.24.0", "coordinax-api"
+            "coordinax-v0.24.0", "coordinax.api"
         )
         assert is_valid is False
         assert "This tag is for package 'coordinax'" in error
@@ -248,7 +248,7 @@ class TestValidateTagForPackage:
 
         with patch("subprocess.run", return_value=mock_result_2):
             is_valid, error = validate_tag.validate_tag_for_package(
-                "coordinax-api-v1.0.0", "coordinax-api"
+                "coordinax-api-v1.0.0", "coordinax.api"
             )
             assert is_valid is True
 
@@ -292,12 +292,12 @@ class TestValidateTagForPackage:
         assert error == ""
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-api-v1.5.3", "coordinax-api"
+            "coordinax-api-v1.5.3", "coordinax.api"
         )
         assert is_valid is True
 
         is_valid, error = validate_tag.validate_tag_for_package(
-            "coordinax-astro-v2.0.99", "coordinax-astro"
+            "coordinax-astro-v2.0.99", "coordinax.astro"
         )
         assert is_valid is True
 
@@ -332,7 +332,7 @@ class TestValidateTagForPackage:
                 "coordinax-api-v0.24.0", None
             )
             assert is_valid is False
-            assert "This tag is for package 'coordinax-api'" in error
+            assert "This tag is for package 'coordinax.api'" in error
             assert "but this workflow is for package 'coordinax'" in error
 
     # All supported packages
@@ -346,16 +346,17 @@ class TestValidateTagForPackage:
 
         packages = [
             "coordinax",
-            "coordinax-api",
-            "coordinax-astro",
-            "coordinax-hypothesis",
-            "coordinax-interop-astropy",
+            "coordinax.api",
+            "coordinax.astro",
+            "coordinax.hypothesis",
+            "coordinax.interop.astropy",
         ]
 
         with patch("subprocess.run", return_value=mock_result):
             for package in packages:
+                tag_prefix = package.replace(".", "-")
                 is_valid, error = validate_tag.validate_tag_for_package(
-                    f"{package}-v1.0.0", package
+                    f"{tag_prefix}-v1.0.0", package
                 )
                 assert is_valid is True, f"Failed for package {package}: {error}"
                 assert error == ""
@@ -475,12 +476,13 @@ class TestIntegration:
             # Test different packages with .0 tags
             for package in [
                 "coordinax",
-                "coordinax-api",
-                "coordinax-astro",
-                "coordinax-hypothesis",
-                "coordinax-interop-astropy",
+                "coordinax.api",
+                "coordinax.astro",
+                "coordinax.hypothesis",
+                "coordinax.interop.astropy",
             ]:
+                tag_prefix = package.replace(".", "-")
                 is_valid, error = validate_tag.validate_tag_for_package(
-                    f"{package}-v1.0.0", package
+                    f"{tag_prefix}-v1.0.0", package
                 )
                 assert is_valid is True, f"Failed for {package}: {error}"

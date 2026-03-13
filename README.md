@@ -18,15 +18,9 @@
 
 ---
 
-Coordinax enables calculations with coordinates in
-[JAX](https://jax.readthedocs.io/en/latest/). Built on
-[Equinox](https://docs.kidger.site/equinox/) and
-[Quax](https://github.com/patrick-kidger/quax).
+Coordinax enables calculations with coordinates in [`JAX`](https://jax.readthedocs.io/en/latest/). Built on [`equinox`](https://docs.kidger.site/equinox/) and [`quax`](https://github.com/patrick-kidger/quax), with unit-support using [`unxt`](https://github.com/GalacticDynamics/unxt)
 
-## Installation
-
-[![PyPI platforms][pypi-platforms]][pypi-link]
-[![PyPI version][pypi-version]][pypi-link]
+## Installation &nbsp; [![PyPI platforms][pypi-platforms]][pypi-link] [![PyPI version][pypi-version]][pypi-link]
 
 <!-- [![Conda-Forge][conda-badge]][conda-link] -->
 
@@ -34,107 +28,71 @@ Coordinax enables calculations with coordinates in
 pip install coordinax
 ```
 
-## Documentation
+## Quick Start &nbsp; [![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://coordinax.readthedocs.io/en/)
 
-[![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://coordinax.readthedocs.io/en/)
+### Concepts
 
-## Quick example
+- Specialized Quantities: scalar coordinate quantities with units, including `Angle` (directional values on $S^1$ with explicit wrapping) and `Distance` (length-valued quantities), plus astronomy-facing forms like `Parallax` and `DistanceModulus`.
+- Charts: a coordinate chart / component schema (names + physical dimensions). A chart does not store numerical values.
+
+## Modules
+
+The most common import is this module which aggregates all the most-commonly used functionality. Chances are this has what you need.
 
 ```python
-import jax.numpy as jnp
-import unxt as u
-import coordinax as cx
+import coordinax.main as cx
+```
 
-q = cx.CartesianPos3D(
-    x=u.Q(jnp.arange(0, 10.0), "kpc"),
-    y=u.Q(jnp.arange(5, 15.0), "kpc"),
-    z=u.Q(jnp.arange(10, 20.0), "kpc"),
-)
-print(q)
-# <CartesianPos3D: (x, y, z) [kpc]
-#     [[ 0.  5. 10.]
-#      [ 1.  6. 11.]
-#      ...
-#      [ 8. 13. 18.]
-#      [ 9. 14. 19.]]>
+### Specialized Quantities
 
-q2 = cx.vconvert(cx.SphericalPos, q)
-print(q2)
-# <SphericalPos: (r[kpc], theta[rad], phi[rad])
-#     [[11.18   0.464  1.571]
-#      [12.57   0.505  1.406]
-#      ...
-#      [23.601  0.703  1.019]
-#      [25.259  0.719  0.999]]>
+The specific sub-packages, with the full functionality are:
 
-p = cx.CartesianVel3D(
-    x=u.Q(jnp.arange(0, 10.0), "km/s"),
-    y=u.Q(jnp.arange(5, 15.0), "km/s"),
-    z=u.Q(jnp.arange(10, 20.0), "km/s"),
-)
-print(p)
-# <CartesianVel3D: (x, y, z) [km / s]
-#     [[ 0.  5. 10.]
-#      [ 1.  6. 11.]
-#      ...
-#      [ 8. 13. 18.]
-#      [ 9. 14. 19.]]>
+```python
+import coordinax.angles as cxa
+import coordinax.distances as cxd
+```
 
-p2 = cx.vconvert(cx.SphericalVel, p, q)
-print(p2)
-# <SphericalVel: (r[km / s], theta[km rad / (km s)], phi[km rad / (km s)])
-#     [[ 1.118e+01 -3.886e-16  0.000e+00]
-#      [ 1.257e+01 -1.110e-16  0.000e+00]
-#      ...
-#      [ 2.360e+01  0.000e+00  0.000e+00]
-#      [ 2.526e+01 -2.776e-16  0.000e+00]]>
+Distances and angles are first-class quantities:
 
+```pycon
+>>> a = cx.Angle(30.0, "deg")
+>>> d = cx.Distance(10.0, "kpc")
 
-# Transforming between frames
-icrs_frame = cx.frames.ICRS()
-gc_frame = cx.frames.Galactocentric()
-op = cx.frames.frame_transform_op(icrs_frame, gc_frame)
-q_gc, p_gc = op(q, p)
-print(q_gc, p_gc, sep="\n")
-# <CartesianPos3D: (x, y, z) [kpc]
-#     [[-1.732e+01  5.246e+00  3.614e+00]
-#      ...
-#      [-3.004e+01  1.241e+01 -1.841e+00]]>
-# <CartesianVel3D: (x, y, z) [km / s]
-#      [[  3.704 250.846  11.373]
-#       ...
-#       [ -9.02  258.012   5.918]]>
+```
 
-coord = cx.Coordinate({"length": q, "speed": p}, frame=icrs_frame)
-print(coord)
-# Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>
-#     }),
-#     frame=ICRS()
-# )
+```pycon
+>>> import unxt as u
+>>> u.uconvert("rad", a)
+Angle(Array(0.52359878, dtype=float64, ...), unit='rad')
 
-print(coord.to_frame(gc_frame))
-# Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[-1.732e+01  5.246e+00  3.614e+00]
-#              ...
-#              [-3.004e+01  1.241e+01 -1.841e+00]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[  3.704 250.846  11.373]
-#              ...
-#              [ -9.02  258.012   5.918]]>
-#     }),
-#     frame=Galactocentric( ... )
-# )
+```
+
+### Charts
+
+The specific sub-package, with the full functionality is:
+
+```python
+import coordinax.charts as cxc
+```
+
+Transform coordinate dictionaries between charts:
+
+```pycon
+>>> # Cartesian coordinates
+>>> q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+>>> # Transform to Spherical
+>>> q_sph = cx.point_realization_map(cxc.sph3d, cxc.cart3d, q)  # to <- from
+>>> q_sph
+{'r': Quantity(Array(3.74165739, dtype=float64, ...), unit='km'),
+ 'theta': Quantity(Array(0.64052231, dtype=float64), unit='rad'),
+ 'phi': Quantity(Array(1.10714872, dtype=float64, ...), unit='rad')}
+
+```
+
+### Representations
+
+```python
+import coordinax.representations as cxr
 ```
 
 ## Citation
@@ -145,12 +103,7 @@ If you found this library to be useful in academic work, then please cite.
 
 ## Development
 
-[![Actions Status][actions-badge]][actions-link]
-[![Documentation Status][rtd-badge]][rtd-link]
-[![codecov][codecov-badge]][codecov-link]
-[![SPEC 0 — Minimum Supported Dependencies][spec0-badge]][spec0-link]
-[![pre-commit][pre-commit-badge]][pre-commit-link]
-[![ruff][ruff-badge]][ruff-link]
+[![Actions Status][actions-badge]][actions-link] [![Documentation Status][rtd-badge]][rtd-link] [![codecov][codecov-badge]][codecov-link] [![SPEC 0 — Minimum Supported Dependencies][spec0-badge]][spec0-link] [![pre-commit][pre-commit-badge]][pre-commit-link] [![ruff][ruff-badge]][ruff-link]
 
 We welcome contributions!
 
