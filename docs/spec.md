@@ -185,6 +185,27 @@ Separating semantics from geometry provides two advantages:
 1. Correct transformation laws -- transformation behavior depends only on geometry kind and basis, not on semantics.
 2. Clear interpretation -- different semantic kinds distinguish objects that share the same mathematical type but represent different physical quantities.
 
+<!-- Vectors -->
+
+## Structure of Points
+
+Points on a manifold do **not** form a vector space.
+
+For points $p,q \in M$:
+
+- the sum $p + q$ is not defined,
+- scalar multiplication of points is not defined.
+
+Instead, points form an **affine space** modeled on the tangent space.
+
+Operations such as
+
+- displacements between points,
+- velocities,
+- accelerations,
+
+belong to tangent spaces and are not themselves points.
+
 ---
 
 # Packages
@@ -208,6 +229,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.distances` | `AbstractDistance`, `Distance`, `DistanceModulus`, `Parallax` |
 | `coordinax.charts` | `AbstractChart`, `AbstractFixedComponentsChart`, `DIMENSIONAL_FLAGS`, `AbstractCartesianProductChart`, `AbstractFlatCartesianProductChart`, `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `point_realization_map`, `realize_cartesian`, `point_transition_map`, </br> `Abstract0D`, `Cart0D`, `cart0d`, </br> `Abstract1D`, `Cart1D`, `cart1d`, `Radial1D`, `radial1d`, `Time1D`, `time1d`, </br> `Abstract2D`, `Cart2D`, `cart2d`, `Polar2D`, `polar2d`, </br> `SphericalTwoSphere`, `sph2`, `LonLatSphericalTwoSphere`, `lonlat_sph2`, `LonCosLatSphericalTwoSphere`, `loncoslat_sph2`, `MathSphericalTwoSphere`, `math_sph2`, </br> `Abstract3D`, `Cart3D`, `cart3d`, `Cylindrical3D`, `cyl3d`, `AbstractSpherical3D`, `Spherical3D`, `sph3d`, `LonLatSpherical3D`, `lonlat_sph3d`, `LonCosLatSpherical3D`, `loncoslat_sph3d`, `MathSpherical3D`, `math_sph3d`, `ProlateSpheroidal3D`, </br> `Abstract6D`, `PoincarePolar6D`, `poincarepolar6d`, </br> `AbstractND`, `CartND`, `cartnd`, </br> `SpaceTimeCT` |
 | `coordinax.representations` | `vconvert`, </br> `Representation`, `point`, </br> `AbstractGeometry`, `PointGeometry`, `point_geom`, </br> `AbstractBasis`, `NoBasis`, `nobasis`, </br> `AbstractSemanticKind`, `Location`, `location` |
+| `coordinax.vectors` | `AbstractVector`, `AbstractVector`, `Vector`, `ToUnitsOptions` |
 
 </br>
 
@@ -1029,3 +1051,80 @@ A `Representation` specifies _what kind of geometric object_ component data is m
 
     - `location` is the pre-defined canonical `Location()` instance.
     - It is used in the default point representation `point = Representation(point_geom, nobasis, location)`.
+
+</br>
+
+<a id="software-spec-vectors"></a>
+
+## Vectors
+
+!!! info `AbstractVector`
+
+    Methods \& Properties:
+
+    - ``from_()``: multiple dispatch constructor of vector-like objects from arguments.
+    - ``uconvert``: convert the vector to the given units.
+      - ``(V, *args, **kwargs) -> uconvert(*args, V, **kwargs)`` redispatch
+      - ``(V, u.AbstractUnitSystem) -> uconvert(u.AbstractUnitSystem, V)`` redispatch
+    - ``__array_namespace__``: the array API namespace -- `quax.numpy`. This delegates to `quax` primitives.
+    - ``__eq__``: equality check, based on type equality and `quax` equality primitive.
+    - ``copy()``: call `dataclass.replace`.
+    - ``flatten()``: flatten the vector.
+    - ``ravel()``: return a flattened vector.
+    - ``reshape(*shape)``: return a reshaped vector
+    - ``round(decimals)``: return a rounded vector.
+    - ``to_device(device)``: move the vector to a new device
+    - ``__repr__()``: string representation through `wadler_lindig`.
+    - ``__str__()``: string representation through `wadler_lindig`.
+    - ``is_like()``: check if the object is a `AbstractVector` object.
+
+    Abstract Methods \& Properties:
+
+    - ``shape``: the shape of the vector. Abstract method.
+    - ``__getitem__(slice)``: slice the vector.
+    - ``astype(dtype, **kw)`` : cast the vector to a new dtype.
+
+    Not Supported:
+
+    - ``materialise``: for materialising the vector for `quax`.
+    - ``__complex__``
+    - ``__float__``
+    - ``__index__``
+    - ``__int__``
+    - ``__setitem__`` : vectors are immutable.
+    - ``__hash__()``: hash the vector by its field items. In general this raises an error.
+
+!!! info `Vector`
+
+    Arguments:
+
+    - ``data``: the data for each component.
+    - ``chart``: the chart of the vector, e.g. ``cxc.cart3d``.
+    - ``rep``: the `coordinax.representations.Representation`, e.g. `cxr.point`.
+
+    Methods \& Properties:
+
+    - ``__getitem__()``
+    - ``__pdoc__()``
+    - ``vconvert()``
+    - ``aval()``
+    - ``shape``
+    - ``norm()``
+
+    `from_` Constructor Dispatches:
+
+    - ``(Vector,) -> Vector``
+    - ``(dict,C,R) -> Vector``
+    - ``(dict,C) -> (dict,C,R) -> Vector``
+    - ``(dict,) -> (dict,C,R) -> Vector``
+    - ``(Q,C,R) -> (dict,C,R) -> Vector``
+    - ``(Q,C) -> (dict,C,R) -> Vector``
+    - ``(Q,) -> (dict,C) -> (dict,C,R) -> Vector``
+    - ``(Q,R) -> (dict,C,R) -> Vector``
+    - ``(Array,unit) -> (Q,) -> ... -> Vector``
+    - ``(Array,unit,C) -> ... -> Vector``
+    - ``(Array,unit,C,R) -> ... -> Vector``
+
+!!! info `ToUnitsOptions`
+
+    Used for `unxt.uconvert` dispatches.

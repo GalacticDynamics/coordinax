@@ -39,6 +39,11 @@ __all__ = (  # distances
     "location",
     "Representation",
     "point",
+    # vectors
+    "AbstractVector",
+    "Vector",
+    "vconvert",
+    "ToUnitsOptions",
 )
 
 from coordinax.angles import Angle
@@ -82,3 +87,4 @@ from coordinax.representations import (
     point_geom,
     vconvert,
 )
+from coordinax.vectors import AbstractVector, ToUnitsOptions, Vector, vconvert

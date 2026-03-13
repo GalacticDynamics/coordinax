@@ -96,12 +96,6 @@ When generating CDicts for product charts:
   - If `role` is `None`, draws from `roles()` and enforces role invariants.
   - For physical roles, may optionally generate a paired base-point (see `fiber_points`).
 
-### 5) PointedVector strategies
-
-- `fiber_points(chart: AbstractChart | None = None, role: Role | None = None, *, scalar: bool = True)`
-  - Returns: `st.SearchStrategy[PointedVector]`
-  - Must generate consistent bundles (base point + tangent/cotangent objects anchored at that point).
-
 ---
 
 ## Scalar-first generation (alignment with Coordinax JAX design)
@@ -140,8 +134,6 @@ then `coordinax.hypothesis` should:
    - `charts(ndim=3)` only yields charts with `chart.ndim == 3`.
 3. Generated `Vector`s are constructible using the canonical constructor:
    - `Vector(data, chart=chart, role=role)` succeeds for generated data.
-4. When generating PointedVectors:
-   - base point chart compatibility and anchoring invariants hold.
 
 ---
 
