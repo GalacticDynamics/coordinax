@@ -113,7 +113,7 @@ class Cart3D(AbstractFixedComponentsChart[Cart3DKeys, Cart3DDims], Abstract3D):
         """Return the canonical Cartesian chart for a 3D chart.
 
         >>> import coordinax.charts as cxc
-        >>> isinstance(cxc.Cart3D().cartesian, cxc.Cart3D)
+        >>> isinstance(cxc.cart3d.cartesian, cxc.Cart3D)
         True
 
         """

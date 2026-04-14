@@ -328,20 +328,19 @@ class TestTangentMapWithQuantityAt:
 
 
 # ===========================================================================
-# 7. Integration via cconvert (tests the 7-arg tangent_map path)
-#    RED: cconvert calls api.tangent_map with 7 positional args but the current
-#    dispatch only has 4 — this will fail until tangent_map is updated.
+# 7. Integration via cconvert
 # ===========================================================================
 
 
 class TestTangentMapViaCconvert:
-    """tangent_map must be reachable via cconvert with TangentGeometry.
+    """``cconvert`` should route tangent conversions through ``tangent_map``.
 
     ``cconvert`` internally calls
         api.tangent_map(v, from_chart, from_geom, from_rep,
-                           to_chart, to_geom, to_rep, at=at)
-    which is the 7-argument form.  These tests verify end-to-end correctness
-    of that path, which requires the new dispatch signature.
+                        to_chart, to_geom, to_rep, at=at)
+
+    These tests cover that integration path end to end for
+    ``TangentGeometry`` conversions.
     """
 
     def test_cart2d_polar2d_via_cconvert(self) -> None:

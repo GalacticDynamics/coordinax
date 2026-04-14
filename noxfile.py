@@ -84,7 +84,7 @@ def lint(s: nox.Session, /) -> None:
     s.notify("ty")
 
 
-@session(uv_groups=["lint"], reuse_venv=True)
+@session(uv_groups=["lint"], uv_extras=["workspace"], reuse_venv=True)
 def precommit(s: nox.Session, /) -> None:
     """Run the linter."""
     s.run("prek", "run", "--all-files", *s.posargs)
