@@ -87,8 +87,7 @@ jobs:
         with:
           path: .
           upload-name-suffix: -coordinax
-          attest-build-provenance-github:
-            ${{ github.event_name != 'pull_request' }}
+          attest-build-provenance-github: ${{ github.event_name != 'pull_request' }}
 
   publish-testpypi:
     name: Publish to TestPyPI

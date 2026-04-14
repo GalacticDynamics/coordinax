@@ -1,4 +1,9 @@
+# VCS version files
 _version.py
+
+# Local agents
+/AGENTS.md
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -80,6 +85,7 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 notebooks/
+docs/guides/*.ipynb
 
 # IPython
 profile_default/
