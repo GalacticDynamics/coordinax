@@ -76,6 +76,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
 | `coordinax.hypothesis.angles` | `angles` |
 | `coordinax.hypothesis.distances` | `distances` |
 | `coordinax.hypothesis.charts` | `chart_classes`, `chart_init_kwargs`, `charts`, `charts_like`, `cdicts` |
+| `coordinax.hypothesis.representations` | `geometry_classes`, `geometries`, `basis_classes`, `bases`, `semantic_classes`, `semantics`, `valid_basis_classes_for_geometry`, `valid_semantic_classes_for_geometry`, `representations`, `cdicts` |
 
 ### `coordinax.hypothesis.angles`
 
@@ -267,3 +268,164 @@ This module provides general-purpose strategies for generating valid `coordinax`
     - Returns a mapping whose keys are exactly `chart.components`.
     - Values are generated as quantities whose units follow `chart.coord_dimensions` component-by-component.
     - Supports scalar and array-valued payloads.
+
+### `coordinax.hypothesis.representations`
+
+!!! info `geometry_classes`:
+
+    Generate geometry classes (not instances).
+
+    Signature:
+    - `geometry_classes(*, include=None, exclude=())`
+
+    Parameters:
+    - `include`: optional tuple of allowed geometry classes.
+    - `exclude`: tuple of geometry classes to remove from candidates.
+
+    Contract:
+    - Returns `type[coordinax.representations.AbstractGeometry]`.
+    - Default candidates are all concrete subclasses of `AbstractGeometry` discovered via `get_all_subclasses`.
+
+    Failure behavior:
+    - If no candidates remain after include/exclude filtering, raises `ValueError`.
+
+!!! info `geometries`:
+
+    Generate geometry instances.
+
+    Signature:
+    - `geometries(*, include=None, exclude=())`
+
+    Contract:
+    - Draws a class from `geometry_classes(...)` and instantiates it.
+    - Returns `coordinax.representations.AbstractGeometry`.
+
+!!! info `basis_classes`:
+
+    Generate basis classes (not instances).
+
+    Signature:
+    - `basis_classes(*, include=None, exclude=())`
+
+    Parameters:
+    - `include`: optional tuple of allowed basis classes.
+    - `exclude`: tuple of basis classes to remove from candidates.
+
+    Contract:
+    - Returns `type[coordinax.representations.AbstractBasis]`.
+    - Default candidates are all concrete subclasses of `AbstractBasis`.
+
+    Failure behavior:
+    - If no candidates remain after include/exclude filtering, raises `ValueError`.
+
+!!! info `bases`:
+
+    Generate basis instances.
+
+    Signature:
+    - `bases(*, include=None, exclude=())`
+
+    Contract:
+    - Draws a class from `basis_classes(...)` and instantiates it.
+    - Returns `coordinax.representations.AbstractBasis`.
+
+!!! info `semantic_classes`:
+
+    Generate semantic-kind classes (not instances).
+
+    Signature:
+    - `semantic_classes(*, include=None, exclude=())`
+
+    Parameters:
+    - `include`: optional tuple of allowed semantic classes.
+    - `exclude`: tuple of semantic classes to remove from candidates.
+
+    Contract:
+    - Returns `type[coordinax.representations.AbstractSemanticKind]`.
+    - Default candidates are all concrete subclasses of `AbstractSemanticKind`.
+
+    Failure behavior:
+    - If no candidates remain after include/exclude filtering, raises `ValueError`.
+
+!!! info `semantics`:
+
+    Generate semantic-kind instances.
+
+    Signature:
+    - `semantics(*, include=None, exclude=())`
+
+    Contract:
+    - Draws a class from `semantic_classes(...)` and instantiates it.
+    - Returns `coordinax.representations.AbstractSemanticKind`.
+
+!!! info `valid_basis_classes_for_geometry`:
+
+    Return geometry-conditioned valid basis classes.
+
+    Signature:
+    - `valid_basis_classes_for_geometry(geom_kind)`
+
+    Contract:
+    - Dispatches on geometry kind type.
+    - General geometry fallback: all concrete basis classes.
+    - `PointGeometry` specialization: `(NoBasis,)`.
+
+!!! info `valid_semantic_classes_for_geometry`:
+
+    Return geometry-conditioned valid semantic classes.
+
+    Signature:
+    - `valid_semantic_classes_for_geometry(geom_kind)`
+
+    Contract:
+    - Dispatches on geometry kind type.
+    - General geometry fallback: all concrete semantic classes.
+    - `PointGeometry` specialization: `(Location,)`.
+
+!!! info `representations`:
+
+    Generate `coordinax.representations.Representation` instances.
+
+    Signature:
+    - `representations(*, geom_kind=None, basis_kind=None, semantic_kind=None, check_valid=True)`
+
+    Parameters:
+    - `geom_kind`: geometry instance, strategy, or `None`.
+    - `basis_kind`: basis instance, strategy, or `None`.
+    - `semantic_kind`: semantic instance, strategy, or `None`.
+    - `check_valid`: enforce geometry-conditioned compatibility when `True`.
+
+    Contract:
+    - Draws any strategy-valued inputs first (`draw_if_strategy`).
+    - If `geom_kind is None`, draws from `geometries()`.
+    - If `basis_kind is None` and `check_valid=True`, restricts candidate basis kinds via `valid_basis_classes_for_geometry(geom_kind)`; otherwise draws from all bases.
+    - If `semantic_kind is None` and `check_valid=True`, restricts candidate semantic kinds via `valid_semantic_classes_for_geometry(geom_kind)`; otherwise draws from all semantics.
+    - Returns `Representation(geom_kind=..., basis=..., semantic_kind=...)`.
+
+    Failure behavior:
+    - With `check_valid=True`, explicitly provided incompatible `basis_kind` or `semantic_kind` raises `ValueError`.
+
+!!! info `cdicts`:
+
+    Generate chart-component dictionaries constrained by a representation.
+
+    Signatures:
+    - `cdicts(chart_or_strategy, rep_or_strategy, /, **kwargs)`
+    - `cdicts(chart, rep, /, **kwargs)`
+    - `cdicts(chart, geom_kind, basis, semantic_kind, /, **kwargs)`
+
+    Parameters:
+    - `chart_or_strategy`: chart instance or strategy producing one.
+    - `rep_or_strategy`: `Representation` instance or strategy producing one.
+    - `geom_kind`, `basis`, `semantic_kind`: explicit representation pieces used by specialized dispatches.
+    - `**kwargs`: forwarded to chart-driven payload generation (`dtype`, `shape`, `elements`, and strategy-valued variants).
+
+    Contract:
+    - Strategy-valued `chart`/`rep` inputs are drawn first, then redispatched.
+    - `Representation` inputs are decomposed into `(geom_kind, basis, semantic_kind)` and redispatched.
+    - For `PointGeometry`, only `(NoBasis, Location)` is valid.
+    - On valid combinations, output keys are exactly `chart.components` and values follow `chart.coord_dimensions`.
+
+    Failure behavior:
+    - For `PointGeometry`, non-`NoBasis` basis values raise `TypeError`.
+    - For `PointGeometry`, non-`Location` semantic values raise `TypeError`.

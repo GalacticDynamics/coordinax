@@ -25,6 +25,16 @@ __all__ = (  # distances
     "loncoslat_sph3d",
     "math_sph3d",
     "cartnd",
+    # representations
+    "cconvert",
+    "PointGeometry",
+    "point_geom",
+    "NoBasis",
+    "no_basis",
+    "Location",
+    "loc",
+    "Representation",
+    "point",
 )
 
 from coordinax.angles import Angle
@@ -51,6 +61,17 @@ from coordinax.charts import (
     time1d,
 )
 from coordinax.distances import Distance
+from coordinax.representations import (
+    Location,
+    NoBasis,
+    PointGeometry,
+    Representation,
+    cconvert,
+    loc,
+    no_basis,
+    point,
+    point_geom,
+)
 
 try:  # noqa: SIM105
     import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import]

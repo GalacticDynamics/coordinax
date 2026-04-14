@@ -15,6 +15,21 @@ Position
 Transition Map
   A smooth, invertible function relating coordinates in two different charts on the same manifold. Enables smooth transformation between coordinate systems. Also called *chart transition function*. See [spec.md § Coordinate Transitions](spec.md).
 
+Representation
+  An abstract triple (GeometricKind, Basis, SemanticKind) describing what data means, independent of coordinate system. Different representations can encode the same geometric object. See [spec.md § Representations](spec.md) and [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
+
+Geometric Kind
+  The category of geometric object (position, velocity, acceleration, etc.); determines time-derivative relationships. Example: `Position` has time derivative `Velocity`.
+
+Basis
+  A choice of coordinate axes or reference frame; affects numerical values of components. Example: Cartesian vs Spherical basis on the same manifold.
+
+Semantic Kind
+  The role and interpretation of data independent of coordinates. Examples: *position* (affine), *displacement* (tangent), *velocity* (tangent). See [Role](#affine-role) concepts.
+
+Representation Conversion
+  Changing an object's representation (its form) without changing underlying data; implemented via `cconvert`. Example: converting `Distance` from meters to kilometers, or `Angle` from radians to degrees. See [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
+
 ```
 
 ## JAX Integration & Type System
@@ -70,7 +85,7 @@ Dispatch
   Runtime type-based routing of function calls; core mechanism in `coordinax` via plum-dispatch. Use `.methods` attribute on dispatched functions to discover all registered implementations. See [Conventions § Multiple Dispatch](conventions.md#multiple-dispatch).
 
 Functional API
-  Primary API design philosophy: pure functions taking arguments and returning new objects without mutations. Examples: `pt_map(chart_from, chart_to, point)`, `vconvert(chart, vector)`. See [Conventions § Functional vs Object-Oriented APIs](conventions.md#functional-vs-object-oriented-apis).
+  Primary API design philosophy: pure functions taking arguments and returning new objects without mutations. Examples: `pt_map(chart_from, chart_to, point)`, `cconvert(chart, vector)`. See [Conventions § Functional vs Object-Oriented APIs](conventions.md#functional-vs-object-oriented-apis).
 
 OOP API
   Object-oriented convenience layer wrapping functional APIs; methods call underlying functions. Example: `point.transition_to(chart)` wraps `pt_map()`. See [Conventions § Functional vs Object-Oriented APIs](conventions.md#functional-vs-object-oriented-apis).
@@ -105,6 +120,9 @@ Distance Modulus
 ```{glossary}
 from_ Constructor
   Flexible constructor method accepting diverse input types. Example: `Distance.from_(10 * u.m)`, `Distance.from_((10, "m"))`, `Distance.from_(parallax_value)`. More flexible than overloading `__init__`.
+
+cconvert Function
+  API for converting object representation. Usage: `cconvert(target_representation, current_object)`. Returns semantically equivalent object in new form. See [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
 
 Chart Instance
   Lowercase singleton instance of a chart for convenience, e.g., `cart3d` (instance of `Cartesian3D`), `sph3d` (instance of `Spherical3D`). See [Conventions § Pre-Defined Chart Instances](conventions.md#pre-defined-chart-instances).

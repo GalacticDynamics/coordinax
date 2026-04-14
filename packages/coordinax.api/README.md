@@ -52,6 +52,36 @@ Use the full `coordinax` package when you need concrete vector implementations o
 <multiple-dispatch function guess_chart ...>
 ```
 
+Register a minimal implementation in your own package, then call it through the `coordinax.api` namespace:
+
+```pycon
+>>> import coordinax.api.representations as cxrapi
+>>> import dataclasses
+>>> import math
+>>> import plum
+
+>>> @dataclasses.dataclass
+... class MyCartesian:
+...     x: float
+...     y: float
+...
+
+>>> @dataclasses.dataclass
+... class MyPolar:
+...     r: float
+...     theta: float
+...
+
+>>> @plum.dispatch
+... def cconvert(target: type[MyPolar], vec: MyCartesian, /, **kwargs: object) -> MyPolar:
+...     return MyPolar(r=(vec.x**2 + vec.y**2) ** 0.5, theta=math.atan2(vec.y, vec.x))
+...
+
+>>> vec = MyCartesian(1.0, 2.0)
+>>> cxrapi.cconvert(MyPolar, vec)
+MyPolar(r=2.23606797749979, theta=1.1071487177940904)
+```
+
 ## Documentation
 
 For detailed usage examples and API documentation, see the [full documentation](https://coordinax.readthedocs.io/).

@@ -192,10 +192,12 @@ def _preload_coordinax_namespace() -> None:
     module_names = (
         "coordinax.api",
         "coordinax.api.charts",
+        "coordinax.api.representations",
         "coordinax.astro",
         "coordinax.charts",
         "coordinax.hypothesis",
         "coordinax.main",
+        "coordinax.representations",
     )
     for module_name in module_names:
         with contextlib.suppress(ModuleNotFoundError):

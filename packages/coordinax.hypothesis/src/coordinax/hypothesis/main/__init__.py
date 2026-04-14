@@ -11,6 +11,16 @@ __all__ = (
     "charts",
     "charts_like",
     "cdicts",
+    # Representations
+    "geometry_classes",
+    "geometries",
+    "basis_classes",
+    "bases",
+    "semantic_classes",
+    "semantics",
+    "valid_basis_classes_for_geometry",
+    "valid_semantic_classes_for_geometry",
+    "representations",
 )
 
 from coordinax.hypothesis.angles import angles
@@ -22,3 +32,14 @@ from coordinax.hypothesis.charts import (
     charts_like,
 )
 from coordinax.hypothesis.distances import distances
+from coordinax.hypothesis.representations import (
+    bases,
+    basis_classes,
+    geometries,
+    geometry_classes,
+    representations,
+    semantic_classes,
+    semantics,
+    valid_basis_classes_for_geometry,
+    valid_semantic_classes_for_geometry,
+)

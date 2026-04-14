@@ -23,6 +23,7 @@ coordinax.interop.astropy <packages/coordinax.interop.astropy/index.md>
 
 guides/quantities.md
 guides/charts.md
+guides/representations.md
 packages/coordinax.hypothesis/testing-guide
 Performance <guides/perf.ipynb>
 ```
@@ -143,6 +144,7 @@ import coordinax.distances
 import coordinax.hypothesis
 import coordinax.interop
 import coordinax.main
+import coordinax.representations
 -->
 
 ```{code-block} python
@@ -151,7 +153,7 @@ import coordinax.main
 >>> from inspect import ismodule
 >>> [name for name in dir(coordinax)
 ...  if not name.startswith("_") and ismodule(getattr(coordinax, name))]
-['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main']
+['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main', 'representations']
 ```
 
 We recommend importing as needed:
@@ -160,6 +162,7 @@ We recommend importing as needed:
 - `coordinax.angles` as `cxa` : further angle-specific functionality.
 - `coordinax.distances` as `cxd` : further distance-specific functionality.
 - `coordinax.charts` as `cxc` : chart-specific functionality.
+- `coordinax.representations` as `cxr` : representation-specific functionality.
 
 - `coordinax.astro` as `cxastro` : astronomy-specific functionality. Note that this package is an optional extra, so you may need to install it separately.
 - `coordinax.hypothesis` as `cxst` : property-based testing strategies for `coordinax`. Note that this package is an optional extra, so you may need to install it separately.
