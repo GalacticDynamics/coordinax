@@ -48,10 +48,12 @@ requires-python = ">=3.11"
 [project.optional-dependencies]
 astro = ["coordinax.astro"]
 benchmark = ["pytest-benchmark>=5.2.3"]
+curveframes = ["coordinax.curveframes"]
 interop-astropy = ["coordinax.interop.astropy"]
 workspace = [
   "coordinax.api",
   "coordinax.astro",
+  "coordinax.curveframes",
   "coordinax.hypothesis",
   "coordinax.interop.astropy",
 ]
@@ -101,6 +103,7 @@ ide = ["ipykernel>=7.1.0", "jaxmore>=0.2.0"]
 lint = ["pre-commit>=4.5.0", "pylint>=3.3.2", "ty>=0.0.19"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
+  "coordinax.curveframes",
   "coordinax.hypothesis",
   "hypothesis[numpy]>=6.151.6",
   "jaxmore>=0.2.0",
@@ -187,10 +190,11 @@ files = [
   "src/coordinax",
   "packages/coordinax.api/src/coordinax/api",
   "packages/coordinax.astro/src/coordinax/astro",
+  "packages/coordinax.curveframes/src/coordinax/curveframes",
   "packages/coordinax.hypothesis/src/coordinax/hypothesis",
   "packages/coordinax.interop.astropy/src/coordinax/interop/astropy",
 ]
-mypy_path = "src:packages/coordinax.api/src:packages/coordinax.astro/src:packages/coordinax.hypothesis/src:packages/coordinax.interop.astropy/src"
+mypy_path = "src:packages/coordinax.api/src:packages/coordinax.astro/src:packages/coordinax.curveframes/src:packages/coordinax.hypothesis/src:packages/coordinax.interop.astropy/src"
 namespace_packages = true
 python_version = "3.11"
 strict = true
@@ -302,6 +306,7 @@ testpaths = [
   "docs/",
   "tests/",
   "packages/coordinax.astro",
+  "packages/coordinax.curveframes",
   "packages/coordinax.hypothesis/",
   "packages/coordinax.interop.astropy/",
 ]
@@ -388,11 +393,13 @@ ignore = [
 "coordinax.api"                        = "cxapi"
 "coordinax.astro"                      = "cxastro"
 "coordinax.charts"                     = "cxc"
+"coordinax.curveframes"                = "cxfc"
 "coordinax.distances"                  = "cxd"
 "coordinax.frames"                     = "cxf"
 "coordinax.hypothesis.angles"          = "cxast"
 "coordinax.hypothesis.astro"           = "cxastrost"
 "coordinax.hypothesis.charts"          = "cxcst"
+"coordinax.hypothesis.curveframes"     = "cxfcst"
 "coordinax.hypothesis.distances"       = "cxdst"
 "coordinax.hypothesis.frames"          = "cxfst"
 "coordinax.hypothesis.main"            = "cxst"
@@ -452,6 +459,7 @@ constraint-dependencies = ["numpy<2.4.0"]
 [tool.uv.sources]
 "coordinax.api"             = { workspace = true }
 "coordinax.astro"           = { workspace = true }
+"coordinax.curveframes"     = { workspace = true }
 "coordinax.hypothesis"      = { workspace = true }
 "coordinax.interop.astropy" = { workspace = true }
 

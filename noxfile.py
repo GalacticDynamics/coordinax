@@ -34,6 +34,7 @@ class PackageEnum(StrEnum):
     coordinax = auto()
     api = auto()
     astro = auto()
+    curveframes = auto()
     hypothesis = auto()
 
 
@@ -83,6 +84,8 @@ def pylint(s: nox.Session, /, package: PackageEnum) -> None:
             package_path = "packages/coordinax.api/"
         case PackageEnum.astro:
             package_path = "packages/coordinax.astro/"
+        case PackageEnum.curveframes:
+            package_path = "packages/coordinax.curveframes/"
         case PackageEnum.hypothesis:
             package_path = "packages/coordinax.hypothesis/"
         case _:
@@ -102,6 +105,8 @@ def ty(s: nox.Session, /, package: PackageEnum) -> None:
             package_paths = ("packages/coordinax.api/",)
         case PackageEnum.astro:
             package_paths = ("packages/coordinax.astro/",)
+        case PackageEnum.curveframes:
+            package_paths = ("packages/coordinax.curveframes/",)
         case PackageEnum.hypothesis:
             package_paths = ("packages/coordinax.hypothesis/",)
         case _:
@@ -128,6 +133,8 @@ def _parse_pytest_paths(package: PackageEnum, /) -> list[str]:
             package_paths = ["packages/coordinax.api/"]
         case PackageEnum.astro:
             package_paths = ["packages/coordinax.astro/"]
+        case PackageEnum.curveframes:
+            package_paths = ["packages/coordinax.curveframes/"]
         case PackageEnum.hypothesis:
             package_paths = ["packages/coordinax.hypothesis/"]
         case _:

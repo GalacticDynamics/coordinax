@@ -143,6 +143,7 @@ This functionality is organized into submodules available under the top-level `c
 import coordinax.angles
 import coordinax.api
 import coordinax.astro
+import coordinax.curveframes
 import coordinax.charts
 import coordinax.distances
 import coordinax.frames
@@ -161,7 +162,7 @@ import coordinax.vectors
 >>> sorted(name.removeprefix("coordinax.")
 ...        for name in sys.modules
 ...        if name.startswith("coordinax.") and name.count(".") == 1)
-['angles', 'api', 'astro', 'charts', 'distances', 'frames', 'hypothesis', 'internal', 'interop', 'main', 'manifolds', 'representations', 'transforms', 'vectors']
+['angles', 'api', 'astro', 'charts', 'curveframes', 'distances', 'frames', 'hypothesis', 'internal', 'interop', 'main', 'manifolds', 'representations', 'transforms', 'vectors']
 ```
 
 We recommend importing as needed:
