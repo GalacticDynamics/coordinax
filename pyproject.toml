@@ -389,22 +389,27 @@ ignore = [
 "coordinax.astro"                      = "cxastro"
 "coordinax.charts"                     = "cxc"
 "coordinax.distances"                  = "cxd"
+"coordinax.frames"                     = "cxf"
 "coordinax.hypothesis.angles"          = "cxast"
 "coordinax.hypothesis.astro"           = "cxastrost"
 "coordinax.hypothesis.charts"          = "cxcst"
 "coordinax.hypothesis.distances"       = "cxdst"
+"coordinax.hypothesis.frames"          = "cxfst"
 "coordinax.hypothesis.main"            = "cxst"
 "coordinax.hypothesis.manifolds"       = "cxmst"
 "coordinax.hypothesis.representations" = "cxrst"
+"coordinax.hypothesis.transforms"      = "cxfmst"
 "coordinax.hypothesis.vectors"         = "cxvst"
 "coordinax.internal"                   = "cxi"
 "coordinax.main"                       = "cx"
 "coordinax.manifolds"                  = "cxm"
 "coordinax.representations"            = "cxr"
+"coordinax.transforms"                 = "cxfm"
 "coordinax.vectors"                    = "cxv"
 equinox                                = "eqx"
 functools                              = "ft"
 unxt                                   = "u"
+
 
 [tool.ruff.lint.isort]
 combine-as-imports = true

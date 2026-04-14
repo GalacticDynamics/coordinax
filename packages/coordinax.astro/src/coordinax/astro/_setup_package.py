@@ -59,3 +59,26 @@ def install_import_hook(
         if RUNTIME_TYPECHECKER is not False
         else contextlib.nullcontext()
     )
+
+
+def coordinax_frames_exports() -> dict[str, object]:
+    """Return frame symbols exported to ``coordinax.frames`` via entry-point."""
+    try:
+        from ._src.base_frame import AbstractSpaceFrame  # noqa: PLC0415
+        from ._src.galactocentric import Galactocentric  # noqa: PLC0415
+        from ._src.icrs import ICRS, icrs  # noqa: PLC0415
+    except ImportError as exc:
+        # During `import coordinax.astro`, this provider may run while
+        # `coordinax.astro._src.base_frame` is still being initialized.
+        # Returning no exports here avoids failing the import cycle; exports
+        # are loaded again once `coordinax.astro` initialization completes.
+        if "partially initialized module" in str(exc):
+            return {}
+        raise
+
+    return {
+        "AbstractSpaceFrame": AbstractSpaceFrame,
+        "ICRS": ICRS,
+        "icrs": icrs,
+        "Galactocentric": Galactocentric,
+    }

@@ -67,10 +67,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     # Canonical URL (jax.readthedocs.io now redirects here)
     "jax": ("https://docs.jax.dev/en/latest/", None),
-    # NOTE: jaxtyping uses MkDocs and has no Sphinx objects.inv;
-    # cross-references to jaxtyping.* symbols cannot be resolved via
-    # intersphinx. Bare names like Array/ArrayLike that sphinx_autodoc_typehints
-    # emits are suppressed below.
+    "jaxtyping": ("https://docs.kidger.site/jaxtyping/", None),
     "astropy": ("https://docs.astropy.org/en/stable/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "equinox": ("https://docs.kidger.site/equinox/", None),
@@ -121,12 +118,10 @@ nitpick_ignore = [
     ("py:class", "coordinax.charts._src.d3.LonLatSpherical3D"),
 ]
 
-# jaxtyping uses MkDocs (no Sphinx objects.inv), so jaxtyping.* symbols cannot
-# be resolved via intersphinx. Suppress all py:class warnings for them.
 # TypedNdArray is a JAX-private type (jax._src.basearray) with no public docs.
 # jax._src.* are private JAX implementation paths never in the public inventory.
 nitpick_ignore_regex = [
-    (r"py:class", r"jaxtyping\..*"),
+    (r"py:class", r"jaxtyping\..*"),  # TODO: remove
     (r"py:class", r".*TypedNdArray.*"),
     (r"py:class", r"jax\._src\..*"),
 ]

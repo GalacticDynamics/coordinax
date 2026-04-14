@@ -8,6 +8,10 @@ def test_module_exports() -> None:
     expected_exports = {
         "DistanceModulus",
         "Parallax",
+        "AbstractSpaceFrame",
+        "ICRS",
+        "icrs",
+        "Galactocentric",
     }
 
     assert set(cxastro.__all__) == expected_exports

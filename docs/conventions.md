@@ -34,10 +34,6 @@ class Cartesian3D(AbstractChart):
 
 This pattern improves code clarity and avoids the fragile base class problem. See [Equinox documentation](https://docs.kidger.site/equinox/pattern/) for more background.
 
-### Semantic Class Hierarchies
-
-Classes are organized by **semantic role**, not implementation details:
-
 ---
 
 ## 2. Type System & JAX Integration
@@ -106,12 +102,55 @@ Both are equally powerful; OOP wraps functional. Choose based on readability.
 Source code (`/src/coordinax/`) uses this structure:
 
 - **`main`**: User-facing re-exports of primary functionality. Most users start here.
+- **Alphabetic submodules**: `angles`, `charts`, `distances`, `frames`, `manifolds`, `representations`, `vectors`. Organized by semantic concept.
 - **`_src/` subdirectories**: Implementation details. Less stable; avoid importing directly.
 - **Internal modules**: `internal` folder for utilities not intended for public use.
 
 **Import patterns**: Always import explicitly; use `from_` constructors for flexibility.
 
 See [Glossary: Functional API, OOP API, Module Organization](glossary.md).
+
+---
+
+## 4. Coordinate Transformations & Conversions
+
+`coordinax` distinguishes between **vector transformations** (coordinate changes) and **representation conversions** (different forms of same data).
+
+### Vector Transformation: `cconvert`
+
+**`cconvert`**: Change vector components under a coordinate change; preserves role semantics.
+
+- **Input**: `cconvert(current_vector, target_chart)`
+- **Output**: New vector with components expressed in `target_chart`
+- **Role-aware**: Position and velocity transform differently (this is why `cconvert` exists, not just simple coordinate swaps)
+- **Example**:
+
+  ```python
+  import coordinax.main as cx
+  import coordinax.charts as cxc
+  import unxt as u
+
+  # Create a position vector in Cartesian coordinates
+  pos_cartesian = cx.Point.from_(
+      {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}, cxc.cart3d, cx.point
+  )
+  # Transform to spherical coordinates
+  pos_spherical = cx.cconvert(pos_cartesian, cxc.sph3d)
+  # Now pos_spherical has (r, theta, phi) components
+  ```
+
+See [Glossary: Vector Transformation, cconvert](glossary.md); [spec.md § Transformations](spec.md).
+
+### Representation Conversion: `cconvert`
+
+**`cconvert`**: Convert object representation without changing underlying data; enables different forms for same object.
+
+- **Input**: `cconvert(target_representation, current_object)`
+- **Output**: Semantically equivalent object in new form
+- **Example**: Convert between `Distance` units (meters → kilometers) or `Angle` representations (radians → degrees)
+- **Contrast with `cconvert`**: Same **object** (e.g., same distance), different **representation**
+
+See [Glossary: Representation Conversion, cconvert](glossary.md); [spec.md § Representations](spec.md).
 
 ---
 

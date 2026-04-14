@@ -22,6 +22,9 @@ v_sph = cx.cconvert(v, cxc.sph3d)
 # but for convenience we allow subtraction to yield a new point.
 v2 = cx.Point.from_([4, 5, 6], "m")
 difference = v - v2
+
+# Inspect converted components
+components = cx.cdict(v_sph)
 ```
 
 See [Working With Vectors](../guides/vectors.md#constructor-patterns) for all construction patterns and design rationale.

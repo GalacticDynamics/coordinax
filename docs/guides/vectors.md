@@ -149,6 +149,168 @@ v_km = u.uconvert({"x": "km", "y": "km", "z": "km"}, v)
 v_mixed = u.uconvert({"x": "km", "y": "km", "z": "m"}, v)
 ```
 
+## Coordinate Objects
+
+`Vector` answers: "what are the component values, chart, and representation?"
+
+`Coordinate` answers: "what are the vector components **and** in which reference frame are they described?"
+
+A coordinate is therefore:
+
+- vector data (component values)
+- chart (coordinate system)
+- representation (transformation law)
+- frame (observer)
+
+### Choosing The Right Operation
+
+Use this decision table when transforming coordinate data:
+
+| Goal | API | What Changes | What Stays Invariant |
+| --- | --- | --- | --- |
+| Change observer/reference frame | `coord.to_frame(to_frame)` | `frame` (and usually component values) | represented geometric point |
+| Change coordinate system/chart | `coord.cconvert(to_chart)` | `chart` (and usually component values) | represented geometric point, `frame` |
+| Change both | chain both operations | both frame and chart | represented geometric point |
+
+### Constructing Coordinates
+
+`Coordinate.from_()` supports the same flexible input styles as `Vector.from_()`, with an additional frame argument.
+
+```python
+import coordinax.main as cx
+import coordinax.frames as cxf
+
+# 1) Array + unit + frame (common high-level pattern)
+coord1 = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)
+
+# 2) Vector + frame
+vec = cx.Point.from_([1, 2, 3], "kpc")
+coord2 = cx.Point.from_(vec, cxf.alice)
+
+# 3) No explicit frame -> NoFrame()
+coord3 = cx.Point.from_([1, 2, 3], "kpc")
+print(coord3.frame)  # NoFrame()
+
+# 4) Passthrough
+coord4 = cx.Point.from_(coord1)
+```
+
+For explicit control, you can also pass chart/representation/manifold through constructor dispatches that mirror `Vector.from_()`.
+
+### Frame Transformations Of Coordinate Data
+
+Use `to_frame()` to apply the frame-transition operator associated with the new observer. Under the active convention, this moves the represented point data into the target frame.
+
+```python
+import coordinax.main as cx
+import coordinax.frames as cxf
+
+coord_a = cx.Point.from_([1, 2, 3], "m", cxf.alice)
+coord_b = coord_a.to_frame(cxf.alex)
+
+print(coord_a.frame)  # Alice()
+print(coord_b.frame)  # Alex()
+```
+
+Identity frame changes are cheap no-ops:
+
+```python
+same = coord_a.to_frame(cxf.alice)
+print(same is coord_a)  # True
+```
+
+For evolving transforms, `to_frame()` accepts an optional evolution parameter `t` (a quantity):
+
+```python
+import unxt as u
+
+coord_t = coord_a.to_frame(cxf.alex, t=u.Q(1.0, "s"))
+```
+
+You can also apply frame operators directly:
+
+```python
+op = cxf.frame_transition(cxf.alice, cxf.alex)
+coord_b2 = op(coord_a)
+```
+
+### Chart Transformations Of Coordinate Data
+
+Use `cconvert()` to change chart representation while preserving frame.
+
+```python
+import coordinax.charts as cxc
+
+coord_cart = cx.Point.from_([1, 2, 3], "m", cxf.alice)
+coord_sph = coord_cart.cconvert(cxc.sph3d)
+
+print(coord_cart.chart)  # Cart3D()
+print(coord_sph.chart)  # Spherical3D()
+
+print(coord_cart.frame)  # Alice()
+print(coord_sph.frame)  # Alice()  (unchanged)
+```
+
+Round-tripping charts preserves the represented point semantics:
+
+```python
+coord_cart_again = coord_sph.cconvert(cxc.cart3d)
+```
+
+### Combined Frame + Chart Pipelines
+
+Real workflows often require both transformations.
+
+```python
+import coordinax.charts as cxc
+import coordinax.frames as cxf
+import coordinax.main as cx
+
+coord = cx.Point.from_([10, 5, 2], "kpc", cxf.alice)
+
+# Pipeline A: frame first, then chart
+out_a = coord.to_frame(cxf.alex).cconvert(cxc.sph3d)
+
+# Pipeline B: chart first, then frame
+out_b = coord.cconvert(cxc.sph3d).to_frame(cxf.alex)
+
+print(out_a.frame, out_a.chart)  # Alex(), Spherical3D()
+print(out_b.frame, out_b.chart)  # Alex(), Spherical3D()
+```
+
+When reading a pipeline, track invariants explicitly:
+
+1. Frame operation changes observer metadata.
+2. Chart operation changes component schema/coordinate system.
+3. Both preserve the represented geometric point semantics.
+
+### Batch And JAX Patterns For Coordinates
+
+Use scalar-first functions, then batch with `vmap`.
+
+```python
+def to_alex_spherical(c):
+    return c.to_frame(cxf.alex).cconvert(cxc.sph3d)
+
+
+coords = [cx.Point.from_([i, i + 1, i + 2], "m", cxf.alice) for i in range(5)]
+coords_out = [to_alex_spherical(c) for c in coords]
+```
+
+### Astronomy-Oriented Pattern (Optional)
+
+If astronomy frames are available, Coordinate workflows are identical:
+
+```python
+# Optional: requires astro frame package/config in your environment
+# import coordinax.astro as cxastro
+# coord_icrs = cx.Point.from_([1, 2, 3], "kpc", cxastro.ICRS())
+# coord_gc = coord_icrs.to_frame(cxastro.Galactocentric())
+# coord_gc_sph = coord_gc.cconvert(cxc.sph3d)
+```
+
+This is the same pattern: first choose observer frame semantics, then choose the most useful chart for the analysis step.
+
 ## Architecture & Design Philosophy
 
 The coordinax `Point` is built on a **"data + chart + representation" triple**. This design prevents silent coordinate errors and makes transformations explicit.
@@ -297,7 +459,7 @@ Vector operators (`+`, `-`, `*`, etc.) are implemented via **Quax multiple dispa
 # @quax.register(lax.add_p)
 # def add_points(v1: Point, v2: Point, /) -> Point:
 #     new_data = {k: v1.data[k] + v2.data[k] for k in v1.data}
-#     return Point(new_data, chart=v1.chart, rep=v1.rep)
+#     return Point(new_data, chart=v1.chart)
 ```
 
 **Why Quax (not Python magic methods)**:

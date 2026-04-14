@@ -43,7 +43,7 @@ import unxt as u
 
 # Create a position in ICRS frame
 pnt = cx.Point.from_({"r": u.Q(10, "kpc"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")})
-crd_icrs = cx.Coordinate({"base": pnt}, frame=cxastro.ICRS())
+crd_icrs = cx.Point({"base": pnt}, frame=cxastro.ICRS())
 
 # Transform to Galactocentric frame
 crd_gc = crd_icrs.to_frame(cxastro.Galactocentric())
@@ -77,7 +77,7 @@ The package provides frame transformation functions that work with coordinax's c
 
 ```
 # Create a coordinate in one frame
-crd_icrs = cx.Coordinate({"base": pnt}, frame=cxastro.ICRS())
+crd_icrs = cx.Point({"base": pnt}, frame=cxastro.ICRS())
 
 # Transform to another frame
 crd_gc = crd_icrs.to_frame(cxastro.Galactocentric())

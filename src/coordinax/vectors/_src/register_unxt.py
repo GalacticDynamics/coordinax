@@ -21,7 +21,7 @@ class ToUnitsOptions(Enum):
     """Options for the units argument of `uconvert`.
 
     This enum provides named conversion behaviors that are accepted by
-    `Point.uconvert` and `Coordinate.uconvert`.
+    `Point.uconvert`.
 
     Examples
     --------

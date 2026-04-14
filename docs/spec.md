@@ -299,6 +299,78 @@ C_1'}$ and the last $n_2$ components transform by $\tau_{C_2 \to C_2'}$, indepen
 
 </br>
 
+(frame-transforms)=
+
+### Frame Transforms
+
+A **static frame transformation** is a smooth map
+
+$$
+F : M \to M
+$$
+
+that relates two descriptions of a point on the same manifold. The map $F : M \to M$ is smooth if it is infinitely differentiable in any chart (a major feature for auto-differentiation codes).
+
+There are two ways of thinking about frame transformations:
+
+- an **active transform**, where the transform moves a point, or
+- a **passive transform**, where the point is unchanged but the reference frame in which the point is expressed.
+
+These are mathematically equivalent but conceptually distinct perspectives.
+
+_In `coordinax`, frame transforms are active_: operators act directly on points and move them on the manifold.
+
+<!-- Frame Transformations: evolution-parameter-dependent -->
+
+**_Evolution-Parameter-Dependent Frame Transformations_**:
+
+Many physically important frame transformations are not fixed but vary with a smooth **evolution parameter** $\lambda \in \Lambda \subseteq \mathbb{R}$. An **evolution-parameter-dependent frame transformation** is a smooth map
+
+$$
+F : \Lambda \times M \to M, \qquad (\lambda, p) \mapsto F_\lambda(p),
+$$
+
+where:
+
+- for each fixed $\lambda$, the map $F_\lambda : M \to M$ is a diffeomorphism, and
+- $F$ is smooth **jointly** in $(\lambda, p)$ — not merely separately in each argument.
+
+Joint smoothness is the natural condition for auto-differentiation through $\lambda$ (e.g., for computing velocities via `jax.grad`), and it is strictly stronger than smoothness in each argument separately.
+
+The static case $F : M \to M$ is the **special case** in which $F_\lambda = F$ for all $\lambda$.
+
+**Coordinate law for points.** In charts $C = (U, \varphi)$ and $C’ = (U’, \varphi’)$, the coordinate form of the transformation is
+
+$$
+q’ = \tau_\lambda(q), \qquad \tau_\lambda = \varphi_{C’} \circ F_\lambda \circ \varphi_{C}^{-1}.
+$$
+
+This is structurally identical to the static law — a point-to-point map — but the diffeomorphism $\tau_\lambda$ now depends on $\lambda$.
+
+**Composition.** Given two evolution-parameter-dependent transformations $F$ and $G$ with the **same** parameter type,
+
+$$
+(G \circ F)_\lambda(p) = G_\lambda\!\bigl(F_\lambda(p)\bigr).
+$$
+
+Both sides evaluate at the same value of $\lambda$; composition does not advance or otherwise alter the parameter. Composing transformations that carry different parameter types requires an explicit reparameterization $\mu \mapsto \lambda(\mu)$ and is not defined automatically.
+
+**Inverse.**
+
+$$
+(F^{-1})_\lambda = (F_\lambda)^{-1}.
+$$
+
+**Identity.** The identity transformation is trivially static:
+
+$$
+F_\lambda = \mathrm{id}_M \quad \forall\, \lambda.
+$$
+
+**Group interpretation.** For each fixed $\lambda$, $F_\lambda$ is an element of the relevant transformation group $G$ (e.g., $SO(3)$, $E(3)$). An evolution-parameter-dependent transformation traces a **smooth path** $\lambda \mapsto F_\lambda$ in $G$; it is not itself a group element, but it yields one at every $\lambda$.
+
+</br>
+
 ---
 
 <a id="math-spec-tangents"></a>
@@ -423,6 +495,309 @@ The metric identifies $T_p M$ with its dual space $T_p^* M$, enabling index rais
 
 ---
 
+## Transformation Groups
+
+Many useful frame transformations form **groups**[^group] under composition. A transformation group is a collection of maps
+
+$$
+F : M \to M
+$$
+
+closed under composition and inversion. These groups classify the kinds of coordinate and frame transformations that may appear in `coordinax`.
+
+Different groups preserve different geometric structures (smooth structure, affine structure, metric structure, spacetime interval, etc.).
+
+Transformation groups describe classes of maps acting on manifolds that preserve specific geometric structure.
+
+Mathematically, a transformation group acting on a manifold $M$ is a group $G$ together with an action
+
+$$
+\tau : G \times M \to M
+$$
+
+satisfying
+
+$$
+\tau(e, p) = p, \qquad
+\tau(g_1 g_2, p) = \tau(g_1, \tau(g_2, p)).
+$$
+
+Equivalently, each element $g \in G$ defines a map
+
+$$
+\tau_g : M \to M,
+$$
+
+and the assignment $g \mapsto \tau_g$ is a group homomorphism
+
+$$
+\rho : G \to \mathrm{Diff}(M).
+$$
+
+[^group]: A **group** is a set $G$ together with a binary operation $\cdot : G \times G \to G$ satisfying four axioms: (1) **Closure**: $a \cdot b \in G$ for all $a, b \in G$; (2) **Associativity**: $(a \cdot b) \cdot c = a \cdot (b \cdot c)$ for all $a, b, c \in G$; (3) **Identity**: there exists $e \in G$ such that $e \cdot a = a \cdot e = a$ for all $a \in G$; (4) **Inverses**: for each $a \in G$ there exists $a^{-1} \in G$ such that $a \cdot a^{-1} = a^{-1} \cdot a = e$.
+
+```text
+flowchart TD
+    Id["Trivial group {e}"]
+
+    Diff["Diffeomorphism group Diff(M)"]
+
+    AffE["Affine group Aff(R^n) = GL(n) ⋉ R^n"]
+    E["Euclidean group E(n) = O(n) ⋉ R^n"]
+    O["Orthogonal group O(n)"]
+    SO["Special orthogonal group SO(n)"]
+
+    AffM["Affine group of Minkowski spacetime Aff(R^4) = GL(4) ⋉ R^4"]
+    P["Poincare group IO(1,3) = O(1,3) ⋉ R^4"]
+    Lor["Lorentz group O(1,3)"]
+    SOLor["Proper orthochronous Lorentz group SO^+(1,3)"]
+
+    Id --> SO
+    Id --> SOLor
+
+    SO --> O
+    O --> E
+    E --> AffE
+    AffE --> Diff
+
+    SOLor --> Lor
+    Lor --> P
+    P --> AffM
+    AffM --> Diff
+```
+
+Every transformation group contains the **identity transformation**
+
+$$
+\mathrm{id}_M(p) = p
+$$
+
+which acts as the neutral element under composition.
+
+### Trivial Group
+
+The **trivial group** contains only the identity transformation:
+
+$$
+G = \{ e \}
+$$
+
+This group represents the absence of any transformation.
+
+```{admonition} Examples
+:class: dropdown
+
+- identity frame transformation
+```
+
+### Diffeomorphism Group $\mathrm{Diff}(M)$
+
+A **diffeomorphism** is a smooth, bijective map with a smooth inverse.
+
+$$
+F : M \to M
+$$
+
+Diffeomorphisms preserve the **smooth structure** of the manifold but need not preserve distances, angles, or straight lines.
+
+The collection of all such maps forms the **diffeomorphism group**:
+
+$$
+\mathrm{Diff}(M).
+$$
+
+This is the largest transformation group normally considered in differential geometry.
+
+```{admonition} Examples
+:class: dropdown
+
+- coordinate system changes
+- nonlinear coordinate wraps
+- accelerated coordinate systems
+- Rindler coordinate transformations
+- general smooth reparameterizations
+- nonlinear warps
+```
+
+### Affine Group $\mathrm{Aff}(\mathbb{R}^n)$
+
+If the manifold has an **affine structure**, transformations may preserve straight lines and parallelism. These transformations form the affine group.
+
+An affine transformation has the form
+
+$$
+x \mapsto Ax + b
+$$
+
+where $A \in GL(n)$ and $b \in \mathbb{R}^n$.
+
+Affine transformations preserve:
+
+- straight lines
+- parallelism
+- ratios along lines
+
+but do **not** necessarily preserve distances or angles.
+
+```{admonition} Examples
+:class: dropdown
+
+- translations
+- linear transformations
+- scalings
+- shears
+- coordinate rescalings
+```
+
+### Special Orthogonal Group $SO(n)$
+
+The **special orthogonal group** consists of rotations that preserve orientation and Euclidean distance.
+
+$$
+R^T R = I, \quad \det R = 1
+$$
+
+These transformations preserve:
+
+- distances
+- angles
+- orientation
+
+```{admonition} Examples
+:class: dropdown
+
+- spatial rotations
+- rotation matrices
+- rigid rotations of coordinate frames
+```
+
+### Orthogonal Group $O(n)$
+
+The orthogonal group extends $SO(n)$ to include **reflections**.
+
+$$
+\det R = \pm 1
+$$
+
+Transformations preserve distances but may reverse orientation.
+
+```{admonition} Examples
+:class: dropdown
+
+- reflections across planes
+- mirror symmetry
+- rotations combined with reflections
+```
+
+### Euclidean Group $E(n)$
+
+The Euclidean group consists of all **distance-preserving transformations of Euclidean space**.
+
+$$
+E(n) = O(n) \ltimes \mathbb{R}^n
+$$
+
+It combines rotations, reflections, and translations.
+
+These transformations preserve:
+
+- distances
+- angles
+- rigid body structure
+
+```{admonition} Examples
+:class: dropdown
+
+- translations
+- rotations
+- reflections
+- rigid body motions
+```
+
+### Lorentz Group $O(1,3)$
+
+In relativistic spacetime, coordinate transformations that preserve the Minkowski interval form the Lorentz group.
+
+$$
+s^2 = -c^2 t^2 + x^2 + y^2 + z^2
+$$
+
+Lorentz transformations satisfy
+
+$$
+\eta_{\alpha\beta}\Lambda^\alpha{}_\mu\Lambda^\beta{}_\nu = \eta_{\mu\nu}
+$$
+
+where $\eta$ is the Minkowski metric.
+
+```{admonition} Examples
+:class: dropdown
+
+- Lorentz boosts
+- spatial rotations in spacetime
+- time reversal
+- parity transformations
+```
+
+### Proper Orthochronous Lorentz Group $SO^+(1,3)$
+
+The physically relevant subgroup of the Lorentz group excludes parity and time reversal.
+
+This subgroup preserves:
+
+- spacetime orientation
+- direction of time
+
+```{admonition} Examples
+:class: dropdown
+
+- Lorentz boosts
+- spatial rotations
+```
+
+### Poincaré Group $IO(1,3)$
+
+The **Poincaré group** extends the Lorentz group with spacetime translations.
+
+$$
+x'^\mu = \Lambda^\mu{}_{\nu} x^\nu + a^\mu
+$$
+
+It is the full group of **isometries of Minkowski spacetime**.
+
+```{admonition} Examples
+:class: dropdown
+
+- spacetime translations
+- Lorentz boosts
+- spacetime rotations
+- inertial frame transformations
+```
+
+### Minkowski Affine Group
+
+The affine group of Minkowski spacetime consists of transformations
+
+$$
+x \mapsto Ax + b
+$$
+
+with $A \in GL(4)$.
+
+These transformations preserve affine structure but not necessarily the Minkowski metric.
+
+```{admonition} Examples
+:class: dropdown
+
+- linear spacetime transformations
+- shears in spacetime coordinates
+- coordinate scalings
+```
+
+</br>
+
+---
+
 # Packages
 
 ```{contents}
@@ -445,7 +820,9 @@ A non-exhaustive table of exported objects are:
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jacobian_pt_map`, `realize_cartesian`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, </br> `PointGeometry`, `point_geom`, </br> `NoBasis`, `no_basis`, </br> `Location`, `loc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
-| `coordinax.manifolds` | `EuclideanManifold`, `EuclideanMetric`,`euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `guess_manifold`, `scale_factors`, `angle_between`, |
+| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
+| `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
+| `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `TransformedReferenceFrame` |
 
 </br>
 
@@ -1533,12 +1910,17 @@ Separating semantics from geometry provides two advantages:
     - ``data``: the data for each component.
     - ``chart``: the chart of the vector, e.g. ``cxc.cart3d``.
     - ``rep``: the `coordinax.representations.Representation`, e.g. `cxr.point`.
+    - ``frame``: the reference frame, e.g. ``cxf.alice``. Optional; defaults to
+      ``cxf.noframe`` when not provided.
 
     Methods \& Properties:
 
     - ``__getitem__()``
     - ``__pdoc__()``
-    - ``cconvert()``
+    - ``cconvert()`` — chart conversion; preserves ``frame``.
+    - ``to_frame(toframe, t=None) -> Point`` — frame transform; applies the
+      frame transition ``self.frame -> toframe`` to the data and returns a new
+      ``Point`` with the updated data and ``frame=toframe``.
     - ``aval()``
     - ``shape``
     - ``norm()``
@@ -1556,6 +1938,13 @@ Separating semantics from geometry provides two advantages:
     - ``(Array,unit) -> (Q,) -> ... -> Point``
     - ``(Array,unit,C) -> ... -> Point``
     - ``(Array,unit,C,R) -> ... -> Point``
+    - ``(Point, frame) -> Point`` — identity on data, replaces frame.
+    - ``(Vector, frame) -> Point`` — wraps vector data with given frame.
+    - ``(obj, chart, rep, manifold, frame) -> Point``
+    - ``(obj, chart, rep, frame) -> Point``
+    - ``(obj, chart, frame) -> Point``
+    - ``(obj, frame) -> Point``
+    - ``(Array, unit, frame) -> Point``
 
 !!! info `ToUnitsOptions`
 
@@ -3105,3 +3494,421 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> chart.components
     ('theta', 'phi')
     ```
+
+</br>
+
+<a id="software-spec-transforms"></a>
+
+## Transforms
+
+The canonical transformation API is exposed by `coordinax.transforms`, which is typically imported as `import coordinax.transforms as cxfm`.
+
+Frame objects in `coordinax.frames` depend on `coordinax.transforms` for operator definitions; frame transitions are constructed in `coordinax.frames` and returned as `cxfm.AbstractTransform` instances.
+
+### Transformation Groups
+
+Transformation groups classify families of coordinate transformations that preserve particular geometric structures. In _coordinax_, these are represented by subclasses of `AbstractTransformGroup`.
+
+A transformation-group class identifies the **structural category** of a transformation (for example affine, orthogonal, or Lorentz). These classes do **not** represent concrete group elements. Instead they are used to
+
+- classify transformations,
+- constrain which transformations are valid for a given manifold,
+- support dispatch when constructing or applying frame transformations.
+
+The currently supported transformation-group hierarchy is:
+
+```text
+flowchart TD
+    Diff["DiffeomorphismGroup"]
+    Aff["AffineGroup"]
+    E["EuclideanGroup"]
+    O["OrthogonalGroup"]
+    SO["SpecialOrthogonalGroup"]
+    Lor["LorentzGroup"]
+    LorP["ProperOrthochronousLorentzGroup"]
+    Point["PoincareGroup"]
+    Id["IdentityGroup"]
+
+    Diff --> Aff
+    Aff --> E
+    Aff --> O
+    O --> SO
+    O --> Lor
+    Lor --> LorP
+    Diff --> Point
+```
+
+Each group corresponds to a set of transformations preserving a particular geometric structure.
+
+(software-spec-identitygroup)=
+
+!!! info `IdentityGroup`
+
+    The trivial transformation group containing only the identity map.
+
+    Its single element acts as
+
+    $$
+    p \mapsto p
+    $$
+
+    for every point $p$ on the manifold.
+
+(software-spec-diffeomorphismgroup)=
+
+!!! info `DiffeomorphismGroup`
+
+    The group of smooth invertible self-maps of a manifold.
+
+    Its elements are **diffeomorphisms**
+
+    $$
+    f : M \to M
+    $$
+
+    such that both $f$ and $f^{-1}$ are smooth.
+
+    This is the largest natural transformation group associated with a smooth manifold.
+
+(software-spec-affinegroup)=
+
+!!! info `AffineGroup`
+
+    The group of affine transformations of an affine space.
+
+    In coordinates, an affine transformation takes the form
+
+    $$
+    x \mapsto A x + b
+    $$
+
+    where $A$ is an invertible linear map and $b$ is a translation vector.
+
+    Affine transformations preserve affine combinations and parallelism.
+
+(software-spec-euclideangroup)=
+
+!!! info `EuclideanGroup`
+
+    The group of Euclidean isometries of Euclidean space.
+
+    Its elements preserve the Euclidean metric
+
+    $$
+    d(f(x), f(y)) = d(x, y)
+    $$
+
+    for all points $x, y$.
+
+    In coordinates these correspond to **rigid motions**, including
+
+    - translations
+    - rotations
+    - reflections
+
+(software-spec-orthogonalgroup)=
+
+!!! info `OrthogonalGroup`
+
+    The group of orthogonal linear transformations.
+
+    These transformations preserve a quadratic form and fix the origin. In Euclidean space they satisfy
+
+    $$
+    Q^{\mathsf T} Q = I.
+    $$
+
+    Elements correspond to rotations and reflections about the origin.
+
+(software-spec-specialorthogonalgroup)=
+
+!!! info `SpecialOrthogonalGroup`
+
+    The subgroup of the orthogonal group with determinant
+
+    $$
+    \det(Q) = +1.
+    $$
+
+    These transformations preserve both the inner product and the orientation of space. In Euclidean space they correspond to **rotations**.
+
+(software-spec-lorentzgroup)=
+
+!!! info `LorentzGroup`
+
+    The group of linear isometries of Minkowski spacetime.
+
+    Its elements preserve the Minkowski bilinear form
+
+    $$
+    \eta(v, w).
+    $$
+
+    Equivalently, matrices in this group satisfy
+
+    $$
+    \Lambda^{\mathsf T} \eta \Lambda = \eta.
+    $$
+
+(software-spec-properorthochronouslorentzgroup)=
+
+!!! info `ProperOrthochronousLorentzGroup`
+
+    The identity component of the Lorentz group.
+
+    These transformations preserve
+
+    - spatial orientation
+    - time orientation
+
+    and are continuously connected to the identity transformation.
+
+(software-spec-poincaregroup)=
+
+!!! info `PoincareGroup`
+
+    The group of isometries of Minkowski spacetime.
+
+    It is the semidirect product
+
+    $$
+    \mathbb{R}^{1,3} \rtimes O(1,3)
+    $$
+
+    consisting of spacetime translations combined with Lorentz transformations.
+
+    The Poincaré group preserves the Minkowski metric and therefore the spacetime interval.
+
+</br>
+
+### Concrete Transforms
+
+(software-spec-transforms-identity)=
+
+!!! info `Identity`
+
+    The identity transformation, which acts as the identity map on all representations.
+
+    $$
+    I : p \mapsto p
+    $$
+
+(software-spec-transforms-translate)=
+
+!!! info `Translate`
+
+    A **Translate** is a transformation that adds a constant displacement to position components while leaving other representations unchanged.
+
+    **Mathematical definition**:
+
+    The transform shifts all points by a constant displacement vector:
+
+    $$
+    F(p) = p + a .
+    $$
+
+    In Cartesian coordinates this is $ x’ = x + a .$
+
+    A time-dependent translation replaces the constant $a$ with a smooth curve $a(t)$:
+
+    $$
+    F_t(p) = p + a(t).
+    $$
+
+    **Fields:**
+
+    - `delta : CDict | Callable[[tau], CDict]` — the position offset $\Delta x$. If callable, evaluated at the time parameter `tau`.
+    - `chart : AbstractChart` — the chart in which `delta` is expressed (static).
+    - `right_add : bool` (default `True`) — whether to compute $x + \Delta x$ (``True``) or $\Delta x + x$ (``False``).
+
+    **Inverse:**
+
+    ```text
+    translate.inverse == Translate(-delta, chart)
+    ```
+
+    **Composition:** Two `Translate` instances with the same chart combine by adding their `delta` values:
+
+    ```text
+    Translate(delta1) + Translate(delta2) == Translate(delta1 + delta2)
+    ```
+
+(software-spec-transforms-rotate)=
+
+!!! info `Rotate`
+
+    A **Rotate** is a transformation that applies a linear orthogonal map to position components while leaving other representations unchanged.
+
+    **Mathematical definition**:
+
+    A rotation is a linear transformation preserving orientation and distances in Euclidean space. In $\mathbb{R}^n$, rotations are represented by orthogonal matrices with unit determinant:
+
+    $$
+    R^T R = I, \quad \det R = 1 .
+    $$
+
+    Rotations form the special orthogonal group $ SO(n).$ A time-dependent rotation replaces the fixed matrix $R$ with a smooth path $R(t) \in SO(n)$:
+
+    $$
+    F_t(p) = R(t)\, p.
+    $$
+
+    **Fields:**
+
+    - `matrix : CDict | Callable[[tau], CDict]` — the rotation matrix $Q$. If callable, evaluated at the time parameter `tau`.
+    - `chart : AbstractChart` — the chart in which `matrix` is expressed (static).
+
+    **Inverse:**
+
+    ```text
+    rotate.inverse == Rotate(matrix.T, chart)
+    ```
+
+    **Composition:** Two `Rotate` instances with the same chart combine by matrix multiplication of their `matrix` fields:
+
+    ```text
+    Rotate(Q1) + Rotate(Q2) == Rotate(Q2 @ Q1)
+    ```
+
+!!! info `Reflect`
+
+    A **Reflect** is a transformation that applies a linear orthogonal map with determinant -1 to position components while leaving other representations unchanged.
+
+    **Mathematical definition**:
+
+    A reflection is a linear transformation that reverses orientation across a hyperplane. Reflections preserve distances but have determinant -1.
+
+    In Euclidean space, reflection across the hyperplane orthogonal to a nonzero normal vector $n$ is represented by the Householder matrix
+
+    $$
+    H_n = I - 2 \hat{n}\hat{n}^T,
+    $$
+
+    where $\hat{n} = n / \|n\|$. The corresponding transformation law is
+
+    $$
+    F(p) = H_n p.
+    $$
+
+    This matrix is orthogonal, symmetric, and involutive:
+
+    $$
+    H_n^T H_n = I, \qquad H_n^T = H_n, \qquad H_n^2 = I.
+    $$
+
+    In `coordinax`, the `Reflect` transform denotes exactly this hyperplane reflection semantics.
+
+    Together with rotations, reflections generate the orthogonal group $ O(n). $
+
+    **Fields:**
+
+    - `matrix : CDict | Callable[[tau], CDict]` — the reflection matrix $Q$. If callable, evaluated at the time parameter `tau`.
+    - `chart : AbstractChart` — the chart in which `matrix` is expressed (static).
+
+    **Inverse:**
+
+    ```text
+    reflect.inverse == Reflect(matrix.T, chart)
+    ```
+
+    **Composition:** Two `Reflect` instances with the same chart combine by matrix multiplication of their `matrix` fields:
+
+    ```text
+    Reflect(Q1) + Reflect(Q2) == Reflect(Q2 @ Q1)
+    ```
+
+(software-spec-transforms-scaling)=
+
+!!! info `Scale`
+
+    A **Scale** is a transformation that applies a linear scaling to position components while leaving other representations unchanged.
+
+    **Mathematical definition**:
+
+    A scaling is a linear map that rescales coordinate magnitudes along one or more axes. In Cartesian coordinates with diagonal scale factors $s = (s_1, \ldots, s_n)$:
+
+    $$
+    F(p) = S p, \qquad S = \operatorname{diag}(s_1, \ldots, s_n).
+    $$
+
+    Uniform scaling uses $s_1 = \cdots = s_n = s$; anisotropic scaling allows different factors per axis. Invertibility requires $s_i \neq 0$ for all $i$.
+
+    In `coordinax`, the `Scale` transform denotes this diagonal linear scaling semantics.
+
+    **Fields:**
+
+    - `factor : float | Callable[[tau], float]` — the scaling factor $s$. If callable, evaluated at the time parameter `tau`.
+    - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
+
+    **Inverse:**
+
+    ```text
+    scaling.inverse == Scaling(1 / factor, chart)
+    ```
+
+    **Composition:** Two `Scaling` instances with the same chart combine by multiplying their `factor` values:
+
+    ```text
+    Scaling(s1) + Scaling(s2) == Scaling(s1 * s2)
+    ```
+
+!!! info `Shear`
+
+    A **Shear** is a transformation that applies a linear shear map to position components while leaving other representations unchanged.
+
+    **Mathematical definition**:
+
+    A shear is a linear affine transform that preserves parallelism while shifting coordinates along one axis proportionally to another. In matrix form:
+
+    $$
+    F(p) = H p,
+    $$
+
+    where $H$ is an invertible shear matrix (typically with ones on the diagonal and one or more off-diagonal shear coefficients).
+
+    In `coordinax`, the `Shear` transform denotes this purely spatial linear shear semantics.
+
+    **Fields:**
+
+    - `factor : float | Callable[[tau], float]` — the shear factor $k$. If callable, evaluated at the time parameter `tau`.
+    - `chart : AbstractChart` — the chart in which `factor` is expressed (static).
+
+    **Inverse:**
+
+    ```text
+    shear.inverse == Shear(-factor, chart)
+    ```
+
+    **Composition:** Two `Shear` instances with the same chart combine by adding their `factor` values:
+
+    ```text
+    Shear(k1) + Shear(k2) == Shear(k1 + k2)
+    ```
+
+</br>
+
+(software-spec-frames)=
+
+## Frames
+
+The canonical frame API is exposed by `coordinax.frames`, which is typically imported as `import coordinax.frames as cxf`.
+
+A **reference frame** is an abstract label used to identify a coordinate description of points. Frame objects do not store coordinates; they classify which frame is in use.
+
+**Frame transitions** (`frame_transition`) map a pair of frames to the `AbstractTransform` that converts from one to the other. This transform is then applied via `act`.
+
+(software-spec-abstractreferenceframe)=
+
+!!! info `AbstractReferenceFrame`
+
+    Abstract base class for reference frames.
+
+(software-spec-alice)=
+
+!!! info `Alice` and `Alex`
+
+    Two example reference frames for testing and illustration.
+
+    - `frame_transition(Alice, Alice)` → `Identity()`
+    - `frame_transition(Alex, Alex)` → `Identity()`
+    - `frame_transition(Alice, Alex)` → a `Translate | Rotate` composition.

@@ -13,7 +13,7 @@ import jax
 import jax.tree as jtu
 import plum
 import quax_blocks
-import wadler_lindig as wl  # type: ignore[import-untyped]
+import wadler_lindig as wl
 from quax import ArrayValue
 
 import quaxed.numpy as jnp
@@ -21,8 +21,10 @@ import unxt as u
 from dataclassish import field_items
 
 import coordinax.charts as cxc
+import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
+import coordinax.transforms as cxfm
 from .custom_types import HasShape
 
 if TYPE_CHECKING:
@@ -186,6 +188,9 @@ class AbstractVector(
 
     manifold: eqx.AbstractVar[cxm.AbstractManifold]
     """The manifold the vector lives in."""
+
+    frame: eqx.AbstractVar[cxf.AbstractReferenceFrame]
+    """The reference frame of the point. Defaults to ``cxf.noframe``."""
 
     # ---------------------------------
     # Constructors
@@ -555,3 +560,44 @@ class AbstractVector(
         msg = "TODO"
         raise NotImplementedError(msg)
         # return self.chart.norm(self.data, *args)
+
+    # ===============================================================
+    # Frame API
+
+    def to_frame(
+        self, toframe: cxf.AbstractReferenceFrame, /, t: u.Q | None = None
+    ) -> "AbstractVector":
+        """Transform the vector to a specified reference frame.
+
+        Parameters
+        ----------
+        toframe : AbstractReferenceFrame
+            The target reference frame.
+        t : Quantity, optional
+            The evolution parameter (e.g. time). Defaults to 0 s.
+
+        Returns
+        -------
+        AbstractVector
+            New vector with the data transformed into ``toframe`` and
+            ``frame=toframe``.
+
+        Examples
+        --------
+        >>> import coordinax.main as cx
+        >>> import coordinax.frames as cxf
+
+        >>> p = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)
+        >>> p.to_frame(cxf.alice) is p
+        True
+
+        """
+        op = self.frame.frame_transition(toframe)
+
+        # Special case for identity operations (same frame)
+        if isinstance(op, cxfm.Identity):
+            return self  # ty: ignore[invalid-return-type]
+
+        # Otherwise, apply the transformation and return a new point
+        new = cxfm.act(op, t, self)
+        return dataclasses.replace(new, frame=toframe)

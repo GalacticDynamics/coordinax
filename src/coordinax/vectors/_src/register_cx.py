@@ -4,19 +4,21 @@ __all__: tuple[str, ...] = ()
 
 from dataclasses import replace
 
-from typing import cast
+from typing import Any, cast
 
 import plum
 
+import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+import coordinax.transforms as cxfm
 from .point import Point
 from coordinax.internal.custom_types import CDict, OptUSys
 
-# ===================================================================
-# Point conversion
-
 CHART_MSMTCH = "from_chart {0} does not match the point's chart {1.chart}"
+
+# ===================================================================
+# Vector conversion
 
 
 @plum.dispatch
@@ -222,3 +224,35 @@ def subtract(lhs: Point, rhs: Point, /) -> Point:
         lhs.data, lhs.chart, lhs.rep, rhs.data, rhs.chart, rhs.rep
     )
     return replace(lhs, data=result_data)
+
+
+# ===================================================================
+# `coordinax.representations`
+
+
+@plum.dispatch
+def act(op: cxfm.AbstractTransform, tau: Any, x: Point, /, **kw: Any) -> Point:
+    """Act a frame transform on a Point.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+
+    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+    >>> op = cx.Rotate(Rz)
+    >>> q = u.Q([1, 0, 0], "km")
+    >>> vec = cx.Point.from_(q)
+    >>> print(vec)
+    <Point: chart=Cart3D (x, y, z) [km]
+        [1 0 0]>
+
+    >>> transformed_vec = cx.act(op, None, vec)
+    >>> print(transformed_vec)
+    <Point: chart=Cart3D (x, y, z) [km]
+        [0 1 0]>
+
+    """
+    data = cxfmapi.act(op, tau, x.data, x.chart, x.rep, **kw)
+    return replace(x, data=data)

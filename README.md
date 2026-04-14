@@ -124,7 +124,46 @@ True
 >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(1.0, "km")}
 >>> M.pt_map(q, cx.cart2d, cx.polar2d)
 {'r': Q(1.41421356, 'km'), 'theta': Q(0.78539816, 'rad')}
+```
 
+### Astronomy Frames
+
+Astronomy frames require the `[astro]` extra (`pip install "coordinax[astro]"`) or to separately install the `coordinax-astro` package.
+
+`to_frame` composes the full transformation chain automatically. The example below converts from ICRS to the Galactic bar frame, which co-rotates at pattern speed $\Omega_b$ relative to Galactocentric. A time-dependent `Rotate` operator captures the rotation; `TransformedReferenceFrame` wraps the base frame with it; `frame_transition` fuses the resulting ICRS -> GCF -> bar chain on-the-fly:
+
+```pycon
+>>> import jax.numpy as jnp
+>>> import coordinax.main as cx
+>>> import coordinax.astro as cxastro
+>>> import coordinax.frames as cxf
+>>> import coordinax.transforms as cxfm
+>>> import unxt as u
+
+>>> # ICRS -> Galactocentric (static: rotate, translate, rotate)
+>>> sun = cx.Point.from_([0, 0, 0], "pc", cxastro.ICRS())
+>>> print(sun.to_frame(cxastro.Galactocentric()))
+<Point: chart=Cart3D (x, y, z) [pc]
+    [-8121.973     0.       20.8  ]>
+
+>>> # Bar frame co-rotating at Omega_b — Rotate accepts a callable for t-dependence
+>>> Omega_b = u.Q(0.0409, "rad/Myr")  # approx 40 km/s/kpc
+>>> def R_bar(t):
+...     theta = u.ustrip("rad", Omega_b * t)
+...     ct, st = jnp.cos(theta), jnp.sin(theta)
+...     return jnp.array([[ct, st, 0.0], [-st, ct, 0.0], [0.0, 0.0, 1.0]])
+...
+
+>>> bar_frame = cxf.TransformedReferenceFrame(cxastro.Galactocentric(), cxfm.Rotate(R_bar))
+
+>>> # ICRS -> bar: frame_transition fuses all four operators
+>>> cx.frame_transition(cxastro.ICRS(), bar_frame)
+Composed((...))
+
+>>> # Sun's ICRS-origin position expressed in the bar frame at t = 500 Myr
+>>> print(sun.to_frame(bar_frame, t=u.Q(500.0, "Myr")))
+<Point: chart=Cart3D (x, y, z) [pc]
+    [ 240.763 8118.404   20.8  ]>
 ```
 
 ## Citation

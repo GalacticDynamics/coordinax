@@ -39,7 +39,7 @@ pos = cx.Spherical3D(
     theta=u.Q(45, "deg"),
     phi=u.Q(30, "deg"),
 )
-icrs_coord = cx.Coordinate(pos, frame=cxa.ICRS())
+icrs_coord = cx.Point(pos, frame=cxa.ICRS())
 
 # Transform to Galactocentric frame
 galactocentric = icrs_coord.to_frame(cxa.Galactocentric())
@@ -76,7 +76,7 @@ Transform coordinates between reference frames:
 
 ```
 # Create a coordinate in one frame
-coord_icrs = cx.Coordinate(pos, frame=cxa.ICRS())
+coord_icrs = cx.Point(pos, frame=cxa.ICRS())
 
 # Transform to another frame
 coord_gal = coord_icrs.to_frame(cxa.Galactocentric())

@@ -147,6 +147,80 @@ Array(True, dtype=bool)
 
 This does **not** mean that arbitrary point CDicts are automatically tangent vectors. The chart and manifold tell coordinax how to interpret the component data.
 
+## Applying Transforms
+
+Use `cxfm.act()` with explicit chart and representation. A CDict alone does not know which chart it belongs to, so you must provide that context:
+
+```{code-block} python
+>>> rot90z = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+
+>>> d = {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
+>>> result = cxfm.act(rot90z, None, d, cxc.cart3d, cxr.point)
+>>> sorted(result.keys())
+['x', 'y', 'z']
+```
+
+Translation:
+
+```{code-block} python
+>>> shift = cxfm.Translate.from_([1, 2, 3], "km")
+
+>>> d_origin = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
+>>> result = cxfm.act(shift, None, d_origin, cxc.cart3d, cxr.point)
+>>> result["x"]
+Q(1, 'km')
+>>> result["y"]
+Q(2, 'km')
+>>> result["z"]
+Q(3, 'km')
+```
+
+Identity transform returns the exact same object:
+
+```{code-block} python
+>>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+>>> result = cxfm.act(cxfm.Identity(), None, d)
+>>> result is d
+True
+```
+
+## Upgrading To A Point
+
+Promote a CDict to a `Point` by providing chart context:
+
+```{code-block} python
+>>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+
+>>> v = cx.Point.from_(d, cxc.cart3d)
+>>> v.chart
+Cart3D()
+
+>>> isinstance(v, cx.Point)
+True
+```
+
+With chart inference (keys are recognized as Cartesian):
+
+```{code-block} python
+>>> v = cx.Point.from_(d)
+>>> v.chart
+Cart3D()
+```
+
+## Upgrading To A Coordinate
+
+Go all the way to a `Coordinate` by providing chart and frame:
+
+```{code-block} python
+>>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+
+>>> coord = cx.Point.from_(d, cxc.cart3d, cxf.alice)
+>>> coord.chart
+Cart3D()
+>>> coord.frame
+Alice()
+```
+
 ## Data Access
 
 CDicts support all standard dictionary operations:
@@ -165,6 +239,24 @@ Q(1, 'km')
 
 >>> "x" in d
 True
+```
+
+## JAX Integration
+
+Python dicts are native JAX PyTrees, so CDicts work with `jit` and `vmap` directly:
+
+```{code-block} python
+>>> @jax.jit
+... def rotate_cdict(d):
+...     rot = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+...     return cxfm.act(rot, None, d, cxc.cart3d, cxr.point)
+
+>>> import jax
+
+>>> d = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+>>> result = rotate_cdict(d)
+>>> sorted(result.keys())
+['x', 'y', 'z']
 ```
 
 ## When To Use CDict

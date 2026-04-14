@@ -35,6 +35,18 @@ __all__ = (  # distances
     "EmbeddedManifold",
     "CustomAtlas",
     "CustomManifold",
+    # frames -- frames
+    "noframe",
+    # frame -- transforms
+    "act",
+    "frame_transition",
+    "simplify",
+    "Composed",
+    "identity",
+    "Rotate",
+    "Translate",
+    "Scale",
+    "Shear",
     # representations
     "cconvert",
     "add",
@@ -76,6 +88,7 @@ from coordinax.charts import (
     time1d,
 )
 from coordinax.distances import Distance
+from coordinax.frames import frame_transition, noframe
 from coordinax.manifolds import (
     CustomAtlas,
     CustomManifold,
@@ -99,6 +112,16 @@ from coordinax.representations import (
     point,
     point_geom,
     subtract,
+)
+from coordinax.transforms import (
+    Composed,
+    Rotate,
+    Scale,
+    Shear,
+    Translate,
+    act,
+    identity,
+    simplify,
 )
 from coordinax.vectors import Point, ToUnitsOptions
 

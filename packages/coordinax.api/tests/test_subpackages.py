@@ -14,3 +14,8 @@ def test_has_subpackage_representations() -> None:
 def test_has_subpackage_manifolds() -> None:
     """Test that the manifolds subpackage is importable."""
     import coordinax.api.manifolds as cxmapi  # noqa: F401
+
+
+def test_has_subpackage_frames() -> None:
+    """Test that the frames subpackage is importable."""
+    import coordinax.api.frames as cxfapi  # noqa: F401

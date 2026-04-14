@@ -26,6 +26,8 @@ guides/charts.md
 guides/manifolds.md
 guides/representations.md
 guides/vectors.md
+guides/frames.md
+guides/transforms.md
 packages/coordinax.hypothesis/testing-guide
 Performance <guides/perf.ipynb>
 ```
@@ -143,6 +145,7 @@ import coordinax.api
 import coordinax.astro
 import coordinax.charts
 import coordinax.distances
+import coordinax.frames
 import coordinax.hypothesis
 import coordinax.interop
 import coordinax.main
@@ -153,11 +156,12 @@ import coordinax.vectors
 
 ```{code-block} python
 >>> import coordinax
+>>> import sys
 
->>> from inspect import ismodule
->>> [name for name in dir(coordinax)
-...  if not name.startswith("_") and ismodule(getattr(coordinax, name))]
-['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main', 'manifolds', 'representations', 'vectors']
+>>> sorted(name.removeprefix("coordinax.")
+...        for name in sys.modules
+...        if name.startswith("coordinax.") and name.count(".") == 1)
+['angles', 'api', 'astro', 'charts', 'distances', 'frames', 'hypothesis', 'internal', 'interop', 'main', 'manifolds', 'representations', 'transforms', 'vectors']
 ```
 
 We recommend importing as needed:
@@ -166,8 +170,10 @@ We recommend importing as needed:
 - `coordinax.angles` as `cxa` : further angle-specific functionality.
 - `coordinax.distances` as `cxd` : further distance-specific functionality.
 - `coordinax.charts` as `cxc` : chart-specific functionality.
+- `coordinax.frames` as `cxf` : frame-specific functionality.
 - `coordinax.manifolds` as `cxm` : manifold-specific functionality.
 - `coordinax.representations` as `cxr` : representation-specific functionality.
+- `coordinax.transforms` as `cxt` : transform-specific functionality.
 - `coordinax.vectors` as `cxv` : vector-specific functionality.
 
 - `coordinax.astro` as `cxastro` : astronomy-specific functionality. Note that this package is an optional extra, so you may need to install it separately.

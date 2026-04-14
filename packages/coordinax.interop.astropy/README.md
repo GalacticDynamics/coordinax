@@ -79,13 +79,11 @@ galcen = cx.Point.from_(
     cxc.lonlat_sph3d,
     cxr.point,
 )
-galcen_v_sun = cx.Point.from_(u.Q([11.1, 244, 7.25], "km/s"))
 
 cx_galcen = cxa.Galactocentric(
     galcen=galcen,
     z_sun=u.Q(20.8, "pc"),
     roll=u.Q(0, "deg"),
-    galcen_v_sun=galcen_v_sun,
 )
 apy_galcen = convert(cx_galcen, apyc.Galactocentric)
 

@@ -21,6 +21,7 @@ import unxt as u
 import unxt.quantity as uq
 
 import coordinax.charts as cxc
+import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 from .base import AbstractVector
@@ -40,6 +41,15 @@ SemanticT = TypeVar(
     "SemanticT", bound=cxr.AbstractSemanticKind, default=cxr.AbstractSemanticKind
 )
 V = TypeVar("V", bound=HasShape, default=u.Q)
+
+
+def _frame_converter(v: Any, /) -> cxf.AbstractReferenceFrame:
+    """Convert a value to an AbstractReferenceFrame, with None -> noframe."""
+    if v is None:
+        return cxf.noframe
+    if isinstance(v, cxf.AbstractReferenceFrame):
+        return v
+    return cxf.TransformedReferenceFrame.from_(v)  # ty: ignore[invalid-return-type]
 
 
 @final
@@ -131,6 +141,11 @@ class Point(
 
     manifold: cxm.AbstractManifold = eqx.field()
     """The manifold the vector lives in."""
+
+    frame: cxf.AbstractReferenceFrame = eqx.field(
+        default=cxf.noframe, converter=_frame_converter
+    )
+    """The reference frame of the point. Defaults to ``cxf.noframe``."""
 
     def _check_init(self) -> None:
         # Pass a check to self.chart.check_data
@@ -493,6 +508,151 @@ def from_(
 
     """
     return cls.from_(u.Q(obj, u.unit(unit)), chart, rep)  # re-dispatch
+
+
+# -------------------------------------
+# Frame-aware constructors
+
+
+@Point.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(
+    cls: type[Point],
+    obj: Point,
+    frame: cxf.AbstractReferenceFrame,
+    /,
+) -> Point:
+    """Construct a point from another point, replacing its frame.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+
+    >>> p = cx.Point.from_([1, 0, 0], "km")
+    >>> p2 = cx.Point.from_(p, cxf.alice)
+    >>> p2.frame
+    Alice()
+
+    >>> # Replace an existing frame
+    >>> p3 = cx.Point.from_(p2, cxf.noframe)
+    >>> p3.frame == cxf.noframe
+    True
+
+    """
+    return replace(obj, frame=frame)
+
+
+@Point.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(
+    cls: type[Point],
+    obj: Any,
+    frame: cxf.AbstractReferenceFrame,
+    /,
+) -> Point:
+    """Construct a point from any object with a frame.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+    >>> import unxt as u
+
+    >>> p = cx.Point.from_(
+    ...     {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
+    ...     cxf.alice,
+    ... )
+    >>> p.frame
+    Alice()
+
+    """
+    p = cls.from_(obj)
+    return replace(p, frame=frame)
+
+
+@Point.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(
+    cls: type[Point],
+    obj: Any,
+    chart: cxc.AbstractChart,
+    frame: cxf.AbstractReferenceFrame,
+    /,
+) -> Point:
+    """Construct a point from an object, chart, and frame.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+    >>> p = cx.Point.from_(d, cxc.cart3d, cxf.alice)
+    >>> p.chart
+    Cart3D()
+    >>> p.frame
+    Alice()
+
+    """
+    p = cls.from_(obj, chart)
+    return replace(p, frame=frame)
+
+
+@Point.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(
+    cls: type[Point],
+    obj: Any,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    frame: cxf.AbstractReferenceFrame,
+    /,
+) -> Point:
+    """Construct a point from an object, chart, representation, and frame.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import unxt as u
+
+    >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+    >>> p = cx.Point.from_(d, cxc.cart3d, cxr.point, cxf.alice)
+    >>> p.chart
+    Cart3D()
+    >>> p.rep
+    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    >>> p.frame
+    Alice()
+
+    """
+    p = cls.from_(obj, chart, rep)
+    return replace(p, frame=frame)
+
+
+@Point.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(
+    cls: type[Point],
+    obj: ArrayLike | list[Any],
+    unit: u.AbstractUnit | str,
+    frame: cxf.AbstractReferenceFrame,
+    /,
+) -> Point:
+    """Construct a point from an array, unit, and frame.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+
+    >>> p = cx.Point.from_([1, 0, 0], "km", cxf.alice)
+    >>> p.frame
+    Alice()
+
+    """
+    p = cls.from_(obj, unit)
+    return replace(p, frame=frame)
 
 
 # ===============================================
