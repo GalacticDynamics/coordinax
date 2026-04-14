@@ -79,7 +79,7 @@ dev = [
   { include-group = "test-all" },
 ]
 docs = [
-  "jaxmore>=0.2.0",
+  "jaxmore>=0.3.0",
   "jupyter-cache>=1.0.0",
   "jupytext>=1.16.4",
   "myst-nb>=1.1.2",
@@ -369,6 +369,7 @@ ignore = [
   "ANN",
   "ARG005", # Unused lambda argument
   "D102",
+  "D401",   # First line of docstring should be in imperative mood
   "FBT001",
   "INP001",
   "N803",
@@ -385,11 +386,14 @@ ignore = [
 "coordinax.angles"               = "cxa"
 "coordinax.api"                  = "cxapi"
 "coordinax.astro"                = "cxastro"
+"coordinax.charts"               = "cxc"
 "coordinax.distances"            = "cxd"
 "coordinax.hypothesis.angles"    = "cxast"
 "coordinax.hypothesis.astro"     = "cxastrost"
+"coordinax.hypothesis.charts"    = "cxcst"
 "coordinax.hypothesis.distances" = "cxdst"
 "coordinax.hypothesis.main"      = "cxst"
+"coordinax.internal"             = "cxi"
 "coordinax.main"                 = "cx"
 equinox                          = "eqx"
 functools                        = "ft"

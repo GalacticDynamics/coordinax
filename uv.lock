@@ -571,6 +571,7 @@ dev = [
     { name = "hypothesis", extras = ["numpy"], specifier = ">=6.151.6" },
     { name = "ipykernel", specifier = ">=7.1.0" },
     { name = "jaxmore", specifier = ">=0.2.0" },
+    { name = "jaxmore", specifier = ">=0.3.0" },
     { name = "jupyter-cache", specifier = ">=1.0.0" },
     { name = "jupytext", specifier = ">=1.16.4" },
     { name = "myst-nb", specifier = ">=1.1.2" },
@@ -600,7 +601,7 @@ dev = [
     { name = "ty", specifier = ">=0.0.19" },
 ]
 docs = [
-    { name = "jaxmore", specifier = ">=0.2.0" },
+    { name = "jaxmore", specifier = ">=0.3.0" },
     { name = "jupyter-cache", specifier = ">=1.0.0" },
     { name = "jupytext", specifier = ">=1.16.4" },
     { name = "myst-nb", specifier = ">=1.1.2" },
@@ -1249,15 +1250,15 @@ wheels = [
 
 [[package]]
 name = "jaxmore"
-version = "0.2.0"
+version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "equinox" },
     { name = "jax" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/49/fb/487e7d0b23827dcd37e28bee8324936d4c5fd974055d1e1615f5fa468f72/jaxmore-0.2.0.tar.gz", hash = "sha256:f8dc5999622fdf7f6241875d1b43ffc9c615b9d809171efe297ed8ad40bddf4a", size = 158506, upload-time = "2026-02-26T21:33:22.014Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/1f/ca/54bac0488e80f55a43065133dfe2ed19af98c6394163d2e47a9b75b7d377/jaxmore-0.3.0.tar.gz", hash = "sha256:f8c635a41d1b1917dbf7f554de613c646ed9df51a55a0a4e86a9ff33891ca87f", size = 171635, upload-time = "2026-04-06T19:58:02.294Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/7c/dc6861979b70f79683a7482a0e5e5cee27d0e657fd8a635a27f7f190da8c/jaxmore-0.2.0-py3-none-any.whl", hash = "sha256:b03d43dd98ecdfba637defa4d9597a077af1d91e34aa48a58c3a5159b25f7e9b", size = 13122, upload-time = "2026-02-26T21:33:20.689Z" },
+    { url = "https://files.pythonhosted.org/packages/01/52/9db18c38ddc8491e3edab107c266f2fe572ce624d964e01612f9dc993a9c/jaxmore-0.3.0-py3-none-any.whl", hash = "sha256:1d5c82ad83d9203f80d97cc9b6da554692fc0d36aee64cd2236bee2ecfad5a6a", size = 22085, upload-time = "2026-04-06T19:58:00.749Z" },
 ]
 
 [[package]]

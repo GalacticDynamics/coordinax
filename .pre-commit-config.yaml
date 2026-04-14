@@ -34,6 +34,7 @@ repos:
       - id: mixed-line-ending
       - id: name-tests-test
         args: ["--pytest-test-first"]
+        exclude: "tests/strategies\\.py"
       - id: trailing-whitespace
 
   - repo: https://github.com/pre-commit/pygrep-hooks

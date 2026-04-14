@@ -162,6 +162,124 @@ def test_dynamic_shaped_angles(angle):
     assert 1 <= angle.shape[1] <= 10
 ```
 
+## Testing Chart Classes
+
+### Basic Chart Class Testing
+
+```python
+from hypothesis import given
+import coordinax.charts as cxc
+import coordinax.hypothesis.main as cxst
+
+
+@given(chart_class=cxst.chart_classes())
+def test_any_chart_class(chart_class):
+    """Any chart class can be tested."""
+    assert issubclass(chart_class, cxc.AbstractChart)
+```
+
+### Testing Multiple Chart Types
+
+```python
+import coordinax.charts as cxc
+
+
+@given(chart_class=cxst.chart_classes(filter=(cxc.Abstract3D, cxc.AbstractSpherical3D)))
+def test_spherical_3d_chartresentations(chart_class):
+    """Test charts that are spherical 3D."""
+    assert issubclass(chart_class, (cxc.Abstract3D, cxc.AbstractSpherical3D))
+```
+
+### Dynamically Choosing Chart Types
+
+```python
+from hypothesis import strategies as st
+
+
+@given(
+    chart_class=cxst.chart_classes(
+        filter=st.sampled_from([cxc.Abstract1D, cxc.Abstract2D, cxc.Abstract3D])
+    )
+)
+def test_random_chart_type(chart_class):
+    """Test with randomly chosen chart category."""
+    assert issubclass(chart_class, (cxc.Abstract1D, cxc.Abstract2D, cxc.Abstract3D))
+```
+
+### Testing Chart Construction with `chart_init_kwargs`
+
+The `chart_init_kwargs` strategy generates valid initialization arguments for chart classes. This is useful when you want to test chart construction or need to create charts dynamically with varying parameters:
+
+```python
+from hypothesis import given
+import coordinax.charts as cxc
+import coordinax.manifolds as cxmf
+import coordinax.hypothesis.main as cxst
+
+
+# Generate valid kwargs for specific chart classes
+@given(kwargs=cxst.chart_init_kwargs(cxc.SpaceTimeCT))
+def test_spacetime_construction(kwargs):
+    """Test SpaceTimeCT construction with generated kwargs."""
+    # kwargs will contain 'spatial_chart' and 'c'
+    assert "spatial_chart" in kwargs
+    chart = cxc.SpaceTimeCT(**kwargs)
+    assert isinstance(chart, cxc.SpaceTimeCT)
+    assert chart.ndim == kwargs["spatial_chart"].ndim + 1
+
+
+# Combine with chart_classes for generic testing
+@given(chart_cls=st.sampled_from([cxc.Cart1D, cxc.Polar2D, cxc.Spherical3D]))
+def test_various_chart_construction(chart_cls):
+    """Test construction of various chart classes."""
+    kwargs = cxst.chart_init_kwargs(chart_cls).example()
+    chart = chart_cls(**kwargs)
+    assert isinstance(chart, chart_cls)
+
+
+# Test that kwargs can be used with different instances
+@given(kwargs=cxst.chart_init_kwargs(cxc.Cylindrical3D))
+def test_kwargs_reusable(kwargs):
+    """Test that generated kwargs can create multiple instances."""
+    chart1 = cxc.Cylindrical3D(**kwargs)
+    chart2 = cxc.Cylindrical3D(**kwargs)
+    # Both should be valid instances
+    assert isinstance(chart1, cxc.Cylindrical3D)
+    assert isinstance(chart2, cxc.Cylindrical3D)
+    assert chart1.ndim == chart2.ndim == 3
+```
+
+### Testing with `charts_like`
+
+The `charts_like` strategy generates charts that match the flags of a template, making it easy to test transformations across compatible charts:
+
+```python
+from hypothesis import given
+import coordinax.charts as cxc
+import coordinax.hypothesis.main as cxst
+
+
+# Test that 3D charts can be converted to each other
+@given(
+    source_chart=cxst.charts(filter=cxc.Abstract3D),
+    target_chart=cxst.charts_like(cxst.charts(filter=cxc.Abstract3D)),
+)
+def test_3d_chart_conversions(source_chart, target_chart):
+    """Test conversions between 3D charts."""
+    # Both charts are 3D
+    assert isinstance(source_chart, cxc.Abstract3D)
+    assert isinstance(target_chart, cxc.Abstract3D)
+    assert source_chart.ndim == target_chart.ndim == 3
+
+
+# Test 2D chart transformations
+@given(chart=cxst.charts_like(cxc.polar2d))
+def test_charts_like_polar(chart):
+    """Generate charts with same flags as Polar2D."""
+    assert isinstance(chart, cxc.Abstract2D)
+    # Could be Cart2D, Polar2D, SphericalTwoSphere, etc.
+```
+
 ## Testing Coordinate Transformations
 
 ## Integration with `unxt-hypothesis`

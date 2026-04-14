@@ -42,6 +42,16 @@ Use `coordinax.api` when you:
 
 Use the full `coordinax` package when you need concrete vector implementations or are writing application code.
 
+## Quick Example
+
+`coordinax.api` exposes abstract multiple-dispatch functions that you extend in your own package.
+
+```pycon
+>>> import coordinax.api.charts as cxcapi
+>>> cxcapi.guess_chart
+<multiple-dispatch function guess_chart ...>
+```
+
 ## Documentation
 
 For detailed usage examples and API documentation, see the [full documentation](https://coordinax.readthedocs.io/).

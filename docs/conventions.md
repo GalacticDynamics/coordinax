@@ -96,7 +96,7 @@ This design maximizes flexibility and performance.
 
 `coordinax` provides both functional and object-oriented APIs:
 
-- **Functional API** (primary): Pure functions taking arguments. Returns new objects; never mutates. Example: `point_transition_map(chart_from, chart_to, point)`.
+- **Functional API** (primary): Pure functions taking arguments. Returns new objects; never mutates. Example: `pt_map(chart_from, chart_to, point)`.
 - **Object-Oriented API** (convenience): Methods on objects wrapping functional APIs. Example: `point.transition_to(chart_to)`.
 
 Both are equally powerful; OOP wraps functional. Choose based on readability.
@@ -124,15 +124,15 @@ See [Glossary: Functional API, OOP API, Module Organization](glossary.md).
 ### Core Pattern: Type Routing
 
 ```python
-from plum import dispatch
+import plum
 
 
-@dispatch
+@plum.dispatch
 def add(x: int, y: int):
     return x + y
 
 
-@dispatch
+@plum.dispatch
 def add(x: str, y: str):
     return f"{x}_{y}"
 ```
@@ -146,9 +146,7 @@ When working with a dispatched function, use the `.methods` attribute to see all
 ```python
 from coordinax.main import Distance
 
-print(
-    Distance.from_.methods
-)  # Lists all @dispatch implementations registered for cconvert
+print(Distance.from_.methods)
 ```
 
 This is essential for understanding what types are supported and avoiding duplicate registrations.
@@ -159,14 +157,17 @@ This is essential for understanding what types are supported and avoiding duplic
 
 ```text
 # CORRECT
-@dispatch
-def process(obj: AbstractChart, /):  # type: ignore[type-arg]
+@plum.dispatch
+def process(obj: cxc.AbstractChart, /):  # type: ignore[type-arg]
     ...
 
 
 # WRONG - causes plum dispatch warnings
-@dispatch
-def process(obj: AbstractChart[Any, Any], /):  # type: ignore[type-arg]
+from typing import Any
+
+
+@plum.dispatch
+def process(obj: cxc.AbstractChart[Any, Any], /):  # type: ignore[type-arg]
     ...
 ```
 
@@ -178,21 +179,40 @@ Common pattern for binary operations:
 
 ```python
 from jaxtyping import ArrayLike
+import coordinax.distances as cxd
 
 
-@dispatch
-def add(x: Distance, y: Distance):
-    return Distance(x.value + y.value, x.unit)
+@plum.dispatch
+def add(x: cxd.Distance, y: cxd.Distance):
+    return cxd.Distance(x.value + y.value, x.unit)
 
 
-@dispatch
-def add(x: ArrayLike, y: Distance):  # Promote array to Distance
-    return Distance(x + y.value, y.unit)
+@plum.dispatch
+def add(x: ArrayLike, y: cxd.Distance):  # Promote array to Distance
+    return cxd.Distance(x + y.value, y.unit)
 ```
 
 Promotion dispatches handle mixed types by converting simpler types to richer ones, then redispatching.
 
 See [Glossary: Multiple Dispatch, Promotion](glossary.md); [plum documentation](https://beartype.github.io/plum/) for full reference.
+
+---
+
+## 6. Naming Conventions
+
+### Class Name Prefixes
+
+- **`Abstract...`**: Abstract base class defining an interface (e.g., `AbstractChart`, `AbstractVector`, `AbstractDistance`). See [Abstract-Final Pattern](#abstract-final-pattern).
+- **`PhysDisp`**: Shorthand for "position", indicating a point/location vector (e.g., `CartesianPhysDisp3D`).
+- **`PhysVel`**: Shorthand for "velocity", indicating velocity vector (e.g., `CartesianPhysVel3D`).
+- **`PhysAcc`**: Shorthand for "acceleration", indicating acceleration vector (e.g., `CartesianPhysAcc3D`).
+- **`0D`, `1D`, `2D`, `3D`, `N-D`**: Chart dimension (e.g., `AbstractChart3D` for 3D manifold charts).
+
+### Method Naming Patterns
+
+- **`from_(...)`**: Constructor method accepting diverse input types. Flexible alternative to overloading `__init__`. Example: `Distance.from_(10 * u.m)` or `Distance.from_((10, "m"))`.
+
+---
 
 ### Pre-Defined Chart Instances
 

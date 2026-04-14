@@ -128,7 +128,8 @@ import equinox as eqx
 
 
 # Abstract base defines interface
-class AbstractChart(eqx.Module):
+@jax.tree_util.register_static
+class AbstractChart:
     @abstractmethod
     def components(self) -> tuple[str, ...]: ...
 

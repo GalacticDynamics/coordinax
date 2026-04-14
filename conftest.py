@@ -191,7 +191,9 @@ def _preload_coordinax_namespace() -> None:
     """
     module_names = (
         "coordinax.api",
+        "coordinax.api.charts",
         "coordinax.astro",
+        "coordinax.charts",
         "coordinax.hypothesis",
         "coordinax.main",
     )
