@@ -2,6 +2,7 @@
 
 from .add import *
 from .base import *
+from .boost import *
 from .composed import *
 from .composite import *
 from .constants import *

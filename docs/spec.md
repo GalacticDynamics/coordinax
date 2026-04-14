@@ -949,8 +949,8 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
-| `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
-| `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `TransformedReferenceFrame` |
+| `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
+| `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `Bob`, `bob`, `TransformedReferenceFrame` |
 
 </br>
 
@@ -4311,6 +4311,96 @@ Each group corresponds to a set of transformations preserving a particular geome
     Shear(k1) + Shear(k2) == Shear(k1 + k2)
     ```
 
+(software-spec-transforms-boost)=
+
+!!! info `Boost`
+
+    A **Boost** is a Galilean velocity-offset operator. It acts on phase-space data by adding a constant velocity $\Delta v$ to velocity components and leaving all other representations unchanged.
+
+    **Mathematical definition** (in a Cartesian chart):
+
+    $$
+    B_{\Delta v} : \dot{x} \mapsto \dot{x} + \Delta v.
+    $$
+
+    Positions, displacements, and accelerations are unchanged:
+
+    $$
+    B_{\Delta v}(x) = x, \quad
+    B_{\Delta v}(\Delta x) = \Delta x, \quad
+    B_{\Delta v}(\ddot{x}) = \ddot{x}.
+    $$
+
+    **Fields:**
+
+    - `delta : CDict | Callable[[tau], CDict]` — the velocity offset $\Delta v$. If callable, evaluated at the time parameter `tau`.
+    - `chart : AbstractChart` — the chart in which `delta` is expressed (static).
+    - `right_add : bool` (default `True`) — whether to compute $\dot{x} + \Delta v$ (``True``) or $\Delta v + \dot{x}$ (``False``).
+
+    **Semantic dispatch table:**
+
+    | Representation semantic kind | Effect of `act` |
+    |------------------------------|-----------------|
+    | `Point` / `Location`         | identity        |
+    | `Displacement`               | identity        |
+    | `Velocity`                   | $\dot{x} \mapsto \dot{x} + \Delta v$ |
+    | `Acceleration`               | identity        |
+
+    **`act` dispatch signature:**
+
+    ```text
+    act(op: Boost, tau, x: CDict, chart: AbstractChart, rep: Representation, /, usys=None) -> CDict
+    ```
+
+    **Inverse:**
+
+    ```text
+    boost.inverse == Boost(-delta, chart)
+    ```
+
+    **Composition:** Two `Boost` instances with the same chart combine by adding their `delta` values:
+
+    ```text
+    Boost(delta1) + Boost(delta2) == Boost(delta1 + delta2)
+    ```
+
+    **Group membership:** `Boost` does not belong to the Euclidean or Lorentz groups — it is a Galilean symmetry. It belongs to the diffeomorphism group of the tangent bundle.
+
+    **Construction helpers:**
+
+    ```text
+    Boost.from_([vx, vy, vz], unit)
+    ```
+
+    creates a boost from a list of velocity components and a unit string.
+
+    **Examples:**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> boost = cxfm.Boost(
+    ...     {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)},
+    ...     chart=cxc.cart3d,
+    ... )
+    >>> boost
+    Boost({'x': 1.0, 'y': 0.0, 'z': 0.0}, chart=Cart3D())
+
+    >>> boost.inverse
+    Boost({'x': -1.0, 'y': -0.0, 'z': -0.0}, chart=Cart3D())
+
+    >>> v = {"x": jnp.array(2.0), "y": jnp.array(3.0), "z": jnp.array(0.0)}
+    >>> cxfm.act(boost, None, v, cxc.cart3d, cxr.coord_vel)
+    {'x': Array(3., dtype=float64), 'y': Array(3., dtype=float64), 'z': Array(0., dtype=float64)}
+
+    >>> p = {"x": jnp.array(1.0), "y": jnp.array(2.0), "z": jnp.array(3.0)}
+    >>> cxfm.act(boost, None, p, cxc.cart3d, cxr.point)
+    {'x': Array(1., dtype=float64), 'y': Array(2., dtype=float64), 'z': Array(3., dtype=float64)}
+    ```
+
 </br>
 
 (software-spec-frames)=
@@ -4338,3 +4428,56 @@ A **reference frame** is an abstract label used to identify a coordinate descrip
     - `frame_transition(Alice, Alice)` → `Identity()`
     - `frame_transition(Alex, Alex)` → `Identity()`
     - `frame_transition(Alice, Alex)` → a `Translate | Rotate` composition.
+
+(software-spec-bob)=
+
+!!! info `Bob` and `bob`
+
+    An example inertial reference frame in uniform motion relative to `Alice`.
+
+    `Bob` is a **non-rotating** observer moving at constant velocity with respect to Alice. His frame is characterised by two parameters:
+
+    - **Spatial offset** from Alice's origin: $[\,100\,000\ \text{km},\; 10\,000\ \text{km},\; 0\,]$.
+    - **Velocity** relative to Alice: $\approx 269\,813\ \text{km\,s}^{-1}$ ($\approx 0.9\,c$) along Alice's $x$-axis.
+
+    Because Bob is non-rotating, the Alice → Bob transformation requires only a spatial `Translate` followed by a Galilean `Boost`. No rotation is needed.
+
+    **Frame transition table:**
+
+    | From → To     | Transform                          |
+    |---------------|------------------------------------|
+    | `Bob → Bob`   | `Identity()`                       |
+    | `Alice → Bob` | `Translate([100 000, 10 000, 0] km) \| Boost([269 813 212.2, 0, 0] m/s)` |
+    | `Bob → Alice` | inverse of Alice → Bob: `Boost([−269 813 212.2, 0, 0] m/s) \| Translate([−100 000, −10 000, 0] km)` |
+
+    **Semantic behaviour** (per representation):
+
+    | Representation semantic | Effect of Alice → Bob transform |
+    |-------------------------|---------------------------------|
+    | `Point` / `Location`    | position shifted by `[100 000, 10 000, 0] km` |
+    | `Displacement`          | unchanged (both Translate and Boost are identity on displacements) |
+    | `Velocity`              | velocity shifted by `[269 813 212.2, 0, 0] m/s` |
+    | `Acceleration`          | unchanged (`Boost` is identity on accelerations) |
+
+    **Pre-defined instance:**
+
+    - `bob` is the canonical `Bob()` singleton.
+
+    **Examples:**
+
+    ```pycon
+    >>> import coordinax.frames as cxf
+
+    >>> cxf.frame_transition(cxf.bob, cxf.bob)
+    Identity()
+
+    >>> op = cxf.frame_transition(cxf.alice, cxf.bob)
+    >>> type(op).__name__
+    'Composed'
+
+    >>> import coordinax.main as cx
+    >>> import unxt as u
+    >>> d = cx.cdict(u.Q([0.0, 0.0, 0.0], "km"))
+    >>> op(None, d)
+    {'x': Q(100000., 'km'), 'y': Q(10000., 'km'), 'z': Q(0., 'km')}
+    ```

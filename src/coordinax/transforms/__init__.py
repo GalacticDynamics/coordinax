@@ -38,6 +38,7 @@ __all__: tuple[str, ...] = (
     # Transformations
     "AbstractTransform",
     "AbstractCompositeTransform",
+    "Boost",
     "Identity",
     "Composed",
     "Translate",
@@ -52,6 +53,7 @@ with install_import_hook("coordinax.transforms"):
     from ._src.actions import (
         AbstractCompositeTransform,
         AbstractTransform,
+        Boost,
         Composed,
         Identity,
         Reflect,

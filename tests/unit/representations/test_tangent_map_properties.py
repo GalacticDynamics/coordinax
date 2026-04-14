@@ -343,24 +343,23 @@ class TestTangentMapWithQuantityAt:
 
 
 # ===========================================================================
-# 7. Integration via cconvert (tests the 7-arg tangent_map path)
-#    RED: cconvert calls api.tangent_map with 7 positional args but the current
-#    dispatch only has 4 — this will fail until tangent_map is updated.
+# 7. Integration via cconvert
 # ===========================================================================
 
 
 class TestTangentMapViaCconvert:
-    """tangent_map must be reachable via cconvert with TangentGeometry.
+    """``cconvert`` should route tangent conversions through ``tangent_map``.
 
     ``cconvert`` internally calls
         api.tangent_map(v, from_chart, from_geom, from_rep,
-                           to_chart, to_geom, to_rep, at=at)
-    which is the 7-argument form.  These tests verify end-to-end correctness
-    of that path, which requires the new dispatch signature.
+                        to_chart, to_geom, to_rep, at=at)
+
+    These tests cover that integration path end to end for
+    ``TangentGeometry`` conversions.
     """
 
     def test_cart2d_polar2d_via_cconvert(self) -> None:
-        """Cconvert with TangentGeometry dispatches through to tangent_map."""
+        """Cart2D tangent components convert to Polar2D via ``cconvert``."""
         v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
         at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
         result = cxr.cconvert(
@@ -377,7 +376,7 @@ class TestTangentMapViaCconvert:
         np.testing.assert_allclose(result["theta"], 0.0, atol=1e-6)
 
     def test_cart3d_sph3d_via_cconvert(self) -> None:
-        """Cconvert for tangent gives same result as tangent_map."""
+        """``cconvert`` matches a direct ``tangent_map`` call for Cart3D -> Sph3D."""
         v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
         at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
 
@@ -402,7 +401,7 @@ class TestTangentMapViaCconvert:
             )
 
     def test_cart3d_cyl3d_via_cconvert(self) -> None:
-        """cconvert(cart3d→cyl3d) tangent: x̂ at (0,1,0) → (ρ=0, φ=-1, z=0)."""
+        """Cart3D -> Cyl3D matches the expected tangent components at ``(0, 1, 0)``."""
         v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
         at = {"x": jnp.array(0.0), "y": jnp.array(1.0), "z": jnp.array(0.0)}
         result = cxr.cconvert(
