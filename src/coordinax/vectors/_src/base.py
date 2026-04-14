@@ -21,6 +21,7 @@ import unxt as u
 from dataclassish import field_items
 
 import coordinax.charts as cxc
+import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 from .custom_types import HasShape
 
@@ -182,6 +183,9 @@ class AbstractVector(
 
     rep: eqx.AbstractVar[cxr.Representation[GeomT, BasisT, SemanticT]]
     """The `coordinax.representations.Representation`, e.g. `cxr.point`."""
+
+    manifold: eqx.AbstractVar[cxm.AbstractManifold]
+    """The manifold the vector lives in."""
 
     # ---------------------------------
     # Constructors

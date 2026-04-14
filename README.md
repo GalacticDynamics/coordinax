@@ -106,6 +106,27 @@ import coordinax.main as cx
 cx.point  # point location data
 ```
 
+### Manifolds
+
+Define an explicit custom atlas and manifold:
+
+```pycon
+>>> import coordinax.main as cx
+>>> import unxt as u
+
+>>> atlas = cx.CustomAtlas(
+...     charts=(type(cx.cart2d), type(cx.polar2d)),
+...     chart_default=cx.cart2d,
+... )
+>>> cx.polar2d in atlas
+True
+>>> M = cx.CustomManifold(atlas)
+>>> q = {"x": u.Q(1.0, "km"), "y": u.Q(1.0, "km")}
+>>> M.pt_map(q, cx.cart2d, cx.polar2d)
+{'r': Q(1.41421356, 'km'), 'theta': Q(0.78539816, 'rad')}
+
+```
+
 ## Citation
 
 [![DOI][zenodo-badge]][zenodo-link]

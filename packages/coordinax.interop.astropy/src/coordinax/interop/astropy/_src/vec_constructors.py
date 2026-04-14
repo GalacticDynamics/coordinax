@@ -9,6 +9,7 @@ import astropy.coordinates as apyc
 import unxt as u
 
 import coordinax.charts as cxc
+import coordinax.manifolds as cxm
 import coordinax.vectors as cxv
 from coordinax.internal.custom_types import CDict
 
@@ -29,11 +30,14 @@ def from_astropy_cartesian_representation(
 
     >>> vec = CartesianRepresentation(1, 2, 3, unit="km")
     >>> cxv.Point.from_(vec)
-    Point({'x': Q(1., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')}, chart=Cart3D())
+    Point(
+      {'x': Q(1., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')},
+      chart=Cart3D(), manifold=EuclideanManifold(ndim=3)
+    )
 
     """
     data: CDict = {k: convert(getattr(obj, k), u.Q) for k in ("x", "y", "z")}
-    return cls(data, chart=cxc.cart3d)
+    return cls(data, cxc.cart3d, cxm.euclidean3d)
 
 
 @cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
@@ -53,12 +57,12 @@ def from_astropy_cylindrical_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'rho': Q(1., 'km'), 'phi': Q(90., 'deg'), 'z': Q(3., 'km')},
-      chart=Cylindrical3D()
+      chart=Cylindrical3D(), manifold=EuclideanManifold(ndim=3)
     )
 
     """
     data: CDict = {k: convert(getattr(obj, k), u.Q) for k in ("rho", "phi", "z")}
-    return cls.from_(data, cxc.cyl3d)
+    return cls(data, cxc.cyl3d, cxm.euclidean3d)
 
 
 @cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
@@ -78,12 +82,12 @@ def from_astropy_physics_spherical_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'r': Q(1., 'kpc'), 'theta': Q(45., 'deg'), 'phi': Q(90., 'deg')},
-      chart=Spherical3D()
+      chart=Spherical3D(), manifold=EuclideanManifold(ndim=3)
     )
 
     """
     data: CDict = {k: convert(getattr(obj, k), u.Q) for k in ("r", "theta", "phi")}
-    return cls.from_(data, cxc.sph3d)
+    return cls(data, cxc.sph3d, cxm.euclidean3d)
 
 
 @cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
@@ -103,9 +107,9 @@ def from_astropy_spherical_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'lon': Q(90., 'deg'), 'lat': Q(45., 'deg'), 'distance': Q(1., 'kpc')},
-      chart=LonLatSpherical3D()
+      chart=LonLatSpherical3D(), manifold=EuclideanManifold(ndim=3)
     )
 
     """
     data: CDict = {k: convert(getattr(obj, k), u.Q) for k in ("lon", "lat", "distance")}
-    return cls.from_(data, cxc.lonlat_sph3d)
+    return cls(data, cxc.lonlat_sph3d, cxm.euclidean3d)

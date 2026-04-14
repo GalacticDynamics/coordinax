@@ -162,6 +162,141 @@ $$
 
 for the inverse transition map.
 
+(math-spec-embedded-manifolds)=
+
+### Embedded Manifolds
+
+Before defining maps between manifolds, we fix the relevant vocabulary.
+
+A map $f : X \to Y$ between sets is **injective** (one-to-one) if distinct points map to distinct points: $f(p) = f(q)$ implies $p = q$. Injectivity ensures the map does not collapse distinct points of $X$ onto the same point of $Y$.
+
+A smooth map $f : N \to M$ between manifolds is an **immersion** if its differential $df_p : T_pN \to T_{f(p)}M$ is injective at every point $p \in N$. Immersion means the map does not fold or collapse tangent directions: the manifold $N$ is locally "spread out" in $M$, even if it crosses itself globally.
+
+A **homeomorphism** $f : X \to Y$ is a bijective continuous map whose inverse is also continuous. A homeomorphism identifies $X$ and $Y$ as topologically identical spaces.
+
+The **image** of a map $f : N \to M$ is the subset
+
+$$
+f(N) = \{ f(p) \in M \mid p \in N \} \subset M.
+$$
+
+A **submanifold** of $M$ is a subset $S \subset M$ that is itself a manifold, and whose inclusion map $S \hookrightarrow M$ is a smooth embedding (defined below). The dimension of $S$ is strictly less than that of $M$ for a proper submanifold.
+
+A **smooth embedding** $\iota : N \hookrightarrow M$ of an $m$-dimensional manifold $N$ into an $n$-dimensional manifold $M$ (with $m < n$) is a smooth map that is simultaneously:
+
+- **injective**: distinct points of $N$ map to distinct points of $M$,
+- an **immersion**: the differential $d\iota_p$ is injective at every $p \in N$, and
+- a **homeomorphism onto its image**: $\iota$ is a continuous bijection $N \to \iota(N)$ with continuous inverse.
+
+The combination of these three properties ensures that $\iota(N)$ is a well-behaved $m$-dimensional submanifold of $M$: it does not self-intersect, it has no cusps or folds, and it carries the same smooth structure as $N$ itself.
+
+#### Projections and Embeddings
+
+Two primitive cross-manifold maps are associated with a smooth embedding $\iota : N \hookrightarrow M$, where $n = \dim N \leq m = \dim M$.
+
+The **embed map** carries a point from $N$ into its image in $M$:
+
+$$
+\iota : N \to \iota(N) \subset M, \qquad p \mapsto \iota(p).
+$$
+
+The **project map** is the left inverse of $\iota$ on the image:
+
+$$
+\pi : \iota(N) \subset M \to N, \qquad \pi \circ \iota = \mathrm{id}_N.
+$$
+
+Note that $\pi$ is only defined on the image $\iota(N)$, not on all of $M$: because $n < m$, the ambient manifold $M$ has directions transverse to $\iota(N)$, and there is no canonical way to project an arbitrary point of $M$ back to $N$. Together, embed and project are the two irreducible cross-manifold steps; all other coordinate changes on either side are ordinary transition maps within a single atlas.
+
+!!! example
+
+    The two-sphere $S^2$ embeds in $\mathbb{R}^3$ via the unit embedding. In the spherical chart $(\theta, \phi)$ on $S^2$ and the Cartesian chart $(x, y, z)$ on $\mathbb{R}^3$, the coordinate form of $\iota$ is
+
+    $$
+    \iota(\theta, \phi) = (\sin\theta\cos\phi,\ \sin\theta\sin\phi,\ \cos\theta),
+    $$
+
+    and $\pi$ is the restriction of $(x,y,z) \mapsto (\arccos z,\ \arctan(y/x))$ to the unit sphere $x^2 + y^2 + z^2 = 1$.
+
+#### Realization Maps
+
+A **realization map** $\rho$ is the coordinate form of a full cross-manifold point transformation between an arbitrary chart $C_N$ on $N$ and an arbitrary chart $C_M$ on $M$. It is common to define the realization map as the composition of transition and embed/project maps, factoring through canonical charts $\bar{C}_N$ on $N$ and $\bar{C}_M$ on $M$ as three sequential steps:
+
+$$
+\varphi_{C_N}(U)
+    \xrightarrow{\;\tau_N\;}
+\varphi_{\bar{C}_N}(U)
+    \xrightarrow{\;\iota \ \text{or} \ \pi\;}
+\varphi_{\bar{C}_M}(V)
+    \xrightarrow{\;\tau_M\;}
+\varphi_{C_M}(V),
+$$
+
+where
+
+- $\tau_{N \rightarrow \tilde{N}} = \varphi_{\bar{C}_N} \circ \varphi_{C_N}^{-1}$ is the transition map from $C_N$ to the canonical chart on $N$,
+- $\iota = \varphi_{\bar{C}_M} \circ \iota \circ \varphi_{\bar{C}_N}^{-1}$ is the coordinate form of the embed map between the two canonical charts (or $\pi$ if a projection), and
+- $\tau_{M \rightarrow \tilde{M}} = \varphi_{C_M} \circ \varphi_{\bar{C}_M}^{-1}$ is the transition map from the canonical chart on $M$ to $C_M$.
+
+The full realization embed map is therefore
+
+$$
+\tau = \tau_{M \rightarrow \tilde{M}} \circ \iota \circ \tau_{N \rightarrow \tilde{N}}.
+$$
+
+The realization project map composes analogously, with $\iota$ replaced by the coordinate form of $\pi$.
+
+### Product Manifolds and Product Charts
+
+Given two smooth manifolds $M_1$ of dimension $n_1$ and $M_2$ of dimension $n_2$, their **product manifold** is the Cartesian product
+
+$$
+M = M_1 \times M_2,
+$$
+
+equipped with the **product smooth structure**: a point in $M$ is a pair $(p_1, p_2)$ with $p_1 \in M_1$ and $p_2 \in M_2$, and the product manifold has dimension $n_1 + n_2$. The two factors $M_1$ and $M_2$ retain full equal status; neither is a submanifold of the other in the sense of the embedding construction introduced in [Embedded Manifolds](#math-spec-embedded-manifolds).[^product-vs-embedding]
+
+[^product-vs-embedding]: An embedding $\iota : N \hookrightarrow M$ places $N$ as a lower-dimensional submanifold inside a single ambient manifold $M$, with the factors having unequal roles. A product $M_1 \times M_2$ instead combines two manifolds symmetrically into a new manifold of strictly larger dimension in which each factor appears as a coordinate slice, not as a proper submanifold.
+
+A **product chart** on $M_1 \times M_2$ is formed from a chart $C_1 = (U_1,
+\varphi_1)$ on $M_1$ and a chart $C_2 = (U_2, \varphi_2)$ on $M_2$ by taking their Cartesian product:
+
+$$
+C_1 \times C_2 = \bigl(U_1 \times U_2,\; \varphi_1 \times \varphi_2\bigr),
+$$
+
+where the product coordinate map is
+
+$$
+(\varphi_1 \times \varphi_2)(p_1, p_2)
+= \bigl(\varphi_1(p_1),\, \varphi_2(p_2)\bigr)
+\in \mathbb{R}^{n_1} \times \mathbb{R}^{n_2} \cong \mathbb{R}^{n_1 + n_2}.
+$$
+
+The **product atlas** on $M_1 \times M_2$ is generated by all such product charts:
+
+$$
+\mathcal{A}_{M_1 \times M_2} = \{ C_1 \times C_2 \mid C_1 \in \mathcal{A}_1,\; C_2 \in \mathcal{A}_2 \}.
+$$
+
+The key structural property of product charts is that **transition maps on the product factor independently**. Given two product charts $C_1 \times C_2$ and $C_1' \times C_2'$, the transition map between them is exactly the product of the two factor transition maps:
+
+$$
+\tau_{(C_1 \times C_2) \to (C_1' \times C_2')}
+= \tau_{C_1 \to C_1'} \times \tau_{C_2 \to C_2'}.
+$$
+
+In coordinates this means the first $n_1$ components transform by $\tau_{C_1 \to
+C_1'}$ and the last $n_2$ components transform by $\tau_{C_2 \to C_2'}$, independently and without mixing. This factorwise law holds because the two factors are geometrically decoupled: a coordinate change on $M_1$ cannot affect coordinates on $M_2$, and vice versa.
+
+!!! example
+
+    _Spacetime._ Newtonian spacetime and the special-relativistic approximation both treat time and space as a product $\mathbb{R}_t \times \mathbb{R}^3$.
+
+!!! example
+
+    _Phase space._ The position-momentum phase space of a particle moving in $\mathbb{R}^3$ is the product manifold $\mathbb{R}^3_q \times \mathbb{R}^3_p$. A product chart in Cartesian coordinates on both factors has components $(x, y, z, p_x, p_y, p_z)$. Changing the position factor from Cartesian to spherical applies $\tau_{C \to S}$ to the first three components and leaves the momentum components unchanged.
+
 </br>
 
 ---
@@ -188,6 +323,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jacobian_pt_map`, `realize_cartesian`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, </br> `PointGeometry`, `point_geom`, </br> `NoBasis`, `no_basis`, </br> `Location`, `loc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
+| `coordinax.manifolds` | `EuclideanManifold`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
 
 </br>
 
@@ -1226,7 +1362,6 @@ Separating semantics from geometry provides two advantages:
     - `loc` is the pre-defined canonical `Location()` instance.
     - It is used in the default point representation `point = Representation(point_geom, no_basis, loc)`.
 
-
 </br>
 
 (software-spec-vectors)=
@@ -1303,3 +1438,954 @@ Separating semantics from geometry provides two advantages:
 !!! info `ToUnitsOptions`
 
     Used for `unxt.uconvert` dispatches.
+
+</br>
+
+(software-spec-manifolds)=
+
+## Manifolds
+
+(software-spec-guess-manifold)=
+
+!!! info `guess_manifold`
+
+    Infer or pass-through a manifold from various input types via multiple dispatch.
+
+    `guess_manifold` is a dispatched function that converts various representational forms into an explicit manifold object. It provides multiple implementations for different input types.
+
+    **Dispatch signatures:**
+
+    - `guess_manifold(manifold: AbstractManifold) -> AbstractManifold`
+      Returns the input manifold unchanged.
+
+    - `guess_manifold(point: CDict) -> AbstractManifold`
+      Infers the manifold from a point represented as a mapping (coordinate dictionary). First infers the chart via `cxc.guess_chart()`, then redispatches on that chart.
+
+    - `guess_manifold(chart: AbstractChart) -> AbstractManifold`
+      Infers the manifold from a chart. Domain-specific implementations exist:
+      - `guess_manifold(atlas: EuclideanAtlas) -> EuclideanManifold`
+      - `guess_manifold(atlas: HyperSphericalAtlas) -> HyperSphericalManifold`
+      - Chart-specific versions for `Cart0D`, `Cart1D`, `Cart2D`, `Cart3D`, `Radial1D`, `Polar2D`, spherical chart types, etc.
+
+    **Purpose:**
+
+    `guess_manifold` enables writing code that is polymorphic over manifold representations: users can pass a point, a chart, an atlas, or a manifold directly, and the function will normalize to an explicit manifold object. This is useful in high-level APIs where users may provide coordinate data without specifying the manifold structure.
+
+    **Examples**
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+
+    >>> # From a manifold (pass-through)
+    >>> M = cxm.EuclideanManifold(3)
+    >>> cxm.guess_manifold(M) is M
+    True
+
+    >>> # From a point (mapping)
+    >>> cxm.guess_manifold({"x": 1.0, "y": 2.0, "z": 3.0})
+    EuclideanManifold(ndim=3)
+
+    >>> # From a chart
+    >>> cxm.guess_manifold(cxc.cart3d)
+    EuclideanManifold(ndim=3)
+
+    >>> # From an atlas
+    >>> cxm.guess_manifold(cxm.EuclideanAtlas(2))
+    EuclideanManifold(ndim=2)
+
+    >>> # Spherical manifold inference
+    >>> cxm.guess_manifold(cxc.sph2)
+    HyperSphericalManifold(ndim=2)
+
+    >>> cxm.guess_manifold({"theta": 1.0, "phi": 0.5})
+    HyperSphericalManifold(ndim=2)
+    ```
+
+    **Notes:**
+
+    - This function is primarily used internally and in high-level convenience APIs.
+    - When the input is a manifold, it is returned unchanged without validation.
+    - When inferring from a point (CDict), the chart inference is performed by `cxc.guess_chart()`, which uses its own dispatch logic.
+
+(software-spec-abstractatlas)=
+
+!!! info `AbstractAtlas`
+
+    An atlas is the collection of compatible charts that defines the smooth structure of a manifold. If $ \mathcal{A} = \{(U_\alpha, \varphi_\alpha)\} $ is an atlas on a topological manifold $M$, then the pair $ (M, \mathcal{A}) $ is a smooth manifold. In `coordinax`, the atlas object is the software representation of this smooth structure: it specifies which charts are valid coordinate descriptions of the manifold.
+
+    The atlas is therefore responsible for chart compatibility, but it does **not** itself implement the numerical coordinate formulas for transforming data between charts. Those formulas live at the chart and transformation-function level.
+
+    **Core attribute:**
+
+    - `ndim`: the dimension of the manifold covered by the atlas. This means that every chart supported by the atlas must have the same coordinate dimension: $$ \dim M = \text{atlas.ndim}. $$
+
+    **Methods:**
+
+    - ``default_chart()``: returns a canonical or preferred chart in the atlas. This does **not** mean that the default chart is mathematically preferred in any intrinsic sense; it is simply the atlas-level convention chosen by the library for ergonomic defaults.
+
+    - ``has_chart(chart)``: returns whether a given chart belongs to the atlas. It is the fundamental membership test for the atlas. It answers whether `chart` is an allowed coordinate system for points on the manifold associated with this atlas. This is a structural question, not a numerical one: it does not evaluate coordinates, only chart compatibility.
+      In particular:
+
+      - a Euclidean atlas supports Euclidean coordinate charts of the correct dimension,
+      - a two-sphere atlas supports intrinsic two-sphere charts,
+      - charts from incompatible manifolds must return `False`.
+
+      Atlases redirect ``__contains__`` to ``has_chart()``, enabling
+
+      ```
+      chart in atlas
+      ```
+
+    - ``pt_map(...)``: checks atlas compatibility and then delegates to the ordinary chart-level point transition machinery.
+
+    **Examples**
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> atlas = cxm.EuclideanAtlas(3)
+    >>> atlas.ndim
+    3
+    >>> atlas.default_chart()
+    Cart3D()
+
+    >>> import coordinax.charts as cxc
+    >>> cxc.cart3d in atlas
+    True
+    >>> cxc.cyl3d in atlas
+    True
+    >>> cxc.cart2d in atlas
+    False
+
+    >>> atlas2 = cxm.EuclideanAtlas(2)
+    >>> x = {"x": 1.0, "y": 1.0}
+    >>> atlas2.pt_map(x, cxc.cart2d, cxc.polar2d)
+    {'r': Array(1.41421356, dtype=float64, ...), 'theta': Array(0.78539816, dtype=float64, ...)}
+    ```
+
+    In this call the atlas first verifies that both charts belong to the same atlas before delegating to the registered point transition map implementation.
+
+(software-spec-abstractmanifold)=
+
+!!! info `AbstractManifold`
+
+    `AbstractManifold` defines the core interface for manifolds. A smooth manifold object represents the mathematical pair
+    $$
+    (M, \mathcal{A})
+    $$
+    In other words, the manifold object owns the primary geometric structures used by the library:
+
+    - the [**atlas** $\mathcal{A}$](#software-spec-abstractatlas), which determines the smooth structure and the set of compatible charts
+
+    The manifold object is responsible for enforcing the compatibility of these structures and for providing a small set of geometry‑level operations that depend on the manifold rather than on a specific chart.
+
+    **Core attributes:**
+
+    Every manifold provides one structural attribute:
+
+    - `atlas`: an instance of `AbstractAtlas` describing the compatible charts.
+
+    The manifold dimension is determined by its atlas:
+
+    $$
+    \dim M = \text{atlas.ndim}.
+    $$
+
+    Atlas-related Methods \& Attributes:
+
+    - ``has_chart(chart)``: determines whether a chart may be used to represent coordinates on it. This calls the atlas ``has_chart(chart)`` method.
+    - ``check_chart(chart)``: raises an error if the chart is not supported by the manifold's atlas.
+    - ``default_chart``: the manifold's default chart, which is the atlas's default chart.
+
+    Manifold‑level coordinate operations:
+
+    The manifold provides thin wrappers around coordinate transformations that ensure atlas compatibility before delegating to chart‑level machinery.
+
+    - ``pt_map(...)`` performs chart transitions while checking that both charts belong to the manifold.
+    - ``realize_cartesian(...)`` converts coordinates into the canonical ambient Cartesian chart.
+    - ``unrealize_cartesian(...)`` performs the inverse operation.
+
+    Pre-defined manifolds:
+
+    - Euclidean [`EuclideanManifold`](#software-spec-euclideanmanifold)
+    - Two-sphere [`HyperSphericalManifold`](#software-spec-twospheremanifold)
+    - Minkowski [`MinkowskiManifold`](#software-spec-minkowskimanifold)
+    - Custom [`CustomManifold`](#software-spec-custommanifold)
+
+### Euclidean Manifolds
+
+!!! info `EuclideanAtlas`
+
+    `EuclideanAtlas` is the atlas for Euclidean space $\mathbb{R}^n$. It defines the set of coordinate charts that represent smooth coordinate systems on flat Euclidean space.
+
+    Formally, the atlas corresponds to the collection
+
+    $$
+    \mathcal{A}_E = \{ C \mid C \text{ is a Euclidean chart on } \mathbb{R}^n \}.
+    $$
+
+    The atlas does not implement coordinate transformations itself; it only determines **which charts belong to the Euclidean smooth structure**. Numerical coordinate formulas are implemented by the chart transition system.
+
+    Construction:
+
+    ```
+    EuclideanAtlas(ndim: int)
+    ```
+
+    where `ndim` is the dimension of the Euclidean space.
+
+    Supported charts:
+
+    A chart belongs to a `EuclideanAtlas(n)` when:
+
+    1. the chart represents coordinates on Euclidean space, and
+    2. the chart dimension equals `n`.
+
+    Examples include
+
+    - Cartesian charts (`CartND`, `Cart1D`, `Cart2D`, `Cart3D`)
+    - polar or cylindrical charts (`Polar2D`, `Cylindrical3D`)
+    - spherical coordinate charts (`Spherical3D`, `LonLatSpherical3D`)
+    - radial charts (`Radial1D`)
+
+    Charts whose intrinsic manifold is not Euclidean (for example intrinsic two-sphere charts) are rejected.
+
+    Default chart:
+
+    The default chart is the canonical Cartesian chart of the same
+    dimension:
+
+    | dimension | default chart |
+    |-----------|---------------|
+    | 0         | `Cart0D()`    |
+    | 1         | `Cart1D()`    |
+    | 2         | `Cart2D()`    |
+    | 3         | `Cart3D()`    |
+    | otherwise | `CartND()`    |
+
+    ### Chart registration
+
+    Charts become members of the Euclidean atlas through **chart registration**.
+
+    When a chart class is defined for Euclidean coordinates, it registers itself with the Euclidean atlas for the appropriate dimension. This allows the atlas to determine membership without hard-coding chart lists.
+
+    In other words, chart membership is determined structurally by the chart definition rather than by manual enumeration.
+
+    ### Example
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+
+    >>> A = cxm.EuclideanAtlas(3)
+
+    >>> A.default_chart()
+    Cart3D()
+
+    >>> cxc.cart3d in A
+    True
+
+    >>> cxc.cyl3d in A
+    True
+
+    >>> cxc.cart2d in A
+    False
+    ```
+
+(software-spec-euclideanmanifold)=
+
+!!! info `EuclideanManifold`
+
+    `EuclideanManifold` represents flat Euclidean space $\mathbb{R}^n$ with its
+    standard smooth structure:
+
+    $$
+    (\mathbb{R}^n, \mathcal{A}_E).
+    $$
+
+    It is the canonical manifold used for ordinary flat coordinate systems (Cartesian, polar, cylindrical, spherical) when expressed in dimension $n$.
+
+    A `EuclideanManifold(n)` simply provides the Euclidean atlas:
+
+    - `atlas = EuclideanAtlas(n)`
+
+    with manifold dimension $ \dim M = n. $
+
+    The default chart is the canonical Cartesian chart of the same dimension provided by the atlas. For example, `EuclideanManifold(2).default_chart == Cart2D()`.
+
+    Coordinate operations (`pt_map`, `realize_cartesian`, `unrealize_cartesian`) are inherited from `AbstractManifold`. These methods verify that the charts belong to the Euclidean atlas before delegating to the chart-level implementations.
+
+    **Example**
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+
+    >>> M = cxm.EuclideanManifold(3)
+    >>> M.ndim
+    3
+    >>> M.default_chart
+    Cart3D()
+    >>> M.has_chart(cxc.cart3d)
+    True
+    >>> M.has_chart(cxc.cart2d)
+    False
+
+    >>> x = {"x": 1.0, "y": 1.0, "z": 1.0}
+    >>> M.pt_map(x, cxc.cart3d, cxc.sph3d)
+    {'r': Array(1.73205081, dtype=float64, ...),
+     'theta': Array(0.95531662, dtype=float64),
+     'phi': Array(0.78539816, dtype=float64, ...)}
+    ```
+
+### Hyper-Spherical Manifolds
+
+!!! info `HyperSphericalAtlas`
+
+    `HyperSphericalAtlas` is the atlas for the intrinsic two-sphere $S^2$. It defines which charts are valid coordinate systems on the sphere surface.
+
+    Formally,
+
+    $$
+    \mathcal{A}_{S^2} = \{ C \mid C \text{ is an intrinsic chart on } S^2 \}.
+    $$
+
+    The atlas determines chart membership only; numerical coordinate transformations are handled by the chart transition system.
+
+    - `ndim = 2`
+    - `default_chart() -> SphericalTwoSphere()`
+
+    Supported charts include:
+
+    - `SphericalTwoSphere`
+    - `LonLatSphericalTwoSphere`
+    - `LonCosLatSphericalTwoSphere`
+    - `MathSphericalTwoSphere`
+
+    Charts on other manifolds, such as `Cart2D` or Euclidean 3-space charts, are not members of this atlas.
+
+    As with `EuclideanAtlas`, membership is determined by chart registration rather than by hard-coded enumeration using the ``register`` class method.
+
+(software-spec-twospheremanifold)=
+
+!!! info `HyperSphericalManifold`
+
+    `HyperSphericalManifold` represents the smooth two-sphere $S^2$:
+
+    $$
+    (S^2, \mathcal{A}_{S^2}).
+    $$
+
+    The manifold describes the curved surface of a sphere with fixed radius and intrinsic geometry. It is commonly used for angular coordinate systems such as longitude–latitude parameterizations.
+
+    Construction:
+
+    ```text
+    HyperSphericalManifold()
+    ```
+
+    Structure:
+
+    - `atlas = HyperSphericalAtlas()`
+
+    The intrinsic dimension is $ \dim S^2 = 2$.
+
+    The atlas provides the canonical spherical chart
+
+    ```text
+    SphericalTwoSphere()
+    ```
+
+    which uses components `(theta, phi)` with the physics convention `theta` = polar (colatitude) and `phi` = azimuth.
+
+    Chart compatibility:
+
+    The manifold accepts only intrinsic two-sphere charts; planar charts such as `Cart2D` are **not valid** coordinate systems for this manifold.
+
+    Coordinate operations:
+
+    `HyperSphericalManifold` inherits the coordinate transformation API from `AbstractManifold`:
+
+    - `pt_map(...)`
+    - `realize_cartesian(...)`
+    - `unrealize_cartesian(...)`
+
+    These methods first verify atlas compatibility before delegating to the chart-level transformation system.
+
+    **Example**
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+
+    >>> M = cxm.HyperSphericalManifold()
+    >>> M.ndim
+    2
+
+    >>> M.default_chart
+    SphericalTwoSphere()
+
+    >>> M.has_chart(cxc.sph2)
+    True
+
+    >>> M.has_chart(cxc.cart2d)
+    False
+    ```
+
+### Minkowski Manifolds
+
+(software-spec-minkowskiatlas)=
+
+!!! info `MinkowskiAtlas`
+
+    Atlas for Minkowski spacetime $\mathbb{R}^{1,3}$.
+
+    Construction:
+
+    - MinkowskiAtlas() has fixed dimension `ndim = 4`.
+
+    Membership semantics:
+
+    A chart belongs to this atlas iff:
+
+    1. the chart has `ndim == 4`, and
+    2. its chart class is registered in the atlas eligibility set (built-in registration includes SpaceTimeCT).
+
+    Built-in chart family:
+
+    - SpaceTimeCT charts with any compatible spatial factor chart, for example:
+      - SpaceTimeCT(cart3d)
+      - SpaceTimeCT(sph3d)
+      - SpaceTimeCT(cyl3d)
+
+    Default chart:
+
+    - default_chart() returns SpaceTimeCT() with Cartesian spatial part.
+
+    Registration API:
+
+    - register(chart_class) adds a chart class to the set of chart classes accepted by membership checks.
+
+    Notes:
+
+    - This atlas defines chart compatibility only.
+    - Metric formulas are specified by MinkowskiMetric.
+
+(software-spec-minkowskimanifold)=
+
+!!! info `MinkowskiManifold`
+
+    Minkowski spacetime manifold $( \mathbb{R}^{1,3}, \eta)$ with Lorentzian metric signature $(-1, 1, 1, 1)$.
+
+    Structure:
+
+    - `ndim = 4`
+    - `atlas = MinkowskiAtlas(4)`
+    - `default_chart = atlas.default_chart()`
+
+    Metric association:
+
+    - `metric = MinkowskiMetric(signature=(-1, 1, 1, 1))`
+
+    Chart compatibility:
+
+    - has_chart(chart) delegates to the atlas membership rule.
+    - Accepted charts are the atlas-supported 4D SpaceTimeCT chart family.
+    - Non-spacetime charts such as cart3d are not members.
+
+    Coordinate operations:
+
+    Inherits manifold-level wrappers from AbstractManifold:
+
+    - `pt_map(...)`
+    - `realize_cartesian(...)`
+    - `unrealize_cartesian(...)`
+
+    These operations first enforce atlas compatibility, then delegate to chart-level transition machinery.
+
+    Pre-defined instance:
+
+    - minkowski4d is the canonical pre-built MinkowskiManifold() instance.
+
+### Custom Manifolds
+
+(software-spec-customatlas)=
+
+!!! info `CustomAtlas`
+
+    `CustomAtlas` is an explicit atlas implementation where chart membership is controlled by user-provided chart classes.
+
+    Construction:
+
+    ```text
+    CustomAtlas(
+        charts: tuple[type[AbstractChart], ...],
+        chart_default: AbstractChart,
+    )
+    ```
+
+    Semantics:
+
+    - The atlas dimension is defined by `chart_default.ndim`.
+    - A chart is supported iff:
+        1. its class is in `charts`, and
+        2. its `ndim` equals the atlas dimension.
+    - `charts` is an ordered tuple of unique chart classes.
+    - The default chart class must be present in `charts`.
+    - Every registered chart class must be zero-argument constructible and have dimensionality equal to the atlas dimension.
+
+    Unlike `EuclideanAtlas`, `CustomAtlas` does not use automatic chart registration or fallback chart-family membership. Membership is explicit and local to the atlas instance.
+
+    **Example**
+
+    ```pycon
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> A = cxm.CustomAtlas(
+    ...     charts=(cxc.Cart2D, cxc.Polar2D),
+    ...     chart_default=cxc.cart2d,
+    ... )
+
+    >>> A.ndim
+    2
+
+    >>> cxc.cart2d in A
+    True
+    >>> cxc.polar2d in A
+    True
+    >>> cxc.cart3d in A
+    False
+    ```
+
+(software-spec-custommanifold)=
+
+!!! info `CustomManifold`
+
+    `CustomManifold` represents a smooth manifold with a caller-supplied explicit atlas:
+
+    $$
+    (M, \mathcal{A}_{\mathrm{custom}}).
+    $$
+
+    Construction:
+
+    ```text
+    CustomManifold(atlas: CustomAtlas)
+    ```
+
+    The manifold is intentionally thin: it forwards chart-membership checks, default-chart selection, and point transition wrappers to the provided atlas.
+
+    - `ndim = atlas.ndim`
+    - `default_chart = atlas.default_chart()`
+    - `has_chart(chart) = atlas.has_chart(chart)`
+
+    Coordinate operations (`pt_map`, `realize_cartesian`, `unrealize_cartesian`) are inherited from `AbstractManifold` and therefore enforce atlas compatibility before delegating to chart-level machinery.
+
+    ```pycon
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> A = cxm.CustomAtlas(
+    ...     charts=(cxc.Cart2D, cxc.Polar2D),
+    ...     chart_default=cxc.cart2d,
+    ... )
+    >>> M = cxm.CustomManifold(A)
+
+    >>> M.ndim
+    2
+    >>> M.default_chart
+    Cart2D()
+
+    >>> M.has_chart(cxc.cart2d)
+    True
+    >>> M.has_chart(cxc.polar2d)
+    True
+    >>> M.has_chart(cxc.cart3d)
+    False
+    ```
+
+### Product Manifolds
+
+(software-spec-cartesianproductatlas)=
+
+!!! info `CartesianProductAtlas`
+
+    Atlas for a Cartesian product manifold $M = M_1 \times M_2 \times \cdots \times M_k$.
+
+    Construction:
+
+    ```text
+    CartesianProductAtlas(
+        factors: tuple[AbstractAtlas, ...],
+        factor_names: tuple[str, ...],
+    )
+    ```
+
+    The atlas is formed as a Cartesian product of the factor atlases.
+
+    Structure:
+
+    - `ndim = sum(factor.ndim for factor in factors)`
+    - `factors` is an ordered tuple of constituent atlases.
+    - `factor_names` is an ordered tuple of unique string names for each factor, used as keys for indexing.
+
+    Membership semantics:
+
+    A chart belongs to this atlas iff:
+
+    1. it is a {class}`~coordinax.charts.CartesianProductChart`, and
+    2. each factor chart in the product chart belongs to the corresponding factor atlas.
+
+    Default chart:
+
+    - `default_chart()` returns a {class}`~coordinax.charts.CartesianProductChart` constructed from the default charts of each factor atlas.
+
+    Factor access:
+
+    - `atlas[name]` returns the factor atlas corresponding to the given name.
+    - Factor names must be unique.
+
+    **Example**
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+
+    >>> atlas = cxm.CartesianProductAtlas(
+    ...     factors=(cxm.HyperSphericalAtlas(), cxm.EuclideanAtlas(1)),
+    ...     factor_names=("S2", "R1"),
+    ... )
+    >>> atlas.ndim
+    3
+
+    >>> default = atlas.default_chart()
+    >>> default
+    CartesianProductChart(
+        factors=(SphericalTwoSphere(), Cart1D()), factor_names=('S2', 'R1')
+    )
+
+    >>> atlas["S2"]
+    HyperSphericalAtlas(ndim=2)
+
+    >>> product_chart = cxc.CartesianProductChart(
+    ...     factors=(cxc.sph2, cxc.cart1d), factor_names=("S2", "R1")
+    ... )
+    >>> atlas.has_chart(product_chart)
+    True
+
+    >>> atlas.has_chart(cxc.sph2)
+    False
+    ```
+
+(software-spec-cartesianproductmanifold)=
+
+!!! info `CartesianProductManifold`
+
+    Manifold defined as a Cartesian product of other manifolds: $M = M_1 \times M_2 \times \cdots \times M_k$.
+
+    Given smooth manifolds $M_1, \ldots, M_k$ with intrinsic dimensions $n_1, \ldots, n_k$, the product manifold $M$ has:
+
+    - Total intrinsic dimension: $\dim(M) = n_1 + n_2 + \cdots + n_k$.
+    - **Smooth structure:** The atlas consists of Cartesian product charts $C_1 \times C_2 \times \cdots \times C_k$ where each $C_i$ is from the atlas of $M_i$.
+    - **Transition maps:** Factor component-wise. If $\tau_i : C_i^\alpha \to C_i^\beta$ is a transition map on $M_i$, the product transition map is $\tau(p_1, \ldots, p_k) = (\tau_1(p_1), \ldots, \tau_k(p_k))$.
+
+    Construction:
+
+    ```text
+    CartesianProductManifold(
+        factors: tuple[AbstractManifold, ...],
+        factor_names: tuple[str, ...],
+    )
+    ```
+
+    Structure:
+
+    - `ndim = sum(factor.ndim for factor in factors)`
+    - `atlas = CartesianProductAtlas(...)` formed from factor atlases.
+    - `default_chart = atlas.default_chart()`
+    - Factor names must be unique and are used as keys when accessing the product atlas.
+
+    Chart membership:
+
+    - `has_chart(chart)` returns true iff the chart is a {class}`~coordinax.charts.CartesianProductChart` whose factor charts belong to the corresponding factor atlases.
+
+    Coordinate operations:
+
+    Inherits manifold-level wrappers from `AbstractManifold`:
+
+    - `pt_map(...)`
+    - `realize_cartesian(...)`
+    - `unrealize_cartesian(...)`
+
+    All operations enforce atlas compatibility and then delegate to chart-level transition machinery.
+
+    **Example**
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+
+    >>> M = cxm.CartesianProductManifold(
+    ...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
+    ...     factor_names=("S2", "R1"),
+    ... )
+    >>> M.ndim
+    3
+
+    >>> M.default_chart
+    CartesianProductChart(
+        factors=(SphericalTwoSphere(), Cart1D()), factor_names=('S2', 'R1')
+    )
+
+    >>> M.atlas["S2"]
+    HyperSphericalAtlas(ndim=2)
+
+    >>> product_chart = cxc.CartesianProductChart(
+    ...     factors=(cxc.sph2, cxc.cart1d), factor_names=("S2", "R1")
+    ... )
+    >>> M.has_chart(product_chart)
+    True
+
+    >>> M.has_chart(cxc.sph2)
+    False
+    ```
+
+### Embedded Manifolds
+
+(software-spec-abstractembeddingmap)=
+
+!!! info `AbstractEmbeddingMap`
+
+    Abstract base class representing a smooth embedding of an intrinsic manifold into an ambient manifold.
+
+    An embedding is a smooth injective map $$\iota : M \hookrightarrow N$$ from an intrinsic manifold $M$ (the lower-dimensional embedded space) to an ambient manifold $N$ (the higher-dimensional containing space).
+
+    Structure:
+
+    - `intrinsic: AbstractChart` — the chart on the intrinsic manifold
+    - `ambient: AbstractChart` — the chart on the ambient manifold
+
+    Abstract interface:
+
+    - `embed(point: CDict, *, usys=None) -> CDict` — maps intrinsic coordinates to ambient coordinates
+    - `project(point: CDict, *, usys=None) -> CDict` — maps ambient coordinates back to intrinsic coordinates (inverse or local projection)
+
+    Concrete subclasses (like `CustomEmbeddingMap` or domain-specific embeddings such as `TwoSphereIn3D`) are responsible for implementing the coordinate-level transformation logic.
+
+    Subclasses must implement both `embed()` and `project()` methods. The signatures must preserve the signature property of the ambient chart when appropriate, and correctly handle coordinate transformations with optional unit system support.
+
+    **Example use case**
+
+    An embedding of the 2-sphere $S^2$ into 3D Cartesian space with fixed radius $R$:
+
+    - `intrinsic`: $(\theta, \phi)$ spherical coordinates on $S^2$
+    - `ambient`: $(x, y, z)$ Cartesian coordinates in $\mathbb{R}^3$
+    - `embed`: $(\theta, \phi) \mapsto (R\sin\theta\cos\phi, R\sin\theta\sin\phi, R\cos\theta)$
+    - `project`: drop radial component, recover $(\theta, \phi)$
+
+(software-spec-customembeddingmap)=
+
+!!! info `CustomEmbeddingMap`
+
+    Concrete embedding map defined by user-provided `embed` and `project` functions.
+
+    Construction:
+
+    ```text
+    CustomEmbeddingMap(
+        intrinsic: AbstractChart,
+        ambient: AbstractChart,
+        embed_fn: callable,
+        project_fn: callable,
+    )
+    ```
+
+    The `embed_fn` and `project_fn` are callables with signature:
+
+    ```text
+    (point: CDict, *, usys: OptUSys = None) -> CDict
+    ```
+
+    Semantics:
+
+    - `intrinsic` and `ambient` define the chart types involved in the embedding.
+    - `embed_fn` transforms coordinates from intrinsic to ambient space.
+    - `project_fn` transforms coordinates from ambient back to intrinsic space.
+    - Both functions must respect optional unit system (`usys`) arguments.
+
+    Notes:
+
+    - `CustomEmbeddingMap` allows users to define embeddings without subclassing `AbstractEmbeddingMap`.
+    - The embedding functions are user-provided; coordinax does not validate mathematical correctness (e.g., smoothness, injectivity, or consistency between embed/project).
+    - This is a thin wrapper ideal for simple coordinate transformations or testing.
+
+    **Example**
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> # Define a custom embedding of R into R^2 (line in plane)
+    >>> def embed_fn(point, *, usys=None):
+    ...     return {"x": point["t"], "y": point["t"] * 2}
+    ...
+
+    >>> def project_fn(point, *, usys=None):
+    ...     return {"t": point["x"]}
+    ...
+
+    >>> embed_map = cxm.CustomEmbeddingMap(
+    ...     intrinsic=cxc.Cart1D(),
+    ...     ambient=cxc.Cart2D(),
+    ...     embed_fn=embed_fn,
+    ...     project_fn=project_fn,
+    ... )
+    >>> embed_map
+    CustomEmbeddingMap(intrinsic=Cart1D(), ambient=Cart2D(), ...)
+    ```
+
+(software-spec-embeddedmanifold)=
+
+!!! info `EmbeddedManifold`
+
+    Manifold structure for a smooth embedding of an intrinsic manifold into an ambient manifold.
+
+    An embedded manifold is a triple $(M, N, \iota)$ where:
+
+    - $M$ is the **intrinsic manifold** (the space being embedded)
+    - $N$ is the **ambient manifold** (the containing space)
+    - $\iota: M \to N$ is a smooth **embedding map**
+
+    Construction:
+
+    ```text
+    EmbeddedManifold(
+        intrinsic: AbstractManifold,
+        ambient: AbstractManifold,
+        embed_map: AbstractEmbeddingMap,
+    )
+    ```
+
+    Structure:
+
+    - `intrinsic: AbstractManifold` — the embedded manifold structure
+    - `ambient: AbstractManifold` — the ambient manifold structure
+    - `embed_map: AbstractEmbeddingMap` — the smooth embedding defining coordinates transformation
+    - `atlas = intrinsic.atlas` — uses the intrinsic manifold's atlas
+    - `ndim = intrinsic.ndim` — the dimension is that of the intrinsic manifold
+
+    Embedding API:
+
+    - `embed(intrinsic_point, from_intrinsic_chart, to_ambient_chart, *, usys=None) -> CDict`
+      Transforms a point from intrinsic coordinates (in a specified chart) to ambient coordinates (in a specified chart).
+
+    - `project(ambient_point, from_ambient_chart, to_intrinsic_chart, *, usys=None) -> CDict`
+      Transforms a point from ambient coordinates (in a specified chart) to intrinsic coordinates (in a specified chart).
+
+    Manifold API:
+
+    - `has_chart(chart)` — delegates to `intrinsic.has_chart(chart)`
+    - `default_chart` — inherited from intrinsic manifold
+
+    Chart membership:
+
+    - Only charts supported by the intrinsic atlas are valid members.
+    - Ambient charts are validated at embedding/projection time, not during atlas membership checks.
+
+    Coordinate operations:
+
+    - `pt_embed()` and `pt_project()` are the primary high-level operations.
+    - These functions perform chart transitions in both intrinsic and ambient spaces around the embedding.
+    - Usage: `pt_embed(intrinsic_point, manifold)` or `pt_embed(intrinsic_point, from_chart, to_chart, manifold)`
+
+    Notes:
+
+    - Realize/unrealize to Cartesian coordinates are not yet implemented (marked TODO).
+    - The embedding map encodes both the transition between intrinsic and ambient chart types and any embedding parameters (e.g., radius).
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> # Create a 2-sphere embedded in R^3 with radius 2 km
+    >>> manifold = cxm.EmbeddedManifold(
+    ...     intrinsic=cxm.HyperSphericalManifold(),
+    ...     ambient=cxm.EuclideanManifold(3),
+    ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")),
+    ... )
+
+    >>> # Embed a point from spherical (theta, phi) to Cartesian (x, y, z)
+    >>> p_int = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> p_amb = cxm.pt_embed(p_int, manifold)
+    >>> p_amb
+    {'x': Q(2., 'km'), 'y': Q(0., 'km'), 'z': Q(0., 'km')}
+
+    >>> # Project back from ambient to intrinsic
+    >>> p_int_recovered = cxm.pt_project(p_amb, manifold)
+    >>> p_int_recovered
+    {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
+    ```
+
+(software-spec-embeddedchart)=
+
+!!! info `EmbeddedChart`
+
+    Convenience wrapper chart that pairs an intrinsic chart with an embedding map to define a chart on an embedded manifold.
+
+    `EmbeddedChart` is a lighter-weight alternative to `EmbeddedManifold` for cases where only chart-level coordinate transformations (embedding/projection) are needed.
+
+    Construction:
+
+    ```text
+    EmbeddedChart(embed_map: AbstractEmbeddingMap)
+    ```
+
+    The intrinsic and ambient charts are derived from the embedding map:
+
+    - `intrinsic: AbstractChart` — retrieved from `embed_map.intrinsic`
+    - `ambient: AbstractChart` — retrieved from `embed_map.ambient`
+
+    Chart API:
+
+    - `components` — inherited from intrinsic chart
+    - `coord_dimensions` — inherited from intrinsic chart
+    - `cartesian` — the ambient chart's Cartesian realization
+
+    Embedding convenience methods:
+
+    - `embed(point) -> CDict` — wraps embedding via the `embed_map`
+    - `project(point) -> CDict` — wraps projection via the `embed_map`
+
+    Notes:
+
+    - `EmbeddedChart` delegates dimension and component information to the intrinsic chart.
+    - Cartesian realization is delegated through the ambient chart.
+    - Explicit chart-level embedding/projection may be preferable to the full `EmbeddedManifold` API when working with points in a single context.
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.manifolds as cxm
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> # Wrap a 2-sphere embedding in a chart
+    >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
+
+    >>> # Use as a normal chart with embedded coordinates
+    >>> p_int = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> p_amb = cxm.pt_embed(p_int, chart)
+    >>> p_amb
+    {'r': Q(2., 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
+
+    >>> # Chart properties are from the intrinsic chart
+    >>> chart.components
+    ('theta', 'phi')
+    ```

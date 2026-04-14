@@ -34,6 +34,8 @@ def test_angle_properties(angle):
 
 Hypothesis will generate random test cases with different values, uncovering edge cases you might not have thought of.
 
+For advanced strategy-factory patterns that combine `plum.dispatch` and `@hypothesis.strategies.composite`, see {doc}`plum-dispatch-hypothesis-guide`.
+
 ## Installation
 
 ::::{tab-set}
@@ -213,7 +215,7 @@ The `chart_init_kwargs` strategy generates valid initialization arguments for ch
 ```python
 from hypothesis import given
 import coordinax.charts as cxc
-import coordinax.manifolds as cxmf
+import coordinax.manifolds as cxm
 import coordinax.hypothesis.main as cxst
 
 

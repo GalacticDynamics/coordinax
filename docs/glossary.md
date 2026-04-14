@@ -12,6 +12,15 @@ Chart
 Position
   Synonym for a point on a manifold when emphasizing its role as a location. Often represented by position vectors in a given chart, e.g., `CartesianPos3D(x, y, z)`.
 
+Manifold
+  A topological space that locally resembles ℝⁿ; the underlying geometric domain supporting coordinate systems. Most application domains use smooth manifolds (differentiable structure). See [spec.md § Manifolds](spec.md).
+
+Embedding
+  A smooth injection placing one manifold as a submanifold inside another; used for coordinate transformations across different geometric spaces. See [spec.md § Embeddings](spec.md).
+
+Atlas
+  A collection of compatible charts that together cover an entire manifold, enabling global coordinates.
+
 Transition Map
   A smooth, invertible function relating coordinates in two different charts on the same manifold. Enables smooth transformation between coordinate systems. Also called *chart transition function*. See [spec.md § Coordinate Transitions](spec.md).
 

@@ -25,6 +25,15 @@ __all__ = (  # distances
     "loncoslat_sph3d",
     "math_sph3d",
     "cartnd",
+    # manifolds and atlases
+    "EuclideanManifold",
+    "euclidean3d",
+    "twosphere",
+    "embedded_twosphere",
+    "EmbeddedChart",
+    "EmbeddedManifold",
+    "CustomAtlas",
+    "CustomManifold",
     # representations
     "cconvert",
     "add",
@@ -66,6 +75,16 @@ from coordinax.charts import (
     time1d,
 )
 from coordinax.distances import Distance
+from coordinax.manifolds import (
+    CustomAtlas,
+    CustomManifold,
+    EmbeddedChart,
+    EmbeddedManifold,
+    EuclideanManifold,
+    embedded_twosphere,
+    euclidean3d,
+    twosphere,
+)
 from coordinax.representations import (
     Location,
     NoBasis,

@@ -61,6 +61,35 @@ Use each API by intent:
 - `coordinax.representations.cconvert`: representation-aware top-level conversion API
 - `coordinax.representations.cmap`: reusable partial conversion map
 
+## End-To-End Workflow
+
+This example shows one point represented across chart, manifold, and representation layers.
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+>>> import coordinax.representations as cxr
+>>> import unxt as u
+
+>>> p = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+
+>>> # 1) Chart-level transition map
+>>> q_chart = cxc.pt_map(p, cxc.cart3d, cxc.sph3d)
+>>> sorted(q_chart)
+['phi', 'r', 'theta']
+
+>>> # 2) Manifold-level transition map (adds atlas compatibility checks)
+>>> M = cxm.EuclideanManifold(3)
+>>> q_mfld = M.pt_map(p, cxc.cart3d, cxc.sph3d)
+>>> q_mfld == q_chart
+True
+
+>>> # 3) Representation-aware conversion for point data
+>>> q_rep = cxr.cconvert(p, cxc.cart3d, cxr.point, cxc.sph3d, cxr.point)
+>>> q_rep == q_chart
+True
+```
+
 ## Reusable Representation Maps
 
 Use `cmap` when you repeatedly apply the same conversion pattern.
@@ -75,6 +104,29 @@ Use `cmap` when you repeatedly apply the same conversion pattern.
 >>> to_sph(p)
 {'r': Q(1., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
 ```
+
+## Realization Context (Intrinsic vs. Ambient)
+
+When moving between intrinsic and ambient descriptions, use realization-style chart maps. This is where charts and manifolds meet most directly.
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+>>> import unxt as u
+
+>>> embedded = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(1, "km")))
+
+>>> p_intrinsic = {"theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
+>>> p_ambient = cxm.pt_embed(p_intrinsic, embedded)
+>>> sorted(p_ambient)
+['phi', 'r', 'theta']
+
+>>> p_cart = cxc.pt_map(p_ambient, embedded.ambient, cxc.cart3d)
+>>> sorted(p_cart)
+['x', 'y', 'z']
+```
+
+For point data, representation-aware conversion uses this same realization machinery under the hood, with representation checks.
 
 ## Current Scope And Future Directions
 

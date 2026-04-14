@@ -212,4 +212,6 @@ The coordinate-change chain rule states that composing two Jacobians gives the J
 
 [Charts API](../api/charts.md)
 
+[Working With Manifolds](manifolds.md)
+
 :::

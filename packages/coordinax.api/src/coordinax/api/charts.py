@@ -326,7 +326,7 @@ def unrealize_cartesian(*args: Any, **kwargs: Any) -> Any:
         that case, users should use
         `coordinax.manifolds.AbstractManifold.realize_cartesian` with an
         appropriate embedded manifold chart or construct a
-        `coordinax.embeddings.EmbeddedChart` which provides a custom
+        `coordinax.manifolds.EmbeddedChart` which provides a custom
         realization map.
 
     Raises

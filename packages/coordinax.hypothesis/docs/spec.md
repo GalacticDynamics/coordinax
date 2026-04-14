@@ -12,7 +12,7 @@ This spec is intentionally **subordinate** to the core Coordinax spec:
 ## Goals
 
 1. **Generate only valid objects** according to `coordinax/docs/spec.md`.
-2. **Expose composable strategies** so tests can quantify over many charts/roles/metrics/embeddings.
+2. **Expose composable strategies** so tests can quantify over many charts/representations/metrics/embeddings.
 3. **Support both broad and targeted testing**:
    - broad: quantify over all charts and roles to catch regressions,
    - targeted: generate specific families (e.g. Euclidean charts only; embedded charts only; physical tangent roles only).
@@ -77,6 +77,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
 | `coordinax.hypothesis.angles` | `angles` |
 | `coordinax.hypothesis.distances` | `distances` |
 | `coordinax.hypothesis.charts` | `chart_classes`, `chart_init_kwargs`, `charts`, `charts_like`, `cdicts` |
+| `coordinax.hypothesis.manifolds` | `atlas_classes`, `atlases`, `manifold_classes`, `manifolds` |
 | `coordinax.hypothesis.representations` | `geometry_classes`, `geometries`, `basis_classes`, `bases`, `semantic_classes`, `semantics`, `valid_basis_classes_for_geometry`, `valid_semantic_classes_for_geometry`, `representations`, `cdicts` |
 | `coordinax.hypothesis.vectors` | `vectors` |
 
@@ -243,6 +244,12 @@ This module provides general-purpose strategies for generating valid `coordinax`
         - If factors/names are omitted: weighted selection between specialized flat-key product subclasses and general namespaced products.
         - Preserves requested total `ndim` when provided.
 
+    - `charts(EmbeddedChart, /, *, ndim=None)`
+        - Generates `EmbeddedChart` instances backed by `TwoSphereIn3D(radius=...)`.
+        - Generated charts are always intrinsic 2-D (`chart.ndim == 2`).
+        - `ndim` is supported as `int | None | SearchStrategy[int]`; draws with values other than `2` are rejected via `assume(...)`.
+        - As with other explicit `chart_cls` overloads, non-empty `filter` or `exclude` arguments are invalid and raise `ValueError` at draw time.
+
 !!! info `charts_like`:
 
     Generate charts compatible with a template chart.
@@ -270,6 +277,135 @@ This module provides general-purpose strategies for generating valid `coordinax`
     - Returns a mapping whose keys are exactly `chart.components`.
     - Values are generated as quantities whose units follow `chart.coord_dimensions` component-by-component.
     - Supports scalar and array-valued payloads.
+
+### `coordinax.hypothesis.manifolds`
+
+!!! info `atlas_classes`:
+
+    Draw concrete atlas classes (not instances).
+
+    Signature:
+    - `atlas_classes(filter=object, *, exclude_abstract=True, exclude=())`
+
+    Parameters:
+    - `filter`: `type | tuple[type, ...] | SearchStrategy[...]`.
+        Tuple filters use AND semantics.
+    - `exclude_abstract`: `bool | SearchStrategy[bool]`.
+        `True` (default) restricts draws to concrete atlas classes.
+    - `exclude`: tuple of classes to remove covariantly.
+
+    Contract:
+    - Returns `type[coordinax.manifolds.AbstractAtlas]`.
+    - Uses subclass discovery over `AbstractAtlas`.
+    - Supports strategy-valued `filter` and `exclude_abstract` inputs.
+    - Never returns `AbstractAtlas` itself when `exclude_abstract=True`.
+
+    Examples:
+    - `@given(Acls=cxst.atlas_classes())`
+    - `@given(Acls=cxst.atlas_classes(filter=cxm.CustomAtlas))`
+
+!!! info `atlases`:
+
+    Generate atlas instances across the concrete atlas hierarchy.
+
+    Signature:
+        - `atlases(atlas_cls=None, /, filter=object, *, exclude=(), ndim=None, required_chart_classes=())`
+
+    Parameters:
+        - `atlas_cls`: optional first positional argument. May be `None`, an atlas class, or a strategy producing atlas classes.
+    - `filter`: class/tuple/strategy constraining which atlas classes may be drawn.
+    - `exclude`: tuple of atlas classes to remove covariantly.
+    - `ndim`: `int | SearchStrategy[int] | None`. When provided, generation is restricted to atlas classes that can realize that intrinsic dimension.
+        - `required_chart_classes`: tuple of chart classes required in generated `CustomAtlas` instances. Ignored for class selection and only valid when `atlas_cls` resolves to `CustomAtlas`.
+
+    Contract:
+    - Returns `coordinax.manifolds.AbstractAtlas` instances.
+        - Dispatch architecture follows the standard composite-dispatch pattern:
+            - abstract overload defines canonical docs and signature,
+            - `SearchStrategy` overload draws `atlas_cls` then redispatches,
+            - typed overload constructs an atlas for the selected class.
+        - `atlas_cls=None`: draws class via `atlas_classes(...)` then redispatches.
+        - `atlas_cls` as a strategy: draws class then redispatches.
+        - `atlas_cls` as a class: builds directly with class-specific logic.
+        - Covers the supported concrete atlas implementations: Euclidean, two-sphere, Cartesian-product, and custom.
+        - For `CustomAtlas`, generated `charts` is a tuple of unique zero-arg constructible chart classes, default chart class is included, and all classes match target `ndim`.
+        - For `CustomAtlas`, every class in `required_chart_classes` is included and validated.
+    - Registers `st.from_type(coordinax.manifolds.AbstractAtlas)` to this strategy.
+        - Registers `st.from_type(coordinax.manifolds.CustomAtlas)` via `atlases(CustomAtlas)`.
+
+    Notes:
+    - The strategy guarantees valid atlas construction, not stronger cross-class semantic laws that may differ between atlas implementations.
+
+        Failure behavior:
+        - If `atlas_cls` is provided and `filter` or `exclude` are non-empty, raise `ValueError`.
+        - If `required_chart_classes` is provided for non-custom atlas classes, raise `ValueError`.
+        - If a required chart class is not zero-argument constructible, raise `ValueError`.
+        - If a required chart class dimension differs from target `ndim`, raise `ValueError`.
+
+    Examples:
+    - `@given(A=cxst.atlases())`
+    - `@given(A=cxst.atlases(ndim=2))`
+        - `@given(A=cxst.atlases(cxm.CustomAtlas))`
+        - `@given(A=cxst.atlases(st.sampled_from((cxm.CustomAtlas, cxm.EuclideanAtlas))))`
+        - `@given(A=cxst.atlases(cxm.CustomAtlas, ndim=2, required_chart_classes=(cxc.Cart2D, cxc.Polar2D)))`
+
+!!! info `manifold_classes`:
+
+    Draw concrete manifold classes (not instances).
+
+    Signature:
+    - `manifold_classes(filter=object, *, exclude_abstract=True, exclude=())`
+
+    Parameters:
+    - Same filtering semantics as `atlas_classes`, but over `AbstractManifold` subclasses.
+
+    Contract:
+    - Returns `type[coordinax.manifolds.AbstractManifold]`.
+    - Uses subclass discovery over `AbstractManifold`.
+    - Never returns `AbstractManifold` itself when `exclude_abstract=True`.
+
+    Examples:
+    - `@given(Mcls=cxst.manifold_classes())`
+    - `@given(Mcls=cxst.manifold_classes(filter=cxm.CustomManifold))`
+
+!!! info `manifolds`:
+
+    Generate manifold instances across the concrete manifold hierarchy.
+
+    Signature:
+    - `manifolds(manifold_cls=None, /, filter=object, *, exclude=(), ndim=None, required_chart_classes=())`
+
+    Parameters:
+    - `manifold_cls`: optional first positional argument. May be `None`, a manifold class, or a strategy producing manifold classes.
+    - `filter`: class/tuple/strategy constraining which manifold classes may be drawn.
+    - `exclude`: tuple of manifold classes to remove covariantly.
+    - `ndim`: `int | SearchStrategy[int] | None`. When provided, generation is restricted to manifold classes that can realize that intrinsic dimension.
+    - `required_chart_classes`: tuple of chart classes required in generated `CustomManifold` instances. Only valid when `manifold_cls` resolves to `CustomManifold`.
+
+    Contract:
+    - Returns `coordinax.manifolds.AbstractManifold` instances.
+    - Dispatch architecture follows the standard composite-dispatch pattern:
+      - abstract overload defines canonical docs and signature,
+      - `SearchStrategy` overload draws `manifold_cls` then redispatches,
+      - typed overload constructs a manifold for the selected class.
+    - `manifold_cls=None`: draws class via `manifold_classes(...)` then redispatches.
+    - `manifold_cls` as a strategy: draws class then redispatches.
+    - `manifold_cls` as a class: builds directly with class-specific logic.
+    - Covers supported concrete manifold implementations: Euclidean, two-sphere, embedded, Cartesian-product, and custom.
+    - For `CustomManifold`, atlas generation delegates to `atlases(CustomAtlas, ...)` and forwards `required_chart_classes`.
+    - Registers `st.from_type(coordinax.manifolds.AbstractManifold)` to this strategy.
+    - Registers `st.from_type(coordinax.manifolds.CustomManifold)` via `manifolds(CustomManifold)`.
+
+    Failure behavior:
+    - If `manifold_cls` is provided and `filter` or `exclude` are non-empty, raise `ValueError`.
+    - If `required_chart_classes` is provided for non-custom manifold classes, raise `ValueError`.
+
+    Examples:
+    - `@given(M=cxst.manifolds())`
+    - `@given(M=cxst.manifolds(ndim=2))`
+    - `@given(M=cxst.manifolds(cxm.CustomManifold))`
+    - `@given(M=cxst.manifolds(st.sampled_from((cxm.CustomManifold, cxm.EuclideanManifold))))`
+    - `@given(M=cxst.manifolds(cxm.CustomManifold, ndim=2, required_chart_classes=(cxc.Cart2D, cxc.Polar2D)))`
 
 ### `coordinax.hypothesis.representations`
 
@@ -442,28 +578,38 @@ This module provides general-purpose strategies for generating valid `coordinax`
     - `vectors(**kwargs)`
     - `vectors(chart, /, **kwargs)`
     - `vectors(chart, rep, /, **kwargs)`
+    - `vectors(chart, rep, manifold, /, **kwargs)`
 
     Parameters:
     - `chart`: positional chart argument, either a concrete chart instance or a strategy producing one.
         The zero-argument form defaults to the chart strategy family from `coordinax.hypothesis.charts`.
     - `rep`: positional `coordinax.representations.Representation` argument, either concrete or strategy-valued.
         The `vectors(chart)` overload samples a valid representation from `coordinax.hypothesis.representations.representations(check_valid=True)`.
+    - `manifold`: positional manifold argument, either concrete or strategy-valued.
+        The `vectors(chart, rep)` overload infers the manifold from the chart using Coordinax chart-to-manifold inference.
     - `dtype`, `shape`, `elements`: forwarded to underlying payload generation.
         `shape=()` is scalar-by-default and is the preferred mode for JAX-first property tests; batching is done in tests via `jax.vmap`.
 
     Contract:
     - Returns `coordinax.vectors.Point`.
+    - Public dispatch is positional, not keyword-based: chart, representation, and manifold are selected by plum overload resolution from the positional arguments provided.
     - Strategy-valued positional inputs are drawn first, then redispatched to the matching concrete overload.
     - `vectors()` is equivalent to drawing a chart from the default chart strategy and redispatching to `vectors(chart)`.
     - `vectors(chart)` draws a valid representation strategy first, then redispatches to `vectors(chart, rep)`.
     - `vectors(chart, rep)` delegates payload generation to `coordinax.hypothesis.representations.cdicts(chart, rep, ...)` and infers the manifold from `chart`.
+    - `vectors(chart, rep, manifold)` delegates payload generation to `coordinax.hypothesis.representations.cdicts(chart, rep, ...)` and uses the provided manifold unchanged.
     - Generated `data` keys are exactly `chart.components`.
     - Generated component dimensions follow `chart.coord_dimensions`, subject to representation validity constraints.
     - Constructed vectors preserve the selected metadata exactly:
         - `vec.chart is chart` where concrete chart identity is preserved,
         - `vec.rep == rep` for explicit representation overloads,
+        - explicit manifold overloads preserve the provided manifold object.
+    - The generated vector must satisfy core Vector initialization invariants from Coordinax core spec:
+        `vec.manifold.has_chart(vec.chart)` and schema-consistent component data.
 
     Failure behavior:
+    - If an explicit manifold does not support the explicit chart, `vectors(chart, rep, manifold)` raises `ValueError`.
+    - If manifold inference is unavailable for a concrete `chart` in the `vectors(chart, rep)` overload, that overload raises `ValueError`.
     - If a strategy draw yields an unsupported chart, incompatible `(chart, rep)` pair, or any combination that fails manifold inference or payload validation, the draw is discarded with Hypothesis assumptions rather than escaping as a hard failure.
     - If `rep` is incompatible with payload constraints (for example invalid point-geometry basis/semantic pairings), errors propagate through the representation CDict path until filtered or raised by the applicable overload.
     - If filtering and assumptions exhaust the search space, Hypothesis reports an unsatisfiable strategy.

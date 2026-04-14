@@ -47,7 +47,7 @@ def draw_if_strategy(draw: st.DrawFn, v: T | st.SearchStrategy[T], /) -> T:
 
     With a strategy, a value is drawn:
 
-    >>> @st.composite  # doctest: +SKIP
+    >>> @st.composite
     ... def demo(draw):
     ...     return draw_if_strategy(draw, st.just("hello"))
     >>> demo().example()  # doctest: +SKIP

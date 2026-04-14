@@ -11,6 +11,11 @@ __all__ = (
     "charts",
     "charts_like",
     "cdicts",
+    # Manifolds
+    "atlas_classes",
+    "atlases",
+    "manifold_classes",
+    "manifolds",
     # Representations
     "geometry_classes",
     "geometries",
@@ -32,6 +37,12 @@ from coordinax.hypothesis.charts import (
     charts_like,
 )
 from coordinax.hypothesis.distances import distances
+from coordinax.hypothesis.manifolds import (
+    atlas_classes,
+    atlases,
+    manifold_classes,
+    manifolds,
+)
 from coordinax.hypothesis.representations import (
     bases,
     basis_classes,

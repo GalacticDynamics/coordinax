@@ -23,6 +23,7 @@ coordinax.interop.astropy <packages/coordinax.interop.astropy/index.md>
 
 guides/quantities.md
 guides/charts.md
+guides/manifolds.md
 guides/representations.md
 guides/vectors.md
 packages/coordinax.hypothesis/testing-guide
@@ -145,6 +146,7 @@ import coordinax.distances
 import coordinax.hypothesis
 import coordinax.interop
 import coordinax.main
+import coordinax.manifolds
 import coordinax.representations
 import coordinax.vectors
 -->
@@ -155,7 +157,7 @@ import coordinax.vectors
 >>> from inspect import ismodule
 >>> [name for name in dir(coordinax)
 ...  if not name.startswith("_") and ismodule(getattr(coordinax, name))]
-['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main', 'representations', 'vectors']
+['angles', 'api', 'astro', 'charts', 'distances', 'hypothesis', 'internal', 'interop', 'main', 'manifolds', 'representations', 'vectors']
 ```
 
 We recommend importing as needed:
@@ -164,6 +166,7 @@ We recommend importing as needed:
 - `coordinax.angles` as `cxa` : further angle-specific functionality.
 - `coordinax.distances` as `cxd` : further distance-specific functionality.
 - `coordinax.charts` as `cxc` : chart-specific functionality.
+- `coordinax.manifolds` as `cxm` : manifold-specific functionality.
 - `coordinax.representations` as `cxr` : representation-specific functionality.
 - `coordinax.vectors` as `cxv` : vector-specific functionality.
 

@@ -44,7 +44,7 @@ def realize_cartesian(
       method will fail. In that case, users should use
       `coordinax.manifolds.AbstractManifold.realize_cartesian` with an
       appropriate embedded manifold chart or construct a
-      `coordinax.embeddings.EmbeddedChart` which provides a custom
+      `coordinax.manifolds.EmbeddedChart` which provides a custom
       realization map.
 
     Parameters
@@ -113,7 +113,7 @@ def unrealize_cartesian(
         that case, users should use
         `coordinax.manifolds.AbstractManifold.realize_cartesian` with an
         appropriate embedded manifold chart or construct a
-        `coordinax.embeddings.EmbeddedChart` which provides a custom
+        `coordinax.manifolds.EmbeddedChart` which provides a custom
         realization map.
 
     Parameters

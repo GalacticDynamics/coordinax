@@ -57,7 +57,7 @@ class TestCartesianAdd:
         assert result["x"] == u.Q(5.0, "m")
 
     def test_cx_add(self) -> None:
-        result = cx.add(_cart_vec(1, 2, 3), _cart_vec(4, 5, 6))
+        result = cxr.add(_cart_vec(1, 2, 3), _cart_vec(4, 5, 6))
         assert result["x"] == u.Q(5, "m")
 
 
@@ -93,7 +93,7 @@ class TestCartesianSubtract:
         assert result["x"] == u.Q(3.0, "m")
 
     def test_cx_subtract(self) -> None:
-        result = cx.subtract(_cart_vec(4, 5, 6), _cart_vec(1, 2, 3))
+        result = cxr.subtract(_cart_vec(4, 5, 6), _cart_vec(1, 2, 3))
         assert result["x"] == u.Q(3, "m")
 
 

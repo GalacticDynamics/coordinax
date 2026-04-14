@@ -394,16 +394,17 @@ ignore = [
 "coordinax.hypothesis.charts"          = "cxcst"
 "coordinax.hypothesis.distances"       = "cxdst"
 "coordinax.hypothesis.main"            = "cxst"
+"coordinax.hypothesis.manifolds"       = "cxmst"
 "coordinax.hypothesis.representations" = "cxrst"
 "coordinax.hypothesis.vectors"         = "cxvst"
 "coordinax.internal"                   = "cxi"
 "coordinax.main"                       = "cx"
+"coordinax.manifolds"                  = "cxm"
 "coordinax.representations"            = "cxr"
 "coordinax.vectors"                    = "cxv"
 equinox                                = "eqx"
 functools                              = "ft"
 unxt                                   = "u"
-
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
