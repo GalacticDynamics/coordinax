@@ -1,4 +1,4 @@
-"""Vector."""
+"""3-Dimensional charts."""
 
 __all__ = (
     "Abstract3D",

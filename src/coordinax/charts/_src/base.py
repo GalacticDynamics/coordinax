@@ -1,4 +1,4 @@
-"""Vector."""
+"""Charts."""
 
 __all__ = (
     "AbstractChart",

@@ -27,6 +27,16 @@ Basis
 Semantic Kind
   The role and interpretation of data independent of coordinates. Examples: *position* (affine), *displacement* (tangent), *velocity* (tangent). See [Role](#affine-role) concepts.
 
+```
+
+(affine-role)=
+
+## Semantic Roles & Transformations
+
+```{glossary}
+Vector Transformation
+  Changing vector components under a coordinate change while preserving role semantics; implemented via `cconvert`. Positions and velocities transform differently due to their different roles. See [Conventions § Vector Transformation](conventions.md#vector-transformation-cconvert).
+
 Representation Conversion
   Changing an object's representation (its form) without changing underlying data; implemented via `cconvert`. Example: converting `Distance` from meters to kilometers, or `Angle` from radians to degrees. See [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
 
@@ -42,7 +52,7 @@ Quax
   Multiple-dispatch layer enabling custom array-like types to work seamlessly with JAX functions. Coordinates with {class}`~quax.ArrayValue` protocol. See [Conventions § Quax & ArrayValue](conventions.md#quax--arrayvalue).
 
 ArrayValue
-  Quax protocol for custom array-like types (e.g., `Distance`, `Angle`, `Vector`). Enables JIT compilation and JAX operations on custom types. See [Conventions § Quax & ArrayValue](conventions.md#quax--arrayvalue).
+  Quax protocol for custom array-like types (e.g., `Distance`, `Angle`, `Point`). Enables JIT compilation and JAX operations on custom types. See [Conventions § Quax & ArrayValue](conventions.md#quax--arrayvalue).
 
 Type-Safe
   Operations preserve and check type information at runtime; `coordinax` uses type hints and `beartype` for runtime validation via Quax dispatch.

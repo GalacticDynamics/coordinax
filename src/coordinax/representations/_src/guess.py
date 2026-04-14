@@ -1,4 +1,4 @@
-"""Vector."""
+"""Guesses for the Representation and its components."""
 
 __all__: tuple[str, ...] = ()
 

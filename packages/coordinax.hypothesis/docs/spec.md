@@ -66,6 +66,7 @@ Rationale:
 - `coordinax.hypothesis.main`: the main entry point, with general-purpose strategies for common objects.
 - `coordinax.hypothesis.angles`: strategies for generating various types of angular quantities.
 - `coordinax.hypothesis.distances`: strategies for generating various types of distance quantities.
+- `coordinax.hypothesis.vectors`: strategies for generating vector objects.
 
 ### Main module: `coordinax.hypothesis.main`
 
@@ -77,6 +78,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
 | `coordinax.hypothesis.distances` | `distances` |
 | `coordinax.hypothesis.charts` | `chart_classes`, `chart_init_kwargs`, `charts`, `charts_like`, `cdicts` |
 | `coordinax.hypothesis.representations` | `geometry_classes`, `geometries`, `basis_classes`, `bases`, `semantic_classes`, `semantics`, `valid_basis_classes_for_geometry`, `valid_semantic_classes_for_geometry`, `representations`, `cdicts` |
+| `coordinax.hypothesis.vectors` | `vectors` |
 
 ### `coordinax.hypothesis.angles`
 
@@ -429,3 +431,49 @@ This module provides general-purpose strategies for generating valid `coordinax`
     Failure behavior:
     - For `PointGeometry`, non-`NoBasis` basis values raise `TypeError`.
     - For `PointGeometry`, non-`Location` semantic values raise `TypeError`.
+
+### `coordinax.hypothesis.vectors`
+
+!!! info `vectors`:
+
+    Generate `coordinax.vectors.Point` instances with chart/representation-consistent payloads.
+
+    Signature:
+    - `vectors(**kwargs)`
+    - `vectors(chart, /, **kwargs)`
+    - `vectors(chart, rep, /, **kwargs)`
+
+    Parameters:
+    - `chart`: positional chart argument, either a concrete chart instance or a strategy producing one.
+        The zero-argument form defaults to the chart strategy family from `coordinax.hypothesis.charts`.
+    - `rep`: positional `coordinax.representations.Representation` argument, either concrete or strategy-valued.
+        The `vectors(chart)` overload samples a valid representation from `coordinax.hypothesis.representations.representations(check_valid=True)`.
+    - `dtype`, `shape`, `elements`: forwarded to underlying payload generation.
+        `shape=()` is scalar-by-default and is the preferred mode for JAX-first property tests; batching is done in tests via `jax.vmap`.
+
+    Contract:
+    - Returns `coordinax.vectors.Point`.
+    - Strategy-valued positional inputs are drawn first, then redispatched to the matching concrete overload.
+    - `vectors()` is equivalent to drawing a chart from the default chart strategy and redispatching to `vectors(chart)`.
+    - `vectors(chart)` draws a valid representation strategy first, then redispatches to `vectors(chart, rep)`.
+    - `vectors(chart, rep)` delegates payload generation to `coordinax.hypothesis.representations.cdicts(chart, rep, ...)` and infers the manifold from `chart`.
+    - Generated `data` keys are exactly `chart.components`.
+    - Generated component dimensions follow `chart.coord_dimensions`, subject to representation validity constraints.
+    - Constructed vectors preserve the selected metadata exactly:
+        - `vec.chart is chart` where concrete chart identity is preserved,
+        - `vec.rep == rep` for explicit representation overloads,
+
+    Failure behavior:
+    - If a strategy draw yields an unsupported chart, incompatible `(chart, rep)` pair, or any combination that fails manifold inference or payload validation, the draw is discarded with Hypothesis assumptions rather than escaping as a hard failure.
+    - If `rep` is incompatible with payload constraints (for example invalid point-geometry basis/semantic pairings), errors propagate through the representation CDict path until filtered or raised by the applicable overload.
+    - If filtering and assumptions exhaust the search space, Hypothesis reports an unsatisfiable strategy.
+
+    Type strategy registration:
+    - `st.from_type(coordinax.vectors.Point)` MUST resolve to `vectors()`.
+
+    Examples:
+    - `@given(v=cxst.vectors())`
+    - `@given(v=cxst.vectors(cxc.cart3d))`
+    - `@given(v=cxst.vectors(cxc.cart3d, cxr.point))`
+    - `@given(v=cxst.vectors(cxst.charts(), cxr.point))`
+    - `@given(v=cxst.vectors(shape=(8,)))`

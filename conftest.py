@@ -198,6 +198,7 @@ def _preload_coordinax_namespace() -> None:
         "coordinax.hypothesis",
         "coordinax.main",
         "coordinax.representations",
+        "coordinax.vectors",
     )
     for module_name in module_names:
         with contextlib.suppress(ModuleNotFoundError):

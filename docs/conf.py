@@ -114,6 +114,7 @@ nitpick_ignore = [
     ("py:class", "dataclassish._src.converters.PassThroughTs"),
     ("py:class", "dataclassish._src.converters.ArgT"),
     ("py:class", "unxt._src.quantity.quantity.Quantity[PhysicalType('length')]"),
+    ("py:class", "coordinax.vectors._src.core.Point"),
     ("py:class", "coordinax.representations._src.semantics.AbstractSemanticKind"),
     ("py:class", "coordinax.representations._src.geom.PointGeometry"),
     ("py:class", "coordinax.representations._src.basis.AbstractBasis"),

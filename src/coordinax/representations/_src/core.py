@@ -1,16 +1,21 @@
 """Vector Conversion."""
 
-__all__ = ("cmap",)
+__all__ = ("add", "cmap", "subtract")
 
-from typing import Any
+from collections.abc import Callable, Mapping
+from typing import Any, no_type_check
 
+import jax.tree as jtu
 import plum
+
+import quaxed.numpy as jnp
+import unxt.quantity as uq
 
 import coordinax.api.representations as api
 import coordinax.charts as cxc
 from .geom import PointGeometry
 from .rep import Representation
-from coordinax.internal.custom_types import OptUSys
+from coordinax.internal.custom_types import CDict, OptUSys
 
 # =======================================================================
 # CMap
@@ -45,6 +50,16 @@ def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
     {'r': Q(3.74165739, 'm'), 'theta': Q(0.64052231, 'rad'),
      'phi': Q(1.10714872, 'rad')}
 
+    Apply to a Point:
+
+    >>> import coordinax.vectors as cxv
+    >>> vec = cxv.Point.from_(q, cxc.cart3d)
+    >>> map(vec)
+    Point(
+      {'r': Q(3.74165739, 'm'), 'theta': Q(0.64052231, 'rad'),
+       'phi': Q(1.10714872, 'rad')},
+      chart=Spherical3D()
+    )
 
     """
     return lambda x, *args, **kwargs: api.cconvert(
@@ -294,3 +309,127 @@ def cconvert(
     return cxc.pt_map(
         x, from_chart, from_geom, from_rep, to_chart, to_geom, to_rep, usys=usys
     )
+
+
+# =======================================================================
+# Leaf binary operation helper
+
+
+@no_type_check
+def _leaf_binop(
+    op: Callable, a: Mapping[str, Any], b: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Apply a binary op to matching leaves in two component dicts."""
+    return jtu.map(op, a, b, is_leaf=uq.is_any_quantity)
+
+
+# =======================================================================
+# Add
+
+
+def _binop_via_cartesian(
+    op: Callable,
+    lhs: Any,
+    lhs_chart: cxc.AbstractChart,
+    rhs: Any,
+    rhs_chart: cxc.AbstractChart,
+) -> tuple[CDict, cxc.AbstractChart]:
+    """Run *op* on two CDicts, round-tripping through Cartesian if needed.
+
+    Returns ``(result_data, result_chart)``.
+    """
+    target_chart = lhs_chart
+
+    try:
+        ambient_cart = target_chart.cartesian
+    except cxc.NoGlobalCartesianChartError:
+        ambient_cart = None
+
+    if ambient_cart is None or ambient_cart == target_chart:
+        rhs_data = (
+            rhs
+            if rhs_chart == target_chart
+            else cxc.pt_map(rhs, rhs_chart, target_chart)
+        )
+        return _leaf_binop(op, lhs, rhs_data), target_chart
+
+    # Curvilinear: round-trip through Cartesian.
+    lhs_cart = cxc.pt_map(lhs, lhs_chart, ambient_cart)
+    rhs_cart = cxc.pt_map(rhs, rhs_chart, ambient_cart)
+    result_cart = _leaf_binop(op, lhs_cart, rhs_cart)
+    out: CDict = cxc.pt_map(result_cart, ambient_cart, target_chart)  # ty: ignore[invalid-assignment]
+    return out, target_chart
+
+
+@plum.dispatch
+def add(
+    lhs: Any,
+    lhs_chart: cxc.AbstractChart,
+    lhs_rep: Representation,
+    rhs: Any,
+    rhs_chart: cxc.AbstractChart,
+    rhs_rep: Representation,
+    /,
+) -> Any:
+    """Add two coordinate data objects via Cartesian round-trip.
+
+    Both operands are converted to the ambient Cartesian chart of
+    ``lhs_chart``, added component-wise, then converted back to
+    ``lhs_chart``.  If ``lhs_chart`` is already Cartesian (or has no
+    global Cartesian), ``rhs`` is converted into ``lhs_chart`` and added
+    directly.
+
+    Examples
+    --------
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> p1 = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
+    >>> p2 = {"x": u.Q(4, "m"), "y": u.Q(5, "m"), "z": u.Q(6, "m")}
+    >>> cxr.add(p1, cxc.cart3d, cxr.point, p2, cxc.cart3d, cxr.point)
+    {'x': Q(5, 'm'), 'y': Q(7, 'm'), 'z': Q(9, 'm')}
+
+    """
+    del lhs_rep, rhs_rep  # unused
+    result_data, _ = _binop_via_cartesian(jnp.add, lhs, lhs_chart, rhs, rhs_chart)
+    return result_data
+
+
+# =======================================================================
+# Subtract
+
+
+@plum.dispatch
+def subtract(
+    lhs: Any,
+    lhs_chart: cxc.AbstractChart,
+    lhs_rep: Representation,
+    rhs: Any,
+    rhs_chart: cxc.AbstractChart,
+    rhs_rep: Representation,
+    /,
+) -> Any:
+    """Subtract two coordinate data objects via Cartesian round-trip.
+
+    Both operands are converted to the ambient Cartesian chart of
+    ``lhs_chart``, subtracted component-wise, then converted back to
+    ``lhs_chart``.  If ``lhs_chart`` is already Cartesian (or has no
+    global Cartesian), ``rhs`` is converted into ``lhs_chart`` and
+    subtracted directly.
+
+    Examples
+    --------
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.charts as cxc
+    >>> import unxt as u
+
+    >>> p1 = {"x": u.Q(4, "m"), "y": u.Q(5, "m"), "z": u.Q(6, "m")}
+    >>> p2 = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
+    >>> cxr.subtract(p1, cxc.cart3d, cxr.point, p2, cxc.cart3d, cxr.point)
+    {'x': Q(3, 'm'), 'y': Q(3, 'm'), 'z': Q(3, 'm')}
+
+    """
+    del lhs_rep, rhs_rep  # unused
+    result_data, _ = _binop_via_cartesian(jnp.subtract, lhs, lhs_chart, rhs, rhs_chart)
+    return result_data

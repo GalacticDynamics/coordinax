@@ -1,6 +1,6 @@
 # Coordinax Core Specification
 
-This document is the **normative** specification for the mathematical and software design of the `coordinax` coordinate and vector system. It defines a low-level, mathematically correct framework—**Charts**, **Metrics**, **Manifolds**, **Frames**, **Embeddings**, and **Maps**—and a high-level user API built on top of them -- **Vector**, **Reference Frames**, **Coordinate**. The goals are:
+This document is the **normative** specification for the mathematical and software design of the `coordinax` coordinate and vector system. It defines a low-level, mathematically correct framework—**Charts**, **Metrics**, **Manifolds**, **Frames**, **Embeddings**, and **Maps**—and a high-level user API built on top of them -- **Point**, **Reference Frames**, **Coordinate**. The goals are:
 
 1. **Correctness-first foundation**: rigorous definitions of points, tangents, their transformations, etc.
 2. **Ergonomic high-level API**: common tasks should not expose low-level details.
@@ -187,6 +187,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jacobian_pt_map`, `realize_cartesian`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, </br> `PointGeometry`, `point_geom`, </br> `NoBasis`, `no_basis`, </br> `Location`, `loc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
+| `coordinax.vectors` | `Point`, `ToUnitsOptions` |
 
 </br>
 
@@ -1224,3 +1225,81 @@ Separating semantics from geometry provides two advantages:
 
     - `loc` is the pre-defined canonical `Location()` instance.
     - It is used in the default point representation `point = Representation(point_geom, no_basis, loc)`.
+
+
+</br>
+
+(software-spec-vectors)=
+
+## Vectors
+
+!!! info `AbstractVector`
+
+    Methods \& Properties:
+
+    - ``from_()``: multiple dispatch constructor of vector-like objects from arguments.
+    - ``uconvert``: convert the vector to the given units.
+      - ``(V, *args, **kwargs) -> uconvert(*args, V, **kwargs)`` redispatch
+      - ``(V, u.AbstractUnitSystem) -> uconvert(u.AbstractUnitSystem, V)`` redispatch
+    - ``__array_namespace__``: the array API namespace -- `quax.numpy`. This delegates to `quax` primitives.
+    - ``__eq__``: equality check, based on type equality and `quax` equality primitive.
+    - ``copy()``: call `dataclass.replace`.
+    - ``flatten()``: flatten the vector.
+    - ``ravel()``: return a flattened vector.
+    - ``reshape(*shape)``: return a reshaped vector
+    - ``round(decimals)``: return a rounded vector.
+    - ``to_device(device)``: move the vector to a new device
+    - ``__repr__()``: string representation through `wadler_lindig`.
+    - ``__str__()``: string representation through `wadler_lindig`.
+    - ``is_like()``: check if the object is a `AbstractVector` object.
+
+    Abstract Methods \& Properties:
+
+    - ``shape``: the shape of the vector. Abstract method.
+    - ``__getitem__(slice)``: slice the vector.
+    - ``astype(dtype, **kw)`` : cast the vector to a new dtype.
+
+    Not Supported:
+
+    - ``materialise``: for materialising the vector for `quax`.
+    - ``__complex__``
+    - ``__float__``
+    - ``__index__``
+    - ``__int__``
+    - ``__setitem__`` : vectors are immutable.
+    - ``__hash__()``: hash the vector by its field items. In general this raises an error.
+
+!!! info `Point`
+
+    Arguments:
+
+    - ``data``: the data for each component.
+    - ``chart``: the chart of the vector, e.g. ``cxc.cart3d``.
+    - ``rep``: the `coordinax.representations.Representation`, e.g. `cxr.point`.
+
+    Methods \& Properties:
+
+    - ``__getitem__()``
+    - ``__pdoc__()``
+    - ``cconvert()``
+    - ``aval()``
+    - ``shape``
+    - ``norm()``
+
+    `from_` Constructor Dispatches:
+
+    - ``(Point,) -> Point``
+    - ``(dict,C,R) -> Point``
+    - ``(dict,C) -> (dict,C,R) -> Point``
+    - ``(dict,) -> (dict,C,R) -> Point``
+    - ``(Q,C,R) -> (dict,C,R) -> Point``
+    - ``(Q,C) -> (dict,C,R) -> Point``
+    - ``(Q,) -> (dict,C) -> (dict,C,R) -> Point``
+    - ``(Q,R) -> (dict,C,R) -> Point``
+    - ``(Array,unit) -> (Q,) -> ... -> Point``
+    - ``(Array,unit,C) -> ... -> Point``
+    - ``(Array,unit,C,R) -> ... -> Point``
+
+!!! info `ToUnitsOptions`
+
+    Used for `unxt.uconvert` dispatches.

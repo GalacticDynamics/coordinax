@@ -1,4 +1,4 @@
-"""Vector."""
+"""6-Dimensional charts."""
 
 __all__ = ("Abstract6D", "PoincarePolar6D", "poincarepolar6d")
 

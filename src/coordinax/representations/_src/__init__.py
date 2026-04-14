@@ -1,4 +1,4 @@
-"""Vector."""
+"""Representations."""
 
 from .basis import *
 from .core import *

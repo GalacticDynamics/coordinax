@@ -7,14 +7,14 @@ plain ``CDict`` dictionaries produces the same numerical results as Astropy's
 Scope
 -----
 * Only ``CDict`` (dict of ``unxt.Quantity``) inputs are tested here.
-* ``coordinax.Vector`` ↔ Astropy comparisons live in a separate test module.
+* ``coordinax.vectors.Point`` <-> Astropy comparisons live in a separate test module.
 
-Chart ↔ Astropy representation mapping
+Chart <-> Astropy representation mapping
 ---------------------------------------
-* ``cart3d``      ↔ ``CartesianRepresentation``        (keys: x, y, z)
-* ``cyl3d``       ↔ ``CylindricalRepresentation``      (keys: rho, phi, z)
-* ``sph3d``       ↔ ``PhysicsSphericalRepresentation`` (keys: r, theta, phi)
-* ``lonlat_sph3d``↔ ``SphericalRepresentation``        (keys: lon, lat, distance)
+* ``cart3d``      <-> ``CartesianRepresentation``        (keys: x, y, z)
+* ``cyl3d``       <-> ``CylindricalRepresentation``      (keys: rho, phi, z)
+* ``sph3d``       <-> ``PhysicsSphericalRepresentation`` (keys: r, theta, phi)
+* ``lonlat_sph3d``<-> ``SphericalRepresentation``        (keys: lon, lat, distance)
 """
 
 __all__: tuple[str, ...] = ()

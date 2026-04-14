@@ -44,6 +44,7 @@ Let's start by importing the libraries we'll need and setting up some test data.
 
 ```{code-cell} ipython3
 import functools as ft
+from dataclasses import replace
 
 from jaxtyping import Array
 import jax
@@ -282,6 +283,51 @@ c2s_cx_qdict(xarr)
 ```
 
 There's no overhead, and we got to use the same function to transform `coordinax` objects with `Quantity` data, without having to manually manage units at all. This is the power of `coordinax`.
+
+### Point
+
+#### Basic JAX
+
+```{code-cell} ipython3
+@jax.jit
+@vmap
+def c2s_vec(x: cx.Point, /) -> cx.Point:
+    r = quax.quaxify(jnp.sqrt)(x["x"] **2 + x["y"]** 2 + x["z"] ** 2)
+    theta = quax.quaxify(jnp.acos)(x["z"] / r)
+    phi = quax.quaxify(jnp.arctan2)(x["y"], x["x"])
+    return replace(x, data={"r": r, "theta": theta, "phi": phi}, chart=cx.sph3d)
+
+xvec = cx.Point.from_(xqdict, cx.cart3d)
+
+%time jax.block_until_ready(c2s_vec(xvec))
+%timeit jax.block_until_ready(c2s_vec(xvec))
+
+c2s_vec(xvec)
+```
+
+This works, but again it's not particularly optimized. Manually optimizing is similar to the cases above.
+
+#### Coordinax
+
+With `coordinax` all we need is:
+
+```{code-cell} ipython3
+c2s_cx(xvec)
+```
+
+With `coordinax`, optimizing is very easy.
+
+```{code-cell} ipython3
+# Pre-specialize `c2s_cx`, pushing pytrees into a JIT-optimizable closure.
+structurer = structured(lambda x: cx.Point.from_(u.Q(x, usys["length"]), cx.cart3d),
+                        lambda x: pack_with_usys(x.data, cx.sph3d.components, usys)[0])
+c2s_cx_vec = jax.jit(vmap(structurer(_c2s_cx)))
+
+%time jax.block_until_ready(c2s_cx_vec(xarr))
+%timeit jax.block_until_ready(c2s_cx_vec(xarr))
+
+c2s_cx_vec(xarr)
+```
 
 </br>
 

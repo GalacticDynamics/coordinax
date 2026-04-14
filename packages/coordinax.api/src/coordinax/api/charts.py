@@ -1,4 +1,4 @@
-"""Vector API for coordinax."""
+"""Chart API for coordinax."""
 
 __all__ = (
     "cartesian_chart",
@@ -405,6 +405,7 @@ def cdict(_: Any, /) -> CDict:
         - `collections.abc.Mapping`: returned as-is
         - `unxt.Quantity`: treated as Cartesian coordinates with components in
           the last dimension, matched to the appropriate Cartesian chart
+        - Point: extracted from ``obj.data``
 
     Returns
     -------

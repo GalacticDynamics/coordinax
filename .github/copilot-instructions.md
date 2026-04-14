@@ -300,32 +300,32 @@ FloatContainer = Container[float]
 
 #### Vector Operations via Quax Multiple Dispatch
 
-**CRITICAL**: `Vector` operations like `+`, `-` are **not** implemented as Python methods. Instead, they are registered as Quax dispatches on JAX primitives. This design ensures operations work correctly with JAX transformations (`jit`, `vmap`, `grad`).
+**CRITICAL**: `AbstractVector` operations like `+`, `-` are **not** implemented as Python methods. Instead, they are registered as Quax dispatches on JAX primitives. This design ensures operations work correctly with JAX transformations (`jit`, `vmap`, `grad`).
 
 **Pattern for implementing binary operations:**
 
-1. Do **NOT** implement `Vector.__add__`, `Vector.__sub__`, etc.
+1. Do **NOT** implement `AbstractVector.__add__`, `AbstractVector.__sub__`, etc.
 2. Register handlers on JAX primitives using `@quax.register(jax.lax.PRIMITIVE)`:
 
 ```
 @quax.register(jax.lax.add_p)
-def add_p_vec_vec(lhs: Vector, rhs: Vector, /) -> Vector:
-    """Handle Vector + Vector."""
+def add_p_vec_vec(lhs: AbstractVector, rhs: AbstractVector, /) -> AbstractVector:
+    """Handle AbstractVector + AbstractVector."""
     return add(lhs.role, rhs.role, lhs, rhs, at=None)
 
 
 @quax.register(jax.lax.add_p)
-def add_p_vec_qty(lhs: Vector, rhs: Quantity, /) -> Vector:
-    """Handle Vector + Quantity via desugaring to Vector + Vector."""
-    # Desugar: convert Quantity to Vector with appropriate role
+def add_p_vec_qty(lhs: AbstractVector, rhs: Quantity, /) -> AbstractVector:
+    """Handle AbstractVector + Quantity via desugaring to AbstractVector + AbstractVector."""
+    # Desugar: convert Quantity to AbstractVector with appropriate role
     if u.dimension_of(rhs) == u.dimension("length"):
-        rhs_vec = Vector.from_(rhs, r.PhysDisp)
+        rhs_vec = AbstractVector.from_(rhs, r.PhysDisp)
     else:
-        rhs_vec = Vector.from_(rhs)
+        rhs_vec = AbstractVector.from_(rhs)
     return add(lhs.role, rhs_vec.role, lhs, rhs_vec, at=None)
 ```
 
-3. `Vector` inherits from `quax_blocks.LaxBinaryOpsMixin`, which provides `__add__`, `__sub__`, etc. that automatically dispatch through the Quax handlers.
+3. `AbstractVector` inherits from `quax_blocks.LaxBinaryOpsMixin`, which provides `__add__`, `__sub__`, etc. that automatically dispatch through the Quax handlers.
 
 **Why this design:**
 
@@ -388,7 +388,7 @@ def transform_points(rep_to, rep_from, points):
 
 #### Registering JAX Primitives with Quax
 
-Quax enables custom array-like types to work with JAX by registering multiple dispatch rules for JAX primitives. This is essential for making custom types (like `Distance`, `Angle`, or `Vector`) work seamlessly with JAX operations.
+Quax enables custom array-like types to work with JAX by registering multiple dispatch rules for JAX primitives. This is essential for making custom types (like `Distance`, `Angle`, or `Point`) work seamlessly with JAX operations.
 
 **Core Pattern:**
 

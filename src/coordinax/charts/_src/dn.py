@@ -1,4 +1,4 @@
-"""Vector."""
+"""N-Dimensional charts."""
 
 __all__ = ("AbstractND", "CartND", "cartnd")
 

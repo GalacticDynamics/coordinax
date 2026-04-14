@@ -6,7 +6,7 @@ You will learn how to:
 
 - Pass quantities to `act` for transforms
 - Decompose quantities into CDicts with `cdict()`
-- Upgrade quantities to `Vector` objects
+- Upgrade quantities to `AbstractVector` objects
 - Convert units with `u.uconvert()`
 - Use quantities with JAX
 
@@ -21,7 +21,7 @@ more metadata. This tutorial covers `Quantity`.
 | Level | Type | See tutorial |
 | --- | --- | --- |
 | Coordinate | `Coordinate` | [Coordinate tutorial](./coordinate_objects.md) |
-| Vector | `Vector` | [Vector tutorial](./vector_objects.md) |
+| Point | `Vector` | [Vector tutorial](./vector_objects.md) |
 | CDict | `dict[str, Quantity]` | [CDict tutorial](./cdict_objects.md) |
 | **Quantity** | `unxt.Quantity` | *this page* |
 | Array | `jax.Array` | [Array tutorial](./array_objects.md) |
@@ -103,6 +103,6 @@ Choose `Quantity` when:
 - You are passing data to `act` and are happy with chart inference from the array shape.
 - You are working with existing unxt-based code and want coordinax transforms to "just work".
 
-**Trade-off**: Chart inference depends on array shape — it only works for trailing axis sizes 1, 2, or 3, and always assumes Cartesian. For non-Cartesian data or explicit chart control, decompose to a CDict or upgrade to a `Vector`. See the [CDict tutorial](./cdict_objects.md) or the [Vector tutorial](./vector_objects.md).
+**Trade-off**: Chart inference depends on array shape — it only works for trailing axis sizes 1, 2, or 3, and always assumes Cartesian. For non-Cartesian data or explicit chart control, decompose to a CDict or upgrade to a `Point`. See the [CDict tutorial](./cdict_objects.md) or the [Vector tutorial](./vector_objects.md).
 
 If you need even less overhead and are willing to manage units yourself, use a bare array. See the [Array tutorial](./array_objects.md).

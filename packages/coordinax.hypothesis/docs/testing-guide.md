@@ -83,7 +83,7 @@ def test_angle_in_degrees(angle):
 
 @given(angle=cxst.angles(shape=(3,)))
 def test_vector_angle_has_correct_shape(angle):
-    """Vector angles have the expected shape."""
+    """Point angles have the expected shape."""
     assert angle.shape == (3,)
 ```
 

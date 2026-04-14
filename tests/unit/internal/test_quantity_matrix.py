@@ -423,7 +423,7 @@ class TestConvertValueMatrix:
         assert jnp.isclose(out[1, 0, 0], 5000.0)
 
 
-class TestConvertValueVector:
+class TestConvertValuePoint:
     """Tests for the element-wise unit conversion helper (1D)."""
 
     def test_noop_same_units(self, unit_1d):

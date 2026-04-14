@@ -35,6 +35,7 @@ pip install coordinax
 - Specialized quantities: scalar coordinate quantities with units, including `Angle` (directional values on $S^1$ with explicit wrapping) and `Distance` (length-valued quantity), plus astronomy-facing forms like `Parallax` and `DistanceModulus`.
 - Charts: a coordinate chart / component schema (names + physical dimensions). A chart does not store numerical values.
 - Representation: geometric meaning of components, encoded as (geometry, basis, semantics), e.g. `point`.
+- Point: data + chart + representation, with conversion and arithmetic behavior defined by chart transition maps and tangent pushforwards.
 
 ## Modules
 
@@ -75,6 +76,24 @@ Transform point coordinates between charts with `pt_map`:
 >>> q_sph = cx.pt_map(q, cx.cart3d, cx.sph3d)
 >>> q_sph
 {'r': Q(3.74165739, 'km'), 'theta': Q(0.64052231, 'rad'), 'phi': Q(1.10714872, 'rad')}
+```
+
+### Point Conversion
+
+`Point` carries chart + representation metadata, so conversions preserve semantics:
+
+```pycon
+>>> import coordinax.main as cx
+
+>>> vec = cx.Point.from_([1, 2, 3], "m")
+>>> print(vec)
+<Point: chart=Cart3D (x, y, z) [m]
+    [1 2 3]>
+
+>>> sph_vec = vec.cconvert(cx.sph3d)
+>>> print(sph_vec)
+<Point: chart=Spherical3D (r[m], theta[rad], phi[rad])
+    [3.742 0.641 1.107]>
 ```
 
 ### Representations

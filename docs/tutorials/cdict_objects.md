@@ -1,13 +1,13 @@
 # Working With Component Dictionaries (CDict)
 
-This tutorial covers **CDict** — coordinax's lightweight interchange format. A CDict is simply a `dict[str, Quantity]` mapping component names to their values. It is the common representation that all higher objects (`Vector`, `Coordinate`) can be decomposed into, and that all lower objects (arrays, quantities) can be assembled from.
+This tutorial covers **CDict** — coordinax's lightweight interchange format. A CDict is simply a `dict[str, Quantity]` mapping component names to their values. It is the common representation that all higher objects (`Point`, `Coordinate`) can be decomposed into, and that all lower objects (arrays, quantities) can be assembled from.
 
 You will learn how to:
 
 - Build CDicts by hand and from other types via `cdict()`
 - Change coordinate system with `pt_map`
 - Apply transforms with `act` (requires explicit chart and rep)
-- Upgrade to `Vector` or `Coordinate`
+- Upgrade to `Point` or `Coordinate`
 - Use CDicts with JAX
 
 **Prerequisites**: [Working With Charts](../guides/charts.md).
@@ -21,7 +21,7 @@ more metadata. This tutorial covers `CDict`.
 | Level | Type | See tutorial |
 | --- | --- | --- |
 | Coordinate | `Coordinate` | [Coordinate tutorial](./coordinate_objects.md) |
-| Vector | `Vector` | [Vector tutorial](./vector_objects.md) |
+| Vector | `AbstractVector` | [Vector tutorial](./vector_objects.md) |
 | **CDict** | `dict[str, Quantity]` | *this page* |
 | Quantity | `unxt.Quantity` | [Quantity tutorial](./quantity_objects.md) |
 | Array | `jax.Array` | [Array tutorial](./array_objects.md) |
@@ -150,11 +150,11 @@ True
 
 Choose CDict when:
 
-- You want a **lightweight intermediate format** without the overhead of constructing a full `Vector`.
+- You want a **lightweight intermediate format** without the overhead of constructing a full `Point`.
 - You are building interop layers with non-coordinax code.
 - You need standard dict operations (iteration, merging, filtering).
-- You are inside a performance-sensitive inner loop where allocating `Vector` objects is undesirable.
+- You are inside a performance-sensitive inner loop where allocating `Point` objects is undesirable.
 
-**Trade-off**: CDicts require you to pass chart and representation explicitly to every function call. If you find yourself repeating `cxc.cart3d, cxr.point` everywhere, upgrade to `Vector`. See the [Vector tutorial](./vector_objects.md).
+**Trade-off**: CDicts require you to pass chart and representation explicitly to every function call. If you find yourself repeating `cxc.cart3d, cxr.point` everywhere, upgrade to `Point`. See the [Vector tutorial](./vector_objects.md).
 
 If you want even less overhead and are willing to manage units externally, use a bare `Quantity`. See the [Quantity tutorial](./quantity_objects.md).

@@ -27,6 +27,8 @@ __all__ = (  # distances
     "cartnd",
     # representations
     "cconvert",
+    "add",
+    "subtract",
     "PointGeometry",
     "point_geom",
     "NoBasis",
@@ -35,6 +37,9 @@ __all__ = (  # distances
     "loc",
     "Representation",
     "point",
+    # vectors
+    "Point",
+    "ToUnitsOptions",
 )
 
 from coordinax.angles import Angle
@@ -66,12 +71,15 @@ from coordinax.representations import (
     NoBasis,
     PointGeometry,
     Representation,
+    add,
     cconvert,
     loc,
     no_basis,
     point,
     point_geom,
+    subtract,
 )
+from coordinax.vectors import Point, ToUnitsOptions
 
 try:  # noqa: SIM105
     import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import]

@@ -1,4 +1,4 @@
-"""Vector."""
+"""2-Dimensional charts."""
 
 __all__ = ("Abstract2D", "Cart2D", "cart2d", "Polar2D", "polar2d")
 

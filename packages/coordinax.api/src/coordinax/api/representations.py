@@ -1,11 +1,13 @@
 """Representations."""
 
 __all__ = (
+    "add",
     "cconvert",
     "guess_basis_kind",
     "guess_geometry_kind",
     "guess_rep",
     "guess_semantic_kind",
+    "subtract",
 )
 
 from typing import Any
@@ -115,6 +117,25 @@ def guess_semantic_kind(*args: Any, **kwargs: Any) -> Any:
     >>> data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> cxr.guess_semantic_kind(data)
     Location()
+    """
+    raise NotImplementedError  # pragma: no cover
 
+
+@plum.dispatch.abstract
+def add(*args: Any, **kwargs: Any) -> Any:
+    """Add two coordinate data objects.
+
+    This is an abstract API definition. See the main coordinax package for
+    concrete implementations.
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def subtract(*args: Any, **kwargs: Any) -> Any:
+    """Subtract two coordinate data objects.
+
+    This is an abstract API definition. See the main coordinax package for
+    concrete implementations.
     """
     raise NotImplementedError  # pragma: no cover

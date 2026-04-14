@@ -18,26 +18,27 @@ uv add coordinax.interop.astropy
 
 ## Features
 
-- **Vector Conversions**: Convert between coordinax vectors and Astropy representations (Cartesian, Spherical, Cylindrical)
+- **Point Conversions**: Convert between coordinax vectors and Astropy representations (Cartesian, Spherical, Cylindrical)
 - **Distance Conversions**: Convert between coordinax distance types (`Distance`, `Parallax`, `DistanceModulus`) and Astropy quantities
 - **Frame Conversions**: Convert between coordinax.astro frames (`ICRS`, `Galactocentric`) and Astropy coordinate frames
 - **Full Velocity Support**: Convert position and velocity vectors with proper differential handling
 
 ## Usage
 
-### Vector Conversions
+### Point Conversions
 
 ```
+import plum
 import coordinax.main as cx
 from astropy.coordinates import CartesianRepresentation
 from plum import convert
 
 # Convert Astropy to coordinax
 cart = CartesianRepresentation(1, 2, 3, unit="m")
-vec = cx.vector(cart)
+vec = plum.convert(cart, cx.Point)
 
 # Convert coordinax to Astropy
-apy_vec = convert(vec, CartesianRepresentation)
+apy_vec = plum.convert(vec, CartesianRepresentation)
 ```
 
 ### Distance Conversions
@@ -73,12 +74,12 @@ import unxt as u
 cx_icrs = cxa.ICRS()
 apy_icrs = convert(cx_icrs, apyc.ICRS)
 
-galcen = cx.Vector.from_(
+galcen = cx.Point.from_(
     {"lon": u.Q(0, "deg"), "lat": u.Q(0, "deg"), "distance": u.Q(8.122, "kpc")},
     cxc.lonlat_sph3d,
     cxr.point,
 )
-galcen_v_sun = cx.Vector.from_(u.Q([11.1, 244, 7.25], "km/s"))
+galcen_v_sun = cx.Point.from_(u.Q([11.1, 244, 7.25], "km/s"))
 
 cx_galcen = cxa.Galactocentric(
     galcen=galcen,

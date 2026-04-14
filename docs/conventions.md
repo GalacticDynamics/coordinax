@@ -57,10 +57,10 @@ All `coordinax` objects are **PyTrees**—JAX's abstraction for hierarchical dat
 To integrate custom types with JAX operations, `coordinax` uses **Quax**—a multiple-dispatch layer enabling custom array-like types in JAX.
 
 - `quax.ArrayValue` is the protocol: custom types inherit from it to work with JAX.
-- `Distance`, `Angle`, and `Vector` are `ArrayValue` subclasses, so they work naturally with `jnp.sqrt`, `jnp.sin`, etc.
+- `Distance`, `Angle`, and `Point` are `ArrayValue` subclasses, so they work naturally with `jnp.sqrt`, `jnp.sin`, etc.
 - Operations like `+`, `*` are implemented via Quax dispatch on JAX primitives (see Multiple Dispatch section below).
 
-**Why this matters**: Users can write JAX code treating `Distance` and `Vector` like arrays—no special handling needed.
+**Why this matters**: Users can write JAX code treating `Distance` and `Point` like arrays—no special handling needed.
 
 See [Glossary: Quax, ArrayValue, PyTree](glossary.md).
 

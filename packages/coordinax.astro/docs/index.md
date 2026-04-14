@@ -42,7 +42,7 @@ import coordinax.astro as cxastro
 import unxt as u
 
 # Create a position in ICRS frame
-pnt = cx.Vector.from_({"r": u.Q(10, "kpc"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")})
+pnt = cx.Point.from_({"r": u.Q(10, "kpc"), "theta": u.Q(45, "deg"), "phi": u.Q(30, "deg")})
 crd_icrs = cx.Coordinate({"base": pnt}, frame=cxastro.ICRS())
 
 # Transform to Galactocentric frame

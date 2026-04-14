@@ -88,12 +88,14 @@ extension to tangent, cotangent, and other geometric objects.
 """
 
 __all__ = (
+    "add",
     "cconvert",
     "cmap",
     "guess_basis_kind",
     "guess_geometry_kind",
     "guess_rep",
     "guess_semantic_kind",
+    "subtract",
     # Representations
     "Representation",
     "point",
@@ -129,11 +131,13 @@ with install_import_hook("coordinax.representations"):
         point_geom,
     )
     from coordinax.api.representations import (
+        add,
         cconvert,
         guess_basis_kind,
         guess_geometry_kind,
         guess_rep,
         guess_semantic_kind,
+        subtract,
     )
 
 

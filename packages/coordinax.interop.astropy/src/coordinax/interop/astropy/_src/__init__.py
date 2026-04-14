@@ -7,3 +7,5 @@ from .charts import *
 from .distances import *
 from .ptmap import *
 from .qmatrix import *
+from .vec_constructors import *
+from .vec_converters import *
