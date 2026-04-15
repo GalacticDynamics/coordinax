@@ -330,19 +330,14 @@ def cconvert(
     at: CDict | None = None,
     usys: OptUSys = None,
 ) -> Any:
-    r"""Convert tangent data between basis conventions in the same chart.
-
-    Tangent conversions are basis changes when source and target charts are
-    identical. In this case, `cconvert` redispatches to `change_basis`.
+    r"""Convert tangent data between charts via Jacobian pushforward.
 
     Examples
     --------
-    Convert tangent data between coordinate and physical basis in the same
-    chart:
-
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
+
     >>> v = {"r": jnp.array(5.0), "theta": jnp.array(1.0), "phi": jnp.array(2.0)}
     >>> at = {"r": jnp.array(3.0), "theta": jnp.array(0.5), "phi": jnp.array(0.0)}
     >>> cxr.cconvert(v, cxc.sph3d, cxr.tangent_geom, cxr.coord_disp,
@@ -351,28 +346,15 @@ def cconvert(
      'theta': Array(3., dtype=float64, ...),
      'phi': Array(..., dtype=float64, ...)}
 
-    Tangent conversion across different charts is not implemented by this
-    dispatch:
-
-    >>> cxr.cconvert(v, cxc.sph3d, cxr.tangent_geom, cxr.coord_disp,
-    ...              cxc.cart3d, cxr.tangent_geom, cxr.coord_disp, at=at)
-    Traceback (most recent call last):
-    ...
-    NotImplementedError: Tangent cconvert between different charts is not implemented;
-    use the same chart for basis changes.
+    >>> v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+    >>> at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+    >>> cxr.cconvert(v, cxc.cart2d, cxr.coord_disp, cxc.polar2d, cxr.coord_disp, at=at)
+    {'r': Array(1., ...), 'theta': Array(0., ...)}
 
     """
-    del from_geom, to_geom  # represented by dispatch signature
-
-    if from_chart != to_chart:
-        msg = (
-            "Tangent cconvert between different charts is not implemented; "
-            "use the same chart for basis changes."
-        )
-        raise NotImplementedError(msg)
-
-    return cxrapi.change_basis(
-        x, from_chart, from_rep.basis, to_rep.basis, at=at, usys=usys
+    del from_geom, to_geom
+    return cxrapi.tangent_map(
+        x, from_chart, from_rep, to_chart, to_rep, at=at, usys=usys
     )
 
 

@@ -633,6 +633,70 @@ def act(
     return cast("CDict", out)
 
 
+@plum.dispatch
+def act(
+    op: Rotate,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    geom: cxr.TangentGeometry,
+    rep: cxr.Representation,
+    /,
+    *,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CDict:
+    """Apply a spatial rotation to a TangentGeometry coordinate dictionary.
+
+    Rotation is linear, so tangent vectors (for example velocity or
+    acceleration) transform with the same rotation matrix as point
+    coordinates.
+
+    The implementation:
+
+    1. Converts ``x`` to the chart canonical Cartesian chart.
+    2. Packs Cartesian components to a common unit.
+    3. Applies ``R`` via ``einsum`` in a batch-safe way.
+    4. Converts the rotated result back to the original chart.
+
+    Examples
+    --------
+    Rotate a Cartesian velocity vector by +90 degrees about ``z``:
+
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    >>> x = {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")}
+    >>> out = cxfm.act(op, None, x, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel)
+    >>> jnp.stack([out[c].to_value("m/s") for c in ("x", "y", "z")]).round(3)
+    Array([0., 1., 0.], dtype=float64)
+
+    """
+    del geom, rep, kw  # Rotation acts identically on tangent vectors.
+
+    cart = chart.cartesian
+    comps_cart = cart.components
+
+    op_eval = materialize_transform(op, tau)
+    R = op_eval._get_R(cart)
+
+    # Convert to canonical Cartesian chart.
+    p_cart = cxc.pt_map(x, chart, cart, usys=usys)
+
+    # Pack -> rotate -> unpack (batch-safe)
+    v, unit = pack_uniform_unit(p_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
+    v_rot = jnp.einsum("ij,...j->...i", R, v)  # (..., n)
+    p_cart_rot = cxc.cdict(v_rot, unit, comps_cart)
+
+    # Convert back to original chart.
+    out = cxc.pt_map(p_cart_rot, cart, chart, usys=usys)
+    return cast("CDict", out)
+
+
 # -----------------------------------------------
 # On CDict with Cartesian-product charts
 
