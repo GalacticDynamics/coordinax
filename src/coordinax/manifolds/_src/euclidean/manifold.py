@@ -9,6 +9,7 @@ from typing import final
 import jax
 
 from .atlas import EuclideanAtlas
+from .metric import EuclideanMetric
 from coordinax.manifolds._src.base import AbstractManifold
 
 
@@ -161,6 +162,7 @@ class EuclideanManifold(AbstractManifold):
     def __init__(self, ndim: int, /) -> None:
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", EuclideanAtlas(self.ndim))
+        object.__setattr__(self, "metric", EuclideanMetric(self.ndim))
 
 
 euclidean3d = EuclideanManifold(3)

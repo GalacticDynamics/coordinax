@@ -435,7 +435,8 @@ def manifolds(  # noqa: F811
             required_chart_classes=required_chart_classes,
         )
     )
-    return cxm.CustomManifold(atlas=atlas)
+    metric = cxm.EuclideanMetric(atlas.ndim)
+    return cxm.CustomManifold(atlas=atlas, metric=metric)
 
 
 @plum.dispatch

@@ -1,6 +1,13 @@
 """Vector API for coordinax."""
 
-__all__ = ("guess_manifold", "pt_embed", "pt_project", "pt_map")
+__all__ = (
+    "guess_manifold",
+    "scale_factors",
+    "angle_between",
+    "pt_embed",
+    "pt_project",
+    "pt_map",
+)
 
 from typing import TYPE_CHECKING, Any
 
@@ -34,6 +41,62 @@ def guess_manifold(*args: Any, **kwargs: Any) -> "coordinax.manifolds.AbstractMa
 
     >>> cxm.guess_manifold(cxc.sph2)
     HyperSphericalManifold(ndim=2)
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def scale_factors(
+    metric_or_manifold: Any, chart: Any, /, *args: Any, **kwargs: Any
+) -> Any:
+    """Return the diagonal entries of the metric matrix.
+
+    Dispatches on the first argument (metric or manifold) and the chart.
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def angle_between(
+    metric_or_manifold: Any,
+    chart: Any,
+    uvec: Any,
+    vvec: Any,
+    /,
+    *args: Any,
+    **kwargs: Any,
+) -> Any:
+    r"""Return the metric angle between two nonzero tangent vectors.
+
+    The inputs ``uvec`` and ``vvec`` are component dictionaries representing
+    tangent-vector components in the coordinate basis of ``chart``. The metric
+    is evaluated at a base point supplied via ``at=...``.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> M = cxm.EuclideanManifold(2)
+    >>> at = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m")}
+    >>> uvec = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
+    >>> vvec = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
+    >>> cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
+    Angle(1.57079633, 'rad')
+
+    >>> metric = cxm.EuclideanMetric(3)
+    >>> at_sph = {
+    ...     "r": u.Q(2.0, "m"),
+    ...     "theta": u.Angle(jnp.pi / 2, "rad"),
+    ...     "phi": u.Angle(0.0, "rad"),
+    ... }
+    >>> u_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> v_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(0.0, "rad"), "phi": u.Angle(1.0, "rad")}
+    >>> cxm.angle_between(metric, cxc.sph3d, u_tan, v_tan, at=at_sph)
+    Angle(1.57079633, 'rad')
 
     """
     raise NotImplementedError  # pragma: no cover

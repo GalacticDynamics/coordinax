@@ -12,6 +12,7 @@ from typing import final
 import jax
 
 from .atlas import MinkowskiAtlas
+from .metric import MinkowskiMetric
 from coordinax.manifolds._src.base import AbstractManifold
 
 
@@ -27,7 +28,7 @@ class MinkowskiManifold(AbstractManifold):
     chart. It is the geometric arena of special relativity.
 
     **Charts.** The manifold admits all
-    {class}`~coordinax.charts.SpaceTimeCT` charts, parameterised by the
+    :class:`~coordinax.charts.SpaceTimeCT` charts, parameterised by the
     choice of spatial sub-chart:
 
     - ``SpaceTimeCT(cart3d)`` — Minkowski coordinates $(ct, x, y, z)$
@@ -38,7 +39,7 @@ class MinkowskiManifold(AbstractManifold):
     $g = J^T \eta J$, where $J$ is the Jacobian from the given chart to the
     canonical Cartesian spacetime chart.
 
-    **Pre-built instance.** The module exports {obj}`minkowski4d` as a
+    **Pre-built instance.** The module exports :obj:`minkowski4d` as a
     ready-to-use instance.
 
     Parameters
@@ -81,6 +82,7 @@ class MinkowskiManifold(AbstractManifold):
     def __init__(self, ndim: int = 4, /) -> None:
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", MinkowskiAtlas(ndim))
+        object.__setattr__(self, "metric", MinkowskiMetric())
 
 
 minkowski4d = MinkowskiManifold()

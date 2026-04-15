@@ -13,6 +13,7 @@ import plum
 import coordinax.api.manifolds as cxmapi
 import coordinax.charts as cxc
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
+from .metric import InducedMetric
 from coordinax.internal.custom_types import CDict, OptUSys
 from coordinax.manifolds._src.base import AbstractAtlas, AbstractManifold
 
@@ -92,9 +93,10 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     # ===============================================================
     # Manifold API
 
-    @override
-    def _check_ndim(self) -> None:
-        pass  # TODO: implement the metric, then remove this shim.
+    @property
+    def metric(self) -> InducedMetric:
+        """Induced (pullback) Riemannian metric from the ambient manifold."""
+        return InducedMetric(self.embed_map, self.ambient.metric)
 
     @override
     @property

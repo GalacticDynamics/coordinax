@@ -126,6 +126,27 @@ Round-tripping:
 ['x', 'y', 'z']
 ```
 
+## Using CDicts As Tangent Components
+
+A CDict can also carry **tangent-vector components** when you provide that meaning explicitly to a manifold-level API.
+
+For example, `cxm.angle_between()` interprets two CDicts as tangent vectors in the coordinate basis of a chart and uses the manifold metric to compute the angle between them at a base point:
+
+```{code-block} python
+>>> import coordinax.manifolds as cxm
+
+>>> M = cxm.EuclideanManifold(2)
+>>> at = {"x": u.Q(0, "m"), "y": u.Q(0, "m")}
+>>> uvec = {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
+>>> vvec = {"x": u.Q(0, "m"), "y": u.Q(1, "m")}
+
+>>> ang = cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
+>>> jnp.allclose(u.ustrip("rad", ang), jnp.pi / 2)
+Array(True, dtype=bool)
+```
+
+This does **not** mean that arbitrary point CDicts are automatically tangent vectors. The chart and manifold tell coordinax how to interpret the component data.
+
 ## Data Access
 
 CDicts support all standard dictionary operations:

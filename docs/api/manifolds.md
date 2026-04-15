@@ -34,11 +34,19 @@ p_sph = M.pt_map(p, cxc.cart3d, cxc.sph3d)
 # Guess manifold from data/chart.
 M2 = cxm.guess_manifold(p)
 M3 = cxm.guess_manifold(cxc.sph2)
+
+# Metric angle between two tangent vectors.
+at = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
+uvec = {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
+vvec = {"x": u.Q(0, "km"), "y": u.Q(1, "km"), "z": u.Q(0, "km")}
+ang = M.angle_between(cxc.cart3d, uvec, vvec, at=at)
 ```
 
 ## Functional API
 
 - `guess_manifold`: infer a manifold from manifold/chart/data inputs
+- `scale_factors`: return the metric diagonal in a chart at a base point
+- `angle_between`: return the metric angle between two tangent-vector CDicts
 - `pt_embed`: embed intrinsic coordinates into ambient coordinates
 - `pt_project`: project ambient coordinates back to intrinsic chart coordinates
 - `pt_map`: manifold-related re-export of point realization map

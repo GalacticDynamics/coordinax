@@ -9,6 +9,7 @@ from typing import final
 import jax
 
 from .atlas import HyperSphericalAtlas
+from .metric import HyperSphericalMetric
 from coordinax.manifolds._src.base import AbstractManifold
 
 
@@ -41,6 +42,7 @@ class HyperSphericalManifold(AbstractManifold):
     def __init__(self, ndim: int = 2, /) -> None:
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", HyperSphericalAtlas(self.ndim))
+        object.__setattr__(self, "metric", HyperSphericalMetric(self.ndim))
 
 
 twosphere = HyperSphericalManifold(2)  # Reusable instance of the two-sphere manifold

@@ -27,6 +27,7 @@ __all__ = (  # distances
     "cartnd",
     # manifolds and atlases
     "EuclideanManifold",
+    "EuclideanMetric",
     "euclidean3d",
     "twosphere",
     "embedded_twosphere",
@@ -81,6 +82,7 @@ from coordinax.manifolds import (
     EmbeddedChart,
     EmbeddedManifold,
     EuclideanManifold,
+    EuclideanMetric,
     embedded_twosphere,
     euclidean3d,
     twosphere,

@@ -17,7 +17,7 @@ def _manifold_2d() -> cxm.CustomManifold:
         charts=(cxc.Cart2D, cxc.Polar2D),
         chart_default=cxc.cart2d,
     )
-    return cxm.CustomManifold(atlas)
+    return cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
 
 
 def _cart2d_to_polar_with_custom(x: u.AbstractQuantity, y: u.AbstractQuantity):

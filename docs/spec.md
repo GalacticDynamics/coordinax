@@ -301,6 +301,128 @@ C_1'}$ and the last $n_2$ components transform by $\tau_{C_2 \to C_2'}$, indepen
 
 ---
 
+<a id="math-spec-tangents"></a>
+
+## Tangents
+
+**_Tangent Vectors_**:
+
+In a chart with local coordinates $q^1,\dots,q^n$, there is a corresponding set of tangent vectors
+
+$$
+\left\{ \frac{\partial}{\partial q^1}, \dots, \frac{\partial}{\partial q^n} \right\}_p.
+$$
+
+Geometrically, $\partial/\partial q^i|_p$ is the velocity of a coordinate curve $\gamma_i(t)$ obtained by varying only the $i$-th coordinate while holding the others fixed:
+
+$$
+\gamma_i(t)
+= \varphi^{-1}(q^1,\dots,q^i+t,\dots,q^n),
+\qquad
+\frac{\partial}{\partial q^i}\bigg|_p
+= \dot{\gamma}_i(0).
+$$
+
+Any tangent vector at $p$ can therefore be expanded as
+
+$$
+v = v^i \frac{\partial}{\partial q^i}\bigg|_p.
+$$
+
+Importantly, while we have defined these tangent vectors we do not yet have a way to define a relationship between the components $v^i$, such as whether they are orthogonal. To give geometric meaning to tangent directions, we must add extra structure to the manifold.
+
+**_Tangent Spaces_**:
+
+Let $M$ be a smooth $n$-dimensional manifold and $p \in M$. The **tangent space** at $p$ is the $n$-dimensional real vector space
+
+$$ T_p M $$
+
+whose elements are **tangent vectors** at $p$. Concretely, any smooth curve $\gamma : (-\varepsilon, \varepsilon) \to M$ with $\gamma(0) = p$ has a velocity $\dot\gamma(0) \in T_p M$; the tangent space is spanned by all such velocities. Equivalently, $T_p M$ is the best linear approximation to $M$ near $p$: it captures all instantaneous directions of motion through $p$.
+
+Unlike $M$ itself, $T_p M$ is a genuine vector space: tangent vectors can be added and scaled.
+
+### Metrics on Manifolds
+
+A manifold _without_ a metric is a smooth manifold $M$. It has points, charts, and transition maps, but no notion of distance, angles, or orthogonality. For these, we need additional geometric structure: the **metric**. We can add the **metric**, to obtain a Riemannian manifold $(M, g)$.
+
+A metric $g$ assigns to each point $p \in M$ a symmetric, non-degenerate bilinear form
+
+$$
+g_p : T_pM \times T_pM \to \mathbb{R},
+$$
+
+varying smoothly with p. In chart coordinates, the metric is represented by the matrix
+
+$$
+g_{ij}(q) = g\!\left(\frac{\partial}{\partial q^i},\frac{\partial}{\partial q^j}\right),
+$$
+
+evaluated at the base point $p$ with coordinates $q=\varphi(p)$.
+
+Importantly, the metric acts only on tangent spaces; it does not act directly on points. Thus, it equips the manifold with intrinsic geometric meaning beyond smooth structure alone.
+
+Specifically, the metric equips the manifold with notions of:
+
+#### Length of tangent vectors
+
+If
+
+$$
+v = v^i \frac{\partial}{\partial q^i}, \quad w = w^j \frac{\partial}{\partial q^j},
+$$
+
+then
+
+$$
+g_p(v,w) = g_{ij}(q)\, v^i w^j.
+$$
+
+In matrix notation,
+
+$$
+g_p(v,w) = v^\mathsf{T}\, g(q)\, w.
+$$
+
+The norm is then
+
+$$
+\|v\|_p^2 = g_p(v,v) = g_{ij}(q)\, v^i v^j.
+$$
+
+#### Angle between tangent vectors
+
+The metric also defines the angle between nonzero tangent vectors:
+
+$$
+\cos\theta = \frac{g_p(u,v)}{\|u\|_p \, \|v\|_p}.
+$$
+
+#### Distance along curves
+
+The metric matrix encodes the infinitesimal line element
+
+$$
+ds^2 = g_{ij}(q)\, dq^i dq^j.
+$$
+
+and curve length is obtained by integrating these infinitesimal lengths.
+
+#### Geodesics
+
+Geodesics are curves that locally extremize length with respect to the metric.
+
+#### Volume elements
+
+The determinant of the metric, $\det g$, encodes the induced volume element.
+
+#### Raising and lowering indices
+
+The metric identifies $T_p M$ with its dual space $T_p^* M$, enabling index raising and lowering.
+
+</br>
+
+---
+
 # Packages
 
 ```{contents}
@@ -323,7 +445,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jacobian_pt_map`, `realize_cartesian`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, </br> `PointGeometry`, `point_geom`, </br> `NoBasis`, `no_basis`, </br> `Location`, `loc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
-| `coordinax.manifolds` | `EuclideanManifold`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
+| `coordinax.manifolds` | `EuclideanManifold`, `EuclideanMetric`,`euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `guess_manifold`, `scale_factors`, `angle_between`, |
 
 </br>
 
@@ -1445,6 +1567,16 @@ Separating semantics from geometry provides two advantages:
 
 ## Manifolds
 
+The `coordinax.metrics` module, typically imported as `import coordinax.manifolds as cxm`, adds Riemannian (and pseudo-Riemannian) structure to smooth manifolds.
+
+A **metric** on a manifold $M$ is a smooth assignment of a symmetric, non-degenerate bilinear form to each tangent space:
+
+$$g_p : T_pM \times T_pM \to \mathbb{R}, \quad p \in M.$$
+
+In a local chart with coordinates $q = (q^1, \ldots, q^n)$, the metric is encoded by the **metric matrix**
+
+$$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial q^j}\right).$$
+
 (software-spec-guess-manifold)=
 
 !!! info `guess_manifold`
@@ -1508,6 +1640,181 @@ Separating semantics from geometry provides two advantages:
     - When the input is a manifold, it is returned unchanged without validation.
     - When inferring from a point (CDict), the chart inference is performed by `cxc.guess_chart()`, which uses its own dispatch logic.
 
+(software-spec-scale-factors)=
+
+!!! info `scale_factors`
+
+    Return the diagonal entries of the metric matrix.
+
+    `scale_factors` is a dispatched function that returns the vector
+
+    $$
+    (g_{11}(p), \ldots, g_{nn}(p))
+    $$
+
+    for a metric evaluated in a chart at the base point $p$. This API returns the diagonal metric entries themselves, not the coordinate-basis lengths $\sqrt{g_{ii}(p)}$.
+
+    **Signature:**
+
+    ```
+    cxm.scale_factors(metric_or_manifold, chart, /, *, at, usys=None)
+    ```
+
+    Or via convenience wrappers on metric and manifold objects:
+
+    ```
+    metric.scale_factors(chart, at=at, usys=usys)
+    manifold.scale_factors(chart, at=at, usys=usys)
+    ```
+
+    **Arguments:**
+
+    - `metric_or_manifold`: an `AbstractMetric` instance (metric-level call) or an `AbstractManifold` instance (manifold-level call). When a manifold is passed, `scale_factors` delegates to `manifold.metric`.
+    - `chart`: the coordinate chart in which the metric is expressed.
+    - `at` (keyword): the base point $p$ in chart coordinates at which the metric is evaluated.
+    - `usys` (keyword, optional): unit system forwarded to metric evaluation when needed.
+
+    **Return:**
+
+    - Always a 1-D `QuantityMatrix` of length `ndim`.
+    - A `QuantityMatrix` is used even when the diagonal entries are dimensionless, because different coordinate directions may carry different units.
+
+    **Dispatch behavior:**
+
+    - Generic metric dispatch: evaluate `metric.metric_matrix(chart, at=at, usys=usys)` and return `QuantityMatrix.diag()` on the result. If the metric matrix is array-valued, it is first promoted to a dimensionless `QuantityMatrix` and then diagonalized.
+    - Manifold dispatch: resolve to `scale_factors(manifold.metric, chart, at=at, usys=usys)`.
+    - `EuclideanMetric` specialization: compute the diagonal more efficiently than forming the full metric matrix. In Cartesian charts this returns a vector of ones directly; in non-Cartesian Euclidean charts it uses the chart-to-Cartesian Jacobian and computes only the squared column norms needed for the diagonal entries.
+
+    **Position dependence:**
+
+    - For flat metrics (for example `EuclideanMetric` in Cartesian coordinates), the result may be position-independent numerically, though `at` remains part of the API.
+    - For curved or curvilinear cases, the returned diagonal entries depend on the supplied base point.
+
+    **Examples**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> M = cxm.EuclideanManifold(3)
+    >>> at = {
+    ...     "r": u.Q(2.0, "km"),
+    ...     "theta": u.Angle(jnp.pi / 2, "rad"),
+    ...     "phi": u.Angle(0.0, "rad"),
+    ... }
+
+    >>> gdiag = cxm.scale_factors(M, cxc.sph3d, at=at)
+    >>> gdiag.shape
+    (3,)
+    >>> gdiag.unit.to_string()
+    '(, km2 / rad2, km2 / rad2)'
+
+    >>> metric = cxm.HyperSphericalMetric(2)
+    >>> at_s2 = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
+    >>> cxm.scale_factors(metric, cxc.sph2, at=at_s2).value
+    Array([1., 1.], dtype=float64)
+    ```
+
+    **Notes:**
+
+    - `AbstractMetric.scale_factors` and `AbstractManifold.scale_factors` are thin wrappers over `cxm.scale_factors`.
+    - The name `scale_factors` in the software API follows the library convention for metric diagonal entries, even though some mathematical texts reserve “scale factor” for $\sqrt{g_{ii}}$.
+
+(software-spec-angle-between)=
+
+!!! info `angle_between`
+
+    Return the metric angle between two nonzero tangent vectors.
+
+    `angle_between` is a dispatched function that evaluates the standard
+    Riemannian angle formula at a base point $p$:
+
+    $$
+    \cos\theta = \frac{g_p(u, v)}{\|u\|_p\,\|v\|_p},
+    \qquad
+    \|u\|_p^2 = g_p(u, u),
+    \qquad
+    \|v\|_p^2 = g_p(v, v).
+    $$
+
+    The input component dictionaries represent **tangent-vector components in
+    the coordinate basis of `chart`**, not point-role coordinates. The base
+    point `at` specifies where the metric is evaluated. Even for flat metrics,
+    `at` remains part of the public API for consistency with curvilinear and
+    embedded-manifold cases.
+
+    **Signature:**
+
+    ```
+    cxm.angle_between(metric_or_manifold, chart, u, v, /, *, at, usys=None)
+    ```
+
+    Or via convenience wrappers on metric and manifold objects:
+
+    ```
+    metric.angle_between(chart, u, v, at=at, usys=usys)
+    manifold.angle_between(chart, u, v, at=at, usys=usys)
+    ```
+
+    **Arguments:**
+
+    - `metric_or_manifold`: an `AbstractMetric` instance (metric-level call) or an `AbstractManifold` instance (manifold-level call). When a manifold is passed, `angle_between` delegates to `manifold.metric`.
+    - `chart`: the coordinate chart in whose basis the tangent-vector components are expressed.
+    - `u`, `v`: `CDict` tangent-vector components keyed by `chart.components`.
+    - `at` (keyword): the base point $p$ in chart coordinates at which the metric is evaluated.
+    - `usys` (keyword, optional): unit system forwarded to metric evaluation when needed.
+
+    **Return:**
+
+    - Returns an angular quantity in radians, typically a `coordinax.angles.Angle`.
+    - For supported positive-definite metrics, the result lies in $[0, \pi]$.
+
+    **Dispatch behavior:**
+
+    - Generic metric dispatch: evaluate `metric.metric_matrix(chart, at=at, usys=usys)`, compute the bilinear forms `u^T g v`, `u^T g u`, and `v^T g v`, then return `arccos(...)` of the normalized inner product.
+    - Manifold dispatch: resolve to `angle_between(manifold.metric, chart, u, v, at=at, usys=usys)`.
+    - The implementation supports full symmetric metric matrices; it is not restricted to diagonal metrics.
+
+    **Failure semantics:**
+
+    - If either input tangent vector has zero norm, raise `ValueError`.
+    - If the chart keys do not match `chart.components`, validation may raise `ValueError`.
+    - In v1, pseudo-Riemannian / indefinite metrics are unsupported by this API and raise `NotImplementedError`.
+
+    **Examples**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> M = cxm.EuclideanManifold(2)
+    >>> at = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m")}
+    >>> uvec = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
+    >>> vvec = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
+
+    >>> cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
+    Angle(1.57079633, 'rad')
+
+    >>> at_sph = {
+    ...     "r": u.Q(2.0, "m"),
+    ...     "theta": u.Angle(jnp.pi / 2, "rad"),
+    ...     "phi": u.Angle(0.0, "rad"),
+    ... }
+    >>> u_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> v_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(0.0, "rad"), "phi": u.Angle(1.0, "rad")}
+    >>> cxm.angle_between(cxm.EuclideanMetric(3), cxc.sph3d, u_tan, v_tan, at=at_sph)
+    Angle(1.57079633, 'rad')
+    ```
+
+    **Notes:**
+
+    - This API is for tangent-space geometry. Point-role coordinates should first be converted into a tangent/displacement representation if that is the intended meaning.
+    - The angle is defined intrinsically by the metric at the supplied base point and is therefore chart-invariant under valid coordinate changes.
+
 (software-spec-abstractatlas)=
 
 !!! info `AbstractAtlas`
@@ -1565,6 +1872,59 @@ Separating semantics from geometry provides two advantages:
 
     In this call the atlas first verifies that both charts belong to the same atlas before delegating to the registered point transition map implementation.
 
+(software-spec-abstractmetric)=
+
+!!! info `AbstractMetric`
+
+    `AbstractMetric` is the abstract base for metric tensors used by manifold objects.
+
+    A metric assigns a symmetric, non-degenerate bilinear form to each tangent space:
+
+    $$
+    g_p : T_pM \times T_pM \to \mathbb{R}, \quad p \in M.
+    $$
+
+    In local coordinates $q = (q^1, \ldots, q^n)$, this is represented by the metric matrix
+    $$g_{ij}(q).$$
+
+    **Immutability and JAX-static requirements:**
+
+    - All metric classes are immutable frozen dataclasses.
+    - All metric classes are registered with `@jax.tree_util.register_static`.
+    - Metric instances therefore flatten as static PyTree nodes (no dynamic leaves).
+
+    **Core API contract:**
+
+    - `signature: tuple[int, ...]` (abstract property): encodes metric signature signs in coordinate order and has length equal to the metric dimension.
+    - `ndim: int`: defined as `len(signature)`.
+    - `metric_matrix(chart, /, *, at, usys=None) -> QuantityMatrix | Array` (abstract method): returns the metric matrix expressed in `chart`, evaluated at base point `at`.
+
+    **Metric matrix requirements:**
+
+    - Shape is `(ndim, ndim)`.
+    - Matrix is symmetric.
+    - The return type follows input/unit context.
+    - Quantity-valued evaluation returns `QuantityMatrix`.
+    - Array-valued evaluation may return `Array`.
+
+    **Behavioral guarantees:**
+
+    - Position-independent metrics (for example Minkowski in canonical coordinates) may ignore `at` numerically, but must still satisfy the same interface.
+    - Position-dependent metrics (for example induced or hyperspherical metrics) evaluate `metric_matrix` at the supplied base point.
+    - Chart compatibility is a manifold-level concern; metrics assume callers provide charts and points compatible with the surrounding manifold contract.
+
+    **Subclassing requirements:**
+
+    - Implement `signature` and `metric_matrix`.
+    - Preserve immutability and static PyTree behavior.
+    - Remain JAX-transform compatible (`jit`, `vmap`) as pure functions of inputs.
+
+    See the [Metrics](#software-spec-metrics) section for concrete metric families and formulas.
+
+    **Methods:**
+
+    - `scale_factors(chart, /, *, at, usys=None)`: convenience wrapper around [`cxm.scale_factors`](#software-spec-scale-factors). Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`.
+
 (software-spec-abstractmanifold)=
 
 !!! info `AbstractManifold`
@@ -1604,6 +1964,7 @@ Separating semantics from geometry provides two advantages:
     - ``pt_map(...)`` performs chart transitions while checking that both charts belong to the manifold.
     - ``realize_cartesian(...)`` converts coordinates into the canonical ambient Cartesian chart.
     - ``unrealize_cartesian(...)`` performs the inverse operation.
+    - ``scale_factors(chart, /, *, at, usys=None)``: convenience wrapper that delegates to the manifold metric. Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`. See the [`scale_factors` functional API section](#software-spec-scale-factors) for full semantics.
 
     Pre-defined manifolds:
 
@@ -1692,6 +2053,55 @@ Separating semantics from geometry provides two advantages:
     False
     ```
 
+(software-spec-euclideanmetric)=
+
+!!! info `EuclideanMetric`
+
+    `EuclideanMetric` is the flat Riemannian metric on $\mathbb{R}^n$.
+
+    In Cartesian coordinates, the metric matrix is the identity:
+
+    $$
+    g = I_n.
+    $$
+
+    In any non-Cartesian chart, the metric is computed by pullback through the chart-to-Cartesian Jacobian:
+
+    $$
+    g_{ij} = (J^T J)_{ij} = \sum_k \frac{\partial x^k}{\partial q^i}\frac{\partial x^k}{\partial q^j}.
+    $$
+
+    Construction:
+
+    ```text
+    EuclideanMetric(ndim: int)
+    ```
+
+    Semantics:
+
+    - `signature = (1,) * ndim`.
+    - `metric_matrix(chart, /, *, at, usys=None)` returns a `QuantityMatrix`.
+    - For Cartesian charts, `metric_matrix` returns a dimensionless identity matrix of shape `(ndim, ndim)`.
+    - For compatible non-Cartesian charts, `metric_matrix` is computed as `J^T J`, where `J = jacobian_pt_map(at, chart, chart.cartesian, usys=usys)`.
+    - If a chart has no global Cartesian sibling, the current implementation falls back to a dimensionless identity matrix.
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> m = cxm.EuclideanMetric(3)
+    >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+    >>> m.metric_matrix(cxc.cart3d, at=at)
+    QuantityMatrix([[1., 0., 0.],
+                    [0., 1., 0.],
+                    [0., 0., 1.]], '((, , ), (, , ), (, , ))')
+    >>> m.signature
+    (1, 1, 1)
+    ```
+
 (software-spec-euclideanmanifold)=
 
 !!! info `EuclideanManifold`
@@ -1705,11 +2115,20 @@ Separating semantics from geometry provides two advantages:
 
     It is the canonical manifold used for ordinary flat coordinate systems (Cartesian, polar, cylindrical, spherical) when expressed in dimension $n$.
 
-    A `EuclideanManifold(n)` simply provides the Euclidean atlas:
+    A `EuclideanManifold(n)` provides both Euclidean smooth and metric structure:
 
     - `atlas = EuclideanAtlas(n)`
+    - `metric = EuclideanMetric(n)`
 
     with manifold dimension $ \dim M = n. $
+
+    Construction:
+
+    ```text
+    EuclideanManifold(ndim: int)
+    ```
+
+    The metric object is attached at construction and is available as `M.metric`.
 
     The default chart is the canonical Cartesian chart of the same dimension provided by the atlas. For example, `EuclideanManifold(2).default_chart == Cart2D()`.
 
@@ -1726,6 +2145,8 @@ Separating semantics from geometry provides two advantages:
     3
     >>> M.default_chart
     Cart3D()
+    >>> M.metric.signature
+    (1, 1, 1)
     >>> M.has_chart(cxc.cart3d)
     True
     >>> M.has_chart(cxc.cart2d)
@@ -1766,6 +2187,58 @@ Separating semantics from geometry provides two advantages:
 
     As with `EuclideanAtlas`, membership is determined by chart registration rather than by hard-coded enumeration using the ``register`` class method.
 
+(software-spec-hypersphericalmetric)=
+
+!!! info `HyperSphericalMetric`
+
+    `HyperSphericalMetric` is the round Riemannian metric on the unit sphere in hyperspherical coordinates.
+
+    For $S^2$ with chart $(\theta, \phi)$, the metric is
+
+    $$
+    g = \begin{pmatrix}
+    1 & 0 \\
+    0 & \sin^2\theta
+    \end{pmatrix}.
+    $$
+
+    More generally, diagonal entries follow the cumulative-sine rule:
+
+    $$
+    g_{kk} = \prod_{j=0}^{k-1} \sin^2(\theta_j),
+    $$
+
+    with $g_{00}=1$.
+
+    Construction:
+
+    ```text
+    HyperSphericalMetric(ndim: int)
+    ```
+
+    Semantics:
+
+    - `signature = (1,) * ndim`.
+    - `metric_matrix(chart, /, *, at, usys=None)` returns either a plain array or a `QuantityMatrix`, depending on whether inputs are unitful.
+    - Angular inputs are interpreted in radians by default, or via `usys["angle"]` when a unit system is provided.
+    - The returned metric is diagonal in the intrinsic hyperspherical chart basis.
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> m = cxm.HyperSphericalMetric(2)
+    >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
+    >>> m.metric_matrix(cxc.sph2, at=at)
+    Array([[1., 0.],
+           [0., 1.]], dtype=float64)
+    >>> m.signature
+    (1, 1)
+    ```
+
 (software-spec-twospheremanifold)=
 
 !!! info `HyperSphericalManifold`
@@ -1781,14 +2254,17 @@ Separating semantics from geometry provides two advantages:
     Construction:
 
     ```text
-    HyperSphericalManifold()
+    HyperSphericalManifold(ndim: int = 2)
     ```
 
     Structure:
 
     - `atlas = HyperSphericalAtlas()`
+    - `metric = HyperSphericalMetric(ndim)`
 
     The intrinsic dimension is $ \dim S^2 = 2$.
+
+    The metric object is attached at construction time and is available as `M.metric`.
 
     The atlas provides the canonical spherical chart
 
@@ -1824,6 +2300,9 @@ Separating semantics from geometry provides two advantages:
 
     >>> M.default_chart
     SphericalTwoSphere()
+
+    >>> M.metric.signature
+    (1, 1)
 
     >>> M.has_chart(cxc.sph2)
     True
@@ -1871,6 +2350,63 @@ Separating semantics from geometry provides two advantages:
     - This atlas defines chart compatibility only.
     - Metric formulas are specified by MinkowskiMetric.
 
+(software-spec-minkowskimetric)=
+
+!!! info `MinkowskiMetric`
+
+    `MinkowskiMetric` is the Lorentzian pseudo-Riemannian metric on Minkowski spacetime.
+
+    In canonical spacetime Cartesian coordinates $(ct, x, y, z)$:
+
+    $$
+    \eta = \operatorname{diag}(-1, 1, 1, 1).
+    $$
+
+    For general `SpaceTimeCT` charts, the metric is computed by pullback:
+
+    $$
+    g = J^T \eta J,
+    $$
+
+    where $J$ is the Jacobian of the map from the chosen spacetime chart to its canonical Cartesian counterpart.
+
+    Construction:
+
+    ```text
+    MinkowskiMetric()
+    ```
+
+    Semantics:
+
+    - `signature = (-1, 1, 1, 1)`.
+    - `ndim = 4`.
+    - `metric_matrix(chart, /, *, at, usys=None)` returns a `QuantityMatrix`.
+    - In canonical Cartesian spacetime coordinates, `metric_matrix` returns `diag(-1, 1, 1, 1)`.
+    - In other compatible `SpaceTimeCT` charts, `metric_matrix` returns `J^T η J`.
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> m = cxm.MinkowskiMetric()
+    >>> at = {
+    ...     "ct": jnp.array(0.0),
+    ...     "x": jnp.array(0.0),
+    ...     "y": jnp.array(0.0),
+    ...     "z": jnp.array(0.0),
+    ... }
+    >>> m.metric_matrix(cxc.spacetimect, at=at).value
+    Array([[-1.,  0.,  0.,  0.],
+           [ 0.,  1.,  0.,  0.],
+           [ 0.,  0.,  1.,  0.],
+           [ 0.,  0.,  0.,  1.]], dtype=float64)
+    >>> m.signature
+    (-1, 1, 1, 1)
+    ```
+
 (software-spec-minkowskimanifold)=
 
 !!! info `MinkowskiManifold`
@@ -1881,11 +2417,16 @@ Separating semantics from geometry provides two advantages:
 
     - `ndim = 4`
     - `atlas = MinkowskiAtlas(4)`
+    - `metric = MinkowskiMetric()`
     - `default_chart = atlas.default_chart()`
 
-    Metric association:
+    Construction:
 
-    - `metric = MinkowskiMetric(signature=(-1, 1, 1, 1))`
+    ```text
+    MinkowskiManifold(ndim: int = 4)
+    ```
+
+    The metric object is attached at construction time and is available as `M.metric`.
 
     Chart compatibility:
 
@@ -1906,6 +2447,13 @@ Separating semantics from geometry provides two advantages:
     Pre-defined instance:
 
     - minkowski4d is the canonical pre-built MinkowskiManifold() instance.
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> M = cxm.MinkowskiManifold()
+    >>> M.metric.signature
+    (-1, 1, 1, 1)
+    ```
 
 ### Custom Manifolds
 
@@ -1958,6 +2506,48 @@ Separating semantics from geometry provides two advantages:
     False
     ```
 
+(software-spec-custommetric)=
+
+!!! info `CustomMetric`
+
+    `CustomMetric` is a concrete metric implementation for user-defined manifolds.
+
+    Construction:
+
+    ```text
+    CustomMetric(
+        metric_matrix: Callable[[AbstractChart], QuantityMatrix | Array],
+        signature: tuple[int, ...],
+    )
+    ```
+
+    Semantics:
+
+    - `metric_matrix(chart, /, *, at, usys=None)` is supplied by the caller and must satisfy the [`AbstractMetric`](#software-spec-abstractmetric) contract.
+    - `signature` is the metric signature as a tuple of `+1` and `-1` entries.
+    - `ndim = len(signature)`.
+    - `CustomMetric` is immutable and registered as a static JAX PyTree, matching the behavior required of all concrete metric types.
+
+    This type exists so users can define metrics for custom manifolds without subclassing `AbstractMetric`.
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> def flat_3d(chart, /, *, at):
+    ...     return jnp.eye(3)
+    ...
+
+    >>> metric = cxm.CustomMetric(metric_matrix=flat_3d, signature=(1, 1, 1))
+    >>> metric.signature
+    (1, 1, 1)
+    >>> metric.ndim
+    3
+    ```
+
 (software-spec-custommanifold)=
 
 !!! info `CustomManifold`
@@ -1971,14 +2561,16 @@ Separating semantics from geometry provides two advantages:
     Construction:
 
     ```text
-    CustomManifold(atlas: CustomAtlas)
+    CustomManifold(atlas: CustomAtlas, metric: AbstractMetric)
     ```
 
-    The manifold is intentionally thin: it forwards chart-membership checks, default-chart selection, and point transition wrappers to the provided atlas.
+    The manifold is intentionally thin: it forwards chart-membership checks, default-chart selection, and point transition wrappers to the provided atlas, while storing an explicit metric object for geometric computations.
 
     - `ndim = atlas.ndim`
     - `default_chart = atlas.default_chart()`
     - `has_chart(chart) = atlas.has_chart(chart)`
+    - `metric` is the caller-supplied metric object.
+    - `atlas.ndim` and `metric.ndim` must match; otherwise construction raises `ValueError`.
 
     Coordinate operations (`pt_map`, `realize_cartesian`, `unrealize_cartesian`) are inherited from `AbstractManifold` and therefore enforce atlas compatibility before delegating to chart-level machinery.
 
@@ -1990,12 +2582,14 @@ Separating semantics from geometry provides two advantages:
     ...     charts=(cxc.Cart2D, cxc.Polar2D),
     ...     chart_default=cxc.cart2d,
     ... )
-    >>> M = cxm.CustomManifold(A)
+    >>> M = cxm.CustomManifold(A, cxm.EuclideanMetric(2))
 
     >>> M.ndim
     2
     >>> M.default_chart
     Cart2D()
+    >>> M.metric.signature
+    (1, 1)
 
     >>> M.has_chart(cxc.cart2d)
     True
@@ -2078,6 +2672,64 @@ Separating semantics from geometry provides two advantages:
     False
     ```
 
+(software-spec-cartesianproductmetric)=
+
+!!! info `CartesianProductMetric`
+
+    `CartesianProductMetric` is the canonical metric on a Cartesian product manifold.
+
+    For factor manifolds $(M_i, g_i)$, the product manifold
+    $$
+    M = M_1 \times M_2 \times \cdots \times M_k
+    $$
+    carries the metric
+    $$
+    g_{(p_1,\ldots,p_k)}((v_1,\ldots,v_k),(w_1,\ldots,w_k))
+    = \sum_{i=1}^k g_i(v_i, w_i).
+    $$
+
+    Construction:
+
+    ```text
+    CartesianProductMetric(factors: tuple[AbstractMetric, ...])
+    ```
+
+    Semantics:
+
+    - `signature` is the concatenation of factor signatures in product order.
+    - `ndim = sum(metric.ndim for metric in factors)`.
+    - `metric_matrix(chart, /, *, at, usys=None)` requires a product chart and returns a block-diagonal matrix with one block per factor metric.
+    - Each block is the factor metric matrix evaluated at the corresponding factor point extracted from `at` using product-chart factor splitting.
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> import unxt as u
+
+    >>> M = cxm.CartesianProductManifold(
+    ...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
+    ...     factor_names=("S2", "R1"),
+    ... )
+    >>> metric = M.metric
+    >>> metric.signature
+    (1, 1, 1)
+
+    >>> chart = cxc.CartesianProductChart(
+    ...     factors=(cxc.sph2, cxc.cart1d), factor_names=("S2", "R1")
+    ... )
+    >>> at = {
+    ...     "S2.theta": u.Angle(jnp.pi / 2, "rad"),
+    ...     "S2.phi": u.Angle(0.0, "rad"),
+    ...     "R1.x": u.Q(1.0, "m"),
+    ... }
+    >>> g = metric.metric_matrix(chart, at=at)
+    >>> g.shape
+    (3, 3)
+    ```
+
 (software-spec-cartesianproductmanifold)=
 
 !!! info `CartesianProductManifold`
@@ -2103,6 +2755,7 @@ Separating semantics from geometry provides two advantages:
 
     - `ndim = sum(factor.ndim for factor in factors)`
     - `atlas = CartesianProductAtlas(...)` formed from factor atlases.
+    - `metric = CartesianProductMetric(...)` formed from factor metrics.
     - `default_chart = atlas.default_chart()`
     - Factor names must be unique and are used as keys when accessing the product atlas.
 
@@ -2246,6 +2899,64 @@ Separating semantics from geometry provides two advantages:
     CustomEmbeddingMap(intrinsic=Cart1D(), ambient=Cart2D(), ...)
     ```
 
+(software-spec-inducedmetric)=
+
+!!! info `InducedMetric`
+
+    `InducedMetric` is the pullback metric on an embedded manifold.
+
+    Given an embedding $\iota : N \hookrightarrow M$, `InducedMetric` constructs the intrinsic metric on $N$ from the ambient metric on $M$ by pullback:
+
+    $$
+    g_N = \iota^* g_M,
+    $$
+
+    or, in local coordinates,
+
+    $$
+    (g_N)_{ij} = (J^T G J)_{ij},
+    $$
+
+    where $J = \partial \iota / \partial q$ is the Jacobian of the embedding map and $G$ is the ambient metric evaluated at the embedded point.
+
+    Construction:
+
+    ```text
+    InducedMetric(
+        embed_map: AbstractEmbeddingMap,
+        ambient_metric: AbstractMetric,
+    )
+    ```
+
+    Semantics:
+
+    - `embed_map` defines the intrinsic and ambient charts used to compute the pullback.
+    - `ambient_metric` is evaluated at the embedded point `embed_map.embed(at, usys=usys)`.
+    - `metric_matrix(chart, /, *, at, usys=None)` computes the embedding Jacobian and returns `J^T G J` as a `QuantityMatrix`.
+    - The current implementation ignores the `chart` argument numerically and computes the induced metric in the embedding map's intrinsic chart.
+    - `signature = (1,) * embed_map.intrinsic.ndim`.
+    - `ndim = embed_map.intrinsic.ndim`.
+
+    This metric is the canonical metric exposed by [`EmbeddedManifold`](#software-spec-embeddedmanifold).
+
+    **Example**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> embed_map = cxm.TwoSphereIn3D(radius=u.Q(1.0, "km"))
+    >>> metric = cxm.InducedMetric(embed_map, cxm.EuclideanMetric(3))
+    >>> at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+    >>> metric.metric_matrix(cxc.sph2, at=at)
+    QuantityMatrix([[1., 0.],
+                    [0., 1.]], '((km2 / rad2, km2 / rad2), (km2 / rad2, km2 / rad2))')
+    >>> metric.signature
+    (1, 1)
+    ```
+
 (software-spec-embeddedmanifold)=
 
 !!! info `EmbeddedManifold`
@@ -2275,6 +2986,7 @@ Separating semantics from geometry provides two advantages:
     - `embed_map: AbstractEmbeddingMap` — the smooth embedding defining coordinates transformation
     - `atlas = intrinsic.atlas` — uses the intrinsic manifold's atlas
     - `ndim = intrinsic.ndim` — the dimension is that of the intrinsic manifold
+    - `metric = InducedMetric(embed_map, ambient.metric)` — the metric is derived from the embedding and the ambient manifold metric, not passed separately at construction time
 
     Embedding API:
 
@@ -2288,6 +3000,7 @@ Separating semantics from geometry provides two advantages:
 
     - `has_chart(chart)` — delegates to `intrinsic.has_chart(chart)`
     - `default_chart` — inherited from intrinsic manifold
+    - `metric` — computed property returning the induced pullback metric from the ambient manifold
 
     Chart membership:
 
@@ -2304,6 +3017,7 @@ Separating semantics from geometry provides two advantages:
 
     - Realize/unrealize to Cartesian coordinates are not yet implemented (marked TODO).
     - The embedding map encodes both the transition between intrinsic and ambient chart types and any embedding parameters (e.g., radius).
+    - Because the metric is induced from the ambient manifold, updating the ambient manifold changes the embedded manifold's geometric metric semantics.
 
     **Example**
 
@@ -2319,6 +3033,8 @@ Separating semantics from geometry provides two advantages:
     ...     ambient=cxm.EuclideanManifold(3),
     ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")),
     ... )
+    >>> manifold.metric.signature
+    (1, 1)
 
     >>> # Embed a point from spherical (theta, phi) to Cartesian (x, y, z)
     >>> p_int = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}

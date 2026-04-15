@@ -11,6 +11,7 @@ from typing_extensions import override
 import jax
 
 from .atlas import CartesianProductAtlas
+from .metric import CartesianProductMetric
 from coordinax.manifolds._src.base import AbstractManifold
 
 
@@ -61,6 +62,8 @@ class CartesianProductManifold(AbstractManifold):
     ----------
     atlas : CartesianProductAtlas
         The product atlas formed from the factor atlases.
+    metric : CartesianProductMetric
+        The canonical product metric formed from the factor metrics.
     ndim : int
         Total intrinsic dimension $\sum_i n_i$.
     default_chart : CartesianProductChart
@@ -193,3 +196,9 @@ class CartesianProductManifold(AbstractManifold):
         return CartesianProductAtlas(
             factors=factor_atlases, factor_names=self.factor_names
         )
+
+    @property
+    def metric(self) -> CartesianProductMetric:
+        """Return the canonical product metric from the factor metrics."""
+        factor_metrics = tuple(factor.metric for factor in self.factors)
+        return CartesianProductMetric(factors=factor_metrics)

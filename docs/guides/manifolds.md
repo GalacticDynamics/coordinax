@@ -106,6 +106,73 @@ Manifold wrappers enforce that both charts belong to the manifold atlas.
 
 Compared to chart-level calls, manifold-level methods add a compatibility check before delegating to chart transition rules.
 
+## Reading Metric Diagonals
+
+Use `scale_factors` when you want the diagonal entries of the metric matrix in a chart.
+
+This returns the metric diagonal $g_{ii}$, not the basis lengths $\sqrt{g_{ii}}$. The result is a 1-D `QuantityMatrix` because different coordinate directions can carry different units.
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+>>> import quaxed.numpy as jnp
+>>> import unxt as u
+
+>>> M = cxm.EuclideanManifold(3)
+>>> at = {
+...     "r": u.Q(2, "km"),
+...     "theta": u.Angle(jnp.pi / 2, "rad"),
+...     "phi": u.Angle(0, "rad"),
+... }
+
+>>> gdiag = M.scale_factors(cxc.sph3d, at=at)
+>>> gdiag.shape
+(3,)
+>>> jnp.allclose(gdiag.value, jnp.array([1.0, 4.0, 4.0]))
+Array(True, dtype=bool)
+>>> gdiag.unit.to_string()
+'(, km2 / rad2, km2 / rad2)'
+```
+
+For generic metrics, `scale_factors` follows the metric matrix path and returns the diagonal. For `EuclideanMetric`, coordinax uses a more efficient specialization that avoids forming the full metric matrix.
+
+## Measuring Angles Between Tangent Vectors
+
+Use `angle_between` when you want the metric angle between two **tangent vectors** expressed as CDicts in a chart basis.
+
+This is a tangent-space operation, not a point-to-point operation. The vectors are interpreted in the coordinate basis of the chosen chart, and the metric is evaluated at the base point `at`.
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+>>> import quaxed.numpy as jnp
+>>> import unxt as u
+
+>>> M = cxm.EuclideanManifold(2)
+>>> at = {"x": u.Q(0, "m"), "y": u.Q(0, "m")}
+>>> uvec = {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
+>>> vvec = {"x": u.Q(0, "m"), "y": u.Q(1, "m")}
+
+>>> ang = M.angle_between(cxc.cart2d, uvec, vvec, at=at)
+>>> jnp.allclose(u.ustrip("rad", ang), jnp.pi / 2)
+Array(True, dtype=bool)
+```
+
+For curvilinear charts, the angle is still intrinsic, but the metric weights the coordinate directions at the supplied base point:
+
+```{code-block} python
+>>> metric = cxm.HyperSphericalMetric(ndim=2)
+>>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
+>>> uvec = {"theta": jnp.array(1.0), "phi": jnp.array(0.0)}
+>>> vvec = {"theta": jnp.array(1.0), "phi": jnp.array(1.0)}
+
+>>> ang = cxm.angle_between(metric, cxc.sph2, uvec, vvec, at=at)
+>>> jnp.allclose(u.ustrip("rad", ang), jnp.pi / 4)
+Array(True, dtype=bool)
+```
+
+If you have ordinary point coordinates rather than tangent components, first decide what tangent/displacement object you intend to compare. `angle_between` does not treat point-role CDicts as rays or displacements automatically.
+
 ## Embedding Workflows
 
 Embeddings connect intrinsic manifold coordinates to ambient-space coordinates.
@@ -235,7 +302,7 @@ When needed, build manifolds from explicit chart sets with `CustomAtlas` and `Cu
 >>> import coordinax.manifolds as cxm
 
 >>> A = cxm.CustomAtlas(charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d)
->>> M = cxm.CustomManifold(A)
+>>> M = cxm.CustomManifold(A, metric=cxm.EuclideanMetric(2))
 
 >>> M.has_chart(cxc.cart2d)
 True

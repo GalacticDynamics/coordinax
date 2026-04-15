@@ -60,7 +60,7 @@ class TestCustomManifold:
             charts=(cxc.Cart2D, cxc.Polar2D),
             chart_default=cxc.cart2d,
         )
-        manifold = cxm.CustomManifold(atlas)
+        manifold = cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
 
         assert manifold.ndim == 2
         assert manifold.default_chart == cxc.cart2d
@@ -71,7 +71,7 @@ class TestCustomManifold:
             charts=(cxc.Cart2D, cxc.Polar2D),
             chart_default=cxc.cart2d,
         )
-        manifold = cxm.CustomManifold(atlas)
+        manifold = cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
 
         assert manifold.has_chart(cxc.cart2d)
         assert manifold.has_chart(cxc.polar2d)
@@ -87,7 +87,7 @@ class TestCustomManifold:
             charts=(cxc.Cart2D, cxc.Polar2D),
             chart_default=cxc.cart2d,
         )
-        manifold = cxm.CustomManifold(atlas)
+        manifold = cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
 
         x = {"x": 1.0, "y": 1.0}
         got = manifold.pt_map(x, cxc.cart2d, cxc.polar2d)

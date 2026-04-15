@@ -120,7 +120,7 @@ Define an explicit custom atlas and manifold:
 ... )
 >>> cx.polar2d in atlas
 True
->>> M = cx.CustomManifold(atlas)
+>>> M = cx.CustomManifold(atlas, metric=cx.EuclideanMetric(2))
 >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(1.0, "km")}
 >>> M.pt_map(q, cx.cart2d, cx.polar2d)
 {'r': Q(1.41421356, 'km'), 'theta': Q(0.78539816, 'rad')}

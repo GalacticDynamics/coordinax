@@ -25,3 +25,15 @@ def test_pt_map() -> None:
     """Test that pt_map can be dispatched on."""
 
     assert len(cxmapi.pt_map.methods) > 0
+
+
+def test_scale_factors() -> None:
+    """Test that scale_factors can be dispatched on."""
+
+    assert len(cxmapi.scale_factors.methods) > 0
+
+
+def test_angle_between() -> None:
+    """Test that angle_between can be dispatched on."""
+
+    assert len(cxmapi.angle_between.methods) > 0

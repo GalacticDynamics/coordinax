@@ -8,8 +8,11 @@ from typing import final
 
 import jax
 
-from .atlas import CustomAtlas
-from coordinax.manifolds._src.base import AbstractManifold
+from coordinax.manifolds._src.base import (
+    AbstractAtlas,
+    AbstractManifold,
+    AbstractMetric,
+)
 
 
 @jax.tree_util.register_static
@@ -31,7 +34,7 @@ class CustomManifold(AbstractManifold):
     ...     charts=(cxc.Cart2D, cxc.Polar2D),
     ...     chart_default=cxc.cart2d,
     ... )
-    >>> M = cxm.CustomManifold(atlas=atlas)
+    >>> M = cxm.CustomManifold(atlas=atlas, metric=cxm.EuclideanMetric(2))
     >>> M.ndim
     2
     >>> M.default_chart
@@ -46,8 +49,18 @@ class CustomManifold(AbstractManifold):
 
     """
 
-    atlas: CustomAtlas
+    atlas: AbstractAtlas
     """Atlas defining chart compatibility for this manifold."""
+
+    metric: AbstractMetric
+    """Riemannian metric for this manifold, used for norm and distance computations."""
+
+    def __post_init__(self) -> None:
+        if self.atlas.ndim != self.metric.ndim:
+            raise ValueError(
+                f"CustomManifold atlas has ndim={self.atlas.ndim} "
+                f"but metric has ndim={self.metric.ndim}."
+            )
 
     @property
     def ndim(self) -> int:

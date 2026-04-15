@@ -2,7 +2,7 @@
 
 __all__ = ("EuclideanAtlas",)
 
-from dataclasses import dataclass
+import dataclasses
 
 from typing import Any, ClassVar, TypeVar, final
 
@@ -35,7 +35,7 @@ def _can_common_point_transition(chart: cxc.AbstractChart, dim: int, /) -> bool:
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class EuclideanAtlas(AbstractAtlas):
     r"""Atlas of coordinate charts for the Euclidean manifold $\mathbb{R}^n$.
 
