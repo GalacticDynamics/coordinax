@@ -18,15 +18,9 @@
 
 ---
 
-Coordinax enables calculations with coordinates in
-[JAX](https://jax.readthedocs.io/en/latest/). Built on
-[Equinox](https://docs.kidger.site/equinox/) and
-[Quax](https://github.com/patrick-kidger/quax).
+Coordinax enables calculations with coordinates in [`JAX`](https://jax.readthedocs.io/en/latest/). Built on [`equinox`](https://docs.kidger.site/equinox/) and [`quax`](https://github.com/patrick-kidger/quax), with unit-support using [`unxt`](https://github.com/GalacticDynamics/unxt)
 
-## Installation
-
-[![PyPI platforms][pypi-platforms]][pypi-link]
-[![PyPI version][pypi-version]][pypi-link]
+## Installation &nbsp; [![PyPI platforms][pypi-platforms]][pypi-link] [![PyPI version][pypi-version]][pypi-link]
 
 <!-- [![Conda-Forge][conda-badge]][conda-link] -->
 
@@ -34,107 +28,142 @@ Coordinax enables calculations with coordinates in
 pip install coordinax
 ```
 
-## Documentation
+## Quick Start &nbsp; [![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://coordinax.readthedocs.io/en/)
 
-[![Read The Docs](https://img.shields.io/badge/read_docs-here-orange)](https://coordinax.readthedocs.io/en/)
+### Concepts
 
-## Quick example
+- Specialized quantities: scalar coordinate quantities with units, including `Angle` (directional values on $S^1$ with explicit wrapping) and `Distance` (length-valued quantity), plus astronomy-facing forms like `Parallax` and `DistanceModulus`.
+- Charts: a coordinate chart / component schema (names + physical dimensions). A chart does not store numerical values.
+- Representation: geometric meaning of components, encoded as (geometry, basis, semantics), e.g. `point`.
+- Point: data + chart + representation, with conversion and arithmetic behavior defined by chart transition maps and tangent pushforwards.
+
+## Modules
+
+The most common import is the high-level user API:
 
 ```python
-import jax.numpy as jnp
-import unxt as u
-import coordinax as cx
+import coordinax.main as cx
+```
 
-q = cx.CartesianPos3D(
-    x=u.Q(jnp.arange(0, 10.0), "kpc"),
-    y=u.Q(jnp.arange(5, 15.0), "kpc"),
-    z=u.Q(jnp.arange(10, 20.0), "kpc"),
-)
-print(q)
-# <CartesianPos3D: (x, y, z) [kpc]
-#     [[ 0.  5. 10.]
-#      [ 1.  6. 11.]
-#      ...
-#      [ 8. 13. 18.]
-#      [ 9. 14. 19.]]>
+### Specialized Quantities
 
-q2 = cx.vconvert(cx.SphericalPos, q)
-print(q2)
-# <SphericalPos: (r[kpc], theta[rad], phi[rad])
-#     [[11.18   0.464  1.571]
-#      [12.57   0.505  1.406]
-#      ...
-#      [23.601  0.703  1.019]
-#      [25.259  0.719  0.999]]>
+```pycon
+>>> import coordinax.main as cx
+>>> import unxt as u
 
-p = cx.CartesianVel3D(
-    x=u.Q(jnp.arange(0, 10.0), "km/s"),
-    y=u.Q(jnp.arange(5, 15.0), "km/s"),
-    z=u.Q(jnp.arange(10, 20.0), "km/s"),
-)
-print(p)
-# <CartesianVel3D: (x, y, z) [km / s]
-#     [[ 0.  5. 10.]
-#      [ 1.  6. 11.]
-#      ...
-#      [ 8. 13. 18.]
-#      [ 9. 14. 19.]]>
+>>> a = cx.Angle(30.0, "deg")
+>>> d = cx.Distance(10.0, "kpc")
+>>> u.uconvert("rad", a)
+Angle(0.52359878, 'rad')
+```
 
-p2 = cx.vconvert(cx.SphericalVel, p, q)
-print(p2)
-# <SphericalVel: (r[km / s], theta[km rad / (km s)], phi[km rad / (km s)])
-#     [[ 1.118e+01 -3.886e-16  0.000e+00]
-#      [ 1.257e+01 -1.110e-16  0.000e+00]
-#      ...
-#      [ 2.360e+01  0.000e+00  0.000e+00]
-#      [ 2.526e+01 -2.776e-16  0.000e+00]]>
+```pycon
+>>> import unxt as u
+>>> u.uconvert("rad", a)
+Angle(0.52359878, 'rad')
 
+```
 
-# Transforming between frames
-icrs_frame = cx.frames.ICRS()
-gc_frame = cx.frames.Galactocentric()
-op = cx.frames.frame_transform_op(icrs_frame, gc_frame)
-q_gc, p_gc = op(q, p)
-print(q_gc, p_gc, sep="\n")
-# <CartesianPos3D: (x, y, z) [kpc]
-#     [[-1.732e+01  5.246e+00  3.614e+00]
-#      ...
-#      [-3.004e+01  1.241e+01 -1.841e+00]]>
-# <CartesianVel3D: (x, y, z) [km / s]
-#      [[  3.704 250.846  11.373]
-#       ...
-#       [ -9.02  258.012   5.918]]>
+### Charts and Point Maps
 
-coord = cx.Coordinate({"length": q, "speed": p}, frame=icrs_frame)
-print(coord)
-# Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[ 0.  5. 10.]
-#              ...
-#              [ 9. 14. 19.]]>
-#     }),
-#     frame=ICRS()
-# )
+Transform point coordinates between charts with `pt_map`:
 
-print(coord.to_frame(gc_frame))
-# Coordinate(
-#     KinematicSpace({
-#        'length': <CartesianPos3D: (x, y, z) [kpc]
-#             [[-1.732e+01  5.246e+00  3.614e+00]
-#              ...
-#              [-3.004e+01  1.241e+01 -1.841e+00]]>,
-#        'speed': <CartesianVel3D: (x, y, z) [km / s]
-#             [[  3.704 250.846  11.373]
-#              ...
-#              [ -9.02  258.012   5.918]]>
-#     }),
-#     frame=Galactocentric( ... )
-# )
+```pycon
+>>> import coordinax.main as cx
+>>> import unxt as u
+
+>>> q = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
+>>> q_sph = cx.pt_map(q, cx.cart3d, cx.sph3d)
+>>> q_sph
+{'r': Q(3.74165739, 'km'), 'theta': Q(0.64052231, 'rad'), 'phi': Q(1.10714872, 'rad')}
+```
+
+### Point Conversion
+
+`Point` carries chart + representation metadata, so conversions preserve semantics:
+
+```pycon
+>>> import coordinax.main as cx
+
+>>> vec = cx.Point.from_([1, 2, 3], "m")
+>>> print(vec)
+<Point: chart=Cart3D (x, y, z) [m]
+    [1 2 3]>
+
+>>> sph_vec = vec.cconvert(cx.sph3d)
+>>> print(sph_vec)
+<Point: chart=Spherical3D (r[m], theta[rad], phi[rad])
+    [3.742 0.641 1.107]>
+```
+
+### Representations
+
+Common representation constants are available from the high-level module:
+
+```python
+import coordinax.main as cx
+
+cx.point  # point location data
+```
+
+### Manifolds
+
+Define an explicit custom atlas and manifold:
+
+```pycon
+>>> import coordinax.main as cx
+>>> import unxt as u
+
+>>> atlas = cx.CustomAtlas(
+...     charts=(type(cx.cart2d), type(cx.polar2d)),
+...     chart_default=cx.cart2d,
+... )
+>>> cx.polar2d in atlas
+True
+>>> M = cx.CustomManifold(atlas, metric=cx.EuclideanMetric(2))
+>>> q = {"x": u.Q(1.0, "km"), "y": u.Q(1.0, "km")}
+>>> M.pt_map(q, cx.cart2d, cx.polar2d)
+{'r': Q(1.41421356, 'km'), 'theta': Q(0.78539816, 'rad')}
+```
+
+### Astronomy Frames
+
+Astronomy frames require the `[astro]` extra (`pip install "coordinax[astro]"`) or to separately install the `coordinax-astro` package.
+
+`to_frame` composes the full transformation chain automatically. The example below converts from ICRS to the Galactic bar frame, which co-rotates at pattern speed $\Omega_b$ relative to Galactocentric. A time-dependent `Rotate` operator captures the rotation; `TransformedReferenceFrame` wraps the base frame with it; `frame_transition` fuses the resulting ICRS -> GCF -> bar chain on-the-fly:
+
+```pycon
+>>> import jax.numpy as jnp
+>>> import coordinax.main as cx
+>>> import coordinax.astro as cxastro
+>>> import coordinax.frames as cxf
+>>> import coordinax.transforms as cxfm
+>>> import unxt as u
+
+>>> # ICRS -> Galactocentric (static: rotate, translate, rotate)
+>>> sun = cx.Point.from_([0, 0, 0], "pc", cxastro.ICRS())
+>>> print(sun.to_frame(cxastro.Galactocentric()))
+<Point: chart=Cart3D (x, y, z) [pc]
+    [-8121.973     0.       20.8  ]>
+
+>>> # Bar frame co-rotating at Omega_b — Rotate accepts a callable for t-dependence
+>>> Omega_b = u.Q(0.0409, "rad/Myr")  # approx 40 km/s/kpc
+>>> def R_bar(t):
+...     theta = u.ustrip("rad", Omega_b * t)
+...     ct, st = jnp.cos(theta), jnp.sin(theta)
+...     return jnp.array([[ct, st, 0.0], [-st, ct, 0.0], [0.0, 0.0, 1.0]])
+...
+
+>>> bar_frame = cxf.TransformedReferenceFrame(cxastro.Galactocentric(), cxfm.Rotate(R_bar))
+
+>>> # ICRS -> bar: frame_transition fuses all four operators
+>>> cx.frame_transition(cxastro.ICRS(), bar_frame)
+Composed((...))
+
+>>> # Sun's ICRS-origin position expressed in the bar frame at t = 500 Myr
+>>> print(sun.to_frame(bar_frame, t=u.Q(500.0, "Myr")))
+<Point: chart=Cart3D (x, y, z) [pc]
+    [ 240.763 8118.404   20.8  ]>
 ```
 
 ## Citation
@@ -145,14 +174,11 @@ If you found this library to be useful in academic work, then please cite.
 
 ## Development
 
-[![Actions Status][actions-badge]][actions-link]
-[![Documentation Status][rtd-badge]][rtd-link]
-[![codecov][codecov-badge]][codecov-link]
-[![SPEC 0 — Minimum Supported Dependencies][spec0-badge]][spec0-link]
-[![pre-commit][pre-commit-badge]][pre-commit-link]
-[![ruff][ruff-badge]][ruff-link]
+[![Actions Status][actions-badge]][actions-link] [![Documentation Status][rtd-badge]][rtd-link] [![codecov][codecov-badge]][codecov-link] [![SPEC 0 — Minimum Supported Dependencies][spec0-badge]][spec0-link] [![pre-commit][pre-commit-badge]][pre-commit-link] [![ruff][ruff-badge]][ruff-link]
 
 We welcome contributions!
+
+For the local development workflow, see `docs/dev.md`. For pull request expectations, see `docs/contributing.md`.
 
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/GalacticDynamics/coordinax/workflows/CI/badge.svg

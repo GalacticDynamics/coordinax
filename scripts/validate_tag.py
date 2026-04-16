@@ -21,11 +21,17 @@ logger = logging.getLogger(__name__)
 
 PACKAGE_NAMES: tuple[str, ...] = (
     "coordinax",
-    "coordinax-api",
-    "coordinax-astro",
-    "coordinax-hypothesis",
-    "coordinax-interop-astropy",
+    "coordinax.api",
+    "coordinax.astro",
+    "coordinax.hypothesis",
+    "coordinax.interop.astropy",
 )
+
+# Maps git tag prefixes (dash-separated) to Python package names (dot-separated)
+# e.g., "coordinax-api" -> "coordinax.api"
+TAG_PREFIX_TO_PACKAGE: dict[str, str] = {
+    name.replace(".", "-"): name for name in PACKAGE_NAMES
+}
 
 LEGACY_MAX_MAJOR_MINOR: tuple[int, int] = (0, 23)
 
@@ -80,6 +86,12 @@ def validate_tag_for_package(tag: str, package: str | None = None) -> tuple[bool
 
     tag_package, major, minor, patch = parsed
 
+    # Convert tag prefix (e.g., "coordinax-api") to canonical package name
+    # (e.g., "coordinax.api")
+    tag_package_name = (
+        TAG_PREFIX_TO_PACKAGE.get(tag_package, tag_package) if tag_package else ""
+    )
+
     # Legacy tags (v0.23.x and older) are grandfathered in.
     if (major, minor) <= LEGACY_MAX_MAJOR_MINOR:
         return True, ""
@@ -91,17 +103,18 @@ def validate_tag_for_package(tag: str, package: str | None = None) -> tuple[bool
         allowed = ", ".join(PACKAGE_NAMES)
         return False, f"Unknown package '{package}'. Allowed values: {allowed}"
 
+    tag_prefix = package.replace(".", "-")
     if not tag_package:
         return False, (
             f"Tag {tag}: Package CD workflows should only trigger on "
-            f"package-specific tags (e.g., {package}-v{major}.{minor}.{patch}). "
+            f"package-specific tags (e.g., {tag_prefix}-v{major}.{minor}.{patch}). "
             "Coordinator tags are bare vX.Y.0 only. Bare vX.Y.Z tags with Z>0 "
             "must be package-specific tags."
         )
 
-    if tag_package != package:
+    if tag_package_name != package:
         return False, (
-            f"Tag {tag}: This tag is for package '{tag_package}', "
+            f"Tag {tag}: This tag is for package '{tag_package_name}', "
             f"but this workflow is for package '{package}'."
         )
 
