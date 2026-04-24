@@ -106,7 +106,7 @@ def jacobian_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
 
 @plum.dispatch
 def jacobian_pt_map(
-    from_chart: AbstractChart, to_chart: AbstractChart, /, *, usys: u.AbstractUnitSystem
+    from_chart: AbstractChart, to_chart: AbstractChart, /, *, usys: OptUSys
 ) -> Callable[[object], Any]:
     """Higher-order function for fixed-arg Jacobian point map.
 
