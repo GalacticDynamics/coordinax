@@ -11,6 +11,7 @@ import pytest
 import quax
 from astropy.units import imperial  # registers °F
 
+import quaxed.numpy as qnp
 import unxt as u
 
 from coordinax.internal import QuantityMatrix as QMat, UnitsMatrix
@@ -1277,3 +1278,225 @@ class TestDiagMethod:
         assert jnp.isclose(d.value[0, 0], 1.0)
         assert jnp.isclose(d.value[1, 0], 2.0)
         assert jnp.isclose(d.value[2, 1], 12.0)
+
+
+# ---------------------------------------------------------------------------
+# UnitsMatrix.T
+# ---------------------------------------------------------------------------
+
+
+class TestUnitsMatrixTranspose:
+    """Tests for ``UnitsMatrix.T`` — the unit-structure transpose."""
+
+    def test_2d_square_values(self):
+        """Transposing a 2x2 UnitsMatrix swaps rows and columns."""
+        um = UnitsMatrix(((_m, _s), (_kg, _rad)))
+        t = um.T
+        assert t[0, 0] == _m
+        assert t[0, 1] == _kg
+        assert t[1, 0] == _s
+        assert t[1, 1] == _rad
+
+    def test_2d_square_shape(self):
+        """Shape is preserved for a square transpose."""
+        um = UnitsMatrix(((_m, _s), (_kg, _rad)))
+        assert um.T.shape == (2, 2)
+
+    def test_2d_nonsquare_shape(self):
+        """Transposing a 2x3 UnitsMatrix gives a 3x2."""
+        um = UnitsMatrix(((_m, _s, _kg), (_rad, _km, _ms)))
+        t = um.T
+        assert t.shape == (3, 2)
+
+    def test_2d_nonsquare_values(self):
+        """Each element [j, i] in the transpose equals [i, j] in the original."""
+        um = UnitsMatrix(((_m, _s, _kg), (_rad, _km, _ms)))
+        t = um.T
+        # Original row 0: (m, s, kg); Original row 1: (rad, km, ms)
+        # Transposed col 0 (row 0): (m, rad); col 1: (s, km); col 2: (kg, ms)
+        assert t[0, 0] == _m
+        assert t[0, 1] == _rad
+        assert t[1, 0] == _s
+        assert t[1, 1] == _km
+        assert t[2, 0] == _kg
+        assert t[2, 1] == _ms
+
+    def test_2d_double_transpose_is_identity(self):
+        """Two transposes return the original unit structure."""
+        um = UnitsMatrix(((_m, _s), (_kg, _rad)))
+        assert um == um.T.T
+
+    def test_2d_returns_unitsmatrix(self):
+        """Result is always a ``UnitsMatrix`` instance."""
+        um = UnitsMatrix(((_m, _s), (_kg, _rad)))
+        assert isinstance(um.T, UnitsMatrix)
+
+    def test_1d_transpose_is_identity(self):
+        """Transposing a 1-D UnitsMatrix is a no-op (numpy convention)."""
+        um = UnitsMatrix((_m, _s, _kg))
+        t = um.T
+        assert t == um
+        assert t.shape == (3,)
+        assert t.ndim == 1
+
+
+# ---------------------------------------------------------------------------
+# QuantityMatrix.T
+# ---------------------------------------------------------------------------
+
+
+@quax.quaxify
+def _transpose(x):
+    return x.T
+
+
+class TestQuantityMatrixTranspose:
+    """Tests for ``QuantityMatrix.T`` — the matrix transpose property."""
+
+    # -- Basic 2D values and units ----------------------------------------
+
+    def test_2d_square_values(self, qm_2x2):
+        """Value array is transposed correctly for a square matrix."""
+        t = qm_2x2.T
+        expected = jnp.array([[1.0, 3.0], [2.0, 4.0]])
+        assert jnp.allclose(t.value, expected)
+
+    def test_2d_square_units(self, qm_2x2):
+        """Unit structure is transposed: unit[j][i] equals original unit[i][j]."""
+        t = qm_2x2.T
+        # Original: unit[0,0]=m, unit[0,1]=s, unit[1,0]=kg, unit[1,1]=rad
+        assert t.unit[0, 0] == _m
+        assert t.unit[0, 1] == _kg
+        assert t.unit[1, 0] == _s
+        assert t.unit[1, 1] == _rad
+
+    def test_2d_square_unit_string(self, qm_2x2):
+        """Transposed unit string matches expected layout."""
+        assert qm_2x2.T.unit.to_string() == "((m, kg), (s, rad))"
+
+    def test_2d_square_shape_preserved(self, qm_2x2):
+        """Shape is unchanged for a square matrix."""
+        assert qm_2x2.T.shape == (2, 2)
+
+    def test_2d_square_returns_quantitymatrix(self, qm_2x2):
+        """Result is a ``QuantityMatrix`` instance."""
+        assert isinstance(qm_2x2.T, QMat)
+
+    def test_2d_nonsquare_values(self):
+        """Transposing a 2x3 matrix gives a 3x2 with correct values."""
+        a = QMat(jnp.arange(6.0).reshape(2, 3), unit=((_m, _s, _kg), (_rad, _km, _ms)))
+        t = a.T
+        expected = jnp.arange(6.0).reshape(2, 3).T
+        assert jnp.allclose(t.value, expected)
+
+    def test_2d_nonsquare_shape(self):
+        """Shape is (3, 2) after transposing a (2, 3) matrix."""
+        a = QMat(jnp.ones((2, 3)), unit=((_m, _s, _kg), (_rad, _km, _ms)))
+        assert a.T.shape == (3, 2)
+
+    def test_2d_nonsquare_units(self):
+        """Unit element [j, i] of the transpose equals original [i, j]."""
+        a = QMat(jnp.ones((2, 3)), unit=((_m, _s, _kg), (_rad, _km, _ms)))
+        t = a.T
+        # Original row 0: (m, s, kg); row 1: (rad, km, ms)
+        assert t.unit[0, 0] == _m
+        assert t.unit[0, 1] == _rad
+        assert t.unit[1, 0] == _s
+        assert t.unit[1, 1] == _km
+        assert t.unit[2, 0] == _kg
+        assert t.unit[2, 1] == _ms
+
+    def test_2d_double_transpose_values(self, qm_2x2):
+        """Transposing twice recovers the original values."""
+        assert jnp.allclose(qm_2x2.T.T.value, qm_2x2.value)
+
+    def test_2d_double_transpose_units(self, qm_2x2):
+        """Transposing twice recovers the original unit structure."""
+        assert qm_2x2.T.T.unit == qm_2x2.unit
+
+    # -- Batch-dimension behavior -----------------------------------------
+
+    def test_batch_shape(self):
+        """For a batched ``(B, N, M)`` array, ``.T`` swaps only matrix axes.
+
+        Result shape is ``(B, M, N)``.
+        """
+        a = QMat(jnp.ones((3, 2, 4)), unit=((_m, _s, _kg, _rad), (_km, _ms, _g, _deg)))
+        t = a.T
+        assert t.shape == (3, 4, 2)
+
+    def test_batch_unit_structure_unchanged(self):
+        """The unit structure (which is 2-D) is transposed in the usual way.
+
+        Batch axes are preserved; only the last two (matrix) axes are swapped.
+        The unit structure only has the two logical dimensions, so it is
+        transposed as a normal 2-D matrix; the batch axis does not appear in
+        the unit structure.
+        """
+        a = QMat(jnp.ones((3, 2, 2)), unit=((_m, _s), (_kg, _rad)))
+        t = a.T
+        # value shape: (3,2,2) → (3,2,2);  unit shape stays (2,2) but transposed
+        assert t.shape == (3, 2, 2)
+        assert t.unit.shape == (2, 2)
+        assert t.unit[0, 0] == _m
+        assert t.unit[0, 1] == _kg
+        assert t.unit[1, 0] == _s
+        assert t.unit[1, 1] == _rad
+
+    def test_batch_matrix_transpose_via_quax(self):
+        """``matrix_transpose`` on a batched ``(B, N, M)`` preserves batch axes."""
+        a = QMat(jnp.arange(12.0).reshape(3, 2, 2), unit=((_m, _s), (_kg, _rad)))
+        t = qnp.matrix_transpose(a)
+        # Batch axis preserved; last two swapped: (3,2,2) → (3,2,2)
+        assert t.shape == (3, 2, 2)
+        # Check a few values: t[b, i, j] == a[b, j, i]
+        for b in range(3):
+            assert jnp.allclose(t.value[b], a.value[b].T)
+        # Unit structure is the same transposed 2-D layout
+        assert t.unit[0, 0] == _m
+        assert t.unit[0, 1] == _kg
+        assert t.unit[1, 0] == _s
+        assert t.unit[1, 1] == _rad
+
+    def test_vmap_transpose(self):
+        """``jax.vmap`` over a batch of 2-D matrices gives the per-element transpose."""
+        a = QMat(jnp.arange(12.0).reshape(3, 2, 2), unit=((_m, _s), (_kg, _rad)))
+
+        @quax.quaxify
+        def single_T(x):
+            return x.T
+
+        result = jax.vmap(single_T)(a)
+        # Each (2,2) slice is transposed independently
+        assert result.shape == (3, 2, 2)
+        for i in range(3):
+            expected = jnp.array(
+                [
+                    [a.value[i, 0, 0], a.value[i, 1, 0]],
+                    [a.value[i, 0, 1], a.value[i, 1, 1]],
+                ]
+            )
+            assert jnp.allclose(result.value[i], expected)
+
+    # -- JIT compatibility ------------------------------------------------
+
+    def test_jit_values(self, qm_2x2):
+        """``jax.jit`` preserves transpose values."""
+        t = jax.jit(_transpose)(qm_2x2)
+        expected = jnp.array([[1.0, 3.0], [2.0, 4.0]])
+        assert jnp.allclose(t.value, expected)
+
+    def test_jit_units(self, qm_2x2):
+        """``jax.jit`` preserves transposed unit structure."""
+        t = jax.jit(_transpose)(qm_2x2)
+        assert t.unit.to_string() == "((m, kg), (s, rad))"
+
+    # -- 1-D error --------------------------------------------------------
+
+    def test_1d_raises(self, qm_1d):
+        """Accessing ``.T`` on a 1-D ``QuantityMatrix`` raises ``ValueError``.
+
+        The ``.T`` property requires a 2-D unit structure to unpack ``(n, m)``.
+        """
+        with pytest.raises(ValueError, match="requires a 2-D matrix"):
+            _ = qm_1d.T

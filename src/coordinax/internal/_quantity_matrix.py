@@ -47,7 +47,7 @@ from .custom_types import CDict
 _DMLS = u.unit("")
 
 
-def strict_zip(*args: Any):
+def strict_zip(*args: Any) -> zip:
     """Zip iterables while enforcing equal lengths."""
     return zip(*args, strict=True)
 
@@ -682,10 +682,10 @@ class QuantityMatrix(u.AbstractQuantity):
         '((m, kg), (s, rad))'
 
         """
-        um = self.unit
-        n, m = um.shape[-2:]  # last two dims
-        t_units = UnitsMatrix([[um[j, i] for j in range(n)] for i in range(m)])
-        return QuantityMatrix(value=self.value.T, unit=t_units)
+        if self.ndim != 2:
+            msg = f"QuantityMatrix.T requires a 2-D matrix, got ndim={self.ndim}"
+            raise ValueError(msg)
+        return QuantityMatrix(value=jnp.swapaxes(self.value, -2, -1), unit=self.unit.T)
 
 
 def _convert_value_vector(
@@ -1210,17 +1210,20 @@ def sub_qm_qm(x: QuantityMatrix, y: QuantityMatrix, /) -> QuantityMatrix:
 def transpose_qm(
     x: QuantityMatrix, /, *, permutation: tuple[int, ...]
 ) -> QuantityMatrix:
-    """Transpose a 2D ``QuantityMatrix``.
+    """Transpose a ``QuantityMatrix``, swapping only the last two (matrix) axes.
 
-    Only the standard matrix transpose (permutation ``(1, 0)``) is supported
-    for the 2D case.  The unit structure is transposed in the same way as the
-    numeric array.
+    Leading batch dimensions must be preserved unchanged.  Only permutations
+    that swap the last two axes while keeping all batch axes in place are
+    supported, because the unit structure is purely 2-D and cannot represent
+    arbitrary axis re-orderings.
 
     Examples
     --------
     >>> import jax.numpy as jnp
     >>> import quaxed.numpy as qnp
     >>> from coordinax.internal import QuantityMatrix
+
+    2-D (no batch):
 
     >>> a = QuantityMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
     ...                    unit=(("m", "s"), ("kg", "rad")))
@@ -1231,19 +1234,30 @@ def transpose_qm(
     >>> aT.unit.to_string()
     '((m, kg), (s, rad))'
 
+    Batched ``(B, N, M)`` — batch axis is preserved:
+
+    >>> import jax
+    >>> b = QuantityMatrix(jnp.ones((3, 2, 2)),
+    ...                    unit=(("m", "s"), ("kg", "rad")))
+    >>> bT = qnp.matrix_transpose(b)
+    >>> bT.shape
+    (3, 2, 2)
+
     """
-    if x.ndim != 2:
-        msg = f"transpose_qm only supports 2D QuantityMatrix, got ndim={x.ndim}"
+    ndim_val = len(permutation)  # full ndim of the value array (includes batch dims)
+    if ndim_val < 2:
+        msg = f"transpose_qm requires ndim >= 2, got ndim={ndim_val}"
+        raise NotImplementedError(msg)
+    # Validate: batch axes must be unchanged, last two must be swapped.
+    expected = (*range(ndim_val - 2), ndim_val - 1, ndim_val - 2)
+    if tuple(permutation) != expected:
+        msg = (
+            f"transpose_qm only supports matrix transpose of the last two axes "
+            f"(expected permutation {expected}), got {tuple(permutation)}"
+        )
         raise NotImplementedError(msg)
     transposed_value = lax.transpose(x.value, permutation)
-    # Build transposed unit structure: swap rows and columns
-    n, m = x.shape[-2:]  # (N, M)
-    # permutation is typically (1, 0) for a 2D matrix transpose
-    # Resulting shape is (m, n): unit[j][i] = original unit[i][j]
-    transposed_unit = UnitsMatrix(
-        tuple(tuple(x.unit[i, j] for i in range(n)) for j in range(m))
-    )
-    return QuantityMatrix(value=transposed_value, unit=transposed_unit)
+    return QuantityMatrix(value=transposed_value, unit=x.unit.T)
 
 
 def _jit_fallback_uniform_unit(units: UnitsMatrix, out_size: int) -> UnitsMatrix:
