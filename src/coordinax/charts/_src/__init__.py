@@ -16,7 +16,6 @@ from .product import *
 from .register_cdict import *
 from .register_guess import *
 from .register_ptmap import *
-from .register_realize import *
 from .spacetime import *
 from .sphere import *
 from .utils import *

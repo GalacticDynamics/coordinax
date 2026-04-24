@@ -1,4 +1,4 @@
-"""Integration tests for pt_map and pt_map.
+"""Integration tests for ``pt_map``.
 
 Key behavioural contracts verified here:
 
@@ -12,9 +12,6 @@ Key behavioural contracts verified here:
   ``AbstractChart → Cartesian → AbstractChart`` fallback) gives the same
   result as going A → B → C when all three charts share the same ambient
   Cartesian chart.
-* **realize_cartesian / unrealize_cartesian roundtrip**: composing
-  ``chart.realize_cartesian`` and ``chart.unrealize_cartesian`` recovers the
-  identity on the chart's domain.
 """
 
 __all__: tuple[str, ...] = ()
@@ -74,18 +71,6 @@ class TestPartialApplicationEquivalence:
 
     def test_charts_partial_form(self, cart_point) -> None:
         """ptm(from_chart, to_chart)(p) == ptm(p, from_chart, to_chart)."""
-        exp = cxc.pt_map(cart_point, cxc.cart3d, cxc.sph3d)
-        got = cxc.pt_map(cxc.cart3d, cxc.sph3d)(cart_point)
-        _assert_cdict_approx(got, exp, rel=1e-6)
-
-    def test_realization_none_partial_form(self, cart_point) -> None:
-        """prm(None, from_chart, to_chart)(p) == prm(p, from_chart, to_chart)."""
-        exp = cxc.pt_map(cart_point, cxc.cart3d, cxc.sph3d)
-        got = cxc.pt_map(None, cxc.cart3d, cxc.sph3d)(cart_point)
-        _assert_cdict_approx(got, exp, rel=1e-6)
-
-    def test_realization_charts_partial_form(self, cart_point) -> None:
-        """prm(from_chart, to_chart)(p) == prm(p, from_chart, to_chart)."""
         exp = cxc.pt_map(cart_point, cxc.cart3d, cxc.sph3d)
         got = cxc.pt_map(cxc.cart3d, cxc.sph3d)(cart_point)
         _assert_cdict_approx(got, exp, rel=1e-6)
@@ -161,12 +146,12 @@ class TestCartesianRoundTrip1D:
 
 
 # ---------------------------------------------------------------------------
-# realize_cartesian / unrealize_cartesian roundtrip
+# Chart → Cartesian → chart roundtrip (realize/unrealize via pt_map)
 # ---------------------------------------------------------------------------
 
 
 class TestRealizeUnrealizeRoundtrip:
-    """realize_cartesian followed by unrealize_cartesian is the identity."""
+    """chart → cart → chart is identity (realize then unrealize via pt_map)."""
 
     @pytest.mark.parametrize(
         ("chart", "p"),
@@ -187,20 +172,15 @@ class TestRealizeUnrealizeRoundtrip:
         ],
     )
     def test_realize_unrealize_roundtrip(self, chart, p) -> None:
-        """Realize → unrealize recovers original chart-space coordinates."""
-        p_cart = chart.realize_cartesian(p)
-        got = chart.unrealize_cartesian(p_cart)
+        """pt_map(chart → cart) then pt_map(cart → chart) recovers original."""
+        p_cart = cxc.pt_map(p, chart, chart.cartesian)
+        got = cxc.pt_map(p_cart, chart.cartesian, chart)
         _assert_cdict_approx(got, p, rel=1e-5)
 
     def test_cartesian_realize_is_identity(self) -> None:
-        """realize_cartesian on a Cartesian chart is the identity."""
+        """pt_map from cart3d to cart3d is the identity."""
         p = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
-        _assert_cdict_approx(cxc.cart3d.realize_cartesian(p), p)
-
-    def test_cartesian_unrealize_is_identity(self) -> None:
-        """unrealize_cartesian on a Cartesian chart is the identity."""
-        p = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
-        _assert_cdict_approx(cxc.cart3d.unrealize_cartesian(p), p)
+        _assert_cdict_approx(cxc.pt_map(p, cxc.cart3d, cxc.cart3d), p)
 
 
 # ---------------------------------------------------------------------------

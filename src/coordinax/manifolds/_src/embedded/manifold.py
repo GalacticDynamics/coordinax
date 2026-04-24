@@ -103,26 +103,6 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     def atlas(self) -> AbstractAtlas:
         return self.intrinsic.atlas
 
-    def realize_cartesian(
-        self,
-        chart: cxc.AbstractChart[Any, Any],
-        data: CDict,
-        /,
-        *,
-        usys: OptUSys = None,
-    ) -> CDict:
-        raise NotImplementedError("TODO")
-
-    def unrealize_cartesian(
-        self,
-        chart: cxc.AbstractChart[Any, Any],
-        data: CDict,
-        /,
-        *,
-        usys: OptUSys = None,
-    ) -> CDict:
-        raise NotImplementedError("TODO")
-
 
 # ===================================================================
 # Point embedding

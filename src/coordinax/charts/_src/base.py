@@ -33,10 +33,9 @@ import wadler_lindig as wl
 import dataclassish
 import unxt as u
 
-import coordinax.api.charts as api
 from .custom_types import CDict
 from .utils import is_abstract_class, is_not_abstract_chart_subclass
-from coordinax.internal.custom_types import Ds, Ks, OptUSys
+from coordinax.internal.custom_types import Ds, Ks
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # type: ignore[misc]
 V = TypeVar("V")
@@ -158,20 +157,6 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
                     raise ValueError(msg)
 
         return data
-
-    # -------------------------------------------
-    # Point-role ambient Cartesian realization
-
-    def realize_cartesian(self, data: CDict, /, *, usys: OptUSys = None) -> CDict:
-        """Realize a point in canonical ambient Cartesian coordinates."""
-        out = api.realize_cartesian(self, data, usys=usys)
-        return cast("CDict", out)
-
-    # TODO: maybe remove.
-    def unrealize_cartesian(self, data: CDict, /, *, usys: OptUSys = None) -> CDict:
-        """Invert the ambient Cartesian realization on the chart domain."""
-        out = api.unrealize_cartesian(self, data, usys=usys)
-        return cast("CDict", out)
 
     # ===============================================================
     # Wadler-Lindig API

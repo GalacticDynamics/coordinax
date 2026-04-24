@@ -68,11 +68,9 @@ systems.
 {'r': Q(3.74165739, 'km'), 'theta': Q(0.64052231, 'rad'),
  'phi': Q(1.10714872, 'rad')}
 
-For same-manifold chart changes, `pt_map` and
-`pt_map` agree:
+We can also compute the Jacobian of the point map:
 
->>> cxc.pt_map(q, cxc.cart3d, cxc.sph3d) == q_sph
-True
+>>> jac = cxc.jacobian_pt_map(q, cxc.cart3d, cxc.sph3d)
 
 """
 
@@ -88,8 +86,6 @@ __all__ = (
     "guess_chart",
     "cdict",
     "jacobian_pt_map",
-    "pt_map",
-    "realize_cartesian",
     "pt_map",
     # ===========================================
     # R^n
@@ -230,7 +226,6 @@ with install_import_hook("coordinax.charts"):
         cdict,
         guess_chart,
         pt_map,
-        realize_cartesian,
     )
 
 

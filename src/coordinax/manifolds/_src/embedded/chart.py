@@ -137,12 +137,6 @@ class EmbeddedChart(cxc.AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks,
         """
         return self.ambient.cartesian
 
-    def realize_cartesian(self, q: CDict, *, usys: OptUSys = None) -> CDict:
-        raise NotImplementedError("TODO")
-
-    def unrealize_cartesian(self, x: CDict, *, usys: OptUSys = None) -> CDict:
-        raise NotImplementedError("TODO")
-
     def __hash__(self) -> int:
         """Hash based on the class and the embedding map.
 
