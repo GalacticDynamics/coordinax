@@ -15,7 +15,7 @@ import unxt as u
 from unxt import AbstractQuantity as ABCQ  # noqa: N814
 from unxt.quantity import is_any_quantity
 
-import coordinax.api.charts as api
+import coordinax.api.charts as cxcapi
 from .base import AbstractChart
 from .custom_types import CDict
 from .d0 import Abstract0D, Cart0D
@@ -114,7 +114,7 @@ def pt_map(
     del q  # unused
 
     # NOTE: lambda is much faster than ft.partial here
-    return lambda x, *args, **kw: api.pt_map(
+    return lambda x, *args, **kw: cxcapi.pt_map(
         x, *fixed_args, *args, **fixed_kwargs, **kw
     )
 
@@ -168,7 +168,7 @@ def pt_map(
     Array([1.        , 1.57079633, 0.        ], dtype=float64)
 
     """
-    out = api.pt_map(None, from_chart, to_chart, **fixed_kwargs)
+    out = cxcapi.pt_map(None, from_chart, to_chart, **fixed_kwargs)
     return cast("Callable[..., Any]", out)
 
 
@@ -276,8 +276,8 @@ def pt_map(
     to_cart = to_chart.cartesian
     assert from_cart == to_cart  # noqa: S101
 
-    p_cart = api.pt_map(p, from_chart, from_cart, usys=usys)
-    p_out = api.pt_map(p_cart, from_cart, to_chart, usys=usys)
+    p_cart = cxcapi.pt_map(p, from_chart, from_cart, usys=usys)
+    p_out = cxcapi.pt_map(p_cart, from_cart, to_chart, usys=usys)
     return cast("CDict", p_out)
 
 
@@ -731,8 +731,8 @@ def pt_map(
 
     """
     # from_chart -> Spherical3D -> to_chart
-    p_sph = api.pt_map(p, from_chart, sph3d, usys=usys)
-    out = api.pt_map(p_sph, sph3d, to_chart, usys=usys)
+    p_sph = cxcapi.pt_map(p, from_chart, sph3d, usys=usys)
+    out = cxcapi.pt_map(p_sph, sph3d, to_chart, usys=usys)
     return cast("CDict", out)
 
 
@@ -1190,8 +1190,8 @@ def pt_map(
     return jax.lax.cond(
         to_chart.Delta == from_chart.Delta,
         lambda p: p,
-        lambda p: api.pt_map(
-            api.pt_map(p, from_chart, cyl3d, usys=usys),
+        lambda p: cxcapi.pt_map(
+            cxcapi.pt_map(p, from_chart, cyl3d, usys=usys),
             cyl3d,
             to_chart,
             usys=usys,
@@ -1284,7 +1284,7 @@ def pt_map(
         return p_cart
 
     # Otherwise, transform from Cartesian to target chart
-    out = api.pt_map(p_cart, cart_chart, to_chart, usys=usys)
+    out = cxcapi.pt_map(p_cart, cart_chart, to_chart, usys=usys)
     return cast("CDict", out)
 
 
@@ -1348,7 +1348,7 @@ def pt_map(
         raise NotImplementedError(msg)
 
     # Transform from source to fixed-dimensional Cartesian
-    p_cart = api.pt_map(p, from_chart, cart_chart, usys=usys)
+    p_cart = cxcapi.pt_map(p, from_chart, cart_chart, usys=usys)
     p_cart = cast("dict[str, Array]", p_cart)
 
     # Convert fixed-dimensional Cartesian to CartND
@@ -1658,10 +1658,10 @@ def pt_map(
 
     """
     # Build a dict of arrays for each component
-    p_dict = api.cdict(p, from_chart)
+    p_dict = cxcapi.cdict(p, from_chart)
 
     # Transform the point dict
-    p_to = api.pt_map(p_dict, from_chart, to_chart, usys=usys)
+    p_to = cxcapi.pt_map(p_dict, from_chart, to_chart, usys=usys)
     p_to = cast("dict[str, u.AbstractQuantity]", p_to)
 
     # Stack the transformed components into an QuantityMatrix
@@ -1750,10 +1750,10 @@ def pt_map(
         raise ValueError(msg)
 
     # Build a dict of arrays for each component
-    p_dict = api.cdict(jnp.asarray(p), from_chart)
+    p_dict = cxcapi.cdict(jnp.asarray(p), from_chart)
 
     # Transform the point dict
-    p_to = api.pt_map(p_dict, from_chart, to_chart, usys=usys)
+    p_to = cxcapi.pt_map(p_dict, from_chart, to_chart, usys=usys)
     p_to = cast("dict[str, Array]", p_to)
 
     # Stack the transformed components into an array

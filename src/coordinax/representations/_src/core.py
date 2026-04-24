@@ -11,7 +11,7 @@ import plum
 import quaxed.numpy as jnp
 import unxt.quantity as uq
 
-import coordinax.api.representations as api
+import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
 from .geom import PointGeometry
 from .rep import Representation
@@ -62,7 +62,7 @@ def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
     )
 
     """
-    return lambda x, *args, **kwargs: api.cconvert(
+    return lambda x, *args, **kwargs: cxrapi.cconvert(
         x, *fixed_args, *args, **fixed_kw, **kwargs
     )
 
@@ -184,7 +184,7 @@ def cconvert(
 
     """
     # redispatch on the combination of GeometryKind
-    return api.cconvert(
+    return cxrapi.cconvert(
         x,
         # from-*
         from_chart,
@@ -243,7 +243,7 @@ def cconvert(
 
     """
     # redispatch on the combination of GeometryKind
-    return api.cconvert(
+    return cxrapi.cconvert(
         x,
         # from-*
         from_chart,

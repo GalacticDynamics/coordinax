@@ -24,7 +24,7 @@ __all__: tuple[str, ...] = ()
 
 import plum
 
-import coordinax.api.frames as api
+import coordinax.api.frames as cxfapi
 import coordinax.frames as cxf
 from coordinax.transforms import AbstractTransform
 
@@ -80,7 +80,7 @@ def frame_transition(
 
     """
     # Compose: (from_frame -> base_frame) then (base_frame -> curve_frame)
-    return api.frame_transition(from_frame, to_frame.base_frame) | to_frame.xop  # ty: ignore[unsupported-operator]
+    return cxfapi.frame_transition(from_frame, to_frame.base_frame) | to_frame.xop  # ty: ignore[unsupported-operator]
 
 
 @plum.dispatch
@@ -130,7 +130,7 @@ def frame_transition(  # noqa: F811
 
     """
     # Compose: (curve_frame -> base_frame) then (base_frame -> to_frame)
-    return from_frame.xop_inv | api.frame_transition(from_frame.base_frame, to_frame)  # ty: ignore[unresolved-attribute]
+    return from_frame.xop_inv | cxfapi.frame_transition(from_frame.base_frame, to_frame)  # ty: ignore[unresolved-attribute]
 
 
 @plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
@@ -188,6 +188,6 @@ def frame_transition(  # noqa: F811
     # Compose: (curve1 -> base1) then (base1 -> base2) then (base2 -> curve2)
     return (
         from_frame.xop_inv  # ty: ignore[unresolved-attribute]
-        | api.frame_transition(from_frame.base_frame, to_frame.base_frame)
+        | cxfapi.frame_transition(from_frame.base_frame, to_frame.base_frame)
         | to_frame.xop
     )
