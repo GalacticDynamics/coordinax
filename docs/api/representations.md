@@ -10,29 +10,35 @@ A representation is the triple $R = (K, B, S)$:
 - $B$: basis kind (how components are interpreted as basis components)
 - $S$: semantic kind (what the object means physically/mathematically)
 
-This is separate from charts:
+This is separate from charts and manifolds:
 
 - Charts define coordinate systems.
+- Manifolds define the underlying space.
 - Representations define geometric meaning and transformation law category.
-
-In the current design, the primary built-in representation is point data.
 
 ## Quick Start
 
-```python
-import coordinax.charts as cxc
-import coordinax.representations as cxr
+```pycon
+>>> import coordinax.charts as cxc
+>>> import coordinax.representations as cxr
 
-# Canonical point representation.
-rep = cxr.point
+>>> # Canonical point representation.
+>>> rep = cxr.point
 
-# Convert point data between charts while preserving representation.
-p = {"x": 1.0, "y": 2.0, "z": 3.0}
-q = cxr.cconvert(p, cxc.cart3d, rep, cxc.sph3d, rep)
+>>> # Convert point data between charts while preserving representation.
+>>> q_cart = {"x": 1.0, "y": 2.0, "z": 3.0}
+>>> q_sph = cxr.cconvert(q_cart, cxc.cart3d, rep, cxc.sph3d, rep)
+>>> q_sph
+{'r': Array(3.74165739, dtype=float64, ...),
+ 'theta': Array(0.64052231, dtype=float64),
+ 'phi': Array(1.10714872, dtype=float64, ...)}
 
-# Build a reusable conversion map.
-to_sph = cxr.cmap(cxc.cart3d, cxr.point, cxc.sph3d)
-q2 = to_sph(p)
+>>> # Build a reusable conversion map.
+>>> to_sph = cxr.cmap(cxc.cart3d, cxr.point, cxc.sph3d)
+>>> to_sph(q_cart)
+{'r': Array(3.74165739, dtype=float64, ...),
+ 'theta': Array(0.64052231, dtype=float64),
+ 'phi': Array(1.10714872, dtype=float64, ...)}
 ```
 
 ## Functional API
