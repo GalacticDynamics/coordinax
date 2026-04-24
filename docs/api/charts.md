@@ -40,11 +40,8 @@ cart_of_sph = cxc.cartesian_chart(sph)
 - `cartesian_chart`: return a chart's canonical Cartesian chart
 - `guess_chart`: infer a chart from keys or array/quantity trailing shape
 - `cdict`: normalize inputs to component dictionaries
-- `pt_map`: transform points between charts on the same manifold
-- `pt_map`: general point map, including realization-style maps
-- `realize_cartesian`: realize point coordinates in `chart.cartesian`
-
-`pt_map` is the same-manifold specialization. `pt_map` is the more general interface.
+- `pt_map`: transform points between charts on the same or different manifolds
+- `jacobian_pt_map`: compute the Jacobian of a point map between charts on the same or different manifolds
 
 ## Available Objects
 
