@@ -509,6 +509,54 @@ The determinant of the metric, $\det g$, encodes the induced volume element.
 
 The metric identifies $T_p M$ with its dual space $T_p^* M$, enabling index raising and lowering.
 
+#### Diagonal metrics and orthogonal coordinate systems
+
+A metric is **diagonal** at a point $p$ when all off-diagonal entries of the metric matrix vanish:
+
+$$
+g_{ij}(p) = 0 \quad \text{for } i \neq j.
+$$
+
+Equivalently, the coordinate basis vectors $\partial/\partial q^i|_p$ are **mutually orthogonal** in the metric. A coordinate system whose metric is diagonal at every base point is called an **orthogonal coordinate system**.
+
+**Scale factors.** For a diagonal metric, the diagonal entries $g_{ii}(p)$ are the _squared scale factors_:
+
+$$
+h_i(p)^2 = g_{ii}(p).
+$$
+
+The scale factors $h_i$ measure how a unit coordinate increment $dq^i$ stretches into actual arc length. The infinitesimal line element simplifies to
+
+$$
+ds^2 = \sum_i g_{ii}(q)\,(dq^i)^2 = \sum_i h_i(q)^2\,(dq^i)^2.
+$$
+
+**Physical (orthonormal) basis.** The _coordinate_ basis vectors $\partial/\partial q^i$ are orthogonal but not unit vectors. Normalizing them with the metric gives the **physical** (orthonormal) basis:
+
+$$
+\hat{e}_i = \frac{1}{h_i(p)}\frac{\partial}{\partial q^i}\bigg|_p.
+$$
+
+The components of a tangent vector $v$ in the two bases are related by a simple scaling (no sum):
+
+$$
+\hat{v}^i = h_i\, v^i, \qquad v^i = h_i^{-1}\,\hat{v}^i.
+$$
+
+**Cholesky factorization and the vielbein.** Given any metric matrix $g$ (diagonal or not), the Cholesky decomposition $g = L\,L^\top$ yields a unique lower-triangular factor $L$ with strictly positive diagonal entries. The matrix $E = L^\top$ is the **vielbein** (frame matrix): it provides the linear map from coordinate-basis components to physical-basis components,
+
+$$
+v_\text{phys} = (L^\top)^{-1}\, v_\text{coord}.
+$$
+
+For a **diagonal** metric $g = \operatorname{diag}(h_1^2, \ldots, h_n^2)$, the Cholesky factor is itself diagonal:
+
+$$
+L = L^\top = \operatorname{diag}(h_1, \ldots, h_n),
+$$
+
+and the coordinate-to-physical map reduces to componentwise scaling $\hat{v}^i = h_i\, v^i$ as above. For a **non-diagonal** metric, $L$ is a full lower-triangular matrix, but the vielbein $E = L^\top$ still provides the unique orthonormalizing frame and the basis-change map to physical components.
+
 </br>
 
 ---
@@ -869,6 +917,8 @@ The `coordinax.angles` module provides the angle-facing scalar API used by chart
 !!! info `AbstractAngle`
 
     Abstract base type for angular quantities. It defines the shared angle interface used by dispatch and typing.
+
+    - `wrap_to` method that calls `coordinax.angles.wrap_to` on the `Angle`.
 
 !!! info `Angle`
 
@@ -2331,6 +2381,39 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Methods:**
 
     - `scale_factors(chart, /, *, at, usys=None)`: convenience wrapper around [`cxm.scale_factors`](#software-spec-scale-factors). Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`.
+    - `is_diagonal(chart, /, *, at, usys=None) -> Bool[Array, ""]`: returns `True` if all off-diagonal entries of the metric matrix vanish at `at`, checked numerically via `jnp.allclose`. This is a **point-specific, numerical** check. For a **structural, global** guarantee that the metric is diagonal at every base point use `isinstance(metric, AbstractDiagonalMetric)`.
+    - `cholesky(chart, /, *, at, usys=None) -> QuantityMatrix | Array`: returns the lower-triangular Cholesky factor $L$ satisfying $g = L\,L^\top$. The vielbein is $E = L^\top$; see [Diagonal metrics and orthogonal coordinate systems](#diagonal-metrics-and-orthogonal-coordinate-systems) for the relationship to physical-basis components. Returns a `QuantityMatrix` when the metric matrix carries units, otherwise a plain `Array`. Element $L_{ij}$ carries unit $\sqrt{u_{ij}}$ where $u_{ij}$ is the unit of $g_{ij}$.
+
+(software-spec-abstractdiagonalmetric)=
+
+!!! info `AbstractDiagonalMetric`
+
+    `AbstractDiagonalMetric` is a **structural marker** subclass of `AbstractMetric` for metrics whose matrix is diagonal at **every** base point.
+
+    A metric is diagonal when all off-diagonal entries vanish globally:
+
+    $$
+    g_{ij}(p) = 0 \quad \text{for } i \neq j, \quad \forall\, p \in M.
+    $$
+
+    The coordinate basis is orthogonal everywhere, and the diagonal entries are the squared scale factors $h_i^2 = g_{ii}$. See [Diagonal metrics and orthogonal coordinate systems](#diagonal-metrics-and-orthogonal-coordinate-systems) for the mathematical background.
+
+    **Structural guarantee vs. point check.** `AbstractDiagonalMetric` makes a **global, type-level** promise: the metric is diagonal at every valid base point regardless of chart or coordinate values. This is strictly stronger than the point-wise `is_diagonal()` test on `AbstractMetric`, which inspects the matrix numerically at a specific `at`. Consequently, `AbstractDiagonalMetric.is_diagonal()` **unconditionally returns `True`** without evaluating the metric matrix.
+
+    **No new abstract members.** `AbstractDiagonalMetric` inherits the full `AbstractMetric` interface and adds no new abstract methods. Subclasses must still implement:
+
+    - `signature` (property): tuple of $\pm 1$ of length `ndim`.
+    - `metric_matrix(chart, /, *, at, usys=None)` (method): **must** return a diagonal `QuantityMatrix` (or plain `Array`) — all off-diagonal entries numerically zero.
+
+    **Dispatch optimization.** Because the diagonal structure is guaranteed statically, dispatch implementations (e.g., for `scale_factors`) can read diagonal entries directly without constructing or inspecting the full $n \times n$ matrix.
+
+    **Immutability and JAX-static requirements:** same as `AbstractMetric` — frozen dataclasses registered with `@jax.tree_util.register_static`.
+
+    **Concrete subclasses:**
+
+    - [`EuclideanMetric`](#software-spec-euclideanmetric): flat Riemannian metric on $\mathbb{R}^n$; identity in Cartesian charts, computed via Jacobian pullback in curvilinear charts.
+    - [`MinkowskiMetric`](#software-spec-minkowskimetric): Lorentzian metric $\eta = \operatorname{diag}(-1, 1, 1, 1)$ on Minkowski spacetime; diagonal in the canonical Cartesian spacetime chart.
+    - [`HyperSphericalMetric`](#software-spec-hypersphericalmetric): round metric on $S^{n-1}$; diagonal entries follow the cumulative-sine rule $g_{kk} = \prod_{j < k}\sin^2\!\theta_j$.
 
 (software-spec-abstractmanifold)=
 
