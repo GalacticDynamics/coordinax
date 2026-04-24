@@ -317,10 +317,9 @@ class AbstractMetric(metaclass=abc.ABCMeta):
         r"""Return the lower-triangular Cholesky factor $L$ of the metric matrix.
 
         Computes the factorization $g = L\,L^\top$ where $L$ is the unique
-        lower-triangular matrix with strictly positive diagonal entries (see
-        *docs/spec.md* §"General charts: vielbein via Cholesky factorization").
-        The vielbein is $E = L^\top$; use ``L.value.T`` (or plain ``.T`` for a
-        bare array) to obtain it.
+        lower-triangular matrix with strictly positive diagonal entries.
+        With the convention used here, the vielbein is $E = L^\top$; use
+        ``L.value.T`` (or plain ``.T`` for a bare array) to obtain it.
 
         Parameters
         ----------
@@ -429,7 +428,8 @@ class AbstractMetric(metaclass=abc.ABCMeta):
         """
         G = self.metric_matrix(chart, at=at, usys=usys)
         val = G.value if hasattr(G, "value") else G
-        return jnp.all(val == jnp.diag(jnp.diag(val)))
+        off_diagonal = val - jnp.diag(jnp.diag(val))
+        return jnp.allclose(off_diagonal, 0)
 
 
 @jtu.register_static
