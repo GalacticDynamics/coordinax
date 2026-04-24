@@ -428,7 +428,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
         """
         G = self.metric_matrix(chart, at=at, usys=usys)
         val = G.value if hasattr(G, "value") else G
-        off_diagonal = val - jnp.diag(jnp.diag(val))
+        off_diagonal = jnp.subtract(val, jnp.diag(jnp.diag(val)))
         return jnp.allclose(off_diagonal, 0)
 
 
