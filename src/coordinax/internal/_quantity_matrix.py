@@ -25,7 +25,7 @@ multiplicative scale factors.
 
 __all__ = ("QuantityMatrix", "UnitsMatrix", "cdict_units")
 
-from collections.abc import Iterable
+
 from jaxtyping import Array, Shaped
 from typing import Any, NoReturn, TypeAlias, TypeVar, cast, final
 
@@ -33,14 +33,20 @@ import equinox as eqx
 import jax
 import jax.core
 import jax.numpy as jnp
+import jax.tree_util as jtu
 import numpy as np
 import plum
 import quax
 from jax import lax
 
 import unxt as u
+from unxt.quantity import AllowValue
 
 from .custom_types import CDict
+
+_DMLS = u.unit("")
+
+strict_zip = lambda *args: zip(*args, strict=True)
 
 ##############################################################################
 # Units helpers
@@ -209,6 +215,29 @@ class UnitsMatrix:
     def ndim(self) -> int:
         """Number of dimensions."""
         return int(self._units.ndim)
+
+    @property
+    def T(self) -> "UnitsMatrix":
+        """Compute the all-axis units array transpose.
+
+        Examples
+        --------
+        >>> from coordinax.internal import UnitsMatrix
+
+        >>> units = UnitsMatrix(("m", "s"))
+        >>> units.T
+        UnitsMatrix("(m, s)")
+
+        >>> units = UnitsMatrix((("m", "s"), ("kg", "rad")))
+        >>> units.T
+        UnitsMatrix("((m, kg), (s, rad))")
+
+        >>> units = UnitsMatrix((("m", "s", "kg"), ("Hz", "candela", "km")))
+        >>> units.T
+        UnitsMatrix("((m, Hz), (s, cd), (kg, km))")
+
+        """
+        return UnitsMatrix(self._units.T)
 
     # ── Serialization ─────────────────────────────────────────────────
 
@@ -468,6 +497,54 @@ class QuantityMatrix(u.AbstractQuantity):
         """Shape, including batch dimensions."""
         return self.value.shape
 
+    @classmethod
+    def from_cdict(
+        cls, v: CDict, /, keys: tuple[str, ...] | None = None
+    ) -> "QuantityMatrix":
+        """Pack a component dictionary into a 1-D ``QuantityMatrix``.
+
+        Each value in *v* is stripped to its numeric value and stacked into a
+        single JAX array.  Values that carry units (``unxt.Quantity``) retain
+        those units in the resulting ``UnitsMatrix``; plain arrays are treated
+        as dimensionless.
+
+        Examples
+        --------
+        >>> import unxt as u
+        >>> from coordinax.internal import QuantityMatrix
+
+        From a dictionary of quantities:
+
+        >>> v = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "s"), "z": u.Q(3.0, "kg")}
+        >>> qv = QuantityMatrix.from_cdict(v)
+        >>> qv.unit.to_string()
+        '(m, s, kg)'
+        >>> qv.value
+        Array([1., 2., 3.], dtype=float64, ...)
+
+        Selecting and reordering a subset of keys:
+
+        >>> qv2 = QuantityMatrix.from_cdict(v, keys=("z", "x"))
+        >>> qv2.unit.to_string()
+        '(kg, m)'
+        >>> qv2.value
+        Array([3., 1.], dtype=float64, ...)
+
+        Dimensionless entries (bare arrays) are accepted:
+
+        >>> import jax.numpy as jnp
+        >>> v2 = {"a": jnp.array(4.0), "b": u.Q(5.0, "m")}
+        >>> qv3 = QuantityMatrix.from_cdict(v2)
+        >>> qv3.unit.to_string()
+        '(, m)'
+
+        """
+        keys = tuple(v) if keys is None else keys
+        vs = [v[k] for k in keys]
+        us = [u.unit_of(x) or _DMLS for x in vs]
+        svs = jnp.stack([u.ustrip(AllowValue, unt, x) for x, unt in strict_zip(vs, us)])
+        return cls(svs, unit=UnitsMatrix(us))
+
     def __getitem__(self, index: Any, /) -> "u.Q | QuantityMatrix":  # ty: ignore[invalid-method-override]
         """Index into the QuantityMatrix to retrieve a specific element.
 
@@ -564,10 +641,47 @@ class QuantityMatrix(u.AbstractQuantity):
         if self.ndim != 2:
             msg = f"QuantityMatrix.diag() requires a 2D matrix, got ndim={self.ndim}"
             raise ValueError(msg)
-        n = min(n_rows(self), n_cols(self))
+        n = min(self.shape[-2], self.shape[-1])
         diag_value = jnp.stack([self.value[..., i, i] for i in range(n)], axis=-1)
         diag_unit = UnitsMatrix(tuple(self.unit[i, i] for i in range(n)))
         return QuantityMatrix(value=diag_value, unit=diag_unit)
+
+    @property
+    def T(self) -> "QuantityMatrix":
+        """Transpose a 2-D ``QuantityMatrix`` (swap rows/columns and units).
+
+        Returns a new ``QuantityMatrix`` whose value array and unit structure
+        are both transposed.  Only 2-D matrices are supported.
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import quaxed.numpy as qnp
+        >>> from coordinax.internal import QuantityMatrix
+
+        >>> a = QuantityMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
+        ...                    unit=(("m", "s"), ("kg", "rad")))
+        >>> aT = a.T
+        >>> aT.value
+        Array([[1., 3.],
+               [2., 4.]], dtype=float64)
+        >>> aT.unit.to_string()
+        '((m, kg), (s, rad))'
+
+        Also accessible via ``jax.numpy.transpose``:
+
+        >>> aT2 = qnp.matrix_transpose(a)
+        >>> aT2.value
+        Array([[1., 3.],
+               [2., 4.]], dtype=float64)
+        >>> aT2.unit.to_string()
+        '((m, kg), (s, rad))'
+
+        """
+        um = self.unit
+        n, m = um.shape[-2:]  # last two dims
+        t_units = UnitsMatrix([[um[j, i] for j in range(n)] for i in range(m)])
+        return QuantityMatrix(value=self.value.T, unit=t_units)
 
 
 def _convert_value_vector(
@@ -617,39 +731,6 @@ def _convert_value_matrix(
     )
 
 
-def _iter_units(units: Any) -> Iterable[u.AbstractUnit]:
-    """Yield every leaf unit from a (possibly nested) ``UnitsMatrix`` or tuple."""
-    for item in units:
-        if isinstance(item, u.AbstractUnit):
-            yield item
-        else:
-            yield from _iter_units(item)
-
-
-def n_rows(q: QuantityMatrix, /) -> int:
-    """Return number of rows for a 2D ``QuantityMatrix``."""
-    if q.ndim != 2:
-        msg = f"n_rows only available for 2D, but ndim={q.ndim}"
-        raise ValueError(msg)
-    return q.value.shape[-2]
-
-
-def n_cols(q: QuantityMatrix, /) -> int:
-    """Return number of columns for a 2D ``QuantityMatrix``."""
-    if q.ndim != 2:
-        msg = f"n_cols only available for 2D, but ndim={q.ndim}"
-        raise ValueError(msg)
-    return q.value.shape[-1]
-
-
-def n_elems(q: QuantityMatrix, /) -> int:
-    """Return number of elements for a 1D ``QuantityMatrix``."""
-    if q.ndim != 1:
-        msg = f"n_elems only available for 1D, but ndim={q.ndim}"
-        raise ValueError(msg)
-    return q.value.shape[-1]
-
-
 @plum.conversion_method(type_from=QuantityMatrix, type_to=u.Quantity)
 def quantitymatrix_to_quantity(x: QuantityMatrix, /) -> u.Quantity:
     """Convert a ``QuantityMatrix`` to a regular ``Quantity``.
@@ -681,7 +762,7 @@ def quantitymatrix_to_quantity(x: QuantityMatrix, /) -> u.Quantity:
     identical.
 
     """
-    units = tuple(_iter_units(x.unit))
+    units = jtu.tree_leaves(x.unit.to_tuple())
 
     if not units:
         msg = "Cannot convert QuantityMatrix with no unit entries."
@@ -898,8 +979,8 @@ def _dot_general_1d_1d(
 
     All terms must be unit-compatible. We convert to the unit of the first term.
     """
-    n = n_elems(lhs)
-    assert n_elems(rhs) == n  # noqa: S101
+    n = lhs.shape[-1]
+    assert n == rhs.shape[-1]  # noqa: S101
 
     # Reference unit: lhs.unit[0] * rhs.unit[0]
     ref_unit = lhs.unit[0] * rhs.unit[0]
@@ -964,9 +1045,8 @@ def _dot_general_2d_1d(
     '(m s, m s)'
 
     """
-    n = n_rows(lhs)  # N
-    k_dim = n_cols(lhs)  # K
-    assert n_elems(rhs) == k_dim  # noqa: S101
+    n, k_dim = lhs.shape[-2:]  # (N, K)
+    assert rhs.shape[-1] == k_dim  # noqa: S101
 
     # 1) Output units: ref[i] = lhs.unit[i][0] * rhs.unit[0]
     out_unit = UnitsMatrix(tuple(lhs.unit[i, 0] * rhs.unit[0] for i in range(n)))
@@ -988,6 +1068,9 @@ def _dot_general_2d_1d(
     accum = jnp.einsum("ij,...ij,...j->...i", scale_2d, lhs.value, rhs.value)
 
     return QuantityMatrix(value=accum, unit=out_unit)
+
+
+vec_uconvert_value = np.vectorize(u.uconvert_value)
 
 
 def _dot_general_2d_2d(
@@ -1027,17 +1110,11 @@ def _dot_general_2d_2d(
        Done via ``C_val = (A_val * S_ij) @ B_val`` per output column, or
        equivalently with a loop + accumulate.
     """
-    n = n_rows(lhs)  # N
-    k_dim = n_cols(lhs)  # K  (contraction axis)
-    m = n_cols(rhs)  # M
-    assert n_rows(rhs) == k_dim  # noqa: S101
+    # Check contraction axis
+    assert lhs.shape[-1] == rhs.shape[-2]  # noqa: S101
 
     # 1) Compute output units: ref[i][k] = lhs.unit[i][0] * rhs.unit[0][k]
-    out_unit = UnitsMatrix(
-        tuple(
-            tuple(lhs.unit[i, 0] * rhs.unit[0, k] for k in range(m)) for i in range(n)
-        )
-    )
+    out_unit = np.multiply(lhs.unit._units[:, 0:1], rhs.unit._units[0:1, :])
 
     # 2) Precompute all scale factors as a (N, K, M) constant array.
     #    scale[i, j, k] converts lhs.unit[i][j]*rhs.unit[j][k] → out_unit[i][k].
@@ -1058,18 +1135,11 @@ def _dot_general_2d_2d(
     #    ever changes, those tests will fail, alerting us that this
     #    assumption needs revisiting.
     scale_3d = jnp.array(
-        [
-            [
-                [
-                    u.uconvert_value(
-                        out_unit[i, k], lhs.unit[i, j] * rhs.unit[j, k], 1.0
-                    )
-                    for k in range(m)
-                ]
-                for j in range(k_dim)
-            ]
-            for i in range(n)
-        ]
+        vec_uconvert_value(
+            out_unit[:, None, :],  # (N, 1, M)
+            np.multiply(lhs.unit._units[:, :, None], rhs.unit._units[None, :, :]),
+            1.0,  # ꜛ (N, K, M)
+        )
     )
 
     # 3) Vectorised contraction — no Python loop, no accumulator.
@@ -1163,7 +1233,7 @@ def transpose_qm(
         raise NotImplementedError(msg)
     transposed_value = lax.transpose(x.value, permutation)
     # Build transposed unit structure: swap rows and columns
-    n, m = n_rows(x), n_cols(x)
+    n, m = x.shape[-2:]  # (N, M)
     # permutation is typically (1, 0) for a 2D matrix transpose
     # Resulting shape is (m, n): unit[j][i] = original unit[i][j]
     transposed_unit = UnitsMatrix(
@@ -1178,7 +1248,7 @@ def _jit_fallback_uniform_unit(units: UnitsMatrix, out_size: int) -> UnitsMatrix
     Used as a JIT-mode fallback inside ``gather_qm`` when the concrete gather
     indices are not available.  Raises ``ValueError`` for heterogeneous inputs.
     """
-    all_units = list(_iter_units(units))
+    all_units = jtu.tree_leaves(units.to_tuple())
     first = all_units[0]
     if any(u_i != first for u_i in all_units[1:]):
         msg = (
@@ -1211,8 +1281,8 @@ def gather_qm(
     covers ``jnp.diag``, ``jnp.diagonal``, and integer-array fancy indexing on
     ``QuantityMatrix`` objects.
 
-    Unit extraction
-    ---------------
+    Unit extraction:
+
     ``QuantityMatrix.unit`` is declared ``static=True`` and is therefore always
     a concrete Python object, even inside ``jax.jit``.  The *indices*, however,
     are traced under JIT and cannot be read concretely.  Because JAX's
@@ -1346,14 +1416,12 @@ def reduce_sum_p_qm(
     if operand.ndim == 2:
         if axset == {0}:
             # Row reduction → 1-D output; unit = first row's units.
-            out_unit = UnitsMatrix(
-                tuple(operand.unit[0, j] for j in range(n_cols(operand)))
-            )
+            m = operand.shape[-1]  # number of columns
+            out_unit = UnitsMatrix(tuple(operand.unit[0, j] for j in range(m)))
         elif axset == {1}:
             # Column reduction → 1-D output; unit = first column's units.
-            out_unit = UnitsMatrix(
-                tuple(operand.unit[i, 0] for i in range(n_rows(operand)))
-            )
+            n = operand.shape[-2]  # number of rows
+            out_unit = UnitsMatrix(tuple(operand.unit[i, 0] for i in range(n)))
         else:
             msg = f"reduce_sum_p_qm: unsupported axes={axes} for 2-D QuantityMatrix."
             raise NotImplementedError(msg)

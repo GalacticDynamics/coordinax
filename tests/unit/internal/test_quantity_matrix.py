@@ -17,9 +17,6 @@ from coordinax.internal import QuantityMatrix as QMat, UnitsMatrix
 from coordinax.internal._quantity_matrix import (
     _convert_value_matrix,
     _convert_value_vector,
-    n_cols,
-    n_elems,
-    n_rows,
 )
 
 # ---------------------------------------------------------------------------
@@ -96,10 +93,10 @@ class TestConstruction:
         assert qm_2x2.shape == (2, 2)
 
     def test_n_rows(self, qm_2x2):
-        assert n_rows(qm_2x2) == 2
+        assert qm_2x2.shape[-2] == 2
 
     def test_n_cols(self, qm_2x2):
-        assert n_cols(qm_2x2) == 2
+        assert qm_2x2.shape[-1] == 2
 
     def test_value(self, qm_2x2):
         expected = jnp.array([[1.0, 2.0], [3.0, 4.0]])
@@ -121,20 +118,20 @@ class TestConstruction:
         """Batch dimensions are supported via leading axes."""
         qm = QMat(jnp.ones((5, 3, 2)), unit=((_m, _s), (_m, _s), (_m, _s)))
         assert qm.shape == (5, 3, 2)
-        assert n_rows(qm) == 3
-        assert n_cols(qm) == 2
+        assert qm.shape[-2] == 3
+        assert qm.shape[-1] == 2
 
     def test_1x1(self):
         """Degenerate 1x1 matrix."""
         qm = QMat(jnp.array([[42.0]]), unit=((_m,),))
-        assert n_rows(qm) == 1
-        assert n_cols(qm) == 1
+        assert qm.shape[-2] == 1
+        assert qm.shape[-1] == 1
 
     def test_nonsquare(self):
         """Non-square 2x3 matrix."""
         qm = QMat(jnp.ones((2, 3)), unit=((_m, _s, _kg), (_m, _s, _kg)))
-        assert n_rows(qm) == 2
-        assert n_cols(qm) == 3
+        assert qm.shape[-2] == 2
+        assert qm.shape[-1] == 3
 
     def test_unit_is_unitsmatrix(self, qm_2x2):
         """The ``unit`` field is always a ``UnitsMatrix`` instance."""
@@ -150,7 +147,7 @@ class TestConstruction:
         """1D vector construction."""
         assert qm_1d.ndim == 1
         assert qm_1d.shape == (3,)
-        assert n_elems(qm_1d) == 3
+        assert qm_1d.shape[-1] == 3
         assert qm_1d.unit == unit_1d
 
     def test_1d_value(self, qm_1d):
@@ -178,21 +175,6 @@ class TestConstruction:
     def test_ndim_property_2d(self, qm_2x2):
         """Ndim property returns 2 for matrices."""
         assert qm_2x2.ndim == 2
-
-    def test_n_elems_error_on_2d(self, qm_2x2):
-        """n_elems raises error for 2D."""
-        with pytest.raises(ValueError, match="n_elems only available for 1D"):
-            _ = n_elems(qm_2x2)
-
-    def test_n_rows_error_on_1d(self, qm_1d):
-        """n_rows raises error for 1D."""
-        with pytest.raises(ValueError, match="n_rows only available for 2D"):
-            _ = n_rows(qm_1d)
-
-    def test_n_cols_error_on_1d(self, qm_1d):
-        """n_cols raises error for 1D."""
-        with pytest.raises(ValueError, match="n_cols only available for 2D"):
-            _ = n_cols(qm_1d)
 
     def test_repr(self, qm_2x2):
         """``repr(QuantityMatrix(...))`` succeeds and contains key info."""
@@ -691,8 +673,8 @@ class TestDotProduct:
             (_m * _s,),
             (_kg * _s,),
         )
-        assert n_rows(result) == 2
-        assert n_cols(result) == 1
+        assert result.shape[-2] == 2
+        assert result.shape[-1] == 1
 
     def test_matmul_with_unit_conversion(self):
         """Contraction axis has mixed units that need conversion."""
@@ -732,8 +714,8 @@ class TestDotProduct:
         b = QMat(jnp.array([[2.0, 3.0], [4.0, 5.0]]), unit=((_s, _kg), (_s, _kg)))
         result = _matmul(a, b)
         # Output shape: 1x2
-        assert n_rows(result) == 1
-        assert n_cols(result) == 2
+        assert result.shape[-2] == 1
+        assert result.shape[-1] == 2
         # Output units: row 0 from A.unit[0][0]=m, col 0 from B.unit[0][0]=s,
         # col 1 from B.unit[0][1]=kg
         assert result.unit[0][0] == _m * _s
