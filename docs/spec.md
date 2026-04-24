@@ -883,7 +883,7 @@ A non-exhaustive table of exported objects are:
 | --- | --- |
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
-| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jacobian_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
+| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, </br> `PointGeometry`, `point_geom`, </br> `NoBasis`, `no_basis`, </br> `Location`, `loc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
@@ -1106,7 +1106,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
 (software-spec-tangent-map)=
 
-!!! info `jacobian_pt_map`
+!!! info `jac_pt_map`
 
     Compute the Jacobian of the chart transition map at a base point.
 
@@ -1114,10 +1114,10 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `(at: None, /, *fixed_args, usys: AbstractUnitSystem, **fixed_kw)` -> partial
       application. Returns a callable that accepts `(at, *args, **kw)` and forwards to
-      `jacobian_pt_map(at, *fixed_args, *args, **fixed_kw, **kw)`. Requires `usys`.
+      `jac_pt_map(at, *fixed_args, *args, **fixed_kw, **kw)`. Requires `usys`.
 
     - `(from_chart, to_chart, /, *, usys: AbstractUnitSystem)` -> curried partial
-      application. Returns `lambda at: jacobian_pt_map(at, from_chart, to_chart,
+      application. Returns `lambda at: jac_pt_map(at, from_chart, to_chart,
       usys=usys)`. Requires `usys`. Useful for repeated Jacobian evaluation at multiple
       base points with a fixed unit system.
 
@@ -2547,7 +2547,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - `signature = (1,) * ndim`.
     - `metric_matrix(chart, /, *, at, usys=None)` returns a `QuantityMatrix`.
     - For Cartesian charts, `metric_matrix` returns a dimensionless identity matrix of shape `(ndim, ndim)`.
-    - For compatible non-Cartesian charts, `metric_matrix` is computed as `J^T J`, where `J = jacobian_pt_map(at, chart, chart.cartesian, usys=usys)`.
+    - For compatible non-Cartesian charts, `metric_matrix` is computed as `J^T J`, where `J = jac_pt_map(at, chart, chart.cartesian, usys=usys)`.
     - If a chart has no global Cartesian sibling, the current implementation falls back to a dimensionless identity matrix.
 
     **Example**

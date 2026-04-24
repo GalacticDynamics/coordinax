@@ -30,7 +30,7 @@ def _jacobian_embed_map(
 ) -> QuantityMatrix:
     """Compute the Jacobian of ``embed_map`` at ``at`` as a ``QuantityMatrix``.
 
-    Mirrors the general fallback of ``jacobian_pt_map`` but differentiates
+    Mirrors the general fallback of ``jac_pt_map`` but differentiates
     the embedding function instead of a chart transition map.
 
     Parameters

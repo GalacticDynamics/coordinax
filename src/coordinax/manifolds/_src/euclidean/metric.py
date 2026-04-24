@@ -93,7 +93,7 @@ class EuclideanMetric(AbstractDiagonalMetric):
             unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
             return QuantityMatrix(jnp.eye(n), unit=UnitsMatrix(unit_tup))
 
-        # Compute J = d(Cartesian)/d(chart) via jacobian_pt_map (returns QuantityMatrix)
-        J = cxc.jacobian_pt_map(at, chart, cart_chart, usys=usys)
+        # Compute J = d(Cartesian)/d(chart) via jac_pt_map (returns QuantityMatrix)
+        J = cxc.jac_pt_map(at, chart, cart_chart, usys=usys)
         JT = jnp.transpose(J, (1, 0))
         return JT @ J  # ty: ignore[invalid-return-type]

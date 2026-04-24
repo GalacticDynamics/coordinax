@@ -1,4 +1,4 @@
-"""Tests for ``jacobian_pt_map`` in ``coordinax.charts``."""
+"""Tests for ``jac_pt_map`` in ``coordinax.charts``."""
 
 __all__: tuple[str, ...] = ()
 
@@ -54,11 +54,11 @@ def _jac_via_autodiff(from_chart, to_chart, at_qty):
 
 
 class TestJacobianPtMapImportable:
-    """jacobian_pt_map is importable from coordinax.charts."""
+    """jac_pt_map is importable from coordinax.charts."""
 
     def test_importable_from_charts(self) -> None:
-        assert hasattr(cxc, "jacobian_pt_map")
-        assert callable(cxc.jacobian_pt_map)
+        assert hasattr(cxc, "jac_pt_map")
+        assert callable(cxc.jac_pt_map)
 
 
 # ===========================================================================
@@ -105,7 +105,7 @@ class TestJacobianPtMapReturnType:
     def test_returns_QuantityMatrix(
         self, from_chart, to_chart, at, expected_shape
     ) -> None:
-        J = cxc.jacobian_pt_map(at, from_chart, to_chart)
+        J = cxc.jac_pt_map(at, from_chart, to_chart)
         assert isinstance(J, QuantityMatrix)
         assert J.ndim == 2
         assert J.value.shape == expected_shape
@@ -122,7 +122,7 @@ class TestJacobianPtMapUnits:
     def test_cart3d_to_sph3d_row0_dimensionless(self) -> None:
         """J[r, *] : m/m → dimensionless (r row, x/y/z columns)."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
         # r has units m, x/y/z have units m → m/m = dimensionless
         for i in range(3):
             assert J.unit[0, i] == u.unit("") or J.unit[0, i] == u.unit("m/m"), (
@@ -132,7 +132,7 @@ class TestJacobianPtMapUnits:
     def test_cart3d_to_sph3d_rows1_and_2_are_rad_per_m(self) -> None:
         """J[θ, *] and J[φ, *] : rad/m (angle output, length input)."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
         rad_per_m = u.unit("rad/m")
         for i in range(3):
             assert J.unit[1, i] == rad_per_m, (
@@ -145,7 +145,7 @@ class TestJacobianPtMapUnits:
     def test_cart3d_to_cyl3d_phi_row_is_rad_per_m(self) -> None:
         """J[φ, *] for Cyl3D : rad/m."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.cyl3d)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.cyl3d)
         # cyl3d components: (rho=m, phi=rad, z=m); cart3d: (x=m, y=m, z=m)
         # Row 1 (phi): rad output / m input → rad/m
         for i in range(3):
@@ -160,7 +160,7 @@ class TestJacobianPtMapUnits:
             "theta": u.Q(jnp.pi / 2, "rad"),
             "phi": u.Q(0.0, "rad"),
         }
-        J = cxc.jacobian_pt_map(at, cxc.sph3d, cxc.cart3d)
+        J = cxc.jac_pt_map(at, cxc.sph3d, cxc.cart3d)
         # cart3d: (x=m, y=m, z=m); sph3d: (r=m, theta=rad, phi=rad)
         # Column 1 (theta): m output / rad input → m/rad
         for j in range(3):
@@ -203,7 +203,7 @@ class TestJacobianPtMapCart2dToPolar2d:
     def test_at_1_0_identity(self) -> None:
         """At (x=1, y=0) the Jacobian is the 2x2 identity."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart2d, cxc.polar2d)
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
         np.testing.assert_allclose(J.value[0, 0], 1.0, atol=1e-6)  # ∂r/∂x
         np.testing.assert_allclose(J.value[0, 1], 0.0, atol=1e-6)  # ∂r/∂y
         np.testing.assert_allclose(J.value[1, 0], 0.0, atol=1e-6)  # ∂θ/∂x
@@ -212,7 +212,7 @@ class TestJacobianPtMapCart2dToPolar2d:
     def test_at_0_1(self) -> None:
         """At (x=0, y=1) J = [[0, 1], [-1, 0]]."""
         at = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart2d, cxc.polar2d)
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
         np.testing.assert_allclose(J.value[0, 0], 0.0, atol=1e-6)  # ∂r/∂x
         np.testing.assert_allclose(J.value[0, 1], 1.0, atol=1e-6)  # ∂r/∂y
         np.testing.assert_allclose(J.value[1, 0], -1.0, atol=1e-6)  # ∂θ/∂x
@@ -221,7 +221,7 @@ class TestJacobianPtMapCart2dToPolar2d:
     def test_at_1_1(self) -> None:
         """At (x=1, y=1) J = [[1/√2, 1/√2], [-1/2, 1/2]]."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(1.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart2d, cxc.polar2d)
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
         invsq2 = float(jnp.sqrt(0.5))
         np.testing.assert_allclose(J.value[0, 0], invsq2, atol=1e-6)  # ∂r/∂x = 1/√2
         np.testing.assert_allclose(J.value[0, 1], invsq2, atol=1e-6)  # ∂r/∂y = 1/√2
@@ -261,7 +261,7 @@ class TestJacobianPtMapPolar2dToCart2d:
     def test_at_r1_theta0_identity(self) -> None:
         """At (r=1, θ=0) J is the 2x2 identity."""
         at = {"r": u.Q(1.0, "m"), "theta": u.Q(0.0, "rad")}
-        J = cxc.jacobian_pt_map(at, cxc.polar2d, cxc.cart2d)
+        J = cxc.jac_pt_map(at, cxc.polar2d, cxc.cart2d)
         np.testing.assert_allclose(J.value[0, 0], 1.0, atol=1e-6)  # ∂x/∂r
         np.testing.assert_allclose(J.value[0, 1], 0.0, atol=1e-6)  # ∂x/∂θ
         np.testing.assert_allclose(J.value[1, 0], 0.0, atol=1e-6)  # ∂y/∂r
@@ -270,7 +270,7 @@ class TestJacobianPtMapPolar2dToCart2d:
     def test_at_r1_theta_pi2(self) -> None:
         """At (r=1, θ=π/2) J = [[0, -1], [1, 0]]."""
         at = {"r": u.Q(1.0, "m"), "theta": u.Q(float(jnp.pi / 2), "rad")}
-        J = cxc.jacobian_pt_map(at, cxc.polar2d, cxc.cart2d)
+        J = cxc.jac_pt_map(at, cxc.polar2d, cxc.cart2d)
         np.testing.assert_allclose(J.value[0, 0], 0.0, atol=1e-6)  # cos(π/2) ≈ 0
         np.testing.assert_allclose(J.value[0, 1], -1.0, atol=1e-6)  # -r sin(π/2) = -1
         np.testing.assert_allclose(J.value[1, 0], 1.0, atol=1e-6)  # sin(π/2) = 1
@@ -279,7 +279,7 @@ class TestJacobianPtMapPolar2dToCart2d:
     def test_at_r2_theta_pi4(self) -> None:
         """At (r=2, θ=π/4): J = [[1/√2, -√2], [1/√2, √2]]."""
         at = {"r": u.Q(2.0, "m"), "theta": u.Q(float(jnp.pi / 4), "rad")}
-        J = cxc.jacobian_pt_map(at, cxc.polar2d, cxc.cart2d)
+        J = cxc.jac_pt_map(at, cxc.polar2d, cxc.cart2d)
         invsq2 = float(jnp.sqrt(0.5))
         sq2 = float(jnp.sqrt(2.0))
         np.testing.assert_allclose(J.value[0, 0], invsq2, atol=1e-6)  # cos(π/4)
@@ -321,7 +321,7 @@ class TestJacobianPtMapCart3dToSph3d:
     """
 
     def _check_jac(self, at, expected):
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
         np.testing.assert_allclose(J.value, expected, atol=1e-6)
 
     def test_at_x1_y0_z0(self) -> None:
@@ -386,7 +386,7 @@ class TestJacobianPtMapSph3dToCart3d:
             "theta": u.Q(float(jnp.pi / 2), "rad"),
             "phi": u.Q(0.0, "rad"),
         }
-        J = cxc.jacobian_pt_map(at, cxc.sph3d, cxc.cart3d)
+        J = cxc.jac_pt_map(at, cxc.sph3d, cxc.cart3d)
         expected = jnp.array([[1.0, 0.0, 0.0], [0.0, 0.0, 1.0], [0.0, -1.0, 0.0]])
         np.testing.assert_allclose(J.value, expected, atol=1e-5)
 
@@ -401,7 +401,7 @@ class TestJacobianPtMapSph3dToCart3d:
         """
         t, p = float(jnp.pi / 3), float(jnp.pi / 4)
         at = {"r": u.Q(1.0, "m"), "theta": u.Q(t, "rad"), "phi": u.Q(p, "rad")}
-        J = cxc.jacobian_pt_map(at, cxc.sph3d, cxc.cart3d)
+        J = cxc.jac_pt_map(at, cxc.sph3d, cxc.cart3d)
         exp_dxdr = float(jnp.sin(t) * jnp.cos(p))
         exp_dxdtheta = float(1.0 * jnp.cos(t) * jnp.cos(p))
         exp_dxdphi = float(-1.0 * jnp.sin(t) * jnp.sin(p))
@@ -440,13 +440,13 @@ class TestJacobianPtMapCart3dToCyl3d:
     def test_at_x1_y0_z0_is_identity(self) -> None:
         """At (1, 0, 0) the Jacobian is the 3x3 identity."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.cyl3d)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.cyl3d)
         np.testing.assert_allclose(J.value, jnp.eye(3), atol=1e-6)
 
     def test_at_x0_y1_z2(self) -> None:
         """At (0, 1, 2): J = [[0,1,0],[-1,0,0],[0,0,1]]."""
         at = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m"), "z": u.Q(2.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.cyl3d)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.cyl3d)
         expected = jnp.array([[0.0, 1.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
         np.testing.assert_allclose(J.value, expected, atol=1e-6)
 
@@ -481,7 +481,7 @@ class TestJacobianPtMapCyl3dToCart3d:
     def test_at_rho1_phi0_z0_is_identity(self) -> None:
         """At (ρ=1, φ=0, z=0) J is the 3x3 identity."""
         at = {"rho": u.Q(1.0, "m"), "phi": u.Q(0.0, "rad"), "z": u.Q(0.0, "m")}
-        J = cxc.jacobian_pt_map(at, cxc.cyl3d, cxc.cart3d)
+        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.cart3d)
         np.testing.assert_allclose(J.value, jnp.eye(3), atol=1e-6)
 
     def test_at_rho1_phi_pi2_z2(self) -> None:
@@ -491,7 +491,7 @@ class TestJacobianPtMapCyl3dToCart3d:
             "phi": u.Q(float(jnp.pi / 2), "rad"),
             "z": u.Q(2.0, "m"),
         }
-        J = cxc.jacobian_pt_map(at, cxc.cyl3d, cxc.cart3d)
+        J = cxc.jac_pt_map(at, cxc.cyl3d, cxc.cart3d)
         expected = jnp.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]])
         np.testing.assert_allclose(J.value, expected, atol=1e-5)
 
@@ -512,8 +512,8 @@ class TestJacobianPtMapCompositionProperty:
     def _check_composition_identity(self, c1, c2, at_c1):
         """Helper: check J_{c2→c1} @ J_{c1→c2} ≈ I."""
         at_c2 = cxc.pt_map(at_c1, c1, c2)
-        J_fwd = cxc.jacobian_pt_map(at_c1, c1, c2)
-        J_inv = cxc.jacobian_pt_map(at_c2, c2, c1)
+        J_fwd = cxc.jac_pt_map(at_c1, c1, c2)
+        J_inv = cxc.jac_pt_map(at_c2, c2, c1)
         result = qnp.matmul(J_inv, J_fwd)
         n = len(c1.components)
         np.testing.assert_allclose(
@@ -561,8 +561,8 @@ class TestJacobianPtMapCompositionProperty:
         """Property: J_{Sph→Cart} @ J_{Cart→Sph} = I for any non-singular point."""
         p_sph = {"r": r, "theta": theta, "phi": phi}
         p_cart = cxc.pt_map(p_sph, cxc.sph3d, cxc.cart3d)
-        J_fwd = cxc.jacobian_pt_map(p_cart, cxc.cart3d, cxc.sph3d)
-        J_inv = cxc.jacobian_pt_map(p_sph, cxc.sph3d, cxc.cart3d)
+        J_fwd = cxc.jac_pt_map(p_cart, cxc.cart3d, cxc.sph3d)
+        J_inv = cxc.jac_pt_map(p_sph, cxc.sph3d, cxc.cart3d)
         result = qnp.matmul(J_inv, J_fwd)
         np.testing.assert_allclose(result.value, jnp.eye(3), atol=1e-4)
 
@@ -572,8 +572,8 @@ class TestJacobianPtMapCompositionProperty:
         """Property: J_{Cyl→Cart} @ J_{Cart→Cyl} = I for any non-singular point."""
         p_cyl = {"rho": r, "phi": phi, "z": z}
         p_cart = cxc.pt_map(p_cyl, cxc.cyl3d, cxc.cart3d)
-        J_fwd = cxc.jacobian_pt_map(p_cart, cxc.cart3d, cxc.cyl3d)
-        J_inv = cxc.jacobian_pt_map(p_cyl, cxc.cyl3d, cxc.cart3d)
+        J_fwd = cxc.jac_pt_map(p_cart, cxc.cart3d, cxc.cyl3d)
+        J_inv = cxc.jac_pt_map(p_cyl, cxc.cyl3d, cxc.cart3d)
         result = qnp.matmul(J_inv, J_fwd)
         np.testing.assert_allclose(result.value, jnp.eye(3), atol=1e-4)
 
@@ -583,8 +583,8 @@ class TestJacobianPtMapCompositionProperty:
         """Property: J_{Polar→Cart} @ J_{Cart→Polar} = I for r > 0."""
         p_polar = {"r": r, "theta": theta}
         p_cart = cxc.pt_map(p_polar, cxc.polar2d, cxc.cart2d)
-        J_fwd = cxc.jacobian_pt_map(p_cart, cxc.cart2d, cxc.polar2d)
-        J_inv = cxc.jacobian_pt_map(p_polar, cxc.polar2d, cxc.cart2d)
+        J_fwd = cxc.jac_pt_map(p_cart, cxc.cart2d, cxc.polar2d)
+        J_inv = cxc.jac_pt_map(p_polar, cxc.polar2d, cxc.cart2d)
         result = qnp.matmul(J_inv, J_fwd)
         np.testing.assert_allclose(result.value, jnp.eye(2), atol=1e-4)
 
@@ -595,14 +595,14 @@ class TestJacobianPtMapCompositionProperty:
 
 
 class TestJacobianPtMapAgreesWithJacfwd:
-    """Values of jacobian_pt_map must match jax.jacfwd(pt_map) numerically.
+    """Values of jac_pt_map must match jax.jacfwd(pt_map) numerically.
 
     This is the gold-standard check: any hand-coded Jacobian must agree
     with the automatic-differentiation reference at the same point.
     """
 
     def _check_agrees(self, from_chart, to_chart, at_qty, *, atol=1e-5):
-        J = cxc.jacobian_pt_map(at_qty, from_chart, to_chart)
+        J = cxc.jac_pt_map(at_qty, from_chart, to_chart)
         ref = _jac_via_autodiff(from_chart, to_chart, at_qty)
         out_keys = list(to_chart.components)
         in_keys = list(from_chart.components)
@@ -698,15 +698,15 @@ class TestJacobianPtMapAgreesWithJacfwd:
 
 
 class TestJacobianPtMapJAXCompatibility:
-    """jacobian_pt_map must be usable inside jax.jit and jax.vmap."""
+    """jac_pt_map must be usable inside jax.jit and jax.vmap."""
 
     def test_jit_cart3d_to_sph3d(self) -> None:
-        """JIT compilation: jacobian_pt_map is traceable."""
+        """JIT compilation: jac_pt_map is traceable."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
 
         @jax.jit
         def jitted(at):
-            return cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+            return cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
 
         J = jitted(at)
         assert isinstance(J, QuantityMatrix)
@@ -718,7 +718,7 @@ class TestJacobianPtMapJAXCompatibility:
 
         @jax.jit
         def jitted(at):
-            return cxc.jacobian_pt_map(at, cxc.cart2d, cxc.polar2d)
+            return cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
 
         J = jitted(at)
         np.testing.assert_allclose(J.value, jnp.eye(2), atol=1e-6)
@@ -730,7 +730,7 @@ class TestJacobianPtMapJAXCompatibility:
 
         def single(x, y):
             at = {"x": u.Q(x, "m"), "y": u.Q(y, "m")}
-            return cxc.jacobian_pt_map(at, cxc.cart2d, cxc.polar2d)
+            return cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d)
 
         batched = jax.vmap(single)(xs, ys)
         assert batched.value.shape == (3, 2, 2)
@@ -747,35 +747,35 @@ class TestJacobianPtMapCurriedForms:
     """Curried and None-partial forms match direct call."""
 
     def test_curried_returns_callable(self) -> None:
-        """jacobian_pt_map(from_chart, to_chart, usys=si) returns a callable."""
-        fn = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        """jac_pt_map(from_chart, to_chart, usys=si) returns a callable."""
+        fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         assert callable(fn)
 
     def test_curried_result_matches_direct(self) -> None:
         """Curried form result matches direct call."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        fn = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         J_curried = fn(at)
-        J_direct = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+        J_direct = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
         np.testing.assert_allclose(J_curried.value, J_direct.value, atol=1e-6)
 
     def test_none_partial_returns_callable(self) -> None:
-        """jacobian_pt_map(None, from_chart, to_chart, usys=si) returns a callable."""
-        fn = cxc.jacobian_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        """jac_pt_map(None, from_chart, to_chart, usys=si) returns a callable."""
+        fn = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         assert callable(fn)
 
     def test_none_partial_result_matches_direct(self) -> None:
         """None-partial form result matches direct call."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        fn = cxc.jacobian_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        fn = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         J_partial = fn(at)
-        J_direct = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+        J_direct = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
         np.testing.assert_allclose(J_partial.value, J_direct.value, atol=1e-6)
 
     def test_curried_2d(self) -> None:
         """Curried form works for 2D chart pair."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
-        fn = cxc.jacobian_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
+        fn = cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
         J = fn(at)
         assert isinstance(J, QuantityMatrix)
         assert J.value.shape == (2, 2)
@@ -792,7 +792,7 @@ class TestJacobianPtMapArrayInput:
     def test_array_input_returns_array(self) -> None:
         """Plain array in → plain array out with usys."""
         at = jnp.array([1.0, 0.0, 0.0])
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         assert isinstance(J, jnp.ndarray)
         assert J.shape == (3, 3)
 
@@ -800,16 +800,14 @@ class TestJacobianPtMapArrayInput:
         """Array dispatch values agree with CDict quantity dispatch."""
         at_arr = jnp.array([1.0, 0.0, 0.0])
         at_qty = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        J_arr = cxc.jacobian_pt_map(
-            at_arr, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si
-        )
-        J_qty = cxc.jacobian_pt_map(at_qty, cxc.cart3d, cxc.sph3d)
+        J_arr = cxc.jac_pt_map(at_arr, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        J_qty = cxc.jac_pt_map(at_qty, cxc.cart3d, cxc.sph3d)
         np.testing.assert_allclose(J_arr, J_qty.value, atol=1e-6)
 
     def test_array_2d(self) -> None:
         """Plain array dispatch works for Cart2D → Polar2D."""
         at = jnp.array([1.0, 0.0])
-        J = cxc.jacobian_pt_map(at, cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
+        J = cxc.jac_pt_map(at, cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
         assert isinstance(J, jnp.ndarray)
         assert J.shape == (2, 2)
 
@@ -834,7 +832,7 @@ class TestJacobianPtMapCDictArrayBranch:
     def test_generic_pair_with_usys(self) -> None:
         """Cart3D→Sph3D CDict with plain floats and usys provided → Array output."""
         at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         assert J.shape == (3, 3)
 
     def test_generic_pair_no_usys_fails(self) -> None:
@@ -846,4 +844,4 @@ class TestJacobianPtMapCDictArrayBranch:
         """
         at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
         with pytest.raises(jaxtyping.TypeCheckError, match="usys"):
-            cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+            cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)

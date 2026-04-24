@@ -94,7 +94,7 @@ def scale_factors(
             jnp.ones((n,)), unit=UnitsMatrix(tuple(u.unit("") for _ in range(n)))
         )
 
-    J = cxc.jacobian_pt_map(at, chart, cart_chart, usys=usys)
+    J = cxc.jac_pt_map(at, chart, cart_chart, usys=usys)
     return _column_squared_norms(J)
 
 

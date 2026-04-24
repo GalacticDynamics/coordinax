@@ -42,7 +42,7 @@ class MinkowskiMetric(AbstractDiagonalMetric):
 
     where $J_{kj} = \partial(ct, x, y, z)^k / \partial q^j$ is the Jacobian
     from the given chart to the canonical Cartesian spacetime chart computed
-    by :func:`~coordinax.charts.jacobian_pt_map`.
+    by :func:`~coordinax.charts.jac_pt_map`.
 
     **Signature.** The metric is **pseudo-Riemannian** with Lorentzian
     signature $(-1, 1, 1, 1)$ meaning one negative and three positive
@@ -88,7 +88,7 @@ class MinkowskiMetric(AbstractDiagonalMetric):
         In the canonical Cartesian chart returns $\eta =
         \operatorname{diag}(-1, 1, 1, 1)$ directly. For other
         {class}`~coordinax.charts.SpaceTimeCT` charts computes the pullback
-        $g = J^T \eta J$ via :func:`~coordinax.charts.jacobian_pt_map`.
+        $g = J^T \eta J$ via :func:`~coordinax.charts.jac_pt_map`.
 
         Parameters
         ----------
@@ -147,7 +147,7 @@ class MinkowskiMetric(AbstractDiagonalMetric):
 
         # Pullback: g = J^T η J
         # J: jacobian of chart → cart_chart, shape (4, 4)
-        J = cxc.jacobian_pt_map(at, chart, cart_chart, usys=usys)
+        J = cxc.jac_pt_map(at, chart, cart_chart, usys=usys)
         JT = qnp.transpose(J, (1, 0))
         eta = QuantityMatrix(
             jnp.diag(jnp.array([-1.0, 1.0, 1.0, 1.0])),

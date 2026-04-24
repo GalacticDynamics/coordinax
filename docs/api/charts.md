@@ -41,7 +41,7 @@ cart_of_sph = cxc.cartesian_chart(sph)
 - `guess_chart`: infer a chart from keys or array/quantity trailing shape
 - `cdict`: normalize inputs to component dictionaries
 - `pt_map`: transform points between charts on the same or different manifolds
-- `jacobian_pt_map`: compute the Jacobian of a point map between charts on the same or different manifolds
+- `jac_pt_map`: compute the Jacobian of a point map between charts on the same or different manifolds
 
 ## Available Objects
 

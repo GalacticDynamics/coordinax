@@ -100,7 +100,7 @@ Product-chart transitions are factorwise. `SpaceTimeCT` is a flat-key product ch
 
 ## Computing Jacobians
 
-`jacobian_pt_map` returns the coordinate-transformation Jacobian $J^j{}_i = \partial \phi^j / \partial q^i$ evaluated at a base point, where $\phi$ is the transition function from `from_chart` to `to_chart`.
+`jac_pt_map` returns the coordinate-transformation Jacobian $J^j{}_i = \partial \phi^j / \partial q^i$ evaluated at a base point, where $\phi$ is the transition function from `from_chart` to `to_chart`.
 
 ### Direct call — quantity-valued dictionary input
 
@@ -111,7 +111,7 @@ Passing a component dictionary with `unxt.Quantity` values returns a `QuantityMa
 >>> import unxt as u
 
 >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
->>> J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+>>> J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
 >>> J
 QuantityMatrix(
     [[ 1.,  0.,  0.],
@@ -133,21 +133,21 @@ Pass a plain numeric dict and supply `usys` to interpret the dimensionless eleme
 >>> import unxt as u
 
 >>> at_arr = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
->>> J2 = cxc.jacobian_pt_map(at_arr, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+>>> J2 = cxc.jac_pt_map(at_arr, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
 >>> J2.shape
 (3, 3)
 ```
 
 ### Curried form — efficient reuse across many points
 
-`jacobian_pt_map(None, *args, **kwargs)` -- or more explicitly, `jacobian_pt_map(from_chart, to_chart, usys=usys)` -- returns a callable that can be applied to many points without re-building the underlying point-map partial each time. This is the recommended pattern for use inside `jax.jit` and `jax.vmap`:
+`jac_pt_map(None, *args, **kwargs)` -- or more explicitly, `jac_pt_map(from_chart, to_chart, usys=usys)` -- returns a callable that can be applied to many points without re-building the underlying point-map partial each time. This is the recommended pattern for use inside `jax.jit` and `jax.vmap`:
 
 ```{code-block} python
 >>> import jax
 >>> import coordinax.charts as cxc
 >>> import unxt as u
 
->>> jac_fn = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+>>> jac_fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
 
 >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
 >>> J = jac_fn(at)
@@ -165,7 +165,7 @@ The curried form is JIT- and vmap-compatible:
 >>> import coordinax.charts as cxc
 >>> import unxt as u
 
->>> jac_fn = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+>>> jac_fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
 >>> jac_jit = jax.jit(jac_fn)
 
 >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
@@ -189,11 +189,11 @@ The coordinate-change chain rule states that composing two Jacobians gives the J
 
 >>> at_cart = {"x": u.Q(1.0, "m"), "y": u.Q(0.5, "m"), "z": u.Q(2.0, "m")}
 
->>> J_cs = cxc.jacobian_pt_map(at_cart, cxc.cart3d, cxc.sph3d)
+>>> J_cs = cxc.jac_pt_map(at_cart, cxc.cart3d, cxc.sph3d)
 
 >>> # Transform point to intermediate chart
 >>> at_sph = cxc.pt_map(at_cart, cxc.cart3d, cxc.sph3d)
->>> J_sc = cxc.jacobian_pt_map(at_sph, cxc.sph3d, cxc.cart3d)
+>>> J_sc = cxc.jac_pt_map(at_sph, cxc.sph3d, cxc.cart3d)
 
 >>> # Chain rule: identity (up to floating-point)
 >>> J_composed = qnp.matmul(J_sc, J_cs)
