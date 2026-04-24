@@ -14,13 +14,13 @@ import unxt as u
 import coordinax.charts as cxc
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 from coordinax.internal.custom_types import CDict, OptUSys
-from coordinax.manifolds._src.base import AbstractMetric
+from coordinax.manifolds._src.diagonal import AbstractDiagonalMetric
 
 
 @jax.tree_util.register_static
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class EuclideanMetric(AbstractMetric):
+class EuclideanMetric(AbstractDiagonalMetric):
     r"""Euclidean (flat) Riemannian metric on $\mathbb{R}^n$.
 
     In Cartesian coordinates the metric is the identity matrix $g = I_n$.

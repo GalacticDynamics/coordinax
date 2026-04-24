@@ -3,6 +3,7 @@
 from .angle_between import *
 from .base import *
 from .custom import *
+from .diagonal import *
 from .embedded import *
 from .euclidean import *
 from .guess import *

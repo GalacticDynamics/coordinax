@@ -63,12 +63,110 @@ class TestAbstractMetricContract:
 
 
 # =============================================================================
+# AbstractDiagonalMetric contract
+# =============================================================================
+
+
+class TestAbstractDiagonalMetricContract:
+    """Every AbstractDiagonalMetric subclass must report is_diagonal=True.
+
+    This class tests the structural promise added by AbstractDiagonalMetric beyond
+    what AbstractMetric already guarantees: is_diagonal() must return True for all
+    valid (metric, chart, base-point) combinations, regardless of position or usys.
+    """
+
+    @pytest.fixture(
+        params=[
+            "euclidean3d_cart",
+            "euclidean3d_sph",
+            "euclidean2d_cart",
+            "hyperspherical2d",
+            "minkowski4d",
+        ]
+    )
+    def metric_chart_at(self, request):
+        cases = {
+            "euclidean3d_cart": (
+                cxm.EuclideanMetric(3),
+                cxc.cart3d,
+                {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
+            ),
+            "euclidean3d_sph": (
+                cxm.EuclideanMetric(3),
+                cxc.sph3d,
+                {
+                    "r": u.Q(2.0, "m"),
+                    "theta": u.Angle(jnp.pi / 3, "rad"),
+                    "phi": u.Angle(1.0, "rad"),
+                },
+            ),
+            "euclidean2d_cart": (
+                cxm.EuclideanMetric(2),
+                cxc.cart2d,
+                {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")},
+            ),
+            "hyperspherical2d": (
+                cxm.HyperSphericalMetric(ndim=2),
+                cxc.sph2,
+                {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")},
+            ),
+            "minkowski4d": (
+                cxm.MinkowskiMetric(),
+                cxc.SpaceTimeCT(cxc.cart3d),
+                {
+                    "ct": u.Q(1.0, "m"),
+                    "x": u.Q(0.0, "m"),
+                    "y": u.Q(0.0, "m"),
+                    "z": u.Q(0.0, "m"),
+                },
+            ),
+        }
+        return cases[request.param]
+
+    def test_is_instance_of_abstractdiagonalmetric(self, metric_chart_at):
+        metric, _, _ = metric_chart_at
+        assert isinstance(metric, cxm.AbstractDiagonalMetric)
+
+    def test_is_diagonal_returns_true(self, metric_chart_at):
+        metric, chart, at = metric_chart_at
+        result = metric.is_diagonal(chart, at=at)
+        assert bool(result) is True
+
+    def test_is_diagonal_output_shape(self, metric_chart_at):
+        metric, chart, at = metric_chart_at
+        result = metric.is_diagonal(chart, at=at)
+        assert result.shape == ()
+        assert result.dtype == jnp.bool_
+
+    def test_is_diagonal_under_jit(self, metric_chart_at):
+        metric, chart, at = metric_chart_at
+
+        @jax.jit
+        def compute(at):
+            return metric.is_diagonal(chart, at=at)
+
+        result = compute(at)
+        assert bool(result) is True
+
+    def test_is_diagonal_ignores_usys(self, metric_chart_at):
+        """is_diagonal must return True regardless of usys argument."""
+        metric, chart, at = metric_chart_at
+        result_no_usys = metric.is_diagonal(chart, at=at)
+        result_with_usys = metric.is_diagonal(chart, at=at, usys=u.unitsystems.si)
+        assert bool(result_no_usys) is True
+        assert bool(result_with_usys) is True
+
+
+# =============================================================================
 # EuclideanMetric
 # =============================================================================
 
 
 class TestEuclideanMetric:
     """Tests for EuclideanMetric, the flat Riemannian metric on Euclidean space."""
+
+    def test_isinstance_abstractdiagonalmetric(self):
+        assert isinstance(cxm.EuclideanMetric(3), cxm.AbstractDiagonalMetric)
 
     def test_construction_1d(self):
         m = cxm.EuclideanMetric(1)
@@ -149,6 +247,9 @@ class TestEuclideanMetric:
 class TestHyperSphericalMetric:
     """Tests for HyperSphericalMetric, the round metric on the unit sphere."""
 
+    def test_isinstance_abstractdiagonalmetric(self):
+        assert isinstance(cxm.HyperSphericalMetric(ndim=2), cxm.AbstractDiagonalMetric)
+
     def test_construction(self):
         m = cxm.HyperSphericalMetric(ndim=2)
         assert m.ndim == 2
@@ -225,6 +326,9 @@ class TestHyperSphericalMetric:
 class TestMinkowskiMetric:
     """Tests for MinkowskiMetric, the flat Lorentzian metric on Minkowski spacetime."""
 
+    def test_isinstance_abstractdiagonalmetric(self):
+        assert isinstance(cxm.MinkowskiMetric(), cxm.AbstractDiagonalMetric)
+
     def test_construction(self):
         M = cxm.MinkowskiMetric()
         assert M.ndim == 4
@@ -295,6 +399,11 @@ class TestMinkowskiMetric:
 class TestInducedMetric:
     """Tests for InducedMetric, the pullback metric on an embedded manifold."""
 
+    def test_induced_metric_is_not_abstractdiagonalmetric(self):
+        """InducedMetric is NOT an AbstractDiagonalMetric."""
+        manifold = cxm.embedded_twosphere(radius=1.0)
+        assert not isinstance(manifold.metric, cxm.AbstractDiagonalMetric)
+
     def test_unit_sphere_at_equator(self):
         """Induced metric on S^2 embedded in R^3 at equator matches sphere metric."""
         manifold = cxm.embedded_twosphere(radius=1.0)
@@ -348,6 +457,14 @@ class TestInducedMetric:
 
 class TestCartesianProductMetric:
     """Tests for CartesianProductMetric on product manifolds."""
+
+    def test_product_metric_is_not_abstractdiagonalmetric(self):
+        """CartesianProductMetric is NOT an AbstractDiagonalMetric."""
+        M = cxm.CartesianProductManifold(
+            factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
+            factor_names=("S2", "R1"),
+        )
+        assert not isinstance(M.metric, cxm.AbstractDiagonalMetric)
 
     def test_signature_concatenates_factor_signatures(self):
         M = cxm.CartesianProductManifold(
