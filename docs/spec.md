@@ -930,10 +930,6 @@ The `coordinax.angles` module provides the angle-facing scalar API used by chart
 
     Functional API for explicit interval wrapping. It remaps an angle into a caller-specified interval (for example $[0, 2\pi)$ or $(-\pi, \pi]$).
 
-!!! info `Parallax`
-
-    Re-exported from `coordinax.distances` for convenience. `Parallax` is an angular quantity that is commonly used as a distance proxy in astronomy.
-
 </br>
 
 (software-spec-distances)=
