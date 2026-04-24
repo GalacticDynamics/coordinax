@@ -1,4 +1,4 @@
-"""Manifold definitions and manifold inference helpers."""
+"""Diagonal-metric marker base classes and helpers."""
 
 __all__ = ("AbstractDiagonalMetric",)
 
