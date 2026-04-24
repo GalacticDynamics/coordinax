@@ -45,6 +45,7 @@ from typing import Any, cast
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 import plum
 
 import quaxed.numpy as qnp
@@ -214,7 +215,7 @@ def _repack_q_from_jac(jac_qq: QuantityMatrix, /) -> QuantityMatrix:
 
     """
     ufrom_, uto_ = jac_qq.value.unit, jac_qq.unit  # ty: ignore[unresolved-attribute]
-    units = UnitsMatrix(tuple(tuple(tj / fi for fi in ufrom_) for tj in uto_))
+    units = UnitsMatrix(np.divide(uto_._units[:, None], ufrom_._units[None, :]))
     return QuantityMatrix(jac_qq.value.value, units)  # ty: ignore[unresolved-attribute]
 
 

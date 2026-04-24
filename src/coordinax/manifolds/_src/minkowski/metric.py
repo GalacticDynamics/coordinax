@@ -15,13 +15,13 @@ import unxt as u
 import coordinax.charts as cxc
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 from coordinax.internal.custom_types import CDict, OptUSys
-from coordinax.manifolds._src.base import AbstractMetric
+from coordinax.manifolds._src.diagonal import AbstractDiagonalMetric
 
 
 @jax.tree_util.register_static
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class MinkowskiMetric(AbstractMetric):
+class MinkowskiMetric(AbstractDiagonalMetric):
     r"""Pseudo-Riemannian (Lorentzian) metric on Minkowski spacetime.
 
     In the canonical {class}`~coordinax.charts.SpaceTimeCT` chart with

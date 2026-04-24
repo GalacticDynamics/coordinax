@@ -42,10 +42,7 @@ from .sphere import (
     SphericalTwoSphere,
 )
 from .utils import uconvert_to_rad
-from coordinax.internal import (
-    QuantityMatrix,
-    UnitsMatrix,
-)
+from coordinax.internal import QuantityMatrix, UnitsMatrix, cdict_units
 from coordinax.internal.custom_types import OptUSys
 
 
@@ -1670,7 +1667,7 @@ def pt_map(
     # Stack the transformed components into an QuantityMatrix
     p_out = QuantityMatrix(
         jnp.stack([u.ustrip(p_to[k]) for k in to_chart.components], axis=-1),
-        unit=UnitsMatrix(tuple(u.unit_of(p_to[k]) for k in to_chart.components)),
+        unit=UnitsMatrix(cdict_units(p_to, to_chart.components)),
     )
 
     return p_out  # noqa: RET504

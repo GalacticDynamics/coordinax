@@ -8,6 +8,7 @@ from typing import final
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 
 import unxt as u
 from unxt.quantity import AllowValue
@@ -15,13 +16,13 @@ from unxt.quantity import AllowValue
 import coordinax.charts as cxc
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 from coordinax.internal.custom_types import CDict, OptUSys
-from coordinax.manifolds._src.base import AbstractMetric
+from coordinax.manifolds._src.diagonal import AbstractDiagonalMetric
 
 
 @jax.tree_util.register_static
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class HyperSphericalMetric(AbstractMetric):
+class HyperSphericalMetric(AbstractDiagonalMetric):
     r"""Round metric on the unit $n$-sphere $S^{n-1}$ in standard spherical coordinates.
 
     The round metric on $S^2$ in the $(\theta, \phi)$ spherical chart is
@@ -123,5 +124,5 @@ class HyperSphericalMetric(AbstractMetric):
             return G_arr
 
         n = self.ndim
-        unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
-        return QuantityMatrix(G_arr, unit=UnitsMatrix(unit_tup))
+        units = UnitsMatrix(np.full((n, n), u.unit("")))
+        return QuantityMatrix(G_arr, unit=units)

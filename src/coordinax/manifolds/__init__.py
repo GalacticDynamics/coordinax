@@ -10,6 +10,7 @@ __all__ = (
     "angle_between",
     # Metrics
     "AbstractMetric",
+    "AbstractDiagonalMetric",
     "CartesianProductMetric",
     "CustomMetric",
     "EuclideanMetric",
@@ -49,6 +50,7 @@ from ._setup_package import install_import_hook
 with install_import_hook("coordinax.manifolds"):
     from ._src import (
         AbstractAtlas,
+        AbstractDiagonalMetric,
         AbstractEmbeddingMap,
         AbstractManifold,
         AbstractMetric,
