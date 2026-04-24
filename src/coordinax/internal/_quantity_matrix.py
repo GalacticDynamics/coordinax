@@ -341,8 +341,7 @@ class UnitsMatrix:
         """
         result = self._units[index]
         if isinstance(result, np.ndarray):
-            if result.ndim == 0:
-                # 0-d array from scalar index — extract the contained unit.
+            if result.ndim == 0:  # 0-d array -> extract the contained unit.
                 return result.item()
             return UnitsMatrix(result)
         return result
@@ -647,7 +646,7 @@ class QuantityMatrix(u.AbstractQuantity):
             raise ValueError(msg)
         n = min(self.shape[-2], self.shape[-1])
         diag_value = jnp.stack([self.value[..., i, i] for i in range(n)], axis=-1)
-        diag_unit = UnitsMatrix(tuple(self.unit[i, i] for i in range(n)))
+        diag_unit = UnitsMatrix(self.unit._units.diagonal())
         return QuantityMatrix(value=diag_value, unit=diag_unit)
 
     @property
@@ -967,6 +966,9 @@ def dot_general_qm_qm(
     raise NotImplementedError(msg)
 
 
+vec_uconvert_value = np.vectorize(u.uconvert_value)
+
+
 def _dot_general_1d_1d(
     lhs: QuantityMatrix,
     rhs: QuantityMatrix,
@@ -1049,22 +1051,19 @@ def _dot_general_2d_1d(
     '(m s, m s)'
 
     """
-    n, k_dim = lhs.shape[-2:]  # (N, K)
-    assert rhs.shape[-1] == k_dim  # noqa: S101
+    assert rhs.shape[-1] == lhs.shape[-1]  # noqa: S101
 
     # 1) Output units: ref[i] = lhs.unit[i][0] * rhs.unit[0]
-    out_unit = UnitsMatrix(tuple(lhs.unit[i, 0] * rhs.unit[0] for i in range(n)))
+    out_unit = UnitsMatrix(np.multiply(lhs.unit._units[:, 0], rhs.unit._units[0]))
 
     # 2) Precompute scale factors: scale[i, j] converts
     #    lhs.unit[i][j]*rhs.unit[j] → ref[i]
     scale_2d = jnp.array(
-        [
-            [
-                u.uconvert_value(out_unit[i], lhs.unit[i, j] * rhs.unit[j], 1.0)
-                for j in range(k_dim)
-            ]
-            for i in range(n)
-        ]
+        vec_uconvert_value(
+            out_unit._units[:, None],  # (N, 1) — broadcast over K
+            np.multiply(lhs.unit._units, rhs.unit._units[None, :]),  # (N, K)
+            1.0,
+        )
     )
 
     # 3) Vectorised contraction:
@@ -1275,7 +1274,7 @@ def _jit_fallback_uniform_unit(units: UnitsMatrix, out_size: int) -> UnitsMatrix
             "Call eagerly (outside jit) for heterogeneous-unit QuantityMatrix."
         )
         raise ValueError(msg)
-    return UnitsMatrix(tuple(first for _ in range(out_size)))
+    return UnitsMatrix(np.full((out_size,), first, dtype=object))
 
 
 @quax.register(lax.gather_p)
@@ -1377,12 +1376,9 @@ def gather_qm(
         # Eager path: indices are concrete — look up units directly.
         idx_np = np.asarray(start_indices)
         if x.unit.ndim == 1:
-            extracted = tuple(x.unit[int(idx_np[k, 0])] for k in range(out_size))
+            out_unit = UnitsMatrix(x.unit._units[idx_np[:, 0]])
         else:  # x.unit.ndim == 2
-            extracted = tuple(
-                x.unit[int(idx_np[k, 0]), int(idx_np[k, 1])] for k in range(out_size)
-            )
-        out_unit = UnitsMatrix(extracted)
+            out_unit = UnitsMatrix(x.unit._units[idx_np[:, 0], idx_np[:, 1]])
 
     return QuantityMatrix(value=result_value, unit=out_unit)
 
@@ -1434,12 +1430,10 @@ def reduce_sum_p_qm(
     if operand.ndim == 2:
         if axset == {0}:
             # Row reduction → 1-D output; unit = first row's units.
-            m = operand.shape[-1]  # number of columns
-            out_unit = UnitsMatrix(tuple(operand.unit[0, j] for j in range(m)))
+            out_unit = UnitsMatrix(operand.unit._units[0])
         elif axset == {1}:
             # Column reduction → 1-D output; unit = first column's units.
-            n = operand.shape[-2]  # number of rows
-            out_unit = UnitsMatrix(tuple(operand.unit[i, 0] for i in range(n)))
+            out_unit = UnitsMatrix(operand.unit._units[:, 0])
         else:
             msg = f"reduce_sum_p_qm: unsupported axes={axes} for 2-D QuantityMatrix."
             raise NotImplementedError(msg)

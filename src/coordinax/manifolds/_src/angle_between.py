@@ -5,6 +5,7 @@ __all__: tuple[str, ...] = ()
 from jaxtyping import Array
 
 import jax
+import numpy as np
 import plum
 
 import quaxed.numpy as qnp
@@ -118,9 +119,9 @@ def _as_quantity_matrix(x: QuantityMatrix | Array) -> QuantityMatrix:
     if isinstance(x, QuantityMatrix):
         return x
 
-    n_rows, n_cols = x.shape[-2], x.shape[-1]
-    unit_tup = tuple(tuple(u.unit("") for _ in range(n_cols)) for _ in range(n_rows))
-    return QuantityMatrix(value=x, unit=UnitsMatrix(unit_tup))
+    n_rows, n_cols = x.shape[-2:]
+    units = UnitsMatrix(np.full((n_rows, n_cols), u.unit("")))
+    return QuantityMatrix(value=x, unit=units)
 
 
 def _check_nonzero_norm(*norms: u.AbstractQuantity) -> None:

@@ -581,10 +581,17 @@ class TestAbstractMetricCholesky:
         assert jnp.all(jnp.diag(L.value) > 0)
 
     def test_reconstruction(self, metric_chart_at):
-        """L @ L.T must equal the original metric matrix G."""
+        """L @ L.T must equal the original metric matrix G (values and units)."""
         metric, chart, at = metric_chart_at
         L = metric.cholesky(chart, at=at)
         G = metric.metric_matrix(chart, at=at)
+        assert isinstance(L, cxi.QuantityMatrix)
+        # Verify units: each L[i,j] must carry sqrt(G[i,j]) units
+        n = G.value.shape[0]
+        for i in range(n):
+            for j in range(n):
+                assert L.unit[i][j] ** 2 == G.unit[i][j]
+        # Verify numeric reconstruction: L @ L^T == G
         assert jnp.allclose(L.value @ L.value.T, G.value, atol=1e-6)
 
     def test_cartesian_euclidean_is_identity(self):

@@ -49,7 +49,8 @@ class AbstractDiagonalMetric(AbstractMetric):
       direction (Lorentzian signature).
     - ``metric_matrix(chart, /, *, at, usys=None)`` (method): must return a
       diagonal ``QuantityMatrix`` (or plain ``Array``) of shape
-      ``(ndim, ndim)`` with all off-diagonal entries exactly zero.
+      ``(ndim, ndim)`` with all off-diagonal entries numerically zero
+      (within floating-point tolerance, i.e. ``jnp.allclose`` to zero).
 
     Concrete subclasses must be immutable frozen dataclasses and registered as
     static JAX PyTree nodes via ``@jax.tree_util.register_static``.
@@ -106,8 +107,8 @@ class AbstractDiagonalMetric(AbstractMetric):
         r"""Return ``True`` if the metric matrix is diagonal at base point ``at``.
 
         A metric is diagonal when all off-diagonal entries $g_{ij}$ with
-        $i \neq j$ are exactly zero, i.e. the coordinate basis is
-        orthogonal at ``at``.
+        $i \neq j$ are numerically zero (within floating-point tolerance),
+        i.e. the coordinate basis is orthogonal at ``at``.
 
         Parameters
         ----------

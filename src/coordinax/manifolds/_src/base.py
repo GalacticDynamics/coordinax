@@ -354,21 +354,25 @@ class AbstractMetric(metaclass=abc.ABCMeta):
                         [0., 1., 0.],
                         [0., 0., 1.]], '((, , ), (, , ), (, , ))')
 
-        >>> at = cxc.pt_map(at, cxc.cart3d, cxc.sph3d)
+        Euclidean metric in spherical coordinates — Cholesky is diag(1, r, r sinθ):
+
+        >>> at = {
+        ...     "r": u.Q(2.0, "m"),
+        ...     "theta": u.Angle(jnp.pi / 2, "rad"),
+        ...     "phi": u.Angle(0.0, "rad"),
+        ... }
         >>> metric.cholesky(cxc.sph3d, at=at)
         QuantityMatrix(
             [[1., 0., 0.],
-            [0., 1., 0.],
-            [0., 0., 1.]],
-            '((, m(1/2) / rad(1/2), m(1/2) / rad(1/2)),
-              (m(1/2) / rad(1/2), m / rad, m / rad),
-              (m(1/2) / rad(1/2), m / rad, m / rad))'
+             [0., 2., 0.],
+             [0., 0., 2.]],
+            '((, m(1/2) / rad(1/2), m(1/2) / rad(1/2)), ...)'
         )
 
         """
         G = self.metric_matrix(chart, at=at, usys=usys)
         if isinstance(G, QuantityMatrix):
-            l_units = UnitsMatrix(tuple(tuple(u**0.5 for u in row) for row in G.unit))
+            l_units = UnitsMatrix(G.unit._units**0.5)
             return QuantityMatrix(jnp.linalg.cholesky(G.value), unit=l_units)
         return jnp.linalg.cholesky(G)
 
@@ -395,7 +399,8 @@ class AbstractMetric(metaclass=abc.ABCMeta):
         r"""Return ``True`` if the metric matrix is diagonal at base point ``at``.
 
         A metric is diagonal when all off-diagonal entries $g_{ij}$ with
-        $i \neq j$ are exactly zero, i.e. the coordinate basis is
+        $i \neq j$ are numerically zero (within floating-point tolerance,
+        checked via ``jnp.allclose``), i.e. the coordinate basis is
         orthogonal at ``at``.
 
         Parameters

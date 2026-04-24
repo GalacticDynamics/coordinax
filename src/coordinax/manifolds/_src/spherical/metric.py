@@ -8,6 +8,7 @@ from typing import final
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 
 import unxt as u
 from unxt.quantity import AllowValue
@@ -123,5 +124,5 @@ class HyperSphericalMetric(AbstractDiagonalMetric):
             return G_arr
 
         n = self.ndim
-        unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
-        return QuantityMatrix(G_arr, unit=UnitsMatrix(unit_tup))
+        units = UnitsMatrix(np.full((n, n), u.unit("")))
+        return QuantityMatrix(G_arr, unit=units)
