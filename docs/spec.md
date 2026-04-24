@@ -952,14 +952,6 @@ The `coordinax.distances` module provides the distance-facing scalar API used by
 
     Concrete length quantity type (value + length unit), built on `unxt`, for physical distances.
 
-!!! info `DistanceModulus`
-
-    Magnitude-space distance representation used in astronomical workflows and conversions.
-
-!!! info `Parallax`
-
-    Angular distance proxy represented in angular units and linked to distance conversion flows.
-
 </br>
 
 (software-spec-charts)=
