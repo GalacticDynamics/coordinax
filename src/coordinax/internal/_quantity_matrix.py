@@ -46,7 +46,11 @@ from .custom_types import CDict
 
 _DMLS = u.unit("")
 
-strict_zip = lambda *args: zip(*args, strict=True)
+
+def strict_zip(*args: Any):
+    """Zip iterables while enforcing equal lengths."""
+    return zip(*args, strict=True)
+
 
 ##############################################################################
 # Units helpers
