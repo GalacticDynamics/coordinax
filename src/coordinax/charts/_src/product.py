@@ -17,7 +17,7 @@ import jax.tree_util as jtu
 import plum
 import wadler_lindig as wl
 
-import coordinax.api.charts as api
+import coordinax.api.charts as cxcapi
 from .base import MISSING, AbstractChart, chart_dataclass_decorator
 from .custom_types import CDict
 from coordinax.internal.custom_types import Ds, Ks, OptUSys
@@ -304,7 +304,7 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         CartesianProductChart(factors=(Cart3D(), Cart3D()), factor_names=('q', 'p'))
 
         """
-        cart_factors = tuple(api.cartesian_chart(f) for f in self.factors)
+        cart_factors = tuple(cxcapi.cartesian_chart(f) for f in self.factors)
         # Check if already cartesian
         if cart_factors == self.factors:
             return self
@@ -384,7 +384,7 @@ def pt_map(
 
     parts = from_chart.split_components(p)
     transformed = tuple(
-        api.pt_map(p_part, f_factor, t_factor, usys=usys)
+        cxcapi.pt_map(p_part, f_factor, t_factor, usys=usys)
         for p_part, f_factor, t_factor in zip(
             parts, from_chart.factors, to_chart.factors, strict=True
         )

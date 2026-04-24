@@ -10,7 +10,7 @@ from typing_extensions import TypeVar
 
 import plum
 
-import coordinax.api.frames as api
+import coordinax.api.frames as cxfapi
 from .base import AbstractReferenceFrame
 from coordinax.transforms import AbstractTransform
 
@@ -158,7 +158,7 @@ def frame_transition(
         [0. 1. 0.]>
 
     """
-    return api.frame_transition(from_frame, to_frame.base_frame) | to_frame.xop  # ty: ignore[unsupported-operator]
+    return cxfapi.frame_transition(from_frame, to_frame.base_frame) | to_frame.xop  # ty: ignore[unsupported-operator]
 
 
 @plum.dispatch
@@ -191,7 +191,7 @@ def frame_transition(
         [1. 0. 0.]>
 
     """
-    return from_frame.xop.inverse | api.frame_transition(
+    return from_frame.xop.inverse | cxfapi.frame_transition(
         from_frame.base_frame, to_frame
     )  # ty: ignore[unsupported-operator]
 
@@ -227,6 +227,6 @@ def frame_transition(
     """
     return (
         from_frame.xop.inverse  # ty: ignore[unsupported-operator]
-        | api.frame_transition(from_frame.base_frame, to_frame.base_frame)
+        | cxfapi.frame_transition(from_frame.base_frame, to_frame.base_frame)
         | to_frame.xop
     )

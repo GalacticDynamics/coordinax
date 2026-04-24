@@ -9,7 +9,7 @@ import plum
 
 import unxt as u
 
-import coordinax.api.frames as api
+import coordinax.api.frames as cxfapi
 import coordinax.transforms as cxfm
 from .base import AbstractReferenceFrame
 
@@ -149,5 +149,5 @@ def frame_transition(
     Composed(( Rotate(...), Translate(...) ))
 
     """
-    out = api.frame_transition(to_frame, from_frame).inverse  # pylint: disable=W1114  # ty: ignore[unresolved-attribute]
+    out = cxfapi.frame_transition(to_frame, from_frame).inverse  # pylint: disable=W1114  # ty: ignore[unresolved-attribute]
     return cast("cxfm.Composed", out)
