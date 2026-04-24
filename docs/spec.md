@@ -166,29 +166,47 @@ for the inverse transition map.
 
 ### Embedded Manifolds
 
-Before defining maps between manifolds, we fix the relevant vocabulary.
+The central question is: when does a manifold $N$ sit _well-behaved_ inside a larger manifold $M$? The unit sphere $S^2 \subset \mathbb{R}^3$ is the prototypical example — it does not cross itself, carries no folds or cusps, and its spherical topology is faithfully represented in ambient space. The concept that formalizes this is a **smooth embedding**, built from three conditions that each rule out a distinct pathology.
 
-A map $f : X \to Y$ between sets is **injective** (one-to-one) if distinct points map to distinct points: $f(p) = f(q)$ implies $p = q$. Injectivity ensures the map does not collapse distinct points of $X$ onto the same point of $Y$.
+**Condition 1 — No self-intersections.** A map $f : X \to Y$ is **injective** (one-to-one) if distinct points always map to distinct points: $f(p) = f(q)$ implies $p = q$. Without injectivity, distinct points of $N$ could collapse onto the same point of $M$, making the image self-intersect.
 
-A smooth map $f : N \to M$ between manifolds is an **immersion** if its differential $df_p : T_pN \to T_{f(p)}M$ is injective at every point $p \in N$. Immersion means the map does not fold or collapse tangent directions: the manifold $N$ is locally "spread out" in $M$, even if it crosses itself globally.
+**Condition 2 — No folding of tangent directions.** A smooth map $f : N \to M$ is an **immersion** if its differential $df_p : T_pN \to T_{f(p)}M$ is injective at every point $p \in N$. This is a local condition: the tangent space of $N$ at $p$ maps into $M$ without collapsing any direction, so there are no cusps or folds at $p$. Crucially, an immersion can still cross itself globally.
 
-A **homeomorphism** $f : X \to Y$ is a bijective continuous map whose inverse is also continuous. A homeomorphism identifies $X$ and $Y$ as topologically identical spaces.
+!!! example
 
-The **image** of a map $f : N \to M$ is the subset
+    The curve $f : \mathbb{R} \to \mathbb{R}^2$, $f(t) = (\sin 2t,\, \sin t)$, traces a figure eight. Its derivative $f'(t) = (2\cos 2t,\, \cos t)$ is never zero (if $\cos t = 0$ then $2\cos 2t = \pm 2 \neq 0$), so $f$ is an immersion everywhere. Yet $f(0) = f(\pi) = (0, 0)$: the curve passes through the origin twice, violating injectivity. An immersion is not enough to rule out self-intersections.
+
+**Condition 3 — No topological misbehavior.** A **homeomorphism** $f : X \to Y$ is a bijective continuous map whose inverse is also continuous; it certifies that $X$ and $Y$ are topologically the same space. We need this condition applied to $f$ viewed as a map onto its image. An injective immersion can still fail here: imagine parametrizing an open interval so that one end spirals arbitrarily close to a point already in the image without ever reaching it — the map is injective and smooth, but its inverse is not continuous, and the image is topologically malformed.
+
+When all three conditions hold, $f$ is a **smooth embedding**.
+
+> **Smooth embedding.** A smooth map $\iota : N \hookrightarrow M$ of an $m$-dimensional manifold $N$ into an $n$-dimensional manifold $M$ (with $m < n$) is a **smooth embedding** if it is simultaneously:
+>
+> - **injective**: distinct points of $N$ map to distinct points of $M$,
+> - an **immersion**: the differential $d\iota_p$ is injective at every $p \in N$, and
+> - a **homeomorphism onto its image**: $\iota$ is a continuous bijection $N \to \iota(N)$ with continuous inverse.
+
+The **image** of $\iota$ is the subset
 
 $$
-f(N) = \{ f(p) \in M \mid p \in N \} \subset M.
+\iota(N) = \{ \iota(p) \in M \mid p \in N \} \subset M,
 $$
 
-A **submanifold** of $M$ is a subset $S \subset M$ that is itself a manifold, and whose inclusion map $S \hookrightarrow M$ is a smooth embedding (defined below). The dimension of $S$ is strictly less than that of $M$ for a proper submanifold.
+and it is itself an $m$-dimensional manifold. A **submanifold** of $M$ is any subset $S \subset M$ that arises this way: it is a manifold in its own right, and its inclusion map $S \hookrightarrow M$ is a smooth embedding. Together, the three embedding conditions ensure $\iota(N)$ has no self-intersections, no cusps or folds, and carries the same smooth structure as $N$.
 
-A **smooth embedding** $\iota : N \hookrightarrow M$ of an $m$-dimensional manifold $N$ into an $n$-dimensional manifold $M$ (with $m < n$) is a smooth map that is simultaneously:
+!!! note
 
-- **injective**: distinct points of $N$ map to distinct points of $M$,
-- an **immersion**: the differential $d\iota_p$ is injective at every $p \in N$, and
-- a **homeomorphism onto its image**: $\iota$ is a continuous bijection $N \to \iota(N)$ with continuous inverse.
+    For compact $N$, the homeomorphism condition is automatic: any injective immersion from a compact manifold is an embedding. In practice this covers most physical cases ($S^1$, $S^2$, compact level sets of potentials).
 
-The combination of these three properties ensures that $\iota(N)$ is a well-behaved $m$-dimensional submanifold of $M$: it does not self-intersect, it has no cusps or folds, and it carries the same smooth structure as $N$ itself.
+!!! example
+
+    The unit sphere $S^2$ embeds in $\mathbb{R}^3$ via the inclusion map $\iota : S^2 \hookrightarrow \mathbb{R}^3$, $p \mapsto p$. In the standard spherical chart $(\theta,\phi) \in (0,\pi)\times(0,2\pi)$ on $S^2$ and the Cartesian chart $(x,y,z)$ on $\mathbb{R}^3$, the coordinate expression of $\iota$ is
+
+    $$
+    \iota(\theta, \phi) = (\sin\theta\cos\phi,\ \sin\theta\sin\phi,\ \cos\theta).
+    $$
+
+    The Jacobian of $\iota$ has rank 2 everywhere on the chart domain, confirming it is an immersion; $\iota$ is injective on the chart domain; and $\iota$ is a homeomorphism onto its image (the sphere minus the meridian $\phi=0$). The full image $\iota(S^2) = \{(x,y,z) \mid x^2 + y^2 + z^2 = 1\}$ is a 2-dimensional submanifold of $\mathbb{R}^3$; a single chart does not cover all of $S^2$, but the embedding itself is defined globally on $S^2$.
 
 #### Projections and Embeddings
 
