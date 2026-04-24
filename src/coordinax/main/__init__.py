@@ -12,7 +12,6 @@ __all__ = (  # distances
     "cdict",
     "pt_map",
     "jacobian_pt_map",
-    "realize_cartesian",
     "cart1d",
     "radial1d",
     "time1d",
@@ -83,7 +82,6 @@ from coordinax.charts import (
     polar2d,
     pt_map,
     radial1d,
-    realize_cartesian,
     sph3d,
     time1d,
 )

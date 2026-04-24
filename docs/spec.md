@@ -883,7 +883,7 @@ A non-exhaustive table of exported objects are:
 | --- | --- |
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
-| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jacobian_pt_map`, `realize_cartesian`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
+| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jacobian_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, </br> `PointGeometry`, `point_geom`, </br> `NoBasis`, `no_basis`, </br> `Location`, `loc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
@@ -930,10 +930,6 @@ The `coordinax.angles` module provides the angle-facing scalar API used by chart
 
     Functional API for explicit interval wrapping. It remaps an angle into a caller-specified interval (for example $[0, 2\pi)$ or $(-\pi, \pi]$).
 
-!!! info `Parallax`
-
-    Re-exported from `coordinax.distances` for convenience. `Parallax` is an angular quantity that is commonly used as a distance proxy in astronomy.
-
 </br>
 
 (software-spec-distances)=
@@ -956,14 +952,6 @@ The `coordinax.distances` module provides the distance-facing scalar API used by
 
     Concrete length quantity type (value + length unit), built on `unxt`, for physical distances.
 
-!!! info `DistanceModulus`
-
-    Magnitude-space distance representation used in astronomical workflows and conversions.
-
-!!! info `Parallax`
-
-    Angular distance proxy represented in angular units and linked to distance conversion flows.
-
 </br>
 
 (software-spec-charts)=
@@ -985,8 +973,6 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - ``ndim``: number of coordinate components (chart dimensionality).
     - ``cartesian``: the corresponding global Cartesian  chart. This can raise an error if there isn't a global Cartesian chart. Calls `coordinax.charts.cartesian_chart`.
     - ``check_data()``: check that the data is compatible with the chart. Keyword arguments are ``keys`` (default ``True``) to validate key schema, and ``values`` (default ``False``) to validate value dimensions/ranges.
-    - ``realize_cartesian``: realize a point in the canonical ambient Cartesian coordinates.
-    - ``unrealize_cartesian``: invert the ambient Cartesian realization on the chart domain.
 
     Notes:
 
@@ -1117,15 +1103,6 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - The partial-application dispatch (returning a callable) is useful for currying: `transform_func = pt_map(cart3d, sph3d); result = transform_func(p)`.
     - Product charts (like SpaceTimeCT with a spatial factor) transform by independently transforming each factor's coordinates.
     - Same-atlas chart transitions and cross-manifold realization maps are unified under one function; dispatch resolution selects the appropriate implementation based on the chart types.
-
-!!! info `realize_cartesian`
-
-    Realize point coordinates in a chart's canonical ambient Cartesian chart.
-
-    This function evaluates the chart's ambient realization map by converting
-    coordinates from `chart` into `chart.cartesian`.
-
-    This is implemented as a thin wrapper over `pt_map`.
 
 (software-spec-tangent-map)=
 
@@ -2452,8 +2429,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     The manifold provides thin wrappers around coordinate transformations that ensure atlas compatibility before delegating to chart‑level machinery.
 
     - ``pt_map(...)`` performs chart transitions while checking that both charts belong to the manifold.
-    - ``realize_cartesian(...)`` converts coordinates into the canonical ambient Cartesian chart.
-    - ``unrealize_cartesian(...)`` performs the inverse operation.
     - ``scale_factors(chart, /, *, at, usys=None)``: convenience wrapper that delegates to the manifold metric. Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`. See the [`scale_factors` functional API section](#software-spec-scale-factors) for full semantics.
 
     Pre-defined manifolds:
@@ -2622,7 +2597,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     The default chart is the canonical Cartesian chart of the same dimension provided by the atlas. For example, `EuclideanManifold(2).default_chart == Cart2D()`.
 
-    Coordinate operations (`pt_map`, `realize_cartesian`, `unrealize_cartesian`) are inherited from `AbstractManifold`. These methods verify that the charts belong to the Euclidean atlas before delegating to the chart-level implementations.
+    Coordinate operations (`pt_map`) are inherited from `AbstractManifold`. These methods verify that the charts belong to the Euclidean atlas before delegating to the chart-level implementations.
 
     **Example**
 
@@ -2773,8 +2748,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     `HyperSphericalManifold` inherits the coordinate transformation API from `AbstractManifold`:
 
     - `pt_map(...)`
-    - `realize_cartesian(...)`
-    - `unrealize_cartesian(...)`
 
     These methods first verify atlas compatibility before delegating to the chart-level transformation system.
 
@@ -2929,8 +2902,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Inherits manifold-level wrappers from AbstractManifold:
 
     - `pt_map(...)`
-    - `realize_cartesian(...)`
-    - `unrealize_cartesian(...)`
 
     These operations first enforce atlas compatibility, then delegate to chart-level transition machinery.
 
@@ -3062,7 +3033,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - `metric` is the caller-supplied metric object.
     - `atlas.ndim` and `metric.ndim` must match; otherwise construction raises `ValueError`.
 
-    Coordinate operations (`pt_map`, `realize_cartesian`, `unrealize_cartesian`) are inherited from `AbstractManifold` and therefore enforce atlas compatibility before delegating to chart-level machinery.
+    Coordinate operations (`pt_map`) are inherited from `AbstractManifold` and therefore enforce atlas compatibility before delegating to chart-level machinery.
 
     ```pycon
     >>> import coordinax.charts as cxc
@@ -3258,8 +3229,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Inherits manifold-level wrappers from `AbstractManifold`:
 
     - `pt_map(...)`
-    - `realize_cartesian(...)`
-    - `unrealize_cartesian(...)`
 
     All operations enforce atlas compatibility and then delegate to chart-level transition machinery.
 

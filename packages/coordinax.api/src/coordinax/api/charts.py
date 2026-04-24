@@ -4,9 +4,6 @@ __all__ = (
     "cartesian_chart",
     "pt_map",
     "jacobian_pt_map",
-    # Realization maps
-    "realize_cartesian",
-    "unrealize_cartesian",
     # Data
     "cdict",
     "guess_chart",
@@ -249,110 +246,6 @@ def jacobian_pt_map(*args: Any, **kwargs: Any) -> Any:
     ... )
     >>> J.value.shape
     (3, 3)
-
-    """
-    del args, kwargs  # Unused in abstract method
-    raise NotImplementedError  # pragma: no cover
-
-
-@plum.dispatch.abstract
-def realize_cartesian(*args: Any, **kwargs: Any) -> Any:
-    r"""Realize a point in canonical ambient Cartesian coordinates.
-
-    This method evaluates the chart's (optional) **ambient realization map**
-
-    $$ X: V \subset \mathbb{R}^n \to \mathbb{R}^m $$
-
-    mapping point-role coordinates in this chart to point-role coordinates
-    in the chart's distinguished ambient Cartesian chart,
-    ``self.cartesian``.
-
-    - This is **point-role only**. It does not apply to tangent-valued roles.
-    - For parameter-free Euclidean reparameterizations (e.g. spherical or
-      cylindrical charts on $\mathbb{R}^3$), this is typically a canonical map.
-    - For charts whose realization depends on additional geometric data (e.g. a
-      2-sphere in $\mathbb{R}^3$ requiring a radius), charts may not provide a
-      canonical realization; in such cases the underlying transition rule to
-      ``self.cartesian`` may be unregistered and this method will fail. In that
-      case, users should use
-      {meth}`coordinax.manifolds.AbstractManifold.realize_cartesian` with an
-      appropriate embedded manifold chart or construct a
-      {class}`coordinax.manifolds.EmbeddedChart` which provides a custom
-      realization map.
-
-    Raises
-    ------
-    Exception
-        If no point transition rule exists from this chart to
-        ``self.cartesian`` (e.g. for charts requiring embedding parameters).
-
-    Examples
-    --------
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    Spherical to ambient Cartesian:
-
-    >>> at = {"r": u.Q(2.0, "m"), "theta": u.Q(1.5707963, "rad"),
-    ...       "phi": u.Q(0.0, "rad")}
-    >>> cxc.sph3d.realize_cartesian(at)
-    {'x': Q(2., 'm'), 'y': Q(0., 'm'), 'z': Q(5...e-08, 'm')}
-
-    Cartesian to Cartesian is the identity:
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
-    >>> cxc.cart3d.realize_cartesian(at)
-    {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
-
-    """
-    del args, kwargs  # Unused in abstract method
-    raise NotImplementedError  # pragma: no cover
-
-
-@plum.dispatch.abstract
-def unrealize_cartesian(*args: Any, **kwargs: Any) -> Any:
-    """Invert the ambient Cartesian realization on the chart domain.
-
-    This method applies the inverse of the chart's ambient realization map
-    (when defined) to convert point-role coordinates in ``self.cartesian``
-    to point-role coordinates in this chart.
-
-    - This is **point-role only**.
-    - The inverse map may be undefined or multi-valued globally; this method
-        represents the inverse only on the chart's intended domain.
-    - For charts whose realization depends on additional geometric data
-        (e.g. embedding parameters), the corresponding transition rule from
-        ``self.cartesian`` may be unregistered and this method will fail. In
-        that case, users should use
-        `coordinax.manifolds.AbstractManifold.realize_cartesian` with an
-        appropriate embedded manifold chart or construct a
-        `coordinax.manifolds.EmbeddedChart` which provides a custom
-        realization map.
-
-    Raises
-    ------
-    Exception
-        If no point transition rule exists from ``self.cartesian`` to this
-        chart.
-
-    Examples
-    --------
-    >>> import coordinax.charts as cxc
-    >>> import unxt as u
-
-    Cartesian point back to spherical:
-
-    >>> cart_pt = {"x": u.Q(0.0, "m"), "y": u.Q(2.0, "m"),
-    ...           "z": u.Q(0.0, "m")}
-    >>> cxc.sph3d.unrealize_cartesian(cart_pt)
-    {'r': Q(2., 'm'), 'theta': Q(1.57079633, 'rad'), 'phi': Q(1.57079633, 'rad')}
-
-    Cartesian to Cartesian is the identity:
-
-    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"),
-    ...       "z": u.Q(3.0, "m")}
-    >>> cxc.cart3d.unrealize_cartesian(at)
-    {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
     """
     del args, kwargs  # Unused in abstract method

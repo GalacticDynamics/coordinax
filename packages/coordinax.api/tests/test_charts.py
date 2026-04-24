@@ -15,18 +15,6 @@ def test_pt_map() -> None:
     assert len(cxcapi.pt_map.methods) > 0
 
 
-def test_realize_cartesian() -> None:
-    """Test that realize_cartesian can be dispatched on."""
-
-    assert len(cxcapi.realize_cartesian.methods) > 0
-
-
-def test_unrealize_cartesian() -> None:
-    """Test that unrealize_cartesian can be dispatched on."""
-
-    assert len(cxcapi.unrealize_cartesian.methods) > 0
-
-
 def test_guess_chart() -> None:
     """Test that guess_chart can be dispatched on."""
 
