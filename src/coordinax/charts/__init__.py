@@ -70,7 +70,7 @@ systems.
 
 We can also compute the Jacobian of the point map:
 
->>> jac = cxc.jacobian_pt_map(q, cxc.cart3d, cxc.sph3d)
+>>> jac = cxc.jac_pt_map(q, cxc.cart3d, cxc.sph3d)
 
 """
 
@@ -85,7 +85,7 @@ __all__ = (
     "cartesian_chart",
     "guess_chart",
     "cdict",
-    "jacobian_pt_map",
+    "jac_pt_map",
     "pt_map",
     # ===========================================
     # R^n
@@ -205,7 +205,7 @@ with install_import_hook("coordinax.charts"):
         cart3d,
         cartnd,
         cyl3d,
-        jacobian_pt_map,
+        jac_pt_map,
         loncoslat_sph2,
         loncoslat_sph3d,
         lonlat_sph2,

@@ -1,8 +1,8 @@
-"""Usage tests for ``jacobian_pt_map`` in ``coordinax.charts``.
+"""Usage tests for ``jac_pt_map`` in ``coordinax.charts``.
 
 Key behavioural contracts verified here:
 
-* **Curried-form workflow**: ``jacobian_pt_map(from_chart, to_chart, usys=si)``
+* **Curried-form workflow**: ``jac_pt_map(from_chart, to_chart, usys=si)``
   returns a callable that can be reused across many base points and produces
   the same result as the direct call.
 * **JIT compatibility**: the curried form can be wrapped in ``jax.jit`` and
@@ -56,20 +56,20 @@ def _assert_jacobian_approx(
 
 
 class TestCurriedWorkflow:
-    """Test The curried form ``jac_fn = jacobian_pt_map(from, to, usys=si)``."""
+    """Test the curried form ``jac_fn = jac_pt_map(from, to, usys=si)``."""
 
     def test_curried_matches_direct_cart3d_sph3d(self) -> None:
         """Curried Jacobian matches direct call for Cart3D→Sph3D."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        jac_fn = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        jac_fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         _assert_jacobian_approx(
             jac_fn(at),
-            cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d),
+            cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d),
         )
 
     def test_curried_reuse_across_points(self) -> None:
         """A single curried function can be called at multiple base points."""
-        jac_fn = cxc.jacobian_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
+        jac_fn = cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
         for x, y in [(1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]:
             at = {"x": u.Q(x, "m"), "y": u.Q(y, "m")}
             J = jac_fn(at)
@@ -79,10 +79,10 @@ class TestCurriedWorkflow:
     def test_none_partial_matches_direct(self) -> None:
         """None-partial form also matches the direct call."""
         at = {"x": u.Q(3.0, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
-        fn = cxc.jacobian_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        fn = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
         _assert_jacobian_approx(
             fn(at),
-            cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d),
+            cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d),
         )
 
 
@@ -92,14 +92,12 @@ class TestCurriedWorkflow:
 
 
 class TestJITCompatibility:
-    """jacobian_pt_map must work inside jax.jit via the curried form."""
+    """jac_pt_map must work inside jax.jit via the curried form."""
 
     def test_jit_curried_cart3d_sph3d(self) -> None:
         """JIT the curried form and verify the result."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        jac_fn = jax.jit(
-            cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
-        )
+        jac_fn = jax.jit(cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si))
         J = jac_fn(at)
         assert isinstance(J, QuantityMatrix)
         assert J.value.shape == (3, 3)
@@ -109,9 +107,7 @@ class TestJITCompatibility:
     def test_jit_curried_cart2d_polar2d(self) -> None:
         """JIT the curried form for Cart2D→Polar2D."""
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
-        jac_fn = jax.jit(
-            cxc.jacobian_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
-        )
+        jac_fn = jax.jit(cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si))
         J = jac_fn(at)
         np.testing.assert_allclose(J.value, jnp.eye(2), atol=1e-6)
 
@@ -121,7 +117,7 @@ class TestJITCompatibility:
 
         @jax.jit
         def jitted(at):
-            return cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+            return cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
 
         J = jitted(at)
         assert isinstance(J, QuantityMatrix)
@@ -134,11 +130,11 @@ class TestJITCompatibility:
 
 
 class TestVmapCompatibility:
-    """jacobian_pt_map must work within jax.vmap for batched evaluation."""
+    """jac_pt_map must work within jax.vmap for batched evaluation."""
 
     def test_vmap_cart3d_sph3d(self) -> None:
         """Vmap over a batch of Cart3D→Sph3D base points."""
-        jac_fn = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+        jac_fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
 
         def single(x, y, z):
             return jac_fn({"x": u.Q(x, "m"), "y": u.Q(y, "m"), "z": u.Q(z, "m")})
@@ -151,7 +147,7 @@ class TestVmapCompatibility:
 
     def test_vmap_cart2d_polar2d(self) -> None:
         """Vmap over Cart2D→Polar2D points produces batched (N, 2, 2) Jacobians."""
-        jac_fn = cxc.jacobian_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
+        jac_fn = cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)
 
         def single(x, y):
             return jac_fn({"x": u.Q(x, "m"), "y": u.Q(y, "m")})
@@ -174,8 +170,8 @@ class TestChainRuleViaCurriedForm:
 
     def _check_composition_identity(self, c1, c2, at_c1, *, atol=1e-5):
         at_c2 = cxc.pt_map(at_c1, c1, c2)
-        jac_fwd = cxc.jacobian_pt_map(c1, c2, usys=u.unitsystems.si)
-        jac_inv = cxc.jacobian_pt_map(c2, c1, usys=u.unitsystems.si)
+        jac_fwd = cxc.jac_pt_map(c1, c2, usys=u.unitsystems.si)
+        jac_inv = cxc.jac_pt_map(c2, c1, usys=u.unitsystems.si)
         J_fwd = jac_fwd(at_c1)
         J_inv = jac_inv(at_c2)
         result = qnp.matmul(J_inv, J_fwd)

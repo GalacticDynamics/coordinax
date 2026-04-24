@@ -11,7 +11,7 @@ from .d3 import *
 from .d6 import *
 from .dn import *
 from .exceptions import *
-from .jacobian_pt_map import *
+from .jacobian import *
 from .product import *
 from .register_cdict import *
 from .register_guess import *

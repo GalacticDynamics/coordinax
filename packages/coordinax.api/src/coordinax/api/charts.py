@@ -3,7 +3,7 @@
 __all__ = (
     "cartesian_chart",
     "pt_map",
-    "jacobian_pt_map",
+    "jac_pt_map",
     # Data
     "cdict",
     "guess_chart",
@@ -233,14 +233,14 @@ def pt_map(*args: Any, **kwargs: Any) -> CDict:
 
 
 @plum.dispatch.abstract
-def jacobian_pt_map(*args: Any, **kwargs: Any) -> Any:
+def jac_pt_map(*args: Any, **kwargs: Any) -> Any:
     """Compute the Jacobian of the chart transition map at a base point.
 
     Examples
     --------
     >>> import coordinax.charts as cxc
     >>> import unxt as u
-    >>> J = cxc.jacobian_pt_map(
+    >>> J = cxc.jac_pt_map(
     ...     {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
     ...     cxc.cart3d, cxc.sph3d,
     ... )

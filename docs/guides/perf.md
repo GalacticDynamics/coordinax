@@ -375,12 +375,12 @@ jac_pt_map_fn(at)
 
 There is a small one-time compilation overhead from the coordinax dispatch layer, but the per-call runtime is identical to the raw-JAX baseline.
 
-### `jacobian_pt_map` (idiomatic API)
+### `jac_pt_map` (idiomatic API)
 
-`cxc.jacobian_pt_map(from_chart, to_chart, usys=usys)` is the high-level API. The curried form returns a callable that wraps the full `jacfwd` pipeline, including unit handling. Wrapping it in `jax.jit` gives the same performance:
+`cxc.jac_pt_map(from_chart, to_chart, usys=usys)` is the high-level API. The curried form returns a callable that wraps the full `jacfwd` pipeline, including unit handling. Wrapping it in `jax.jit` gives the same performance:
 
 ```{code-cell} ipython3
-jac_fn = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=usys)
+jac_fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=usys)
 jac_jit = jax.jit(jac_fn)
 
 %time jac_jit(at).block_until_ready()

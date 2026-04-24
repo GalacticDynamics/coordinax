@@ -1,6 +1,6 @@
 r"""Jacobian of the point transition map between coordinate charts.
 
-This module defines ``jacobian_pt_map``, which computes the Jacobian matrix of
+This module defines ``jac_pt_map``, which computes the Jacobian matrix of
 the chart transition map (point-map) between two charts, evaluated at a given
 base point.
 
@@ -28,7 +28,7 @@ Examples
 --------
 >>> import coordinax.charts as cxc
 >>> import unxt as u
->>> J = cxc.jacobian_pt_map(
+>>> J = cxc.jac_pt_map(
 ...     {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
 ...     cxc.cart3d, cxc.sph3d,
 ... )
@@ -37,7 +37,7 @@ Examples
 
 """
 
-__all__ = ("jacobian_pt_map",)
+__all__ = ("jac_pt_map",)
 
 from collections.abc import Callable
 from jaxtyping import Array
@@ -75,7 +75,7 @@ DMLS: u.AbstractUnit = cast("u.AbstractUnit", u.unit(""))
 
 
 @plum.dispatch
-def jacobian_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
+def jac_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     """Higher-order function for fixed-arg Jacobian point map.
 
     Examples
@@ -83,7 +83,7 @@ def jacobian_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
-    >>> map = cxc.jacobian_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+    >>> map = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map(at)
     QuantityMatrix(
@@ -99,14 +99,14 @@ def jacobian_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     (1, 3, 3)
 
     """
-    return lambda at, *args, **kw: cxcapi.jacobian_pt_map(
+    return lambda at, *args, **kw: cxcapi.jac_pt_map(
         at, *fixed_args, *args, **fixed_kw, **kw
     )
 
 
 @plum.dispatch
-def jacobian_pt_map(
-    from_chart: AbstractChart, to_chart: AbstractChart, /, *, usys: u.AbstractUnitSystem
+def jac_pt_map(
+    from_chart: AbstractChart, to_chart: AbstractChart, /, *, usys: OptUSys
 ) -> Callable[[object], Any]:
     """Higher-order function for fixed-arg Jacobian point map.
 
@@ -115,7 +115,7 @@ def jacobian_pt_map(
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
-    >>> map = cxc.jacobian_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+    >>> map = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map(at)
     QuantityMatrix(
@@ -131,7 +131,7 @@ def jacobian_pt_map(
     (1, 3, 3)
 
     """
-    return lambda at: cxcapi.jacobian_pt_map(at, from_chart, to_chart, usys=usys)
+    return lambda at: cxcapi.jac_pt_map(at, from_chart, to_chart, usys=usys)
 
 
 # ===================================================================
@@ -139,7 +139,7 @@ def jacobian_pt_map(
 
 
 @plum.dispatch
-def jacobian_pt_map(
+def jac_pt_map(
     at: Array,
     from_chart: AbstractChart,
     to_chart: AbstractChart,
@@ -179,7 +179,7 @@ def jacobian_pt_map(
     >>> import unxt as u
 
     >>> at = jnp.array([1.0, 0.0, 0.0])
-    >>> jac_fn = cxc.jacobian_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+    >>> jac_fn = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> J = jac_fn(at)
     >>> J
     Array([[ 1.,  0.,  0.],
@@ -220,7 +220,7 @@ def _repack_q_from_jac(jac_qq: QuantityMatrix, /) -> QuantityMatrix:
 
 
 @plum.dispatch
-def jacobian_pt_map(
+def jac_pt_map(
     at: CDict,
     from_chart: AbstractChart,
     to_chart: AbstractChart,
@@ -235,7 +235,7 @@ def jacobian_pt_map(
 
     **Array-valued branch** (no units in any value)
         Stacks the dict values into a plain array via ``jnp.stack``, then
-        forwards to ``jacobian_pt_map(at_arr, from_chart, to_chart, usys=usys)``
+        forwards to ``jac_pt_map(at_arr, from_chart, to_chart, usys=usys)``
         which requires *usys*.  For chart pairs without an analytical
         ``Array`` dispatch this means *usys* must be provided.
 
@@ -271,7 +271,7 @@ def jacobian_pt_map(
     Quantity-valued dict (no usys needed):
 
     >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-    >>> J = cxc.jacobian_pt_map(at, cxc.cart3d, cxc.sph3d)
+    >>> J = cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
     >>> J.value.shape
     (3, 3)
 
@@ -279,7 +279,7 @@ def jacobian_pt_map(
 
     >>> import jax.numpy as jnp
     >>> at_arr = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-    >>> J2 = cxc.jacobian_pt_map(at_arr, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
+    >>> J2 = cxc.jac_pt_map(at_arr, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> J2.shape
     (3, 3)
 
@@ -292,7 +292,7 @@ def jacobian_pt_map(
     # is_array &= not all(dim is None for dim in from_chart.coord_dimensions)
     if is_array:
         at_arr = jnp.stack([at[k] for k in from_chart.components], axis=-1)
-        return cxcapi.jacobian_pt_map(at_arr, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
+        return cxcapi.jac_pt_map(at_arr, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
 
     # It's Quantity-valued.
     # Prepare the Jacobian of the point-map function w.r.t. the base point.
@@ -314,7 +314,7 @@ def jacobian_pt_map(
 
 
 @plum.dispatch
-def jacobian_pt_map(
+def jac_pt_map(
     at: Array, from_chart: Cart2D, to_chart: Polar2D, /, *, usys: OptUSys = None
 ) -> Array:
     r"""Compute the Jacobian of the transition function between two charts.
@@ -329,7 +329,7 @@ def jacobian_pt_map(
     >>> import unxt as u
 
     >>> x = jnp.array([1.0, 1.0])
-    >>> cxc.jacobian_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)(x)
+    >>> cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)(x)
     Array([[ 0.70710678,  0.70710678],
            [-0.5       ,  0.5       ]], dtype=float64)
 
@@ -341,7 +341,7 @@ def jacobian_pt_map(
 
 
 @plum.dispatch
-def jacobian_pt_map(
+def jac_pt_map(
     at: u.AbstractQuantity,
     from_chart: Cart2D,
     to_chart: Polar2D,
@@ -361,7 +361,7 @@ def jacobian_pt_map(
     >>> import unxt as u
 
     >>> x = u.Q(jnp.array([1.0, 1.0]), "m")
-    >>> cxc.jacobian_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)(x)
+    >>> cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)(x)
     QuantityMatrix([[ 0.70710678,  0.70710678],
                     [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
 
