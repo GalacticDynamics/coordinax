@@ -1,6 +1,10 @@
 # cz_gitmoji Type Reference
 
-Full list of available types. Source: `shared/spec.py` in the `cz_gitmoji` package.
+Generated from `shared/spec.py` in the `cz_gitmoji` package.
+
+- Required by pyproject.toml: `>=0.6.1`
+- Locked in uv.lock: `0.7.0`
+- Source package installed for generation: `cz-conventional-gitmoji==0.7.0`
 
 Commit prefix format: `{icon} {type}` (with a space between icon and type).
 

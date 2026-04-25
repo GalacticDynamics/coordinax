@@ -34,6 +34,28 @@ Load this skill when the user says any of:
 
 ## Procedure
 
+### Step 0 — Sync the gitmoji type reference when needed
+
+Use this step when the user asks to refresh the type reference, or before committing if the plugin version may have changed.
+
+1. Check whether the reference is stale:
+
+```bash
+uv run --group dev python .github/skills/gitmoji-commit/scripts/update_types_reference.py --check
+```
+
+2. If the check reports stale output, regenerate the reference file and version metadata:
+
+```bash
+uv run --group dev python .github/skills/gitmoji-commit/scripts/update_types_reference.py --write
+```
+
+3. This update process keeps [the full type reference](./references/types.md) aligned with:
+
+- `dependency-groups.dev` in `pyproject.toml` (required specifier)
+- `uv.lock` (locked concrete version)
+- the installed `cz-conventional-gitmoji` metadata used to generate the table
+
 ### Step 1 — Inspect staged changes
 
 Run both commands to understand what's staged:
