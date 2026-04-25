@@ -41,7 +41,7 @@ __all__ = ("jac_pt_map",)
 
 from collections.abc import Callable
 from jaxtyping import Array
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import jax
 import jax.numpy as jnp
@@ -59,10 +59,11 @@ from coordinax.internal import (
     QuantityMatrix,
     UnitsMatrix,
     pack_to_qmatrix,
+    tree_cast_int_bool_to_float,
 )
 from coordinax.internal.custom_types import OptUSys
 
-DMLS: u.AbstractUnit = cast("u.AbstractUnit", u.unit(""))
+DMLS: Final[u.AbstractUnit] = cast("u.AbstractUnit", u.unit(""))
 
 
 # ===================================================================
@@ -153,35 +154,16 @@ def jac_pt_map(
     coordinates expressed. Returns the JAX array Jacobian $J^j{}_i = \partial
     \tau^j / \partial q^i$, without unit annotation.
 
-    Parameters
-    ----------
-    at
-        Base point in ``from_chart`` coordinates, shape ``(n_in,)``.  Each
-        element should be in the ``usys`` unit for the corresponding coordinate
-        dimension.
-    from_chart
-        Source coordinate chart.
-    to_chart
-        Target coordinate chart.
-    usys
-        Unit system used to build the point-map function via ``pt_map(None,
-        from_chart, to_chart, usys=usys)``.  **Required.**
-
-    Returns
-    -------
-    Array
-        Jacobian array of shape ``(n_out, n_in)``.
-
     Examples
     --------
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
-    >>> at = jnp.array([1.0, 0.0, 0.0])
     >>> jac_fn = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
-    >>> J = jac_fn(at)
-    >>> J
+
+    >>> at = jnp.array([1, 0, 0])
+    >>> jac_fn(at)
     Array([[ 1.,  0.,  0.],
            [-0., -0., -1.],
            [ 0.,  1.,  0.]], dtype=float64)
@@ -192,6 +174,9 @@ def jac_pt_map(
     (1, 3, 3)
 
     """
+    # jacfwd requires real floating inputs; promote only integer/bool.
+    at = tree_cast_int_bool_to_float(jnp.asarray(at))
+
     # Prepare the Jacobian of the point-map function w.r.t. the base point.
     # Close over the args/kwargs to construct the point-map function once.
     pt_map_fn = cxcapi.pt_map(None, from_chart, to_chart, usys=usys)
@@ -241,8 +226,11 @@ def jac_pt_map(
 
     **Quantity-valued branch** (at least one value carries a unit)
         Packs *at* into a 1-D ``QuantityMatrix`` via
-        ``pack_to_qmatrix(at, keys=from_chart.components)``, casts to
-        ``float``, then computes ``J_qq = jax.jacfwd(pt_map_fn)(at_in)``.
+        ``pack_to_qmatrix(at, keys=from_chart.components)``, promotes any
+        integer or boolean leaves to the default floating-point dtype (other
+        dtypes, including complex, are left unchanged and will raise a
+        ``TypeError`` from ``jax.jacfwd`` if passed), then computes
+        ``J_qq = jax.jacfwd(pt_map_fn)(at_in)``.
         Because ``jacfwd`` applied to a ``QuantityMatrix``-in /
         ``QuantityMatrix``-out function yields a nested ``QuantityMatrix``,
         ``_repack_q_from_jac`` is called to extract the correct 2-D unit
@@ -302,7 +290,7 @@ def jac_pt_map(
 
     # Pack the input CDict to a QMatrix
     at_in = pack_to_qmatrix(at, keys=from_chart.components)
-    at_in = at_in.astype(float)
+    at_in = tree_cast_int_bool_to_float(at_in)
 
     # Compute Jacobian as QMatrix
     J_qq = jac_pt_map_fn(at_in)
