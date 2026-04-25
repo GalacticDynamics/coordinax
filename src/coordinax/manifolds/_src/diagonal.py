@@ -17,13 +17,12 @@ class AbstractDiagonalMetric(AbstractMetric):
 
     A metric is **diagonal** (equivalently, the coordinate chart is an
     **orthogonal coordinate system**) when all off-diagonal entries of the
-    metric matrix vanish at every base point:
+    metric matrix vanish at every base point in every compatible chart:
 
     $$g_{ij}(p) = 0 \quad \text{for } i \neq j.$$
 
     The coordinate basis vectors $\partial/\partial q^i$ are then mutually
-    orthogonal. The diagonal entries $g_{ii}(p)$ give the squared scale
-    factors
+    orthogonal. The diagonal entries $g_{ii}(p)$ give the squared scale factors
 
     $$h_i(p)^2 = g_{ii}(p),$$
 
@@ -31,43 +30,50 @@ class AbstractDiagonalMetric(AbstractMetric):
 
     $$ds^2 = \sum_i g_{ii}(q)\,(dq^i)^2.$$
 
-    This class is a **structural marker**: it adds no new abstract methods
-    beyond those of `AbstractMetric`, but declares that ``metric_matrix``
-    **must** return a diagonal matrix (all off-diagonal entries zero) at every
-    valid base point. This structural guarantee allows dispatch-level
-    specialisations — for example computing ``scale_factors`` directly from
-    the diagonal without constructing the full $n \times n$ matrix.
+    **Role: structural marker, not behavioral interface.**
+
+    This class adds no new abstract methods beyond those of `AbstractMetric`.
+    Its purpose is to declare that ``metric_matrix`` **must** return a diagonal
+    matrix at every valid base point in every compatible chart.
+
+    This structural guarantee enables type-level dispatch specialisation, for
+    example:
+
+    - computing ``scale_factors`` from diagonal entries directly,
+    - extracting only ``diag(g)`` instead of inspecting a full matrix, and
+    - using squared Jacobian column norms instead of forming full
+        $J^\top J$ when a diagonal form is known a priori.
 
     Notes
     -----
     Subclasses must implement the two abstract members inherited from
     `AbstractMetric`:
 
-    - ``signature`` (property): a tuple of $\pm 1$ of length ``ndim``
-      encoding the metric signature. Positive entries denote Riemannian
-      (space-like) directions; a single ``-1`` entry denotes a time-like
-      direction (Lorentzian signature).
+    - ``signature`` (property): a tuple of $\pm 1$ of length ``ndim`` encoding
+      the metric signature. Positive entries denote Riemannian (space-like)
+      directions; a single ``-1`` entry denotes a time-like direction
+      (Lorentzian signature).
     - ``metric_matrix(chart, /, *, at, usys=None)`` (method): must return a
-      diagonal ``QuantityMatrix`` (or plain ``Array``) of shape
-      ``(ndim, ndim)`` with all off-diagonal entries numerically zero
-      (within floating-point tolerance, i.e. ``jnp.allclose`` to zero).
+      diagonal ``QuantityMatrix`` (or plain ``Array``) of shape ``(ndim, ndim)``
+      with all off-diagonal entries numerically zero (within floating-point
+      tolerance, i.e. ``jnp.allclose`` to zero).
 
     Concrete subclasses must be immutable frozen dataclasses and registered as
     static JAX PyTree nodes via ``@jax.tree_util.register_static``.
 
     `AbstractMetric.is_diagonal` inspects the matrix at a **specific base
-    point** and returns a ``bool``. ``AbstractDiagonalMetric`` makes this an
-    unconditional **structural promise** across all base points: instances are
-    always diagonal regardless of the chart or base point.
+    point** and returns a ``bool`` Array. ``AbstractDiagonalMetric`` makes this
+    an unconditional **structural promise** across all base points: instances
+    are always diagonal regardless of the chart or base point.
 
     See Also
     --------
     EuclideanMetric : flat Riemannian metric on $\mathbb{R}^n$; in Cartesian
-        charts $g = I_n$; in orthogonal curvilinear charts computed by
-        Jacobian pullback $g = J^\top J$.
+        charts $g = I_n$; in orthogonal curvilinear charts computed by Jacobian
+        pullback $g = J^\top J$.
     HyperSphericalMetric : round metric on $S^{n-1}$ in the intrinsic
-        hyperspherical chart; diagonal entries follow the cumulative-sine
-        rule $g_{kk} = \prod_{j < k} \sin^2\!\theta_j$.
+        hyperspherical chart; diagonal entries follow the cumulative-sine rule
+        $g_{kk} = \prod_{j < k} \sin^2\!\theta_j$.
     MinkowskiMetric : Lorentzian pseudo-Riemannian metric
         $\eta = \operatorname{diag}(-1, 1, 1, 1)$ on Minkowski spacetime;
         diagonal in the canonical Cartesian spacetime chart.
@@ -104,25 +110,11 @@ class AbstractDiagonalMetric(AbstractMetric):
     def is_diagonal(
         self, chart: cxc.AbstractChart[Any, Any], /, *, at: CDict, usys: OptUSys = None
     ) -> Bool[Array, ""]:
-        r"""Return ``True`` if the metric matrix is diagonal at base point ``at``.
+        r"""Return ``True`` as a structural guarantee of diagonality.
 
-        A metric is diagonal when all off-diagonal entries $g_{ij}$ with
-        $i \neq j$ are numerically zero (within floating-point tolerance),
-        i.e. the coordinate basis is orthogonal at ``at``.
-
-        Parameters
-        ----------
-        chart : AbstractChart
-            The coordinate chart in which to evaluate the metric.
-        at : CDict
-            Base point at which to check the metric matrix.
-        usys : OptUSys, optional
-            Unit system for the evaluation.
-
-        Returns
-        -------
-        bool
-            ``True`` if all off-diagonal metric components vanish.
+        For ``AbstractDiagonalMetric`` the metric is diagonal by type-level
+        contract, so this method is unconditional and does not inspect
+        ``metric_matrix``.
 
         Examples
         --------
