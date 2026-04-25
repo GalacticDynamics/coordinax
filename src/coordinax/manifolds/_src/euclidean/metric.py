@@ -33,6 +33,11 @@ class EuclideanMetric(AbstractDiagonalMetric):
     where $J = \partial x / \partial q$ is the Jacobian of the chart-to-Cartesian
     transition map.
 
+    This pullback is diagonal precisely for orthogonal coordinate charts.
+    `EuclideanMetric` is treated as ``AbstractDiagonalMetric`` on that
+    orthogonal chart domain; atlas chart compatibility alone does not imply
+    orthogonality.
+
     Parameters
     ----------
     ndim : int
@@ -75,7 +80,8 @@ class EuclideanMetric(AbstractDiagonalMetric):
 
         For Cartesian charts, returns the identity matrix directly.
         For other charts, compute ``J^T J`` where ``J`` is the Jacobian of
-        the curvilinear-to-Cartesian transition.
+        the curvilinear-to-Cartesian transition. This is diagonal exactly when
+        the chart is orthogonal.
 
         """
         # Try to get the canonical Cartesian chart for this manifold

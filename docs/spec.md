@@ -2358,14 +2358,14 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Methods:**
 
     - `scale_factors(chart, /, *, at, usys=None)`: convenience wrapper around [`cxm.scale_factors`](#software-spec-scale-factors). Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`.
-    - `is_diagonal(chart, /, *, at, usys=None) -> Bool[Array, ""]`: returns `True` if all off-diagonal entries of the metric matrix vanish at `at`, checked numerically via `jnp.allclose`. This is a **point-specific, numerical** check. For a **structural, global** guarantee that the metric is diagonal at every base point use `isinstance(metric, AbstractDiagonalMetric)`.
+    - `is_diagonal(chart, /, *, at, usys=None) -> Bool[Array, ""]`: returns `True` if all off-diagonal entries of the metric matrix vanish at `at`, checked numerically via `jnp.allclose`. This is a **point-specific, numerical** check. For a **structural, global** guarantee on a metric's diagonal chart domain (typically orthogonal charts), use `isinstance(metric, AbstractDiagonalMetric)`.
     - `cholesky(chart, /, *, at, usys=None) -> QuantityMatrix | Array`: returns the lower-triangular Cholesky factor $L$ satisfying $g = L\,L^\top$. The vielbein is $E = L^\top$; see [Diagonal metrics and orthogonal coordinate systems](#diagonal-metrics-and-orthogonal-coordinate-systems) for the relationship to physical-basis components. Returns a `QuantityMatrix` when the metric matrix carries units, otherwise a plain `Array`. Element $L_{ij}$ carries unit $\sqrt{u_{ij}}$ where $u_{ij}$ is the unit of $g_{ij}$.
 
 (software-spec-abstractdiagonalmetric)=
 
 !!! info `AbstractDiagonalMetric`
 
-    `AbstractDiagonalMetric` is a **structural marker** subclass of `AbstractMetric` for metrics whose matrix is diagonal at **every** base point.
+    `AbstractDiagonalMetric` is a **structural marker** subclass of `AbstractMetric` for metrics whose matrix is diagonal at **every** base point on their diagonal chart domain.
 
     A metric is diagonal when all off-diagonal entries vanish globally:
 
@@ -2375,7 +2375,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     The coordinate basis is orthogonal everywhere, and the diagonal entries are the squared scale factors $h_i^2 = g_{ii}$. See [Diagonal metrics and orthogonal coordinate systems](#diagonal-metrics-and-orthogonal-coordinate-systems) for the mathematical background.
 
-    **Structural guarantee vs. point check.** `AbstractDiagonalMetric` makes a **global, type-level** promise: the metric is diagonal at every valid base point regardless of chart or coordinate values. This is strictly stronger than the point-wise `is_diagonal()` test on `AbstractMetric`, which inspects the matrix numerically at a specific `at`. Consequently, `AbstractDiagonalMetric.is_diagonal()` **unconditionally returns `True`** without evaluating the metric matrix.
+    **Structural guarantee vs. point check.** `AbstractDiagonalMetric` makes a **global, type-level** promise on the metric's diagonal chart domain (typically orthogonal charts): the metric is diagonal at every valid base point. This is strictly stronger than the point-wise `is_diagonal()` test on `AbstractMetric`, which inspects the matrix numerically at a specific `at`. Consequently, `AbstractDiagonalMetric.is_diagonal()` **unconditionally returns `True`** without evaluating the metric matrix.
+
+    **Atlas compatibility vs. diagonality.** Atlas/manifold chart compatibility (`has_chart`) is a broader structural criterion and does not by itself imply orthogonality or diagonal metric form.
 
     **No new abstract members.** `AbstractDiagonalMetric` inherits the full `AbstractMetric` interface and adds no new abstract methods. Subclasses must still implement:
 
@@ -2548,6 +2550,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - `metric_matrix(chart, /, *, at, usys=None)` returns a `QuantityMatrix`.
     - For Cartesian charts, `metric_matrix` returns a dimensionless identity matrix of shape `(ndim, ndim)`.
     - For compatible non-Cartesian charts, `metric_matrix` is computed as `J^T J`, where `J = jac_pt_map(at, chart, chart.cartesian, usys=usys)`.
+    - This pullback is diagonal exactly for orthogonal charts. Therefore the `AbstractDiagonalMetric` interpretation of `EuclideanMetric` is scoped to that orthogonal chart domain; atlas compatibility alone does not guarantee diagonality.
     - If a chart has no global Cartesian sibling, the current implementation falls back to a dimensionless identity matrix.
 
     **Example**
