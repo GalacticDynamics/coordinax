@@ -116,6 +116,7 @@ def cconvert(
     to_rep: Representation,
     /,
     *,
+    at: CDict | None = None,
     usys: OptUSys = None,
 ) -> Any:
     r"""Convert point data between charts.
@@ -195,6 +196,7 @@ def cconvert(
         to_rep.geom_kind,
         to_rep,
         # extra
+        **({"at": at} if at is not None else {}),
         usys=usys,
     )
 
@@ -209,6 +211,7 @@ def cconvert(
     to_chart: cxc.AbstractChart,
     /,
     *,
+    at: CDict | None = None,
     usys: OptUSys = None,
 ) -> Any:
     r"""Convert point data between charts.
@@ -254,12 +257,13 @@ def cconvert(
         from_rep.geom_kind,
         from_rep,
         # extra
+        **({"at": at} if at is not None else {}),
         usys=usys,
     )
 
 
 # =======================================================================
-# Point dispatches
+# Geometry-specific dispatches
 
 
 @plum.dispatch
@@ -284,7 +288,6 @@ def cconvert(
     canonical point data:
 
     $$(\mathrm{PointGeometry},\, \mathrm{NoBasis},\, \mathrm{Location}).$$
-
 
     Examples
     --------

@@ -21,6 +21,7 @@ This is separate from charts and manifolds:
 ```pycon
 >>> import coordinax.charts as cxc
 >>> import coordinax.representations as cxr
+>>> import unxt as u
 
 >>> # Canonical point representation.
 >>> rep = cxr.point
@@ -79,6 +80,8 @@ For point data, `cconvert` dispatches through chart-level point conversion laws.
 
 - `AbstractBasis`: base class for basis descriptors
 - `NoBasis` / `no_basis`: basis kind used for affine point data
+- `CoordinateBasis` / `coord_basis`: coordinate-basis tangent components
+- `PhysicalBasis` / `phys_basis`: physical-basis tangent components
 
 ## Semantic Kind
 

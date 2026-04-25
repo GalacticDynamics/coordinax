@@ -5,6 +5,9 @@ __all__ = (
     # Point
     "PointGeometry",
     "point_geom",
+    # Tangent
+    "TangentGeometry",
+    "tangent_geom",
 )
 
 
@@ -181,3 +184,50 @@ class PointGeometry(AbstractGeometry):
 
 point_geom = PointGeometry()
 """Point geometric kind instance."""
+
+
+@final
+@jtu.register_static
+@dataclasses.dataclass(frozen=True, slots=True)
+class TangentGeometry(AbstractGeometry):
+    r"""Tangent-vector geometric kind.
+
+    A tangent geometry indicates that component data should be interpreted as
+    the components of a **tangent vector** at a point on a manifold, rather than
+    as coordinates of a point.
+
+    Mathematical Definition:
+
+    Let $M$ be a smooth manifold and $p \in M$ a point. A tangent vector is an
+    element $v \in T_p M$ of the tangent space at $p$.
+
+    Tangent data is **linear**: tangent vectors form a vector space, so adding
+    two tangent vectors at the same point is geometrically well-defined. Under a
+    change of chart, tangent vector components transform by the Jacobian
+    (pushforward) of the chart transition map.
+
+    Examples
+    --------
+    Construct the tangent geometry object directly:
+
+    >>> import coordinax.representations as cxr
+    >>> geom = cxr.TangentGeometry()
+
+    Use it inside a full representation for tangent data:
+
+    >>> rep = cxr.Representation(geom, cxr.coord_basis, cxr.dpl)
+
+    Notes
+    -----
+    This is a static dispatch object and carries no runtime numerical data.
+    `TangentGeometry` describes only the geometric kind. The chart still
+    determines the coordinate system, component names, and coordinate domains.
+
+    """
+
+    canonical_name: ClassVar = "tangent_geom"
+    """Canonical name for the tangent geometry kind."""
+
+
+tangent_geom = TangentGeometry()
+"""Tangent geometric kind instance."""

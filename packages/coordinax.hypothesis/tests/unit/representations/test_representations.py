@@ -21,6 +21,12 @@ def test_valid_basis_classes_for_point_geometry() -> None:
     assert classes == (cxr.NoBasis,)
 
 
+def test_valid_basis_classes_for_tangent_geometry() -> None:
+    """Tangent geometry allows only AbstractLinearBasis subclasses."""
+    classes = cxst.valid_basis_classes_for_geometry(cxr.TangentGeometry())
+    assert set(classes) == {cxr.CoordinateBasis, cxr.PhysicalBasis}
+
+
 def test_valid_basis_classes_for_generic_geometry_returns_all_concrete() -> None:
     """Generic AbstractGeometry fallback returns all concrete basis classes."""
     all_bases = get_all_subclasses(cxr.AbstractBasis, exclude_abstract=True)
@@ -41,6 +47,12 @@ def test_valid_semantic_classes_for_point_geometry() -> None:
     """Point geometry allows only Location."""
     classes = cxst.valid_semantic_classes_for_geometry(cxr.PointGeometry())
     assert classes == (cxr.Location,)
+
+
+def test_valid_semantic_classes_for_tangent_geometry() -> None:
+    """Tangent geometry allows only AbstractTangentSemanticKind subclasses."""
+    classes = cxst.valid_semantic_classes_for_geometry(cxr.TangentGeometry())
+    assert set(classes) == {cxr.Displacement, cxr.Velocity, cxr.Acceleration}
 
 
 def test_valid_semantic_classes_for_generic_geometry_returns_all_concrete() -> None:
@@ -79,12 +91,20 @@ class TestRepresentations:
         """Explicitly provided geom_kind is used."""
         assert isinstance(rep.geom_kind, cxr.PointGeometry)
 
-    @given(rep=cxsr.representations(basis_kind=cxr.NoBasis()))
+    @given(
+        rep=cxsr.representations(
+            geom_kind=cxr.PointGeometry(), basis_kind=cxr.NoBasis()
+        )
+    )
     def test_explicit_basis_kind_is_preserved(self, rep: cxr.Representation) -> None:
         """Explicitly provided basis_kind is used."""
         assert isinstance(rep.basis, cxr.NoBasis)
 
-    @given(rep=cxsr.representations(semantic_kind=cxr.Location()))
+    @given(
+        rep=cxsr.representations(
+            geom_kind=cxr.PointGeometry(), semantic_kind=cxr.Location()
+        )
+    )
     def test_explicit_semantic_kind_is_preserved(self, rep: cxr.Representation) -> None:
         """Explicitly provided semantic_kind is used."""
         assert isinstance(rep.semantic_kind, cxr.Location)
@@ -121,6 +141,7 @@ class TestRepresentations:
 
     @given(
         rep=cxsr.representations(
+            geom_kind=st.just(cxr.PointGeometry()),
             basis_kind=st.just(cxr.NoBasis()),
         )
     )
@@ -130,6 +151,7 @@ class TestRepresentations:
 
     @given(
         rep=cxsr.representations(
+            geom_kind=st.just(cxr.PointGeometry()),
             semantic_kind=st.just(cxr.Location()),
         )
     )
@@ -188,6 +210,15 @@ class TestRepresentations:
         # With check_valid=False the strategy draws from all available kinds,
         # so we just check the result has the expected geom.
         assert isinstance(rep.geom_kind, cxr.PointGeometry)
+
+    @given(rep=cxsr.representations(geom_kind=cxr.TangentGeometry()))
+    def test_tangent_geometry_auto_restricts_basis_and_semantic(
+        self, rep: cxr.Representation
+    ) -> None:
+        """TangentGeometry with check_valid=True restricts basis/semantic."""
+        assert isinstance(rep.geom_kind, cxr.TangentGeometry)
+        assert isinstance(rep.basis, cxr.AbstractLinearBasis)
+        assert isinstance(rep.semantic_kind, cxr.AbstractTangentSemanticKind)
 
     def test_also_accessible_via_main(self) -> None:
         """representations is re-exported from coordinax.hypothesis.main."""
