@@ -24,6 +24,12 @@ Contents:
     Pack dict-of-quantities into an array, converting all entries to
     a common unit.
 
+- ``tree_cast_int_bool_to_float``
+    Tree-map over a PyTree, promoting integer and boolean leaves to the
+    default floating-point dtype (``jax.dtypes.canonicalize_dtype(jnp.float_)``).
+    Existing float and complex leaves are left unchanged.  Useful for
+    satisfying ``jax.jacfwd``'s requirement of real-floating inputs.
+
 - ``structured``
     Decorator for transparent argument and return value processing.
     This helps pushing the logic for packing/unpacking inside a JIT.
@@ -33,6 +39,7 @@ Contents:
 __all__ = (
     "QuantityMatrix",
     "UnitsMatrix",
+    "tree_cast_int_bool_to_float",
     "pack_uniform_unit",
     "cdict_units",
     "pack_nonuniform_unit",
@@ -43,6 +50,7 @@ __all__ = (
 from ._setup_package import install_import_hook
 
 with install_import_hook("coordinax.internal"):
+    from coordinax.internal._dtype_utils import tree_cast_int_bool_to_float
     from coordinax.internal._pack_utils import (
         pack_nonuniform_unit,
         pack_to_qmatrix,
