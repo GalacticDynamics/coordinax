@@ -5,17 +5,24 @@ __all__ = ()
 import inspect
 
 from jaxtyping import ArrayLike
-from typing import Any, Final, TypeVar, cast
+from typing import Any, Final, overload
 
 import unxt as u
-from unxt.quantity import BareQuantity
+from unxt.quantity import AllowValue, BareQuantity
 
-V = TypeVar("V", bound=u.AbstractQuantity | ArrayLike)
+from coordinax.internal.custom_types import OptUSys
+
 RAD: Final = u.unit("rad")
 ANGLE: Final = u.dimension("angle")
+UNTLS: Final = u.unit("")
+DMLS: Final = u.dimension_of(UNTLS)
 
 
-def uconvert_to_rad(value: V, usys: u.AbstractUnitSystem | None, /) -> V:
+@overload
+def uconvert_to_rad(value: ArrayLike, usys: OptUSys, /) -> ArrayLike: ...
+@overload
+def uconvert_to_rad(value: u.AbstractQuantity, usys: OptUSys, /) -> BareQuantity: ...
+def uconvert_to_rad(value: Any, usys: OptUSys, /) -> Any:
     """Convert an angle value to radians, handling no-usys case.
 
     Examples
@@ -46,14 +53,28 @@ def uconvert_to_rad(value: V, usys: u.AbstractUnitSystem | None, /) -> V:
     >>> bool(jnp.allclose(uconvert_to_rad(90.0, usys), jnp.pi / 2))
     True
 
+    Non-angle, non-dimensionless quantities are rejected:
+
+    >>> uconvert_to_rad(u.Q(1, "m"), None)
+    Traceback (most recent call last):
+        ...
+    ValueError: Unsupported quantity dimension for angle conversion: length
+
     """
     from_unit = RAD if usys is None else usys["angle"]
-    is_qty = isinstance(value, u.AbstractQuantity)
-    source_unit = (
-        u.unit_of(value) if is_qty and u.dimension_of(value) == ANGLE else from_unit
-    )
-    raw = u.uconvert_value(RAD, source_unit, value.value if is_qty else value)  # ty: ignore[possibly-missing-attribute]
-    return cast("V", BareQuantity(raw, unit=RAD) if is_qty else raw)
+    unit = u.unit_of(value)
+    source_unit = from_unit
+
+    if unit is not None:
+        dim = u.dimension_of(unit)
+        if dim == ANGLE:
+            source_unit = unit
+        elif dim != DMLS:
+            msg = f"Unsupported quantity dimension for angle conversion: {dim}"
+            raise ValueError(msg)
+
+    raw_rad = u.uconvert_value(RAD, source_unit, u.ustrip(AllowValue, value))
+    return BareQuantity(raw_rad, unit=RAD) if unit is not None else raw_rad
 
 
 def is_abstract_class(cls: type, /) -> bool:
