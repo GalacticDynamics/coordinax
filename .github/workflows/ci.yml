@@ -44,18 +44,15 @@ jobs:
       python-all: ${{ steps.matrix.outputs.python-all }}
       python-edge: ${{ steps.matrix.outputs.python-edge }}
     steps:
-      - name: Install uv
-        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v6
-
       - name: Compute matrix versions
         id: matrix
         run: |
-          uv run python - <<'PY'
+          python - <<'PY'
           import json
           import os
 
           versions = json.loads(os.environ["PYTHON_VERSIONS"])
-          edge_versions = [versions[0], versions[-1]]
+          edge_versions = list(dict.fromkeys([versions[0], versions[-1]]))
 
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as f:
               f.write(f"python-all={json.dumps(versions)}\n")
