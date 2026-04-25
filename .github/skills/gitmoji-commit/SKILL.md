@@ -25,6 +25,14 @@ Load this skill when the user says any of:
 {body}
 ```
 
+Or, when scope is omitted:
+
+```
+{icon} {type}: {subject}
+
+{body}
+```
+
 **Example:** `✨ feat(distances): add parallax-to-distance conversion`
 
 - Scope is optional. Omit parentheses if no clear module scope.
@@ -105,13 +113,22 @@ Use [the full type reference](./references/types.md) to pick the most specific t
 
 Construct:
 
-- **Subject line**: `{icon} {type}({scope}): {short imperative description}`
+- **Subject line (with scope)**: `{icon} {type}({scope}): {short imperative description}`
+- **Subject line (without scope)**: `{icon} {type}: {short imperative description}`
 - **Body** (if needed): one paragraph explaining _why_ the change was made, not _what_ changed (git diff shows what).
 
 ### Step 4 — Execute the commit
 
+With scope:
+
 ```bash
 git commit -m "{icon} {type}({scope}): {subject}" -m "{body}"
+```
+
+Without scope:
+
+```bash
+git commit -m "{icon} {type}: {subject}" -m "{body}"
 ```
 
 Omit the second `-m` if no body is needed.
