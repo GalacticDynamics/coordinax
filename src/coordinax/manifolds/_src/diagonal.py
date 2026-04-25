@@ -17,7 +17,8 @@ class AbstractDiagonalMetric(AbstractMetric):
 
     A metric is **diagonal** (equivalently, the coordinate chart is an
     **orthogonal coordinate system**) when all off-diagonal entries of the
-    metric matrix vanish at every base point in every compatible chart:
+    metric matrix vanish at every base point in every chart in the metric's
+    diagonal domain:
 
     $$g_{ij}(p) = 0 \quad \text{for } i \neq j.$$
 
@@ -34,7 +35,12 @@ class AbstractDiagonalMetric(AbstractMetric):
 
     This class adds no new abstract methods beyond those of `AbstractMetric`.
     Its purpose is to declare that ``metric_matrix`` **must** return a diagonal
-    matrix at every valid base point in every compatible chart.
+    matrix at every valid base point for charts where this metric is used as
+    diagonal (typically orthogonal charts).
+
+    In particular, manifold/atlas chart membership (for example, ``has_chart``)
+    is a broader structural notion and does not, by itself, imply orthogonality
+    or diagonality.
 
     This structural guarantee enables type-level dispatch specialisation, for
     example:
@@ -63,8 +69,8 @@ class AbstractDiagonalMetric(AbstractMetric):
 
     `AbstractMetric.is_diagonal` inspects the matrix at a **specific base
     point** and returns a ``bool`` Array. ``AbstractDiagonalMetric`` makes this
-    an unconditional **structural promise** across all base points: instances
-    are always diagonal regardless of the chart or base point.
+    an unconditional **structural promise** across all base points within the
+    metric's diagonal chart domain.
 
     See Also
     --------
@@ -113,8 +119,8 @@ class AbstractDiagonalMetric(AbstractMetric):
         r"""Return ``True`` as a structural guarantee of diagonality.
 
         For ``AbstractDiagonalMetric`` the metric is diagonal by type-level
-        contract, so this method is unconditional and does not inspect
-        ``metric_matrix``.
+        contract on its diagonal chart domain (typically orthogonal charts), so
+        this method is unconditional and does not inspect ``metric_matrix``.
 
         Examples
         --------
