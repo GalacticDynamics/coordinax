@@ -6,10 +6,10 @@
 
 import argparse
 import shutil
-from enum import StrEnum, auto
+from enum import Enum
 from pathlib import Path
 
-from typing import assert_never, final
+from typing import Self, final
 
 import nox
 from nox_uv import session
@@ -20,22 +20,39 @@ nox.options.default_venv_backend = "uv"
 DIR = Path(__file__).parent.resolve()
 
 
-@final
-class PackageEnum(StrEnum):
-    """Enum for package names."""
+class _StrEnumWithPaths(str, Enum):
+    """String enum that carries an immutable tuple of paths."""
 
-    @staticmethod
-    def _generate_next_value_(name: str, *_: object, **__: object) -> str:
-        return name
+    _paths: tuple[str, ...]
+
+    def __new__(cls, value: str, paths: tuple[str, ...]) -> Self:
+        obj = str.__new__(cls, value)
+        obj._value_ = value
+        obj._paths = paths
+        return obj
+
+    def __str__(self) -> str:
+        """Match StrEnum behavior: render as the raw string value."""
+        return self.value
+
+    @property
+    def paths(self) -> tuple[str, ...]:
+        """Get paths attached to this enum value."""
+        return self._paths
+
+
+@final
+class PackageEnum(_StrEnumWithPaths):
+    """Enum for package names."""
 
     def __repr__(self) -> str:
         return f"{self.value!r}"
 
-    coordinax = auto()
-    api = auto()
-    astro = auto()
-    curveframes = auto()
-    hypothesis = auto()
+    coordinax = ("coordinax", ("README.md", "docs", "src/", "tests/"))
+    api = ("api", ("packages/coordinax.api/",))
+    astro = ("astro", ("packages/coordinax.astro/",))
+    curveframes = ("curveframes", ("packages/coordinax.curveframes/",))
+    hypothesis = ("hypothesis", ("packages/coordinax.hypothesis/",))
 
 
 # =============================================================================
@@ -77,40 +94,21 @@ def precommit(s: nox.Session, /) -> None:
 @nox.parametrize("package", list(PackageEnum))
 def pylint(s: nox.Session, /, package: PackageEnum) -> None:
     """Run PyLint."""
-    match package:
-        case PackageEnum.coordinax:
-            package_path = "src/coordinax"
-        case PackageEnum.api:
-            package_path = "packages/coordinax.api/"
-        case PackageEnum.astro:
-            package_path = "packages/coordinax.astro/"
-        case PackageEnum.curveframes:
-            package_path = "packages/coordinax.curveframes/"
-        case PackageEnum.hypothesis:
-            package_path = "packages/coordinax.hypothesis/"
-        case _:
-            assert_never(package)
-    s.run("pylint", package_path, *s.posargs)
+    package_paths = (
+        ("src/coordinax",) if package == PackageEnum.coordinax else tuple(package.paths)
+    )
+    s.run("pylint", *package_paths, *s.posargs)
 
 
 @session(uv_groups=["lint"], reuse_venv=True)
 @nox.parametrize("package", list(PackageEnum))
 def ty(s: nox.Session, /, package: PackageEnum) -> None:
     """Run ty."""
-    package_paths: tuple[str, ...]
-    match package:
-        case PackageEnum.coordinax:
-            package_paths = ("src/coordinax", "packages/coordinax.api/")
-        case PackageEnum.api:
-            package_paths = ("packages/coordinax.api/",)
-        case PackageEnum.astro:
-            package_paths = ("packages/coordinax.astro/",)
-        case PackageEnum.curveframes:
-            package_paths = ("packages/coordinax.curveframes/",)
-        case PackageEnum.hypothesis:
-            package_paths = ("packages/coordinax.hypothesis/",)
-        case _:
-            assert_never(package)
+    package_paths = (
+        ("src/coordinax", "packages/coordinax.api/")
+        if package == PackageEnum.coordinax
+        else tuple(package.paths)
+    )
     s.run("ty", "check", *package_paths, *s.posargs)
 
 
@@ -118,37 +116,38 @@ def ty(s: nox.Session, /, package: PackageEnum) -> None:
 # Testing
 
 
-@session(uv_groups=["test"], reuse_venv=True, default=True)
+@session(uv_groups=["test"], uv_extras=["workspace"], reuse_venv=True, default=True)
 def test(s: nox.Session, /) -> None:
-    """Run the unit and regular tests."""
-    s.notify("pytest", posargs=s.posargs)
+    """Run the unit and regular tests.
+
+    Optional flags:
+      --exclude-package <package>
+          Exclude one package's paths from this aggregated pytest invocation.
+          May be provided multiple times.
+    """
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--exclude-package", action="append", default=[])
+    args, posargs = parser.parse_known_args(s.posargs)
+
+    ignore_paths: list[str] = []
+    for raw in args.exclude_package:
+        try:
+            package = PackageEnum[raw]
+        except KeyError:
+            s.error(f"Unknown --exclude-package value: {raw!r}")
+        ignore_paths.extend(package.paths)
+
+    ignore_args = [f"--ignore={path}" for path in dict.fromkeys(ignore_paths)]
+
+    s.run("pytest", *ignore_args, *posargs)
     # s.notify("pytest_benchmark", posargs=s.posargs)
-
-
-def _parse_pytest_paths(package: PackageEnum, /) -> list[str]:
-    match package:
-        case PackageEnum.coordinax:
-            package_paths = ["README.md", "docs", "src/", "tests/"]
-        case PackageEnum.api:
-            package_paths = ["packages/coordinax.api/"]
-        case PackageEnum.astro:
-            package_paths = ["packages/coordinax.astro/"]
-        case PackageEnum.curveframes:
-            package_paths = ["packages/coordinax.curveframes/"]
-        case PackageEnum.hypothesis:
-            package_paths = ["packages/coordinax.hypothesis/"]
-        case _:
-            assert_never(package)
-
-    return package_paths
 
 
 @session(uv_groups=["test"], uv_extras=["workspace"], reuse_venv=True)
 @nox.parametrize("package", list(PackageEnum))
 def pytest(s: nox.Session, /, package: PackageEnum) -> None:
     """Run the unit and regular tests."""
-    package_paths = _parse_pytest_paths(package)
-    s.run("pytest", *package_paths, *s.posargs)
+    s.run("pytest", *package.paths, *s.posargs)
 
 
 # =============================================================================
