@@ -186,7 +186,7 @@ True
 
 ## Changing Tangent Basis
 
-Use `cxr.change_basis()` when a you want to change the tangent basis of a CDict without changing its chart or representation.
+Use `cxr.change_basis()` when you want to change the tangent basis of a CDict without changing its chart, geometry, or semantics.
 
 ```{code-block} python
 >>> d = {"x": 1.0, "y": 0.0}

@@ -44,9 +44,9 @@ This is separate from charts and manifolds:
 # Change tangent components between basis conventions in the same chart.
 >>> v = {"r": u.Q(1.0, "km/s"), "theta": u.Q(0.0, "rad/s"), "phi": u.Q(0.0, "rad/s")}
 >>> at = {"r": u.Q(2.0, "km"), "theta": u.Q(3.0, "rad"), "phi": u.Q(4.0, "rad")}
->>> v2 = cxr.change_basis(v, cxc.cart2d, cxr.coord_basis, cxr.phys_basis, at=at)
+>>> v2 = cxr.change_basis(v, cxc.sph3d, cxr.coord_basis, cxr.phys_basis, at=at)
 >>> v2
-{'r': Q(1., 'km / s'), 'theta': Q(0., 'rad / s'), 'phi': Q(0., 'rad / s')}
+{'r': Q(1., 'km / s'), 'theta': Q(0., 'km / s'), 'phi': Q(0., 'km / s')}
 ```
 
 ## Functional API

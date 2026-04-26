@@ -144,8 +144,8 @@ The representation design is intentionally extensible. Future geometric kinds (f
 
 - supported basis changes: `CoordinateBasis` $\rightleftarrows$ `PhysicalBasis`
 - supported representations: tangent representations such as `coord_disp` and `phys_disp`
-- unsupported: point data (`NoBasis`)
-- non-Cartesian support: available for charts with basis-change rules (for example `sph3d`), and generally via an explicit metric/manifold
+- point representations are not supported as genuine basis-changing inputs; however, `NoBasis -> CoordinateBasis` and `NoBasis -> PhysicalBasis` are supported as identity reinterpretations when the dimensions are compatible
+- non-Cartesian support: available for tangent basis changes on charts with basis-change rules (for example `sph3d`), and generally via an explicit metric/manifold
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
