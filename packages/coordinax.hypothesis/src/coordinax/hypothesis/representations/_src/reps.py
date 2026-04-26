@@ -84,12 +84,13 @@ def valid_semantic_classes_for_geometry(  # noqa: F811
 ) -> tuple[type[cxr.AbstractSemanticKind], ...]:
     """Return valid semantic classes for tangent geometry.
 
-    TangentGeometry supports Displacement, Velocity, and Acceleration.
+    Returns all registered tangent semantic kinds (e.g. Displacement, Velocity,
+    Acceleration), sorted by their ``order`` attribute for deterministic output.
     """
     del geom_kind
     return cast(
         "tuple[type[cxr.AbstractSemanticKind], ...]",
-        tuple(_TANGENT_TIME_ORDER_LADDER.values()),
+        tuple(cls for _, cls in sorted(_TANGENT_TIME_ORDER_LADDER.items())),
     )
 
 

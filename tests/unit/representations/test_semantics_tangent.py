@@ -14,6 +14,19 @@ import coordinax.main as cx
 import coordinax.representations as cxr
 from coordinax.representations._src.semantics import _TANGENT_TIME_ORDER_LADDER
 
+
+@pytest.fixture
+def restore_tangent_ladder():
+    """Snapshot and restore _TANGENT_TIME_ORDER_LADDER after each test.
+
+    Guarantees the registry is clean even when assertions fail mid-test.
+    """
+    snapshot = dict(_TANGENT_TIME_ORDER_LADDER)
+    yield
+    _TANGENT_TIME_ORDER_LADDER.clear()
+    _TANGENT_TIME_ORDER_LADDER.update(snapshot)
+
+
 # ===================================================================
 
 
@@ -204,6 +217,7 @@ class TestTangentTimeOrderLadder:
         """Acceleration class is registered at order 2."""
         assert _TANGENT_TIME_ORDER_LADDER[2] is cxr.Acceleration
 
+    @pytest.mark.usefixtures("restore_tangent_ladder")
     def test_new_subclass_auto_registers(self) -> None:
         """A new concrete subclass with a new order auto-registers."""
 
@@ -219,9 +233,6 @@ class TestTangentTimeOrderLadder:
         # Acceleration.derivative() now works because the registry has order 3
         assert isinstance(cxr.Acceleration().derivative(), Jerk)
 
-        # Clean up so we don't pollute other tests
-        del _TANGENT_TIME_ORDER_LADDER[3]
-
     def test_duplicate_order_raises_type_error(self) -> None:
         """Defining a subclass at an already-occupied order raises TypeError."""
         with pytest.raises(TypeError, match="already occupied"):
@@ -233,6 +244,7 @@ class TestTangentTimeOrderLadder:
                 canonical_name = "vel2"
                 order = 1  # already occupied by Velocity
 
+    @pytest.mark.usefixtures("restore_tangent_ladder")
     def test_absement_registration_enables_displacement_antiderivative(self) -> None:
         """Registering Absement at order -1 makes Displacement.antiderivative() work."""
 
@@ -248,9 +260,6 @@ class TestTangentTimeOrderLadder:
         # Displacement.antiderivative() now resolves via the internal registry
         result = cxr.Displacement().antiderivative()
         assert isinstance(result, Absement)
-
-        # Clean up so we don't pollute other tests
-        del _TANGENT_TIME_ORDER_LADDER[-1]
 
 
 # ===================================================================

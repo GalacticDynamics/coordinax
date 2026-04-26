@@ -28,7 +28,7 @@ from .geom import (
     tangent_geom,
 )
 from .rep import Representation, point
-from .semantics import AbstractSemanticKind, acc, loc, vel
+from .semantics import AbstractSemanticKind, Location, acc, dpl, loc, vel
 from coordinax.internal.custom_types import CDict
 
 # ===================================================================
@@ -559,16 +559,35 @@ def guess_rep(
     Examples
     --------
     >>> import unxt as u
+    >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
 
-    >>> rep = cxr.guess_rep(u.Q(1.0, "m"), cxc.cart2d, point_geom)
+    Speed dimensions infer Velocity:
+
+    >>> rep = cxr.guess_rep(u.Q([1.0, 2.0], "m / s"), cxc.cart2d, cxr.TangentGeometry())
     >>> rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    Representation(geom_kind=TangentGeometry(), basis=CoordinateBasis(),
+                   semantic_kind=Velocity())
+
+    Length dimensions would infer Location in general, but TangentGeometry
+    requires a tangent semantic kind, so Displacement is returned instead:
+
+    >>> rep = cxr.guess_rep(u.Q([1.0, 2.0], "m"), cxc.cart2d, cxr.TangentGeometry())
+    >>> rep
+    Representation(geom_kind=TangentGeometry(), basis=CoordinateBasis(),
+                   semantic_kind=Displacement())
 
     """
     # Infer the semantic kind from the data.
     data = cxc.cdict(obj, chart)
     semantic_kind = cxrapi.guess_semantic_kind(data)
+
+    # Length/angle dimensions map to Location in the dimension→semantic table,
+    # but TangentGeometry requires an AbstractTangentSemanticKind. Displacement
+    # is the tangent kind at order 0 (same physical dimensions as a position,
+    # but living in the tangent space), so use it as the default.
+    if isinstance(semantic_kind, Location):
+        semantic_kind = dpl
 
     # TODO: better determine the basis kind
     basis = coord_basis

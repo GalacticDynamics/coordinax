@@ -20,12 +20,12 @@ LENGTH: u.AbstractDimension = cast("u.AbstractDimension", u.dimension("length"))
 AREA: u.AbstractDimension = cast("u.AbstractDimension", u.dimension("area"))
 SPEED: u.AbstractDimension = cast("u.AbstractDimension", u.dimension("speed"))
 ANGULAR_SPEED: u.AbstractDimension = cast(
-    "u.AbstractDimension", u.dimension("angular_speed")
+    "u.AbstractDimension", u.dimension("angular speed")
 )
 ACCELERATION: u.AbstractDimension = cast(
     "u.AbstractDimension", u.dimension("acceleration")
 )
 ANGULAR_ACCELERATION: u.AbstractDimension = cast(
-    "u.AbstractDimension", u.dimension("angular_acceleration")
+    "u.AbstractDimension", u.dimension("angular acceleration")
 )
 TIME: u.AbstractDimension = cast("u.AbstractDimension", u.dimension("time"))

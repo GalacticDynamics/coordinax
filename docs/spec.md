@@ -2096,7 +2096,7 @@ Separating semantics from geometry provides two advantages:
     - Represents $\Delta q = q_2 - q_1$, an element of the tangent space in the limit, or a finite difference.
     - Under Galilean boosts: `Displacement` is **invariant** — boost does not change displacements.
     - `order = 0`.
-    - `derivative()` returns `Velocity()` directly (overridden for clarity and performance).
+    - `derivative()` returns the `vel` singleton directly.
     - `antiderivative()` uses the base-class internal-registry lookup; raises `ValueError` unless a class at order -1 (e.g. `Absement`) is registered.
 
     API instance:
@@ -2113,8 +2113,8 @@ Separating semantics from geometry provides two advantages:
     - Represents $\dot{q} = dq/dt$, a genuine element of $T_p M$.
     - Under Galilean boosts: **shifts** by the boost velocity $\Delta v$.
     - `order = 1`.
-    - `derivative()` returns `Acceleration()` (via base-class ladder lookup).
-    - `antiderivative()` returns `Displacement()` (via base-class ladder lookup).
+    - `derivative()` returns the `acc` singleton directly.
+    - `antiderivative()` returns the `dpl` singleton directly.
 
     API instance:
 
@@ -2131,7 +2131,7 @@ Separating semantics from geometry provides two advantages:
     - Under Galilean boosts with constant $\Delta v$: **invariant** (since $\dot{\Delta v} = 0$).
     - `order = 2`.
     - `derivative()` uses the base-class ladder lookup; raises `ValueError` unless a class at order 3 (e.g. `Jerk`) is registered.
-    - `antiderivative()` returns `Velocity()` (via base-class ladder lookup).
+    - `antiderivative()` returns the `vel` singleton directly.
 
     API instance:
 

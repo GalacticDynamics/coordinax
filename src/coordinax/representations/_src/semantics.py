@@ -633,7 +633,6 @@ class Velocity(AbstractTangentSemanticKind):
         Velocity has time-order 1. Its time antiderivative is displacement
         (time-order 0).
 
-
         Examples
         --------
         >>> import coordinax.representations as cxr
