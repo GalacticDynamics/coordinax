@@ -133,9 +133,8 @@ def test(s: nox.Session, /) -> None:
     for raw in args.exclude_package:
         try:
             package = PackageEnum[raw]
-        except KeyError as exc:
+        except KeyError:
             s.error(f"Unknown --exclude-package value: {raw!r}")
-            raise AssertionError("unreachable") from exc
         ignore_paths.extend(package.paths)
 
     ignore_args = [f"--ignore={path}" for path in dict.fromkeys(ignore_paths)]

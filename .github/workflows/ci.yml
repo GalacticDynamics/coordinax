@@ -50,16 +50,18 @@ jobs:
       status-json: ${{ steps.detect.outputs.status-json }}
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
 
-      - name: Fetch main for diff
-        run: git fetch origin main:main --depth=1
+      - name: Fetch origin/main for diff
+        run: git fetch origin main --depth=1
 
       - name: Detect optional package changes
         id: detect
         uses: ./.github/actions/detect-changed-packages
         with:
           config-file: .github/test-packages.yml
-          target-branch: main
+          base-ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || 'origin/main' }}
 
       - name: Compute matrix versions
         id: matrix

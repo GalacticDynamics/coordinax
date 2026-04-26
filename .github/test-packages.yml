@@ -3,7 +3,8 @@
 #
 # Fields:
 #   path     — workspace-relative directory watched for changes
-#   nox-key  — value passed to nox -s "pytest(package=<nox-key>)"
+#   nox-key  — value used by the workflow/action to emit
+#              `--exclude-package <nox-key>` flags for `nox -s test`
 #              (must match a PackageEnum value in noxfile.py)
 - path: packages/coordinax.astro
   nox-key: astro

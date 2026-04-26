@@ -7,10 +7,13 @@ inputs:
       Workspace-relative YAML file containing entries with keys 'path' and
       'nox-key'.
     required: true
-  target-branch:
-    description: Target branch to diff against (e.g., 'main').
+  base-ref:
+    description: >-
+      Base ref or SHA to diff against. Use a SHA (e.g., github.event.before or
+      github.event.pull_request.base.sha) for push/PR events, or a fully-qualified
+      ref such as 'origin/main' for workflow_dispatch.
     required: false
-    default: main
+    default: origin/main
 
 outputs:
   status-json:
@@ -31,37 +34,18 @@ runs:
       shell: python
       env:
         INPUT_CONFIG_FILE: ${{ inputs.config-file }}
-        INPUT_TARGET_BRANCH: ${{ inputs.target-branch }}
+        INPUT_BASE_REF: ${{ inputs.base-ref }}
       run: |
         import json
         import os
         import subprocess
+        import yaml
 
         config_file = os.environ["INPUT_CONFIG_FILE"]
-        target_branch = os.environ["INPUT_TARGET_BRANCH"]
+        base_ref = os.environ["INPUT_BASE_REF"]
 
-        rows: list[dict[str, str]] = []
-        current: dict[str, str] | None = None
         with open(config_file, encoding="utf-8") as fh:
-            for raw in fh:
-                line = raw.strip()
-                if not line or line.startswith("#"):
-                    continue
-                if line.startswith("- "):
-                    if current:
-                        rows.append(current)
-                    current = {}
-                    line = line[2:].strip()
-                    if not line:
-                        continue
-                if current is None:
-                    continue
-                if ":" not in line:
-                    continue
-                key, value = [s.strip() for s in line.split(":", 1)]
-                current[key] = value
-            if current:
-                rows.append(current)
+            rows: list[dict[str, str]] = yaml.safe_load(fh)
 
         status: list[dict[str, str]] = []
         excluded: list[str] = []
@@ -74,7 +58,7 @@ runs:
                 "diff",
                 "--name-only",
                 "--diff-filter=ACMRD",
-                f"origin/{target_branch}...HEAD",
+                f"{base_ref}...HEAD",
                 "--",
                 path,
             ]
