@@ -51,10 +51,8 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
+          # `git diff <base>...HEAD` needs the base commit available locally.
           fetch-depth: 0
-
-      - name: Fetch origin/main for diff
-        run: git fetch origin main --depth=1
 
       - name: Detect optional package changes
         id: detect

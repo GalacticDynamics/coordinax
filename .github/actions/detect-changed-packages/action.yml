@@ -44,7 +44,7 @@ runs:
         base_ref = os.environ["INPUT_BASE_REF"]
 
         with open(config_file, encoding="utf-8") as fh:
-          rows: list[dict[str, str]] = json.load(fh)
+            rows: list[dict[str, str]] = json.load(fh)
 
         status: list[dict[str, str]] = []
         excluded: list[str] = []
