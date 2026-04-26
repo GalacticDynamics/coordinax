@@ -513,14 +513,6 @@ class TestGuessRep:
         result = cxr.guess_rep(d, cxc.cart2d)
         assert result == cxr.point
 
-    # --- CDict + chart dispatch ---
-
-    def test_cdict_with_chart_returns_point(self) -> None:
-        """guess_rep(CDict, chart) returns point."""
-        d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
-        result = cxr.guess_rep(d, cxc.cart2d)
-        assert result == cxr.point
-
     # --- Tangent geometry: speed dimensions ---
 
     def test_dimension_speed_returns_tangent_vel(self) -> None:
