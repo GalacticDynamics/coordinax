@@ -1,0 +1,13 @@
+# Optional packages: tested only when their source files change.
+# Add entries here to enable conditional testing for additional packages.
+#
+# Fields:
+#   path     — workspace-relative directory watched for changes
+#   nox-key  — value passed to nox -s "pytest(package=<nox-key>)"
+#              (must match a PackageEnum value in noxfile.py)
+- path: packages/coordinax.astro
+  nox-key: astro
+- path: packages/coordinax.hypothesis
+  nox-key: hypothesis
+- path: packages/coordinax.curveframes
+  nox-key: curveframes

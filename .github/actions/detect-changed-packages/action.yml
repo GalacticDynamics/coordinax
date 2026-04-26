@@ -1,0 +1,99 @@
+name: Detect Changed Packages
+description: Detect per-path changes from a config file and emit exclude flags.
+
+inputs:
+  config-file:
+    description: >-
+      Workspace-relative YAML file containing entries with keys 'path' and
+      'nox-key'.
+    required: true
+  target-branch:
+    description: Target branch to diff against (e.g., 'main').
+    required: false
+    default: main
+
+outputs:
+  status-json:
+    description: JSON list of objects with path, nox-key, and changed ('Y'/'N').
+    value: ${{ steps.detect.outputs.status_json }}
+  excluded-json:
+    description: JSON list of excluded nox keys.
+    value: ${{ steps.detect.outputs.excluded_json }}
+  exclude-args:
+    description: CLI-ready string of repeated --exclude-package flags.
+    value: ${{ steps.detect.outputs.exclude_args }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect configured path changes
+      id: detect
+      shell: python
+      env:
+        INPUT_CONFIG_FILE: ${{ inputs.config-file }}
+        INPUT_TARGET_BRANCH: ${{ inputs.target-branch }}
+      run: |
+        import json
+        import os
+        import subprocess
+
+        config_file = os.environ["INPUT_CONFIG_FILE"]
+        target_branch = os.environ["INPUT_TARGET_BRANCH"]
+
+        rows: list[dict[str, str]] = []
+        current: dict[str, str] | None = None
+        with open(config_file, encoding="utf-8") as fh:
+            for raw in fh:
+                line = raw.strip()
+                if not line or line.startswith("#"):
+                    continue
+                if line.startswith("- "):
+                    if current:
+                        rows.append(current)
+                    current = {}
+                    line = line[2:].strip()
+                    if not line:
+                        continue
+                if current is None:
+                    continue
+                if ":" not in line:
+                    continue
+                key, value = [s.strip() for s in line.split(":", 1)]
+                current[key] = value
+            if current:
+                rows.append(current)
+
+        status: list[dict[str, str]] = []
+        excluded: list[str] = []
+
+        for row in rows:
+            path = row["path"]
+            nox_key = row["nox-key"]
+            cmd = [
+                "git",
+                "diff",
+                "--name-only",
+                "--diff-filter=ACMRD",
+                f"origin/{target_branch}...HEAD",
+                "--",
+                path,
+            ]
+            result = subprocess.run(cmd, check=True, text=True, capture_output=True)
+            changed = "Y" if result.stdout.strip() else "N"
+            status.append({"path": path, "nox-key": nox_key, "changed": changed})
+            if changed == "N":
+                excluded.append(nox_key)
+
+        exclude_args = " ".join(f"--exclude-package {pkg}" for pkg in excluded)
+
+        with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+            fh.write(f"status_json={json.dumps(status)}\n")
+            fh.write(f"excluded_json={json.dumps(excluded)}\n")
+            fh.write(f"exclude_args={exclude_args}\n")
+
+        # Write summary to GITHUB_STEP_SUMMARY
+        with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+            fh.write("## Test scope\n")
+            fh.write(f"Path statuses (Y/N): `{json.dumps(status)}`\n")
+            fh.write(f"Excluded optional packages: `{json.dumps(excluded)}`\n")
+            fh.write(f"Exclude args: `{exclude_args}`\n")

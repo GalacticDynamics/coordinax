@@ -120,8 +120,29 @@ def ty(s: nox.Session, /, package: PackageEnum) -> None:
 
 @session(uv_groups=["test"], reuse_venv=True, default=True)
 def test(s: nox.Session, /) -> None:
-    """Run the unit and regular tests."""
-    s.notify("pytest", posargs=s.posargs)
+    """Run the unit and regular tests.
+
+    Optional flags:
+      --exclude-package <package>
+          Exclude one package's paths from this aggregated pytest invocation.
+          May be provided multiple times.
+    """
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--exclude-package", action="append", default=[])
+    args, posargs = parser.parse_known_args(s.posargs)
+
+    ignore_paths: list[str] = []
+    for raw in args.exclude_package:
+        try:
+            package = PackageEnum(raw)
+        except ValueError as exc:
+            s.error(f"Unknown --exclude-package value: {raw!r}")
+            raise AssertionError("unreachable") from exc
+        ignore_paths.extend(_parse_pytest_paths(package))
+
+    ignore_args = [f"--ignore={path}" for path in dict.fromkeys(ignore_paths)]
+
+    s.run("pytest", *ignore_args, *posargs)
     # s.notify("pytest_benchmark", posargs=s.posargs)
 
 
