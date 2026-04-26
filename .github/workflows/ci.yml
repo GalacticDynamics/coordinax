@@ -60,7 +60,7 @@ jobs:
         id: detect
         uses: ./.github/actions/detect-changed-packages
         with:
-          config-file: .github/test-packages.yml
+          config-file: .github/test-packages.json
           base-ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'push' && github.event.before || 'origin/main' }}
 
       - name: Compute matrix versions

@@ -4,7 +4,7 @@ description: Detect per-path changes from a config file and emit exclude flags.
 inputs:
   config-file:
     description: >-
-      Workspace-relative YAML file containing entries with keys 'path' and
+      Workspace-relative JSON file containing entries with keys 'path' and
       'nox-key'.
     required: true
   base-ref:
@@ -39,13 +39,12 @@ runs:
         import json
         import os
         import subprocess
-        import yaml
 
         config_file = os.environ["INPUT_CONFIG_FILE"]
         base_ref = os.environ["INPUT_BASE_REF"]
 
         with open(config_file, encoding="utf-8") as fh:
-            rows: list[dict[str, str]] = yaml.safe_load(fh)
+          rows: list[dict[str, str]] = json.load(fh)
 
         status: list[dict[str, str]] = []
         excluded: list[str] = []
