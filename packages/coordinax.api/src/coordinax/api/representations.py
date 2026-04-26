@@ -3,6 +3,7 @@
 __all__ = (
     "add",
     "cconvert",
+    "change_basis",
     "guess_basis_kind",
     "guess_geometry_kind",
     "guess_rep",
@@ -13,6 +14,25 @@ __all__ = (
 from typing import Any
 
 import plum
+
+
+@plum.dispatch.abstract
+def change_basis(*args: Any, **kwargs: Any) -> Any:
+    """Change the basis of a tangent vector's components.
+
+    Supports both basis-object and representation-object overloads.
+    Tangent-only in v1: only CoordinateBasis <-> PhysicalBasis conversions are supported.
+
+    Examples
+    --------
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.charts as cxc
+    >>> v = {"x": 1.0, "y": 0.0}
+    >>> at = {"x": 1.0, "y": 0.0}
+    >>> cxr.change_basis(v, cxc.cart2d, cxr.coord_basis, cxr.phys_basis, at=at)
+    {'x': 1.0, 'y': 0.0}
+    """
+    raise NotImplementedError  # pragma: no cover
 
 
 @plum.dispatch.abstract

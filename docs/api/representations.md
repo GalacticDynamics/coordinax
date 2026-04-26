@@ -40,11 +40,19 @@ This is separate from charts and manifolds:
 {'r': Array(3.74165739, dtype=float64, ...),
  'theta': Array(0.64052231, dtype=float64),
  'phi': Array(1.10714872, dtype=float64, ...)}
+
+# Change tangent components between basis conventions in the same chart.
+>>> v = {"r": u.Q(1.0, "km/s"), "theta": u.Q(0.0, "rad/s"), "phi": u.Q(0.0, "rad/s")}
+>>> at = {"r": u.Q(2.0, "km"), "theta": u.Q(3.0, "rad"), "phi": u.Q(4.0, "rad")}
+>>> v2 = cxr.change_basis(v, cxc.cart2d, cxr.coord_basis, cxr.phys_basis, at=at)
+>>> v2
+{'r': Q(1., 'km / s'), 'theta': Q(0., 'rad / s'), 'phi': Q(0., 'rad / s')}
 ```
 
 ## Functional API
 
 - `cconvert`: representation-aware coordinate conversion API
+- `change_basis`: same-chart tangent basis conversion API
 - `cmap`: partial-function builder around `cconvert`
 - `guess_basis_kind`: infer basis kind from dimensions/data
 - `guess_geometry_kind`: infer geometric kind from dimensions/data
@@ -58,6 +66,7 @@ For point data, `cconvert` dispatches through chart-level point conversion laws.
 ### Conversion Functions
 
 - `cconvert`: convert data across charts/representations
+- `change_basis`: change tangent basis without changing chart
 - `cmap`: build reusable conversion callables
 - `guess_basis_kind`: infer a basis kind
 - `guess_geometry_kind`: infer a geometry kind
@@ -92,6 +101,8 @@ For point data, `cconvert` dispatches through chart-level point conversion laws.
 
 - Representations are orthogonal to charts: chart choice and representation choice are independent concerns.
 - The current built-in flow is point-first, centered on `(point_geom, no_basis, loc)`.
+- `change_basis` is currently limited to tangent data in Cartesian charts, with `CoordinateBasis` $
+ightleftarrows$ `PhysicalBasis` conversions.
 
 ```{eval-rst}
 

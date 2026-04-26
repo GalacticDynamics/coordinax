@@ -946,7 +946,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
-| `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
+| `coordinax.representations` | `cconvert`, `change_basis`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
@@ -2624,6 +2624,90 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - [`EuclideanMetric`](#software-spec-euclideanmetric): flat Riemannian metric on $\mathbb{R}^n$; identity in Cartesian charts, computed via Jacobian pullback in curvilinear charts.
     - [`MinkowskiMetric`](#software-spec-minkowskimetric): Lorentzian metric $\eta = \operatorname{diag}(-1, 1, 1, 1)$ on Minkowski spacetime; diagonal in the canonical Cartesian spacetime chart.
     - [`HyperSphericalMetric`](#software-spec-hypersphericalmetric): round metric on $S^{n-1}$; diagonal entries follow the cumulative-sine rule $g_{kk} = \prod_{j < k}\sin^2\!\theta_j$.
+
+(software-spec-abstractdiagonalmetric)=
+
+!!! info `AbstractDiagonalMetric`
+
+    `AbstractDiagonalMetric` is an abstract subclass of `AbstractMetric` for metrics whose matrix is diagonal at every base point in every compatible chart.
+
+    A metric is **diagonal** (equivalently, the coordinate chart is an **orthogonal coordinate system**) when all off-diagonal entries of the metric matrix vanish:
+
+    $$g_{ij}(p) = 0 \quad \text{for } i \neq j \quad \forall\, p \in U.$$
+
+    The coordinate basis vectors $\partial/\partial q^i$ are mutually orthogonal. The diagonal entries $g_{ii}(p)$ give the squared scale factors
+
+    $$h_i(p)^2 = g_{ii}(p),$$
+
+    and the infinitesimal line element simplifies to
+
+    $$ds^2 = \sum_i g_{ii}(q)\,(dq^i)^2.$$
+
+    **Role: structural marker, not behavioral interface.**
+
+    `AbstractDiagonalMetric` adds no new abstract methods beyond those of `AbstractMetric`.  Its sole purpose is to **declare** that `metric_matrix` will always return a diagonal matrix.  This allows:
+
+    - Dispatch specialisations that compute `scale_factors` more efficiently
+      (e.g., extracting only the diagonal of $g$, or using squared Jacobian
+      column norms instead of the full $J^\top J$).
+    - Type-level distinction between orthogonal and general metrics in
+      multiple-dispatch registrations.
+
+    **Subclassing contract:**
+
+    Subclasses must implement the two abstract members inherited from
+    `AbstractMetric`:
+
+    - `signature` (abstract property): a tuple of $\pm 1$ of length `ndim`
+      encoding the metric signature in coordinate order.  Positive entries
+      are Riemannian (space-like); a ``-1`` entry is pseudo-Riemannian
+      (time-like).
+    - `metric_matrix(chart, /, *, at, usys=None)` (abstract method): must
+      return a diagonal `QuantityMatrix` (or plain `Array`) of shape
+      `(ndim, ndim)` with all off-diagonal entries exactly zero.
+
+    All other behavioral requirements of `AbstractMetric` also apply:
+    immutability (frozen dataclass), static JAX PyTree registration, and
+    `jit`/`vmap` compatibility.
+
+    **Relationship to `AbstractMetric.is_diagonal`:**
+
+    `AbstractMetric.is_diagonal(chart, at=at)` inspects the metric matrix at
+    a **specific base point** and returns a `bool`.
+    `AbstractDiagonalMetric` makes this an unconditional **structural
+    promise** across all base points: instances are always diagonal,
+    regardless of which chart or point is supplied.
+
+    **Concrete subclasses (built-in):**
+
+    | Class | Manifold | Diagonal in |
+    |-------|----------|-------------|
+    | [`EuclideanMetric`](#software-spec-euclideanmetric) | $\mathbb{R}^n$ | Cartesian charts; orthogonal curvilinear charts via $g = J^\top J$ |
+    | [`HyperSphericalMetric`](#software-spec-hypersphericalmetric) | $S^{n-1}$ | Intrinsic hyperspherical chart; cumulative-sine rule $g_{kk} = \prod_{j<k}\sin^2\!\theta_j$ |
+    | [`MinkowskiMetric`](#software-spec-minkowskimetric) | $\mathbb{R}^{1,3}$ | Canonical Cartesian spacetime chart $\eta = \operatorname{diag}(-1,1,1,1)$ |
+
+    **Example**
+
+    ```pycon
+    >>> from coordinax.manifolds._src.diagonal import AbstractDiagonalMetric
+    >>> import coordinax.manifolds as cxm
+
+    >>> isinstance(cxm.EuclideanMetric(3), AbstractDiagonalMetric)
+    True
+
+    >>> isinstance(cxm.MinkowskiMetric(), AbstractDiagonalMetric)
+    True
+
+    >>> import unxt as u
+    >>> isinstance(
+    ...     cxm.InducedMetric(
+    ...         cxm.TwoSphereIn3D(radius=u.Q(1.0, "m")),
+    ...         cxm.EuclideanMetric(3),
+    ...     ),
+    ...     AbstractDiagonalMetric,
+    ... )
+    False
+    ```
 
 (software-spec-abstractmanifold)=
 

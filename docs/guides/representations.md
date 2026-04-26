@@ -138,12 +138,40 @@ Current built-in representation conversions are point-first:
 
 The representation design is intentionally extensible. Future geometric kinds (for example tangent and cotangent objects) can use different transformation categories (such as Jacobian pushforward/pullback) while keeping the same chart and manifold interfaces.
 
+## Tangent Basis Changes
+
+`change_basis` handles a narrower problem than `cconvert`: it keeps the chart fixed and only changes how tangent components are interpreted with respect to a basis.
+
+In the current v1 implementation, this is intentionally limited to tangent data in Cartesian charts:
+
+- supported basis changes: `CoordinateBasis` $
+ightleftarrows$ `PhysicalBasis`
+- supported representations: tangent representations such as `coord_disp` and `phys_disp`
+- unsupported: point data (`NoBasis`) and non-Cartesian charts
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import coordinax.representations as cxr
+
+>>> v = {"x": 1.0, "y": 0.0}
+>>> at = {"x": 2.0, "y": 3.0}
+
+>>> cxr.change_basis(v, cxc.cart2d, cxr.coord_basis, cxr.phys_basis, at=at)
+{'x': 1.0, 'y': 0.0}
+
+>>> cxr.change_basis(v, cxc.cart2d, cxr.coord_disp, cxr.phys_disp, at=at)
+{'x': 1.0, 'y': 0.0}
+```
+
+In Cartesian charts the coordinate basis and physical basis coincide, so the component values are unchanged. The API exists so code can state basis intent explicitly and remain extensible to nontrivial basis changes later.
+
 ## Quick Reference
 
 - Need only a same-manifold coordinate rewrite: `pt_map`
 - Need general point mapping behavior: `pt_map`
 - Need manifold compatibility checks: manifold methods like `M.pt_map`
 - Need representation-aware conversions: `cconvert`
+- Need same-chart tangent basis conversion: `change_basis`
 - Need reusable conversion callables: `cmap`
 - Need to infer basis kind from data: `guess_basis_kind`
 - Need to infer semantic kind from data: `guess_semantic_kind`

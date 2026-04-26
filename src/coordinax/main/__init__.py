@@ -78,6 +78,7 @@ __all__ = (  # distances
     "phys_disp",
     "phys_vel",
     "phys_acc",
+    "change_basis",
     # vectors
     "Point",
     "ToUnitsOptions",
@@ -134,6 +135,7 @@ from coordinax.representations import (
     acc,
     add,
     cconvert,
+    change_basis,
     coord_acc,
     coord_basis,
     coord_disp,
