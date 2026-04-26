@@ -34,7 +34,7 @@ pip install coordinax
 
 - Specialized quantities: scalar coordinate quantities with units, including `Angle` (directional values on $S^1$ with explicit wrapping) and `Distance` (length-valued quantity), plus astronomy-facing forms like `Parallax` and `DistanceModulus`.
 - Charts: a coordinate chart / component schema (names + physical dimensions). A chart does not store numerical values.
-- Representation: geometric meaning of components, encoded as (geometry, basis, semantics), e.g. `point`.
+- Representation: geometric meaning of components, encoded as (geometry, basis, semantics), e.g. `point`, `coord_vel`, `phys_acc`.
 - Point: data + chart + representation, with conversion and arithmetic behavior defined by chart transition maps and tangent pushforwards.
 
 ## Modules
@@ -104,6 +104,8 @@ Common representation constants are available from the high-level module:
 import coordinax.main as cx
 
 cx.point  # point location data
+cx.coord_vel  # coordinate-basis velocity components
+cx.phys_vel  # physical-basis velocity components
 ```
 
 ### Manifolds

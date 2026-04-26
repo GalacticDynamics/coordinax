@@ -1,6 +1,16 @@
 """Vector representation."""
 
-__all__ = ("Representation", "point")
+__all__ = (
+    "Representation",
+    "point",
+    # Tangent singletons
+    "coord_disp",
+    "coord_vel",
+    "coord_acc",
+    "phys_disp",
+    "phys_vel",
+    "phys_acc",
+)
 
 
 import dataclasses
@@ -13,9 +23,9 @@ import wadler_lindig as wl
 
 from dataclassish import field_items, field_values
 
-from .basis import AbstractBasis, no_basis
-from .geom import AbstractGeometry, point_geom
-from .semantics import AbstractSemanticKind, loc
+from .basis import AbstractBasis, coord_basis, no_basis, phys_basis
+from .geom import AbstractGeometry, point_geom, tangent_geom
+from .semantics import AbstractSemanticKind, acc, dpl, loc, vel
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -186,7 +196,49 @@ r"""Predefined point representation.
 $(\mathrm{PointGeometry}, \mathrm{NoBasis}, \mathrm{Location})$.
 """
 
+coord_disp = Representation(tangent_geom, coord_basis, dpl)
+r"""Coordinate-basis displacement representation.
+
+$(\mathrm{TangentGeometry}, \mathrm{CoordinateBasis}, \mathrm{Displacement})$.
+"""
+
+coord_vel = Representation(tangent_geom, coord_basis, vel)
+r"""Coordinate-basis velocity representation.
+
+$(\mathrm{TangentGeometry}, \mathrm{CoordinateBasis}, \mathrm{Velocity})$.
+"""
+
+coord_acc = Representation(tangent_geom, coord_basis, acc)
+r"""Coordinate-basis acceleration representation.
+
+$(\mathrm{TangentGeometry}, \mathrm{CoordinateBasis}, \mathrm{Acceleration})$.
+"""
+
+phys_disp = Representation(tangent_geom, phys_basis, dpl)
+r"""Physical-basis displacement representation.
+
+$(\mathrm{TangentGeometry}, \mathrm{PhysicalBasis}, \mathrm{Displacement})$.
+"""
+
+phys_vel = Representation(tangent_geom, phys_basis, vel)
+r"""Physical-basis velocity representation.
+
+$(\mathrm{TangentGeometry}, \mathrm{PhysicalBasis}, \mathrm{Velocity})$.
+"""
+
+phys_acc = Representation(tangent_geom, phys_basis, acc)
+r"""Physical-basis acceleration representation.
+
+$(\mathrm{TangentGeometry}, \mathrm{PhysicalBasis}, \mathrm{Acceleration})$.
+"""
+
 
 CANONICAL_REPRESENTATIONS: Final[dict[Representation[Any, Any, Any], str]] = {
     point: "point",
+    coord_disp: "coord_disp",
+    coord_vel: "coord_vel",
+    coord_acc: "coord_acc",
+    phys_disp: "phys_disp",
+    phys_vel: "phys_vel",
+    phys_acc: "phys_acc",
 }

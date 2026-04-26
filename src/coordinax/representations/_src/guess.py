@@ -10,14 +10,25 @@ import unxt as u
 
 import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
-from .basis import AbstractBasis, no_basis
-from .constants import ANGLE, AREA, LENGTH
-from .geom import AbstractGeometry, PointGeometry, point_geom
-from .rep import Representation, point
-from .semantics import (
-    AbstractSemanticKind,
-    loc,
+from .basis import AbstractBasis, coord_basis, no_basis
+from .constants import (
+    ACCELERATION,
+    ANGLE,
+    ANGULAR_ACCELERATION,
+    ANGULAR_SPEED,
+    AREA,
+    LENGTH,
+    SPEED,
 )
+from .geom import (
+    AbstractGeometry,
+    PointGeometry,
+    TangentGeometry,
+    point_geom,
+    tangent_geom,
+)
+from .rep import Representation, point
+from .semantics import AbstractSemanticKind, Location, acc, dpl, loc, vel
 from coordinax.internal.custom_types import CDict
 
 # ===================================================================
@@ -46,6 +57,14 @@ DIM_TO_GEOM_MAP: dict[
     LENGTH: point_geom,  # Length → point (affine location, per spec)
     ANGLE: point_geom,  # Angles → affine (mixed with other coords)
     (ANGLE, LENGTH): point_geom,
+    SPEED: tangent_geom,
+    ANGULAR_SPEED: tangent_geom,
+    (ANGULAR_SPEED, SPEED): tangent_geom,
+    (SPEED, ANGULAR_SPEED): tangent_geom,
+    ACCELERATION: tangent_geom,
+    ANGULAR_ACCELERATION: tangent_geom,
+    (ACCELERATION, ANGULAR_ACCELERATION): tangent_geom,
+    (ANGULAR_ACCELERATION, ACCELERATION): tangent_geom,
 }
 
 
@@ -65,6 +84,18 @@ def guess_geometry_kind(
 
     >>> cxr.guess_geometry_kind((u.dimension("angle"), u.dimension("length")))
     PointGeometry()
+
+    >>> cxr.guess_geometry_kind(u.dimension("speed"))
+    TangentGeometry()
+
+    >>> cxr.guess_geometry_kind(u.dimension("angular speed"))
+    TangentGeometry()
+
+    >>> cxr.guess_geometry_kind(u.dimension("acceleration"))
+    TangentGeometry()
+
+    >>> cxr.guess_geometry_kind(u.dimension("angular acceleration"))
+    TangentGeometry()
 
     """
     try:
@@ -86,6 +117,12 @@ def guess_geometry_kind(obj: u.AbstractQuantity, /) -> AbstractGeometry:
 
     >>> cxr.guess_geometry_kind(u.Q(1.0, "m"))
     PointGeometry()
+
+    >>> cxr.guess_geometry_kind(u.Q(2.0, "m / s"))
+    TangentGeometry()
+
+    >>> cxr.guess_geometry_kind(u.Q(3.0, "m / s ** 2"))
+    TangentGeometry()
 
     """
     dim = u.dimension_of(obj)
@@ -112,6 +149,10 @@ def guess_geometry_kind(obj: CDict, /) -> AbstractGeometry:
     >>> d2 = {"lon": u.Q(1.0, "deg"), "lat": u.Q(2.0, "deg")}
     >>> cxr.guess_geometry_kind(d2)
     PointGeometry()
+
+    >>> d3 = {"x": u.Q(1.0, "m / s"), "y": u.Q(2.0, "m / s")}
+    >>> cxr.guess_geometry_kind(d3)
+    TangentGeometry()
 
     """
     # Find the `dim` for determining the geometry kind
@@ -312,6 +353,14 @@ DIM_TO_SEMANTICS_MAP: dict[
     LENGTH: loc,
     ANGLE: loc,
     (ANGLE, LENGTH): loc,
+    SPEED: vel,
+    ANGULAR_SPEED: vel,
+    (ANGULAR_SPEED, SPEED): vel,
+    (SPEED, ANGULAR_SPEED): vel,
+    ACCELERATION: acc,
+    ANGULAR_ACCELERATION: acc,
+    (ACCELERATION, ANGULAR_ACCELERATION): acc,
+    (ANGULAR_ACCELERATION, ACCELERATION): acc,
 }
 
 
@@ -331,6 +380,18 @@ def guess_semantic_kind(
 
     >>> cxr.guess_semantic_kind((u.dimension("angle"), u.dimension("length")))
     Location()
+
+    >>> cxr.guess_semantic_kind(u.dimension("speed"))
+    Velocity()
+
+    >>> cxr.guess_semantic_kind(u.dimension("angular speed"))
+    Velocity()
+
+    >>> cxr.guess_semantic_kind(u.dimension("acceleration"))
+    Acceleration()
+
+    >>> cxr.guess_semantic_kind(u.dimension("angular acceleration"))
+    Acceleration()
 
     """
     try:
@@ -428,7 +489,68 @@ def guess_rep(obj: PointGeometry, /) -> Representation:
 
 @plum.dispatch
 def guess_rep(
-    obj: u.AbstractDimension | u.AbstractQuantity | CDict, /
+    obj: u.AbstractDimension
+    | tuple[u.AbstractDimension, ...]
+    | u.AbstractQuantity
+    | CDict,
+    geom: PointGeometry,
+    /,
+) -> Representation:
+    """Infer point representation from data and an already-inferred PointGeometry.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.representations as cxr
+
+    >>> rep = cxr.guess_rep(u.dimension("length"), cxr.point_geom)
+    >>> rep
+    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+
+    """
+    return point  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def guess_rep(
+    obj: u.AbstractDimension
+    | tuple[u.AbstractDimension, ...]
+    | u.AbstractQuantity
+    | CDict,
+    geom: TangentGeometry,
+    /,
+) -> Representation:
+    """Infer tangent representation from data and an already-inferred TangentGeometry.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.representations as cxr
+
+    >>> rep = cxr.guess_rep(u.dimension("speed"), cxr.tangent_geom)
+    >>> rep.geom_kind
+    TangentGeometry()
+    >>> rep.semantic_kind
+    Velocity()
+
+    >>> rep = cxr.guess_rep(u.dimension("acceleration"), cxr.tangent_geom)
+    >>> rep.geom_kind
+    TangentGeometry()
+    >>> rep.semantic_kind
+    Acceleration()
+
+    """
+    sem = cxrapi.guess_semantic_kind(obj)
+    return Representation(geom_kind=geom, basis=coord_basis, semantic_kind=sem)
+
+
+@plum.dispatch
+def guess_rep(
+    obj: u.AbstractDimension
+    | tuple[u.AbstractDimension, ...]
+    | u.AbstractQuantity
+    | CDict,
+    /,
 ) -> Representation:
     """Infer representation from the physical dimension of a Quantity.
 
@@ -445,9 +567,27 @@ def guess_rep(
     >>> rep
     Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 
+    >>> rep = cxr.guess_rep(u.dimension("speed"))
+    >>> rep.geom_kind
+    TangentGeometry()
+    >>> rep.semantic_kind
+    Velocity()
+
+    >>> rep = cxr.guess_rep(u.Q(1.0, "m / s"))
+    >>> rep.geom_kind
+    TangentGeometry()
+    >>> rep.semantic_kind
+    Velocity()
+
+    >>> rep = cxr.guess_rep(u.dimension("acceleration"))
+    >>> rep.geom_kind
+    TangentGeometry()
+    >>> rep.semantic_kind
+    Acceleration()
+
     """
     geom = cxrapi.guess_geometry_kind(obj)
-    out = cxrapi.guess_rep(geom)
+    out = cxrapi.guess_rep(obj, geom)
     return cast("Representation", out)
 
 
@@ -491,3 +631,48 @@ def guess_rep(
 
     """
     return point  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def guess_rep(
+    obj: Any, chart: cxc.AbstractChart, geom: TangentGeometry, /
+) -> Representation:
+    """Infer representation.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    Speed dimensions infer Velocity:
+
+    >>> rep = cxr.guess_rep(u.Q([1.0, 2.0], "m / s"), cxc.cart2d, cxr.TangentGeometry())
+    >>> rep
+    Representation(geom_kind=TangentGeometry(), basis=CoordinateBasis(),
+                   semantic_kind=Velocity())
+
+    Length dimensions would infer Location in general, but TangentGeometry
+    requires a tangent semantic kind, so Displacement is returned instead:
+
+    >>> rep = cxr.guess_rep(u.Q([1.0, 2.0], "m"), cxc.cart2d, cxr.TangentGeometry())
+    >>> rep
+    Representation(geom_kind=TangentGeometry(), basis=CoordinateBasis(),
+                   semantic_kind=Displacement())
+
+    """
+    # Infer the semantic kind from the data.
+    data = cxc.cdict(obj, chart)
+    semantic_kind = cxrapi.guess_semantic_kind(data)
+
+    # Length/angle dimensions map to Location in the dimension→semantic table,
+    # but TangentGeometry requires an AbstractTangentSemanticKind. Displacement
+    # is the tangent kind at order 0 (same physical dimensions as a position,
+    # but living in the tangent space), so use it as the default.
+    if isinstance(semantic_kind, Location):
+        semantic_kind = dpl
+
+    # TODO: better determine the basis kind
+    basis = coord_basis
+
+    return Representation(geom_kind=geom, basis=basis, semantic_kind=semantic_kind)

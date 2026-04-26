@@ -5,6 +5,12 @@ __all__ = (
     # No basis
     "NoBasis",
     "no_basis",
+    # Linear bases
+    "AbstractLinearBasis",
+    "CoordinateBasis",
+    "coord_basis",
+    "PhysicalBasis",
+    "phys_basis",
 )
 
 
@@ -195,3 +201,122 @@ class NoBasis(AbstractBasis):
 
 no_basis: Final = NoBasis()
 """Instance of `NoBasis`."""
+
+
+@jtu.register_static
+class AbstractLinearBasis(AbstractBasis, metaclass=abc.ABCMeta):
+    r"""Abstract base class for linear (basis-dependent) basis kinds.
+
+    A linear basis kind indicates that component data is expressed as
+    components with respect to a specific choice of basis vectors in a
+    tangent space or other linear space.
+
+    In the representation model used by `coordinax`, `AbstractLinearBasis`
+    refines `AbstractBasis` by indicating that the object lives in a
+    basis-dependent linear space, in contrast to `NoBasis` which is used for
+    affine point data.
+
+    Examples
+    --------
+    >>> import coordinax.representations as cxr
+    >>> isinstance(cxr.CoordinateBasis(), cxr.AbstractLinearBasis)
+    True
+
+    """
+
+
+@final
+@jtu.register_static
+@dataclasses.dataclass(frozen=True, slots=True)
+class CoordinateBasis(AbstractLinearBasis):
+    r"""Coordinate basis kind.
+
+    A coordinate basis kind indicates that tangent-vector components are
+    expressed in the **coordinate basis** induced by the current chart. In a
+    coordinate basis, the basis vectors are the partial derivative operators
+    $\partial/\partial x^i$ associated with the chart coordinates $x^i$.
+
+    Mathematical Definition:
+
+    Let $(U, \varphi)$ be a chart on a smooth manifold $M$. The coordinate
+    basis at a point $p \in U$ consists of the tangent vectors
+    $\partial_i = \partial/\partial x^i|_p$. A tangent vector $v \in T_p M$
+    expressed in the coordinate basis has components $v^i$ such that
+    $v = v^i \partial_i$.
+
+    Under a change of chart, coordinate-basis components transform by the
+    Jacobian matrix of the chart transition map.
+
+    Examples
+    --------
+    Construct the coordinate basis object directly:
+
+    >>> import coordinax.representations as cxr
+    >>> basis = cxr.CoordinateBasis()
+
+    Use it inside a full representation for tangent data:
+
+    >>> rep = cxr.Representation(cxr.tangent_geom, basis, cxr.dpl)
+
+    Notes
+    -----
+    `CoordinateBasis` does not carry unit-length information. Components in a
+    coordinate basis are not necessarily dimensionless: for example, the
+    $\partial_r$ component of a vector in spherical coordinates carries units
+    of inverse length relative to the physical basis.
+
+    """
+
+    canonical_name: ClassVar = "coord_basis"
+    """Canonical name for the coordinate basis kind."""
+
+
+coord_basis: Final = CoordinateBasis()
+"""Instance of `CoordinateBasis`."""
+
+
+@final
+@jtu.register_static
+@dataclasses.dataclass(frozen=True, slots=True)
+class PhysicalBasis(AbstractLinearBasis):
+    r"""Physical (orthonormal) basis kind.
+
+    A physical basis kind indicates that tangent-vector components are expressed
+    in an **orthonormal physical basis**. In a physical basis, the basis vectors
+    are unit-length and mutually orthogonal with respect to the metric.
+
+    Mathematical Definition:
+
+    Let $M$ carry a Riemannian metric $g$ and let $(U, \varphi)$ be a chart on
+    $M$. The physical basis at a point $p \in U$ consists of unit vectors
+    $\hat{e}_i = \partial_i / \sqrt{g_{ii}}$ (for orthogonal charts). A tangent
+    vector $v \in T_p M$ expressed in the physical basis has components
+    $\hat{v}^i$ such that $v = \hat{v}^i \hat{e}_i$.
+
+    Under a change of chart, physical-basis components transform by both the
+    Jacobian and the normalization factors of the chart transition.
+
+    Examples
+    --------
+    Construct the physical basis object directly:
+
+    >>> import coordinax.representations as cxr
+    >>> basis = cxr.PhysicalBasis()
+
+    Use it inside a full representation for tangent data:
+
+    >>> rep = cxr.Representation(cxr.tangent_geom, basis, cxr.vel)
+
+    Notes
+    -----
+    `PhysicalBasis` components have consistent physical dimensions across all
+    charts, unlike coordinate-basis components.
+
+    """
+
+    canonical_name: ClassVar = "phys_basis"
+    """Canonical name for the physical basis kind."""
+
+
+phys_basis: Final = PhysicalBasis()
+"""Instance of `PhysicalBasis`."""

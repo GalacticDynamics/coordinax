@@ -13,6 +13,7 @@ import hypothesis.strategies as st
 import plum
 
 import coordinax.representations as cxr
+from coordinax.representations._src.semantics import _TANGENT_TIME_ORDER_LADDER
 
 from .bases import bases
 from .geoms import geometries
@@ -42,6 +43,21 @@ def valid_basis_classes_for_geometry(  # noqa: F811
 
 
 @plum.dispatch
+def valid_basis_classes_for_geometry(  # noqa: F811
+    geom_kind: cxr.TangentGeometry, /
+) -> tuple[type[cxr.AbstractBasis], ...]:
+    """Return valid basis classes for tangent geometry.
+
+    TangentGeometry requires a linear basis (coordinate or physical).
+    """
+    del geom_kind
+    return cast(
+        "tuple[type[cxr.AbstractBasis], ...]",
+        get_all_subclasses(cxr.AbstractLinearBasis, exclude_abstract=True),
+    )
+
+
+@plum.dispatch
 def valid_semantic_classes_for_geometry(
     geom_kind: cxr.AbstractGeometry, /
 ) -> tuple[type[cxr.AbstractSemanticKind], ...]:
@@ -60,6 +76,22 @@ def valid_semantic_classes_for_geometry(  # noqa: F811
     """Return valid semantic classes for point geometry."""
     del geom_kind
     return (cxr.Location,)
+
+
+@plum.dispatch
+def valid_semantic_classes_for_geometry(  # noqa: F811
+    geom_kind: cxr.TangentGeometry, /
+) -> tuple[type[cxr.AbstractSemanticKind], ...]:
+    """Return valid semantic classes for tangent geometry.
+
+    Returns all registered tangent semantic kinds (e.g. Displacement, Velocity,
+    Acceleration), sorted by their ``order`` attribute for deterministic output.
+    """
+    del geom_kind
+    return cast(
+        "tuple[type[cxr.AbstractSemanticKind], ...]",
+        tuple(cls for _, cls in sorted(_TANGENT_TIME_ORDER_LADDER.items())),
+    )
 
 
 @st.composite

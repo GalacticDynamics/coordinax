@@ -531,31 +531,93 @@ $$
 ds^2 = \sum_i g_{ii}(q)\,(dq^i)^2 = \sum_i h_i(q)^2\,(dq^i)^2.
 $$
 
-**Physical (orthonormal) basis.** The _coordinate_ basis vectors $\partial/\partial q^i$ are orthogonal but not unit vectors. Normalizing them with the metric gives the **physical** (orthonormal) basis:
+The scale factors $h_i$ therefore control both the metric geometry and the relationship between coordinate components and physical (arc-length) components. For orthogonal coordinate systems they are the only information needed to pass between these two representations; for general (non-orthogonal) coordinate systems the analogous role is played by the **vielbein**, obtained via Cholesky factorization of $g$ — see [Physical Basis and Basis Conventions](#physical-basis-and-basis-conventions) below.
+
+### Physical Basis and Basis Conventions
+
+**Orthogonal coordinate systems.** The _coordinate_ basis vectors $\partial/\partial q^i$ are generally not unit vectors. For orthogonal coordinate systems (diagonal metric), they are mutually orthogonal. Normalizing them with the scale factors gives the **physical basis** (also called the **orthonormal frame**):
 
 $$
 \hat{e}_i = \frac{1}{h_i(p)}\frac{\partial}{\partial q^i}\bigg|_p.
 $$
 
-The components of a tangent vector $v$ in the two bases are related by a simple scaling (no sum):
+The components of a tangent vector $v$ in the two bases are related by a simple scaling (no sum on $i$):
 
 $$
-\hat{v}^i = h_i\, v^i, \qquad v^i = h_i^{-1}\,\hat{v}^i.
+\hat{v}^i = h_i(p)\, v^i, \qquad v^i = h_i(p)^{-1}\,\hat{v}^i.
 $$
 
-**Cholesky factorization and the vielbein.** Given any metric matrix $g$ (diagonal or not), the Cholesky decomposition $g = L\,L^\top$ yields a unique lower-triangular factor $L$ with strictly positive diagonal entries. The matrix $E = L^\top$ is the **vielbein** (frame matrix): it provides the linear map from coordinate-basis components to physical-basis components,
+For orthogonal coordinates, these transformations can be written in matrix form. Let $H(p) = \operatorname{diag}(h_1(p),\ldots,h_n(p))$ be the diagonal scale-factor matrix. Then:
 
 $$
-v_\text{phys} = (L^\top)^{-1}\, v_\text{coord}.
+\boxed{
+\hat{\mathbf{v}} = H(p)\,\mathbf{v}, \qquad \mathbf{v} = H(p)^{-1}\,\hat{\mathbf{v}}.
+}
 $$
 
-For a **diagonal** metric $g = \operatorname{diag}(h_1^2, \ldots, h_n^2)$, the Cholesky factor is itself diagonal:
+The metric in physical components is the identity by construction: $g(\hat{v}, \hat{w}) = \sum_i \hat{v}^i \hat{w}^i$, whereas in coordinate components it reads $g(v, w) = h_i^2 v^i w^i$ (using diagonality).
+
+!!! example
+
+    _Cartesian coordinates in $\mathbb{R}^3$._ The metric is $g = dx^2 + dy^2 + dz^2$, so $h_x = h_y = h_z = 1$. The coordinate basis equals the physical basis ($\hat{e}_i = \partial_i$), and coordinate components equal physical components: no transformation is needed.
+
+!!! example
+
+    _Spherical coordinates in $\mathbb{R}^3$._ The metric is $g = dr^2 + r^2 d\theta^2 + r^2 \sin^2\theta \, d\phi^2$, giving scale factors $h_r = 1$, $h_\theta = r$, $h_\phi = r\sin\theta$. The transformation from coordinate to physical components is:
+
+    $$
+    \begin{pmatrix} \hat{v}^r \\ \hat{v}^\theta \\ \hat{v}^\phi \end{pmatrix}
+    = \begin{pmatrix}
+    1 & 0 & 0 \\
+    0 & r & 0 \\
+    0 & 0 & r\sin\theta
+    \end{pmatrix}
+    \begin{pmatrix} v^r \\ v^\theta \\ v^\phi \end{pmatrix},
+    \qquad
+    \begin{pmatrix} v^r \\ v^\theta \\ v^\phi \end{pmatrix}
+    = \begin{pmatrix}
+    1 & 0 & 0 \\
+    0 & 1/r & 0 \\
+    0 & 0 & 1/(r\sin\theta)
+    \end{pmatrix}
+    \begin{pmatrix} \hat{v}^r \\ \hat{v}^\theta \\ \hat{v}^\phi \end{pmatrix}.
+    $$
+
+**General (non-orthogonal) coordinate systems.** The Cholesky decomposition $g = L\,L^\top$ yields the **vielbein** $E = L^\top$, a unique upper-triangular matrix satisfying:
 
 $$
-L = L^\top = \operatorname{diag}(h_1, \ldots, h_n),
+g = E^\top E.
 $$
 
-and the coordinate-to-physical map reduces to componentwise scaling $\hat{v}^i = h_i\, v^i$ as above. For a **non-diagonal** metric, $L$ is a full lower-triangular matrix, but the vielbein $E = L^\top$ still provides the unique orthonormalizing frame and the basis-change map to physical components.
+For any metric (diagonal or not), the vielbein provides the basis-change map to orthonormal-frame components:
+
+$$
+\boxed{
+\mathbf{v}_{\rm frame} = E \,\mathbf{v}_{\rm coord}, \qquad
+\mathbf{v}_{\rm coord} = E^{-1} \,\mathbf{v}_{\rm frame}.
+}
+$$
+
+For a diagonal metric $g = \operatorname{diag}(h_1^2, \ldots, h_n^2)$, the Cholesky factor is $L = \operatorname{diag}(h_1, \ldots, h_n)$, so $E = H$ and the formula reduces to the orthogonal-coordinate scaling above. For non-diagonal metrics, $E$ is a full upper-triangular matrix, but the transformation remains $O(n^2)$ and numerically stable.
+
+!!! example
+
+    _Non-orthogonal 2-D coordinates._ Consider a 2-D metric $g = \begin{pmatrix} 4 & 2 \\ 2 & 3 \end{pmatrix}$. The Cholesky factorization gives $L = \begin{pmatrix} 2 & 0 \\ 1 & \sqrt{2} \end{pmatrix}$, so $E = \begin{pmatrix} 2 & 1 \\ 0 & \sqrt{2} \end{pmatrix}$. For a coordinate vector $\mathbf{v}_{\rm coord} = (v^1, v^2)^\top$, the frame components are:
+
+    $$
+    \begin{pmatrix} v^1_{\rm frame} \\ v^2_{\rm frame} \end{pmatrix}
+    = \begin{pmatrix} 2 & 1 \\ 0 & \sqrt{2} \end{pmatrix}
+    \begin{pmatrix} v^1 \\ v^2 \end{pmatrix}
+    = \begin{pmatrix} 2v^1 + v^2 \\ \sqrt{2}\, v^2 \end{pmatrix}.
+    $$
+
+**Basis changes under chart transitions.** When transforming coordinates under a chart transition $\tau : q \to \tilde{q}$ with Jacobian $J^j{}_i$, coordinate components transform as $\tilde{v}^j = J^j{}_i v^i$. The effect on orthonormal-frame components combines the Jacobian with the vielbeins at each chart:
+
+$$
+\mathbf{v}'_{\rm frame} = \tilde{E}\,J\,E^{-1}\,\mathbf{v}_{\rm frame} \equiv R\,\mathbf{v}_{\rm frame},
+$$
+
+where $R = \tilde{E}\,J\,E^{-1}$ is the **frame-change matrix**. For orthogonal coordinates, this simplifies to $R = \tilde{H}\,J\,H^{-1}$. When the transition is a rigid rotation (so $J \in O(n)$ and both charts are Cartesian), $R$ itself is orthogonal.
 
 </br>
 
@@ -884,7 +946,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
-| `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, </br> `PointGeometry`, `point_geom`, </br> `NoBasis`, `no_basis`, </br> `Location`, `loc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
+| `coordinax.representations` | `cconvert`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
@@ -1624,6 +1686,12 @@ A representation is therefore **not** the same thing as a chart: the chart deter
     |     Name     |   `geom_kind`  |    `basis`    | `semantic_kind` |
     |--------------|----------------|---------------|-----------------|
     | `point`      | [`point_geom`](#software-spec-point-geometry)   | [`no_basis`](#software-spec-no_basis)    |      [`loc`](#software-spec-location)      |
+    | `coord_disp` | [`tangent_geom`](#software-spec-tangent-geometry) | [`coord_basis`](#software-spec-coordinatebasis) |      [`dpl`](#software-spec-displacement)      |
+    | `coord_vel`  | [`tangent_geom`](#software-spec-tangent-geometry) | [`coord_basis`](#software-spec-coordinatebasis) |      [`vel`](#software-spec-velocity)      |
+    | `coord_acc`  | [`tangent_geom`](#software-spec-tangent-geometry) | [`coord_basis`](#software-spec-coordinatebasis) |      [`acc`](#software-spec-acceleration)      |
+    | `phys_disp`  | [`tangent_geom`](#software-spec-tangent-geometry) | [`phys_basis`](#software-spec-physicalbasis)  |      [`dpl`](#software-spec-displacement)      |
+    | `phys_vel`   | [`tangent_geom`](#software-spec-tangent-geometry) | [`phys_basis`](#software-spec-physicalbasis)  |      [`vel`](#software-spec-velocity)      |
+    | `phys_acc`   | [`tangent_geom`](#software-spec-tangent-geometry) | [`phys_basis`](#software-spec-physicalbasis)  |      [`acc`](#software-spec-acceleration)      |
 
 </br>
 
@@ -1694,6 +1762,43 @@ q_f = \tau(q_i) .$$ An important example is the **point geometry**.
 
     - `AbstractGeometry` is a static dispatch object category (no runtime numerical payload).
     - Concrete subclasses should represent immutable geometric categories.
+
+!!! info `PointGeometry` and `point_geom`
+
+    Concrete geometric kind for manifold points, and its canonical instance.
+
+    - `PointGeometry` is the final concrete subclass of `AbstractGeometry` for point-like data.
+    - It encodes that components represent a point $p \in M$ (an affine object), not a vector in a tangent/cotangent space.
+    - Point coordinates therefore transform by the ordinary chart transition map (`pt_map` / `pt_map` point behavior), with the represented geometric object unchanged.
+
+    Affine semantics:
+
+    - Point data is location data: points do not add as vectors.
+    - Any vector-space operations require a separate geometric kind (for example tangent/cotangent kinds), not `PointGeometry`.
+
+    API instance:
+
+    - `point_geom` is the pre-defined canonical `PointGeometry()` instance used by the default point representation `point = Representation(point_geom, no_basis, loc)`.
+
+(software-spec-tangent-geometry)=
+
+!!! info `TangentGeometry` and `tangent_geom`
+
+    Concrete geometric kind for tangent vectors, and its canonical instance.
+
+    - `TangentGeometry` is the final concrete subclass of `AbstractGeometry` for tangent-vector data.
+    - It encodes that components represent a tangent vector $v \in T_p M$ (a vector in the tangent space at a base point $p$), not an affine point.
+    - Tangent vector coordinates transform by the **Jacobian pushforward** under chart changes: $\tilde{v}^j = J^j{}_i v^i$.
+
+    Tangent semantics:
+
+    - Requires a **basis** specification (e.g. `CoordinateBasis` or `PhysicalBasis`) to determine component convention.
+    - Requires a **base point** `at` for non-Cartesian chart changes (since $J$ depends on the evaluation point).
+    - Supports three semantic kinds: `Displacement`, `Velocity`, `Acceleration` — all with identical transformation laws.
+
+    API instance:
+
+    - `tangent_geom` is the pre-defined canonical `TangentGeometry()` instance.
 
 (software-spec-guess_geometry_kind)=
 
@@ -1822,6 +1927,44 @@ However, not all geometric objects require a basis specification.
     - `no_basis` is the pre-defined canonical `NoBasis()` instance.
     - It is used in the default point representation `point = Representation(point_geom, no_basis, loc)`.
 
+(software-spec-abstractlinearbasis)=
+
+!!! info `AbstractLinearBasis`
+
+    Abstract marker base class for bases in linear (vector) spaces.
+
+    - `AbstractLinearBasis` is the abstract parent of all basis kinds applicable to tangent vectors (elements of $T_p M$).
+    - Concrete subclasses specify which basis convention is used for the components.
+    - Not applicable to point data (`PointGeometry` uses `NoBasis`).
+
+(software-spec-coordinatebasis)=
+
+!!! info `CoordinateBasis` and `coord_basis`
+
+    The holonomic coordinate basis $\{\partial_i\} = \{\partial/\partial q^i\}$, and its canonical instance.
+
+    - `CoordinateBasis` is the concrete basis kind for tangent components expressed in the coordinate (holonomic) basis.
+    - Components $v^i$ transform under chart changes by the Jacobian $J^j{}_i = \partial\tilde{q}^j/\partial q^i$ computed via `jax.jacfwd`.
+    - This is the natural output of differentiation (e.g. `jax.grad`, `jax.jacfwd`) of coordinate-valued functions.
+
+    API instance:
+
+    - `coord_basis` is the pre-defined canonical `CoordinateBasis()` instance.
+
+(software-spec-physicalbasis)=
+
+!!! info `PhysicalBasis` and `phys_basis`
+
+    The orthonormal physical basis $\{\hat{e}_i\} = \{\partial_i / h_i\}$, and its canonical instance.
+
+    - `PhysicalBasis` is the concrete basis kind for tangent components expressed in the orthonormal (physical) frame.
+    - Components $\hat{v}^i$ transform under chart changes via the orthonormal-frame rotation matrix $R = B_{\rm to}^T B_{\rm from}$ where $B$ is the frame matrix of physical basis vectors expressed in Cartesian coordinates.
+    - Physical components have consistent physical dimensions (e.g. speed in m/s, not speed/length).
+
+    API instance:
+
+    - `phys_basis` is the pre-defined canonical `PhysicalBasis()` instance.
+
 </br>
 
 ### Semantic Kind
@@ -1905,6 +2048,94 @@ Separating semantics from geometry provides two advantages:
 
     - `loc` is the pre-defined canonical `Location()` instance.
     - It is used in the default point representation `point = Representation(point_geom, no_basis, loc)`.
+
+(software-spec-abstracttangentsemantickind)=
+
+!!! info `AbstractTangentSemanticKind`
+
+    Abstract marker base class for semantic kinds of tangent vectors.
+
+    - All tangent-vector semantic kinds (Displacement, Velocity, Acceleration) share the same Jacobian transformation law.
+    - Semantic kind is used for role-aware dispatch in frame transformations (e.g. `Boost` acts on `Velocity`, is identity on `Displacement`).
+
+    **`order` class variable** (`ClassVar[int]`):
+
+    Every concrete subclass must define `order`, an integer encoding its position in the time-derivative chain:
+
+    | Class          | `order` |
+    |----------------|---------|
+    | `Displacement` |   0     |
+    | `Velocity`     |   1     |
+    | `Acceleration` |   2     |
+
+    `order` is the key used in the internal order registry.
+
+    **`__init_subclass__`**:
+
+    On class creation, each concrete subclass is automatically registered in the internal order registry at its `order`. Raises `TypeError` if the chosen `order` is already occupied by a *different* class (same-named reconstructions from `@dataclasses.dataclass(slots=True)` are allowed).
+
+    **`derivative() -> AbstractTangentSemanticKind`**:
+
+    Returns a fresh instance of the class registered at `self.order + 1`. Raises `ValueError` if no class is registered at that order.
+
+    **`antiderivative() -> AbstractTangentSemanticKind`**:
+
+    Returns a fresh instance of the class registered at `self.order - 1`. Raises `ValueError` if no class is registered at that order. This is open for extension: defining an `Absement` subclass at `order = -1` automatically makes `Displacement().antiderivative()` return `Absement()`.
+
+    **`derivative()` and `antiderivative()` are mutual inverses** on the interior of the registered ladder:
+    - `kind.derivative().antiderivative() == kind` for all kinds that are not the top of the ladder.
+    - `kind.antiderivative().derivative() == kind` for all kinds that are not the bottom of the ladder.
+
+(software-spec-displacement)=
+
+!!! info `Displacement` and `dpl`
+
+    Semantic kind for a finite (or infinitesimal) position difference, and its canonical instance.
+
+    - `Displacement` is a concrete subclass of `AbstractTangentSemanticKind`.
+    - Represents $\Delta q = q_2 - q_1$, an element of the tangent space in the limit, or a finite difference.
+    - Under Galilean boosts: `Displacement` is **invariant** — boost does not change displacements.
+    - `order = 0`.
+    - `derivative()` returns the `vel` singleton directly.
+    - `antiderivative()` uses the base-class internal-registry lookup; raises `ValueError` unless a class at order -1 (e.g. `Absement`) is registered.
+
+    API instance:
+
+    - `dpl` is the pre-defined canonical `Displacement()` instance.
+
+(software-spec-velocity)=
+
+!!! info `Velocity` and `vel`
+
+    Semantic kind for time-derivative of position, and its canonical instance.
+
+    - `Velocity` is a concrete subclass of `AbstractTangentSemanticKind`.
+    - Represents $\dot{q} = dq/dt$, a genuine element of $T_p M$.
+    - Under Galilean boosts: **shifts** by the boost velocity $\Delta v$.
+    - `order = 1`.
+    - `derivative()` returns the `acc` singleton directly.
+    - `antiderivative()` returns the `dpl` singleton directly.
+
+    API instance:
+
+    - `vel` is the pre-defined canonical `Velocity()` instance.
+
+(software-spec-acceleration)=
+
+!!! info `Acceleration` and `acc`
+
+    Semantic kind for time-derivative of velocity, and its canonical instance.
+
+    - `Acceleration` is a concrete subclass of `AbstractTangentSemanticKind`.
+    - Represents $\ddot{q} = d^2q/dt^2$, also an element of $T_p M$.
+    - Under Galilean boosts with constant $\Delta v$: **invariant** (since $\dot{\Delta v} = 0$).
+    - `order = 2`.
+    - `derivative()` uses the base-class ladder lookup; raises `ValueError` unless a class at order 3 (e.g. `Jerk`) is registered.
+    - `antiderivative()` returns the `vel` singleton directly.
+
+    API instance:
+
+    - `acc` is the pre-defined canonical `Acceleration()` instance.
 
 </br>
 

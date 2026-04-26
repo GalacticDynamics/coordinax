@@ -123,6 +123,47 @@ def cdicts(  # noqa: F811
     if not isinstance(semantic_kind, cxr.Location):
         raise TypeError("cdicts with PointGeometry must have Location semantic kind")
 
-    # The default implementation for cdicts is the point-geometry case, so we can safely redispatch to the rep-less methods.
+    strategy = cdicts(chart, **kwargs)
+    return draw(cast(st.SearchStrategy[CDict], strategy))
+
+
+@plum.dispatch
+@strip_return_annotation
+@st.composite
+def cdicts(  # noqa: F811
+    draw: st.DrawFn,
+    chart: cxc.AbstractChart,
+    geom_kind: cxr.TangentGeometry,
+    basis: cxr.AbstractBasis,
+    semantic_kind: cxr.AbstractSemanticKind,
+    /,
+    **kwargs: Any,
+) -> CDict:
+    """Generate a tangent-geometry CDict following chart.coord_dimensions.
+
+    Tangent vectors (with any basis and semantic kind) are generated as
+    chart-coordinate-dimensioned quantities. For hypothesis testing, this is
+    sufficient since invariants are checked separately.
+
+    >>> import coordinax.hypothesis.representations as cxsr
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.charts as cxc
+    >>> from hypothesis import given
+
+    >>> @given(p=cxsr.cdicts(cxc.cart3d, cxr.coord_disp))
+    ... def test_cdict_tangent(p):
+    ...     assert set(p.keys()) == {"x", "y", "z"}
+
+    """
+    del geom_kind
+
+    if not isinstance(basis, cxr.AbstractLinearBasis):
+        raise TypeError("cdicts with TangentGeometry must have AbstractLinearBasis")
+
+    if not isinstance(semantic_kind, cxr.AbstractTangentSemanticKind):
+        raise TypeError(
+            "cdicts with TangentGeometry must have AbstractTangentSemanticKind"
+        )
+
     strategy = cdicts(chart, **kwargs)
     return draw(cast(st.SearchStrategy[CDict], strategy))

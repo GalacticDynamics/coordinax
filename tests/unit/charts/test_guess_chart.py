@@ -1,7 +1,5 @@
 """Tests for guess_chart function.
 
-Notes
------
 `guess_chart` has fundamental limitations:
 
 1. It only works with charts that can be instantiated without arguments.
