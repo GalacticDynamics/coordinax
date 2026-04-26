@@ -184,11 +184,9 @@ Identity transform returns the exact same object:
 True
 ```
 
-## Changing Tangent Basis In-Place
+## Changing Tangent Basis
 
-Use `cxr.change_basis()` when a CDict already lives in the correct chart and you only need to reinterpret tangent components with respect to a different basis.
-
-In v1 this supports Cartesian tangent data only. For Cartesian charts, coordinate and physical bases coincide, so the values are preserved.
+Use `cxr.change_basis()` when a you want to change the tangent basis of a CDict without changing its chart or representation.
 
 ```{code-block} python
 >>> d = {"x": 1.0, "y": 0.0}

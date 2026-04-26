@@ -20,9 +20,6 @@ import plum
 def change_basis(*args: Any, **kwargs: Any) -> Any:
     """Change the basis of a tangent vector's components.
 
-    Supports both basis-object and representation-object overloads.
-    Tangent-only in v1: only CoordinateBasis <-> PhysicalBasis conversions are supported.
-
     Examples
     --------
     >>> import coordinax.representations as cxr

@@ -142,16 +142,15 @@ The representation design is intentionally extensible. Future geometric kinds (f
 
 `change_basis` handles a narrower problem than `cconvert`: it keeps the chart fixed and only changes how tangent components are interpreted with respect to a basis.
 
-In the current v1 implementation, this is intentionally limited to tangent data in Cartesian charts:
-
-- supported basis changes: `CoordinateBasis` $
-ightleftarrows$ `PhysicalBasis`
+- supported basis changes: `CoordinateBasis` $\rightleftarrows$ `PhysicalBasis`
 - supported representations: tangent representations such as `coord_disp` and `phys_disp`
-- unsupported: point data (`NoBasis`) and non-Cartesian charts
+- unsupported: point data (`NoBasis`)
+- non-Cartesian support: available for charts with basis-change rules (for example `sph3d`), and generally via an explicit metric/manifold
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
 >>> import coordinax.representations as cxr
+>>> import jax.numpy as jnp
 
 >>> v = {"x": 1.0, "y": 0.0}
 >>> at = {"x": 2.0, "y": 3.0}
@@ -161,9 +160,30 @@ ightleftarrows$ `PhysicalBasis`
 
 >>> cxr.change_basis(v, cxc.cart2d, cxr.coord_disp, cxr.phys_disp, at=at)
 {'x': 1.0, 'y': 0.0}
+
+>>> import coordinax.manifolds as cxm
+>>> import unxt as u
+
+>>> v_sph = {
+...     "r": u.Q(5, "m/s"),
+...     "theta": u.Q(1, "rad/s"),
+...     "phi": u.Q(1, "rad/s"),
+... }
+>>> at_sph = {
+...     "r": u.Q(2, "m"),
+...     "theta": u.Q(jnp.pi / 2, "rad"),
+...     "phi": u.Q(0, "rad"),
+... }
+
+>>> cxr.change_basis(v_sph, cxc.sph3d, cxr.coord_basis, cxr.phys_basis, at=at_sph)
+{'r': Q(5, 'm / s'), 'theta': Q(2, 'm / s'), 'phi': Q(2., 'm / s')}
+
+>>> metric = cxm.EuclideanMetric(3)
+>>> cxr.change_basis(v_sph, cxc.sph3d, metric, cxr.coord_basis, cxr.phys_basis, at=at_sph)
+{'r': Q(5, 'm / s'), 'theta': Q(2, 'm / s'), 'phi': Q(2., 'm / s')}
 ```
 
-In Cartesian charts the coordinate basis and physical basis coincide, so the component values are unchanged. The API exists so code can state basis intent explicitly and remain extensible to nontrivial basis changes later.
+In Cartesian charts the coordinate basis and physical basis coincide, so the component values are unchanged. In non-Cartesian charts (for example spherical), basis changes are generally nontrivial and depend on the base point `at` and metric. The API exists so code can state basis intent explicitly while supporting both cases.
 
 ## Quick Reference
 

@@ -3,7 +3,7 @@
 __all__ = ("change_basis",)
 
 from jaxtyping import ArrayLike
-from typing import Any, TypeVar
+from typing import Any
 
 import jax
 import jax.scipy.linalg
@@ -27,8 +27,6 @@ from .geom import TangentGeometry
 from .rep import Representation
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 from coordinax.internal.custom_types import CDict, OptUSys
-
-T = TypeVar("T", bound=u.Quantity)
 
 _RAD = u.unit("rad")
 
@@ -63,7 +61,7 @@ def _qm_triangular_solve(E: QuantityMatrix, b: QuantityMatrix) -> QuantityMatrix
     # D^{-1} b → b_norm[i] = b.value[i] / E.value[i,i]
     diag_vals = jnp.diagonal(E.value, axis1=-2, axis2=-1)
     b_norm = b.value / diag_vals  # shape (..., n), element-wise divide by diagonal
-    E_norm = E.value / diag_vals[:, None]  # normalise each row by its diagonal
+    E_norm = E.value / diag_vals[..., :, None]  # normalise each row by its diagonal
     x_vals = jax.scipy.linalg.solve_triangular(E_norm, b_norm, lower=False)
     return QuantityMatrix(x_vals, unit=x_units)
 
@@ -599,7 +597,7 @@ def change_basis(
     return {
         "r": v["r"],
         "theta": r * _drop_rad_unit(v["theta"]),
-        "phi": (r * jnp.sin(at["theta"])) * _drop_rad_unit(v["phi"]),
+        "phi": r * jnp.sin(at["theta"]) * _drop_rad_unit(v["phi"]),
     }
 
 

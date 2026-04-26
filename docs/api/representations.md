@@ -101,8 +101,7 @@ For point data, `cconvert` dispatches through chart-level point conversion laws.
 
 - Representations are orthogonal to charts: chart choice and representation choice are independent concerns.
 - The current built-in flow is point-first, centered on `(point_geom, no_basis, loc)`.
-- `change_basis` is currently limited to tangent data in Cartesian charts, with `CoordinateBasis` $
-ightleftarrows$ `PhysicalBasis` conversions.
+- `change_basis` currently supports tangent-data conversions between `CoordinateBasis` $\rightleftarrows$ `PhysicalBasis`, including Cartesian, spherical, and metric-based conversions.
 
 ```{eval-rst}
 
