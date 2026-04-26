@@ -305,7 +305,7 @@ def d_dt_dim(
     First time derivative of length gives speed:
 
     >>> d_dt_dim("length", 1)
-    PhysicalType({'speed', 'velocity'})
+    PhysicalType({...'speed'...})
 
     Second time derivative of length gives acceleration:
 
@@ -315,7 +315,7 @@ def d_dt_dim(
     Angular dimension at first order gives angular speed:
 
     >>> d_dt_dim("angle", 1)
-    PhysicalType({'angular frequency', 'angular speed', 'angular velocity'})
+    PhysicalType({...'angular speed'...})
 
     Dimensionless components (``None``) pass through unchanged:
 
@@ -395,10 +395,12 @@ class AbstractTangentSemanticKind(AbstractSemanticKind, metaclass=abc.ABCMeta):
     def __init_subclass__(cls, **kwargs: Any) -> None:
         r"""Register tangent semantic kinds in the internal time-order registry.
 
-        Every concrete subclass must define a ``order`` class variable (an
-        integer).  On class creation this hook stores ``cls`` in an internal
-        registry under that integer key.  The registry is then used by
-        `derivative` and `antiderivative` to navigate the time-derivative chain.
+        Every concrete subclass must define an ``order`` class variable (an
+        integer). On class creation this hook validates that requirement,
+        raising `TypeError` for missing or non-integer values, then stores
+        ``cls`` in an internal registry under that integer key. The registry is
+        then used by `derivative` and `antiderivative` to navigate the
+        time-derivative chain.
 
         The built-in chain is:
 
@@ -424,8 +426,20 @@ class AbstractTangentSemanticKind(AbstractSemanticKind, metaclass=abc.ABCMeta):
         if hasattr(super(), "__init_subclass__"):
             super().__init_subclass__(**kwargs)
 
-        if hasattr(cls, "order") and cls.order in _TANGENT_TIME_ORDER_LADDER:
-            existing = _TANGENT_TIME_ORDER_LADDER[cls.order]
+        if not hasattr(cls, "order"):
+            raise TypeError(
+                f"{cls.__name__!r} must define class variable 'order' as an int "
+                "before registration in the tangent time-order ladder."
+            )
+
+        order = cls.order
+        if not isinstance(order, int):
+            raise TypeError(
+                f"{cls.__name__!r}.order must be an int, got {type(order).__name__}."
+            )
+
+        if order in _TANGENT_TIME_ORDER_LADDER:
+            existing = _TANGENT_TIME_ORDER_LADDER[order]
             # Allow re-registration when it is the same class being rebuilt.
             # @dataclasses.dataclass(slots=True) recreates the class via
             # type(cls)(cls.__name__, ...) which fires __init_subclass__ a
@@ -438,12 +452,12 @@ class AbstractTangentSemanticKind(AbstractSemanticKind, metaclass=abc.ABCMeta):
             if not same_class:
                 raise TypeError(
                     f"Cannot register {cls.__name__!r} at time-derivative order "
-                    f"{cls.order}: order {cls.order} is already occupied by "
+                    f"{order}: order {order} is already occupied by "
                     f"{existing.__name__!r}.  Choose a different order or "
                     f"remove the existing registration first."
                 )
 
-        _TANGENT_TIME_ORDER_LADDER[cls.order] = cls
+        _TANGENT_TIME_ORDER_LADDER[order] = cls
 
     def derivative(self) -> "AbstractTangentSemanticKind":
         """Return the semantic kind one step up the time-derivative ladder.

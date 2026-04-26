@@ -244,6 +244,27 @@ class TestTangentTimeOrderLadder:
                 canonical_name = "vel2"
                 order = 1  # already occupied by Velocity
 
+    def test_missing_order_raises_type_error(self) -> None:
+        """Defining a subclass without order raises a clear TypeError."""
+        with pytest.raises(TypeError, match="must define class variable 'order'"):
+
+            @final
+            @jtu.register_static
+            @dataclasses.dataclass(frozen=True, slots=True)
+            class MissingOrder(cxr.AbstractTangentSemanticKind):
+                canonical_name = "missing_order"
+
+    def test_non_integer_order_raises_type_error(self) -> None:
+        """Defining a subclass with non-int order raises a clear TypeError."""
+        with pytest.raises(TypeError, match="order must be an int"):
+
+            @final
+            @jtu.register_static
+            @dataclasses.dataclass(frozen=True, slots=True)
+            class NonIntegerOrder(cxr.AbstractTangentSemanticKind):
+                canonical_name = "bad_order"
+                order = "1"
+
     @pytest.mark.usefixtures("restore_tangent_ladder")
     def test_absement_registration_enables_displacement_antiderivative(self) -> None:
         """Registering Absement at order -1 makes Displacement.antiderivative() work."""
