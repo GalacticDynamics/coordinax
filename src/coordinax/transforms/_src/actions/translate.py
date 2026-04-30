@@ -89,15 +89,17 @@ class Translate(AbstractAdd):
 
     """
 
+    semantic_kind: cxr.AbstractTangentSemanticKind = eqx.field(
+        static=True, default=cxr.dpl
+    )
+    """Semantic kind of tangent data this operator acts on. Default: Displacement."""
+
     # delta, chart, and right_add inherited from AbstractAdd
     @classmethod
     def groups(cls) -> frozenset[type]:
         """Return the groups to which this map belongs."""
         del cls
         return frozenset((groups.EuclideanGroup, groups.DiffeomorphismGroup))
-
-    semantic_kind: None = eqx.field(static=True, default=None)
-    """Semantic kind of tangent data this operator acts on. Default: Displacement."""
 
     def __add__(self, other: object, /) -> Union["Translate", Composed]:
         """Combine two Translate operators with matching semantic kinds.

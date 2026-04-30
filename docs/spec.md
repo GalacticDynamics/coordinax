@@ -946,7 +946,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
-| `coordinax.representations` | `cconvert`, `change_basis`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
+| `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
@@ -1727,6 +1727,44 @@ A representation is therefore **not** the same thing as a chart: the chart deter
     Failure semantics:
 
     - Inherits all failure semantics from `guess_geometry_kind`.
+
+!!! info `tangent_map`
+
+    Transform a tangent vector from one chart to another.
+
+    **Signature:**
+
+    ```text
+    tangent_map(v, from_chart, from_geom, from_rep, to_chart, to_geom, to_rep, /, *, at) -> CDict
+    ```
+
+    A 4-argument shorthand form is also supported:
+
+    ```text
+    tangent_map(v, from_chart, from_rep, to_chart, /, *, at) -> CDict
+    ```
+
+    **Arguments:**
+
+    - `v`: `CDict` — tangent vector components in `from_chart` with basis `from_rep.basis`.
+    - `from_chart`: source chart.
+    - `from_geom`: source geometry (e.g. `TangentGeometry`).
+    - `from_rep`: source `Representation` (must have `TangentGeometry`).
+    - `to_chart`: target chart.
+    - `to_geom`: target geometry.
+    - `to_rep`: target `Representation`.
+    - `at`: `CDict` — base point in `from_chart` coordinates at which the tangent space is attached. Required for non-Cartesian charts (since the Jacobian depends on the base point).
+
+    **Semantics by basis:**
+
+    - **`CoordinateBasis`**: delegates to `jac_pt_map(at, from_chart, to_chart)` to obtain the Jacobian $J^j{}_i = \partial\tilde{q}^j/\partial q^i$, then applies $\tilde{v}^j = J^j{}_i v^i$.
+    - **`PhysicalBasis`**: fetch the orthonormal frame matrices $B_{\rm from}$ (columns = physical basis vectors in Cartesian) and $B_{\rm to}$ via `frame_cart`, compute $R = B_{\rm to}^T B_{\rm from}$, apply $\hat{v}' = R \hat{v}$.
+
+    **Same-chart optimisation:** when `from_chart is to_chart`, returns `v` unchanged.
+
+    **`cconvert` integration:** `cconvert` dispatches to `tangent_map` when the source representation has `TangentGeometry`, passing `at` through the `at` keyword argument.
+
+    **Same-chart basis conversion:** `change_basis(v, chart, from_basis, to_basis, /, *, at)` changes tangent component conventions without changing charts. In v1 it is defined only for Cartesian charts and `CoordinateBasis` $
 
 </br>
 

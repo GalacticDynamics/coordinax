@@ -78,6 +78,7 @@ __all__ = (  # distances
     "phys_disp",
     "phys_vel",
     "phys_acc",
+    "tangent_map",
     "change_basis",
     # vectors
     "Point",
@@ -151,6 +152,7 @@ from coordinax.representations import (
     point_geom,
     subtract,
     tangent_geom,
+    tangent_map,
     vel,
 )
 from coordinax.transforms import (

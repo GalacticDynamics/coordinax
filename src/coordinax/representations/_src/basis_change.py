@@ -3,7 +3,7 @@
 __all__ = ("change_basis",)
 
 from jaxtyping import ArrayLike
-from typing import Any
+from typing import Any, TypeVar
 
 import jax
 import jax.scipy.linalg
@@ -27,6 +27,8 @@ from .geom import TangentGeometry
 from .rep import Representation
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 from coordinax.internal.custom_types import CDict, OptUSys
+
+T = TypeVar("T", bound=u.Quantity)
 
 _RAD = u.unit("rad")
 

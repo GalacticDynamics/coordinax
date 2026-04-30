@@ -8,3 +8,4 @@ from .guess import *
 from .register_cx import *
 from .rep import *
 from .semantics import *
+from .tangent_map import *

@@ -27,6 +27,9 @@ def tree_equal(lhs: Any, rhs: Any) -> bool:
     return bool(jnp.all(jnp.stack(reduced)))
 
 
+usys = u.unitsystems.si
+
+
 class TestChangeBasisExistence:
     """Import-surface checks for the public API."""
 

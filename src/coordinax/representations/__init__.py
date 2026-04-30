@@ -96,6 +96,7 @@ __all__ = (
     "guess_rep",
     "guess_semantic_kind",
     "subtract",
+    "tangent_map",
     "change_basis",
     # Representations
     "Representation",
@@ -171,6 +172,7 @@ with install_import_hook("coordinax.representations"):
         point,
         point_geom,
         tangent_geom,
+        tangent_map,
         vel,
     )
     from coordinax.api.representations import (

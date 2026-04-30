@@ -33,6 +33,23 @@ def change_basis(*args: Any, **kwargs: Any) -> Any:
 
 
 @plum.dispatch.abstract
+def tangent_map(*args: Any, **kwargs: Any) -> Any:
+    """Compute the tangent map (Jacobian) of a chart transition.
+
+    This is an abstract API definition. See the main coordinax package for
+    concrete implementations.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
 def cconvert(*args: Any, **kwargs: Any) -> Any:
     """Transform the current vector to the target chart.
 
