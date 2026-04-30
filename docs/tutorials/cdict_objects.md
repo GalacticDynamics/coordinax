@@ -184,6 +184,23 @@ Identity transform returns the exact same object:
 True
 ```
 
+## Changing Tangent Basis
+
+Use `cxr.change_basis()` when you want to change the tangent basis of a CDict without changing its chart, geometry, or semantics.
+
+```{code-block} python
+>>> d = {"x": 1.0, "y": 0.0}
+>>> at = {"x": 2.0, "y": 3.0}
+
+>>> cxr.change_basis(d, cxc.cart2d, cxr.coord_basis, cxr.phys_basis, at=at)
+{'x': 1.0, 'y': 0.0}
+
+>>> cxr.change_basis(d, cxc.cart2d, cxr.coord_disp, cxr.phys_disp, at=at)
+{'x': 1.0, 'y': 0.0}
+```
+
+Use `cconvert()` instead when the chart itself must change.
+
 ## Upgrading To A Point
 
 Promote a CDict to a `Point` by providing chart context:

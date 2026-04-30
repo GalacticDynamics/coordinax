@@ -1,6 +1,7 @@
 """Representations."""
 
 from .basis import *
+from .basis_change import *
 from .core import *
 from .geom import *
 from .guess import *

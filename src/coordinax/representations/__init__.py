@@ -96,6 +96,7 @@ __all__ = (
     "guess_rep",
     "guess_semantic_kind",
     "subtract",
+    "change_basis",
     # Representations
     "Representation",
     "point",
@@ -154,6 +155,7 @@ with install_import_hook("coordinax.representations"):
         TangentGeometry,
         Velocity,
         acc,
+        change_basis,
         cmap,
         coord_acc,
         coord_basis,

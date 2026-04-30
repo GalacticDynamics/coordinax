@@ -13,7 +13,7 @@ import unxt.quantity as uq
 
 import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
-from .geom import PointGeometry
+from .geom import PointGeometry, TangentGeometry
 from .rep import Representation
 from coordinax.internal.custom_types import CDict, OptUSys
 
@@ -311,6 +311,68 @@ def cconvert(
     """
     return cxc.pt_map(
         x, from_chart, from_geom, from_rep, to_chart, to_geom, to_rep, usys=usys
+    )
+
+
+@plum.dispatch
+def cconvert(
+    x: Any,
+    # from-*
+    from_chart: cxc.AbstractChart,
+    from_geom: TangentGeometry,
+    from_rep: Representation,
+    # to-*
+    to_chart: cxc.AbstractChart,
+    to_geom: TangentGeometry,
+    to_rep: Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    usys: OptUSys = None,
+) -> Any:
+    r"""Convert tangent data between basis conventions in the same chart.
+
+    Tangent conversions are basis changes when source and target charts are
+    identical. In this case, `cconvert` redispatches to `change_basis`.
+
+    Examples
+    --------
+    Convert tangent data between coordinate and physical basis in the same
+    chart:
+
+    >>> import jax.numpy as jnp
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> v = {"r": jnp.array(5.0), "theta": jnp.array(1.0), "phi": jnp.array(2.0)}
+    >>> at = {"r": jnp.array(3.0), "theta": jnp.array(0.5), "phi": jnp.array(0.0)}
+    >>> cxr.cconvert(v, cxc.sph3d, cxr.tangent_geom, cxr.coord_disp,
+    ...              cxc.sph3d, cxr.tangent_geom, cxr.phys_disp, at=at)
+    {'r': Array(5., dtype=float64, ...),
+     'theta': Array(3., dtype=float64, ...),
+     'phi': Array(..., dtype=float64, ...)}
+
+    Tangent conversion across different charts is not implemented by this
+    dispatch:
+
+    >>> cxr.cconvert(v, cxc.sph3d, cxr.tangent_geom, cxr.coord_disp,
+    ...              cxc.cart3d, cxr.tangent_geom, cxr.coord_disp, at=at)
+    Traceback (most recent call last):
+    ...
+    NotImplementedError: Tangent cconvert between different charts is not implemented;
+    use the same chart for basis changes.
+
+    """
+    del from_geom, to_geom  # represented by dispatch signature
+
+    if from_chart != to_chart:
+        msg = (
+            "Tangent cconvert between different charts is not implemented; "
+            "use the same chart for basis changes."
+        )
+        raise NotImplementedError(msg)
+
+    return cxrapi.change_basis(
+        x, from_chart, from_rep.basis, to_rep.basis, at=at, usys=usys
     )
 
 

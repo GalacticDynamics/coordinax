@@ -138,12 +138,60 @@ Current built-in representation conversions are point-first:
 
 The representation design is intentionally extensible. Future geometric kinds (for example tangent and cotangent objects) can use different transformation categories (such as Jacobian pushforward/pullback) while keeping the same chart and manifold interfaces.
 
+## Tangent Basis Changes
+
+`change_basis` handles a narrower problem than `cconvert`: it keeps the chart fixed and only changes how tangent components are interpreted with respect to a basis.
+
+- supported basis changes: `CoordinateBasis` $\rightleftarrows$ `PhysicalBasis`
+- supported representations: tangent representations such as `coord_disp` and `phys_disp`
+- point representations are not supported as genuine basis-changing inputs; however, `NoBasis -> CoordinateBasis` and `NoBasis -> PhysicalBasis` are supported as identity reinterpretations when the dimensions are compatible
+- non-Cartesian support: available for tangent basis changes on charts with basis-change rules (for example `sph3d`), and generally via an explicit metric/manifold
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import coordinax.representations as cxr
+>>> import jax.numpy as jnp
+
+>>> v = {"x": 1.0, "y": 0.0}
+>>> at = {"x": 2.0, "y": 3.0}
+
+>>> cxr.change_basis(v, cxc.cart2d, cxr.coord_basis, cxr.phys_basis, at=at)
+{'x': 1.0, 'y': 0.0}
+
+>>> cxr.change_basis(v, cxc.cart2d, cxr.coord_disp, cxr.phys_disp, at=at)
+{'x': 1.0, 'y': 0.0}
+
+>>> import coordinax.manifolds as cxm
+>>> import unxt as u
+
+>>> v_sph = {
+...     "r": u.Q(5, "m/s"),
+...     "theta": u.Q(1, "rad/s"),
+...     "phi": u.Q(1, "rad/s"),
+... }
+>>> at_sph = {
+...     "r": u.Q(2, "m"),
+...     "theta": u.Q(jnp.pi / 2, "rad"),
+...     "phi": u.Q(0, "rad"),
+... }
+
+>>> cxr.change_basis(v_sph, cxc.sph3d, cxr.coord_basis, cxr.phys_basis, at=at_sph)
+{'r': Q(5, 'm / s'), 'theta': Q(2, 'm / s'), 'phi': Q(2., 'm / s')}
+
+>>> metric = cxm.EuclideanMetric(3)
+>>> cxr.change_basis(v_sph, cxc.sph3d, metric, cxr.coord_basis, cxr.phys_basis, at=at_sph)
+{'r': Q(5, 'm / s'), 'theta': Q(2, 'm / s'), 'phi': Q(2., 'm / s')}
+```
+
+In Cartesian charts the coordinate basis and physical basis coincide, so the component values are unchanged. In non-Cartesian charts (for example spherical), basis changes are generally nontrivial and depend on the base point `at` and metric. The API exists so code can state basis intent explicitly while supporting both cases.
+
 ## Quick Reference
 
 - Need only a same-manifold coordinate rewrite: `pt_map`
 - Need general point mapping behavior: `pt_map`
 - Need manifold compatibility checks: manifold methods like `M.pt_map`
 - Need representation-aware conversions: `cconvert`
+- Need same-chart tangent basis conversion: `change_basis`
 - Need reusable conversion callables: `cmap`
 - Need to infer basis kind from data: `guess_basis_kind`
 - Need to infer semantic kind from data: `guess_semantic_kind`
