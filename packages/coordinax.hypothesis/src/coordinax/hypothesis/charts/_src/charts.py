@@ -123,7 +123,7 @@ def charts(  # noqa: F811
 
     # Draw the chart class
     chart_cls = draw(  # ty: ignore[invalid-assignment]
-        chart_classes(  # ty: ignore[missing-argument]
+        chart_classes(
             filter=draw_if_strategy(draw, filter),
             exclude_abstract=True,
             exclude=exclude,

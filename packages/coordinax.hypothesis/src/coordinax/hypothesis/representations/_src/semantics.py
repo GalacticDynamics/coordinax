@@ -7,6 +7,7 @@ from typing import Final
 import hypothesis.strategies as st
 
 import coordinax.representations as cxr
+
 from coordinax.hypothesis.utils import get_all_subclasses
 
 SEMANTICS: Final = get_all_subclasses(cxr.AbstractSemanticKind, exclude_abstract=True)
@@ -61,7 +62,7 @@ def semantic_classes(
         msg = "No semantic classes left after exclusions"
         raise ValueError(msg)
 
-    return draw(st.sampled_from(candidates))
+    return draw(st.sampled_from(candidates))  # ty: ignore[invalid-return-type]
 
 
 @st.composite
@@ -98,5 +99,5 @@ def semantics(
     ...     assert isinstance(sem, cxr.Location)
 
     """
-    sem_cls = draw(semantic_classes(include=include, exclude=exclude))  # ty: ignore[missing-argument]
+    sem_cls = draw(semantic_classes(include=include, exclude=exclude))
     return sem_cls()

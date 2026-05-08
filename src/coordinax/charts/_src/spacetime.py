@@ -77,7 +77,7 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     """Spatial part of the representation. Defaults: `coordinax.charts.cart3d`."""
 
     _: KW_ONLY
-    c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # type: ignore[type-arg]   # pylint: disable=invalid-field-call
+    c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
     @property
@@ -119,7 +119,7 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         return (time_dict, spatial_dict)
 
     @override
-    def merge_components(self, parts: tuple[CDict, CDict], /) -> CDict:  # type: ignore[override]
+    def merge_components(self, parts: tuple[CDict, CDict], /) -> CDict:  # ty: ignore[invalid-method-override]
         """Merge factor CDicts back into SpaceTimeCT components.
 
         Expects time factor dict with 'ct' key, spatial factor dict with spatial keys.

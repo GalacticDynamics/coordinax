@@ -148,7 +148,7 @@ def representations(
     # Draw the geometry kind
     geom_kind = draw_if_strategy(draw, geom_kind)
     if geom_kind is None:
-        geom_kind = draw(geometries())  # ty: ignore[missing-argument]
+        geom_kind = draw(geometries())
     assert isinstance(geom_kind, cxr.AbstractGeometry)
 
     # Draw the basis kind
@@ -157,7 +157,7 @@ def representations(
         include_bases = (
             valid_basis_classes_for_geometry(geom_kind) if check_valid else None
         )
-        basis_kind = draw(bases(include=include_bases))  # ty: ignore[missing-argument]
+        basis_kind = draw(bases(include=include_bases))
     elif check_valid and not isinstance(
         basis_kind,
         (valid_basis_classes := valid_basis_classes_for_geometry(geom_kind)),
@@ -176,7 +176,7 @@ def representations(
         include_sems = (
             valid_semantic_classes_for_geometry(geom_kind) if check_valid else None
         )
-        semantic_kind = draw(semantics(include=include_sems))  # ty: ignore[missing-argument]
+        semantic_kind = draw(semantics(include=include_sems))
 
     elif check_valid and not isinstance(
         semantic_kind,

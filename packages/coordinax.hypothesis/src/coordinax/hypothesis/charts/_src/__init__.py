@@ -19,7 +19,7 @@ from coordinax.hypothesis.utils import get_all_subclasses
 st.register_type_strategy(cxc.AbstractChart, lambda _: charts())  # ty: ignore[missing-argument]
 st.register_type_strategy(
     cxc.CartesianProductChart,
-    lambda _: charts(cxc.CartesianProductChart),  # ty: ignore[missing-argument]
+    lambda _: charts(cxc.CartesianProductChart),
 )
 
 for flag_cls in get_all_subclasses(cxc.AbstractDimensionalFlag, exclude_abstract=False):
@@ -27,4 +27,4 @@ for flag_cls in get_all_subclasses(cxc.AbstractDimensionalFlag, exclude_abstract
     if issubclass(flag_cls, cxc.AbstractChart):
         continue
 
-    st.register_type_strategy(flag_cls, lambda typ: charts(typ))  # ty: ignore[missing-argument]
+    st.register_type_strategy(flag_cls, lambda typ: charts(typ))

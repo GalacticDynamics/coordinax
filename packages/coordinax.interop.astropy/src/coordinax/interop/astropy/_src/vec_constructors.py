@@ -7,7 +7,7 @@ import plum
 
 import astropy.coordinates as apyc
 
-import coordinax.astro as cxastro
+import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.manifolds as cxm
@@ -17,7 +17,7 @@ import coordinax.vectors as cxv
 # Representation -> Point
 
 
-@cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_astropy_cartesian_representation(
     cls: type[cxv.Point], obj: apyc.CartesianRepresentation, /
 ) -> cxv.Point:
@@ -40,7 +40,7 @@ def from_astropy_cartesian_representation(
     return cls(data, cxc.cart3d, cxm.euclidean3d, frame=cxf.noframe)  # ty: ignore[missing-argument]
 
 
-@cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_astropy_cylindrical_representation(
     cls: type[cxv.Point], obj: apyc.CylindricalRepresentation, /
 ) -> cxv.Point:
@@ -65,7 +65,7 @@ def from_astropy_cylindrical_representation(
     return cls(data, cxc.cyl3d, cxm.euclidean3d, frame=cxf.noframe)  # ty: ignore[missing-argument]
 
 
-@cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_astropy_physics_spherical_representation(
     cls: type[cxv.Point], obj: apyc.PhysicsSphericalRepresentation, /
 ) -> cxv.Point:
@@ -90,7 +90,7 @@ def from_astropy_physics_spherical_representation(
     return cls(data, cxc.sph3d, cxm.euclidean3d, frame=cxf.noframe)  # ty: ignore[missing-argument]
 
 
-@cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_astropy_spherical_representation(
     cls: type[cxv.Point], obj: apyc.SphericalRepresentation, /
 ) -> cxv.Point:
@@ -119,7 +119,7 @@ def from_astropy_spherical_representation(
 # Astropy Data-ful Frames -> Coordinax Point
 
 
-@cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     """Construct Point from Astropy frame with data.
 
@@ -224,7 +224,7 @@ def convert_astropy_frame_with_data_to_cx_point(
 # Astropy SkyCoord -> Coordinax Point
 
 
-@cxv.Point.from_.dispatch  # type: ignore[untyped-decorator]
+@cxv.Point.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_astropy_skycoord(cls: type[cxv.Point], obj: apyc.SkyCoord, /) -> cxv.Point:
     """Construct Point from Astropy SkyCoord.
 

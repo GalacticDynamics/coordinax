@@ -54,7 +54,7 @@ class Parallax(cxd.AbstractDistance):
     )
     """The value of the `unxt.AbstractQuantity`."""
 
-    unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)
+    unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)  # ty: ignore[invalid-assignment]
     """The unit associated with this value."""
 
     _: KW_ONLY
@@ -118,7 +118,7 @@ def from_(cls: type[Parallax], p: Parallax, /, **kw: Any) -> Parallax:
 
 
 @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(cls: type[Parallax], p: u.Q["angle"], /, **kw: Any) -> Parallax:  # type: ignore[type-arg]
+def from_(cls: type[Parallax], p: u.Q["angle"], /, **kw: Any) -> Parallax:
     """Compute parallax from parallax.
 
     Examples
@@ -138,7 +138,7 @@ def from_(cls: type[Parallax], p: u.Q["angle"], /, **kw: Any) -> Parallax:  # ty
 @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
     cls: type[Parallax],
-    d: cxd.Distance | u.Q["length"],  # ty: ignore[unresolved-reference]
+    d: cxd.Distance | u.Q["length"],
     /,
     **kw: Any,
 ) -> Parallax:
@@ -163,12 +163,7 @@ def from_(
 
 
 @Parallax.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[Parallax],
-    dm: u.Q["mag"],  # type: ignore[type-arg]
-    /,
-    **kw: Any,
-) -> Parallax:
+def from_(cls: type[Parallax], dm: u.Q["mag"], /, **kw: Any) -> Parallax:
     """Convert distance modulus to parallax.
 
     Examples

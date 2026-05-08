@@ -121,7 +121,7 @@ def cartesian_product_factors(
         # Exclude abstract charts, product charts (to avoid infinite recursion),
         # and charts with unresolvable TypeVars Late import to avoid circular
         # import (core.py imports from this module)
-        chart = draw(charts(filter=cxc.AbstractFixedComponentsChart, ndim=factor_dim))  # ty: ignore[missing-argument]
+        chart = draw(charts(filter=cxc.AbstractFixedComponentsChart, ndim=factor_dim))  # ty: ignore[missing-argument, unknown-argument]
         factors.append(chart)
 
     return tuple(factors)
@@ -191,7 +191,7 @@ def charts(  # noqa: F811
         else:
             # Generate factors with specified or random dimensionality
             factors = draw(
-                cartesian_product_factors(  # ty: ignore[missing-argument]
+                cartesian_product_factors(
                     ndim=ndim, min_factors=min_factors, max_factors=max_factors
                 )
             )
@@ -208,7 +208,7 @@ def charts(  # noqa: F811
 
     else:
         factors = draw(
-            cartesian_product_factors(  # ty: ignore[missing-argument]
+            cartesian_product_factors(
                 ndim=ndim, min_factors=min_factors, max_factors=max_factors
             )
         )
@@ -242,7 +242,7 @@ def chart_init_kwargs(
     """
     del chart_class
 
-    factors = draw(cartesian_product_factors(ndim=ndim))  # ty: ignore[missing-argument]
+    factors = draw(cartesian_product_factors(ndim=ndim))
     names = tuple(f"f{i}" for i in range(len(factors)))
 
     return {"factors": factors, "factor_names": names}
@@ -290,13 +290,13 @@ def charts(  # noqa: F811
     # SpaceTimeCT has 1 time dimension plus the spatial chart's dimensions.
     ndim = 4 if ndim is None else ndim
     spatial_chart = draw(  # exclude=() allows 0-D
-        charts(filter=cxc.AbstractFixedComponentsChart, exclude=(), ndim=ndim - 1)  # ty: ignore[missing-argument]
+        charts(filter=cxc.AbstractFixedComponentsChart, exclude=(), ndim=ndim - 1)  # ty: ignore[missing-argument, unknown-argument]
     )
 
     # Have a 10% chance to generate `c` different than the default value
     if draw(st.integers(1, 100)) <= 10:
         c = draw(
-            ust.quantities(  # ty: ignore[missing-argument]
+            ust.quantities(
                 unit="km/s",
                 quantity_cls=u.StaticQuantity,
                 shape=(),
@@ -304,7 +304,7 @@ def charts(  # noqa: F811
                 elements=st.floats(min_value=1e6, max_value=5e6, width=32),
             )
         )
-        c = c.uconvert(draw(ust.units("speed")))  # ty: ignore[missing-argument]
+        c = c.uconvert(draw(ust.units("speed")))
     else:
         c = cxc.SpaceTimeCT.__dataclass_fields__["c"].default
 
@@ -415,11 +415,11 @@ def charts(  # noqa: F811
         chart = draw(
             charts(
                 cxc.CartesianProductChart,
-                factor_charts=factor_charts,
-                factor_names=factor_names,
+                factor_charts=factor_charts,  # ty: ignore[unknown-argument]
+                factor_names=factor_names,  # ty: ignore[unknown-argument]
                 ndim=ndim,
-                min_factors=min_factors,
-                max_factors=max_factors,
+                min_factors=min_factors,  # ty: ignore[unknown-argument]
+                max_factors=max_factors,  # ty: ignore[unknown-argument]
             )
         )
 

@@ -113,7 +113,7 @@ class Translate(AbstractAdd):
             return NotImplemented
         if self.semantic_kind != other.semantic_kind:
             return Composed((self, other))
-        return super().__add__(other)  # type: ignore[return-value]
+        return super().__add__(other)  # ty: ignore[invalid-return-type]
 
     # inverse and __neg__ inherited from AbstractAdd
 

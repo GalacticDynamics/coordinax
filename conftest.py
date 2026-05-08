@@ -24,7 +24,10 @@ from sybil.python import import_path as sybil_import_path
 
 # Quick smoke test profile to check the test infrastructure is working.
 settings.register_profile(
-    "smoke", max_examples=5, phases=[Phase.explicit, Phase.reuse, Phase.generate]
+    "smoke",
+    max_examples=5,
+    phases=[Phase.explicit, Phase.reuse, Phase.generate],
+    suppress_health_check=[HealthCheck.too_slow],
 )
 
 # Default profile for development: more examples and allow slow tests.
@@ -116,7 +119,7 @@ def _resolve_package_path_with_namespace(path: pathlib.Path) -> pathlib.Path | N
     return _ORIG_RESOLVE_PACKAGE_PATH(path)
 
 
-pytest_pathlib.resolve_package_path = _resolve_package_path_with_namespace  # type: ignore[assignment]
+pytest_pathlib.resolve_package_path = _resolve_package_path_with_namespace  # ty: ignore[invalid-assignment]
 
 
 def _resolve_pkg_root_and_module_name_with_namespace(
@@ -136,7 +139,7 @@ def _resolve_pkg_root_and_module_name_with_namespace(
     )
 
 
-pytest_pathlib.resolve_pkg_root_and_module_name = (  # type: ignore[assignment]
+pytest_pathlib.resolve_pkg_root_and_module_name = (  # ty: ignore[invalid-assignment]
     _resolve_pkg_root_and_module_name_with_namespace
 )
 
@@ -174,7 +177,7 @@ def _import_path_with_namespace(path: pathlib.Path) -> ModuleType:
     return sybil_import_path(path)
 
 
-sybil_document.import_path = _import_path_with_namespace  # type: ignore[attr-defined]
+sybil_document.import_path = _import_path_with_namespace  # ty: ignore[invalid-assignment]
 sybil_python.import_path = _import_path_with_namespace  # ty: ignore[invalid-assignment]
 
 

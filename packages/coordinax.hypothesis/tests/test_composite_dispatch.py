@@ -48,6 +48,7 @@ pattern (Section 6) for heterogeneous lists.
 
 """
 
+import sys
 from numbers import Number, Real
 from typing import Any
 
@@ -102,6 +103,10 @@ def annotated_draw(draw: Any, x: int):
     return draw(st.integers(min_value=x, max_value=x + 10))
 
 
+@pytest.mark.skipif(
+    sys.version_info >= (3, 14),
+    reason="Python 3.14 changes annotation behaviour; @st.composite no longer strips draw from __annotations__ the same way",
+)
 def test_draw_annotation_is_stripped():
     """@composite removes draw from the public signature regardless of its annotation."""
     fn = annotated_draw.invoke(int)

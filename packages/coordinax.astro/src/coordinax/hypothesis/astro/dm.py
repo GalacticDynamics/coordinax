@@ -68,11 +68,11 @@ def distance_moduli(draw: st.DrawFn, /, **kwargs: Any) -> cxastro.DistanceModulu
 
     # Generate the DistanceModulus quantity
     out = draw(
-        ust.quantities(unit="mag", quantity_cls=cxastro.DistanceModulus, **kwargs)  # ty: ignore[missing-argument]
+        ust.quantities(unit="mag", quantity_cls=cxastro.DistanceModulus, **kwargs)
     )
     return cast("cxastro.DistanceModulus", out)
 
 
 # Register type strategy for Hypothesis's st.from_type()
 # Note: Pass the callable, not an invoked strategy
-st.register_type_strategy(cxastro.DistanceModulus, lambda _: distance_moduli())  # ty: ignore[missing-argument]
+st.register_type_strategy(cxastro.DistanceModulus, lambda _: distance_moduli())

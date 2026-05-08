@@ -101,7 +101,7 @@ def vectors(  # noqa: F811
     """
     chart = draw(chart)
     try:
-        return draw(vectors(chart, **kw))
+        return draw(vectors(chart, **kw))  # ty: ignore[missing-argument]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -148,7 +148,7 @@ def vectors(  # noqa: F811
     chart = draw_if_strategy(draw, chart)
     rep = draw_if_strategy(draw, rep)
     try:
-        return draw(vectors(chart, rep, **kw))
+        return draw(vectors(chart, rep, **kw))  # ty: ignore[missing-argument, too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -206,7 +206,7 @@ def vectors(  # noqa: F811
         raise ValueError(f"Manifold {manifold!r} does not support chart {chart!r}.")
 
     try:
-        return draw(vectors(chart, rep, manifold, **kw))
+        return draw(vectors(chart, rep, manifold, **kw))  # ty: ignore[too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -237,9 +237,9 @@ def vectors(  # noqa: F811
     ... def test_cart3d(vec): ...
 
     """
-    rep = draw(cxrst.representations(check_valid=True))  # ty: ignore[missing-argument]
+    rep = draw(cxrst.representations(check_valid=True))
     try:
-        return draw(vectors(chart, rep, **kw))
+        return draw(vectors(chart, rep, **kw))  # ty: ignore[missing-argument, too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -267,7 +267,7 @@ def vectors(  # noqa: F811
     ... def test_cart3d_point(vec): ...
 
     """
-    cdict = draw(cxrst.cdicts(chart, rep, **kw))
+    cdict = draw(cxrst.cdicts(chart, rep, **kw))  # ty: ignore[missing-argument]
     try:
         out = cxv.Point.from_(cdict, chart, rep)
     except plum.NotFoundLookupError as exc:
@@ -307,5 +307,5 @@ def vectors(  # noqa: F811
     if not manifold.has_chart(chart):
         raise ValueError(f"Manifold {manifold!r} does not support chart {chart!r}.")
 
-    data = draw(cxrst.cdicts(chart, rep, **kw))
+    data = draw(cxrst.cdicts(chart, rep, **kw))  # ty: ignore[missing-argument]
     return cxv.Point.from_(data, chart, rep, manifold)  # ty: ignore[invalid-return-type]

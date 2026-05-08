@@ -58,7 +58,7 @@ def cdicts(  # noqa: F811
     elements = draw_if_strategy(draw, kwargs.pop("elements", None))
 
     # Redispatch to the representation-specific implementation based on the chart
-    strategy = cdicts(chart, rep, dtype=dtype, shape=shape, elements=elements, **kwargs)
+    strategy = cdicts(chart, rep, dtype=dtype, shape=shape, elements=elements, **kwargs)  # ty: ignore[missing-argument]
     return draw(cast(st.SearchStrategy[CDict], strategy))
 
 
@@ -85,7 +85,7 @@ def cdicts(  # noqa: F811
 
     """
     # Break apart the rep and redispatch
-    strategy = cdicts(chart, rep.geom_kind, rep.basis, rep.semantic_kind, **kwargs)
+    strategy = cdicts(chart, rep.geom_kind, rep.basis, rep.semantic_kind, **kwargs)  # ty: ignore[too-many-positional-arguments]
     return draw(cast(st.SearchStrategy[CDict], strategy))
 
 
@@ -123,7 +123,7 @@ def cdicts(  # noqa: F811
     if not isinstance(semantic_kind, cxr.Location):
         raise TypeError("cdicts with PointGeometry must have Location semantic kind")
 
-    strategy = cdicts(chart, **kwargs)
+    strategy = cdicts(chart, **kwargs)  # ty: ignore[missing-argument]
     return draw(cast(st.SearchStrategy[CDict], strategy))
 
 
@@ -165,5 +165,5 @@ def cdicts(  # noqa: F811
             "cdicts with TangentGeometry must have AbstractTangentSemanticKind"
         )
 
-    strategy = cdicts(chart, **kwargs)
+    strategy = cdicts(chart, **kwargs)  # ty: ignore[missing-argument]
     return draw(cast(st.SearchStrategy[CDict], strategy))

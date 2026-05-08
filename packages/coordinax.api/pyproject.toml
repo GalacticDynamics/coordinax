@@ -14,11 +14,15 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python",
   "Topic :: Scientific/Engineering",
   "Typing :: Typed",
 ]
-dependencies = ["plum-dispatch>=2.5.7"]
+dependencies = [
+  "plum>=2.8.0; python_version < '3.14'",
+  "plum>=2.9.0; python_version >= '3.14'",
+]
 description = "Abstract dispatch API definitions for coordinax"
 dynamic = ["version"]
 license.text = "MIT"

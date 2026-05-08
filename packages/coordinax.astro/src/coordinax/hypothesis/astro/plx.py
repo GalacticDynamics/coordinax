@@ -97,4 +97,4 @@ def parallaxes(
 
 # Register type strategy for Hypothesis's st.from_type()
 # Note: Pass the callable, not an invoked strategy
-st.register_type_strategy(cxastro.Parallax, lambda _: parallaxes())  # ty: ignore[missing-argument]
+st.register_type_strategy(cxastro.Parallax, lambda _: parallaxes())

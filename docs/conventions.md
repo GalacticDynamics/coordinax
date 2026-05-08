@@ -197,7 +197,7 @@ This is essential for understanding what types are supported and avoiding duplic
 ```text
 # CORRECT
 @plum.dispatch
-def process(obj: cxc.AbstractChart, /):  # type: ignore[type-arg]
+def process(obj: cxc.AbstractChart, /):
     ...
 
 
@@ -206,7 +206,7 @@ from typing import Any
 
 
 @plum.dispatch
-def process(obj: cxc.AbstractChart[Any, Any], /):  # type: ignore[type-arg]
+def process(obj: cxc.AbstractChart[Any, Any], /):
     ...
 ```
 

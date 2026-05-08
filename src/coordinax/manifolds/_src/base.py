@@ -304,7 +304,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
         QuantityMatrix([1., 4., 4.], '(, km2 / rad2, km2 / rad2)')
 
         """
-        return cxmapi.scale_factors(self, chart, at=at, usys=usys)  # type: ignore[invalid-return-type]
+        return cxmapi.scale_factors(self, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
     def cholesky(
         self,
@@ -391,7 +391,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
         This is a thin convenience wrapper over
         ``cxmapi.angle_between(self, chart, uvec, vvec, at=at, usys=usys)``.
         """
-        return cxmapi.angle_between(self, chart, uvec, vvec, at=at, usys=usys)  # type: ignore[invalid-return-type]
+        return cxmapi.angle_between(self, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
     def is_diagonal(
         self, chart: cxc.AbstractChart[Any, Any], /, *, at: CDict, usys: OptUSys = None
@@ -700,7 +700,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         This is a thin convenience wrapper over
         ``cxmapi.scale_factors(self.metric, chart, at=at, usys=usys)``.
         """
-        return cxmapi.scale_factors(self.metric, chart, at=at, usys=usys)  # type: ignore[invalid-return-type]
+        return cxmapi.scale_factors(self.metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
     def angle_between(
         self,
@@ -717,7 +717,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         This is a thin convenience wrapper over
         ``cxmapi.angle_between(self.metric, chart, uvec, vvec, at=at, usys=usys)``.
         """
-        return cxmapi.angle_between(self.metric, chart, uvec, vvec, at=at, usys=usys)  # type: ignore[invalid-return-type]
+        return cxmapi.angle_between(self.metric, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
     # =====================================================
 

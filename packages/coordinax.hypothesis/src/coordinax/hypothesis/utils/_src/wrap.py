@@ -49,9 +49,9 @@ def strip_return_annotation(func: T, /) -> T:
     # @st.composite also sets __signature__ explicitly; Plum reads that first
     f: Any = func
     if hasattr(f, "__signature__"):
-        sig: inspect.Signature = f.__signature__  # type: ignore[assignment]
+        sig: inspect.Signature = f.__signature__
         if sig.return_annotation is not EMPTY:
-            f.__signature__ = sig.replace(return_annotation=EMPTY)  # type: ignore[assignment]
+            f.__signature__ = sig.replace(return_annotation=EMPTY)
 
     # Recurse into wrapped functions (in case applied before @st.composite)
     if hasattr(func, "__wrapped__"):

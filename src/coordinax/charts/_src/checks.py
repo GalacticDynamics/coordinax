@@ -80,7 +80,7 @@ def strictly_positive(
     name = f" {name}" if name else name
     pred = jnp.any(x <= 0)
     # TODO: enable error_if to work on non-tracers.
-    if isinstance(pred, jax.core.Tracer):  # ty: ignore[possibly-missing-attribute]
+    if isinstance(pred, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
         return eqx.error_if(
             x, pred, f"The input{name} must be non-negative and non-zero."
         )

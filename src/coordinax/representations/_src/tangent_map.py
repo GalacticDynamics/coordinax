@@ -80,7 +80,7 @@ def _apply_jac(
         v_arr, v_units = pack_nonuniform_unit(v, keys=from_components)
         v_qm = QuantityMatrix(v_arr, unit=v_units)
         w = qnp.matmul(J, v_qm)  # (n_out,) QuantityMatrix
-        return {key: u.Q(w.value[i], w.unit[i]) for i, key in enumerate(to_components)}  # ty: ignore[unresolved-attribute]
+        return {key: u.Q(w.value[i], w.unit[i]) for i, key in enumerate(to_components)}
 
     v_arr = jnp.stack([jnp.asarray(v[k]) for k in from_components])
     # When J is a QuantityMatrix, use J.value to avoid the Quax fallback path

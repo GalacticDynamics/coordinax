@@ -171,10 +171,7 @@ class Rotate(AbstractTransform):
 
     @classmethod
     def from_euler(
-        cls: type["Rotate"],
-        seq: str,
-        angles: u.Q["angle"] | u.Angle,  # type: ignore[type-arg]
-        /,
+        cls: type["Rotate"], seq: str, angles: u.Q["angle"] | u.Angle, /
     ) -> "Rotate":
         """Initialize from Euler angles.
 

@@ -541,7 +541,7 @@ def guess_rep(
 
     """
     sem = cxrapi.guess_semantic_kind(obj)
-    return Representation(geom_kind=geom, basis=coord_basis, semantic_kind=sem)
+    return Representation(geom_kind=geom, basis=coord_basis, semantic_kind=sem)  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch
@@ -675,4 +675,4 @@ def guess_rep(
     # TODO: better determine the basis kind
     basis = coord_basis
 
-    return Representation(geom_kind=geom, basis=basis, semantic_kind=semantic_kind)
+    return Representation(geom_kind=geom, basis=basis, semantic_kind=semantic_kind)  # ty: ignore[invalid-return-type]

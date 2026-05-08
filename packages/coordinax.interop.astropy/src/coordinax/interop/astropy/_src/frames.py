@@ -63,7 +63,7 @@ import astropy.coordinates as apyc
 import astropy.units as apyu
 import unxt as u
 
-import coordinax.astro as cxastro
+import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.manifolds as cxm
@@ -101,7 +101,7 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     return apyc.ICRS()
 
 
-@cxf.AbstractReferenceFrame.from_.dispatch  # type: ignore[untyped-decorator]
+@cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(cls: type[cxastro.ICRS], obj: apyc.ICRS, /) -> cxastro.ICRS:
     """Construct from a `astropy.coordinates.ICRS`.
 
@@ -226,7 +226,7 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     )
 
 
-@cxf.AbstractReferenceFrame.from_.dispatch  # type: ignore[untyped-decorator]
+@cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
     cls: type[cxastro.Galactocentric], frame: apyc.Galactocentric, /
 ) -> cxastro.Galactocentric:
@@ -356,4 +356,4 @@ def astropy_galactocentric_to_coordinax_galactocentric(
     True
 
     """
-    return cxastro.Galactocentric.from_(frame)  # ty: ignore[invalid-return-type]
+    return cxastro.Galactocentric.from_(frame)

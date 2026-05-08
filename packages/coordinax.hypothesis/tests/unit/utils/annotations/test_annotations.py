@@ -68,7 +68,7 @@ class TestAbstractNotIntrospectable:
     def test_abstract_wrapper_frozen(self):
         wrapper = annotations.AbstractNotIntrospectable(ann=int)
         with pytest.raises(AttributeError):
-            wrapper.ann = float  # type: ignore[misc]
+            wrapper.ann = float
 
     def test_annotated_wrapper_is_subclass(self):
         assert issubclass(

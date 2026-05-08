@@ -353,7 +353,7 @@ class TestUnitsMatrix:
     def test_rejects_single_unit(self):
         """A bare unit is not a valid matrix/vector unit structure."""
         with pytest.raises((TypeError, ValueError)):
-            UnitsMatrix(_m)  # type: ignore[arg-type]
+            UnitsMatrix(_m)
 
     def test_to_tuple_1d(self):
         units = UnitsMatrix((_m, _s, _kg))

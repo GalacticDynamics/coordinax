@@ -156,7 +156,7 @@ def cdicts(  # noqa: F811
 
         # Generate quantity for this component
         data[cname] = draw(
-            ust.quantities(unit=dim, dtype=dtype, shape=shape, elements=elements)  # ty: ignore[missing-argument]
+            ust.quantities(unit=dim, dtype=dtype, shape=shape, elements=elements)
         )
 
     return data

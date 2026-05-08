@@ -4,6 +4,7 @@ __all__ = ("AbstractTransform", "materialize_transform")
 
 import abc
 import dataclasses
+import sys
 
 from collections.abc import Mapping
 from jaxtyping import ArrayLike
@@ -13,10 +14,19 @@ import equinox as eqx
 import jax.numpy as jnp
 import jax.tree as jtu
 import plum
+
+if sys.version_info >= (3, 12):
+    import optype as op
+
+    _DataclassBase = op.dataclasses.HasDataclassFields
+else:
+    from dataclassish import (
+        DataclassInstance as _DataclassBase,  # ty: ignore[unresolved-import]
+    )
 import wadler_lindig as wl
 
 import unxt as u
-from dataclassish import DataclassInstance, field_items, flags
+from dataclassish import field_items, flags
 
 import coordinax.api.transforms as cxfmapi
 from coordinax.internal._wl_utils import pos_named_objs
@@ -50,23 +60,16 @@ class AbstractTransform(eqx.Module):
     # ===============================================================
     # Operator API
 
-    @plum.dispatch
-    def __call__(self: "AbstractTransform", tau: Any, x: Any, /, **kw: Any) -> Any:
+    def __call__(self, tau: Any, x: Any = None, /, **kw: Any) -> Any:
         """Apply the operator to the arguments.
 
         This method calls `coordinax.api.frames.act` to apply the operator.
+        If `x` is not provided, `tau` will be passed as `None` to the `act`
 
         """
+        if x is None:
+            return cxfmapi.act(self, None, tau, **kw)
         return cxfmapi.act(self, tau, x, **kw)
-
-    @plum.dispatch
-    def __call__(self: "AbstractTransform", x: Any, /, **kw: Any) -> Any:
-        """Apply the operator to the arguments with tau=None.
-
-        This method calls `coordinax.api.frames.act` to apply the operator.
-
-        """
-        return cxfmapi.act(self, None, x, **kw)
 
     # -------------------------------------------
 
@@ -130,7 +133,7 @@ class AbstractTransform(eqx.Module):
         fitems = list(field_items(flags.FilterRepr, self))
         fitems = [
             (k, v)
-            for k, v in fitems
+            for k, v in fitems  # ty: ignore[not-iterable]
             if not jnp.all(v == getattr(self.__class__, k, _sentinel))
         ]
 
@@ -324,7 +327,7 @@ def from_(cls: type[AbstractTransform], obj: AbstractTransform, /) -> AbstractTr
 # =============================================================================
 # materialize_transform: Materialization of time-dependent parameters
 
-OpT = TypeVar("OpT", bound=DataclassInstance)
+OpT = TypeVar("OpT", bound=_DataclassBase)
 
 
 def materialize_transform(op: OpT, tau: Any, /) -> OpT:

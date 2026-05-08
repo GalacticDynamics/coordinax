@@ -207,7 +207,9 @@ class AbstractVector(
     # Vector API
 
     @plum.dispatch
-    def cconvert(self, *args: Any, **kwargs: Any) -> "AbstractVector":
+    def cconvert(
+        self, *args: Any, **kwargs: Any
+    ) -> Any:  # TODO: return type annotation
         """Represent the vector as another type.
 
         This forwards to `coordinax.representations.cconvert`.
@@ -253,7 +255,9 @@ class AbstractVector(
     # Quantity API
 
     @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
-    def uconvert(self, *args: Any, **kwargs: Any) -> "AbstractVector":
+    def uconvert(
+        self, *args: Any, **kwargs: Any
+    ) -> Any:  # TODO: return type annotation
         """Convert the vector to the given units.
 
         This just forwards to `unxt.uconvert`, reversing the order of the
@@ -272,7 +276,9 @@ class AbstractVector(
         return cast("AbstractVector", u.uconvert(*args, self, **kwargs))
 
     @plum.dispatch
-    def uconvert(self, usys: u.AbstractUnitSystem, /) -> "AbstractVector":
+    def uconvert(
+        self, usys: u.AbstractUnitSystem, /
+    ) -> Any:  # TODO: return type annotation
         """Convert the vector to the given units.
 
         Parameters
@@ -354,7 +360,7 @@ class AbstractVector(
 
     # TODO: use quax_blocks.LaxEqMixin
     @override
-    def __eq__(self: "AbstractVector", other: object, /) -> Any:  # ty: ignore[invalid-method-override]
+    def __eq__(self: "AbstractVector", other: object, /) -> Any:
         """Check if the vector is equal to another object."""
         # Check type equality first
         if type(other) is not type(self):
@@ -422,10 +428,7 @@ class AbstractVector(
     # view() addressable_shards, at, committed, globarl_shards,
     # is_fully_addressable, is_fully_replcated, nbytes, sharding
 
-    @plum.dispatch
-    def astype(
-        self: "AbstractVector", dtype: Any, /, **kwargs: Any
-    ) -> "AbstractVector":
+    def astype(self, dtype: Any, /, **kwargs: Any) -> "AbstractVector":
         """Cast the vector to a new dtype.
 
         Examples

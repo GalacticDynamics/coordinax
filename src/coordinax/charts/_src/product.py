@@ -73,12 +73,12 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
             f"{name}.{c}"
             for name, factor in zip(self.factor_names, self.factors, strict=True)
             for c in factor.components
-        )  # type: ignore[return-value]
+        )  # ty: ignore[invalid-return-type]
 
     @property
     def coord_dimensions(self) -> Ds:
         """Concatenation of factor coordinate dimensions."""
-        return tuple(d for f in self.factors for d in f.coord_dimensions)  # type: ignore[return-value]
+        return tuple(d for f in self.factors for d in f.coord_dimensions)  # ty: ignore[invalid-return-type]
 
     def split_components(self, p: CDict, /) -> tuple[CDict, ...]:
         """Partition a CDict by factor components.
@@ -189,7 +189,7 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
                 raise ValueError(msg)
             seen_add(c)
             fc_append(c)
-        return tuple(flat_components)  # type: ignore[return-value]
+        return tuple(flat_components)  # ty: ignore[invalid-return-type]
 
     def split_components(self, p: CDict, /) -> tuple[CDict, ...]:
         """Partition a CDict by factor components.

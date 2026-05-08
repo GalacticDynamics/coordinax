@@ -5,12 +5,12 @@ __all__ = ("distances",)
 
 from typing import Any
 
-from hypothesis import strategies as st
-
 import unxt as u
 import unxt_hypothesis as ust
+from hypothesis import strategies as st
 
 import coordinax.distances as cxd
+
 from .utils import make_nonnegative
 from coordinax.hypothesis.utils import draw_if_strategy
 
@@ -77,7 +77,7 @@ def distances(
         kwargs = make_nonnegative(draw, **kwargs)
 
     # Generate the Distance quantity
-    return draw(  # type: ignore[return-value]
+    return draw(  # ty: ignore[invalid-return-type]
         ust.quantities(
             unit,
             quantity_cls=cxd.Distance,
@@ -89,4 +89,4 @@ def distances(
 
 # Register type strategy for Hypothesis's st.from_type()
 # Note: Pass the callable, not an invoked strategy
-st.register_type_strategy(cxd.Distance, lambda _: distances())  # ty: ignore[missing-argument]
+st.register_type_strategy(cxd.Distance, lambda _: distances())

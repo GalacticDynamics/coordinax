@@ -180,7 +180,8 @@ def pow_p_abstractdistance_arraylike(
     BareQuantity(1000., 'm3')
 
     """
-    return BareQuantity(x.value, x.unit) ** y  # type: ignore[return-value]  # TODO: better call to power
+    # TODO: better call to power
+    return BareQuantity(x.value, x.unit) ** y  # ty: ignore[invalid-return-type]
 
 
 # ==============================================================================

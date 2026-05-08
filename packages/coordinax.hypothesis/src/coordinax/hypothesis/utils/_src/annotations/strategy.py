@@ -87,7 +87,7 @@ def strategy_for_annotation(  # noqa: F811
     try:
         dim = u.dimension_of(ann)
     except eqx.EquinoxTracetimeError:
-        dim = ust.units()  # ty: ignore[missing-argument]
+        dim = ust.units()
 
     # Determine the quantity class and whether to use static values
     # Check if ann is a subclass of StaticQuantity or if it's a parametrized
@@ -109,7 +109,7 @@ def strategy_for_annotation(  # noqa: F811
         static_value = True  # StaticQuantity requires StaticValue
 
     # Build quantity strategy
-    strategy = ust.quantities(  # ty: ignore[missing-argument]
+    strategy = ust.quantities(
         unit=dim,
         quantity_cls=quantity_cls,
         dtype=meta.get("dtype", xps.scalar_dtypes()),
