@@ -37,7 +37,7 @@ from .custom_types import CDict
 from .utils import is_abstract_class, is_not_abstract_chart_subclass
 from coordinax.internal.custom_types import Ds, Ks
 
-GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # type: ignore[misc]
+GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")
 CDictT = TypeVar("CDictT", bound=CDict)
 

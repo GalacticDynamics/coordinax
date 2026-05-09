@@ -44,7 +44,7 @@ class Distance(AbstractDistance):
     )
     """The distance value."""
 
-    unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)
+    unit: u.AbstractUnit = eqx.field(static=True, converter=u.unit)  # ty: ignore[invalid-assignment]
     """The unit associated with this value."""
 
     _: KW_ONLY
@@ -104,7 +104,7 @@ def from_(cls: type[Distance], d: Distance, /, **kw: Any) -> Distance:
 
 
 @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(cls: type[Distance], d: u.Q["length"], /, **kw: Any) -> Distance:  # type: ignore[type-arg]
+def from_(cls: type[Distance], d: u.Q["length"], /, **kw: Any) -> Distance:
     """Compute distance from distance.
 
     Examples
@@ -122,12 +122,7 @@ def from_(cls: type[Distance], d: u.Q["length"], /, **kw: Any) -> Distance:  # t
 
 
 @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[Distance],
-    p: u.Q["angle"],  # type: ignore[type-arg]
-    /,
-    **kw: Any,
-) -> Distance:
+def from_(cls: type[Distance], p: u.Q["angle"], /, **kw: Any) -> Distance:
     """Compute distance from parallax.
 
     Examples
@@ -146,12 +141,7 @@ def from_(
 
 
 @Distance.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[Distance],
-    dm: u.Q["mag"],  # type: ignore[type-arg]
-    /,
-    **kw: Any,
-) -> Distance:
+def from_(cls: type[Distance], dm: u.Q["mag"], /, **kw: Any) -> Distance:
     """Compute distance from distance modulus.
 
     Examples

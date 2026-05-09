@@ -64,7 +64,9 @@ def _qm_triangular_solve(E: QuantityMatrix, b: QuantityMatrix) -> QuantityMatrix
     diag_vals = jnp.diagonal(E.value, axis1=-2, axis2=-1)
     b_norm = b.value / diag_vals  # shape (..., n), element-wise divide by diagonal
     E_norm = E.value / diag_vals[..., :, None]  # normalise each row by its diagonal
-    x_vals = jax.scipy.linalg.solve_triangular(E_norm, b_norm, lower=False)
+    x_vals = jax.scipy.linalg.solve_triangular(
+        E_norm, b_norm[..., None], lower=False
+    ).squeeze(-1)
     return QuantityMatrix(x_vals, unit=x_units)
 
 

@@ -18,7 +18,7 @@ env:
   # Many color libraries just need this to be set to any value, but at least
   # one distinguishes color depth, where "3" -> "256-bit color".
   FORCE_COLOR: 3
-  PYTHON_VERSIONS: '["3.11", "3.12", "3.13"]'
+  PYTHON_VERSIONS: '["3.11", "3.12", "3.13", "3.14"]'
 
 jobs:
   format:
@@ -98,7 +98,7 @@ jobs:
 
       - name: Test package
         run: |
-          uv run --frozen nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow"
+          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow"
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v6.0.0
@@ -128,7 +128,7 @@ jobs:
 
       - name: Test package
         run: |
-          uv run --frozen nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow"
+          uv run --no-sync nox -s test -- ${{ needs.prepare_test_matrix.outputs.exclude-args }} --cov --cov-report=xml --cov-report=term --durations=20 --arraydiff -m"not slow"
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v6.0.0
@@ -187,6 +187,6 @@ jobs:
     if: always()
     steps:
       - name: All required jobs passed
-        uses: re-actors/alls-green@release/v1
+        uses: re-actors/alls-green@05ac9388f0aebcb5727afa17fcccfecd6f8ec5fe # v1.2.2
         with:
           jobs: ${{ toJSON(needs) }}

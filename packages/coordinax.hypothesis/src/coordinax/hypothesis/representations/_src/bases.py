@@ -62,7 +62,7 @@ def basis_classes(
         msg = "No basis classes left after exclusions"
         raise ValueError(msg)
 
-    return draw(st.sampled_from(candidates))
+    return draw(st.sampled_from(candidates))  # ty: ignore[invalid-return-type]
 
 
 @st.composite
@@ -99,5 +99,5 @@ def bases(
     ...     assert isinstance(role, cxr.NoBasis)
 
     """
-    basis_cls = draw(basis_classes(include=include, exclude=exclude))  # ty: ignore[missing-argument]
+    basis_cls = draw(basis_classes(include=include, exclude=exclude))
     return basis_cls()

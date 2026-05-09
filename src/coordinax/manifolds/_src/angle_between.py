@@ -47,7 +47,7 @@ def angle_between(
     Angle(1.57079633, 'rad')
 
     """
-    return cxmapi.angle_between(manifold.metric, chart, uvec, vvec, at=at, usys=usys)  # type: ignore[invalid-return-type]
+    return cxmapi.angle_between(manifold.metric, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch
@@ -128,7 +128,7 @@ def _check_nonzero_norm(*norms: u.AbstractQuantity) -> None:
     """Raise when a norm-squared is zero or negative outside JAX tracing."""
     for norm in norms:
         value = norm.value
-        if isinstance(value, jax.core.Tracer):  # ty: ignore[possibly-missing-attribute]
+        if isinstance(value, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
             continue
         if bool(qnp.any(value <= 0)):
             msg = "angle_between is undefined for zero-norm tangent vectors."

@@ -7,6 +7,7 @@ from typing import Final
 import hypothesis.strategies as st
 
 import coordinax.representations as cxr
+
 from coordinax.hypothesis.utils import get_all_subclasses
 
 GEOMETRIES: Final = get_all_subclasses(cxr.AbstractGeometry, exclude_abstract=True)
@@ -61,7 +62,7 @@ def geometry_classes(
         msg = "No role classes left after exclusions"
         raise ValueError(msg)
 
-    return draw(st.sampled_from(candidates))
+    return draw(st.sampled_from(candidates))  # ty: ignore[invalid-return-type]
 
 
 @st.composite
@@ -98,5 +99,5 @@ def geometries(
     ...     assert isinstance(role, cxr.PointGeometry)
 
     """
-    geom_cls = draw(geometry_classes(include=include, exclude=exclude))  # ty: ignore[missing-argument]
+    geom_cls = draw(geometry_classes(include=include, exclude=exclude))
     return geom_cls()

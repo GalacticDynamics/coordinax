@@ -25,9 +25,7 @@ from coordinax.internal.custom_types import Shape
 
 
 @quax.register(jax.lax.broadcast_in_dim_p)
-def broadcast_in_dim_p_absvec(
-    operand: Point, /, *, shape: Shape, **kwargs: Any
-) -> Point:
+def broadcast_in_dim_p_absvec(operand: Point, /, *, shape: Shape, **kw: Any) -> Point:
     """Broadcast in a dimension.
 
     >>> import quaxed.numpy as jnp
@@ -50,7 +48,7 @@ def broadcast_in_dim_p_absvec(
 
 
 @quax.register(jax.lax.convert_element_type_p)
-def convert_element_type_p_absvec(operand: Point, /, **kwargs: Any) -> Point:
+def convert_element_type_p_absvec(operand: Point, /, **kw: Any) -> Point:
     """Convert the element type of a quantity.
 
     >>> import quaxed.lax as qlax
@@ -66,7 +64,7 @@ def convert_element_type_p_absvec(operand: Point, /, **kwargs: Any) -> Point:
 
     """
     convert_p = quax.quaxify(jax.lax.convert_element_type_p.bind)
-    data = jtu.map(lambda v: convert_p(v, **kwargs), operand.data)
+    data = jtu.map(lambda v: convert_p(v, **kw), operand.data)
     return replace(operand, data=data)
 
 
@@ -126,7 +124,7 @@ def neg_p_absvec(operand: Point, /) -> Point:
 
 
 @quax.register(jax.lax.add_p)
-def add_p_absvecs(lhs: Point, rhs: Point, /) -> Point:
+def add_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
     r"""Element-wise addition of two points.
 
     For non-Cartesian charts the operation converts both operands to the
@@ -149,7 +147,7 @@ def add_p_absvecs(lhs: Point, rhs: Point, /) -> Point:
 
 
 @quax.register(jax.lax.sub_p)
-def sub_p_absvecs(lhs: Point, rhs: Point, /) -> Point:
+def sub_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
     r"""Element-wise subtraction of two points.
 
     For non-Cartesian charts the operation converts both operands to the
@@ -179,28 +177,28 @@ def sub_p_absvecs(lhs: Point, rhs: Point, /) -> Point:
 
 
 @quax.register(jax.lax.mul_p)
-def mul_p_absvecs(lhs: int | float | Array, rhs: Point, /) -> Point:
+def mul_p_absvecs(lhs: int | float | Array, rhs: Point, /, **kw: Any) -> Point:
     """Element-wise multiplication of a scalar and a point."""
     data = jtu.map(lambda v: jnp.multiply(lhs, v), rhs.data, is_leaf=uq.is_any_quantity)
     return replace(rhs, data=data)
 
 
 @quax.register(jax.lax.mul_p)
-def mul_p_vecs(lhs: Point, rhs: int | float | Array, /) -> Point:
+def mul_p_vecs(lhs: Point, rhs: int | float | Array, /, **kw: Any) -> Point:
     """Element-wise multiplication of a point and a scalar."""
     data = jtu.map(lambda v: jnp.multiply(v, rhs), lhs.data, is_leaf=uq.is_any_quantity)
     return replace(lhs, data=data)
 
 
 @quax.register(jax.lax.div_p)
-def div_p_absvecs(lhs: int | float | Array, rhs: Point, /) -> Point:
+def div_p_absvecs(lhs: int | float | Array, rhs: Point, /, **kw: Any) -> Point:
     """Element-wise division of a scalar by a point."""
     data = jtu.map(lambda v: jnp.divide(lhs, v), rhs.data, is_leaf=uq.is_any_quantity)
     return replace(rhs, data=data)
 
 
 @quax.register(jax.lax.div_p)
-def div_p_vecs(lhs: Point, rhs: int | float | Array, /) -> Point:
+def div_p_vecs(lhs: Point, rhs: int | float | Array, /, **kw: Any) -> Point:
     """Element-wise division of a point by a scalar."""
     data = jtu.map(lambda v: jnp.divide(v, rhs), lhs.data, is_leaf=uq.is_any_quantity)
     return replace(lhs, data=data)

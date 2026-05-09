@@ -46,7 +46,7 @@ def jax_scalar_handler(obj: Any, /) -> wl.AbstractDoc | None:
 
     """  # noqa: D401
     # Tracers: let wadler_lindig render the shape/dtype summary.
-    if isinstance(obj, jax.core.Tracer):  # ty: ignore[possibly-missing-attribute]
+    if isinstance(obj, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
         return None
 
     # Concrete 0-d arrays: convert to a Python scalar for display.

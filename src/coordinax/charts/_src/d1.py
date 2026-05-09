@@ -30,7 +30,7 @@ from .base import (
 from .utils import is_not_abstract_chart_subclass
 from coordinax.internal.custom_types import Len
 
-GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # type: ignore[misc]
+GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")
 
 

@@ -20,8 +20,9 @@ dependencies = [
   "coordinax.api",
   "coordinax.astro",
   "jaxtyping>=0.3.3",
-  "plum-dispatch>=2.6.1",
-  "unxt>=1.10.0",
+  "plum>=2.8.0; python_version < '3.14'",
+  "plum>=2.9.0; python_version >= '3.14'",
+  "unxt>=1.11.2",
 ]
 description = "Astropy interoperability for coordinax"
 dynamic = ["version"]

@@ -12,7 +12,7 @@ from .errors import FrameTransformError
 from .null import NoFrame
 
 
-@plum.dispatch(precedence=1)  # type: ignore[no-matching-overload]
+@plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
 def frame_transition(
     from_frame: NoFrame, to_frame: AbstractReferenceFrame, /
 ) -> NoReturn:

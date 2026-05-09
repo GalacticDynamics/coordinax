@@ -99,7 +99,7 @@ def _astropy_gcf_to_icrs_xyz_pc(xyz_pc: Iterable[float], frame: cxastro.Galactoc
 def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
     """ICRS->Galactocentric position transforms match Astropy."""
     gcf = cxastro.Galactocentric()
-    op = cxf.frame_transition(cxastro.ICRS(), gcf)  # type: ignore[no-untyped-call]
+    op = cxf.frame_transition(cxastro.ICRS(), gcf)
 
     got = _to_np(cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")), "pc")
     expected = _astropy_icrs_to_gcf_xyz_pc(xyz_pc, gcf)
@@ -118,7 +118,7 @@ def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
 def test_galactocentric_to_icrs_matches_astropy_positions(xyz_pc) -> None:
     """Galactocentric->ICRS position transforms match Astropy."""
     gcf = cxastro.Galactocentric()
-    op = cxf.frame_transition(gcf, cxastro.ICRS())  # type: ignore[no-untyped-call]
+    op = cxf.frame_transition(gcf, cxastro.ICRS())
 
     got = _to_np(cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")), "pc")
     expected = _astropy_gcf_to_icrs_xyz_pc(xyz_pc, gcf)
@@ -128,7 +128,7 @@ def test_galactocentric_to_icrs_matches_astropy_positions(xyz_pc) -> None:
 
 def test_icrs_galactocentric_transitions_are_inverse_for_positions() -> None:
     """ICRS<->Galactocentric operators are inverses for position transforms."""
-    icrs = cxastro.ICRS()  # type: ignore[no-untyped-call]
+    icrs = cxastro.ICRS()
     gcf = cxastro.Galactocentric()
 
     fwd = cxf.frame_transition(icrs, gcf)
@@ -157,7 +157,7 @@ class TestFrameTransformProperties:
     @settings(deadline=None)
     def test_icrs_gcf_icrs_roundtrip(self, q: u.AbstractQuantity) -> None:
         """ICRS → GCF → ICRS is the identity for arbitrary bounded positions."""
-        icrs = cxastro.ICRS()  # type: ignore[no-untyped-call]
+        icrs = cxastro.ICRS()
         gcf = cxastro.Galactocentric()
 
         fwd = cxf.frame_transition(icrs, gcf)
@@ -178,7 +178,7 @@ class TestFrameTransformProperties:
     @settings(deadline=None)
     def test_gcf_icrs_gcf_roundtrip(self, q: u.AbstractQuantity) -> None:
         """GCF → ICRS → GCF is the identity for arbitrary bounded positions."""
-        icrs = cxastro.ICRS()  # type: ignore[no-untyped-call]
+        icrs = cxastro.ICRS()
         gcf = cxastro.Galactocentric()
 
         fwd = cxf.frame_transition(gcf, icrs)
@@ -205,7 +205,7 @@ class TestFrameTransformProperties:
         The active-semantics inverse law:
         ``(frame_transition(A, B)).inverse ≈ frame_transition(B, A)``.
         """
-        icrs = cxastro.ICRS()  # type: ignore[no-untyped-call]
+        icrs = cxastro.ICRS()
         gcf = cxastro.Galactocentric()
 
         fwd = cxf.frame_transition(icrs, gcf)
@@ -232,7 +232,7 @@ class TestFrameTransformProperties:
     ) -> None:
         """ICRS→GCF position matches Astropy for randomly generated positions."""
         gcf = cxastro.Galactocentric()
-        op = cxf.frame_transition(cxastro.ICRS(), gcf)  # type: ignore[no-untyped-call]
+        op = cxf.frame_transition(cxastro.ICRS(), gcf)
 
         xyz = _to_np(q, "pc")
         got = _to_np(cxfm.act(op, None, q), "pc")

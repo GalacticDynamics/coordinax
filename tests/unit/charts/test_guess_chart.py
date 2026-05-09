@@ -24,7 +24,7 @@ from .conftest import SHAPE_CART_MAP, xps
 from coordinax.internal.custom_types import Shape
 
 
-def is_guessable(chart: cxc.AbstractChart) -> bool:  # type: ignore[type-arg]
+def is_guessable(chart: cxc.AbstractChart) -> bool:
     """Check if a chart can be recovered by guess_chart.
 
     A chart is guessable if its type can be instantiated without arguments.
@@ -43,7 +43,7 @@ guessable_charts = cxst.charts(filter=cxc.AbstractFixedComponentsChart).filter(
 
 @given(guessable_charts)
 def test_guess_chart_returns_same_components(
-    chart: cxc.AbstractFixedComponentsChart,  # type: ignore[type-arg]
+    chart: cxc.AbstractFixedComponentsChart,
 ) -> None:
     """guess_chart(frozenset(chart.components)) returns chart with same components.
 
@@ -62,7 +62,7 @@ def test_guess_chart_returns_same_components(
 
 @given(guessable_charts)
 def test_guess_chart_from_dict_returns_same_components(
-    chart: cxc.AbstractFixedComponentsChart,  # type: ignore[type-arg]
+    chart: cxc.AbstractFixedComponentsChart,
 ) -> None:
     """guess_chart with dict input returns chart with same components."""
     # Create a component dictionary with dummy values

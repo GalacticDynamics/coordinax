@@ -133,7 +133,7 @@ class Point(
 
     """
 
-    data: dict[CKey, V]
+    data: dict[CKey, Any]  # TODO: data: dict[CKey, V]
     """The data for each component."""
 
     chart: ChartT = eqx.field(static=True)
@@ -161,18 +161,18 @@ class Point(
     def __getitem__(self, key: Any) -> "V | Point":  # ty: ignore[invalid-method-override]
         if isinstance(key, str):
             return self.data[key]
-        return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type]
+        return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type,not-subscriptable]
 
     # ===============================================================
     # Quax API
 
     # TODO: generalize to work with FourVector, and Space
-    def aval(self) -> jax.core.ShapedArray:  # ty: ignore[possibly-missing-attribute]
+    def aval(self) -> jax.core.ShapedArray:  # ty: ignore[possibly-missing-submodule]
         """Return the vector as a JAX array."""
         fvs = self.data.values()
         shape = (*jnp.broadcast_shapes(*map(jnp.shape, fvs)), len(fvs))
         dtype = jnp.result_type(*map(jnp.dtype, fvs))
-        return jax.core.ShapedArray(shape, dtype)  # ty: ignore[possibly-missing-attribute]
+        return jax.core.ShapedArray(shape, dtype)  # ty: ignore[possibly-missing-submodule]
 
     @property
     def shape(self) -> tuple[int, ...]:

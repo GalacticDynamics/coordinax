@@ -488,7 +488,7 @@ class QuantityMatrix(u.AbstractQuantity):
     """
 
     value: Shaped[Array, "..."] = eqx.field()
-    unit: UnitsMatrix = eqx.field(static=True, converter=u.unit)
+    unit: UnitsMatrix = eqx.field(static=True, converter=u.unit)  # ty: ignore[invalid-assignment]
 
     @property
     def ndim(self) -> int:

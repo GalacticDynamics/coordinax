@@ -62,7 +62,7 @@ def make_nonnegative(draw: st.DrawFn, /, **kwargs: Any) -> dict[str, Any]:
         elif isinstance(elements, st.SearchStrategy):
             elements = elements.map(abs)  # Simple way to ensure non-negative
         else:
-            assert_never(elements)  # ty: ignore[type-assertion-failure]
+            assert_never(elements)
 
         kwargs["elements"] = elements
 

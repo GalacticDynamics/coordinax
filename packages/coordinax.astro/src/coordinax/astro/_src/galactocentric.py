@@ -18,7 +18,7 @@ import coordinax.vectors as cxv
 from .base_frame import AbstractSpaceFrame
 from coordinax.distances import Distance
 
-ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]  # ty: ignore[unresolved-reference]
+ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]
 
 
 galcen_default = cxv.Point.from_(
@@ -51,7 +51,7 @@ class Galactocentric(AbstractSpaceFrame):
     #: RA, Dec, and distance of the Galactic center from an ICRS origin.
     #: ra, dec: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
     #: distance: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
-    galcen: cxv.Point[cxc.LonLatSpherical3D, Any] = eqx.field(
+    galcen: cxv.Point[cxc.LonLatSpherical3D, Any] = eqx.field(  # ty: ignore[invalid-assignment]
         converter=cxv.Point[cxc.LonLatSpherical3D, Any].from_,
         default=galcen_default,
     )
@@ -64,7 +64,7 @@ class Galactocentric(AbstractSpaceFrame):
 
     #: Distance from the Sun to the Galactic midplane.
     #: https://ui.adsabs.harvard.edu/abs/2019MNRAS.482.1417B
-    z_sun: u.Q["length"] = eqx.field(  # ty: ignore[unresolved-reference]
+    z_sun: u.Q["length"] = eqx.field(
         converter=Unless(u.Q["length"], u.Q["length"].from_),
         default=u.Q(jnp.array(20.8), "pc"),
     )
