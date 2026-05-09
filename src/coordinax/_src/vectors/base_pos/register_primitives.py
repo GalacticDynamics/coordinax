@@ -22,6 +22,8 @@ from coordinax._src.vectors.api import vconvert
 from coordinax._src.vectors.base import AttrFilter
 from coordinax._src.vectors.base.register_primitives import eq_p_absvecs
 
+mul_p_qbind = quaxify(jax.lax.mul_p.bind)
+
 
 @register(jax.lax.add_p)
 def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
@@ -56,7 +58,7 @@ def add_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
         isinstance(lhs, cart_cls) and isinstance(rhs, cart_cls),
         f"must register a Cartesian-specific dispatch for {cart_cls} addition",
     )
-    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)
+    add = lhs.vconvert(cart_cls) + rhs.vconvert(cart_cls)  # type: ignore[operator]
     return cast("AbstractPos", add.vconvert(type(lhs), **lhs._auxiliary_data))
 
 
@@ -139,7 +141,7 @@ def eq_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> Array:
 
 
 @register(jax.lax.mul_p)
-def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
+def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /, **kw: Any) -> AbstractPos:
     """Scale a position by a scalar.
 
     Examples
@@ -225,12 +227,12 @@ def mul_p_arraylike_pos(lhs: ArrayLike, rhs: AbstractPos, /) -> AbstractPos:
     )
 
     rc = rhs.vconvert(cart_cls)
-    nr = cast("AbstractPos", qlax.mul(lhs, rc))  # type: ignore[arg-type]
+    nr = cast("AbstractPos", mul_p_qbind(lhs, rc, **kw))
     return cast("AbstractPos", nr.vconvert(type(rhs)))
 
 
 @register(jax.lax.mul_p)
-def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
+def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /, **kw: Any) -> AbstractPos:
     """Scale a position by a scalar.
 
     This just re-dispatches to the other side -- for example vec * 2 becomes 2 *
@@ -248,11 +250,12 @@ def mul_p_pos_arraylike(lhs: AbstractPos, rhs: ArrayLike, /) -> AbstractPos:
         [2 4 6]>
 
     """
-    return cast("AbstractPos", qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # re-dispatch on the other side
+    # re-dispatch on the other side
+    return cast("AbstractPos", mul_p_qbind(rhs, lhs, **kw))
 
 
 @register(jax.lax.mul_p)
-def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
+def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /, **kw: Any) -> BareQuantity:
     """Multiply two positions.
 
     This is required to take the dot product of two vectors.
@@ -279,7 +282,7 @@ def mul_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> BareQuantity:
     """
     lq: BareQuantity = convert(lhs.vconvert(lhs.cartesian_type), BareQuantity)
     rq: BareQuantity = convert(rhs.vconvert(rhs.cartesian_type), BareQuantity)
-    return qlax.mul(lq, rq)  # re-dispatch to Quantities
+    return mul_p_qbind(lq, rq, **kw)  # re-dispatch to Quantities
 
 
 # ------------------------------------------------
@@ -301,8 +304,8 @@ def neg_p_pos(obj: AbstractPos, /) -> AbstractPos:
 
     """
     cart = vconvert(obj.cartesian_type, obj)
-    negcart = jnp.negative(cart)
-    return vconvert(type(obj), negcart)
+    negcart = jnp.negative(cart)  # type: ignore[call-overload]
+    return vconvert(type(obj), negcart)  # type: ignore[return-value]
 
 
 # ------------------------------------------------
@@ -375,5 +378,5 @@ def sub_p_poss(lhs: AbstractPos, rhs: AbstractPos, /) -> AbstractPos:
     # singularities, ranges, or auxiliary data that need to be handled, so this
     # is a safe default. We restore aux data from the lhs.
     cart_cls = lhs.cartesian_type
-    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)
+    diff = lhs.vconvert(cart_cls) - rhs.vconvert(cart_cls)  # type: ignore[operator]
     return cast("AbstractPos", diff.vconvert(type(lhs), **lhs._auxiliary_data))

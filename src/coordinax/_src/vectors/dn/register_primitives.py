@@ -7,6 +7,7 @@ from typing import Any, cast
 
 import equinox as eqx
 import jax
+import quax
 from jaxtyping import ArrayLike
 from quax import register
 
@@ -15,6 +16,8 @@ import unxt as u
 
 from .cartesian import CartesianPosND
 from coordinax._src.vectors.base_pos import AbstractPos
+
+mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 # ------------------------------------------------
 
@@ -71,7 +74,9 @@ def dot_general_p_cartnds(
 
 
 @register(jax.lax.mul_p)
-def mul_p_arraylike_cartnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianPosND:
+def mul_p_arraylike_cartnd(
+    lhs: ArrayLike, rhs: CartesianPosND, /, **kw: Any
+) -> CartesianPosND:
     """Scale a position by a scalar.
 
     Examples
@@ -91,7 +96,7 @@ def mul_p_arraylike_cartnd(lhs: ArrayLike, rhs: CartesianPosND, /) -> CartesianP
     )
 
     # Scale the components
-    return replace(rhs, q=lhs * rhs.q)
+    return replace(rhs, q=mul_p_qbind(lhs, rhs.q, **kw))
 
 
 @register(jax.lax.neg_p)

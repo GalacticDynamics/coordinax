@@ -75,9 +75,9 @@ def time_nth_derivative_vector_type(
         pass
     elif n < 0:
         for _ in range(-n):
-            out = api.time_antiderivative_vector_type(out)
+            out = api.time_antiderivative_vector_type(out)  # type: ignore[assignment]
     else:
         for _ in range(n):
-            out = api.time_derivative_vector_type(out)
+            out = api.time_derivative_vector_type(out)  # type: ignore[assignment]
 
     return out

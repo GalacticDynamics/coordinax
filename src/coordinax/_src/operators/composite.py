@@ -2,23 +2,31 @@
 
 __all__ = ("AbstractCompositeOperator",)
 
+import sys
 from collections.abc import Iterator
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, Protocol, overload, runtime_checkable
 
 import equinox as eqx
 
-from dataclassish import DataclassInstance
-
 from .base import AbstractOperator
 from coordinax._src.vectors.base import AbstractVectorLike
+
+if sys.version_info >= (3, 12):
+    import optype as op
+
+    _DataclassBase = op.dataclasses.HasDataclassFields
+else:
+    from dataclassish import (
+        DataclassInstance as _DataclassBase,  # ty: ignore[unresolved-import]
+    )
 
 if TYPE_CHECKING:
     import coordinax.ops  # noqa: ICN001
 
 
 @runtime_checkable
-class HasOperatorsAttr(DataclassInstance, Protocol):  # type: ignore[misc]
+class HasOperatorsAttr(_DataclassBase, Protocol):  # type: ignore[misc]
     """Protocol for classes with an `operators` attribute."""
 
     operators: tuple[AbstractOperator, ...]
@@ -67,28 +75,6 @@ class AbstractCompositeOperator(AbstractOperator):
 
         return Pipe(tuple(op.inverse for op in reversed(self.operators)))
 
-    @AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[untyped-decorator]
-    def __call__(
-        self: "AbstractCompositeOperator", *args: object, **kwargs: Any
-    ) -> tuple[object, ...]:
-        """Apply the operators to the coordinates.
-
-        This is the default implementation, which applies the operators in
-        sequence, passing along the arguments.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
-        >>> op(1, 2, 3)
-        (1, 2, 3)
-
-        """
-        for op in self.operators:
-            args = op(*args, **kwargs)
-        return args
-
     # ===========================================
     # Pipe
 
@@ -114,7 +100,30 @@ class AbstractCompositeOperator(AbstractOperator):
 # Call dispatches
 
 
-@AbstractOperator.__call__.dispatch(precedence=1)  # type: ignore[untyped-decorator]
+@AbstractOperator.__call__.dispatch(precedence=1)
+def call(
+    self: AbstractCompositeOperator, *args: object, **kwargs: Any
+) -> tuple[object, ...]:
+    """Apply the operators to the coordinates.
+
+    This is the default implementation, which applies the operators in
+    sequence, passing along the arguments.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.Pipe((cx.ops.Identity(), cx.ops.Identity()))
+    >>> op(1, 2, 3)
+    (1, 2, 3)
+
+    """
+    for op in self.operators:  # pylint: disable=W0621
+        args = op(*args, **kwargs)
+    return args
+
+
+@AbstractOperator.__call__.dispatch(precedence=1)
 def call(
     self: AbstractCompositeOperator, x: AbstractVectorLike, /, **kwargs: Any
 ) -> AbstractVectorLike:
@@ -134,6 +143,6 @@ def call(
 
     """
     # TODO: with lax.for_i
-    for op in self.operators:
+    for op in self.operators:  # pylint: disable=W0621
         x = op(x, **kwargs)
     return x

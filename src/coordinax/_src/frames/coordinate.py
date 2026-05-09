@@ -9,7 +9,6 @@ from typing_extensions import override
 import equinox as eqx
 import jax
 import wadler_lindig as wl
-from plum import dispatch
 
 import unxt as u
 from dataclassish import field_items, replace
@@ -74,7 +73,7 @@ class AbstractCoordinate(AbstractVector):
             return self
 
         # Otherwise, apply the transformation and return a new coordinate
-        new_data = op(self.data) if t is None else op(t, self.data)[1]
+        new_data = op(self.data) if t is None else op(t, self.data)[1]  # type: ignore[index]
         out = self.__class__.from_(new_data, toframe)
         return cast("AbstractCoordinate", out)
 
@@ -334,27 +333,8 @@ class Coordinate(AbstractCoordinate):
         # TODO: KinematicSpace is currently not implemented.
         return self.data._dimensionality()
 
-    @dispatch
-    def __getitem__(self: "Coordinate", index: Any) -> "Coordinate":
+    def __getitem__(self, index: Any) -> "Coordinate":
         """Return Coordinate, with indexing applied to the data.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> data = cx.CartesianPos3D.from_([[1, 2, 3], [4, 5, 6]], "kpc")
-        >>> w = cx.Coordinate.from_(data, cx.frames.ICRS())
-
-        >>> print(w[0].data["length"])
-        <CartesianPos3D: (x, y, z) [kpc]
-            [1 2 3]>
-
-        """
-        return replace(self, data=self.data[index])
-
-    @dispatch
-    def __getitem__(self: "Coordinate", index: str) -> AbstractVector:
-        """Return the data of the coordinate.
 
         Examples
         --------
@@ -368,5 +348,12 @@ class Coordinate(AbstractCoordinate):
             [[1 2 3]
              [4 5 6]]>
 
+        >>> print(w[0].data["length"])
+        <CartesianPos3D: (x, y, z) [kpc]
+            [1 2 3]>
+
         """
-        return self.data[index]
+        if isinstance(index, str):
+            return self.data[index]
+
+        return replace(self, data=self.data[index])

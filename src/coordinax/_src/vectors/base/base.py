@@ -17,7 +17,7 @@ import unxt as u
 from dataclassish import field_items, field_values, replace
 
 from .flags import AttrFilter
-from coordinax._src.vectors.api import vconvert
+from coordinax._src.vectors import api
 from coordinax._src.vectors.utils import full_shaped
 
 if TYPE_CHECKING:
@@ -125,7 +125,7 @@ class AbstractVectorLike(
     # ===============================================================
     # Vector API
 
-    @dispatch
+    @dispatch.abstract
     def vconvert(
         self: "AbstractVectorLike", target: type, *args: Any, **kwargs: Any
     ) -> "AbstractVectorLike":
@@ -189,13 +189,12 @@ class AbstractVectorLike(
             [13.363  0.767 -1.2  ]>
 
         """
-        return vconvert(target, self, *args, **kwargs)
+        raise NotImplementedError  # pragma: no cover
 
     # ===============================================================
     # Quantity API
 
-    @dispatch(precedence=-1)
-    def uconvert(self, *args: Any, **kwargs: Any) -> "AbstractVectorLike":
+    def uconvert(self, *args: Any, **kw: Any) -> Any:
         """Convert the vector to the given units.
 
         This just forwards to `unxt.uconvert`, reversing the order of the
@@ -206,32 +205,18 @@ class AbstractVectorLike(
         >>> import coordinax as cx
 
         >>> vec = cx.vecs.CartesianPos3D.from_([1, 2, 3], "km")
+
         >>> vec.uconvert({"length": "km"})
         CartesianPos3D(
             x=Quantity(1, unit='km'), y=Quantity(2, unit='km'), z=Quantity(3, unit='km')
         )
 
-        """
-        return u.uconvert(*args, self, **kwargs)
-
-    @dispatch
-    def uconvert(self, usys: Any, /) -> "AbstractVectorLike":
-        """Convert the vector to the given units.
-
-        Parameters
-        ----------
-        usys
-            The units to convert to according to the physical type of the
-            components. This is passed to [`unxt.unitsystem`][].
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
+        >>> vec.uconvert(cx.vecs.ToUnitsOptions.consistent)
+        CartesianPos3D(
+            x=Quantity(1, unit='km'), y=Quantity(2, unit='km'), z=Quantity(3, unit='km')
+        )
 
         >>> usys = u.unitsystem("m", "s", "kg", "rad")
-
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
 
         >>> print(vec.uconvert(usys))
         <CartesianPos3D: (x, y, z) [m]
@@ -242,7 +227,7 @@ class AbstractVectorLike(
             [3.241e-17 6.482e-17 9.722e-17]>
 
         """
-        return u.uconvert(usys, self)
+        return u.uconvert(*args, self, **kw)
 
     # ===============================================================
     # Quax API
@@ -513,60 +498,9 @@ class AbstractVectorLike(
     # view() addressable_shards, at, committed, globarl_shards,
     # is_fully_addressable, is_fully_replcated, nbytes, sharding
 
-    @dispatch
-    def astype(
-        self: "AbstractVectorLike", dtype: Any, /, **kwargs: Any
-    ) -> "AbstractVectorLike":
-        """Cast the vector to a new dtype.
-
-        Examples
-        --------
-        >>> import quaxed.numpy as jnp
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        We can cast a vector to a new dtype:
-
-        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
-        >>> vec.astype(jnp.float32)
-        CartesianPos1D(x=Quantity([1., 2.], unit='m'))
-
-        >>> jnp.astype(vec, jnp.float32)
-        CartesianPos1D(x=Quantity([1., 2.], unit='m'))
-
-        """
-        return replace(
-            self, **{k: v.astype(dtype, **kwargs) for k, v in field_items(self)}
-        )
-
-    @dispatch
-    def astype(
-        self: "AbstractVectorLike", dtypes: Mapping[str, DTypeLike], /, **kwargs: Any
-    ) -> "AbstractVectorLike":
-        """Cast the vector to a new dtype.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-
-        We can cast a vector to a new dtype:
-
-        >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
-        >>> vec
-        CartesianPos1D(x=Quantity([1, 2], unit='m'))
-
-        >>> vec.astype({"x": jnp.float32})
-        CartesianPos1D(x=Quantity([1., 2.], unit='m'))
-
-        """
-        return replace(
-            self,
-            **{
-                k: (v.astype(dtypes[k], **kwargs) if k in dtypes else v)
-                for k, v in field_items(self)
-            },
-        )
+    def astype(self, dtype: Any, /, **kwargs: Any) -> "AbstractVectorLike":
+        """Cast the vector to a new dtype."""
+        return astype(self, dtype, **kwargs)
 
     # -------------------------------
 
@@ -768,3 +702,109 @@ def is_vectorlike(obj: Any, /) -> TypeGuard[AbstractVectorLike]:
 
     """
     return isinstance(obj, AbstractVectorLike)
+
+
+@AbstractVectorLike.vconvert.dispatch  # type: ignore[union-attr, untyped-decorator]
+def vconvert(
+    self: AbstractVectorLike, target: type, *args: Any, **kwargs: Any
+) -> AbstractVectorLike:
+    """Represent the vector as another type, forwarding to `coordinax.vconvert`.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.vecs as cxv
+
+    Transforming a Position:
+
+    >>> q_cart = cxv.CartesianPos3D.from_([1, 2, 3], "m")
+
+    >>> q_sph = q_cart.vconvert(cxv.SphericalPos)
+    >>> print(q_sph)
+    <SphericalPos: (r[m], theta[rad], phi[rad])
+        [3.742 0.641 1.107]>
+
+    >>> q_ps = q_cart.vconvert(cxv.ProlateSpheroidalPos, Delta=u.Quantity(1.5, "m"))
+    >>> print(q_ps)
+    <ProlateSpheroidalPos: (mu[m2], nu[m2], phi[rad])
+        Delta=Quantity(1.5, unit='m')
+        [14.89   1.36   1.107]>
+
+    >>> print((q_ps.vconvert(cxv.CartesianPos3D) - q_cart).round(3))
+    <CartesianPos3D: (x, y, z) [m]
+        [-0.  0.  0.]>
+
+    Transforming a Velocity:
+
+    >>> v_cart = cxv.CartesianVel3D.from_([1, 2, 3], "m/s")
+    >>> v_sph = v_cart.vconvert(cxv.SphericalVel, q_cart)
+    >>> print(v_sph)
+    <SphericalVel: (r[m / s], theta[rad / s], phi[rad / s])
+        [ 3.742e+00 -8.941e-08  0.000e+00]>
+
+    Transforming an Acceleration:
+
+    >>> a_cart = cxv.CartesianAcc3D.from_([7, 8, 9], "m/s2")
+    >>> a_sph = a_cart.vconvert(cxv.SphericalAcc, v_cart, q_cart)
+    >>> print(a_sph)
+    <SphericalAcc: (r[m / s2], theta[rad / s2], phi[rad / s2])
+        [13.363  0.767 -1.2  ]>
+
+    """
+    return api.vconvert(target, self, *args, **kwargs)  # type: ignore[return-value]
+
+
+# -------------------------------------------------------------------
+
+
+@dispatch
+def astype(self: AbstractVectorLike, dtype: Any, /, **kw: Any) -> AbstractVectorLike:
+    """Cast the vector to a new dtype.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    We can cast a vector to a new dtype:
+
+    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+    >>> vec.astype(jnp.float32)
+    CartesianPos1D(x=Quantity([1., 2.], unit='m'))
+
+    >>> jnp.astype(vec, jnp.float32)
+    CartesianPos1D(x=Quantity([1., 2.], unit='m'))
+
+    """
+    return replace(self, **{k: v.astype(dtype, **kw) for k, v in field_items(self)})
+
+
+@dispatch
+def astype(
+    self: AbstractVectorLike, dtypes: Mapping[str, DTypeLike], /, **kw: Any
+) -> AbstractVectorLike:
+    """Cast the vector to a new dtype.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+
+    We can cast a vector to a new dtype:
+
+    >>> vec = cx.vecs.CartesianPos1D(u.Quantity([1, 2], "m"))
+    >>> vec
+    CartesianPos1D(x=Quantity([1, 2], unit='m'))
+
+    >>> vec.astype({"x": jnp.float32})
+    CartesianPos1D(x=Quantity([1., 2.], unit='m'))
+
+    """
+    return replace(
+        self,
+        **{
+            k: (v.astype(dtypes[k], **kw) if k in dtypes else v)
+            for k, v in field_items(self)
+        },
+    )

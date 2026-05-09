@@ -6,6 +6,7 @@ from typing import Any, cast
 
 import equinox as eqx
 import jax
+import quax
 from jaxtyping import ArrayLike
 from quax import register
 
@@ -16,6 +17,8 @@ from dataclassish import replace
 
 from .cartesian import CartesianAcc1D, CartesianPos1D, CartesianVel1D
 from coordinax._src.vectors.base_pos import AbstractPos
+
+mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 # ---------------------------------------------------------
 
@@ -123,7 +126,7 @@ def dot_general_cart1d(
 
 
 @register(jax.lax.mul_p)
-def mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
+def mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /, **kw: Any) -> CartesianPos1D:
     """Scale a position by a scalar.
 
     Examples
@@ -145,11 +148,11 @@ def mul_ac1(lhs: ArrayLike, rhs: CartesianPos1D, /) -> CartesianPos1D:
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x)
+    return replace(rhs, x=mul_p_qbind(lhs, rhs.x, **kw))
 
 
 @register(jax.lax.mul_p)
-def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
+def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /, **kw: Any) -> CartesianVel1D:
     """Scale a velocity by a scalar.
 
     Examples
@@ -174,11 +177,11 @@ def mul_vcart(lhs: ArrayLike, rhs: CartesianVel1D, /) -> CartesianVel1D:
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x)
+    return replace(rhs, x=mul_p_qbind(lhs, rhs.x, **kw))
 
 
 @register(jax.lax.mul_p)
-def mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
+def mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /, **kw: Any) -> CartesianAcc1D:
     """Scale an acceleration by a scalar.
 
     Examples
@@ -203,7 +206,7 @@ def mul_aq(lhs: ArrayLike, rhs: CartesianAcc1D, /) -> CartesianAcc1D:
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x)
+    return replace(rhs, x=mul_p_qbind(lhs, rhs.x, **kw))
 
 
 # ------------------------------------------------
