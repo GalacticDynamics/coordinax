@@ -21,10 +21,10 @@ from unxt.quantity import AllowValue, is_any_quantity
 import coordinax.charts as cxc
 from .base import AbstractTransform
 from .composed import Composed
+from .custom_types import CDict
 from .identity import Identity, identity
 from .utils import Neg
-from coordinax.internal._wl_utils import jax_scalar_handler, pos_named_objs
-from coordinax.internal.custom_types import CDict
+from coordinax.internal import jax_scalar_handler, pos_named_objs
 
 
 class AbstractAdd(AbstractTransform):

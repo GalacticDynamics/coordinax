@@ -9,8 +9,8 @@ from typing import Any
 import plum
 
 import coordinax.manifolds as cxm
+from .custom_types import OptUSys
 from .point import Point
-from coordinax.internal.custom_types import OptUSys
 
 
 @plum.dispatch

@@ -165,7 +165,7 @@ def _import_path_with_namespace(path: pathlib.Path) -> ModuleType:
 
     Sybil receives filesystem paths. Without this mapping, those files may be
     imported as top-level modules (e.g. ``charts._src``), causing duplicate
-    module identities versus ``coordinax.charts._src``.
+    module identities versus ``coordinax._src.charts``.
     """
     resolved_path = path.resolve()
     for root, namespace in RESOLVED_MODULE_ROOTS:

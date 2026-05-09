@@ -19,8 +19,8 @@ import coordinax.representations as cxr
 from .add import AbstractAdd
 from .base import materialize_transform
 from .composed import Composed
+from .custom_types import CDict, OptUSys
 from coordinax.internal import pack_uniform_unit
-from coordinax.internal.custom_types import CDict, OptUSys
 from coordinax.transforms._src import groups
 
 

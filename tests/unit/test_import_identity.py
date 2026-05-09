@@ -1,13 +1,11 @@
 """Regression tests for canonical module import identities during pytest runs."""
 
-import importlib
 import pathlib
 import sys
 
 from types import ModuleType
 
 import coordinax.charts as cxc
-from coordinax.charts._src.base import AbstractChart
 
 WORKSPACE_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
@@ -22,9 +20,9 @@ def _is_workspace_module(module: ModuleType, /) -> bool:
 
 def test_canonical_chart_module_identity() -> None:
     """Chart classes resolve from canonical ``coordinax.*`` module paths."""
-    module = importlib.import_module("coordinax.charts._src.d3")
-    assert module.Cart3D is cxc.Cart3D
-    assert cxc.Cart3D.__module__.startswith("coordinax.charts.")
+    from coordinax._src.charts.d3 import Cart3D  # noqa: PLC0415
+
+    assert Cart3D is cxc.Cart3D
 
 
 def test_workspace_short_alias_modules_are_not_loaded() -> None:
@@ -39,4 +37,4 @@ def test_workspace_short_alias_modules_are_not_loaded() -> None:
 
 def test_canonical_chart_is_abstractchart_instance() -> None:
     """Canonical chart instances satisfy the abstract chart contract."""
-    assert isinstance(cxc.cart3d, AbstractChart)
+    assert isinstance(cxc.cart3d, cxc.AbstractChart)

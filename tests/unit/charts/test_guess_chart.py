@@ -14,6 +14,8 @@
 
 """
 
+from typing import TypeAlias
+
 from hypothesis import given, strategies as st
 
 import unxt_hypothesis as ust
@@ -21,7 +23,8 @@ import unxt_hypothesis as ust
 import coordinax.charts as cxc
 import coordinax.hypothesis.main as cxst
 from .conftest import SHAPE_CART_MAP, xps
-from coordinax.internal.custom_types import Shape
+
+Shape: TypeAlias = tuple[int, ...]
 
 
 def is_guessable(chart: cxc.AbstractChart) -> bool:

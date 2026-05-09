@@ -10,7 +10,7 @@ import unxt as u
 import unxt_hypothesis as ust
 
 import coordinax.angles as cxa
-from coordinax.charts._src.checks import geq, leq, polar_range, strictly_positive
+from coordinax._src.charts import checks
 
 
 # Use width=32 for float32 compatibility with JAX
@@ -48,7 +48,7 @@ class TestPolarRange:
             ),
             label="angle",
         )
-        result = polar_range(angle)
+        result = checks.polar_range(angle)
         assert jnp.array_equal(result.value, angle.value)
 
     @given(ust.quantities("m", elements=float32s(min_value=0.0, max_value=PI_F32)))
@@ -56,7 +56,7 @@ class TestPolarRange:
     def test_non_angular_units_raises(self, x: u.AbstractQuantity) -> None:
         """Non-angular quantities always raise, regardless of value."""
         with pytest.raises(eqx.EquinoxTracetimeError, match="must be in angular units"):
-            polar_range(x)
+            checks.polar_range(x)
 
     @given(data=st.data())
     @settings(deadline=None)
@@ -77,7 +77,7 @@ class TestPolarRange:
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError), match="must be in the range"
         ):
-            polar_range(outside_bounds)
+            checks.polar_range(outside_bounds)
 
 
 class TestStrictlyPositive:
@@ -93,7 +93,7 @@ class TestStrictlyPositive:
     @settings(deadline=None)
     def test_positive_values_pass(self, x: u.AbstractQuantity) -> None:
         """Positive values should pass through unchanged."""
-        result = strictly_positive(x)
+        result = checks.strictly_positive(x)
         assert jnp.array_equal(result.value, x.value)
 
     def test_zero_raises(self) -> None:
@@ -103,7 +103,7 @@ class TestStrictlyPositive:
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
         ):
-            strictly_positive(x)
+            checks.strictly_positive(x)
 
     def test_negative_raises(self) -> None:
         """Negative values should raise an error."""
@@ -112,7 +112,7 @@ class TestStrictlyPositive:
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
         ):
-            strictly_positive(x)
+            checks.strictly_positive(x)
 
     def test_array_with_zero_raises(self) -> None:
         """Arrays containing zero should raise an error."""
@@ -121,7 +121,7 @@ class TestStrictlyPositive:
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
         ):
-            strictly_positive(x)
+            checks.strictly_positive(x)
 
     def test_array_with_negative_raises(self) -> None:
         """Arrays containing negative values should raise an error."""
@@ -130,7 +130,7 @@ class TestStrictlyPositive:
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
         ):
-            strictly_positive(x)
+            checks.strictly_positive(x)
 
 
 class TestLeq:
@@ -146,14 +146,14 @@ class TestLeq:
             )
         )
         max_q = u.Q(max_val, "m")
-        result = leq(x, max_q)
+        result = checks.leq(x, max_q)
         assert jnp.array_equal(result.value, x.value)
 
     def test_equal_to_max_passes(self) -> None:
         """Values equal to max should pass."""
         x = u.Q(5.0, "m")
         max_q = u.Q(5.0, "m")
-        result = leq(x, max_q)
+        result = checks.leq(x, max_q)
         assert jnp.array_equal(result.value, x.value)
 
     def test_above_max_raises(self) -> None:
@@ -163,7 +163,7 @@ class TestLeq:
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError), match="must be less than or equal to"
         ):
-            leq(x, max_q)
+            checks.leq(x, max_q)
 
     def test_array_with_value_above_max_raises(self) -> None:
         """Arrays with any value above max should raise an error."""
@@ -172,7 +172,7 @@ class TestLeq:
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError), match="must be less than or equal to"
         ):
-            leq(x, max_q)
+            checks.leq(x, max_q)
 
 
 class TestGeq:
@@ -192,14 +192,14 @@ class TestGeq:
             )
         )
         min_q = u.Q(min_val, "m")
-        result = geq(x, min_q)
+        result = checks.geq(x, min_q)
         assert jnp.array_equal(result.value, x.value)
 
     def test_equal_to_min_passes(self) -> None:
         """Values equal to min should pass."""
         x = u.Q(5.0, "m")
         min_q = u.Q(5.0, "m")
-        result = geq(x, min_q)
+        result = checks.geq(x, min_q)
         assert jnp.array_equal(result.value, x.value)
 
     def test_below_min_raises(self) -> None:
@@ -210,7 +210,7 @@ class TestGeq:
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be greater than or equal to",
         ):
-            geq(x, min_q)
+            checks.geq(x, min_q)
 
     def test_array_with_value_below_min_raises(self) -> None:
         """Arrays with any value below min should raise an error."""
@@ -220,4 +220,4 @@ class TestGeq:
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be greater than or equal to",
         ):
-            geq(x, min_q)
+            checks.geq(x, min_q)

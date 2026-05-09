@@ -68,7 +68,7 @@ import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.vectors as cxv
-from coordinax.internal.custom_types import CDict
+from .custom_types import CDict
 
 # =============================================================================
 # ICRS

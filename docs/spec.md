@@ -2727,7 +2727,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Example**
 
     ```pycon
-    >>> from coordinax.manifolds._src.diagonal import AbstractDiagonalMetric
+    >>> from coordinax._src.manifolds.diagonal import AbstractDiagonalMetric
     >>> import coordinax.manifolds as cxm
 
     >>> isinstance(cxm.EuclideanMetric(3), AbstractDiagonalMetric)

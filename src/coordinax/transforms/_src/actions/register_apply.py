@@ -15,8 +15,8 @@ import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .base import AbstractTransform
+from .custom_types import CDict
 from coordinax.internal import QuantityMatrix, pack_nonuniform_unit, pack_uniform_unit
-from coordinax.internal.custom_types import CDict
 
 _MSG_CHARTS_MATCH: Final = (
     "inferred chart guess_chart(x)={0.__class__.__name__} "

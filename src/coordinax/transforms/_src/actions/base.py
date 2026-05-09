@@ -29,7 +29,7 @@ import unxt as u
 from dataclassish import field_items, flags
 
 import coordinax.api.transforms as cxfmapi
-from coordinax.internal._wl_utils import pos_named_objs
+from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
     import coordinax.transforms  # noqa: ICN001

@@ -13,9 +13,9 @@ import unxt.quantity as uq
 
 import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
+from .custom_types import CDict, OptUSys
 from .geom import PointGeometry, TangentGeometry
 from .rep import Representation
-from coordinax.internal.custom_types import CDict, OptUSys
 
 # =======================================================================
 # CMap

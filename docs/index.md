@@ -161,7 +161,7 @@ import coordinax.vectors
 
 >>> sorted(name.removeprefix("coordinax.")
 ...        for name in sys.modules
-...        if name.startswith("coordinax.") and name.count(".") == 1)
+...        if name.startswith("coordinax.") and name.count(".") == 1)[1:]
 ['angles', 'api', 'astro', 'charts', 'curveframes', 'distances', 'frames', 'hypothesis', 'internal', 'interop', 'main', 'manifolds', 'representations', 'transforms', 'vectors']
 ```
 

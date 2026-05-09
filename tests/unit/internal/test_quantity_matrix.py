@@ -14,11 +14,11 @@ from astropy.units import imperial  # registers °F
 import quaxed.numpy as qnp
 import unxt as u
 
-from coordinax.internal import QuantityMatrix as QMat, UnitsMatrix
-from coordinax.internal._quantity_matrix import (
+from coordinax._src.internal._quantity_matrix import (
     _convert_value_matrix,
     _convert_value_vector,
 )
+from coordinax.internal import QuantityMatrix as QMat, UnitsMatrix
 
 # ---------------------------------------------------------------------------
 # Unit shorthands (visual noise reduction)

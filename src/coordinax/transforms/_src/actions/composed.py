@@ -18,8 +18,8 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .base import AbstractTransform
 from .composite import AbstractCompositeTransform
+from .custom_types import CDict
 from .identity import Identity, identity
-from coordinax.internal.custom_types import CDict
 from coordinax.transforms._src import groups
 
 Ts = TypeVarTuple("Ts")

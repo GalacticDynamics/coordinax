@@ -14,10 +14,10 @@ import unxt as u
 import coordinax.api.representations as cxrapi
 import coordinax.charts as cxc
 from .basis import CoordinateBasis, PhysicalBasis, coord_basis
+from .custom_types import CDict, OptUSys
 from .geom import TangentGeometry
 from .rep import Representation
 from coordinax.internal import QuantityMatrix, pack_nonuniform_unit
-from coordinax.internal.custom_types import CDict, OptUSys
 
 # ---------------------------------------------------------------------------
 # Validation helpers

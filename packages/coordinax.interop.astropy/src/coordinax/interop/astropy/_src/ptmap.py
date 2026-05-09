@@ -15,7 +15,7 @@ import astropy.units as apyu
 import unxt as u
 
 import coordinax.charts as cxc
-from coordinax.internal.custom_types import CDict
+from .custom_types import CDict
 
 
 @plum.conversion_method(type_from=dict, type_to=apyc.CartesianRepresentation)

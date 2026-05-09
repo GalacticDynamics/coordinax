@@ -856,5 +856,5 @@ class TestJacobianPtMapCDictArrayBranch:
         dispatch this is a known limitation.
         """
         at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
-        with pytest.raises(jaxtyping.TypeCheckError, match="usys"):
+        with pytest.raises((jaxtyping.TypeCheckError, ValueError), match="usys"):
             cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)

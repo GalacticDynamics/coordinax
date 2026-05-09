@@ -5,7 +5,7 @@ import pytest
 import quaxed.numpy as jnp
 import unxt as u
 
-from coordinax.charts._src.utils import uconvert_to_rad
+from coordinax._src.charts.utils import uconvert_to_rad
 
 
 def test_uconvert_to_rad_angle_quantity_uses_own_unit() -> None:

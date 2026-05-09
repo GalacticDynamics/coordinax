@@ -25,8 +25,8 @@ from .basis import (
 )
 from .geom import TangentGeometry
 from .rep import Representation
+from coordinax._src.manifolds.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
-from coordinax.internal.custom_types import CDict, OptUSys
 
 T = TypeVar("T", bound=u.Quantity)
 

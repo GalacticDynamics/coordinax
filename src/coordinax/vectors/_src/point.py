@@ -27,10 +27,10 @@ import coordinax.representations as cxr
 from .base import AbstractVector
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
-from coordinax.internal._wl_utils import pos_named_objs
+from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
-    from coordinax.internal.custom_types import CDict
+    from .custom_types import CDict
 
 ChartT = TypeVar(
     "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
