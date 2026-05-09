@@ -26,7 +26,7 @@ If you only need raw chart transforms, use the charts guide. If you need compati
 >>> M = cxm.EuclideanManifold(3)
 >>> M.ndim
 3
->>> M.default_chart
+>>> M.default_chart()
 Cart3D()
 
 >>> M.has_chart(cxc.cart3d)
@@ -48,7 +48,7 @@ False
 >>> import coordinax.manifolds as cxm
 
 >>> E2 = cxm.EuclideanManifold(2)
->>> E2.default_chart
+>>> E2.default_chart()
 Cart2D()
 >>> E2.has_chart(cxc.cart2d)
 True
@@ -65,7 +65,7 @@ True
 >>> import coordinax.manifolds as cxm
 
 >>> S2 = cxm.HyperSphericalManifold()
->>> S2.default_chart
+>>> S2.default_chart()
 SphericalTwoSphere()
 >>> S2.has_chart(cxc.sph2)
 True

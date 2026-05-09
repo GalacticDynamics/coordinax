@@ -62,7 +62,7 @@ class MinkowskiManifold(AbstractManifold):
     >>> M.atlas
     MinkowskiAtlas(ndim=4)
 
-    >>> M.default_chart
+    >>> M.default_chart()
     SpaceTimeCT()
 
     >>> M.has_chart(cxc.spacetimect)

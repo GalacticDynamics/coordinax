@@ -47,7 +47,7 @@ cart_of_sph = cxc.cartesian_chart(sph)
 
 ### Chart Families
 
-The module exports both concrete chart classes and predefined singleton-style instances.
+The module exports both concrete chart classes and predefined instances.
 
 ### 0D Charts
 

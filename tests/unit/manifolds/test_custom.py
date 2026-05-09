@@ -63,7 +63,7 @@ class TestCustomManifold:
         manifold = cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
 
         assert manifold.ndim == 2
-        assert manifold.default_chart == cxc.cart2d
+        assert manifold.default_chart() == cxc.cart2d
 
     def test_has_chart_and_check_chart(self) -> None:
         """Chart membership and validation are delegated to the atlas."""

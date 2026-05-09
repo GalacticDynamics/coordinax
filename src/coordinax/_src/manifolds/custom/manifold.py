@@ -37,7 +37,7 @@ class CustomManifold(AbstractManifold):
     >>> M = cxm.CustomManifold(atlas=atlas, metric=cxm.EuclideanMetric(2))
     >>> M.ndim
     2
-    >>> M.default_chart
+    >>> M.default_chart()
     Cart2D()
     >>> M.has_chart(cxc.polar2d)
     True

@@ -13,14 +13,12 @@ from typing import Any
 
 import jax.numpy as jnp
 import jax.tree_util as jtu
-import wadler_lindig as wl
-
-import dataclassish
 
 import coordinax.angles as cxa
 import coordinax.api.manifolds as cxmapi
 import coordinax.charts as cxc
 from .custom_types import CDict, OptUSys
+from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 
 
@@ -438,7 +436,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
 
 
 @jtu.register_static
-class AbstractManifold(metaclass=abc.ABCMeta):
+class AbstractManifold(AbstractTopologicalManifold):
     r"""Abstract interface for smooth manifolds.
 
     A **smooth manifold** of dimension $n$ is a topological space $M$ equipped
@@ -512,7 +510,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
 
     The default chart is the canonical Cartesian chart for that dimension:
 
-    >>> M.default_chart
+    >>> M.default_chart()
     Cart3D()
 
     **Chart membership**
@@ -585,7 +583,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     >>> S2.has_chart(cxc.cart2d)
     False
 
-    >>> S2.default_chart
+    >>> S2.default_chart()
     SphericalTwoSphere()
 
     """
@@ -599,7 +597,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     def __post_init__(self) -> None:
         self._check_ndim()
 
-    def _check_ndim(self) -> None:  # noqa: B027
+    def _check_ndim(self) -> None:
         """Check that the chart and metric dimensions match the manifold dimension."""
         # if self.metric.ndim != self.atlas.ndim:
         #     msg = (
@@ -624,7 +622,6 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         """
         return self.atlas.ndim
 
-    @property
     def default_chart(self) -> cxc.AbstractChart[Any, Any]:
         """Return a default chart from the atlas.
 
@@ -632,7 +629,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
 
         >>> import coordinax.manifolds as cxm
         >>> M = cxm.EuclideanManifold(2)
-        >>> M.default_chart
+        >>> M.default_chart()
         Cart2D()
 
         """
@@ -718,28 +715,3 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         ``cxmapi.angle_between(self.metric, chart, uvec, vvec, at=at, usys=usys)``.
         """
         return cxmapi.angle_between(self.metric, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
-
-    # =====================================================
-
-    def __pdoc__(self, **kw: Any) -> wl.AbstractDoc:
-        """Return the string representation.
-
-        >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(3)
-
-        """
-        return wl.bracketed(
-            begin=wl.TextDoc(f"{type(self).__name__}("),
-            docs=wl.named_objs(list(dataclassish.field_items(self)), **kw),
-            sep=wl.comma,
-            end=wl.TextDoc(")"),
-            indent=4,
-        )
-
-    def __repr__(self) -> str:
-        """Return the string representation."""
-        return wl.pformat(self, width=88)
-
-    def __str__(self) -> str:
-        """Return the string representation."""
-        return wl.pformat(self, width=88)

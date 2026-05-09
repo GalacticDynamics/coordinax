@@ -41,7 +41,7 @@ out = cxfm.act(frame_op, None, v)
 - `Scale`: Cartesian linear scaling
 - `Shear`: Cartesian linear shear
 - `Composed`: ordered transform composition
-- `identity`: convenience singleton instance of `Identity`
+- `identity`: convenience instance of `Identity`
 
 ## Transformation Group Classes (Markers)
 

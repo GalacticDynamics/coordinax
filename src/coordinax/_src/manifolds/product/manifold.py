@@ -110,7 +110,7 @@ class CartesianProductManifold(AbstractManifold):
     CartesianProductAtlas(factors=(HyperSphericalAtlas(ndim=2), EuclideanAtlas(ndim=1)),
         factor_names=('S2', 'R1'))
 
-    >>> M.default_chart
+    >>> M.default_chart()
     CartesianProductChart(
         factors=(SphericalTwoSphere(), Cart1D()), factor_names=('S2', 'R1')
     )
@@ -166,7 +166,7 @@ class CartesianProductManifold(AbstractManifold):
     >>> Mprod.ndim
     3
 
-    >>> Mprod.default_chart
+    >>> Mprod.default_chart()
     CartesianProductChart(factors=(Cart2D(), Cart1D()), factor_names=('xy', 'z'))
 
     """

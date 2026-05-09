@@ -8,6 +8,17 @@ __all__ = (
     "pt_map",
     "scale_factors",
     "angle_between",
+    # Topological Space
+    "AbstractTopologicalManifold",
+    "NoManifold",
+    "no_manifold",
+    # Atlases
+    "AbstractAtlas",
+    "EuclideanAtlas",
+    "HyperSphericalAtlas",
+    "CartesianProductAtlas",
+    "CustomAtlas",
+    "MinkowskiAtlas",
     # Metrics
     "AbstractMetric",
     "AbstractDiagonalMetric",
@@ -28,13 +39,6 @@ __all__ = (
     "minkowski4d",
     "CartesianProductManifold",
     "CustomManifold",
-    # Atlases
-    "AbstractAtlas",
-    "EuclideanAtlas",
-    "HyperSphericalAtlas",
-    "CartesianProductAtlas",
-    "CustomAtlas",
-    "MinkowskiAtlas",
     # Embeddings
     "AbstractEmbeddingMap",
     "CustomEmbeddingMap",
@@ -48,6 +52,7 @@ __all__ = (
 from ._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.manifolds"):
+    from ._src.base_topo import AbstractTopologicalManifold, NoManifold, no_manifold
     from ._src.manifolds import (
         AbstractAtlas,
         AbstractDiagonalMetric,

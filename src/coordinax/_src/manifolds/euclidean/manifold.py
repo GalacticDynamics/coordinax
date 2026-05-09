@@ -94,13 +94,13 @@ class EuclideanManifold(AbstractManifold):
 
     The default chart is the standard Cartesian chart for the given dimension:
 
-    >>> M.default_chart
+    >>> M.default_chart()
     Cart3D()
 
-    >>> cxmd.EuclideanManifold(2).default_chart
+    >>> cxmd.EuclideanManifold(2).default_chart()
     Cart2D()
 
-    >>> cxmd.EuclideanManifold(1).default_chart
+    >>> cxmd.EuclideanManifold(1).default_chart()
     Cart1D()
 
     **Chart membership**

@@ -53,11 +53,32 @@ A point is an abstract geometric object. In this section we will explore how poi
 
 ### Smooth Manifolds
 
-**Smooth** means that the manifold has a well-defined notion of differentiability, allowing us to perform calculus on it. **Manifold** indicates that the space is locally similar to $\mathbb{R}^n$ but can have a different global topology, such as being curved or having holes.
+#### Topological Manifolds
+
+A **topological manifold** of dimension $n$ is a topological space $M$ satisfying three axioms:
+
+1. **Hausdorff**: any two distinct points $p, q \in M$ have disjoint open neighbourhoods,
+2. **Second-countable**: the topology of $M$ admits a countable basis, and
+3. **Locally Euclidean of dimension $n$**: every point $p \in M$ has an open neighbourhood $U_p$ homeomorphic to an open subset of $\mathbb{R}^n$ via a continuous bijection $\varphi_p : U_p \to \mathbb{R}^n$ with continuous inverse.
+
+The locally Euclidean condition is what makes coordinates possible: near any point, the space looks like flat $n$-dimensional Euclidean space, so one can assign $n$ real numbers to each point in a neighbourhood. The Hausdorff condition rules out pathological point identifications, and second-countability ensures the existence of partitions of unity (needed to glue local constructions together globally).
+
+At the topological level one can ask whether maps are **continuous** or **homeomorphisms**, but not whether they are differentiable. Differentiability is an additional structure layered on top.
+
+#### Smooth Manifolds
+
+A **smooth manifold** is a topological manifold $M$ equipped with a **smooth atlas** — a collection of charts $\{(U_\alpha, \varphi_\alpha)\}$ whose domains cover $M$ and whose **transition maps**
+
+$$
+\tau_{\alpha\beta} = \varphi_\beta \circ \varphi_\alpha^{-1} :
+\varphi_\alpha(U_\alpha \cap U_\beta) \to \varphi_\beta(U_\alpha \cap U_\beta)
+$$
+
+are $C^\infty$ diffeomorphisms wherever chart domains overlap. The unique maximal such atlas defines the **smooth structure**. **Smooth** means that calculus on $M$ is well-defined: one can differentiate functions, define tangent vectors, and integrate differential forms.
 
 A **point** is simply an element $p \in M$.
 
-Most of the important properties and structures associated with smooth manifolds --- such as coordinate systems, charts, atlases, and transition maps --- will be introduced and explained in subsequent sections.
+Most of the important structures of smooth manifolds --- charts, atlases, transition maps, metrics, and embeddings --- are introduced in the sections that follow.
 
 (math-spec-charts)=
 
@@ -1326,7 +1347,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `Radial1D` is the final concrete chart type for 1-dimensional radial coordinates.
     - Components: `("r",)` with dimension `("length",)`.
-    - `radial1d` is its pre-defined singleton instance.
+    - `radial1d` is its pre-defined instance.
     - Semantically equivalent to `Cart1D` but uses `r` instead of `x`; transition between the two is a pure component rename (`r ↔ x`).
     - Cartesian projection is canonical: `cartesian_chart(Radial1D) -> cart1d`.
 
@@ -1677,7 +1698,7 @@ A representation is therefore **not** the same thing as a chart: the chart deter
         semantic_kind: AbstractSemanticKind
     ```
 
-(software-spec-singletons)=
+(software-spec-instances)=
 
 !!! info Pre-defined Representations
 
@@ -2134,7 +2155,7 @@ Separating semantics from geometry provides two advantages:
     - Represents $\Delta q = q_2 - q_1$, an element of the tangent space in the limit, or a finite difference.
     - Under Galilean boosts: `Displacement` is **invariant** — boost does not change displacements.
     - `order = 0`.
-    - `derivative()` returns the `vel` singleton directly.
+    - `derivative()` returns the `vel` instance directly.
     - `antiderivative()` uses the base-class internal-registry lookup; raises `ValueError` unless a class at order -1 (e.g. `Absement`) is registered.
 
     API instance:
@@ -2151,8 +2172,8 @@ Separating semantics from geometry provides two advantages:
     - Represents $\dot{q} = dq/dt$, a genuine element of $T_p M$.
     - Under Galilean boosts: **shifts** by the boost velocity $\Delta v$.
     - `order = 1`.
-    - `derivative()` returns the `acc` singleton directly.
-    - `antiderivative()` returns the `dpl` singleton directly.
+    - `derivative()` returns the `acc` instance directly.
+    - `antiderivative()` returns the `dpl` instance directly.
 
     API instance:
 
@@ -2169,7 +2190,7 @@ Separating semantics from geometry provides two advantages:
     - Under Galilean boosts with constant $\Delta v$: **invariant** (since $\dot{\Delta v} = 0$).
     - `order = 2`.
     - `derivative()` uses the base-class ladder lookup; raises `ValueError` unless a class at order 3 (e.g. `Jerk`) is registered.
-    - `antiderivative()` returns the `vel` singleton directly.
+    - `antiderivative()` returns the `vel` instance directly.
 
     API instance:
 
@@ -2270,7 +2291,7 @@ Separating semantics from geometry provides two advantages:
 
 ## Manifolds
 
-The `coordinax.metrics` module, typically imported as `import coordinax.manifolds as cxm`, adds Riemannian (and pseudo-Riemannian) structure to smooth manifolds.
+The `coordinax.manifolds` module, typically imported as `import coordinax.manifolds as cxm`, provides the manifold hierarchy used by `coordinax`. Concrete manifold classes attach an atlas and, where appropriate, a Riemannian (or pseudo-Riemannian) metric to smooth manifolds.
 
 A **metric** on a manifold $M$ is a smooth assignment of a symmetric, non-degenerate bilinear form to each tangent space:
 
@@ -2279,6 +2300,46 @@ $$g_p : T_pM \times T_pM \to \mathbb{R}, \quad p \in M.$$
 In a local chart with coordinates $q = (q^1, \ldots, q^n)$, the metric is encoded by the **metric matrix**
 
 $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial q^j}\right).$$
+
+!!! info `AbstractTopologicalManifold`
+
+    `AbstractTopologicalManifold` is the root base class for all manifold objects in `coordinax`. It encodes only the topological layer: intrinsic dimension and chart membership. Subclasses that attach a smooth atlas and metric structure implement the full smooth-manifold interface.
+
+    **Invariant**: `AbstractTopologicalManifold` is a pure structural descriptor — it carries no numerical point data. Instances are registered as JAX static nodes and appear as compile-time metadata inside JIT-compiled functions.
+
+    Public API:
+
+    - `ndim`: intrinsic dimension $n$ of the manifold.
+    - `has_chart(chart) -> bool`: return `True` if `chart` belongs to this manifold's atlas.
+    - `check_chart(chart)`: assert chart membership; raise `ValueError` if not supported.
+
+    Notes:
+
+    - Registered to JAX as static via `jax.tree_util.register_static`.
+    - Implements a `wadler_lindig` `__pdoc__()` method underpinning `__repr__` and `__str__`.
+    - The class hierarchy follows the abstract-final pattern: `AbstractTopologicalManifold` → concrete final classes (e.g. `EuclideanManifold`, `HyperSphericalManifold`); no intermediate layers.
+
+!!! info `NoManifold` and `no_manifold`
+
+    `NoManifold` is a degenerate placeholder manifold with no charts and no geometry. It serves as a sentinel value when a manifold object is required by the API but none has been specified by the user.
+
+    - `ndim == -1` (sentinel for "no manifold specified").
+    - `has_chart(chart)` always returns `False`.
+
+    `no_manifold` is the canonical module-level instance of `NoManifold`. It should be used in preference to constructing `NoManifold()` directly, since `NoManifold` carries no state and a shared instance is cheaper.
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> cxm.no_manifold
+    NoManifold(ndim=-1)
+
+    >>> cxm.no_manifold.ndim
+    -1
+
+    >>> import coordinax.charts as cxc
+    >>> cxm.no_manifold.has_chart(cxc.cart3d)
+    False
+    ```
 
 (software-spec-guess-manifold)=
 
