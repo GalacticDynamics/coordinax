@@ -6,6 +6,8 @@ from typing import Any
 
 import equinox as eqx
 import jax
+import jax.tree as jt
+import quax
 from jaxtyping import ArrayLike
 from quax import register
 
@@ -17,6 +19,8 @@ from dataclassish import replace
 from .cartesian import CartesianAcc2D, CartesianPos2D, CartesianVel2D
 from .polar import PolarPos
 from coordinax._src.vectors.base_pos import AbstractPos
+
+mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 # -----------------------------------------------------
 
@@ -43,7 +47,7 @@ def add_p_cart2d_pos(lhs: CartesianPos2D, rhs: AbstractPos, /) -> CartesianPos2D
 
     """
     cart = rhs.vconvert(CartesianPos2D)
-    return jax.tree.map(jnp.add, lhs, cart)
+    return jt.map(jnp.add, lhs, cart)
 
 
 @register(jax.lax.add_p)
@@ -65,7 +69,7 @@ def add_p_pp(lhs: CartesianVel2D, rhs: CartesianVel2D, /) -> CartesianVel2D:
         [2 4]>
 
     """
-    return jax.tree.map(qlax.add, lhs, rhs)
+    return jt.map(qlax.add, lhs, rhs)
 
 
 @register(jax.lax.add_p)
@@ -87,7 +91,7 @@ def add_p_aa(lhs: CartesianAcc2D, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
         [6 8]>
 
     """
-    return jax.tree.map(jnp.add, lhs, rhs)
+    return jt.map(jnp.add, lhs, rhs)
 
 
 # ------------------------------------------------
@@ -116,15 +120,15 @@ def dot_general_p_cart2d(
     Quantity(Array(11, dtype=int32), unit='m2')
 
     """
-    tree = jax.tree.map(jnp.multiply, lhs, rhs, is_leaf=u.quantity.is_any_quantity)
-    return jax.tree.reduce(jnp.add, tree, is_leaf=u.quantity.is_any_quantity)
+    tree = jt.map(jnp.multiply, lhs, rhs, is_leaf=u.quantity.is_any_quantity)
+    return jt.reduce(jnp.add, tree, is_leaf=u.quantity.is_any_quantity)
 
 
 # ------------------------------------------------
 
 
 @register(jax.lax.mul_p)
-def mul_p_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
+def mul_p_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /, **kw: Any) -> CartesianPos2D:
     """Scale a cartesian 2D position by a scalar.
 
     Examples
@@ -143,11 +147,13 @@ def mul_p_v_cart2d(lhs: ArrayLike, rhs: CartesianPos2D, /) -> CartesianPos2D:
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
+    return replace(
+        rhs, x=mul_p_qbind(lhs, rhs.x, **kw), y=mul_p_qbind(lhs, rhs.y, **kw)
+    )
 
 
 @register(jax.lax.mul_p)
-def mul_p_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
+def mul_p_vp(lhs: ArrayLike, rhs: CartesianVel2D, /, **kw: Any) -> CartesianVel2D:
     """Scale a cartesian 2D velocity by a scalar.
 
     Examples
@@ -171,11 +177,13 @@ def mul_p_vp(lhs: ArrayLike, rhs: CartesianVel2D, /) -> CartesianVel2D:
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
+    return replace(
+        rhs, x=mul_p_qbind(lhs, rhs.x, **kw), y=mul_p_qbind(lhs, rhs.y, **kw)
+    )
 
 
 @register(jax.lax.mul_p)
-def mul_p_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
+def mul_p_va(lhs: ArrayLike, rhs: CartesianAcc2D, /, **kw: Any) -> CartesianAcc2D:
     """Scale a cartesian 2D acceleration by a scalar.
 
     Examples
@@ -199,11 +207,13 @@ def mul_p_va(lhs: ArrayLike, rhs: CartesianAcc2D, /) -> CartesianAcc2D:
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y)
+    return replace(
+        rhs, x=mul_p_qbind(lhs, rhs.x, **kw), y=mul_p_qbind(lhs, rhs.y, **kw)
+    )
 
 
 @register(jax.lax.mul_p)
-def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
+def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /, **kw: Any) -> PolarPos:
     """Scale the polar position by a scalar.
 
     Examples
@@ -231,7 +241,7 @@ def mul_p_v_polar(lhs: ArrayLike, rhs: PolarPos, /) -> PolarPos:
         lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
     )
     # Scale the radial distance
-    return replace(rhs, r=lhs * rhs.r)
+    return replace(rhs, r=mul_p_qbind(lhs, rhs.r, **kw))
 
 
 # ------------------------------------------------

@@ -106,7 +106,7 @@ class AbstractOperator(eqx.Module):
         )
 
         """
-        return simplify_op(self)
+        return simplify_op(self)  # type: ignore[return-value]
 
     # ===============================================================
     # Wadler-Lindig API

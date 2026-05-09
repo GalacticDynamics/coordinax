@@ -54,24 +54,24 @@ class AbstractPos(
     @classmethod
     def cartesian_type(cls) -> "type[coordinax.vecs.AbstractPos]":
         """Return the corresponding Cartesian vector class."""
-        return api.cartesian_vector_type(cls)
+        return api.cartesian_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_derivative_cls(cls) -> "type[coordinax.vecs.AbstractVel]":
         """Return the corresponding time derivative class."""
-        return api.time_derivative_vector_type(cls)
+        return api.time_derivative_vector_type(cls)  # type: ignore[return-value]
 
     @classproperty
     @classmethod
     def time_antiderivative_cls(cls) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding time antiderivative class."""
-        return api.time_antiderivative_vector_type(cls)
+        return api.time_antiderivative_vector_type(cls)  # type: ignore[return-value]
 
     @classmethod
     def time_nth_derivative_cls(cls, n: int) -> "type[coordinax.vecs.AbstractVector]":
         """Return the corresponding time nth derivative class."""
-        return api.time_nth_derivative_vector_type(cls, n=n)
+        return api.time_nth_derivative_vector_type(cls, n=n)  # type: ignore[return-value]
 
     # ===============================================================
     # Python API
@@ -102,10 +102,10 @@ class AbstractPos(
         # TODO: figure out how to do this without converting back to arrays.
         cart_cls = self.cartesian_type
         cartvec = self.vconvert(cart_cls)
-        q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)
+        q: FastQ = convert(cartvec.uconvert(ToUnitsOptions.consistent), FastQ)  # type: ignore[union-attr]
         newq = _vec_matmul(other, q)
         newvec = cart_cls.from_(newq)
-        return newvec.vconvert(type(self))
+        return newvec.vconvert(type(self))  # type: ignore[union-attr]
 
     def __abs__(self) -> u.AbstractQuantity:
         """Return the norm of the vector.

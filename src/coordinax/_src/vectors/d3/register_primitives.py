@@ -8,6 +8,7 @@ from typing import Any, cast
 
 import equinox as eqx
 import jax
+import quax
 from jaxtyping import ArrayLike
 from quax import register
 
@@ -19,6 +20,8 @@ from .cartesian import CartesianAcc3D, CartesianPos3D, CartesianVel3D
 from .generic import Cartesian3D
 from .mathspherical import MathSphericalPos
 from coordinax._src.vectors.base_pos import AbstractPos
+
+mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
 
 # ------------------------------------------------
 
@@ -111,7 +114,9 @@ def dot_general_cart3d(
 
 
 @register(jax.lax.mul_p)
-def mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
+def mul_p_vmsph(
+    lhs: ArrayLike, rhs: MathSphericalPos, /, **kw: Any
+) -> MathSphericalPos:
     """Scale the polar position by a scalar.
 
     Examples
@@ -138,11 +143,13 @@ def mul_p_vmsph(lhs: ArrayLike, rhs: MathSphericalPos, /) -> MathSphericalPos:
         lhs, any(jax.numpy.shape(lhs)), f"must be a scalar, not {type(lhs)}"
     )
     # Scale the radial distance
-    return replace(rhs, r=cast("u.AbstractQuantity", lhs * rhs.r))
+    return replace(rhs, r=cast("u.AbstractQuantity", mul_p_qbind(lhs, rhs.r, **kw)))
 
 
 @register(jax.lax.mul_p)
-def mul_p_arraylike_cart3d(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianPos3D:
+def mul_p_arraylike_cart3d(
+    lhs: ArrayLike, rhs: CartesianPos3D, /, **kw: Any
+) -> CartesianPos3D:
     """Scale a position by a scalar.
 
     Examples
@@ -167,7 +174,12 @@ def mul_p_arraylike_cart3d(lhs: ArrayLike, rhs: CartesianPos3D, /) -> CartesianP
     )
 
     # Scale the components
-    return replace(rhs, x=lhs * rhs.x, y=lhs * rhs.y, z=lhs * rhs.z)
+    return replace(
+        rhs,
+        x=mul_p_qbind(lhs, rhs.x, **kw),
+        y=mul_p_qbind(lhs, rhs.y, **kw),
+        z=mul_p_qbind(lhs, rhs.z, **kw),
+    )
 
 
 # ------------------------------------------------

@@ -2,9 +2,10 @@
 
 __all__: tuple[str, ...] = ()
 
-from typing import cast
+from typing import Any, cast
 
 import jax
+import quax
 from quax import register
 
 import quaxed.numpy as jnp
@@ -14,11 +15,15 @@ from dataclassish import field_items
 from .core import AbstractVel
 from coordinax._src.vectors.base_pos import AbstractPos
 
+mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
+
 # ---------------------------------------------------------
 
 
 @register(jax.lax.mul_p)
-def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
+def _mul_vel_q(
+    self: AbstractVel, other: u.Quantity["time"], /, **kw: Any
+) -> AbstractPos:
     """Multiply the vector by a time `unxt.Quantity` to get a position.
 
     Examples
@@ -38,7 +43,7 @@ def _mul_vel_q(self: AbstractVel, other: u.Quantity["time"]) -> AbstractPos:
         [2]>
 
     """
-    fs = {k: v * other for k, v in field_items(self)}
+    fs = {k: mul_p_qbind(v, other, **kw) for k, v in field_items(self)}
     return cast("AbstractPos", self.time_antiderivative_cls.from_(fs))
 
 

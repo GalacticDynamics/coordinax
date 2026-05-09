@@ -59,7 +59,7 @@ class AbstractReferenceFrame(eqx.Module):
         Pipe(( ... ))
 
         """
-        return frame_transform_op(self, to_frame)
+        return frame_transform_op(self, to_frame)  # type: ignore[return-value]
 
 
 # =============================================================================

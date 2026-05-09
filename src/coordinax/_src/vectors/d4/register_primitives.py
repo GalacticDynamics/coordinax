@@ -48,9 +48,7 @@ def broadcast_in_dim_p_4v(
     """Broadcast in a dimension."""
     batch = shape[:-1]
     return replace(
-        obj,
-        t=jnp.broadcast_to(obj.t, batch),
-        q=cast("coordinax.vecs.AbstractPos3D", jnp.broadcast_to(obj.q, (*batch, 3))),
+        obj, t=jnp.broadcast_to(obj.t, batch), q=jnp.broadcast_to(obj.q, (*batch, 3))
     )
 
 

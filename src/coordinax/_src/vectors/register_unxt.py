@@ -48,7 +48,9 @@ def dimension_of(obj: _MetaAbstractArray, /) -> u.dims.AbstractDimension:
     return u.dimension_of(obj.array_type)
 
 
-@dispatch
+# Precedence of -1 because astropy Unit aliases are unions over astropy Unit
+# base classes.
+@dispatch(precedence=-1)
 def dimension_of(obj: Union, /) -> u.dims.AbstractDimension:
     # Call dimension_of on all the __args__ of the Union and make sure they are
     # all the same

@@ -105,28 +105,6 @@ class VelocityBoost(AbstractOperator):
         """
         return VelocityBoost(-self.velocity)
 
-    # -----------------------------------------------------
-
-    @AbstractOperator.__call__.dispatch  # type: ignore[untyped-decorator]
-    def __call__(self: "VelocityBoost", p: AbstractVel, /) -> AbstractVel:
-        """Apply the boost to the coordinates.
-
-        This does nothing to the position, as the boost is to the velocity only.
-
-        Examples
-        --------
-        >>> import coordinax as cx
-
-        >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
-
-        >>> p = cx.CartesianVel3D.from_([0, 0, 0], "m/s")
-        >>> print(op(p))
-        <CartesianVel3D: (x, y, z) [m / s]
-            [1 2 3]>
-
-        """
-        return cast("AbstractVel", p + self.velocity)
-
     # -------------------------------------------
     # Arithmetic operations
 
@@ -159,6 +137,27 @@ class VelocityBoost(AbstractOperator):
 
 # ======================================================================
 # More call dispatch
+
+
+@AbstractOperator.__call__.dispatch
+def call(self: VelocityBoost, p: AbstractVel, /) -> AbstractVel:
+    """Apply the boost to the coordinates.
+
+    This does nothing to the position, as the boost is to the velocity only.
+
+    Examples
+    --------
+    >>> import coordinax as cx
+
+    >>> op = cx.ops.VelocityBoost.from_([1, 2, 3], "m/s")
+
+    >>> p = cx.CartesianVel3D.from_([0, 0, 0], "m/s")
+    >>> print(op(p))
+    <CartesianVel3D: (x, y, z) [m / s]
+        [1 2 3]>
+
+    """
+    return cast("AbstractVel", p + self.velocity)
 
 
 @AbstractOperator.__call__.dispatch

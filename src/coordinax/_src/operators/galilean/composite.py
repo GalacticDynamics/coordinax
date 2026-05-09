@@ -232,6 +232,6 @@ def simplify_op(op: GalileanOperator, /, **kwargs: Any) -> SimplifyOpR:
         not isinstance(x, type(orig))
         for x, orig in zip(simple_ops, op.operators, strict=True)
     ):
-        return cast("SimplifyOpR", Pipe(simple_ops).simplify())
+        return cast("SimplifyOpR", Pipe(simple_ops).simplify())  # type: ignore[arg-type]
 
     return op

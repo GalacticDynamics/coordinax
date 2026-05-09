@@ -3,25 +3,29 @@
 __all__: tuple[str, ...] = ()
 
 
-from typing import cast
+from typing import Any, cast
 
 import jax
+import quax
 from quax import register
 
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
-from quaxed import lax as qlax
 
 from .core import AbstractAcc
 from coordinax._src.vectors.base_pos import AbstractPos
 from coordinax._src.vectors.base_vel import AbstractVel
 
+mul_p_qbind = quax.quaxify(jax.lax.mul_p.bind)
+
 # -----------------------------------------------
 
 
 @register(jax.lax.mul_p)
-def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
+def mul_p_acc_time(
+    lhs: AbstractAcc, rhs: u.Quantity["time"], /, **kw: Any
+) -> AbstractVel:
     """Multiply the vector by a `unxt.Quantity`.
 
     Examples
@@ -37,12 +41,14 @@ def mul_p_acc_time(lhs: AbstractAcc, rhs: u.Quantity["time"], /) -> AbstractVel:
         [2]>
 
     """
-    fs = {k: jnp.multiply(v, rhs) for k, v in field_items(lhs)}
+    fs = {k: mul_p_qbind(v, rhs, **kw) for k, v in field_items(lhs)}
     return cast("AbstractVel", lhs.time_antiderivative_cls.from_(fs))
 
 
 @register(jax.lax.mul_p)
-def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
+def mul_p_time_acc(
+    lhs: u.Quantity["time"], rhs: AbstractAcc, /, **kw: Any
+) -> AbstractVel:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -58,11 +64,13 @@ def mul_p_time_acc(lhs: u.Quantity["time"], rhs: AbstractAcc, /) -> AbstractVel:
         [2]>
 
     """
-    return cast("AbstractVel", qlax.mul(rhs, lhs))  # type: ignore[arg-type]  # pylint: disable=arguments-out-of-order
+    return cast("AbstractVel", mul_p_qbind(rhs, lhs, **kw))  # pylint: disable=arguments-out-of-order
 
 
 @register(jax.lax.mul_p)
-def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
+def mul_p_acc_time2(
+    lhs: AbstractAcc, rhs: u.Quantity["s2"], /, **kw: Any
+) -> AbstractPos:
     """Multiply an acceleration by a scalar.
 
     Examples
@@ -83,12 +91,14 @@ def mul_p_acc_time2(lhs: AbstractAcc, rhs: u.Quantity["s2"], /) -> AbstractPos:
 
     """
     pos_cls = lhs.time_nth_derivative_cls(-2)
-    fs = {k: v * rhs for k, v in field_items(lhs)}
+    fs = {k: mul_p_qbind(v, rhs, **kw) for k, v in field_items(lhs)}
     return cast("AbstractPos", pos_cls.from_(fs))
 
 
 @register(jax.lax.mul_p)
-def mul_p_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc, /) -> AbstractPos:
+def mul_p_time2_acc(
+    lhs: u.Quantity["s2"], rhs: AbstractAcc, /, **kw: Any
+) -> AbstractPos:
     """Multiply a scalar by an acceleration.
 
     Examples
@@ -104,7 +114,7 @@ def mul_p_time2_acc(lhs: u.Quantity["s2"], rhs: AbstractAcc, /) -> AbstractPos:
         [2]>
 
     """
-    return qlax.mul(rhs, lhs)  # type: ignore[arg-type,return-value]  # pylint: disable=arguments-out-of-order
+    return cast("AbstractPos", mul_p_qbind(rhs, lhs, **kw))  # pylint: disable=arguments-out-of-order
 
 
 # -----------------------------------------------

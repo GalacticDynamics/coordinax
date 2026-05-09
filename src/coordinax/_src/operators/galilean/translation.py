@@ -140,47 +140,8 @@ class GalileanTranslation(AbstractGalileanOperator):
         delta_q = cast("AbstractPos3D", -self.delta_q)
         return GalileanTranslation(-self.delta_t, delta_q)
 
-    # -------------------------------------------
 
-    @AbstractOperator.__call__.dispatch  # type: ignore[untyped-decorator]
-    def __call__(
-        self: "GalileanTranslation",
-        t: u.Quantity["time"],
-        x: AbstractPos3D,
-        /,
-        **__: Any,
-    ) -> tuple[u.Quantity["time"], AbstractPos3D]:
-        """Apply the translation to the coordinates.
-
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
-        >>> import coordinax.ops as cxo
-
-        Explicitly construct the translation operator:
-
-        >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
-        >>> tshift = u.Quantity(1, "Gyr")
-        >>> op = cx.ops.GalileanTranslation(tshift, qshift)
-
-        Construct a vector to translate
-
-        >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> t = u.Quantity(1, "Gyr")
-        >>> newt, newq = op(t, q)
-
-        >>> newq.x
-        Quantity(Array(2, dtype=int32), unit='km')
-
-        >>> newt
-        Quantity(Array(2, dtype=int32, ...), unit='Gyr')
-
-        """
-        return t + self.delta_t, x + self.delta_q
-
-
-@AbstractOperator.from_.dispatch  # type: ignore[untyped-decorator]
+@AbstractOperator.from_.dispatch  # type: ignore[union-attr,untyped-decorator]
 def from_(
     cls: type[GalileanTranslation], delta: u.AbstractQuantity, /
 ) -> GalileanTranslation:
@@ -198,8 +159,45 @@ def from_(
     return cls(
         delta_t=delta[0]
         / u.Quantity(299_792.458, "km/s"),  # TODO: couple to FourVector value
-        delta_q=CartesianPos3D.from_(delta[1:]),
+        delta_q=CartesianPos3D.from_(delta[1:]),  # type: ignore[arg-type]
     )
+
+
+# -------------------------------------------
+
+
+@AbstractOperator.__call__.dispatch  # type: ignore[union-attr, untyped-decorator]
+def call(
+    self: GalileanTranslation, t: u.Quantity["time"], x: AbstractPos3D, /, **__: Any
+) -> tuple[u.Quantity["time"], AbstractPos3D]:
+    """Apply the translation to the coordinates.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
+    >>> import coordinax.ops as cxo
+
+    Explicitly construct the translation operator:
+
+    >>> qshift = cx.CartesianPos3D.from_([1, 1, 1], "km")
+    >>> tshift = u.Quantity(1, "Gyr")
+    >>> op = cx.ops.GalileanTranslation(tshift, qshift)
+
+    Construct a vector to translate
+
+    >>> q = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> t = u.Quantity(1, "Gyr")
+    >>> newt, newq = op(t, q)
+
+    >>> newq.x
+    Quantity(Array(2, dtype=int32), unit='km')
+
+    >>> newt
+    Quantity(Array(2, dtype=int32, ...), unit='Gyr')
+
+    """
+    return t + self.delta_t, x + self.delta_q
 
 
 # -------------------------------------------

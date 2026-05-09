@@ -122,52 +122,54 @@ class Identity(AbstractOperator):
     # Dispatched call signatures
     # More call signatures are registered in the `coordinax._d<X>.operate` modules.
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", arg: Any, /, **__: Any) -> Any:
-        """Apply the Identity operation.
 
-        This is the identity operation, which does nothing to the input.
+@AbstractOperator.__call__.dispatch(precedence=1)
+def call(self: Identity, arg: Any, /, **__: Any) -> Any:
+    """Apply the Identity operation.
 
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
+    This is the identity operation, which does nothing to the input.
 
-        >>> op = cx.ops.Identity()
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
 
-        >>> q = u.Quantity([1, 2, 3], "km")
-        >>> op(q) is q
-        True
+    >>> op = cx.ops.Identity()
 
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> op(vec) is vec
-        True
+    >>> q = u.Quantity([1, 2, 3], "km")
+    >>> op(q) is q
+    True
 
-        """
-        return arg
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> op(vec) is vec
+    True
 
-    @AbstractOperator.__call__.dispatch(precedence=1)
-    def __call__(self: "Identity", *args: Any, **__: Any) -> tuple[Any, ...]:
-        """Apply the Identity operation.
+    """
+    return arg
 
-        This is the identity operation, which does nothing to the input.
 
-        Examples
-        --------
-        >>> import unxt as u
-        >>> import coordinax as cx
+@AbstractOperator.__call__.dispatch(precedence=1)
+def call(self: Identity, *args: Any, **__: Any) -> tuple[Any, ...]:
+    """Apply the Identity operation.
 
-        >>> op = cx.ops.Identity()
+    This is the identity operation, which does nothing to the input.
 
-        >>> q = u.Quantity([1, 2, 3], "km")
-        >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
-        >>> t = u.Quantity(10, "Gyr")
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax as cx
 
-        >>> op(t, q) == (t, q)
-        True
+    >>> op = cx.ops.Identity()
 
-        >>> op(t, vec) == (t, vec)
-        True
+    >>> q = u.Quantity([1, 2, 3], "km")
+    >>> vec = cx.CartesianPos3D.from_([1, 2, 3], "km")
+    >>> t = u.Quantity(10, "Gyr")
 
-        """
-        return args
+    >>> op(t, q) == (t, q)
+    True
+
+    >>> op(t, vec) == (t, vec)
+    True
+
+    """
+    return args
