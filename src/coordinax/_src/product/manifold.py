@@ -86,8 +86,7 @@ class CartesianProductManifold(AbstractManifold):
     ... )
     >>> wl.pprint(M, width=60)
     CartesianProductManifold(
-        factors=(HyperSphericalManifold(ndim=2), Rn(1)),
-        factor_names=('S2', 'R1')
+        factors=(Sn(2), Rn(1)), factor_names=('S2', 'R1')
     )
 
     **Dimension**

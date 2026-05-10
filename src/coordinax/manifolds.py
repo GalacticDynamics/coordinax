@@ -27,6 +27,7 @@ __all__ = (
     "HyperSphericalAtlas",
     "HyperSphericalMetric",
     "HyperSphericalManifold",
+    "Sn",
     "twosphere",
     # Minkowski
     "MinkowskiAtlas",
@@ -74,7 +75,7 @@ with install_import_hook("coordinax.manifolds"):
         Rn,
         euclidean3d,
     )
-    from ._src.manifolds import *  # noqa: F403  # TODO: move the registration out
+    from ._src.manifolds import *  # noqa: F403
     from ._src.minkowski import (
         MinkowskiAtlas,
         MinkowskiManifold,
@@ -90,6 +91,7 @@ with install_import_hook("coordinax.manifolds"):
         HyperSphericalAtlas,
         HyperSphericalManifold,
         HyperSphericalMetric,
+        Sn,
         TwoSphereIn3D,
         embedded_twosphere,
         twosphere,
