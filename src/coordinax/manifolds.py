@@ -21,6 +21,7 @@ __all__ = (
     "EuclideanAtlas",
     "EuclideanMetric",
     "EuclideanManifold",
+    "Rn",
     "euclidean3d",
     # HyperSpherical
     "HyperSphericalAtlas",
@@ -70,6 +71,7 @@ with install_import_hook("coordinax.manifolds"):
         EuclideanAtlas,
         EuclideanManifold,
         EuclideanMetric,
+        Rn,
         euclidean3d,
     )
     from ._src.manifolds import *  # noqa: F403  # TODO: move the registration out

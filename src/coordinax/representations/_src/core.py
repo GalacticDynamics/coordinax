@@ -58,7 +58,8 @@ def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
     Point(
       {'r': Q(3.74165739, 'm'), 'theta': Q(0.64052231, 'rad'),
        'phi': Q(1.10714872, 'rad')},
-      chart=Spherical3D(), manifold=EuclideanManifold(ndim=3)
+      chart=Spherical3D(),
+      manifold=Rn(3)
     )
 
     """

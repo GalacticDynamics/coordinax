@@ -32,7 +32,7 @@ def from_astropy_cartesian_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'x': Q(1., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')},
-      chart=Cart3D(), manifold=EuclideanManifold(ndim=3)
+      chart=Cart3D(), manifold=Rn(3)
     )
 
     """
@@ -57,7 +57,7 @@ def from_astropy_cylindrical_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'rho': Q(1., 'km'), 'phi': Q(90., 'deg'), 'z': Q(3., 'km')},
-      chart=Cylindrical3D(), manifold=EuclideanManifold(ndim=3)
+      chart=Cylindrical3D(), manifold=Rn(3)
     )
 
     """
@@ -82,7 +82,7 @@ def from_astropy_physics_spherical_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'r': Q(1., 'kpc'), 'theta': Q(45., 'deg'), 'phi': Q(90., 'deg')},
-      chart=Spherical3D(), manifold=EuclideanManifold(ndim=3)
+      chart=Spherical3D(), manifold=Rn(3)
     )
 
     """
@@ -107,7 +107,7 @@ def from_astropy_spherical_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'lon': Q(90., 'deg'), 'lat': Q(45., 'deg'), 'distance': Q(1., 'kpc')},
-      chart=LonLatSpherical3D(), manifold=EuclideanManifold(ndim=3)
+      chart=LonLatSpherical3D(), manifold=Rn(3)
     )
 
     """
@@ -133,7 +133,7 @@ def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     >>> cxv.Point.from_(vec)
     Point(
       {'lon': Q(90., 'deg'), 'lat': Q(45., 'deg'), 'distance': Q(1., 'kpc')},
-      chart=LonLatSpherical3D(), manifold=EuclideanManifold(ndim=3), frame=ICRS()
+      chart=LonLatSpherical3D(), manifold=Rn(3), frame=ICRS()
     )
 
     >>> vec = apyc.Galactocentric(
@@ -142,7 +142,7 @@ def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     >>> cxv.Point.from_(vec)
     Point(
         {'x': Q(1., 'kpc'), 'y': Q(2., 'kpc'), 'z': Q(3., 'kpc')},
-        chart=Cart3D(), manifold=EuclideanManifold(ndim=3), frame=Galactocentric(...)
+        chart=Cart3D(), manifold=Rn(3), frame=Galactocentric(...)
     )
 
     """
@@ -179,7 +179,7 @@ def convert_astropy_frame_with_data_to_cx_point(
     >>> plum.convert(vec, cxv.Point)
     Point(
       {'lon': Q(90., 'deg'), 'lat': Q(45., 'deg'), 'distance': Q(1., 'kpc')},
-      chart=LonLatSpherical3D(), manifold=EuclideanManifold(ndim=3), frame=ICRS()
+      chart=LonLatSpherical3D(), manifold=Rn(3), frame=ICRS()
     )
 
     >>> vec = apyc.Galactocentric(
@@ -188,7 +188,7 @@ def convert_astropy_frame_with_data_to_cx_point(
     >>> plum.convert(vec, cxv.Point)
     Point(
         {'x': Q(1., 'kpc'), 'y': Q(2., 'kpc'), 'z': Q(3., 'kpc')},
-        chart=Cart3D(), manifold=EuclideanManifold(ndim=3), frame=Galactocentric(...)
+        chart=Cart3D(), manifold=Rn(3), frame=Galactocentric(...)
     )
 
     """
@@ -237,7 +237,7 @@ def from_astropy_skycoord(cls: type[cxv.Point], obj: apyc.SkyCoord, /) -> cxv.Po
     Point(
       {'lon': Q(90., 'deg'), 'lat': Q(45., 'deg'), 'distance': Q(1., 'kpc')},
       chart=LonLatSpherical3D(),
-      manifold=EuclideanManifold(ndim=3),
+      manifold=Rn(3),
       frame=ICRS()
     )
 
@@ -246,13 +246,13 @@ def from_astropy_skycoord(cls: type[cxv.Point], obj: apyc.SkyCoord, /) -> cxv.Po
     Point(
       {'x': Q(-9.08123957, 'kpc'), 'y': Q(0.21365468, 'kpc'), 'z': Q(0.2056243, 'kpc')},
       chart=Cart3D(),
-      manifold=EuclideanManifold(ndim=3),
+      manifold=Rn(3),
       frame=Galactocentric(
         galcen=Point(
           { 'lon': Q(266.4051, 'deg'), 'lat': Q(-28.936175, 'deg'),
             'distance': Q(8.122, 'kpc')
           },
-          chart=LonLatSpherical3D(), manifold=EuclideanManifold(ndim=3),
+          chart=LonLatSpherical3D(), manifold=Rn(3),
           frame=ICRS()
         ),
         roll=Angle(0., 'deg'),

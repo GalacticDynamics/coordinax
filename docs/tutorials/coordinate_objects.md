@@ -162,7 +162,7 @@ Alice()
 Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 
 >>> coord.manifold
-EuclideanManifold(ndim=3)
+Rn(3)
 
 >>> isinstance(coord, cx.Point)
 True

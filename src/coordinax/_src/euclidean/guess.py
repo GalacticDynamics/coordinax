@@ -17,7 +17,7 @@ def guess_manifold(obj: EuclideanAtlas, /) -> EuclideanManifold:
     >>> import coordinax.manifolds as cxm
     >>> atlas = cxm.EuclideanAtlas(3)
     >>> cxm.guess_manifold(atlas)
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     """
     return EuclideanManifold(obj.ndim)
@@ -31,7 +31,7 @@ def guess_manifold(obj: cxc.Cart0D, /) -> EuclideanManifold:
     >>> import coordinax.manifolds as cxm
 
     >>> cxm.guess_manifold(cxc.Cart0D())
-    EuclideanManifold(ndim=0)
+    Rn(0)
 
     """
     return EuclideanManifold(0)
@@ -45,7 +45,7 @@ def guess_manifold(obj: cxc.Cart1D | cxc.Radial1D, /) -> EuclideanManifold:
     >>> import coordinax.manifolds as cxm
 
     >>> cxm.guess_manifold(cxc.Cart1D())
-    EuclideanManifold(ndim=1)
+    Rn(1)
 
     """
     return EuclideanManifold(1)
@@ -59,7 +59,7 @@ def guess_manifold(obj: cxc.Cart2D | cxc.Polar2D, /) -> EuclideanManifold:
     >>> import coordinax.manifolds as cxm
 
     >>> cxm.guess_manifold(cxc.Cart2D())
-    EuclideanManifold(ndim=2)
+    Rn(2)
 
     """
     return EuclideanManifold(2)
@@ -79,7 +79,7 @@ def guess_manifold(
     >>> import coordinax.manifolds as cxm
 
     >>> cxm.guess_manifold(cxc.Cart3D())
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     """
     return EuclideanManifold(3)

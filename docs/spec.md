@@ -969,7 +969,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
-| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
+| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `TransformedReferenceFrame` |
 
@@ -2380,15 +2380,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     >>> # From a point (mapping)
     >>> cxm.guess_manifold({"x": 1.0, "y": 2.0, "z": 3.0})
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     >>> # From a chart
     >>> cxm.guess_manifold(cxc.cart3d)
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     >>> # From an atlas
     >>> cxm.guess_manifold(cxm.EuclideanAtlas(2))
-    EuclideanManifold(ndim=2)
+    Rn(2)
 
     >>> # Spherical manifold inference
     >>> cxm.guess_manifold(cxc.sph2)
@@ -3009,6 +3009,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ```text
     EuclideanManifold(ndim: int)
     ```
+
+    **Alias**: `Rn` is an alias for `EuclideanManifold`. Instances print using the `Rn` name rather than `EuclideanManifold` by default (e.g. `repr(EuclideanManifold(3))` yields `Rn(3)`). Pass `alias=False` to `__pdoc__` to get the full class name instead (e.g. `EuclideanManifold(3)`).
 
     The metric object is attached at construction and is available as `M.metric`.
 

@@ -34,10 +34,10 @@ def guess_manifold(*args: Any, **kwargs: Any) -> "coordinax.manifolds.AbstractMa
     True
 
     >>> cxm.guess_manifold({"x": 1, "y": 2, "z": 3})
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     >>> cxm.guess_manifold(cxc.sph3d)
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     >>> cxm.guess_manifold(cxc.sph2)
     HyperSphericalManifold(ndim=2)

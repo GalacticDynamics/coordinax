@@ -1,21 +1,25 @@
 """Euclidean manifolds."""
 
-__all__ = ("EuclideanManifold", "euclidean3d")
+__all__ = ("EuclideanManifold", "Rn", "euclidean3d")
 
 import dataclasses
 
-from typing import final
+from typing import Any, final
 
 import jax
+import wadler_lindig as wl
+
+import dataclassish
 
 from .atlas import EuclideanAtlas
 from .metric import EuclideanMetric
 from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.internal import pos_named_objs
 
 
 @jax.tree_util.register_static
 @final
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class EuclideanManifold(AbstractManifold):
     r"""The $n$-dimensional Euclidean manifold $\mathbb{R}^n$.
 
@@ -78,7 +82,7 @@ class EuclideanManifold(AbstractManifold):
     >>> import coordinax.manifolds as cxmd
     >>> M = cxmd.EuclideanManifold(3)
     >>> M
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     The intrinsic dimension is accessible via {attr}`~EuclideanManifold.ndim`:
 
@@ -152,7 +156,7 @@ class EuclideanManifold(AbstractManifold):
     — the module provides a pre-built instance:
 
     >>> cxmd.euclidean3d
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     """
 
@@ -163,6 +167,40 @@ class EuclideanManifold(AbstractManifold):
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", EuclideanAtlas(self.ndim))
         object.__setattr__(self, "metric", EuclideanMetric(self.ndim))
+
+    def __pdoc__(self, *, alias: bool = True, **kw: Any) -> wl.AbstractDoc:
+        """Return the string representation.
+
+        Examples
+        --------
+        >>> import wadler_lindig as wl
+        >>> import coordinax.manifolds as cxm
+        >>> M = cxm.EuclideanManifold(3)
+        >>> wl.pprint(M)
+        Rn(3)
+
+        >>> wl.pformat(M, alias=False)
+        'EuclideanManifold(3)'
+
+        """
+        name = "Rn" if alias else "EuclideanManifold"
+        docs = pos_named_objs(
+            list(dataclassish.field_items(self)),
+            ("ndim",),
+            self.__dataclass_fields__,
+            **kw,
+        )
+        return wl.bracketed(
+            begin=wl.TextDoc(f"{name}("),
+            docs=docs,
+            sep=wl.comma,
+            end=wl.TextDoc(")"),
+            indent=4,
+        )
+
+
+Rn = EuclideanManifold
+"""Alias for `EuclideanManifold`."""
 
 
 euclidean3d = EuclideanManifold(3)

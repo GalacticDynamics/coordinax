@@ -247,9 +247,7 @@ def from_(
     Galactocentric(
       galcen=Point(
         { 'lon': Q(f64[], 'deg'), 'lat': Q(f64[], 'deg'), 'distance': Q(f64[], 'kpc') },
-        chart=LonLatSpherical3D(),
-        manifold=EuclideanManifold(ndim=3),
-        frame=ICRS()
+        chart=LonLatSpherical3D(), manifold=Rn(3), frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
       z_sun=Quantity(f64[], 'pc')
@@ -326,7 +324,7 @@ def astropy_galactocentric_to_coordinax_galactocentric(
     Galactocentric(
       galcen=Point(
         { 'lon': Q(f64[], 'deg'), 'lat': Q(f64[], 'deg'), 'distance': Q(f64[], 'kpc') },
-        chart=LonLatSpherical3D(), manifold=EuclideanManifold(ndim=3), frame=ICRS()
+        chart=LonLatSpherical3D(), manifold=Rn(3), frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
       z_sun=Quantity(f64[], 'pc')

@@ -58,7 +58,7 @@ def jax_scalar_handler(obj: Any, /) -> wl.AbstractDoc | None:
 
 def pos_named_objs(
     pairs: Iterable[tuple[str, Any]],
-    pos_names: list[str],
+    pos_names: tuple[str, ...] | list[str],
     fields: dict[str, Any],
     /,
     *,

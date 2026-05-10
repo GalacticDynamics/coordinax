@@ -146,7 +146,7 @@ Cart3D()
 Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 
 >>> v.manifold
-EuclideanManifold(ndim=3)
+Rn(3)
 
 >>> sorted(v.data.keys())
 ['x', 'y', 'z']

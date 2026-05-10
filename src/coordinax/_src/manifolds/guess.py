@@ -34,7 +34,7 @@ def guess_manifold(obj: CDict, /) -> AbstractManifold:
 
     >>> import coordinax.manifolds as cxm
     >>> cxm.guess_manifold({"x": 1, "y": 2, "z": 3})
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     """
     chart = cxcapi.guess_chart(obj)

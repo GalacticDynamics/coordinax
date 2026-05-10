@@ -82,7 +82,7 @@ Use `guess_manifold` when you have data or a chart and need a manifold object.
 >>> import coordinax.manifolds as cxm
 
 >>> cxm.guess_manifold({"x": 1, "y": 2, "z": 3})
-EuclideanManifold(ndim=3)
+Rn(3)
 
 >>> cxm.guess_manifold(cxc.sph2)
 HyperSphericalManifold(ndim=2)

@@ -40,7 +40,7 @@ def pt_map(
     >>> manifold = cxm.embedded_twosphere(radius=u.Q(1, "kpc"))
     >>> manifold
     EmbeddedManifold(intrinsic=HyperSphericalManifold(...),
-                     ambient=EuclideanManifold(ndim=3),
+                     ambient=Rn(3),
                      embed_map=TwoSphereIn3D(radius=Q(1, 'kpc')))
     >>> x_cart = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
 

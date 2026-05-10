@@ -69,7 +69,7 @@ class AbstractTopologicalManifold(metaclass=abc.ABCMeta):
     >>> import coordinax.manifolds as cxm
     >>> M = cxm.EuclideanManifold(3)
     >>> M
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     The intrinsic dimension:
 
@@ -129,7 +129,7 @@ class AbstractTopologicalManifold(metaclass=abc.ABCMeta):
         >>> import coordinax.manifolds as cxm
         >>> M = cxm.EuclideanManifold(3)
         >>> wl.pprint(M)
-        EuclideanManifold(ndim=3)
+        Rn(3)
 
         """
         return wl.bracketed(

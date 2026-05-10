@@ -68,7 +68,7 @@ class Identity(AbstractTransform):
     >>> op(tau, vec)
     Point(
       {'r': Q(3.74165739, 'km'), 'theta': Q(0.64052231, 'rad'), 'phi': Q(1.10714872, 'rad')},
-      chart=Spherical3D(), manifold=EuclideanManifold(ndim=3)
+      chart=Spherical3D(), manifold=Rn(3)
     )
 
     >>> op(tau, q)

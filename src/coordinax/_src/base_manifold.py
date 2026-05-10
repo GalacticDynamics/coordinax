@@ -78,7 +78,7 @@ class AbstractManifold(AbstractTopologicalManifold):
     >>> import coordinax.manifolds as cxm
     >>> M = cxm.EuclideanManifold(3)
     >>> M
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     The intrinsic dimension is read from the atlas:
 

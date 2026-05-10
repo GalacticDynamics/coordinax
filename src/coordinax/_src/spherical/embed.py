@@ -145,7 +145,7 @@ def embedded_twosphere(
     >>> manifold = cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
     >>> manifold
     EmbeddedManifold(intrinsic=HyperSphericalManifold(...),
-                     ambient=EuclideanManifold(ndim=3),
+                     ambient=Rn(3),
                      embed_map=TwoSphereIn3D(radius=Q(2., 'km')))
 
     >>> p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}

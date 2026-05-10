@@ -125,7 +125,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         >>> import coordinax.manifolds as cxm
         >>> M = cxm.EuclideanManifold(2)
         >>> M.atlas.default_chart_for(M)
-        Cart2D(manifold=EuclideanManifold(ndim=2))
+        Cart2D(manifold=Rn(2))
 
         >>> try: M.atlas.default_chart_for(cxm.EuclideanManifold(3))
         ... except ValueError as e: print(e)
