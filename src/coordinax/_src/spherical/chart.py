@@ -27,15 +27,15 @@ import jax.tree_util as jtu
 
 import unxt as u
 
-from . import checks
-from .constants import Deg0, Deg90, Deg180
-from .d1 import Abstract1D
-from .d2 import Abstract2D
 from coordinax._src.base_charts import (
     AbstractFixedComponentsChart,
     CDictT,
     chart_dataclass_decorator,
 )
+from coordinax._src.charts import checks
+from coordinax._src.charts.d1 import Abstract1D
+from coordinax._src.charts.d2 import Abstract2D
+from coordinax._src.constants import Deg0, Deg90, Deg180
 from coordinax._src.custom_types import Ang, Ds, Ks
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 

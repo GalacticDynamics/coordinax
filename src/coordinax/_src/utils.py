@@ -9,7 +9,7 @@ from typing import Any, Final, overload
 import unxt as u
 from unxt.quantity import AllowValue, BareQuantity
 
-from coordinax._src.custom_types import OptUSys
+from .custom_types import OptUSys
 
 RAD: Final = u.unit("rad")
 ANGLE: Final = u.dimension("angle")

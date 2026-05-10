@@ -7,10 +7,12 @@ from typing import Any, Final, cast
 
 import plum
 
+import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
+from .chart import AbstractSphericalTwoSphere
 from .embed import TwoSphereIn3D
 from .manifold import HyperSphericalManifold, twosphere
+from coordinax._src.charts.d3 import Abstract3D, sph3d
 from coordinax._src.custom_types import CDict, OptUSys
 
 _twospherefrom3d: Final = TwoSphereIn3D(1)
@@ -19,7 +21,7 @@ _twospherefrom3d: Final = TwoSphereIn3D(1)
 @plum.dispatch
 def pt_project(
     p_ambient: Any,
-    from_ambient_chart: cxc.Abstract3D,
+    from_ambient_chart: Abstract3D,
     manifold: HyperSphericalManifold,
     /,
     *,
@@ -46,7 +48,7 @@ def pt_project(
     del manifold
 
     # First project from the ambient chart to the intermediate Spherical3D chart
-    x_sph = cxc.pt_map(p_ambient, from_ambient_chart, cxc.sph3d)
+    x_sph = cxcapi.pt_map(p_ambient, from_ambient_chart, sph3d)
 
     # Then project from the intermediate Spherical3D chart to the intrinsic
     # SphericalTwoSphere chart. The radius doesn't matter for the projection.
@@ -57,8 +59,8 @@ def pt_project(
 def pt_map(
     p: CDict,
     manifold: HyperSphericalManifold,
-    from_chart: cxc.Abstract3D,
-    to_chart: cxc.AbstractSphericalTwoSphere,
+    from_chart: Abstract3D,
+    to_chart: AbstractSphericalTwoSphere,
     /,
     *,
     usys: OptUSys = None,
@@ -88,8 +90,8 @@ def pt_map(
 @plum.dispatch
 def pt_map(
     p: CDict,
-    from_chart: cxc.Abstract3D,
-    to_chart: cxc.AbstractSphericalTwoSphere,
+    from_chart: Abstract3D,
+    to_chart: AbstractSphericalTwoSphere,
     /,
     *,
     usys: OptUSys = None,

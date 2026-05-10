@@ -72,22 +72,24 @@ with install_import_hook("coordinax.manifolds"):
         CustomMetric,
         EmbeddedChart,
         EmbeddedManifold,
-        HyperSphericalAtlas,
-        HyperSphericalManifold,
-        HyperSphericalMetric,
         InducedMetric,
         MinkowskiAtlas,
         MinkowskiManifold,
         MinkowskiMetric,
-        TwoSphereIn3D,
-        embedded_twosphere,
         minkowski4d,
-        twosphere,
     )
     from ._src.product import (
         CartesianProductAtlas,
         CartesianProductManifold,
         CartesianProductMetric,
+    )
+    from ._src.spherical import (
+        HyperSphericalAtlas,
+        HyperSphericalManifold,
+        HyperSphericalMetric,
+        TwoSphereIn3D,
+        embedded_twosphere,
+        twosphere,
     )
     from coordinax.api.charts import pt_map
     from coordinax.api.manifolds import (

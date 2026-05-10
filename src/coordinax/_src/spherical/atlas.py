@@ -9,19 +9,20 @@ from typing import Any, Final, TypeVar, final
 
 import jax
 
-import coordinax.charts as cxc
+from .chart import AbstractSphericalHyperSphere, sph1, sph2
 from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_charts import AbstractChart
 
-CT = TypeVar("CT", bound=type[cxc.AbstractChart[Any, Any]])
+CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])
 
 
-SPHERICAL_ATLAS_DEFAULT_CHARTS: Final[dict[int, cxc.AbstractChart[Any, Any]]] = {
-    1: cxc.sph1,
-    2: cxc.sph2,
+SPHERICAL_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any]]] = {
+    1: sph1,
+    2: sph2,
 }
 
 SPHERICAL_ATLAS_ELIGIBLE_CHARTS: Final[
-    weakref.WeakSet[type[cxc.AbstractChart[Any, Any]]]
+    weakref.WeakSet[type[AbstractChart[Any, Any]]]
 ] = weakref.WeakSet()
 
 
@@ -64,11 +65,11 @@ class HyperSphericalAtlas(AbstractAtlas):
     ndim: int = 2
     """Dimension of the two-sphere."""
 
-    def default_chart(self) -> cxc.AbstractChart[Any, Any]:
+    def default_chart(self) -> AbstractChart[Any, Any]:
         """Return the default chart (SphericalTwoSphere) for this atlas."""
         return SPHERICAL_ATLAS_DEFAULT_CHARTS[self.ndim]
 
-    def has_chart(self, chart: cxc.AbstractChart[Any, Any], /) -> bool:
+    def has_chart(self, chart: AbstractChart[Any, Any], /) -> bool:
         """Return whether the atlas supports the given chart.
 
         Examples
@@ -119,5 +120,5 @@ def _concrete_subclasses(cls: type, /) -> set[type]:
     return out
 
 
-for _chart_cls in _concrete_subclasses(cxc.AbstractSphericalHyperSphere):
+for _chart_cls in _concrete_subclasses(AbstractSphericalHyperSphere):
     _ = HyperSphericalAtlas.register(_chart_cls)

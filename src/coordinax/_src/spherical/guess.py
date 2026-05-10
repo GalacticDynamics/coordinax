@@ -5,8 +5,8 @@ __all__: tuple[str, ...] = ()
 
 import plum
 
-import coordinax.charts as cxc
 from .atlas import HyperSphericalAtlas
+from .chart import AbstractSphericalTwoSphere
 from .manifold import HyperSphericalManifold
 
 
@@ -24,7 +24,7 @@ def guess_manifold(obj: HyperSphericalAtlas, /) -> HyperSphericalManifold:
 
 
 @plum.dispatch
-def guess_manifold(obj: cxc.AbstractSphericalTwoSphere, /) -> HyperSphericalManifold:
+def guess_manifold(obj: AbstractSphericalTwoSphere, /) -> HyperSphericalManifold:
     """Return a HyperSphericalManifold manifold.
 
     >>> import coordinax.charts as cxc

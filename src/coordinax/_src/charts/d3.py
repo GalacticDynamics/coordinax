@@ -30,8 +30,6 @@ from beartype.vale import Is
 import quaxed.numpy as jnp
 import unxt as u
 
-from . import checks
-from .constants import Deg0, Deg90, Deg180
 from coordinax._src.base_charts import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
@@ -39,6 +37,8 @@ from coordinax._src.base_charts import (
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
+from coordinax._src.charts import checks
+from coordinax._src.constants import Deg0, Deg90, Deg180
 from coordinax._src.custom_types import Ang, Ds, Ks, Len
 
 

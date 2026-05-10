@@ -1,7 +1,5 @@
 """Charts."""
 
-from .checks import *
-from .constants import *
 from .d0 import *
 from .d1 import *
 from .d2 import *
@@ -12,5 +10,3 @@ from .jacobian import *
 from .register_cdict import *
 from .register_guess import *
 from .register_ptmap import *
-from .sphere import *
-from .utils import *
