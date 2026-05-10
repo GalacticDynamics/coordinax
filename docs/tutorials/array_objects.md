@@ -127,7 +127,7 @@ Attach chart and representation:
 ```{code-block} python
 >>> v = cx.Point.from_(q)
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ### Vector → Coordinate
@@ -147,7 +147,7 @@ Skip the quantity step:
 ```{code-block} python
 >>> v = cx.Point.from_([1, 2, 3], "km")
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ## JAX Integration

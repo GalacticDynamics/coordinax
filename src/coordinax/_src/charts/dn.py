@@ -15,6 +15,7 @@ from coordinax._src.base_charts import (
     is_not_abstract_chart_subclass,
 )
 from coordinax._src.custom_types import Len
+from coordinax._src.euclidean.atlas import EuclideanAtlas
 
 
 class AbstractND(AbstractDimensionalFlag, n="N"):
@@ -45,6 +46,7 @@ CartNDKeys = tuple[L["q"]]
 CartNDDims = tuple[Len]
 
 
+@EuclideanAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -81,10 +83,10 @@ class CartND(AbstractFixedComponentsChart[CartNDKeys, CartNDDims], AbstractND):
         True
 
         """
-        return cartnd
+        return self
 
 
-cartnd: Final = CartND()
+cartnd: Final = CartND()  # TODO: M=Rn(n)
 """The canonical N-D Cartesian chart.
 
 >>> import coordinax.charts as cxc

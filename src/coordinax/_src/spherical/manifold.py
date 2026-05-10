@@ -36,7 +36,7 @@ class HyperSphericalManifold(AbstractManifold):
     True
 
     >>> S2.default_chart()
-    SphericalTwoSphere()
+    SphericalTwoSphere(M=Sn(2))
 
     """
 

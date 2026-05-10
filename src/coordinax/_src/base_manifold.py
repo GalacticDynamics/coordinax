@@ -93,7 +93,7 @@ class AbstractManifold(AbstractTopologicalManifold):
     The default chart is the canonical Cartesian chart for that dimension:
 
     >>> M.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     **Chart membership**
 
@@ -119,7 +119,7 @@ class AbstractManifold(AbstractTopologicalManifold):
     ...     M.check_chart(cxc.cart2d)
     ... except ValueError as e:
     ...     print(e)
-    Chart Cart2D() is not supported by this manifold atlas.
+    Chart Cart2D(M=Rn(2)) is not supported by this manifold atlas.
 
     **Point transition maps**
 
@@ -148,7 +148,7 @@ class AbstractManifold(AbstractTopologicalManifold):
     ...     M.pt_map(x, cxc.cart3d, cxc.sph2)
     ... except ValueError as e:
     ...     print(e)
-    Atlas EuclideanAtlas(ndim=3) does not support chart SphericalTwoSphere()
+    Atlas EuclideanAtlas(ndim=3) does not support chart SphericalTwoSphere(M=Sn(2))
 
     **Non-Euclidean manifolds**
 
@@ -166,7 +166,7 @@ class AbstractManifold(AbstractTopologicalManifold):
     False
 
     >>> S2.default_chart()
-    SphericalTwoSphere()
+    SphericalTwoSphere(M=Sn(2))
 
     """
 
@@ -212,7 +212,7 @@ class AbstractManifold(AbstractTopologicalManifold):
         >>> import coordinax.manifolds as cxm
         >>> M = cxm.EuclideanManifold(2)
         >>> M.default_chart()
-        Cart2D()
+        Cart2D(M=Rn(2))
 
         """
         return self.atlas.default_chart()
@@ -259,7 +259,7 @@ class AbstractManifold(AbstractTopologicalManifold):
 
         >>> try: M.pt_map(x, cxc.cart2d, cxc.sph2)
         ... except ValueError as e: print(e)
-        Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere()
+        Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
 
         """
         return cxc.pt_map(x, self, *args, **kwargs)

@@ -13,6 +13,7 @@ import jax
 from .atlas import CartesianProductAtlas
 from .metric import CartesianProductMetric
 from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base_topo import AbstractTopologicalManifold
 
 
 @jax.tree_util.register_static
@@ -108,7 +109,8 @@ class CartesianProductManifold(AbstractManifold):
 
     >>> M.default_chart()
     CartesianProductChart(
-        factors=(SphericalTwoSphere(), Cart1D()), factor_names=('S2', 'R1')
+        factors=(SphericalTwoSphere(M=Sn(2)), Cart1D(M=Rn(1))),
+        factor_names=('S2', 'R1')
     )
 
     Factor atlases can be retrieved by name:
@@ -163,11 +165,13 @@ class CartesianProductManifold(AbstractManifold):
     3
 
     >>> Mprod.default_chart()
-    CartesianProductChart(factors=(Cart2D(), Cart1D()), factor_names=('xy', 'z'))
+    CartesianProductChart(
+        factors=(Cart2D(M=Rn(2)), Cart1D(M=Rn(1))), factor_names=('xy', 'z')
+    )
 
     """
 
-    factors: tuple[AbstractManifold, ...]
+    factors: tuple[AbstractTopologicalManifold, ...]
     factor_names: tuple[str, ...]
 
     @override

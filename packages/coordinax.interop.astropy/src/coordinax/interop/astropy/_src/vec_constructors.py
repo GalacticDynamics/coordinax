@@ -32,7 +32,7 @@ def from_astropy_cartesian_representation(
     >>> cxv.Point.from_(vec)
     Point(
       {'x': Q(1., 'km'), 'y': Q(2., 'km'), 'z': Q(3., 'km')},
-      chart=Cart3D(), manifold=Rn(3)
+      chart=Cart3D(M=Rn(3)), manifold=Rn(3)
     )
 
     """
@@ -142,7 +142,7 @@ def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     >>> cxv.Point.from_(vec)
     Point(
         {'x': Q(1., 'kpc'), 'y': Q(2., 'kpc'), 'z': Q(3., 'kpc')},
-        chart=Cart3D(), manifold=Rn(3), frame=Galactocentric(...)
+        chart=Cart3D(M=Rn(3)), manifold=Rn(3), frame=Galactocentric(...)
     )
 
     """
@@ -188,7 +188,7 @@ def convert_astropy_frame_with_data_to_cx_point(
     >>> plum.convert(vec, cxv.Point)
     Point(
         {'x': Q(1., 'kpc'), 'y': Q(2., 'kpc'), 'z': Q(3., 'kpc')},
-        chart=Cart3D(), manifold=Rn(3), frame=Galactocentric(...)
+        chart=Cart3D(M=Rn(3)), manifold=Rn(3), frame=Galactocentric(...)
     )
 
     """
@@ -245,7 +245,7 @@ def from_astropy_skycoord(cls: type[cxv.Point], obj: apyc.SkyCoord, /) -> cxv.Po
     >>> cxv.Point.from_(vec)
     Point(
       {'x': Q(-9.08123957, 'kpc'), 'y': Q(0.21365468, 'kpc'), 'z': Q(0.2056243, 'kpc')},
-      chart=Cart3D(),
+      chart=Cart3D(M=Rn(3)),
       manifold=Rn(3),
       frame=Galactocentric(
         galcen=Point(

@@ -74,7 +74,7 @@ Pass an existing `Point` and a frame — the frame is attached to it:
 
 >>> coord = cx.Point.from_(vec, cxf.alice)
 >>> coord.chart
-Cart3D()
+Cart3D(M=Rn(3))
 >>> coord.frame
 Alice()
 ```
@@ -90,7 +90,7 @@ Pass a component dictionary, chart, and frame:
 ...     cxf.alice,
 ... )
 >>> coord.chart
-Cart3D()
+Cart3D(M=Rn(3))
 >>> coord.frame
 Alice()
 ```
@@ -102,7 +102,7 @@ The most compact form — the chart is inferred from the array shape (length 3 �
 ```{code-block} python
 >>> coord = cx.Point.from_([1, 2, 3], "km", cxf.alice)
 >>> coord.chart
-Cart3D()
+Cart3D(M=Rn(3))
 >>> coord.frame
 Alice()
 ```
@@ -153,7 +153,7 @@ Access the components, chart, frame, representation, and manifold directly:
 ... )
 
 >>> coord.chart
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> coord.frame
 Alice()
@@ -183,7 +183,7 @@ Use `cconvert()` to change the chart while preserving the frame and the geometri
 
 >>> coord_sph = coord_cart.cconvert(cxc.sph3d)
 >>> coord_sph.chart
-Spherical3D()
+Spherical3D(M=Rn(3))
 
 >>> coord_sph.frame  # unchanged
 Alice()
@@ -197,7 +197,7 @@ Round-tripping preserves the geometric point:
 ```{code-block} python
 >>> coord_back = coord_sph.cconvert(cxc.cart3d)
 >>> coord_back.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ## Changing The Reference Frame
@@ -243,7 +243,7 @@ Real workflows often require both frame and chart changes.
 >>> # Pipeline: change frame, then chart
 >>> result = coord.to_frame(rotated_frame).cconvert(cxc.sph3d)
 >>> result.chart
-Spherical3D()
+Spherical3D(M=Rn(3))
 
 >>> result.frame
 TransformedReferenceFrame(base_frame=Alice(), xop=Rotate(R=f...[3,3]))
@@ -310,7 +310,7 @@ Coordinates are JAX PyTrees by construction. They work with `jit` and `vmap`:
 
 >>> result = to_rotated_spherical(coord)
 >>> result.chart
-Spherical3D()
+Spherical3D(M=Rn(3))
 ```
 
 ## When To Track Reference Frames

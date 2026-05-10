@@ -5,7 +5,7 @@ __all__ = ("EuclideanAtlas",)
 import dataclasses
 import weakref
 
-from typing import Any, TypeVar, final
+from typing import Any, Final, TypeVar, final
 
 import jax
 
@@ -16,13 +16,7 @@ from coordinax._src.exceptions import NoGlobalCartesianChartError
 
 CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])
 
-EUCLIDEAN_ATLAS_DEFAULT_CHARTS: dict[int, AbstractChart[Any, Any]] = {
-    0: cxc.cart0d,
-    1: cxc.cart1d,
-    2: cxc.cart2d,
-    3: cxc.cart3d,
-}
-
+EUCLIDEAN_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any]]] = {}
 
 EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS: weakref.WeakSet[type[AbstractChart[Any, Any]]] = (
     weakref.WeakSet()
@@ -96,18 +90,18 @@ class EuclideanAtlas(AbstractAtlas):
     The atlas provides a canonical Cartesian chart for each dimension:
 
     >>> atlas.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> cxmd.EuclideanAtlas(2).default_chart()
-    Cart2D()
+    Cart2D(M=Rn(2))
 
     >>> cxmd.EuclideanAtlas(1).default_chart()
-    Cart1D()
+    Cart1D(M=Rn(1))
 
     For $n > 3$ the fallback is `CartND`:
 
     >>> cxmd.EuclideanAtlas(10).default_chart()
-    CartND()
+    CartND(M=NoManifold(ndim=False))
 
     **Chart membership**
 
@@ -145,7 +139,7 @@ class EuclideanAtlas(AbstractAtlas):
     ...     atlas.pt_map(x, cxc.cart3d, cxc.cart2d)
     ... except ValueError as e:
     ...     print(e)
-    Atlas EuclideanAtlas(ndim=3) does not support chart Cart2D()
+    Atlas EuclideanAtlas(ndim=3) does not support chart Cart2D(M=Rn(2))
 
     """
 
@@ -161,21 +155,21 @@ class EuclideanAtlas(AbstractAtlas):
         >>> import coordinax.manifolds as cxmd
 
         >>> cxmd.EuclideanAtlas(0).default_chart()
-        Cart0D()
+        Cart0D(M=Rn(0))
 
         >>> cxmd.EuclideanAtlas(1).default_chart()
-        Cart1D()
+        Cart1D(M=Rn(1))
 
         >>> cxmd.EuclideanAtlas(2).default_chart()
-        Cart2D()
+        Cart2D(M=Rn(2))
 
         >>> cxmd.EuclideanAtlas(3).default_chart()
-        Cart3D()
+        Cart3D(M=Rn(3))
 
         For higher dimensions, the default is CartND:
 
         >>> cxmd.EuclideanAtlas(100).default_chart()
-        CartND()
+        CartND(M=NoManifold(ndim=False))
 
         """
         return EUCLIDEAN_ATLAS_DEFAULT_CHARTS.get(self.ndim, cxc.cartnd)
@@ -221,26 +215,3 @@ class EuclideanAtlas(AbstractAtlas):
         """
         EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS.add(registrant)
         return registrant
-
-
-for chart_cls in (
-    # 0-D
-    cxc.Cart0D,
-    # 1-D
-    cxc.Cart1D,
-    cxc.Radial1D,
-    # 2-D
-    cxc.Cart2D,
-    cxc.Polar2D,
-    # 3-D
-    cxc.Cart3D,
-    cxc.Cylindrical3D,
-    cxc.Spherical3D,
-    cxc.LonLatSpherical3D,
-    cxc.LonCosLatSpherical3D,
-    cxc.MathSpherical3D,
-    cxc.ProlateSpheroidal3D,
-    # N-D
-    cxc.CartND,
-):
-    _ = EuclideanAtlas.register(chart_cls)

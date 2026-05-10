@@ -41,7 +41,7 @@ class CustomAtlas(AbstractAtlas):
     >>> atlas.ndim
     2
     >>> atlas.default_chart()
-    Cart2D()
+    Cart2D(M=Rn(2))
     >>> atlas.has_chart(cxc.polar2d)
     True
     >>> atlas.has_chart(cxc.cart3d)

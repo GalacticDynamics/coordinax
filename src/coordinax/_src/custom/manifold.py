@@ -37,7 +37,7 @@ class CustomManifold(AbstractManifold):
     >>> M.ndim
     2
     >>> M.default_chart()
-    Cart2D()
+    Cart2D(M=Rn(2))
     >>> M.has_chart(cxc.polar2d)
     True
 

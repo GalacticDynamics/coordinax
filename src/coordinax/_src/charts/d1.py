@@ -16,6 +16,7 @@ __all__ = (
     "time1d",
 )
 
+import dataclasses
 
 from typing import Any, Final, Literal as L, TypeVar, final  # noqa: N817
 from typing_extensions import override
@@ -28,7 +29,13 @@ from coordinax._src.base_charts import (
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
+from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax._src.custom_types import Len
+from coordinax._src.euclidean.atlas import (
+    EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
+    EuclideanAtlas,
+)
+from coordinax._src.euclidean.manifold import euclidean1d
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")
@@ -88,6 +95,9 @@ class Cart1D(AbstractFixedComponentsChart[Cart1DKeys, Cart1DDims], Abstract1D):
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = euclidean1d
+
     @override
     @property
     def cartesian(self) -> "Cart1D":
@@ -98,7 +108,7 @@ class Cart1D(AbstractFixedComponentsChart[Cart1DKeys, Cart1DDims], Abstract1D):
         True
 
         """
-        return cart1d
+        return self
 
 
 cart1d: Final = Cart1D()
@@ -110,6 +120,8 @@ True
 
 """
 
+EUCLIDEAN_ATLAS_DEFAULT_CHARTS[1] = cart1d
+
 
 # -----------------------------------------------
 # Radial
@@ -118,6 +130,7 @@ RadialKeys = tuple[L["r"]]
 Radial1DDims = tuple[Len]
 
 
+@EuclideanAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -144,6 +157,9 @@ class Radial1D(AbstractFixedComponentsChart[RadialKeys, Radial1DDims], Abstract1
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = euclidean1d
+
     @override
     @property
     def cartesian(self) -> "Cart1D":
@@ -154,7 +170,7 @@ class Radial1D(AbstractFixedComponentsChart[RadialKeys, Radial1DDims], Abstract1
         True
 
         """
-        return cart1d
+        return Cart1D(M=self.M)
 
 
 radial1d: Final = Radial1D()
@@ -165,7 +181,6 @@ radial1d: Final = Radial1D()
 True
 
 """
-
 
 # -----------------------------------------------
 # Time
@@ -198,6 +213,9 @@ class Time1D(AbstractFixedComponentsChart[TimeKeys, TimeDims], Abstract1D):
     True
 
     """
+
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = euclidean1d
 
     @override
     @property

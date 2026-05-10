@@ -27,8 +27,6 @@ from .d3 import (
     MathSpherical3D,
     ProlateSpheroidal3D,
     Spherical3D,
-    cyl3d,
-    sph3d,
 )
 from .d6 import PoincarePolar6D
 from .dn import CartND
@@ -719,6 +717,7 @@ def pt_map(
 
     """
     # from_chart -> Spherical3D -> to_chart
+    sph3d = Spherical3D(M=from_chart.M)
     p_sph = cxcapi.pt_map(p, from_chart, sph3d, usys=usys)
     out = cxcapi.pt_map(p_sph, sph3d, to_chart, usys=usys)
     return cast("CDict", out)
@@ -1175,14 +1174,12 @@ def pt_map(
         to_chart.Delta, from_chart.Delta, *[v.dtype for v in p.values()]
     )
     p = jax.tree.map(lambda x: jnp.asarray(x, dtype=dtype), p)
+    cyl3d = Cylindrical3D(M=to_chart.M)
     return jax.lax.cond(
         to_chart.Delta == from_chart.Delta,
         lambda p: p,
         lambda p: cxcapi.pt_map(
-            cxcapi.pt_map(p, from_chart, cyl3d, usys=usys),
-            cyl3d,
-            to_chart,
-            usys=usys,
+            cxcapi.pt_map(p, from_chart, cyl3d, usys=usys), cyl3d, to_chart, usys=usys
         ),
         p,
     )

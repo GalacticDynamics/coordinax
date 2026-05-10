@@ -188,20 +188,20 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
         >>> import wadler_lindig as wl
 
         >>> wl.pprint(cxc.cart3d)
-        Cart3D[('x', 'y', 'z'), ('length', 'length', 'length')]()
+        Cart3D[('x', 'y', 'z'), ('length', 'length', 'length')](M=Rn(3))
 
         >>> wl.pprint(cxc.sph3d)
-        Spherical3D[('r', 'theta', 'phi'), ('length', 'angle', 'angle')]()
+        Spherical3D[('r', 'theta', 'phi'), ('length', 'angle', 'angle')](M=Rn(3))
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")))
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            Delta=StaticQuantity(i64[](numpy), unit='km')
+            M=Rn(3), Delta=StaticQuantity(i64[](numpy), unit='km')
         )
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")),
         ... short_arrays=False)
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            Delta=StaticQuantity(array(20), unit='km')
+            M=Rn(3), Delta=StaticQuantity(array(20), unit='km')
         )
 
         """
@@ -237,7 +237,8 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
                 **kw,
             )
             for k, v in field_items
-            if not kw["hide_defaults"]
+            if k == "M"
+            or not kw["hide_defaults"]
             or v is not defaults.get(k, MISSINGDEFAULT).default
         ]
         return wl.bracketed(
@@ -308,7 +309,7 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
 
 @plum.dispatch
-def cartesian_chart(obj: AbstractChart, /) -> AbstractChart:
+def cartesian_chart(chart: AbstractChart, /) -> AbstractChart:
     """Return the canonical Cartesian chart for a 0D chart.
 
     >>> import coordinax.charts as cxc
@@ -316,7 +317,7 @@ def cartesian_chart(obj: AbstractChart, /) -> AbstractChart:
     True
 
     """
-    return obj.cartesian
+    return chart.cartesian
 
 
 def is_abstract_class(cls: type, /) -> bool:

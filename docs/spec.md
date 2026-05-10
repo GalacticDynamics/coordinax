@@ -1389,7 +1389,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `Cart3D` is the final concrete chart type for 3-dimensional Cartesian coordinates.
     - Components: `("x", "y", "z")` with dimensions `("length", "length", "length")`.
-    - `cart3d` is its pre-defined `Cart3D()` instance.
+    - `cart3d` is its pre-defined `Cart3D(M=Rn(3))` instance.
     - As the canonical 3-D Cartesian chart, it is the target of `cartesian_chart(Abstract3D)`.
 
 !!! info `Cylindrical3D` and `cyl3d`
@@ -2618,7 +2618,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> atlas.ndim
     3
     >>> atlas.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> import coordinax.charts as cxc
     >>> cxc.cart3d in atlas
@@ -2902,7 +2902,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     | 0         | `Cart0D()`    |
     | 1         | `Cart1D()`    |
     | 2         | `Cart2D()`    |
-    | 3         | `Cart3D()`    |
+    | 3         | `Cart3D(M=Rn(3))`    |
     | otherwise | `CartND()`    |
 
     ### Chart registration
@@ -2922,7 +2922,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> A = cxm.EuclideanAtlas(3)
 
     >>> A.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> cxc.cart3d in A
     True
@@ -3028,7 +3028,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> M.ndim
     3
     >>> M.default_chart
-    Cart3D()
+    Cart3D(M=Rn(3))
     >>> M.metric.signature
     (1, 1, 1)
     >>> M.has_chart(cxc.cart3d)

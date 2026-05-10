@@ -36,12 +36,12 @@ Another example is a 4D spacetime chart:
 >>> st_chart.coord_dimensions
 ('length', 'length', 'length', 'length')
 >>> st_chart.time_chart
-Time1D()
+Time1D(M=Rn(1))
 >>> st_chart.spatial_chart
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> cxc.SpaceTimeCT(cxc.sph3d)
-SpaceTimeCT(spatial_chart=Spherical3D())
+SpaceTimeCT(spatial_chart=Spherical3D(M=Rn(3)))
 
 `SpaceTimeCT` is a special case of a Cartesian product chart. It has a fixed
 time factor `time1d` and a user-selectable spatial factor and flattens its chart
@@ -53,7 +53,8 @@ using `CartesianProductChart`:
 >>> prod_chart = cxc.CartesianProductChart((cxc.time1d, cxc.sph3d), ("t", "q"))
 >>> prod_chart
 CartesianProductChart(
-    factors=(Time1D(), Spherical3D()), factor_names=('t', 'q')
+    factors=(Time1D(M=Rn(1)), Spherical3D(M=Rn(3))),
+    factor_names=('t', 'q')
 )
 >>> prod_chart.components
 ('t.t', 'q.r', 'q.theta', 'q.phi')

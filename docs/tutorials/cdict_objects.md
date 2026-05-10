@@ -210,7 +210,7 @@ Promote a CDict to a `Point` by providing chart context:
 
 >>> v = cx.Point.from_(d, cxc.cart3d)
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> isinstance(v, cx.Point)
 True
@@ -221,7 +221,7 @@ With chart inference (keys are recognized as Cartesian):
 ```{code-block} python
 >>> v = cx.Point.from_(d)
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ## Upgrading To A Coordinate
@@ -233,7 +233,7 @@ Go all the way to a `Coordinate` by providing chart and frame:
 
 >>> coord = cx.Point.from_(d, cxc.cart3d, cxf.alice)
 >>> coord.chart
-Cart3D()
+Cart3D(M=Rn(3))
 >>> coord.frame
 Alice()
 ```

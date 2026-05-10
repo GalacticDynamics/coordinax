@@ -73,7 +73,7 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     SpaceTimeCT()
 
     >>> cxc.SpaceTimeCT(cxc.sph3d)
-    SpaceTimeCT(spatial_chart=Spherical3D())
+    SpaceTimeCT(spatial_chart=Spherical3D(M=Rn(3)))
 
     """
 
@@ -84,7 +84,7 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
-    manifold: ClassVar[AbstractTopologicalManifold]  # remove from init
+    M: ClassVar[AbstractTopologicalManifold]  # remove from init
 
     @property
     def time_chart(self) -> AbstractChart[Any, Any]:
@@ -147,10 +147,10 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         >>> import coordinax.charts as cxc
         >>> rep = cxc.SpaceTimeCT(cxc.sph3d)
         >>> rep
-        SpaceTimeCT(spatial_chart=Spherical3D())
+        SpaceTimeCT(spatial_chart=Spherical3D(M=Rn(3)))
 
         >>> rep.cartesian  # default is Cart3D
-        SpaceTimeCT()
+        SpaceTimeCT(spatial_chart=Cart3D(M=Rn(3)))
 
         """
         spatial_cart = self.spatial_chart.cartesian

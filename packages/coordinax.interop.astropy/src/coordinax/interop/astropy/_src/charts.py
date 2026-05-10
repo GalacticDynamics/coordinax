@@ -20,7 +20,7 @@ def guess_chart(obj: apyc.RadialRepresentation) -> cxc.Radial1D:
 
     >>> vec = apyc.RadialRepresentation(distance=1 * apyu.kpc)
     >>> cxc.guess_chart(vec)
-    Radial1D()
+    Radial1D(M=Rn(1))
 
     """
     return cxc.radial1d
@@ -39,7 +39,7 @@ def guess_chart(obj: apyc.UnitSphericalRepresentation) -> cxc.LonLatSphericalTwo
 
     >>> vec = apyc.UnitSphericalRepresentation(lon=90 * apyu.deg, lat=45 * apyu.deg)
     >>> cxc.guess_chart(vec)
-    LonLatSphericalTwoSphere()
+    LonLatSphericalTwoSphere(M=Sn(2))
 
     """
     return cxc.lonlat_sph2
@@ -56,7 +56,7 @@ def guess_chart(obj: apyc.CartesianRepresentation) -> cxc.Cart3D:
     >>> import coordinax.charts as cxc
 
     >>> cxc.guess_chart(apyc.CartesianRepresentation(1, 2, 3))
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     """
     return cxc.cart3d
@@ -72,7 +72,7 @@ def guess_chart(obj: apyc.CylindricalRepresentation) -> cxc.Cylindrical3D:
 
     >>> vec = apyc.CylindricalRepresentation(1 * apyu.km, 2 * apyu.deg, 3 * apyu.km)
     >>> cxc.guess_chart(vec)
-    Cylindrical3D()
+    Cylindrical3D(M=Rn(3))
 
     """
     return cxc.cyl3d
@@ -89,7 +89,7 @@ def guess_chart(obj: apyc.PhysicsSphericalRepresentation) -> cxc.Spherical3D:
     >>> vec = apyc.PhysicsSphericalRepresentation(
     ...     r=1 * apyu.kpc, theta=45 * apyu.deg, phi=90 * apyu.deg)
     >>> cxc.guess_chart(vec)
-    Spherical3D()
+    Spherical3D(M=Rn(3))
 
     """
     return cxc.sph3d
@@ -106,7 +106,7 @@ def guess_chart(obj: apyc.SphericalRepresentation) -> cxc.LonLatSpherical3D:
     >>> vec = apyc.SphericalRepresentation(
     ...     lon=90 * apyu.deg, lat=45 * apyu.deg, distance=1 * apyu.kpc)
     >>> cxc.guess_chart(vec)
-    LonLatSpherical3D()
+    LonLatSpherical3D(M=Rn(3))
 
     """
     return cxc.lonlat_sph3d

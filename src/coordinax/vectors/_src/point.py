@@ -139,7 +139,7 @@ class Point(
     chart: ChartT = eqx.field(static=True)
     """The chart of the vector, e.g. `cxc.cart3d`."""
 
-    manifold: cxm.AbstractManifold = eqx.field()
+    manifold: cxm.AbstractTopologicalManifold = eqx.field()
     """The manifold the vector lives in."""
 
     frame: cxf.AbstractReferenceFrame = eqx.field(
@@ -589,7 +589,7 @@ def from_(
     >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
     >>> p = cx.Point.from_(d, cxc.cart3d, cxf.alice)
     >>> p.chart
-    Cart3D()
+    Cart3D(M=Rn(3))
     >>> p.frame
     Alice()
 
@@ -620,7 +620,7 @@ def from_(
     >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
     >>> p = cx.Point.from_(d, cxc.cart3d, cxr.point, cxf.alice)
     >>> p.chart
-    Cart3D()
+    Cart3D(M=Rn(3))
     >>> p.rep
     Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
     >>> p.frame

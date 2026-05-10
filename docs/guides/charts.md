@@ -50,7 +50,7 @@ Chart selection is independent of point data:
 >>> import coordinax.charts as cxc
 
 >>> cxc.cartesian_chart(cxc.sph3d)
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ## Inferring Charts And Normalizing Inputs
@@ -62,10 +62,10 @@ Cart3D()
 >>> import unxt as u
 
 >>> cxc.guess_chart({"x": 1.0, "y": 2.0, "z": 3.0})
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> cxc.guess_chart(frozenset(("x", "y", "z")))
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> q = u.Q([1.0, 2.0, 3.0], "m")
 >>> cxc.cdict(q)

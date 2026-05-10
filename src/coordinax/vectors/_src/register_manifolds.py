@@ -34,7 +34,7 @@ def pt_project(
     >>> cxm.pt_project(q, M)
     Point(
       {'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')},
-      chart=SphericalTwoSphere(), manifold=Sn(2)
+      chart=SphericalTwoSphere(M=Sn(2)), manifold=Sn(2)
     )
 
     """

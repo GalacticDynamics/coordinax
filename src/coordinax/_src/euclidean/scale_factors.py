@@ -1,4 +1,4 @@
-"""Euclidean specializations for :func:`coordinax.api.manifolds.scale_factors`."""
+"""Euclidean specializations for `coordinax.manifolds.scale_factors`."""
 
 __all__: tuple[str, ...] = ()
 
@@ -11,52 +11,12 @@ import unxt as u
 from unxt.quantity import AllowValue, is_any_quantity
 
 import coordinax.api.charts as cxcapi
-import coordinax.charts as cxc
 from .metric import EuclideanMetric
-from coordinax._src.base_charts import AbstractChart, AbstractDimensionalFlag
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 
 DMLS = u.unit("")
-
-
-@plum.dispatch
-def scale_factors(
-    metric: EuclideanMetric,
-    chart: cxc.Cart0D | cxc.Cart1D | cxc.Cart2D | cxc.Cart3D | cxc.CartND,
-    /,
-    *,
-    at: CDict,
-    usys: OptUSys = None,
-) -> QuantityMatrix:
-    """Fast path for Euclidean metrics in Cartesian charts.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-
-    >>> metric = cxm.EuclideanMetric(3)
-    >>> at = {
-    ...     "x": u.Q(jnp.array(1.0), "m"),
-    ...     "y": u.Q(jnp.array(2.0), "m"),
-    ...     "z": u.Q(jnp.array(3.0), "m"),
-    ... }
-    >>> cxm.scale_factors(metric, cxc.cart3d, at=at)
-    QuantityMatrix([1., 1., 1.], '(, , )')
-
-    """
-    del metric, at, usys
-    n = (
-        chart.ndim
-        if isinstance(chart, AbstractDimensionalFlag)
-        else len(chart.components)
-    )
-    return QuantityMatrix(
-        jnp.ones((n,)), unit=UnitsMatrix(tuple(u.unit("") for _ in range(n)))
-    )
 
 
 @plum.dispatch

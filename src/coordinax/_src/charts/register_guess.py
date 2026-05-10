@@ -10,6 +10,7 @@ import plum
 import unxt as u
 
 import coordinax.api.charts as cxcapi
+import coordinax.api.manifolds as cxmapi
 from .d1 import cart1d
 from .d2 import cart2d
 from .d3 import cart3d
@@ -20,6 +21,9 @@ from coordinax._src.base_charts import (
     AbstractFixedComponentsChart,
 )
 from coordinax._src.custom_types import CDict
+
+# ===================================================================
+# Guess Chart Classes
 
 
 # TODO: speed this up. The problem is that caching the results breaks something,
@@ -41,6 +45,10 @@ def guess_chart_cls(obj: frozenset[str]) -> type[AbstractChart[Any, Any]]:
     raise ValueError(msg)
 
 
+# ===================================================================
+# Guess Charts
+
+
 @plum.dispatch
 def guess_chart(obj: frozenset[str], /) -> AbstractChart:
     """Infer a chart from the keys of a component dictionary.
@@ -57,14 +65,17 @@ def guess_chart(obj: frozenset[str], /) -> AbstractChart:
     >>> d = {"x": 1.0, "y": 2.0, "z": 3.0}
     >>> chart = cxc.guess_chart(d)
     >>> chart
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     """
-    # Infer the representation from the keys
+    # Infer the chart from the keys
     chart_cls = guess_chart_cls(obj)
+    # Guess the manifold from the chart class, if possible. This is needed to
+    # instantiate the chart class, which requires a manifold argument.
+    M = cxmapi.guess_manifold(chart_cls)
 
-    # Instantiate the chart class
-    chart = chart_cls()
+    # Instantiate the chart class.
+    chart = chart_cls(M=M)
 
     # This should never happen since guess_chart_cls should raise if no chart is
     # found, but we check just in case.
@@ -91,7 +102,7 @@ def guess_chart(obj: CDict, /) -> AbstractChart:
     >>> d = {"x": 1.0, "y": 2.0, "z": 3.0}
     >>> chart = cxc.guess_chart(d)
     >>> chart
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     """
     out = cxcapi.guess_chart(frozenset(obj.keys()))
@@ -111,7 +122,7 @@ def guess_chart(
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0], "m")
     >>> cxc.guess_chart(q)
-    Cart1D()
+    Cart1D(M=Rn(1))
 
     """
     return cart1d
@@ -129,7 +140,7 @@ def guess_chart(
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0, 2.0], "m")
     >>> cxc.guess_chart(q)
-    Cart2D()
+    Cart2D(M=Rn(2))
 
     """
     return cart2d
@@ -147,7 +158,7 @@ def guess_chart(
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0, 2.0, 3.0], "m")
     >>> cxc.guess_chart(q)
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     """
     return cart3d
@@ -165,7 +176,7 @@ def guess_chart(
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0, 2.0, 3.0, 4.0], "m")
     >>> cxc.guess_chart(q)
-    CartND()
+    CartND(M=NoManifold(ndim=False))
 
     """
     return cartnd

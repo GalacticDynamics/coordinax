@@ -20,6 +20,8 @@ __all__ = (
 )
 
 
+import dataclasses
+
 from typing import Any, Final, Literal as L, NoReturn, final  # noqa: N817
 from typing_extensions import override
 
@@ -27,11 +29,14 @@ import jax.tree_util as jtu
 
 import unxt as u
 
+from .atlas import SPHERICAL_ATLAS_DEFAULT_CHARTS, HyperSphericalAtlas
+from .manifold import twosphere
 from coordinax._src.base_charts import (
     AbstractFixedComponentsChart,
     CDictT,
     chart_dataclass_decorator,
 )
+from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax._src.charts import checks
 from coordinax._src.charts.d1 import Abstract1D
 from coordinax._src.charts.d2 import Abstract2D
@@ -114,6 +119,7 @@ CircularOneSphereKeys = tuple[L["phi"]]  # TODO: theta?
 CircularOneSphereDims = tuple[Ang]
 
 
+@HyperSphericalAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -147,11 +153,13 @@ class CircularOneSphere(
 sph1: Final = CircularOneSphere()
 """Standard circular coordinates on the unit circle."""
 
+SPHERICAL_ATLAS_DEFAULT_CHARTS[1] = sph1
 
 #####################################################################
 # Base class for all spherical 2-sphere charts
 
 
+@chart_dataclass_decorator
 class AbstractSphericalTwoSphere(AbstractSphericalHyperSphere[Ks, Ds], Abstract2D):
     r"""Abstract base class for intrinsic charts on the unit two-sphere.
 
@@ -174,6 +182,9 @@ class AbstractSphericalTwoSphere(AbstractSphericalHyperSphere[Ks, Ds], Abstract2
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = twosphere
+
 
 # ===============================================================================
 # SphericalTwoSphere  (theta, phi) — physics convention
@@ -183,6 +194,7 @@ SphericalTwoSphereKeys = tuple[L["theta"], L["phi"]]
 SphericalTwoSphereDims = tuple[Ang, Ang]
 
 
+@HyperSphericalAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -220,6 +232,9 @@ class SphericalTwoSphere(
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = twosphere
+
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         # call base check
         super().check_data(data, **kw)
@@ -231,6 +246,7 @@ class SphericalTwoSphere(
 sph2: Final = SphericalTwoSphere()
 """Standard spherical coordinates on the two-sphere with physics convention."""
 
+SPHERICAL_ATLAS_DEFAULT_CHARTS[2] = sph2
 
 # ===============================================================================
 # LonLatSphericalTwoSphere  (lon, lat)
@@ -239,6 +255,7 @@ LonLatSphericalTwoSphereKeys = tuple[L["lon"], L["lat"]]
 LonLatSphericalTwoSphereDims = tuple[Ang, Ang]
 
 
+@HyperSphericalAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -269,6 +286,9 @@ class LonLatSphericalTwoSphere(
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = twosphere
+
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
         if values:
@@ -287,6 +307,7 @@ LonCosLatSphericalTwoSphereKeys = tuple[L["lon_coslat"], L["lat"]]
 LonCosLatSphericalTwoSphereDims = tuple[Ang, Ang]
 
 
+@HyperSphericalAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -313,6 +334,9 @@ class LonCosLatSphericalTwoSphere(
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = twosphere
+
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
         if values:
@@ -329,6 +353,7 @@ loncoslat_sph2: Final = LonCosLatSphericalTwoSphere()
 MathSphericalTwoSphereKeys = tuple[L["theta"], L["phi"]]
 
 
+@HyperSphericalAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -355,6 +380,9 @@ class MathSphericalTwoSphere(
     ('angle', 'angle')
 
     """
+
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = twosphere
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)

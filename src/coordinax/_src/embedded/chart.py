@@ -81,7 +81,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
         >>> import unxt as u
         >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
         >>> chart.intrinsic
-        SphericalTwoSphere()
+        SphericalTwoSphere(M=Sn(2))
 
         """
         return self.embed_map.intrinsic
@@ -94,7 +94,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
         >>> import unxt as u
         >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
         >>> chart.ambient
-        Spherical3D()
+        Spherical3D(M=Rn(3))
 
         """
         return self.embed_map.ambient
@@ -136,7 +136,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
         >>> import unxt as u
         >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
         >>> chart.cartesian
-        Cart3D()
+        Cart3D(M=Rn(3))
 
         """
         return self.ambient.cartesian

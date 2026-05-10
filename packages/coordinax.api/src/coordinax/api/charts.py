@@ -89,34 +89,34 @@ def cartesian_chart(obj: Any, /) -> "coordinax.charts.AbstractChart":
     1D coordinate systems map to Cart1D:
 
     >>> cxc.cartesian_chart(cxc.cart1d)
-    Cart1D()
+    Cart1D(M=Rn(1))
 
     >>> cxc.cartesian_chart(cxc.radial1d)
-    Cart1D()
+    Cart1D(M=Rn(1))
 
     2D coordinate systems map to Cart2D:
 
     >>> cxc.cartesian_chart(cxc.cart2d)
-    Cart2D()
+    Cart2D(M=Rn(2))
 
     >>> cxc.cartesian_chart(cxc.polar2d)
-    Cart2D()
+    Cart2D(M=Rn(2))
 
     3D coordinate systems map to Cart3D:
 
     >>> cxc.cartesian_chart(cxc.cart3d)
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> cxc.cartesian_chart(cxc.sph3d)
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> cxc.cartesian_chart(cxc.cyl3d)
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     N-dimensional systems map to CartND:
 
     >>> cxc.cartesian_chart(cxc.cartnd)
-    CartND()
+    CartND(M=NoManifold(ndim=False))
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -265,18 +265,18 @@ def guess_chart(*_: Any) -> "coordinax.charts.AbstractChart":
     >>> import coordinax.charts as cxc
 
     >>> cxc.guess_chart(frozenset(("x", "y", "z")))
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> cxc.guess_chart({"x": 1.0, "y": 2.0, "z": 3.0})
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> q = u.Q([1.0, 2.0, 3.0], "m")
     >>> cxc.guess_chart(q)
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> x = jnp.array([1.0, 2.0, 3.0])
     >>> cxc.guess_chart(x)
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     """
     raise NotImplementedError  # pragma: no cover

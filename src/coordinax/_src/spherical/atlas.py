@@ -9,18 +9,13 @@ from typing import Any, Final, TypeVar, final
 
 import jax
 
-from .chart import AbstractSphericalHyperSphere, sph1, sph2
 from coordinax._src.base_atlas import AbstractAtlas
 from coordinax._src.base_charts import AbstractChart
 
 CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])
 
 
-SPHERICAL_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any]]] = {
-    1: sph1,
-    2: sph2,
-}
-
+SPHERICAL_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any]]] = {}
 SPHERICAL_ATLAS_ELIGIBLE_CHARTS: Final[
     weakref.WeakSet[type[AbstractChart[Any, Any]]]
 ] = weakref.WeakSet()
@@ -58,7 +53,7 @@ class HyperSphericalAtlas(AbstractAtlas):
     False
 
     >>> atlas.default_chart()
-    SphericalTwoSphere()
+    SphericalTwoSphere(M=Sn(2))
 
     """
 
@@ -104,21 +99,3 @@ class HyperSphericalAtlas(AbstractAtlas):
         """
         SPHERICAL_ATLAS_ELIGIBLE_CHARTS.add(registrant)
         return registrant
-
-
-# ===================================================================
-# Register eligible charts for this atlas.
-
-
-def _concrete_subclasses(cls: type, /) -> set[type]:
-    """Recursively collect all final (concrete) subclasses of *cls*."""
-    out: set[type] = set()
-    for sub in cls.__subclasses__():
-        if getattr(sub, "__final__", False):
-            out.add(sub)
-        out.update(_concrete_subclasses(sub))
-    return out
-
-
-for _chart_cls in _concrete_subclasses(AbstractSphericalHyperSphere):
-    _ = HyperSphericalAtlas.register(_chart_cls)

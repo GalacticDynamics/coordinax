@@ -44,7 +44,7 @@ def pt_map(
 
     >>> try: cxc.pt_map(x, atlas, cxc.cart2d, cxc.sph2)
     ... except ValueError as e: print(e)
-    Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere()
+    Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
 
     """
     # Check the atlas supports the charts
@@ -81,7 +81,7 @@ def pt_map(
 
     >>> try: cxc.pt_map(x, M, cxc.cart2d, cxc.sph2)
     ... except ValueError as e: print(e)
-    Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere()
+    Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
 
     """
     # Redispatch to the atlas

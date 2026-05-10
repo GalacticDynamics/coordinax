@@ -18,8 +18,9 @@ import plum
 import wadler_lindig as wl
 
 import coordinax.api.charts as cxcapi
+from .manifold import CartesianProductManifold
 from coordinax._src.base_charts import MISSING, AbstractChart, chart_dataclass_decorator
-from coordinax._src.base_topo import AbstractTopologicalManifold, no_manifold
+from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 V = TypeVar("V")
@@ -56,6 +57,23 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
 
     factor_names: tuple[str, ...]
     """Factor names for namespaced keys. Must be unique and aligned with `factors`."""
+
+    @override
+    @property
+    def M(self) -> CartesianProductManifold:  # type: ignore[override]
+        """Return the product manifold of the factor charts' manifolds.
+
+        Examples
+        --------
+        >>> import coordinax.charts as cxc
+        >>> chart = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+        >>> chart.M
+        CartesianProductManifold(factors=(Rn(3), Rn(3)), factor_names=('q', 'p'))
+
+        """
+        return CartesianProductManifold(
+            factors=tuple(f.M for f in self.factors), factor_names=self.factor_names
+        )
 
     @property
     def ndim(self) -> int:
@@ -263,7 +281,7 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     6
 
     >>> chart["p"]
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     """
 
@@ -273,7 +291,7 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     factor_names: tuple[str, ...]
     """Factor names for namespaced keys. Must be unique and aligned with `factors`."""
 
-    manifold: ClassVar[AbstractTopologicalManifold]  # remove from init
+    M: ClassVar[AbstractTopologicalManifold]  # remove from init
 
     def __post_init__(self) -> None:
         # Validate lengths match
@@ -291,17 +309,6 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 
     @override
     @property
-    def manifold(self) -> AbstractTopologicalManifold:  # type: ignore[override]
-        """Return the product manifold of the factor charts' manifolds.
-
-        The manifold of a Cartesian product chart is the Cartesian product of the
-        manifolds of its factors. If any factor has `no_manifold`, the product
-        manifold is also `no_manifold`.
-        """
-        return no_manifold
-
-    @override
-    @property
     def cartesian(self) -> "CartesianProductChart":
         """Get Cartesian version of a namespaced product chart (factorwise).
 
@@ -314,7 +321,9 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         >>> product = cxc.CartesianProductChart((cxc.sph3d, cxc.sph3d), ("q", "p"))
         >>> cart_product = cxc.cartesian_chart(product)
         >>> cart_product
-        CartesianProductChart(factors=(Cart3D(), Cart3D()), factor_names=('q', 'p'))
+        CartesianProductChart(
+            factors=(Cart3D(M=Rn(3)), Cart3D(M=Rn(3))), factor_names=('q', 'p')
+        )
 
         """
         cart_factors = tuple(cxcapi.cartesian_chart(f) for f in self.factors)
@@ -333,7 +342,7 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         >>> atlas = cxc.CartesianProductChart(
         ...     factors=(cxc.sph2, cxc.cart1d), factor_names=("S^2", "R^1"))
         >>> atlas["R^1"]
-        Cart1D()
+        Cart1D(M=Rn(1))
 
         """
         return self.factors[self.factor_names.index(idx)]

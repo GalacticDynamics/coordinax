@@ -63,7 +63,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
     It can provide a canonical chart:
 
     >>> atlas.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     The atlas determines whether a chart belongs to the manifold.
 
@@ -109,7 +109,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         >>> import coordinax.manifolds as cxm
         >>> atlas = cxm.EuclideanAtlas(2)
         >>> atlas.default_chart()
-        Cart2D()
+        Cart2D(M=Rn(2))
 
         """
         raise NotImplementedError  # pragma: no cover
@@ -188,7 +188,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
 
         >>> try: atlas.pt_map(x, cxc.cart2d, cxc.sph2)
         ... except ValueError as e: print(e)
-        Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere()
+        Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
 
         """
         return cxc.pt_map(x, self, *args, **kwargs)

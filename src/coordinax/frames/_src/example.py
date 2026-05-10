@@ -46,7 +46,8 @@ class Alice(AbstractReferenceFrame):
     >>> op = cxf.frame_transition(cxf.alice, cxf.alex)
     >>> print(jax.tree.map(lambda x: x.round(2), op))
     Composed((
-      Translate({'x': Q(10, 'm'), 'y': Q(0, 'm'), 'z': Q(0, 'm')}, chart=Cart3D()),
+      Translate({'x': Q(10, 'm'), 'y': Q(0, 'm'), 'z': Q(0, 'm')},
+                chart=Cart3D(M=Rn(3))),
       Rotate([[ 0. -1.  0.]
               [ 1.  0.  0.]
               [ 0.  0.  1.]])

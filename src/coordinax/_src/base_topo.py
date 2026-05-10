@@ -99,7 +99,7 @@ class AbstractTopologicalManifold(metaclass=abc.ABCMeta):
     ...     M.check_chart(cxc.cart2d)
     ... except ValueError as e:
     ...     print(e)
-    Chart Cart2D() is not supported by this manifold atlas.
+    Chart Cart2D(M=Rn(2)) is not supported by this manifold atlas.
 
     """
 
@@ -147,6 +147,9 @@ class AbstractTopologicalManifold(metaclass=abc.ABCMeta):
     def __str__(self) -> str:
         """Return the string representation."""
         return wl.pformat(self, width=88)
+
+
+# ============================================================================
 
 
 @jtu.register_static

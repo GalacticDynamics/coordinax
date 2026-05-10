@@ -64,13 +64,15 @@ class Translate(AbstractAdd):
 
     >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
     >>> shift
-    Translate({'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D())
+    Translate(
+        {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D(M=Rn(3))
+    )
 
     The inverse negates the displacement:
 
     >>> shift.inverse
     Translate(
-        {'x': Q(-1, 'km'), 'y': Q(-2, 'km'), 'z': Q(-3, 'km')}, chart=Cart3D()
+        {'x': Q(-1, 'km'), 'y': Q(-2, 'km'), 'z': Q(-3, 'km')}, chart=Cart3D(M=Rn(3))
     )
 
     Time-dependent translation:
@@ -79,7 +81,7 @@ class Translate(AbstractAdd):
     ...                    "z": u.Q(0, "m")}
     >>> moving = cxfm.Translate(delta, chart=cxc.cart3d)
     >>> moving
-    Translate(<function <lambda>>, chart=Cart3D())
+    Translate(<function <lambda>>, chart=Cart3D(M=Rn(3)))
 
     >>> t = u.Q(10, "s")
     >>> x = cx.cdict(u.Q([0, 0, 0], "m"))

@@ -116,7 +116,7 @@ Compute where the star appears in the body frame at $t = 0$:
 >>> star_at_t0
 Point(
     {'x': Q(1., 'kpc'), 'y': Q(0., 'kpc'), 'z': Q(0., 'kpc')},
-    chart=Cart3D(), manifold=Rn(3)
+    chart=Cart3D(M=Rn(3)), manifold=Rn(3)
 )
 ```
 
@@ -128,7 +128,7 @@ After 6 hours (quarter turn, $90°$ rotation), the star lies along the body fram
 >>> star_at_quarter
 Point(
     {'x': Q(6.123234e-17, 'kpc'), 'y': Q(1., 'kpc'), 'z': Q(0., 'kpc')},
-    chart=Cart3D(), manifold=Rn(3)
+    chart=Cart3D(M=Rn(3)), manifold=Rn(3)
 )
 ```
 
@@ -140,7 +140,7 @@ After 12 hours (half turn, $180°$ rotation), the star appears at $[-1, 0, 0]$:
 >>> star_at_half
 Point(
     {'x': Q(-1., 'kpc'), 'y': Q(1.2246468e-16, 'kpc'), 'z': Q(0., 'kpc')},
-    chart=Cart3D(), manifold=Rn(3)
+    chart=Cart3D(M=Rn(3)), manifold=Rn(3)
 )
 ```
 
@@ -159,7 +159,7 @@ Apply it to recover the star's inertial coordinates from the body-frame coordina
 >>> star_back
 Point(
     {'x': Q(1., 'kpc'), 'y': Q(0., 'kpc'), 'z': Q(0., 'kpc')},
-    chart=Cart3D(), manifold=Rn(3)
+    chart=Cart3D(M=Rn(3)), manifold=Rn(3)
 )
 ```
 

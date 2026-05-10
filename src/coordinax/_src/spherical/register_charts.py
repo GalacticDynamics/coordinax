@@ -12,7 +12,7 @@ import coordinax.api.manifolds as cxmapi
 from .chart import AbstractSphericalTwoSphere
 from .embed import TwoSphereIn3D
 from .manifold import HyperSphericalManifold, twosphere
-from coordinax._src.charts.d3 import Abstract3D, sph3d
+from coordinax._src.charts.d3 import Abstract3D, Spherical3D
 from coordinax._src.custom_types import CDict, OptUSys
 
 _twospherefrom3d: Final = TwoSphereIn3D(1)
@@ -48,6 +48,7 @@ def pt_project(
     del manifold
 
     # First project from the ambient chart to the intermediate Spherical3D chart
+    sph3d = Spherical3D(M=from_ambient_chart.M)
     x_sph = cxcapi.pt_map(p_ambient, from_ambient_chart, sph3d)
 
     # Then project from the intermediate Spherical3D chart to the intrinsic

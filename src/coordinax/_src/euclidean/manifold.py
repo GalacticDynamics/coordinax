@@ -1,6 +1,13 @@
 """Euclidean manifolds."""
 
-__all__ = ("EuclideanManifold", "Rn", "euclidean3d")
+__all__ = (
+    "EuclideanManifold",
+    "Rn",
+    "euclidean0d",
+    "euclidean1d",
+    "euclidean2d",
+    "euclidean3d",
+)
 
 import dataclasses
 
@@ -99,13 +106,13 @@ class EuclideanManifold(AbstractManifold):
     The default chart is the standard Cartesian chart for the given dimension:
 
     >>> M.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> cxmd.EuclideanManifold(2).default_chart()
-    Cart2D()
+    Cart2D(M=Rn(2))
 
     >>> cxmd.EuclideanManifold(1).default_chart()
-    Cart1D()
+    Cart1D(M=Rn(1))
 
     **Chart membership**
 
@@ -130,7 +137,7 @@ class EuclideanManifold(AbstractManifold):
     ...     M.check_chart(cxc.cart2d)
     ... except ValueError as e:
     ...     print(e)
-    Chart Cart2D() is not supported by this manifold atlas.
+    Chart Cart2D(M=Rn(2)) is not supported by this manifold atlas.
 
     **Point transition maps**
 
@@ -203,5 +210,8 @@ Rn = EuclideanManifold
 """Alias for `EuclideanManifold`."""
 
 
+euclidean0d = EuclideanManifold(0)
+euclidean1d = EuclideanManifold(1)
+euclidean2d = EuclideanManifold(2)
 euclidean3d = EuclideanManifold(3)
 r"""The 3-dimensional Euclidean manifold, i.e. $\mathbb{R}^3$."""

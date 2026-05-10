@@ -6,14 +6,16 @@ __all__ = ("CartesianProductAtlas",)
 import dataclasses
 
 from collections.abc import Iterator
-from typing import cast, final
+from typing import TYPE_CHECKING, cast, final
 from typing_extensions import override
 
 import jax
 
-from .chart import AbstractCartesianProductChart, CartesianProductChart
 from coordinax._src.base_atlas import AbstractAtlas
 from coordinax._src.base_charts import AbstractChart
+
+if TYPE_CHECKING:
+    import coordinax.charts  # noqa: ICN001
 
 
 @jax.tree_util.register_static
@@ -108,7 +110,7 @@ class CartesianProductAtlas(AbstractAtlas):
         """
         return self.factors[self.factor_names.index(idx)]
 
-    def default_chart(self) -> CartesianProductChart:
+    def default_chart(self) -> "coordinax.charts.CartesianProductChart":
         """Return a default chart for the product atlas.
 
         Examples
@@ -120,7 +122,8 @@ class CartesianProductAtlas(AbstractAtlas):
         >>> chart = atlas.default_chart()
         >>> chart
         CartesianProductChart(
-            factors=(SphericalTwoSphere(), Cart1D()), factor_names=('S2', 'R1')
+            factors=(SphericalTwoSphere(M=Sn(2)), Cart1D(M=Rn(1))),
+            factor_names=('S2', 'R1')
         )
 
         >>> chart["S2"] == cxm.HyperSphericalAtlas().default_chart()
@@ -130,6 +133,8 @@ class CartesianProductAtlas(AbstractAtlas):
         True
 
         """
+        from .chart import CartesianProductChart  # noqa: PLC0415
+
         # Get default charts for each factor
         factor_charts = [factor.default_chart() for factor in self.factors]
         # Construct and return the product chart
@@ -151,6 +156,8 @@ class CartesianProductAtlas(AbstractAtlas):
         True
 
         """
+        from .chart import AbstractCartesianProductChart  # noqa: PLC0415
+
         return (
             isinstance(chart, AbstractCartesianProductChart)
             and chart.factor_names == self.factor_names

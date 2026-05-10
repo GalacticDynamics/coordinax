@@ -2,6 +2,7 @@
 
 __all__ = ("Abstract0D", "Cart0D", "cart0d")
 
+import dataclasses
 
 from typing import Any, Final, Literal as L, final  # noqa: N817
 from typing_extensions import override
@@ -14,6 +15,12 @@ from coordinax._src.base_charts import (
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
+from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.euclidean.atlas import (
+    EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
+    EuclideanAtlas,
+)
+from coordinax._src.euclidean.manifold import euclidean0d
 
 
 class Abstract0D(AbstractDimensionalFlag, n=0):
@@ -43,6 +50,7 @@ ZeroDKeys = tuple[()]
 ZeroDDims = tuple[()]
 
 
+@EuclideanAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
@@ -66,6 +74,9 @@ class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractTopologicalManifold = euclidean0d
+
     @override
     @property
     def cartesian(self) -> "Cart0D":
@@ -75,7 +86,7 @@ class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
         >>> isinstance(cxc.Cart0D().cartesian, cxc.Cart0D)
         True
         """
-        return cart0d
+        return self
 
 
 cart0d: Final = Cart0D()
@@ -86,3 +97,5 @@ cart0d: Final = Cart0D()
 True
 
 """
+
+EUCLIDEAN_ATLAS_DEFAULT_CHARTS[0] = cart0d

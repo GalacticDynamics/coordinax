@@ -265,7 +265,9 @@ def from_(
 
     >>> op = cxfm.Translate.from_([1, 1, 1], "km")
     >>> print(op)
-    Translate({'x': Q(1, 'km'), 'y': Q(1, 'km'), 'z': Q(1, 'km')}, chart=Cart3D())
+    Translate(
+        {'x': Q(1, 'km'), 'y': Q(1, 'km'), 'z': Q(1, 'km')}, chart=Cart3D(M=Rn(3))
+    )
 
     """
     return cls.from_(u.Q(x, unit))  # ty: ignore[invalid-return-type]
