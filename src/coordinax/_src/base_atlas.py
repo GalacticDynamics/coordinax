@@ -125,7 +125,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         >>> import coordinax.manifolds as cxm
         >>> M = cxm.EuclideanManifold(2)
         >>> M.atlas.default_chart_for(M)
-        Cart2D(manifold=Rn(2))
+        Cart2D(M=Rn(2))
 
         >>> try: M.atlas.default_chart_for(cxm.EuclideanManifold(3))
         ... except ValueError as e: print(e)
@@ -140,7 +140,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
             msg = f"Atlas {self!r} does not match manifold atlas {manifold.atlas!r}."
             raise ValueError(msg)
 
-        return dataclasses.replace(chart, manifold=manifold)
+        return dataclasses.replace(chart, M=manifold)
 
     @abc.abstractmethod
     def has_chart(self, chart: cxc.AbstractChart[Any, Any], /) -> bool:

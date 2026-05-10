@@ -80,7 +80,7 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
     _: dataclasses.KW_ONLY
 
-    manifold: AbstractTopologicalManifold = no_manifold
+    M: AbstractTopologicalManifold = no_manifold
     """The manifold that this chart belongs to.
 
     Default is `no_manifold` for charts that do not belong to any manifold.
