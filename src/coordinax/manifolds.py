@@ -71,10 +71,8 @@ with install_import_hook("coordinax.manifolds"):
         EuclideanMetric,
         euclidean3d,
     )
-    from ._src.manifolds import (
-        CustomAtlas,
-        CustomManifold,
-        CustomMetric,
+    from ._src.manifolds import CustomAtlas, CustomManifold, CustomMetric
+    from ._src.minkowski import (
         MinkowskiAtlas,
         MinkowskiManifold,
         MinkowskiMetric,
