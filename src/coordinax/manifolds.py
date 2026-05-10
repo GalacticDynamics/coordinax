@@ -58,6 +58,7 @@ with install_import_hook("coordinax.manifolds"):
     from ._src.base_manifold import AbstractManifold
     from ._src.base_metric import AbstractDiagonalMetric, AbstractMetric
     from ._src.base_topo import AbstractTopologicalManifold, NoManifold, no_manifold
+    from ._src.custom import CustomAtlas, CustomManifold, CustomMetric
     from ._src.embedded import (
         AbstractEmbeddingMap,
         CustomEmbeddingMap,
@@ -71,7 +72,7 @@ with install_import_hook("coordinax.manifolds"):
         EuclideanMetric,
         euclidean3d,
     )
-    from ._src.manifolds import CustomAtlas, CustomManifold, CustomMetric
+    from ._src.manifolds import *  # noqa: F403  # TODO: move the registration out
     from ._src.minkowski import (
         MinkowskiAtlas,
         MinkowskiManifold,
