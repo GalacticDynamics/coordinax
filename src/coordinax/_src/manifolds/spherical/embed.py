@@ -10,7 +10,7 @@ import unxt as u
 
 import coordinax.charts as cxc
 from .manifold import HyperSphericalManifold
-from coordinax._src.manifolds.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.manifolds.embedded import (
     AbstractEmbeddingMap,
     AmbientT,

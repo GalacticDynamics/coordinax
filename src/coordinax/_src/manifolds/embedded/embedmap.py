@@ -10,7 +10,7 @@ from typing import Any, Generic, Protocol, TypeVar, final, runtime_checkable
 import jax
 
 import coordinax.charts as cxc
-from coordinax._src.manifolds.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import CDict, OptUSys
 
 IntrinsicT = TypeVar("IntrinsicT", bound=cxc.AbstractChart[Any, Any])
 AmbientT = TypeVar("AmbientT", bound=cxc.AbstractChart[Any, Any])

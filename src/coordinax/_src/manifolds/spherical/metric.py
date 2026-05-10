@@ -14,7 +14,7 @@ import unxt as u
 from unxt.quantity import AllowValue
 
 import coordinax.charts as cxc
-from coordinax._src.manifolds.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.manifolds.diagonal import AbstractDiagonalMetric
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 

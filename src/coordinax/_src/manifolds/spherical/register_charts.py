@@ -11,7 +11,7 @@ import coordinax.api.manifolds as cxmapi
 import coordinax.charts as cxc
 from .embed import TwoSphereIn3D
 from .manifold import HyperSphericalManifold, twosphere
-from coordinax._src.manifolds.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import CDict, OptUSys
 
 _twospherefrom3d: Final = TwoSphereIn3D(1)
 

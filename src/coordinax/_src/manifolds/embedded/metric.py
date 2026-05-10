@@ -14,7 +14,7 @@ import unxt as u
 import coordinax.charts as cxc
 from .embedmap import AbstractEmbeddingMap
 from coordinax._src.base_metric import AbstractMetric
-from coordinax._src.manifolds.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import (
     QuantityMatrix,
     UnitsMatrix,

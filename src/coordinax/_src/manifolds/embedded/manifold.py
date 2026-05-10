@@ -16,7 +16,7 @@ from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
 from .metric import InducedMetric
 from coordinax._src.base_atlas import AbstractAtlas
 from coordinax._src.base_manifold import AbstractManifold
-from coordinax._src.manifolds.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import CDict, OptUSys
 
 UNSUPPORTED_CHART_MESSAGE: Final[str] = (
     "{0} chart {1} is not supported by the manifold's {0} atlas {2}."

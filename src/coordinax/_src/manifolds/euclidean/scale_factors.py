@@ -12,7 +12,7 @@ from unxt.quantity import AllowValue, is_any_quantity
 
 import coordinax.charts as cxc
 from .metric import EuclideanMetric
-from coordinax._src.manifolds.custom_types import CDict, OptUSys
+from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 
 DMLS = u.unit("")
