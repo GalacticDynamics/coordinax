@@ -13,9 +13,9 @@ import unxt as u
 
 import coordinax.api.charts as cxcapi
 from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base_metric import AbstractDiagonalMetric
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.exceptions import NoGlobalCartesianChartError
-from coordinax._src.manifolds.diagonal import AbstractDiagonalMetric
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 
 

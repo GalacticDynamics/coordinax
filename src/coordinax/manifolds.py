@@ -56,10 +56,15 @@ from ._src.setup_package import install_import_hook
 with install_import_hook("coordinax.manifolds"):
     from ._src.base_atlas import AbstractAtlas
     from ._src.base_manifold import AbstractManifold
-    from ._src.base_metric import AbstractMetric
+    from ._src.base_metric import AbstractDiagonalMetric, AbstractMetric
     from ._src.base_topo import AbstractTopologicalManifold, NoManifold, no_manifold
+    from ._src.euclidean import (
+        EuclideanAtlas,
+        EuclideanManifold,
+        EuclideanMetric,
+        euclidean3d,
+    )
     from ._src.manifolds import (
-        AbstractDiagonalMetric,
         AbstractEmbeddingMap,
         CustomAtlas,
         CustomEmbeddingMap,
@@ -67,9 +72,6 @@ with install_import_hook("coordinax.manifolds"):
         CustomMetric,
         EmbeddedChart,
         EmbeddedManifold,
-        EuclideanAtlas,
-        EuclideanManifold,
-        EuclideanMetric,
         HyperSphericalAtlas,
         HyperSphericalManifold,
         HyperSphericalMetric,
@@ -79,7 +81,6 @@ with install_import_hook("coordinax.manifolds"):
         MinkowskiMetric,
         TwoSphereIn3D,
         embedded_twosphere,
-        euclidean3d,
         minkowski4d,
         twosphere,
     )
