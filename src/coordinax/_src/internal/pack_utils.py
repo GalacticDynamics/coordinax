@@ -24,8 +24,8 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue
 
-from ._quantity_matrix import QuantityMatrix
 from .custom_types import CDict, CKey
+from .quantity_matrix import QuantityMatrix
 
 DMLS: Final = u.unit("")
 

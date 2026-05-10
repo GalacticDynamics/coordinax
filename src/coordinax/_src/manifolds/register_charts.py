@@ -14,10 +14,6 @@ from coordinax._src.base_atlas import AbstractAtlas
 from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_manifold import AbstractManifold
 
-#####################################################################
-# Point Transition Map
-
-
 _ATLAS_MSG: Final[Callable[[AbstractAtlas, AbstractChart[Any, Any]], str]] = (
     lambda a, c: (
         f"Atlas {a} does not support chart {wl.pformat(c, include_params=False)}"
@@ -90,7 +86,3 @@ def pt_map(
     """
     # Redispatch to the atlas
     return cxcapi.pt_map(x, manifold.atlas, chart_from, chart_to, *args, **kwargs)
-
-
-# ===================================================================
-# Special cases

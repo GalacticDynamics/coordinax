@@ -14,7 +14,7 @@ from astropy.units import imperial  # registers °F
 import quaxed.numpy as qnp
 import unxt as u
 
-from coordinax._src.internal._quantity_matrix import (
+from coordinax._src.internal.quantity_matrix import (
     _convert_value_matrix,
     _convert_value_vector,
 )
