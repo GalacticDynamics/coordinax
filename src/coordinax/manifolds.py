@@ -12,41 +12,43 @@ __all__ = (
     "AbstractTopologicalManifold",
     "NoManifold",
     "no_manifold",
-    # Atlases
+    # Abstract Manifold/Atlas/Metric
     "AbstractAtlas",
-    "EuclideanAtlas",
-    "HyperSphericalAtlas",
-    "CartesianProductAtlas",
-    "CustomAtlas",
-    "MinkowskiAtlas",
-    # Metrics
     "AbstractMetric",
-    "AbstractDiagonalMetric",
-    "CartesianProductMetric",
-    "CustomMetric",
-    "EuclideanMetric",
-    "HyperSphericalMetric",
-    "InducedMetric",
-    "MinkowskiMetric",
-    # Manifolds
     "AbstractManifold",
-    "EmbeddedManifold",
+    "AbstractDiagonalMetric",
+    # Euclidean
+    "EuclideanAtlas",
+    "EuclideanMetric",
     "EuclideanManifold",
     "euclidean3d",
+    # HyperSpherical
+    "HyperSphericalAtlas",
+    "HyperSphericalMetric",
     "HyperSphericalManifold",
     "twosphere",
+    # Minkowski
+    "MinkowskiAtlas",
+    "MinkowskiMetric",
     "MinkowskiManifold",
     "minkowski4d",
+    # Product
+    "CartesianProductAtlas",
+    "CartesianProductMetric",
     "CartesianProductManifold",
-    "CustomManifold",
     # Embeddings
+    "EmbeddedManifold",
     "AbstractEmbeddingMap",
     "CustomEmbeddingMap",
     "TwoSphereIn3D",
     "embedded_twosphere",
     "EmbeddedManifold",
-    # Convenience chart
     "EmbeddedChart",
+    "InducedMetric",
+    # Custom
+    "CustomAtlas",
+    "CustomMetric",
+    "CustomManifold",
 )
 
 from ._src.setup_package import install_import_hook
@@ -59,9 +61,6 @@ with install_import_hook("coordinax.manifolds"):
     from ._src.manifolds import (
         AbstractDiagonalMetric,
         AbstractEmbeddingMap,
-        CartesianProductAtlas,
-        CartesianProductManifold,
-        CartesianProductMetric,
         CustomAtlas,
         CustomEmbeddingMap,
         CustomManifold,
@@ -83,6 +82,11 @@ with install_import_hook("coordinax.manifolds"):
         euclidean3d,
         minkowski4d,
         twosphere,
+    )
+    from ._src.product import (
+        CartesianProductAtlas,
+        CartesianProductManifold,
+        CartesianProductMetric,
     )
     from coordinax.api.charts import pt_map
     from coordinax.api.manifolds import (

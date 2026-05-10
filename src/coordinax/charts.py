@@ -173,8 +173,6 @@ with install_import_hook("coordinax.charts"):
         Abstract2D,
         Abstract3D,
         Abstract6D,
-        AbstractCartesianProductChart,
-        AbstractFlatCartesianProductChart,
         AbstractND,
         AbstractSpherical3D,
         AbstractSphericalHyperSphere,
@@ -184,7 +182,6 @@ with install_import_hook("coordinax.charts"):
         Cart1D,
         Cart2D,
         Cart3D,
-        CartesianProductChart,
         CartND,
         CircularOneSphere,
         Cylindrical3D,
@@ -198,7 +195,6 @@ with install_import_hook("coordinax.charts"):
         Polar2D,
         ProlateSpheroidal3D,
         Radial1D,
-        SpaceTimeCT,
         Spherical3D,
         SphericalTwoSphere,
         Time1D,
@@ -218,13 +214,19 @@ with install_import_hook("coordinax.charts"):
         poincarepolar6d,
         polar2d,
         radial1d,
-        spacetimect,
         sph1,
         sph2,
         sph3d,
         time1d,
     )
     from coordinax._src.exceptions import NoGlobalCartesianChartError
+    from coordinax._src.product import (
+        AbstractCartesianProductChart,
+        AbstractFlatCartesianProductChart,
+        CartesianProductChart,
+        SpaceTimeCT,
+        spacetimect,
+    )
     from coordinax.api.charts import cartesian_chart, cdict, guess_chart, pt_map
 
 

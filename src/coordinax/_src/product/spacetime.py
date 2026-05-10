@@ -12,15 +12,15 @@ import jax.tree_util as jtu
 
 import unxt as u
 
-from .d1 import time1d
-from .d3 import cart3d
-from .product import AbstractFlatCartesianProductChart
+from .chart import AbstractFlatCartesianProductChart
 from coordinax._src.base_charts import (
     AbstractChart,
     AbstractFixedComponentsChart,
     chart_dataclass_decorator,
 )
 from coordinax._src.base_manifold import AbstractTopologicalManifold
+from coordinax._src.charts.d1 import time1d
+from coordinax._src.charts.d3 import cart3d
 from coordinax._src.custom_types import CDict, Ds, Ks
 
 C_DEFAULT = u.StaticQuantity(299_792.458, "km/s")

@@ -11,8 +11,9 @@ from typing_extensions import override
 
 import jax
 
-import coordinax.charts as cxc
+from .chart import AbstractCartesianProductChart, CartesianProductChart
 from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_charts import AbstractChart
 
 
 @jax.tree_util.register_static
@@ -79,7 +80,7 @@ class CartesianProductAtlas(AbstractAtlas):
             msg = f"factor_names must be unique, got {self.factor_names}"
             raise ValueError(msg)
 
-    def __iter__(self) -> Iterator[cxc.AbstractChart]:
+    def __iter__(self) -> Iterator[AbstractChart]:
         """Iterate over charts in the product atlas.
 
         >>> import coordinax.manifolds as cxm
@@ -91,7 +92,7 @@ class CartesianProductAtlas(AbstractAtlas):
         [HyperSphericalAtlas(ndim=2), EuclideanAtlas(ndim=1)]
 
         """
-        return cast("Iterator[cxc.AbstractChart]", iter(self.factors))
+        return cast("Iterator[AbstractChart]", iter(self.factors))
 
     def __getitem__(self, idx: str) -> AbstractAtlas:
         """Allow indexing to access factor charts.
@@ -107,7 +108,7 @@ class CartesianProductAtlas(AbstractAtlas):
         """
         return self.factors[self.factor_names.index(idx)]
 
-    def default_chart(self) -> cxc.CartesianProductChart:
+    def default_chart(self) -> CartesianProductChart:
         """Return a default chart for the product atlas.
 
         Examples
@@ -132,11 +133,11 @@ class CartesianProductAtlas(AbstractAtlas):
         # Get default charts for each factor
         factor_charts = [factor.default_chart() for factor in self.factors]
         # Construct and return the product chart
-        return cxc.CartesianProductChart(
+        return CartesianProductChart(
             factors=tuple(factor_charts), factor_names=self.factor_names
         )
 
-    def has_chart(self, chart: cxc.AbstractChart) -> bool:
+    def has_chart(self, chart: AbstractChart) -> bool:
         """Check if the atlas supports the given chart.
 
         >>> import coordinax.manifolds as cxm
@@ -151,7 +152,7 @@ class CartesianProductAtlas(AbstractAtlas):
 
         """
         return (
-            isinstance(chart, cxc.AbstractCartesianProductChart)
+            isinstance(chart, AbstractCartesianProductChart)
             and chart.factor_names == self.factor_names
             and all(
                 a.has_chart(c) for a, c in zip(self.factors, chart.factors, strict=True)
