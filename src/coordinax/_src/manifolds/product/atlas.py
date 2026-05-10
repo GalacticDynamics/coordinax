@@ -12,7 +12,7 @@ from typing_extensions import override
 import jax
 
 import coordinax.charts as cxc
-from coordinax._src.manifolds.base import AbstractAtlas
+from coordinax._src.base_atlas import AbstractAtlas
 
 
 @jax.tree_util.register_static

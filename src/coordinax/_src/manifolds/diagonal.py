@@ -8,8 +8,8 @@ from typing import Any
 import jax.numpy as jnp
 
 import coordinax.charts as cxc
-from .base import AbstractMetric
 from .custom_types import CDict, OptUSys
+from coordinax._src.base_metric import AbstractMetric
 
 
 class AbstractDiagonalMetric(AbstractMetric):

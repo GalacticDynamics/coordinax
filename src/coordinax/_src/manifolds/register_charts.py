@@ -10,7 +10,8 @@ import plum
 import wadler_lindig as wl
 
 import coordinax.charts as cxc
-from .base import AbstractAtlas, AbstractManifold
+from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_manifold import AbstractManifold
 
 #####################################################################
 # Point Transition Map

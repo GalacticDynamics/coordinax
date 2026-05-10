@@ -2,7 +2,7 @@
 
 __all__ = ("CartesianProductMetric",)
 
-from dataclasses import dataclass
+import dataclasses
 
 from typing import final
 
@@ -12,14 +12,14 @@ import jax.numpy as jnp
 import unxt as u
 
 import coordinax.charts as cxc
-from coordinax._src.manifolds.base import AbstractMetric
+from coordinax._src.base_metric import AbstractMetric
 from coordinax._src.manifolds.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class CartesianProductMetric(AbstractMetric):
     r"""Canonical product metric on a Cartesian product manifold.
 

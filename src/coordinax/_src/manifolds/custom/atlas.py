@@ -2,19 +2,19 @@
 
 __all__ = ("CustomAtlas",)
 
-from dataclasses import dataclass
+import dataclasses
 
 from typing import Any, final
 
 import jax
 
 import coordinax.charts as cxc
-from coordinax._src.manifolds.base import AbstractAtlas
+from coordinax._src.base_atlas import AbstractAtlas
 
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class CustomAtlas(AbstractAtlas):
     r"""Atlas of explicitly registered charts for a custom manifold.
 

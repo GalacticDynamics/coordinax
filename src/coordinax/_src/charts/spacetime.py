@@ -5,7 +5,7 @@ __all__ = ("SpaceTimeCT", "spacetimect")
 from dataclasses import KW_ONLY, field, replace
 
 from jaxtyping import Float
-from typing import Any, cast, final
+from typing import Any, ClassVar, cast, final
 from typing_extensions import override
 
 import jax.tree_util as jtu
@@ -20,6 +20,7 @@ from coordinax._src.base_charts import (
     AbstractFixedComponentsChart,
     chart_dataclass_decorator,
 )
+from coordinax._src.base_manifold import AbstractTopologicalManifold
 from coordinax._src.custom_types import CDict, Ds, Ks
 
 C_DEFAULT = u.StaticQuantity(299_792.458, "km/s")
@@ -83,10 +84,17 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
+    manifold: ClassVar[AbstractTopologicalManifold]  # remove from init
+
     @property
     def time_chart(self) -> AbstractChart[Any, Any]:
         """Time factor chart (always `time1d`)."""
         return time1d
+
+    @property
+    def manifold(self) -> AbstractTopologicalManifold:
+        """The manifold of this chart is determined by the spatial chart."""
+        return self.spatial_chart.manifold
 
     @override
     @property

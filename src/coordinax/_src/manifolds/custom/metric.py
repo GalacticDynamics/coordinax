@@ -2,19 +2,19 @@
 
 __all__ = ("CustomMetric",)
 
-from dataclasses import dataclass
+import dataclasses
 
 from collections.abc import Callable
 from typing import Any, final
 
 import jax
 
-from coordinax._src.manifolds.base import AbstractMetric
+from coordinax._src.base_metric import AbstractMetric
 
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class CustomMetric(AbstractMetric):  # ty: ignore[abstract-method-in-final-class]
     r"""Metric for a {class}`CustomManifold`, defined by user-provided callables.
 

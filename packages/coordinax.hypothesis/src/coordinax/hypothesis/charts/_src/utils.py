@@ -35,7 +35,13 @@ VAR_INPUT: Final = (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYW
 
 def _param_filter(name: str, param: inspect.Parameter, /) -> bool:
     """Filter function to identify parameters."""
-    return name != "self" and param.kind not in VAR_INPUT
+    if name == "self" or param.kind in VAR_INPUT:
+        return False
+    # Skip keyword-only params with defaults (e.g., the inherited `manifold`
+    # field on AbstractChart) — these are metadata, not mathematical parameters.
+    if param.kind == inspect.Parameter.KEYWORD_ONLY and param.default is not EMPTY:
+        return False
+    return True
 
 
 @ft.lru_cache(maxsize=256)

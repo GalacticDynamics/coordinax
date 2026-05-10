@@ -3,6 +3,7 @@
 __all__ = ("AbstractTopologicalManifold", "NoManifold", "no_manifold")
 
 import abc
+import dataclasses
 
 from typing import Any
 
@@ -149,6 +150,7 @@ class AbstractTopologicalManifold(metaclass=abc.ABCMeta):
 
 
 @jtu.register_static
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class NoManifold(AbstractTopologicalManifold):
     """A degenerate placeholder manifold with no charts and no geometry.
 

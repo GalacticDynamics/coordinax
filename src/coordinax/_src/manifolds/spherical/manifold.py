@@ -2,7 +2,7 @@
 
 __all__ = ("HyperSphericalManifold", "twosphere")
 
-from dataclasses import dataclass
+import dataclasses
 
 from typing import final
 
@@ -10,12 +10,12 @@ import jax
 
 from .atlas import HyperSphericalAtlas
 from .metric import HyperSphericalMetric
-from coordinax._src.manifolds.base import AbstractManifold
+from coordinax._src.base_manifold import AbstractManifold
 
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class HyperSphericalManifold(AbstractManifold):
     r"""The unit two-sphere $S^2$ as a smooth manifold.
 

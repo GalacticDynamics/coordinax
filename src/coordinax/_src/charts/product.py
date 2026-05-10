@@ -10,7 +10,7 @@ import abc
 from itertools import chain
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast, final
+from typing import Any, ClassVar, TypeVar, cast, final
 from typing_extensions import override
 
 import jax.tree_util as jtu
@@ -19,6 +19,7 @@ import wadler_lindig as wl
 
 import coordinax.api.charts as cxcapi
 from coordinax._src.base_charts import MISSING, AbstractChart, chart_dataclass_decorator
+from coordinax._src.base_topo import AbstractTopologicalManifold, no_manifold
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 V = TypeVar("V")
@@ -272,6 +273,8 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     factor_names: tuple[str, ...]
     """Factor names for namespaced keys. Must be unique and aligned with `factors`."""
 
+    manifold: ClassVar[AbstractTopologicalManifold]  # remove from init
+
     def __post_init__(self) -> None:
         # Validate lengths match
         if len(self.factors) != len(self.factor_names):
@@ -285,6 +288,17 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         if len(set(self.factor_names)) != len(self.factor_names):
             msg = f"factor_names must be unique, got {self.factor_names}"
             raise ValueError(msg)
+
+    @override
+    @property
+    def manifold(self) -> AbstractTopologicalManifold:  # type: ignore[override]
+        """Return the product manifold of the factor charts' manifolds.
+
+        The manifold of a Cartesian product chart is the Cartesian product of the
+        manifolds of its factors. If any factor has `no_manifold`, the product
+        manifold is also `no_manifold`.
+        """
+        return no_manifold
 
     @override
     @property

@@ -2,20 +2,21 @@
 
 __all__ = ("EmbeddedChart",)
 
-from dataclasses import dataclass
+import dataclasses
 
-from typing import Generic, cast, final
+from typing import ClassVar, Generic, cast, final
 
 import plum
 
 import coordinax.api.manifolds as cxmapi
 import coordinax.charts as cxc
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
+from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax._src.manifolds.custom_types import CDict, Ds, Ks, OptUSys
 
 
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class EmbeddedChart(cxc.AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]):
     r"""Chart for intrinsic coordinates on an embedding manifold.
 
@@ -68,6 +69,8 @@ class EmbeddedChart(cxc.AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks,
     TwoSphereIn3D(radius=Q(2., 'km'))
 
     """
+
+    manifold: ClassVar[AbstractTopologicalManifold]
 
     @property
     def intrinsic(self) -> IntrinsicT:

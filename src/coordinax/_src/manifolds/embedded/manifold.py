@@ -2,7 +2,7 @@
 
 __all__ = ("EmbeddedManifold",)
 
-from dataclasses import dataclass
+import dataclasses
 
 from typing import Any, Final, Generic, cast, final
 from typing_extensions import override
@@ -14,7 +14,8 @@ import coordinax.api.manifolds as cxmapi
 import coordinax.charts as cxc
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
 from .metric import InducedMetric
-from coordinax._src.manifolds.base import AbstractAtlas, AbstractManifold
+from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.manifolds.custom_types import CDict, OptUSys
 
 UNSUPPORTED_CHART_MESSAGE: Final[str] = (
@@ -24,7 +25,7 @@ UNSUPPORTED_CHART_MESSAGE: Final[str] = (
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     r"""Embedded manifold.
 

@@ -2,22 +2,21 @@
 
 __all__ = ("CustomManifold",)
 
-from dataclasses import dataclass
+
+import dataclasses
 
 from typing import final
 
 import jax
 
-from coordinax._src.manifolds.base import (
-    AbstractAtlas,
-    AbstractManifold,
-    AbstractMetric,
-)
+from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base_metric import AbstractMetric
 
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class CustomManifold(AbstractManifold):
     r"""Smooth manifold with a caller-defined explicit atlas.
 

@@ -2,8 +2,7 @@
 
 __all__ = ("AnnotatedNotIntrospectable",)
 
-from dataclasses import dataclass
-
+import dataclasses
 from typing import TypeVar, final
 
 import beartype
@@ -25,7 +24,7 @@ BeartypeValidator = beartype.vale.Is[lambda x: x].__class__  # ty: ignore[unreso
 
 
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class AnnotatedNotIntrospectable(AbstractNotIntrospectable[T]):
     """Wrapper for Annotated types that are not introspectable."""
 

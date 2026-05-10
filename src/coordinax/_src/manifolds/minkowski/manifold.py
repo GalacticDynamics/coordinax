@@ -13,7 +13,7 @@ import jax
 
 from .atlas import MinkowskiAtlas
 from .metric import MinkowskiMetric
-from coordinax._src.manifolds.base import AbstractManifold
+from coordinax._src.base_manifold import AbstractManifold
 
 
 @jax.tree_util.register_static

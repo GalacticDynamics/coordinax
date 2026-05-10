@@ -74,8 +74,11 @@ MISSINGDEFAULT = MissingDefault()
 
 
 @jtu.register_static
+@chart_dataclass_decorator
 class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
+
+    _: dataclasses.KW_ONLY
 
     manifold: AbstractTopologicalManifold = no_manifold
     """The manifold that this chart belongs to.

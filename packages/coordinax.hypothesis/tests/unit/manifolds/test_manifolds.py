@@ -43,7 +43,7 @@ def test_manifolds_generates_valid_manifold_instances(
     assert isinstance(manifold, cxm.AbstractManifold)
     assert isinstance(manifold.atlas, cxm.AbstractAtlas)
     assert manifold.atlas.ndim == manifold.ndim
-    assert isinstance(manifold.default_chart, cxc.AbstractChart)
+    assert isinstance(manifold.default_chart(), cxc.AbstractChart)
 
 
 @given(atlas=cxst.atlases(cxm.CustomAtlas))
@@ -66,9 +66,9 @@ def test_custom_manifold_strategy_basic(manifold: cxm.CustomManifold) -> None:
     # Strategy output should always be the concrete manifold wrapper.
     assert isinstance(manifold, cxm.CustomManifold)
     # The inherited manifold contract guarantees default_chart is usable.
-    assert manifold.has_chart(manifold.default_chart)
+    assert manifold.has_chart(manifold.default_chart())
     # Manifold dimension is forwarded from atlas dimension.
-    assert manifold.default_chart.ndim == manifold.ndim
+    assert manifold.default_chart().ndim == manifold.ndim
 
 
 @given(
@@ -88,7 +88,7 @@ def test_custom_manifold_required_chart_classes(manifold: cxm.CustomManifold) ->
 def test_custom_manifold_from_strategy_selector(manifold: cxm.CustomManifold) -> None:
     """SearchStrategy manifold_cls draws then redispatches to typed generation."""
     assert isinstance(manifold, cxm.CustomManifold)
-    assert manifold.has_chart(manifold.default_chart)
+    assert manifold.has_chart(manifold.default_chart())
 
 
 @given(
@@ -126,4 +126,4 @@ def test_custom_atlas_from_type_registration(atlas: cxm.CustomAtlas) -> None:
 def test_custom_manifold_from_type_registration(manifold: cxm.CustomManifold) -> None:
     """st.from_type(CustomManifold) resolves to the registered strategy."""
     assert isinstance(manifold, cxm.CustomManifold)
-    assert manifold.has_chart(manifold.default_chart)
+    assert manifold.has_chart(manifold.default_chart())

@@ -9,7 +9,7 @@ import plum
 
 import coordinax.api.manifolds as cxmapi
 import coordinax.charts as cxc
-from .base import AbstractManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.manifolds.custom_types import CDict
 
 

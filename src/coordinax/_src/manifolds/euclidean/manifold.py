@@ -2,7 +2,7 @@
 
 __all__ = ("EuclideanManifold", "euclidean3d")
 
-from dataclasses import dataclass
+import dataclasses
 
 from typing import final
 
@@ -10,12 +10,12 @@ import jax
 
 from .atlas import EuclideanAtlas
 from .metric import EuclideanMetric
-from coordinax._src.manifolds.base import AbstractManifold
+from coordinax._src.base_manifold import AbstractManifold
 
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class EuclideanManifold(AbstractManifold):
     r"""The $n$-dimensional Euclidean manifold $\mathbb{R}^n$.
 

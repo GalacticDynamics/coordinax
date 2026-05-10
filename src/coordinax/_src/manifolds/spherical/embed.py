@@ -2,7 +2,7 @@
 
 __all__ = ("TwoSphereIn3D", "embedded_twosphere")
 
-from dataclasses import dataclass, field
+import dataclasses
 
 from typing import Any, final
 
@@ -21,7 +21,7 @@ from coordinax._src.manifolds.euclidean import EuclideanManifold
 
 
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
     r"""Embedding of ``cxc.SphericalTwoSphere`` as a 2-sphere in a 3D ambient chart.
 
@@ -85,7 +85,7 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
 
     """
 
-    radius: u.AbstractQuantity | float | int = field()
+    radius: u.AbstractQuantity | float | int = dataclasses.field()
 
     @property
     def intrinsic(self) -> cxc.AbstractChart[Any, Any]:

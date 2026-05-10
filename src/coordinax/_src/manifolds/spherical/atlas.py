@@ -2,15 +2,15 @@
 
 __all__ = ("HyperSphericalAtlas",)
 
+import dataclasses
 import weakref
-from dataclasses import dataclass
 
 from typing import Any, Final, TypeVar, final
 
 import jax
 
 import coordinax.charts as cxc
-from coordinax._src.manifolds.base import AbstractAtlas
+from coordinax._src.base_atlas import AbstractAtlas
 
 CT = TypeVar("CT", bound=type[cxc.AbstractChart[Any, Any]])
 
@@ -27,7 +27,7 @@ SPHERICAL_ATLAS_ELIGIBLE_CHARTS: Final[
 
 @jax.tree_util.register_static
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class HyperSphericalAtlas(AbstractAtlas):
     """Atlas for spherical manifolds (e.g. the circle or 2-sphere).
 

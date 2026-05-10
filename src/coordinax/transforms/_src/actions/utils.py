@@ -5,7 +5,7 @@ This module defines helpers for operator implementations.
 
 __all__: tuple[str, ...] = ("Neg",)
 
-from dataclasses import dataclass
+import dataclasses
 
 from typing import Any, final
 
@@ -14,7 +14,7 @@ import jax.tree as jtu
 
 
 @final
-@dataclass(slots=True)
+@dataclasses.dataclass(slots=True)
 class Neg:
     """A parameter that negates another parameter."""
 

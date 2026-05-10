@@ -52,13 +52,13 @@ __all__ = (
 from ._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.manifolds"):
+    from ._src.base_atlas import AbstractAtlas
+    from ._src.base_manifold import AbstractManifold
+    from ._src.base_metric import AbstractMetric
     from ._src.base_topo import AbstractTopologicalManifold, NoManifold, no_manifold
     from ._src.manifolds import (
-        AbstractAtlas,
         AbstractDiagonalMetric,
         AbstractEmbeddingMap,
-        AbstractManifold,
-        AbstractMetric,
         CartesianProductAtlas,
         CartesianProductManifold,
         CartesianProductMetric,

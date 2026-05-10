@@ -1,7 +1,6 @@
 """Manifolds in coordinax."""
 
 from .angle_between import *
-from .base import *
 from .custom import *
 from .diagonal import *
 from .embedded import *
