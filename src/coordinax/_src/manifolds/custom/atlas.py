@@ -8,8 +8,8 @@ from typing import Any, final
 
 import jax
 
-import coordinax.charts as cxc
 from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_charts import AbstractChart
 
 
 @jax.tree_util.register_static
@@ -49,10 +49,10 @@ class CustomAtlas(AbstractAtlas):
 
     """
 
-    charts: tuple[type[cxc.AbstractChart[Any, Any]], ...]
+    charts: tuple[type[AbstractChart[Any, Any]], ...]
     """Explicitly registered chart classes for this atlas."""
 
-    chart_default: cxc.AbstractChart[Any, Any]
+    chart_default: AbstractChart[Any, Any]
     """Stored default chart instance provided at construction."""
 
     def __post_init__(self) -> None:
@@ -81,7 +81,7 @@ class CustomAtlas(AbstractAtlas):
                     f"but expected {self.ndim}."
                 )
 
-    def default_chart(self) -> cxc.AbstractChart[Any, Any]:
+    def default_chart(self) -> AbstractChart[Any, Any]:
         """Return the default chart for this atlas."""
         return self.chart_default
 
@@ -90,6 +90,6 @@ class CustomAtlas(AbstractAtlas):
         """Intrinsic dimension of the manifold."""
         return self.chart_default.ndim
 
-    def has_chart(self, chart: cxc.AbstractChart[Any, Any]) -> bool:
+    def has_chart(self, chart: AbstractChart[Any, Any]) -> bool:
         """Return whether the atlas supports the given chart."""
         return type(chart) in self.charts and chart.ndim == self.ndim

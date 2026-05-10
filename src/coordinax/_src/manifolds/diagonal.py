@@ -7,7 +7,7 @@ from typing import Any
 
 import jax.numpy as jnp
 
-import coordinax.charts as cxc
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_metric import AbstractMetric
 from coordinax._src.custom_types import CDict, OptUSys
 
@@ -114,7 +114,7 @@ class AbstractDiagonalMetric(AbstractMetric):
     """
 
     def is_diagonal(
-        self, chart: cxc.AbstractChart[Any, Any], /, *, at: CDict, usys: OptUSys = None
+        self, chart: AbstractChart[Any, Any], /, *, at: CDict, usys: OptUSys = None
     ) -> Bool[Array, ""]:
         r"""Return ``True`` as a structural guarantee of diagonality.
 

@@ -9,15 +9,16 @@ from typing import Any, Final
 import plum
 import wadler_lindig as wl
 
-import coordinax.charts as cxc
+import coordinax.api.charts as cxcapi
 from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_manifold import AbstractManifold
 
 #####################################################################
 # Point Transition Map
 
 
-_ATLAS_MSG: Final[Callable[[AbstractAtlas, cxc.AbstractChart[Any, Any]], str]] = (
+_ATLAS_MSG: Final[Callable[[AbstractAtlas, AbstractChart[Any, Any]], str]] = (
     lambda a, c: (
         f"Atlas {a} does not support chart {wl.pformat(c, include_params=False)}"
     )
@@ -28,8 +29,8 @@ _ATLAS_MSG: Final[Callable[[AbstractAtlas, cxc.AbstractChart[Any, Any]], str]] =
 def pt_map(
     x: Any,
     atlas: AbstractAtlas,
-    chart_from: cxc.AbstractChart,
-    chart_to: cxc.AbstractChart,
+    chart_from: AbstractChart,
+    chart_to: AbstractChart,
     *args: Any,
     **kwargs: Any,
 ) -> Any:
@@ -57,7 +58,7 @@ def pt_map(
         raise ValueError(_ATLAS_MSG(atlas, chart_from))
 
     # If charts are supported, delegate to ptm
-    return cxc.pt_map(x, chart_from, chart_to, *args, **kwargs)
+    return cxcapi.pt_map(x, chart_from, chart_to, *args, **kwargs)
 
 
 # default route
@@ -65,8 +66,8 @@ def pt_map(
 def pt_map(
     x: Any,
     manifold: AbstractManifold,
-    chart_from: cxc.AbstractChart,
-    chart_to: cxc.AbstractChart,
+    chart_from: AbstractChart,
+    chart_to: AbstractChart,
     *args: Any,
     **kwargs: Any,
 ) -> Any:
@@ -88,7 +89,7 @@ def pt_map(
 
     """
     # Redispatch to the atlas
-    return cxc.pt_map(x, manifold.atlas, chart_from, chart_to, *args, **kwargs)
+    return cxcapi.pt_map(x, manifold.atlas, chart_from, chart_to, *args, **kwargs)
 
 
 # ===================================================================

@@ -7,9 +7,10 @@ from typing import Final, cast
 
 import plum
 
+import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
 from .manifold import EmbeddedManifold
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 
 AMBIGUOUS_CHART_POINT_REALIZATION_MAP_MSG: Final[str] = (
@@ -22,8 +23,8 @@ AMBIGUOUS_CHART_POINT_REALIZATION_MAP_MSG: Final[str] = (
 def pt_map(
     p: CDict,
     manifold: EmbeddedManifold,
-    from_chart: cxc.AbstractChart,
-    to_chart: cxc.AbstractChart,
+    from_chart: AbstractChart,
+    to_chart: AbstractChart,
     /,
     *,
     usys: OptUSys = None,
@@ -43,13 +44,11 @@ def pt_map(
                      embed_map=TwoSphereIn3D(radius=Q(1, 'kpc')))
     >>> x_cart = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
 
-    >>> x_sph2 = cxc.pt_map(x_cart, manifold,
-    ...                                    cxc.cart3d, cxc.loncoslat_sph2)
+    >>> x_sph2 = cxc.pt_map(x_cart, manifold, cxc.cart3d, cxc.loncoslat_sph2)
     >>> x_sph2
     {'lon_coslat': Q(0.66164791, 'rad'), 'lat': Q(53.3007748, 'deg')}
 
-    >>> cxc.pt_map(x_sph2, manifold,
-    ...            cxc.loncoslat_sph2, cxc.cart3d)
+    >>> cxc.pt_map(x_sph2, manifold, cxc.loncoslat_sph2, cxc.cart3d)
     {'x': Q(0.26726124, 'kpc'), 'y': Q(0.53452248, 'kpc'),
      'z': Q(0.80178373, 'kpc')}
 
@@ -57,7 +56,7 @@ def pt_map(
     # First check if the intrinsic and ambient manifolds are the same, in which
     # case we can just delegate to the chart-level transition map.
     if manifold.intrinsic == manifold.ambient:
-        out = cxc.pt_map(p, from_chart, to_chart, manifold.intrinsic, usys=usys)
+        out = cxcapi.pt_map(p, from_chart, to_chart, manifold.intrinsic, usys=usys)
         return cast("CDict", out)
 
     # Now that we know the intrinsic and ambient manifolds are different, we can

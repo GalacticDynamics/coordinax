@@ -7,8 +7,8 @@ from typing import cast
 
 import plum
 
+import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
 from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.custom_types import CDict
 
@@ -37,6 +37,6 @@ def guess_manifold(obj: CDict, /) -> AbstractManifold:
     EuclideanManifold(ndim=3)
 
     """
-    chart = cxc.guess_chart(obj)
+    chart = cxcapi.guess_chart(obj)
     out = cxmapi.guess_manifold(chart)
     return cast("AbstractManifold", out)

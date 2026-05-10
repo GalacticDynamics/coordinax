@@ -13,7 +13,7 @@ import unxt as u
 
 import coordinax.angles as cxa
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.base_metric import AbstractMetric
 from coordinax._src.custom_types import CDict, OptUSys
@@ -23,7 +23,7 @@ from coordinax.internal import QuantityMatrix, UnitsMatrix, pack_to_qmatrix
 @plum.dispatch
 def angle_between(
     manifold: AbstractManifold,
-    chart: cxc.AbstractChart,
+    chart: AbstractChart,
     uvec: CDict,
     vvec: CDict,
     /,
@@ -54,7 +54,7 @@ def angle_between(
 @plum.dispatch
 def angle_between(
     metric: AbstractMetric,
-    chart: cxc.AbstractChart,
+    chart: AbstractChart,
     uvec: CDict,
     vvec: CDict,
     /,

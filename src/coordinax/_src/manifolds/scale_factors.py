@@ -10,7 +10,7 @@ import plum
 import unxt as u
 
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.base_metric import AbstractMetric
 from coordinax._src.custom_types import CDict, OptUSys
@@ -20,7 +20,7 @@ from coordinax.internal import QuantityMatrix, UnitsMatrix
 @plum.dispatch
 def scale_factors(
     manifold: AbstractManifold,
-    chart: cxc.AbstractChart,
+    chart: AbstractChart,
     /,
     *,
     at: CDict,
@@ -51,7 +51,7 @@ def scale_factors(
 @plum.dispatch
 def scale_factors(
     metric: AbstractMetric,
-    chart: cxc.AbstractChart,
+    chart: AbstractChart,
     /,
     *,
     at: CDict,

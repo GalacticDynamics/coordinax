@@ -8,16 +8,17 @@ from typing import ClassVar, Generic, cast, final
 
 import plum
 
+import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class EmbeddedChart(cxc.AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]):
+class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]):
     r"""Chart for intrinsic coordinates on an embedding manifold.
 
     This is a convenience wrapper that combines an intrinsic chart with an
@@ -128,7 +129,7 @@ class EmbeddedChart(cxc.AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks,
         return self.intrinsic.coord_dimensions
 
     @property
-    def cartesian(self) -> cxc.AbstractChart:
+    def cartesian(self) -> AbstractChart:
         """The ambient Cartesian chart for the embedding.
 
         >>> import coordinax.manifolds as cxm
@@ -222,7 +223,7 @@ def pt_project(
 @plum.dispatch
 def pt_project(
     p_ambient: CDict,
-    from_chart: cxc.AbstractChart,
+    from_chart: AbstractChart,
     embedding: EmbeddedChart,
     /,
     *,
@@ -238,7 +239,7 @@ def pt_project(
     {'theta': Q(45, 'deg'), 'phi': Q(30, 'deg')}
 
     """
-    p_ambient: CDict = cxc.pt_map(  # ty: ignore[invalid-assignment]
+    p_ambient: CDict = cxcapi.pt_map(  # ty: ignore[invalid-assignment]
         p_ambient, from_chart, embedding.ambient, usys=usys
     )
     # Redispatch to the more general pt_project that handles chart
@@ -304,7 +305,9 @@ def pt_map(
         raise ValueError(msg)
 
     p_ambient = cxmapi.pt_embed(p, from_chart)  # TODO: support usys
-    p_ambient = cxc.pt_map(p_ambient, from_chart.ambient, to_chart.ambient, usys=usys)
+    p_ambient = cxcapi.pt_map(
+        p_ambient, from_chart.ambient, to_chart.ambient, usys=usys
+    )
     out = cxmapi.pt_project(p_ambient, to_chart)  # TODO: support usys
     return cast("CDict", out)
 
@@ -312,7 +315,7 @@ def pt_map(
 @plum.dispatch
 def pt_map(
     p: CDict,
-    from_chart: cxc.AbstractChart,
+    from_chart: AbstractChart,
     to_chart: EmbeddedChart,
     /,
     *,
@@ -351,7 +354,7 @@ def pt_map(
     {'theta': 1, 'phi': 0.5}
 
     """
-    p_ambient = cxc.pt_map(p, from_chart, to_chart.ambient, usys=usys)
+    p_ambient = cxcapi.pt_map(p, from_chart, to_chart.ambient, usys=usys)
     out = cxmapi.pt_project(p_ambient, to_chart, usys=usys)
     return cast("CDict", out)
 
@@ -360,7 +363,7 @@ def pt_map(
 def pt_map(
     p: CDict,
     from_chart: EmbeddedChart,
-    to_chart: cxc.AbstractChart,
+    to_chart: AbstractChart,
     /,
     usys: OptUSys = None,
 ) -> CDict:
@@ -395,5 +398,5 @@ def pt_map(
 
     """
     p_ambient = cxmapi.pt_embed(p, from_chart)
-    out = cxc.pt_map(p_ambient, from_chart.ambient, to_chart, usys=usys)
+    out = cxcapi.pt_map(p_ambient, from_chart.ambient, to_chart, usys=usys)
     return cast("CDict", out)

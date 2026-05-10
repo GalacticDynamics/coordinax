@@ -10,11 +10,12 @@ from typing_extensions import override
 import jax
 import plum
 
+import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
 from .metric import InducedMetric
 from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.custom_types import CDict, OptUSys
 
@@ -66,8 +67,8 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     def embed(
         self,
         intrinsic_point: CDict,
-        from_intrinsic_chart: cxc.AbstractChart[Any, Any],
-        to_ambient_chart: cxc.AbstractChart[Any, Any],
+        from_intrinsic_chart: AbstractChart[Any, Any],
+        to_ambient_chart: AbstractChart[Any, Any],
         /,
         *,
         usys: OptUSys = None,
@@ -80,8 +81,8 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     def project(
         self,
         ambient_point: CDict,
-        from_ambient_chart: cxc.AbstractChart[Any, Any],
-        to_intrinsic_chart: cxc.AbstractChart[Any, Any],
+        from_ambient_chart: AbstractChart[Any, Any],
+        to_intrinsic_chart: AbstractChart[Any, Any],
         /,
         *,
         usys: OptUSys = None,
@@ -127,8 +128,8 @@ def pt_embed(
 @plum.dispatch
 def pt_embed(
     p_intrinsic: CDict,
-    from_intrinsic_chart: cxc.AbstractChart,
-    to_ambient_chart: cxc.AbstractChart,
+    from_intrinsic_chart: AbstractChart,
+    to_ambient_chart: AbstractChart,
     manifold: EmbeddedManifold,
     /,
     *,
@@ -164,8 +165,8 @@ def pt_embed(
 @plum.dispatch
 def pt_embed(
     p_intrinsic: CDict,
-    from_intrinsic_chart: cxc.AbstractChart,
-    to_ambient_chart: cxc.AbstractChart,
+    from_intrinsic_chart: AbstractChart,
+    to_ambient_chart: AbstractChart,
     embed_map: AbstractEmbeddingMap,
     /,
     *,
@@ -173,13 +174,13 @@ def pt_embed(
 ) -> CDict:
     r"""Embed intrinsic point coordinates into ambient coordinates."""
     # Step 1: point transition from intrinsic chart to embedding's intrinsic chart
-    p_intrinsic_in_embedding_chart = cxc.pt_map(
+    p_intrinsic_in_embedding_chart = cxcapi.pt_map(
         p_intrinsic, from_intrinsic_chart, embed_map.intrinsic, usys=usys
     )
     # Step 2: embed from embedding's intrinsic chart to ambient chart
     p_ambient = embed_map.embed(p_intrinsic_in_embedding_chart)
     # Step 3: point transition from embedding's ambient chart to target chart
-    p_ambient_in_target_chart = cxc.pt_map(
+    p_ambient_in_target_chart = cxcapi.pt_map(
         p_ambient, embed_map.ambient, to_ambient_chart, usys=usys
     )
     return cast("CDict", p_ambient_in_target_chart)
@@ -209,8 +210,8 @@ def pt_project(
 @plum.dispatch
 def pt_project(
     p_ambient: CDict,
-    from_ambient_chart: cxc.AbstractChart,
-    to_intrinsic_chart: cxc.AbstractChart,
+    from_ambient_chart: AbstractChart,
+    to_intrinsic_chart: AbstractChart,
     manifold: EmbeddedManifold,
     /,
     *,
@@ -246,8 +247,8 @@ def pt_project(
 @plum.dispatch
 def pt_project(
     p_ambient: CDict,
-    from_ambient_chart: cxc.AbstractChart,
-    to_intrinsic_chart: cxc.AbstractChart,
+    from_ambient_chart: AbstractChart,
+    to_intrinsic_chart: AbstractChart,
     embed_map: AbstractEmbeddingMap,
     /,
     *,
@@ -255,13 +256,13 @@ def pt_project(
 ) -> CDict:
     r"""Project ambient coordinates onto intrinsic chart coordinates."""
     # Step 1: point transition from ambient chart to embedding's ambient chart
-    p_ambient_in_embedding_chart = cxc.pt_map(
+    p_ambient_in_embedding_chart = cxcapi.pt_map(
         p_ambient, from_ambient_chart, embed_map.ambient, usys=usys
     )
     # Step 2: project from embedding's ambient chart to intrinsic chart
     p_intrinsic = embed_map.project(p_ambient_in_embedding_chart)
     # Step 3: point transition from embedding's intrinsic chart to target chart
-    p_intrinsic_in_target_chart = cxc.pt_map(
+    p_intrinsic_in_target_chart = cxcapi.pt_map(
         p_intrinsic, embed_map.intrinsic, to_intrinsic_chart, usys=usys
     )
     return cast("CDict", p_intrinsic_in_target_chart)
