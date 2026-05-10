@@ -8,13 +8,13 @@ from typing_extensions import override
 
 import jax.tree_util as jtu
 
-from .base import (
+from coordinax._src.base_charts import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
     chart_dataclass_decorator,
+    is_not_abstract_chart_subclass,
 )
-from .custom_types import Ang, Len
-from .utils import is_not_abstract_chart_subclass
+from coordinax._src.custom_types import Ang, Len
 
 
 class Abstract2D(AbstractDimensionalFlag, n=2):

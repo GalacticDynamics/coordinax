@@ -18,8 +18,8 @@ import plum
 import wadler_lindig as wl
 
 import coordinax.api.charts as cxcapi
-from .base import MISSING, AbstractChart, chart_dataclass_decorator
-from .custom_types import CDict, Ds, Ks, OptUSys
+from coordinax._src.base_charts import MISSING, AbstractChart, chart_dataclass_decorator
+from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 V = TypeVar("V")
 

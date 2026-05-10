@@ -28,12 +28,16 @@ import jax.tree_util as jtu
 import unxt as u
 
 from . import checks
-from .base import AbstractFixedComponentsChart, CDictT, chart_dataclass_decorator
 from .constants import Deg0, Deg90, Deg180
-from .custom_types import Ang, Ds, Ks
 from .d1 import Abstract1D
 from .d2 import Abstract2D
 from .exceptions import NoGlobalCartesianChartError
+from coordinax._src.base_charts import (
+    AbstractFixedComponentsChart,
+    CDictT,
+    chart_dataclass_decorator,
+)
+from coordinax._src.custom_types import Ang, Ds, Ks
 
 _MSG_NO_CART: Final = (
     "{cls} has no global Cartesian representation. Use an embedding "

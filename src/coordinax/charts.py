@@ -160,18 +160,20 @@ __all__ = (
 from coordinax._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.charts"):
-    from coordinax._src.charts import (
+    from coordinax._src.base_charts import (
         CHART_CLASSES,
         DIMENSIONAL_FLAGS,
+        AbstractChart,
+        AbstractDimensionalFlag,
+        AbstractFixedComponentsChart,
+    )
+    from coordinax._src.charts import (
         Abstract0D,
         Abstract1D,
         Abstract2D,
         Abstract3D,
         Abstract6D,
         AbstractCartesianProductChart,
-        AbstractChart,
-        AbstractDimensionalFlag,
-        AbstractFixedComponentsChart,
         AbstractFlatCartesianProductChart,
         AbstractND,
         AbstractSpherical3D,
@@ -223,12 +225,7 @@ with install_import_hook("coordinax.charts"):
         sph3d,
         time1d,
     )
-    from coordinax.api.charts import (
-        cartesian_chart,
-        cdict,
-        guess_chart,
-        pt_map,
-    )
+    from coordinax.api.charts import cartesian_chart, cdict, guess_chart, pt_map
 
 
 del install_import_hook

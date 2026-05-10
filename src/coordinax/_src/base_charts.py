@@ -33,8 +33,8 @@ import wadler_lindig as wl
 import dataclassish
 import unxt as u
 
+from .base_topo import AbstractTopologicalManifold, no_manifold
 from .custom_types import CDict, Ds, Ks
-from .utils import is_abstract_class, is_not_abstract_chart_subclass
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")
@@ -76,6 +76,12 @@ MISSINGDEFAULT = MissingDefault()
 @jtu.register_static
 class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
+
+    manifold: AbstractTopologicalManifold = no_manifold
+    """The manifold that this chart belongs to.
+
+    Default is `no_manifold` for charts that do not belong to any manifold.
+    """
 
     def __init_subclass__(cls, **kw: Any) -> None:
         # This allows multiple inheritance with other ABCs that might or might
@@ -308,6 +314,16 @@ def cartesian_chart(obj: AbstractChart, /) -> AbstractChart:
 
     """
     return obj.cartesian
+
+
+def is_abstract_class(cls: type, /) -> bool:
+    """Determine if a class is abstract."""
+    return inspect.isabstract(cls) or cls.__name__.startswith("Abstract")
+
+
+def is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
+    """Check if cls is a non-abstract non-subclass of AbstractChart."""
+    return not is_abstract_class(cls) and not issubclass(cls, AbstractChart)
 
 
 ##############################################################################

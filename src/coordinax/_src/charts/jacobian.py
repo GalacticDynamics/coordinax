@@ -52,9 +52,9 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.api.charts as cxcapi
-from .base import AbstractChart
-from .custom_types import CDict, OptUSys
 from .d2 import Cart2D, Polar2D
+from coordinax._src.base_charts import AbstractChart
+from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import (
     QuantityMatrix,
     UnitsMatrix,

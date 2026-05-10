@@ -8,14 +8,14 @@ from typing_extensions import override
 
 import jax.tree_util as jtu
 
-from .base import (
+from .exceptions import NoGlobalCartesianChartError
+from coordinax._src.base_charts import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
     chart_dataclass_decorator,
+    is_not_abstract_chart_subclass,
 )
-from .custom_types import Len, Spd
-from .exceptions import NoGlobalCartesianChartError
-from .utils import is_not_abstract_chart_subclass
+from coordinax._src.custom_types import Len, Spd
 
 
 class Abstract6D(AbstractDimensionalFlag, n=6):

@@ -13,7 +13,7 @@ import unxt as u
 
 import coordinax.charts as cxc
 import coordinax.hypothesis.main as cxst
-from coordinax._src.charts import CHART_CLASSES
+from coordinax._src.base_charts import CHART_CLASSES
 
 # =============================================================================
 # AbstractChart registration

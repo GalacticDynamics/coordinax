@@ -2,7 +2,6 @@
 
 __all__ = ()
 
-import inspect
 
 from jaxtyping import ArrayLike
 from typing import Any, Final, overload
@@ -10,7 +9,7 @@ from typing import Any, Final, overload
 import unxt as u
 from unxt.quantity import AllowValue, BareQuantity
 
-from .custom_types import OptUSys
+from coordinax._src.custom_types import OptUSys
 
 RAD: Final = u.unit("rad")
 ANGLE: Final = u.dimension("angle")
@@ -74,15 +73,3 @@ def uconvert_to_rad(value: Any, usys: OptUSys, /) -> Any:
 
     raw_rad = u.uconvert_value(RAD, source_unit, u.ustrip(AllowValue, value))
     return BareQuantity(raw_rad, unit=RAD) if unit is not None else raw_rad
-
-
-def is_abstract_class(cls: type, /) -> bool:
-    """Determine if a class is abstract."""
-    return inspect.isabstract(cls) or cls.__name__.startswith("Abstract")
-
-
-def is_not_abstract_chart_subclass(cls: type[Any], /) -> bool:
-    """Check if cls is a non-abstract non-subclass of AbstractChart."""
-    from .base import AbstractChart  # noqa: PLC0415
-
-    return not is_abstract_class(cls) and not issubclass(cls, AbstractChart)

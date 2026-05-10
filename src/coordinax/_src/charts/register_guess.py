@@ -10,12 +10,16 @@ import plum
 import unxt as u
 
 import coordinax.api.charts as cxcapi
-from .base import NON_ABC_CHART_CLASSES, AbstractChart, AbstractFixedComponentsChart
-from .custom_types import CDict
 from .d1 import cart1d
 from .d2 import cart2d
 from .d3 import cart3d
 from .dn import cartnd
+from coordinax._src.base_charts import (
+    NON_ABC_CHART_CLASSES,
+    AbstractChart,
+    AbstractFixedComponentsChart,
+)
+from coordinax._src.custom_types import CDict
 
 
 # TODO: speed this up. The problem is that caching the results breaks something,
