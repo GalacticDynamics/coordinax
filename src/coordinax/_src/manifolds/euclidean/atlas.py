@@ -3,8 +3,9 @@
 __all__ = ("EuclideanAtlas",)
 
 import dataclasses
+import weakref
 
-from typing import Any, ClassVar, TypeVar, final
+from typing import Any, TypeVar, final
 
 import jax
 
@@ -21,7 +22,13 @@ EUCLIDEAN_ATLAS_DEFAULT_CHARTS: dict[int, cxc.AbstractChart[Any, Any]] = {
 }
 
 
+EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS: weakref.WeakSet[type[cxc.AbstractChart[Any, Any]]] = (
+    weakref.WeakSet()
+)
+
+
 def _can_common_point_transition(chart: cxc.AbstractChart, dim: int, /) -> bool:
+    """Return whether ``chart`` maps to the default Cartesian chart for ``dim``."""
     expect = EUCLIDEAN_ATLAS_DEFAULT_CHARTS.get(dim)
     if expect is None:
         return False
@@ -143,8 +150,6 @@ class EuclideanAtlas(AbstractAtlas):
     ndim: int
     """Dimension of the Euclidean manifold."""
 
-    _ELIGIBLE_CHARTS: ClassVar[set[type[cxc.AbstractChart[Any, Any]]]] = set()
-
     def default_chart(self) -> cxc.AbstractChart[Any, Any]:
         """Return the default chart for this atlas.
 
@@ -198,7 +203,7 @@ class EuclideanAtlas(AbstractAtlas):
 
         """
         return chart.ndim == self.ndim and (
-            type(chart) in self._ELIGIBLE_CHARTS
+            type(chart) in EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS
             or _can_common_point_transition(chart, self.ndim)
         )
 
@@ -212,7 +217,7 @@ class EuclideanAtlas(AbstractAtlas):
         conditions are met.
 
         """
-        cls._ELIGIBLE_CHARTS.add(registrant)
+        EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS.add(registrant)
         return registrant
 
 

@@ -2,9 +2,10 @@
 
 __all__ = ("HyperSphericalAtlas",)
 
+import weakref
 from dataclasses import dataclass
 
-from typing import Any, ClassVar, Final, TypeVar, final
+from typing import Any, Final, TypeVar, final
 
 import jax
 
@@ -18,6 +19,10 @@ SPHERICAL_ATLAS_DEFAULT_CHARTS: Final[dict[int, cxc.AbstractChart[Any, Any]]] = 
     1: cxc.sph1,
     2: cxc.sph2,
 }
+
+SPHERICAL_ATLAS_ELIGIBLE_CHARTS: Final[
+    weakref.WeakSet[type[cxc.AbstractChart[Any, Any]]]
+] = weakref.WeakSet()
 
 
 @jax.tree_util.register_static
@@ -59,8 +64,6 @@ class HyperSphericalAtlas(AbstractAtlas):
     ndim: int = 2
     """Dimension of the two-sphere."""
 
-    _ELIGIBLE_CHARTS: ClassVar[set[type[cxc.AbstractChart[Any, Any]]]] = set()
-
     def default_chart(self) -> cxc.AbstractChart[Any, Any]:
         """Return the default chart (SphericalTwoSphere) for this atlas."""
         return SPHERICAL_ATLAS_DEFAULT_CHARTS[self.ndim]
@@ -81,7 +84,9 @@ class HyperSphericalAtlas(AbstractAtlas):
         False
 
         """
-        return (chart.ndim == self.ndim) and (type(chart) in self._ELIGIBLE_CHARTS)
+        return (chart.ndim == self.ndim) and (
+            type(chart) in SPHERICAL_ATLAS_ELIGIBLE_CHARTS
+        )
 
     @classmethod
     def register(cls, registrant: CT, /) -> CT:
@@ -92,12 +97,16 @@ class HyperSphericalAtlas(AbstractAtlas):
         >>> import coordinax.manifolds as cxm
         >>> import coordinax.charts as cxc
 
-        >>> cxc.SphericalTwoSphere in cxm.HyperSphericalAtlas._ELIGIBLE_CHARTS
+        >>> cxc.SphericalTwoSphere in SPHERICAL_ATLAS_ELIGIBLE_CHARTS
         True
 
         """
-        cls._ELIGIBLE_CHARTS.add(registrant)
+        SPHERICAL_ATLAS_ELIGIBLE_CHARTS.add(registrant)
         return registrant
+
+
+# ===================================================================
+# Register eligible charts for this atlas.
 
 
 def _concrete_subclasses(cls: type, /) -> set[type]:
