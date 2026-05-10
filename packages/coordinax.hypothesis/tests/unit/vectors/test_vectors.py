@@ -25,7 +25,7 @@ def test_vectors_basic(vec: cxv.Point) -> None:
     """vectors() should generate valid Point instances."""
     assert isinstance(vec, cxv.Point)
     assert set(vec.data.keys()) == set(vec.chart.components)
-    assert vec.manifold.has_chart(vec.chart)
+    assert vec.M.has_chart(vec.chart)
 
 
 @given(vec=vector_strategy(cxc.cart3d))
@@ -41,7 +41,7 @@ def test_vectors_chart_strategy(vec: cxv.Point) -> None:
     """vectors(chart_strategy) should draw a chart and generate a valid point."""
     assert isinstance(vec, cxv.Point)
     assert set(vec.data.keys()) == set(vec.chart.components)
-    assert vec.manifold.has_chart(vec.chart)
+    assert vec.M.has_chart(vec.chart)
 
 
 @given(vec=vector_strategy(cxc.cart3d, cxr.point))
@@ -57,7 +57,7 @@ def test_vectors_chart_strategy_concrete_rep(vec: cxv.Point) -> None:
     """vectors(chart_strategy, rep) should draw a chart then fix the rep."""
     assert vec.rep == cxr.point
     assert isinstance(vec, cxv.Point)
-    assert vec.manifold.has_chart(vec.chart)
+    assert vec.M.has_chart(vec.chart)
 
 
 @given(vec=vector_strategy(cxc.cart3d, cxsr.representations(check_valid=True)))
@@ -78,23 +78,23 @@ def test_vectors_propagate_shape(vec: cxv.Point) -> None:
 def test_vectors_infer_manifold_from_chart(data: st.DataObject) -> None:
     """When manifold is not given, it should be inferred from the chart."""
     vec = data.draw(vector_strategy(cxc.sph3d, cxr.point))
-    assert vec.manifold == cxm.guess_manifold(cxc.sph3d)
+    assert vec.M == cxm.guess_manifold(cxc.sph3d)
 
 
 @given(data=st.data())
 def test_vectors_explicit_manifold(data: st.DataObject) -> None:
     """vectors(chart, rep, manifold) should preserve the provided manifold."""
-    manifold = cxm.EuclideanManifold(3)
-    vec = data.draw(vector_strategy(cxc.cart3d, cxr.point, manifold))
-    assert vec.manifold is manifold
+    M = cxm.EuclideanManifold(3)
+    vec = data.draw(vector_strategy(cxc.cart3d, cxr.point, M))
+    assert vec.M is M
 
 
 @given(data=st.data())
 def test_vectors_manifold_strategy(data: st.DataObject) -> None:
     """vectors(chart, rep, manifold_strategy) should draw a manifold."""
-    manifold = cxm.EuclideanManifold(3)
-    vec = data.draw(vector_strategy(cxc.cart3d, cxr.point, st.just(manifold)))
-    assert vec.manifold is manifold
+    M = cxm.EuclideanManifold(3)
+    vec = data.draw(vector_strategy(cxc.cart3d, cxr.point, st.just(M)))
+    assert vec.M is M
 
 
 @given(data=st.data())
@@ -109,7 +109,7 @@ def test_vector_from_type_basic(vec: cxv.Point) -> None:
     """from_type(Point) should resolve to the vectors strategy."""
     assert isinstance(vec, cxv.Point)
     assert set(vec.data.keys()) == set(vec.chart.components)
-    assert vec.manifold.has_chart(vec.chart)
+    assert vec.M.has_chart(vec.chart)
 
 
 class TestPointValueControl:

@@ -22,7 +22,7 @@ _twospherefrom3d: Final = TwoSphereIn3D(1)
 def pt_project(
     p_ambient: Any,
     from_ambient_chart: Abstract3D,
-    manifold: HyperSphericalManifold,
+    M: HyperSphericalManifold,
     /,
     *,
     usys: OptUSys = None,
@@ -40,12 +40,12 @@ def pt_project(
     >>> import coordinax.manifolds as cxm
 
     >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
-    >>> manifold = cxm.HyperSphericalManifold()
-    >>> cxm.pt_project(q, cxc.cart3d, manifold)
+    >>> M = cxm.HyperSphericalManifold()
+    >>> cxm.pt_project(q, cxc.cart3d, M)
     {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
 
     """
-    del manifold
+    del M
 
     # First project from the ambient chart to the intermediate Spherical3D chart
     sph3d = Spherical3D(M=from_ambient_chart.M)
@@ -59,7 +59,7 @@ def pt_project(
 @plum.dispatch
 def pt_map(
     p: CDict,
-    manifold: HyperSphericalManifold,
+    M: HyperSphericalManifold,
     from_chart: Abstract3D,
     to_chart: AbstractSphericalTwoSphere,
     /,
@@ -78,12 +78,12 @@ def pt_map(
     >>> import coordinax.manifolds as cxm
 
     >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
-    >>> manifold = cxm.HyperSphericalManifold()
-    >>> cxc.pt_map(q, manifold, cxc.cart3d, cxc.sph2)
+    >>> M = cxm.HyperSphericalManifold()
+    >>> cxc.pt_map(q, M, cxc.cart3d, cxc.sph2)
     {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
 
     """
-    del manifold
+    del M
     p_s2 = cxmapi.pt_project(p, from_chart, to_chart, _twospherefrom3d, usys=usys)
     return cast("CDict", p_s2)
 

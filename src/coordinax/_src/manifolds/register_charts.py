@@ -61,7 +61,7 @@ def pt_map(
 @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
 def pt_map(
     x: Any,
-    manifold: AbstractManifold,
+    M: AbstractManifold,
     chart_from: AbstractChart,
     chart_to: AbstractChart,
     *args: Any,
@@ -85,4 +85,4 @@ def pt_map(
 
     """
     # Redispatch to the atlas
-    return cxcapi.pt_map(x, manifold.atlas, chart_from, chart_to, *args, **kwargs)
+    return cxcapi.pt_map(x, M.atlas, chart_from, chart_to, *args, **kwargs)

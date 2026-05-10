@@ -5,11 +5,14 @@ __all__ = ("AbstractAtlas",)
 import abc
 import dataclasses
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import jax.tree_util as jtu
 
 import coordinax.charts as cxc
+
+if TYPE_CHECKING:
+    import coordinax.manifolds  # noqa: ICN001
 
 
 @jtu.register_static
@@ -115,7 +118,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         raise NotImplementedError  # pragma: no cover
 
     def default_chart_for(
-        self, manifold: "AbstractManifold", /
+        self, M: "coordinax.manifolds.AbstractManifold", /
     ) -> cxc.AbstractChart[Any, Any]:
         """Return a default chart from the atlas for the given manifold.
 
@@ -136,11 +139,11 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         # Get the default chart
         chart = self.default_chart()
         # Validate that the manifold is compatible with this atlas
-        if manifold.atlas != self:
-            msg = f"Atlas {self!r} does not match manifold atlas {manifold.atlas!r}."
+        if M.atlas != self:
+            msg = f"Atlas {self!r} does not match manifold atlas {M.atlas!r}."
             raise ValueError(msg)
 
-        return dataclasses.replace(chart, M=manifold)
+        return dataclasses.replace(chart, M=M)
 
     @abc.abstractmethod
     def has_chart(self, chart: cxc.AbstractChart[Any, Any], /) -> bool:

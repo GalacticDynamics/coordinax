@@ -86,7 +86,7 @@ class AbstractVector(
     rep : coordinax.representations.Representation
         The representation (e.g. `coordinax.representations.point`) that
         selects the transformation semantics for chart conversions.
-    manifold : coordinax.manifolds.AbstractManifold
+    M : coordinax.manifolds.AbstractManifold
         The manifold on which the vector lives.
     shape : tuple[int, ...]
         The batch shape of the vector (abstract; implemented by subclasses).
@@ -186,7 +186,7 @@ class AbstractVector(
     rep: eqx.AbstractVar[cxr.Representation[GeomT, BasisT, SemanticT]]
     """The `coordinax.representations.Representation`, e.g. `cxr.point`."""
 
-    manifold: eqx.AbstractVar[cxm.AbstractManifold]
+    M: eqx.AbstractVar[cxm.AbstractManifold]
     """The manifold the vector lives in."""
 
     frame: eqx.AbstractVar[cxf.AbstractReferenceFrame]

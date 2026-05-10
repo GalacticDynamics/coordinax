@@ -168,7 +168,7 @@ def vectors(  # noqa: F811
     draw: st.DrawFn,
     chart: cxc.AbstractChart | st.SearchStrategy,
     rep: cxr.Representation | st.SearchStrategy,
-    manifold: cxm.AbstractManifold | st.SearchStrategy,
+    M: cxm.AbstractManifold | st.SearchStrategy,
     /,
     **kw: Any,
 ) -> cxv.AbstractVector:
@@ -193,20 +193,20 @@ def vectors(  # noqa: F811
 
     Explicit manifold via strategy:
 
-    >>> manifold = cxm.EuclideanManifold(3)
-    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, st.just(manifold)))
+    >>> M = cxm.EuclideanManifold(3)
+    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, st.just(M)))
     ... def test_manifold_strat(vec): ...
 
     """
     chart = draw_if_strategy(draw, chart)
     rep = draw_if_strategy(draw, rep)
-    manifold = draw_if_strategy(draw, manifold)
+    M = draw_if_strategy(draw, M)
 
-    if manifold is not None and not manifold.has_chart(chart):
-        raise ValueError(f"Manifold {manifold!r} does not support chart {chart!r}.")
+    if M is not None and not M.has_chart(chart):
+        raise ValueError(f"Manifold {M!r} does not support chart {chart!r}.")
 
     try:
-        return draw(vectors(chart, rep, manifold, **kw))  # ty: ignore[too-many-positional-arguments]
+        return draw(vectors(chart, rep, M, **kw))  # ty: ignore[too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -282,7 +282,7 @@ def vectors(  # noqa: F811
     draw: st.DrawFn,
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
-    manifold: cxm.AbstractManifold,
+    M: cxm.AbstractManifold,
     /,
     **kw: Any,
 ) -> cxv.AbstractVector:
@@ -299,13 +299,13 @@ def vectors(  # noqa: F811
     >>> import coordinax.manifolds as cxm
     >>> from hypothesis import given
 
-    >>> manifold = cxm.EuclideanManifold(3)
-    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, manifold))
+    >>> M = cxm.EuclideanManifold(3)
+    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, M))
     ... def test_explicit_manifold(vec): ...
 
     """
-    if not manifold.has_chart(chart):
-        raise ValueError(f"Manifold {manifold!r} does not support chart {chart!r}.")
+    if not M.has_chart(chart):
+        raise ValueError(f"Manifold {M!r} does not support chart {chart!r}.")
 
     data = draw(cxrst.cdicts(chart, rep, **kw))  # ty: ignore[missing-argument]
-    return cxv.Point.from_(data, chart, rep, manifold)  # ty: ignore[invalid-return-type]
+    return cxv.Point.from_(data, chart, rep, M)  # ty: ignore[invalid-return-type]

@@ -15,7 +15,7 @@ from .point import Point
 
 @plum.dispatch
 def pt_project(
-    p_ambient: Point, manifold: cxm.HyperSphericalManifold, /, *, usys: OptUSys = None
+    p_ambient: Point, M: cxm.HyperSphericalManifold, /, *, usys: OptUSys = None
 ) -> Any:
     """Project a point from an ambient space onto a manifold.
 
@@ -34,10 +34,10 @@ def pt_project(
     >>> cxm.pt_project(q, M)
     Point(
       {'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')},
-      chart=SphericalTwoSphere(M=Sn(2)), manifold=Sn(2)
+      chart=SphericalTwoSphere(M=Sn(2)), M=Sn(2)
     )
 
     """
-    data = cxm.pt_project(p_ambient.data, p_ambient.chart, manifold, usys=usys)
+    data = cxm.pt_project(p_ambient.data, p_ambient.chart, M, usys=usys)
     embed_map = cxm.TwoSphereIn3D(1.0)
-    return replace(p_ambient, data=data, chart=embed_map.intrinsic, manifold=manifold)
+    return replace(p_ambient, data=data, chart=embed_map.intrinsic, M=M)

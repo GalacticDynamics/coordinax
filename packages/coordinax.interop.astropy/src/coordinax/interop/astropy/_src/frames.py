@@ -247,7 +247,7 @@ def from_(
     Galactocentric(
       galcen=Point(
         { 'lon': Q(f64[], 'deg'), 'lat': Q(f64[], 'deg'), 'distance': Q(f64[], 'kpc') },
-        chart=LonLatSpherical3D(), manifold=Rn(3), frame=ICRS()
+        chart=LonLatSpherical3D(M=Rn(3)), M=Rn(3), frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
       z_sun=Quantity(f64[], 'pc')
@@ -271,10 +271,7 @@ def from_(
         "distance": plum.convert(frame.galcen_distance, u.Q),
     }
     galcen = cxv.Point(  # ty: ignore[missing-argument]
-        galcen_data,
-        chart=cxc.lonlat_sph3d,
-        manifold=cxm.euclidean3d,
-        frame=cxastro.icrs,
+        galcen_data, chart=cxc.lonlat_sph3d, M=cxm.euclidean3d, frame=cxastro.icrs
     )
 
     # # Convert galcen_v_sun to CartesianVel3D
@@ -324,7 +321,7 @@ def astropy_galactocentric_to_coordinax_galactocentric(
     Galactocentric(
       galcen=Point(
         { 'lon': Q(f64[], 'deg'), 'lat': Q(f64[], 'deg'), 'distance': Q(f64[], 'kpc') },
-        chart=LonLatSpherical3D(), manifold=Rn(3), frame=ICRS()
+        chart=LonLatSpherical3D(M=Rn(3)), M=Rn(3), frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
       z_sun=Quantity(f64[], 'pc')

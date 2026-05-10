@@ -71,7 +71,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 
     """
 
-    manifold: ClassVar[AbstractTopologicalManifold]
+    M: ClassVar[AbstractTopologicalManifold]
 
     @property
     def intrinsic(self) -> IntrinsicT:
@@ -159,11 +159,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 
 @plum.dispatch
 def pt_embed(
-    p_intrinsic: CDict,
-    embedding: EmbeddedChart,
-    /,
-    *,
-    usys: OptUSys = None,
+    p_intrinsic: CDict, embedding: EmbeddedChart, /, *, usys: OptUSys = None
 ) -> CDict:
     r"""Embed intrinsic point coordinates into ambient coordinates.
 
@@ -192,11 +188,7 @@ def pt_embed(
 
 @plum.dispatch
 def pt_project(
-    p_ambient: CDict,
-    embedding: EmbeddedChart,
-    /,
-    *,
-    usys: OptUSys = None,
+    p_ambient: CDict, embedding: EmbeddedChart, /, *, usys: OptUSys = None
 ) -> CDict:
     r"""Project ambient coordinates onto intrinsic chart coordinates.
 

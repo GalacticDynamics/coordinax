@@ -145,7 +145,7 @@ Cart3D(M=Rn(3))
 >>> v.rep
 Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 
->>> v.manifold
+>>> v.M
 Rn(3)
 
 >>> sorted(v.data.keys())
@@ -165,7 +165,7 @@ Because a vector carries both its chart and its manifold, you can ask the manifo
 ...     cxc.sph3d,
 ... )
 
->>> gdiag = v.manifold.scale_factors(v.chart, at=v.data)
+>>> gdiag = v.M.scale_factors(v.chart, at=v.data)
 >>> gdiag.shape
 (3,)
 >>> gdiag.unit.to_string()

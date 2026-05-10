@@ -26,24 +26,22 @@ def test_atlases_generates_valid_atlas_instances(atlas: cxm.AbstractAtlas) -> No
     assert atlas.default_chart() in atlas
 
 
-@given(manifold_cls=cxst.manifold_classes())
+@given(M_cls=cxst.manifold_classes())
 def test_manifold_classes_returns_concrete_manifold_subclasses(
-    manifold_cls: type[cxm.AbstractManifold],
+    M_cls: type[cxm.AbstractManifold],
 ) -> None:
     """manifold_classes returns concrete manifold subclasses."""
-    assert issubclass(manifold_cls, cxm.AbstractManifold)
-    assert manifold_cls is not cxm.AbstractManifold
+    assert issubclass(M_cls, cxm.AbstractManifold)
+    assert M_cls is not cxm.AbstractManifold
 
 
-@given(manifold=cxst.manifolds())
-def test_manifolds_generates_valid_manifold_instances(
-    manifold: cxm.AbstractManifold,
-) -> None:
+@given(M=cxst.manifolds())
+def test_manifolds_generates_valid_manifold_instances(M: cxm.AbstractManifold) -> None:
     """manifolds generates valid manifold instances."""
-    assert isinstance(manifold, cxm.AbstractManifold)
-    assert isinstance(manifold.atlas, cxm.AbstractAtlas)
-    assert manifold.atlas.ndim == manifold.ndim
-    assert isinstance(manifold.default_chart(), cxc.AbstractChart)
+    assert isinstance(M, cxm.AbstractManifold)
+    assert isinstance(M.atlas, cxm.AbstractAtlas)
+    assert M.atlas.ndim == M.ndim
+    assert isinstance(M.default_chart(), cxc.AbstractChart)
 
 
 @given(atlas=cxst.atlases(cxm.CustomAtlas))
@@ -60,35 +58,35 @@ def test_custom_atlas_strategy_basic(atlas: cxm.CustomAtlas) -> None:
     assert atlas.has_chart(atlas.default_chart())
 
 
-@given(manifold=cxst.manifolds(cxm.CustomManifold))
-def test_custom_manifold_strategy_basic(manifold: cxm.CustomManifold) -> None:
+@given(M=cxst.manifolds(cxm.CustomManifold))
+def test_custom_manifold_strategy_basic(M: cxm.CustomManifold) -> None:
     """manifolds(CustomManifold) generates valid CustomManifold objects."""
     # Strategy output should always be the concrete manifold wrapper.
-    assert isinstance(manifold, cxm.CustomManifold)
+    assert isinstance(M, cxm.CustomManifold)
     # The inherited manifold contract guarantees default_chart is usable.
-    assert manifold.has_chart(manifold.default_chart())
+    assert M.has_chart(M.default_chart())
     # Manifold dimension is forwarded from atlas dimension.
-    assert manifold.default_chart().ndim == manifold.ndim
+    assert M.default_chart().ndim == M.ndim
 
 
 @given(
-    manifold=cxst.manifolds(
+    M=cxst.manifolds(
         cxm.CustomManifold,
         ndim=2,
         required_chart_classes=(cxc.Cart2D, cxc.Polar2D),
     )
 )
-def test_custom_manifold_required_chart_classes(manifold: cxm.CustomManifold) -> None:
+def test_custom_manifold_required_chart_classes(M: cxm.CustomManifold) -> None:
     """required_chart_classes are forwarded for CustomManifold draws."""
-    assert manifold.has_chart(cxc.cart2d)
-    assert manifold.has_chart(cxc.polar2d)
+    assert M.has_chart(cxc.cart2d)
+    assert M.has_chart(cxc.polar2d)
 
 
-@given(manifold=cxst.manifolds(st.just(cxm.CustomManifold)))
-def test_custom_manifold_from_strategy_selector(manifold: cxm.CustomManifold) -> None:
+@given(M=cxst.manifolds(st.just(cxm.CustomManifold)))
+def test_custom_manifold_from_strategy_selector(M: cxm.CustomManifold) -> None:
     """SearchStrategy manifold_cls draws then redispatches to typed generation."""
-    assert isinstance(manifold, cxm.CustomManifold)
-    assert manifold.has_chart(manifold.default_chart())
+    assert isinstance(M, cxm.CustomManifold)
+    assert M.has_chart(M.default_chart())
 
 
 @given(
@@ -122,8 +120,8 @@ def test_custom_atlas_from_type_registration(atlas: cxm.CustomAtlas) -> None:
     assert atlas.has_chart(atlas.default_chart())
 
 
-@given(manifold=st.from_type(cxm.CustomManifold))
-def test_custom_manifold_from_type_registration(manifold: cxm.CustomManifold) -> None:
+@given(M=st.from_type(cxm.CustomManifold))
+def test_custom_manifold_from_type_registration(M: cxm.CustomManifold) -> None:
     """st.from_type(CustomManifold) resolves to the registered strategy."""
-    assert isinstance(manifold, cxm.CustomManifold)
-    assert manifold.has_chart(manifold.default_chart())
+    assert isinstance(M, cxm.CustomManifold)
+    assert M.has_chart(M.default_chart())

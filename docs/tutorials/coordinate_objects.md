@@ -161,7 +161,7 @@ Alice()
 >>> coord.rep
 Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 
->>> coord.manifold
+>>> coord.M
 Rn(3)
 
 >>> isinstance(coord, cx.Point)

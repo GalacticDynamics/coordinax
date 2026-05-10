@@ -605,7 +605,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
         - `vec.rep == rep` for explicit representation overloads,
         - explicit manifold overloads preserve the provided manifold object.
     - The generated vector must satisfy core Vector initialization invariants from Coordinax core spec:
-        `vec.manifold.has_chart(vec.chart)` and schema-consistent component data.
+        `vec.M.has_chart(vec.chart)` and schema-consistent component data.
 
     Failure behavior:
     - If an explicit manifold does not support the explicit chart, `vectors(chart, rep, manifold)` raises `ValueError`.

@@ -124,19 +124,19 @@ class TestScaleFactorsGeneric:
         assert jnp.allclose(result, expected, atol=1e-6)
 
     def test_embedded_manifold_requires_induced_metric(self):
-        manifold = cxm.EmbeddedManifold(
+        M = cxm.EmbeddedManifold(
             intrinsic=cxm.HyperSphericalManifold(),
             ambient=cxm.EuclideanManifold(3),
             embed_map=cxm.TwoSphereIn3D(radius=u.Q(jnp.array(2.0), "m")),
         )
-        assert isinstance(manifold.metric, cxm.InducedMetric)
+        assert isinstance(M.metric, cxm.InducedMetric)
 
         at = {
             "theta": u.Angle(jnp.pi / 6, "rad"),
             "phi": u.Angle(jnp.array(0.0), "rad"),
         }
 
-        result = cxm.scale_factors(manifold, cxc.sph2, at=at)
+        result = cxm.scale_factors(M.metric, cxc.sph2, at=at)
 
         # A 2-sphere of radius R embedded in Euclidean 3-space has induced metric
         # diag(R^2, R^2 sin^2(theta)) in the (theta, phi) chart. Here R = 2 m,

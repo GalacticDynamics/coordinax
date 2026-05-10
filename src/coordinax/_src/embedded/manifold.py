@@ -40,16 +40,16 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u
 
-    >>> manifold = cxm.EmbeddedManifold(
+    >>> M = cxm.EmbeddedManifold(
     ...     intrinsic=cxm.HyperSphericalManifold(),
     ...     ambient=cxm.EuclideanManifold(3),
     ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
     >>> p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
-    >>> sph = cxm.pt_embed(p, manifold)
+    >>> sph = cxm.pt_embed(p, M)
     >>> sph
     {'r': Q(2., 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
-    >>> p2 = cxm.pt_project(sph, manifold)
+    >>> p2 = cxm.pt_project(sph, M)
     >>> p2
     {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
     >>> jnp.allclose(p2["theta"].value, p["theta"].value)
@@ -112,16 +112,14 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
 
 @plum.dispatch
 def pt_embed(
-    p_intrinsic: CDict, manifold: EmbeddedManifold, /, *, usys: OptUSys = None
+    p_intrinsic: CDict, M: EmbeddedManifold, /, *, usys: OptUSys = None
 ) -> CDict:
     """Embed intrinsic point coordinates into ambient coordinates (manifold)."""
     # Redispatch to the more general pt_embed that handles chart transitions
     # in both the ambient and intrinsic charts.
-    intrinsic_chart = manifold.embed_map.intrinsic
-    ambient_chart = manifold.embed_map.ambient
-    out = cxmapi.pt_embed(
-        p_intrinsic, intrinsic_chart, ambient_chart, manifold, usys=usys
-    )
+    intrinsic_chart = M.embed_map.intrinsic
+    ambient_chart = M.embed_map.ambient
+    out = cxmapi.pt_embed(p_intrinsic, intrinsic_chart, ambient_chart, M, usys=usys)
     return cast("CDict", out)
 
 
@@ -130,34 +128,30 @@ def pt_embed(
     p_intrinsic: CDict,
     from_intrinsic_chart: AbstractChart,
     to_ambient_chart: AbstractChart,
-    manifold: EmbeddedManifold,
+    M: EmbeddedManifold,
     /,
     *,
     usys: OptUSys = None,
 ) -> CDict:
     """Embed intrinsic point coordinates into ambient coordinates (manifold)."""
     # Check the the intrinsic chart is in the manifold's intrinsic atlas
-    if not manifold.intrinsic.has_chart(from_intrinsic_chart):
+    if not M.intrinsic.has_chart(from_intrinsic_chart):
         raise ValueError(
             UNSUPPORTED_CHART_MESSAGE.format(
-                "intrinsic", from_intrinsic_chart, manifold.intrinsic.atlas
+                "intrinsic", from_intrinsic_chart, M.intrinsic.atlas
             )
         )
     # Check that the ambient chart is supported by the manifold's ambient atlas
-    if not manifold.ambient.has_chart(to_ambient_chart):
+    if not M.ambient.has_chart(to_ambient_chart):
         raise ValueError(
             UNSUPPORTED_CHART_MESSAGE.format(
-                "ambient", to_ambient_chart, manifold.ambient.atlas
+                "ambient", to_ambient_chart, M.ambient.atlas
             )
         )
     # Now that it's confirmed that the charts are compatible, we can dispatch to
     # the actual implementation that handles the embedding.
     out = cxmapi.pt_embed(
-        p_intrinsic,
-        from_intrinsic_chart,
-        to_ambient_chart,
-        manifold.embed_map,
-        usys=usys,
+        p_intrinsic, from_intrinsic_chart, to_ambient_chart, M.embed_map, usys=usys
     )
     return cast("CDict", out)
 
@@ -192,17 +186,13 @@ def pt_embed(
 
 @plum.dispatch
 def pt_project(
-    p_ambient: CDict, manifold: EmbeddedManifold, /, *, usys: OptUSys = None
+    p_ambient: CDict, M: EmbeddedManifold, /, *, usys: OptUSys = None
 ) -> CDict:
     """Project ambient coordinates onto intrinsic chart coordinates (manifold)."""
     # Redispatch to the more general pt_project that handles chart
     # transitions in both the ambient and intrinsic charts.
     out = cxmapi.pt_project(
-        p_ambient,
-        manifold.embed_map.ambient,
-        manifold.embed_map.intrinsic,
-        manifold,
-        usys=usys,
+        p_ambient, M.embed_map.ambient, M.embed_map.intrinsic, M, usys=usys
     )
     return cast("CDict", out)
 
@@ -212,34 +202,30 @@ def pt_project(
     p_ambient: CDict,
     from_ambient_chart: AbstractChart,
     to_intrinsic_chart: AbstractChart,
-    manifold: EmbeddedManifold,
+    M: EmbeddedManifold,
     /,
     *,
     usys: OptUSys = None,
 ) -> CDict:
     """Project ambient coordinates onto intrinsic chart coordinates (manifold)."""
     # Check the the ambient chart is in the manifold's ambient atlas
-    if not manifold.ambient.has_chart(from_ambient_chart):
+    if not M.ambient.has_chart(from_ambient_chart):
         raise ValueError(
             UNSUPPORTED_CHART_MESSAGE.format(
-                "ambient", from_ambient_chart, manifold.ambient.atlas
+                "ambient", from_ambient_chart, M.ambient.atlas
             )
         )
     # Check that the intrinsic chart is supported by the manifold's intrinsic atlas
-    if not manifold.intrinsic.has_chart(to_intrinsic_chart):
+    if not M.intrinsic.has_chart(to_intrinsic_chart):
         raise ValueError(
             UNSUPPORTED_CHART_MESSAGE.format(
-                "intrinsic", to_intrinsic_chart, manifold.intrinsic.atlas
+                "intrinsic", to_intrinsic_chart, M.intrinsic.atlas
             )
         )
     # Now that it's confirmed that the charts are compatible, we can dispatch to
     # the actual implementation that handles the projection.
     out = cxmapi.pt_project(
-        p_ambient,
-        from_ambient_chart,
-        to_intrinsic_chart,
-        manifold.embed_map,
-        usys=usys,
+        p_ambient, from_ambient_chart, to_intrinsic_chart, M.embed_map, usys=usys
     )
     return cast("CDict", out)
 

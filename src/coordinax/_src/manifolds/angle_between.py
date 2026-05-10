@@ -22,7 +22,7 @@ from coordinax.internal import QuantityMatrix, UnitsMatrix, pack_to_qmatrix
 
 @plum.dispatch
 def angle_between(
-    manifold: AbstractManifold,
+    M: AbstractManifold,
     chart: AbstractChart,
     uvec: CDict,
     vvec: CDict,
@@ -40,15 +40,15 @@ def angle_between(
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> manifold = cxm.EuclideanManifold(2)
+    >>> M = cxm.EuclideanManifold(2)
     >>> at = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m")}
     >>> uvec = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
     >>> vvec = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
-    >>> cxm.angle_between(manifold, cxc.cart2d, uvec, vvec, at=at)
+    >>> cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
     Angle(1.57079633, 'rad')
 
     """
-    return cxmapi.angle_between(manifold.metric, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+    return cxmapi.angle_between(M.metric, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch

@@ -139,7 +139,7 @@ class Point(
     chart: ChartT = eqx.field(static=True)
     """The chart of the vector, e.g. `cxc.cart3d`."""
 
-    manifold: cxm.AbstractTopologicalManifold = eqx.field()
+    M: cxm.AbstractTopologicalManifold = eqx.field()
     """The manifold the vector lives in."""
 
     frame: cxf.AbstractReferenceFrame = eqx.field(
@@ -149,7 +149,7 @@ class Point(
 
     def _check_init(self) -> None:
         # Pass a check to self.chart.check_data
-        self.manifold.has_chart(self.chart)
+        self.M.has_chart(self.chart)
         self.chart.check_data(self.data, keys=True)
 
     @property
@@ -238,7 +238,7 @@ def from_(cls: type[Point], obj: Point, /) -> Point:
     """
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj  # fast path for same type
-    return cls.from_(obj.data, obj.chart, obj.manifold)
+    return cls.from_(obj.data, obj.chart, obj.M)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -247,7 +247,7 @@ def from_(
     obj: Any,
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
-    manifold: cxm.AbstractManifold,
+    M: cxm.AbstractManifold,
     /,
 ) -> Point:
     """Construct a vector from an object, and chart, rep, and manifold info.
@@ -273,7 +273,7 @@ def from_(
     if rep != cxr.point:
         raise ValueError(f"Point construction needs point rep, got {rep}.")
     data = cast("CDict", cxc.cdict(obj, chart))
-    return cls(data=data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    return cls(data=data, chart=chart, M=M)  # ty: ignore[missing-argument]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -309,8 +309,8 @@ def from_(
     if rep != cxr.point:
         raise ValueError(f"Point construction needs point rep, got {rep}.")
     data = cast("CDict", cxc.cdict(obj, chart))
-    manifold = cxm.guess_manifold(chart)
-    return cls(data=data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    M = cxm.guess_manifold(chart)
+    return cls(data=data, chart=chart, M=M)  # ty: ignore[missing-argument]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -343,8 +343,8 @@ def from_(cls: type[Point], obj: Any, chart: cxc.AbstractChart, /) -> Point:
 
     """
     data = cast("CDict", cxc.cdict(obj, chart))
-    manifold = cxm.guess_manifold(chart)
-    return cls(data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    M = cxm.guess_manifold(chart)
+    return cls(data, chart=chart, M=M)  # ty: ignore[missing-argument]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -378,8 +378,8 @@ def from_(cls: type[Point], obj: Any, rep: cxr.Representation, /) -> Point:
     """
     data = cast("CDict", cxc.cdict(obj))
     chart = cxc.guess_chart(data)
-    manifold = cxm.guess_manifold(chart)
-    return cls(data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    M = cxm.guess_manifold(chart)
+    return cls(data, chart=chart, M=M)  # ty: ignore[missing-argument]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -412,9 +412,9 @@ def from_(cls: type[Point], obj: Any, /) -> Any:
     # Infer the data from the chart and object
     data = cast("CDict", cxc.cdict(obj, chart))
     # Infer the manifold from the chart
-    manifold = cxm.guess_manifold(chart)
+    M = cxm.guess_manifold(chart)
 
-    return cls(data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    return cls(data, chart=chart, M=M)  # ty: ignore[missing-argument]
 
 
 # -------------------------------------
