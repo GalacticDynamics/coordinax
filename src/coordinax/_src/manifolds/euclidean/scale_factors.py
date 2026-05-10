@@ -10,8 +10,10 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt.quantity import AllowValue, is_any_quantity
 
+import coordinax.api.charts as cxcapi
 import coordinax.charts as cxc
 from .metric import EuclideanMetric
+from coordinax._src.base_charts import AbstractChart, AbstractDimensionalFlag
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 
@@ -49,7 +51,7 @@ def scale_factors(
     del metric, at, usys
     n = (
         chart.ndim
-        if isinstance(chart, cxc.AbstractDimensionalFlag)
+        if isinstance(chart, AbstractDimensionalFlag)
         else len(chart.components)
     )
     return QuantityMatrix(
@@ -60,7 +62,7 @@ def scale_factors(
 @plum.dispatch
 def scale_factors(
     metric: EuclideanMetric,
-    chart: cxc.AbstractChart,
+    chart: AbstractChart,
     /,
     *,
     at: CDict,
@@ -94,7 +96,7 @@ def scale_factors(
             jnp.ones((n,)), unit=UnitsMatrix(tuple(u.unit("") for _ in range(n)))
         )
 
-    J = cxc.jac_pt_map(at, chart, cart_chart, usys=usys)
+    J = cxcapi.jac_pt_map(at, chart, cart_chart, usys=usys)
     return _column_squared_norms(J)
 
 

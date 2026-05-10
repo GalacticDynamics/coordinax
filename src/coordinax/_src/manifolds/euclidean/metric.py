@@ -11,8 +11,10 @@ import jax
 import quaxed.numpy as jnp
 import unxt as u
 
-import coordinax.charts as cxc
+import coordinax.api.charts as cxcapi
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
+from coordinax._src.exceptions import NoGlobalCartesianChartError
 from coordinax._src.manifolds.diagonal import AbstractDiagonalMetric
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 
@@ -74,7 +76,7 @@ class EuclideanMetric(AbstractDiagonalMetric):
         return tuple(1 for _ in range(self.ndim))
 
     def metric_matrix(
-        self, chart: cxc.AbstractChart, /, *, at: CDict, usys: OptUSys = None
+        self, chart: AbstractChart, /, *, at: CDict, usys: OptUSys = None
     ) -> QuantityMatrix:
         r"""Metric matrix in the given chart at the base point ``at``.
 
@@ -87,7 +89,7 @@ class EuclideanMetric(AbstractDiagonalMetric):
         # Try to get the canonical Cartesian chart for this manifold
         try:
             cart_chart = chart.cartesian
-        except cxc.NoGlobalCartesianChartError:
+        except NoGlobalCartesianChartError:
             # Chart has no Cartesian sibling; fall back to dimensionless identity
             n = self.ndim
             unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
@@ -100,6 +102,6 @@ class EuclideanMetric(AbstractDiagonalMetric):
             return QuantityMatrix(jnp.eye(n), unit=UnitsMatrix(unit_tup))
 
         # Compute J = d(Cartesian)/d(chart) via jac_pt_map (returns QuantityMatrix)
-        J = cxc.jac_pt_map(at, chart, cart_chart, usys=usys)
+        J = cxcapi.jac_pt_map(at, chart, cart_chart, usys=usys)
         JT = jnp.transpose(J, (1, 0))
         return JT @ J  # ty: ignore[invalid-return-type]

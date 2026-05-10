@@ -194,7 +194,6 @@ with install_import_hook("coordinax.charts"):
         LonLatSphericalTwoSphere,
         MathSpherical3D,
         MathSphericalTwoSphere,
-        NoGlobalCartesianChartError,
         PoincarePolar6D,
         Polar2D,
         ProlateSpheroidal3D,
@@ -225,6 +224,7 @@ with install_import_hook("coordinax.charts"):
         sph3d,
         time1d,
     )
+    from coordinax._src.exceptions import NoGlobalCartesianChartError
     from coordinax.api.charts import cartesian_chart, cdict, guess_chart, pt_map
 
 

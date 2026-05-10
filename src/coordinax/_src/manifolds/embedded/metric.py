@@ -11,8 +11,8 @@ import jax
 import quaxed.numpy as qnp
 import unxt as u
 
-import coordinax.charts as cxc
 from .embedmap import AbstractEmbeddingMap
+from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_metric import AbstractMetric
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import (
@@ -143,7 +143,7 @@ class InducedMetric(AbstractMetric):
         return (1,) * self.embed_map.intrinsic.ndim
 
     def metric_matrix(
-        self, _: cxc.AbstractChart, /, *, at: CDict, usys: OptUSys = None
+        self, _: AbstractChart, /, *, at: CDict, usys: OptUSys = None
     ) -> QuantityMatrix:
         r"""Compute the induced metric $g_N = J^T G_M J$.
 

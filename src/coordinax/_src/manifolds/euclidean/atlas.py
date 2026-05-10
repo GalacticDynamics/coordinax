@@ -11,10 +11,12 @@ import jax
 
 import coordinax.charts as cxc
 from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base_charts import AbstractChart
+from coordinax._src.exceptions import NoGlobalCartesianChartError
 
-CT = TypeVar("CT", bound=type[cxc.AbstractChart[Any, Any]])
+CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])
 
-EUCLIDEAN_ATLAS_DEFAULT_CHARTS: dict[int, cxc.AbstractChart[Any, Any]] = {
+EUCLIDEAN_ATLAS_DEFAULT_CHARTS: dict[int, AbstractChart[Any, Any]] = {
     0: cxc.cart0d,
     1: cxc.cart1d,
     2: cxc.cart2d,
@@ -22,19 +24,19 @@ EUCLIDEAN_ATLAS_DEFAULT_CHARTS: dict[int, cxc.AbstractChart[Any, Any]] = {
 }
 
 
-EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS: weakref.WeakSet[type[cxc.AbstractChart[Any, Any]]] = (
+EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS: weakref.WeakSet[type[AbstractChart[Any, Any]]] = (
     weakref.WeakSet()
 )
 
 
-def _can_common_point_transition(chart: cxc.AbstractChart, dim: int, /) -> bool:
+def _can_common_point_transition(chart: AbstractChart, dim: int, /) -> bool:
     """Return whether ``chart`` maps to the default Cartesian chart for ``dim``."""
     expect = EUCLIDEAN_ATLAS_DEFAULT_CHARTS.get(dim)
     if expect is None:
         return False
     try:
         got = chart.cartesian
-    except cxc.NoGlobalCartesianChartError:
+    except NoGlobalCartesianChartError:
         return False
 
     return got == expect
@@ -150,7 +152,7 @@ class EuclideanAtlas(AbstractAtlas):
     ndim: int
     """Dimension of the Euclidean manifold."""
 
-    def default_chart(self) -> cxc.AbstractChart[Any, Any]:
+    def default_chart(self) -> AbstractChart[Any, Any]:
         """Return the default chart for this atlas.
 
         Examples
@@ -178,7 +180,7 @@ class EuclideanAtlas(AbstractAtlas):
         """
         return EUCLIDEAN_ATLAS_DEFAULT_CHARTS.get(self.ndim, cxc.cartnd)
 
-    def has_chart(self, chart: cxc.AbstractChart[Any, Any], /) -> bool:
+    def has_chart(self, chart: AbstractChart[Any, Any], /) -> bool:
         """Return whether the atlas supports the given chart.
 
         This checks if the chart has the same dimension as the atlas and is
