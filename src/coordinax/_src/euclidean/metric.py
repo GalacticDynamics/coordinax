@@ -102,5 +102,5 @@ class EuclideanMetric(AbstractDiagonalMetric):
 
         # Compute J = d(Cartesian)/d(chart) via jac_pt_map (returns QuantityMatrix)
         J = cxcapi.jac_pt_map(at, chart, cart_chart, usys=usys)
-        JT = jnp.transpose(J, (1, 0))
+        JT = jnp.transpose(J, (1, 0))  # ty: ignore[no-matching-overload]
         return JT @ J

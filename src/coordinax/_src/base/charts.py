@@ -77,11 +77,8 @@ MISSINGDEFAULT = MissingDefault()
 
 
 @jtu.register_static
-@chart_dataclass_decorator
 class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
-
-    _: dataclasses.KW_ONLY
 
     M: AbstractManifold
     """The manifold that this chart belongs to.
@@ -198,13 +195,13 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")))
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            M=Rn(3), Delta=StaticQuantity(i64[](numpy), unit='km')
+            Delta=StaticQuantity(i64[](numpy), unit='km'), M=Rn(3)
         )
 
         >>> wl.pprint(cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(20, "km")),
         ... short_arrays=False)
         ProlateSpheroidal3D[('mu', 'nu', 'phi'), ('area', 'area', 'angle')](
-            M=Rn(3), Delta=StaticQuantity(array(20), unit='km')
+            Delta=StaticQuantity(array(20), unit='km'), M=Rn(3)
         )
 
         """

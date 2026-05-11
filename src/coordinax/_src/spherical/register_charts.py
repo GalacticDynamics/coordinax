@@ -12,6 +12,7 @@ import coordinax.api.manifolds as cxmapi
 from .chart import AbstractSphericalTwoSphere
 from .embed import TwoSphereIn3D
 from .manifold import HyperSphericalManifold, twosphere
+from coordinax._src.base import AbstractChart
 from coordinax._src.charts.d3 import Abstract3D, Spherical3D
 from coordinax._src.custom_types import CDict, OptUSys
 
@@ -21,7 +22,7 @@ _twospherefrom3d: Final = TwoSphereIn3D(1)
 @plum.dispatch
 def pt_project(
     p_ambient: Any,
-    from_ambient_chart: Abstract3D,
+    from_ambient_chart: AbstractChart,
     M: HyperSphericalManifold,
     /,
     *,

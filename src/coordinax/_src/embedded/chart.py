@@ -6,6 +6,7 @@ __all__ = ("EmbeddedChart",)
 from typing import ClassVar, Generic, cast, final
 from typing_extensions import override
 
+import jax
 import plum
 
 import coordinax.api.charts as cxcapi
@@ -20,6 +21,7 @@ from coordinax._src.base import (
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 
+@jax.tree_util.register_static
 @final
 @chart_dataclass_decorator
 class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]):
@@ -73,7 +75,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 
     """
 
-    M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
+    M: ClassVar[AbstractManifold]
 
     @override
     @property

@@ -196,7 +196,6 @@ True
 # Spherical
 
 
-@chart_dataclass_decorator
 class AbstractSpherical3D(AbstractFixedComponentsChart[Ks, Ds], Abstract3D):
     """Abstract spherical vector representation."""
 

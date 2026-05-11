@@ -75,7 +75,7 @@ def guess_chart(obj: frozenset[str], /) -> AbstractChart:
     M = cxmapi.guess_manifold(chart_cls)
 
     # Instantiate the chart class.
-    chart = chart_cls(M=M)
+    chart = chart_cls(M=M)  # ty: ignore[unknown-argument]
 
     # This should never happen since guess_chart_cls should raise if no chart is
     # found, but we check just in case.

@@ -84,7 +84,7 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
-    M: ClassVar[AbstractManifold]  # remove from init
+    M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
 
     @property
     def time_chart(self) -> AbstractChart[Any, Any]:
