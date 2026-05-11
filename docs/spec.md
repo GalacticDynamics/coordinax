@@ -2796,7 +2796,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ```pycon
     >>> import coordinax.manifolds as cxm
     >>> cxm.no_manifold
-    NoManifold(ndim=False)
+    NoManifold()
 
     >>> cxm.no_manifold.ndim
     -1

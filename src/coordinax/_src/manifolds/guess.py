@@ -26,7 +26,7 @@ from coordinax._src.euclidean import (
     euclidean2d,
     euclidean3d,
 )
-from coordinax._src.no_manifold import no_manifold
+from coordinax._src.null import no_manifold
 
 # ===================================================================
 # Guess Manifolds

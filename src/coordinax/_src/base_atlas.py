@@ -1,6 +1,6 @@
 """Manifold definitions and manifold inference helpers."""
 
-__all__ = ("AbstractAtlas", "NoAtlas", "no_atlas")
+__all__ = ("AbstractAtlas",)
 
 import abc
 import dataclasses
@@ -196,22 +196,3 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
 
         """
         return cxcapi.pt_map(x, self, *args, **kwargs)
-
-
-# ===================================================================
-
-
-class NoAtlas(AbstractAtlas):
-    """Trivial atlas that supports no charts."""
-
-    ndim = 0
-
-    def default_chart(self) -> "coordinax.charts.AbstractChart[Any, Any]":
-        raise ValueError("NoAtlas does not support any charts.")
-
-    def has_chart(self, _: "coordinax.charts.AbstractChart[Any, Any]", /) -> bool:
-        return False
-
-
-no_atlas = NoAtlas()
-"""Canonical empty atlas that supports no charts."""

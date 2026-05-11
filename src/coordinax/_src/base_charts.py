@@ -35,7 +35,7 @@ import unxt as u
 
 from .base_manifold import AbstractManifold
 from .custom_types import CDict, Ds, Ks
-from .no_manifold import no_manifold
+from coordinax._src.null import no_manifold
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")

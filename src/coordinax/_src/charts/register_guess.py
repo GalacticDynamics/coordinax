@@ -176,7 +176,7 @@ def guess_chart(
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0, 2.0, 3.0, 4.0], "m")
     >>> cxc.guess_chart(q)
-    CartND(M=NoManifold(ndim=False))
+    CartND(M=NoManifold())
 
     """
     return cartnd

@@ -8,15 +8,16 @@ __all__ = (
     "pt_map",
     "scale_factors",
     "angle_between",
-    # Topological Space
-    "NoManifold",
-    "no_manifold",
     # Abstract Manifold/Atlas/Metric
     "AbstractAtlas",
     "AbstractMetric",
     "AbstractManifold",
     "AbstractDiagonalMetric",
     # Null
+    "NoManifold",
+    "no_manifold",
+    "NoMetric",
+    "no_metric",
     "NoAtlas",
     "no_atlas",
     # Euclidean
@@ -58,7 +59,7 @@ __all__ = (
 from ._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.manifolds"):
-    from ._src.base_atlas import AbstractAtlas, NoAtlas, no_atlas
+    from ._src.base_atlas import AbstractAtlas
     from ._src.base_manifold import AbstractManifold
     from ._src.base_metric import AbstractDiagonalMetric, AbstractMetric
     from ._src.custom import CustomAtlas, CustomManifold, CustomMetric
@@ -83,7 +84,14 @@ with install_import_hook("coordinax.manifolds"):
         MinkowskiMetric,
         minkowski4d,
     )
-    from ._src.no_manifold import NoManifold, no_manifold
+    from ._src.null import (
+        NoAtlas,
+        NoManifold,
+        NoMetric,
+        no_atlas,
+        no_manifold,
+        no_metric,
+    )
     from ._src.product import (
         CartesianProductAtlas,
         CartesianProductManifold,

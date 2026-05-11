@@ -116,7 +116,7 @@ def cartesian_chart(obj: Any, /) -> "coordinax.charts.AbstractChart":
     N-dimensional systems map to CartND:
 
     >>> cxc.cartesian_chart(cxc.cartnd)
-    CartND(M=NoManifold(ndim=False))
+    CartND(M=NoManifold())
 
     """
     raise NotImplementedError  # pragma: no cover
