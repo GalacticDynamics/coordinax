@@ -189,6 +189,7 @@ TimeKeys = tuple[L["t"]]
 TimeDims = tuple[L["time"]]
 
 
+@EuclideanAtlas.register
 @jtu.register_static
 @final
 @chart_dataclass_decorator
