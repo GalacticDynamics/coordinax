@@ -52,12 +52,7 @@ MISSING: Final[MissingType] = MissingType()
 
 
 @plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
-def pt_map(
-    q: None,
-    /,
-    *fixed_args: Any,
-    **fixed_kwargs: Any,
-) -> Callable[..., Any]:
+def pt_map(q: None, /, *fixed_args: Any, **fixed_kw: Any) -> Callable[..., Any]:
     """Return a partial function for point transformation.
 
     Examples
@@ -76,8 +71,7 @@ def pt_map(
     `unxt.AbstractUnitSystem`, which must be passed.
 
     >>> q = {"x": 1.0, "y": 0.0, "z": 0.0}
-    >>> map = cxc.pt_map(None, cxc.cart3d, cxc.sph3d,
-    ...                                 usys=u.unitsystems.si)
+    >>> map = cxc.pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> map(q)
     {'r': Array(1., dtype=float64, ...),
      'theta': Array(1.57079633, dtype=float64),
@@ -95,8 +89,7 @@ def pt_map(
     the required `unxt.AbstractUnitSystem`.
 
     >>> q = [1.0, 0.0, 0.0]
-    >>> map = cxc.pt_map(None, cxc.cart3d, cxc.sph3d,
-    ...                                 usys=u.unitsystems.si)
+    >>> map = cxc.pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> map(q)
     Array([1.        , 1.57079633, 0.        ], dtype=float64)
 
@@ -104,17 +97,12 @@ def pt_map(
     del q  # unused
 
     # NOTE: lambda is much faster than ft.partial here
-    return lambda x, *args, **kw: cxcapi.pt_map(
-        x, *fixed_args, *args, **fixed_kwargs, **kw
-    )
+    return lambda x, *args, **kw: cxcapi.pt_map(x, *fixed_args, *args, **fixed_kw, **kw)
 
 
 @plum.dispatch
 def pt_map(
-    from_chart: AbstractChart,
-    to_chart: AbstractChart,
-    /,
-    **fixed_kwargs: Any,
+    from_chart: AbstractChart, to_chart: AbstractChart, /, **fixed_kw: Any
 ) -> Callable[..., Any]:
     """Return a partial function for point transformation.
 
@@ -134,8 +122,7 @@ def pt_map(
     `unxt.AbstractUnitSystem`, which must be passed.
 
     >>> p = {"x": 1.0, "y": 0.0, "z": 0.0}
-    >>> map = cxc.pt_map(cxc.cart3d, cxc.sph3d,
-    ...                                usys=u.unitsystems.si)
+    >>> map = cxc.pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> map(p)
     {'r': Array(1., dtype=float64, ...),
      'theta': Array(1.57079633, dtype=float64),
@@ -158,7 +145,7 @@ def pt_map(
     Array([1.        , 1.57079633, 0.        ], dtype=float64)
 
     """
-    out = cxcapi.pt_map(None, from_chart, to_chart, **fixed_kwargs)
+    out = cxcapi.pt_map(None, from_chart, to_chart, **fixed_kw)
     return cast("Callable[..., Any]", out)
 
 
