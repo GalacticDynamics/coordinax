@@ -1,6 +1,5 @@
 """Tests for the vectors strategy."""
 
-import pytest
 from hypothesis import given, strategies as st
 
 import coordinax.charts as cxc
@@ -79,29 +78,6 @@ def test_vectors_infer_manifold_from_chart(data: st.DataObject) -> None:
     """When manifold is not given, it should be inferred from the chart."""
     vec = data.draw(vector_strategy(cxc.sph3d, cxr.point))
     assert vec.M == cxm.guess_manifold(cxc.sph3d)
-
-
-@given(data=st.data())
-def test_vectors_explicit_manifold(data: st.DataObject) -> None:
-    """vectors(chart, rep, manifold) should preserve the provided manifold."""
-    M = cxm.EuclideanManifold(3)
-    vec = data.draw(vector_strategy(cxc.cart3d, cxr.point, M))
-    assert vec.M is M
-
-
-@given(data=st.data())
-def test_vectors_manifold_strategy(data: st.DataObject) -> None:
-    """vectors(chart, rep, manifold_strategy) should draw a manifold."""
-    M = cxm.EuclideanManifold(3)
-    vec = data.draw(vector_strategy(cxc.cart3d, cxr.point, st.just(M)))
-    assert vec.M is M
-
-
-@given(data=st.data())
-def test_vectors_incompatible_manifold_raises(data: st.DataObject) -> None:
-    """Passing a manifold that does not support the chart must raise ValueError."""
-    with pytest.raises(ValueError, match="support"):
-        data.draw(vector_strategy(cxc.cart3d, cxr.point, cxm.HyperSphericalManifold()))
 
 
 @given(vec=st.from_type(cxv.Point))

@@ -91,11 +91,6 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         """Time factor chart (always `time1d`)."""
         return time1d
 
-    @property
-    def manifold(self) -> AbstractTopologicalManifold:
-        """The manifold of this chart is determined by the spatial chart."""
-        return self.spatial_chart.manifold
-
     @override
     @property
     def factors(self) -> tuple[AbstractChart[Any, Any], ...]:

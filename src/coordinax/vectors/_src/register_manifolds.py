@@ -32,12 +32,9 @@ def pt_project(
     ...     cx.sph3d)
     >>> M = cxm.HyperSphericalManifold(2)
     >>> cxm.pt_project(q, M)
-    Point(
-      {'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')},
-      chart=SphericalTwoSphere(M=Sn(2)), M=Sn(2)
-    )
+    Point({'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')}, chart=SphericalTwoSphere(M=Sn(2)))
 
     """
     data = cxm.pt_project(p_ambient.data, p_ambient.chart, M, usys=usys)
     embed_map = cxm.TwoSphereIn3D(1.0)
-    return replace(p_ambient, data=data, chart=embed_map.intrinsic, M=M)
+    return replace(p_ambient, data=data, chart=embed_map.intrinsic)

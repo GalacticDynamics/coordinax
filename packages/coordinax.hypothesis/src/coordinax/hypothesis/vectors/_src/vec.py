@@ -273,39 +273,3 @@ def vectors(  # noqa: F811
     except plum.NotFoundLookupError as exc:
         raise ValueError(f"Could not infer a manifold for chart {chart!r}.") from exc
     return cast("cxv.Point", out)
-
-
-@plum.dispatch
-@strip_return_annotation
-@st.composite
-def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    M: cxm.AbstractManifold,
-    /,
-    **kw: Any,
-) -> cxv.AbstractVector:
-    """Generate a vector for a fully-concrete ``(chart, rep, manifold)`` triple.
-
-    This is the terminal overload.  All arguments are concrete instances and no
-    further redispatch occurs.
-
-    Examples
-    --------
-    >>> import coordinax.hypothesis.vectors as cxvst
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import coordinax.manifolds as cxm
-    >>> from hypothesis import given
-
-    >>> M = cxm.EuclideanManifold(3)
-    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, M))
-    ... def test_explicit_manifold(vec): ...
-
-    """
-    if not M.has_chart(chart):
-        raise ValueError(f"Manifold {M!r} does not support chart {chart!r}.")
-
-    data = draw(cxrst.cdicts(chart, rep, **kw))  # ty: ignore[missing-argument]
-    return cxv.Point.from_(data, chart, rep, M)  # ty: ignore[invalid-return-type]

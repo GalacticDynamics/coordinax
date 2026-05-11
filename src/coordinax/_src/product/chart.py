@@ -283,6 +283,9 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     >>> chart["p"]
     Cart3D(M=Rn(3))
 
+    >>> chart.M
+    CartesianProductManifold(factors=(Rn(3), Rn(3)), factor_names=('q', 'p'))
+
     """
 
     factors: tuple[AbstractChart[Any, Any], ...]

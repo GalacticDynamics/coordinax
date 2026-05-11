@@ -186,9 +186,6 @@ class AbstractVector(
     rep: eqx.AbstractVar[cxr.Representation[GeomT, BasisT, SemanticT]]
     """The `coordinax.representations.Representation`, e.g. `cxr.point`."""
 
-    M: eqx.AbstractVar[cxm.AbstractManifold]
-    """The manifold the vector lives in."""
-
     frame: eqx.AbstractVar[cxf.AbstractReferenceFrame]
     """The reference frame of the point. Defaults to ``cxf.noframe``."""
 
@@ -205,6 +202,11 @@ class AbstractVector(
 
     # ===============================================================
     # Vector API
+
+    @property
+    def M(self) -> cxm.AbstractTopologicalManifold:
+        """The manifold of the vector, from the chart."""
+        return self.chart.M
 
     @plum.dispatch
     def cconvert(
