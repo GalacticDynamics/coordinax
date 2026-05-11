@@ -562,11 +562,6 @@ class AbstractVector(
         """
         return isinstance(obj, cls)
 
-    def norm(self, *args: "AbstractVector") -> u.AbstractQuantity:
-        msg = "TODO"
-        raise NotImplementedError(msg)
-        # return self.chart.norm(self.data, *args)
-
     # ===============================================================
     # Frame API
 

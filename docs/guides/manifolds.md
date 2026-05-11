@@ -318,10 +318,85 @@ Product manifolds combine independent factors and sum dimensions.
 3
 ```
 
+## Computing Vector Norms
+
+Manifold and metric objects expose a `norm` method that computes the Riemannian norm
+
+$$
+\|v\|_g = \sqrt{g_p(v, v)}
+$$
+
+where $g$ is the manifold metric and $p$ is the base point at which the metric is evaluated.
+
+Three equivalent call forms are available:
+
+- **Via manifold**: `manifold.norm(v, chart, at=at)` — uses the manifold's metric automatically.
+- **Via metric**: `metric.norm(v, chart, at=at)` — uses the metric object directly.
+- **Functional form**: `cxm.norm(v, metric_or_manifold, chart, at=at)`.
+
+The `at` keyword argument specifies the base point for position-dependent metrics (for example `HyperSphericalMetric`). For flat metrics such as `EuclideanMetric`, `at` is not always required by the interface and does not affect the result numerically.
+
+### Euclidean norms with Quantity components
+
+For CDict inputs whose values are quantities, `usys` is optional and a `Quantity` is returned:
+
+```{code-block} python
+>>> import jax.numpy as jnp
+>>> import unxt as u
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+
+>>> M = cxm.EuclideanManifold(3)
+>>> chart = cxc.cart3d
+>>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+>>> v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s"), "z": u.Q(0.0, "m/s")}
+>>> M.norm(v, chart, at=at)
+Q(5., 'm / s')
+```
+
+### Euclidean norms with bare arrays
+
+When `v` contains bare `jax.Array` values a unit system must be supplied via `usys`:
+
+```{code-block} python
+>>> import jax.numpy as jnp
+>>> import unxt as u
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+
+>>> M = cxm.EuclideanManifold(3)
+>>> chart = cxc.cart3d
+>>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+>>> v = jnp.array([3.0, 4.0, 0.0])
+>>> M.norm(v, chart, at=at, usys=u.unitsystems.si)
+Array(5., dtype=float64)
+```
+
+### Using the metric directly
+
+You can also call `norm` on a standalone metric object:
+
+```{code-block} python
+>>> import jax.numpy as jnp
+>>> import unxt as u
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
+
+>>> metric = cxm.EuclideanMetric(3)
+>>> chart = cxc.cart3d
+>>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+>>> v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s"), "z": u.Q(0.0, "m/s")}
+>>> metric.norm(v, chart, at=at)
+Q(5., 'm / s')
+```
+
+See [spec § norm](../spec.md#software-spec-norm) for the complete dispatch table and notes on curved-metric position dependence.
+
 ## Quick Reference
 
 - Need compatibility checks around chart transitions: manifold methods
 - Need manifold inference from data/charts: `guess_manifold`
+- Need to compute a Riemannian vector norm: `manifold.norm(...)` / `metric.norm(...)` / `cxm.norm(...)`
 - Need intrinsic-to-ambient conversion: `pt_embed` / `pt_project`
 - Need custom chart membership rules: `CustomAtlas` + `CustomManifold`
 - Need manifold products: `CartesianProductManifold`

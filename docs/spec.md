@@ -2687,6 +2687,99 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     (3,)
     ```
 
+(software-spec-norm)=
+
+!!! info `norm`
+
+    Compute the Riemannian norm of a tangent vector.
+
+    `norm` is a dispatched function that computes
+
+    $$
+    \|v\|_g = \sqrt{g_p(v, v)}
+    $$
+
+    where $g$ is the metric tensor and $p$ is the base point at which the metric is evaluated. It dispatches on the type of the second argument (either an `AbstractMetric` or an `AbstractManifold`) and on the type of `v`.
+
+    **Signature:**
+
+    ```
+    cxm.norm(v, chart, /, *, at, usys=None)
+    ```
+
+    Or via convenience wrappers on metric and manifold objects:
+
+    ```
+    metric.norm(v, chart, at=at, usys=usys)
+    manifold.norm(v, chart, at=at, usys=usys)
+    ```
+
+    **Arguments:**
+
+    - `v`: the tangent vector. Accepted forms:
+      - `jax.Array` shaped `(ndim,)`: requires `usys` to interpret units.
+      - `CDict` of bare `jax.Array` values: requires `usys`.
+      - `CDict` of `unxt.AbstractQuantity` values: `usys` is optional.
+    - `metric_or_manifold`: an `AbstractMetric` instance (metric-level call) or an `AbstractManifold` instance (manifold-level call). When a manifold is passed, `norm` delegates to `manifold.metric`.
+    - `chart`: the coordinate chart in which `v` is expressed.
+    - `at` (keyword): the base point $p$ in chart coordinates at which the metric is evaluated.
+    - `usys` (keyword, optional): unit system; required when `v` contains bare arrays.
+
+    **Return:**
+
+    - `Quantity` when `v` is quantity-valued.
+    - `jax.Array` when `v` is bare-array-valued and `usys` is provided.
+
+    **Dispatch table:**
+
+    | `v` type | `metric_or_manifold` type | `usys` | Result |
+    |---|---|---|---|
+    | `CDict[Quantity]` | `AbstractMetric` | optional | `Quantity` |
+    | `CDict[Array]` | `AbstractMetric` | required | `Array` |
+    | `jax.Array` | `AbstractMetric` | required | `Array` |
+    | Any of above | `AbstractManifold` | (as above) | (as above) |
+
+    **Position dependence:**
+
+    - For flat metrics (for example `EuclideanMetric`), the metric matrix is constant and `at` does not affect the result numerically, though it is still required by the API.
+    - For curved metrics (for example `HyperSphericalMetric`), the metric matrix depends on `at` and must be the correct base point.
+
+    **Examples**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> M = cxm.EuclideanManifold(3)
+    >>> chart = cxc.Cart3D(M=M)
+    >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+
+    >>> # CDict of Quantities via manifold wrapper (usys optional):
+    >>> v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> M.norm(v, chart, at=at)
+    Q(5., 'm / s')
+
+    >>> cxm.norm(v, chart, at=at)
+    Q(5., 'm / s')
+
+    >>> # Stacked jax.Array (usys required):
+    >>> cxm.norm(jnp.array([3.0, 4.0, 0.0]), chart, at=at, usys=u.unitsystems.si)
+    Array(5., dtype=float64)
+
+    >>> # Via metric directly:
+    >>> metric = cxm.EuclideanMetric(3)
+    >>> metric.norm(v, chart, at=at)
+    Q(5., 'm / s')
+    ```
+
+    **Notes:**
+
+    - `AbstractMetric.norm` and `AbstractManifold.norm` are thin wrappers that delegate to `cxm.norm`.
+    - Manifold-level calls resolve to `cxm.norm(v, manifold.metric, chart, at=at, usys=usys)`.
+    - An optimized Euclidean fast-path using `jnp.linalg.norm` is registered for `EuclideanMetric` with `CartND` charts.
+
 (software-spec-angle-between)=
 
 !!! info `angle_between`

@@ -1,5 +1,7 @@
 """Register distance constructors."""
 
+__all__: tuple[str, ...] = ()
+
 from typing import Any
 
 import quaxed.numpy as jnp

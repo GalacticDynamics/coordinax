@@ -10,6 +10,7 @@ __all__ = (
     "angle_between",
     "metric_matrix",
     "metric_representation",
+    "norm",
     # Abstract Manifold/Atlas/Metric
     "AbstractAtlas",
     "AbstractMetricField",
@@ -135,6 +136,7 @@ with install_import_hook("coordinax.manifolds"):
         guess_manifold,
         metric_matrix,
         metric_representation,
+        norm,
         pt_embed,
         pt_project,
         scale_factors,
