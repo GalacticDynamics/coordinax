@@ -18,7 +18,7 @@ from .chart import (
     MathSphericalTwoSphere,
     SphericalTwoSphere,
 )
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.utils import uconvert_to_rad
 

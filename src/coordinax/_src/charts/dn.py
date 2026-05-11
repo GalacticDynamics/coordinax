@@ -3,19 +3,23 @@
 __all__ = ("AbstractND", "CartND", "cartnd")
 
 
+import dataclasses
+
 from typing import Any, Final, Literal as L, final  # noqa: N817
 from typing_extensions import override
 
 import jax.tree_util as jtu
 
-from coordinax._src.base_charts import (
+from coordinax._src.base import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
+    AbstractManifold,
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
 from coordinax._src.custom_types import Len
 from coordinax._src.euclidean.atlas import EuclideanAtlas
+from coordinax._src.null import no_manifold
 
 
 class AbstractND(AbstractDimensionalFlag, n="N"):
@@ -73,6 +77,9 @@ class CartND(AbstractFixedComponentsChart[CartNDKeys, CartNDDims], AbstractND):
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractManifold = no_manifold  # TODO: M=Rn(n)
+
     @override
     @property
     def cartesian(self) -> "CartND":
@@ -86,7 +93,7 @@ class CartND(AbstractFixedComponentsChart[CartNDKeys, CartNDDims], AbstractND):
         return self
 
 
-cartnd: Final = CartND()  # TODO: M=Rn(n)
+cartnd: Final = CartND()
 """The canonical N-D Cartesian chart.
 
 >>> import coordinax.charts as cxc

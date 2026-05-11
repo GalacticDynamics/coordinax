@@ -8,8 +8,7 @@ from typing import Any, final
 
 import jax
 
-from coordinax._src.base_atlas import AbstractAtlas
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractAtlas, AbstractChart
 
 
 @jax.tree_util.register_static

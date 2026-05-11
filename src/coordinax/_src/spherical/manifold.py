@@ -1,6 +1,6 @@
 """Two-sphere manifold."""
 
-__all__ = ("HyperSphericalManifold", "Sn", "twosphere")
+__all__ = ("HyperSphericalManifold", "Sn", "onesphere", "twosphere")
 
 import dataclasses
 
@@ -13,7 +13,7 @@ import dataclassish
 
 from .atlas import HyperSphericalAtlas
 from .metric import HyperSphericalMetric
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import AbstractManifold
 from coordinax._src.internal import pos_named_objs
 
 
@@ -81,6 +81,9 @@ class HyperSphericalManifold(AbstractManifold):
 
 Sn = HyperSphericalManifold
 """Alias for `HyperSphericalManifold`."""
+
+onesphere = HyperSphericalManifold(1)
+r"""The circular manifold, e.g. $S^1$."""
 
 twosphere = HyperSphericalManifold(2)
 r"""The spherical manifold, e.g. $S^2$."""

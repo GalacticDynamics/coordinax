@@ -7,7 +7,7 @@ from typing import Any, NoReturn
 
 import jax.tree_util as jtu
 
-from coordinax._src.base_atlas import AbstractAtlas
+from coordinax._src.base import AbstractAtlas
 
 
 @jtu.register_static

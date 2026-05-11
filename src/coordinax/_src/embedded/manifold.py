@@ -14,9 +14,7 @@ import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
 from .metric import InducedMetric
-from coordinax._src.base_atlas import AbstractAtlas
-from coordinax._src.base_charts import AbstractChart
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import AbstractAtlas, AbstractChart, AbstractManifold
 from coordinax._src.custom_types import CDict, OptUSys
 
 UNSUPPORTED_CHART_MESSAGE: Final[str] = (

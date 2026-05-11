@@ -20,7 +20,7 @@ import dataclassish
 
 from .atlas import EuclideanAtlas
 from .metric import EuclideanMetric
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import AbstractManifold
 from coordinax._src.internal import pos_named_objs
 
 

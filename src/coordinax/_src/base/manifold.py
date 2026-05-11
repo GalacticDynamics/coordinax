@@ -14,9 +14,9 @@ import dataclassish
 import coordinax.angles as cxa
 import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
-from .base_atlas import AbstractAtlas
-from .base_metric import AbstractMetric
-from .custom_types import CDict, OptUSys
+from .atlas import AbstractAtlas
+from .metric import AbstractMetric
+from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix
 
 if TYPE_CHECKING:

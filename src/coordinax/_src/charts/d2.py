@@ -10,13 +10,13 @@ from typing_extensions import override
 
 import jax.tree_util as jtu
 
-from coordinax._src.base_charts import (
+from coordinax._src.base import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
+    AbstractManifold,
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
-from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.custom_types import Ang, Len
 from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,

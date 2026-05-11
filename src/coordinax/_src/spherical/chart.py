@@ -30,18 +30,17 @@ import jax.tree_util as jtu
 import unxt as u
 
 from .atlas import SPHERICAL_ATLAS_DEFAULT_CHARTS, HyperSphericalAtlas
-from .manifold import twosphere
-from coordinax._src.base_charts import (
+from .manifold import onesphere, twosphere
+from coordinax._src.base import (
     AbstractFixedComponentsChart,
-    CDictT,
+    AbstractManifold,
     chart_dataclass_decorator,
 )
-from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.charts import checks
 from coordinax._src.charts.d1 import Abstract1D
 from coordinax._src.charts.d2 import Abstract2D
 from coordinax._src.constants import Deg0, Deg90, Deg180
-from coordinax._src.custom_types import Ang, Ds, Ks
+from coordinax._src.custom_types import Ang, CDictT, Ds, Ks
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 
 _MSG_NO_CART: Final = (
@@ -148,6 +147,9 @@ class CircularOneSphere(
     ('angle',)
 
     """
+
+    _: dataclasses.KW_ONLY
+    M: AbstractManifold = onesphere
 
 
 sph1: Final = CircularOneSphere()

@@ -12,7 +12,7 @@ import jax
 
 from .atlas import CartesianProductAtlas
 from .metric import CartesianProductMetric
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import AbstractManifold
 
 
 @jax.tree_util.register_static

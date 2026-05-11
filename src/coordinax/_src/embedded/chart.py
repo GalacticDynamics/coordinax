@@ -11,8 +11,7 @@ import plum
 import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
-from coordinax._src.base_charts import AbstractChart
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import AbstractChart, AbstractManifold
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 

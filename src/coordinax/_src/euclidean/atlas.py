@@ -10,8 +10,7 @@ from typing import Any, Final, TypeVar, final
 import jax
 
 import coordinax.charts as cxc
-from coordinax._src.base_atlas import AbstractAtlas
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractAtlas, AbstractChart
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 
 CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])

@@ -12,7 +12,7 @@ import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.api.charts as cxcapi
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 

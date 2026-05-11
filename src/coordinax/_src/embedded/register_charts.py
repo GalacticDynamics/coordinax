@@ -10,7 +10,7 @@ import plum
 import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .manifold import EmbeddedManifold
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 
 AMBIGUOUS_CHART_POINT_REALIZATION_MAP_MSG: Final[str] = (

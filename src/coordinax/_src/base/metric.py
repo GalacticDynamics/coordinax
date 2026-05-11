@@ -12,7 +12,6 @@ import jax.numpy as jnp
 
 import coordinax.angles as cxa
 import coordinax.api.manifolds as cxmapi
-from .custom_types import CDict, OptUSys
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 

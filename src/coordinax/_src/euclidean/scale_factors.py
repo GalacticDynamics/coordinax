@@ -12,7 +12,7 @@ from unxt.quantity import AllowValue, is_any_quantity
 
 import coordinax.api.charts as cxcapi
 from .metric import EuclideanMetric
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
 

@@ -13,8 +13,7 @@ import unxt as u
 
 import coordinax.angles as cxa
 import coordinax.api.manifolds as cxmapi
-from coordinax._src.base_charts import AbstractChart
-from coordinax._src.base_metric import AbstractMetric
+from coordinax._src.base import AbstractChart, AbstractMetric
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix, pack_to_qmatrix
 

@@ -15,7 +15,7 @@ from .d1 import cart1d
 from .d2 import cart2d
 from .d3 import cart3d
 from .dn import cartnd
-from coordinax._src.base_charts import (
+from coordinax._src.base import (
     NON_ABC_CHART_CLASSES,
     AbstractChart,
     AbstractFixedComponentsChart,

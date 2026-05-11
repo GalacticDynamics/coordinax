@@ -31,6 +31,7 @@ __all__ = (
     "HyperSphericalMetric",
     "HyperSphericalManifold",
     "Sn",
+    "onesphere",
     "twosphere",
     # Minkowski
     "MinkowskiAtlas",
@@ -59,9 +60,12 @@ __all__ = (
 from ._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.manifolds"):
-    from ._src.base_atlas import AbstractAtlas
-    from ._src.base_manifold import AbstractManifold
-    from ._src.base_metric import AbstractDiagonalMetric, AbstractMetric
+    from ._src.base import (
+        AbstractAtlas,
+        AbstractDiagonalMetric,
+        AbstractManifold,
+        AbstractMetric,
+    )
     from ._src.custom import CustomAtlas, CustomManifold, CustomMetric
     from ._src.embedded import (
         AbstractEmbeddingMap,
@@ -104,6 +108,7 @@ with install_import_hook("coordinax.manifolds"):
         Sn,
         TwoSphereIn3D,
         embedded_twosphere,
+        onesphere,
         twosphere,
     )
     from coordinax.api.charts import pt_map

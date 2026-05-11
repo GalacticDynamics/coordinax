@@ -9,8 +9,7 @@ from typing import Any, Final, TypeVar, final
 
 import jax
 
-from coordinax._src.base_atlas import AbstractAtlas
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractAtlas, AbstractChart
 
 CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])
 

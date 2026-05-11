@@ -6,7 +6,11 @@ __all__ = (
     "AbstractDimensionalFlag",
     "DIMENSIONAL_FLAGS",
     "CHART_CLASSES",
+    "NON_ABC_CHART_CLASSES",
     "chart_dataclass_decorator",
+    "is_not_abstract_chart_subclass",
+    "MISSING",
+    "CDictT",
 )
 
 import abc
@@ -33,13 +37,11 @@ import wadler_lindig as wl
 import dataclassish
 import unxt as u
 
-from .base_manifold import AbstractManifold
-from .custom_types import CDict, Ds, Ks
-from coordinax._src.null import no_manifold
+from .manifold import AbstractManifold
+from coordinax._src.custom_types import CDictT, Ds, Ks
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")
-CDictT = TypeVar("CDictT", bound=CDict)
 
 # Charts are registered in CHART_CLASSES when they are defined, via
 # AbstractChart.__init_subclass__. This allows us to find all chart classes for
@@ -81,7 +83,7 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
     _: dataclasses.KW_ONLY
 
-    M: AbstractManifold = no_manifold
+    M: AbstractManifold
     """The manifold that this chart belongs to.
 
     Default is `no_manifold` for charts that do not belong to any manifold.

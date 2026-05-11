@@ -9,7 +9,7 @@ from typing import Any, Generic, Protocol, TypeVar, final, runtime_checkable
 
 import jax
 
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 
 IntrinsicT = TypeVar("IntrinsicT", bound=AbstractChart[Any, Any])

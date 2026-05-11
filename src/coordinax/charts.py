@@ -161,7 +161,7 @@ __all__ = (
 from coordinax._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.charts"):
-    from coordinax._src.base_charts import (
+    from coordinax._src.base import (
         CHART_CLASSES,
         DIMENSIONAL_FLAGS,
         AbstractChart,

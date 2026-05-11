@@ -9,7 +9,7 @@ from typing import Any, final
 
 import jax
 
-from coordinax._src.base_metric import AbstractMetric
+from coordinax._src.base import AbstractMetric
 
 
 @jax.tree_util.register_static

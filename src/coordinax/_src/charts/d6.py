@@ -3,19 +3,23 @@
 __all__ = ("Abstract6D", "PoincarePolar6D", "poincarepolar6d")
 
 
+import dataclasses
+
 from typing import Any, Final, Literal as L, NoReturn, final  # noqa: N817
 from typing_extensions import override
 
 import jax.tree_util as jtu
 
-from coordinax._src.base_charts import (
+from coordinax._src.base import (
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
+    AbstractManifold,
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
 from coordinax._src.custom_types import Len, Spd
 from coordinax._src.exceptions import NoGlobalCartesianChartError
+from coordinax._src.null import no_manifold
 
 
 class Abstract6D(AbstractDimensionalFlag, n=6):
@@ -76,6 +80,9 @@ class PoincarePolar6D(
 
     """
 
+    _: dataclasses.KW_ONLY
+    M: AbstractManifold = no_manifold  # TODO: actual manifold
+
     @override
     @property
     def cartesian(self) -> NoReturn:
@@ -85,5 +92,5 @@ class PoincarePolar6D(
         )
 
 
-poincarepolar6d: Final = PoincarePolar6D()
+poincarepolar6d: Final = PoincarePolar6D()  # TODO: actual manifold
 """Six-dimensional Poincare-polar chart."""

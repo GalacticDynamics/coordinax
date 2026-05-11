@@ -11,8 +11,7 @@ from typing_extensions import override
 
 import jax
 
-from coordinax._src.base_atlas import AbstractAtlas
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractAtlas, AbstractChart
 
 if TYPE_CHECKING:
     import coordinax.charts  # noqa: ICN001

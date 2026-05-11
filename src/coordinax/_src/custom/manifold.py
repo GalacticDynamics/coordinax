@@ -9,9 +9,7 @@ from typing import final
 
 import jax
 
-from coordinax._src.base_atlas import AbstractAtlas
-from coordinax._src.base_manifold import AbstractManifold
-from coordinax._src.base_metric import AbstractMetric
+from coordinax._src.base import AbstractAtlas, AbstractManifold, AbstractMetric
 
 
 @jax.tree_util.register_static

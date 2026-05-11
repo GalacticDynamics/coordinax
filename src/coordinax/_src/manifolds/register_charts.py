@@ -10,9 +10,7 @@ import plum
 import wadler_lindig as wl
 
 import coordinax.api.charts as cxcapi
-from coordinax._src.base_atlas import AbstractAtlas
-from coordinax._src.base_charts import AbstractChart
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import AbstractAtlas, AbstractChart, AbstractManifold
 
 _ATLAS_MSG: Final[Callable[[AbstractAtlas, AbstractChart[Any, Any]], str]] = (
     lambda a, c: (

@@ -12,7 +12,7 @@ import jax.tree_util as jtu
 
 from .atlas import NoAtlas, no_atlas
 from .metric import NoMetric, no_metric
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import AbstractManifold
 
 
 @jtu.register_static

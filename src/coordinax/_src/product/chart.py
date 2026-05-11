@@ -19,8 +19,12 @@ import wadler_lindig as wl
 
 import coordinax.api.charts as cxcapi
 from .manifold import CartesianProductManifold
-from coordinax._src.base_charts import MISSING, AbstractChart, chart_dataclass_decorator
-from coordinax._src.base_manifold import AbstractManifold
+from coordinax._src.base import (
+    MISSING,
+    AbstractChart,
+    AbstractManifold,
+    chart_dataclass_decorator,
+)
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 V = TypeVar("V")

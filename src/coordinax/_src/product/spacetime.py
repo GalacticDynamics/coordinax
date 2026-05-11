@@ -13,12 +13,12 @@ import jax.tree_util as jtu
 import unxt as u
 
 from .chart import AbstractFlatCartesianProductChart
-from coordinax._src.base_charts import (
+from coordinax._src.base import (
     AbstractChart,
     AbstractFixedComponentsChart,
+    AbstractManifold,
     chart_dataclass_decorator,
 )
-from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.charts.d1 import time1d
 from coordinax._src.charts.d3 import cart3d
 from coordinax._src.custom_types import CDict, Ds, Ks

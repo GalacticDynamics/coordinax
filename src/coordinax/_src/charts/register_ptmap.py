@@ -30,7 +30,7 @@ from .d3 import (
 )
 from .d6 import PoincarePolar6D
 from .dn import CartND
-from coordinax._src.base_charts import AbstractChart
+from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.utils import uconvert_to_rad
 from coordinax.internal import QuantityMatrix, UnitsMatrix, cdict_units
