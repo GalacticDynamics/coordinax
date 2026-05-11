@@ -119,6 +119,19 @@ def change_basis(
     ...                  at=at, usys=usys)
     {'theta': Q(1., 'km'), 'phi': Q(1.73205081, 'km')}
 
+    Use an embedded two-sphere manifold, whose induced metric is non-diagonal in
+    the general case:
+
+    >>> M = cxm.EmbeddedManifold(
+    ...     intrinsic=cxm.HyperSphericalManifold(),
+    ...     ambient=cxm.EuclideanManifold(3),
+    ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
+    ... )
+    >>> v = {"theta": u.Q(1.0, "rad/s"), "phi": u.Q(2.0, "rad/s")}
+    >>> at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0.0, "rad")}
+    >>> cxr.change_basis(v, cxc.sph2, M.metric, cxr.coord_basis, cxr.phys_basis, at=at)
+    {'theta': Q(..., 'km / s'), 'phi': Q(..., 'km / s')}
+
     """
     at = chart.check_data(at, keys=True)
     keys = chart.components
@@ -185,48 +198,6 @@ def change_basis(
 def change_basis(
     v: CDict,
     chart: cxc.AbstractChart,
-    M: cxm.AbstractManifold,
-    from_basis: CoordinateBasis,
-    to_basis: PhysicalBasis,
-    /,
-    *,
-    at: CDict,
-    usys: OptUSys = None,
-) -> CDict:
-    r"""Change from coordinate basis to physical basis using a general metric.
-
-    Examples
-    --------
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-    >>> import coordinax.representations as cxr
-
-    Use an embedded two-sphere manifold, whose induced metric is non-diagonal in
-    the general case:
-
-    >>> M = cxm.EmbeddedManifold(
-    ...     intrinsic=cxm.HyperSphericalManifold(),
-    ...     ambient=cxm.EuclideanManifold(3),
-    ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
-    ... )
-    >>> v = {"theta": u.Q(1.0, "rad/s"), "phi": u.Q(2.0, "rad/s")}
-    >>> at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0.0, "rad")}
-    >>> cxr.change_basis(v, cxc.sph2, M, cxr.coord_basis, cxr.phys_basis, at=at)
-    {'theta': Q(..., 'km / s'), 'phi': Q(..., 'km / s')}
-
-    """
-    return cxrapi.change_basis(
-        v, chart, M.metric, from_basis, to_basis, at=at, usys=usys
-    )  # ty: ignore[invalid-return-type]
-
-
-@plum.dispatch
-def change_basis(
-    v: CDict,
-    chart: cxc.AbstractChart,
-    M: cxm.AbstractManifold,
     from_basis: PhysicalBasis,
     to_basis: CoordinateBasis,
     /,
@@ -251,12 +222,12 @@ def change_basis(
     ... )
     >>> v = {"theta": u.Q(1.0, "km/s"), "phi": u.Q(2.0, "km/s")}
     >>> at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0.0, "rad")}
-    >>> cxr.change_basis(v, cxc.sph2, M, cxr.phys_basis, cxr.coord_basis, at=at)
+    >>> cxr.change_basis(v, cxc.sph2, M.metric, cxr.phys_basis, cxr.coord_basis, at=at)
     {'theta': Q(..., 'rad / s'), 'phi': Q(..., 'rad / s')}
 
     """
     return cxrapi.change_basis(
-        v, chart, M.metric, from_basis, to_basis, at=at, usys=usys
+        v, chart, chart.M.metric, from_basis, to_basis, at=at, usys=usys
     )  # ty: ignore[invalid-return-type]
 
 
