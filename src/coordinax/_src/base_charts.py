@@ -33,8 +33,9 @@ import wadler_lindig as wl
 import dataclassish
 import unxt as u
 
-from .base_topo import AbstractTopologicalManifold, no_manifold
+from .base_topo import AbstractTopologicalManifold
 from .custom_types import CDict, Ds, Ks
+from .no_manifold import no_manifold
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")

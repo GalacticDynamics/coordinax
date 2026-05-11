@@ -17,6 +17,9 @@ __all__ = (
     "AbstractMetric",
     "AbstractManifold",
     "AbstractDiagonalMetric",
+    # Null
+    "NoAtlas",
+    "no_atlas",
     # Euclidean
     "EuclideanAtlas",
     "EuclideanMetric",
@@ -56,10 +59,10 @@ __all__ = (
 from ._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.manifolds"):
-    from ._src.base_atlas import AbstractAtlas
+    from ._src.base_atlas import AbstractAtlas, NoAtlas, no_atlas
     from ._src.base_manifold import AbstractManifold
     from ._src.base_metric import AbstractDiagonalMetric, AbstractMetric
-    from ._src.base_topo import AbstractTopologicalManifold, NoManifold, no_manifold
+    from ._src.base_topo import AbstractTopologicalManifold
     from ._src.custom import CustomAtlas, CustomManifold, CustomMetric
     from ._src.embedded import (
         AbstractEmbeddingMap,
@@ -82,6 +85,7 @@ with install_import_hook("coordinax.manifolds"):
         MinkowskiMetric,
         minkowski4d,
     )
+    from ._src.no_manifold import NoManifold, no_manifold
     from ._src.product import (
         CartesianProductAtlas,
         CartesianProductManifold,

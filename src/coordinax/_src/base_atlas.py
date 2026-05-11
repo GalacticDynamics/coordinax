@@ -1,6 +1,6 @@
 """Manifold definitions and manifold inference helpers."""
 
-__all__ = ("AbstractAtlas",)
+__all__ = ("AbstractAtlas", "NoAtlas", "no_atlas")
 
 import abc
 import dataclasses
@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Any
 
 import jax.tree_util as jtu
 
-import coordinax.charts as cxc
+import coordinax.api.charts as cxcapi
+from .base_charts import AbstractChart
 
 if TYPE_CHECKING:
     import coordinax.manifolds  # noqa: ICN001
@@ -106,7 +107,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
     """Dimension of the manifold that this atlas covers."""
 
     @abc.abstractmethod
-    def default_chart(self) -> cxc.AbstractChart[Any, Any]:
+    def default_chart(self) -> AbstractChart[Any, Any]:
         """Return a default chart from the atlas.
 
         >>> import coordinax.manifolds as cxm
@@ -119,7 +120,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
 
     def default_chart_for(
         self, M: "coordinax.manifolds.AbstractManifold", /
-    ) -> cxc.AbstractChart[Any, Any]:
+    ) -> AbstractChart[Any, Any]:
         """Return a default chart from the atlas for the given manifold.
 
         This is a thin convenience wrapper over ``self.default_chart()`` that
@@ -146,7 +147,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         return dataclasses.replace(chart, M=M)
 
     @abc.abstractmethod
-    def has_chart(self, chart: cxc.AbstractChart[Any, Any], /) -> bool:
+    def has_chart(self, chart: AbstractChart[Any, Any], /) -> bool:
         """Return whether the atlas supports the given chart.
 
         >>> import coordinax.manifolds as cxm
@@ -160,7 +161,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def __contains__(self, chart: cxc.AbstractChart[Any, Any]) -> bool:
+    def __contains__(self, chart: AbstractChart[Any, Any]) -> bool:
         """Return whether the atlas supports the given chart.
 
         >>> import coordinax.manifolds as cxm
@@ -194,4 +195,23 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
 
         """
-        return cxc.pt_map(x, self, *args, **kwargs)
+        return cxcapi.pt_map(x, self, *args, **kwargs)
+
+
+# ===================================================================
+
+
+class NoAtlas(AbstractAtlas):
+    """Trivial atlas that supports no charts."""
+
+    ndim = 0
+
+    def default_chart(self) -> AbstractChart[Any, Any]:
+        raise ValueError("NoAtlas does not support any charts.")
+
+    def has_chart(self, _: AbstractChart[Any, Any], /) -> bool:
+        return False
+
+
+no_atlas = NoAtlas()
+"""Canonical empty atlas that supports no charts."""

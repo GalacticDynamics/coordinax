@@ -8,7 +8,7 @@ import plum
 import coordinax.api.charts as cxcapi
 from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_manifold import AbstractManifold
-from coordinax._src.base_topo import AbstractTopologicalManifold, no_manifold
+from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax._src.charts.d0 import Cart0D
 from coordinax._src.charts.d1 import Cart1D, Radial1D
 from coordinax._src.charts.d2 import Cart2D, Polar2D
@@ -26,6 +26,7 @@ from coordinax._src.euclidean import (
     euclidean2d,
     euclidean3d,
 )
+from coordinax._src.no_manifold import no_manifold
 
 # ===================================================================
 # Guess Manifolds
