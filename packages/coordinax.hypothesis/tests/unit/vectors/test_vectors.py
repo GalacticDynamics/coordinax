@@ -11,7 +11,9 @@ import coordinax.hypothesis.charts as cxcst
 import coordinax.hypothesis.representations as cxsr
 from coordinax.hypothesis.vectors import vectors as vector_strategy
 
-SUPPORTED_CHARTS = cxcst.charts(exclude=(cxc.CartND, cxc.SpaceTimeCT, cxc.Time1D))
+SUPPORTED_CHARTS = cxcst.charts(
+    exclude=(cxc.CartND, cxc.SpaceTimeCT, cxc.Time1D, cxm.EmbeddedChart)
+)
 
 # Shared float32 element strategies (width=32 matches the default JAX dtype).
 _F32_POS = st.floats(min_value=1.0, max_value=100.0, width=32)

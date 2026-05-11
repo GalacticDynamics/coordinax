@@ -77,7 +77,7 @@ st.register_type_strategy(cxv.Point, lambda _: vectors())  # ty: ignore[missing-
 @st.composite
 def vectors(  # noqa: F811
     draw: st.DrawFn,
-    chart: st.SearchStrategy = cxcst.charts(exclude=(cxc.Time1D,)),  # ty: ignore[missing-argument],
+    chart: st.SearchStrategy = cxcst.charts(exclude=(cxc.Time1D, cxm.EmbeddedChart)),  # ty: ignore[missing-argument],
     /,
     **kw: Any,
 ) -> cxv.Point:
