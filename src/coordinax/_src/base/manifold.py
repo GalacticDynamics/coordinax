@@ -268,7 +268,8 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
 
         """
-        return cxcapi.pt_map(x, self, *args, **kwargs)
+        # TODO: check chart compatible with manifold
+        return cxcapi.pt_map(x, self.atlas, *args, **kwargs)
 
     # =====================================================
 
