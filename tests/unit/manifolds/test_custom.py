@@ -53,25 +53,25 @@ class TestCustomManifold:
         atlas = cxm.CustomAtlas(
             charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d
         )
-        manifold = cxm.CustomManifold(atlas, metric=cxm.FlatMetric(2))
+        M = cxm.CustomManifold(atlas, metric=cxm.FlatMetric(2))
 
-        assert manifold.ndim == 2
-        assert manifold.default_chart() == cxc.cart2d
+        assert M.ndim == 2
+        assert M.default_chart() == cxc.cart2d
 
     def test_has_chart_and_check_chart(self) -> None:
         """Chart membership and validation are delegated to the atlas."""
         atlas = cxm.CustomAtlas(
             charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d
         )
-        manifold = cxm.CustomManifold(atlas, metric=cxm.FlatMetric(2))
+        M = cxm.CustomManifold(atlas, metric=cxm.FlatMetric(2))
 
-        assert manifold.has_chart(cxc.cart2d)
-        assert manifold.has_chart(cxc.polar2d)
-        assert not manifold.has_chart(cxc.cart3d)
+        assert M.has_chart(cxc.cart2d)
+        assert M.has_chart(cxc.polar2d)
+        assert not M.has_chart(cxc.cart3d)
 
-        manifold.check_chart(cxc.cart2d)
+        M.check_chart(cxc.cart2d)
         with pytest.raises(ValueError, match="is not supported"):
-            manifold.check_chart(cxc.cart3d)
+            M.check_chart(cxc.cart3d)
 
 
 @given(atlas=cxst.atlases(cxm.CustomAtlas))

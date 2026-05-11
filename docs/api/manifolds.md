@@ -47,6 +47,7 @@ ang = cxm.angle_between(cxc.cart3d, uvec, vvec, at=at)
 - `guess_manifold`: infer a manifold from manifold/chart/data inputs
 - `scale_factors`: return the metric diagonal in a chart at a base point
 - `angle_between`: return the metric angle between two tangent-vector CDicts
+- `norm`: compute the Riemannian norm $\|v\|_g = \sqrt{g_p(v,v)}$ of a tangent vector in a chart
 - `pt_embed`: embed intrinsic coordinates into ambient coordinates
 - `pt_project`: project ambient coordinates back to intrinsic chart coordinates
 - `pt_map`: manifold-related re-export of point realization map
