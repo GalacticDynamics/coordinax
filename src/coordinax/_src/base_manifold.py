@@ -3,7 +3,7 @@
 __all__ = ("AbstractManifold",)
 
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import jax.tree_util as jtu
 
@@ -11,11 +11,13 @@ import coordinax.angles as cxa
 import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .base_atlas import AbstractAtlas
-from .base_charts import AbstractChart
 from .base_metric import AbstractMetric
 from .custom_types import CDict, OptUSys
 from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax.internal import QuantityMatrix
+
+if TYPE_CHECKING:
+    import coordinax.charts  # noqa: ICN001
 
 
 @jtu.register_static
@@ -205,7 +207,7 @@ class AbstractManifold(AbstractTopologicalManifold):
         """
         return self.atlas.ndim
 
-    def default_chart(self) -> AbstractChart[Any, Any]:
+    def default_chart(self) -> "coordinax.charts.AbstractChart[Any, Any]":
         """Return a default chart from the atlas.
 
         This is a convenience property that proxies to the atlas default chart.
@@ -218,7 +220,7 @@ class AbstractManifold(AbstractTopologicalManifold):
         """
         return self.atlas.default_chart()
 
-    def has_chart(self, chart: AbstractChart[Any, Any], /) -> bool:
+    def has_chart(self, chart: "coordinax.charts.AbstractChart[Any, Any]", /) -> bool:
         """Return whether ``chart`` belongs to this manifold atlas.
 
         >>> import coordinax.manifolds as cxm
@@ -231,7 +233,7 @@ class AbstractManifold(AbstractTopologicalManifold):
         """
         return self.atlas.has_chart(chart)
 
-    def check_chart(self, chart: AbstractChart[Any, Any], /) -> None:
+    def check_chart(self, chart: "coordinax.charts.AbstractChart[Any, Any]", /) -> None:
         """Check that ``chart`` belongs to this manifold atlas.
 
         >>> import coordinax.manifolds as cxm
@@ -268,7 +270,12 @@ class AbstractManifold(AbstractTopologicalManifold):
     # =====================================================
 
     def scale_factors(
-        self, chart: AbstractChart[Any, Any], /, *, at: CDict, usys: OptUSys = None
+        self,
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
+        /,
+        *,
+        at: CDict,
+        usys: OptUSys = None,
     ) -> QuantityMatrix:
         r"""Return the diagonal entries of the manifold metric in ``chart`` at ``at``.
 
@@ -279,7 +286,7 @@ class AbstractManifold(AbstractTopologicalManifold):
 
     def angle_between(
         self,
-        chart: AbstractChart[Any, Any],
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
         uvec: CDict,
         vvec: CDict,
         /,
