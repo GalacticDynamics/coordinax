@@ -53,11 +53,32 @@ A point is an abstract geometric object. In this section we will explore how poi
 
 ### Smooth Manifolds
 
-**Smooth** means that the manifold has a well-defined notion of differentiability, allowing us to perform calculus on it. **Manifold** indicates that the space is locally similar to $\mathbb{R}^n$ but can have a different global topology, such as being curved or having holes.
+#### Topological Manifolds
+
+A **topological manifold** of dimension $n$ is a topological space $M$ satisfying three axioms:
+
+1. **Hausdorff**: any two distinct points $p, q \in M$ have disjoint open neighbourhoods,
+2. **Second-countable**: the topology of $M$ admits a countable basis, and
+3. **Locally Euclidean of dimension $n$**: every point $p \in M$ has an open neighbourhood $U_p$ homeomorphic to an open subset of $\mathbb{R}^n$ via a continuous bijection $\varphi_p : U_p \to \mathbb{R}^n$ with continuous inverse.
+
+The locally Euclidean condition is what makes coordinates possible: near any point, the space looks like flat $n$-dimensional Euclidean space, so one can assign $n$ real numbers to each point in a neighbourhood. The Hausdorff condition rules out pathological point identifications, and second-countability ensures the existence of partitions of unity (needed to glue local constructions together globally).
+
+At the topological level one can ask whether maps are **continuous** or **homeomorphisms**, but not whether they are differentiable. Differentiability is an additional structure layered on top.
+
+#### Smooth Manifolds
+
+A **smooth manifold** is a topological manifold $M$ equipped with a **smooth atlas** — a collection of charts $\{(U_\alpha, \varphi_\alpha)\}$ whose domains cover $M$ and whose **transition maps**
+
+$$
+\tau_{\alpha\beta} = \varphi_\beta \circ \varphi_\alpha^{-1} :
+\varphi_\alpha(U_\alpha \cap U_\beta) \to \varphi_\beta(U_\alpha \cap U_\beta)
+$$
+
+are $C^\infty$ diffeomorphisms wherever chart domains overlap. The unique maximal such atlas defines the **smooth structure**. **Smooth** means that calculus on $M$ is well-defined: one can differentiate functions, define tangent vectors, and integrate differential forms.
 
 A **point** is simply an element $p \in M$.
 
-Most of the important properties and structures associated with smooth manifolds --- such as coordinate systems, charts, atlases, and transition maps --- will be introduced and explained in subsequent sections.
+Most of the important structures of smooth manifolds --- charts, atlases, transition maps, metrics, and embeddings --- are introduced in the sections that follow.
 
 (math-spec-charts)=
 
@@ -948,7 +969,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `ToUnitsOptions` |
-| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
+| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `TransformedReferenceFrame` |
 
@@ -1326,7 +1347,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `Radial1D` is the final concrete chart type for 1-dimensional radial coordinates.
     - Components: `("r",)` with dimension `("length",)`.
-    - `radial1d` is its pre-defined singleton instance.
+    - `radial1d` is its pre-defined instance.
     - Semantically equivalent to `Cart1D` but uses `r` instead of `x`; transition between the two is a pure component rename (`r ↔ x`).
     - Cartesian projection is canonical: `cartesian_chart(Radial1D) -> cart1d`.
 
@@ -1368,7 +1389,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - `Cart3D` is the final concrete chart type for 3-dimensional Cartesian coordinates.
     - Components: `("x", "y", "z")` with dimensions `("length", "length", "length")`.
-    - `cart3d` is its pre-defined `Cart3D()` instance.
+    - `cart3d` is its pre-defined `Cart3D(M=Rn(3))` instance.
     - As the canonical 3-D Cartesian chart, it is the target of `cartesian_chart(Abstract3D)`.
 
 !!! info `Cylindrical3D` and `cyl3d`
@@ -1677,7 +1698,7 @@ A representation is therefore **not** the same thing as a chart: the chart deter
         semantic_kind: AbstractSemanticKind
     ```
 
-(software-spec-singletons)=
+(software-spec-instances)=
 
 !!! info Pre-defined Representations
 
@@ -2134,7 +2155,7 @@ Separating semantics from geometry provides two advantages:
     - Represents $\Delta q = q_2 - q_1$, an element of the tangent space in the limit, or a finite difference.
     - Under Galilean boosts: `Displacement` is **invariant** — boost does not change displacements.
     - `order = 0`.
-    - `derivative()` returns the `vel` singleton directly.
+    - `derivative()` returns the `vel` instance directly.
     - `antiderivative()` uses the base-class internal-registry lookup; raises `ValueError` unless a class at order -1 (e.g. `Absement`) is registered.
 
     API instance:
@@ -2151,8 +2172,8 @@ Separating semantics from geometry provides two advantages:
     - Represents $\dot{q} = dq/dt$, a genuine element of $T_p M$.
     - Under Galilean boosts: **shifts** by the boost velocity $\Delta v$.
     - `order = 1`.
-    - `derivative()` returns the `acc` singleton directly.
-    - `antiderivative()` returns the `dpl` singleton directly.
+    - `derivative()` returns the `acc` instance directly.
+    - `antiderivative()` returns the `dpl` instance directly.
 
     API instance:
 
@@ -2169,7 +2190,7 @@ Separating semantics from geometry provides two advantages:
     - Under Galilean boosts with constant $\Delta v$: **invariant** (since $\dot{\Delta v} = 0$).
     - `order = 2`.
     - `derivative()` uses the base-class ladder lookup; raises `ValueError` unless a class at order 3 (e.g. `Jerk`) is registered.
-    - `antiderivative()` returns the `vel` singleton directly.
+    - `antiderivative()` returns the `vel` instance directly.
 
     API instance:
 
@@ -2270,7 +2291,7 @@ Separating semantics from geometry provides two advantages:
 
 ## Manifolds
 
-The `coordinax.metrics` module, typically imported as `import coordinax.manifolds as cxm`, adds Riemannian (and pseudo-Riemannian) structure to smooth manifolds.
+The `coordinax.manifolds` module, typically imported as `import coordinax.manifolds as cxm`, provides the manifold hierarchy used by `coordinax`. Concrete manifold classes attach an atlas and, where appropriate, a Riemannian (or pseudo-Riemannian) metric to smooth manifolds.
 
 A **metric** on a manifold $M$ is a smooth assignment of a symmetric, non-degenerate bilinear form to each tangent space:
 
@@ -2319,15 +2340,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     >>> # From a point (mapping)
     >>> cxm.guess_manifold({"x": 1.0, "y": 2.0, "z": 3.0})
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     >>> # From a chart
     >>> cxm.guess_manifold(cxc.cart3d)
-    EuclideanManifold(ndim=3)
+    Rn(3)
 
     >>> # From an atlas
     >>> cxm.guess_manifold(cxm.EuclideanAtlas(2))
-    EuclideanManifold(ndim=2)
+    Rn(2)
 
     >>> # Spherical manifold inference
     >>> cxm.guess_manifold(cxc.sph2)
@@ -2360,7 +2381,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signature:**
 
     ```
-    cxm.scale_factors(metric_or_manifold, chart, /, *, at, usys=None)
+    cxm.scale_factors(chart, /, *, at, usys=None)
     ```
 
     Or via convenience wrappers on metric and manifold objects:
@@ -2401,14 +2422,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> M = cxm.EuclideanManifold(3)
     >>> at = {
     ...     "r": u.Q(2.0, "km"),
     ...     "theta": u.Angle(jnp.pi / 2, "rad"),
     ...     "phi": u.Angle(0.0, "rad"),
     ... }
 
-    >>> gdiag = cxm.scale_factors(M, cxc.sph3d, at=at)
+    >>> gdiag = cxm.scale_factors(cxc.sph3d, at=at)
     >>> gdiag.shape
     (3,)
     >>> gdiag.unit.to_string()
@@ -2451,7 +2471,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signature:**
 
     ```
-    cxm.angle_between(metric_or_manifold, chart, u, v, /, *, at, usys=None)
+    cxm.angle_between(metric, chart, u, v, /, *, at, usys=None)
+    ```
+    or
+    ```
+    cxm.angle_between(chart, u, v, /, *, at, usys=None)
     ```
 
     Or via convenience wrappers on metric and manifold objects:
@@ -2477,7 +2501,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Dispatch behavior:**
 
     - Generic metric dispatch: evaluate `metric.metric_matrix(chart, at=at, usys=usys)`, compute the bilinear forms `u^T g v`, `u^T g u`, and `v^T g v`, then return `arccos(...)` of the normalized inner product.
-    - Manifold dispatch: resolve to `angle_between(manifold.metric, chart, u, v, at=at, usys=usys)`.
+    - Manifold dispatch: resolve to `angle_between(chart, u, v, at=at, usys=usys)`.
     - The implementation supports full symmetric metric matrices; it is not restricted to diagonal metrics.
 
     **Failure semantics:**
@@ -2499,7 +2523,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> uvec = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
     >>> vvec = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
 
-    >>> cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
+    >>> cxm.angle_between(cxc.cart2d, uvec, vvec, at=at)
     Angle(1.57079633, 'rad')
 
     >>> at_sph = {
@@ -2509,7 +2533,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ... }
     >>> u_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
     >>> v_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(0.0, "rad"), "phi": u.Angle(1.0, "rad")}
-    >>> cxm.angle_between(cxm.EuclideanMetric(3), cxc.sph3d, u_tan, v_tan, at=at_sph)
+    >>> cxm.angle_between(cxc.sph3d, u_tan, v_tan, at=at_sph)
     Angle(1.57079633, 'rad')
     ```
 
@@ -2557,7 +2581,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> atlas.ndim
     3
     >>> atlas.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> import coordinax.charts as cxc
     >>> cxc.cart3d in atlas
@@ -2634,39 +2658,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
 !!! info `AbstractDiagonalMetric`
 
-    `AbstractDiagonalMetric` is a **structural marker** subclass of `AbstractMetric` for metrics whose matrix is diagonal at **every** base point on their diagonal chart domain.
-
-    A metric is diagonal when all off-diagonal entries vanish globally:
-
-    $$
-    g_{ij}(p) = 0 \quad \text{for } i \neq j, \quad \forall\, p \in M.
-    $$
-
-    The coordinate basis is orthogonal everywhere, and the diagonal entries are the squared scale factors $h_i^2 = g_{ii}$. See [Diagonal metrics and orthogonal coordinate systems](#diagonal-metrics-and-orthogonal-coordinate-systems) for the mathematical background.
-
-    **Structural guarantee vs. point check.** `AbstractDiagonalMetric` makes a **global, type-level** promise on the metric's diagonal chart domain (typically orthogonal charts): the metric is diagonal at every valid base point. This is strictly stronger than the point-wise `is_diagonal()` test on `AbstractMetric`, which inspects the matrix numerically at a specific `at`. Consequently, `AbstractDiagonalMetric.is_diagonal()` **unconditionally returns `True`** without evaluating the metric matrix.
-
-    **Atlas compatibility vs. diagonality.** Atlas/manifold chart compatibility (`has_chart`) is a broader structural criterion and does not by itself imply orthogonality or diagonal metric form.
-
-    **No new abstract members.** `AbstractDiagonalMetric` inherits the full `AbstractMetric` interface and adds no new abstract methods. Subclasses must still implement:
-
-    - `signature` (property): tuple of $\pm 1$ of length `ndim`.
-    - `metric_matrix(chart, /, *, at, usys=None)` (method): **must** return a diagonal `QuantityMatrix` (or plain `Array`) — all off-diagonal entries numerically zero.
-
-    **Dispatch optimization.** Because the diagonal structure is guaranteed statically, dispatch implementations (e.g., for `scale_factors`) can read diagonal entries directly without constructing or inspecting the full $n \times n$ matrix.
-
-    **Immutability and JAX-static requirements:** same as `AbstractMetric` — frozen dataclasses registered with `@jax.tree_util.register_static`.
-
-    **Concrete subclasses:**
-
-    - [`EuclideanMetric`](#software-spec-euclideanmetric): flat Riemannian metric on $\mathbb{R}^n$; identity in Cartesian charts, computed via Jacobian pullback in curvilinear charts.
-    - [`MinkowskiMetric`](#software-spec-minkowskimetric): Lorentzian metric $\eta = \operatorname{diag}(-1, 1, 1, 1)$ on Minkowski spacetime; diagonal in the canonical Cartesian spacetime chart.
-    - [`HyperSphericalMetric`](#software-spec-hypersphericalmetric): round metric on $S^{n-1}$; diagonal entries follow the cumulative-sine rule $g_{kk} = \prod_{j < k}\sin^2\!\theta_j$.
-
-(software-spec-abstractdiagonalmetric)=
-
-!!! info `AbstractDiagonalMetric`
-
     `AbstractDiagonalMetric` is an abstract subclass of `AbstractMetric` for metrics whose matrix is diagonal at every base point in every compatible chart.
 
     A metric is **diagonal** (equivalently, the coordinate chart is an **orthogonal coordinate system**) when all off-diagonal entries of the metric matrix vanish:
@@ -2727,7 +2718,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Example**
 
     ```pycon
-    >>> from coordinax.manifolds._src.diagonal import AbstractDiagonalMetric
+    >>> from coordinax._src.manifolds.diagonal import AbstractDiagonalMetric
     >>> import coordinax.manifolds as cxm
 
     >>> isinstance(cxm.EuclideanMetric(3), AbstractDiagonalMetric)
@@ -2793,6 +2784,28 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - Minkowski [`MinkowskiManifold`](#software-spec-minkowskimanifold)
     - Custom [`CustomManifold`](#software-spec-custommanifold)
 
+!!! info `NoManifold` and `no_manifold`
+
+    `NoManifold` is a degenerate placeholder manifold with no charts and no geometry. It serves as a sentinel value when a manifold object is required by the API but none has been specified by the user.
+
+    - `ndim == -1` (sentinel for "no manifold specified").
+    - `has_chart(chart)` always returns `False`.
+
+    `no_manifold` is the canonical module-level instance of `NoManifold`. It should be used in preference to constructing `NoManifold()` directly, since `NoManifold` carries no state and a shared instance is cheaper.
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> cxm.no_manifold
+    NoManifold()
+
+    >>> cxm.no_manifold.ndim
+    -1
+
+    >>> import coordinax.charts as cxc
+    >>> cxm.no_manifold.has_chart(cxc.cart3d)
+    False
+    ```
+
 ### Euclidean Manifolds
 
 !!! info `EuclideanAtlas`
@@ -2841,7 +2854,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     | 0         | `Cart0D()`    |
     | 1         | `Cart1D()`    |
     | 2         | `Cart2D()`    |
-    | 3         | `Cart3D()`    |
+    | 3         | `Cart3D(M=Rn(3))`    |
     | otherwise | `CartND()`    |
 
     ### Chart registration
@@ -2861,7 +2874,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> A = cxm.EuclideanAtlas(3)
 
     >>> A.default_chart()
-    Cart3D()
+    Cart3D(M=Rn(3))
 
     >>> cxc.cart3d in A
     True
@@ -2949,6 +2962,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     EuclideanManifold(ndim: int)
     ```
 
+    **Alias**: `Rn` is an alias for `EuclideanManifold`. Instances print using the `Rn` name rather than `EuclideanManifold` by default (e.g. `repr(EuclideanManifold(3))` yields `Rn(3)`). Pass `alias=False` to `__pdoc__` to get the full class name instead (e.g. `EuclideanManifold(3)`).
+
     The metric object is attached at construction and is available as `M.metric`.
 
     The default chart is the canonical Cartesian chart of the same dimension provided by the atlas. For example, `EuclideanManifold(2).default_chart == Cart2D()`.
@@ -2965,7 +2980,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> M.ndim
     3
     >>> M.default_chart
-    Cart3D()
+    Cart3D(M=Rn(3))
     >>> M.metric.signature
     (1, 1, 1)
     >>> M.has_chart(cxc.cart3d)

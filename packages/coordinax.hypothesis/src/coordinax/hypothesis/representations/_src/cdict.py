@@ -17,9 +17,8 @@ from hypothesis.extra.array_api import make_strategies_namespace
 
 import coordinax.charts as cxc
 import coordinax.representations as cxr
-from coordinax.internal.custom_types import CDict
 
-from coordinax.hypothesis.utils import draw_if_strategy, strip_return_annotation
+from coordinax.hypothesis.utils import CDict, draw_if_strategy, strip_return_annotation
 
 # Create array API strategies namespace for JAX
 xps = make_strategies_namespace(jnp)

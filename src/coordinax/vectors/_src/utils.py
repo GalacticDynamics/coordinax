@@ -10,7 +10,7 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt._src.dimensions import name_of
 
-from coordinax.internal.custom_types import Shape
+from .custom_types import Shape
 
 # Dimension-related
 DimensionLike: TypeAlias = u.AbstractDimension | str

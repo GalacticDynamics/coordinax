@@ -147,7 +147,7 @@ Promote a quantity to a `Vector`:
 
 >>> v = cx.Point.from_(q)
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> isinstance(v, cx.Point)
 True
@@ -158,7 +158,7 @@ With an explicit chart:
 ```{code-block} python
 >>> v = cx.Point.from_(q, cxc.cart3d)
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ## Upgrading To A Coordinate
@@ -173,7 +173,7 @@ Go all the way from a quantity to a `Coordinate`:
 >>> coord.frame
 Alice()
 >>> coord.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ## Unit Conversion

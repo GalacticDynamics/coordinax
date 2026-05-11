@@ -21,10 +21,10 @@ from unxt.quantity import AllowValue, is_any_quantity
 import coordinax.charts as cxc
 from .base import AbstractTransform
 from .composed import Composed
+from .custom_types import CDict
 from .identity import Identity, identity
 from .utils import Neg
-from coordinax.internal._wl_utils import jax_scalar_handler, pos_named_objs
-from coordinax.internal.custom_types import CDict
+from coordinax.internal import jax_scalar_handler, pos_named_objs
 
 
 class AbstractAdd(AbstractTransform):
@@ -79,7 +79,7 @@ class AbstractAdd(AbstractTransform):
         >>> shift.inverse
         Translate(
             {'x': Q(-1, 'km'), 'y': Q(-2, 'km'), 'z': Q(-3, 'km')},
-            chart=Cart3D()
+            chart=Cart3D(M=Rn(3))
         )
 
         """
@@ -183,7 +183,9 @@ def from_(cls: type[AbstractAdd], q: u.AbstractQuantity, /) -> AbstractAdd:
     >>> import coordinax.transforms as cxfm
 
     >>> cxfm.Translate.from_(u.Q([1, 2, 3], "km"))
-    Translate({'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D())
+    Translate(
+        {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D(M=Rn(3))
+    )
 
     """
     chart = cxc.guess_chart(q)
@@ -200,7 +202,9 @@ def from_(cls: type[AbstractAdd], x: ArrayLike, unit: str) -> AbstractAdd:
     >>> import coordinax.transforms as cxfm
 
     >>> cxfm.Translate.from_([1, 2, 3], "km")
-    Translate({'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D())
+    Translate(
+        {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D(M=Rn(3))
+    )
 
     """
     return cls.from_(u.Q(x, unit))  # ty: ignore[invalid-return-type]

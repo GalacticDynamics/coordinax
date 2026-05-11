@@ -12,8 +12,8 @@ import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+from .custom_types import CDict, OptUSys
 from .point import Point
-from coordinax.internal.custom_types import CDict, OptUSys
 
 CHART_MSMTCH = "from_chart {0} does not match the point's chart {1.chart}"
 

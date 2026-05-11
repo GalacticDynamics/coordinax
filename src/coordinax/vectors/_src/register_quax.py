@@ -17,8 +17,8 @@ import unxt.quantity as uq
 
 import coordinax.charts as cxc
 import coordinax.representations as cxr
+from .custom_types import Shape
 from .point import Point
-from coordinax.internal.custom_types import Shape
 
 ##############################################################################
 # Primitives

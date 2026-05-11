@@ -23,10 +23,10 @@ from .basis import (
     NoBasis,
     PhysicalBasis,
 )
+from .custom_types import CDict, OptUSys
 from .geom import TangentGeometry
 from .rep import Representation
 from coordinax.internal import QuantityMatrix, UnitsMatrix
-from coordinax.internal.custom_types import CDict, OptUSys
 
 T = TypeVar("T", bound=u.Quantity)
 
@@ -185,7 +185,7 @@ def change_basis(
 def change_basis(
     v: CDict,
     chart: cxc.AbstractChart,
-    manifold: cxm.AbstractManifold,
+    M: cxm.AbstractManifold,
     from_basis: CoordinateBasis,
     to_basis: PhysicalBasis,
     /,
@@ -206,19 +206,19 @@ def change_basis(
     Use an embedded two-sphere manifold, whose induced metric is non-diagonal in
     the general case:
 
-    >>> manifold = cxm.EmbeddedManifold(
+    >>> M = cxm.EmbeddedManifold(
     ...     intrinsic=cxm.HyperSphericalManifold(),
     ...     ambient=cxm.EuclideanManifold(3),
     ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
     ... )
     >>> v = {"theta": u.Q(1.0, "rad/s"), "phi": u.Q(2.0, "rad/s")}
     >>> at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0.0, "rad")}
-    >>> cxr.change_basis(v, cxc.sph2, manifold, cxr.coord_basis, cxr.phys_basis, at=at)
+    >>> cxr.change_basis(v, cxc.sph2, M, cxr.coord_basis, cxr.phys_basis, at=at)
     {'theta': Q(..., 'km / s'), 'phi': Q(..., 'km / s')}
 
     """
     return cxrapi.change_basis(
-        v, chart, manifold.metric, from_basis, to_basis, at=at, usys=usys
+        v, chart, M.metric, from_basis, to_basis, at=at, usys=usys
     )  # ty: ignore[invalid-return-type]
 
 
@@ -226,7 +226,7 @@ def change_basis(
 def change_basis(
     v: CDict,
     chart: cxc.AbstractChart,
-    manifold: cxm.AbstractManifold,
+    M: cxm.AbstractManifold,
     from_basis: PhysicalBasis,
     to_basis: CoordinateBasis,
     /,
@@ -244,19 +244,19 @@ def change_basis(
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.representations as cxr
 
-    >>> manifold = cxm.EmbeddedManifold(
+    >>> M = cxm.EmbeddedManifold(
     ...     intrinsic=cxm.HyperSphericalManifold(),
     ...     ambient=cxm.EuclideanManifold(3),
     ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
     ... )
     >>> v = {"theta": u.Q(1.0, "km/s"), "phi": u.Q(2.0, "km/s")}
     >>> at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0.0, "rad")}
-    >>> cxr.change_basis(v, cxc.sph2, manifold, cxr.phys_basis, cxr.coord_basis, at=at)
+    >>> cxr.change_basis(v, cxc.sph2, M, cxr.phys_basis, cxr.coord_basis, at=at)
     {'theta': Q(..., 'rad / s'), 'phi': Q(..., 'rad / s')}
 
     """
     return cxrapi.change_basis(
-        v, chart, manifold.metric, from_basis, to_basis, at=at, usys=usys
+        v, chart, M.metric, from_basis, to_basis, at=at, usys=usys
     )  # ty: ignore[invalid-return-type]
 
 

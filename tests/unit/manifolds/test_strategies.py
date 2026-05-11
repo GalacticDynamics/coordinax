@@ -15,11 +15,9 @@ def test_generated_atlas_supports_default_chart(atlas: cxm.AbstractAtlas) -> Non
     assert isinstance(atlas.default_chart(), cxc.AbstractChart)
 
 
-@given(manifold=cxst.manifolds())
-def test_generated_manifold_supports_default_chart(
-    manifold: cxm.AbstractManifold,
-) -> None:
+@given(M=cxst.manifolds())
+def test_generated_manifold_supports_default_chart(M: cxm.AbstractManifold) -> None:
     """Every generated manifold exposes an atlas and a default chart."""
-    assert isinstance(manifold.atlas, cxm.AbstractAtlas)
-    assert manifold.atlas.ndim == manifold.ndim
-    assert isinstance(manifold.default_chart, cxc.AbstractChart)
+    assert isinstance(M.atlas, cxm.AbstractAtlas)
+    assert M.atlas.ndim == M.ndim
+    assert isinstance(M.default_chart(), cxc.AbstractChart)

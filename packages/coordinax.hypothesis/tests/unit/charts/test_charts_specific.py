@@ -2,7 +2,7 @@
 
 import hypothesis.strategies as st
 import pytest
-from hypothesis import given
+from hypothesis import HealthCheck, given, settings
 from hypothesis.errors import Unsatisfiable
 
 import coordinax.charts as cxc
@@ -54,6 +54,7 @@ def test_concrete_chart_with_impossible_ndim_is_unsatisfiable() -> None:
     """Concrete class requests remain unsatisfiable when ndim cannot match."""
 
     @given(chart=cxst.charts(cxc.Cart1D, ndim=2))
+    @settings(suppress_health_check=[HealthCheck.filter_too_much])
     def impossible(chart: cxc.AbstractChart) -> None:
         del chart
 

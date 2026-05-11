@@ -25,37 +25,6 @@ class TestAngleBetweenEuclidean:
         assert isinstance(got, AbstractAngle)
         assert jnp.allclose(u.ustrip("rad", got), jnp.pi / 2, atol=1e-6)
 
-    def test_manifold_and_wrapper_match_metric(self):
-        manifold = cxm.EuclideanManifold(3)
-        at = {
-            "r": u.Q(jnp.array(2.0), "m"),
-            "theta": u.Angle(jnp.pi / 2, "rad"),
-            "phi": u.Angle(jnp.array(0.0), "rad"),
-        }
-        uvec = {
-            "r": u.Q(jnp.array(0.0), "m"),
-            "theta": u.Angle(jnp.array(1.0), "rad"),
-            "phi": u.Angle(jnp.array(0.0), "rad"),
-        }
-        vvec = {
-            "r": u.Q(jnp.array(0.0), "m"),
-            "theta": u.Angle(jnp.array(0.0), "rad"),
-            "phi": u.Angle(jnp.array(1.0), "rad"),
-        }
-
-        got_metric = cxm.angle_between(manifold.metric, cxc.sph3d, uvec, vvec, at=at)
-        got_manifold = cxm.angle_between(manifold, cxc.sph3d, uvec, vvec, at=at)
-        got_method = manifold.angle_between(cxc.sph3d, uvec, vvec, at=at)
-
-        assert isinstance(got_metric, AbstractAngle)
-        assert jnp.allclose(u.ustrip("rad", got_metric), jnp.pi / 2, atol=1e-6)
-        assert jnp.allclose(
-            u.ustrip("rad", got_manifold), u.ustrip("rad", got_metric), atol=1e-6
-        )
-        assert jnp.allclose(
-            u.ustrip("rad", got_method), u.ustrip("rad", got_metric), atol=1e-6
-        )
-
 
 class TestAngleBetweenFailureModes:
     """Tests for invalid inputs and unsupported metrics."""

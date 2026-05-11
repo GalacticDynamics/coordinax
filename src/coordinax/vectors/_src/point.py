@@ -22,15 +22,14 @@ import unxt.quantity as uq
 
 import coordinax.charts as cxc
 import coordinax.frames as cxf
-import coordinax.manifolds as cxm
 import coordinax.representations as cxr
 from .base import AbstractVector
 from .custom_types import CKey, HasShape
 from .mixins import AstropyRepresentationAPIMixin
-from coordinax.internal._wl_utils import pos_named_objs
+from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
-    from coordinax.internal.custom_types import CDict
+    from .custom_types import CDict
 
 ChartT = TypeVar(
     "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
@@ -139,9 +138,6 @@ class Point(
     chart: ChartT = eqx.field(static=True)
     """The chart of the vector, e.g. `cxc.cart3d`."""
 
-    manifold: cxm.AbstractManifold = eqx.field()
-    """The manifold the vector lives in."""
-
     frame: cxf.AbstractReferenceFrame = eqx.field(
         default=cxf.noframe, converter=_frame_converter
     )
@@ -149,7 +145,7 @@ class Point(
 
     def _check_init(self) -> None:
         # Pass a check to self.chart.check_data
-        self.manifold.has_chart(self.chart)
+        self.M.has_chart(self.chart)
         self.chart.check_data(self.data, keys=True)
 
     @property
@@ -161,7 +157,7 @@ class Point(
     def __getitem__(self, key: Any) -> "V | Point":  # ty: ignore[invalid-method-override]
         if isinstance(key, str):
             return self.data[key]
-        return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type,not-subscriptable]
+        return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type]
 
     # ===============================================================
     # Quax API
@@ -238,42 +234,7 @@ def from_(cls: type[Point], obj: Point, /) -> Point:
     """
     if type(obj) is cls:  # pylint: disable=unidiomatic-typecheck
         return obj  # fast path for same type
-    return cls.from_(obj.data, obj.chart, obj.manifold)
-
-
-@Point.from_.dispatch  # ty: ignore[unresolved-attribute]
-def from_(
-    cls: type[Point],
-    obj: Any,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    manifold: cxm.AbstractManifold,
-    /,
-) -> Point:
-    """Construct a vector from an object, and chart, rep, and manifold info.
-
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.main as cx
-
-    >>> xs = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
-    >>> vec = cx.Point.from_(xs, cx.cart3d, cx.point, cx.euclidean3d)
-    >>> print(vec)
-    <Point: chart=Cart3D (x, y, z) [m]
-        [1 2 3]>
-
-    >>> xs = u.Q(jnp.array([[1, 2, 3], [4, 5, 6]]), "m")
-    >>> vec = cx.Point.from_(xs, cx.cart3d, cx.point, cx.euclidean3d)
-    >>> print(vec)
-    <Point: chart=Cart3D (x, y, z) [m]
-        [[1 2 3]
-         [4 5 6]]>
-
-    """
-    if rep != cxr.point:
-        raise ValueError(f"Point construction needs point rep, got {rep}.")
-    data = cast("CDict", cxc.cdict(obj, chart))
-    return cls(data=data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    return cls.from_(obj.data, obj.chart, obj.M)
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -309,8 +270,7 @@ def from_(
     if rep != cxr.point:
         raise ValueError(f"Point construction needs point rep, got {rep}.")
     data = cast("CDict", cxc.cdict(obj, chart))
-    manifold = cxm.guess_manifold(chart)
-    return cls(data=data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    return cls(data=data, chart=chart)  # ty: ignore[missing-argument]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -343,8 +303,7 @@ def from_(cls: type[Point], obj: Any, chart: cxc.AbstractChart, /) -> Point:
 
     """
     data = cast("CDict", cxc.cdict(obj, chart))
-    manifold = cxm.guess_manifold(chart)
-    return cls(data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    return cls(data, chart=chart)  # ty: ignore[missing-argument]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -378,8 +337,7 @@ def from_(cls: type[Point], obj: Any, rep: cxr.Representation, /) -> Point:
     """
     data = cast("CDict", cxc.cdict(obj))
     chart = cxc.guess_chart(data)
-    manifold = cxm.guess_manifold(chart)
-    return cls(data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    return cls(data, chart=chart)  # ty: ignore[missing-argument]
 
 
 @Point.from_.dispatch  # ty: ignore[unresolved-attribute]
@@ -411,10 +369,8 @@ def from_(cls: type[Point], obj: Any, /) -> Any:
     chart = cxc.guess_chart(obj)
     # Infer the data from the chart and object
     data = cast("CDict", cxc.cdict(obj, chart))
-    # Infer the manifold from the chart
-    manifold = cxm.guess_manifold(chart)
 
-    return cls(data, chart=chart, manifold=manifold)  # ty: ignore[missing-argument]
+    return cls(data, chart=chart)  # ty: ignore[missing-argument]
 
 
 # -------------------------------------
@@ -589,7 +545,7 @@ def from_(
     >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
     >>> p = cx.Point.from_(d, cxc.cart3d, cxf.alice)
     >>> p.chart
-    Cart3D()
+    Cart3D(M=Rn(3))
     >>> p.frame
     Alice()
 
@@ -620,7 +576,7 @@ def from_(
     >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
     >>> p = cx.Point.from_(d, cxc.cart3d, cxr.point, cxf.alice)
     >>> p.chart
-    Cart3D()
+    Cart3D(M=Rn(3))
     >>> p.rep
     Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
     >>> p.frame

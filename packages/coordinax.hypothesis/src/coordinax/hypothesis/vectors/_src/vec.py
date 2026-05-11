@@ -77,7 +77,7 @@ st.register_type_strategy(cxv.Point, lambda _: vectors())  # ty: ignore[missing-
 @st.composite
 def vectors(  # noqa: F811
     draw: st.DrawFn,
-    chart: st.SearchStrategy = cxcst.charts(exclude=(cxc.Time1D,)),  # ty: ignore[missing-argument],
+    chart: st.SearchStrategy = cxcst.charts(exclude=(cxc.Time1D, cxm.EmbeddedChart)),  # ty: ignore[missing-argument],
     /,
     **kw: Any,
 ) -> cxv.Point:
@@ -148,65 +148,7 @@ def vectors(  # noqa: F811
     chart = draw_if_strategy(draw, chart)
     rep = draw_if_strategy(draw, rep)
     try:
-        return draw(vectors(chart, rep, **kw))  # ty: ignore[missing-argument, too-many-positional-arguments]
-    except (TypeError, ValueError, plum.NotFoundLookupError):
-        assume(False)
-
-
-@plum.dispatch.multi(
-    (st.SearchStrategy, st.SearchStrategy, st.SearchStrategy),
-    (cxc.AbstractChart, st.SearchStrategy, st.SearchStrategy),
-    (st.SearchStrategy, cxr.Representation, st.SearchStrategy),
-    (st.SearchStrategy, st.SearchStrategy, cxm.AbstractManifold),
-    (cxc.AbstractChart, cxr.Representation, st.SearchStrategy),
-    (cxc.AbstractChart, st.SearchStrategy, cxm.AbstractManifold),
-    (st.SearchStrategy, cxr.Representation, cxm.AbstractManifold),
-)
-@strip_return_annotation
-@st.composite
-def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart | st.SearchStrategy,
-    rep: cxr.Representation | st.SearchStrategy,
-    manifold: cxm.AbstractManifold | st.SearchStrategy,
-    /,
-    **kw: Any,
-) -> cxv.AbstractVector:
-    """Generate a vector after drawing strategy-valued *chart*, *rep*, and/or *manifold*.
-
-    Handles all three-argument combinations where at least one of ``chart``,
-    ``rep``, or ``manifold`` is a strategy.  Concrete values are re-dispatched
-    to the ``(chart, rep, manifold)`` concrete overload.
-
-    Before redispatching, the drawn manifold (if not ``None``) is validated
-    against the drawn chart; an incompatible pair raises
-    {class}`ValueError`.
-
-    Examples
-    --------
-    >>> import coordinax.hypothesis.vectors as cxvst
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import coordinax.manifolds as cxm
-    >>> from hypothesis import given
-    >>> import hypothesis.strategies as st
-
-    Explicit manifold via strategy:
-
-    >>> manifold = cxm.EuclideanManifold(3)
-    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, st.just(manifold)))
-    ... def test_manifold_strat(vec): ...
-
-    """
-    chart = draw_if_strategy(draw, chart)
-    rep = draw_if_strategy(draw, rep)
-    manifold = draw_if_strategy(draw, manifold)
-
-    if manifold is not None and not manifold.has_chart(chart):
-        raise ValueError(f"Manifold {manifold!r} does not support chart {chart!r}.")
-
-    try:
-        return draw(vectors(chart, rep, manifold, **kw))  # ty: ignore[too-many-positional-arguments]
+        return draw(vectors(chart, rep, **kw))  # ty: ignore[ too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -220,10 +162,7 @@ def vectors(  # noqa: F811
 @strip_return_annotation
 @st.composite
 def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart,
-    /,
-    **kw: Any,
+    draw: st.DrawFn, chart: cxc.AbstractChart, /, **kw: Any
 ) -> cxv.Point:
     """Generate a point for a concrete *chart*.
 
@@ -239,7 +178,7 @@ def vectors(  # noqa: F811
     """
     rep = draw(cxrst.representations(check_valid=True))
     try:
-        return draw(vectors(chart, rep, **kw))  # ty: ignore[missing-argument, too-many-positional-arguments]
+        return draw(vectors(chart, rep, **kw))  # ty: ignore[too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -248,11 +187,7 @@ def vectors(  # noqa: F811
 @strip_return_annotation
 @st.composite
 def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    **kw: Any,
+    draw: st.DrawFn, chart: cxc.AbstractChart, rep: cxr.Representation, /, **kw: Any
 ) -> cxv.Point:
     """Generate a point for a concrete *chart* and *rep* (manifold inferred).
 
@@ -273,39 +208,3 @@ def vectors(  # noqa: F811
     except plum.NotFoundLookupError as exc:
         raise ValueError(f"Could not infer a manifold for chart {chart!r}.") from exc
     return cast("cxv.Point", out)
-
-
-@plum.dispatch
-@strip_return_annotation
-@st.composite
-def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    manifold: cxm.AbstractManifold,
-    /,
-    **kw: Any,
-) -> cxv.AbstractVector:
-    """Generate a vector for a fully-concrete ``(chart, rep, manifold)`` triple.
-
-    This is the terminal overload.  All arguments are concrete instances and no
-    further redispatch occurs.
-
-    Examples
-    --------
-    >>> import coordinax.hypothesis.vectors as cxvst
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import coordinax.manifolds as cxm
-    >>> from hypothesis import given
-
-    >>> manifold = cxm.EuclideanManifold(3)
-    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, manifold))
-    ... def test_explicit_manifold(vec): ...
-
-    """
-    if not manifold.has_chart(chart):
-        raise ValueError(f"Manifold {manifold!r} does not support chart {chart!r}.")
-
-    data = draw(cxrst.cdicts(chart, rep, **kw))  # ty: ignore[missing-argument]
-    return cxv.Point.from_(data, chart, rep, manifold)  # ty: ignore[invalid-return-type]

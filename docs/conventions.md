@@ -255,7 +255,7 @@ See [Glossary: Multiple Dispatch, Promotion](glossary.md); [plum documentation](
 
 ### Pre-Defined Chart Instances
 
-For convenience, modules provide lowercase singleton instances:
+For convenience, modules provide lowercase instances:
 
 - `cart3d`: Instance of `Cartesian3D`
 - `sph3d`: Instance of `Spherical3D`

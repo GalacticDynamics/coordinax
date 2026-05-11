@@ -51,7 +51,7 @@ def frame_transition(
     Composed((
       Rotate(f64[3,3](jax)),
       Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D() ),
+      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
       Rotate(f64[3,3](jax))
     ))
 
@@ -108,10 +108,10 @@ def frame_transition(
     >>> frame_op2
     Composed((
       Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D() ),
+      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
       Rotate(f64[3,3](jax)),
       Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D() ),
+      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
       Rotate(f64[3,3](jax))
     ))
 
@@ -159,7 +159,7 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     >>> frame_op
     Composed((
       Rotate(f64[3,3](jax)),
-      Translate( {...}, chart=Cart3D() ),
+      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
       Rotate(f64[3,3](jax))
     ))
 

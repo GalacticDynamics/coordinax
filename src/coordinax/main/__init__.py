@@ -26,6 +26,7 @@ __all__ = (  # distances
     "cartnd",
     # manifolds and atlases
     "EuclideanManifold",
+    "Rn",
     "EuclideanMetric",
     "euclidean3d",
     "twosphere",
@@ -116,6 +117,7 @@ from coordinax.manifolds import (
     EmbeddedManifold,
     EuclideanManifold,
     EuclideanMetric,
+    Rn,
     embedded_twosphere,
     euclidean3d,
     twosphere,
@@ -168,6 +170,6 @@ from coordinax.transforms import (
 from coordinax.vectors import Point, ToUnitsOptions
 
 try:  # noqa: SIM105
-    import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import]
+    import coordinax.interop.astropy as _  # ty: ignore[unresolved-import,unused-ignore-comment]  # noqa: F401
 except ImportError:
     pass

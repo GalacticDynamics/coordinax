@@ -67,7 +67,7 @@ The chart is inferred from the array length (3 → `cart3d`):
 ```{code-block} python
 >>> v = cx.Point.from_([1, 2, 3], "m")
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> sorted(v.data.keys())
 ['x', 'y', 'z']
@@ -85,7 +85,7 @@ Shape inference:
 >>> q = u.Q([1, 2, 3], "m")
 >>> v = cx.Point.from_(q)
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ### From A Component Dictionary
@@ -97,7 +97,7 @@ The most explicit pattern — every component is named:
 ...     {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
 ... )
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ### With Explicit Chart
@@ -110,7 +110,7 @@ Override the inferred chart:
 ...     cxc.sph3d,
 ... )
 >>> v.chart
-Spherical3D()
+Spherical3D(M=Rn(3))
 ```
 
 ### With Explicit Chart And Representation
@@ -140,13 +140,13 @@ True
 >>> v = cx.Point.from_([1, 2, 3], "m")
 
 >>> v.chart
-Cart3D()
+Cart3D(M=Rn(3))
 
 >>> v.rep
 Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 
->>> v.manifold
-EuclideanManifold(ndim=3)
+>>> v.M
+Rn(3)
 
 >>> sorted(v.data.keys())
 ['x', 'y', 'z']
@@ -165,7 +165,7 @@ Because a vector carries both its chart and its manifold, you can ask the manifo
 ...     cxc.sph3d,
 ... )
 
->>> gdiag = v.manifold.scale_factors(v.chart, at=v.data)
+>>> gdiag = v.M.scale_factors(v.chart, at=v.data)
 >>> gdiag.shape
 (3,)
 >>> gdiag.unit.to_string()
@@ -185,7 +185,7 @@ Use `cx.cconvert()` to transform between coordinate systems. The geometric point
 
 >>> v_sph = cx.cconvert(v_cart, cxc.sph3d)
 >>> v_sph.chart
-Spherical3D()
+Spherical3D(M=Rn(3))
 
 >>> sorted(v_sph.data.keys())
 ['phi', 'r', 'theta']
@@ -196,7 +196,7 @@ Round-tripping:
 ```{code-block} python
 >>> v_back = cx.cconvert(v_sph, cxc.cart3d)
 >>> v_back.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ### Cartesian → Cylindrical → Spherical
@@ -206,11 +206,11 @@ Cart3D()
 
 >>> v_cyl = cx.cconvert(v, cxc.cyl3d)
 >>> v_cyl.chart
-Cylindrical3D()
+Cylindrical3D(M=Rn(3))
 
 >>> v_sph = cx.cconvert(v_cyl, cxc.sph3d)
 >>> v_sph.chart
-Spherical3D()
+Spherical3D(M=Rn(3))
 ```
 
 ## Applying Transforms
@@ -288,7 +288,7 @@ Vectors are JAX PyTrees (via Equinox), so all JAX transformations work out of th
 >>> v = cx.Point.from_({"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")})
 >>> result = rotate_to_spherical(v)
 >>> result.chart
-Spherical3D()
+Spherical3D(M=Rn(3))
 ```
 
 ## Upgrading To A Coordinate
@@ -301,7 +301,7 @@ Attach a reference frame to promote a vector to a coordinate:
 >>> coord.frame
 Alice()
 >>> coord.chart
-Cart3D()
+Cart3D(M=Rn(3))
 ```
 
 ## When To Use Vector

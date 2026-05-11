@@ -20,6 +20,7 @@ from .constants import (
     LENGTH,
     SPEED,
 )
+from .custom_types import CDict
 from .geom import (
     AbstractGeometry,
     PointGeometry,
@@ -29,7 +30,6 @@ from .geom import (
 )
 from .rep import Representation, point
 from .semantics import AbstractSemanticKind, Location, acc, dpl, loc, vel
-from coordinax.internal.custom_types import CDict
 
 # ===================================================================
 

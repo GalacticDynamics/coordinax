@@ -28,9 +28,9 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import unxt as u
-from coordinax.internal.custom_types import CDict
 
 from .base import AbstractParallelTransportTransform
+from .custom_types import CDict
 
 
 @plum.dispatch

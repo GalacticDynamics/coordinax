@@ -63,7 +63,7 @@ class TestCustomManifold:
         manifold = cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
 
         assert manifold.ndim == 2
-        assert manifold.default_chart == cxc.cart2d
+        assert manifold.default_chart() == cxc.cart2d
 
     def test_has_chart_and_check_chart(self) -> None:
         """Chart membership and validation are delegated to the atlas."""
@@ -108,18 +108,16 @@ def test_custom_atlas_property_invariants(atlas: cxm.CustomAtlas) -> None:
 
 
 @given(
-    manifold=cxst.manifolds(
-        cxm.CustomManifold,
-        ndim=2,
-        required_chart_classes=(cxc.Cart2D, cxc.Polar2D),
+    M=cxst.manifolds(
+        cxm.CustomManifold, ndim=2, required_chart_classes=(cxc.Cart2D, cxc.Polar2D)
     )
 )
-def test_custom_manifold_property_transition(manifold: cxm.CustomManifold) -> None:
+def test_custom_manifold_property_transition(M: cxm.CustomManifold) -> None:
     """Generated 2D custom manifolds support cart2d->polar2d transitions."""
     # Fixed input point keeps this property focused on manifold/chart validity,
     # not numeric fuzz from random values.
     x = {"x": 1.0, "y": 1.0}
     # The required chart classes ensure this transition path is defined.
-    got = manifold.pt_map(x, cxc.cart2d, cxc.polar2d)
+    got = M.pt_map(x, cxc.cart2d, cxc.polar2d)
     # Transition result schema should match polar chart component keys.
     assert set(got) == {"r", "theta"}

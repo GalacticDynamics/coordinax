@@ -357,7 +357,7 @@ import coordinax.frames as cxf
 
 coord = cx.Point.from_([1, 2, 3], "kpc", cxf.alice)
 print(coord.frame)  # Alice()
-print(coord.chart)  # Cart3D()
+print(coord.chart)  # Cart3D(M=Rn(3))
 ```
 
 ### Frame Transformations On Coordinates
@@ -392,7 +392,7 @@ import coordinax.charts as cxc
 coord_cart = cx.Point.from_([1, 2, 3], "m", cxf.alice)
 coord_sph = coord_cart.cconvert(cxc.sph3d)
 
-print(coord_cart.frame, coord_cart.chart)  # Alice(), Cart3D()
+print(coord_cart.frame, coord_cart.chart)  # Alice(), Cart3D(M=Rn(3))
 print(coord_sph.frame, coord_sph.chart)  # Alice(), Spherical3D()
 ```
 

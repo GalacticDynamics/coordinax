@@ -29,7 +29,7 @@ import unxt as u
 from dataclassish import field_items, flags
 
 import coordinax.api.transforms as cxfmapi
-from coordinax.internal._wl_utils import pos_named_objs
+from coordinax.internal import pos_named_objs
 
 if TYPE_CHECKING:
     import coordinax.transforms  # noqa: ICN001
@@ -265,7 +265,9 @@ def from_(
 
     >>> op = cxfm.Translate.from_([1, 1, 1], "km")
     >>> print(op)
-    Translate({'x': Q(1, 'km'), 'y': Q(1, 'km'), 'z': Q(1, 'km')}, chart=Cart3D())
+    Translate(
+        {'x': Q(1, 'km'), 'y': Q(1, 'km'), 'z': Q(1, 'km')}, chart=Cart3D(M=Rn(3))
+    )
 
     """
     return cls.from_(u.Q(x, unit))  # ty: ignore[invalid-return-type]

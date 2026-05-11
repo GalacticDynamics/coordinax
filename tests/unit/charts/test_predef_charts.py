@@ -266,7 +266,7 @@ def test_predef_chart_ndim(chart, expected_ndim) -> None:
     ids=_CHART_IDS,
 )
 def test_predef_chart_equals_fresh_instance(chart, cls) -> None:
-    """The predefined singleton equals a freshly constructed instance."""
+    """The predefined instance equals a freshly constructed instance."""
     assert chart == cls()
 
 

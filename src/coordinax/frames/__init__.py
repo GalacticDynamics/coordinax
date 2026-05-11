@@ -13,7 +13,8 @@ Let's transform a position from Alice's frame to Alex's frame:
 >>> op
 Composed((
     Translate(
-        {'x': Q(i64[], 'm'), 'y': Q(i64[], 'm'), 'z': Q(i64[], 'm')}, chart=Cart3D()
+        {'x': Q(i64[], 'm'), 'y': Q(i64[], 'm'), 'z': Q(i64[], 'm')},
+        chart=Cart3D(M=Rn(3))
     ),
     Rotate(f64[3,3](jax))
 ))

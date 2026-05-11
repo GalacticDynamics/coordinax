@@ -46,21 +46,6 @@ class TestScaleFactorsEuclidean:
         assert result.unit[1] == u.unit("m2 / rad2")
         assert result.unit[2] == u.unit("m2 / rad2")
 
-    def test_manifold_wrapper_matches_metric(self):
-        manifold = cxm.EuclideanManifold(3)
-        at = {
-            "r": u.Q(jnp.array(3.0), "km"),
-            "theta": u.Angle(jnp.pi / 2, "rad"),
-            "phi": u.Angle(jnp.array(0.0), "rad"),
-        }
-
-        result_metric = cxm.scale_factors(manifold.metric, cxc.sph3d, at=at)
-        result_manifold = cxm.scale_factors(manifold, cxc.sph3d, at=at)
-
-        assert isinstance(result_manifold, QuantityMatrix)
-        assert jnp.allclose(result_manifold.value, result_metric.value)
-        assert result_manifold.unit.to_string() == result_metric.unit.to_string()
-
 
 class TestScaleFactorsGeneric:
     """Tests for generic metric-based scale_factors behavior."""
@@ -124,19 +109,19 @@ class TestScaleFactorsGeneric:
         assert jnp.allclose(result, expected, atol=1e-6)
 
     def test_embedded_manifold_requires_induced_metric(self):
-        manifold = cxm.EmbeddedManifold(
+        M = cxm.EmbeddedManifold(
             intrinsic=cxm.HyperSphericalManifold(),
             ambient=cxm.EuclideanManifold(3),
             embed_map=cxm.TwoSphereIn3D(radius=u.Q(jnp.array(2.0), "m")),
         )
-        assert isinstance(manifold.metric, cxm.InducedMetric)
+        assert isinstance(M.metric, cxm.InducedMetric)
 
         at = {
             "theta": u.Angle(jnp.pi / 6, "rad"),
             "phi": u.Angle(jnp.array(0.0), "rad"),
         }
 
-        result = cxm.scale_factors(manifold, cxc.sph2, at=at)
+        result = cxm.scale_factors(M.metric, cxc.sph2, at=at)
 
         # A 2-sphere of radius R embedded in Euclidean 3-space has induced metric
         # diag(R^2, R^2 sin^2(theta)) in the (theta, phi) chart. Here R = 2 m,

@@ -9,13 +9,13 @@ from typing import Any
 import plum
 
 import coordinax.manifolds as cxm
+from .custom_types import OptUSys
 from .point import Point
-from coordinax.internal.custom_types import OptUSys
 
 
 @plum.dispatch
 def pt_project(
-    p_ambient: Point, manifold: cxm.HyperSphericalManifold, /, *, usys: OptUSys = None
+    p_ambient: Point, M: cxm.HyperSphericalManifold, /, *, usys: OptUSys = None
 ) -> Any:
     """Project a point from an ambient space onto a manifold.
 
@@ -32,12 +32,9 @@ def pt_project(
     ...     cx.sph3d)
     >>> M = cxm.HyperSphericalManifold(2)
     >>> cxm.pt_project(q, M)
-    Point(
-      {'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')},
-      chart=SphericalTwoSphere(), manifold=HyperSphericalManifold(ndim=2)
-    )
+    Point({'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')}, chart=SphericalTwoSphere(M=Sn(2)))
 
     """
-    data = cxm.pt_project(p_ambient.data, p_ambient.chart, manifold, usys=usys)
+    data = cxm.pt_project(p_ambient.data, p_ambient.chart, M, usys=usys)
     embed_map = cxm.TwoSphereIn3D(1.0)
-    return replace(p_ambient, data=data, chart=embed_map.intrinsic, manifold=manifold)
+    return replace(p_ambient, data=data, chart=embed_map.intrinsic)

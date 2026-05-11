@@ -25,13 +25,13 @@ import coordinax.charts as cxc
 import coordinax.transforms as cxt
 import quaxed.numpy as qnp
 import unxt as u
-from coordinax.internal.custom_types import CDict
 
 from .base import (
     AbstractParallelTransportFrame,
     AbstractParallelTransportTransform,
     FrameT,
 )
+from .custom_types import CDict
 
 
 def _normalize(v: Any) -> Any:

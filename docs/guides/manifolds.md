@@ -26,8 +26,8 @@ If you only need raw chart transforms, use the charts guide. If you need compati
 >>> M = cxm.EuclideanManifold(3)
 >>> M.ndim
 3
->>> M.default_chart
-Cart3D()
+>>> M.default_chart()
+Cart3D(M=Rn(3))
 
 >>> M.has_chart(cxc.cart3d)
 True
@@ -48,8 +48,8 @@ False
 >>> import coordinax.manifolds as cxm
 
 >>> E2 = cxm.EuclideanManifold(2)
->>> E2.default_chart
-Cart2D()
+>>> E2.default_chart()
+Cart2D(M=Rn(2))
 >>> E2.has_chart(cxc.cart2d)
 True
 >>> E2.has_chart(cxc.polar2d)
@@ -65,8 +65,8 @@ True
 >>> import coordinax.manifolds as cxm
 
 >>> S2 = cxm.HyperSphericalManifold()
->>> S2.default_chart
-SphericalTwoSphere()
+>>> S2.default_chart()
+SphericalTwoSphere(M=Sn(2))
 >>> S2.has_chart(cxc.sph2)
 True
 >>> S2.has_chart(cxc.cart2d)
@@ -82,7 +82,7 @@ Use `guess_manifold` when you have data or a chart and need a manifold object.
 >>> import coordinax.manifolds as cxm
 
 >>> cxm.guess_manifold({"x": 1, "y": 2, "z": 3})
-EuclideanManifold(ndim=3)
+Rn(3)
 
 >>> cxm.guess_manifold(cxc.sph2)
 HyperSphericalManifold(ndim=2)
@@ -204,9 +204,9 @@ Use `EmbeddedChart` for compact chart-facing embed/project operations.
 
 >>> embedded = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(1, "km")))
 >>> embedded.intrinsic
-SphericalTwoSphere()
+SphericalTwoSphere(M=Sn(2))
 >>> embedded.ambient
-Spherical3D()
+Spherical3D(M=Rn(3))
 
 >>> p_intrinsic = {"theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
 >>> p_ambient = cxm.pt_embed(p_intrinsic, embedded)

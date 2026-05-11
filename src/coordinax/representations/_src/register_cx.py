@@ -7,9 +7,9 @@ from typing import Any, Final
 import plum
 
 import coordinax.charts as cxc
+from .custom_types import OptUSys
 from .geom import PointGeometry
 from .rep import Representation, point
-from coordinax.internal.custom_types import OptUSys
 
 # =======================================================================
 # General dispatches

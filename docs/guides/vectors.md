@@ -244,7 +244,7 @@ import coordinax.charts as cxc
 coord_cart = cx.Point.from_([1, 2, 3], "m", cxf.alice)
 coord_sph = coord_cart.cconvert(cxc.sph3d)
 
-print(coord_cart.chart)  # Cart3D()
+print(coord_cart.chart)  # Cart3D(M=Rn(3))
 print(coord_sph.chart)  # Spherical3D()
 
 print(coord_cart.frame)  # Alice()

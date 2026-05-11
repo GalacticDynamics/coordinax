@@ -6,15 +6,14 @@ __all__ = (
     "RECOGNIZE_NONINTROSPECTABLE",
 )
 
-from dataclasses import dataclass
-
+import dataclasses
 from collections.abc import Callable
 from typing import Any, Final, Generic, TypeVar
 
 T = TypeVar("T")
 
 
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class AbstractNotIntrospectable(Generic[T]):
     """Wrapper to indicate a non-introspectable annotation."""
 

@@ -2,15 +2,14 @@
 
 __all__ = ()
 
+import dataclasses
 import functools as ft
 import inspect
-from dataclasses import dataclass
-
-import jaxtyping
 from typing import Any, Final, final
 
 import hypothesis.strategies as st
 import jax.numpy as jnp
+import jaxtyping
 import plum
 from hypothesis.extra.array_api import make_strategies_namespace
 
@@ -30,7 +29,7 @@ xps = make_strategies_namespace(jnp)
 
 
 @final
-@dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True)
 class JaxtypingNotIntrospectable(AbstractNotIntrospectable[T]):
     """Wrapper for jaxtyping annotations that are not introspectable."""
 

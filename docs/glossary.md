@@ -144,7 +144,7 @@ cconvert Function
   API for converting object representation. Usage: `cconvert(target_representation, current_object)`. Returns semantically equivalent object in new form. See [Conventions § Representation Conversion](conventions.md#representation-conversion-cconvert).
 
 Chart Instance
-  Lowercase singleton instance of a chart for convenience, e.g., `cart3d` (instance of `Cartesian3D`), `sph3d` (instance of `Spherical3D`). See [Conventions § Pre-Defined Chart Instances](conventions.md#pre-defined-chart-instances).
+  Lowercase instance of a chart for convenience, e.g., `cart3d` (instance of `Cartesian3D`), `sph3d` (instance of `Spherical3D`). See [Conventions § Pre-Defined Chart Instances](conventions.md#pre-defined-chart-instances).
 
 Chart Class
   Uppercase class defining a coordinate system template, e.g., `Cartesian3D`, `Spherical3D`. Instantiate to create specific charts.

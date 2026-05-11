@@ -69,7 +69,6 @@ class TestPointFrame:
         p = cx.Point(
             data={"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
             chart=cx.cart3d,
-            manifold=cx.euclidean3d,
             frame=cxf.alice,
         )
         assert isinstance(p.frame, cxf.AbstractReferenceFrame)
