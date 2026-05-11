@@ -135,12 +135,11 @@ For example, `cxm.angle_between()` interprets two CDicts as tangent vectors in t
 ```{code-block} python
 >>> import coordinax.manifolds as cxm
 
->>> M = cxm.EuclideanManifold(2)
 >>> at = {"x": u.Q(0, "m"), "y": u.Q(0, "m")}
 >>> uvec = {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
 >>> vvec = {"x": u.Q(0, "m"), "y": u.Q(1, "m")}
 
->>> ang = cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
+>>> ang = cxm.angle_between(cxc.cart2d, uvec, vvec, at=at)
 >>> jnp.allclose(u.ustrip("rad", ang), jnp.pi / 2)
 Array(True, dtype=bool)
 ```

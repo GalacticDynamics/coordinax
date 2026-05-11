@@ -57,13 +57,7 @@ def scale_factors(chart: Any, /, *args: Any, **kwargs: Any) -> Any:
 
 @plum.dispatch.abstract
 def angle_between(
-    metric_or_manifold: Any,
-    chart: Any,
-    uvec: Any,
-    vvec: Any,
-    /,
-    *args: Any,
-    **kwargs: Any,
+    chart: Any, uvec: Any, vvec: Any, /, *args: Any, **kwargs: Any
 ) -> Any:
     r"""Return the metric angle between two nonzero tangent vectors.
 
@@ -78,14 +72,12 @@ def angle_between(
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> M = cxm.EuclideanManifold(2)
     >>> at = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m")}
     >>> uvec = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
     >>> vvec = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
-    >>> cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
+    >>> cxm.angle_between(cxc.cart2d, uvec, vvec, at=at)
     Angle(1.57079633, 'rad')
 
-    >>> metric = cxm.EuclideanMetric(3)
     >>> at_sph = {
     ...     "r": u.Q(2.0, "m"),
     ...     "theta": u.Angle(jnp.pi / 2, "rad"),
@@ -93,7 +85,7 @@ def angle_between(
     ... }
     >>> u_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
     >>> v_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(0.0, "rad"), "phi": u.Angle(1.0, "rad")}
-    >>> cxm.angle_between(metric, cxc.sph3d, u_tan, v_tan, at=at_sph)
+    >>> cxm.angle_between(cxc.sph3d, u_tan, v_tan, at=at_sph)
     Angle(1.57079633, 'rad')
 
     """

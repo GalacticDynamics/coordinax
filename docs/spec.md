@@ -2511,7 +2511,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signature:**
 
     ```
-    cxm.angle_between(metric_or_manifold, chart, u, v, /, *, at, usys=None)
+    cxm.angle_between(metric, chart, u, v, /, *, at, usys=None)
+    ```
+    or
+    ```
+    cxm.angle_between(chart, u, v, /, *, at, usys=None)
     ```
 
     Or via convenience wrappers on metric and manifold objects:
@@ -2537,7 +2541,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Dispatch behavior:**
 
     - Generic metric dispatch: evaluate `metric.metric_matrix(chart, at=at, usys=usys)`, compute the bilinear forms `u^T g v`, `u^T g u`, and `v^T g v`, then return `arccos(...)` of the normalized inner product.
-    - Manifold dispatch: resolve to `angle_between(manifold.metric, chart, u, v, at=at, usys=usys)`.
+    - Manifold dispatch: resolve to `angle_between(chart, u, v, at=at, usys=usys)`.
     - The implementation supports full symmetric metric matrices; it is not restricted to diagonal metrics.
 
     **Failure semantics:**
@@ -2559,7 +2563,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> uvec = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
     >>> vvec = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
 
-    >>> cxm.angle_between(M, cxc.cart2d, uvec, vvec, at=at)
+    >>> cxm.angle_between(cxc.cart2d, uvec, vvec, at=at)
     Angle(1.57079633, 'rad')
 
     >>> at_sph = {
@@ -2569,7 +2573,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ... }
     >>> u_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
     >>> v_tan = {"r": u.Q(0.0, "m"), "theta": u.Angle(0.0, "rad"), "phi": u.Angle(1.0, "rad")}
-    >>> cxm.angle_between(cxm.EuclideanMetric(3), cxc.sph3d, u_tan, v_tan, at=at_sph)
+    >>> cxm.angle_between(cxc.sph3d, u_tan, v_tan, at=at_sph)
     Angle(1.57079633, 'rad')
     ```
 
