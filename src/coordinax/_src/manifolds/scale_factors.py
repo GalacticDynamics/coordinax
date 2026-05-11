@@ -11,7 +11,6 @@ import unxt as u
 
 import coordinax.api.manifolds as cxmapi
 from coordinax._src.base_charts import AbstractChart
-from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.base_metric import AbstractMetric
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
@@ -19,12 +18,7 @@ from coordinax.internal import QuantityMatrix, UnitsMatrix
 
 @plum.dispatch
 def scale_factors(
-    M: AbstractManifold,
-    chart: AbstractChart,
-    /,
-    *,
-    at: CDict,
-    usys: OptUSys = None,
+    chart: AbstractChart, /, *, at: CDict, usys: OptUSys = None
 ) -> QuantityMatrix:
     """Manifold-level dispatch: delegate to the attached metric.
 
@@ -35,17 +29,16 @@ def scale_factors(
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> M = cxm.EuclideanManifold(3)
     >>> at = {
     ...     "r": u.Q(jnp.array(2.0), "km"),
     ...     "theta": u.Angle(jnp.pi / 2, "rad"),
     ...     "phi": u.Angle(jnp.array(0.0), "rad"),
     ... }
-    >>> cxm.scale_factors(M, cxc.sph3d, at=at)
+    >>> cxm.scale_factors(cxc.sph3d, at=at)
     QuantityMatrix([1., 4., 4.], '(, km2 / rad2, km2 / rad2)')
 
     """
-    return cxmapi.scale_factors(M.metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+    return cxmapi.scale_factors(chart.M.metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch

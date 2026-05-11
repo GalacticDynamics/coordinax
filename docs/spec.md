@@ -2421,7 +2421,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signature:**
 
     ```
-    cxm.scale_factors(metric_or_manifold, chart, /, *, at, usys=None)
+    cxm.scale_factors(chart, /, *, at, usys=None)
     ```
 
     Or via convenience wrappers on metric and manifold objects:
@@ -2462,14 +2462,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> M = cxm.EuclideanManifold(3)
     >>> at = {
     ...     "r": u.Q(2.0, "km"),
     ...     "theta": u.Angle(jnp.pi / 2, "rad"),
     ...     "phi": u.Angle(0.0, "rad"),
     ... }
 
-    >>> gdiag = cxm.scale_factors(M, cxc.sph3d, at=at)
+    >>> gdiag = cxm.scale_factors(cxc.sph3d, at=at)
     >>> gdiag.shape
     (3,)
     >>> gdiag.unit.to_string()

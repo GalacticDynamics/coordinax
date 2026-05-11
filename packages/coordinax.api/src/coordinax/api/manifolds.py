@@ -47,9 +47,7 @@ def guess_manifold(*args: Any, **kwargs: Any) -> "coordinax.manifolds.AbstractMa
 
 
 @plum.dispatch.abstract
-def scale_factors(
-    metric_or_manifold: Any, chart: Any, /, *args: Any, **kwargs: Any
-) -> Any:
+def scale_factors(chart: Any, /, *args: Any, **kwargs: Any) -> Any:
     """Return the diagonal entries of the metric matrix.
 
     Dispatches on the first argument (metric or manifold) and the chart.

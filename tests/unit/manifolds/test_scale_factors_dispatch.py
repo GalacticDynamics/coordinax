@@ -46,21 +46,6 @@ class TestScaleFactorsEuclidean:
         assert result.unit[1] == u.unit("m2 / rad2")
         assert result.unit[2] == u.unit("m2 / rad2")
 
-    def test_manifold_wrapper_matches_metric(self):
-        manifold = cxm.EuclideanManifold(3)
-        at = {
-            "r": u.Q(jnp.array(3.0), "km"),
-            "theta": u.Angle(jnp.pi / 2, "rad"),
-            "phi": u.Angle(jnp.array(0.0), "rad"),
-        }
-
-        result_metric = cxm.scale_factors(manifold.metric, cxc.sph3d, at=at)
-        result_manifold = cxm.scale_factors(manifold, cxc.sph3d, at=at)
-
-        assert isinstance(result_manifold, QuantityMatrix)
-        assert jnp.allclose(result_manifold.value, result_metric.value)
-        assert result_manifold.unit.to_string() == result_metric.unit.to_string()
-
 
 class TestScaleFactorsGeneric:
     """Tests for generic metric-based scale_factors behavior."""
