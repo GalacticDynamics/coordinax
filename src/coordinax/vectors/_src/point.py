@@ -157,7 +157,7 @@ class Point(
     def __getitem__(self, key: Any) -> "V | Point":  # ty: ignore[invalid-method-override]
         if isinstance(key, str):
             return self.data[key]
-        return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type,not-subscriptable]
+        return replace(self, data={k: v[key] for k, v in self.data.items()})  # ty: ignore[invalid-return-type]
 
     # ===============================================================
     # Quax API

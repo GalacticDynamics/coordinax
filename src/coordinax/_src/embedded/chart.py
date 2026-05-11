@@ -71,7 +71,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 
     """
 
-    M: ClassVar[AbstractTopologicalManifold]
+    M: ClassVar[AbstractTopologicalManifold]  # ty: ignore[invalid-attribute-override]
 
     @property
     def intrinsic(self) -> IntrinsicT:

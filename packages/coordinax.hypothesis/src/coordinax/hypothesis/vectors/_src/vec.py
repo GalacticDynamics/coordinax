@@ -148,7 +148,7 @@ def vectors(  # noqa: F811
     chart = draw_if_strategy(draw, chart)
     rep = draw_if_strategy(draw, rep)
     try:
-        return draw(vectors(chart, rep, **kw))  # ty: ignore[missing-argument, too-many-positional-arguments]
+        return draw(vectors(chart, rep, **kw))  # ty: ignore[ too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 
@@ -239,7 +239,7 @@ def vectors(  # noqa: F811
     """
     rep = draw(cxrst.representations(check_valid=True))
     try:
-        return draw(vectors(chart, rep, **kw))  # ty: ignore[missing-argument, too-many-positional-arguments]
+        return draw(vectors(chart, rep, **kw))  # ty: ignore[too-many-positional-arguments]
     except (TypeError, ValueError, plum.NotFoundLookupError):
         assume(False)
 

@@ -2,6 +2,7 @@
 
 __all__: tuple[str, ...] = ()
 
+from typing import cast
 
 import plum
 
@@ -136,5 +137,5 @@ def guess_manifold(obj: CDict, /) -> AbstractManifold:
     Rn(3)
 
     """
-    chart = cxcapi.guess_chart(obj)
+    chart = cast("AbstractChart", cxcapi.guess_chart(obj))
     return chart.M

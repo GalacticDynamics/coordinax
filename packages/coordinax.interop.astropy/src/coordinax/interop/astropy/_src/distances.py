@@ -7,7 +7,7 @@ from plum import conversion_method
 
 from astropy.units import Quantity as AstropyQuantity
 
-import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
+import coordinax.astro as cxastro
 import coordinax.distances as cxd
 
 # ============================================================================

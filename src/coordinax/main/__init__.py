@@ -170,6 +170,6 @@ from coordinax.transforms import (
 from coordinax.vectors import Point, ToUnitsOptions
 
 try:  # noqa: SIM105
-    import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import]
+    import coordinax.interop.astropy as _  # noqa: F401
 except ImportError:
     pass

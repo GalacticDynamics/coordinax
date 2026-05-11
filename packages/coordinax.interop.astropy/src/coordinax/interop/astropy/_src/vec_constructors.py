@@ -7,7 +7,7 @@ import plum
 
 import astropy.coordinates as apyc
 
-import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
+import coordinax.astro as cxastro
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.vectors as cxv
@@ -155,7 +155,7 @@ def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     frame = plum.convert(apy_frame, cxastro.AbstractSpaceFrame)
 
     # Convert the data to a Point
-    return cxv.Point(data, chart, frame=frame)
+    return cxv.Point(data, chart, frame=frame)  # ty: ignore[missing-argument]
 
 
 @plum.conversion_method(type_from=apyc.BaseCoordinateFrame, type_to=cxv.Point)
