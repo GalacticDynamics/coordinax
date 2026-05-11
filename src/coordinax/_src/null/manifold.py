@@ -23,7 +23,7 @@ class NoManifold(AbstractManifold):
     ``NoManifold`` is a sentinel value used when a manifold object is required
     by the API but none has been specified by the user.
 
-    - ``ndim == -1`` signals "no manifold specified".
+    - ``ndim == False`` signals "no manifold specified".
     - ``has_chart(chart)`` always returns ``False``.
 
     Examples

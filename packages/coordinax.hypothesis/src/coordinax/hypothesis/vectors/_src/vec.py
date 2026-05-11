@@ -153,64 +153,6 @@ def vectors(  # noqa: F811
         assume(False)
 
 
-@plum.dispatch.multi(
-    (st.SearchStrategy, st.SearchStrategy, st.SearchStrategy),
-    (cxc.AbstractChart, st.SearchStrategy, st.SearchStrategy),
-    (st.SearchStrategy, cxr.Representation, st.SearchStrategy),
-    (st.SearchStrategy, st.SearchStrategy, cxm.AbstractManifold),
-    (cxc.AbstractChart, cxr.Representation, st.SearchStrategy),
-    (cxc.AbstractChart, st.SearchStrategy, cxm.AbstractManifold),
-    (st.SearchStrategy, cxr.Representation, cxm.AbstractManifold),
-)
-@strip_return_annotation
-@st.composite
-def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart | st.SearchStrategy,
-    rep: cxr.Representation | st.SearchStrategy,
-    M: cxm.AbstractManifold | st.SearchStrategy,
-    /,
-    **kw: Any,
-) -> cxv.AbstractVector:
-    """Generate a vector after drawing strategy-valued *chart*, *rep*, and/or *manifold*.
-
-    Handles all three-argument combinations where at least one of ``chart``,
-    ``rep``, or ``manifold`` is a strategy.  Concrete values are re-dispatched
-    to the ``(chart, rep, manifold)`` concrete overload.
-
-    Before redispatching, the drawn manifold (if not ``None``) is validated
-    against the drawn chart; an incompatible pair raises
-    {class}`ValueError`.
-
-    Examples
-    --------
-    >>> import coordinax.hypothesis.vectors as cxvst
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
-    >>> import coordinax.manifolds as cxm
-    >>> from hypothesis import given
-    >>> import hypothesis.strategies as st
-
-    Explicit manifold via strategy:
-
-    >>> M = cxm.EuclideanManifold(3)
-    >>> @given(vec=cxvst.vectors(cxc.cart3d, cxr.point, st.just(M)))
-    ... def test_manifold_strat(vec): ...
-
-    """
-    chart = draw_if_strategy(draw, chart)
-    rep = draw_if_strategy(draw, rep)
-    M = draw_if_strategy(draw, M)
-
-    if M is not None and not M.has_chart(chart):
-        raise ValueError(f"Manifold {M!r} does not support chart {chart!r}.")
-
-    try:
-        return draw(vectors(chart, rep, M, **kw))  # ty: ignore[too-many-positional-arguments]
-    except (TypeError, ValueError, plum.NotFoundLookupError):
-        assume(False)
-
-
 #####################################################################
 # Concrete-argument dispatches (terminal implementations)
 #####################################################################
@@ -220,10 +162,7 @@ def vectors(  # noqa: F811
 @strip_return_annotation
 @st.composite
 def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart,
-    /,
-    **kw: Any,
+    draw: st.DrawFn, chart: cxc.AbstractChart, /, **kw: Any
 ) -> cxv.Point:
     """Generate a point for a concrete *chart*.
 
@@ -248,11 +187,7 @@ def vectors(  # noqa: F811
 @strip_return_annotation
 @st.composite
 def vectors(  # noqa: F811
-    draw: st.DrawFn,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    **kw: Any,
+    draw: st.DrawFn, chart: cxc.AbstractChart, rep: cxr.Representation, /, **kw: Any
 ) -> cxv.Point:
     """Generate a point for a concrete *chart* and *rep* (manifold inferred).
 

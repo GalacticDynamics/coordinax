@@ -22,7 +22,7 @@ class NoMetric(AbstractMetric):
     ``NoMetric`` is a sentinel value used when a metric object is required
     by the API but none has been specified by the user.
 
-    - ``ndim == -1`` signals "no metric specified".
+    - ``ndim == False`` signals "no metric specified".
     - ``metric_matrix(chart, at)`` always raises ``NoGlobalCartesianChartError``.
 
     """
