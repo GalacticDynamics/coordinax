@@ -71,9 +71,7 @@ def manifold_classes(
 
 @plum.dispatch
 def _manifold_class_supports_ndim(
-    cls: type[cxm.EuclideanManifold],
-    ndim: int,
-    /,
+    cls: type[cxm.EuclideanManifold], ndim: int, /
 ) -> bool:
     """EuclideanManifold supports any dimensionality."""
     return True
@@ -81,9 +79,7 @@ def _manifold_class_supports_ndim(
 
 @plum.dispatch
 def _manifold_class_supports_ndim(
-    cls: type[cxm.HyperSphericalManifold],
-    ndim: int,
-    /,
+    cls: type[cxm.HyperSphericalManifold], ndim: int, /
 ) -> bool:
     """HyperSphericalManifold is always 2-D."""
     return ndim == 2
@@ -91,9 +87,7 @@ def _manifold_class_supports_ndim(
 
 @plum.dispatch
 def _manifold_class_supports_ndim(
-    cls: type[cxm.EmbeddedManifold],
-    ndim: int,
-    /,
+    cls: type[cxm.EmbeddedManifold], ndim: int, /
 ) -> bool:
     """EmbeddedManifold: only the 2-D embedded two-sphere is currently generated."""
     return ndim == 2
@@ -101,29 +95,21 @@ def _manifold_class_supports_ndim(
 
 @plum.dispatch
 def _manifold_class_supports_ndim(
-    cls: type[cxm.CartesianProductManifold],
-    ndim: int,
-    /,
+    cls: type[cxm.CartesianProductManifold], ndim: int, /
 ) -> bool:
     """CartesianProductManifold requires at least 1 dimension."""
     return ndim >= 1
 
 
 @plum.dispatch
-def _manifold_class_supports_ndim(
-    cls: type[cxm.CustomManifold],
-    ndim: int,
-    /,
-) -> bool:
+def _manifold_class_supports_ndim(cls: type[cxm.CustomManifold], ndim: int, /) -> bool:
     """CustomManifold supports ndim when matching zero-arg charts exist."""
     return len(_matching_chart_classes_for_ndim(ndim)) > 0
 
 
 @plum.dispatch
 def _manifold_class_supports_ndim(
-    cls: type[cxm.AbstractManifold],
-    ndim: int,
-    /,
+    cls: type[cxm.AbstractManifold], ndim: int, /
 ) -> bool:
     """Fallback: unknown manifold types are assumed to support any ndim."""
     return True

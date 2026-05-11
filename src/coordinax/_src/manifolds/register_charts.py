@@ -10,7 +10,7 @@ import plum
 import wadler_lindig as wl
 
 import coordinax.api.charts as cxcapi
-from coordinax._src.base import AbstractAtlas, AbstractChart, AbstractManifold
+from coordinax._src.base import AbstractAtlas, AbstractChart
 
 _ATLAS_MSG: Final[Callable[[AbstractAtlas, AbstractChart[Any, Any]], str]] = (
     lambda a, c: (
@@ -53,34 +53,3 @@ def pt_map(
 
     # If charts are supported, delegate to ptm
     return cxcapi.pt_map(x, chart_from, chart_to, *args, **kwargs)
-
-
-# default route
-@plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
-def pt_map(
-    x: Any,
-    M: AbstractManifold,
-    chart_from: AbstractChart,
-    chart_to: AbstractChart,
-    *args: Any,
-    **kwargs: Any,
-) -> Any:
-    """Transition map for points, checking the manifold's atlas.
-
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-
-    >>> M = cxm.EuclideanManifold(2)
-
-    >>> x = {"x": 1.0, "y": 1.0}
-    >>> cxc.pt_map(x, M, cxc.cart2d, cxc.polar2d)
-    {'r': Array(1.41421356, dtype=float64, ...),
-     'theta': Array(0.78539816, dtype=float64, ...)}
-
-    >>> try: cxc.pt_map(x, M, cxc.cart2d, cxc.sph2)
-    ... except ValueError as e: print(e)
-    Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
-
-    """
-    # Redispatch to the atlas
-    return cxcapi.pt_map(x, M.atlas, chart_from, chart_to, *args, **kwargs)

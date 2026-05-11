@@ -209,7 +209,8 @@ def pt_map(
     True
 
     """
-    del from_chart, to_chart, usys  # unused
+    del usys  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     return p
 
 
@@ -283,7 +284,8 @@ def pt_map(
     {'x': 5.0}
 
     """
-    del to_chart, from_chart, usys  # unused
+    del usys  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     return {"x": p["r"]}
 
 
@@ -313,7 +315,8 @@ def pt_map(
     {'r': 5.0}
 
     """
-    del to_chart, from_chart, usys  # unused
+    del usys  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     return {"r": p["x"]}
 
 
@@ -346,7 +349,7 @@ def pt_map(
      'y': Array(5., dtype=float64, ...)}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     theta = uconvert_to_rad(p["theta"], usys)
     x = p["r"] * jnp.cos(theta)
     y = p["r"] * jnp.sin(theta)
@@ -377,7 +380,8 @@ def pt_map(
      'theta': Array(0.92729522, dtype=float64, ...)}
 
     """
-    del to_chart, from_chart, usys  # unused
+    del usys  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     r_ = jnp.hypot(p["x"], p["y"])
     theta = jnp.arctan2(p["y"], p["x"])
     return {"r": r_, "theta": theta}
@@ -409,7 +413,7 @@ def pt_map(
      'z': 2.0}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     phi = uconvert_to_rad(p["phi"], usys)
     x = p["rho"] * jnp.cos(phi)
     y = p["rho"] * jnp.sin(phi)
@@ -444,7 +448,7 @@ def pt_map(
      'z': Array(1.2246468e-16, dtype=float64, ...)}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     r_ = p["r"]
     theta = uconvert_to_rad(p["theta"], usys)
     phi = uconvert_to_rad(p["phi"], usys)
@@ -485,7 +489,7 @@ def pt_map(
      'z': Array(0., dtype=float64, ...)}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     r_ = p["distance"]
     lon = uconvert_to_rad(p["lon"], usys)
     lat = uconvert_to_rad(p["lat"], usys)
@@ -529,7 +533,7 @@ def pt_map(
     {'x': Q(1.2246468e-16, 'm'), 'y': Q(0., 'm'), 'z': Q(2., 'm')}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     lon_coslat, r_ = p["lon_coslat"], p["distance"]
     lat = uconvert_to_rad(p["lat"], usys)
     # Handle the poles where cos(lat) == 0
@@ -570,7 +574,7 @@ def pt_map(
     {'x': Q(2., 'm'), 'y': Q(0., 'm'), 'z': Q(1.2246468e-16, 'm')}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     r_ = p["r"]
     theta = uconvert_to_rad(p["theta"], usys)
     phi = uconvert_to_rad(p["phi"], usys)
@@ -621,7 +625,7 @@ def pt_map(
      'z': Array(1.11803399, dtype=float64)}
 
     """
-    del to_chart
+    assert from_chart.M == to_chart.M  # noqa: S101
     # Calculate cylindrical distance
     nu, mu = p["nu"], p["mu"]
     if not isinstance(nu, ABCQ) or not isinstance(mu, ABCQ):
@@ -667,7 +671,8 @@ def pt_map(
      'z': 5.0}
 
     """
-    del to_chart, from_chart, usys  # Unused
+    del usys  # Unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     rho = jnp.hypot(p["x"], p["y"])
     phi = jnp.atan2(p["y"], p["x"])
     return {"rho": rho, "phi": phi, "z": p["z"]}
@@ -736,7 +741,7 @@ def pt_map(
      'phi': Array(0., dtype=float64, ...)}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     x, y, z = p["x"], p["y"], p["z"]
     r = jnp.sqrt(x**2 + y**2 + z**2)
     # Avoid division by zero: when r == 0, set theta = 0 by convention
@@ -776,7 +781,7 @@ def pt_map(
      'phi': 0}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     r_ = jnp.hypot(p["rho"], p["z"])
     # Avoid division by zero: when r == 0, set theta = 0 by convention
     theta = jnp.acos(jnp.where(r_ == 0, jnp.ones(r_.shape), p["z"] / r_))
@@ -814,7 +819,7 @@ def pt_map(
      'z': Array(1.2246468e-16, dtype=float64, ...)}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     theta = uconvert_to_rad(p["theta"], usys)
     rho = p["r"] * jnp.sin(theta)
     z = p["r"] * jnp.cos(theta)
@@ -849,7 +854,7 @@ def pt_map(
     {'lon': 0, 'lat': 1.5707963267948966, 'distance': 1.0}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     lat = (
         u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
@@ -886,7 +891,7 @@ def pt_map(
      'lat': 1.5707963267948966, 'distance': 1.0}
 
     """
-    del to_chart, from_chart  # unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     lat = (
         u.Q(90, "deg") if isinstance(p["theta"], ABCQ) else jnp.pi / 2
     ) - uconvert_to_rad(p["theta"], usys)
@@ -922,7 +927,8 @@ def pt_map(
     {'r': 1.0, 'theta': 60, 'phi': 30}
 
     """
-    del to_chart, from_chart, usys  # Unused
+    del usys  # Unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     return {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
 
 
@@ -954,7 +960,8 @@ def pt_map(
     {'r': 1.0, 'theta': 30, 'phi': 60}
 
     """
-    del to_chart, from_chart, usys  # Unused
+    del usys  # Unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     return {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
 
 
@@ -999,7 +1006,7 @@ def pt_map(
      'z': Array(1.11803399, dtype=float64)}
 
     """
-    del to_chart  # Unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     nu, mu = p["nu"], p["mu"]
     if not isinstance(nu, ABCQ) or not isinstance(mu, ABCQ):
         if usys is None:
@@ -1068,7 +1075,7 @@ def pt_map(
      'nu': Array(2.47920271, dtype=float64), 'phi': 0}
 
     """
-    del from_chart  # Unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     # Pre-compute common terms
     R2 = p["rho"] ** 2
     z2 = p["z"] ** 2
@@ -1156,6 +1163,7 @@ def pt_map(
      'phi': Q(0., 'rad')}
 
     """
+    assert from_chart.M == to_chart.M  # noqa: S101
     # Cast to the result type
     dtype = jnp.result_type(
         to_chart.Delta, from_chart.Delta, *[v.dtype for v in p.values()]
@@ -1220,7 +1228,7 @@ def pt_map(
     {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')}
 
     """
-    del from_chart  # Unused
+    # assert from_chart.M == to_chart.M  # TODO: CartND manifold
 
     # If target is CartND, we can't convert (would be infinite recursion)
     if isinstance(to_chart, CartND):
@@ -1304,7 +1312,7 @@ def pt_map(
     {'q': Q([0., 0., 5.], 'm')}
 
     """
-    del to_chart  # Unused
+    # assert from_chart.M == to_chart.M  # TODO: CartND manifold
 
     # If source is CartND, we can't convert (would be infinite recursion)
     if isinstance(from_chart, CartND):
@@ -1392,7 +1400,8 @@ def pt_map(
     True
 
     """
-    del to_chart, from_chart, usys  # Unused
+    del usys  # Unused
+    assert from_chart.M == to_chart.M  # noqa: S101
     return q
 
 
