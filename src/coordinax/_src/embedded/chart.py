@@ -2,21 +2,26 @@
 
 __all__ = ("EmbeddedChart",)
 
-import dataclasses
 
 from typing import ClassVar, Generic, cast, final
+from typing_extensions import override
 
 import plum
 
 import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
-from coordinax._src.base import AbstractChart, AbstractManifold
+from .manifold import EmbeddedManifold
+from coordinax._src.base import (
+    AbstractChart,
+    AbstractManifold,
+    chart_dataclass_decorator,
+)
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 
 @final
-@dataclasses.dataclass(frozen=True, slots=True)
+@chart_dataclass_decorator
 class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]):
     r"""Chart for intrinsic coordinates on an embedding manifold.
 
@@ -52,9 +57,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 
     """
 
-    embed_map: AbstractEmbeddingMap[
-        IntrinsicT, AmbientT
-    ]  # holds ambient and and any embedding params
+    embed_map: AbstractEmbeddingMap[IntrinsicT, AmbientT]
     """The embedding that defines the map to the ambient chart.
 
     This is the core data of the EmbeddedChart, as it defines the ambient chart
@@ -71,6 +74,29 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
     """
 
     M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
+
+    @override
+    @property
+    def M(self) -> EmbeddedManifold:
+        """The manifold associated with this chart.
+
+        This is an EmbeddedManifold that combines the intrinsic and ambient
+        manifolds defined by the embedding map.
+
+        >>> import coordinax.manifolds as cxm
+        >>> import unxt as u
+        >>> chart = cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
+        >>> chart.M
+        EmbeddedManifold(intrinsic=HyperSphericalManifold(ndim=2),
+                         ambient=Rn(3),
+                         embed_map=TwoSphereIn3D(radius=Q(2., 'km')))
+
+        """
+        return EmbeddedManifold(
+            intrinsic=self.intrinsic.M,
+            ambient=self.ambient.M,
+            embed_map=self.embed_map,
+        )
 
     @property
     def intrinsic(self) -> IntrinsicT:
