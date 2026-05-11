@@ -20,7 +20,7 @@ import wadler_lindig as wl
 import coordinax.api.charts as cxcapi
 from .manifold import CartesianProductManifold
 from coordinax._src.base_charts import MISSING, AbstractChart, chart_dataclass_decorator
-from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 V = TypeVar("V")
@@ -294,7 +294,7 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
     factor_names: tuple[str, ...]
     """Factor names for namespaced keys. Must be unique and aligned with `factors`."""
 
-    M: ClassVar[AbstractTopologicalManifold]  # ty: ignore[invalid-attribute-override]
+    M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
 
     def __post_init__(self) -> None:
         # Validate lengths match

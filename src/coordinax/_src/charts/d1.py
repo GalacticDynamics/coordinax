@@ -29,7 +29,7 @@ from coordinax._src.base_charts import (
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
-from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.custom_types import Len
 from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
@@ -96,7 +96,7 @@ class Cart1D(AbstractFixedComponentsChart[Cart1DKeys, Cart1DDims], Abstract1D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean1d
+    M: AbstractManifold = euclidean1d
 
     @override
     @property
@@ -158,7 +158,7 @@ class Radial1D(AbstractFixedComponentsChart[RadialKeys, Radial1DDims], Abstract1
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean1d
+    M: AbstractManifold = euclidean1d
 
     @override
     @property
@@ -216,7 +216,7 @@ class Time1D(AbstractFixedComponentsChart[TimeKeys, TimeDims], Abstract1D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean1d
+    M: AbstractManifold = euclidean1d
 
     @override
     @property

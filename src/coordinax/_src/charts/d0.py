@@ -15,7 +15,7 @@ from coordinax._src.base_charts import (
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
-from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
@@ -75,7 +75,7 @@ class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean0d
+    M: AbstractManifold = euclidean0d
 
     @override
     @property

@@ -9,7 +9,6 @@ __all__ = (
     "scale_factors",
     "angle_between",
     # Topological Space
-    "AbstractTopologicalManifold",
     "NoManifold",
     "no_manifold",
     # Abstract Manifold/Atlas/Metric
@@ -62,7 +61,6 @@ with install_import_hook("coordinax.manifolds"):
     from ._src.base_atlas import AbstractAtlas, NoAtlas, no_atlas
     from ._src.base_manifold import AbstractManifold
     from ._src.base_metric import AbstractDiagonalMetric, AbstractMetric
-    from ._src.base_topo import AbstractTopologicalManifold
     from ._src.custom import CustomAtlas, CustomManifold, CustomMetric
     from ._src.embedded import (
         AbstractEmbeddingMap,

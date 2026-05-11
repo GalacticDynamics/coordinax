@@ -9,12 +9,12 @@ from typing import Any
 
 import jax.tree_util as jtu
 
-from .base_topo import AbstractTopologicalManifold
+from .base_manifold import AbstractManifold
 
 
 @jtu.register_static
 @dataclasses.dataclass(frozen=True, slots=True, repr=False)
-class NoManifold(AbstractTopologicalManifold):
+class NoManifold(AbstractManifold):
     """A degenerate placeholder manifold with no charts and no geometry.
 
     ``NoManifold`` is a sentinel value used when a manifold object is required

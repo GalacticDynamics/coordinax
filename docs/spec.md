@@ -2301,46 +2301,6 @@ In a local chart with coordinates $q = (q^1, \ldots, q^n)$, the metric is encode
 
 $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial q^j}\right).$$
 
-!!! info `AbstractTopologicalManifold`
-
-    `AbstractTopologicalManifold` is the root base class for all manifold objects in `coordinax`. It encodes only the topological layer: intrinsic dimension and chart membership. Subclasses that attach a smooth atlas and metric structure implement the full smooth-manifold interface.
-
-    **Invariant**: `AbstractTopologicalManifold` is a pure structural descriptor — it carries no numerical point data. Instances are registered as JAX static nodes and appear as compile-time metadata inside JIT-compiled functions.
-
-    Public API:
-
-    - `ndim`: intrinsic dimension $n$ of the manifold.
-    - `has_chart(chart) -> bool`: return `True` if `chart` belongs to this manifold's atlas.
-    - `check_chart(chart)`: assert chart membership; raise `ValueError` if not supported.
-
-    Notes:
-
-    - Registered to JAX as static via `jax.tree_util.register_static`.
-    - Implements a `wadler_lindig` `__pdoc__()` method underpinning `__repr__` and `__str__`.
-    - The class hierarchy follows the abstract-final pattern: `AbstractTopologicalManifold` → concrete final classes (e.g. `EuclideanManifold`, `HyperSphericalManifold`); no intermediate layers.
-
-!!! info `NoManifold` and `no_manifold`
-
-    `NoManifold` is a degenerate placeholder manifold with no charts and no geometry. It serves as a sentinel value when a manifold object is required by the API but none has been specified by the user.
-
-    - `ndim == -1` (sentinel for "no manifold specified").
-    - `has_chart(chart)` always returns `False`.
-
-    `no_manifold` is the canonical module-level instance of `NoManifold`. It should be used in preference to constructing `NoManifold()` directly, since `NoManifold` carries no state and a shared instance is cheaper.
-
-    ```pycon
-    >>> import coordinax.manifolds as cxm
-    >>> cxm.no_manifold
-    NoManifold(ndim=False)
-
-    >>> cxm.no_manifold.ndim
-    -1
-
-    >>> import coordinax.charts as cxc
-    >>> cxm.no_manifold.has_chart(cxc.cart3d)
-    False
-    ```
-
 (software-spec-guess-manifold)=
 
 !!! info `guess_manifold`
@@ -2698,39 +2658,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
 !!! info `AbstractDiagonalMetric`
 
-    `AbstractDiagonalMetric` is a **structural marker** subclass of `AbstractMetric` for metrics whose matrix is diagonal at **every** base point on their diagonal chart domain.
-
-    A metric is diagonal when all off-diagonal entries vanish globally:
-
-    $$
-    g_{ij}(p) = 0 \quad \text{for } i \neq j, \quad \forall\, p \in M.
-    $$
-
-    The coordinate basis is orthogonal everywhere, and the diagonal entries are the squared scale factors $h_i^2 = g_{ii}$. See [Diagonal metrics and orthogonal coordinate systems](#diagonal-metrics-and-orthogonal-coordinate-systems) for the mathematical background.
-
-    **Structural guarantee vs. point check.** `AbstractDiagonalMetric` makes a **global, type-level** promise on the metric's diagonal chart domain (typically orthogonal charts): the metric is diagonal at every valid base point. This is strictly stronger than the point-wise `is_diagonal()` test on `AbstractMetric`, which inspects the matrix numerically at a specific `at`. Consequently, `AbstractDiagonalMetric.is_diagonal()` **unconditionally returns `True`** without evaluating the metric matrix.
-
-    **Atlas compatibility vs. diagonality.** Atlas/manifold chart compatibility (`has_chart`) is a broader structural criterion and does not by itself imply orthogonality or diagonal metric form.
-
-    **No new abstract members.** `AbstractDiagonalMetric` inherits the full `AbstractMetric` interface and adds no new abstract methods. Subclasses must still implement:
-
-    - `signature` (property): tuple of $\pm 1$ of length `ndim`.
-    - `metric_matrix(chart, /, *, at, usys=None)` (method): **must** return a diagonal `QuantityMatrix` (or plain `Array`) — all off-diagonal entries numerically zero.
-
-    **Dispatch optimization.** Because the diagonal structure is guaranteed statically, dispatch implementations (e.g., for `scale_factors`) can read diagonal entries directly without constructing or inspecting the full $n \times n$ matrix.
-
-    **Immutability and JAX-static requirements:** same as `AbstractMetric` — frozen dataclasses registered with `@jax.tree_util.register_static`.
-
-    **Concrete subclasses:**
-
-    - [`EuclideanMetric`](#software-spec-euclideanmetric): flat Riemannian metric on $\mathbb{R}^n$; identity in Cartesian charts, computed via Jacobian pullback in curvilinear charts.
-    - [`MinkowskiMetric`](#software-spec-minkowskimetric): Lorentzian metric $\eta = \operatorname{diag}(-1, 1, 1, 1)$ on Minkowski spacetime; diagonal in the canonical Cartesian spacetime chart.
-    - [`HyperSphericalMetric`](#software-spec-hypersphericalmetric): round metric on $S^{n-1}$; diagonal entries follow the cumulative-sine rule $g_{kk} = \prod_{j < k}\sin^2\!\theta_j$.
-
-(software-spec-abstractdiagonalmetric)=
-
-!!! info `AbstractDiagonalMetric`
-
     `AbstractDiagonalMetric` is an abstract subclass of `AbstractMetric` for metrics whose matrix is diagonal at every base point in every compatible chart.
 
     A metric is **diagonal** (equivalently, the coordinate chart is an **orthogonal coordinate system**) when all off-diagonal entries of the metric matrix vanish:
@@ -2856,6 +2783,28 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - Two-sphere [`HyperSphericalManifold`](#software-spec-twospheremanifold)
     - Minkowski [`MinkowskiManifold`](#software-spec-minkowskimanifold)
     - Custom [`CustomManifold`](#software-spec-custommanifold)
+
+!!! info `NoManifold` and `no_manifold`
+
+    `NoManifold` is a degenerate placeholder manifold with no charts and no geometry. It serves as a sentinel value when a manifold object is required by the API but none has been specified by the user.
+
+    - `ndim == -1` (sentinel for "no manifold specified").
+    - `has_chart(chart)` always returns `False`.
+
+    `no_manifold` is the canonical module-level instance of `NoManifold`. It should be used in preference to constructing `NoManifold()` directly, since `NoManifold` carries no state and a shared instance is cheaper.
+
+    ```pycon
+    >>> import coordinax.manifolds as cxm
+    >>> cxm.no_manifold
+    NoManifold(ndim=False)
+
+    >>> cxm.no_manifold.ndim
+    -1
+
+    >>> import coordinax.charts as cxc
+    >>> cxm.no_manifold.has_chart(cxc.cart3d)
+    False
+    ```
 
 ### Euclidean Manifolds
 

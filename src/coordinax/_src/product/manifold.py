@@ -13,7 +13,6 @@ import jax
 from .atlas import CartesianProductAtlas
 from .metric import CartesianProductMetric
 from coordinax._src.base_manifold import AbstractManifold
-from coordinax._src.base_topo import AbstractTopologicalManifold
 
 
 @jax.tree_util.register_static
@@ -171,7 +170,7 @@ class CartesianProductManifold(AbstractManifold):
 
     """
 
-    factors: tuple[AbstractTopologicalManifold, ...]
+    factors: tuple[AbstractManifold, ...]
     factor_names: tuple[str, ...]
 
     @override

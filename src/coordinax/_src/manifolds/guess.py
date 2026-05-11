@@ -9,7 +9,6 @@ import plum
 import coordinax.api.charts as cxcapi
 from coordinax._src.base_charts import AbstractChart
 from coordinax._src.base_manifold import AbstractManifold
-from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax._src.charts.d0 import Cart0D
 from coordinax._src.charts.d1 import Cart1D, Radial1D
 from coordinax._src.charts.d2 import Cart2D, Polar2D
@@ -34,7 +33,7 @@ from coordinax._src.no_manifold import no_manifold
 
 
 @plum.dispatch
-def guess_manifold(obj: AbstractTopologicalManifold, /) -> AbstractTopologicalManifold:
+def guess_manifold(obj: AbstractManifold, /) -> AbstractManifold:
     """Return the manifold of a manifold.
 
     >>> import coordinax.manifolds as cxm
@@ -47,7 +46,7 @@ def guess_manifold(obj: AbstractTopologicalManifold, /) -> AbstractTopologicalMa
 
 
 @plum.dispatch
-def guess_manifold(_: type[AbstractChart], /) -> AbstractTopologicalManifold:
+def guess_manifold(_: type[AbstractChart], /) -> AbstractManifold:
     """Infer manifold from a chart class.
 
     >>> import coordinax.charts as cxc
@@ -60,7 +59,7 @@ def guess_manifold(_: type[AbstractChart], /) -> AbstractTopologicalManifold:
 
 
 @plum.dispatch
-def guess_manifold(chart: AbstractChart, /) -> AbstractTopologicalManifold:
+def guess_manifold(chart: AbstractChart, /) -> AbstractManifold:
     """Infer manifold from a chart class.
 
     >>> import coordinax.charts as cxc

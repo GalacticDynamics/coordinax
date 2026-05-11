@@ -37,7 +37,7 @@ from coordinax._src.base_charts import (
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
-from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.charts import checks
 from coordinax._src.constants import Deg0, Deg90, Deg180
 from coordinax._src.custom_types import Ang, Ds, Ks, Len
@@ -106,7 +106,7 @@ class Cart3D(AbstractFixedComponentsChart[Cart3DKeys, Cart3DDims], Abstract3D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     @override
     @property
@@ -170,7 +170,7 @@ class Cylindrical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     @override
     @property
@@ -202,7 +202,7 @@ class AbstractSpherical3D(AbstractFixedComponentsChart[Ks, Ds], Abstract3D):
     """Abstract spherical vector representation."""
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     @override
     @property
@@ -261,7 +261,7 @@ class Spherical3D(AbstractSpherical3D[SphericalKeys, Spherical3DDims]):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -321,7 +321,7 @@ class LonLatSpherical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -375,7 +375,7 @@ class LonCosLatSpherical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -431,7 +431,7 @@ class MathSpherical3D(AbstractSpherical3D[MathSphericalKeys, Spherical3DDims]):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -503,7 +503,7 @@ class ProlateSpheroidal3D(
     ]
     """Focal length of the coordinate system."""
 
-    M: AbstractTopologicalManifold = euclidean3d
+    M: AbstractManifold = euclidean3d
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check

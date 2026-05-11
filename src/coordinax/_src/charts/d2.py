@@ -16,7 +16,7 @@ from coordinax._src.base_charts import (
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
-from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.custom_types import Ang, Len
 from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
@@ -83,7 +83,7 @@ class Cart2D(AbstractFixedComponentsChart[Cart2DKeys, Cart2DDims], Abstract2D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean2d
+    M: AbstractManifold = euclidean2d
 
     @override
     @property
@@ -145,7 +145,7 @@ class Polar2D(AbstractFixedComponentsChart[PolarKeys, Polar2DDims], Abstract2D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = euclidean2d
+    M: AbstractManifold = euclidean2d
 
     @override
     @property

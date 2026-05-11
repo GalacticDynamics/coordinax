@@ -204,7 +204,7 @@ class AbstractVector(
     # Vector API
 
     @property
-    def M(self) -> cxm.AbstractTopologicalManifold:
+    def M(self) -> cxm.AbstractManifold:
         """The manifold of the vector, from the chart."""
         return self.chart.M
 

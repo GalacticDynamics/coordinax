@@ -2,10 +2,14 @@
 
 __all__ = ("AbstractManifold",)
 
+import abc
 
 from typing import TYPE_CHECKING, Any
 
 import jax.tree_util as jtu
+import wadler_lindig as wl
+
+import dataclassish
 
 import coordinax.angles as cxa
 import coordinax.api.charts as cxcapi
@@ -13,7 +17,6 @@ import coordinax.api.manifolds as cxmapi
 from .base_atlas import AbstractAtlas
 from .base_metric import AbstractMetric
 from .custom_types import CDict, OptUSys
-from coordinax._src.base_topo import AbstractTopologicalManifold
 from coordinax.internal import QuantityMatrix
 
 if TYPE_CHECKING:
@@ -21,7 +24,7 @@ if TYPE_CHECKING:
 
 
 @jtu.register_static
-class AbstractManifold(AbstractTopologicalManifold):
+class AbstractManifold(metaclass=abc.ABCMeta):
     r"""Abstract interface for smooth manifolds.
 
     A **smooth manifold** of dimension $n$ is a topological space $M$ equipped
@@ -184,12 +187,12 @@ class AbstractManifold(AbstractTopologicalManifold):
 
     def _check_ndim(self) -> None:
         """Check that the chart and metric dimensions match the manifold dimension."""
-        # if self.metric.ndim != self.atlas.ndim:
-        #     msg = (
-        #         f"Atlas dimension {self.atlas.ndim} "
-        #         f"does not match metric dimension {self.metric.ndim}."
-        #     )
-        #     raise ValueError(msg)
+        if self.metric.ndim != self.atlas.ndim:
+            msg = (
+                f"Atlas dimension {self.atlas.ndim} "
+                f"does not match metric dimension {self.metric.ndim}."
+            )
+            raise ValueError(msg)
 
     @property
     def ndim(self) -> int:
@@ -300,3 +303,31 @@ class AbstractManifold(AbstractTopologicalManifold):
         ``cxmapi.angle_between(self.metric, chart, uvec, vvec, at=at, usys=usys)``.
         """
         return cxmapi.angle_between(self.metric, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+
+    # =====================================================
+
+    def __pdoc__(self, **kw: Any) -> wl.AbstractDoc:
+        """Return the string representation.
+
+        >>> import wadler_lindig as wl
+        >>> import coordinax.manifolds as cxm
+        >>> M = cxm.EuclideanManifold(3)
+        >>> wl.pprint(M)
+        Rn(3)
+
+        """
+        return wl.bracketed(
+            begin=wl.TextDoc(f"{type(self).__name__}("),
+            docs=wl.named_objs(list(dataclassish.field_items(self)), **kw),
+            sep=wl.comma,
+            end=wl.TextDoc(")"),
+            indent=4,
+        )
+
+    def __repr__(self) -> str:
+        """Return the string representation."""
+        return wl.pformat(self, width=88)
+
+    def __str__(self) -> str:
+        """Return the string representation."""
+        return wl.pformat(self, width=88)

@@ -36,7 +36,7 @@ from coordinax._src.base_charts import (
     CDictT,
     chart_dataclass_decorator,
 )
-from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.charts import checks
 from coordinax._src.charts.d1 import Abstract1D
 from coordinax._src.charts.d2 import Abstract2D
@@ -183,7 +183,7 @@ class AbstractSphericalTwoSphere(AbstractSphericalHyperSphere[Ks, Ds], Abstract2
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = twosphere
+    M: AbstractManifold = twosphere
 
 
 # ===============================================================================
@@ -233,7 +233,7 @@ class SphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = twosphere
+    M: AbstractManifold = twosphere
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         # call base check
@@ -287,7 +287,7 @@ class LonLatSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = twosphere
+    M: AbstractManifold = twosphere
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -335,7 +335,7 @@ class LonCosLatSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = twosphere
+    M: AbstractManifold = twosphere
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -382,7 +382,7 @@ class MathSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractTopologicalManifold = twosphere
+    M: AbstractManifold = twosphere
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)

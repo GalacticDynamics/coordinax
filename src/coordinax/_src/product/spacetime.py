@@ -18,7 +18,7 @@ from coordinax._src.base_charts import (
     AbstractFixedComponentsChart,
     chart_dataclass_decorator,
 )
-from coordinax._src.base_manifold import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.charts.d1 import time1d
 from coordinax._src.charts.d3 import cart3d
 from coordinax._src.custom_types import CDict, Ds, Ks
@@ -84,7 +84,7 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
-    M: ClassVar[AbstractTopologicalManifold]  # remove from init
+    M: ClassVar[AbstractManifold]  # remove from init
 
     @property
     def time_chart(self) -> AbstractChart[Any, Any]:

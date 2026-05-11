@@ -12,7 +12,7 @@ import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
 from coordinax._src.base_charts import AbstractChart
-from coordinax._src.base_topo import AbstractTopologicalManifold
+from coordinax._src.base_manifold import AbstractManifold
 from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 
 
@@ -71,7 +71,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 
     """
 
-    M: ClassVar[AbstractTopologicalManifold]  # ty: ignore[invalid-attribute-override]
+    M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
 
     @property
     def intrinsic(self) -> IntrinsicT:

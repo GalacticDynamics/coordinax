@@ -33,7 +33,7 @@ import wadler_lindig as wl
 import dataclassish
 import unxt as u
 
-from .base_topo import AbstractTopologicalManifold
+from .base_manifold import AbstractManifold
 from .custom_types import CDict, Ds, Ks
 from .no_manifold import no_manifold
 
@@ -81,7 +81,7 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
     _: dataclasses.KW_ONLY
 
-    M: AbstractTopologicalManifold = no_manifold
+    M: AbstractManifold = no_manifold
     """The manifold that this chart belongs to.
 
     Default is `no_manifold` for charts that do not belong to any manifold.

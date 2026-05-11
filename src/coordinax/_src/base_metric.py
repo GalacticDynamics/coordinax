@@ -5,18 +5,19 @@ __all__ = ("AbstractMetric", "AbstractDiagonalMetric")
 import abc
 
 from jaxtyping import Array, Bool
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import jax
 import jax.numpy as jnp
 
 import coordinax.angles as cxa
 import coordinax.api.manifolds as cxmapi
-import coordinax.charts as cxc
 from .custom_types import CDict, OptUSys
-from coordinax._src.base_charts import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import QuantityMatrix, UnitsMatrix
+
+if TYPE_CHECKING:
+    import coordinax.charts  # noqa: ICN001
 
 
 @jax.tree_util.register_static
@@ -80,7 +81,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def metric_matrix(
         self,
-        chart: cxc.AbstractChart,
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
         /,
         *,
         at: CDict,
@@ -108,7 +109,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
 
     def scale_factors(
         self,
-        chart: cxc.AbstractChart[Any, Any],
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
         /,
         *,
         at: CDict,
@@ -150,7 +151,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
 
     def cholesky(
         self,
-        chart: cxc.AbstractChart[Any, Any],
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
         /,
         *,
         at: CDict,
@@ -220,7 +221,7 @@ class AbstractMetric(metaclass=abc.ABCMeta):
 
     def angle_between(
         self,
-        chart: cxc.AbstractChart[Any, Any],
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
         uvec: CDict,
         vvec: CDict,
         /,
@@ -236,7 +237,12 @@ class AbstractMetric(metaclass=abc.ABCMeta):
         return cxmapi.angle_between(self, chart, uvec, vvec, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
     def is_diagonal(
-        self, chart: cxc.AbstractChart[Any, Any], /, *, at: CDict, usys: OptUSys = None
+        self,
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
+        /,
+        *,
+        at: CDict,
+        usys: OptUSys = None,
     ) -> Bool[Array, ""]:
         r"""Return ``True`` if the metric matrix is diagonal at base point ``at``.
 
@@ -380,7 +386,12 @@ class AbstractDiagonalMetric(AbstractMetric):
     """
 
     def is_diagonal(
-        self, chart: AbstractChart[Any, Any], /, *, at: CDict, usys: OptUSys = None
+        self,
+        chart: "coordinax.charts.AbstractChart[Any, Any]",
+        /,
+        *,
+        at: CDict,
+        usys: OptUSys = None,
     ) -> Bool[Array, ""]:
         r"""Return ``True`` as a structural guarantee of diagonality.
 
