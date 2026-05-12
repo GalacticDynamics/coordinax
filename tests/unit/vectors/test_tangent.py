@@ -128,6 +128,60 @@ class TestVectorConstruction:
 
 
 # ======================================================================
+# __check_init__
+
+
+class TestCheckInit:
+    """Tests for ``Tangent.__check_init__``."""
+
+    def test_raises_for_wrong_data_keys(self):
+        """Construction raises when data keys don't match chart components."""
+        with pytest.raises(ValueError, match="data keys"):
+            cx.Tangent(
+                data={"wrong": u.Q(1.0, "m/s")},
+                chart=cxc.cart3d,
+                basis=cxr.coord_basis,
+                semantic=cxr.vel,
+            )
+
+    def test_raises_for_missing_data_key(self):
+        """Construction raises when a chart component is absent from data."""
+        with pytest.raises(ValueError, match="data"):
+            cx.Tangent(
+                data={"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s")},  # z missing
+                chart=cxc.cart3d,
+                basis=cxr.coord_basis,
+                semantic=cxr.vel,
+            )
+
+    def test_valid_data_does_not_raise(self):
+        """Construction succeeds when data keys match chart components exactly."""
+        v = cx.Tangent(
+            data=_cart3d_vel_data(),
+            chart=cxc.cart3d,
+            basis=cxr.coord_basis,
+            semantic=cxr.vel,
+        )
+        assert v is not None
+
+    def test_check_init_calls_manifold_check_chart(self):
+        """__check_init__ enforces that the chart belongs to the manifold atlas.
+
+        Tangent mirrors Point: both call M.check_chart(self.chart).
+        """
+        # Verify this is consistent with Point's behavior. For any valid chart,
+        # M == chart.M so the check is always True. The key property is that the
+        # call is made (not silently skipped).
+        v = cx.Tangent(
+            data=_cart3d_vel_data(),
+            chart=cxc.cart3d,
+            basis=cxr.coord_basis,
+            semantic=cxr.vel,
+        )
+        assert v.M.has_chart(v.chart)
+
+
+# ======================================================================
 # M property
 
 

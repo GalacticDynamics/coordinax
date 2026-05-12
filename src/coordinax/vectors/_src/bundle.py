@@ -14,7 +14,6 @@ from typing import Any, cast, final
 from typing_extensions import TypeVar, override
 
 import equinox as eqx
-import jax
 import jax.numpy as jnp
 import wadler_lindig as wl
 from jax.core import ShapedArray
@@ -279,21 +278,10 @@ class Coordinate(AbstractVector):
         if isinstance(key, str):
             return self._data[key]
 
-        # Batch-indexing: slice all arrays in point and all fields
-        nindex = len(key) if isinstance(key, tuple) else 1
-
-        def _index_leaf(x: Any) -> Any:
-            if not eqx.is_array(x):
-                return x
-            if getattr(x, "ndim", 0) < nindex:
-                return x
-            return x[key]
-
-        new_point = jax.tree.map(_index_leaf, self.point, is_leaf=eqx.is_array)
-        new_fields = {
-            k: jax.tree.map(_index_leaf, v, is_leaf=eqx.is_array)
-            for k, v in self._data.items()
-        }
+        # Batch-indexing: delegate to Point/Tangent indexing so invalid
+        # indices raise consistently instead of silently skipping.
+        new_point = self.point[key]
+        new_fields = {k: v[key] for k, v in self._data.items()}
         return Coordinate(point=new_point, **new_fields)
 
     def keys(self) -> KeysView[str]:

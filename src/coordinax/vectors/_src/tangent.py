@@ -133,7 +133,8 @@ class Tangent(
     )
     """The reference frame. Defaults to ``cxf.noframe``."""
 
-    def _check_init(self) -> None:
+    def __check_init__(self) -> None:
+        self.M.check_chart(self.chart)
         self.chart.check_data(self.data, keys=True)
 
     @property
@@ -288,7 +289,7 @@ def from_(
     """Construct a Tangent from data, chart, and a tangent Representation.
 
     Extracts ``basis`` and ``semantic`` from the representation. Raises
-    ``ValueError`` if the representation's geometry kind is not
+    ``TypeError`` if the representation's geometry kind is not
     ``TangentGeometry``.
 
     Examples

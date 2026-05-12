@@ -143,9 +143,8 @@ class Point(
     )
     """The reference frame of the point. Defaults to ``cxf.noframe``."""
 
-    def _check_init(self) -> None:
-        # Pass a check to self.chart.check_data
-        self.M.has_chart(self.chart)
+    def __check_init__(self) -> None:
+        self.M.check_chart(self.chart)
         self.chart.check_data(self.data, keys=True)
 
     @property

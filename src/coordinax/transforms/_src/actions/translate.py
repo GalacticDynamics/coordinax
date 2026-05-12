@@ -150,11 +150,23 @@ def act(
     >>> cxfm.act(shift, None, x,  cxc.cart3d, cxr.point, usys=usys)
     Array([1000., 2000., 3000.], dtype=float64)
 
+    Velocity-semantic translate is identity on point arrays:
+
+    >>> import coordinax.representations as cxr
+    >>> from dataclassish import replace
+    >>> vel_shift = replace(shift, semantic_kind=cxr.vel)
+    >>> cxfm.act(vel_shift, None, x, cxc.cart3d, cxr.point, usys=usys)
+    Array([0., 0., 0.], dtype=float64)
+
     """
     del kw
 
     if rep != cxr.point:
         raise TypeError("Translate can only be applied to point representations")
+
+    # A vel/acc-semantic translate does not move position points.
+    if not isinstance(op.semantic_kind, cxr.Displacement):
+        return jnp.asarray(x)
 
     if usys is None:
         raise TypeError("Translate requires usys to convert delta to x's units")
@@ -202,6 +214,8 @@ def act(
     --------
     >>> import jax.numpy as jnp
     >>> import coordinax.transforms as cxfm
+    >>> import coordinax.representations as cxr
+    >>> from dataclassish import replace
     >>> import unxt as u
 
     >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
@@ -209,9 +223,19 @@ def act(
     >>> cxfm.act(shift, None, x, cxc.cart3d, cxr.point)
     Q([1000., 2000., 3000.], 'm')
 
+    Velocity-semantic translate is identity on point quantities:
+
+    >>> vel_shift = replace(shift, semantic_kind=cxr.vel)
+    >>> cxfm.act(vel_shift, None, x, cxc.cart3d, cxr.point)
+    Q([0., 0., 0.], 'm')
+
     """
     if rep != cxr.point:
         raise TypeError("Translate can only be applied to point representations")
+
+    # A vel/acc-semantic translate does not move position points.
+    if not isinstance(op.semantic_kind, cxr.Displacement):
+        return x
 
     # Process Translation
     op_eval = materialize_transform(op, tau)
@@ -273,6 +297,12 @@ def _act_translate_cdict(
     """Displacement-semantic translate: shifts points and displacement vectors."""
     op_eval = materialize_transform(op, tau)
 
+    # A vel/acc-semantic translate does not move position points.
+    # This check should never trigger here since dispatch selects on Displacement,
+    # but explicit for consistency with other overloads.
+    if rep == cxr.point and not isinstance(op.semantic_kind, cxr.Displacement):
+        return x
+
     if rep == cxr.point:
         # Translate in Cartesian space, then map back.
         cart = chart.cartesian
@@ -327,6 +357,10 @@ def _act_translate_cdict(
 ) -> CDict:
     """Velocity/acceleration-semantic translate: shifts matching tangent vectors."""
     op_eval = materialize_transform(op, tau)
+
+    # A vel/acc-semantic translate does not move position points.
+    if rep == cxr.point:
+        return x
 
     if rep.semantic_kind == sk:
         return cast(

@@ -216,6 +216,20 @@ def cconvert(
     Spherical3D(M=Rn(3))
 
     """
+    if from_vec.chart != to_chart:
+        if at is None:
+            msg = (
+                f"'at' is required when converting a Tangent between different charts "
+                f"({from_vec.chart!r} -> {to_chart!r}): "
+                "the Jacobian pushforward needs a base point."
+            )
+            raise TypeError(msg)
+        if isinstance(at, Point) and at.chart != from_vec.chart:
+            msg = (
+                f"'at' chart {at.chart!r} does not match "
+                f"the source chart {from_vec.chart!r}."
+            )
+            raise ValueError(msg)
     at_data: CDict | None = at.data if isinstance(at, Point) else at
     p = cxr.cconvert(
         from_vec.data,
@@ -302,6 +316,20 @@ def change_basis(
     phys_vel
 
     """
+    if v.basis != to_basis:
+        if at is None:
+            msg = (
+                f"'at' is required when changing the basis of a Tangent "
+                f"({v.basis!r} -> {to_basis!r}): "
+                "scale factors need a base point."
+            )
+            raise TypeError(msg)
+        if isinstance(at, Point) and at.chart != v.chart:
+            msg = (
+                f"'at' chart {at.chart!r} does not match "
+                f"the vector's chart {v.chart!r}."
+            )
+            raise ValueError(msg)
     at_data: CDict | None = at.data if isinstance(at, Point) else at
     new_data = cxr.change_basis(
         v.data,
