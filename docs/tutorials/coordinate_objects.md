@@ -166,7 +166,7 @@ NoFrame()
 >>> isinstance(pv["velocity"], cx.Tangent)
 True
 >>> pv["velocity"].semantic
-Velocity()
+vel
 ```
 
 ### Multiple Fibre Fields
@@ -183,7 +183,7 @@ A `Coordinate` can hold any number of named tangent fields:
 >>> sorted(pv2.keys())
 ['acceleration', 'velocity']
 >>> pv2["acceleration"].semantic
-Acceleration()
+acc
 ```
 
 ### Converting Charts (The Whole Bundle)

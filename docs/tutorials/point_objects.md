@@ -121,7 +121,7 @@ Spherical3D(M=Rn(3))
 ...     cxc.cart3d,
 ...     cxr.point,
 ... )
->>> v.rep
+>>> print(v.rep)
 Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 ```
 
@@ -143,7 +143,7 @@ True
 Cart3D(M=Rn(3))
 
 >>> v.rep
-Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+point
 
 >>> v.M
 Rn(3)
@@ -342,8 +342,10 @@ You can request the physical (orthonormal) basis instead:
 
 ```{code-block} python
 >>> disp_phys = cxr.change_basis(pt, cxr.phys_basis)
->>> disp_phys.rep
-Representation(geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Displacement())
+>>> print(disp_phys.rep)
+Representation(
+    geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Displacement()
+)
 ```
 
 See the [Tangent guide](../guides/tangents.md) for more on basis and semantic kinds.

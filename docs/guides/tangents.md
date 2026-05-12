@@ -171,7 +171,9 @@ Converting a `Tangent` to a new chart requires knowing the **base point** at whi
 >>> # Convert to physical basis (all components in m/s)
 >>> vel_sph_phys = cxr.change_basis(vel_sph_coord, cxr.phys_basis, at=point_sph)
 >>> print(vel_sph_phys.rep)  # phys_vel
-Representation(geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Velocity())
+Representation(
+    geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Velocity()
+)
 ```
 
 ## Promoting a Point to a Displacement
@@ -195,7 +197,9 @@ You can also request the physical basis directly:
 ```{code-block} python
 >>> disp_phys = cxr.change_basis(pt, cxr.phys_basis)
 >>> print(disp_phys.rep)   # phys_disp
-Representation(geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Displacement())
+Representation(
+    geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Displacement()
+)
 ```
 
 The `at` and `usys` keyword arguments are accepted for API consistency but have no effect (no numerical transformation is performed).
