@@ -169,7 +169,7 @@ class TestMappingAPI:
         assert isinstance(pv["velocity"], Tangent)
 
     def test_getitem_unknown_key_raises(self, pv: Coordinate) -> None:
-        with pytest.raises((KeyError, Exception)):
+        with pytest.raises(KeyError):
             _ = pv["nonexistent"]
 
     def test_keys_contains_fields(self, pv: Coordinate) -> None:

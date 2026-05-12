@@ -21,7 +21,7 @@ more metadata. This tutorial covers `Quantity`.
 | Level | Type | See tutorial |
 | --- | --- | --- |
 | Coordinate | `Coordinate` | [Coordinate tutorial](./coordinate_objects.md) |
-| Point | `Vector` | [Point tutorial](./point_objects.md) |
+| Point | `Point` | [Point tutorial](./point_objects.md) |
 | CDict | `dict[str, Quantity]` | [CDict tutorial](./cdict_objects.md) |
 | **Quantity** | `unxt.Quantity` | *this page* |
 | Array | `jax.Array` | [Array tutorial](./array_objects.md) |

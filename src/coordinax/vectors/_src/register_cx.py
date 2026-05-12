@@ -10,6 +10,7 @@ import plum
 
 import dataclassish
 
+import coordinax.api.representations as cxrapi
 import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
@@ -273,7 +274,7 @@ def cconvert(
     """
     if from_chart != from_vec.chart:
         raise ValueError(CHART_MSMTCH.format(from_chart, from_vec))
-    return cxr.cconvert(from_vec, to_chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+    return cxrapi.cconvert(from_vec, to_chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
 
 # ===================================================================
@@ -545,10 +546,13 @@ def act(
 
 @dataclassish.replace.dispatch  # type: ignore[attr-defined]
 def _replace_coordinate(coord: Coordinate, /, **kwargs: Any) -> Coordinate:
-    """Replace fields on a Coordinate, propagating ``frame`` to point and fibres.
+    """Replace fields on a Coordinate.
 
+    Supports replacing ``point``, any named fibre field, or ``frame``.
     When ``frame`` is supplied, it is forwarded to both the base ``point`` and
     every fibre field so the bundle stays internally consistent.
+
+    Unknown keys are rejected with a ``TypeError``.
 
     Examples
     --------
@@ -558,18 +562,42 @@ def _replace_coordinate(coord: Coordinate, /, **kwargs: Any) -> Coordinate:
     >>> point = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
     >>> pv = cx.Coordinate(point=point)
     >>> import dataclassish
+
+    Replace the frame (propagates to point and all fibres):
+
     >>> pv2 = dataclassish.replace(pv, frame=cxf.alex)
     >>> pv2.frame
     Alex()
 
+    Replace the base point directly:
+
+    >>> point2 = cx.Point.from_([2.0, 0.0, 0.0], "m", cxf.alice)
+    >>> pv3 = dataclassish.replace(pv, point=point2)
+    >>> pv3.point is point2
+    True
+
     """
+    # Validate: reject unknown keys up front
+    valid_keys = {"frame", "point"} | coord._data.keys()
+    unknown = set(kwargs) - valid_keys
+    if unknown:
+        msg = (
+            f"dataclassish.replace(Coordinate, ...): unknown field(s) {unknown!r}. "
+            f"Valid fields are: {sorted(valid_keys)!r}."
+        )
+        raise TypeError(msg)
+
     frame = kwargs.pop("frame", None)
+    new_point = kwargs.pop("point", coord.point)
+    # Remaining kwargs are fibre-field replacements
+    new_fields = dict(coord._data)
+    new_fields.update(kwargs)
+
     if frame is not None:
-        new_point = replace(coord.point, frame=frame)
-        new_fields = {name: replace(f, frame=frame) for name, f in coord._data.items()}
-        return Coordinate(point=new_point, **new_fields)
-    # No frame kwarg — only point-level replacement
-    return Coordinate(point=replace(coord.point, **kwargs), **coord._data)
+        new_point = replace(new_point, frame=frame)
+        new_fields = {name: replace(f, frame=frame) for name, f in new_fields.items()}
+
+    return Coordinate(point=new_point, **new_fields)
 
 
 # ===================================================================
