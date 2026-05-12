@@ -53,7 +53,7 @@ Construct the canonical point representation explicitly:
 
 >>> rep = cxr.Representation(cxr.PointGeometry(), cxr.NoBasis(), cxr.Location())
 >>> rep
-Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+point
 
 This is also provided as a convenient pre-defined instance.
 

@@ -127,9 +127,6 @@ Q['speed'](Array(1, dtype=int64, weak_type=True), unit='m / s')
 >>> print(vel.chart)  # Cart3D(M=Rn(3))
 Cart3D[('x', 'y', 'z'), ('length', 'length', 'length')](M=Rn(3))
 
->>> print(vel.rep)  # coord_vel
-Representation(geom_kind=TangentGeometry(), basis=CoordinateBasis(), semantic_kind=Velocity())
-
 >>> print(vel.basis)  # coord_basis
 CoordinateBasis()
 

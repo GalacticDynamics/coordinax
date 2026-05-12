@@ -297,10 +297,9 @@ def change_basis(
     ...     "phi": u.Q(0.0, "rad/s")}, cxc.sph3d, cxr.coord_vel)
     >>> vel_phys = cxr.change_basis(vel, cxr.phys_basis, at=point)
     >>> vel_phys.basis
-    PhysicalBasis()
+    phys_basis
     >>> vel_phys.rep
-    Representation(geom_kind=TangentGeometry(), basis=PhysicalBasis(),
-                   semantic_kind=Velocity())
+    phys_vel
 
     """
     at_data: CDict | None = at.data if isinstance(at, Point) else at
@@ -339,9 +338,9 @@ def change_basis(
     >>> pt = cx.Point.from_([1.0, 2.0, 3.0], "m")
     >>> disp = cxr.change_basis(pt, cxr.coord_basis)
     >>> disp.semantic
-    Displacement()
+    dpl
     >>> disp.basis
-    CoordinateBasis()
+    coord_basis
     >>> disp.chart == pt.chart
     True
 

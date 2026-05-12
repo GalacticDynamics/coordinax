@@ -102,7 +102,7 @@ class AbstractBasis(metaclass=abc.ABCMeta):
     # ===============================================================
     # Wadler-Lindig API
 
-    def __pdoc__(self, *, canonical: bool = False, **kw: Any) -> wl.AbstractDoc:
+    def __pdoc__(self, *, canonical: bool = True, **kw: Any) -> wl.AbstractDoc:
         """Generate a Wadler-Lindig docstring for this Basis.
 
         Parameters
@@ -120,7 +120,7 @@ class AbstractBasis(metaclass=abc.ABCMeta):
         >>> import coordinax.representations as cxr
 
         >>> basis = cxr.NoBasis()
-        >>> wl.pprint(basis)
+        >>> wl.pprint(basis, canonical=False)
         NoBasis()
 
         >>> wl.pprint(basis, canonical=True)
@@ -138,9 +138,31 @@ class AbstractBasis(metaclass=abc.ABCMeta):
             indent=kw.get("indent", 4),
         )
 
+    def __repr__(self) -> str:
+        """Return the canonical string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> repr(cxr.coord_basis)
+        'coord_basis'
+        >>> repr(cxr.CoordinateBasis())
+        'coord_basis'
+
+        """
+        return wl.pformat(self, canonical=True)
+
+    def __str__(self) -> str:
+        """Return the verbose string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> str(cxr.coord_basis)
+        'CoordinateBasis()'
+
+        """
+        return wl.pformat(self, canonical=False)
+
 
 @final
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class NoBasis(AbstractBasis):
     r"""No-basis kind.
 
@@ -182,7 +204,7 @@ class NoBasis(AbstractBasis):
     The output `q` is still point data, but expressed in the target chart.
 
     >>> import wadler_lindig as wl
-    >>> wl.pprint(basis)
+    >>> wl.pprint(basis, canonical=False)
     NoBasis()
 
     >>> wl.pprint(basis, canonical=True)
@@ -227,7 +249,7 @@ class AbstractLinearBasis(AbstractBasis, metaclass=abc.ABCMeta):
 
 @final
 @jtu.register_static
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class CoordinateBasis(AbstractLinearBasis):
     r"""Coordinate basis kind.
 
@@ -277,7 +299,7 @@ coord_basis: Final = CoordinateBasis()
 
 @final
 @jtu.register_static
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class PhysicalBasis(AbstractLinearBasis):
     r"""Physical (orthonormal) basis kind.
 

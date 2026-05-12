@@ -39,7 +39,7 @@ SemanticT = TypeVar(
 
 @jtu.register_static
 @final
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class Representation(Generic[GeomT, BasisT, SemanticT]):
     r"""Representation of geometric component data.
 
@@ -140,7 +140,7 @@ class Representation(Generic[GeomT, BasisT, SemanticT]):
     # Wadler-Lindig API
 
     def __pdoc__(
-        self, *, field_names: bool = True, canonical: bool = False, **kw: Any
+        self, *, field_names: bool = True, canonical: bool = True, **kw: Any
     ) -> wl.AbstractDoc:
         """Generate a Wadler-Lindig docstring for this representation.
 
@@ -161,15 +161,15 @@ class Representation(Generic[GeomT, BasisT, SemanticT]):
         >>> import coordinax.representations as cxr
 
         >>> rep = cxr.Representation(cxr.PointGeometry(), cxr.NoBasis(), cxr.Location())
-        >>> wl.pprint(rep)
+        >>> wl.pprint(rep, canonical=True)
+        point
+
+        >>> wl.pprint(rep, canonical=False)
         Representation(geom_kind=PointGeometry(), basis=NoBasis(),
                        semantic_kind=Location())
 
-        >>> wl.pprint(rep, field_names=False)
+        >>> wl.pprint(rep, canonical=False, field_names=False)
         Representation(PointGeometry(), NoBasis(), Location())
-
-        >>> wl.pprint(rep, canonical=True)
-        point
 
         """
         if canonical and self in CANONICAL_REPRESENTATIONS:
@@ -188,6 +188,29 @@ class Representation(Generic[GeomT, BasisT, SemanticT]):
             end=wl.TextDoc(")"),
             indent=kw.get("indent", 4),
         )
+
+    def __repr__(self) -> str:
+        """Return the canonical string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> repr(cxr.point)
+        'point'
+        >>> repr(cxr.coord_vel)
+        'coord_vel'
+
+        """
+        return wl.pformat(self, canonical=True)
+
+    def __str__(self) -> str:
+        """Return the verbose string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> print(cxr.point)
+        Representation(geom_kind=PointGeometry(), basis=NoBasis(),
+                       semantic_kind=Location())
+
+        """
+        return wl.pformat(self, canonical=False)
 
 
 point = Representation(point_geom, no_basis, loc)

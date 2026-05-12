@@ -27,7 +27,7 @@ A representation is a triple $R = (K, B, S)$:
 
 >>> rep = cxr.Representation(cxr.PointGeometry(), cxr.NoBasis(), cxr.Location())
 >>> rep
-Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+point
 
 >>> rep == cxr.point
 True

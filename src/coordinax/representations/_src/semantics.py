@@ -135,7 +135,7 @@ class AbstractSemanticKind(metaclass=abc.ABCMeta):
     # ===============================================================
     # Wadler-Lindig API
 
-    def __pdoc__(self, *, canonical: bool = False, **kw: Any) -> wl.AbstractDoc:
+    def __pdoc__(self, *, canonical: bool = True, **kw: Any) -> wl.AbstractDoc:
         """Generate a Wadler-Lindig docstring for this Basis.
 
         Parameters
@@ -153,7 +153,7 @@ class AbstractSemanticKind(metaclass=abc.ABCMeta):
         >>> import coordinax.representations as cxr
 
         >>> semantic = cxr.Location()
-        >>> wl.pprint(semantic)
+        >>> wl.pprint(semantic, canonical=False)
         Location()
 
         >>> wl.pprint(semantic, canonical=True)
@@ -171,13 +171,35 @@ class AbstractSemanticKind(metaclass=abc.ABCMeta):
             indent=kw.get("indent", 4),
         )
 
+    def __repr__(self) -> str:
+        """Return the canonical string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> repr(cxr.vel)
+        'vel'
+        >>> repr(cxr.Velocity())
+        'vel'
+
+        """
+        return wl.pformat(self, canonical=True)
+
+    def __str__(self) -> str:
+        """Return the verbose string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> str(cxr.vel)
+        'Velocity()'
+
+        """
+        return wl.pformat(self, canonical=False)
+
 
 # ===================================================================
 
 
 @final
 @jtu.register_static
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class Location(AbstractSemanticKind):
     r"""Location semantic kind.
 
@@ -480,9 +502,9 @@ class AbstractTangentSemanticKind(AbstractSemanticKind):
         --------
         >>> import coordinax.representations as cxr
         >>> cxr.Displacement().derivative()
-        Velocity()
+        vel
         >>> cxr.Velocity().derivative()
-        Acceleration()
+        acc
         >>> try:
         ...     cxr.Acceleration().derivative()   # no Jerk registered yet
         ... except ValueError as e:
@@ -519,9 +541,9 @@ class AbstractTangentSemanticKind(AbstractSemanticKind):
         --------
         >>> import coordinax.representations as cxr
         >>> cxr.Acceleration().antiderivative()
-        Velocity()
+        vel
         >>> cxr.Velocity().antiderivative()
-        Displacement()
+        dpl
         >>> try:
         ...     cxr.Displacement().antiderivative()   # no Absement registered yet
         ... except ValueError as e:
@@ -542,7 +564,7 @@ _TANGENT_TIME_ORDER_LADDER: Final[dict[int, type[AbstractTangentSemanticKind]]] 
 
 @final
 @jtu.register_static
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class Displacement(AbstractTangentSemanticKind):
     r"""Displacement semantic kind.
 
@@ -584,7 +606,7 @@ class Displacement(AbstractTangentSemanticKind):
         --------
         >>> import coordinax.representations as cxr
         >>> cxr.Displacement().derivative()
-        Velocity()
+        vel
 
         """
         return vel
@@ -596,7 +618,7 @@ dpl = Displacement()
 
 @final
 @jtu.register_static
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class Velocity(AbstractTangentSemanticKind):
     r"""Velocity semantic kind.
 
@@ -636,7 +658,7 @@ class Velocity(AbstractTangentSemanticKind):
         --------
         >>> import coordinax.representations as cxr
         >>> cxr.Velocity().derivative()
-        Acceleration()
+        acc
 
         """
         return acc
@@ -651,7 +673,7 @@ class Velocity(AbstractTangentSemanticKind):
         --------
         >>> import coordinax.representations as cxr
         >>> cxr.Velocity().antiderivative()
-        Displacement()
+        dpl
 
         """
         return dpl
@@ -663,7 +685,7 @@ vel = Velocity()
 
 @final
 @jtu.register_static
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class Acceleration(AbstractTangentSemanticKind):
     r"""Acceleration semantic kind.
 
@@ -703,7 +725,7 @@ class Acceleration(AbstractTangentSemanticKind):
         --------
         >>> import coordinax.representations as cxr
         >>> cxr.Acceleration().antiderivative()
-        Velocity()
+        vel
 
         """
         return vel

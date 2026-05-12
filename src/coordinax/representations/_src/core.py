@@ -62,8 +62,8 @@ def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
     )
 
     """
-    return lambda x, *args, **kwargs: cxrapi.cconvert(
-        x, *fixed_args, *args, **fixed_kw, **kwargs
+    return lambda x, *args, **kw: cxrapi.cconvert(
+        x, *fixed_args, *args, **fixed_kw, **kw
     )
 
 

@@ -578,7 +578,7 @@ def from_(
     >>> p.chart
     Cart3D(M=Rn(3))
     >>> p.rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
     >>> p.frame
     Alice()
 
