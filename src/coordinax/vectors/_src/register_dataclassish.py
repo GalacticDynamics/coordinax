@@ -35,12 +35,13 @@ def replace(obj: Point, /, **kwargs: Any) -> Point:
     # Get all the kwarg fields that are part of Point, reserving the rest to
     # pass to the constructor.
     keys = obj.__dataclass_fields__.keys()
-    fs = {k: kwargs.pop(k) for k in kwargs if k in keys}
+    fs = {k: v for k, v in kwargs.items() if k in keys}
+    component_kwargs = {k: v for k, v in kwargs.items() if k not in keys}
     # If any of the kwargs are also in the data, that's an error (ambiguous).
-    if "data" in fs and kwargs:
+    if "data" in fs and component_kwargs:
         raise ValueError("Cannot pass both data and non-field kwargs.")
     # If any of the kwargs are in the data, merge them with the existing data.
-    if kwargs:
-        fs["data"] = {**obj.data, **kwargs}
+    if component_kwargs:
+        fs["data"] = {**obj.data, **component_kwargs}
     # Replace the fields using dataclasses.replace.
     return dataclasses.replace(obj, **fs)

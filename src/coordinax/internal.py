@@ -47,11 +47,15 @@ __all__ = (
     "pack_to_qmatrix",
     "pos_named_objs",
     "jax_scalar_handler",
+    # Types
+    "CDict",
+    "OptUSys",
 )
 
 from ._src.setup_package import install_import_hook
 
 with install_import_hook("coordinax.internal"):
+    from coordinax._src.custom_types import CDict, OptUSys
     from coordinax._src.internal import (
         QuantityMatrix,
         UnitsMatrix,

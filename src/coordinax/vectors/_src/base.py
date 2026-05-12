@@ -16,6 +16,7 @@ import quax_blocks
 import wadler_lindig as wl
 from quax import ArrayValue
 
+import dataclassish
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
@@ -605,4 +606,4 @@ class AbstractVector(
 
         # Otherwise, apply the transformation and return a new point
         new = cxfm.act(op, t, self)
-        return dataclasses.replace(new, frame=toframe)
+        return dataclassish.replace(new, frame=toframe)  # ty: ignore[invalid-return-type]

@@ -19,7 +19,7 @@ more metadata. This tutorial covers the **bottom level** — plain arrays.
 | Level | Type | See tutorial |
 | --- | --- | --- |
 | Coordinate | `Coordinate` | [Coordinate tutorial](./coordinate_objects.md) |
-| Vector | `Vector` | [Vector tutorial](./vector_objects.md) |
+| Vector | `Vector` | [Point tutorial](./point_objects.md) |
 | CDict | `dict[str, Quantity]` | [CDict tutorial](./cdict_objects.md) |
 | Quantity | `unxt.Quantity` | [Quantity tutorial](./quantity_objects.md) |
 | **Array** | `jax.Array` | *this page* |

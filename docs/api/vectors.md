@@ -13,21 +13,30 @@ For design philosophy, practical patterns, and worked examples, see [Working Wit
 ```python
 import coordinax.main as cx
 import coordinax.charts as cxc
+import coordinax.representations as cxr
+import unxt as u
 
-# Construct and convert
-v = cx.Point.from_([1, 2, 3], "m")
-v_sph = cx.cconvert(v, cxc.sph3d)
+# ── Point ──────────────────────────────────────────────────
+p = cx.Point.from_([1, 2, 3], "m")
+p_sph = cx.cconvert(p, cxc.sph3d)
 
-# Arithmetic. Technically points are NOT displacements,
-# but for convenience we allow subtraction to yield a new point.
-v2 = cx.Point.from_([4, 5, 6], "m")
-difference = v - v2
+# ── Tangent ────────────────────────────────────────────────
+# A velocity vector — transforms by Jacobian pushforward
+v = cx.Tangent.from_(
+    {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+    cxc.cart3d,
+    cxr.coord_vel,
+)
+# Convert a Tangent — must supply the base Point via `at=`
+v_sph = v.cconvert(cxc.sph3d, at=p)
 
-# Inspect converted components
-components = cx.cdict(v_sph)
+# ── Coordinate ─────────────────────────────────────────────
+# Bundle: base Point + named Tangent fibre fields
+pv = cx.Coordinate(point=p, velocity=v)
+pv_sph = pv.cconvert(cxc.sph3d)  # converts point AND velocity together
 ```
 
-See [Working With Vectors](../guides/vectors.md#constructor-patterns) for all construction patterns and design rationale.
+See [Working With Vectors](../guides/vectors.md) and [Working With Tangent Vectors](../guides/tangents.md) for all construction patterns and design rationale.
 
 ## Functional API
 
@@ -60,14 +69,15 @@ Additional utilities:
 
 ## Available Objects
 
-- **`Point`**: the primary vector class storing data + chart + representation
+- **`Point`**: a geometric point storing data + chart + representation (always `PointGeometry`)
+- **`Tangent`**: a tangent-space vector with explicit basis and semantic kind (velocity, displacement, acceleration)
+- **`Coordinate`**: a vector bundle — a `Point` paired with named `Tangent` fibre fields anchored at that point
 - **`AbstractVector`**: base class defining the vector interface
-- **`Coordinate`**: a vector placed in a reference frame (see `coordinax.frames`)
 - **`ToUnitsOptions`**: configuration for unit conversion behavior
 
 ## Design & Integration
 
-For design philosophy, architecture, and immutability details, see [Working With Vectors](../guides/vectors.md#architecture--design-philosophy). For JAX integration patterns (PyTree, scalar-first design, vmap/jit/grad), see [Working With Vectors](../guides/vectors.md#jax-integration--scaling).
+For design philosophy, architecture, and immutability details, see [Working With Vectors](../guides/vectors.md#architecture--design-philosophy). For tangent-vector patterns (basis, semantic kind, Jacobian pushforward), see [Working With Tangent Vectors](../guides/tangents.md). For JAX integration patterns (PyTree, scalar-first design, vmap/jit/grad), see [Working With Vectors](../guides/vectors.md#jax-integration--scaling).
 
 ```{automodule} coordinax.vectors
 :members:

@@ -21,7 +21,7 @@ from coordinax.distances import Distance
 ScalarAngle: TypeAlias = Shaped[u.Q["angle"] | u.Angle, ""]
 
 
-galcen_default = cxv.Point.from_(
+GALCEN_DEFAULT = cxv.Point.from_(
     {
         "lon": u.Angle(jnp.array(266.4051), "deg"),
         "lat": u.Angle(jnp.array(-28.936175), "degree"),
@@ -30,7 +30,7 @@ galcen_default = cxv.Point.from_(
     cxc.lonlat_sph3d,
     cxr.point,
 )
-# galcen_v_sun_default = cxv.Point.from_([12.9, 245.6, 7.78], "km/s")
+GALCEN_V_SUN_DEFAULT = cxv.Tangent.from_([12.9, 245.6, 7.78], "km/s")
 
 
 @final
@@ -53,7 +53,7 @@ class Galactocentric(AbstractSpaceFrame):
     #: distance: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
     galcen: cxv.Point[cxc.LonLatSpherical3D, Any] = eqx.field(  # ty: ignore[invalid-assignment]
         converter=cxv.Point[cxc.LonLatSpherical3D, Any].from_,
-        default=galcen_default,
+        default=GALCEN_DEFAULT,
     )
 
     #: Rotation angle of the Galactic center from the ICRS x-axis.

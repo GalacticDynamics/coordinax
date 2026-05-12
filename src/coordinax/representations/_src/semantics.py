@@ -329,7 +329,7 @@ def d_dt_dim(
 
 
 @jtu.register_static
-class AbstractTangentSemanticKind(AbstractSemanticKind, metaclass=abc.ABCMeta):
+class AbstractTangentSemanticKind(AbstractSemanticKind):
     r"""Abstract base class for tangent-vector semantic kinds.
 
     A tangent semantic kind specifies the **meaning** of a tangent-vector

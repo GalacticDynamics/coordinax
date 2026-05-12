@@ -21,7 +21,7 @@ more metadata. This tutorial covers `CDict`.
 | Level | Type | See tutorial |
 | --- | --- | --- |
 | Coordinate | `Coordinate` | [Coordinate tutorial](./coordinate_objects.md) |
-| Vector | `AbstractVector` | [Vector tutorial](./vector_objects.md) |
+| Vector | `AbstractVector` | [Point tutorial](./point_objects.md) |
 | **CDict** | `dict[str, Quantity]` | *this page* |
 | Quantity | `unxt.Quantity` | [Quantity tutorial](./quantity_objects.md) |
 | Array | `jax.Array` | [Array tutorial](./array_objects.md) |
@@ -284,6 +284,6 @@ Choose CDict when:
 - You need standard dict operations (iteration, merging, filtering).
 - You are inside a performance-sensitive inner loop where allocating `Point` objects is undesirable.
 
-**Trade-off**: CDicts require you to pass chart and representation explicitly to every function call. If you find yourself repeating `cxc.cart3d, cxr.point` everywhere, upgrade to `Point`. See the [Vector tutorial](./vector_objects.md).
+**Trade-off**: CDicts require you to pass chart and representation explicitly to every function call. If you find yourself repeating `cxc.cart3d, cxr.point` everywhere, upgrade to `Point`. See the [Point tutorial](./point_objects.md).
 
 If you want even less overhead and are willing to manage units externally, use a bare `Quantity`. See the [Quantity tutorial](./quantity_objects.md).

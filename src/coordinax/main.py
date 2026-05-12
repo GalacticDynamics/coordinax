@@ -83,6 +83,8 @@ __all__ = (  # distances
     "change_basis",
     # vectors
     "Point",
+    "Coordinate",
+    "Tangent",
     "ToUnitsOptions",
 )
 
@@ -167,9 +169,9 @@ from coordinax.transforms import (
     identity,
     simplify,
 )
-from coordinax.vectors import Point, ToUnitsOptions
+from coordinax.vectors import Coordinate, Point, Tangent, ToUnitsOptions
 
 try:  # noqa: SIM105
-    import coordinax.interop.astropy as _  # ty: ignore[unresolved-import,unused-ignore-comment]  # noqa: F401
+    import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import,unused-ignore-comment]
 except ImportError:
     pass
