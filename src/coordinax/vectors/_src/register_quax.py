@@ -332,7 +332,7 @@ def add_p_tangents(lhs: Tangent, rhs: Tangent, /, **kw: Any) -> Tangent:
             f"Cannot add Tangent vectors with different representations: "
             f"{lhs.rep!r} vs {rhs.rep!r}."
         )
-        raise TypeError(msg)
+        raise ValueError(msg)
     return cast("Tangent", cxr.add(lhs, rhs))
 
 
@@ -362,7 +362,7 @@ def sub_p_tangents(lhs: Tangent, rhs: Tangent, /, **kw: Any) -> Tangent:
             f"Cannot subtract Tangent vectors with different representations: "
             f"{lhs.rep!r} vs {rhs.rep!r}."
         )
-        raise TypeError(msg)
+        raise ValueError(msg)
     return cast("Tangent", cxr.subtract(lhs, rhs))
 
 
