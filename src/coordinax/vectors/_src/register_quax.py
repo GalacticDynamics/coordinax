@@ -408,7 +408,7 @@ def broadcast_in_dim_p_coordinate(
     ...     cxc.cart3d, cxr.coord_vel,
     ... )
     >>> pv = cx.Coordinate(point=point, velocity=vel)
-    >>> result = jnp.broadcast_to(pv, (2, 3))
+    >>> result = jnp.broadcast_to(pv, (2, 6))
     >>> result.point["x"].shape
     (2,)
 
