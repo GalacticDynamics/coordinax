@@ -18,10 +18,13 @@ import jax.numpy as jnp
 import wadler_lindig as wl
 from jax.core import ShapedArray
 
+import dataclassish
+
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.manifolds as cxm
 import coordinax.representations as cxr
+import coordinax.transforms as cxfm
 from .base import AbstractVector
 from .point import Point, _vector_comps_unit_docs, _vector_values_str
 from .tangent import Tangent, _vectorform_pdoc as _vec_vectorform_pdoc
@@ -90,11 +93,16 @@ class Coordinate(AbstractVector):
       (each a `~coordinax.vectors.Tangent` with ``TangentGeometry`` rep,
       e.g. velocity, displacement, acceleration).
 
-    On construction every fibre vector is automatically converted into the
-    **reference frame of the base point** via
-    `~coordinax.vectors.AbstractVector.to_frame`.  This guarantees internal
-    consistency: after construction ``pv["velocity"].frame`` always equals
-    ``pv.point.frame``.
+    On construction every fibre vector is automatically aligned to both the
+    **reference frame** and **chart** of the base point:
+
+    1. Frame-alignment via `~coordinax.vectors.AbstractVector.to_frame`
+       ensures ``pv["velocity"].frame == pv.point.frame``.
+    2. Chart-alignment via a Jacobian pushforward ensures
+       ``pv["velocity"].chart == pv.point.chart``, so that
+       `~coordinax.vectors.Coordinate.cconvert` can always pass
+       ``at=self.point`` to the tangent conversion without a chart-mismatch
+       error.
 
     Coordinate conversion (chart change) is handled automatically: the base
     converts as a point map, and each fibre vector converts via the Jacobian
@@ -154,7 +162,8 @@ class Coordinate(AbstractVector):
             Base point. Must be a ``Point`` instance.
         **fields : Tangent
             Named fibre vectors. Each must be a ``Tangent`` instance with
-            ``TangentGeometry`` representation.
+            ``TangentGeometry`` representation.  Each field is automatically
+            frame- and chart-aligned to ``point`` on construction.
 
         """
         # --- Validate: point must be a Point instance ---
@@ -178,9 +187,36 @@ class Coordinate(AbstractVector):
                 raise TypeError(msg)
             vec: Tangent = val
 
-            # Always convert to point's frame (no-op when already equal;
-            # avoids materialising a JAX boolean which breaks under JIT).
-            vec = vec.to_frame(target_frame)  # ty: ignore[invalid-assignment]
+            # Convert to point's frame using act() directly so we can supply
+            # the base-point anchor (at=) needed by non-Cartesian tangent
+            # frame transforms (e.g. Rotate on TangentGeometry requires 'at'
+            # to evaluate the Jacobian pushforward).  The Identity fast-path
+            # avoids any JAX tracing overhead when frames already match.
+            op = vec.frame.frame_transition(target_frame)
+            if not isinstance(op, cxfm.Identity):
+                # Express the base point in vec's current chart so that act()
+                # can evaluate the Jacobian at the correct location.
+                at_point = cast(
+                    "Point", cxr.cconvert(point.to_frame(vec.frame), vec.chart)
+                )
+                vec = dataclassish.replace(
+                    cast("Tangent", cxfm.act(op, None, vec, at=at_point.data)),
+                    frame=target_frame,
+                )  # ty: ignore[invalid-assignment]
+
+            # Chart-align: convert the field to the point's chart so that
+            # later Coordinate.cconvert() can safely pass `at=self.point`
+            # (which has `point.chart`) into Tangent.cconvert() without a
+            # chart-mismatch error.  The Jacobian needs a base point in the
+            # field's *source* chart, so we first convert `point` to that
+            # chart, push the tangent forward, and store the result in
+            # `point.chart`.
+            if vec.chart != point.chart:
+                at_in_field_chart = cast("Point", cxr.cconvert(point, vec.chart))
+                vec = cast(
+                    "Tangent",
+                    cxr.cconvert(vec, point.chart, at=at_in_field_chart),
+                )
 
             field_vecs[name] = vec
 
@@ -196,6 +232,22 @@ class Coordinate(AbstractVector):
         # Bypass equinox's immutable __setattr__
         self.__dict__["point"] = point
         self.__dict__["_data"] = field_vecs
+
+    @classmethod
+    def _create_unchecked(
+        cls,
+        point: Point,
+        fields: dict[str, Tangent],
+    ) -> "Coordinate":
+        """Create a ``Coordinate`` bypassing frame/chart alignment and validation.
+
+        For **internal use only**.  Callers must guarantee that ``point`` and
+        every value in ``fields`` already have consistent types and shapes.
+        """
+        obj: Coordinate = object.__new__(cls)
+        obj.__dict__["point"] = point
+        obj.__dict__["_data"] = fields
+        return obj
 
     # ===================================================================
     # AbstractVector abstract attribute satisfaction (delegate to point)
@@ -261,7 +313,7 @@ class Coordinate(AbstractVector):
         # indices raise consistently instead of silently skipping.
         new_point = self.point[key]
         new_fields = {k: v[key] for k, v in self._data.items()}
-        return Coordinate(point=new_point, **new_fields)
+        return Coordinate._create_unchecked(new_point, new_fields)
 
     def keys(self) -> KeysView[str]:
         """Return field names (excluding base point).
@@ -364,7 +416,10 @@ class Coordinate(AbstractVector):
             for name, vec in self._data.items()
         }
 
-        return Coordinate(point=new_point, **new_fields)
+        # Use _create_unchecked so that field_charts overrides (which may
+        # intentionally leave fields in a different chart than new_point)
+        # are not silently re-aligned by __init__.
+        return Coordinate._create_unchecked(new_point, new_fields)
 
     # ===================================================================
     # AbstractVector — shape
@@ -388,11 +443,45 @@ class Coordinate(AbstractVector):
     # Quax API
 
     def aval(self) -> ShapedArray:
-        """Return abstract JAX array value for tracing."""
+        """Return abstract JAX array value for tracing.
+
+        The shape is ``(*batch, total_components)`` where ``total_components``
+        is the sum of components across the base `Point` and every fibre
+        `Tangent`.  This is consistent with `Point.aval` / `Tangent.aval`
+        (which return ``(*batch, n_components)``) and reflects the full
+        flattened array that a ``Coordinate`` bundle conceptually represents.
+
+        The dtype is the promoted dtype across all held fields.
+
+        Examples
+        --------
+        >>> import coordinax.main as cx
+
+        >>> point = cx.Point.from_([1.0, 2.0, 3.0], "m")
+        >>> pv = cx.Coordinate(point=point)
+        >>> pv.aval()  # doctest: +ELLIPSIS
+        ShapedArray(float...[3])
+
+        A ``Coordinate`` with one velocity field (3 + 3 = 6 total components):
+
+        >>> import unxt as u
+        >>> import coordinax.charts as cxc
+        >>> import coordinax.representations as cxr
+        >>> vel = cx.Tangent.from_(
+        ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+        ...     cxc.cart3d, cxr.coord_vel,
+        ... )
+        >>> pv2 = cx.Coordinate(point=point, velocity=vel)
+        >>> pv2.aval()  # doctest: +ELLIPSIS
+        ShapedArray(float...[6])
+
+        """
         all_vecs = [self.point, *self._data.values()]
         avals = [v.aval() for v in all_vecs]
         dtype = jnp.result_type(*[a.dtype for a in avals])
-        return ShapedArray(self.shape, dtype)
+        batch = self.shape
+        total_components = sum(a.shape[-1] for a in avals)
+        return ShapedArray((*batch, total_components), dtype)
 
     # ===================================================================
     # Wadler-Lindig API

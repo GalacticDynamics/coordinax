@@ -6,9 +6,12 @@ from dataclasses import replace
 
 from typing import Any, cast
 
+import jax.tree as jtu
 import plum
 
 import dataclassish
+import quaxed.numpy as jnp
+import unxt.quantity as uq
 
 import coordinax.api.representations as cxrapi
 import coordinax.api.transforms as cxfmapi
@@ -454,6 +457,96 @@ def subtract(lhs: Point, rhs: Point, /) -> Point:
         lhs.data, lhs.chart, lhs.rep, rhs.data, rhs.chart, rhs.rep
     )
     return replace(lhs, data=result_data)
+
+
+@plum.dispatch
+def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
+    """Add two tangent vectors component-wise.
+
+    Tangent spaces are genuine vector spaces: addition is component-wise in
+    any chart basis (no Cartesian round-trip is needed or correct).  Both
+    operands must share the same representation (chart + basis + semantic).
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v1 = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> v2 = cx.Tangent.from_(
+    ...     {"x": u.Q(4.0, "m/s"), "y": u.Q(5.0, "m/s"), "z": u.Q(6.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> result = cxr.add(v1, v2)
+    >>> result["x"]
+    Q(5., 'm / s')
+
+    """
+    if lhs.rep != rhs.rep:
+        msg = (
+            f"Cannot add tangent vectors with different representations: "
+            f"{lhs.rep} vs {rhs.rep}."
+        )
+        raise TypeError(msg)
+
+    data = jtu.map(
+        jnp.add,
+        jtu.leaves(lhs.data, is_leaf=uq.is_any_quantity),
+        jtu.leaves(rhs.data, is_leaf=uq.is_any_quantity),
+        is_leaf=uq.is_any_quantity,
+    )
+    keys = list(lhs.data.keys())
+    return replace(lhs, data=dict(zip(keys, data, strict=True)))
+
+
+@plum.dispatch
+def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
+    """Subtract two tangent vectors component-wise.
+
+    Tangent spaces are genuine vector spaces: subtraction is component-wise in
+    any chart basis (no Cartesian round-trip is needed or correct).  Both
+    operands must share the same representation (chart + basis + semantic).
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v1 = cx.Tangent.from_(
+    ...     {"x": u.Q(4.0, "m/s"), "y": u.Q(5.0, "m/s"), "z": u.Q(6.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> v2 = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> result = cxr.subtract(v1, v2)
+    >>> result["x"]
+    Q(3., 'm / s')
+
+    """
+    if lhs.rep != rhs.rep:
+        msg = (
+            f"Cannot subtract tangent vectors with different representations: "
+            f"{lhs.rep} vs {rhs.rep}."
+        )
+        raise TypeError(msg)
+
+    data = jtu.map(
+        jnp.subtract,
+        jtu.leaves(lhs.data, is_leaf=uq.is_any_quantity),
+        jtu.leaves(rhs.data, is_leaf=uq.is_any_quantity),
+        is_leaf=uq.is_any_quantity,
+    )
+    keys = list(lhs.data.keys())
+    return replace(lhs, data=dict(zip(keys, data, strict=True)))
 
 
 # ===================================================================

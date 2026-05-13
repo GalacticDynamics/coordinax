@@ -363,6 +363,63 @@ def from_(cls: type[Tangent], obj: Any, /) -> Tangent:
     return cls.from_(data, chart, rep)  # ty: ignore[invalid-return-type]
 
 
+@Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(
+    cls: type[Tangent],
+    obj: list[Any],
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+) -> Tangent:
+    """Construct a Tangent from a Python list, chart, and Representation.
+
+    Converts the list to a JAX array before dispatching. The values are
+    treated as dimensionless; use the ``(list, unit, chart, ...)`` overloads
+    when physical units are needed.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v = cx.Tangent.from_([10, 20, 30], cxc.cart3d, cxr.coord_vel)
+    >>> isinstance(v, cx.Tangent)
+    True
+
+    """
+    return cls.from_(jnp.asarray(obj), chart, rep)  # ty: ignore[invalid-return-type]
+
+
+@Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(
+    cls: type[Tangent],
+    obj: list[Any],
+    chart: cxc.AbstractChart,
+    basis: cxr.AbstractLinearBasis,
+    semantic: cxr.AbstractTangentSemanticKind,
+    /,
+) -> Tangent:
+    """Construct a Tangent from a Python list, chart, basis, and semantic kind.
+
+    Converts the list to a JAX array before dispatching. The values are
+    treated as dimensionless; use the ``(list, unit, chart, ...)`` overloads
+    when physical units are needed.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v = cx.Tangent.from_([10, 20, 30], cxc.cart3d, cxr.coord_basis, cxr.vel)
+    >>> isinstance(v, cx.Tangent)
+    True
+
+    """
+    return cls.from_(jnp.asarray(obj), chart, basis, semantic)  # ty: ignore[invalid-return-type]
+
+
 # -----------------------------------------
 # Array-like constructors
 
