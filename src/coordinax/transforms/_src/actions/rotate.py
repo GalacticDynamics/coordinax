@@ -640,21 +640,25 @@ def act(
     rep: cxr.Representation,
     /,
     *,
+    at: CDict | None = None,
     usys: OptUSys = None,
     **kw: Any,
 ) -> CDict:
     """Apply a spatial rotation to a TangentGeometry coordinate dictionary.
 
-    Rotation is linear, so tangent vectors (for example velocity or
-    acceleration) transform with the same rotation matrix as point
-    coordinates.
+    Rotation acts on tangent vectors via the Jacobian pushforward, not as a
+    direct coordinate substitution.  The algorithm is:
 
-    The implementation:
+    1. Push ``x`` to the chart's canonical Cartesian chart via the Jacobian.
+    2. Pack Cartesian components to a common unit.
+    3. Apply ``R`` via ``einsum`` in a batch-safe way.
+    4. Pull the result back to the original chart via the inverse Jacobian
+       evaluated at the rotated base point.
 
-    1. Converts ``x`` to the chart canonical Cartesian chart.
-    2. Packs Cartesian components to a common unit.
-    3. Applies ``R`` via ``einsum`` in a batch-safe way.
-    4. Converts the rotated result back to the original chart.
+    For Cartesian charts the Jacobian is the identity, so steps 1 and 4 are
+    no-ops and ``at`` is not required.  For all other charts (e.g. spherical)
+    ``at`` **must** be supplied: it is the base point (in the original chart)
+    at which the Jacobian is evaluated.
 
     Examples
     --------
@@ -672,26 +676,54 @@ def act(
     >>> jnp.stack([out[c].to_value("m/s") for c in ("x", "y", "z")]).round(3)
     Array([0., 1., 0.], dtype=float64)
 
+    Rotate a spherical velocity at a given base point:
+
+    >>> import jax.numpy as jnp
+    >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    >>> x = {"r": u.Q(1, "m/s"), "theta": u.Q(0, "rad/s"), "phi": u.Q(0, "rad/s")}
+    >>> at = {"r": u.Q(1, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
+    >>> out = cxfm.act(op, None, x, cxc.sph3d, cxr.tangent_geom, cxr.coord_vel, at=at)
+    >>> round(float(out["r"].to_value("m/s")), 3)  # radial component preserved
+    1.0
+
     """
-    del geom, rep, kw  # Rotation acts identically on tangent vectors.
+    del geom, kw
 
     cart = chart.cartesian
-    comps_cart = cart.components
-
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(cart)
 
-    # Convert to canonical Cartesian chart.
-    p_cart = cxc.pt_map(x, chart, cart, usys=usys)
+    if chart is cart:
+        # Cartesian chart: Jacobian is the identity — simple linear map.
+        p_cart = x
+    else:
+        # Non-Cartesian chart: push tangent forward via Jacobian.
+        if at is None:
+            msg = (
+                "act(Rotate, ..., TangentGeometry) on a non-Cartesian chart "
+                f"({chart!r}) requires 'at' (base point in chart coords) so "
+                "the Jacobian pushforward can be evaluated."
+            )
+            raise TypeError(msg)
+        at_cart = cxc.pt_map(at, chart, cart, usys=usys)
+        p_cart = cxr.tangent_map(x, chart, rep, cart, at=at, usys=usys)  # ty: ignore[missing-argument]
 
     # Pack -> rotate -> unpack (batch-safe)
-    v, unit = pack_uniform_unit(p_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
+    comps_cart = cart.components
+    v, unit = pack_uniform_unit(p_cart, keys=comps_cart)
     v_rot = jnp.einsum("ij,...j->...i", R, v)  # (..., n)
     p_cart_rot = cxc.cdict(v_rot, unit, comps_cart)
 
-    # Convert back to original chart.
-    out = cxc.pt_map(p_cart_rot, cart, chart, usys=usys)
-    return cast("CDict", out)
+    if chart is cart:
+        return p_cart_rot  # ty: ignore[invalid-return-type]
+
+    # Rotate the base point in Cartesian to anchor the inverse Jacobian.
+    at_cart_arr, at_unit = pack_uniform_unit(at_cart, keys=comps_cart)  # ty: ignore[no-matching-overload]
+    at_cart_rot_arr = jnp.einsum("ij,...j->...i", R, at_cart_arr)
+    at_cart_rot = cxc.cdict(at_cart_rot_arr, at_unit, comps_cart)
+
+    # Pull rotated tangent back to original chart via inverse Jacobian.
+    return cxr.tangent_map(p_cart_rot, cart, rep, chart, at=at_cart_rot, usys=usys)  # ty: ignore[missing-argument]
 
 
 # -----------------------------------------------

@@ -543,8 +543,13 @@ def act(
 
     """
     new_point = cxfm.act(op, tau, x.point, **kw)
+    # Inject the base-point data as 'at' so non-Cartesian tangent dispatches
+    # can evaluate the Jacobian at the correct location.  Callers may
+    # override this by passing their own 'at' in **kw.
+    kw_fibre = dict(kw)
+    kw_fibre.setdefault("at", x.point.data)
     new_fields = {
-        name: cxfm.act(op, tau, fibre, **kw) for name, fibre in x._data.items()
+        name: cxfm.act(op, tau, fibre, **kw_fibre) for name, fibre in x._data.items()
     }
     return Coordinate(point=new_point, **new_fields)
 

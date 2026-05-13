@@ -77,7 +77,7 @@ class AbstractTransform(eqx.Module):
     @abc.abstractmethod
     def inverse(self) -> "AbstractTransform":
         """The inverse of the operator."""
-        ...
+        raise NotImplementedError  # pragma: no cover
 
     def simplify(self) -> "AbstractTransform":
         """Simplify the operator.

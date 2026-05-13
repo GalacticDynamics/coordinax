@@ -11,6 +11,7 @@ from typing_extensions import TypeVar
 import plum
 
 import coordinax.api.frames as cxfapi
+import coordinax.transforms as cxfm
 from .base import AbstractReferenceFrame
 from coordinax.transforms import AbstractTransform
 
@@ -202,6 +203,9 @@ def frame_transition(
 ) -> AbstractTransform:
     """Return a frame transform operator between two transformed frames.
 
+    When ``from_frame`` and ``to_frame`` are the same object the result is
+    the identity transform.
+
     Examples
     --------
     >>> import quaxed.numpy as jnp
@@ -212,6 +216,11 @@ def frame_transition(
 
     >>> R = cxfm.Rotate(jnp.asarray([[0., -1, 0], [1, 0, 0], [0, 0, 1]]))
     >>> frame1 = cxf.TransformedReferenceFrame(ICRS(), R)
+
+    Same frame → identity:
+
+    >>> cxf.frame_transition(frame1, frame1)
+    Identity()
 
     >>> shift = cxfm.Translate.from_([1, 0, 0], "kpc")
     >>> frame2 = cxf.TransformedReferenceFrame(frame1, shift)
@@ -225,6 +234,8 @@ def frame_transition(
         [ 1. -1.  0.]>
 
     """
+    if from_frame is to_frame:
+        return cxfm.identity
     return (
         from_frame.xop.inverse  # ty: ignore[unsupported-operator]
         | cxfapi.frame_transition(from_frame.base_frame, to_frame.base_frame)

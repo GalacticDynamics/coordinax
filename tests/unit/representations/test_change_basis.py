@@ -19,7 +19,7 @@ from coordinax.representations._src.basis_change import _qm_triangular_solve
 
 def tree_equal(lhs: Any, rhs: Any) -> bool:
     """Return True when two pytrees are elementwise equal."""
-    eq_tree = jax.tree_util.tree_map(lambda x, y: jnp.equal(x, y), lhs, rhs)
+    eq_tree = jax.tree_util.tree_map(jnp.equal, lhs, rhs)
     leaves = jax.tree_util.tree_leaves(eq_tree)
     if not leaves:
         return True

@@ -288,9 +288,21 @@ def act(
     {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}
 
     """
+    # 'at' tracks the evolving base point for tangent Jacobians: advance it
+    # after each sub-op so the next step evaluates at the correct anchor.
+    current_at = kw.get("at")
     result = x
     for sub_op in op.transforms:
-        result = cxfmapi.act(sub_op, tau, result, chart, rep, **kw)
+        result = cxfmapi.act(
+            sub_op,
+            tau,
+            result,
+            chart,
+            rep,
+            **({**kw, "at": current_at} if current_at is not None else kw),
+        )
+        if current_at is not None:
+            current_at = cxfmapi.act(sub_op, tau, current_at, chart, cxr.point)
     return cast("CDict", result)
 
 

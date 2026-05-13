@@ -130,9 +130,10 @@ class AbstractBasis(metaclass=abc.ABCMeta):
         if canonical and self.canonical_name is not None:
             return wl.TextDoc(self.canonical_name)
 
+        items = field_items(self) if dataclasses.is_dataclass(self) else ()
         return wl.bracketed(
             begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=wl.named_objs(field_items(self), **kw),
+            docs=wl.named_objs(items, **kw),
             sep=wl.comma,
             end=wl.TextDoc(")"),
             indent=kw.get("indent", 4),

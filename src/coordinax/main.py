@@ -88,6 +88,8 @@ __all__ = (  # distances
     "ToUnitsOptions",
 )
 
+import contextlib
+
 from coordinax.angles import Angle
 from coordinax.charts import (
     CartesianProductChart,
@@ -171,7 +173,9 @@ from coordinax.transforms import (
 )
 from coordinax.vectors import Coordinate, Point, Tangent, ToUnitsOptions
 
-try:  # noqa: SIM105
+# Import interop modules to register conversions and chart transitions.
+with contextlib.suppress(ImportError):
     import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import,unused-ignore-comment]
-except ImportError:
-    pass
+
+# Clean up namespace
+del contextlib

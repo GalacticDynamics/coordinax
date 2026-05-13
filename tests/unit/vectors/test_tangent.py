@@ -146,7 +146,7 @@ class TestCheckInit:
 
     def test_raises_for_missing_data_key(self):
         """Construction raises when a chart component is absent from data."""
-        with pytest.raises(ValueError, match="data"):
+        with pytest.raises(ValueError, match="Data keys do not match"):
             cx.Tangent(
                 data={"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s")},  # z missing
                 chart=cxc.cart3d,

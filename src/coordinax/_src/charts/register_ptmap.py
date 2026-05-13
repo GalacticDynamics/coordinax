@@ -965,6 +965,7 @@ def pt_map(
     return {"r": p["r"], "theta": p["phi"], "phi": p["theta"]}
 
 
+@plum.dispatch
 def pt_map(
     p: CDict,
     from_chart: ProlateSpheroidal3D,
@@ -997,12 +998,12 @@ def pt_map(
 
     >>> p = {"mu": u.Q(5.0, "m2"), "nu": u.Q(1.0, "m2"), "phi": u.Q(0, "rad")}
     >>> cxc.pt_map(p, prolatesph3d, cxc.cyl3d)
-    {'rho': Q(0.8660254, 'm'), 'phi': Q(0., 'rad'), 'z': Q(1.11803399, 'm')}
+    {'rho': Q(0.8660254, 'm'), 'phi': Q(0, 'rad'), 'z': Q(1.11803399, 'm')}
 
     >>> p = {"mu": 5.0, "nu": 1.0, "phi": 0}  # No units
     >>> usys = u.unitsystem("m", "rad")
     >>> cxc.pt_map(p, prolatesph3d, cxc.cyl3d, usys=usys)
-    {'rho': Array(0.8660254, dtype=float64), 'phi': Array(0., dtype=float64),
+    {'rho': Array(0.8660254, dtype=float64), 'phi': 0,
      'z': Array(1.11803399, dtype=float64)}
 
     """

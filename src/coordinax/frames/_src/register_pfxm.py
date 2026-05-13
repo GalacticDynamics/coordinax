@@ -7,9 +7,31 @@ from typing import NoReturn
 
 import plum
 
+import coordinax.transforms as cxfm
 from .base import AbstractReferenceFrame
 from .errors import FrameTransformError
 from .null import NoFrame
+
+
+@plum.dispatch(precedence=2)  # ty: ignore[no-matching-overload]
+def frame_transition(from_frame: NoFrame, to_frame: NoFrame, /) -> cxfm.Identity:
+    """Null-to-null frame transition is always the identity.
+
+    When both source and target frames are :obj:`noframe` (i.e. the vector is
+    frame-agnostic) there is nothing to transform, so the result is the
+    identity operation.
+
+    Examples
+    --------
+    >>> import coordinax.frames as cxf
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxf.frame_transition(cxf.noframe, cxf.noframe)
+    >>> isinstance(op, cxfm.Identity)
+    True
+
+    """
+    return cxfm.identity
 
 
 @plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]

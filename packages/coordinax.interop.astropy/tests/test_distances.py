@@ -34,16 +34,6 @@ def float32s(
 # Distance
 
 
-def test_astropy_quantity_to_distance() -> None:
-    """Test converting AstropyQuantity to Distance."""
-    q = apyu.Quantity(1.0, "km")
-    dist = convert(q, Distance)
-
-    assert isinstance(dist, Distance)
-    assert dist.value == pytest.approx(1.0)
-    assert str(dist.unit) == "km"
-
-
 @given(unit=ust.units("length"))
 def test_astropy_quantity_to_distance(unit: str) -> None:
     """Test converting Astropy Quantity to Distance."""
@@ -85,16 +75,6 @@ def test_distance_roundtrip(dist: Distance) -> None:
 
 # =============================================================================
 # Parallax
-
-
-def test_astropy_quantity_to_parallax() -> None:
-    """Test converting AstropyQuantity to Parallax."""
-    q = AstropyQuantity(1.0, "mas")
-    plx = convert(q, Parallax)
-
-    assert isinstance(plx, Parallax)
-    assert plx.value == pytest.approx(1.0)
-    assert str(plx.unit) == "mas"
 
 
 @given(unit=ust.units("angle"))

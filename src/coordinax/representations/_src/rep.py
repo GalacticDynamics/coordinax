@@ -176,7 +176,8 @@ class Representation(Generic[GeomT, BasisT, SemanticT]):
             return wl.TextDoc(CANONICAL_REPRESENTATIONS[self])
 
         if field_names:
-            docs = wl.named_objs(field_items(self), canonical=canonical, **kw)
+            fi = field_items(self) if dataclasses.is_dataclass(self) else ()
+            docs = wl.named_objs(fi, canonical=canonical, **kw)
         else:
             fvals = cast("Iterable[Any]", field_values(self))
             docs = [wl.pdoc(v, canonical=canonical, **kw) for v in fvals]
