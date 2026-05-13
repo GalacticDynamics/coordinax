@@ -407,7 +407,7 @@ class TestTangentScalarDiv:
 
 
 class TestTangentMismatchedRep:
-    """Adding/subtracting Tangents with different reps raises TypeError."""
+    """Adding/subtracting Tangents with different reps raises ValueError."""
 
     def _vel_acc(self) -> tuple:
         vel = _cart_tangent(1.0, 2.0, 3.0)  # coord_vel semantic
@@ -427,6 +427,16 @@ class TestTangentMismatchedRep:
         vel, acc = self._vel_acc()
         with pytest.raises(ValueError, match="Cannot subtract Tangent vectors"):
             _ = vel - acc
+
+    def test_cx_add_different_semantic_raises(self) -> None:
+        vel, acc = self._vel_acc()
+        with pytest.raises(ValueError, match="Cannot add Tangent vectors"):
+            cxr.add(vel, acc)
+
+    def test_cx_subtract_different_semantic_raises(self) -> None:
+        vel, acc = self._vel_acc()
+        with pytest.raises(ValueError, match="Cannot subtract Tangent vectors"):
+            cxr.subtract(vel, acc)
 
 
 # ===================================================================

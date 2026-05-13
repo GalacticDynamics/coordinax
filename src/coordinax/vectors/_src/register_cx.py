@@ -487,10 +487,10 @@ def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     """
     if lhs.rep != rhs.rep:
         msg = (
-            f"Cannot add tangent vectors with different representations: "
-            f"{lhs.rep} vs {rhs.rep}."
+            f"Cannot add Tangent vectors with different representations: "
+            f"{lhs.rep!r} vs {rhs.rep!r}."
         )
-        raise TypeError(msg)
+        raise ValueError(msg)
 
     data = jtu.map(jnp.add, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
     return replace(lhs, data=data)
@@ -526,10 +526,10 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     """
     if lhs.rep != rhs.rep:
         msg = (
-            f"Cannot subtract tangent vectors with different representations: "
-            f"{lhs.rep} vs {rhs.rep}."
+            f"Cannot subtract Tangent vectors with different representations: "
+            f"{lhs.rep!r} vs {rhs.rep!r}."
         )
-        raise TypeError(msg)
+        raise ValueError(msg)
 
     data = jtu.map(jnp.subtract, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
     return replace(lhs, data=data)
