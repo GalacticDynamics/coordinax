@@ -34,9 +34,7 @@ ChartT = TypeVar(
     "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
 )
 BasisT = TypeVar(
-    "BasisT",
-    bound=cxr.AbstractLinearBasis,
-    default=cxr.AbstractLinearBasis,
+    "BasisT", bound=cxr.AbstractLinearBasis, default=cxr.AbstractLinearBasis
 )
 SemanticT = TypeVar(
     "SemanticT",
@@ -197,10 +195,7 @@ class Tangent(
 
 
 def _vectorform_pdoc(
-    vector: Tangent[Any, Any, Any, Any],
-    *,
-    class_name: str | None = None,
-    **kwargs: Any,
+    vector: Tangent[Any, Any, Any, Any], *, class_name: str | None = None, **kwargs: Any
 ) -> wl.AbstractDoc:
     """Return the compact vector-form docstring for a Tangent."""
     kwargs.setdefault("canonical", True)
@@ -274,11 +269,7 @@ def from_(
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
-    cls: type[Tangent],
-    obj: Any,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
+    cls: type[Tangent], obj: Any, chart: cxc.AbstractChart, rep: cxr.Representation, /
 ) -> Tangent:
     """Construct a Tangent from data, chart, and a tangent Representation.
 
@@ -357,10 +348,7 @@ def from_(cls: type[Tangent], obj: Any, /) -> Tangent:
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
-    cls: type[Tangent],
-    obj: ArrayLike | list[Any],
-    unit: u.AbstractUnit | str,
-    /,
+    cls: type[Tangent], obj: ArrayLike | list[Any], unit: u.AbstractUnit | str, /
 ) -> Tangent:
     """Construct a Tangent from an array and unit (chart inferred).
 
@@ -444,7 +432,7 @@ def from_(
     Alice()
 
     """
-    v = cls.from_(u.Q(obj, u.unit(unit)), chart, rep)  # ty: ignore[invalid-return-type]
+    v = cls.from_(u.Q(obj, u.unit(unit)), chart, rep)
     return replace(v, frame=frame)
 
 
@@ -511,10 +499,7 @@ def from_(
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
-    cls: type[Tangent],
-    obj: Tangent,
-    frame: cxf.AbstractReferenceFrame,
-    /,
+    cls: type[Tangent], obj: Tangent, frame: cxf.AbstractReferenceFrame, /
 ) -> Tangent:
     """Construct a Tangent from another Tangent, replacing its frame.
 
@@ -538,10 +523,7 @@ def from_(
 
 @Tangent.from_.dispatch  # ty: ignore[unresolved-attribute]
 def from_(
-    cls: type[Tangent],
-    obj: Any,
-    frame: cxf.AbstractReferenceFrame,
-    /,
+    cls: type[Tangent], obj: Any, frame: cxf.AbstractReferenceFrame, /
 ) -> Tangent:
     """Construct a Tangent from data with a frame (chart and rep inferred).
 

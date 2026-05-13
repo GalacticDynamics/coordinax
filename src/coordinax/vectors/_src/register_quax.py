@@ -497,7 +497,7 @@ def eq_p_coordinates(lhs: Coordinate, rhs: Coordinate, /) -> Bool[Array, "..."]:
     """
     # Ensure the same set of fibre names; if not, return False
     if set(lhs.keys()) != set(rhs.keys()):
-        return jnp.asarray(value=False)
+        return jnp.asarray(False)  # noqa: FBT003
     # Check point equality
     point_eq = eq_p_absvecs(lhs.point, rhs.point)
     # Check equality for every fibre tangent, matched by name
