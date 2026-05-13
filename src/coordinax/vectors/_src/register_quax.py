@@ -327,6 +327,12 @@ def add_p_tangents(lhs: Tangent, rhs: Tangent, /, **kw: Any) -> Tangent:
     Q(5., 'm / s')
 
     """
+    if lhs.rep != rhs.rep:
+        msg = (
+            f"Cannot add Tangent vectors with different representations: "
+            f"{lhs.rep!r} vs {rhs.rep!r}."
+        )
+        raise ValueError(msg)
     return cast("Tangent", cxr.add(lhs, rhs))
 
 
@@ -489,11 +495,11 @@ def eq_p_coordinates(lhs: Coordinate, rhs: Coordinate, /) -> Bool[Array, "..."]:
     True
 
     """
+    # Ensure the same set of fibre names; if not, return False
+    if set(lhs.keys()) != set(rhs.keys()):
+        return jnp.asarray(value=False)
     # Check point equality
     point_eq = eq_p_absvecs(lhs.point, rhs.point)
-    # Check equality for every fibre tangent
-    fibre_eqs = [
-        eq_p_tangents(lhs_v, rhs_v)
-        for lhs_v, rhs_v in zip(lhs.values(), rhs.values(), strict=True)
-    ]
+    # Check equality for every fibre tangent, matched by name
+    fibre_eqs = [eq_p_tangents(lhs[name], rhs[name]) for name in lhs]
     return jax.tree.reduce(jnp.logical_and, [point_eq, *fibre_eqs])

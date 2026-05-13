@@ -382,8 +382,6 @@ def change_basis(
     True
 
     """
-    if at is not None:
-        raise ValueError("`at` parameter is not used for Point-to-Tangent promotion.")
     return Tangent(  # ty: ignore[missing-argument]
         data=v.data, chart=v.chart, basis=to_basis, semantic=cxr.dpl, frame=v.frame
     )

@@ -416,7 +416,7 @@ class TestTangentMismatchedRep:
             cxc.cart3d,
             cxr.coord_acc,
         )
-        with pytest.raises((TypeError, Exception)):
+        with pytest.raises(ValueError, match="Cannot add Tangent vectors"):
             _ = vel + acc
 
 

@@ -626,17 +626,17 @@ class TestRotateTangentGeometryNonCartesian:
         v_rot_cart = cxr.tangent_map(
             v_rot_sph, cxc.sph3d, cxr.coord_vel, cxc.cart3d, at=at_sph_rot
         )
-        # Directly compute R * cart(v)
+        # Directly compute R * cart(v) via public act on the Cartesian tangent
         v_cart = cxr.tangent_map(
             v_radial_sph, cxc.sph3d, cxr.coord_vel, cxc.cart3d, at=at_sph
         )
-        R = rot90z._get_R(cxc.cart3d)
-        v_arr = jnp.stack([v_cart["x"].value, v_cart["y"].value, v_cart["z"].value])
-        v_expected = R @ v_arr
+        v_expected = cxfm.act(
+            rot90z, None, v_cart, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel
+        )
 
-        assert abs(float(v_rot_cart["x"].value) - float(v_expected[0])) < ATOL
-        assert abs(float(v_rot_cart["y"].value) - float(v_expected[1])) < ATOL
-        assert abs(float(v_rot_cart["z"].value) - float(v_expected[2])) < ATOL
+        assert abs(float(v_rot_cart["x"].value) - float(v_expected["x"].value)) < ATOL
+        assert abs(float(v_rot_cart["y"].value) - float(v_expected["y"].value)) < ATOL
+        assert abs(float(v_rot_cart["z"].value) - float(v_expected["z"].value)) < ATOL
 
     def test_round_trip(self, rot90z, at_sph, v_radial_sph):
         """R⁻¹(R(v, at), R(at)) == v."""

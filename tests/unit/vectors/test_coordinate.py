@@ -26,20 +26,6 @@ import coordinax.vectors as cxv
 from coordinax.vectors import Coordinate, Tangent
 
 # ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def _make_vel(
-    *xyz: float, unit: str = "m/s", frame: cxf.AbstractReferenceFrame = cxf.noframe
-) -> Tangent:
-    """Cartesian velocity vector."""
-    data = {"x": u.Q(xyz[0], unit), "y": u.Q(xyz[1], unit), "z": u.Q(xyz[2], unit)}
-    v = cx.Tangent.from_(data, cxc.cart3d, cxr.coord_vel)
-    return replace(v, frame=frame)
-
-
-# ---------------------------------------------------------------------------
 # TestConstruction
 # ---------------------------------------------------------------------------
 
@@ -57,7 +43,7 @@ class TestConstruction:
     def test_base_with_one_field(self) -> None:
         """Coordinate with base point + one field vector."""
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = cx.Tangent.from_([10, 20, 30], cxc.cart3d, cxr.coord_vel)
+        vel = cx.Tangent.from_([10, 20, 30], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         assert pv.point is base
         assert "velocity" in list(pv.keys())
@@ -65,19 +51,15 @@ class TestConstruction:
     def test_base_with_multiple_fields(self) -> None:
         """Coordinate with base + two field vectors."""
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(10, 20, 30)
-        acc = cx.Tangent.from_(
-            {"x": u.Q(0.1, "m/s^2"), "y": u.Q(0.2, "m/s^2"), "z": u.Q(0.3, "m/s^2")},
-            cxc.cart3d,
-            cxr.coord_acc,
-        )
+        vel = cx.Tangent.from_([10, 20, 30], "m/s", cxc.cart3d, cxr.coord_vel)
+        acc = cx.Tangent.from_([0.1, 0.2, 0.3], "m/s^2", cxc.cart3d, cxr.coord_acc)
         pv = Coordinate(point=base, velocity=vel, acceleration=acc)
         assert "velocity" in list(pv.keys())
         assert "acceleration" in list(pv.keys())
 
     def test_point_must_be_Point(self) -> None:
         """Passing a bare Tangent (not Point) as point must raise TypeError."""
-        vel = _make_vel(1, 2, 3)  # this is a Tangent, not a Point
+        vel = cxv.Tangent.from_([1, 2, 3], "m/s", cxc.cart3d, cxr.coord_vel)
         with pytest.raises(TypeError, match="point must be a Point"):
             Coordinate(point=vel)
 
@@ -100,7 +82,7 @@ class TestFrameAlignment:
     def test_noframe_noframe_no_conversion(self) -> None:
         """Field with noframe when point has noframe: no conversion (identity)."""
         base = cxv.Point.from_([1, 0, 0], "m")  # noframe
-        vel = _make_vel(1, 0, 0)  # noframe
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         # Same frame — no conversion, same object returned
         assert pv["velocity"] is vel
@@ -108,14 +90,14 @@ class TestFrameAlignment:
     def test_same_real_frame_no_conversion(self) -> None:
         """Field with same real frame as point: no conversion needed."""
         base = cxv.Point.from_([1, 0, 0], "m", cxf.alice)
-        vel = _make_vel(1, 0, 0, frame=cxf.alice)
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel, cxf.alice)
         pv = Coordinate(point=base, velocity=vel)
         assert pv["velocity"].frame is cxf.alice
 
     def test_different_frame_converts(self) -> None:
         """Field in different frame is converted to point's frame."""
         base = cxv.Point.from_([1, 0, 0], "m", cxf.alice)
-        vel = _make_vel(1, 0, 0, frame=cxf.alex)  # alex != alice
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel, cxf.alex)
         pv = Coordinate(point=base, velocity=vel)
         # After construction, velocity must be in alice's frame
         assert pv["velocity"].frame is cxf.alice
@@ -129,7 +111,7 @@ class TestFrameAlignment:
     def test_multiple_fields_all_converted(self) -> None:
         """All field vectors are converted to point's frame."""
         base = cxv.Point.from_([1, 0, 0], "m", cxf.alice)
-        vel = _make_vel(1, 0, 0, frame=cxf.alex)
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel, cxf.alex)
         acc_data = {
             "x": u.Q(0.1, "m/s^2"),
             "y": u.Q(0.0, "m/s^2"),
@@ -154,11 +136,7 @@ def _make_sph_vel(r: float, theta: float, phi: float) -> Tangent:
 
     r component in m/s, theta and phi components in rad/s.
     """
-    data = {
-        "r": u.Q(r, "m/s"),
-        "theta": u.Q(theta, "rad/s"),
-        "phi": u.Q(phi, "rad/s"),
-    }
+    data = {"r": u.Q(r, "m/s"), "theta": u.Q(theta, "rad/s"), "phi": u.Q(phi, "rad/s")}
     return cx.Tangent.from_(data, cxc.sph3d, cxr.coord_vel)
 
 
@@ -172,7 +150,7 @@ class TestChartAlignment:
 
     def test_mismatched_chart_field_is_converted(self) -> None:
         """Field supplied in sph3d is converted to point's cart3d chart."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")  # cart3d
+        base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
         # velocity given in spherical coords at (r=1, θ=π/2, φ=0) — same point
         vel_sph = _make_sph_vel(1.0, 0.0, 0.0)
         pv = Coordinate(point=base, velocity=vel_sph)
@@ -180,16 +158,16 @@ class TestChartAlignment:
 
     def test_same_chart_no_change(self) -> None:
         """Field already in point's chart is left unchanged."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")  # cart3d
-        vel = _make_vel(1.0, 0.0, 0.0)  # also cart3d
+        base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         # same chart — object is the same instance (no conversion occurred)
         assert pv["velocity"] is vel
 
     def test_mismatched_chart_numerically_correct(self) -> None:
         """Value after chart-alignment equals value pre-converted manually."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")  # cart3d, at (1,0,0)
-        vel_sph = _make_sph_vel(1.0, 0.0, 0.0)  # radial unit velocity in sph3d
+        base = cxv.Point.from_([1, 0, 0], "m")  # cart3d, at (1,0,0)
+        vel_sph = _make_sph_vel(1, 0, 0)  # radial unit velocity in sph3d
 
         # Pre-convert manually: get sph3d representation of the same base point,
         # then push the tangent forward to cart3d.
@@ -211,8 +189,8 @@ class TestChartAlignment:
 
     def test_cconvert_after_mismatched_chart_init_succeeds(self) -> None:
         """Cconvert must not raise after constructing with a mismatched-chart field."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")  # cart3d
-        vel_sph = _make_sph_vel(1.0, 0.0, 0.0)
+        base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
+        vel_sph = _make_sph_vel(1, 0, 0)
         pv = Coordinate(point=base, velocity=vel_sph)
         # This must not raise (original bug: would raise chart-mismatch ValueError)
         pv_sph = pv.cconvert(cxc.sph3d)
@@ -221,8 +199,8 @@ class TestChartAlignment:
 
     def test_multiple_fields_different_charts(self) -> None:
         """Multiple fields with different charts are all converted to point.chart."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")  # cart3d
-        vel_sph = _make_sph_vel(1.0, 0.0, 0.0)
+        base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
+        vel_sph = _make_sph_vel(1, 0, 0)
         acc_sph = cx.Tangent.from_(
             {
                 "r": u.Q(0.1, "m/s^2"),
@@ -248,7 +226,7 @@ class TestMappingAPI:
     @pytest.fixture
     def pv(self) -> Coordinate:
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(10, 20, 30)
+        vel = cxv.Tangent.from_([10, 20, 30], "m/s", cxc.cart3d, cxr.coord_vel)
         return Coordinate(point=base, velocity=vel)
 
     def test_getitem_field_by_name(self, pv: Coordinate) -> None:
@@ -313,7 +291,7 @@ class TestProperties:
 
     def test_shape_scalar(self) -> None:
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(10, 20, 30)
+        vel = cxv.Tangent.from_([10, 20, 30], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         assert pv.shape == ()
 
@@ -325,7 +303,7 @@ class TestProperties:
     def test_shape_broadcast(self) -> None:
         """Batched base (2,) and scalar velocity () broadcast to (2,)."""
         base = cxv.Point.from_(jnp.ones((2, 3)), "m")
-        vel = _make_vel(10, 20, 30)  # scalar shape ()
+        vel = cxv.Tangent.from_([10, 20, 30], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         assert pv.shape == (2,)
 
@@ -358,8 +336,8 @@ class TestCconvert:
 
     def test_velocity_uses_tangent_map(self) -> None:
         """Velocity at [1,0,0] in Cartesian converts via Jacobian to Spherical."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")
-        vel = _make_vel(1.0, 0.0, 0.0)  # radial velocity in Cartesian
+        base = cxv.Point.from_([1, 0, 0], "m")
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         pv_sph = pv.cconvert(cxc.sph3d)
         assert pv_sph.point.chart == cxc.sph3d
@@ -369,7 +347,7 @@ class TestCconvert:
 
     def test_round_trip(self) -> None:
         """Cart → sph → cart should recover original base values."""
-        base = cxv.Point.from_([1.0, 2.0, 0.0], "m")  # cart3d
+        base = cxv.Point.from_([1, 2, 0], "m")  # cart3d
         pv = Coordinate(point=base)
         pv_rt = pv.cconvert(cxc.sph3d).cconvert(cxc.cart3d)
         assert jnp.allclose(pv_rt.point["x"].value, base["x"].value, atol=1e-6)
@@ -377,8 +355,8 @@ class TestCconvert:
 
     def test_identity_same_chart(self) -> None:
         """Converting to the same chart returns equivalent values."""
-        base = cxv.Point.from_([1.0, 2.0, 3.0], "m")  # cart3d
-        vel = _make_vel(4.0, 5.0, 6.0)
+        base = cxv.Point.from_([1, 2, 3], "m")  # cart3d
+        vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         pv_same = pv.cconvert(cxc.cart3d)
         assert jnp.allclose(pv_same.point["x"].value, base["x"].value, atol=1e-6)
@@ -386,7 +364,7 @@ class TestCconvert:
 
     def test_pv_method_agrees_with_cx_function(self) -> None:
         """pv.cconvert(chart) and cx.cconvert(pv, chart) agree."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")  # cart3d
+        base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
         pv = Coordinate(point=base)
         via_method = pv.cconvert(cxc.sph3d)
         via_func = cx.cconvert(pv, cxc.sph3d)
@@ -419,7 +397,7 @@ class TestFromDispatches:
     def test_from_mapping_with_point_key(self) -> None:
         """Coordinate.from_(mapping) detects 'point' key for base."""
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(4, 5, 6)
+        vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate.from_({"point": base, "velocity": vel})
         assert isinstance(pv, Coordinate)
         assert "velocity" in list(pv.keys())
@@ -427,7 +405,7 @@ class TestFromDispatches:
     def test_from_mapping_explicit_point_kwarg(self) -> None:
         """Coordinate.from_(mapping, point=...) uses explicit base."""
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(4, 5, 6)
+        vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate.from_({"velocity": vel}, point=base)
         assert pv.point is base
 
@@ -443,7 +421,7 @@ class TestJAXCompat:
     def test_pytree_flatten_unflatten(self) -> None:
         """Pytree round-trip preserves structure."""
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(4, 5, 6)
+        vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         leaves, treedef = jax.tree.flatten(pv)
         pv2 = jax.tree.unflatten(treedef, leaves)
@@ -497,7 +475,7 @@ class TestJAXCompat:
     def test_jit_with_fields(self) -> None:
         """Jit with velocity field runs correctly."""
         base = cxv.Point.from_([1, 0, 0], "m")
-        vel = _make_vel(1, 0, 0)
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
 
         @jax.jit
@@ -520,7 +498,7 @@ class TestFieldCharts:
     def test_field_charts_override(self) -> None:
         """field_charts allows velocity to convert to a different chart than base."""
         base = cxv.Point.from_([1, 0, 0], "m")
-        vel = _make_vel(1, 0, 0)
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         pv_mixed = pv.cconvert(cxc.sph3d, field_charts={"velocity": cxc.cart3d})
         assert pv_mixed.point.chart == cxc.sph3d
@@ -529,7 +507,7 @@ class TestFieldCharts:
     def test_field_charts_empty_uses_default(self) -> None:
         """Empty field_charts dict behaves as default (all fields use to_chart)."""
         base = cxv.Point.from_([1, 0, 0], "m")
-        vel = _make_vel(1, 0, 0)
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         pv_a = pv.cconvert(cxc.sph3d, field_charts={})
         pv_b = pv.cconvert(cxc.sph3d)
@@ -546,7 +524,7 @@ class TestFromErrors:
 
     def test_from_mapping_no_point_raises(self) -> None:
         """from_(mapping) without a 'point' key or kwarg raises ValueError."""
-        vel = _make_vel(1, 2, 3)
+        vel = cxv.Tangent.from_([1, 2, 3], "m/s", cxc.cart3d, cxr.coord_vel)
         with pytest.raises(ValueError, match="point"):
             Coordinate.from_({"velocity": vel})
 
@@ -554,7 +532,7 @@ class TestFromErrors:
         """Explicit point= kwarg wins over 'point' key in the mapping."""
         base1 = cxv.Point.from_([1, 2, 3], "m")
         base2 = cxv.Point.from_([4, 5, 6], "m")
-        vel = _make_vel(1, 0, 0)
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate.from_({"point": base1, "velocity": vel}, point=base2)
         assert pv.point is base2
 
@@ -579,13 +557,13 @@ class TestReprStr:
 
     def test_str_nonempty(self) -> None:
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(4, 5, 6)
+        vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         assert str(pv)
 
     def test_repr_with_fields_contains_field_name(self) -> None:
         base = cxv.Point.from_([1, 2, 3], "m")
-        vel = _make_vel(4, 5, 6)
+        vel = cxv.Tangent.from_([4, 5, 6], "m/s", cxc.cart3d, cxr.coord_vel)
         pv = Coordinate(point=base, velocity=vel)
         assert "velocity" in repr(pv)
 
