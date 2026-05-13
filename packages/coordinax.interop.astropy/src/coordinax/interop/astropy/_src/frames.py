@@ -119,7 +119,8 @@ def from_(cls: type[cxastro.ICRS], obj: apyc.ICRS, /) -> cxastro.ICRS:
     ICRS()
 
     """
-    obj = eqx.error_if(obj, obj.has_data, "Astropy frame must not have data.")
+    if obj.has_data:
+        raise ValueError("Astropy frame must not have data.")
     return cls()
 
 

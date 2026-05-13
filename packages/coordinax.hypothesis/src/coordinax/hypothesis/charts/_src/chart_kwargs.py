@@ -109,8 +109,8 @@ def chart_init_kwargs(  # noqa: F811
     ...     assert chart.ndim == 3
 
     """
-    # Handle dimensionality alias and strategy
-    ndim = draw_if_strategy(draw, ndim)
+    # TODO: Handle dimensionality alias and strategy
+    # ndim = draw_if_strategy(draw, ndim)
 
     # Get a dictionary of all the required parameters for cls.__init__
     required_params = get_init_params(chart_class)
