@@ -440,7 +440,7 @@ def broadcast_in_dim_p_coordinate(
         )
         for name, vec in operand.items()
     }
-    return Coordinate(point=new_point, **new_fields)
+    return Coordinate._create_unchecked(new_point, new_fields)
 
 
 @quax.register(jax.lax.convert_element_type_p)
@@ -476,7 +476,7 @@ def convert_element_type_p_coordinate(operand: Coordinate, /, **kw: Any) -> Coor
         name: replace(vec, data=jtu.map(lambda v: convert_p(v, **kw), vec.data))
         for name, vec in operand.items()
     }
-    return Coordinate(point=new_point, **new_fields)
+    return Coordinate._create_unchecked(new_point, new_fields)
 
 
 @quax.register(jax.lax.eq_p)
