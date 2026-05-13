@@ -47,27 +47,6 @@ def _broadcast_shapes(shapes: list[tuple[int, ...]]) -> tuple[int, ...]:
     return result
 
 
-def _frames_equal(
-    f1: cxf.AbstractReferenceFrame,
-    f2: cxf.AbstractReferenceFrame,
-) -> bool:
-    """Return True if two reference frames are structurally equal.
-
-    Uses identity check first (handles singletons like ``noframe``, ``alice``,
-    ``alex``), then falls back to Equinox structural equality for parametric
-    frames such as ``TransformedReferenceFrame``.
-    """
-    if f1 is f2:
-        return True
-    if type(f1) is not type(f2):
-        return False
-    # Same type — structural comparison (safe: same type → same pytree structure)
-    result = eqx.tree_equal(f1, f2)
-    if isinstance(result, bool):
-        return result
-    return bool(result)  # JAX boolean → concrete bool at init time
-
-
 def vectorform_pdoc(pv: "Coordinate", **kwargs: Any) -> wl.AbstractDoc:
     """Return the vector-form Wadler-Lindig document for a `Coordinate`."""
     kwargs.setdefault("canonical", True)
@@ -199,9 +178,9 @@ class Coordinate(AbstractVector):
                 raise TypeError(msg)
             vec: Tangent = val
 
-            # Convert to point's frame when frames differ
-            if not _frames_equal(vec.frame, target_frame):
-                vec = vec.to_frame(target_frame)  # ty: ignore[invalid-assignment]
+            # Always convert to point's frame (no-op when already equal;
+            # avoids materialising a JAX boolean which breaks under JIT).
+            vec = vec.to_frame(target_frame)  # ty: ignore[invalid-assignment]
 
             field_vecs[name] = vec
 

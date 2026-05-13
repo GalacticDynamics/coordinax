@@ -331,6 +331,13 @@ def _act_translate_cdict(
 
     if isinstance(rep.semantic_kind, cxr.Displacement):
         # Shift displacement-valued tangent representations.
+        if op_eval.chart != chart:
+            msg = (
+                f"Translate.delta is defined in chart {op_eval.chart!r}, "
+                f"but the representation is in chart {chart!r}. "
+                "Convert delta to the target chart before constructing Translate."
+            )
+            raise ValueError(msg)
         return cast(
             "CDict",
             jtu.map(
@@ -363,6 +370,13 @@ def _act_translate_cdict(
         return x
 
     if rep.semantic_kind == sk:
+        if op_eval.chart != chart:
+            msg = (
+                f"Translate.delta is defined in chart {op_eval.chart!r}, "
+                f"but the representation is in chart {chart!r}. "
+                "Convert delta to the target chart before constructing Translate."
+            )
+            raise ValueError(msg)
         return cast(
             "CDict",
             jtu.map(

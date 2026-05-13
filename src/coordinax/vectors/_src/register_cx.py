@@ -283,7 +283,12 @@ def cconvert(
 
 @plum.dispatch
 def change_basis(
-    v: Tangent, to_basis: cxr.AbstractBasis, /, *, at: Any = None, usys: OptUSys = None
+    v: Tangent,
+    to_basis: cxr.AbstractLinearBasis,
+    /,
+    *,
+    at: Any = None,
+    usys: OptUSys = None,
 ) -> Tangent:
     """Change the basis of a `Tangent` vector.
 
