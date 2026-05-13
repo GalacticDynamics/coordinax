@@ -77,11 +77,11 @@ def eq_p_absvecs(lhs: Point, rhs: Point, /) -> Bool[Array, "..."]:
     See `Point.__eq__` for examples.
 
     """
-    # Map the equality over the leaves, which are Quantities.
+    # Map the equality over the dict values, matching by key.
     comp_tree = jtu.map(
         jnp.equal,
-        jtu.leaves(lhs.data, is_leaf=uq.is_any_quantity),
-        jtu.leaves(rhs.data, is_leaf=uq.is_any_quantity),
+        lhs.data,
+        rhs.data,
         is_leaf=uq.is_any_quantity,
     )
 
@@ -273,8 +273,8 @@ def eq_p_tangents(lhs: Tangent, rhs: Tangent, /) -> Bool[Array, "..."]:
     """Element-wise equality of two Tangent vectors."""
     comp_tree = jtu.map(
         jnp.equal,
-        jtu.leaves(lhs.data, is_leaf=uq.is_any_quantity),
-        jtu.leaves(rhs.data, is_leaf=uq.is_any_quantity),
+        lhs.data,
+        rhs.data,
         is_leaf=uq.is_any_quantity,
     )
     return jax.tree.reduce(jnp.logical_and, comp_tree)

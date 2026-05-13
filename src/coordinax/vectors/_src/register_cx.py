@@ -492,14 +492,8 @@ def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
         )
         raise TypeError(msg)
 
-    data = jtu.map(
-        jnp.add,
-        jtu.leaves(lhs.data, is_leaf=uq.is_any_quantity),
-        jtu.leaves(rhs.data, is_leaf=uq.is_any_quantity),
-        is_leaf=uq.is_any_quantity,
-    )
-    keys = list(lhs.data.keys())
-    return replace(lhs, data=dict(zip(keys, data, strict=True)))
+    data = jtu.map(jnp.add, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
+    return replace(lhs, data=data)
 
 
 @plum.dispatch
@@ -537,14 +531,8 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
         )
         raise TypeError(msg)
 
-    data = jtu.map(
-        jnp.subtract,
-        jtu.leaves(lhs.data, is_leaf=uq.is_any_quantity),
-        jtu.leaves(rhs.data, is_leaf=uq.is_any_quantity),
-        is_leaf=uq.is_any_quantity,
-    )
-    keys = list(lhs.data.keys())
-    return replace(lhs, data=dict(zip(keys, data, strict=True)))
+    data = jtu.map(jnp.subtract, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
+    return replace(lhs, data=data)
 
 
 # ===================================================================
@@ -637,11 +625,22 @@ def act(
     # Inject the base-point data as 'at' so non-Cartesian tangent dispatches
     # can evaluate the Jacobian at the correct location.  Callers may
     # override this by passing their own 'at' in **kw.
-    kw_fibre = dict(kw)
-    kw_fibre.setdefault("at", x.point.data)
-    new_fields = {
-        name: cxfm.act(op, tau, fibre, **kw_fibre) for name, fibre in x._data.items()
-    }
+    # 'at' is resolved per-fibre: if the fibre's chart differs from the
+    # point's chart (possible via _create_unchecked / cconvert with
+    # field_charts=), we convert the base point into the fibre's chart first
+    # so as not to violate Tangent's at-chart requirement.
+    kw_base = dict(kw)
+    new_fields: dict[str, Any] = {}
+    for name, fibre in x._data.items():
+        if "at" not in kw_base:
+            if fibre.chart == x.point.chart:
+                at_data = x.point.data
+            else:
+                at_data = cast("Point", cxr.cconvert(x.point, fibre.chart)).data
+            fibre_kw = {**kw_base, "at": at_data}
+        else:
+            fibre_kw = kw_base
+        new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
     return Coordinate(point=new_point, **new_fields)
 
 
