@@ -136,7 +136,7 @@ class TestCheckInit:
 
     def test_raises_for_wrong_data_keys(self):
         """Construction raises when data keys don't match chart components."""
-        with pytest.raises(ValueError, match="data keys"):
+        with pytest.raises(ValueError, match="Data keys do not match"):
             cx.Tangent(
                 data={"wrong": u.Q(1.0, "m/s")},
                 chart=cxc.cart3d,
