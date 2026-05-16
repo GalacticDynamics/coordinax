@@ -79,7 +79,7 @@ class CartND(AbstractFixedComponentsChart[CartNDKeys, CartNDDims], AbstractND):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = no_manifold  # TODO: M=Rn(n)
+    M: AbstractManifold = RN
 
     @override
     @property

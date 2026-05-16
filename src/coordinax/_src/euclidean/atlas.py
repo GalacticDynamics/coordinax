@@ -100,7 +100,7 @@ class EuclideanAtlas(AbstractAtlas):
     For $n > 3$ the fallback is `CartND`:
 
     >>> cxmd.EuclideanAtlas(10).default_chart()
-    CartND(M=NoManifold())
+    CartND(M=Rn(True))
 
     **Chart membership**
 
@@ -168,7 +168,7 @@ class EuclideanAtlas(AbstractAtlas):
         For higher dimensions, the default is CartND:
 
         >>> cxmd.EuclideanAtlas(100).default_chart()
-        CartND(M=NoManifold())
+        CartND(M=Rn(True))
 
         """
         return EUCLIDEAN_ATLAS_DEFAULT_CHARTS.get(self.ndim, cxc.cartnd)
