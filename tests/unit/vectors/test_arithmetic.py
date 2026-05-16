@@ -488,7 +488,7 @@ class TestCoordinateConvertElementType:
     def test_convert_to_float(self) -> None:
         pv = self._make_coord()
         result = qlax.convert_element_type(pv, float)
-        assert result.point["x"].value.dtype == float
+        assert result.point["x"].dtype == float
 
     def test_jit_with_float_input(self) -> None:
         pv = self._make_coord()

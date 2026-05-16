@@ -450,7 +450,7 @@ def convert_element_type_p_coordinate(operand: Coordinate, /, **kw: Any) -> Coor
     >>> pv.point["x"].dtype
     dtype('int64')
 
-    >>> qlax.convert_element_type(pv, float).point["x"].value.dtype
+    >>> qlax.convert_element_type(pv, float).point["x"].dtype
     dtype('float64')
 
     """

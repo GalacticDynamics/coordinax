@@ -297,12 +297,6 @@ def _act_translate_cdict(
     """Displacement-semantic translate: shifts points and displacement vectors."""
     op_eval = materialize_transform(op, tau)
 
-    # A vel/acc-semantic translate does not move position points.
-    # This check should never trigger here since dispatch selects on Displacement,
-    # but explicit for consistency with other overloads.
-    if rep == cxr.point and not isinstance(op.semantic_kind, cxr.Displacement):
-        return x
-
     if rep == cxr.point:
         # Translate in Cartesian space, then map back.
         cart = chart.cartesian
