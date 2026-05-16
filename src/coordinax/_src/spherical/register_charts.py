@@ -11,7 +11,7 @@ import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .chart import AbstractSphericalTwoSphere
 from .embed import TwoSphereIn3D
-from .manifold import HyperSphericalManifold, twosphere
+from .manifold import S2, HyperSphericalManifold
 from coordinax._src.base import AbstractChart
 from coordinax._src.charts.d3 import Abstract3D, Spherical3D
 from coordinax._src.custom_types import CDict, OptUSys
@@ -113,4 +113,4 @@ def pt_map(
     {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
 
     """
-    return cxmapi.pt_map(p, twosphere, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
+    return cxmapi.pt_map(p, S2, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]

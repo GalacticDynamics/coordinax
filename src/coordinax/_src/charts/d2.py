@@ -22,7 +22,7 @@ from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
 )
-from coordinax._src.euclidean.manifold import euclidean2d
+from coordinax._src.euclidean.manifold import R2
 
 
 class Abstract2D(AbstractDimensionalFlag, n=2):
@@ -83,7 +83,7 @@ class Cart2D(AbstractFixedComponentsChart[Cart2DKeys, Cart2DDims], Abstract2D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean2d
+    M: AbstractManifold = R2
 
     @override
     @property
@@ -145,7 +145,7 @@ class Polar2D(AbstractFixedComponentsChart[PolarKeys, Polar2DDims], Abstract2D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean2d
+    M: AbstractManifold = R2
 
     @override
     @property

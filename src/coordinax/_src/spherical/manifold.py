@@ -1,6 +1,6 @@
 """Two-sphere manifold."""
 
-__all__ = ("HyperSphericalManifold", "Sn", "onesphere", "twosphere")
+__all__ = ("HyperSphericalManifold", "Sn", "S1", "S2")
 
 import dataclasses
 
@@ -82,8 +82,8 @@ class HyperSphericalManifold(AbstractManifold):
 Sn = HyperSphericalManifold
 """Alias for `HyperSphericalManifold`."""
 
-onesphere = HyperSphericalManifold(1)
+S1 = HyperSphericalManifold(1)
 r"""The circular manifold, e.g. $S^1$."""
 
-twosphere = HyperSphericalManifold(2)
+S2 = HyperSphericalManifold(2)
 r"""The spherical manifold, e.g. $S^2$."""

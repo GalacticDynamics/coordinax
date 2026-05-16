@@ -377,8 +377,8 @@ def manifolds(  # noqa: F811
         st.floats(min_value=1e-6, max_value=1e6, allow_nan=False, allow_infinity=False)
     )
     return cxm.EmbeddedManifold(
-        intrinsic=cxm.twosphere,
-        ambient=cxm.euclidean3d,
+        intrinsic=cxm.S2,
+        ambient=cxm.R3,
         embed_map=cxm.TwoSphereIn3D(radius=radius),
     )
 

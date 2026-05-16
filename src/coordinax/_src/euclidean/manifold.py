@@ -3,15 +3,16 @@
 __all__ = (
     "EuclideanManifold",
     "Rn",
-    "euclidean0d",
-    "euclidean1d",
-    "euclidean2d",
-    "euclidean3d",
+    "R0",
+    "R1",
+    "R2",
+    "R3",
+    "RN",
 )
 
 import dataclasses
 
-from typing import Any, final
+from typing import Any, Final, final
 
 import jax
 import wadler_lindig as wl
@@ -65,7 +66,7 @@ class EuclideanManifold(AbstractManifold):
                 \arccos\!\tfrac{z}{r},\; \operatorname{atan2}(y, x)\Bigr).$$
 
     **Pre-built instance.** The module exports
-    {obj}`coordinax.manifolds.euclidean3d` as a pre-built instance for the
+    {obj}`coordinax.manifolds.R3` as a pre-built instance for the
     common case $\mathbb{R}^3$.
 
     Parameters
@@ -162,7 +163,7 @@ class EuclideanManifold(AbstractManifold):
     For the most common case — three-dimensional Euclidean space $\mathbb{R}^3$
     — the module provides a pre-built instance:
 
-    >>> cxmd.euclidean3d
+    >>> cxmd.R3
     Rn(3)
 
     """
@@ -171,6 +172,13 @@ class EuclideanManifold(AbstractManifold):
     """Intrinsic dimension of the manifold."""
 
     def __init__(self, ndim: int, /) -> None:
+        # Check `ndim` is a positive integer or True. True works for Rn(N),
+        # deferring the check until the default chart is requested.
+        if ndim is not True and not (
+            isinstance(ndim, int) and not isinstance(ndim, bool) and ndim >= 0
+        ):
+            msg = f"`ndim` must be True or a positive integer, got {ndim!r}"
+            raise TypeError(msg)
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", EuclideanAtlas(self.ndim))
         object.__setattr__(self, "metric", EuclideanMetric(self.ndim))
@@ -210,8 +218,17 @@ Rn = EuclideanManifold
 """Alias for `EuclideanManifold`."""
 
 
-euclidean0d = EuclideanManifold(0)
-euclidean1d = EuclideanManifold(1)
-euclidean2d = EuclideanManifold(2)
-euclidean3d = EuclideanManifold(3)
-r"""The 3-dimensional Euclidean manifold, i.e. $\mathbb{R}^3$."""
+R0: Final = EuclideanManifold(0)
+r"""The 0-dim Euclidean manifold, i.e. $\mathbb{R}^0$."""
+
+R1: Final = EuclideanManifold(1)
+r"""The 1-dim Euclidean manifold, i.e. $\mathbb{R}^1$."""
+
+R2: Final = EuclideanManifold(2)
+r"""The 2-dim Euclidean manifold, i.e. $\mathbb{R}^2$."""
+
+R3: Final = EuclideanManifold(3)
+r"""The 3-dim Euclidean manifold, i.e. $\mathbb{R}^3$."""
+
+RN: Final = EuclideanManifold(True)  # noqa: FBT003
+r"""The $n$-dim Euclidean manifold, i.e. $\mathbb{R}^n$ for any $n \geq 0$."""

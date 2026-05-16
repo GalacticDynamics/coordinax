@@ -44,7 +44,7 @@ from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
 )
-from coordinax._src.euclidean.manifold import euclidean3d
+from coordinax._src.euclidean.manifold import R3
 
 
 class Abstract3D(AbstractDimensionalFlag, n=3):
@@ -105,7 +105,7 @@ class Cart3D(AbstractFixedComponentsChart[Cart3DKeys, Cart3DDims], Abstract3D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     @override
     @property
@@ -169,7 +169,7 @@ class Cylindrical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     @override
     @property
@@ -200,7 +200,7 @@ class AbstractSpherical3D(AbstractFixedComponentsChart[Ks, Ds], Abstract3D):
     """Abstract spherical vector representation."""
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     @override
     @property
@@ -259,7 +259,7 @@ class Spherical3D(AbstractSpherical3D[SphericalKeys, Spherical3DDims]):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -319,7 +319,7 @@ class LonLatSpherical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -373,7 +373,7 @@ class LonCosLatSpherical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -429,7 +429,7 @@ class MathSpherical3D(AbstractSpherical3D[MathSphericalKeys, Spherical3DDims]):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -501,7 +501,7 @@ class ProlateSpheroidal3D(
     ]
     """Focal length of the coordinate system."""
 
-    M: AbstractManifold = euclidean3d
+    M: AbstractManifold = R3
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check

@@ -35,7 +35,7 @@ from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
 )
-from coordinax._src.euclidean.manifold import euclidean1d
+from coordinax._src.euclidean.manifold import R1
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
 V = TypeVar("V")
@@ -96,7 +96,7 @@ class Cart1D(AbstractFixedComponentsChart[Cart1DKeys, Cart1DDims], Abstract1D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean1d
+    M: AbstractManifold = R1
 
     @override
     @property
@@ -158,7 +158,7 @@ class Radial1D(AbstractFixedComponentsChart[RadialKeys, Radial1DDims], Abstract1
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean1d
+    M: AbstractManifold = R1
 
     @override
     @property
@@ -216,7 +216,7 @@ class Time1D(AbstractFixedComponentsChart[TimeKeys, TimeDims], Abstract1D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean1d
+    M: AbstractManifold = R1
 
     @override
     @property

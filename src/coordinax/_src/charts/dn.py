@@ -29,7 +29,8 @@ class AbstractND(AbstractDimensionalFlag, n="N"):
     Examples include Cartesian representations in arbitrary dimensions.
     """
 
-    # TODO: add a check it's N-D
+    _: dataclasses.KW_ONLY
+    M: AbstractManifold = no_manifold
 
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
         # Enforce that this is a subclass of AbstractChart

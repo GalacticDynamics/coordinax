@@ -30,7 +30,7 @@ import jax.tree_util as jtu
 import unxt as u
 
 from .atlas import SPHERICAL_ATLAS_DEFAULT_CHARTS, HyperSphericalAtlas
-from .manifold import onesphere, twosphere
+from .manifold import S1, S2
 from coordinax._src.base import (
     AbstractFixedComponentsChart,
     AbstractManifold,
@@ -149,7 +149,7 @@ class CircularOneSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = onesphere
+    M: AbstractManifold = S1
 
 
 sph1: Final = CircularOneSphere()
@@ -185,7 +185,7 @@ class AbstractSphericalTwoSphere(AbstractSphericalHyperSphere[Ks, Ds], Abstract2
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = twosphere
+    M: AbstractManifold = S2
 
 
 # ===============================================================================
@@ -235,7 +235,7 @@ class SphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = twosphere
+    M: AbstractManifold = S2
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         # call base check
@@ -289,7 +289,7 @@ class LonLatSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = twosphere
+    M: AbstractManifold = S2
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -337,7 +337,7 @@ class LonCosLatSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = twosphere
+    M: AbstractManifold = S2
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -384,7 +384,7 @@ class MathSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = twosphere
+    M: AbstractManifold = S2
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)

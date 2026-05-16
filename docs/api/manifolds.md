@@ -56,7 +56,7 @@ ang = M.angle_between(cxc.cart3d, uvec, vvec, at=at)
 ### Manifolds
 
 - `AbstractManifold`: base manifold interface
-- `EuclideanManifold` / `euclidean3d`: Euclidean manifold family and 3D convenience
+- `EuclideanManifold` / `R3`: Euclidean manifold family and 3D convenience
 - `HyperSphericalManifold`: intrinsic two-sphere manifold
 - `CartesianProductManifold`: Cartesian product manifold
 - `EmbeddedManifold`: manifold with explicit embedding into an ambient manifold
