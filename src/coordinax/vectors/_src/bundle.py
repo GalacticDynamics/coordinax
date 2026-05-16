@@ -93,16 +93,17 @@ class Coordinate(AbstractVector):
       (each a `~coordinax.vectors.Tangent` with ``TangentGeometry`` rep,
       e.g. velocity, displacement, acceleration).
 
-    On construction every fibre vector is automatically aligned to both the
-    **reference frame** and **chart** of the base point:
+    On construction every fibre vector is automatically frame-aligned to the
+    **reference frame** of the base point:
 
     1. Frame-alignment via `~coordinax.vectors.AbstractVector.to_frame`
        ensures ``pv["velocity"].frame == pv.point.frame``.
-    2. Chart-alignment via a Jacobian pushforward ensures
-       ``pv["velocity"].chart == pv.point.chart``, so that
-       `~coordinax.vectors.Coordinate.cconvert` can always pass
-       ``at=self.point`` to the tangent conversion without a chart-mismatch
-       error.
+
+    Fibre vectors are **not** chart-aligned on construction; each fibre
+    retains the chart it was supplied with.  Chart conversion is handled
+    lazily: `~coordinax.vectors.Coordinate.cconvert` pushes each fibre
+    forward using the Jacobian at the base point expressed in the fibre's
+    current chart.
 
     Coordinate conversion (chart change) is handled automatically: the base
     converts as a point map, and each fibre vector converts via the Jacobian
@@ -163,7 +164,8 @@ class Coordinate(AbstractVector):
         **fields : Tangent
             Named fibre vectors. Each must be a ``Tangent`` instance with
             ``TangentGeometry`` representation.  Each field is automatically
-            frame- and chart-aligned to ``point`` on construction.
+            frame-aligned to ``point`` on construction; the chart of each
+            fibre is preserved as supplied.
 
         """
         # --- Validate: point must be a Point instance ---
@@ -203,20 +205,6 @@ class Coordinate(AbstractVector):
                     cast("Tangent", cxfm.act(op, None, vec, at=at_point.data)),
                     frame=target_frame,
                 )  # ty: ignore[invalid-assignment]
-
-            # Chart-align: convert the field to the point's chart so that
-            # later Coordinate.cconvert() can safely pass `at=self.point`
-            # (which has `point.chart`) into Tangent.cconvert() without a
-            # chart-mismatch error.  The Jacobian needs a base point in the
-            # field's *source* chart, so we first convert `point` to that
-            # chart, push the tangent forward, and store the result in
-            # `point.chart`.
-            if vec.chart != point.chart:
-                at_in_field_chart = cast("Point", cxr.cconvert(point, vec.chart))
-                vec = cast(
-                    "Tangent",
-                    cxr.cconvert(vec, point.chart, at=at_in_field_chart),
-                )
 
             field_vecs[name] = vec
 
@@ -405,20 +393,24 @@ class Coordinate(AbstractVector):
         # 1. Convert base point (pure point map — no Jacobian needed)
         new_point = cast("Point", cxr.cconvert(self.point, to_chart, usys=usys))
 
-        # 2. Convert each field via tangent pushforward at self.point
-        new_fields: dict[str, Tangent] = {
-            name: cast(
-                "Tangent",
-                cxr.cconvert(
-                    vec, field_charts.get(name, to_chart), at=self.point, usys=usys
-                ),
+        # 2. Convert each field via tangent pushforward at self.point.
+        # Express self.point in each fibre's current chart for the Jacobian;
+        # this handles fibres that are in a different chart than self.point.
+        new_fields: dict[str, Tangent] = {}
+        for name, vec in self._data.items():
+            target = field_charts.get(name, to_chart)
+            at = (
+                self.point
+                if vec.chart == self.point.chart
+                else cast("Point", cxr.cconvert(self.point, vec.chart))
             )
-            for name, vec in self._data.items()
-        }
+            new_fields[name] = cast(
+                "Tangent",
+                cxr.cconvert(vec, target, at=at, usys=usys),
+            )
 
-        # Use _create_unchecked so that field_charts overrides (which may
-        # intentionally leave fields in a different chart than new_point)
-        # are not silently re-aligned by __init__.
+        # Use _create_unchecked to bypass frame re-alignment in __init__
+        # (the results are already in the correct frame).
         return Coordinate._create_unchecked(new_point, new_fields)
 
     # ===================================================================

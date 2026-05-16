@@ -141,20 +141,22 @@ def _make_sph_vel(r: float, theta: float, phi: float) -> Tangent:
 
 
 class TestChartAlignment:
-    """Test automatic chart-alignment of fibre vectors on construction.
+    """Test that fibre charts are preserved on construction.
 
-    On construction, each field must be converted to point.chart via a
-    Jacobian pushforward so that Coordinate.cconvert() can safely pass
-    at=self.point without a chart-mismatch error.
+    cconvert handles fibres in arbitrary charts correctly.
+
+    Fibres are NOT chart-aligned on construction; each fibre retains the
+    chart it was supplied with.  Chart conversion is handled lazily by
+    Coordinate.cconvert, which expresses self.point in the fibre's current
+    chart before passing it as 'at' to the Jacobian pushforward.
     """
 
-    def test_mismatched_chart_field_is_converted(self) -> None:
-        """Field supplied in sph3d is converted to point's cart3d chart."""
+    def test_mismatched_chart_field_preserved(self) -> None:
+        """Field supplied in sph3d retains its sph3d chart after construction."""
         base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
-        # velocity given in spherical coords at (r=1, θ=π/2, φ=0) — same point
         vel_sph = _make_sph_vel(1.0, 0.0, 0.0)
         pv = Coordinate(point=base, velocity=vel_sph)
-        assert pv["velocity"].chart == cxc.cart3d
+        assert pv["velocity"].chart == cxc.sph3d
 
     def test_same_chart_no_change(self) -> None:
         """Field already in point's chart is left unchanged."""
@@ -164,41 +166,40 @@ class TestChartAlignment:
         # same chart — object is the same instance (no conversion occurred)
         assert pv["velocity"] is vel
 
-    def test_mismatched_chart_numerically_correct(self) -> None:
-        """Value after chart-alignment equals value pre-converted manually."""
+    def test_cconvert_mismatched_chart_numerically_correct(self) -> None:
+        """Cconvert on a bundle with a sph3d fibre gives correct cart3d values."""
         base = cxv.Point.from_([1, 0, 0], "m")  # cart3d, at (1,0,0)
         vel_sph = _make_sph_vel(1, 0, 0)  # radial unit velocity in sph3d
 
-        # Pre-convert manually: get sph3d representation of the same base point,
-        # then push the tangent forward to cart3d.
+        # Expected result: manually push sph3d fibre to cart3d.
         base_sph = cx.cconvert(base, cxc.sph3d)
-        vel_cart_manual = cx.cconvert(vel_sph, cxc.cart3d, at=base_sph)
+        vel_cart_expected = cx.cconvert(vel_sph, cxc.cart3d, at=base_sph)
 
         pv = Coordinate(point=base, velocity=vel_sph)
-        vel_cart_auto = pv["velocity"]
+        pv_cart = pv.cconvert(cxc.cart3d)
 
         assert jnp.allclose(
-            vel_cart_auto["x"].value, vel_cart_manual["x"].value, atol=1e-6
+            pv_cart["velocity"]["x"].value, vel_cart_expected["x"].value, atol=1e-6
         )
         assert jnp.allclose(
-            vel_cart_auto["y"].value, vel_cart_manual["y"].value, atol=1e-6
+            pv_cart["velocity"]["y"].value, vel_cart_expected["y"].value, atol=1e-6
         )
         assert jnp.allclose(
-            vel_cart_auto["z"].value, vel_cart_manual["z"].value, atol=1e-6
+            pv_cart["velocity"]["z"].value, vel_cart_expected["z"].value, atol=1e-6
         )
 
     def test_cconvert_after_mismatched_chart_init_succeeds(self) -> None:
-        """Cconvert must not raise after constructing with a mismatched-chart field."""
+        """Cconvert must succeed when a fibre was supplied in a different chart."""
         base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
         vel_sph = _make_sph_vel(1, 0, 0)
         pv = Coordinate(point=base, velocity=vel_sph)
-        # This must not raise (original bug: would raise chart-mismatch ValueError)
+        # Fibre is in sph3d; cconvert to sph3d must not raise
         pv_sph = pv.cconvert(cxc.sph3d)
         assert pv_sph.point.chart == cxc.sph3d
         assert pv_sph["velocity"].chart == cxc.sph3d
 
-    def test_multiple_fields_different_charts(self) -> None:
-        """Multiple fields with different charts are all converted to point.chart."""
+    def test_multiple_fields_different_charts_preserved(self) -> None:
+        """Multiple fields with different charts each retain their original chart."""
         base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
         vel_sph = _make_sph_vel(1, 0, 0)
         acc_sph = cx.Tangent.from_(
@@ -211,8 +212,8 @@ class TestChartAlignment:
             cxr.coord_acc,
         )
         pv = Coordinate(point=base, velocity=vel_sph, acceleration=acc_sph)
-        assert pv["velocity"].chart == cxc.cart3d
-        assert pv["acceleration"].chart == cxc.cart3d
+        assert pv["velocity"].chart == cxc.sph3d
+        assert pv["acceleration"].chart == cxc.sph3d
 
 
 # ---------------------------------------------------------------------------
@@ -512,6 +513,49 @@ class TestFieldCharts:
         pv_a = pv.cconvert(cxc.sph3d, field_charts={})
         pv_b = pv.cconvert(cxc.sph3d)
         assert pv_a["velocity"].chart == pv_b["velocity"].chart
+
+    def test_cconvert_on_field_charts_output(self) -> None:
+        """Cconvert on a mixed-chart Coordinate (from field_charts) must not raise.
+
+        After ``pv.cconvert(sph3d, field_charts={"velocity": cart3d})``, the
+        result has ``point.chart=sph3d`` and ``velocity.chart=cart3d``.  A
+        subsequent ``cconvert`` to a *different* target chart must resolve
+        ``at`` in the fibre's own chart (cart3d), not in ``point.chart``
+        (sph3d), to satisfy Tangent's at-chart requirement.
+        """
+        base = cxv.Point.from_([1, 0, 0], "m")
+        vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
+        pv = Coordinate(point=base, velocity=vel)
+        # Build a mixed-chart bundle: point→sph3d, velocity stays in cart3d
+        pv_mixed = pv.cconvert(cxc.sph3d, field_charts={"velocity": cxc.cart3d})
+        assert pv_mixed.point.chart == cxc.sph3d
+        assert pv_mixed["velocity"].chart == cxc.cart3d
+
+        # Second cconvert to sph3d: velocity (cart3d→sph3d) needs a Jacobian,
+        # and at must be expressed in cart3d (velocity's source chart), not sph3d.
+        # Without per-fibre at computation this raises a chart-mismatch error.
+        pv_sph = pv_mixed.cconvert(cxc.sph3d)
+        assert pv_sph.point.chart == cxc.sph3d
+        assert pv_sph["velocity"].chart == cxc.sph3d
+
+    def test_cconvert_on_create_unchecked_output(self) -> None:
+        """Cconvert on a Coordinate built via _create_unchecked with mixed charts.
+
+        ``_create_unchecked`` is used by ``cconvert`` itself (for field_charts
+        results) and can produce bundles where ``velocity.chart != point.chart``.
+        A subsequent ``cconvert`` must compute ``at`` in each fibre's chart.
+        """
+        base_sph = cx.cconvert(cxv.Point.from_([1, 0, 0], "m"), cxc.sph3d)
+        vel_cart = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel)
+        # Manually build a bundle with mismatched charts (as _create_unchecked allows)
+        pv = Coordinate._create_unchecked(base_sph, {"velocity": vel_cart})
+        assert pv.point.chart == cxc.sph3d
+        assert pv["velocity"].chart == cxc.cart3d
+
+        # cconvert must not raise even though velocity.chart != point.chart
+        pv_sph = pv.cconvert(cxc.sph3d)
+        assert pv_sph.point.chart == cxc.sph3d
+        assert pv_sph["velocity"].chart == cxc.sph3d
 
 
 # ---------------------------------------------------------------------------

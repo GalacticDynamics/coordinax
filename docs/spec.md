@@ -2399,9 +2399,9 @@ Separating semantics from geometry provides two advantages:
     - A base **point** $q \in M$ (a `Point` instance).
     - A named collection of **fibre vectors** $\{v_i\}$ anchored at $q$ (each a `Tangent` with `TangentGeometry` rep).
 
-    On construction every fibre vector is automatically converted into the **reference frame of the base point** via `to_frame`. This guarantees internal consistency: after construction `pv["velocity"].frame` always equals `pv.point.frame`.
+    On construction every fibre vector is automatically converted into the **reference frame of the base point** via `to_frame`. This guarantees internal consistency: after construction `pv["velocity"].frame` always equals `pv.point.frame`. Fibre vectors are **not** chart-aligned on construction; each fibre retains the chart it was supplied with.
 
-    Coordinate conversion (chart change) propagates consistently: the base point converts via the chart transition map, and each fibre vector converts via the **Jacobian pushforward at the base point**.
+    Coordinate conversion (chart change) propagates consistently: the base point converts via the chart transition map, and each fibre vector converts via the **Jacobian pushforward at the base point** expressed in the fibre's current chart.
 
     **Fields:**
 
@@ -2416,6 +2416,7 @@ Separating semantics from geometry provides two advantages:
     - Every field value must be a `Tangent` instance; otherwise `TypeError`.
     - All shapes (point + fields) must be broadcastable; otherwise `ValueError`.
     - Every fibre vector whose `frame` differs from `point.frame` is **automatically converted** to `point.frame` before storage.
+    - Fibre charts are **not** altered on construction; each fibre retains its supplied chart.
 
     **Delegated properties** (forward to `self.point`):
 
