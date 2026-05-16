@@ -90,7 +90,7 @@ def guess_basis_kind(*args: Any, **kwargs: Any) -> Any:
 
     >>> data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> cxr.guess_basis_kind(data)
-    NoBasis()
+    no_basis
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -110,7 +110,7 @@ def guess_geometry_kind(*args: Any, **kwargs: Any) -> Any:
 
     >>> data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> cxr.guess_geometry_kind(data)
-    PointGeometry()
+    point_geom
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -130,7 +130,7 @@ def guess_rep(*args: Any, **kwargs: Any) -> Any:
 
     >>> data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> cxr.guess_rep(data)
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     """
     raise NotImplementedError  # pragma: no cover
@@ -150,7 +150,7 @@ def guess_semantic_kind(*args: Any, **kwargs: Any) -> Any:
 
     >>> data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     >>> cxr.guess_semantic_kind(data)
-    Location()
+    loc
     """
     raise NotImplementedError  # pragma: no cover
 

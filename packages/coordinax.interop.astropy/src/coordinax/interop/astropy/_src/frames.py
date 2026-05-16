@@ -63,7 +63,7 @@ import astropy.coordinates as apyc
 import astropy.units as apyu
 import unxt as u
 
-import coordinax.astro as cxastro
+import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.vectors as cxv
@@ -119,7 +119,8 @@ def from_(cls: type[cxastro.ICRS], obj: apyc.ICRS, /) -> cxastro.ICRS:
     ICRS()
 
     """
-    obj = eqx.error_if(obj, obj.has_data, "Astropy frame must not have data.")
+    if obj.has_data:
+        raise ValueError("Astropy frame must not have data.")
     return cls()
 
 
@@ -350,4 +351,4 @@ def astropy_galactocentric_to_coordinax_galactocentric(
     True
 
     """
-    return cxastro.Galactocentric.from_(frame)  # ty: ignore[invalid-return-type]
+    return cxastro.Galactocentric.from_(frame)

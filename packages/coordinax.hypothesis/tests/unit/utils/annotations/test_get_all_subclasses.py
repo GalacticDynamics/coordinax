@@ -31,7 +31,8 @@ class AbstractBase(abc.ABC):
     """Abstract base class for testing abstract exclusion."""
 
     @abc.abstractmethod
-    def method(self) -> None: ...
+    def method(self) -> None:
+        raise NotImplementedError  # pragma: no cover
 
 
 class ConcreteFromAbstract(AbstractBase):

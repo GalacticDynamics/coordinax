@@ -16,13 +16,13 @@ You will learn how to:
 ```{admonition} Object Levels
 :class: tip
 
-Coordinax supports five levels of coordinate representation, each adding
-more metadata. This tutorial covers `Vector`.
+Coordinax supports a few levels of coordinate representation, each adding
+more metadata. This tutorial covers `Point`.
 
 | Level | Type | See tutorial |
 | --- | --- | --- |
-| Coordinate | `Coordinate` | [Coordinate tutorial](./coordinate_objects.md) |
-| **Vector** | `Vector` | *this page* |
+| Coordinate bundle | `Coordinate` | [Tangent tutorial](./tangent_objects.md) |
+| **Point** \& Tangent | `Point`, `Tangent` | *this page*, [Tangent tutorial](./tangent_objects.md) |
 | CDict | `dict[str, Quantity]` | [CDict tutorial](./cdict_objects.md) |
 | Quantity | `unxt.Quantity` | [Quantity tutorial](./quantity_objects.md) |
 | Array | `jax.Array` | [Array tutorial](./array_objects.md) |
@@ -121,7 +121,7 @@ Spherical3D(M=Rn(3))
 ...     cxc.cart3d,
 ...     cxr.point,
 ... )
->>> v.rep
+>>> print(v.rep)
 Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
 ```
 
@@ -143,7 +143,7 @@ True
 Cart3D(M=Rn(3))
 
 >>> v.rep
-Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+point
 
 >>> v.M
 Rn(3)
@@ -293,7 +293,27 @@ Spherical3D(M=Rn(3))
 
 ## Upgrading To A Coordinate
 
-Attach a reference frame to promote a vector to a coordinate:
+A `Point` represents a location. If you also need to carry tangent quantities like velocity or acceleration **at** that point, bundle the `Point` with `Tangent` fields into a `Coordinate`:
+
+```{code-block} python
+>>> import coordinax.representations as cxr
+>>> import unxt as u
+
+>>> vel = cx.Tangent.from_(
+...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+...     cxc.cart3d, cxr.coord_vel,
+... )
+>>> pv = cx.Coordinate(point=cx.Point.from_([1.0, 0.0, 0.0], "m"), velocity=vel)
+>>> pv_sph = pv.cconvert(cxc.sph3d)
+>>> pv_sph["velocity"].chart
+Spherical3D(M=Rn(3))
+```
+
+See the [Coordinate tutorial](./coordinate_objects.md) for the full walkthrough.
+
+`Tangent` on its own is **not** an upgrade of `Point` — it is a separate type for tangent-space quantities that exist independently of a base location. See the [Tangent tutorial](./tangent_objects.md) if you need to work with tangent vectors directly.
+
+Attach a reference frame to a `Point` to track the observer:
 
 ```{code-block} python
 >>> v = cx.Point.from_({"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")})
@@ -304,15 +324,47 @@ Alice()
 Cart3D(M=Rn(3))
 ```
 
-## When To Use Vector
+## Promoting a Point to a Displacement
 
-Choose `Vector` when:
+Sometimes you have a `Point` whose component data you want to reinterpret as a tangent-space **displacement** rather than an absolute location — for example, when feeding a position offset into an operation that expects a `Tangent`.
+
+`change_basis` handles this in one call. The component data is **unchanged**; only the geometric type changes from `PointGeometry` to `TangentGeometry` with `Displacement` semantics:
+
+```{code-block} python
+>>> pt = cx.Point.from_([1.0, 2.0, 3.0], "m")
+>>> disp = cxr.change_basis(pt, cxr.coord_basis)
+>>> disp
+Tangent( {'x': Q(1., 'm'), 'y': Q(2., 'm'), 'z': Q(3., 'm')},
+         chart=Cart3D(M=Rn(3)), basis=coord_basis, semantic=dpl )
+```
+
+You can request the physical (orthonormal) basis instead:
+
+```{code-block} python
+>>> disp_phys = cxr.change_basis(pt, cxr.phys_basis)
+>>> print(disp_phys.rep)
+Representation(
+    geom_kind=TangentGeometry(), basis=PhysicalBasis(), semantic_kind=Displacement()
+)
+```
+
+See the [Tangent guide](../guides/tangents.md) for more on basis and semantic kinds.
+
+## When To Use Point
+
+Choose `Point` when:
 
 - You need chart and representation metadata attached to your data.
 - You want `cconvert` and `act` to work without extra arguments.
 - You do not need reference-frame tracking (no `to_frame`).
 - You are doing geometry: chart conversions, transform pipelines, or building higher-level abstractions.
 
-If you need frame tracking, upgrade to `Coordinate`. See the [Coordinate tutorial](./coordinate_objects.md).
+If you need tangent fields (velocity, displacement, acceleration) bundled with the point, use `Coordinate`. See the [Coordinate tutorial](./coordinate_objects.md).
+
+If you need standalone tangent quantities (without a base point), use `Tangent`. See the [Tangent tutorial](./tangent_objects.md).
+
+If you want to reinterpret a `Point`'s data as a displacement, use `cxr.change_basis(pt, cxr.coord_basis)` to promote it to a `Tangent` with `Displacement` semantics.
+
+If you need frame tracking, attach a frame to a `Point`. See the [Coordinate tutorial](./coordinate_objects.md).
 
 If you want a lighter representation, use a component dictionary (`CDict`). See the [CDict tutorial](./cdict_objects.md).

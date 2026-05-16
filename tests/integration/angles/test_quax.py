@@ -34,15 +34,13 @@ import coordinax.hypothesis.main as cxst
 # Bounded to [-3, 3] rad — covers more than a full turn without overflowing
 # trig functions
 _angle_rad = cxst.angles(
-    unit="rad",
-    elements=st.floats(min_value=-3.0, max_value=3.0, width=32),
+    unit="rad", elements=st.floats(min_value=-3, max_value=3, width=32)
 )
 
 # Narrower range for grad tests where we compare with cos(x): avoids
 # cancellation near ±π/2
 _angle_rad_trig = cxst.angles(
-    unit="rad",
-    elements=st.floats(min_value=-1.0, max_value=1.0, width=32),
+    unit="rad", elements=st.floats(min_value=-1, max_value=1, width=32)
 )
 
 
@@ -57,9 +55,9 @@ class TestQuaxedUnary:
             (1.5, qnp.abs, 1.5),  # positive → unchanged
             (-1.5, qnp.abs, 1.5),  # negative → flipped
             (1.5, qnp.negative, -1.5),
-            (1.7, qnp.floor, 1.0),
-            (1.2, qnp.ceil, 2.0),
-            (1.6, qnp.round, 2.0),
+            (1.7, qnp.floor, 1),
+            (1.2, qnp.ceil, 2),
+            (1.6, qnp.round, 2),
         ],
     )
     def test_known_value(self, value: float, fn: object, expected: float) -> None:
@@ -91,7 +89,7 @@ class TestQuaxedTrig:
     # in one parametrized test so we avoid duplicating the fixture setup.
     @pytest.mark.parametrize(
         ("fn", "angle_val", "expected"),
-        [(qnp.sin, jnp.pi / 2, 1.0), (qnp.cos, 0.0, 1.0), (qnp.tan, jnp.pi / 4, 1.0)],
+        [(qnp.sin, jnp.pi / 2, 1), (qnp.cos, 0, 1), (qnp.tan, jnp.pi / 4, 1)],
     )
     def test_trig_known_value_and_type(
         self, fn: object, angle_val: float, expected: float
@@ -107,7 +105,7 @@ class TestQuaxedTrig:
         """sin²(x) + cos²(x) == 1 for all angles (numerical sanity check)."""
         s2 = qnp.sin(angle).value ** 2
         c2 = qnp.cos(angle).value ** 2
-        assert jnp.allclose(s2 + c2, 1.0, atol=1e-5)
+        assert jnp.allclose(s2 + c2, 1, atol=1e-5)
 
 
 class TestQuaxedBinary:
@@ -115,7 +113,7 @@ class TestQuaxedBinary:
 
     @pytest.mark.parametrize(
         ("a_val", "b_val", "fn", "expected"),
-        [(1.0, 0.5, qnp.add, 1.5), (1.5, 0.5, qnp.subtract, 1.0)],
+        [(1, 0.5, qnp.add, 1.5), (1.5, 0.5, qnp.subtract, 1)],
     )
     def test_known_value(
         self, a_val: float, b_val: float, fn: object, expected: float
@@ -126,16 +124,16 @@ class TestQuaxedBinary:
 
     def test_multiply_by_scalar(self) -> None:
         """Multiplying an Angle by a plain scalar returns an Angle."""
-        result = qnp.multiply(cxa.Angle(1.5, "rad"), 2.0)
+        result = qnp.multiply(cxa.Angle(1.5, "rad"), 2)
         assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, 3.0)
+        assert jnp.allclose(result.value, 3)
 
     @given(
         a=cxst.angles(
-            unit="rad", elements=st.floats(min_value=0.0, max_value=3.0, width=32)
+            unit="rad", elements=st.floats(min_value=0, max_value=3, width=32)
         ),
         b=cxst.angles(
-            unit="rad", elements=st.floats(min_value=0.0, max_value=3.0, width=32)
+            unit="rad", elements=st.floats(min_value=0, max_value=3, width=32)
         ),
     )
     def test_add_commutativity(self, a: cxa.Angle, b: cxa.Angle) -> None:
@@ -153,10 +151,10 @@ class TestQuaxedReductions:
     @pytest.mark.parametrize(
         ("values", "fn", "expected"),
         [
-            ([1.0, 2.0, 3.0], qnp.sum, 6.0),
-            ([0.0, 2.0, 4.0], qnp.mean, 2.0),
-            ([3.0, 1.0, 2.0], qnp.min, 1.0),
-            ([3.0, 1.0, 2.0], qnp.max, 3.0),
+            ([1, 2, 3], qnp.sum, 6),
+            ([0, 2, 4], qnp.mean, 2),
+            ([3, 1, 2], qnp.min, 1),
+            ([3, 1, 2], qnp.max, 3),
         ],
     )
     def test_known_value(
@@ -178,26 +176,24 @@ class TestQuaxedArrayOps:
 
     def test_stack(self) -> None:
         """Stack creates an Angle array from scalar Angles."""
-        result = qnp.stack([cxa.Angle(1.0, "rad"), cxa.Angle(2.0, "rad")])
+        result = qnp.stack([cxa.Angle(1, "rad"), cxa.Angle(2, "rad")])
         assert isinstance(result, cxa.Angle)
         assert result.shape == (2,)
-        assert jnp.allclose(result.value, jnp.array([1.0, 2.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 2]))
 
     def test_concatenate(self) -> None:
-        result = qnp.concatenate(
-            [cxa.Angle([1.0, 2.0], "rad"), cxa.Angle([3.0, 4.0], "rad")]
-        )
+        result = qnp.concatenate([cxa.Angle([1, 2], "rad"), cxa.Angle([3, 4], "rad")])
         assert isinstance(result, cxa.Angle)
         assert result.shape == (4,)
-        assert jnp.allclose(result.value, jnp.array([1.0, 2.0, 3.0, 4.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 2, 3, 4]))
 
     def test_sort(self) -> None:
-        result = qnp.sort(cxa.Angle([3.0, 1.0, 2.0], "rad"))
+        result = qnp.sort(cxa.Angle([3, 1, 2], "rad"))
         assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, jnp.array([1.0, 2.0, 3.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 2, 3]))
 
     def test_reshape(self) -> None:
-        result = qnp.reshape(cxa.Angle([[1.0, 2.0], [3.0, 4.0]], "deg"), (4,))
+        result = qnp.reshape(cxa.Angle([[1, 2], [3, 4]], "deg"), (4,))
         assert isinstance(result, cxa.Angle)
         assert result.shape == (4,)
 
@@ -208,10 +204,10 @@ class TestQuaxedArrayOps:
         assert jnp.all(result.value == 1.5)
 
     def test_diff(self) -> None:
-        result = qnp.diff(cxa.Angle([1.0, 3.0, 6.0], "deg"))
+        result = qnp.diff(cxa.Angle([1, 3, 6], "deg"))
         assert isinstance(result, cxa.Angle)
         assert result.shape == (2,)
-        assert jnp.allclose(result.value, jnp.array([2.0, 3.0]))
+        assert jnp.allclose(result.value, jnp.array([2, 3]))
 
     @pytest.mark.parametrize(
         ("cond", "a_val", "b_val", "expected"),
@@ -234,11 +230,11 @@ class TestQuaxedArrayOps:
         """Where with a boolean array selects element-wise."""
         result = qnp.where(
             jnp.array([True, False, True]),
-            cxa.Angle([1.0, 2.0, 3.0], "rad"),
-            cxa.Angle([4.0, 5.0, 6.0], "rad"),
+            cxa.Angle([1, 2, 3], "rad"),
+            cxa.Angle([4, 5, 6], "rad"),
         )
         assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, jnp.array([1.0, 5.0, 3.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 5, 3]))
 
 
 class TestQuaxQuaxify:
@@ -256,7 +252,7 @@ class TestQuaxQuaxify:
 
     @pytest.mark.parametrize(
         ("fn", "angle_val", "expected"),
-        [(jax.numpy.sin, jnp.pi / 2, 1.0), (jax.numpy.cos, 0.0, 1.0)],
+        [(jax.numpy.sin, jnp.pi / 2, 1), (jax.numpy.cos, 0, 1)],
     )
     def test_quaxify_trig_known_value(
         self, fn: object, angle_val: float, expected: float
@@ -268,9 +264,7 @@ class TestQuaxQuaxify:
 
     def test_quaxify_add_preserves_angle_type(self) -> None:
         """quaxify(jax.numpy.add) on two Angles returns an Angle."""
-        result = quax.quaxify(jax.numpy.add)(
-            cxa.Angle(1.0, "rad"), cxa.Angle(0.5, "rad")
-        )
+        result = quax.quaxify(jax.numpy.add)(cxa.Angle(1, "rad"), cxa.Angle(0.5, "rad"))
         assert isinstance(result, cxa.Angle)
         assert jnp.allclose(result.value, 1.5)
 
@@ -280,30 +274,30 @@ class TestQuaxQuaxify:
         def double(x):
             return jax.numpy.add(x, x)
 
-        result = quax.quaxify(double)(cxa.Angle(1.0, "rad"))
+        result = quax.quaxify(double)(cxa.Angle(1, "rad"))
         assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, 2.0)
+        assert jnp.allclose(result.value, 2)
 
     def test_quaxify_jit(self) -> None:
         """jax.jit(quaxify(fn)) works on an Angle."""
         result = jax.jit(quax.quaxify(jax.numpy.sin))(cxa.Angle(jnp.pi / 2, "rad"))
         assert isinstance(result, u.AbstractQuantity)
-        assert jnp.allclose(result.value, 1.0, atol=1e-6)
+        assert jnp.allclose(result.value, 1, atol=1e-6)
 
     def test_quaxify_vmap(self) -> None:
         """jax.vmap(quaxify(fn)) maps over an Angle array."""
-        arr = cxa.Angle([0.0, jnp.pi / 6, jnp.pi / 2], "rad")
+        arr = cxa.Angle([0, jnp.pi / 6, jnp.pi / 2], "rad")
         result = jax.vmap(quax.quaxify(jax.numpy.sin))(arr)
         assert isinstance(result, u.AbstractQuantity)
         assert result.value.shape == (3,)
-        assert jnp.allclose(result.value[2], 1.0, atol=1e-5)
+        assert jnp.allclose(result.value[2], 1, atol=1e-5)
 
     @given(angle=_angle_rad)
     def test_quaxify_pythagorean_identity(self, angle: cxa.Angle) -> None:
         """sin²+cos² == 1 via quaxified raw jax.numpy functions."""
         s = quax.quaxify(jax.numpy.sin)(angle)
         c = quax.quaxify(jax.numpy.cos)(angle)
-        assert jnp.allclose(s.value**2 + c.value**2, 1.0, atol=1e-5)
+        assert jnp.allclose(s.value**2 + c.value**2, 1, atol=1e-5)
 
 
 class TestJAXTransformsWithQuaxed:
@@ -312,10 +306,8 @@ class TestJAXTransformsWithQuaxed:
     @pytest.mark.parametrize(
         ("loss_fn", "angle_val", "expected_grad"),
         [
-            # d/dx sin(x) = cos(x)
-            (lambda x: qnp.sin(x).value, 1.0, jnp.cos(1.0)),
-            # d/dx cos(x) = -sin(x)
-            (lambda x: qnp.cos(x).value, 1.0, -jnp.sin(1.0)),
+            (lambda x: qnp.sin(x).value, 1.0, jnp.cos(1.0)),  # d/dx sin(x) = cos(x)
+            (lambda x: qnp.cos(x).value, 1.0, -jnp.sin(1.0)),  # d/dx cos(x) = -sin(x)
         ],
     )
     def test_grad_known_value(
@@ -337,8 +329,8 @@ class TestJAXTransformsWithQuaxed:
     @pytest.mark.parametrize(
         ("fn", "angle_val", "expected_type", "expected_val"),
         [
-            (lambda x: qnp.sin(x), jnp.pi / 2, u.AbstractQuantity, 1.0),
-            (lambda x: qnp.add(x, x), 1.0, cxa.Angle, 2.0),
+            (qnp.sin, jnp.pi / 2, u.AbstractQuantity, 1),
+            (lambda x: qnp.add(x, x), 1, cxa.Angle, 2),
         ],
     )
     def test_jit(
@@ -362,7 +354,7 @@ class TestJAXTransformsWithQuaxed:
         angle=cxst.angles(
             unit="rad",
             shape=(4,),
-            elements=st.floats(min_value=-2.0, max_value=2.0, width=32),
+            elements=st.floats(min_value=-2, max_value=2, width=32),
         )
     )
     @settings(deadline=None)

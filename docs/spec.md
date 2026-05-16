@@ -78,7 +78,7 @@ are $C^\infty$ diffeomorphisms wherever chart domains overlap. The unique maxima
 
 A **point** is simply an element $p \in M$.
 
-Most of the important structures of smooth manifolds --- charts, atlases, transition maps, metrics, and embeddings --- are introduced in the sections that follow.
+Most of the important properties and structures associated with smooth manifolds --- such as coordinate systems, charts, atlases, and transition maps --- will be introduced and explained in subsequent sections.
 
 (math-spec-charts)=
 
@@ -968,7 +968,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
-| `coordinax.vectors` | `Point`, `ToUnitsOptions` |
+| `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `TransformedReferenceFrame` |
@@ -1787,6 +1787,8 @@ A representation is therefore **not** the same thing as a chart: the chart deter
 
     **Same-chart basis conversion:** `change_basis(v, chart, from_basis, to_basis, /, *, at)` changes tangent component conventions without changing charts. In v1 it is defined only for Cartesian charts and `CoordinateBasis` $
 
+    **Point-to-Displacement promotion:** `change_basis(v: Point, to_basis, /, *, at)` promotes a `Point` to a `Tangent` with `Displacement` semantics. The component data are unchanged; only the geometric interpretation is recast from a manifold point (affine, `PointGeometry`) to a tangent-space displacement vector (`TangentGeometry`, `Displacement`). The resulting `Tangent` carries the same chart as the input `Point`, and its basis is `to_basis`. This operation is the inverse of treating a displacement as an absolute position, and it respects the affine/tangent distinction enforced throughout the spec.
+
 </br>
 
 ### Geometric Kind
@@ -2280,6 +2282,219 @@ Separating semantics from geometry provides two advantages:
     - ``(obj, chart, frame) -> Point``
     - ``(obj, frame) -> Point``
     - ``(Array, unit, frame) -> Point``
+
+(software-spec-tangent)=
+
+!!! info `Tangent`
+
+    A `Tangent` is a **tangent-geometry vector** carrying explicit basis and semantic kind information alongside its coordinate data. It represents an element of the tangent space $T_p M$ at a base point $p$ — for example a velocity, displacement, or acceleration — expressed in a chosen chart and basis.
+
+    Unlike `Point`, whose representation is always the constant `cxr.point` (`PointGeometry / NoBasis / Location`), a `Tangent`'s representation is **computed** from its `basis` and `semantic` fields:
+
+    $$
+    \mathrm{rep} = \bigl(\mathrm{TangentGeometry},\; \mathrm{basis},\; \mathrm{semantic}\bigr).
+    $$
+
+    **Type parameters** (generic):
+
+    | Parameter   | Bound                         | Default                       |
+    |-------------|-------------------------------|-------------------------------|
+    | `ChartT`    | `AbstractChart`               | `AbstractChart`               |
+    | `BasisT`    | `AbstractLinearBasis`         | `AbstractLinearBasis`         |
+    | `SemanticT` | `AbstractTangentSemanticKind` | `AbstractTangentSemanticKind` |
+    | `V`         | `HasShape` (array-like)       | `unxt.Quantity`               |
+
+    **Fields:**
+
+    | Field      | Type                     | Notes                                  |
+    |------------|--------------------------|----------------------------------------|
+    | `data`     | `dict[str, V]`           | component name → scalar value          |
+    | `chart`    | `ChartT`                 | coordinate system; static (JAX-frozen) |
+    | `manifold` | `AbstractManifold`       | manifold the tangent lives in          |
+    | `basis`    | `BasisT`                 | linear basis; static                   |
+    | `semantic` | `SemanticT`              | physical interpretation; static        |
+    | `frame`    | `AbstractReferenceFrame` | defaults to `cxf.noframe`              |
+
+    **Post-init checks:**
+
+    - `manifold.has_chart(chart)` — chart must belong to the manifold's atlas.
+    - `chart.check_data(data, keys=True)` — data keys must match the chart's component schema.
+
+    **Methods & Properties:**
+
+    - `rep` (computed property) — returns `Representation(tangent_geom, basis, semantic)`. Never stored.
+    - `__getitem__(key)`:
+      - `str` key → returns the component leaf `data[key]`.
+      - integer/slice key → returns a batch-indexed `Tangent` with all components sliced at `key`.
+    - `shape` — broadcast shape of all component leaves.
+    - `aval()` — Quax API; returns `jax.core.ShapedArray` for JAX tracing.
+    - `cconvert(to_chart, *, at, usys)` — chart conversion via Jacobian pushforward at base point `at`.
+    - `to_frame(to_frame, t=None)` — frame transform; returns a new `Tangent` in `to_frame`.
+    - `uconvert(usys_or_units)` — unit conversion.
+    - `norm()` — Riemannian norm in the attached manifold.
+    - `__pdoc__()` — Wadler-Lindig repr.
+
+    **Coordinate transformation law:**
+
+    Tangent components transform via the **Jacobian pushforward** of the chart transition map. Given a base point `at` in `from_chart` coordinates and a target chart `to_chart`:
+
+    $$
+    \tilde{v}^j = J^j{}_i\, v^i, \qquad
+    J^j{}_i = \frac{\partial \tilde{q}^j}{\partial q^i}\bigg|_{\mathrm{at}}.
+    $$
+
+    For `PhysicalBasis` components the transform uses the orthonormal frame rotation matrix $R = B_{\mathrm{to}}^T B_{\mathrm{from}}$ instead of the raw Jacobian.
+
+    **`from_` Constructor Dispatches:**
+
+    | Signature | Behaviour |
+    |-----------|-----------|
+    | `(Tangent,)` | identity / fast-path if same type |
+    | `(obj, chart, basis, semantic, manifold)` | full explicit construction; manifold supplied |
+    | `(obj, chart, basis, semantic)` | manifold inferred via `cxm.guess_manifold(chart)` |
+    | `(obj, chart, rep)` | extracts `basis` and `semantic` from `rep`; raises `TypeError` if `rep.geom_kind` is not `TangentGeometry` |
+    | `(obj, chart)` | rep inferred via `cxr.guess_rep(data, chart)` |
+    | `(obj,)` | chart inferred via `cxc.guess_chart(obj)`, then cascades above |
+    | `(Array, unit)` | converts to `Quantity`, then cascades |
+    | `(Array, unit, chart)` | converts to `Quantity`, then `(Quantity, chart)` |
+    | `(Array, unit, chart, basis, semantic)` | converts to `Quantity`, then full dispatch |
+
+    **`cconvert` dispatches** (registered in `coordinax.vectors`):
+
+    - `cconvert(tangent, to_chart, *, at, usys)` — applies `tangent_map(tangent.data, tangent.chart, tangent.rep, to_chart, *, at=at.data)`. The `at` argument must be a `Point` in `tangent.chart`.
+
+    **Examples:**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+    ...     cxc.cart3d,
+    ...     cxr.coord_basis,
+    ...     cxr.vel,
+    ... )
+    >>> v.rep == cxr.coord_vel
+    True
+
+    >>> v.basis
+    coord_basis
+
+    >>> v.semantic
+    vel
+
+    >>> v["x"]
+    Q(1., 'm / s')
+    ```
+
+(software-spec-coordinate)=
+
+!!! info `Coordinate`
+
+    A `Coordinate` is a **vector bundle** anchored at a base `Point`. It stores:
+
+    - A base **point** $q \in M$ (a `Point` instance).
+    - A named collection of **fibre vectors** $\{v_i\}$ anchored at $q$ (each a `Tangent` with `TangentGeometry` rep).
+
+    On construction every fibre vector is automatically converted into the **reference frame of the base point** via `to_frame`. This guarantees internal consistency: after construction `pv["velocity"].frame` always equals `pv.point.frame`. Fibre vectors are **not** chart-aligned on construction; each fibre retains the chart it was supplied with.
+
+    Coordinate conversion (chart change) propagates consistently: the base point converts via the chart transition map, and each fibre vector converts via the **Jacobian pushforward at the base point** expressed in the fibre's current chart.
+
+    **Fields:**
+
+    | Field   | Type                 | Notes                             |
+    |---------|----------------------|-----------------------------------|
+    | `point` | `Point`              | base point of the bundle          |
+    | `_data` | `dict[str, Tangent]` | fibre vectors; excluded from repr |
+
+    **Post-init invariants:**
+
+    - `point` must be a `Point` instance; otherwise `TypeError`.
+    - Every field value must be a `Tangent` instance; otherwise `TypeError`.
+    - All shapes (point + fields) must be broadcastable; otherwise `ValueError`.
+    - Every fibre vector whose `frame` differs from `point.frame` is **automatically converted** to `point.frame` before storage.
+    - Fibre charts are **not** altered on construction; each fibre retains its supplied chart.
+
+    **Delegated properties** (forward to `self.point`):
+
+    - `data` — component data of the base point.
+    - `chart` — chart of the base point.
+    - `rep` — representation of the base point (always `PointGeometry`).
+    - `manifold` — manifold of the base point.
+    - `frame` — reference frame; always equals `point.frame`.
+    - `shape` — broadcast shape of base point and all fibre vectors.
+
+    **Mapping interface** (over fibre fields only, not including the base point):
+
+    - `keys()` — field names.
+    - `values()` — field `Tangent` objects.
+    - `items()` — `(name, Tangent)` pairs.
+    - `__len__()` — number of fibre fields.
+    - `__iter__()` — iterates over field names.
+
+    **`__getitem__(key)`:**
+
+    - `str` key → returns the named `Tangent` field.
+    - integer/slice key → batch-indexes the entire bundle (base point and all fields) and returns a new `Coordinate`.
+
+    **`cconvert(to_chart, *, field_charts=None, usys=None)`:**
+
+    Converts the whole bundle to `to_chart`:
+
+    1. Base point: plain chart transition map.
+    2. Each fibre field: Jacobian pushforward at `self.point`.
+
+    `field_charts` allows per-field target chart overrides (`dict[name, AbstractChart]`).
+
+    **`to_frame(to_frame, t=None) -> Coordinate`:**
+
+    Transforms the entire bundle (base point and all fibre fields) to `to_frame`.
+
+    **`from_` Constructor Dispatches:**
+
+    | Signature | Behaviour |
+    |-----------|-----------|
+    | `(Coordinate,)` | identity; returns the same object unchanged |
+    | `(Point,)` | wraps as a point-only bundle with no fibre fields |
+    | `(Mapping, *, point=None)` | reads `"point"` key from the mapping as base; explicit `point=` kwarg takes precedence |
+
+    **`cconvert` registration:**
+
+    `cconvert(coordinate, to_chart, ...)` delegates to `Coordinate.cconvert(to_chart, ...)`.
+
+    **Examples:**
+
+    ```pycon
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> point = cx.Point.from_([1.0, 0.0, 0.0], "m")
+    >>> vel = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+    ...     cxc.cart3d,
+    ...     cxr.coord_vel,
+    ... )
+    >>> pv = cx.Coordinate(point=point, velocity=vel)
+    >>> pv.point.chart
+    Cart3D()
+
+    >>> list(pv.keys())
+    ['velocity']
+
+    >>> pv["velocity"].semantic
+    vel
+
+    >>> pv_sph = pv.cconvert(cxc.sph3d)
+    >>> pv_sph.point.chart
+    Spherical3D()
+    >>> pv_sph["velocity"].chart
+    Spherical3D()
+    ```
 
 !!! info `ToUnitsOptions`
 

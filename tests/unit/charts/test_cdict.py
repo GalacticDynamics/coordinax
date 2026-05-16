@@ -11,7 +11,7 @@ import unxt_hypothesis as ust
 import coordinax.charts as cxc
 import coordinax.hypothesis.main as cxst
 from .conftest import shapes_ending_in_123, xps
-from coordinax._src.custom_types import CDict
+from coordinax.internal import CDict
 
 
 @given(cxst.cdicts(cxst.charts()))
@@ -64,7 +64,8 @@ def test_cdict_from_quantity_and_chart(data, chart):
 def test_cdict_from_array_and_chart(data, chart):
     """cdict(array, chart) should return a CDict with correct keys and values."""
     ndim = len(chart.components)
-    q = data.draw(xps.arrays(xps.real_dtypes(), shape=(ndim,)))
+    dtype = data.draw(st.sampled_from([jnp.float32, jnp.float64]))
+    q = data.draw(xps.arrays(dtype, shape=(ndim,)))
 
     got = cxc.cdict(q, chart)
 

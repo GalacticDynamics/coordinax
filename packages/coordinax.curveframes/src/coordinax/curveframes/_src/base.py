@@ -369,7 +369,7 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
         - ``_is_forward = False``
         - All extra fields (e.g. Bishop's ``tau_0``, ``initial_normal``)
         """
-        ...
+        raise NotImplementedError  # pragma: no cover
 
     @abc.abstractmethod
     def _rebuild_forward(self) -> "AbstractParallelTransportTransform":
@@ -378,7 +378,7 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
         Called when ``.inverse`` is invoked on an already-inverse instance,
         avoiding closure accumulation.
         """
-        ...
+        raise NotImplementedError  # pragma: no cover
 
     # ---------------------------------------------------------------
     # Inverse-building helpers (shared logic)

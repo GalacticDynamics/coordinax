@@ -80,22 +80,22 @@ def guess_geometry_kind(
     >>> import coordinax.representations as cxr
 
     >>> cxr.guess_geometry_kind(u.dimension("length"))
-    PointGeometry()
+    point_geom
 
     >>> cxr.guess_geometry_kind((u.dimension("angle"), u.dimension("length")))
-    PointGeometry()
+    point_geom
 
     >>> cxr.guess_geometry_kind(u.dimension("speed"))
-    TangentGeometry()
+    tangent_geom
 
     >>> cxr.guess_geometry_kind(u.dimension("angular speed"))
-    TangentGeometry()
+    tangent_geom
 
     >>> cxr.guess_geometry_kind(u.dimension("acceleration"))
-    TangentGeometry()
+    tangent_geom
 
     >>> cxr.guess_geometry_kind(u.dimension("angular acceleration"))
-    TangentGeometry()
+    tangent_geom
 
     """
     try:
@@ -116,13 +116,13 @@ def guess_geometry_kind(obj: u.AbstractQuantity, /) -> AbstractGeometry:
     >>> import coordinax.representations as cxr
 
     >>> cxr.guess_geometry_kind(u.Q(1.0, "m"))
-    PointGeometry()
+    point_geom
 
     >>> cxr.guess_geometry_kind(u.Q(2.0, "m / s"))
-    TangentGeometry()
+    tangent_geom
 
     >>> cxr.guess_geometry_kind(u.Q(3.0, "m / s ** 2"))
-    TangentGeometry()
+    tangent_geom
 
     """
     dim = u.dimension_of(obj)
@@ -144,15 +144,15 @@ def guess_geometry_kind(obj: CDict, /) -> AbstractGeometry:
 
     >>> d1 = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
     >>> cxr.guess_geometry_kind(d1)
-    PointGeometry()
+    point_geom
 
     >>> d2 = {"lon": u.Q(1.0, "deg"), "lat": u.Q(2.0, "deg")}
     >>> cxr.guess_geometry_kind(d2)
-    PointGeometry()
+    point_geom
 
     >>> d3 = {"x": u.Q(1.0, "m / s"), "y": u.Q(2.0, "m / s")}
     >>> cxr.guess_geometry_kind(d3)
-    TangentGeometry()
+    tangent_geom
 
     """
     # Find the `dim` for determining the geometry kind
@@ -181,7 +181,7 @@ def guess_geometry_kind(obj: CDict, chart: cxc.AbstractChart, /) -> AbstractGeom
 
     >>> d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
     >>> cxr.guess_geometry_kind(d, cxc.cart2d)
-    PointGeometry()
+    point_geom
 
     """  # noqa: E501
     # Confirm data is compatible with the chart (e.g., no "x" component for
@@ -206,7 +206,7 @@ def guess_geometry_kind(
     >>> d = {"mu": u.Q(1, "km2"), "nu": u.Q(0.5, "km2"), "phi": u.Q(1, "deg")}
     >>> chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "km"))
     >>> cxr.guess_geometry_kind(d, chart)
-    PointGeometry()
+    point_geom
 
     """  # noqa: E501
     # Confirm data is compatible with the chart (e.g., no "x" component for
@@ -266,10 +266,10 @@ def guess_basis_kind(
     >>> import coordinax.representations as cxr
 
     >>> cxr.guess_basis_kind(u.dimension("length"))
-    NoBasis()
+    no_basis
 
     >>> cxr.guess_basis_kind((u.dimension("angle"), u.dimension("length")))
-    NoBasis()
+    no_basis
 
     """
     try:
@@ -290,7 +290,7 @@ def guess_basis_kind(obj: u.AbstractQuantity, /) -> AbstractBasis:
     >>> import coordinax.representations as cxr
 
     >>> cxr.guess_basis_kind(u.Q(1.0, "m"))
-    NoBasis()
+    no_basis
 
     """
     dim = u.dimension_of(obj)
@@ -309,11 +309,11 @@ def guess_basis_kind(obj: CDict, /) -> AbstractBasis:
 
     >>> d1 = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
     >>> cxr.guess_basis_kind(d1)
-    NoBasis()
+    no_basis
 
     >>> d2 = {"lon": u.Q(1.0, "deg"), "lat": u.Q(2.0, "deg")}
     >>> cxr.guess_basis_kind(d2)
-    NoBasis()
+    no_basis
 
     """
     dims = {u.dimension_of(v) for v in obj.values()}
@@ -376,22 +376,22 @@ def guess_semantic_kind(
     >>> import coordinax.representations as cxr
 
     >>> cxr.guess_semantic_kind(u.dimension("length"))
-    Location()
+    loc
 
     >>> cxr.guess_semantic_kind((u.dimension("angle"), u.dimension("length")))
-    Location()
+    loc
 
     >>> cxr.guess_semantic_kind(u.dimension("speed"))
-    Velocity()
+    vel
 
     >>> cxr.guess_semantic_kind(u.dimension("angular speed"))
-    Velocity()
+    vel
 
     >>> cxr.guess_semantic_kind(u.dimension("acceleration"))
-    Acceleration()
+    acc
 
     >>> cxr.guess_semantic_kind(u.dimension("angular acceleration"))
-    Acceleration()
+    acc
 
     """
     try:
@@ -412,7 +412,7 @@ def guess_semantic_kind(obj: u.AbstractQuantity, /) -> AbstractSemanticKind:
     >>> import coordinax.representations as cxr
 
     >>> cxr.guess_semantic_kind(u.Q(1.0, "m"))
-    Location()
+    loc
 
     """
     dim = u.dimension_of(obj)
@@ -431,11 +431,11 @@ def guess_semantic_kind(obj: CDict, /) -> AbstractSemanticKind:
 
     >>> d1 = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
     >>> cxr.guess_semantic_kind(d1)
-    Location()
+    loc
 
     >>> d2 = {"lon": u.Q(1.0, "deg"), "lat": u.Q(2.0, "deg")}
     >>> cxr.guess_semantic_kind(d2)
-    Location()
+    loc
 
     """
     # Find the `dim` for determining the semantic kind
@@ -481,7 +481,7 @@ def guess_rep(obj: PointGeometry, /) -> Representation:
 
     >>> geom = cxr.PointGeometry()
     >>> cxr.guess_rep(geom)
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     """
     return point  # ty: ignore[invalid-return-type]
@@ -505,7 +505,7 @@ def guess_rep(
 
     >>> rep = cxr.guess_rep(u.dimension("length"), cxr.point_geom)
     >>> rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     """
     return point  # ty: ignore[invalid-return-type]
@@ -529,15 +529,15 @@ def guess_rep(
 
     >>> rep = cxr.guess_rep(u.dimension("speed"), cxr.tangent_geom)
     >>> rep.geom_kind
-    TangentGeometry()
+    tangent_geom
     >>> rep.semantic_kind
-    Velocity()
+    vel
 
     >>> rep = cxr.guess_rep(u.dimension("acceleration"), cxr.tangent_geom)
     >>> rep.geom_kind
-    TangentGeometry()
+    tangent_geom
     >>> rep.semantic_kind
-    Acceleration()
+    acc
 
     """
     sem = cxrapi.guess_semantic_kind(obj)
@@ -561,29 +561,29 @@ def guess_rep(
 
     >>> rep = cxr.guess_rep(u.dimension("length"))
     >>> rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     >>> rep = cxr.guess_rep(u.Q(1.0, "m"))
     >>> rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     >>> rep = cxr.guess_rep(u.dimension("speed"))
     >>> rep.geom_kind
-    TangentGeometry()
+    tangent_geom
     >>> rep.semantic_kind
-    Velocity()
+    vel
 
     >>> rep = cxr.guess_rep(u.Q(1.0, "m / s"))
     >>> rep.geom_kind
-    TangentGeometry()
+    tangent_geom
     >>> rep.semantic_kind
-    Velocity()
+    vel
 
     >>> rep = cxr.guess_rep(u.dimension("acceleration"))
     >>> rep.geom_kind
-    TangentGeometry()
+    tangent_geom
     >>> rep.semantic_kind
-    Acceleration()
+    acc
 
     """
     geom = cxrapi.guess_geometry_kind(obj)
@@ -602,11 +602,11 @@ def guess_rep(obj: Any, chart: cxc.AbstractChart, /) -> Representation:
 
     >>> rep = cxr.guess_rep(u.dimension("length"))
     >>> rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     >>> rep = cxr.guess_rep(u.Q(1.0, "m"))
     >>> rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     """
     geom = cxrapi.guess_geometry_kind(obj, chart)
@@ -627,7 +627,7 @@ def guess_rep(
 
     >>> rep = cxr.guess_rep(u.Q(1.0, "m"), cxc.cart2d, point_geom)
     >>> rep
-    Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
+    point
 
     """
     return point  # ty: ignore[invalid-return-type]
@@ -649,16 +649,14 @@ def guess_rep(
 
     >>> rep = cxr.guess_rep(u.Q([1.0, 2.0], "m / s"), cxc.cart2d, cxr.TangentGeometry())
     >>> rep
-    Representation(geom_kind=TangentGeometry(), basis=CoordinateBasis(),
-                   semantic_kind=Velocity())
+    coord_vel
 
     Length dimensions would infer Location in general, but TangentGeometry
     requires a tangent semantic kind, so Displacement is returned instead:
 
     >>> rep = cxr.guess_rep(u.Q([1.0, 2.0], "m"), cxc.cart2d, cxr.TangentGeometry())
     >>> rep
-    Representation(geom_kind=TangentGeometry(), basis=CoordinateBasis(),
-                   semantic_kind=Displacement())
+    coord_disp
 
     """
     # Infer the semantic kind from the data.

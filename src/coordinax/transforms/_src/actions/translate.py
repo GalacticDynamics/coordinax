@@ -3,7 +3,6 @@
 __all__ = ("Translate",)
 
 
-from collections.abc import Callable
 from jaxtyping import Array, ArrayLike
 from typing import Any, Union, cast, final
 
@@ -151,11 +150,23 @@ def act(
     >>> cxfm.act(shift, None, x,  cxc.cart3d, cxr.point, usys=usys)
     Array([1000., 2000., 3000.], dtype=float64)
 
+    Velocity-semantic translate is identity on point arrays:
+
+    >>> import coordinax.representations as cxr
+    >>> from dataclassish import replace
+    >>> vel_shift = replace(shift, semantic_kind=cxr.vel)
+    >>> cxfm.act(vel_shift, None, x, cxc.cart3d, cxr.point, usys=usys)
+    Array([0., 0., 0.], dtype=float64)
+
     """
     del kw
 
     if rep != cxr.point:
         raise TypeError("Translate can only be applied to point representations")
+
+    # A vel/acc-semantic translate does not move position points.
+    if not isinstance(op.semantic_kind, cxr.Displacement):
+        return jnp.asarray(x)
 
     if usys is None:
         raise TypeError("Translate requires usys to convert delta to x's units")
@@ -175,60 +186,6 @@ def act(
     # Apply translation
     x_arr = jnp.asarray(x)
     return x_arr + delta if op_eval.right_add else delta + x_arr  # ty: ignore[unsupported-operator]
-
-
-def _require_tau_time(tau: Any, /) -> tuple[Array, u.AbstractUnit]:
-    """Return (tau_value, tau_unit), requiring tau to be a time quantity."""
-    # We require a Quantity-like tau with time dimension so we can form d/dtau.
-    tau = eqx.error_if(
-        tau,
-        not u.quantity.is_any_quantity(tau),
-        "Translate requires tau as a time Quantity when delta is time-dependent",
-    )
-    tau_unit = u.unit_of(tau)
-    tau = eqx.error_if(
-        tau,
-        u.dimension_of(tau_unit) != u.dimension_of(u.unit("s")),
-        "Translate requires tau to have time dimension",
-    )
-    # Differentiate with respect to the numeric tau in its own unit.
-    return jnp.asarray(u.ustrip(tau_unit, tau)), tau_unit  # ty: ignore[invalid-return-type]
-
-
-def _delta_values_fn(
-    delta_fn: Callable[[Any], Any],
-    chart: cxc.AbstractChart,
-    tau_unit: u.AbstractUnit,
-    /,
-) -> tuple[Callable[[Array], Array], u.AbstractUnit | None]:
-    """Build a pure-JAX function returning packed delta values.
-
-    Returns
-    -------
-    (f, unit)
-        f: tau_value -> Array[... , n] of delta values in `chart.components` order.
-        unit: common length unit returned by `pack_uniform_unit`.
-
-    Notes
-    -----
-    We wrap `tau_value` back into a Quantity with unit `tau_unit` before calling
-    the user-provided `delta_fn`.
-
-    """
-    keys = chart.components
-
-    def f(tau_value: Array) -> Array:
-        tau_q = u.Q(tau_value, tau_unit)
-        d = delta_fn(tau_q)
-        vals, _unit = pack_uniform_unit(d, keys=keys)
-        # Ensure an array output for JAX differentiation.
-        return jnp.asarray(vals)
-
-    # One eager call to learn the unit.
-    vals0, unit0 = pack_uniform_unit(delta_fn(u.Q(jnp.zeros(()), tau_unit)), keys=keys)
-    del vals0
-
-    return f, unit0
 
 
 # -----------------------------------------------
@@ -257,6 +214,8 @@ def act(
     --------
     >>> import jax.numpy as jnp
     >>> import coordinax.transforms as cxfm
+    >>> import coordinax.representations as cxr
+    >>> from dataclassish import replace
     >>> import unxt as u
 
     >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
@@ -264,9 +223,19 @@ def act(
     >>> cxfm.act(shift, None, x, cxc.cart3d, cxr.point)
     Q([1000., 2000., 3000.], 'm')
 
+    Velocity-semantic translate is identity on point quantities:
+
+    >>> vel_shift = replace(shift, semantic_kind=cxr.vel)
+    >>> cxfm.act(vel_shift, None, x, cxc.cart3d, cxr.point)
+    Q([0., 0., 0.], 'm')
+
     """
     if rep != cxr.point:
         raise TypeError("Translate can only be applied to point representations")
+
+    # A vel/acc-semantic translate does not move position points.
+    if not isinstance(op.semantic_kind, cxr.Displacement):
+        return x
 
     # Process Translation
     op_eval = materialize_transform(op, tau)
@@ -294,19 +263,15 @@ def act(
 ) -> CDict:
     """Apply Translate to a Point-valued component dictionary.
 
-    Translation is performed in the canonical Cartesian chart of ``chart``:
-
-    1. Convert the point ``x`` to ``cart = chart.cartesian``.
-    2. Convert ``delta`` to the same ``cart`` using
-        ``api.phys_tangent_basis_change`` evaluated at the point being
-        translated (expressed in ``op.chart``).
-    3. Add in Cartesian components.
-    4. Convert the translated point back to ``chart``.
+    Dispatches on ``op.semantic_kind`` to determine which representations
+    are shifted.
 
     Examples
     --------
     >>> import coordinax.transforms as cxfm
     >>> import unxt as u
+
+    Default (displacement-semantic) translate shifts points:
 
     >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
     >>> x = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
@@ -315,38 +280,105 @@ def act(
 
     """
     del kw
+    return _act_translate_cdict(op.semantic_kind, op, tau, x, chart, rep, usys=usys)
 
-    if rep != cxr.point:
-        raise TypeError("Translate can only be applied to point representations")
 
+@plum.dispatch
+def _act_translate_cdict(
+    sk: cxr.Displacement,
+    op: Translate,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+    usys: OptUSys = None,
+) -> CDict:
+    """Displacement-semantic translate: shifts points and displacement vectors."""
     op_eval = materialize_transform(op, tau)
 
-    # Shared canonical Cartesian chart for performing the translation.
-    cart = chart.cartesian
+    if rep == cxr.point:
+        # Translate in Cartesian space, then map back.
+        cart = chart.cartesian
+        x_cart = cxc.pt_map(x, chart, cart, usys=usys)
 
-    # Convert point to Cartesian.
-    x_cart = cxc.pt_map(x, chart, cart, usys=usys)
+        if op_eval.chart == cart:
+            delta_cart = op_eval.delta
+        else:
+            # Push delta through the Jacobian into Cartesian.
+            at_in_op_chart = cxc.pt_map(x_cart, cart, op_eval.chart, usys=usys)
+            delta_cart = cxr.tangent_map(  # ty: ignore[missing-argument]
+                op_eval.delta,
+                op_eval.chart,
+                cxr.coord_disp,
+                cart,
+                at=at_in_op_chart,
+                usys=usys,
+            )
 
-    # Convert delta to Cartesian (as a physical displacement).
-    if op_eval.chart == cart:
-        delta_cart = op_eval.delta
-    else:
-        raise NotImplementedError(
-            "Translation by a delta in a different chart is not implemented yet."
+        x_cart2 = jtu.map(
+            jnp.add,
+            *((x_cart, delta_cart) if op_eval.right_add else (delta_cart, x_cart)),
+            is_leaf=u.quantity.is_any_quantity,
         )
-        # # Base point expressed in the delta's chart.
-        # at_in_op_chart = cxc.pt_map(x, chart, op_eval.chart, usys=usys)
-        # delta_cart = cxtapi.phys_tangent_basis_change(
-        #     op_eval.delta, op_eval.chart, cart, at=at_in_op_chart, usys=usys
-        # )
+        return cast("CDict", cxc.pt_map(x_cart2, cart, chart, usys=usys))
 
-    # Add in Cartesian components (key-wise).
-    x_cart2 = jtu.map(
-        jnp.add,
-        *((x_cart, delta_cart) if op_eval.right_add else (delta_cart, x_cart)),
-        is_leaf=u.quantity.is_any_quantity,
-    )
+    if isinstance(rep.semantic_kind, cxr.Displacement):
+        # Shift displacement-valued tangent representations.
+        if op_eval.chart != chart:
+            msg = (
+                f"Translate.delta is defined in chart {op_eval.chart!r}, "
+                f"but the representation is in chart {chart!r}. "
+                "Convert delta to the target chart before constructing Translate."
+            )
+            raise ValueError(msg)
+        return cast(
+            "CDict",
+            jtu.map(
+                jnp.add,
+                *((x, op_eval.delta) if op_eval.right_add else (op_eval.delta, x)),
+                is_leaf=u.quantity.is_any_quantity,
+            ),
+        )
 
-    # Convert back to the input chart.
-    out = cxc.pt_map(x_cart2, cart, chart, usys=usys)
-    return cast("CDict", out)
+    # Identity for velocity, acceleration, and other representations.
+    return x
+
+
+@plum.dispatch
+def _act_translate_cdict(
+    sk: cxr.AbstractTangentSemanticKind,
+    op: Translate,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+    usys: OptUSys = None,
+) -> CDict:
+    """Velocity/acceleration-semantic translate: shifts matching tangent vectors."""
+    op_eval = materialize_transform(op, tau)
+
+    # A vel/acc-semantic translate does not move position points.
+    if rep == cxr.point:
+        return x
+
+    if rep.semantic_kind == sk:
+        if op_eval.chart != chart:
+            msg = (
+                f"Translate.delta is defined in chart {op_eval.chart!r}, "
+                f"but the representation is in chart {chart!r}. "
+                "Convert delta to the target chart before constructing Translate."
+            )
+            raise ValueError(msg)
+        return cast(
+            "CDict",
+            jtu.map(
+                jnp.add,
+                *((x, op_eval.delta) if op_eval.right_add else (op_eval.delta, x)),
+                is_leaf=u.quantity.is_any_quantity,
+            ),
+        )
+
+    # Identity for non-matching representations.
+    return x

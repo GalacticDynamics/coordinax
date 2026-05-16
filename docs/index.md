@@ -26,6 +26,7 @@ guides/charts.md
 guides/manifolds.md
 guides/representations.md
 guides/vectors.md
+guides/tangents.md
 guides/frames.md
 guides/transforms.md
 packages/coordinax.hypothesis/testing-guide

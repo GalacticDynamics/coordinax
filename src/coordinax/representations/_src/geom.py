@@ -93,7 +93,7 @@ class AbstractGeometry(metaclass=abc.ABCMeta):
     # ===============================================================
     # Wadler-Lindig API
 
-    def __pdoc__(self, *, canonical: bool = False, **kw: Any) -> wl.AbstractDoc:
+    def __pdoc__(self, *, canonical: bool = True, **kw: Any) -> wl.AbstractDoc:
         """Generate a Wadler-Lindig docstring for this Basis.
 
         Parameters
@@ -111,7 +111,7 @@ class AbstractGeometry(metaclass=abc.ABCMeta):
         >>> import coordinax.representations as cxr
 
         >>> geom = cxr.PointGeometry()
-        >>> wl.pprint(geom)
+        >>> wl.pprint(geom, canonical=False)
         PointGeometry()
 
         >>> wl.pprint(geom, canonical=True)
@@ -121,17 +121,42 @@ class AbstractGeometry(metaclass=abc.ABCMeta):
         if canonical and self.canonical_name is not None:
             return wl.TextDoc(self.canonical_name)
 
+        items = field_items(self) if dataclasses.is_dataclass(self) else ()
         return wl.bracketed(
             begin=wl.TextDoc(f"{self.__class__.__name__}("),
-            docs=wl.named_objs(field_items(self), **kw),
+            docs=wl.named_objs(items, **kw),
             sep=wl.comma,
             end=wl.TextDoc(")"),
             indent=kw.get("indent", 4),
         )
 
+    def __repr__(self) -> str:
+        """Return the canonical string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> repr(cxr.point_geom)
+        'point_geom'
+        >>> repr(cxr.PointGeometry())
+        'point_geom'
+
+        """
+        return wl.pformat(self, canonical=True)
+
+    def __str__(self) -> str:
+        """Return the verbose string representation.
+
+        >>> import coordinax.representations as cxr
+        >>> str(cxr.point_geom)
+        'PointGeometry()'
+        >>> str(cxr.PointGeometry())
+        'PointGeometry()'
+
+        """
+        return wl.pformat(self, canonical=False)
+
 
 @final
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class PointGeometry(AbstractGeometry):
     r"""Point geometric kind.
 
@@ -188,7 +213,7 @@ point_geom = PointGeometry()
 
 @final
 @jtu.register_static
-@dataclasses.dataclass(frozen=True, slots=True)
+@dataclasses.dataclass(frozen=True, slots=True, repr=False)
 class TangentGeometry(AbstractGeometry):
     r"""Tangent-vector geometric kind.
 

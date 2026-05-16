@@ -454,6 +454,14 @@ invalid-argument-type = "ignore"
 [tool.ty.terminal]
 output-format = "concise"
 
+[tool.unxt]
+quantity.repr.named_unit     = false
+quantity.repr.short_arrays   = "compact"
+quantity.repr.use_short_name = true
+
+quantity.str.named_unit     = true
+quantity.str.short_arrays   = false
+quantity.str.use_short_name = true
 
 [tool.uv]
 # Temporary constraint to restrict JAX version
@@ -465,17 +473,6 @@ constraint-dependencies = ["numpy<2.4.0"]
 "coordinax.curveframes"     = { workspace = true }
 "coordinax.hypothesis"      = { workspace = true }
 "coordinax.interop.astropy" = { workspace = true }
-
-
-[tool.unxt]
-quantity.repr.named_unit     = false
-quantity.repr.short_arrays   = "compact"
-quantity.repr.use_short_name = true
-
-quantity.str.named_unit     = true
-quantity.str.short_arrays   = false
-quantity.str.use_short_name = true
-
 
 [tool.uv.workspace]
 members = ["packages/*"]

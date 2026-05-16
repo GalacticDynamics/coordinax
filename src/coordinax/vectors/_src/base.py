@@ -16,6 +16,7 @@ import quax_blocks
 import wadler_lindig as wl
 from quax import ArrayValue
 
+import dataclassish
 import quaxed.numpy as jnp
 import unxt as u
 from dataclassish import field_items
@@ -601,8 +602,15 @@ class AbstractVector(
 
         # Special case for identity operations (same frame)
         if isinstance(op, cxfm.Identity):
-            return self  # ty: ignore[invalid-return-type]
+            # Return self only when the frame object is already the target (fast
+            # path that preserves object identity).  When two distinct frame
+            # instances resolve to Identity – e.g. two separate NoFrame() values
+            # – we still rebind so that result.frame is literally toframe,
+            # matching the docstring guarantee of "frame=toframe".
+            if self.frame is toframe:
+                return self  # ty: ignore[invalid-return-type]
+            return dataclassish.replace(self, frame=toframe)  # ty: ignore[invalid-return-type]
 
         # Otherwise, apply the transformation and return a new point
         new = cxfm.act(op, t, self)
-        return dataclasses.replace(new, frame=toframe)
+        return dataclassish.replace(new, frame=toframe)  # ty: ignore[invalid-return-type]

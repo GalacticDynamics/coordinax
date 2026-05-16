@@ -1,34 +1,20 @@
-# Working With Points And Reference Frames
+# Working With Points And Coordinates
 
-This tutorial covers `Point` with a reference frame — coordinax's **richest** coordinate container. A `Point` stores data (components), a chart (coordinate system), a representation (transformation law), a manifold, and optionally a **reference frame**, giving every number full provenance: what it measures, in which system, and from whose perspective.
+This tutorial covers two linked types:
+
+- **`Point`** — a position carrying its chart and reference frame, so every number has full provenance: _what_, _where_, and _from whose perspective_.
+- **`Coordinate`** — a bundle of a `Point` with named `Tangent` fibre fields (velocities, displacements, accelerations). Chart conversion and frame changes propagate to all fields at once.
 
 You will learn how to:
 
-- Construct points with frames from multiple input forms
-- Change chart (coordinate system) with `cconvert`
-- Change reference frame with `to_frame`
-- Apply transforms directly with `act`
-- Inspect and convert units
-- Use frame-attached points with JAX `jit` and `vmap`
+- Construct `Point` objects with reference frames
+- Convert `Point` between charts and frames
+- Bundle a `Point` with `Tangent` fields into a `Coordinate`
+- Convert the whole bundle between charts in one call
+- Change reference frame for the whole bundle
+- Use both types with JAX `jit` and `vmap`
 
-**Prerequisites**: [Working With Vectors](../guides/vectors.md) and [Working With Frames](../guides/frames.md).
-
-```{admonition} Object Levels
-:class: tip
-
-Coordinax supports four levels of coordinate representation, each adding
-more metadata. This tutorial covers the **top level** — a `Point` with a reference frame.
-
-| Level | Type | See tutorial |
-| --- | --- | --- |
-| **Point (with frame)** | `Point` | *this page* |
-| Point (no frame) | `Point` | [Vector tutorial](./vector_objects.md) |
-| CDict | `dict[str, Quantity]` | [CDict tutorial](./cdict_objects.md) |
-| Quantity | `unxt.Quantity` | [Quantity tutorial](./quantity_objects.md) |
-| Array | `jax.Array` | [Array tutorial](./array_objects.md) |
-
-A `Point` always has a `frame` attribute. When constructed without one, it defaults to `NoFrame()`.
-```
+**Prerequisites**: [Working With Vectors](../guides/vectors.md), [Working With Tangent Vectors](./tangent_objects.md), and [Working With Frames](../guides/frames.md).
 
 ## Setup
 
@@ -43,283 +29,285 @@ A `Point` always has a `frame` attribute. When constructed without one, it defau
 >>> import jax
 ```
 
-## What Is A Point With Frame?
+## Part 1: Point — A Position With Frame
 
-A `Point` bundles five things together:
+A `Point` stores a position: component data, a chart (coordinate system), and optionally a **reference frame** — the observer from whose perspective the coordinates are expressed. A `Point` without a frame defaults to `NoFrame()`.
 
-```
-Point = data + chart + rep + manifold + frame
-```
-
-- **data**: component values (e.g. `{"x": Q(1, "km"), ...}`)
-- **chart**: the coordinate system (e.g. Cartesian, spherical)
-- **rep**: the transformation law (point, tangent, etc.)
-- **manifold**: the geometric space
-- **frame**: the reference observer — defaults to `NoFrame()` when omitted
-
-This ensures that **every number carries its full context**: the values, the coordinate system, the transformation law, the manifold, and the observer.
-
-## Constructing Points With Frames
-
-`Point.from_()` accepts an optional frame as the last argument.
-
-### From A Point And Frame
-
-Pass an existing `Point` and a frame — the frame is attached to it:
+### Constructing A Point
 
 ```{code-block} python
->>> vec = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
-... )
+>>> p = cx.Point.from_([1.0, 2.0, 3.0], "km")
+>>> print(p)
+<Point: chart=Cart3D (x, y, z) [km]
+    [1. 2. 3.]>
+```
 
->>> coord = cx.Point.from_(vec, cxf.alice)
->>> coord.chart
-Cart3D(M=Rn(3))
->>> coord.frame
+Pass a frame as the last argument to attach it at construction:
+
+```{code-block} python
+>>> p_alice = cx.Point.from_([1.0, 2.0, 3.0], "km", cxf.alice)
+>>> p_alice.frame
 Alice()
 ```
 
-### From A Component Dictionary And Chart
-
-Pass a component dictionary, chart, and frame:
+Or attach a frame to an existing `Point`:
 
 ```{code-block} python
->>> coord = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")},
-...     cxc.cart3d,
-...     cxf.alice,
-... )
->>> coord.chart
-Cart3D(M=Rn(3))
->>> coord.frame
+>>> p_alice2 = cx.Point.from_(p, cxf.alice)
+>>> p_alice2.frame
 Alice()
 ```
 
-### From An Array, Unit, And Frame
-
-The most compact form — the chart is inferred from the array shape (length 3 → `cart3d`):
+For the most explicit construction — specifying data, chart, and frame:
 
 ```{code-block} python
->>> coord = cx.Point.from_([1, 2, 3], "km", cxf.alice)
->>> coord.chart
+>>> p_explicit = cx.Point.from_(
+...     {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")},
+...     cxc.cart3d, cxf.alice)
+>>> p_explicit.chart
 Cart3D(M=Rn(3))
->>> coord.frame
+>>> p_explicit.frame
 Alice()
 ```
 
-### Full Specification (Dict + Chart + Rep + Frame)
+### Changing Chart
 
-When you need to control every aspect:
-
-```{code-block} python
->>> coord = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")},
-...     cxc.cart3d, cxr.point, cxf.alice,
-... )
->>> coord.rep
-Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
-```
-
-### Default Frame
-
-If no frame is given, `NoFrame` is used:
+`cconvert` preserves the frame; only the chart and component values change:
 
 ```{code-block} python
->>> coord_noframe = cx.Point.from_(
-...     cx.Point.from_({"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")})
-... )
->>> coord_noframe.frame
-NoFrame()
-```
-
-### Passthrough
-
-Passing an existing point returns it unchanged:
-
-```{code-block} python
->>> same = cx.Point.from_(coord)
->>> same is coord
-True
-```
-
-## Inspecting Point Data
-
-Access the components, chart, frame, representation, and manifold directly:
-
-```{code-block} python
->>> coord = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")},
-...     cxc.cart3d, cxf.alice,
-... )
-
->>> coord.chart
-Cart3D(M=Rn(3))
-
->>> coord.frame
-Alice()
-
->>> coord.rep
-Representation(geom_kind=PointGeometry(), basis=NoBasis(), semantic_kind=Location())
-
->>> coord.M
-Rn(3)
-
->>> isinstance(coord, cx.Point)
-True
-
->>> sorted(coord.data.keys())
-['x', 'y', 'z']
-```
-
-## Changing The Chart (Coordinate System)
-
-Use `cconvert()` to change the chart while preserving the frame and the geometric point:
-
-```{code-block} python
->>> coord_cart = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")},
-...     cxc.cart3d, cxf.alice,
-... )
-
->>> coord_sph = coord_cart.cconvert(cxc.sph3d)
->>> coord_sph.chart
+>>> p_sph = p_alice.cconvert(cxc.sph3d)
+>>> p_sph.chart
 Spherical3D(M=Rn(3))
-
->>> coord_sph.frame  # unchanged
+>>> p_sph.frame
 Alice()
-
->>> sorted(coord_sph.data.keys())
-['phi', 'r', 'theta']
 ```
 
-Round-tripping preserves the geometric point:
+Round-tripping:
 
 ```{code-block} python
->>> coord_back = coord_sph.cconvert(cxc.cart3d)
->>> coord_back.chart
+>>> p_back = p_sph.cconvert(cxc.cart3d)
+>>> p_back.chart
 Cart3D(M=Rn(3))
 ```
 
-## Changing The Reference Frame
+### Changing Frame
 
-Use `to_frame()` to transform the point into a different observer's frame. First, build a frame that is rotated 90° about the z-axis relative to Alice:
+`to_frame` transforms the components into the new observer's frame. The chart is preserved:
 
 ```{code-block} python
->>> rot90z = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
->>> rotated_frame = cxf.TransformedReferenceFrame(cxf.alice, rot90z)
-
->>> coord_alice = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
-...     cxc.cart3d, cxf.alice,
-... )
-
->>> coord_rotated = coord_alice.to_frame(rotated_frame)
->>> coord_rotated.frame
-TransformedReferenceFrame(base_frame=Alice(), xop=Rotate(R=f...[3,3]))
+>>> p_alex = p_alice.to_frame(cxf.alex)
+>>> p_alex.frame
+Alex()
+>>> p_alex.chart
+Cart3D(M=Rn(3))
 ```
 
 Identity frame changes are no-ops:
 
 ```{code-block} python
->>> same = coord_alice.to_frame(cxf.alice)
->>> same is coord_alice
+>>> p_alice.to_frame(cxf.alice) is p_alice
 True
 ```
 
-## Combined Pipeline: Frame + Chart
-
-Real workflows often require both frame and chart changes.
-
-```{code-block} python
->>> coord = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")},
-...     cxc.cart3d, cxf.alice,
-... )
-
->>> rotated_frame = cxf.TransformedReferenceFrame(
-...     cxf.alice, cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-... )
-
->>> # Pipeline: change frame, then chart
->>> result = coord.to_frame(rotated_frame).cconvert(cxc.sph3d)
->>> result.chart
-Spherical3D(M=Rn(3))
-
->>> result.frame
-TransformedReferenceFrame(base_frame=Alice(), xop=Rotate(R=f...[3,3]))
-```
-
-When reading a pipeline, each step preserves the geometric point but changes one metadata attribute:
-
-1. `to_frame(...)` changes the **frame** (and component values).
-2. `cconvert(...)` changes the **chart** (and component values).
-3. Both preserve the **represented geometric point**.
-
-## Applying Transforms Directly
-
-Use `cxfm.act()` to apply a transform directly to a point, without building a frame:
-
-```{code-block} python
->>> rot90z = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-
->>> coord = cx.Point.from_(
-...     {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
-...     cxc.cart3d, cxf.alice,
-... )
-
->>> rotated = cxfm.act(rot90z, None, coord)
->>> isinstance(rotated, cx.Point)
-True
-```
-
-The second argument (`None`) is the time parameter `tau` — pass `None` for time-independent transforms. For time-dependent transforms, see the [Time-Dependent Frames](./time_dependent_frames.md) tutorial.
-
-## Unit Conversion
-
-Convert component units with `u.uconvert()`:
-
-```{code-block} python
->>> coord_m = cx.Point.from_(
-...     {"x": u.Q(1000, "m"), "y": u.Q(2000, "m"), "z": u.Q(3000, "m")},
-...     cxc.cart3d, cxf.alice,
-... )
-
->>> coord_km = u.uconvert({"x": "km", "y": "km", "z": "km"}, coord_m)
->>> coord_km.data["x"]
-Q(1., 'km')
-```
-
-## JAX Integration
-
-Coordinates are JAX PyTrees by construction. They work with `jit` and `vmap`:
-
-### JIT Compilation
+To apply a rotation and then convert to spherical in one pipeline:
 
 ```{code-block} python
 >>> rot90z = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
 >>> rotated_frame = cxf.TransformedReferenceFrame(cxf.alice, rot90z)
 
->>> @jax.jit
-... def to_rotated_spherical(c):
-...     return c.to_frame(rotated_frame).cconvert(cxc.sph3d)
+>>> p_rotated_sph = p_alice.to_frame(rotated_frame).cconvert(cxc.sph3d)
+>>> p_rotated_sph.chart
+Spherical3D(M=Rn(3))
+>>> isinstance(p_rotated_sph.frame, cxf.TransformedReferenceFrame)
+True
+```
 
->>> coord = cx.Point.from_(
-...     {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")},
-...     cxc.cart3d, cxf.alice,
+See [point_objects.md](./point_objects.md) for a full walkthrough of `Point` including component dictionaries, applying transforms with `act`, unit conversion, and immutability.
+
+---
+
+## Part 2: Coordinate — Point With Tangent Fields
+
+A `Coordinate` is a **vector bundle**: a base `Point` together with named `Tangent` fibre fields anchored at it.
+
+```
+Coordinate = Point (base) + {name: Tangent} (fibres)
+```
+
+Chart conversion propagates consistently: the base `Point` converts by the chart transition map, and each `Tangent` converts by the **Jacobian pushforward** at the base. On construction, every fibre field whose frame differs from the base point's frame is **automatically converted** to match it, so `pv["velocity"].frame == pv.point.frame` always holds.
+
+### Constructing A Coordinate
+
+Pass a base `Point` and any number of named `Tangent` keyword arguments:
+
+```{code-block} python
+>>> point = cx.Point.from_([1.0, 0.0, 0.0], "m")
+>>> vel = cx.Tangent.from_(
+...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+...     cxc.cart3d, cxr.coord_vel,
 ... )
 
->>> result = to_rotated_spherical(coord)
->>> result.chart
+>>> pv = cx.Coordinate(point=point, velocity=vel)
+>>> isinstance(pv, cx.Coordinate)
+True
+```
+
+### Accessing The Bundle
+
+Properties delegate to the base point; fibre fields are accessed by name:
+
+```{code-block} python
+>>> pv.chart        # delegates to pv.point.chart
+Cart3D(M=Rn(3))
+>>> pv.frame        # delegates to pv.point.frame
+NoFrame()
+>>> list(pv.keys())
+['velocity']
+>>> isinstance(pv["velocity"], cx.Tangent)
+True
+>>> pv["velocity"].semantic
+vel
+```
+
+### Multiple Fibre Fields
+
+A `Coordinate` can hold any number of named tangent fields:
+
+```{code-block} python
+>>> acc = cx.Tangent.from_(
+...     {"x": u.Q(0.0, "m/s^2"), "y": u.Q(0.0, "m/s^2"), "z": u.Q(-9.8, "m/s^2")},
+...     cxc.cart3d, cxr.coord_acc,
+... )
+
+>>> pv2 = cx.Coordinate(point=point, velocity=vel, acceleration=acc)
+>>> sorted(pv2.keys())
+['acceleration', 'velocity']
+>>> pv2["acceleration"].semantic
+acc
+```
+
+### Converting Charts (The Whole Bundle)
+
+`cconvert` converts **all fields at once**:
+
+1. Base `Point` converts by the chart transition map.
+2. Each `Tangent` converts by the **Jacobian pushforward** at the base point.
+
+```{code-block} python
+>>> pv_sph = pv.cconvert(cxc.sph3d)
+>>> pv_sph.point.chart
+Spherical3D(M=Rn(3))
+>>> pv_sph["velocity"].chart
 Spherical3D(M=Rn(3))
 ```
 
-## When To Track Reference Frames
+Round-tripping:
 
-Attach a frame to a `Point` when you need **full provenance**:
+```{code-block} python
+>>> pv_back = pv_sph.cconvert(cxc.cart3d)
+>>> pv_back.point.chart
+Cart3D(M=Rn(3))
+```
 
-- You are tracking data from multiple observers and need to know which frame each measurement is in.
-- You want `to_frame()` semantics to transform between observers.
-- Your workflow chains frame transitions and chart conversions.
-- You are building an astronomy pipeline where frames like ICRS and Galactocentric are first-class concepts.
+Override the target chart for individual fields with `field_charts`:
 
-If you do not need frame tracking, omit the frame — a `Point` without one defaults to `NoFrame()` and is otherwise identical. See the [Vector tutorial](./vector_objects.md) for the frame-free workflow.
+```{code-block} python
+>>> pv_mixed = pv.cconvert(cxc.sph3d, field_charts={"velocity": cxc.cyl3d})
+>>> pv_mixed.point.chart
+Spherical3D(M=Rn(3))
+>>> pv_mixed["velocity"].chart
+Cylindrical3D(M=Rn(3))
+```
+
+### Changing Reference Frame
+
+`to_frame` moves **all fields** into the new frame. Construct the framed pieces first, then bundle:
+
+```{code-block} python
+>>> point_alice = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
+>>> vel_alice = cx.Tangent.from_(vel, cxf.alice)
+>>> pv_alice = cx.Coordinate(point=point_alice, velocity=vel_alice)
+
+>>> pv_alex = pv_alice.to_frame(cxf.alex)
+>>> pv_alex.frame
+Alex()
+>>> pv_alex["velocity"].frame
+Alex()
+```
+
+### Automatic Frame Alignment
+
+If a fibre field's frame differs from the base point's frame on construction, it is **automatically converted** to the base's frame. No manual conversion needed:
+
+```{code-block} python
+>>> vel_alex = cx.Tangent.from_(vel, cxf.alex)
+
+>>> # point is alice, vel is alex — vel is silently converted to alice
+>>> pv_auto = cx.Coordinate(point=point_alice, velocity=vel_alex)
+>>> pv_auto["velocity"].frame
+Alice()
+```
+
+### Combined Pipeline: Frame + Chart
+
+Frame changes and chart conversions can be chained:
+
+```{code-block} python
+>>> result = pv_alice.to_frame(rotated_frame).cconvert(cxc.sph3d)
+>>> result.point.chart
+Spherical3D(M=Rn(3))
+>>> isinstance(result.frame, cxf.TransformedReferenceFrame)
+True
+```
+
+### Indexing A Batched Coordinate
+
+Integer/slice indexing applies to the base point and all fibre fields together:
+
+```{code-block} python
+>>> pts = cx.Point.from_(jnp.ones((4, 3)), "m")
+>>> vels = cx.Tangent.from_(jnp.zeros((4, 3)), "m/s")
+>>> pv_batch = cx.Coordinate(point=pts, velocity=vels)
+
+>>> pv_0 = pv_batch[0]
+>>> pv_0.point.shape
+()
+```
+
+## JAX Integration
+
+Both `Point` and `Coordinate` are JAX PyTrees and work with all JAX transformations.
+
+### JIT Compilation
+
+```{code-block} python
+>>> to_spherical = jax.jit(lambda coord: coord.cconvert(cxc.sph3d))
+
+>>> result = to_spherical(pv)
+>>> result.point.chart
+Spherical3D(M=Rn(3))
+```
+
+### Vectorisation With vmap
+
+```{code-block} python
+>>> pts_batch = cx.Point.from_(
+...     jnp.stack([jnp.array([1.0, 0.0, 0.0]), jnp.array([0.0, 1.0, 0.0])]), "m"
+... )
+>>> vels_batch = cx.Tangent.from_(jnp.zeros((2, 3)), "m/s")
+>>> pv_batch2 = cx.Coordinate(point=pts_batch, velocity=vels_batch)
+
+>>> pv_sph_batch = jax.vmap(to_spherical)(pv_batch2)
+>>> pv_sph_batch.point.chart
+Spherical3D(M=Rn(3))
+```
+
+## When To Use
+
+| You have | Use |
+| --- | --- |
+| Position only | `Point` (Part 1 of this tutorial) |
+| Velocity / displacement / acceleration only | `Tangent` — see [Tangent tutorial](./tangent_objects.md) |
+| Position + tangent field(s) | `Coordinate` (Part 2 of this tutorial) |
+
+Use `Coordinate` when you need chart conversion to apply the correct transformation law to every field automatically, or when frame changes must propagate to all fields at once.

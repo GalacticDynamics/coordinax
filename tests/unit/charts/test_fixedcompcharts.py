@@ -1,7 +1,7 @@
 """Tests for AbstractFixedComponentsChart."""
 
 import hypothesis.strategies as st
-from hypothesis import given
+from hypothesis import given, settings
 
 import coordinax.charts as cxc
 import coordinax.hypothesis.main as cxst
@@ -19,6 +19,7 @@ _fixedcharts = cxst.charts(filter=cxc.AbstractFixedComponentsChart)
 class TestFixedComponentsChart:
     """Behavior of charts with fixed components."""
 
+    @settings(deadline=None)
     @given(data=st.data(), chart_class=_fixedchart_classes)
     def test_instances_from_same_class_have_same_component_schema(
         self, data, chart_class

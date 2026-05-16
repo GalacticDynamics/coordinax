@@ -113,13 +113,13 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def components(self) -> Ks:
         """The names of the components."""
-        ...
+        raise NotImplementedError  # pragma: no cover
 
     @property
     @abc.abstractmethod
     def coord_dimensions(self) -> Ds:
         """The dimensions of the components."""
-        ...
+        raise NotImplementedError  # pragma: no cover
 
     @property
     def ndim(self) -> int:

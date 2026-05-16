@@ -6,19 +6,27 @@ from dataclasses import replace
 
 from typing import Any, cast
 
+import jax.tree as jtu
 import plum
 
+import dataclassish
+import quaxed.numpy as jnp
+import unxt.quantity as uq
+
+import coordinax.api.representations as cxrapi
 import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
-from .custom_types import CDict, OptUSys
+from .bundle import Coordinate
 from .point import Point
+from .tangent import Tangent
+from coordinax.internal import CDict, OptUSys
 
 CHART_MSMTCH = "from_chart {0} does not match the point's chart {1.chart}"
 
 # ===================================================================
-# Vector conversion
+# Tangent conversion
 
 
 @plum.dispatch
@@ -156,6 +164,229 @@ def cdict(obj: Point, /) -> CDict:
     return obj.data
 
 
+@plum.dispatch
+def cdict(obj: Tangent, /) -> CDict:
+    """Extract component dictionary from a Tangent.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.representations as cxr
+    >>> import unxt as u
+    >>> vec = cx.Tangent.from_(
+    ...     u.Q([1.0, 2.0, 3.0], "m/s"), "m/s", cx.cart3d, cxr.coord_basis, cxr.vel
+    ... )
+    >>> d = cx.cdict(vec)
+    >>> list(d.keys())
+    ['x', 'y', 'z']
+
+    """
+    return obj.data
+
+
+# ===================================================================
+# Tangent cconvert
+
+
+@plum.dispatch
+def cconvert(
+    from_vec: Tangent,
+    to_chart: cxc.AbstractChart,
+    /,
+    *,
+    at: Any = None,
+    usys: OptUSys = None,
+) -> Tangent:
+    """Convert a tangent Tangent from one chart to another.
+
+    The ``at`` parameter provides the base point at which the tangent map
+    (Jacobian pushforward) is evaluated. It may be a `Point` instance
+    (whose ``.data`` is used) or a raw ``CDict``.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_basis, cxr.vel,
+    ... )
+    >>> pt = cx.Point.from_([1.0, 0.0, 0.0], "m")
+    >>> v_sph = cx.cconvert(v, cxc.sph3d, at=pt)
+    >>> v_sph.chart
+    Spherical3D(M=Rn(3))
+
+    """
+    if from_vec.chart != to_chart:
+        if at is None:
+            msg = (
+                f"'at' is required when converting a Tangent between different charts "
+                f"({from_vec.chart!r} -> {to_chart!r}): "
+                "the Jacobian pushforward needs a base point."
+            )
+            raise TypeError(msg)
+        if isinstance(at, Point) and at.chart != from_vec.chart:
+            msg = (
+                f"'at' chart {at.chart!r} does not match "
+                f"the source chart {from_vec.chart!r}."
+            )
+            raise ValueError(msg)
+    at_data: CDict | None = at.data if isinstance(at, Point) else at
+    p = cxr.cconvert(
+        from_vec.data,
+        from_vec.chart,
+        from_vec.rep,
+        to_chart,
+        **({"at": at_data} if at_data is not None else {}),
+        usys=usys,
+    )
+    return replace(from_vec, data=p, chart=to_chart)
+
+
+@plum.dispatch
+def cconvert(
+    from_vec: Tangent,
+    from_chart: cxc.AbstractChart,
+    to_chart: cxc.AbstractChart,
+    /,
+    *,
+    at: Any = None,
+    usys: OptUSys = None,
+) -> Tangent:
+    """Convert a tangent Tangent from one chart to another (explicit from-chart).
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_basis, cxr.vel,
+    ... )
+    >>> pt = cx.Point.from_([1.0, 0.0, 0.0], "m")
+    >>> v_sph = cx.cconvert(v, cxc.cart3d, cxc.sph3d, at=pt)
+    >>> v_sph.chart
+    Spherical3D(M=Rn(3))
+
+    """
+    if from_chart != from_vec.chart:
+        raise ValueError(CHART_MSMTCH.format(from_chart, from_vec))
+    return cxrapi.cconvert(from_vec, to_chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+
+
+# ===================================================================
+# Basis change
+
+
+@plum.dispatch
+def change_basis(
+    v: Tangent,
+    to_basis: cxr.AbstractLinearBasis,
+    /,
+    *,
+    at: Any = None,
+    usys: OptUSys = None,
+) -> Tangent:
+    """Change the basis of a `Tangent` vector.
+
+    Converts the component data from the current basis to ``to_basis`` using
+    the registered ``change_basis`` overload for dicts, then returns a new
+    `Tangent` with the updated data and basis.
+
+    The ``at`` parameter provides the base point at which the scale factors
+    are evaluated.  It may be a `Point` instance (whose ``.data`` is used) or
+    a raw ``CDict``.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    Convert a coordinate-basis spherical velocity to the physical basis:
+
+    >>> point = cx.Point.from_(
+    ...     {"r": u.Q(1.0, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(0.0, "rad")},
+    ...     cxc.sph3d,
+    ... )
+    >>> vel = cx.Tangent.from_({"r": u.Q(1.0, "m/s"), "theta": u.Q(0.0, "rad/s"),
+    ...     "phi": u.Q(0.0, "rad/s")}, cxc.sph3d, cxr.coord_vel)
+    >>> vel_phys = cxr.change_basis(vel, cxr.phys_basis, at=point)
+    >>> vel_phys.basis
+    phys_basis
+    >>> vel_phys.rep
+    phys_vel
+
+    """
+    if v.basis != to_basis:
+        if at is None:
+            msg = (
+                f"'at' is required when changing the basis of a Tangent "
+                f"({v.basis!r} -> {to_basis!r}): "
+                "scale factors need a base point."
+            )
+            raise TypeError(msg)
+        if isinstance(at, Point) and at.chart != v.chart:
+            msg = (
+                f"'at' chart {at.chart!r} does not match "
+                f"the vector's chart {v.chart!r}."
+            )
+            raise ValueError(msg)
+    at_data: CDict | None = at.data if isinstance(at, Point) else at
+    new_data = cxr.change_basis(
+        v.data,
+        v.chart,
+        v.basis,
+        to_basis,
+        **({"at": at_data} if at_data is not None else {}),
+        usys=usys,
+    )
+    return replace(v, data=new_data, basis=to_basis)
+
+
+@plum.dispatch
+def change_basis(
+    v: Point, to_basis: cxr.AbstractLinearBasis, /, *, at: Any = None, usys: Any = None
+) -> Tangent:
+    """Promote a `Point` to a `Tangent` with `Displacement` semantics.
+
+    The component data are unchanged; only the geometric interpretation is
+    recast from a manifold point (`PointGeometry`) to a tangent-space
+    displacement vector (`TangentGeometry`, `Displacement`).  The resulting
+    `Tangent` carries the same chart and frame as the input `Point`, and its
+    basis is ``to_basis``.
+
+    The ``at`` and ``usys`` parameters are accepted for API consistency but
+    are not used.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.representations as cxr
+
+    >>> pt = cx.Point.from_([1.0, 2.0, 3.0], "m")
+    >>> disp = cxr.change_basis(pt, cxr.coord_basis)
+    >>> disp.semantic
+    dpl
+    >>> disp.basis
+    coord_basis
+    >>> disp.chart == pt.chart
+    True
+
+    """
+    return Tangent(  # ty: ignore[missing-argument]
+        data=v.data, chart=v.chart, basis=to_basis, semantic=cxr.dpl, frame=v.frame
+    )
+
+
 # ===================================================================
 # Add / Subtract
 
@@ -226,8 +457,113 @@ def subtract(lhs: Point, rhs: Point, /) -> Point:
     return replace(lhs, data=result_data)
 
 
+@plum.dispatch
+def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
+    """Add two tangent vectors component-wise.
+
+    Tangent spaces are genuine vector spaces: addition is component-wise in
+    any chart basis (no Cartesian round-trip is needed or correct).  Both
+    operands must share the same representation (chart + basis + semantic).
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v1 = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> v2 = cx.Tangent.from_(
+    ...     {"x": u.Q(4.0, "m/s"), "y": u.Q(5.0, "m/s"), "z": u.Q(6.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> result = cxr.add(v1, v2)
+    >>> result["x"]
+    Q(5., 'm / s')
+
+    """
+    if lhs.rep != rhs.rep:
+        msg = (
+            f"Cannot add Tangent vectors with different representations: "
+            f"{lhs.rep!r} vs {rhs.rep!r}."
+        )
+        raise ValueError(msg)
+
+    data = jtu.map(jnp.add, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
+    return replace(lhs, data=data)
+
+
+@plum.dispatch
+def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
+    """Subtract two tangent vectors component-wise.
+
+    Tangent spaces are genuine vector spaces: subtraction is component-wise in
+    any chart basis (no Cartesian round-trip is needed or correct).  Both
+    operands must share the same representation (chart + basis + semantic).
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+
+    >>> v1 = cx.Tangent.from_(
+    ...     {"x": u.Q(4.0, "m/s"), "y": u.Q(5.0, "m/s"), "z": u.Q(6.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> v2 = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_vel,
+    ... )
+    >>> result = cxr.subtract(v1, v2)
+    >>> result["x"]
+    Q(3., 'm / s')
+
+    """
+    if lhs.rep != rhs.rep:
+        msg = (
+            f"Cannot subtract Tangent vectors with different representations: "
+            f"{lhs.rep!r} vs {rhs.rep!r}."
+        )
+        raise ValueError(msg)
+
+    data = jtu.map(jnp.subtract, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
+    return replace(lhs, data=data)
+
+
 # ===================================================================
 # `coordinax.representations`
+
+
+@plum.dispatch
+def act(op: cxfm.AbstractTransform, tau: Any, x: Tangent, /, **kw: Any) -> Tangent:
+    """Act a frame transform on a tangent Tangent.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+
+    >>> Rz = jnp.asarray([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+    >>> op = cx.Rotate(Rz)
+    >>> v = cx.Tangent.from_(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+    ...     cx.cart3d, cx.coord_vel,
+    ... )
+    >>> transformed = cx.act(op, None, v)
+    >>> print(transformed)
+    <Tangent: chart=Cart3D (x, y, z) [m / s]
+        [0. 1. 0.]>
+
+    """
+    data = cxfmapi.act(op, tau, x.data, x.chart, x.rep, **kw)
+    return replace(x, data=data)
 
 
 @plum.dispatch
@@ -256,3 +592,136 @@ def act(op: cxfm.AbstractTransform, tau: Any, x: Point, /, **kw: Any) -> Point:
     """
     data = cxfmapi.act(op, tau, x.data, x.chart, x.rep, **kw)
     return replace(x, data=data)
+
+
+@plum.dispatch
+def act(
+    op: cxfm.AbstractTransform, tau: Any, x: Coordinate, /, **kw: Any
+) -> Coordinate:
+    """Act a frame transform on a Coordinate (point + all fibres).
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import unxt as u
+
+    >>> point = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
+    >>> vel = cx.Tangent(
+    ...     {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+    ...     cxc.cart3d, cxr.coord_basis, cxr.vel, frame=cxf.alice,
+    ... )
+    >>> pv = cx.Coordinate(point=point, velocity=vel)
+    >>> pv_alex = pv.to_frame(cxf.alex)
+    >>> pv_alex.frame
+    Alex()
+    >>> pv_alex["velocity"].frame
+    Alex()
+
+    """
+    new_point = cxfm.act(op, tau, x.point, **kw)
+    # Inject the base-point data as 'at' so non-Cartesian tangent dispatches
+    # can evaluate the Jacobian at the correct location.  Callers may
+    # override this by passing their own 'at' in **kw.
+    # 'at' is resolved per-fibre: if the fibre's chart differs from the
+    # point's chart (possible via _create_unchecked / cconvert with
+    # field_charts=), we convert the base point into the fibre's chart first
+    # so as not to violate Tangent's at-chart requirement.
+    kw_base = dict(kw)
+    new_fields: dict[str, Any] = {}
+    for name, fibre in x._data.items():
+        if "at" not in kw_base:
+            if fibre.chart == x.point.chart:
+                at_data = x.point.data
+            else:
+                at_data = cast("Point", cxr.cconvert(x.point, fibre.chart)).data
+            fibre_kw = {**kw_base, "at": at_data}
+        else:
+            fibre_kw = kw_base
+        new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
+    return Coordinate(point=new_point, **new_fields)
+
+
+@dataclassish.replace.dispatch  # type: ignore[attr-defined]
+def _replace_coordinate(coord: Coordinate, /, **kwargs: Any) -> Coordinate:
+    """Replace fields on a Coordinate.
+
+    Supports replacing ``point``, any named fibre field, or ``frame``.
+    When ``frame`` is supplied, it is forwarded to both the base ``point`` and
+    every fibre field so the bundle stays internally consistent.
+
+    Unknown keys are rejected with a ``TypeError``.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.frames as cxf
+
+    >>> point = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
+    >>> pv = cx.Coordinate(point=point)
+    >>> import dataclassish
+
+    Replace the frame (propagates to point and all fibres):
+
+    >>> pv2 = dataclassish.replace(pv, frame=cxf.alex)
+    >>> pv2.frame
+    Alex()
+
+    Replace the base point directly:
+
+    >>> point2 = cx.Point.from_([2.0, 0.0, 0.0], "m", cxf.alice)
+    >>> pv3 = dataclassish.replace(pv, point=point2)
+    >>> pv3.point is point2
+    True
+
+    """
+    # Validate: reject unknown keys up front
+    valid_keys = {"frame", "point"} | coord._data.keys()
+    unknown = set(kwargs) - valid_keys
+    if unknown:
+        msg = (
+            f"dataclassish.replace(Coordinate, ...): unknown field(s) {unknown!r}. "
+            f"Valid fields are: {sorted(valid_keys)!r}."
+        )
+        raise TypeError(msg)
+
+    frame = kwargs.pop("frame", None)
+    new_point = kwargs.pop("point", coord.point)
+    # Remaining kwargs are fibre-field replacements
+    new_fields = dict(coord._data)
+    new_fields.update(kwargs)
+
+    if frame is not None:
+        new_point = replace(new_point, frame=frame)
+        new_fields = {name: replace(f, frame=frame) for name, f in new_fields.items()}
+
+    return Coordinate(point=new_point, **new_fields)
+
+
+# ===================================================================
+# Coordinate conversion
+
+
+@plum.dispatch
+def cconvert(
+    pv: Coordinate, to_chart: cxc.AbstractChart, /, *, usys: OptUSys = None
+) -> Coordinate:
+    """Convert a Coordinate to a new chart.
+
+    Delegates to {meth}`Coordinate.cconvert`.
+
+    Examples
+    --------
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+
+    >>> pt = cx.Point.from_([1.0, 0.0, 0.0], "m")
+    >>> pv = cx.Coordinate(point=pt)
+    >>> pv_sph = cx.cconvert(pv, cxc.sph3d)
+    >>> pv_sph.point.chart
+    Spherical3D(M=Rn(3))
+
+    """
+    return pv.cconvert(to_chart, usys=usys)
