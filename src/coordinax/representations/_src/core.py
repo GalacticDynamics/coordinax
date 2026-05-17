@@ -25,8 +25,6 @@ from .rep import Representation
 def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
     """Return a partial function for vector conversion.
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr
@@ -77,8 +75,6 @@ def cmap(*fixed_args: Any, **fixed_kw: Any) -> Any:
 def cconvert(obj: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     r"""Return a partial function for vector conversion.
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr
@@ -121,8 +117,6 @@ def cconvert(
 ) -> Any:
     r"""Convert point data between charts.
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr
@@ -216,8 +210,6 @@ def cconvert(
 ) -> Any:
     r"""Convert point data between charts.
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr
@@ -283,14 +275,11 @@ def cconvert(
 ) -> Any:
     r"""Convert point data between charts.
 
-    This function delegates to `coordinax.charts.pt_map`.
-    The representation arguments are checked to ensure they correspond to
-    canonical point data:
+    This function delegates to `coordinax.charts.pt_map`.  The representation
+    arguments are checked to ensure they correspond to canonical point data:
 
     $$(\mathrm{PointGeometry},\, \mathrm{NoBasis},\, \mathrm{Location}).$$
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr
@@ -332,8 +321,6 @@ def cconvert(
 ) -> Any:
     r"""Convert tangent data between charts via Jacobian pushforward.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr
@@ -426,8 +413,6 @@ def add(
     global Cartesian), ``rhs`` is converted into ``lhs_chart`` and added
     directly.
 
-    Examples
-    --------
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -465,8 +450,6 @@ def subtract(
     global Cartesian), ``rhs`` is converted into ``lhs_chart`` and
     subtracted directly.
 
-    Examples
-    --------
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
     >>> import unxt as u

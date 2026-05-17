@@ -240,8 +240,6 @@ def from_(
 def from_(cls: type[AbstractTransform], obj: Mapping[str, Any], /) -> AbstractTransform:
     """Construct from a mapping.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
     >>> cxfm.Composed.from_({"transforms": (cxfm.Identity(), cxfm.Identity())})
     Composed((Identity(), Identity()))
@@ -259,10 +257,7 @@ def from_(
 ) -> AbstractTransform:
     """Construct from a Quantity's value and unit.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
-
     >>> op = cxfm.Translate.from_([1, 1, 1], "km")
     >>> print(op)
     Translate(

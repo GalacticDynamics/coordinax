@@ -16,7 +16,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .base import AbstractTransform
 from .custom_types import CDict
-from coordinax.internal import QuantityMatrix, pack_nonuniform_unit, pack_uniform_unit
+from coordinax.internal import QMatrix, pack_nonuniform_unit, pack_uniform_unit
 
 _MSG_CHARTS_MATCH: Final = (
     "inferred chart guess_chart(x)={0.__class__.__name__} "
@@ -77,8 +77,6 @@ def act(
     with a Cartesian chart (e.g. `coordinax.charts.Cartesian3D`) and
     `coordinax.representations.PointGeometry` geometry.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.main as cx
@@ -120,8 +118,6 @@ def act(
     with a Cartesian chart (e.g. `coordinax.charts.Cartesian3D`) and
     `coordinax.representations.PointGeometry` geometry.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.main as cx
@@ -150,8 +146,6 @@ def act(op: AbstractTransform, tau: Any, x: AbcQ, /, **kw: Any) -> AbcQ:
     `coordinax.charts.Cartesian3D`) and
     `coordinax.representations.PointGeometry` geometry.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.main as cx
@@ -180,8 +174,6 @@ def act(
 ) -> AbcQ:
     """Apply operator, routing through dictionary-based implementation.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
@@ -218,8 +210,6 @@ def act(
 ) -> AbcQ:
     """Apply operator, routing through dictionary-based implementation.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
@@ -246,9 +236,9 @@ def act(
 
 
 # ===================================================================
-# On QuantityMatrix inputs
+# On QMatrix inputs
 #
-# Precedence=2 on all QuantityMatrix dispatches so they are preferred over
+# Precedence=2 on all QMatrix dispatches so they are preferred over
 # the (SpecificTransform, AbstractQuantity) dispatches in rotate.py,
 # translate.py, and composed.py (precedence=0) AND over the Identity
 # catch-all (precedence=1). Without this, plum sees e.g.
@@ -257,23 +247,19 @@ def act(
 
 
 @plum.dispatch(precedence=2)  # ty: ignore[no-matching-overload]
-def act(
-    op: AbstractTransform, tau: Any, x: QuantityMatrix, /, **kw: Any
-) -> QuantityMatrix:
-    """Apply an operator to a ``QuantityMatrix``.
+def act(op: AbstractTransform, tau: Any, x: QMatrix, /, **kw: Any) -> QMatrix:
+    """Apply an operator to a ``QMatrix``.
 
     The chart is inferred from the matrix size and the representation defaults
     to ``point``.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> qm = QuantityMatrix(
+    >>> qm = QMatrix(
     ...     jnp.array([1.0, 0.0, 0.0]),
     ...     unit=(u.unit("km"), u.unit("km"), u.unit("km")),
     ... )
@@ -284,29 +270,27 @@ def act(
     """
     chart = cxc.guess_chart(x)
     out = cxfmapi.act(op, tau, x, chart, cxr.point, **kw)
-    return cast("QuantityMatrix", out)
+    return cast("QMatrix", out)
 
 
 @plum.dispatch(precedence=2)  # ty: ignore[no-matching-overload]
 def act(
     op: AbstractTransform,
     tau: Any,
-    x: QuantityMatrix,
+    x: QMatrix,
     chart: cxc.AbstractChart,
     /,
     **kw: Any,
-) -> QuantityMatrix:
-    """Apply an operator to a ``QuantityMatrix`` with explicit chart.
+) -> QMatrix:
+    """Apply an operator to a ``QMatrix`` with explicit chart.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
-    >>> qm = QuantityMatrix(
+    >>> qm = QMatrix(
     ...     jnp.array([1.0, 0.0, 0.0]),
     ...     unit=("km", "km", "km"),
     ... )
@@ -323,35 +307,33 @@ def act(
 
     """
     out = cxfmapi.act(op, tau, x, chart, cxr.point, **kw)
-    return cast("QuantityMatrix", out)
+    return cast("QMatrix", out)
 
 
 @plum.dispatch(precedence=2)  # ty: ignore[no-matching-overload]
 def act(
     op: AbstractTransform,
     tau: Any,
-    x: QuantityMatrix,
+    x: QMatrix,
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
     /,
     **kw: Any,
-) -> QuantityMatrix:
-    """Apply an operator to a ``QuantityMatrix`` with explicit chart and rep.
+) -> QMatrix:
+    """Apply an operator to a ``QMatrix`` with explicit chart and rep.
 
     Routes through the CDict-based implementation, then repacks the result
-    into a ``QuantityMatrix``.
+    into a ``QMatrix``.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
     >>> import coordinax.representations as cxr
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> qm = QuantityMatrix(
+    >>> qm = QMatrix(
     ...     jnp.array([1.0, 0.0, 0.0]),
     ...     unit=("km", "km", "km"),
     ... )
@@ -360,13 +342,13 @@ def act(
     Array([0., 1., 0.], dtype=float64)
 
     """
-    # Convert QuantityMatrix → CDict
+    # Convert QMatrix → CDict
     v = cxc.cdict(x, chart)
     # Act on the CDict
     nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
-    # Repack CDict → QuantityMatrix
+    # Repack CDict → QMatrix
     arr, units = pack_nonuniform_unit(nv, keys=chart.components)
-    return QuantityMatrix(arr, unit=units)
+    return QMatrix(arr, unit=units)
 
 
 # ===================================================================
@@ -377,8 +359,6 @@ def act(
 def act(op: AbstractTransform, tau: Any, x: CDict, /, **kw: Any) -> CDict:
     """Apply operator to a CDict representation of a vector.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
@@ -404,8 +384,6 @@ def act(
 ) -> CDict:
     """Apply operator to a CDict representation of a vector.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm

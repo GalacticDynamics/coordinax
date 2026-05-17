@@ -28,8 +28,6 @@ Ts = TypeVarTuple("Ts")
 def convert_to_transforms_tuple(inp: Any, /) -> tuple[AbstractTransform, ...]:
     """Convert to a tuple of transforms for `Pipe`.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
 
     >>> op1 = cxfm.Rotate([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
@@ -202,8 +200,6 @@ class Composed(AbstractCompositeTransform, Generic[*Ts]):
 def compose(*transforms: AbstractTransform) -> Composed:
     """Compose multiple transforms into a `Composed` transform.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
 
     >>> shift = cxfm.Translate.from_([1, 2, 3], "km")
@@ -239,8 +235,6 @@ def act(
 ) -> Array:
     """Apply Composed to an ArrayLike by sequentially applying each transform.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
@@ -274,8 +268,6 @@ def act(
 ) -> CDict:
     """Apply Composed to a CDict by sequentially applying each transform.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
@@ -321,8 +313,6 @@ def act(
 ) -> u.AbstractQuantity:
     """Apply Composed to a Quantity by sequentially applying each transform.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.transforms as cxfm
@@ -347,8 +337,6 @@ def act(
 ) -> u.AbstractQuantity:
     """Apply Composed to a Quantity by sequentially applying each transform.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
 
@@ -373,8 +361,6 @@ def act(
 def simplify(op: Composed, /) -> AbstractTransform:
     """Simplify a Composed transform.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
 
     >>> shift = cxfm.Translate.from_([1, 2, 3], "km")

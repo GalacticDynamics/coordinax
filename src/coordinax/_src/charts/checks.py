@@ -16,8 +16,6 @@ _pid = u.Angle(jnp.array(180), "deg")
 def polar_range(polar: AbcQ, _l: AbcQ = _0d, _u: AbcQ = _pid, /) -> AbcQ:
     """Check that the polar angle is in the range.
 
-    Examples
-    --------
     >>> import unxt as u
 
     Pass through the input if it's in the range.
@@ -55,8 +53,6 @@ def strictly_positive(
 ) -> u.AbstractQuantity:
     """Check that the input is non-negative and non-zero.
 
-    Examples
-    --------
     >>> import unxt as u
 
     Pass through the input if the value is non-negative.
@@ -99,8 +95,6 @@ def leq(
 ) -> u.AbstractQuantity:
     """Check that the input value is less than or equal to the input maximum value.
 
-    Examples
-    --------
     >>> import unxt as u
 
     Pass through the input if the value is less than or equal to the max value:
@@ -130,8 +124,6 @@ def geq(
 ) -> u.AbstractQuantity:
     """Check that the input value is greater than or equal to the input minimum value.
 
-    Examples
-    --------
     >>> import unxt as u
 
     Pass through the input if the value is greater than or equal to the min value:

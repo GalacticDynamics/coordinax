@@ -139,8 +139,6 @@ def act(
     The array is interpreted as Cartesian coordinates. The delta is converted
     to the same unit system to perform the addition.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.transforms as cxfm
 
@@ -210,8 +208,6 @@ def act(
     The array is interpreted as Cartesian coordinates. The delta is converted
     to the same unit system to perform the addition.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.transforms as cxfm
     >>> import coordinax.representations as cxr
@@ -266,8 +262,6 @@ def act(
     Dispatches on ``op.semantic_kind`` to determine which representations
     are shifted.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
     >>> import unxt as u
 

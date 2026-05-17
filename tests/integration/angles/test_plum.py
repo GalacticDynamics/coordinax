@@ -12,7 +12,7 @@ import coordinax.hypothesis.main as cxst
 def test_promotion_rule(a):
     """Test the promotion rule for angles."""
     # Quantities
-    q = u.Q(1.0, "rad")
+    q = u.Q(1, "rad")
 
     # Explicit promotion test
     a_p, q_p = promote(a, q)

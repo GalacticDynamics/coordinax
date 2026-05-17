@@ -16,8 +16,6 @@ from .point import Point
 def replace(obj: Point, /, **kwargs: Any) -> Point:
     """Replace fields of a point.
 
-    Examples
-    --------
     >>> import dataclassish
     >>> import unxt as u
     >>> import coordinax.main as cx

@@ -33,15 +33,12 @@ import coordinax.hypothesis.main as cxst
 
 # Non-negative, bounded to avoid overflow
 _dist_kpc = cxst.distances(
-    unit="kpc",
-    elements=st.floats(min_value=0.0, max_value=3.0, width=32),
+    unit="kpc", elements=st.floats(min_value=0, max_value=3, width=32)
 )
 
 # Wider range for vmap/grad tests
 _dist_kpc_arr = cxst.distances(
-    unit="kpc",
-    shape=(4,),
-    elements=st.floats(min_value=0.0, max_value=2.0, width=32),
+    unit="kpc", shape=(4,), elements=st.floats(min_value=0, max_value=2, width=32)
 )
 
 
@@ -54,9 +51,9 @@ class TestQuaxedUnary:
         ("value", "fn", "expected"),
         [
             (1.5, qnp.abs, 1.5),
-            (1.7, qnp.floor, 1.0),
-            (1.2, qnp.ceil, 2.0),
-            (1.6, qnp.round, 2.0),
+            (1.7, qnp.floor, 1),
+            (1.2, qnp.ceil, 2),
+            (1.6, qnp.round, 2),
         ],
     )
     def test_known_value_returns_distance(
@@ -105,10 +102,7 @@ class TestQuaxedBinary:
 
     @pytest.mark.parametrize(
         ("a_val", "b_val", "fn", "expected"),
-        [
-            (1.0, 0.5, qnp.add, 1.5),
-            (1.5, 0.5, qnp.subtract, 1.0),
-        ],
+        [(1, 0.5, qnp.add, 1.5), (1.5, 0.5, qnp.subtract, 1)],
     )
     def test_known_value(
         self, a_val: float, b_val: float, fn: object, expected: float
@@ -119,16 +113,16 @@ class TestQuaxedBinary:
 
     def test_multiply_by_scalar(self) -> None:
         """Multiplying a Distance by a plain scalar returns a Distance."""
-        result = qnp.multiply(cxd.Distance(1.5, "kpc"), 2.0)
+        result = qnp.multiply(cxd.Distance(1.5, "kpc"), 2)
         assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, 3.0)
+        assert jnp.allclose(result.value, 3)
 
     @given(
         a=cxst.distances(
-            unit="kpc", elements=st.floats(min_value=0.0, max_value=3.0, width=32)
+            unit="kpc", elements=st.floats(min_value=0, max_value=3, width=32)
         ),
         b=cxst.distances(
-            unit="kpc", elements=st.floats(min_value=0.0, max_value=3.0, width=32)
+            unit="kpc", elements=st.floats(min_value=0, max_value=3, width=32)
         ),
     )
     def test_add_commutativity(self, a: cxd.Distance, b: cxd.Distance) -> None:
@@ -146,10 +140,10 @@ class TestQuaxedReductions:
     @pytest.mark.parametrize(
         ("values", "fn", "expected"),
         [
-            ([1.0, 2.0, 3.0], qnp.sum, 6.0),
-            ([0.0, 2.0, 4.0], qnp.mean, 2.0),
-            ([3.0, 1.0, 2.0], qnp.min, 1.0),
-            ([3.0, 1.0, 2.0], qnp.max, 3.0),
+            ([1, 2, 3], qnp.sum, 6),
+            ([0, 2, 4], qnp.mean, 2),
+            ([3, 1, 2], qnp.min, 1),
+            ([3, 1, 2], qnp.max, 3),
         ],
     )
     def test_known_value(
@@ -171,26 +165,26 @@ class TestQuaxedArrayOps:
 
     def test_stack(self) -> None:
         """Stack creates a Distance array from scalar Distances."""
-        result = qnp.stack([cxd.Distance(1.0, "kpc"), cxd.Distance(2.0, "kpc")])
+        result = qnp.stack([cxd.Distance(1, "kpc"), cxd.Distance(2, "kpc")])
         assert isinstance(result, cxd.Distance)
         assert result.shape == (2,)
-        assert jnp.allclose(result.value, jnp.array([1.0, 2.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 2]))
 
     def test_concatenate(self) -> None:
         result = qnp.concatenate(
-            [cxd.Distance([1.0, 2.0], "kpc"), cxd.Distance([3.0, 4.0], "kpc")]
+            [cxd.Distance([1, 2], "kpc"), cxd.Distance([3, 4], "kpc")]
         )
         assert isinstance(result, cxd.Distance)
         assert result.shape == (4,)
-        assert jnp.allclose(result.value, jnp.array([1.0, 2.0, 3.0, 4.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 2, 3, 4]))
 
     def test_sort(self) -> None:
-        result = qnp.sort(cxd.Distance([3.0, 1.0, 2.0], "kpc"))
+        result = qnp.sort(cxd.Distance([3, 1, 2], "kpc"))
         assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, jnp.array([1.0, 2.0, 3.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 2, 3]))
 
     def test_reshape(self) -> None:
-        result = qnp.reshape(cxd.Distance([[1.0, 2.0], [3.0, 4.0]], "kpc"), (4,))
+        result = qnp.reshape(cxd.Distance([[1, 2], [3, 4]], "kpc"), (4,))
         assert isinstance(result, cxd.Distance)
         assert result.shape == (4,)
 
@@ -201,10 +195,10 @@ class TestQuaxedArrayOps:
         assert jnp.all(result.value == 1.5)
 
     def test_diff(self) -> None:
-        result = qnp.diff(cxd.Distance([1.0, 3.0, 6.0], "kpc"))
+        result = qnp.diff(cxd.Distance([1, 3, 6], "kpc"))
         assert isinstance(result, cxd.Distance)
         assert result.shape == (2,)
-        assert jnp.allclose(result.value, jnp.array([2.0, 3.0]))
+        assert jnp.allclose(result.value, jnp.array([2, 3]))
 
     @pytest.mark.parametrize(
         ("cond", "a_val", "b_val", "expected"),
@@ -218,9 +212,7 @@ class TestQuaxedArrayOps:
     ) -> None:
         """Where with a scalar condition selects the correct Distance."""
         result = qnp.where(
-            jnp.array(cond),
-            cxd.Distance(a_val, "kpc"),
-            cxd.Distance(b_val, "kpc"),
+            jnp.array(cond), cxd.Distance(a_val, "kpc"), cxd.Distance(b_val, "kpc")
         )
         assert isinstance(result, cxd.Distance)
         assert jnp.allclose(result.value, expected)
@@ -229,11 +221,11 @@ class TestQuaxedArrayOps:
         """Where with a boolean array selects element-wise."""
         result = qnp.where(
             jnp.array([True, False, True]),
-            cxd.Distance([1.0, 2.0, 3.0], "kpc"),
-            cxd.Distance([4.0, 5.0, 6.0], "kpc"),
+            cxd.Distance([1, 2, 3], "kpc"),
+            cxd.Distance([4, 5, 6], "kpc"),
         )
         assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, jnp.array([1.0, 5.0, 3.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 5, 3]))
 
 
 class TestQuaxQuaxify:
@@ -247,14 +239,11 @@ class TestQuaxQuaxify:
     def test_raw_jax_add_raises_without_quaxify(self) -> None:
         """Raw jax.numpy.add raises TypeError on a Distance — no dispatch rules."""
         with pytest.raises(TypeError):
-            jax.numpy.add(cxd.Distance(1.0, "kpc"), cxd.Distance(0.5, "kpc"))
+            jax.numpy.add(cxd.Distance(1, "kpc"), cxd.Distance(0.5, "kpc"))
 
     @pytest.mark.parametrize(
         ("fn", "a_val", "b_val", "expected"),
-        [
-            (jax.numpy.add, 1.0, 0.5, 1.5),
-            (jax.numpy.subtract, 1.5, 0.5, 1.0),
-        ],
+        [(jax.numpy.add, 1, 0.5, 1.5), (jax.numpy.subtract, 1.5, 0.5, 1)],
     )
     def test_quaxify_binary_known_value(
         self, fn: object, a_val: float, b_val: float, expected: float
@@ -272,25 +261,25 @@ class TestQuaxQuaxify:
         def double(x):
             return jax.numpy.add(x, x)
 
-        result = quax.quaxify(double)(cxd.Distance(1.0, "kpc"))
+        result = quax.quaxify(double)(cxd.Distance(1, "kpc"))
         assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, 2.0)
+        assert jnp.allclose(result.value, 2)
 
     def test_quaxify_jit(self) -> None:
         """jax.jit(quaxify(fn)) works on a Distance."""
         result = jax.jit(quax.quaxify(jax.numpy.add))(
-            cxd.Distance(1.0, "kpc"), cxd.Distance(0.5, "kpc")
+            cxd.Distance(1, "kpc"), cxd.Distance(0.5, "kpc")
         )
         assert isinstance(result, cxd.Distance)
         assert jnp.allclose(result.value, 1.5)
 
     def test_quaxify_vmap(self) -> None:
         """jax.vmap(quaxify(fn)) maps over a Distance array."""
-        arr = cxd.Distance([1.0, 2.0, 3.0], "kpc")
+        arr = cxd.Distance([1, 2, 3], "kpc")
         result = jax.vmap(quax.quaxify(jax.numpy.add))(arr, arr)
         assert isinstance(result, cxd.Distance)
         assert result.value.shape == (3,)
-        assert jnp.allclose(result.value, jnp.array([2.0, 4.0, 6.0]))
+        assert jnp.allclose(result.value, jnp.array([2, 4, 6]))
 
     @given(d=_dist_kpc)
     def test_quaxify_preserves_distance_type(self, d: cxd.Distance) -> None:
@@ -307,9 +296,9 @@ class TestJAXTransformsWithQuaxed:
         ("loss_fn", "d_val", "expected_grad"),
         [
             # d/dx sum(x) = 1
-            (lambda x: qnp.sum(x).value, 1.0, 1.0),
+            (lambda x: qnp.sum(x).value, 1.0, 1),
             # d/dx 2*x = 2 (via x + x)
-            (lambda x: qnp.add(x, x).value, 1.0, 2.0),
+            (lambda x: qnp.add(x, x).value, 1.0, 2),
         ],
     )
     def test_grad_known_value(
@@ -326,14 +315,11 @@ class TestJAXTransformsWithQuaxed:
         """d/dx sum(x) == 1 for any Distance scalar."""
         g = jax.grad(lambda x: qnp.sum(x).value)(d)
         assert isinstance(g, cxd.Distance)
-        assert jnp.allclose(g.value, 1.0, atol=1e-5)
+        assert jnp.allclose(g.value, 1, atol=1e-5)
 
     @pytest.mark.parametrize(
         ("fn", "d_val", "expected_val"),
-        [
-            (lambda x: qnp.add(x, x), 1.0, 2.0),
-            (lambda x: qnp.multiply(x, 3.0), 2.0, 6.0),
-        ],
+        [(lambda x: qnp.add(x, x), 1, 2), (lambda x: qnp.multiply(x, 3), 2, 6)],
     )
     def test_jit(self, fn: object, d_val: float, expected_val: float) -> None:
         """jax.jit works on functions using qnp over Distance."""

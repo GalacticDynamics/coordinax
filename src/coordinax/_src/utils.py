@@ -24,8 +24,6 @@ def uconvert_to_rad(value: u.AbstractQuantity, usys: OptUSys, /) -> BareQuantity
 def uconvert_to_rad(value: Any, usys: OptUSys, /) -> Any:
     """Convert an angle value to radians, handling no-usys case.
 
-    Examples
-    --------
     Angular quantities are converted from their own unit:
 
     >>> import quaxed.numpy as jnp

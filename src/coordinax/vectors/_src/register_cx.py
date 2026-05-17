@@ -35,8 +35,6 @@ def cconvert(
 ) -> Point:
     """Convert a point from one chart to another.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
 
@@ -152,8 +150,6 @@ def pt_map(
 def cdict(obj: Point, /) -> CDict:
     """Extract component dictionary from a Point.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import unxt as u
     >>> vec = cx.Point.from_(u.Q([1, 2, 3], "m"))
@@ -169,14 +165,12 @@ def cdict(obj: Point, /) -> CDict:
 def cdict(obj: Tangent, /) -> CDict:
     """Extract component dictionary from a Tangent.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.representations as cxr
+    >>> import coordinax.charts as cxc
     >>> import unxt as u
-    >>> vec = cx.Tangent.from_(
-    ...     u.Q([1.0, 2.0, 3.0], "m/s"), "m/s", cx.cart3d, cxr.coord_basis, cxr.vel
-    ... )
+    >>> d = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
+    >>> vec = cx.Tangent.from_(d, cxc.cart3d, cxr.coord_vel)
     >>> d = cx.cdict(vec)
     >>> list(d.keys())
     ['x', 'y', 'z']
@@ -204,8 +198,6 @@ def cconvert(
     (Jacobian pushforward) is evaluated. It may be a `Point` instance
     (whose ``.data`` is used) or a raw ``CDict``.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> import coordinax.charts as cxc
@@ -259,8 +251,6 @@ def cconvert(
 ) -> Tangent:
     """Convert a tangent Tangent from one chart to another (explicit from-chart).
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> import coordinax.charts as cxc
@@ -296,16 +286,14 @@ def change_basis(
 ) -> Tangent:
     """Change the basis of a `Tangent` vector.
 
-    Converts the component data from the current basis to ``to_basis`` using
-    the registered ``change_basis`` overload for dicts, then returns a new
-    `Tangent` with the updated data and basis.
+    Converts the component data from the current basis to ``to_basis`` using the
+    registered ``change_basis`` overload for dicts, then returns a new `Tangent`
+    with the updated data and basis.
 
-    The ``at`` parameter provides the base point at which the scale factors
-    are evaluated.  It may be a `Point` instance (whose ``.data`` is used) or
-    a raw ``CDict``.
+    The ``at`` parameter provides the base point at which the scale factors are
+    evaluated.  It may be a `Point` instance (whose ``.data`` is used) or a raw
+    ``CDict``.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> import coordinax.charts as cxc
@@ -364,11 +352,9 @@ def change_basis(
     `Tangent` carries the same chart and frame as the input `Point`, and its
     basis is ``to_basis``.
 
-    The ``at`` and ``usys`` parameters are accepted for API consistency but
-    are not used.
+    The ``at`` and ``usys`` parameters are accepted for API consistency but are
+    not used.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> import coordinax.representations as cxr
@@ -396,16 +382,13 @@ def change_basis(
 def add(lhs: Point, rhs: Point, /) -> Point:
     """Add two points.
 
-    For non-Cartesian charts the operation converts both operands to the
-    ambient Cartesian chart, adds there, and converts the result back
-    to the ``lhs`` chart.  For Cartesian charts the addition is direct.
+    For non-Cartesian charts the operation converts both operands to the ambient
+    Cartesian chart, adds there, and converts the result back to the ``lhs``
+    chart.  For Cartesian charts the addition is direct.
 
     The result keeps the ``lhs`` chart and representation.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
-
     >>> v1 = cx.Point.from_([1, 2, 3], "m")
     >>> v2 = cx.Point.from_([4, 5, 6], "m")
     >>> print(cxr.add(v1, v2))
@@ -428,16 +411,13 @@ def add(lhs: Point, rhs: Point, /) -> Point:
 def subtract(lhs: Point, rhs: Point, /) -> Point:
     """Subtract two vectors.
 
-    For non-Cartesian charts the operation converts both operands to the
-    ambient Cartesian chart, subtracts there, and converts the result back
-    to the ``lhs`` chart.  For Cartesian charts the subtraction is direct.
+    For non-Cartesian charts the operation converts both operands to the ambient
+    Cartesian chart, subtracts there, and converts the result back to the
+    ``lhs`` chart.  For Cartesian charts the subtraction is direct.
 
     The result keeps the ``lhs`` chart and representation.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
-
     >>> v1 = cx.Point.from_([4, 5, 6], "m")
     >>> v2 = cx.Point.from_([1, 2, 3], "m")
     >>> print(cxr.subtract(v1, v2))
@@ -462,12 +442,10 @@ def subtract(lhs: Point, rhs: Point, /) -> Point:
 def add(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     """Add two tangent vectors component-wise.
 
-    Tangent spaces are genuine vector spaces: addition is component-wise in
-    any chart basis (no Cartesian round-trip is needed or correct).  Both
-    operands must share the same representation (chart + basis + semantic).
+    Tangent spaces are genuine vector spaces: addition is component-wise in any
+    chart basis (no Cartesian round-trip is needed or correct).  Both operands
+    must share the same representation (chart + basis + semantic).
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> import coordinax.charts as cxc
@@ -505,8 +483,6 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
     any chart basis (no Cartesian round-trip is needed or correct).  Both
     operands must share the same representation (chart + basis + semantic).
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> import coordinax.charts as cxc
@@ -544,8 +520,6 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
 def act(op: cxfm.AbstractTransform, tau: Any, x: Tangent, /, **kw: Any) -> Tangent:
     """Act a frame transform on a tangent Tangent.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.main as cx
@@ -571,8 +545,6 @@ def act(op: cxfm.AbstractTransform, tau: Any, x: Tangent, /, **kw: Any) -> Tange
 def act(op: cxfm.AbstractTransform, tau: Any, x: Point, /, **kw: Any) -> Point:
     """Act a frame transform on a Point.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.main as cx
@@ -601,8 +573,6 @@ def act(
 ) -> Coordinate:
     """Act a frame transform on a Coordinate (point + all fibres).
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.frames as cxf
     >>> import coordinax.charts as cxc
@@ -649,14 +619,13 @@ def act(
 def _replace_coordinate(coord: Coordinate, /, **kwargs: Any) -> Coordinate:
     """Replace fields on a Coordinate.
 
-    Supports replacing ``point``, any named fibre field, or ``frame``.
-    When ``frame`` is supplied, it is forwarded to both the base ``point`` and
-    every fibre field so the bundle stays internally consistent.
+    Supports replacing ``point``, any named fibre field, or ``frame``.  When
+    ``frame`` is supplied, it is forwarded to both the base ``point`` and every
+    fibre field so the bundle stays internally consistent.
 
     Unknown keys are rejected with a ``TypeError``.
 
-    Examples
-    --------
+
     >>> import coordinax.main as cx
     >>> import coordinax.frames as cxf
 
@@ -713,8 +682,6 @@ def cconvert(
 
     Delegates to {meth}`Coordinate.cconvert`.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.charts as cxc
 

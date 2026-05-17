@@ -33,7 +33,7 @@ def test_cdict_from_quantity(q):
 
 def test_cdict_from_quantity_chart_error():
     """cdict(Quantity, chart) with mismatched chart should raise ValueError."""
-    q = u.Q([1.0, 2.0], "m")  # 2 components
+    q = u.Q([1, 2], "m")  # 2 components
     with pytest.raises(
         ValueError, match=r"Quantity last dimension 2 does not match provided keys 3."
     ):

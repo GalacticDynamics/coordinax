@@ -31,16 +31,14 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.charts as cxc
-from coordinax.internal import QuantityMatrix
+from coordinax.internal import QMatrix
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
-def _assert_jacobian_approx(
-    J1: QuantityMatrix, J2: QuantityMatrix, *, atol: float = 1e-5
-) -> None:
+def _assert_jacobian_approx(J1: QMatrix, J2: QMatrix, *, atol: float = 1e-5) -> None:
     """Assert two Jacobians agree entry-wise (values only)."""
     np.testing.assert_allclose(
         np.asarray(J1.value),
@@ -73,7 +71,7 @@ class TestCurriedWorkflow:
         for x, y in [(1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]:
             at = {"x": u.Q(x, "m"), "y": u.Q(y, "m")}
             J = jac_fn(at)
-            assert isinstance(J, QuantityMatrix)
+            assert isinstance(J, QMatrix)
             assert J.value.shape == (2, 2)
 
     def test_none_partial_matches_direct(self) -> None:
@@ -99,7 +97,7 @@ class TestJITCompatibility:
         at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
         jac_fn = jax.jit(cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si))
         J = jac_fn(at)
-        assert isinstance(J, QuantityMatrix)
+        assert isinstance(J, QMatrix)
         assert J.value.shape == (3, 3)
         # At (1,0,0): ∂r/∂x = 1
         np.testing.assert_allclose(J.value[0, 0], 1.0, atol=1e-6)
@@ -120,7 +118,7 @@ class TestJITCompatibility:
             return cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
 
         J = jitted(at)
-        assert isinstance(J, QuantityMatrix)
+        assert isinstance(J, QMatrix)
         np.testing.assert_allclose(J.value[0, 0], 1.0, atol=1e-6)
 
 
@@ -139,9 +137,9 @@ class TestVmapCompatibility:
         def single(x, y, z):
             return jac_fn({"x": u.Q(x, "m"), "y": u.Q(y, "m"), "z": u.Q(z, "m")})
 
-        xs = jnp.array([1.0, 0.0, 3.0])
-        ys = jnp.array([0.0, 1.0, 4.0])
-        zs = jnp.array([0.0, 0.0, 0.0])
+        xs = jnp.array([1, 0, 3])
+        ys = jnp.array([0, 1, 4])
+        zs = jnp.array([0, 0, 0])
         Js = jax.vmap(single)(xs, ys, zs)
         assert Js.value.shape == (3, 3, 3)
 

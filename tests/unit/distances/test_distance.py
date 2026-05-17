@@ -31,10 +31,10 @@ import coordinax.hypothesis.main as cxst
 # ---------------------------------------------------------------------------
 
 # Non-negative float32 values bounded away from overflow (safe to double, add)
-_bounded_f32 = st.floats(min_value=0.0, max_value=1e10, width=32)
+_bounded_f32 = st.floats(min_value=0, max_value=1e10, width=32)
 
 # Non-negative float32 values in [0, 1] — used for algebraic property tests
-_unit_f32 = st.floats(min_value=0.0, max_value=1.0, width=32)
+_unit_f32 = st.floats(min_value=0, max_value=1, width=32)
 
 # ---------------------------------------------------------------------------
 # Named constants for float32 overflow boundary
@@ -106,10 +106,7 @@ class TestDistanceConstruction:
 
     @pytest.mark.parametrize(
         ("value", "unit_str", "expected_shape"),
-        [
-            (1, "kpc", ()),
-            ([1.0, 2.0, 3.0], "pc", (3,)),
-        ],
+        [(1, "kpc", ()), ([1, 2, 3], "pc", (3,))],
     )
     def test_construct_from_python(
         self, value: object, unit_str: str, expected_shape: tuple[int, ...]
@@ -121,7 +118,7 @@ class TestDistanceConstruction:
 
     def test_construct_from_jnp_array(self) -> None:
         """Distances can be constructed from a JAX array."""
-        arr = jnp.array([0.0, 1.0, 2.0])
+        arr = jnp.array([0, 1, 2])
         d = cxd.Distance(arr, "kpc")
         assert isinstance(d, cxd.Distance)
         assert d.shape == (3,)
@@ -131,7 +128,7 @@ class TestDistanceConstruction:
     def test_invalid_unit_raises(self) -> None:
         """Non-length units are rejected at construction time."""
         with pytest.raises(ValueError, match="dimensions length"):
-            cxd.Distance(1.0, "rad")
+            cxd.Distance(1, "rad")
 
     def test_negative_raises_when_checked(self) -> None:
         """Negative values raise when check_negative=True."""
@@ -139,7 +136,7 @@ class TestDistanceConstruction:
             (eqx.EquinoxRuntimeError, ValueError),
             match="Distance must be non-negative",
         ):
-            cxd.Distance(-1.0, "kpc", check_negative=True)
+            cxd.Distance(-1, "kpc", check_negative=True)
 
 
 class TestDistanceConversion:
@@ -147,10 +144,7 @@ class TestDistanceConversion:
 
     @pytest.mark.parametrize(
         ("value", "from_unit", "to_unit", "expected"),
-        [
-            (1.0, "kpc", "pc", 1000.0),
-            (1000.0, "pc", "kpc", 1.0),
-        ],
+        [(1, "kpc", "pc", 1000), (1000, "pc", "kpc", 1)],
     )
     def test_unit_conversion(
         self, value: float, from_unit: str, to_unit: str, expected: float
@@ -183,7 +177,7 @@ class TestDistanceArithmetic:
     def test_sub_self_is_zero(self, d: cxd.Distance) -> None:
         result = d - d
         assert isinstance(result, cxd.Distance)
-        assert jnp.allclose(result.value, 0.0)
+        assert jnp.allclose(result.value, 0)
 
     @given(d=cxst.distances())
     def test_neg_degrades_to_quantity(self, d: cxd.Distance) -> None:
@@ -229,7 +223,7 @@ class TestDistanceArithmetic:
     @given(d=cxst.distances())
     def test_mul_quantity_promotes(self, d: cxd.Distance) -> None:
         """Distance x dimensioned Quantity yields a plain Quantity, not a Distance."""
-        result = d * u.Q(2.0, "s")
+        result = d * u.Q(2, "s")
         assert isinstance(result, u.AbstractQuantity)
         assert not isinstance(result, cxd.Distance)
 
@@ -256,11 +250,11 @@ class TestDistanceArithmetic:
 
     def test_atan2_promotes_to_angle(self) -> None:
         """atan2(Distance, Distance) yields an angle-dimensioned Quantity."""
-        result = qnp.atan2(cxd.Distance(1.0, "m"), cxd.Distance(3.0, "km"))
+        result = qnp.atan2(cxd.Distance(1, "m"), cxd.Distance(3, "km"))
         assert isinstance(result, u.AbstractQuantity)
         assert not isinstance(result, cxd.Distance)
         assert u.dimension_of(result) == u.dimension("angle")
-        assert jnp.allclose(result.ustrip("rad"), jnp.atan2(1.0, 3000.0))
+        assert jnp.allclose(result.ustrip("rad"), jnp.atan2(1, 3000))
 
 
 class TestDistanceConversionProperties:
@@ -327,4 +321,4 @@ class TestDistanceJAX:
         """jax.grad differentiates through quaxed sum; d/dx sum(x) == 1."""
         g = jax.grad(lambda x: qnp.sum(x).value)(d)
         assert isinstance(g, cxd.Distance)
-        assert jnp.allclose(g.value, 1.0, atol=1e-5)
+        assert jnp.allclose(g.value, 1, atol=1e-5)

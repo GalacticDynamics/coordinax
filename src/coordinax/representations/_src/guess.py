@@ -38,10 +38,7 @@ from .semantics import AbstractSemanticKind, Location, acc, dpl, loc, vel
 def guess_geometry_kind(obj: AbstractGeometry, /) -> AbstractGeometry:
     """Infer geometry kind from an AbstractGeometry object.
 
-    Examples
-    --------
     >>> import coordinax.representations as cxr
-
     >>> geom = cxr.PointGeometry()
     >>> cxr.guess_geometry_kind(geom) is geom
     True
@@ -74,8 +71,6 @@ def guess_geometry_kind(
 ) -> AbstractGeometry:
     """Infer geometry kind from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -110,8 +105,6 @@ def guess_geometry_kind(
 def guess_geometry_kind(obj: u.AbstractQuantity, /) -> AbstractGeometry:
     """Infer geometry kind from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -137,8 +130,6 @@ dim_name = lambda dim: dim._physical_type[0]
 def guess_geometry_kind(obj: CDict, /) -> AbstractGeometry:
     """Infer geometry kind from the physical dimensions of a component dictionary.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -173,8 +164,6 @@ def guess_geometry_kind(obj: CDict, /) -> AbstractGeometry:
 def guess_geometry_kind(obj: CDict, chart: cxc.AbstractChart, /) -> AbstractGeometry:
     """Infer geometry kind from the physical dimensions of a component dictionary and chart.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
@@ -197,8 +186,6 @@ def guess_geometry_kind(
 ) -> AbstractGeometry:
     """Infer geometry kind from the physical dimensions of a component dictionary and chart.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
     >>> import coordinax.charts as cxc
@@ -232,10 +219,7 @@ def guess_geometry_kind(
 def guess_basis_kind(obj: AbstractBasis, /) -> AbstractBasis:
     """Infer basis kind from an AbstractBasis object.
 
-    Examples
-    --------
     >>> import coordinax.representations as cxr
-
     >>> basis = cxr.NoBasis()
     >>> cxr.guess_basis_kind(basis) is basis
     True
@@ -260,8 +244,6 @@ def guess_basis_kind(
 ) -> AbstractBasis:
     """Infer basis kind from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -284,11 +266,8 @@ def guess_basis_kind(
 def guess_basis_kind(obj: u.AbstractQuantity, /) -> AbstractBasis:
     """Infer basis kind from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
-
     >>> cxr.guess_basis_kind(u.Q(1.0, "m"))
     no_basis
 
@@ -302,8 +281,6 @@ def guess_basis_kind(obj: u.AbstractQuantity, /) -> AbstractBasis:
 def guess_basis_kind(obj: CDict, /) -> AbstractBasis:
     """Infer basis kind from the physical dimensions of a component dictionary.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -335,10 +312,7 @@ def guess_basis_kind(obj: CDict, /) -> AbstractBasis:
 def guess_semantic_kind(obj: AbstractSemanticKind, /) -> AbstractSemanticKind:
     """Infer semantic kind from an AbstractSemanticKind object.
 
-    Examples
-    --------
     >>> import coordinax.representations as cxr
-
     >>> sem = cxr.Location()
     >>> cxr.guess_semantic_kind(sem) is sem
     True
@@ -370,8 +344,6 @@ def guess_semantic_kind(
 ) -> AbstractSemanticKind:
     """Infer semantic kind from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -406,11 +378,8 @@ def guess_semantic_kind(
 def guess_semantic_kind(obj: u.AbstractQuantity, /) -> AbstractSemanticKind:
     """Infer semantic kind from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
-
     >>> cxr.guess_semantic_kind(u.Q(1.0, "m"))
     loc
 
@@ -424,8 +393,6 @@ def guess_semantic_kind(obj: u.AbstractQuantity, /) -> AbstractSemanticKind:
 def guess_semantic_kind(obj: CDict, /) -> AbstractSemanticKind:
     """Infer semantic kind from the physical dimensions of a component dictionary.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -459,11 +426,8 @@ def guess_semantic_kind(obj: CDict, /) -> AbstractSemanticKind:
 def guess_rep(obj: Representation, /) -> Representation:
     """Infer representation from a Representation object.
 
-    Examples
-    --------
     >>> import coordinax.representations as cxr
-
-    >>> rep = cxr.Representation(cxr.PointGeometry(), cxr.NoBasis(), cxr.Location())
+    >>> rep = cxr.point
     >>> cxr.guess_rep(rep) is rep
     True
 
@@ -475,10 +439,7 @@ def guess_rep(obj: Representation, /) -> Representation:
 def guess_rep(obj: PointGeometry, /) -> Representation:
     """Infer representation from a PointGeometry object.
 
-    Examples
-    --------
     >>> import coordinax.representations as cxr
-
     >>> geom = cxr.PointGeometry()
     >>> cxr.guess_rep(geom)
     point
@@ -498,11 +459,8 @@ def guess_rep(
 ) -> Representation:
     """Infer point representation from data and an already-inferred PointGeometry.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
-
     >>> rep = cxr.guess_rep(u.dimension("length"), cxr.point_geom)
     >>> rep
     point
@@ -522,8 +480,6 @@ def guess_rep(
 ) -> Representation:
     """Infer tangent representation from data and an already-inferred TangentGeometry.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -554,8 +510,6 @@ def guess_rep(
 ) -> Representation:
     """Infer representation from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -595,8 +549,6 @@ def guess_rep(
 def guess_rep(obj: Any, chart: cxc.AbstractChart, /) -> Representation:
     """Infer representation from the physical dimension of a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -620,8 +572,6 @@ def guess_rep(
 ) -> Representation:
     """Infer representation.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.representations as cxr
 
@@ -639,8 +589,6 @@ def guess_rep(
 ) -> Representation:
     """Infer representation.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.representations as cxr

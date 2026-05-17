@@ -10,7 +10,7 @@ import unxt as u
 import coordinax.frames as cxf
 import coordinax.main as cx
 import coordinax.transforms as cxfm
-from coordinax.internal import QuantityMatrix
+from coordinax.internal import QMatrix
 
 # ===================================================================
 # Transform fixtures
@@ -65,7 +65,7 @@ def composed_op(translate_op, rotate_op):
 @pytest.fixture
 def array_3d():
     """Bare JAX array [1, 0, 0]."""
-    return jnp.array([1.0, 0.0, 0.0])
+    return jnp.array([1, 0, 0])
 
 
 @pytest.fixture
@@ -76,9 +76,9 @@ def quantity_3d():
 
 @pytest.fixture
 def qmatrix_3d():
-    """QuantityMatrix [1, 0, 0] with uniform km units."""
-    return QuantityMatrix(
-        jnp.array([1.0, 0.0, 0.0]),
+    """QMatrix [1, 0, 0] with uniform km units."""
+    return QMatrix(
+        jnp.array([1, 0, 0]),
         unit=(u.unit("km"), u.unit("km"), u.unit("km")),
     )
 
@@ -117,8 +117,8 @@ def coord_xfm_3d():
 # Expected results after each transform applied to (1, 0, 0) km
 
 
-EXPECTED_IDENTITY = (1.0, 0.0, 0.0)  # no change
-EXPECTED_ROTATE = (0.0, 1.0, 0.0)  # 90° z-rotation
-EXPECTED_REFLECT = (-1.0, 0.0, 0.0)  # reflection across yz-plane
-EXPECTED_TRANSLATE = (2.0, 0.0, 0.0)  # +1 km in x
-EXPECTED_COMPOSED = (0.0, 2.0, 0.0)  # translate then rotate
+EXPECTED_IDENTITY = (1, 0, 0)  # no change
+EXPECTED_ROTATE = (0, 1, 0)  # 90° z-rotation
+EXPECTED_REFLECT = (-1, 0, 0)  # reflection across yz-plane
+EXPECTED_TRANSLATE = (2, 0, 0)  # +1 km in x
+EXPECTED_COMPOSED = (0, 2, 0)  # translate then rotate

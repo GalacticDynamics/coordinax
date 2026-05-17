@@ -12,7 +12,7 @@ Jacobian at a base point $p$ (expressed in $C_1$ coordinates) is
 $$ J^j{}_i(p) = \frac{\\partial \tau^j}{\partial q^i}\bigg|_p $$
 
 where $q^i$ are the $C_1$ coordinates and $\tau^j$ are the $C_2$ coordinates.
-The result is a 2-D {class}`~coordinax.internal.QuantityMatrix` of shape
+The result is a 2-D {class}`~coordinax.internal.QMatrix` of shape
 $(n_\\mathrm{out},\\, n_\\mathrm{in})$ whose $(j, i)$ element carries units
 
 $$ \mathrm{unit}(J^j{}_i) = \frac{\mathrm{unit}(\tau^j)}{\mathrm{unit}(q^i)} $$
@@ -56,7 +56,7 @@ from .d2 import Cart2D, Polar2D
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import (
-    QuantityMatrix,
+    QMatrix,
     UnitsMatrix,
     pack_to_qmatrix,
     tree_cast_int_bool_to_float,
@@ -78,15 +78,13 @@ DMLS: Final[u.AbstractUnit] = cast("u.AbstractUnit", u.unit(""))
 def jac_pt_map(at: None, /, *fixed_args: Any, **fixed_kw: Any) -> Any:
     """Higher-order function for fixed-arg Jacobian point map.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
     >>> map = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map(at)
-    QuantityMatrix(
+    QMatrix(
         [[ 1.,  0.,  0.],
          [-0., -0., -1.],
          [ 0.,  1.,  0.]],
@@ -110,15 +108,13 @@ def jac_pt_map(
 ) -> Callable[[object], Any]:
     """Higher-order function for fixed-arg Jacobian point map.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
     >>> map = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
     >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
     >>> map(at)
-    QuantityMatrix(
+    QMatrix(
         [[ 1.,  0.,  0.],
          [-0., -0., -1.],
          [ 0.,  1.,  0.]],
@@ -153,8 +149,6 @@ def jac_pt_map(
     coordinates expressed. Returns the JAX array Jacobian $J^j{}_i = \partial
     \tau^j / \partial q^i$, without unit annotation.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -184,13 +178,13 @@ def jac_pt_map(
     return jac_pt_map_fn(at)  # Compute Jacobian as array
 
 
-def _repack_q_from_jac(jac_qq: QuantityMatrix, /) -> QuantityMatrix:
-    r"""Rebuild a 2-D ``QuantityMatrix`` Jacobian from the raw ``jax.jacfwd`` output.
+def _repack_q_from_jac(jac_qq: QMatrix, /) -> QMatrix:
+    r"""Rebuild a 2-D ``QMatrix`` Jacobian from the raw ``jax.jacfwd`` output.
 
     When ``jax.jacfwd`` differentiates a function that maps a 1-D
-    ``QuantityMatrix`` of shape ``(n_in,)`` to a 1-D ``QuantityMatrix`` of
-    shape ``(n_out,)``, the result is a 2-D ``QuantityMatrix`` of shape
-    ``(n_out, n_in)`` whose ``.value`` is *itself* a 1-D ``QuantityMatrix``
+    ``QMatrix`` of shape ``(n_in,)`` to a 1-D ``QMatrix`` of
+    shape ``(n_out,)``, the result is a 2-D ``QMatrix`` of shape
+    ``(n_out, n_in)`` whose ``.value`` is *itself* a 1-D ``QMatrix``
     carrying the input units (one per column), and whose ``.unit`` is a 1-D
     ``UnitsMatrix`` carrying the output units (one per row).
 
@@ -200,7 +194,7 @@ def _repack_q_from_jac(jac_qq: QuantityMatrix, /) -> QuantityMatrix:
     """
     ufrom_, uto_ = jac_qq.value.unit, jac_qq.unit  # ty: ignore[unresolved-attribute]
     units = UnitsMatrix(np.divide(uto_._units[:, None], ufrom_._units[None, :]))
-    return QuantityMatrix(jac_qq.value.value, units)  # ty: ignore[unresolved-attribute]
+    return QMatrix(jac_qq.value.value, units)  # ty: ignore[unresolved-attribute]
 
 
 @plum.dispatch
@@ -211,7 +205,7 @@ def jac_pt_map(
     /,
     *,
     usys: OptUSys = None,
-) -> Array | QuantityMatrix:
+) -> Array | QMatrix:
     r"""Compute the Jacobian at a coordinate-dictionary base point.
 
     The primary dict-input dispatch.  Branches on whether the values of *at*
@@ -224,21 +218,21 @@ def jac_pt_map(
         ``Array`` dispatch this means *usys* must be provided.
 
     **Quantity-valued branch** (at least one value carries a unit)
-        Packs *at* into a 1-D ``QuantityMatrix`` via
+        Packs *at* into a 1-D ``QMatrix`` via
         ``pack_to_qmatrix(at, keys=from_chart.components)``, promotes any
         integer or boolean leaves to the default floating-point dtype (other
         dtypes, including complex, are left unchanged and will raise a
         ``TypeError`` from ``jax.jacfwd`` if passed), then computes
         ``J_qq = jax.jacfwd(pt_map_fn)(at_in)``.
-        Because ``jacfwd`` applied to a ``QuantityMatrix``-in /
-        ``QuantityMatrix``-out function yields a nested ``QuantityMatrix``,
+        Because ``jacfwd`` applied to a ``QMatrix``-in /
+        ``QMatrix``-out function yields a nested ``QMatrix``,
         ``_repack_q_from_jac`` is called to extract the correct 2-D unit
         structure.
 
     Returns
     -------
-    Array | QuantityMatrix
-        Plain array when *at* is array-valued; ``QuantityMatrix`` of shape
+    Array | QMatrix
+        Plain array when *at* is array-valued; ``QMatrix`` of shape
         ``(n_out, n_in)`` with per-element units otherwise.
 
     Raises
@@ -335,7 +329,7 @@ def jac_pt_map(
     /,
     *,
     usys: OptUSys = None,
-) -> QuantityMatrix:
+) -> QMatrix:
     r"""Compute the Jacobian of the transition function between two charts.
 
     $$
@@ -349,7 +343,7 @@ def jac_pt_map(
 
     >>> x = u.Q(jnp.array([1.0, 1.0]), "m")
     >>> cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=u.unitsystems.si)(x)
-    QuantityMatrix([[ 0.70710678,  0.70710678],
+    QMatrix([[ 0.70710678,  0.70710678],
                     [-0.5       ,  0.5       ]], '((, ), (rad / m, rad / m))')
 
     """
@@ -361,7 +355,7 @@ def jac_pt_map(
     # Astropy treats rad as dimensionless, so x2.unit == 1/m rather than
     # the correct rad/m.  Force the right unit explicitly.
     rad_per_len = u.unit("rad") / x.unit
-    return QuantityMatrix(
+    return QMatrix(
         jnp.array([[x0.value, x1.value], [x2.value, x3.value]]),
         unit=((x0.unit, x1.unit), (rad_per_len, rad_per_len)),
     )

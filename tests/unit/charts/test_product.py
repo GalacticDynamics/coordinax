@@ -76,43 +76,26 @@ class TestNamespacedSplitMerge:
         self, phase_space: cxc.CartesianProductChart
     ) -> None:
         """split_components should extract keys by prefix and strip it."""
-        p = {"q.x": 1.0, "q.y": 2.0, "q.z": 3.0, "p.x": 4.0, "p.y": 5.0, "p.z": 6.0}
+        p = {"q.x": 1, "q.y": 2, "q.z": 3, "p.x": 4, "p.y": 5, "p.z": 6}
         parts = phase_space.split_components(p)
         assert len(parts) == 2
-        assert parts[0] == {"x": 1.0, "y": 2.0, "z": 3.0}
-        assert parts[1] == {"x": 4.0, "y": 5.0, "z": 6.0}
+        assert parts[0] == {"x": 1, "y": 2, "z": 3}
+        assert parts[1] == {"x": 4, "y": 5, "z": 6}
 
     def test_merge_components_reattaches_prefix(
         self, phase_space: cxc.CartesianProductChart
     ) -> None:
         """merge_components should re-add dot-delimited prefix."""
-        parts = (
-            {"x": 1.0, "y": 2.0, "z": 3.0},
-            {"x": 4.0, "y": 5.0, "z": 6.0},
-        )
+        parts = ({"x": 1, "y": 2, "z": 3}, {"x": 4, "y": 5, "z": 6})
         merged = phase_space.merge_components(parts)
-        expected = {
-            "q.x": 1.0,
-            "q.y": 2.0,
-            "q.z": 3.0,
-            "p.x": 4.0,
-            "p.y": 5.0,
-            "p.z": 6.0,
-        }
+        expected = {"q.x": 1, "q.y": 2, "q.z": 3, "p.x": 4, "p.y": 5, "p.z": 6}
         assert merged == expected
 
     def test_split_merge_roundtrip(
         self, phase_space: cxc.CartesianProductChart
     ) -> None:
         """Split followed by merge should recover original dict."""
-        original = {
-            "q.x": 1.0,
-            "q.y": 2.0,
-            "q.z": 3.0,
-            "p.x": 4.0,
-            "p.y": 5.0,
-            "p.z": 6.0,
-        }
+        original = {"q.x": 1, "q.y": 2, "q.z": 3, "p.x": 4, "p.y": 5, "p.z": 6}
         parts = phase_space.split_components(original)
         recovered = phase_space.merge_components(parts)
         assert recovered == original

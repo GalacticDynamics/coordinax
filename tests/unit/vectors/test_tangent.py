@@ -545,15 +545,15 @@ class TestVectorShape:
     def test_slice_values_correct(self):
         """Indexed values match the original batch element."""
         data = {
-            "x": u.Q([1.0, 2.0], "m/s"),
-            "y": u.Q([3.0, 4.0], "m/s"),
-            "z": u.Q([5.0, 6.0], "m/s"),
+            "x": u.Q([1, 2], "m/s"),
+            "y": u.Q([3, 4], "m/s"),
+            "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
             data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
-        assert v[1]["x"].value == jnp.array(2.0)
-        assert v[1]["y"].value == jnp.array(4.0)
+        assert v[1]["x"].value == jnp.array(2)
+        assert v[1]["y"].value == jnp.array(4)
 
 
 # ======================================================================

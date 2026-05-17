@@ -166,14 +166,14 @@ _DIM_TO_UNIT: dict[str, str] = {
 
 def _quantity_for_dimension(dim: str | None) -> u.AbstractQuantity:
     if dim is None:
-        return u.Q(1.0, "")
-    return u.Q(1.0, _DIM_TO_UNIT[dim])
+        return u.Q(1, "")
+    return u.Q(1, _DIM_TO_UNIT[dim])
 
 
 def _mismatched_quantity_for_dimension(dim: str | None) -> u.AbstractQuantity:
     if dim == "time":
-        return u.Q(1.0, "m")
-    return u.Q(1.0, "s")
+        return u.Q(1, "m")
+    return u.Q(1, "s")
 
 
 def _strict_dimension_component(chart: cxc.AbstractChart) -> str:
@@ -319,7 +319,7 @@ def test_predef_chart_no_cartesian_raises(chart) -> None:
 @pytest.mark.parametrize("chart", [p[1] for p in _CHART_PARAMS], ids=_CHART_IDS)
 def test_predef_chart_check_data_valid_keys_default_dimensions_false(chart) -> None:
     """check_data defaults to key checks only when values=False."""
-    data = {k: u.Q(1.0, "m") for k in chart.components}
+    data = {k: u.Q(1, "m") for k in chart.components}
     chart.check_data(data)  # should not raise
 
 
@@ -329,7 +329,7 @@ def test_predef_chart_check_data_wrong_keys_raises(chart) -> None:
     if chart.ndim == 0:
         pytest.skip("0D chart has no components to remove")
     # Drop the last component to trigger the mismatch
-    data = {k: u.Q(1.0, "m") for k in chart.components[:-1]}
+    data = {k: u.Q(1, "m") for k in chart.components[:-1]}
     with pytest.raises(ValueError, match="Data keys do not match"):
         chart.check_data(data)
 

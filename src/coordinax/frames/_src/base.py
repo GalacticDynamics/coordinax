@@ -110,8 +110,6 @@ def from_(
 ) -> AbstractReferenceFrame:
     """Construct a reference frame from a mapping.
 
-    Examples
-    --------
     >>> import coordinax.frames as cxf
 
     >>> alice = cxf.Alice.from_({})

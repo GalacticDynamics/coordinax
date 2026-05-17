@@ -29,8 +29,6 @@ def pt_map(
 ) -> Any:
     r"""Convert point data between charts.
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr
@@ -119,8 +117,6 @@ def pt_map(
 ) -> Any:
     r"""Convert point data between charts.
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr
@@ -193,8 +189,6 @@ def pt_map(
 ) -> Any:
     r"""Convert point data between charts.
 
-    Examples
-    --------
     Convert a point from Cartesian coordinates to spherical coordinates:
 
     >>> import coordinax.representations as cxr

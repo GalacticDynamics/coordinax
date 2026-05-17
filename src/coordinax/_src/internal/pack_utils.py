@@ -25,7 +25,7 @@ import unxt as u
 from unxt.quantity import AllowValue
 
 from .custom_types import CDict, CKey
-from .quantity_matrix import QuantityMatrix
+from .quantity_matrix import QMatrix
 
 DMLS: Final = u.unit("")
 
@@ -119,12 +119,12 @@ def pack_with_usys(
 
 def pack_to_qmatrix(
     p: CDict, /, keys: tuple[CKey, ...] | None = None
-) -> Array | QuantityMatrix:
-    """Pack a component dictionary into a QuantityMatrix or plain Array.
+) -> Array | QMatrix:
+    """Pack a component dictionary into a QMatrix or plain Array.
 
     Components are ordered according to ``keys``. If the values
     are {class}`~unxt.AbstractQuantity`, a 1-D
-    {class}`~coordinax.internal.QuantityMatrix` is returned with per-component
+    {class}`~coordinax.internal.QMatrix` is returned with per-component
     units. If the values are plain arrays, a stacked JAX array is returned.
 
     Parameters
@@ -136,7 +136,7 @@ def pack_to_qmatrix(
 
     Returns
     -------
-    Array | QuantityMatrix
+    Array | QMatrix
         Packed representation of the component dictionary.
 
     Examples
@@ -147,7 +147,7 @@ def pack_to_qmatrix(
 
     >>> p = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(3.0, "km")}
     >>> pack_to_qmatrix(p, ("x", "y", "z"))
-    QuantityMatrix([1., 2., 3.], '(km, km, km)')
+    QMatrix([1., 2., 3.], '(km, km, km)')
 
     """
     # Dict sorter
@@ -160,5 +160,5 @@ def pack_to_qmatrix(
     vals = [
         u.ustrip(AllowValue, unit, p[k]) for k, unit in zip(keys, units, strict=True)
     ]
-    # Return as QuantityMatrix
-    return QuantityMatrix(jnp.stack(vals, axis=-1), unit=units)
+    # Return as QMatrix
+    return QMatrix(jnp.stack(vals, axis=-1), unit=units)

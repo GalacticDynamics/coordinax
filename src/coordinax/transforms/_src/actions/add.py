@@ -160,8 +160,6 @@ class AbstractAdd(AbstractTransform):
 def from_(cls: type[AbstractAdd], obj: AbstractAdd, /) -> AbstractAdd:
     """Construct a AbstractAdd from another AbstractAdd.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> shift1 = cxfm.Translate.from_([1, 2, 3], "km")
     >>> cxfm.Translate.from_(shift1) is shift1
@@ -177,11 +175,8 @@ def from_(cls: type[AbstractAdd], obj: AbstractAdd, /) -> AbstractAdd:
 def from_(cls: type[AbstractAdd], q: u.AbstractQuantity, /) -> AbstractAdd:
     """Construct an AbstractAdd subclass from a Quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
-
     >>> cxfm.Translate.from_(u.Q([1, 2, 3], "km"))
     Translate(
         {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D(M=Rn(3))
@@ -197,10 +192,7 @@ def from_(cls: type[AbstractAdd], q: u.AbstractQuantity, /) -> AbstractAdd:
 def from_(cls: type[AbstractAdd], x: ArrayLike, unit: str) -> AbstractAdd:
     """Construct an Add operator from an array-like offset and unit.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
-
     >>> cxfm.Translate.from_([1, 2, 3], "km")
     Translate(
         {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}, chart=Cart3D(M=Rn(3))
@@ -220,8 +212,6 @@ def simplify(op: AbstractAdd, /, **kw: Any) -> AbstractAdd | Identity:
 
     A translation with zero delta simplifies to Identity.
 
-    Examples
-    --------
     >>> import coordinax.transforms as cxfm
 
     >>> op = cxfm.Translate.from_([1, 2, 3], "km")

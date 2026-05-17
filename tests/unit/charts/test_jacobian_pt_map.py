@@ -22,7 +22,7 @@ import quaxed.numpy as qnp
 import unxt as u
 
 import coordinax.charts as cxc
-from coordinax.internal import QuantityMatrix
+from coordinax.internal import QMatrix
 
 usys_si = u.unitsystems.si
 
@@ -71,7 +71,7 @@ class TestJacobianPtMapImportable:
 
 
 class TestJacobianPtMapReturnType:
-    """Returns a 2-D QuantityMatrix with shape (n_to, n_from)."""
+    """Returns a 2-D QMatrix with shape (n_to, n_from)."""
 
     @pytest.mark.parametrize(
         ("from_chart", "to_chart", "at", "exp_shape"),
@@ -101,9 +101,9 @@ class TestJacobianPtMapReturnType:
             ),
         ],
     )
-    def test_returns_QuantityMatrix(self, from_chart, to_chart, at, exp_shape) -> None:
+    def test_returns_QMatrix(self, from_chart, to_chart, at, exp_shape) -> None:
         J = cxc.jac_pt_map(at, from_chart, to_chart)
-        assert isinstance(J, QuantityMatrix)
+        assert isinstance(J, QMatrix)
         assert J.ndim == 2
         assert J.value.shape == exp_shape
 
@@ -484,7 +484,7 @@ class TestJacobianPtMapCompositionProperty:
     r"""Property: J_{C2→C1}(p_{C2}) @ J_{C1→C2}(p_{C1}) = I.
 
     This is the chain rule: the Jacobian of the round-trip is the identity.
-    Uses QuantityMatrix matmul (quaxed) which tracks units through the product.
+    Uses QMatrix matmul (quaxed) which tracks units through the product.
     The result has all-dimensionless units and values equal to the nxn identity.
     """
 
@@ -675,7 +675,7 @@ class TestJacobianPtMapJAXCompatibility:
             return cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d)
 
         J = jitted(at)
-        assert isinstance(J, QuantityMatrix)
+        assert isinstance(J, QMatrix)
         assert_allclose(J.value[0, 0], 1, atol=1e-6)  # ∂r/∂x at (1,0,0)
 
     def test_jit_cart2d_to_polar2d(self) -> None:
@@ -743,7 +743,7 @@ class TestJacobianPtMapCurriedForms:
         at = {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
         fn = cxc.jac_pt_map(cxc.cart2d, cxc.polar2d, usys=usys_si)
         J = fn(at)
-        assert isinstance(J, QuantityMatrix)
+        assert isinstance(J, QMatrix)
         assert J.value.shape == (2, 2)
 
 
@@ -765,7 +765,7 @@ class TestJacobianPtMapArrayInput:
     def test_int_array_input_is_promoted_and_supported(self) -> None:
         """Integer plain-array input is promoted and produces the correct Jacobian."""
         at_int = jnp.array([1, 0, 0])
-        at_float = jnp.array([1.0, 0.0, 0.0], dtype=float)
+        at_float = jnp.array([1, 0, 0], dtype=float)
 
         J_int = cxc.jac_pt_map(at_int, cxc.cart3d, cxc.sph3d, usys=usys_si)
         J_float = cxc.jac_pt_map(at_float, cxc.cart3d, cxc.sph3d, usys=usys_si)
@@ -777,7 +777,7 @@ class TestJacobianPtMapArrayInput:
     def test_bool_array_input_is_promoted_and_supported(self) -> None:
         """Boolean plain-array input is promoted and produces the correct Jacobian."""
         at_bool = jnp.array([True, False, False], dtype=jnp.bool_)
-        at_float = jnp.array([1.0, 0.0, 0.0], dtype=float)
+        at_float = jnp.array([1, 0, 0], dtype=float)
 
         J_bool = cxc.jac_pt_map(at_bool, cxc.cart3d, cxc.sph3d, usys=usys_si)
         J_float = cxc.jac_pt_map(at_float, cxc.cart3d, cxc.sph3d, usys=usys_si)
@@ -836,9 +836,9 @@ class TestJacobianPtMapCDictArrayBranch:
         """Cart3D→Sph3D integer CDict values are promoted via Array dispatch."""
         at_int = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
         at_float = {
-            "x": jnp.array(1.0, dtype=float),
-            "y": jnp.array(0.0, dtype=float),
-            "z": jnp.array(0.0, dtype=float),
+            "x": jnp.array(1, dtype=float),
+            "y": jnp.array(0, dtype=float),
+            "z": jnp.array(0, dtype=float),
         }
 
         J_int = cxc.jac_pt_map(at_int, cxc.cart3d, cxc.sph3d, usys=usys_si)

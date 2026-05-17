@@ -59,8 +59,6 @@ def guess_chart(obj: frozenset[str], /) -> AbstractChart:
     the first matching chart it finds. Since the function is cached, the result
     will be consistent across calls.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> d = {"x": 1.0, "y": 2.0, "z": 3.0}
     >>> chart = cxc.guess_chart(d)
@@ -96,8 +94,6 @@ def guess_chart(obj: CDict, /) -> AbstractChart:
     the first matching chart it finds. Since the function is cached, the result
     will be consistent across calls.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> d = {"x": 1.0, "y": 2.0, "z": 3.0}
     >>> chart = cxc.guess_chart(d)
@@ -116,8 +112,6 @@ def guess_chart(
 ) -> AbstractChart:
     """Infer a 1D Cartesian chart from last dimension of a value / quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0], "m")
@@ -134,8 +128,6 @@ def guess_chart(
 ) -> AbstractChart:
     """Infer a 2D Cartesian chart from last dimension of a value / quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0, 2.0], "m")
@@ -152,8 +144,6 @@ def guess_chart(
 ) -> AbstractChart:
     """Infer a 3D Cartesian chart from last dimension of a value / quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0, 2.0, 3.0], "m")
@@ -170,8 +160,6 @@ def guess_chart(
 ) -> AbstractChart:
     """Infer a N-dimensional Cartesian chart from last dimension of a value / quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cx
     >>> q = u.Q([1.0, 2.0, 3.0, 4.0], "m")

@@ -17,7 +17,7 @@ from .basis import CoordinateBasis, PhysicalBasis, coord_basis
 from .custom_types import CDict, OptUSys
 from .geom import TangentGeometry
 from .rep import Representation
-from coordinax.internal import QuantityMatrix, pack_nonuniform_unit
+from coordinax.internal import QMatrix, pack_nonuniform_unit
 
 # ---------------------------------------------------------------------------
 # Validation helpers
@@ -40,28 +40,28 @@ def _check_linear_basis(rep: Representation, label: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Shared helper: apply a QuantityMatrix Jacobian to a tangent vector CDict
+# Shared helper: apply a QMatrix Jacobian to a tangent vector CDict
 # ---------------------------------------------------------------------------
 
 
 def _apply_jac(
-    J: Array | QuantityMatrix,
+    J: Array | QMatrix,
     from_components: tuple[str, ...],
     to_components: tuple[str, ...],
     v: CDict,
 ) -> CDict:
-    """Apply a 2-D QuantityMatrix Jacobian to a tangent CDict.
+    """Apply a 2-D QMatrix Jacobian to a tangent CDict.
 
     If the components of ``v`` are plain arrays, the output is a plain-array
     CDict (using ``J.value @ v_arr``).  If any component of ``v`` is a
     {class}`~unxt.AbstractQuantity`, ``v`` is packed into a 1-D
-    {class}`~coordinax.internal.QuantityMatrix` and the result is computed
+    {class}`~coordinax.internal.QMatrix` and the result is computed
     via ``qnp.matmul(J, v_qm)``, which handles per-element unit conversion.
 
     Parameters
     ----------
     J
-        QuantityMatrix of shape ``(n_out, n_in)`` returned by ``jac_pt_map``.
+        QMatrix of shape ``(n_out, n_in)`` returned by ``jac_pt_map``.
     from_components
         Ordered component names for the input chart (columns of J).
     to_components
@@ -78,15 +78,15 @@ def _apply_jac(
     """
     if isinstance(v[from_components[0]], u.AbstractQuantity):
         v_arr, v_units = pack_nonuniform_unit(v, keys=from_components)
-        v_qm = QuantityMatrix(v_arr, unit=v_units)
-        w = qnp.matmul(J, v_qm)  # (n_out,) QuantityMatrix
+        v_qm = QMatrix(v_arr, unit=v_units)
+        w = qnp.matmul(J, v_qm)  # (n_out,) QMatrix
         return {key: u.Q(w.value[i], w.unit[i]) for i, key in enumerate(to_components)}
 
     v_arr = jnp.stack([jnp.asarray(v[k]) for k in from_components])
-    # When J is a QuantityMatrix, use J.value to avoid the Quax fallback path
-    # that returns a QuantityMatrix with J's own 2D unit structure (wrong).
+    # When J is a QMatrix, use J.value to avoid the Quax fallback path
+    # that returns a QMatrix with J's own 2D unit structure (wrong).
     # Plain-array velocity is dimensionless, so numeric-only application is correct.
-    j_arr = J.value if isinstance(J, QuantityMatrix) else J
+    j_arr = J.value if isinstance(J, QMatrix) else J
     result = j_arr @ v_arr
     return {key: result[i] for i, key in enumerate(to_components)}
 
@@ -112,8 +112,6 @@ def tangent_map(
     Applies the Jacobian of the chart transition map to the tangent vector
     components ``v``, evaluated at the base point ``at``.
 
-    Examples
-    --------
     Convert a tangent vector from Cartesian to polar 2D at the point (1, 0):
 
     >>> import jax.numpy as jnp
@@ -154,8 +152,6 @@ def tangent_map(
     2. apply the chart Jacobian pushforward,
     3. convert target components back to physical basis.
 
-    Examples
-    --------
     Convert a physical-basis tangent vector from Cartesian to spherical 3D:
 
     >>> import unxt as u
@@ -215,8 +211,6 @@ def tangent_map(
     Applies the Jacobian of the chart transition map to the tangent vector
     components ``v``, evaluated at the base point ``at``.
 
-    Examples
-    --------
     Convert a tangent vector from Cartesian to polar 2D at the point (1, 0):
 
     >>> import jax.numpy as jnp
@@ -256,8 +250,6 @@ def tangent_map(
     Applies the Jacobian of the chart transition map to the tangent vector
     components ``v``, evaluated at the base point ``at``.
 
-    Examples
-    --------
     Convert a tangent vector from Cartesian to polar 2D at the point (1, 0):
 
     >>> import jax.numpy as jnp

@@ -108,16 +108,13 @@ identity = Identity()  # convenience instance
 def simplify(op: Identity, /, **__: Any) -> Identity:
     """Simplify a {class}`coordinax.transforms.Identity` operator.
 
-    Examples
-    --------
-    The {class}`coordinax.transforms.Identity` operator is the simplest operator and
+    The `coordinax.transforms.Identity` operator is the simplest operator and
     cannot be simplified further:
 
     >>> import coordinax.transforms as cxfm
 
-    >>> op = cxfm.Identity()
-    >>> simplified = cxfm.simplify(op)
-    >>> simplified == op
+    >>> op = cxfm.identity
+    >>> cxfm.simplify(op) is op
     True
 
     """
@@ -133,13 +130,11 @@ def simplify(op: Identity, /, **__: Any) -> Identity:
 def act(op: Identity, tau: Any, x: Any, /, *args: Any, **kw: Any) -> Any:
     """Identity operator - returns input unchanged.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
 
-    >>> op = cxfm.Identity()
+    >>> op = cxfm.identity
 
     >>> q = [1, 2, 3]
     >>> cxfm.act(op, None, q) is q

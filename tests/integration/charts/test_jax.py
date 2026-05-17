@@ -27,8 +27,8 @@ import coordinax.charts as cxc
 # Helpers
 # ---------------------------------------------------------------------------
 
-_pos_floats = st.floats(min_value=0.5, max_value=5.0, width=32, allow_nan=False)
-_any_floats = st.floats(min_value=-5.0, max_value=5.0, width=32, allow_nan=False)
+_pos_floats = st.floats(min_value=0.5, max_value=5, width=32, allow_nan=False)
+_any_floats = st.floats(min_value=-5, max_value=5, width=32, allow_nan=False)
 
 
 def _cart3d_to_sph3d(x, y, z):
@@ -62,7 +62,7 @@ class TestJITCompatibility:
 
     def test_jit_cart3d_to_sph3d_matches_eager(self) -> None:
         """jit(cart3d → sph3d) gives the same result as the eager call."""
-        x, y, z = u.Q(3.0, "m"), u.Q(4.0, "m"), u.Q(0.0, "m")
+        x, y, z = u.Q(3, "m"), u.Q(4, "m"), u.Q(0, "m")
 
         r_eager, theta_eager, phi_eager = _cart3d_to_sph3d(x, y, z)
         r_jit, theta_jit, phi_jit = jax.jit(_cart3d_to_sph3d)(x, y, z)
@@ -77,7 +77,7 @@ class TestJITCompatibility:
 
     def test_jit_cart3d_to_cyl3d_matches_eager(self) -> None:
         """jit(cart3d → cyl3d) gives the same result as the eager call."""
-        x, y, z = u.Q(3.0, "m"), u.Q(4.0, "m"), u.Q(5.0, "m")
+        x, y, z = u.Q(3, "m"), u.Q(4, "m"), u.Q(5, "m")
 
         rho_eager, phi_eager, z_eager = _cart3d_to_cyl3d(x, y, z)
         rho_jit, phi_jit, z_jit = jax.jit(_cart3d_to_cyl3d)(x, y, z)
@@ -97,11 +97,11 @@ class TestJITCompatibility:
             p = {"x": x, "y": y, "z": z}
             return cxc.pt_map(p, cxc.cart3d, cxc.cart3d)
 
-        x, y, z = u.Q(1.0, "m"), u.Q(2.0, "m"), u.Q(3.0, "m")
+        x, y, z = u.Q(1, "m"), u.Q(2, "m"), u.Q(3, "m")
         result = jax.jit(identity)(x, y, z)
-        assert u.ustrip("m", result["x"]) == pytest.approx(1.0)
-        assert u.ustrip("m", result["y"]) == pytest.approx(2.0)
-        assert u.ustrip("m", result["z"]) == pytest.approx(3.0)
+        assert u.ustrip("m", result["x"]) == pytest.approx(1)
+        assert u.ustrip("m", result["y"]) == pytest.approx(2)
+        assert u.ustrip("m", result["z"]) == pytest.approx(3)
 
     @given(x=_any_floats, y=_any_floats, z=_pos_floats)
     @settings(deadline=None)
@@ -123,9 +123,9 @@ class TestVmapCompatibility:
 
     def test_vmap_cart3d_to_sph3d_matches_individual(self) -> None:
         """vmap(cart3d → sph3d) over a batch matches element-wise results."""
-        xs = u.Q(jnp.array([1.0, 0.0, 0.0]), "m")
-        ys = u.Q(jnp.array([0.0, 1.0, 0.0]), "m")
-        zs = u.Q(jnp.array([0.0, 0.0, 1.0]), "m")
+        xs = u.Q(jnp.array([1, 0, 0]), "m")
+        ys = u.Q(jnp.array([0, 1, 0]), "m")
+        zs = u.Q(jnp.array([0, 0, 1]), "m")
 
         r_batch, _, _ = jax.vmap(_cart3d_to_sph3d)(xs, ys, zs)
 
@@ -147,9 +147,9 @@ class TestVmapCompatibility:
 
     def test_vmap_matches_looped_individual(self) -> None:
         """Vmap result == list of individual calls stacked together."""
-        xs = u.Q(jnp.array([3.0, 0.0, 0.0]), "m")
-        ys = u.Q(jnp.array([0.0, 4.0, 0.0]), "m")
-        zs = u.Q(jnp.array([0.0, 0.0, 5.0]), "m")
+        xs = u.Q(jnp.array([3, 0, 0]), "m")
+        ys = u.Q(jnp.array([0, 4, 0]), "m")
+        zs = u.Q(jnp.array([0, 0, 5]), "m")
 
         r_vmap, theta_vmap, _phi_vmap = jax.vmap(_cart3d_to_sph3d)(xs, ys, zs)
 
@@ -200,18 +200,18 @@ class TestGradCompatibility:
         """dr/dx = 1 at (1, 0, 0) m — agrees with the analytic Jacobian."""
 
         def r_value(x_val):
-            p = {"x": u.Q(x_val, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+            p = {"x": u.Q(x_val, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
             return cxc.pt_map(p, cxc.cart3d, cxc.sph3d)["r"].value
 
         dr_dx = jax.grad(r_value)(1.0)
-        assert float(dr_dx) == pytest.approx(1.0, rel=1e-5)
+        assert float(dr_dx) == pytest.approx(1, rel=1e-5)
 
     # drho/dx = x/rho.  At (3,4,0): rho=5, so drho/dx = 3/5 = 0.6.
     def test_grad_rho_wrt_x_at_known_point(self) -> None:
         """drho/dx = x/rho — checked at (3, 4, 0) m."""
 
         def rho_value(x_val):
-            p = {"x": u.Q(x_val, "m"), "y": u.Q(4.0, "m"), "z": u.Q(0.0, "m")}
+            p = {"x": u.Q(x_val, "m"), "y": u.Q(4, "m"), "z": u.Q(0, "m")}
             return cxc.pt_map(p, cxc.cart3d, cxc.cyl3d)["rho"].value
 
         drho_dx = jax.grad(rho_value)(3.0)
@@ -222,11 +222,11 @@ class TestGradCompatibility:
         """d(polar r)/dx = 1 at (1, 0) m."""
 
         def r_polar(x_val):
-            p = {"x": u.Q(x_val, "m"), "y": u.Q(0.0, "m")}
+            p = {"x": u.Q(x_val, "m"), "y": u.Q(0, "m")}
             return cxc.pt_map(p, cxc.cart2d, cxc.polar2d)["r"].value
 
         dr_dx = jax.grad(r_polar)(1.0)
-        assert float(dr_dx) == pytest.approx(1.0, rel=1e-5)
+        assert float(dr_dx) == pytest.approx(1, rel=1e-5)
 
     @given(x=_pos_floats, z=_pos_floats)
     @settings(deadline=None)
@@ -234,7 +234,7 @@ class TestGradCompatibility:
         """Property: dr/dx = x/r (analytical Jacobian of spherical r)."""
 
         def r_value(x_val):
-            p = {"x": u.Q(x_val, "m"), "y": u.Q(0.0, "m"), "z": u.Q(z, "m")}
+            p = {"x": u.Q(x_val, "m"), "y": u.Q(0, "m"), "z": u.Q(z, "m")}
             return cxc.pt_map(p, cxc.cart3d, cxc.sph3d)["r"].value
 
         dr_dx = jax.grad(r_value)(x)
@@ -252,7 +252,7 @@ class TestComposedTransforms:
 
     def test_jit_vmap(self) -> None:
         """jit(vmap(fn)) works and gives the same result as vmap(fn)."""
-        xs = u.Q(jnp.array([1.0, 2.0, 3.0]), "m")
+        xs = u.Q(jnp.array([1, 2, 3]), "m")
         ys = u.Q(jnp.zeros(3), "m")
         zs = u.Q(jnp.zeros(3), "m")
 
@@ -265,7 +265,7 @@ class TestComposedTransforms:
         """jit(grad(fn)) works and gives the same result as grad(fn)."""
 
         def r_value(x_val):
-            p = {"x": u.Q(x_val, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+            p = {"x": u.Q(x_val, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
             return cxc.pt_map(p, cxc.cart3d, cxc.sph3d)["r"].value
 
         dr_dx_grad = jax.grad(r_value)(1.0)
