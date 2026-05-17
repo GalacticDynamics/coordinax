@@ -1803,7 +1803,7 @@ class TestInvQMatrix:
 
     def test_jit_QMatrix(self):
         """Inv of QMatrix works under jax.jit."""
-        A = QMat(jnp.array([[4.0, 0.0], [0.0, 1.0]]), unit=((_m, _m), (_m, _m)))
+        A = QMat(jnp.array([[4, 0], [0, 1]]), unit=((_m, _m), (_m, _m)))
         result = jax.jit(quax.quaxify(qm_inv))(A)
         assert jnp.allclose(result.value, jnp.array([[0.25, 0.0], [0.0, 1.0]]))
         assert result.unit[0, 0] == u.unit("1 / m")
