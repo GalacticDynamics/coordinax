@@ -47,7 +47,7 @@ class TestCDictValueControl:
 
     @given(
         p=cxst.cdicts(
-            cxc.cart3d, elements=st.floats(min_value=1.0, max_value=100.0, width=32)
+            cxc.cart3d, elements=st.floats(min_value=1, max_value=100, width=32)
         )
     )
     def test_first_octant_via_elements(self, p):
@@ -58,7 +58,7 @@ class TestCDictValueControl:
 
     @given(
         p=cxst.cdicts(
-            cxc.cart3d, elements=st.floats(min_value=-100.0, max_value=-1.0, width=32)
+            cxc.cart3d, elements=st.floats(min_value=-100, max_value=-1, width=32)
         )
     )
     def test_negative_octant_via_elements(self, p):
@@ -70,16 +70,14 @@ class TestCDictValueControl:
     @given(
         p=cxst.cdicts(
             cxc.cart2d,
-            elements=st.floats(
-                min_value=-10.0, max_value=10.0, allow_nan=False, width=32
-            ),
+            elements=st.floats(min_value=-10, max_value=10, allow_nan=False, width=32),
         )
     )
     def test_bounded_range(self, p):
         """elements= with explicit bounds keeps all component magnitudes in range."""
         for key in ("x", "y"):
             val = float(p[key].value)
-            assert -10.0 <= val <= 10.0
+            assert -10 <= val <= 10
 
     @given(data=st.data())
     def test_second_quadrant_per_component(self, data):
@@ -90,12 +88,12 @@ class TestCDictValueControl:
         p_x = data.draw(
             cxst.cdicts(
                 cxc.cart2d,
-                elements=st.floats(min_value=-100.0, max_value=-1.0, width=32),
+                elements=st.floats(min_value=-100, max_value=-1, width=32),
             )
         )
         p_y = data.draw(
             cxst.cdicts(
-                cxc.cart2d, elements=st.floats(min_value=1.0, max_value=100.0, width=32)
+                cxc.cart2d, elements=st.floats(min_value=1, max_value=100, width=32)
             )
         )
 
@@ -104,7 +102,7 @@ class TestCDictValueControl:
 
     @given(
         p=cxst.cdicts(
-            cxc.sph3d, elements=st.floats(min_value=1.0, max_value=100.0, width=32)
+            cxc.sph3d, elements=st.floats(min_value=1, max_value=100, width=32)
         )
     )
     def test_spherical_positive_elements(self, p):

@@ -71,8 +71,8 @@ def bounded_value(draw, x: int):
 @dispatch
 @st.composite
 def bounded_value(draw, x: float):  # noqa: F811
-    """Strategy: draw a float in [x, x+1.0]."""
-    return draw(st.floats(min_value=x, max_value=x + 1.0, allow_nan=False))
+    """Strategy: draw a float in [x, x+1]."""
+    return draw(st.floats(min_value=x, max_value=x + 1, allow_nan=False))
 
 
 @given(bounded_value(5))
@@ -143,10 +143,10 @@ def test_dispatch_two_int_args(v):
     assert 0 <= v <= 100
 
 
-@given(interval_value(0.0, 1.0))
+@given(interval_value(0, 1))
 def test_dispatch_two_float_args(v):
     assert isinstance(v, float)
-    assert 0.0 <= v <= 1.0
+    assert 0 <= v <= 1
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ def test_dispatch_two_float_args(v):
 @st.composite
 def typed_number(draw, x: Number):
     """Fallback: any number → float in [0, 1]."""
-    return draw(st.floats(min_value=0.0, max_value=1.0, allow_nan=False))
+    return draw(st.floats(min_value=0, max_value=1, allow_nan=False))
 
 
 @dispatch
@@ -166,11 +166,7 @@ def typed_number(draw, x: Number):
 def typed_number(draw, x: Real):  # noqa: F811
     """Specialisation for real numbers: float near x."""
     return draw(
-        st.floats(
-            min_value=float(x) - 1.0,
-            max_value=float(x) + 1.0,
-            allow_nan=False,
-        )
+        st.floats(min_value=float(x) - 1, max_value=float(x) + 1, allow_nan=False)
     )
 
 
@@ -193,7 +189,7 @@ def test_real_overload_for_float(v):
     """float is a Real but not an int → Real overload is selected."""
     assert isinstance(v, float)
     x = 3.14
-    assert float(x) - 1.0 <= v <= float(x) + 1.0
+    assert float(x) - 1 <= v <= float(x) + 1
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -213,8 +209,8 @@ def sorted_pair(draw, n: int):
 @dispatch
 @st.composite
 def sorted_pair(draw, x: float):  # noqa: F811
-    """Draw (a, b) with 0.0 ≤ a ≤ b ≤ x (floats)."""
-    a = draw(st.floats(min_value=0.0, max_value=x, allow_nan=False))
+    """Draw (a, b) with 0 ≤ a ≤ b ≤ x (floats)."""
+    a = draw(st.floats(min_value=0, max_value=x, allow_nan=False))
     b = draw(st.floats(min_value=a, max_value=x, allow_nan=False))
     return (a, b)
 
@@ -227,12 +223,12 @@ def test_sorted_int_pair(pair):
     assert 0 <= b <= 100
 
 
-@given(sorted_pair(1.0))
+@given(sorted_pair(1))
 def test_sorted_float_pair(pair):
     a, b = pair
     assert a <= b
-    assert 0.0 <= a <= 1.0
-    assert 0.0 <= b <= 1.0
+    assert 0 <= a <= 1
+    assert 0 <= b <= 1
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -253,9 +249,7 @@ def multi_bounded(draw, *xs: int):
 @st.composite
 def multi_bounded(draw, *xs: float):  # noqa: F811
     """Draw one float in [x, x+1] for each seed value x."""
-    return [
-        draw(st.floats(min_value=x, max_value=x + 1.0, allow_nan=False)) for x in xs
-    ]
+    return [draw(st.floats(min_value=x, max_value=x + 1, allow_nan=False)) for x in xs]
 
 
 @given(multi_bounded(0, 10, 20))
@@ -273,7 +267,7 @@ def test_varargs_float_overload(values):
     """All-float varargs resolves to the float overload."""
     assert len(values) == 2
     assert all(isinstance(v, float) for v in values)
-    assert 0.0 <= values[0] <= 1.0
+    assert 0 <= values[0] <= 1
     assert 0.5 <= values[1] <= 1.5
 
 
@@ -284,7 +278,7 @@ def test_varargs_mixed_type_raises():
     type.  Use the per-element pattern (Section 7) for heterogeneous lists.
     """
     with pytest.raises(NotFoundLookupError):
-        multi_bounded(1, 2.0)  # int + float → no overload matches
+        multi_bounded(1, 2.5)  # int + float → no overload matches
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -302,7 +296,7 @@ def _element_strategy(x: int) -> st.SearchStrategy:
 
 @dispatch
 def _element_strategy(x: float) -> st.SearchStrategy:
-    return st.floats(min_value=x, max_value=x + 1.0, allow_nan=False)
+    return st.floats(min_value=x, max_value=x + 1, allow_nan=False)
 
 
 @st.composite

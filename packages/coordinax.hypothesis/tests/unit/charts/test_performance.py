@@ -5,6 +5,7 @@ import time
 import pytest
 
 import coordinax.charts as cxc
+
 import coordinax.hypothesis.main as cxst
 
 
@@ -60,7 +61,7 @@ def test_drawing_charts_is_fast():
     elapsed = time.perf_counter() - start
 
     # Drawing 10 examples should complete in < 1 second
-    assert elapsed < 1.0, f"Drawing 10 examples took {elapsed:.3f}s"
+    assert elapsed < 1, f"Drawing 10 examples took {elapsed:.3f}s"
 
     # Verify we got valid charts
     assert all(isinstance(chart, cxc.AbstractChart) for chart in examples)

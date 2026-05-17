@@ -140,7 +140,7 @@ def test_angle_arithmetic(angle1, angle2):
     """Angles support arithmetic operations."""
     # Can add/subtract angles
     diff = angle1 - angle2
-    assert isinstance(diff, u.Quantity)
+    assert isinstance(diff, u.Q)
 ```
 
 ### Using Assumptions
