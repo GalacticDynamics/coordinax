@@ -67,6 +67,7 @@ def pt_map(
     del usys  # unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
+
     return p
 
 
@@ -89,21 +90,23 @@ def pt_map(
 
     lat = pi/2 - theta, lon = phi.
 
-    Examples
-    --------
+    >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
     >>> import unxt as u
+
     >>> p = {"theta": u.Q(0, "rad"), "phi": u.Q(0, "rad")}  # North pole
-    >>> cxc.pt_map(p, cxc.sph2, cxc.lonlat_sph2)
+    >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.lonlat_sph2)
     {'lon': Q(0, 'rad'), 'lat': Q(90., 'deg')}
 
     >>> p = {"theta": u.Q(90, "deg"), "phi": u.Q(45, "deg")}  # Equator
-    >>> cxc.pt_map(p, cxc.sph2, cxc.lonlat_sph2)
-    {'lon': Q(45, 'deg'), 'lat': Q(0., 'deg')}
+    >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.lonlat_sph2)
+    {'lon': Q(45, 'deg'), 'lat': Q(0, 'deg')}
 
     """
+    del usys  # Unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
+
     lat = p["theta"]
     lat = u.Q(90, "deg") - lat if is_any_quantity(lat) else jnp.pi / 2 - lat
     return {"lon": p["phi"], "lat": lat}
@@ -124,14 +127,13 @@ def pt_map(
 
     theta = pi/2 - lat, phi = lon.
 
-    Examples
-    --------
+    >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
     >>> p = {"lon": u.Q(45, "deg"), "lat": u.Q(0, "deg")}
-    >>> cxc.pt_map(p, cxc.lonlat_sph2, cxc.sph2)
-    {'theta': Q(90., 'deg'), 'phi': Q(45, 'deg')}
+    >>> cxc.pt_map(p, cxm.S2, cxc.lonlat_sph2, cxm.S2, cxc.sph2)
+    {'theta': Q(90, 'deg'), 'phi': Q(45, 'deg')}
 
     """
     del usys
@@ -162,18 +164,17 @@ def pt_map(
 
     lat = pi/2 - theta, lon_coslat = phi * cos(lat).
 
-    Examples
-    --------
+    >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
     >>> import unxt as u
     >>> import quaxed.numpy as jnp
 
     >>> p = {"theta": u.Q(90, "deg"), "phi": u.Q(45, "deg")}  # equator
-    >>> cxc.pt_map(p, cxc.sph2, cxc.loncoslat_sph2)
+    >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.loncoslat_sph2)
     {'lon_coslat': Q(45., 'deg'), 'lat': Q(0., 'deg')}
 
     >>> p = {"theta": u.Q(0, "deg"), "phi": u.Q(45, "deg")}  # north pole
-    >>> result = cxc.pt_map(p, cxc.sph2, cxc.loncoslat_sph2)
+    >>> result = cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.loncoslat_sph2)
     >>> bool(jnp.allclose(u.ustrip("deg", result["lat"]), 90.0))
     True
 
@@ -203,13 +204,12 @@ def pt_map(
 
     theta = pi/2 - lat, phi = lon_coslat / cos(lat).
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
     >>> import unxt as u
 
     >>> p = {"lon_coslat": u.Q(45, "deg"), "lat": u.Q(0, "deg")}
-    >>> cxc.pt_map(p, cxc.loncoslat_sph2, cxc.sph2)
+    >>> cxc.pt_map(p, cxm.S2, cxc.loncoslat_sph2, cxm.S2, cxc.sph2)
     {'theta': Q(90., 'deg'), 'phi': Q(45., 'deg')}
 
     """
@@ -241,13 +241,12 @@ def pt_map(
 
     Swaps theta and phi (physics -> math convention).
 
-    Examples
-    --------
+    >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
     >>> p = {"theta": u.Q(30, "deg"), "phi": u.Q(60, "deg")}
-    >>> cxc.pt_map(p, cxc.sph2, cxc.math_sph2)
+    >>> cxm.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.math_sph2)
     {'theta': Q(60, 'deg'), 'phi': Q(30, 'deg')}
 
     """
@@ -272,17 +271,17 @@ def pt_map(
 
     Swaps theta and phi (math -> physics convention).
 
-    Examples
-    --------
+    >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
     >>> p = {"theta": u.Q(60, "deg"), "phi": u.Q(30, "deg")}
-    >>> cxc.pt_map(p, cxc.math_sph2, cxc.sph2)
+    >>> cxc.pt_map(p, cxm.S2, cxc.math_sph2, cxm.S2, cxc.sph2)
     {'theta': Q(30, 'deg'), 'phi': Q(60, 'deg')}
 
     """
     del usys  # Unused
     assert from_M == from_chart.M  # noqa: S101
     assert to_M == to_chart.M  # noqa: S101
+
     return {"theta": p["phi"], "phi": p["theta"]}

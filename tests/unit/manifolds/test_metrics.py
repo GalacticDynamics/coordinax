@@ -115,7 +115,7 @@ class TestAbstractDiagonalMetricContract:
             ),
             "minkowski4d": (
                 cxm.MinkowskiMetric(),
-                cxc.SpaceTimeCT(cxc.cart3d),
+                cxc.MinkowskiCT(),
                 {
                     "ct": u.Q(1.0, "m"),
                     "x": u.Q(0.0, "m"),
@@ -338,7 +338,7 @@ class TestMinkowskiMetric:
 
     def test_metric_matrix_is_diagonal(self):
         m = cxm.MinkowskiMetric()
-        chart = cxc.SpaceTimeCT(cxc.cart3d)
+        chart = cxc.MinkowskiCT()
         p = {
             "ct": u.Q(1.0, "m"),
             "x": u.Q(0.0, "m"),
@@ -353,7 +353,7 @@ class TestMinkowskiMetric:
     def test_metric_matrix_is_position_independent(self):
         """Minkowski metric is flat — does not depend on position."""
         m = cxm.MinkowskiMetric()
-        chart = cxc.SpaceTimeCT(cxc.cart3d)
+        chart = cxc.MinkowskiCT()
         p1 = {
             "ct": u.Q(1.0, "m"),
             "x": u.Q(0.0, "m"),
@@ -372,7 +372,7 @@ class TestMinkowskiMetric:
 
     def test_metric_matrix_jit(self):
         m = cxm.MinkowskiMetric()
-        chart = cxc.SpaceTimeCT(cxc.cart3d)
+        chart = cxc.MinkowskiCT()
         p = {
             "ct": u.Q(1.0, "m"),
             "x": u.Q(0.0, "m"),

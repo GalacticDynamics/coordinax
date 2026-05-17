@@ -60,7 +60,7 @@ class TestAngleBetweenFailureModes:
         }
 
         with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
-            cxm.angle_between(metric, cxc.spacetimect, uvec, vvec, at=at)
+            cxm.angle_between(metric, cxc.minkowskict, uvec, vvec, at=at)
 
 
 class TestAngleBetweenJAX:

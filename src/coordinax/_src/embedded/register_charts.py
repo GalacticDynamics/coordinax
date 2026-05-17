@@ -56,7 +56,7 @@ def pt_map(
     # First check if the intrinsic and ambient manifolds are the same, in which
     # case we can just delegate to the chart-level transition map.
     if M.intrinsic == M.ambient:
-        out = cxcapi.pt_map(p, from_chart, to_chart, M.intrinsic, usys=usys)
+        out = cxcapi.pt_map(p, from_chart, to_chart, usys=usys)
         return cast("CDict", out)
 
     # Now that we know the intrinsic and ambient manifolds are different, we can

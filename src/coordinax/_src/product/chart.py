@@ -45,9 +45,9 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
         - General product charts use **dot-delimited** string keys:
           ``"factor_name.c"`` where ``factor_name`` identifies the factor and
           ``c`` is the factor's component key.
-        - Specialized products (e.g. `SpaceTimeCT`) may
+        - Specialized products (i.e. `AbstractFlatCartesianProductChart` subclasses) may
           expose **flat** string keys as a documented exception when component
-          names are guaranteed collision-free (e.g. "ct", "x", "y", "z").
+          names are guaranteed collision-free.
 
     Normative requirements:
     - `factors` is an ordered tuple of charts
@@ -62,45 +62,13 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
     factor_names: tuple[str, ...]
     """Factor names for namespaced keys. Must be unique and aligned with `factors`."""
 
-    @override
-    @property
-    def M(self) -> CartesianProductManifold:  # type: ignore[override]
-        """Return the product manifold of the factor charts' manifolds.
-
-        Examples
-        --------
-        >>> import coordinax.charts as cxc
-        >>> chart = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
-        >>> chart.M
-        CartesianProductManifold(factors=(Rn(3), Rn(3)), factor_names=('q', 'p'))
-
-        """
-        return CartesianProductManifold(
-            factors=tuple(f.M for f in self.factors), factor_names=self.factor_names
-        )
+    # ===============================================================
+    # Product Chart API
 
     @property
-    def ndim(self) -> int:
+    def ndims(self) -> tuple[int, ...]:
         """Total dimension: sum of factor dimensions."""
-        return sum(f.ndim for f in self.factors)
-
-    @property
-    def components(self) -> Ks:
-        """Component keys: dot-delimited strings ``"factor_name.component"``.
-
-        Components are dot-delimited string keys to avoid collisions:
-            (f"{name_0}.{c}" for c in factors[0].components, ...)
-        """
-        return tuple(  # Namespaced dot-delimited keys via a single comprehension
-            f"{name}.{c}"
-            for name, factor in zip(self.factor_names, self.factors, strict=True)
-            for c in factor.components
-        )  # ty: ignore[invalid-return-type]
-
-    @property
-    def coord_dimensions(self) -> Ds:
-        """Concatenation of factor coordinate dimensions."""
-        return tuple(d for f in self.factors for d in f.coord_dimensions)  # ty: ignore[invalid-return-type]
+        return tuple(f.ndim for f in self.factors)
 
     def split_components(self, p: CDict, /) -> tuple[CDict, ...]:
         """Partition a CDict by factor components.
@@ -154,6 +122,55 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
             for c, v in part.items()
         }
 
+    # ===============================================================
+    # Chart API
+
+    @override
+    @property
+    def M(self) -> CartesianProductManifold:  # type: ignore[override]
+        """Return the product manifold of the factor charts' manifolds.
+
+        Examples
+        --------
+        >>> import coordinax.charts as cxc
+        >>> chart = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
+        >>> chart.M
+        CartesianProductManifold(factors=(Rn(3), Rn(3)), factor_names=('q', 'p'))
+
+        """
+        return CartesianProductManifold(
+            factors=tuple(f.M for f in self.factors), factor_names=self.factor_names
+        )
+
+    @property
+    def components(self) -> Ks:
+        """Component keys: dot-delimited strings ``"factor_name.component"``.
+
+        Components are dot-delimited string keys to avoid collisions:
+            (f"{name_0}.{c}" for c in factors[0].components, ...)
+        """
+        # Namespaced dot-delimited keys via a single comprehension
+        cs = tuple(
+            f"{name}.{c}"
+            for name, factor in zip(self.factor_names, self.factors, strict=True)
+            for c in factor.components
+        )
+        return cast("Ks", cs)
+
+    @property
+    def coord_dimensions(self) -> Ds:
+        """Concatenation of factor coordinate dimensions."""
+        dims = tuple(d for f in self.factors for d in f.coord_dimensions)
+        return cast("Ds", dims)
+
+    @property
+    def ndim(self) -> int:
+        """Total dimension: sum of factor dimensions."""
+        return sum(f.ndim for f in self.factors)
+
+    # ===============================================================
+    # Wadler-Lindig API
+
     def __pdoc__(self, *, include_params: bool = False, **kw: Any) -> wl.AbstractDoc:
         return super().__pdoc__(include_params=include_params, **kw)
 
@@ -182,6 +199,10 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
       (must be collision-free)
     """
 
+    # ===============================================================
+    # Product Chart API
+
+    @override
     @property
     @abc.abstractmethod
     def factor_names(self) -> tuple[str, ...]:
@@ -190,28 +211,6 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         Subclasses must provide factor names even though components are flat.
         """
         raise NotImplementedError  # pragma: no cover
-
-    @property
-    def components(self) -> Ks:
-        """Component keys: flat strings (collision-free concatenation of factors).
-
-        Components are the direct concatenation of factor component strings
-        (must be collision-free).
-        """
-        # Flat keys (specialized products like SpaceTimeCT)
-        seen: set[str] = set()
-        flat_components: list[str] = []
-        seen_add = seen.add
-        fc_append = flat_components.append
-        for c in chain.from_iterable(f.components for f in self.factors):
-            if c in seen:
-                msg = MSG_COMPONENT_KEY_COLLISION.format(
-                    chart=self, comps=flat_components, c=c
-                )
-                raise ValueError(msg)
-            seen_add(c)
-            fc_append(c)
-        return tuple(flat_components)  # ty: ignore[invalid-return-type]
 
     def split_components(self, p: CDict, /) -> tuple[CDict, ...]:
         """Partition a CDict by factor components.
@@ -253,6 +252,31 @@ class AbstractFlatCartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 
         """
         return {k: v for part in parts for k, v in part.items()}
+
+    # ===============================================================
+    # Chart API
+
+    @property
+    def components(self) -> Ks:
+        """Component keys: flat strings (collision-free concatenation of factors).
+
+        Components are the direct concatenation of factor component strings
+        (must be collision-free).
+        """
+        # Flat keys (AbstractFlatCartesianProductChart subclasses)
+        seen: set[str] = set()
+        flat_components: list[str] = []
+        seen_add = seen.add
+        fc_append = flat_components.append
+        for c in chain.from_iterable(f.components for f in self.factors):
+            if c in seen:
+                msg = MSG_COMPONENT_KEY_COLLISION.format(
+                    chart=self, comps=flat_components, c=c
+                )
+                raise ValueError(msg)
+            seen_add(c)
+            fc_append(c)
+        return tuple(flat_components)  # ty: ignore[invalid-return-type]
 
 
 # =========================================================
@@ -362,17 +386,19 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 @plum.dispatch
 def pt_map(
     p: CDict,
+    from_M: CartesianProductManifold,
     from_chart: AbstractCartesianProductChart,
+    to_M: CartesianProductManifold,
     to_chart: AbstractCartesianProductChart,
     /,
+    *,
     usys: OptUSys = None,
 ) -> CDict:
-    r"""AbstractCartesianProductChart -> AbstractCartesianProductChart (factorwise).
+    r"""ABC CartesianProductChart -> CartesianProductChart (factorwise).
 
-    Transforms between product charts by applying
-    {func}`~coordinax.charts.pt_map` to each factor
-    independently. Requires compatible factor structure (same number of factors,
-    pairwise compatible).
+    Transforms between product charts by applying `coordinax.charts.pt_map` to
+    each factor independently. Requires compatible factor structure (same number
+    of factors, pairwise compatible).
 
     Mathematical definition:
 
@@ -387,19 +413,22 @@ def pt_map(
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
-    Transform SpaceTimeCT (a product chart) between spatial representations:
+    Transform a Cartesian product chart between spatial representations:
 
-    >>> spacetime_cart = cxc.SpaceTimeCT(cxc.cart3d)
-    >>> spacetime_sph = cxc.SpaceTimeCT(cxc.sph3d)
-    >>> p = {"ct": u.Q(1.0, "s"), "x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"),
-    ...      "z": u.Q(0.0, "m")}
-    >>> result = cxc.pt_map(p, spacetime_cart, spacetime_sph)
-    >>> result["ct"]
+    >>> prod_crt = cxc.CartesianProductChart((cxc.time1d, cxc.cart3d), ("t", "q"))
+    >>> prod_sph = cxc.CartesianProductChart((cxc.time1d, cxc.sph3d), ("t", "q"))
+    >>> p = {"t.t": u.Q(1.0, "s"), "q.x": u.Q(1.0, "m"), "q.y": u.Q(0.0, "m"),
+    ...      "q.z": u.Q(0.0, "m")}
+    >>> result = cxc.pt_map(p, prod_crt, prod_sph)
+    >>> result["t.t"]
     Q(1., 's')
-    >>> result["r"]
+    >>> result["q.r"]
     Q(1., 'm')
 
     """
+    assert from_M == from_chart.M  # noqa: S101
+    assert to_M == to_chart.M  # noqa: S101
+
     # Product charts can't safely use the cartesian intermediate because their
     # cartesian version is still a product chart, which would recurse here. Do
     # a factor-wise transform directly instead.
@@ -413,8 +442,8 @@ def pt_map(
 
     parts = from_chart.split_components(p)
     transformed = tuple(
-        cxcapi.pt_map(p_part, f_factor, t_factor, usys=usys)
-        for p_part, f_factor, t_factor in zip(
+        cxcapi.pt_map(p_part, f.M, f, t.M, t, usys=usys)
+        for p_part, f, t in zip(
             parts, from_chart.factors, to_chart.factors, strict=True
         )
     )
@@ -425,9 +454,12 @@ def pt_map(
 @plum.dispatch
 def pt_map(
     p: CDict,
+    from_M: AbstractManifold,
     from_chart: AbstractChart,
+    to_M: CartesianProductManifold,
     to_chart: AbstractCartesianProductChart,
     /,
+    *,
     usys: OptUSys = None,
 ) -> CDict:
     """AbstractChart -> Cartesian -> AbstractCartesianProductChart.
@@ -445,7 +477,7 @@ def pt_map(
     Define explicit rules for non-product to product conversions.
 
     """
-    del p, usys
+    del p, from_M, to_M, usys
     msg = (
         f"No general transform between {type(from_chart).__name__} and "
         f"{type(to_chart).__name__}. Define explicit rules for non-product to "
@@ -457,9 +489,12 @@ def pt_map(
 @plum.dispatch
 def pt_map(
     p: CDict,
+    from_M: CartesianProductManifold,
     from_chart: AbstractCartesianProductChart,
+    to_M: AbstractManifold,
     to_chart: AbstractChart,
     /,
+    *,
     usys: OptUSys = None,
 ) -> CDict:
     """AbstractCartesianProductChart -> Cartesian -> AbstractChart.
@@ -477,7 +512,7 @@ def pt_map(
     Define explicit rules for product to non-product conversions.
 
     """
-    del p, usys
+    del p, from_M, to_M, usys
     msg = (
         f"No general transform between {type(from_chart).__name__} and "
         f"{type(to_chart).__name__}. Define explicit rules for product to "

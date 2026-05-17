@@ -39,11 +39,6 @@ class CustomManifold(AbstractManifold):
     >>> M.has_chart(cxc.polar2d)
     True
 
-    >>> x = {"x": 1.0, "y": 1.0}
-    >>> M.pt_map(x, cxc.cart2d, cxc.polar2d)
-    {'r': Array(1.41421356, dtype=float64, ...),
-     'theta': Array(0.78539816, dtype=float64, ...)}
-
     """
 
     atlas: AbstractAtlas

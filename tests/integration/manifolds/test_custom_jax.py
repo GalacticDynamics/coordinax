@@ -9,21 +9,11 @@ import pytest
 import unxt as u
 
 import coordinax.charts as cxc
-import coordinax.manifolds as cxm
-
-
-def _manifold_2d() -> cxm.CustomManifold:
-    atlas = cxm.CustomAtlas(
-        charts=(cxc.Cart2D, cxc.Polar2D),
-        chart_default=cxc.cart2d,
-    )
-    return cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
 
 
 def _cart2d_to_polar_with_custom(x: u.AbstractQuantity, y: u.AbstractQuantity):
-    manifold = _manifold_2d()
     p = {"x": x, "y": y}
-    out = manifold.pt_map(p, cxc.cart2d, cxc.polar2d)
+    out = cxc.pt_map(p, cxc.cart2d, cxc.polar2d)
     return out["r"], out["theta"]
 
 

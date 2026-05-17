@@ -140,24 +140,6 @@ class EuclideanManifold(AbstractManifold):
     ...     print(e)
     Chart Cart2D(M=Rn(2)) is not supported by this manifold atlas.
 
-    **Point transition maps**
-
-    Convert a point from Cartesian to spherical coordinates on $\mathbb{R}^3$.
-    The point $(0, 0, 1)$ maps to $(r, \theta, \phi) = (1, 0, 0)$:
-
-    >>> x = {"x": 0.0, "y": 0.0, "z": 1.0}
-    >>> M.pt_map(x, cxc.cart3d, cxc.sph3d)
-    {'r': Array(1., ...), 'theta': Array(0., ...), 'phi': Array(0., ...)}
-
-    Transitioning a point from Cartesian to polar coordinates on $\mathbb{R}^2$.
-    The point $(1, 1)$ has distance $\sqrt{2}$ and angle $\pi/4$ from the
-    origin:
-
-    >>> M2 = cxmd.EuclideanManifold(2)
-    >>> x2 = {"x": 1.0, "y": 1.0}
-    >>> M2.pt_map(x2, cxc.cart2d, cxc.polar2d)
-    {'r': Array(1.41421356, ...), 'theta': Array(0.78539816, ...)}
-
     **Pre-built instances**
 
     For the most common case — three-dimensional Euclidean space $\mathbb{R}^3$

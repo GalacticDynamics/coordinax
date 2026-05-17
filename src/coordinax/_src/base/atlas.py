@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING, Any
 
 import jax.tree_util as jtu
 
-import coordinax.api.charts as cxcapi
-
 if TYPE_CHECKING:
     import coordinax.charts  # noqa: ICN001
     import coordinax.manifolds  # noqa: ICN001
@@ -174,25 +172,3 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
 
         """
         return self.has_chart(chart)
-
-    # =====================================================
-
-    def pt_map(self, x: Any, /, *args: Any, **kwargs: Any) -> Any:
-        """Transition map for points, checking the atlas.
-
-        >>> import coordinax.charts as cxc
-        >>> import coordinax.manifolds as cxm
-
-        >>> atlas = cxm.EuclideanAtlas(2)
-
-        >>> x = {"x": 1.0, "y": 1.0}
-        >>> atlas.pt_map(x, cxc.cart2d, cxc.polar2d)
-        {'r': Array(1.41421356, dtype=float64, ...),
-         'theta': Array(0.78539816, dtype=float64, ...)}
-
-        >>> try: atlas.pt_map(x, cxc.cart2d, cxc.sph2)
-        ... except ValueError as e: print(e)
-        Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
-
-        """
-        return cxcapi.pt_map(x, self, *args, **kwargs)

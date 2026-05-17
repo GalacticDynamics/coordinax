@@ -11,7 +11,7 @@ import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .chart import AbstractSphericalTwoSphere
 from .embed import TwoSphereIn3D
-from .manifold import S2, HyperSphericalManifold
+from .manifold import HyperSphericalManifold
 from coordinax._src.base import AbstractChart
 from coordinax._src.charts.d3 import Abstract3D, Spherical3D
 from coordinax._src.custom_types import CDict, OptUSys
@@ -21,13 +21,13 @@ _twospherefrom3d: Final = TwoSphereIn3D(1)
 
 @plum.dispatch
 def pt_project(
-    p_ambient: Any,
+    p_ambient: object,
     from_ambient_chart: AbstractChart,
     M: HyperSphericalManifold,
     /,
     *,
     usys: OptUSys = None,
-) -> Any:
+) -> object:
     """Project a point from the 3D chart to the two-sphere intrinsic chart.
 
     This projection map is a special case for projecting from 3D charts to the
@@ -57,47 +57,15 @@ def pt_project(
     return _twospherefrom3d.project(x_sph, usys=usys)
 
 
-@plum.dispatch
+@plum.dispatch(precedence=1)
 def pt_map(
-    p: CDict,
-    M: HyperSphericalManifold,
+    p: Any,
     from_chart: Abstract3D,
     to_chart: AbstractSphericalTwoSphere,
     /,
     *,
     usys: OptUSys = None,
-) -> CDict:
-    """Project a point from the ambient chart to the two-sphere intrinsic chart.
-
-    This realization map is a special case for projecting from 3D charts to the
-    two-sphere intrinsic chart, which is a common use case. The projection does
-    not depend on the radius of the embedding, so this projection works in
-    general.
-
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-
-    >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
-    >>> M = cxm.HyperSphericalManifold()
-    >>> cxc.pt_map(q, M, cxc.cart3d, cxc.sph2)
-    {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
-
-    """
-    del M
-    p_s2 = cxmapi.pt_project(p, from_chart, to_chart, _twospherefrom3d, usys=usys)
-    return cast("CDict", p_s2)
-
-
-@plum.dispatch
-def pt_map(
-    p: CDict,
-    from_chart: Abstract3D,
-    to_chart: AbstractSphericalTwoSphere,
-    /,
-    *,
-    usys: OptUSys = None,
-) -> CDict:
+) -> Any:
     """Project a point from the ambient chart to the two-sphere intrinsic chart.
 
     This realization map is a special case for projecting from 3D charts to the
@@ -113,4 +81,6 @@ def pt_map(
     {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
 
     """
-    return cxmapi.pt_map(p, S2, from_chart, to_chart, usys=usys)  # ty: ignore[invalid-return-type]
+    # Delegate to the projection map, which handles the intermediate Spherical3D
+    p_s2 = cxmapi.pt_project(p, from_chart, to_chart, _twospherefrom3d, usys=usys)
+    return cast("CDict", p_s2)

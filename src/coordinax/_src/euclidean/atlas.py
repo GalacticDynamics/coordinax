@@ -120,26 +120,6 @@ class EuclideanAtlas(AbstractAtlas):
     >>> cxc.cart2d in atlas
     False
 
-    **Point transition maps**
-
-    Convert point coordinates between any two supported charts. The atlas
-    validates that both charts belong to it before delegating to the chart-level
-    transition map. Here the point $(1, 0, 0)$ in Cartesian — lying on the
-    positive $x$-axis — maps to $(r, \theta, \phi) = (1, \pi/2, 0)$ in
-    spherical:
-
-    >>> x = {"x": 1.0, "y": 0.0, "z": 0.0}
-    >>> atlas.pt_map(x, cxc.cart3d, cxc.sph3d)
-    {'r': Array(1., ...), 'theta': Array(1.57079633, ...), 'phi': Array(0., ...)}
-
-    Attempting a transition to a chart not in the atlas raises:
-
-    >>> try:
-    ...     atlas.pt_map(x, cxc.cart3d, cxc.cart2d)
-    ... except ValueError as e:
-    ...     print(e)
-    Atlas EuclideanAtlas(ndim=3) does not support chart Cart2D(M=Rn(2))
-
     """
 
     ndim: int
