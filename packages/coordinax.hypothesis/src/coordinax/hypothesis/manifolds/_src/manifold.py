@@ -281,7 +281,7 @@ def manifolds(  # noqa: F811
 @st.composite
 def manifolds(  # noqa: F811
     draw: st.DrawFn,
-    manifold_cls: type[cxm.EuclideanManifold],
+    M_cls: type[cxm.EuclideanManifold],
     /,
     *,
     filter: type | tuple[type, ...] | st.SearchStrategy = (),
@@ -305,7 +305,7 @@ def manifolds(  # noqa: F811
         if target_ndim is None
         else target_ndim
     )
-    return cxm.EuclideanManifold(dim)
+    return M_cls(dim)
 
 
 @plum.dispatch
@@ -313,7 +313,7 @@ def manifolds(  # noqa: F811
 @st.composite
 def manifolds(  # noqa: F811
     draw: st.DrawFn,
-    manifold_cls: type[cxm.HyperSphericalManifold],
+    M_cls: type[cxm.HyperSphericalManifold],
     /,
     *,
     filter: type | tuple[type, ...] | st.SearchStrategy = (),
@@ -332,10 +332,11 @@ def manifolds(  # noqa: F811
     >>> sphere = cxmst.manifolds(cxm.HyperSphericalManifold)
 
     """
+    del M_cls
     target_ndim = draw_if_strategy(draw, ndim)
     if target_ndim is not None and target_ndim != 2:
         assume(False)
-    return cxm.HyperSphericalManifold()
+    return cxm.S2
 
 
 @plum.dispatch
@@ -343,7 +344,7 @@ def manifolds(  # noqa: F811
 @st.composite
 def manifolds(  # noqa: F811
     draw: st.DrawFn,
-    manifold_cls: type[cxm.EmbeddedManifold],
+    M_cls: type[cxm.EmbeddedManifold],
     /,
     *,
     filter: type | tuple[type, ...] | st.SearchStrategy = (),
@@ -355,8 +356,8 @@ def manifolds(  # noqa: F811
     Currently this strategy generates an embedded two-sphere by constructing
     ``EmbeddedManifold`` directly with:
 
-    - ``intrinsic=HyperSphericalManifold()``
-    - ``ambient=EuclideanManifold(3)``
+    - ``intrinsic=S2``
+    - ``ambient=R3``
     - ``embed_map=TwoSphereIn3D(radius=...)``
 
     Examples with ``ndim != 2`` are discarded via ``hypothesis.assume``.
@@ -369,6 +370,7 @@ def manifolds(  # noqa: F811
     >>> embedded = cxmst.manifolds(cxm.EmbeddedManifold)
 
     """
+    del M_cls
     target_ndim = draw_if_strategy(draw, ndim)
     if target_ndim is not None and target_ndim != 2:
         assume(False)
@@ -419,7 +421,7 @@ def manifolds(  # noqa: F811
             required_chart_classes=required_chart_classes,
         )
     )
-    metric = cxm.EuclideanMetric(atlas.ndim)
+    metric = cxm.FlatMetric(atlas.ndim)
     return cxm.CustomManifold(atlas=atlas, metric=metric)
 
 

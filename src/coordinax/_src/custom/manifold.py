@@ -9,7 +9,7 @@ from typing import final
 
 import jax
 
-from coordinax._src.base import AbstractAtlas, AbstractManifold, AbstractMetric
+from coordinax._src.base import AbstractAtlas, AbstractManifold, AbstractMetricField
 
 
 @jax.tree_util.register_static
@@ -31,7 +31,7 @@ class CustomManifold(AbstractManifold):
     ...     charts=(cxc.Cart2D, cxc.Polar2D),
     ...     chart_default=cxc.cart2d,
     ... )
-    >>> M = cxm.CustomManifold(atlas=atlas, metric=cxm.EuclideanMetric(2))
+    >>> M = cxm.CustomManifold(atlas=atlas, metric=cxm.FlatMetric(2))
     >>> M.ndim
     2
     >>> M.default_chart()
@@ -44,7 +44,7 @@ class CustomManifold(AbstractManifold):
     atlas: AbstractAtlas
     """Atlas defining chart compatibility for this manifold."""
 
-    metric: AbstractMetric
+    metric: AbstractMetricField
     """Riemannian metric for this manifold, used for norm and distance computations."""
 
     def __post_init__(self) -> None:

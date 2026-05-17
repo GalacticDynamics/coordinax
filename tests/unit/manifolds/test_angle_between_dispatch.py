@@ -15,7 +15,7 @@ class TestAngleBetweenEuclidean:
     """Tests for angle_between on Euclidean metrics and manifolds."""
 
     def test_cartesian_right_angle_returns_angle(self):
-        metric = cxm.EuclideanMetric(2)
+        metric = cxm.FlatMetric(2)
         at = {"x": u.Q(jnp.array(0.0), "m"), "y": u.Q(jnp.array(0.0), "m")}
         uvec = {"x": u.Q(jnp.array(1.0), "m"), "y": u.Q(jnp.array(0.0), "m")}
         vvec = {"x": u.Q(jnp.array(0.0), "m"), "y": u.Q(jnp.array(2.0), "m")}
@@ -30,7 +30,7 @@ class TestAngleBetweenFailureModes:
     """Tests for invalid inputs and unsupported metrics."""
 
     def test_zero_norm_vector_raises_value_error(self):
-        metric = cxm.EuclideanMetric(2)
+        metric = cxm.FlatMetric(2)
         at = {"x": jnp.array(0.0), "y": jnp.array(0.0)}
         zero = {"x": jnp.array(0.0), "y": jnp.array(0.0)}
         other = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
@@ -67,7 +67,7 @@ class TestAngleBetweenJAX:
     """Tests for JAX compatibility of angle_between."""
 
     def test_jit(self):
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
 
         @jax.jit
         def compute(theta):
@@ -82,7 +82,7 @@ class TestAngleBetweenJAX:
         assert jnp.allclose(got, jnp.pi / 4, atol=1e-6)
 
     def test_vmap_values(self):
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         thetas = jnp.array([jnp.pi / 6, jnp.pi / 4, jnp.pi / 2])
 
         def compute(theta):
