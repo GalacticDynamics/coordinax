@@ -2,7 +2,7 @@
 
 import hypothesis.strategies as st
 import pytest
-from hypothesis import given, settings
+from hypothesis import HealthCheck, given, settings
 from hypothesis.errors import Unsatisfiable
 
 import coordinax.charts as cxc
@@ -152,7 +152,6 @@ class TestProductChartsFactorCount:
     )
     def test_factor_count_range(self, chart: cxc.AbstractCartesianProductChart) -> None:
         """Generated factor count respects min/max bounds."""
-        # Skip SpaceTime specializations which always have 2 conceptual factors
         if isinstance(chart, cxc.CartesianProductChart):
             assert 3 <= len(chart.factors) <= 5
 
@@ -161,11 +160,11 @@ class TestProductChartsFactorCount:
             cxc.AbstractCartesianProductChart, min_factors=1, max_factors=1
         )
     )
+    @settings(suppress_health_check=[HealthCheck.too_slow])
     def test_single_factor_product(
         self, chart: cxc.AbstractCartesianProductChart
     ) -> None:
         """Can generate product with single factor."""
-        # Skip SpaceTime specializations which always have 2 conceptual factors
         if isinstance(chart, cxc.CartesianProductChart):
             assert len(chart.factors) == 1
             # Still should have factor_names

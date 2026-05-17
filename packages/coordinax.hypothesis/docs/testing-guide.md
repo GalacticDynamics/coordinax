@@ -219,15 +219,14 @@ import coordinax.manifolds as cxm
 import coordinax.hypothesis.main as cxst
 
 
-# Generate valid kwargs for specific chart classes
-@given(kwargs=cxst.chart_init_kwargs(cxc.SpaceTimeCT))
-def test_spacetime_construction(kwargs):
-    """Test SpaceTimeCT construction with generated kwargs."""
-    # kwargs will contain 'spatial_chart' and 'c'
-    assert "spatial_chart" in kwargs
-    chart = cxc.SpaceTimeCT(**kwargs)
-    assert isinstance(chart, cxc.SpaceTimeCT)
-    assert chart.ndim == kwargs["spatial_chart"].ndim + 1
+# Generate valid kwargs for specific chart classes (MinkowskiCT has no required init params)
+@given(kwargs=cxst.chart_init_kwargs(cxc.MinkowskiCT))
+def test_minkowskict_construction(kwargs):
+    """Test MinkowskiCT construction with generated kwargs."""
+    # kwargs will be empty (MinkowskiCT has only KW_ONLY fields with defaults)
+    chart = cxc.MinkowskiCT(**kwargs)
+    assert isinstance(chart, cxc.MinkowskiCT)
+    assert chart.ndim == 4
 
 
 # Combine with chart_classes for generic testing

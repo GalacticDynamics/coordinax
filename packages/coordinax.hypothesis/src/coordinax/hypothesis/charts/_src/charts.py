@@ -56,10 +56,9 @@ def charts(
 
         In combination, this can be used to draw charts that satisfy multiple
         criteria, e.g., ``filter=(coordinax.charts.Abstract3D,
-        coordinax.charts.AbstractSpherical3D)``.  Just note that some 3-D
-        charts, e.g. SpaceTimeCT[Cart2D] are not subclasses of
-        {class}`coordinax.charts.Abstract3D` and will be excluded unless
-        explicitly added.
+        coordinax.charts.AbstractSpherical3D)``.  Just note that some charts
+        are not subclasses of `coordinax.charts.Abstract3D` (e.g. `MinkowskiCT`)
+        and will be excluded unless explicitly added.
     exclude
         Specific classes to exclude, by default ().
     ndim
@@ -206,9 +205,8 @@ def strategy_for_annotation(
 ) -> st.SearchStrategy:
     """Strategy for chart-typed annotations.
 
-    For chart-valued ``__init__`` parameters (e.g.
-    ``SpaceTimeCT.spatial_chart``), we must draw a valid chart *instance* rather
-    than instantiating abstract base classes like
+    For chart-valued ``__init__`` parameters, we must draw a valid chart
+    *instance* rather than instantiating abstract base classes like
     ``AbstractFixedComponentsChart()``.
 
     """

@@ -15,7 +15,7 @@ from typing import final
 
 import hypothesis.strategies as st
 import pytest
-from hypothesis import given
+from hypothesis import HealthCheck, given, settings
 
 import coordinax.charts as cxc
 
@@ -374,6 +374,7 @@ class TestEdgeCases:
         data=st.data(),
         chart_cls=cxst.chart_classes(filter=cxc.Abstract3D, exclude_abstract=True),
     )
+    @settings(suppress_health_check=[HealthCheck.too_slow])
     def test_3d_charts_have_three_components(
         self, data, chart_cls: type[cxc.AbstractChart]
     ) -> None:

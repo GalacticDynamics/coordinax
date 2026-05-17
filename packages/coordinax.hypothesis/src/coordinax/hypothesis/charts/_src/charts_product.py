@@ -3,12 +3,11 @@
 __all__: tuple[str, ...] = ("cartesian_product_factors",)
 
 import functools as ft
+import warnings
 from typing import Any
 
 import hypothesis.strategies as st
 import plum
-import unxt as u
-import unxt_hypothesis as ust
 from hypothesis import assume
 
 import coordinax.charts as cxc
@@ -249,69 +248,6 @@ def chart_init_kwargs(
 
 
 ##############################################################################
-# Specialized Cartesian Product Charts
-
-
-@plum.dispatch
-@strip_return_annotation
-@st.composite
-def charts(  # noqa: F811
-    draw: st.DrawFn, chart_cls: type[cxc.SpaceTimeCT], /, *, ndim: int | None = None
-) -> Any:
-    """Generate SpaceTimeCT charts with random spatial factors and `c` values.
-
-    Parameters
-    ----------
-    draw
-        Hypothesis draw function.
-    chart_cls
-        Class of the chart.
-    ndim
-        Target total dimensionality (including time). If specified, generates
-        spatial charts with ndim-1 dimensions. If `None`, generates 3-D spatial charts.
-
-    Returns
-    -------
-    SpaceTimeCT
-        A `SpaceTimeCT` instance with a random spatial chart and `c` value.
-
-    Examples
-    --------
-    >>> from hypothesis import given
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.hypothesis.main as cxst
-
-    >>> @given(chart=cxst.charts(cxc.SpaceTimeCT))
-    ... def test_spacetime_chart(chart):
-    ...     assert isinstance(chart, cxc.SpaceTimeCT)
-
-    """
-    # Draw a spatial chart with one less dimension than the target, since
-    # SpaceTimeCT has 1 time dimension plus the spatial chart's dimensions.
-    ndim = 4 if ndim is None else ndim
-    spatial_chart = draw(  # exclude=() allows 0-D
-        charts(filter=cxc.AbstractFixedComponentsChart, exclude=(), ndim=ndim - 1)  # ty: ignore[missing-argument, unknown-argument]
-    )
-
-    # Have a 10% chance to generate `c` different than the default value
-    if draw(st.integers(1, 100)) <= 10:
-        c = draw(
-            ust.quantities(
-                unit="km/s",
-                quantity_cls=u.StaticQuantity,
-                shape=(),
-                static_value=True,
-                elements=st.floats(min_value=1e6, max_value=5e6, width=32),
-            )
-        )
-        c = c.uconvert(draw(ust.units("speed")))
-    else:
-        c = cxc.SpaceTimeCT.__dataclass_fields__["c"].default
-
-    return cxc.SpaceTimeCT(spatial_chart=spatial_chart, c=c)
-
-
-##############################################################################
 # General product chart strategy
 
 
@@ -333,7 +269,7 @@ def charts(  # noqa: F811
 
     Generates product charts with a weighted distribution:
     - 25% chance: specialized flat-key products (concrete subclasses of
-      `AbstractFlatCartesianProductChart` like `SpaceTimeCT`)
+      `AbstractFlatCartesianProductChart`)
     - 75% chance: general `CartesianProductChart` with namespaced keys
 
     Parameters
@@ -397,15 +333,18 @@ def charts(  # noqa: F811
 
     """
     # If factor_charts/names are not provided we have a 25% chance to generate a
-    # specialized product chart.
-    if (factor_charts is None and factor_names is None) and draw(
-        st.integers(1, 100)
-    ) <= 25:
-        # 25% chance to generate a specialized product chart
-        # Get all concrete subclasses of AbstractFlatCartesianProductChart
+    # specialized product chart, if any exist.
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
         flat_product_classes = get_all_subclasses(
             cxc.AbstractFlatCartesianProductChart, exclude_abstract=True, exclude=()
         )
+    if (
+        flat_product_classes
+        and (factor_charts is None and factor_names is None)
+        and draw(st.integers(1, 100)) <= 25
+    ):
+        # 25% chance to generate a specialized product chart
         # Pick a random specialization
         flat_cls = draw(st.sampled_from(flat_product_classes))
 

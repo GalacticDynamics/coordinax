@@ -225,7 +225,7 @@ This module provides general-purpose strategies for generating valid `coordinax`
     - Abstract chart classes remain valid in the positional slot and act as chart-class filters.
     - Dimensional flag types such as `Abstract3D` are not chart classes and must still be passed via `filter=`.
     - If `ndim` is a concrete dimensional flag value, excludes other dimensional-flag families before class draw.
-    - Specialized overloads cover `CartesianProductChart`, `SpaceTimeCT`, and `AbstractCartesianProductChart`.
+    - Specialized overloads cover `AbstractCartesianProductChart`, `CartesianProductChart`.
 
     Specialized `charts(...)` overloads:
 
@@ -234,10 +234,6 @@ This module provides general-purpose strategies for generating valid `coordinax`
         - User-provided `factor_charts` and `factor_names` force the general `CartesianProductChart` path.
         - Otherwise generates factors internally and default names `f0`, `f1`, ...
         - Enforces `len(factors) == len(names)` with `assume(...)`.
-
-    - `charts(SpaceTimeCT, /, *, ndim=None)`
-        - Draws `spatial_chart` with `ndim - 1` (default total ndim is `4`).
-        - Uses the default `c` most of the time; with low probability draws a random physically valid static speed quantity.
 
     - `charts(AbstractCartesianProductChart, /, *, factor_charts=None, factor_names=None, ndim=None, min_factors=1, max_factors=3)`
         - If factors/names are user-provided: generates the general `CartesianProductChart` path.
