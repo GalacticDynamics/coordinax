@@ -20,7 +20,7 @@ import wadler_lindig as wl
 import dataclassish
 
 from .atlas import EuclideanAtlas
-from .metric import EuclideanMetric
+from .metric import FlatMetric
 from coordinax._src.base import AbstractManifold
 from coordinax._src.internal import pos_named_objs
 
@@ -163,7 +163,7 @@ class EuclideanManifold(AbstractManifold):
             raise TypeError(msg)
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", EuclideanAtlas(self.ndim))
-        object.__setattr__(self, "metric", EuclideanMetric(self.ndim))
+        object.__setattr__(self, "metric", FlatMetric(self.ndim))
 
     def __pdoc__(self, *, alias: bool = True, **kw: Any) -> wl.AbstractDoc:
         """Return the string representation.
@@ -172,7 +172,7 @@ class EuclideanManifold(AbstractManifold):
         --------
         >>> import wadler_lindig as wl
         >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(3)
+        >>> M = cxm.R3
         >>> wl.pprint(M)
         Rn(3)
 

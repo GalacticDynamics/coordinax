@@ -41,8 +41,7 @@ def pt_project(
     >>> import coordinax.manifolds as cxm
 
     >>> q = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
-    >>> M = cxm.HyperSphericalManifold()
-    >>> cxm.pt_project(q, cxc.cart3d, M)
+    >>> cxm.pt_project(q, cxc.cart3d, cxm.S2)
     {'theta': Q(1.57079633, 'rad'), 'phi': Q(0., 'rad')}
 
     """

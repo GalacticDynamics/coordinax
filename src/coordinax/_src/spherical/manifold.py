@@ -12,7 +12,7 @@ import wadler_lindig as wl
 import dataclassish
 
 from .atlas import HyperSphericalAtlas
-from .metric import HyperSphericalMetric
+from .metric import RoundMetric
 from coordinax._src.base import AbstractManifold
 from coordinax._src.internal import pos_named_objs
 
@@ -28,7 +28,7 @@ class HyperSphericalManifold(AbstractManifold):
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
 
-    >>> S2 = cxm.HyperSphericalManifold()
+    >>> S2 = cxm.HyperSphericalManifold(2)
     >>> S2.ndim
     2
 
@@ -46,7 +46,7 @@ class HyperSphericalManifold(AbstractManifold):
     def __init__(self, ndim: int = 2, /) -> None:
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", HyperSphericalAtlas(self.ndim))
-        object.__setattr__(self, "metric", HyperSphericalMetric(self.ndim))
+        object.__setattr__(self, "metric", RoundMetric(self.ndim))
 
     def __pdoc__(self, *, alias: bool = True, **kw: Any) -> wl.AbstractDoc:
         """Return the string representation.
@@ -55,7 +55,7 @@ class HyperSphericalManifold(AbstractManifold):
         --------
         >>> import wadler_lindig as wl
         >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(3)
+        >>> M = cxm.R3
         >>> wl.pprint(M)
         Rn(3)
 

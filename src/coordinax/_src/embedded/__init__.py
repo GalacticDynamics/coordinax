@@ -5,3 +5,4 @@ from .embedmap import *
 from .manifold import *
 from .metric import *
 from .register_charts import *
+from .register_metric import *

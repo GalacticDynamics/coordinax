@@ -293,8 +293,6 @@ def pt_map(
     2. Transforming in the ambient space (if the ambient charts differ)
     3. Projecting back to the intrinsic coordinates of the target manifold
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u
@@ -350,8 +348,6 @@ def pt_map(
     This transforms coordinates from an ambient chart (e.g., Cartesian or
     Spherical) into the intrinsic coordinates of an embedded manifold.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u
@@ -400,8 +396,6 @@ def pt_map(
     coordinates of an ambient chart, which may differ from the embedding's
     native ambient chart.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u

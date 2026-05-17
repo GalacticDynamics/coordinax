@@ -31,8 +31,6 @@ def pt_map(
 ) -> CDict:
     """Convert between embedded manifolds with a shared ambient space.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm

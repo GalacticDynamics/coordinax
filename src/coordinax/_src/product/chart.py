@@ -464,8 +464,6 @@ def pt_map(
 ) -> CDict:
     """AbstractChart -> Cartesian -> AbstractCartesianProductChart.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
@@ -499,8 +497,6 @@ def pt_map(
 ) -> CDict:
     """AbstractCartesianProductChart -> Cartesian -> AbstractChart.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 

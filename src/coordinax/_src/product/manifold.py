@@ -11,7 +11,7 @@ from typing_extensions import override
 import jax
 
 from .atlas import CartesianProductAtlas
-from .metric import CartesianProductMetric
+from .metric import ProductMetric
 from coordinax._src.base import AbstractManifold
 
 
@@ -62,7 +62,7 @@ class CartesianProductManifold(AbstractManifold):
     ----------
     atlas : CartesianProductAtlas
         The product atlas formed from the factor atlases.
-    metric : CartesianProductMetric
+    metric : ProductMetric
         The canonical product metric formed from the factor metrics.
     ndim : int
         Total intrinsic dimension $\sum_i n_i$.
@@ -81,8 +81,7 @@ class CartesianProductManifold(AbstractManifold):
     >>> import wadler_lindig as wl
 
     >>> M = cxm.CartesianProductManifold(
-    ...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
-    ...     factor_names=("S2", "R1"),
+    ...     factors=(cxm.S2, cxm.R1), factor_names=("S2", "R1")
     ... )
     >>> wl.pprint(M, width=60)
     CartesianProductManifold(
@@ -144,8 +143,7 @@ class CartesianProductManifold(AbstractManifold):
     \times \mathbb{R}^2$ has $\dim = 2 + 2 = 4$:
 
     >>> M4 = cxm.CartesianProductManifold(
-    ...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(2)),
-    ...     factor_names=("S2", "R2"),
+    ...     factors=(cxm.S2, cxm.R2), factor_names=("S2", "R2")
     ... )
     >>> M4.ndim
     4
@@ -157,8 +155,7 @@ class CartesianProductManifold(AbstractManifold):
     structure rather than a single `EuclideanManifold`):
 
     >>> Mprod = cxm.CartesianProductManifold(
-    ...     factors=(cxm.EuclideanManifold(2), cxm.EuclideanManifold(1)),
-    ...     factor_names=("xy", "z"),
+    ...     factors=(cxm.R2, cxm.R1), factor_names=("xy", "z")
     ... )
     >>> Mprod.ndim
     3
@@ -182,8 +179,7 @@ class CartesianProductManifold(AbstractManifold):
         >>> import wadler_lindig as wl
 
         >>> M = cxm.CartesianProductManifold(
-        ...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
-        ...     factor_names=("S2", "R1"))
+        ...     factors=(cxm.S2, cxm.R1), factor_names=("S2", "R1"))
         >>> wl.pprint(M.atlas, width=60)
         CartesianProductAtlas(
             factors=(HyperSphericalAtlas(), EuclideanAtlas(ndim=1)),
@@ -197,7 +193,7 @@ class CartesianProductManifold(AbstractManifold):
         )
 
     @property
-    def metric(self) -> CartesianProductMetric:
+    def metric(self) -> ProductMetric:
         """Return the canonical product metric from the factor metrics."""
         factor_metrics = tuple(factor.metric for factor in self.factors)
-        return CartesianProductMetric(factors=factor_metrics)
+        return ProductMetric(factors=factor_metrics)

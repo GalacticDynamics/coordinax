@@ -26,8 +26,6 @@ class CartesianProductAtlas(AbstractAtlas):
     The atlas consists of Cartesian product charts formed from the atlases of
     the factor manifolds.
 
-    Examples
-    --------
     Consider the product manifold $S^2 \times \\mathbb{R}$, where
 
     - $S^2$ is the 2-sphere with spherical coordinates $(\theta, \\phi)$ and

@@ -1,6 +1,6 @@
 """Representations for embedded manifolds."""
 
-__all__ = ("InducedMetric",)
+__all__ = ("PullbackMetric",)
 
 import dataclasses
 
@@ -12,10 +12,10 @@ import quaxed.numpy as qnp
 import unxt as u
 
 from .embedmap import AbstractEmbeddingMap
-from coordinax._src.base import AbstractChart, AbstractMetric
+from coordinax._src.base import AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax.internal import (
-    QuantityMatrix,
+    QMatrix,
     UnitsMatrix,
     cdict_units,
     pack_nonuniform_unit,
@@ -26,8 +26,8 @@ DMLS = u.unit("")
 
 def _jacobian_embed_map(
     embed_map: AbstractEmbeddingMap, at: CDict, usys: OptUSys
-) -> QuantityMatrix:
-    """Compute the Jacobian of ``embed_map`` at ``at`` as a ``QuantityMatrix``.
+) -> QMatrix:
+    """Compute the Jacobian of ``embed_map`` at ``at`` as a ``QMatrix``.
 
     Mirrors the general fallback of ``jac_pt_map`` but differentiates
     the embedding function instead of a chart transition map.
@@ -43,8 +43,8 @@ def _jacobian_embed_map(
 
     Returns
     -------
-    QuantityMatrix
-        2-D ``QuantityMatrix`` of shape ``(n_ambient, n_intrinsic)`` where
+    QMatrix
+        2-D ``QMatrix`` of shape ``(n_ambient, n_intrinsic)`` where
         ``J.value[j, i] = \u2202(ambient_j) / \u2202(intrinsic_i)``.
 
     """
@@ -79,13 +79,13 @@ def _jacobian_embed_map(
         return qnp.stack(vals)
 
     J_arr = jax.jacfwd(embed_fn_arr)(xat)  # shape (n_ambient, n_intrinsic)
-    return QuantityMatrix(J_arr, unit=unit_matrix)
+    return QMatrix(J_arr, unit=unit_matrix)
 
 
 @jax.tree_util.register_static
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class InducedMetric(AbstractMetric):
+class PullbackMetric(AbstractMetricField):
     r"""Pullback metric induced by an embedding map.
 
     Given an embedding $\iota : N \hookrightarrow M$, the metric $g_N$ on the
@@ -101,35 +101,44 @@ class InducedMetric(AbstractMetric):
     ----------
     embed_map : AbstractEmbeddingMap
         The embedding map from the submanifold into the ambient space.
-    ambient_metric : AbstractMetric
+    ambient_metric : AbstractMetricField
         The Riemannian metric on the ambient manifold.
 
     Examples
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
+    >>> import coordinax.api.manifolds as cxmapi
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
     >>> embed_map = cxm.TwoSphereIn3D(radius=u.Q(1.0, "km"))
-    >>> ambient_metric = cxm.EuclideanMetric(3)
-    >>> M = cxm.InducedMetric(embed_map, ambient_metric)
-    >>> at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
-    >>> M.metric_matrix(cxc.sph2, at=at)
-    QuantityMatrix([[1., 0.],
-                    [0., 1.]], '((km2 / rad2, km2 / rad2), (km2 / rad2, km2 / rad2))')
-
-    Embedding into a Riemannian ambient space yields a Riemannian induced metric:
-
+    >>> ambient_metric = cxm.FlatMetric(3)
+    >>> M = cxm.PullbackMetric(embed_map, ambient_metric)
     >>> M.signature
     (1, 1)
     >>> M.ndim
     2
 
+    The metric matrix is obtained via the dispatch API on an
+    :class:`~coordinax.manifolds.EmbeddedManifold`:
+
+    >>> M_emb = cxm.EmbeddedManifold(
+    ...     intrinsic=cxm.S2, ambient=cxm.R3,
+    ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
+    ... )
+    >>> at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+    >>> g = cxmapi.metric_matrix(M_emb, at, cxc.sph2)
+    >>> g.matrix.value
+    Array([[1., 0.],
+           [0., 1.]], dtype=float64, weak_type=True)
+    >>> g.matrix.unit[0, 0]
+    Unit("km2 / rad2")
+
     """
 
     embed_map: AbstractEmbeddingMap
-    ambient_metric: AbstractMetric
+    ambient_metric: AbstractMetricField
 
     @property
     def signature(self) -> tuple[int, ...]:
@@ -140,28 +149,3 @@ class InducedMetric(AbstractMetric):
         ``J`` has full column rank).
         """
         return (1,) * self.embed_map.intrinsic.ndim
-
-    def metric_matrix(
-        self, _: AbstractChart, /, *, at: CDict, usys: OptUSys = None
-    ) -> QuantityMatrix:
-        r"""Compute the induced metric $g_N = J^T G_M J$.
-
-        Computes the Jacobian of the embedding evaluated at ``at``, then
-        contracts with the ambient metric at the embedded point.
-
-        """
-        # Compute Jacobian of the embedding as a QuantityMatrix:
-        # J shape (n_ambient, n_intrinsic)
-        J = _jacobian_embed_map(self.embed_map, at, usys=usys)
-
-        # Evaluate embedding at base point to get ambient point
-        at_ambient = self.embed_map.embed(at)
-
-        # Ambient metric at the embedded point (also QuantityMatrix)
-        ambient_chart = self.embed_map.ambient
-        G_ambient = self.ambient_metric.metric_matrix(
-            ambient_chart, at=at_ambient, usys=usys
-        )
-
-        JT = qnp.transpose(J, (1, 0))  # (n_intrinsic, n_ambient)
-        return JT @ G_ambient @ J  # ty: ignore[invalid-return-type]

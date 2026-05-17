@@ -112,10 +112,10 @@ def embedded_twosphere(
     radius: float | u.AbstractQuantity,
     ambient: cxc.AbstractChart[Any, Any] = cxc.sph3d,
 ) -> EmbeddedManifold:
-    """Create an {class}`coordinax.manifolds.EmbeddedManifold` for the two-sphere.
+    """Create an `coordinax.manifolds.EmbeddedManifold` for the two-sphere.
 
     This is a convenience helper that constructs an
-    {class}`coordinax.manifolds.EmbeddedManifold` with
+    `coordinax.manifolds.EmbeddedManifold` with
     ``intrinsic=HyperSphericalManifold()`` and ``embedding=TwoSphereIn3D(radius,
     ambient)``.
 
@@ -125,13 +125,7 @@ def embedded_twosphere(
         Sphere radius.
     ambient
         Ambient chart for the embedding.  Defaults to
-        `{class}`~coordinax.charts.Spherical3D`.
-
-    Returns
-    -------
-    EmbeddedManifold
-        An embedded manifold pairing the two-sphere manifold with the
-        {class}`coordinax.manifolds.TwoSphereIn3D` embedding.
+        `coordinax.charts.Spherical3D`.
 
     Examples
     --------
