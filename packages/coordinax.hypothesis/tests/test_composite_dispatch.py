@@ -143,7 +143,7 @@ def test_dispatch_two_int_args(v):
     assert 0 <= v <= 100
 
 
-@given(interval_value(0.0, 1.0))
+@given(interval_value(0, 1))
 def test_dispatch_two_float_args(v):
     assert isinstance(v, float)
     assert 0 <= v <= 1
