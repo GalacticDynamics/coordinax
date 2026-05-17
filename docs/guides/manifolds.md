@@ -88,9 +88,9 @@ Rn(3)
 HyperSphericalManifold(ndim=2)
 ```
 
-## Manifold-Validated Point Transitions
+## Point Transitions
 
-Manifold wrappers enforce that both charts belong to the manifold atlas.
+Use `cxc.pt_map` (or `cxm.pt_map`) to convert a point between two charts on the same manifold.
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
@@ -99,12 +99,10 @@ Manifold wrappers enforce that both charts belong to the manifold atlas.
 
 >>> M = cxm.EuclideanManifold(2)
 >>> p = {"x": u.Q(1, "km"), "y": u.Q(1, "km")}
->>> p_pol = M.pt_map(p, cxc.cart2d, cxc.polar2d)
+>>> p_pol = cxc.pt_map(p, cxc.cart2d, cxc.polar2d)
 >>> sorted(p_pol)
 ['r', 'theta']
 ```
-
-Compared to chart-level calls, manifold-level methods add a compatibility check before delegating to chart transition rules.
 
 ## Reading Metric Diagonals
 

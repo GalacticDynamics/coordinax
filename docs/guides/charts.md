@@ -77,21 +77,21 @@ Cart3D(M=Rn(3))
 - Key-based inference uses component-name sets, so it is not a unique identifier when multiple chart types share names.
 - Array/quantity shape inference is limited to trailing axis sizes 1, 2, or 3.
 
-## Product Charts and SpaceTimeCT
+## Product Charts
 
-Product-chart transitions are factorwise. `SpaceTimeCT` is a flat-key product chart with fixed time factor and selectable spatial factor.
+Product-chart transitions are factorwise.
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
 >>> import unxt as u
 
->>> st_cart = cxc.spacetimect
->>> st_sph = cxc.SpaceTimeCT(cxc.sph3d)
+>>> st_cart = cxc.CartesianProductChart((cxc.time1d, cxc.cart3d), ("ct", "q"))
+>>> st_sph = cxc.CartesianProductChart((cxc.time1d, cxc.sph3d), ("ct", "q"))
 
->>> p_st = {"ct": u.Q(1, "km"), "x": u.Q(2, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
+>>> p_st = {"ct.t": u.Q(1, "km"), "q.x": u.Q(2, "km"), "q.y": u.Q(0, "km"), "q.z": u.Q(0, "km")}
 >>> q_st = cxc.pt_map(p_st, st_cart, st_sph)
 >>> sorted(q_st)
-['ct', 'phi', 'r', 'theta']
+['ct.t', 'q.phi', 'q.r', 'q.theta']
 
 >>> prod = cxc.CartesianProductChart((cxc.time1d, cxc.sph3d), ("t", "q"))
 >>> prod.components
@@ -199,6 +199,55 @@ The coordinate-change chain rule states that composing two Jacobians gives the J
 >>> J_composed = qnp.matmul(J_sc, J_cs)
 >>> J_composed.shape
 (3, 3)
+```
+
+## Spacetime Charts
+
+`coordinax.charts` provides two 4D spacetime chart types.
+
+**Minkowski spacetime** (`minkowskict`) is a flat, fixed-component chart with signature $(-,+,+,+)$:
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> cxc.minkowskict.components
+('ct', 'x', 'y', 'z')
+>>> cxc.minkowskict.cartesian is cxc.minkowskict
+True
+```
+
+**Galilean spacetime** (`galileanct`) is a parametric product chart `time1d × spatial_chart`. The default spatial chart is `cart3d`, giving components `(ct, x, y, z)`:
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> cxc.galileanct.components
+('ct', 'x', 'y', 'z')
+>>> cxc.galileanct.spatial_chart
+Cart3D(M=Rn(3))
+```
+
+The spatial factor can be changed at construction time. Chart conversions on the spatial part work factorwise — the `ct` component is untouched:
+
+```{code-block} python
+>>> import coordinax.charts as cxc
+>>> import unxt as u
+
+>>> st_sph = cxc.GalileanCT(cxc.sph3d)
+>>> st_sph.components
+('ct', 'r', 'theta', 'phi')
+
+>>> p = {"ct": u.Q(0.0, "km"), "r": u.Q(1.0, "km"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
+>>> p_cart = cxc.pt_map(p, st_sph, cxc.galileanct)
+>>> sorted(p_cart)
+['ct', 'x', 'y', 'z']
+```
+
+`galileanct.cartesian` returns `self` when the spatial chart is already Cartesian; for a non-Cartesian variant it returns a new `GalileanCT` with a Cartesian spatial chart:
+
+```{code-block} python
+>>> cxc.galileanct.cartesian is cxc.galileanct
+True
+>>> cxc.GalileanCT(cxc.sph3d).cartesian == cxc.galileanct
+True
 ```
 
 ## Quick Reference

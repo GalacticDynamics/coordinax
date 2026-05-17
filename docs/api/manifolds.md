@@ -27,9 +27,9 @@ M = cxm.EuclideanManifold(3)
 assert M.has_chart(cxc.cart3d)
 assert not M.has_chart(cxc.cart2d)
 
-# Manifold-level chart transition map.
+# Chart-level point transition map.
 p = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
-p_sph = M.pt_map(p, cxc.cart3d, cxc.sph3d)
+p_sph = cxc.pt_map(p, cxc.cart3d, cxc.sph3d)
 
 # Guess manifold from data/chart.
 M2 = cxm.guess_manifold(p)
@@ -79,7 +79,7 @@ ang = M.angle_between(cxc.cart3d, uvec, vvec, at=at)
 
 ## Notes
 
-- Manifold methods (for example `pt_map`) validate atlas compatibility before delegating to chart-level coordinate rules.
+- Manifold methods delegate chart transitions to `cxc.pt_map`.
 - For intrinsic two-sphere workflows, use `HyperSphericalManifold` and intrinsic two-sphere charts (`sph2`, `lonlat_sph2`, etc.) rather than Euclidean 2D charts.
 
 ```{eval-rst}

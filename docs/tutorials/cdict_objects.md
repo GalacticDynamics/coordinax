@@ -257,6 +257,33 @@ Q(1, 'km')
 True
 ```
 
+## Spacetime CDicts
+
+CDicts work equally well with 4D spacetime charts. `galileanct` is the pre-defined Galilean spacetime chart with components `(ct, x, y, z)`:
+
+```{code-block} python
+>>> st = {
+...     "ct": u.Q(0.0, "km"),
+...     "x": u.Q(1.0, "km"),
+...     "y": u.Q(0.0, "km"),
+...     "z": u.Q(0.0, "km"),
+... }
+
+>>> sorted(st.keys())
+['ct', 'x', 'y', 'z']
+```
+
+Convert the spatial part from Cartesian to spherical without touching `ct`:
+
+```{code-block} python
+>>> st_sph = cxc.pt_map(st, cxc.galileanct, cxc.GalileanCT(cxc.sph3d))
+>>> sorted(st_sph.keys())
+['ct', 'phi', 'r', 'theta']
+
+>>> st_sph["ct"]
+Q(0., 'km')
+```
+
 ## JAX Integration
 
 Python dicts are native JAX PyTrees, so CDicts work with `jit` and `vmap` directly:

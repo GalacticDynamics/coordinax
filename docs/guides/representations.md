@@ -55,19 +55,16 @@ This means you can write representation-aware code without duplicating chart log
 
 Use each API by intent:
 
-- `coordinax.charts.pt_map`: same-manifold chart transition
-- `coordinax.charts.pt_map`: general point map (including realization-style paths)
-- `AbstractManifold.pt_map`: same as transition map plus atlas compatibility checks
+- `coordinax.charts.pt_map`: chart-level point transition (including realization-style paths)
 - `coordinax.representations.cconvert`: representation-aware top-level conversion API
 - `coordinax.representations.cmap`: reusable partial conversion map
 
 ## End-To-End Workflow
 
-This example shows one point represented across chart, manifold, and representation layers.
+This example shows one point represented across chart and representation layers.
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
->>> import coordinax.manifolds as cxm
 >>> import coordinax.representations as cxr
 >>> import unxt as u
 
@@ -78,13 +75,7 @@ This example shows one point represented across chart, manifold, and representat
 >>> sorted(q_chart)
 ['phi', 'r', 'theta']
 
->>> # 2) Manifold-level transition map (adds atlas compatibility checks)
->>> M = cxm.EuclideanManifold(3)
->>> q_mfld = M.pt_map(p, cxc.cart3d, cxc.sph3d)
->>> q_mfld == q_chart
-True
-
->>> # 3) Representation-aware conversion for point data
+>>> # 2) Representation-aware conversion for point data
 >>> q_rep = cxr.cconvert(p, cxc.cart3d, cxr.point, cxc.sph3d, cxr.point)
 >>> q_rep == q_chart
 True
