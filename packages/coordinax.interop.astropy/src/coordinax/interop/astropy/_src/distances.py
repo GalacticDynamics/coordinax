@@ -5,17 +5,17 @@ __all__: tuple[str, ...] = ()
 
 from plum import conversion_method
 
-from astropy.units import Quantity as AstropyQuantity
+import astropy.units as apyu
 
-import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
+import coordinax.astro as cxastro
 import coordinax.distances as cxd
 
 # ============================================================================
 # Distance
 
 
-@conversion_method(type_from=AstropyQuantity, type_to=cxd.Distance)
-def convert_astropy_quantity_to_unxt_distance(q: AstropyQuantity, /) -> cxd.Distance:
+@conversion_method(type_from=apyu.Quantity, type_to=cxd.Distance)
+def convert_astropy_quantity_to_unxt_distance(q: apyu.Quantity, /) -> cxd.Distance:
     """Convert a `astropy.units.Quantity` to a `coordinax.distances.Distance`.
 
     Examples
@@ -35,10 +35,8 @@ def convert_astropy_quantity_to_unxt_distance(q: AstropyQuantity, /) -> cxd.Dist
 # Parallax
 
 
-@conversion_method(type_from=AstropyQuantity, type_to=cxastro.Parallax)
-def convert_astropy_quantity_to_unxt_parallax(
-    q: AstropyQuantity, /
-) -> cxastro.Parallax:
+@conversion_method(type_from=apyu.Quantity, type_to=cxastro.Parallax)
+def convert_astropy_quantity_to_unxt_parallax(q: apyu.Quantity, /) -> cxastro.Parallax:
     """Convert a `astropy.units.Quantity` to a `coordinax.astro.Parallax`.
 
     Examples
@@ -58,9 +56,9 @@ def convert_astropy_quantity_to_unxt_parallax(
 # Distance Modulus
 
 
-@conversion_method(type_from=AstropyQuantity, type_to=cxastro.DistanceModulus)
+@conversion_method(type_from=apyu.Quantity, type_to=cxastro.DistanceModulus)
 def convert_astropy_quantity_to_unxt_distmod(
-    q: AstropyQuantity, /
+    q: apyu.Quantity, /
 ) -> cxastro.DistanceModulus:
     """Convert a `astropy.units.Quantity` to a `coordinax.astro.DistanceModulus`.
 

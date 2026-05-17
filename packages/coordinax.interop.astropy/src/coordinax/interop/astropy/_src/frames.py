@@ -63,7 +63,7 @@ import astropy.coordinates as apyc
 import astropy.units as apyu
 import unxt as u
 
-import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
+import coordinax.astro as cxastro
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.vectors as cxv
@@ -351,4 +351,4 @@ def astropy_galactocentric_to_coordinax_galactocentric(
     True
 
     """
-    return cxastro.Galactocentric.from_(frame)
+    return cxastro.Galactocentric.from_(frame)  # ty: ignore[invalid-return-type]

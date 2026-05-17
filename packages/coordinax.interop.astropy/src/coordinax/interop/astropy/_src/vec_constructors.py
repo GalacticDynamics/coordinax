@@ -7,7 +7,7 @@ import plum
 
 import astropy.coordinates as apyc
 
-import coordinax.astro as cxastro  # ty: ignore[unresolved-import]
+import coordinax.astro as cxastro
 import coordinax.charts as cxc
 import coordinax.frames as cxf
 import coordinax.vectors as cxv
