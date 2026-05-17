@@ -51,7 +51,7 @@ def unit_2x2():
 @pytest.fixture
 def qm_2x2(unit_2x2):
     """Return a 2x2 QMatrix with values 1-4."""
-    return QMat(value=jnp.array([[1, 2], [3, 4]]), unit=unit_2x2)
+    return QMat(value=jnp.array([[1.0, 2.0], [3.0, 4.0]]), unit=unit_2x2)
 
 
 @pytest.fixture
@@ -456,10 +456,7 @@ class TestAddition:
 
     def test_result_keeps_lhs_units(self, qm_2x2, unit_2x2, unit_2x2_alt):
         """Result units come from the LHS."""
-        other = QMat(
-            value=jnp.array([[1.0, 1000.0], [3000.0, 180.0]]),
-            unit=unit_2x2_alt,
-        )
+        other = QMat(value=jnp.array([[1, 1000], [3000, 180]]), unit=unit_2x2_alt)
         result = _add(qm_2x2, other)
         assert result.unit == unit_2x2
 
