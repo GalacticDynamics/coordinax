@@ -15,7 +15,7 @@ chart in its atlas.  The rules follow a two-tier scheme:
 
 __all__: tuple[str, ...] = ()
 
-from typing import Any
+from typing import Any, cast
 
 import jax.numpy as jnp
 import plum
@@ -61,8 +61,8 @@ def _angle_rad(q: Any, /) -> Any:
 def _angle_unit(q: Any, /) -> u.AbstractUnit:
     """Return the unit of an angular coordinate, or dimensionless if plain array."""
     if isinstance(q, u.AbstractQuantity):
-        return q.unit
-    return u.unit("")
+        return cast("u.AbstractUnit", q.unit)
+    return u.unit("")  # ty: ignore[invalid-return-type]
 
 
 # =====================================================================
@@ -484,5 +484,5 @@ def metric_matrix(
         unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
         return DenseMetric(QMatrix(jnp.eye(n), unit=UnitsMatrix(unit_tup)))
     J = cxcapi.jac_pt_map(point, chart, cart_chart, usys=None)
-    JT = J.T
-    return DenseMetric(JT @ J)  # ty: ignore[unsupported-operator]
+    JT = J.T  # ty: ignore[unresolved-attribute]
+    return DenseMetric(JT @ J)

@@ -9,7 +9,7 @@ Registers handlers for the following JAX primitives:
 - ``lax.reduce_sum_p`` — summation reduction
 """
 
-from typing import Any
+from typing import Any, cast
 
 import jax
 import jax.numpy as jnp
@@ -495,7 +495,7 @@ def dot_general_qm_qty(
 
     """
     rhs_unit = u.unit_of(rhs)
-    rhs_val = u.ustrip(AllowValue, rhs_unit, rhs)
+    rhs_val = cast("jax.Array", u.ustrip(AllowValue, rhs_unit, rhs))
     if rhs_val.ndim == 1:
         n = rhs_val.shape[0]
         rhs_qm = QMatrix(rhs_val, unit=UnitsMatrix(tuple(rhs_unit for _ in range(n))))
@@ -732,7 +732,7 @@ def gather_qm(
     # Number of output elements — start_indices.shape is always concrete in JAX.
     out_size = start_indices.shape[0]
 
-    if isinstance(start_indices, jax.core.Tracer):
+    if isinstance(start_indices, jax.core.Tracer):  # ty: ignore[possibly-missing-submodule]
         # JIT path: indices are traced — fall back to uniform-unit check.
         out_unit = _jit_fallback_uniform_unit(x.unit, out_size)
     else:

@@ -1099,7 +1099,7 @@ def dot_general_qm_qty(
 
     """
     rhs_unit = u.unit_of(rhs)
-    rhs_val = u.ustrip(AllowValue, rhs_unit, rhs)
+    rhs_val = cast("Array", u.ustrip(AllowValue, rhs_unit, rhs))
     if rhs_val.ndim == 1:
         n = rhs_val.shape[0]
         rhs_qm = QMatrix(rhs_val, unit=UnitsMatrix(tuple(rhs_unit for _ in range(n))))

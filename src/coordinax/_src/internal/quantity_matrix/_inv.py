@@ -100,7 +100,7 @@ inv_p.def_impl(_inv_impl)
 # ── 2. Abstract evaluation rule ───────────────────────────────────────────
 
 
-def _inv_abstract_eval(x: "jax.core.ShapedArray", /) -> "jax.core.ShapedArray":
+def _inv_abstract_eval(x: "jax.core.ShapedArray", /) -> "jax.core.ShapedArray":  # ty: ignore[possibly-missing-submodule]
     if x.ndim < 2:
         raise ValueError(f"inv_p requires at least 2-D input, got ndim={x.ndim}")
     if x.shape[-1] != x.shape[-2]:
