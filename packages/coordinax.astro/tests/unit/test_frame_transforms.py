@@ -100,7 +100,7 @@ def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
     got = cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")).ustrip("pc")
     expected = _astropy_icrs_to_gcf_xyz_pc(xyz_pc, gcf)
 
-    np.testing.assert_allclose(got, expected, rtol=0.0, atol=1e-6)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -114,7 +114,7 @@ def test_galactocentric_to_icrs_matches_astropy_positions(xyz_pc) -> None:
     got = cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")).ustrip("pc")
     expected = _astropy_gcf_to_icrs_xyz_pc(xyz_pc, gcf)
 
-    np.testing.assert_allclose(got, expected, rtol=0.0, atol=1e-6)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
 
 def test_icrs_galactocentric_transitions_are_inverse_for_positions() -> None:
@@ -176,7 +176,7 @@ class TestFrameTransformProperties:
         bwd = cxf.frame_transition(icrs, gcf)
 
         back = cxfm.act(bwd, None, cxfm.act(fwd, None, q))
-        np.testing.assert_allclose(back.ustrip("pc"), q.ustrip("pc"), rtol=s, atol=1e-6)
+        np.testing.assert_allclose(back.ustrip("pc"), q.ustrip("pc"), rtol=0, atol=1e-6)
 
     @given(
         q=ust.quantities(
