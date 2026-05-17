@@ -122,7 +122,7 @@ Use the built-in $S^2$ two-sphere and its round metric to measure angles between
 >>> cxm.S2
 HyperSphericalManifold(ndim=2)
 >>> cxm.S2.metric
-HyperSphericalMetric(ndim=2)
+RoundMetric(ndim=2)
 
 >>> # At the equator, measure the angle between northward and eastward tangents
 >>> at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}

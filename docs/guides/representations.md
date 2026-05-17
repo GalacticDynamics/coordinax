@@ -136,7 +136,7 @@ The representation design is intentionally extensible. Future geometric kinds (f
 - supported basis changes: `CoordinateBasis` $\rightleftarrows$ `PhysicalBasis`
 - supported representations: tangent representations such as `coord_disp` and `phys_disp`
 - point representations are not supported as genuine basis-changing inputs; however, `NoBasis -> CoordinateBasis` and `NoBasis -> PhysicalBasis` are supported as identity reinterpretations when the dimensions are compatible
-- non-Cartesian support: available for tangent basis changes on charts with basis-change rules (for example `sph3d`), and generally via an explicit metric/manifold
+- non-Cartesian support: available for tangent basis changes on charts with basis-change rules (for example `sph3d`), and generally via an explicit manifold
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
@@ -169,8 +169,7 @@ The representation design is intentionally extensible. Future geometric kinds (f
 >>> cxr.change_basis(v_sph, cxc.sph3d, cxr.coord_basis, cxr.phys_basis, at=at_sph)
 {'r': Q(5, 'm / s'), 'theta': Q(2, 'm / s'), 'phi': Q(2., 'm / s')}
 
->>> metric = cxm.EuclideanMetric(3)
->>> cxr.change_basis(v_sph, cxc.sph3d, metric, cxr.coord_basis, cxr.phys_basis, at=at_sph)
+>>> cxr.change_basis(v_sph, cxc.sph3d, cxm.R3, cxr.coord_basis, cxr.phys_basis, at=at_sph)
 {'r': Q(5, 'm / s'), 'theta': Q(2, 'm / s'), 'phi': Q(2., 'm / s')}
 ```
 

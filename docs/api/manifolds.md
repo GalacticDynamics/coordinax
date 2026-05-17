@@ -39,7 +39,7 @@ M3 = cxm.guess_manifold(cxc.sph2)
 at = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
 uvec = {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
 vvec = {"x": u.Q(0, "km"), "y": u.Q(1, "km"), "z": u.Q(0, "km")}
-ang = M.angle_between(cxc.cart3d, uvec, vvec, at=at)
+ang = cxm.angle_between(cxc.cart3d, uvec, vvec, at=at)
 ```
 
 ## Functional API
