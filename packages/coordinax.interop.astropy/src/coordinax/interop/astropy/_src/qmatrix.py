@@ -7,7 +7,7 @@ import plum
 
 import astropy.units as apyu
 
-from coordinax.internal import QuantityMatrix, UnitsMatrix
+from coordinax.internal import QMatrix, UnitsMatrix
 
 
 def _structured_unit_to_tuple(obj: apyu.StructuredUnit) -> tuple:
@@ -29,8 +29,6 @@ def _structured_unit_to_tuple(obj: apyu.StructuredUnit) -> tuple:
 def unitsmatrix_to_structured_unit(obj: UnitsMatrix, /) -> apyu.StructuredUnit:
     """Convert a ``UnitsMatrix`` to an ``astropy.units.StructuredUnit``.
 
-    Examples
-    --------
     >>> import plum
     >>> import astropy.units as apyu
     >>> from coordinax.internal import UnitsMatrix
@@ -55,8 +53,6 @@ def unitsmatrix_to_structured_unit(obj: UnitsMatrix, /) -> apyu.StructuredUnit:
 def structured_unit_to_unitsmatrix(obj: apyu.StructuredUnit, /) -> UnitsMatrix:
     """Convert an ``astropy.units.StructuredUnit`` to a ``UnitsMatrix``.
 
-    Examples
-    --------
     >>> import plum
     >>> import astropy.units as apyu
     >>> from coordinax.internal import UnitsMatrix
@@ -74,18 +70,16 @@ def structured_unit_to_unitsmatrix(obj: apyu.StructuredUnit, /) -> UnitsMatrix:
     return UnitsMatrix(_structured_unit_to_tuple(obj))
 
 
-@plum.conversion_method(QuantityMatrix, apyu.Quantity)
-def convert_qmatrix_to_astropy_quantity(q: QuantityMatrix, /) -> apyu.Quantity:
-    """Convert a `coordinax.internal.QuantityMatrix` to an `astropy.units.Quantity`.
+@plum.conversion_method(QMatrix, apyu.Quantity)
+def convert_qmatrix_to_astropy_quantity(q: QMatrix, /) -> apyu.Quantity:
+    """Convert a `coordinax.internal.QMatrix` to an `astropy.units.Quantity`.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import astropy.units as apyu
     >>> import plum
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
-    >>> qmat = QuantityMatrix(jnp.array([1.0, 2.0]), unit=("km", "s"))
+    >>> qmat = QMatrix(jnp.array([1.0, 2.0]), unit=("km", "s"))
     >>> plum.convert(qmat, apyu.Quantity)
     <Quantity (1., 2.) (km, s)>
 

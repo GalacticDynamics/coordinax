@@ -15,12 +15,9 @@ import coordinax.angles as cxa
 def convert_astropy_angle_to_cx_angle(q: AstropyAngle, /) -> cxa.Angle:
     """Convert a `astropy.coordinates.Angle` to a `coordinax.angles.Angle`.
 
-    Examples
-    --------
     >>> import astropy.coordinates as apyc
     >>> import plum
     >>> import coordinax.angles as cxa
-
     >>> plum.convert(apyc.Angle(1.0, "rad"), cxa.Angle)
     Angle(1., 'rad')
 

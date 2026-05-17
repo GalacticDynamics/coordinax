@@ -16,11 +16,11 @@ import coordinax.interop.astropy  # noqa: F401
 
 def test_astropy_angle_to_cx_angle() -> None:
     """Test converting AstropyAngle to cxa.Angle."""
-    apy = AstropyAngle(1.0, "rad")
+    apy = AstropyAngle(1, "rad")
     angle = convert(apy, cxa.Angle)
 
     assert isinstance(angle, cxa.Angle)
-    assert angle.value == pytest.approx(1.0)
+    assert angle.value == pytest.approx(1)
     assert str(angle.unit) == "rad"
 
 
@@ -41,11 +41,11 @@ def test_astropy_angle_to_cx_angle_hypothesis(unit: str) -> None:
 
 def test_cx_angle_to_astropy_angle() -> None:
     """Test converting cxa.Angle to AstropyAngle."""
-    angle = cxa.Angle(1.0, "rad")
+    angle = cxa.Angle(1, "rad")
     apy = convert(angle, AstropyAngle)
 
     assert isinstance(apy, AstropyAngle)
-    assert apy.value == pytest.approx(1.0)
+    assert apy.value == pytest.approx(1)
     assert str(apy.unit) == "rad"
 
 

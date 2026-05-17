@@ -47,7 +47,7 @@ prolatesph = cx.Point.from_(
         "nu": u.Q([0.1, 0.2, 0.3, 0.4], "kpc2"),
         "phi": u.Q([0, 1, 2, 3], "rad"),
     },
-    cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "kpc")),
+    cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1, "kpc")),
 )
 apyprolatesph = None  # No corresponding Astropy representation
 

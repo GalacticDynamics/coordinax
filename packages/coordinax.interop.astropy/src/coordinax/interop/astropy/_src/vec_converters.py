@@ -40,8 +40,6 @@ def check_semantics(obj: V, /, need: type[cxr.AbstractSemanticKind]) -> V:
 def vec_to_q(obj: cxv.Point, /) -> Shaped[apyu.Quantity, "*batch 3"]:
     """`coordinax.Point` -> `astropy.units.Quantity`.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.vectors as cxv
     >>> from plum import convert
@@ -75,14 +73,12 @@ def vec_to_q(obj: cxv.Point, /) -> Shaped[apyu.Quantity, "*batch 3"]:
 def convert_vector_to_astropy(obj: cxv.Point, /) -> apyc.BaseRepresentation:
     """Convert a `coordinax.Point` to a `astropy.coordinates.BaseRepresentation`.
 
-    The specific Astropy representation type (e.g., Cartesian vs. Cylindrical) is
-    determined by the chart of the input point. The point's role must be
+    The specific Astropy representation type (e.g., Cartesian vs. Cylindrical)
+    is determined by the chart of the input point. The point's role must be
     compatible with a position/location (e.g., Point), and the chart must be one
     of the supported types (e.g., Cart3D, Cyl3D, Sph3D, etc.), or else a
     ValueError will be raised.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.vectors as cxv
     >>> from plum import convert
@@ -132,15 +128,12 @@ def convert_vector_to_astropy(obj: cxv.Point, /) -> apyc.BaseRepresentation:
 def cart3_to_apycart3(obj: cxv.Point, /) -> apyc.CartesianRepresentation:
     """`coordinax.Point` -> `astropy.CartesianRepresentation`.
 
-    This conversion is only used for Cartesian-charted points or Point-role points.
-    For Pos/Vel/Acc roles with non-Cartesian charts, convert to the corresponding
-    Astropy representation type first (e.g., Cyl → CylindricalRepresentation,
-    then use Astropy's `.represent_as()` if needed).
+    This conversion is only used for Cartesian-charted points or Point-role
+    points.  For Pos/Vel/Acc roles with non-Cartesian charts, convert to the
+    corresponding Astropy representation type first (e.g., Cyl →
+    CylindricalRepresentation, then use Astropy's `.represent_as()` if needed).
 
-    Examples
-    --------
     >>> import coordinax.vectors as cxv
-
     >>> point = cxv.Point.from_([1, 2, 3], "km")
     >>> convert(point, apyc.CartesianRepresentation)
     <CartesianRepresentation (x, y, z) in km
@@ -168,11 +161,8 @@ def cart3_to_apycart3(obj: cxv.Point, /) -> apyc.CartesianRepresentation:
 def apycart3_to_cart3(obj: apyc.CartesianRepresentation, /) -> cxv.Point:
     """`astropy.CartesianRepresentation` -> `coordinax.Cart3D`.
 
-    Examples
-    --------
     >>> import coordinax.vectors as cxv
     >>> from astropy.coordinates import CartesianRepresentation
-
     >>> vec = CartesianRepresentation(1, 2, 3, unit="km")
     >>> print(convert(vec, cxv.Point))
     <Point: chart=Cart3D (x, y, z) [km]
@@ -192,8 +182,6 @@ def cyl_to_apycyl(
 ) -> apyc.CylindricalRepresentation:
     """`Cyl3D` -> `astropy.CylindricalRepresentation`.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.vectors as cxv
 
@@ -225,13 +213,12 @@ def cyl_to_apycyl(
 def apycyl_to_cyl(obj: apyc.CylindricalRepresentation, /) -> cxv.Point:
     """`astropy.CylindricalRepresentation` -> `coordinax.Cylindrical3D`.
 
-    Examples
-    --------
-    >>> import astropy.units as u
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
     >>> import coordinax.vectors as cxv
-    >>> from astropy.coordinates import CylindricalRepresentation
 
-    >>> cyl = CylindricalRepresentation(rho=1 * u.km, phi=2 * u.deg, z=30 * u.m)
+    >>> cyl = apyc.CylindricalRepresentation(rho=1 * apyu.km, phi=2 * apyu.deg,
+    ...                                      z=30 * apyu.m)
     >>> print(convert(cyl, cxv.Point))
     <Point: chart=Cylindrical3D (rho[km], phi[deg], z[m])
         [ 1.  2. 30.]>
@@ -250,11 +237,8 @@ def sph_to_apysph(
 ) -> apyc.PhysicsSphericalRepresentation:
     """`coordinax.Point` -> `astropy.PhysicsSphericalRepresentation`.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.vectors as cxv
-
     >>> vec = cxv.Point.from_({"r": u.Q(1,"m"), "theta": u.Q(2,"deg"),
     ...                         "phi": u.Q(3,"deg")}, cxc.sph3d)
     >>> convert(vec, apyc.PhysicsSphericalRepresentation)
@@ -279,8 +263,6 @@ def sph_to_apysph(
 def apysph_to_sph(obj: apyc.PhysicsSphericalRepresentation, /) -> cxv.Point:
     """`astropy.PhysicsSphericalRepresentation` -> `coordinax.Spherical3D`.
 
-    Examples
-    --------
     >>> import astropy.units as u
     >>> import coordinax.vectors as cxv
     >>> from astropy.coordinates import PhysicsSphericalRepresentation
@@ -305,8 +287,6 @@ def lonlatsph_to_apysph(
 ) -> apyc.SphericalRepresentation:
     """`coordinax.LonLatSpherical3D` -> `astropy.SphericalRepresentation`.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.vectors as cxv
 
@@ -334,14 +314,12 @@ def lonlatsph_to_apysph(
 def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> cxv.Point:
     """`astropy.SphericalRepresentation` -> `coordinax.LonLatSpherical3D`.
 
-    Examples
-    --------
-    >>> import astropy.units as u
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
     >>> import coordinax.vectors as cxv
-    >>> from astropy.coordinates import SphericalRepresentation
 
-    >>> sph = SphericalRepresentation(lon=2 * u.deg, lat=3 * u.deg,
-    ...                               distance=1 * u.km)
+    >>> sph = apyc.SphericalRepresentation(lon=2 * apyu.deg, lat=3 * apyu.deg,
+    ...                                    distance=1 * apyu.km)
     >>> print(convert(sph, cxv.Point))
     <Point: chart=LonLatSpherical3D (lon[deg], lat[deg], distance[km])
         [2. 3. 1.]>

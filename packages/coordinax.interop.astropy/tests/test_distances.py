@@ -37,7 +37,7 @@ def float32s(
 @given(unit=ust.units("length"))
 def test_astropy_quantity_to_distance(unit: str) -> None:
     """Test converting Astropy Quantity to Distance."""
-    apyq = apyu.Quantity(42.0, unit)
+    apyq = apyu.Quantity(42, unit)
     dist = convert(apyq, Distance)
 
     assert isinstance(dist, Distance)
@@ -47,7 +47,7 @@ def test_astropy_quantity_to_distance(unit: str) -> None:
 
 @given(
     dist=ust.quantities(
-        ust.units("length"), elements=float32s(1.0, 1e6), quantity_cls=Distance
+        ust.units("length"), elements=float32s(1, 1e6), quantity_cls=Distance
     )
 )
 def test_distance_to_astropy_quantity(dist: Distance) -> None:
@@ -61,7 +61,7 @@ def test_distance_to_astropy_quantity(dist: Distance) -> None:
 
 @given(
     dist=ust.quantities(
-        ust.units("length"), elements=float32s(1.0, 1e6), quantity_cls=Distance
+        ust.units("length"), elements=float32s(1, 1e6), quantity_cls=Distance
     )
 )
 def test_distance_roundtrip(dist: Distance) -> None:
@@ -90,7 +90,7 @@ def test_astropy_quantity_to_parallax(unit: str) -> None:
 
 @given(
     plx=ust.quantities(
-        ust.units("angle"), elements=float32s(0.0625, 1.0), quantity_cls=Parallax
+        ust.units("angle"), elements=float32s(0.0625, 1), quantity_cls=Parallax
     )
 )
 def test_parallax_to_astropy_quantity(plx: Parallax) -> None:
@@ -104,7 +104,7 @@ def test_parallax_to_astropy_quantity(plx: Parallax) -> None:
 
 @given(
     plx=ust.quantities(
-        ust.units("angle"), elements=float32s(0.0625, 1.0), quantity_cls=Parallax
+        ust.units("angle"), elements=float32s(0.0625, 1), quantity_cls=Parallax
     )
 )
 def test_parallax_roundtrip(plx: Parallax) -> None:
@@ -122,17 +122,17 @@ def test_parallax_roundtrip(plx: Parallax) -> None:
 
 def test_astropy_quantity_to_distancemodulus() -> None:
     """Test converting AstropyQuantity to DistanceModulus."""
-    q = AstropyQuantity(5.0, "mag")
+    q = AstropyQuantity(5, "mag")
     dm = convert(q, DistanceModulus)
 
     assert isinstance(dm, DistanceModulus)
-    assert dm.value == pytest.approx(5.0)
+    assert dm.value == pytest.approx(5)
     assert str(dm.unit) == "mag"
 
 
 def test_distancemodulus_to_astropy_quantity() -> None:
     """Test converting DistanceModulus to AstropyQuantity."""
-    dm = DistanceModulus(5.0, "mag")
+    dm = DistanceModulus(5, "mag")
     apyq = convert(dm, apyu.Quantity)
 
     assert isinstance(apyq, apyu.Quantity)
@@ -142,7 +142,7 @@ def test_distancemodulus_to_astropy_quantity() -> None:
 
 def test_distancemodulus_roundtrip() -> None:
     """Test roundtrip conversion for DistanceModulus."""
-    dm = DistanceModulus(5.0, "mag")
+    dm = DistanceModulus(5, "mag")
     apyq = convert(dm, apyu.Quantity)
     dm_back = convert(apyq, DistanceModulus)
 

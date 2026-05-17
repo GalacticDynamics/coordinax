@@ -8,7 +8,7 @@ import pytest
 
 import unxt as u
 
-from coordinax.internal import QuantityMatrix, UnitsMatrix
+from coordinax.internal import QMatrix, UnitsMatrix
 
 
 class TestUnitsMatrixToStructuredUnit:
@@ -81,23 +81,23 @@ class TestStructuredUnitToUnitsMatrix:
         assert result == su
 
 
-class TestQuantityMatrixToAstropyQuantity:
-    """Tests for QuantityMatrix → apyu.Quantity conversion."""
+class TestQMatrixToAstropyQuantity:
+    """Tests for QMatrix → apyu.Quantity conversion."""
 
     def test_1d(self) -> None:
-        qmat = QuantityMatrix(jnp.array([1.0, 2.0]), unit=("km", "s"))
+        qmat = QMatrix(jnp.array([1, 2]), unit=("km", "s"))
         result = plum.convert(qmat, apyu.Quantity)
         assert isinstance(result, apyu.Quantity)
 
     def test_1d_unit(self) -> None:
-        qmat = QuantityMatrix(jnp.array([1.0, 2.0]), unit=("km", "s"))
+        qmat = QMatrix(jnp.array([1, 2]), unit=("km", "s"))
         result = plum.convert(qmat, apyu.Quantity)
         assert result.unit == apyu.StructuredUnit(("km", "s"))
 
     def test_1d_values(self) -> None:
-        qmat = QuantityMatrix(jnp.array([3.0, 4.0]), unit=("m", "kg"))
+        qmat = QMatrix(jnp.array([3, 4]), unit=("m", "kg"))
         result = plum.convert(qmat, apyu.Quantity)
 
         arr = np.array(result)
-        assert float(arr["f0"]) == pytest.approx(3.0)
-        assert float(arr["f1"]) == pytest.approx(4.0)
+        assert float(arr["f0"]) == pytest.approx(3)
+        assert float(arr["f1"]) == pytest.approx(4)

@@ -55,12 +55,12 @@ def make_strat(
     )
 
 
-_pos_km = make_strat("km", 0.5, 100.0)
-_any_km = make_strat("km", -100.0, 100.0)
-_phi_rad = make_strat("rad", -3.0, 3.0)
+_pos_km = make_strat("km", 0.5, 100)
+_any_km = make_strat("km", -100, 100)
+_phi_rad = make_strat("rad", -3, 3)
 # 0.1 avoids the polar singularity; 3.04 avoids theta≈π (south pole)
 _theta_rad = make_strat("rad", 0.1, 3.04)
-_lon_rad = make_strat("rad", -3.0, 3.0)
+_lon_rad = make_strat("rad", -3, 3)
 _lat_rad = make_strat("rad", -1.5, 1.5)
 
 
@@ -85,12 +85,12 @@ def _approx_angle_equal(
     apy_val = float(apy.to(apy.unit).value)
 
     # Convert to radians for the modular comparison
-    scale = math.pi / 180.0 if apy.unit == "deg" else 1.0
+    scale = math.pi / 180 if apy.unit == "deg" else 1
 
     diff_rad = (got_val - apy_val) * scale
     # Reduce to (-π, π]
     diff_rad = (diff_rad + math.pi) % (2 * math.pi) - math.pi
-    assert abs(diff_rad) == pytest.approx(0.0, abs=abs_tol)
+    assert abs(diff_rad) == pytest.approx(0, abs=abs_tol)
 
 
 # ---------------------------------------------------------------------------
