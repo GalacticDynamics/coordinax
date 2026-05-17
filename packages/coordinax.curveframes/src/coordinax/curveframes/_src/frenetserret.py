@@ -281,6 +281,7 @@ class FrenetSerretTransform(AbstractParallelTransportTransform):
             3. Cross product: $\mathbf{B} = \mathbf{T} \times \mathbf{N}$.
             4. Stack rows into a $3 \times 3$ matrix.
             """
+            tau = tau.astype(float)
             dp = dcurve(tau)
             d2p = d2curve(tau)
 
