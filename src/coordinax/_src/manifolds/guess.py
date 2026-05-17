@@ -19,11 +19,11 @@ from coordinax._src.charts.d3 import (
 )
 from coordinax._src.custom_types import CDict
 from coordinax._src.euclidean import (
+    R0,
+    R1,
+    R2,
+    R3,
     EuclideanManifold,
-    euclidean0d,
-    euclidean1d,
-    euclidean2d,
-    euclidean3d,
 )
 from coordinax._src.null import no_manifold
 
@@ -80,7 +80,7 @@ def guess_manifold(_: type[Cart0D], /) -> EuclideanManifold:
     Rn(0)
 
     """
-    return euclidean0d
+    return R0
 
 
 @plum.dispatch
@@ -93,7 +93,7 @@ def guess_manifold(_: type[Cart1D | Radial1D], /) -> EuclideanManifold:
     Rn(1)
 
     """
-    return euclidean1d
+    return R1
 
 
 @plum.dispatch
@@ -106,7 +106,7 @@ def guess_manifold(_: type[Cart2D | Polar2D], /) -> EuclideanManifold:
     Rn(2)
 
     """
-    return euclidean2d
+    return R2
 
 
 @plum.dispatch
@@ -121,7 +121,7 @@ def guess_manifold(
     Rn(3)
 
     """
-    return euclidean3d
+    return R3
 
 
 @plum.dispatch

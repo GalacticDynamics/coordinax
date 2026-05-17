@@ -12,7 +12,7 @@ import coordinax.hypothesis.representations as cxsr
 from coordinax.hypothesis.vectors import vectors as vector_strategy
 
 SUPPORTED_CHARTS = cxcst.charts(
-    exclude=(cxc.CartND, cxc.SpaceTimeCT, cxc.Time1D, cxm.EmbeddedChart)
+    exclude=(cxc.CartND, cxc.MinkowskiCT, cxc.Time1D, cxm.EmbeddedChart)
 )
 
 # Shared float32 element strategies (width=32 matches the default JAX dtype).

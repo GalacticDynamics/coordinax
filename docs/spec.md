@@ -966,10 +966,10 @@ A non-exhaustive table of exported objects are:
 | --- | --- |
 | `coordinax.angles` | `AbstractAngle`, `Angle`, `wrap_to` |
 | `coordinax.distances` | `AbstractDistance`, `Distance` |
-| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `spacetimect` |
+| `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `minkowskict`, `galileanct` |
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
-| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `EuclideanMetric`, `euclidean3d`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `twosphere`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, |
+| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `EuclideanMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `TransformedReferenceFrame` |
 
@@ -1098,7 +1098,9 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - Mapping: `Abstract0D -> cart0d`, `Abstract1D -> cart1d`, `Abstract2D -> cart2d`, `Abstract3D -> cart3d`, `AbstractND -> cartnd`.
     - Special-case `Time1D`: `Time1D -> time1d` (time is already canonical in this 1D chart family).
     - For `CartesianProductChart`, apply `cartesian_chart` factorwise and preserve `factor_names`.
-    - For `SpaceTimeCT`, apply `cartesian_chart` to the spatial factor and keep the `ct` time factor convention.
+    - For `MinkowskiCT`, the chart is already Cartesian: `cartesian_chart(minkowskict) is minkowskict`.
+    - For `GalileanCT(cart3d)`, the chart is already Cartesian: `cartesian_chart(galileanct) is galileanct`.
+    - For `GalileanCT(non_cartesian)`, applies `cartesian_chart` to the spatial factor and returns a new `GalileanCT` with the Cartesian spatial chart.
     - The operation is idempotent: `cartesian_chart(cartesian_chart(C)) == cartesian_chart(C)`.
 
     Failure semantics:
@@ -1184,7 +1186,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - This is a position-only transformation.
     - The partial-application dispatch (returning a callable) is useful for currying: `transform_func = pt_map(cart3d, sph3d); result = transform_func(p)`.
-    - Product charts (like SpaceTimeCT with a spatial factor) transform by independently transforming each factor's coordinates.
+    - Product charts transform by independently transforming each factor's coordinates.
     - Same-atlas chart transitions and cross-manifold realization maps are unified under one function; dispatch resolution selects the appropriate implementation based on the chart types.
 
 (software-spec-tangent-map)=
@@ -1489,7 +1491,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - `factor_names: tuple[str, ...]`: ordered factor names aligned with `factors` (same length; unique in concrete implementations).
     - `ndim`: total dimension, computed as `sum(f.ndim for f in factors)`.
     - `components` (default behavior): dot-delimited namespaced keys `("name0.c0", ..., "nameN.cK")`.
-      - Flat-key product charts are an explicit specialization (`AbstractFlatCartesianProductChart`), used by `SpaceTimeCT`.
+      - Flat-key product charts are an explicit specialization (`AbstractFlatCartesianProductChart`).
     - `coord_dimensions`: concatenation of factor coordinate dimensions in factor order.
     - `split_components(p)`: partitions a `CDict` into one per factor, stripping factor prefixes.
     - `merge_components(parts)`: re-attaches prefixes and merges factor dictionaries.
@@ -1533,42 +1535,77 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - Inherits factorwise `pt_map` behavior from `AbstractCartesianProductChart` dispatches.
 
-!!! info `SpaceTimeCT` and `spacetimect`
+!!! info `MinkowskiCT` and `minkowskict`
 
-    Concrete flat-key spacetime product chart with Minkowski-oriented convention.
+    Concrete 4D Minkowski spacetime chart with the canonical $(ct, x, y, z)$ convention.
 
-    `SpaceTimeCT` is a final `AbstractFlatCartesianProductChart` representing:
-    $$
-    \text{SpaceTimeCT(spatial\_chart)} \equiv \text{time1d} \times \text{spatial\_chart}
-    $$
-    with components `(ct, *spatial_components)`.
+    `MinkowskiCT` is a final `AbstractFixedComponentsChart` (not a product chart) representing Minkowski spacetime in one flat chart. Components are fixed:
+
+    - `components`: `("ct", "x", "y", "z")`
+    - `coord_dimensions`: `("length", "length", "length", "length")`
+    - `ndim`: 4
 
     API:
 
-    - `spatial_chart`: spatial factor chart (default `cart3d`).
-    - `c`: speed of light parameter (default `299792.458 km/s`).
-    - `factors` is always `(time1d, spatial_chart)`.
-    - `factor_names` is always `("time", "space")`.
-    - `time_chart` is always `time1d` (not user-selectable).
-    - `split_components(p)` returns `({"ct": ...}, {spatial keys...})`.
-    - `merge_components(parts)` merges those two dicts directly.
-
-    Component and dimension convention:
-
-    - Overrides default product keys to use **flat** keys:
-      - components: `("ct", *spatial_chart.components)`
-      - dimensions: `("length", *spatial_chart.coord_dimensions)`
-    - `ct` is the chart-level time coordinate key used by this representation.
+    - `M`: the manifold this chart belongs to; defaults to `MinkowskiManifold()` and is KW_ONLY with a default factory.
+    - Only manifold: `MinkowskiManifold`; charts of this class are registered in `MinkowskiAtlas`.
 
     Cartesian projection:
 
-    - `cartesian_chart(SpaceTimeCT(...))` maps only the spatial factor to its Cartesian chart.
-    - Returns the same object when spatial factor is already Cartesian; otherwise returns a replaced `SpaceTimeCT`.
+    - `cartesian_chart(MinkowskiCT(...)) is MinkowskiCT(...)` — the chart is already Cartesian (returns `self`).
 
-    Transformation behavior:
+!!! info `GalileanCT` and `galileanct`
 
-    - Uses the generic product-chart factorwise `pt_map` dispatch.
-    - In practice, this preserves `ct` while transforming only spatial components when changing the spatial chart.
+    Parametric 4D Galilean spacetime chart combining a fixed `time1d` factor with a user-supplied spatial chart.
+
+    `GalileanCT` is a final `AbstractFlatCartesianProductChart` (a product chart) with a configurable spatial factor. The time component is always `"ct"` (coordinate time scaled by the speed of light), and the spatial components are determined by the `spatial_chart` argument.
+
+    Construction:
+
+    - `GalileanCT(spatial_chart=cart3d, *, c=Quantity(299_792.458, "km/s"))` — `spatial_chart` defaults to `cart3d`; `c` is the speed of light used for the $ct$ convention.
+    - The time factor is always `time1d`; it is not user-selectable.
+
+    Component schema (for the default `spatial_chart=cart3d`):
+
+    - `components`: `("ct", "x", "y", "z")`
+    - `coord_dimensions`: `("length", "length", "length", "length")`
+    - `ndim`: 4
+
+    For non-Cartesian spatial charts (e.g. `sph3d`):
+
+    - `components`: `("ct", "r", "theta", "phi")`
+    - `coord_dimensions`: `("length", "length", "angle", "angle")`
+
+    Product structure:
+
+    - `time_chart`: always `time1d`.
+    - `factors`: `(time1d, spatial_chart)`.
+    - `factor_names`: `("time", "space")`.
+    - `split_components(p)` partitions a `CDict` into `{"ct": ...}` for the time factor and the spatial keys for the space factor.
+    - `merge_components((time_part, space_part))` merges both factor dicts back into a flat `CDict`.
+
+    Manifold:
+
+    - `M`: always `galilean_spacetime` (the `R1 × R3` Cartesian product manifold).
+
+    Cartesian projection:
+
+    - `GalileanCT(cart3d).cartesian is GalileanCT(cart3d)` — already Cartesian (returns `self`).
+    - `GalileanCT(sph3d).cartesian == GalileanCT(cart3d)` — replaces non-Cartesian spatial with its Cartesian equivalent.
+    - `cartesian_chart(galileanct) is galileanct` — the pre-defined instance is already Cartesian.
+
+    Pre-defined instance:
+
+    - `galileanct = GalileanCT(spatial_chart=cart3d)` — canonical 4D Galilean spacetime chart with Cartesian spatial axes `(ct, x, y, z)`.
+
+!!! info `galilean_spacetime`
+
+    The 4-dimensional Galilean spacetime manifold $\mathbb{R}^1 \times \mathbb{R}^3$.
+
+    - `galilean_spacetime` is a `CartesianProductManifold` with factors `(R1, R3)` and factor names `("ct", "space")`.
+    - `ndim`: 4.
+    - Exported from `coordinax.manifolds`.
+    - This is the manifold to which all `GalileanCT` charts belong.
 
 ### Two-Sphere Charts
 
@@ -2808,11 +2845,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     >>> atlas2 = cxm.EuclideanAtlas(2)
     >>> x = {"x": 1.0, "y": 1.0}
-    >>> atlas2.pt_map(x, cxc.cart2d, cxc.polar2d)
+    >>> cxc.pt_map(x, cxc.cart2d, cxc.polar2d)
     {'r': Array(1.41421356, dtype=float64, ...), 'theta': Array(0.78539816, dtype=float64, ...)}
     ```
 
-    In this call the atlas first verifies that both charts belong to the same atlas before delegating to the registered point transition map implementation.
+    Chart-level transitions can be called directly via `cxc.pt_map`.
 
 (software-spec-abstractmetric)=
 
@@ -3183,7 +3220,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     The default chart is the canonical Cartesian chart of the same dimension provided by the atlas. For example, `EuclideanManifold(2).default_chart == Cart2D()`.
 
-    Coordinate operations (`pt_map`) are inherited from `AbstractManifold`. These methods verify that the charts belong to the Euclidean atlas before delegating to the chart-level implementations.
+    Coordinate operations (`pt_map`) are inherited from `AbstractManifold` and delegate to the chart-level implementations.
 
     **Example**
 
@@ -3204,7 +3241,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     False
 
     >>> x = {"x": 1.0, "y": 1.0, "z": 1.0}
-    >>> M.pt_map(x, cxc.cart3d, cxc.sph3d)
+    >>> cxc.pt_map(x, cxc.cart3d, cxc.sph3d)
     {'r': Array(1.73205081, dtype=float64, ...),
      'theta': Array(0.95531662, dtype=float64),
      'phi': Array(0.78539816, dtype=float64, ...)}
@@ -3377,18 +3414,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     A chart belongs to this atlas iff:
 
     1. the chart has `ndim == 4`, and
-    2. its chart class is registered in the atlas eligibility set (built-in registration includes SpaceTimeCT).
+    2. its chart class is registered in the atlas eligibility set (built-in registration includes `MinkowskiCT`).
 
     Built-in chart family:
 
-    - SpaceTimeCT charts with any compatible spatial factor chart, for example:
-      - SpaceTimeCT(cart3d)
-      - SpaceTimeCT(sph3d)
-      - SpaceTimeCT(cyl3d)
+    - `MinkowskiCT` — canonical $(ct, x, y, z)$ Cartesian spacetime chart.
 
     Default chart:
 
-    - default_chart() returns SpaceTimeCT() with Cartesian spatial part.
+    - default_chart() returns `MinkowskiCT()`.
 
     Registration API:
 
@@ -3411,13 +3445,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     \eta = \operatorname{diag}(-1, 1, 1, 1).
     $$
 
-    For general `SpaceTimeCT` charts, the metric is computed by pullback:
+    For registered non-Cartesian charts, the metric is computed by pullback:
 
     $$
     g = J^T \eta J,
     $$
 
-    where $J$ is the Jacobian of the map from the chosen spacetime chart to its canonical Cartesian counterpart.
+    where $J$ is the Jacobian of the map from the chosen spacetime chart to `MinkowskiCT`.
 
     Construction:
 
@@ -3430,8 +3464,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - `signature = (-1, 1, 1, 1)`.
     - `ndim = 4`.
     - `metric_matrix(chart, /, *, at, usys=None)` returns a `QuantityMatrix`.
-    - In canonical Cartesian spacetime coordinates, `metric_matrix` returns `diag(-1, 1, 1, 1)`.
-    - In other compatible `SpaceTimeCT` charts, `metric_matrix` returns `J^T η J`.
+    - In the canonical `MinkowskiCT` chart, `metric_matrix` returns `diag(-1, 1, 1, 1)` directly.
+    - For other registered charts, `metric_matrix` returns `J^T η J`.
 
     **Example**
 
@@ -3447,7 +3481,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ...     "y": jnp.array(0.0),
     ...     "z": jnp.array(0.0),
     ... }
-    >>> m.metric_matrix(cxc.spacetimect, at=at).value
+    >>> m.metric_matrix(cxc.minkowskict, at=at).value
     Array([[-1.,  0.,  0.,  0.],
            [ 0.,  1.,  0.,  0.],
            [ 0.,  0.,  1.,  0.],
@@ -3480,7 +3514,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Chart compatibility:
 
     - has_chart(chart) delegates to the atlas membership rule.
-    - Accepted charts are the atlas-supported 4D SpaceTimeCT chart family.
+    - Accepted charts are the atlas-supported 4D `MinkowskiCT` chart class.
     - Non-spacetime charts such as cart3d are not members.
 
     Coordinate operations:
@@ -3619,7 +3653,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - `metric` is the caller-supplied metric object.
     - `atlas.ndim` and `metric.ndim` must match; otherwise construction raises `ValueError`.
 
-    Coordinate operations (`pt_map`) are inherited from `AbstractManifold` and therefore enforce atlas compatibility before delegating to chart-level machinery.
+    Coordinate operations (`pt_map`) are inherited from `AbstractManifold` and delegate to chart-level machinery.
 
     ```pycon
     >>> import coordinax.charts as cxc

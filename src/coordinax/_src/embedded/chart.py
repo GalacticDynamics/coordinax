@@ -323,11 +323,16 @@ def pt_map(
         msg = "EmbeddedChart ambient kinds must match for conversion."
         raise ValueError(msg)
 
-    p_ambient = cxmapi.pt_embed(p, from_chart)  # TODO: support usys
+    p_ambient = cxmapi.pt_embed(p, from_chart, usys=usys)
     p_ambient = cxcapi.pt_map(
-        p_ambient, from_chart.ambient, to_chart.ambient, usys=usys
+        p_ambient,
+        from_chart.ambient.M,
+        from_chart.ambient,
+        to_chart.ambient.M,
+        to_chart.ambient,
+        usys=usys,
     )
-    out = cxmapi.pt_project(p_ambient, to_chart)  # TODO: support usys
+    out = cxmapi.pt_project(p_ambient, to_chart, usys=usys)
     return cast("CDict", out)
 
 
@@ -373,7 +378,9 @@ def pt_map(
     {'theta': 1, 'phi': 0.5}
 
     """
-    p_ambient = cxcapi.pt_map(p, from_chart, to_chart.ambient, usys=usys)
+    p_ambient = cxcapi.pt_map(
+        p, from_chart.M, from_chart, to_chart.ambient.M, to_chart.ambient, usys=usys
+    )
     out = cxmapi.pt_project(p_ambient, to_chart, usys=usys)
     return cast("CDict", out)
 
@@ -384,6 +391,7 @@ def pt_map(
     from_chart: EmbeddedChart,
     to_chart: AbstractChart,
     /,
+    *,
     usys: OptUSys = None,
 ) -> CDict:
     """Embed intrinsic coordinates into an ambient representation.
@@ -416,6 +424,13 @@ def pt_map(
     {'r': Q(1., 'm'), 'theta': Q(1., 'rad'), 'phi': Q(0.5, 'rad')}
 
     """
-    p_ambient = cxmapi.pt_embed(p, from_chart)
-    out = cxcapi.pt_map(p_ambient, from_chart.ambient, to_chart, usys=usys)
+    p_ambient = cxmapi.pt_embed(p, from_chart, usys=usys)
+    out = cxcapi.pt_map(
+        p_ambient,
+        from_chart.ambient.M,
+        from_chart.ambient,
+        to_chart.M,
+        to_chart,
+        usys=usys,
+    )
     return cast("CDict", out)

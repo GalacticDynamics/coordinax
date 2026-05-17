@@ -26,14 +26,13 @@ class MinkowskiAtlas(AbstractAtlas):
     only if:
 
     1. The chart dimensionality is 4.
-    2. The chart class is {class}`~coordinax.charts.SpaceTimeCT` (or a
+    2. The chart class is {class}`~coordinax.charts.MinkowskiCT` (or a
        subclass explicitly registered via {meth}`register`).
 
     **Built-in charts:**
 
-    - {class}`~coordinax.charts.SpaceTimeCT` with any spatial sub-chart
-      (``SpaceTimeCT(cart3d)``, ``SpaceTimeCT(sph3d)``, ``SpaceTimeCT(cyl3d)``,
-      etc.)
+    - {class}`~coordinax.charts.MinkowskiCT` — canonical $(ct, x, y, z)$
+      chart.
 
     Parameters
     ----------
@@ -49,17 +48,14 @@ class MinkowskiAtlas(AbstractAtlas):
     >>> atlas.ndim
     4
 
-    >>> cxc.spacetimect in atlas
-    True
-
-    >>> cxc.SpaceTimeCT(cxc.sph3d) in atlas
+    >>> cxc.minkowskict in atlas
     True
 
     >>> cxc.cart3d in atlas
     False
 
     >>> atlas.default_chart()
-    SpaceTimeCT()
+    MinkowskiCT(M=MinkowskiManifold(ndim=4))
 
     """
 
@@ -69,22 +65,22 @@ class MinkowskiAtlas(AbstractAtlas):
     _ELIGIBLE_CHARTS: ClassVar[set[type[cxc.AbstractChart[Any, Any]]]] = set()
 
     def default_chart(self) -> cxc.AbstractChart[Any, Any]:
-        """Return the default chart (``SpaceTimeCT`` with Cartesian spatial part).
+        """Return the default chart (canonical ``MinkowskiCT``).
 
         Examples
         --------
         >>> import coordinax.manifolds as cxm
         >>> cxm.MinkowskiAtlas().default_chart()
-        SpaceTimeCT()
+        MinkowskiCT(M=MinkowskiManifold(ndim=4))
 
         """
-        return cxc.spacetimect
+        return cxc.minkowskict
 
     def has_chart(self, chart: cxc.AbstractChart[Any, Any], /) -> bool:
         """Return whether the chart belongs to this atlas.
 
         A chart belongs when its dimensionality is 4 and its class is
-        {class}`~coordinax.charts.SpaceTimeCT` (or another class registered
+        {class}`~coordinax.charts.MinkowskiCT` (or another class registered
         via {meth}`register`).
 
         Examples
@@ -94,10 +90,7 @@ class MinkowskiAtlas(AbstractAtlas):
 
         >>> atlas = cxm.MinkowskiAtlas()
 
-        >>> atlas.has_chart(cxc.spacetimect)
-        True
-
-        >>> atlas.has_chart(cxc.SpaceTimeCT(cxc.sph3d))
+        >>> atlas.has_chart(cxc.minkowskict)
         True
 
         >>> atlas.has_chart(cxc.cart3d)
@@ -115,12 +108,9 @@ class MinkowskiAtlas(AbstractAtlas):
         >>> import coordinax.charts as cxc
         >>> import coordinax.manifolds as cxm
 
-        >>> cxc.SpaceTimeCT in cxm.MinkowskiAtlas._ELIGIBLE_CHARTS
+        >>> cxc.MinkowskiCT in cxm.MinkowskiAtlas._ELIGIBLE_CHARTS
         True
 
         """
         cls._ELIGIBLE_CHARTS.add(registrant)
         return registrant
-
-
-_ = MinkowskiAtlas.register(cxc.SpaceTimeCT)

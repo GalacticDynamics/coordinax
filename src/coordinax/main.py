@@ -28,8 +28,8 @@ __all__ = (  # distances
     "EuclideanManifold",
     "Rn",
     "EuclideanMetric",
-    "euclidean3d",
-    "twosphere",
+    "R3",
+    "S2",
     "embedded_twosphere",
     "EmbeddedChart",
     "EmbeddedManifold",
@@ -115,6 +115,8 @@ from coordinax.charts import (
 from coordinax.distances import Distance
 from coordinax.frames import frame_transition, noframe
 from coordinax.manifolds import (
+    R3,
+    S2,
     CustomAtlas,
     CustomManifold,
     EmbeddedChart,
@@ -123,8 +125,6 @@ from coordinax.manifolds import (
     EuclideanMetric,
     Rn,
     embedded_twosphere,
-    euclidean3d,
-    twosphere,
 )
 from coordinax.representations import (
     AbstractLinearBasis,
@@ -175,7 +175,7 @@ from coordinax.vectors import Coordinate, Point, Tangent, ToUnitsOptions
 
 # Import interop modules to register conversions and chart transitions.
 with contextlib.suppress(ImportError):
-    import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import]
+    import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import,unused-ignore-comment]
 
 # Clean up namespace
 del contextlib

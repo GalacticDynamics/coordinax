@@ -24,8 +24,8 @@ from coordinax.internal import QuantityMatrix, UnitsMatrix
 class MinkowskiMetric(AbstractDiagonalMetric):
     r"""Pseudo-Riemannian (Lorentzian) metric on Minkowski spacetime.
 
-    In the canonical {class}`~coordinax.charts.SpaceTimeCT` chart with
-    Cartesian spatial part $(ct, x, y, z)$, the Minkowski metric is
+    In the canonical {class}`~coordinax.charts.MinkowskiCT` chart
+    $(ct, x, y, z)$, the Minkowski metric is
 
     $$\eta = \operatorname{diag}(-1, 1, 1, 1),$$
 
@@ -33,16 +33,6 @@ class MinkowskiMetric(AbstractDiagonalMetric):
     all four components carry the same unit (length). The line element is
 
     $$ds^2 = -(d(ct))^2 + dx^2 + dy^2 + dz^2.$$
-
-    For a general {class}`~coordinax.charts.SpaceTimeCT` chart with spatial
-    sub-chart $C_s$ (e.g. spherical or cylindrical), the metric is the
-    pullback
-
-    $$g_{ij} = J^k{}_i\,\eta_{kl}\,J^l{}_j = (J^T \eta J)_{ij},$$
-
-    where $J_{kj} = \partial(ct, x, y, z)^k / \partial q^j$ is the Jacobian
-    from the given chart to the canonical Cartesian spacetime chart computed
-    by :func:`~coordinax.charts.jac_pt_map`.
 
     **Signature.** The metric is **pseudo-Riemannian** with Lorentzian
     signature $(-1, 1, 1, 1)$ meaning one negative and three positive
@@ -59,7 +49,7 @@ class MinkowskiMetric(AbstractDiagonalMetric):
     >>> m = cxm.MinkowskiMetric()
     >>> at = {"ct": jnp.array(0.0), "x": jnp.array(0.0),
     ...       "y": jnp.array(0.0), "z": jnp.array(0.0)}
-    >>> m.metric_matrix(cxc.spacetimect, at=at).value
+    >>> m.metric_matrix(cxc.minkowskict, at=at).value
     Array([[-1.,  0.,  0.,  0.],
            [ 0.,  1.,  0.,  0.],
            [ 0.,  0.,  1.,  0.],
@@ -85,17 +75,17 @@ class MinkowskiMetric(AbstractDiagonalMetric):
     ) -> QuantityMatrix:
         r"""Compute the Minkowski metric tensor $g_{ij}$ at the base point ``at``.
 
-        In the canonical Cartesian chart returns $\eta =
-        \operatorname{diag}(-1, 1, 1, 1)$ directly. For other
-        {class}`~coordinax.charts.SpaceTimeCT` charts computes the pullback
-        $g = J^T \eta J$ via :func:`~coordinax.charts.jac_pt_map`.
+        In the canonical :class:`~coordinax.charts.MinkowskiCT` chart returns
+        $\eta = \operatorname{diag}(-1, 1, 1, 1)$ directly. For any other
+        registered chart computes the pullback $g = J^T \eta J$ via
+        :func:`~coordinax.charts.jac_pt_map`.
 
         Parameters
         ----------
         chart : AbstractChart
-            Coordinate chart in which to express the metric. Must support a
-            ``.cartesian`` property (i.e. be a
-            {class}`~coordinax.charts.SpaceTimeCT` instance).
+            Coordinate chart in which to express the metric. Must be a chart
+            registered with :class:`~coordinax.manifolds.MinkowskiAtlas` and
+            support a ``.cartesian`` property.
         at : CDict
             Base point in ``chart`` coordinates at which to evaluate.
         usys : OptUSys, optional
@@ -112,26 +102,16 @@ class MinkowskiMetric(AbstractDiagonalMetric):
         >>> import coordinax.charts as cxc
         >>> import coordinax.manifolds as cxm
 
-        Canonical Cartesian chart — returns the flat Minkowski matrix:
+        Canonical Minkowski chart — returns the flat Minkowski matrix:
 
         >>> m = cxm.MinkowskiMetric()
         >>> at = {"ct": jnp.array(0.0), "x": jnp.array(0.0),
         ...       "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        >>> m.metric_matrix(cxc.spacetimect, at=at).value
+        >>> m.metric_matrix(cxc.minkowskict, at=at).value
         Array([[-1.,  0.,  0.,  0.],
                [ 0.,  1.,  0.,  0.],
                [ 0.,  0.,  1.,  0.],
                [ 0.,  0.,  0.,  1.]], dtype=float64)
-
-        Spherical spatial chart — metric becomes $\operatorname{diag}(-1, 1, r^2,
-        r^2\sin^2\!\theta)$:
-
-        >>> import unxt as u
-        >>> at_sph = {"ct": u.Q(0.0, "m"), "r": u.Q(2.0, "m"),
-        ...           "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
-        >>> g = m.metric_matrix(cxc.SpaceTimeCT(cxc.sph3d), at=at_sph)
-        >>> jnp.diag(g.value).round(6)
-        Array([-1.,  1.,  4.,  4.], dtype=float64)
 
         """
         n = 4

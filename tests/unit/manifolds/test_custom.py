@@ -81,22 +81,6 @@ class TestCustomManifold:
         with pytest.raises(ValueError, match="is not supported"):
             manifold.check_chart(cxc.cart3d)
 
-    def test_pt_map_uses_atlas_validation(self) -> None:
-        """pt_map succeeds for supported charts and rejects others."""
-        atlas = cxm.CustomAtlas(
-            charts=(cxc.Cart2D, cxc.Polar2D),
-            chart_default=cxc.cart2d,
-        )
-        manifold = cxm.CustomManifold(atlas, metric=cxm.EuclideanMetric(2))
-
-        x = {"x": 1.0, "y": 1.0}
-        got = manifold.pt_map(x, cxc.cart2d, cxc.polar2d)
-
-        assert set(got) == {"r", "theta"}
-
-        with pytest.raises(ValueError, match="does not support chart"):
-            manifold.pt_map(x, cxc.cart2d, cxc.sph2)
-
 
 @given(atlas=cxst.atlases(cxm.CustomAtlas))
 def test_custom_atlas_property_invariants(atlas: cxm.CustomAtlas) -> None:
@@ -118,6 +102,6 @@ def test_custom_manifold_property_transition(M: cxm.CustomManifold) -> None:
     # not numeric fuzz from random values.
     x = {"x": 1.0, "y": 1.0}
     # The required chart classes ensure this transition path is defined.
-    got = M.pt_map(x, cxc.cart2d, cxc.polar2d)
+    got = cxc.pt_map(x, cxc.cart2d, cxc.polar2d)
     # Transition result schema should match polar chart component keys.
     assert set(got) == {"r", "theta"}

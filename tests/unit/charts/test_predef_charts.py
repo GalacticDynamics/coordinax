@@ -99,9 +99,9 @@ _CHART_PARAMS: list[tuple] = [
     ),
     # 4D spacetime
     (
-        "spacetimect",
-        cxc.spacetimect,
-        cxc.SpaceTimeCT,
+        "minkowskict",
+        cxc.minkowskict,
+        cxc.MinkowskiCT,
         ("ct", "x", "y", "z"),
         ("length", "length", "length", "length"),
         4,
@@ -142,7 +142,7 @@ _CARTESIAN_PARAMS: list[tuple] = [
     ("lonlat_sph3d", cxc.lonlat_sph3d, cxc.cart3d),
     ("loncoslat_sph3d", cxc.loncoslat_sph3d, cxc.cart3d),
     ("math_sph3d", cxc.math_sph3d, cxc.cart3d),
-    ("spacetimect", cxc.spacetimect, cxc.spacetimect),
+    ("minkowskict", cxc.minkowskict, cxc.minkowskict),
     ("cartnd", cxc.cartnd, cxc.cartnd),
 ]
 

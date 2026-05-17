@@ -20,7 +20,7 @@ from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
 )
-from coordinax._src.euclidean.manifold import euclidean0d
+from coordinax._src.euclidean.manifold import R0
 
 
 class Abstract0D(AbstractDimensionalFlag, n=0):
@@ -75,7 +75,7 @@ class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = euclidean0d
+    M: AbstractManifold = R0
 
     @override
     @property

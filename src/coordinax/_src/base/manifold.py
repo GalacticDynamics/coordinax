@@ -12,7 +12,6 @@ import wadler_lindig as wl
 import dataclassish
 
 import coordinax.angles as cxa
-import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .atlas import AbstractAtlas
 from .metric import AbstractMetric
@@ -127,35 +126,6 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     ...     print(e)
     Chart Cart2D(M=Rn(2)) is not supported by this manifold atlas.
 
-    **Point transition maps**
-
-    {meth}`pt_map` converts point-role coordinates between two
-    charts that both belong to the manifold atlas. The transition map is the
-    composition $\varphi_\beta \circ \varphi_\alpha^{-1}$; no embedding is
-    involved.
-
-    Converting the point $(0, 0, 1)$ from Cartesian to spherical on
-    $\mathbb{R}^3$ --- the north pole maps to $(r, \theta, \phi) = (1, 0, 0)$:
-
-    >>> x = {"x": 0.0, "y": 0.0, "z": 1.0}
-    >>> M.pt_map(x, cxc.cart3d, cxc.sph3d)
-    {'r': Array(1., ...), 'theta': Array(0., ...), 'phi': Array(0., ...)}
-
-    Converting $(1, 1)$ from Cartesian to polar on $\mathbb{R}^2$ --- the
-    point lies at distance $\sqrt{2}$ from the origin at angle $\pi/4$:
-
-    >>> M2 = cxm.EuclideanManifold(2)
-    >>> M2.pt_map({"x": 1.0, "y": 1.0}, cxc.cart2d, cxc.polar2d)
-    {'r': Array(1.41421356, ...), 'theta': Array(0.78539816, ...)}
-
-    Passing a chart not in the atlas raises {exc}`ValueError`:
-
-    >>> try:
-    ...     M.pt_map(x, cxc.cart3d, cxc.sph2)
-    ... except ValueError as e:
-    ...     print(e)
-    Atlas EuclideanAtlas(ndim=3) does not support chart SphericalTwoSphere(M=Sn(2))
-
     **Non-Euclidean manifolds**
 
     The two-sphere $S^2$ is a 2-dimensional manifold that is *not* a subspace
@@ -247,29 +217,6 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         if not self.has_chart(chart):
             msg = f"Chart {chart!r} is not supported by this manifold atlas."
             raise ValueError(msg)
-
-    # =====================================================
-
-    def pt_map(self, x: Any, /, *args: Any, **kwargs: Any) -> Any:
-        """Transition map for points, checking the manifold.
-
-        >>> import coordinax.charts as cxc
-        >>> import coordinax.manifolds as cxm
-
-        >>> M = cxm.EuclideanManifold(2)
-
-        >>> x = {"x": 1.0, "y": 1.0}
-        >>> M.pt_map(x, cxc.cart2d, cxc.polar2d)
-        {'r': Array(1.41421356, dtype=float64, ...),
-         'theta': Array(0.78539816, dtype=float64, ...)}
-
-        >>> try: M.pt_map(x, cxc.cart2d, cxc.sph2)
-        ... except ValueError as e: print(e)
-        Atlas EuclideanAtlas(ndim=2) does not support chart SphericalTwoSphere(M=Sn(2))
-
-        """
-        # TODO: check chart compatible with manifold
-        return cxcapi.pt_map(x, self.atlas, *args, **kwargs)
 
     # =====================================================
 

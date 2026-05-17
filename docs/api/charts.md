@@ -82,6 +82,10 @@ Intrinsic two-sphere charts do not have a global Cartesian 2D chart; requesting 
 
 `ProlateSpheroidal3D` does not export a predefined instance because chart instances depend on the focal parameter `Delta`.
 
+### 4D Charts
+
+- `MinkowskiCT` / `minkowskict`: 4D Minkowski spacetime chart with the conventional 3+1 split. Components are `(ct, x, y, z)`, all with dimension `"length"`. This is a single (non-product) flat chart whose metric is $\eta = \operatorname{diag}(-1, 1, 1, 1)$. The chart is self-Cartesian: `cartesian_chart(minkowskict) is minkowskict`.
+
 ### 6D Charts
 
 - `PoincarePolar6D` / `poincarepolar6d`: 6D Poincare polar chart family
@@ -89,12 +93,10 @@ Intrinsic two-sphere charts do not have a global Cartesian 2D chart; requesting 
 ### N-D Charts
 
 - `CartND` / `cartnd`: N-dimensional Cartesian
-- `SpaceTimeCT` / `spacetimect`: spacetime chart with `ct` plus a spatial factor
 
 ### Product Charts
 
 - `CartesianProductChart`: namespace-prefixed product chart with dot-delimited component keys (for example `q.x`, `q.y`, `p.x`, ...)
-- `SpaceTimeCT`: flat-key product chart `time1d x spatial_chart`
 
 Product-chart transitions are factorwise: each factor chart transforms independently and then components are merged.
 

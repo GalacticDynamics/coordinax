@@ -25,14 +25,18 @@ __all__ = (
     "EuclideanMetric",
     "EuclideanManifold",
     "Rn",
-    "euclidean3d",
+    "R0",
+    "R1",
+    "R2",
+    "R3",
+    "RN",
     # HyperSpherical
     "HyperSphericalAtlas",
     "HyperSphericalMetric",
     "HyperSphericalManifold",
     "Sn",
-    "onesphere",
-    "twosphere",
+    "S1",
+    "S2",
     # Minkowski
     "MinkowskiAtlas",
     "MinkowskiMetric",
@@ -55,6 +59,8 @@ __all__ = (
     "CustomAtlas",
     "CustomMetric",
     "CustomManifold",
+    # Product / Galilean
+    "galilean_spacetime",
 )
 
 from ._src.setup_package import install_import_hook
@@ -75,11 +81,15 @@ with install_import_hook("coordinax.manifolds"):
         InducedMetric,
     )
     from ._src.euclidean import (
+        R0,
+        R1,
+        R2,
+        R3,
+        RN,
         EuclideanAtlas,
         EuclideanManifold,
         EuclideanMetric,
         Rn,
-        euclidean3d,
     )
     from ._src.manifolds import *  # noqa: F403
     from ._src.minkowski import (
@@ -101,15 +111,16 @@ with install_import_hook("coordinax.manifolds"):
         CartesianProductManifold,
         CartesianProductMetric,
     )
+    from ._src.product.galilean_ct import galilean_spacetime
     from ._src.spherical import (
+        S1,
+        S2,
         HyperSphericalAtlas,
         HyperSphericalManifold,
         HyperSphericalMetric,
         Sn,
         TwoSphereIn3D,
         embedded_twosphere,
-        onesphere,
-        twosphere,
     )
     from coordinax.api.charts import pt_map
     from coordinax.api.manifolds import (

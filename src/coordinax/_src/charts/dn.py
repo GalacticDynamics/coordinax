@@ -19,6 +19,7 @@ from coordinax._src.base import (
 )
 from coordinax._src.custom_types import Len
 from coordinax._src.euclidean.atlas import EuclideanAtlas
+from coordinax._src.euclidean.manifold import RN
 from coordinax._src.null import no_manifold
 
 
@@ -29,7 +30,8 @@ class AbstractND(AbstractDimensionalFlag, n="N"):
     Examples include Cartesian representations in arbitrary dimensions.
     """
 
-    # TODO: add a check it's N-D
+    _: dataclasses.KW_ONLY
+    M: AbstractManifold = no_manifold
 
     def __init_subclass__(cls, n: int | L["N"] | None = None, **kw: Any) -> None:
         # Enforce that this is a subclass of AbstractChart
@@ -78,7 +80,7 @@ class CartND(AbstractFixedComponentsChart[CartNDKeys, CartNDDims], AbstractND):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = no_manifold  # TODO: M=Rn(n)
+    M: AbstractManifold = RN
 
     @override
     @property

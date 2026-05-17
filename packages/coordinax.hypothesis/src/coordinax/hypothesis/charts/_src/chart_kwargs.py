@@ -59,12 +59,11 @@ def chart_init_kwargs(
 
     Generate init kwargs for a specific chart class:
 
-    >>> @given(kwargs=cxst.chart_init_kwargs(cxc.SpaceTimeCT))
-    ... def test_spacetime_kwargs(kwargs):
-    ...     # kwargs will contain 'spatial_chart' and 'c' keys
-    ...     assert 'spatial_chart' in kwargs
-    ...     chart = cxc.SpaceTimeCT(**kwargs)
-    ...     assert isinstance(chart, cxc.SpaceTimeCT)
+    >>> @given(kwargs=cxst.chart_init_kwargs(cxc.MinkowskiCT))
+    ... def test_minkowskict_kwargs(kwargs):
+    ...     # MinkowskiCT has no required init params; kwargs will be empty
+    ...     chart = cxc.MinkowskiCT(**kwargs)
+    ...     assert isinstance(chart, cxc.MinkowskiCT)
 
     Use with chart_classes strategy:
 

@@ -25,9 +25,9 @@ class TestAbstractMetricContract:
 
     @pytest.fixture(
         params=[
-            "euclidean3d",
-            "euclidean2d",
-            "euclidean1d",
+            "R3",
+            "R2",
+            "R1",
             "hyperspherical2d",
             "minkowski4d",
             "product3d",
@@ -35,9 +35,9 @@ class TestAbstractMetricContract:
     )
     def metric(self, request):
         metrics = {
-            "euclidean3d": cxm.EuclideanMetric(3),
-            "euclidean2d": cxm.EuclideanMetric(2),
-            "euclidean1d": cxm.EuclideanMetric(1),
+            "R3": cxm.EuclideanMetric(3),
+            "R2": cxm.EuclideanMetric(2),
+            "R1": cxm.EuclideanMetric(1),
             "hyperspherical2d": cxm.HyperSphericalMetric(ndim=2),
             "minkowski4d": cxm.MinkowskiMetric(),
             "product3d": cxm.CartesianProductMetric(
@@ -80,21 +80,21 @@ class TestAbstractDiagonalMetricContract:
 
     @pytest.fixture(
         params=[
-            "euclidean3d_cart",
-            "euclidean3d_sph",
-            "euclidean2d_cart",
+            "R3_cart",
+            "R3_sph",
+            "R2_cart",
             "hyperspherical2d",
             "minkowski4d",
         ]
     )
     def metric_chart_at(self, request):
         cases = {
-            "euclidean3d_cart": (
+            "R3_cart": (
                 cxm.EuclideanMetric(3),
                 cxc.cart3d,
                 {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
             ),
-            "euclidean3d_sph": (
+            "R3_sph": (
                 cxm.EuclideanMetric(3),
                 cxc.sph3d,
                 {
@@ -103,7 +103,7 @@ class TestAbstractDiagonalMetricContract:
                     "phi": u.Angle(1.0, "rad"),
                 },
             ),
-            "euclidean2d_cart": (
+            "R2_cart": (
                 cxm.EuclideanMetric(2),
                 cxc.cart2d,
                 {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")},
@@ -115,7 +115,7 @@ class TestAbstractDiagonalMetricContract:
             ),
             "minkowski4d": (
                 cxm.MinkowskiMetric(),
-                cxc.SpaceTimeCT(cxc.cart3d),
+                cxc.MinkowskiCT(),
                 {
                     "ct": u.Q(1.0, "m"),
                     "x": u.Q(0.0, "m"),
@@ -236,8 +236,8 @@ class TestEuclideanMetric:
         assert g.shape == (3, 3)
 
     def test_carried_by_euclidean_manifold(self):
-        """euclidean3d.metric should return an EuclideanMetric."""
-        metric = cxm.euclidean3d.metric
+        """R3.metric should return an EuclideanMetric."""
+        metric = cxm.R3.metric
         assert isinstance(metric, cxm.EuclideanMetric)
         assert metric.ndim == 3
 
@@ -315,8 +315,8 @@ class TestHyperSphericalMetric:
         assert gs.shape == (5, 2, 2)
 
     def test_carried_by_hyperspherical_manifold(self):
-        """twosphere.metric should return a HyperSphericalMetric."""
-        metric = cxm.twosphere.metric
+        """S2.metric should return a HyperSphericalMetric."""
+        metric = cxm.S2.metric
         assert isinstance(metric, cxm.HyperSphericalMetric)
         assert metric.ndim == 2
 
@@ -338,7 +338,7 @@ class TestMinkowskiMetric:
 
     def test_metric_matrix_is_diagonal(self):
         m = cxm.MinkowskiMetric()
-        chart = cxc.SpaceTimeCT(cxc.cart3d)
+        chart = cxc.MinkowskiCT()
         p = {
             "ct": u.Q(1.0, "m"),
             "x": u.Q(0.0, "m"),
@@ -353,7 +353,7 @@ class TestMinkowskiMetric:
     def test_metric_matrix_is_position_independent(self):
         """Minkowski metric is flat — does not depend on position."""
         m = cxm.MinkowskiMetric()
-        chart = cxc.SpaceTimeCT(cxc.cart3d)
+        chart = cxc.MinkowskiCT()
         p1 = {
             "ct": u.Q(1.0, "m"),
             "x": u.Q(0.0, "m"),
@@ -372,7 +372,7 @@ class TestMinkowskiMetric:
 
     def test_metric_matrix_jit(self):
         m = cxm.MinkowskiMetric()
-        chart = cxc.SpaceTimeCT(cxc.cart3d)
+        chart = cxc.MinkowskiCT()
         p = {
             "ct": u.Q(1.0, "m"),
             "x": u.Q(0.0, "m"),
@@ -519,20 +519,20 @@ class TestAbstractMetricCholesky:
 
     @pytest.fixture(
         params=[
-            "euclidean3d_cart",
-            "euclidean3d_sph",
-            "euclidean2d_cart",
+            "R3_cart",
+            "R3_sph",
+            "R2_cart",
             "hyperspherical2d",
         ]
     )
     def metric_chart_at(self, request):
         cases = {
-            "euclidean3d_cart": (
+            "R3_cart": (
                 cxm.EuclideanMetric(3),
                 cxc.cart3d,
                 {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
             ),
-            "euclidean3d_sph": (
+            "R3_sph": (
                 cxm.EuclideanMetric(3),
                 cxc.sph3d,
                 {
@@ -541,7 +541,7 @@ class TestAbstractMetricCholesky:
                     "phi": u.Angle(1.0, "rad"),
                 },
             ),
-            "euclidean2d_cart": (
+            "R2_cart": (
                 cxm.EuclideanMetric(2),
                 cxc.cart2d,
                 {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")},

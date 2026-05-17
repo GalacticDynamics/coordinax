@@ -139,6 +139,7 @@ def pt_map(
     """
     if from_chart != from_vec.chart:
         raise ValueError(CHART_MSMTCH.format(from_chart, from_vec))
+
     out = cxc.pt_map(from_vec, to_chart, usys=usys)
     return cast("Point", out)
 

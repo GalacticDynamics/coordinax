@@ -110,22 +110,26 @@ cx.phys_vel  # physical-basis velocity components
 
 ### Manifolds
 
-Define an explicit custom atlas and manifold:
+Use the built-in $S^2$ two-sphere and its round metric to measure angles between tangent vectors:
 
 ```pycon
->>> import coordinax.main as cx
+>>> import jax.numpy as jnp
+>>> import coordinax.charts as cxc
+>>> import coordinax.manifolds as cxm
 >>> import unxt as u
 
->>> atlas = cx.CustomAtlas(
-...     charts=(type(cx.cart2d), type(cx.polar2d)),
-...     chart_default=cx.cart2d,
-... )
->>> cx.polar2d in atlas
-True
->>> M = cx.CustomManifold(atlas, metric=cx.EuclideanMetric(2))
->>> q = {"x": u.Q(1.0, "km"), "y": u.Q(1.0, "km")}
->>> M.pt_map(q, cx.cart2d, cx.polar2d)
-{'r': Q(1.41421356, 'km'), 'theta': Q(0.78539816, 'rad')}
+>>> # Unit two-sphere S^2 with its intrinsic round metric
+>>> cxm.S2
+HyperSphericalManifold(ndim=2)
+>>> cxm.S2.metric
+HyperSphericalMetric(ndim=2)
+
+>>> # At the equator, measure the angle between northward and eastward tangents
+>>> at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+>>> u_north = {"theta": u.Angle(1.0, "rad"), "phi": u.Angle(0.0, "rad")}
+>>> v_east = {"theta": u.Angle(0.0, "rad"), "phi": u.Angle(1.0, "rad")}
+>>> cxm.S2.angle_between(cxc.sph2, u_north, v_east, at=at)
+Angle(1.57079633, 'rad')
 ```
 
 ### Astronomy Frames
