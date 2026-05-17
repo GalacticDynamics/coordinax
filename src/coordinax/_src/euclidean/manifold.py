@@ -159,7 +159,7 @@ class EuclideanManifold(AbstractManifold):
         if ndim is not True and not (
             isinstance(ndim, int) and not isinstance(ndim, bool) and ndim >= 0
         ):
-            msg = f"`ndim` must be True or a positive integer, got {ndim!r}"
+            msg = f"`ndim` must be True or a non-negative integer, got {ndim!r}"
             raise TypeError(msg)
         object.__setattr__(self, "ndim", ndim)
         object.__setattr__(self, "atlas", EuclideanAtlas(self.ndim))

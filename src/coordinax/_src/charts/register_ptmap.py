@@ -210,7 +210,7 @@ def pt_map(
     >>> p = {"r": u.Q(5.0, "m"), "theta": u.Q(90, "deg")}
     >>> map = cxc.pt_map.invoke(dict[str, u.Q], cxm.Rn, cxc.AbstractChart,
     ...                         cxm.Rn, cxc.AbstractChart)
-    >>> cxc.pt_map(p, cxm.R2, cxc.polar2d, cxm.R2, cxc.cart2d)
+    >>> map(p, cxm.R2, cxc.polar2d, cxm.R2, cxc.cart2d)
     {'x': Q(3.061617e-16, 'm'), 'y': Q(5., 'm')}
 
     """
