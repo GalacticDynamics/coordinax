@@ -32,13 +32,13 @@ import coordinax.charts as cxc
 # Helpers
 # ---------------------------------------------------------------------------
 
-_pos_m = _m_qty(0.5, 10.0)
-_any_m = _m_qty(-10.0, 10.0)
+_pos_m = _m_qty(0.5, 10)
+_any_m = _m_qty(-10, 10)
 
 
 def _assert_cdict_approx(got, ref, *, rel=1e-5, abs=None) -> None:
     """Assert two CDicts agree component-wise, stripping each to ref's units."""
-    atol = 0.0 if abs is None else abs
+    atol = 0 if abs is None else abs
     for key in ref:
         got_value = np.asarray(u.ustrip(ref[key].unit, got[key]))
         ref_value = np.asarray(u.ustrip(ref[key].unit, ref[key]))

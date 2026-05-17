@@ -46,18 +46,18 @@ def _angle_qty(min_value: float, max_value: float):
 # ---------------------------------------------------------------------------
 
 # Strictly positive radial coordinate (avoids origin singularity)
-pos_m = _m_qty(0.5, 8.0)
+pos_m = _m_qty(0.5, 8)
 
 # Any Cartesian component value
-any_m = _m_qty(-8.0, 8.0)
+any_m = _m_qty(-8, 8)
 
 # Polar angle θ ∈ (0.25, 2.875) — avoids singularities at 0 and π
 polar_rad = _angle_qty(0.25, 2.875)
 
 # Any azimuthal / angle value
-any_angle_rad = _angle_qty(-3.0, 3.0)
+any_angle_rad = _angle_qty(-3, 3)
 
 # Dimensionless tangent-vector components
 v_elem = st.floats(
-    min_value=-5.0, max_value=5.0, allow_nan=False, allow_subnormal=False, width=32
+    min_value=-5, max_value=5, allow_nan=False, allow_subnormal=False, width=32
 )
