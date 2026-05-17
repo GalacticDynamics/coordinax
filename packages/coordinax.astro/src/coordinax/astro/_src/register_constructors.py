@@ -13,10 +13,7 @@ from .parallax import Parallax, parallax_base_length
 def from_(cls: type[DistanceModulus], p: Parallax, /, **kw: Any) -> DistanceModulus:
     """Compute distance modulus from parallax.
 
-    Examples
-    --------
     >>> from coordinax.astro import DistanceModulus, Parallax
-
     >>> p = Parallax(1, "mas")
     >>> DistanceModulus.from_(p)
     DistanceModulus(10., 'mag')
@@ -31,11 +28,8 @@ def from_(cls: type[DistanceModulus], p: Parallax, /, **kw: Any) -> DistanceModu
 def from_(cls: type[Parallax], dm: DistanceModulus, /, **kw: Any) -> Parallax:
     """Convert distance modulus to parallax.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import DistanceModulus, Parallax
-
     >>> dm = DistanceModulus(10, "mag")
     >>> Parallax.from_(dm).uconvert("mas").round(2)
     Parallax(1., 'mas')

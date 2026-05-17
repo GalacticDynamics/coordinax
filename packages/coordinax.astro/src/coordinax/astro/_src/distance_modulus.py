@@ -56,8 +56,6 @@ def from_(
 ) -> DistanceModulus:
     """Construct a distance.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import DistanceModulus
 
@@ -74,8 +72,6 @@ def from_(
 ) -> DistanceModulus:
     """Compute distance modulus from distance modulus.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import DistanceModulus
 
@@ -96,8 +92,6 @@ def from_(
 def from_(cls: type[DistanceModulus], dm: u.Q["mag"], /, **kw: Any) -> DistanceModulus:
     """Compute parallax from parallax.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import DistanceModulus
 
@@ -119,8 +113,6 @@ def from_(
 ) -> DistanceModulus:
     """Compute distance modulus from distance.
 
-    Examples
-    --------
     >>> import coordinax.distances as cxd
     >>> from coordinax.astro import DistanceModulus
 
@@ -139,8 +131,6 @@ def from_(
 ) -> DistanceModulus:
     """Compute distance modulus from distance.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import DistanceModulus
 
@@ -157,8 +147,6 @@ def from_(
 def from_(cls: type[DistanceModulus], p: u.Q["angle"], /, **kw: Any) -> DistanceModulus:
     """Compute distance modulus from parallax.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import DistanceModulus
 
@@ -181,8 +169,6 @@ def from_(
 ) -> cxd.Distance:
     """Compute distance from distance modulus.
 
-    Examples
-    --------
     >>> import coordinax.distances as cxd
     >>> from coordinax.astro import DistanceModulus
 

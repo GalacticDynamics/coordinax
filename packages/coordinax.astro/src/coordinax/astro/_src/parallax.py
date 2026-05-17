@@ -83,8 +83,6 @@ class Parallax(cxd.AbstractDistance):
 def from_(cls: type[Parallax], value: ArrayLike, unit: Any, /, **kw: Any) -> Parallax:
     """Construct a distance.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import Parallax
 
@@ -99,8 +97,6 @@ def from_(cls: type[Parallax], value: ArrayLike, unit: Any, /, **kw: Any) -> Par
 def from_(cls: type[Parallax], p: Parallax, /, **kw: Any) -> Parallax:
     """Compute parallax from parallax.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import Parallax
 
@@ -121,8 +117,6 @@ def from_(cls: type[Parallax], p: Parallax, /, **kw: Any) -> Parallax:
 def from_(cls: type[Parallax], p: u.Q["angle"], /, **kw: Any) -> Parallax:
     """Compute parallax from parallax.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import Parallax
 
@@ -144,8 +138,6 @@ def from_(
 ) -> Parallax:
     """Compute parallax from distance.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import Parallax
 
@@ -166,8 +158,6 @@ def from_(
 def from_(cls: type[Parallax], dm: u.Q["mag"], /, **kw: Any) -> Parallax:
     """Convert distance modulus to parallax.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> from coordinax.astro import Parallax
 
@@ -186,8 +176,6 @@ def from_(cls: type[Parallax], dm: u.Q["mag"], /, **kw: Any) -> Parallax:
 def from_(cls: type[cxd.Distance], p: Parallax, /, **kw: Any) -> cxd.Distance:
     """Compute distance from parallax.
 
-    Examples
-    --------
     >>> import coordinax.distances as cxd
     >>> from coordinax.astro import Parallax
 

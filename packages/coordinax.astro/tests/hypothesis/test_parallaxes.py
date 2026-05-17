@@ -61,19 +61,17 @@ def test_parallax_with_strategy_check_negative(plx: cxastro.Parallax) -> None:
 
 
 @given(
-    plx=cxastrost.parallaxes(
-        elements=st.floats(min_value=1.0, max_value=100.0, width=32)
-    )
+    plx=cxastrost.parallaxes(elements=st.floats(min_value=1, max_value=100, width=32))
 )
 def test_parallax_with_custom_elements(plx: cxastro.Parallax) -> None:
     """Test parallax with custom elements range."""
     assert isinstance(plx, cxastro.Parallax)
-    assert 1.0 <= plx.value <= 100.0
+    assert 1 <= plx.value <= 100
 
 
 @given(
     plx=cxastrost.parallaxes(
-        check_negative=True, elements=st.floats(min_value=0.0, max_value=10.0, width=32)
+        check_negative=True, elements=st.floats(min_value=0, max_value=10, width=32)
     )
 )
 def test_parallax_check_negative_with_elements(plx: cxastro.Parallax) -> None:
@@ -81,7 +79,7 @@ def test_parallax_check_negative_with_elements(plx: cxastro.Parallax) -> None:
     assert isinstance(plx, cxastro.Parallax)
     # When check_negative=True and elements provided, min_value should be adjusted
     assert plx.value >= 0
-    assert plx.value <= 10.0
+    assert plx.value <= 10
 
 
 class TestParallaxFromType:
