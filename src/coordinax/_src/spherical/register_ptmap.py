@@ -246,7 +246,7 @@ def pt_map(
     >>> import unxt as u
 
     >>> p = {"theta": u.Q(30, "deg"), "phi": u.Q(60, "deg")}
-    >>> cxm.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.math_sph2)
+    >>> cxc.pt_map(p, cxm.S2, cxc.sph2, cxm.S2, cxc.math_sph2)
     {'theta': Q(60, 'deg'), 'phi': Q(30, 'deg')}
 
     """

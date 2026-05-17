@@ -3241,7 +3241,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     False
 
     >>> x = {"x": 1.0, "y": 1.0, "z": 1.0}
-    >>> cxm.pt_map(x, cxc.cart3d, cxc.sph3d)
+    >>> cxc.pt_map(x, cxc.cart3d, cxc.sph3d)
     {'r': Array(1.73205081, dtype=float64, ...),
      'theta': Array(0.95531662, dtype=float64),
      'phi': Array(0.78539816, dtype=float64, ...)}
