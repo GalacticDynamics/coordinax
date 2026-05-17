@@ -57,7 +57,7 @@ def pt_project(
     return _twospherefrom3d.project(x_sph, usys=usys)
 
 
-@plum.dispatch(precedence=1)
+@plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
 def pt_map(
     p: Any,
     from_chart: Abstract3D,

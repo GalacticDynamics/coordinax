@@ -12,6 +12,7 @@ from hypothesis import assume
 
 import coordinax.charts as cxc
 
+from .chart_kwargs import chart_init_kwargs
 from .charts import charts
 from coordinax.hypothesis.utils import (
     draw_if_strategy,
@@ -220,7 +221,7 @@ def charts(  # noqa: F811
 @ft.lru_cache(maxsize=128, typed=True)
 @strip_return_annotation
 @st.composite
-def chart_init_kwargs(
+def chart_init_kwargs(  # noqa: F811
     draw: st.DrawFn,
     chart_class: type[cxc.CartesianProductChart],
     /,
@@ -348,7 +349,14 @@ def charts(  # noqa: F811
         # Pick a random specialization
         flat_cls = draw(st.sampled_from(flat_product_classes))
 
-        chart = draw(charts(flat_cls, ndim=ndim))
+        # Use chart_init_kwargs directly to avoid re-entering the
+        # AbstractCartesianProductChart dispatch (flat_cls is a subclass of it,
+        # so charts(flat_cls) would recurse with default min/max_factors).
+        kwargs = draw(chart_init_kwargs(flat_cls, ndim=ndim))  # type: ignore[arg-type]
+        chart = flat_cls(**kwargs)
+        if ndim is not None:
+            assume(chart.ndim == ndim)
+        assume(min_factors <= len(chart.factors) <= max_factors)
 
     else:
         chart = draw(
