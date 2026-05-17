@@ -1,4 +1,4 @@
-"""Tests for coordinax._src.quantity_matrix.QuantityMatrix."""
+"""Tests for coordinax._src.quantity_matrix.QMatrix."""
 
 import math
 
@@ -17,8 +17,10 @@ import unxt as u
 from coordinax._src.internal.quantity_matrix import (
     _convert_value_matrix,
     _convert_value_vector,
+    det as qm_det,
+    inv as qm_inv,
 )
-from coordinax.internal import QuantityMatrix as QMat, UnitsMatrix
+from coordinax.internal import QMatrix as QMat, UnitsMatrix
 
 # ---------------------------------------------------------------------------
 # Unit shorthands (visual noise reduction)
@@ -48,11 +50,8 @@ def unit_2x2():
 
 @pytest.fixture
 def qm_2x2(unit_2x2):
-    """Return a 2x2 QuantityMatrix with values 1-4."""
-    return QMat(
-        value=jnp.array([[1.0, 2.0], [3.0, 4.0]]),
-        unit=unit_2x2,
-    )
+    """Return a 2x2 QMatrix with values 1-4."""
+    return QMat(value=jnp.array([[1, 2], [3, 4]]), unit=unit_2x2)
 
 
 @pytest.fixture
@@ -69,11 +68,8 @@ def unit_1d():
 
 @pytest.fixture
 def qm_1d(unit_1d):
-    """Return a 1D QuantityMatrix (vector) with values 1-3."""
-    return QMat(
-        value=jnp.array([1.0, 2.0, 3.0]),
-        unit=unit_1d,
-    )
+    """Return a 1D QMatrix (vector) with values 1-3."""
+    return QMat(value=jnp.array([1, 2, 3]), unit=unit_1d)
 
 
 @pytest.fixture
@@ -88,7 +84,7 @@ def unit_1d_alt():
 
 
 class TestConstruction:
-    """Tests for QuantityMatrix construction and basic properties."""
+    """Tests for QMatrix construction and basic properties."""
 
     def test_shape(self, qm_2x2):
         assert qm_2x2.shape == (2, 2)
@@ -100,7 +96,7 @@ class TestConstruction:
         assert qm_2x2.shape[-1] == 2
 
     def test_value(self, qm_2x2):
-        expected = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+        expected = jnp.array([[1, 2], [3, 4]])
         assert jnp.array_equal(qm_2x2.value, expected)
 
     def test_unit(self, qm_2x2, unit_2x2):
@@ -124,7 +120,7 @@ class TestConstruction:
 
     def test_1x1(self):
         """Degenerate 1x1 matrix."""
-        qm = QMat(jnp.array([[42.0]]), unit=((_m,),))
+        qm = QMat(jnp.array([[42]]), unit=((_m,),))
         assert qm.shape[-2] == 1
         assert qm.shape[-1] == 1
 
@@ -140,7 +136,7 @@ class TestConstruction:
 
     def test_unit_converter_from_plain_tuples(self):
         """Plain nested tuples (of strings) are converted to ``UnitsMatrix``."""
-        qm = QMat(jnp.array([[1.0]]), unit=(("m",),))
+        qm = QMat(jnp.array([[1]]), unit=(("m",),))
         assert isinstance(qm.unit, UnitsMatrix)
         assert qm.unit[0, 0] == _m
 
@@ -153,12 +149,12 @@ class TestConstruction:
 
     def test_1d_value(self, qm_1d):
         """1D vector value."""
-        expected = jnp.array([1.0, 2.0, 3.0])
+        expected = jnp.array([1, 2, 3])
         assert jnp.array_equal(qm_1d.value, expected)
 
     def test_1d_from_strings(self):
         """1D vector from unit strings."""
-        qm = QMat(jnp.array([7.0, 8.0]), unit=("m", "s"))
+        qm = QMat(jnp.array([7, 8]), unit=("m", "s"))
         assert isinstance(qm.unit, UnitsMatrix)
         assert qm.unit[0] == _m
         assert qm.unit[1] == _s
@@ -178,16 +174,16 @@ class TestConstruction:
         assert qm_2x2.ndim == 2
 
     def test_repr(self, qm_2x2):
-        """``repr(QuantityMatrix(...))`` succeeds and contains key info."""
+        """``repr(QMatrix(...))`` succeeds and contains key info."""
         r = repr(qm_2x2)
-        assert "QuantityMatrix" in r
+        assert "QMatrix" in r
         assert "((m, s), (kg, rad))" in r
 
     def test_repr_1x1(self):
         """Repr for a 1x1 matrix includes trailing-comma tuple syntax."""
-        qm = QMat(jnp.array([[42.0]]), unit=((_m,),))
+        qm = QMat(jnp.array([[42]]), unit=((_m,),))
         r = repr(qm)
-        assert "QuantityMatrix" in r
+        assert "QMatrix" in r
         assert "((m,),)" in r
 
 
@@ -379,31 +375,31 @@ class TestConvertValueMatrix:
 
     def test_noop_same_units(self, unit_2x2):
         """If from_units == to_units no conversion happens."""
-        val = jnp.array([[7.0, 8.0], [9.0, 10.0]])
+        val = jnp.array([[7, 8], [9, 10]])
         out = _convert_value_matrix(val, unit_2x2, unit_2x2)
         assert jnp.array_equal(out, val)
 
     def test_km_to_m(self):
         """1 km → 1000 m."""
-        out = _convert_value_matrix(jnp.array([[3.0]]), ((_km,),), ((_m,),))
-        assert jnp.isclose(out[0, 0], 3000.0)
+        out = _convert_value_matrix(jnp.array([[3]]), ((_km,),), ((_m,),))
+        assert jnp.isclose(out[0, 0], 3000)
 
     def test_mixed_conversion(self, unit_2x2, unit_2x2_alt):
         """Convert from (km, ms, g, deg) → (m, s, kg, rad)."""
-        val = jnp.array([[1.0, 1000.0], [3000.0, 180.0]])
+        val = jnp.array([[1, 1000], [3000, 180]])
         out = _convert_value_matrix(val, unit_2x2_alt, unit_2x2)
-        assert jnp.isclose(out[0, 0], 1000.0)  # 1 km -> 1000 m
-        assert jnp.isclose(out[0, 1], 1.0)  # 1000 ms -> 1 s
-        assert jnp.isclose(out[1, 0], 3.0)  # 3000 g -> 3 kg
+        assert jnp.isclose(out[0, 0], 1000)  # 1 km -> 1000 m
+        assert jnp.isclose(out[0, 1], 1)  # 1000 ms -> 1 s
+        assert jnp.isclose(out[1, 0], 3)  # 3000 g -> 3 kg
         assert jnp.isclose(out[1, 1], math.pi, atol=1e-4)  # 180 deg -> pi rad
 
     def test_preserves_batch(self):
         """Batch dimensions are preserved."""
-        val = jnp.array([[[2.0]], [[5.0]]])  # (2, 1, 1)
+        val = jnp.array([[[2]], [[5]]])  # (2, 1, 1)
         out = _convert_value_matrix(val, ((_km,),), ((_m,),))
         assert out.shape == (2, 1, 1)
-        assert jnp.isclose(out[0, 0, 0], 2000.0)
-        assert jnp.isclose(out[1, 0, 0], 5000.0)
+        assert jnp.isclose(out[0, 0, 0], 2000)
+        assert jnp.isclose(out[1, 0, 0], 5000)
 
 
 class TestConvertValuePoint:
@@ -417,24 +413,24 @@ class TestConvertValuePoint:
 
     def test_km_to_m(self):
         """1 km → 1000 m."""
-        out = _convert_value_vector(jnp.array([3.0]), (_km,), (_m,))
-        assert jnp.isclose(out[0], 3000.0)
+        out = _convert_value_vector(jnp.array([3]), (_km,), (_m,))
+        assert jnp.isclose(out[0], 3000)
 
     def test_mixed_conversion(self, unit_1d, unit_1d_alt):
         """Convert from (km, ms, g) → (m, s, kg)."""
-        val = jnp.array([1.0, 1000.0, 3000.0])
+        val = jnp.array([1, 1000, 3000])
         out = _convert_value_vector(val, unit_1d_alt, unit_1d)
-        assert jnp.isclose(out[0], 1000.0)  # 1 km -> 1000 m
-        assert jnp.isclose(out[1], 1.0)  # 1000 ms -> 1 s
-        assert jnp.isclose(out[2], 3.0)  # 3000 g -> 3 kg
+        assert jnp.isclose(out[0], 1000)  # 1 km -> 1000 m
+        assert jnp.isclose(out[1], 1)  # 1000 ms -> 1 s
+        assert jnp.isclose(out[2], 3)  # 3000 g -> 3 kg
 
     def test_preserves_batch(self):
         """Batch dimensions are preserved."""
-        val = jnp.array([[2.0], [5.0]])  # (2, 1)
+        val = jnp.array([[2], [5]])  # (2, 1)
         out = _convert_value_vector(val, (_km,), (_m,))
         assert out.shape == (2, 1)
-        assert jnp.isclose(out[0, 0], 2000.0)
-        assert jnp.isclose(out[1, 0], 5000.0)
+        assert jnp.isclose(out[0, 0], 2000)
+        assert jnp.isclose(out[1, 0], 5000)
 
 
 # ---------------------------------------------------------------------------
@@ -448,16 +444,13 @@ def _add(a, b):
 
 
 class TestAddition:
-    """Tests for QuantityMatrix + QuantityMatrix."""
+    """Tests for QMatrix + QMatrix."""
 
     def test_same_units(self, qm_2x2, unit_2x2):
         """Simple add, same units."""
-        other = QMat(
-            value=jnp.array([[10.0, 20.0], [30.0, 40.0]]),
-            unit=unit_2x2,
-        )
+        other = QMat(value=jnp.array([[10, 20], [30, 40]]), unit=unit_2x2)
         result = _add(qm_2x2, other)
-        expected = jnp.array([[11.0, 22.0], [33.0, 44.0]])
+        expected = jnp.array([[11, 22], [33, 44]])
         assert jnp.allclose(result.value, expected)
         assert result.unit == unit_2x2
 
@@ -561,7 +554,7 @@ def _sub(a, b):
 
 
 class TestSubtraction:
-    """Tests for QuantityMatrix - QuantityMatrix."""
+    """Tests for QMatrix - QMatrix."""
 
     def test_same_units(self, qm_2x2, unit_2x2):
         """Simple sub, same units."""
@@ -659,7 +652,7 @@ def _matmul(a, b):
 
 
 class TestDotProduct:
-    """Tests for QuantityMatrix @ QuantityMatrix."""
+    """Tests for QMatrix @ QMatrix."""
 
     def test_simple_matmul_uniform_units(self):
         """2x2 @ 2x1 with uniform units along contraction axis."""
@@ -747,9 +740,9 @@ class TestDotProduct:
         a = QMat(jnp.array([2.0, 3.0]), unit=(_m, _m))
         b = QMat(jnp.array([4.0, 5.0]), unit=(_s, _s))
         result = _matmul(a, b)
-        # Result should be a scalar Quantity, not a QuantityMatrix
+        # Result should be a scalar Quantity, not a QMatrix
         # 2*4 + 3*5 = 8 + 15 = 23 in m*s
-        assert isinstance(result, u.Quantity)
+        assert isinstance(result, u.Q)
         assert jnp.isclose(result.value, 23.0)
         assert result.unit == _m * _s
 
@@ -760,7 +753,7 @@ class TestDotProduct:
         a = QMat(jnp.array([1.0, 1.0]), unit=(_m, _km))
         b = QMat(jnp.array([1.0, 1.0]), unit=(_s, _s))
         result = _matmul(a, b)
-        assert isinstance(result, u.Quantity)
+        assert isinstance(result, u.Q)
         assert jnp.isclose(result.value, 1001.0)
         assert result.unit == _m * _s
 
@@ -787,7 +780,7 @@ class TestDotProduct:
 
 
 class TestJaxIntegration:
-    """QuantityMatrix works with JAX transformations."""
+    """QMatrix works with JAX transformations."""
 
     def test_jit_add(self, unit_2x2):
         """jit-compiled addition."""
@@ -805,7 +798,7 @@ class TestJaxIntegration:
         assert jnp.isclose(result.value[0, 0], 23.0)
 
     def test_pytree_flatten_unflatten(self, qm_2x2, unit_2x2):
-        """QuantityMatrix is a proper PyTree."""
+        """QMatrix is a proper PyTree."""
         leaves, treedef = jax.tree.flatten(qm_2x2)
         restored = jax.tree.unflatten(treedef, leaves)
         assert jnp.array_equal(restored.value, qm_2x2.value)
@@ -831,41 +824,35 @@ class TestJaxIntegration:
 
 
 class TestPlumConversion:
-    """Tests for ``plum.convert`` registrations involving ``QuantityMatrix``."""
+    """Tests for ``plum.convert`` registrations involving ``QMatrix``."""
 
-    def test_quantitymatrix_to_quantity_uniform_1d(self):
-        """1D uniform-unit ``QuantityMatrix`` converts to ``u.Quantity``."""
+    def test_QMatrix_to_quantity_uniform_1d(self):
+        """1D uniform-unit ``QMatrix`` converts to ``u.Q``."""
         qm = QMat(value=jnp.array([1.0, 2.0, 3.0]), unit=(_m, _m, _m))
 
-        result = plum.convert(qm, u.Quantity)
+        result = plum.convert(qm, u.Q)
 
-        assert isinstance(result, u.Quantity)
+        assert isinstance(result, u.Q)
         assert result.unit == _m
         assert jnp.array_equal(result.value, qm.value)
 
-    def test_quantitymatrix_to_quantity_uniform_2d(self):
-        """2D uniform-unit ``QuantityMatrix`` converts to ``u.Quantity``."""
-        qm = QMat(
-            value=jnp.array([[1.0, 2.0], [3.0, 4.0]]),
-            unit=((_s, _s), (_s, _s)),
-        )
+    def test_QMatrix_to_quantity_uniform_2d(self):
+        """2D uniform-unit ``QMatrix`` converts to ``u.Q``."""
+        qm = QMat(value=jnp.array([[1, 2], [3, 4]]), unit=((_s, _s), (_s, _s)))
 
-        result = plum.convert(qm, u.Quantity)
+        result = plum.convert(qm, u.Q)
 
-        assert isinstance(result, u.Quantity)
+        assert isinstance(result, u.Q)
         assert result.unit == _s
         assert result.shape == (2, 2)
         assert jnp.array_equal(result.value, qm.value)
 
-    def test_quantitymatrix_to_quantity_heterogeneous_units_raises(self):
-        """Mixed units cannot be converted to a single ``u.Quantity``."""
+    def test_QMatrix_to_quantity_heterogeneous_units_raises(self):
+        """Mixed units cannot be converted to a single ``u.Q``."""
         qm = QMat(value=jnp.array([1.0, 2.0]), unit=(_m, _s))
 
-        with pytest.raises(
-            ValueError,
-            match="all units are identical",
-        ):
-            plum.convert(qm, u.Quantity)
+        with pytest.raises(ValueError, match="all units are identical"):
+            plum.convert(qm, u.Q)
 
 
 # ---------------------------------------------------------------------------
@@ -933,7 +920,7 @@ class TestAffineProductUnitsRejected:
 
 
 class TestMatVec:
-    """Tests for 2D `QuantityMatrix` @ 1D `QuantityMatrix`."""
+    """Tests for 2D `QMatrix` @ 1D `QMatrix`."""
 
     def test_identity_uniform_units(self):
         """Identity 3x3 @ uniform-unit vector → same vector."""
@@ -953,8 +940,8 @@ class TestMatVec:
         assert jnp.isclose(w.value[0], 80.0)
         assert jnp.isclose(w.value[1], 140.0)
 
-    def test_output_is_1d_quantitymatrix(self):
-        """Result of 2D @ 1D is a 1D ``QuantityMatrix``, not a 2D one."""
+    def test_output_is_1d_QMatrix(self):
+        """Result of 2D @ 1D is a 1D ``QMatrix``, not a 2D one."""
         A = QMat(jnp.array([[1.0, 0.0], [0.0, 1.0]]), unit=((_m, _m), (_m, _m)))
         v = QMat(jnp.array([3.0, 7.0]), unit=(_s, _s))
         w = _matmul(A, v)
@@ -1130,7 +1117,7 @@ class TestDiagAndGather:
         assert s.count("(") == 1, f"Expected 1D unit string, got: {s!r}"
 
     def test_diag_under_jit_uniform_units(self):
-        """jnp.diag under jit works for uniform-unit QuantityMatrix."""
+        """jnp.diag under jit works for uniform-unit QMatrix."""
         A = QMat(
             jnp.diag(jnp.array([1.0, 4.0, 9.0])),
             unit=((_m, _m, _m), (_m, _m, _m), (_m, _m, _m)),
@@ -1143,12 +1130,12 @@ class TestDiagAndGather:
 
 
 # ---------------------------------------------------------------------------
-# QuantityMatrix.diag() method
+# QMatrix.diag() method
 # ---------------------------------------------------------------------------
 
 
 class TestDiagMethod:
-    """Tests for ``QuantityMatrix.diag()`` — the method that bypasses JAX gather."""
+    """Tests for ``QMatrix.diag()`` — the method that bypasses JAX gather."""
 
     def test_uniform_units_values(self):
         """Diagonal values are correct for a uniform-unit matrix."""
@@ -1238,7 +1225,7 @@ class TestDiagMethod:
         assert d.unit[1] == _km  # unit[1,1]
 
     def test_1d_raises(self, qm_1d):
-        """Calling .diag() on a 1-D QuantityMatrix raises ValueError."""
+        """Calling .diag() on a 1-D QMatrix raises ValueError."""
         with pytest.raises(ValueError, match="2D"):
             qm_1d.diag()
 
@@ -1278,6 +1265,69 @@ class TestDiagMethod:
         assert jnp.isclose(d.value[0, 0], 1.0)
         assert jnp.isclose(d.value[1, 0], 2.0)
         assert jnp.isclose(d.value[2, 1], 12.0)
+
+
+# ---------------------------------------------------------------------------
+# UnitsMatrix.inverse
+# ---------------------------------------------------------------------------
+
+
+class TestUnitsMatrixInverse:
+    """Tests for ``UnitsMatrix.inverse`` — element-wise unit reciprocal."""
+
+    def test_1d_values(self):
+        """1-D: each unit is reciprocated."""
+        um = UnitsMatrix((_m, _s))
+        inv = um.inverse()
+        assert inv[0] == _m ** (-1)
+        assert inv[1] == _s ** (-1)
+
+    def test_1d_shape_preserved(self):
+        """1-D inverse has the same shape."""
+        um = UnitsMatrix((_m, _s, _kg))
+        assert um.inverse().shape == (3,)
+
+    def test_1d_returns_unitsmatrix(self):
+        """Result is a ``UnitsMatrix`` instance."""
+        um = UnitsMatrix((_m, _s))
+        assert isinstance(um.inverse(), UnitsMatrix)
+
+    def test_1d_double_inverse_is_identity(self):
+        """Two inversions return the original unit structure."""
+        um = UnitsMatrix((_m, _s, _kg))
+        assert um == um.inverse().inverse()
+
+    def test_2d_uniform_values(self):
+        """2-D uniform matrix: every entry is reciprocated."""
+        um = UnitsMatrix(((_m, _m), (_m, _m)))
+        inv = um.inverse()
+        for i in range(2):
+            for j in range(2):
+                assert inv[i, j] == _m ** (-1)
+
+    def test_2d_uniform_shape_preserved(self):
+        """2-D uniform inverse has the same shape."""
+        um = UnitsMatrix(((_m, _m), (_m, _m)))
+        assert um.inverse().shape == (2, 2)
+
+    def test_2d_mixed_values(self):
+        """2-D mixed-unit matrix: element-wise reciprocal."""
+        um = UnitsMatrix(((_m, _s), (_kg, _rad)))
+        inv = um.inverse()
+        assert inv[0, 0] == _m ** (-1)
+        assert inv[0, 1] == _s ** (-1)
+        assert inv[1, 0] == _kg ** (-1)
+        assert inv[1, 1] == _rad ** (-1)
+
+    def test_2d_returns_unitsmatrix(self):
+        """Result is always a ``UnitsMatrix`` instance."""
+        um = UnitsMatrix(((_m, _s), (_kg, _rad)))
+        assert isinstance(um.inverse(), UnitsMatrix)
+
+    def test_2d_double_inverse_is_identity(self):
+        """Two inversions return the original unit structure."""
+        um = UnitsMatrix(((_m, _s), (_kg, _rad)))
+        assert um == um.inverse().inverse()
 
 
 # ---------------------------------------------------------------------------
@@ -1341,7 +1391,7 @@ class TestUnitsMatrixTranspose:
 
 
 # ---------------------------------------------------------------------------
-# QuantityMatrix.T
+# QMatrix.T
 # ---------------------------------------------------------------------------
 
 
@@ -1350,8 +1400,8 @@ def _transpose(x):
     return x.T
 
 
-class TestQuantityMatrixTranspose:
-    """Tests for ``QuantityMatrix.T`` — the matrix transpose property."""
+class TestQMatrixTranspose:
+    """Tests for ``QMatrix.T`` — the matrix transpose property."""
 
     # -- Basic 2D values and units ----------------------------------------
 
@@ -1378,8 +1428,8 @@ class TestQuantityMatrixTranspose:
         """Shape is unchanged for a square matrix."""
         assert qm_2x2.T.shape == (2, 2)
 
-    def test_2d_square_returns_quantitymatrix(self, qm_2x2):
-        """Result is a ``QuantityMatrix`` instance."""
+    def test_2d_square_returns_QMatrix(self, qm_2x2):
+        """Result is a ``QMatrix`` instance."""
         assert isinstance(qm_2x2.T, QMat)
 
     def test_2d_nonsquare_values(self):
@@ -1494,9 +1544,291 @@ class TestQuantityMatrixTranspose:
     # -- 1-D error --------------------------------------------------------
 
     def test_1d_raises(self, qm_1d):
-        """Accessing ``.T`` on a 1-D ``QuantityMatrix`` raises ``ValueError``.
+        """Accessing ``.T`` on a 1-D ``QMatrix`` raises ``ValueError``.
 
         The ``.T`` property requires a 2-D unit structure to unpack ``(n, m)``.
         """
         with pytest.raises(ValueError, match="requires a 2-D matrix"):
             _ = qm_1d.T
+
+
+# ---------------------------------------------------------------------------
+# det_p custom primitive + Quax dispatch for QMatrix
+# ---------------------------------------------------------------------------
+
+
+class TestDetPrimitive:
+    """Tests for the custom ``det_p`` JAX primitive on plain arrays."""
+
+    def test_det_2x2_diagonal(self):
+        """Det on a 2×2 diagonal matrix returns the product of the diagonals."""
+        A = jnp.array([[2.0, 0.0], [0.0, 3.0]])
+        assert jnp.allclose(qm_det(A), jnp.linalg.det(A))
+
+    def test_det_3x3_identity(self):
+        """det(I_3 * 2) == 8."""
+        A = jnp.eye(3) * 2.0
+        assert jnp.allclose(qm_det(A), 8.0)
+
+    def test_det_matches_jnp_linalg_det(self):
+        """det_p gives the same result as jnp.linalg.det for a generic matrix."""
+        A = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+        assert jnp.allclose(qm_det(A), jnp.linalg.det(A))
+
+    def test_det_jit(self):
+        """det_p works under jax.jit."""
+        A = jnp.array([[2.0, 0.0], [0.0, 3.0]])
+        result = jax.jit(qm_det)(A)
+        assert jnp.allclose(result, 6.0)
+
+    def test_det_jvp(self):
+        """Forward-mode derivative matches Jacobi's formula.
+
+        d det(A)(dA) = det(A) * tr(A^-1 dA).
+        """
+        A = jnp.array([[2.0, 0.0], [0.0, 3.0]])
+        dA = jnp.ones((2, 2))
+        primal, tangent = jax.jvp(qm_det, (A,), (dA,))
+        # det(A) = 6
+        # tr(A⁻¹ dA) = tr([[0.5,0],[0,1/3]] @ [[1,1],[1,1]]) = 0.5 + 1/3 = 5/6
+        # tangent = 6 * 5/6 = 5
+        assert jnp.allclose(primal, 6.0)
+        assert jnp.allclose(tangent, 5.0)
+
+    def test_det_grad(self):
+        """Reverse-mode gradient matches Jacobi's formula: ∂det(A)/∂A = det(A)·A⁻ᵀ."""
+        A = jnp.array([[2.0, 0.0], [0.0, 3.0]])
+        # grad_A = det(A) * A^{-T} = 6 * diag(0.5, 1/3) = diag(3, 2)
+        grad_A = jax.grad(qm_det)(A)
+        expected = jnp.array([[3.0, 0.0], [0.0, 2.0]])
+        assert jnp.allclose(grad_A, expected)
+
+    def test_det_jit_grad(self):
+        """jit(grad(det)) works correctly."""
+        A = jnp.array([[2.0, 0.0], [0.0, 3.0]])
+        grad_A = jax.jit(jax.grad(qm_det))(A)
+        expected = jnp.array([[3.0, 0.0], [0.0, 2.0]])
+        assert jnp.allclose(grad_A, expected)
+
+    def test_det_vmap(self):
+        """det_p works under jax.vmap — maps over a batch of matrices."""
+        A = jnp.stack(
+            [jnp.diag(jnp.array([2.0, 3.0])), jnp.diag(jnp.array([4.0, 5.0]))]
+        )
+        results = jax.vmap(qm_det)(A)
+        expected = jnp.array([6.0, 20.0])
+        assert jnp.allclose(results, expected)
+
+    def test_det_jit_vmap(self):
+        """jit(vmap(det)) works correctly."""
+        A = jnp.stack(
+            [jnp.diag(jnp.array([2.0, 3.0])), jnp.diag(jnp.array([4.0, 5.0]))]
+        )
+        results = jax.jit(jax.vmap(qm_det))(A)
+        expected = jnp.array([6.0, 20.0])
+        assert jnp.allclose(results, expected)
+
+    def test_det_batched_shape(self):
+        """det_p on a (*batch, n, n) array returns shape (*batch,)."""
+        A = jnp.ones((3, 4, 2, 2))
+        # det of 2×2 ones matrix = 1*1 - 1*1 = 0
+        result = qm_det(A)
+        assert result.shape == (3, 4)
+
+
+class TestDetQMatrix:
+    """Tests for det_p Quax dispatch on QMatrix."""
+
+    def test_returns_abstract_quantity(self):
+        """Det of a 2×2 QMatrix returns an AbstractQuantity."""
+        A = QMat(jnp.array([[2.0, 0.0], [0.0, 3.0]]), unit=((_m, _m), (_m, _m)))
+        result = quax.quaxify(qm_det)(A)
+        assert isinstance(result, u.AbstractQuantity)
+
+    def test_value_2x2_diagonal(self):
+        """Numeric value equals jnp.linalg.det of the value array."""
+        A = QMat(jnp.array([[2.0, 0.0], [0.0, 3.0]]), unit=((_m, _m), (_m, _m)))
+        result = quax.quaxify(qm_det)(A)
+        assert jnp.allclose(result.value, 6.0)
+
+    def test_unit_product_of_diagonal(self):
+        """Unit is the product of the main-diagonal units: m·m = m²."""
+        A = QMat(jnp.array([[2.0, 0.0], [0.0, 3.0]]), unit=((_m, _m), (_m, _m)))
+        result = quax.quaxify(qm_det)(A)
+        assert result.unit == u.unit("m2")
+
+    def test_unit_heterogeneous_diagonal(self):
+        """Unit is u00 * u11 for a 2×2 matrix with mixed diagonal units."""
+        A = QMat(jnp.eye(2), unit=((_m, _s), (_m, _s)))
+        result = quax.quaxify(qm_det)(A)
+        assert result.unit == _m * _s
+
+    def test_unit_3x3_uniform(self):
+        """Det of 3×3 identity with uniform unit m gives unit m³."""
+        A = QMat(jnp.eye(3), unit=((_m, _m, _m),) * 3)
+        result = quax.quaxify(qm_det)(A)
+        assert jnp.allclose(result.value, 1.0)
+        assert result.unit == u.unit("m3")
+
+    def test_jit_QMatrix(self):
+        """Det of QMatrix works under jax.jit."""
+        A = QMat(jnp.array([[2.0, 0.0], [0.0, 3.0]]), unit=((_m, _m), (_m, _m)))
+        result = jax.jit(quax.quaxify(qm_det))(A)
+        assert jnp.allclose(result.value, 6.0)
+        assert result.unit == u.unit("m2")
+
+
+# ---------------------------------------------------------------------------
+# inv_p custom primitive + Quax dispatch for QMatrix
+# ---------------------------------------------------------------------------
+
+
+class TestInvPrimitive:
+    """Tests for the custom ``inv_p`` JAX primitive on plain arrays."""
+
+    def test_inv_2x2_diagonal(self):
+        """inv_p on a diagonal matrix returns the reciprocal diagonal."""
+        A = jnp.array([[2.0, 0.0], [0.0, 4.0]])
+        result = qm_inv(A)
+        expected = jnp.linalg.inv(A)
+        assert jnp.allclose(result, expected)
+
+    def test_inv_3x3_identity(self):
+        """inv(I) == I."""
+        A = jnp.eye(3)
+        assert jnp.allclose(qm_inv(A), A)
+
+    def test_inv_matches_jnp_linalg_inv(self):
+        """inv_p gives the same result as jnp.linalg.inv for a generic matrix."""
+        A = jnp.array([[1.0, 2.0], [3.0, 4.0]])
+        assert jnp.allclose(qm_inv(A), jnp.linalg.inv(A))
+
+    def test_inv_jit(self):
+        """inv_p works under jax.jit."""
+        A = jnp.array([[2.0, 0.0], [0.0, 4.0]])
+        result = jax.jit(qm_inv)(A)
+        assert jnp.allclose(result, jnp.linalg.inv(A))
+
+    def test_inv_jvp(self):
+        """Forward-mode derivative of A^{-1}: d(A^{-1})(dA) = -A^{-1} dA A^{-1}."""
+        A = jnp.array([[2.0, 0.0], [0.0, 4.0]])
+        dA = jnp.ones((2, 2))
+        primal, tangent = jax.jvp(qm_inv, (A,), (dA,))
+        assert jnp.allclose(primal, jnp.linalg.inv(A))
+        # expected tangent: -A^{-1} dA A^{-1}
+        Ainv = jnp.linalg.inv(A)
+        expected_tangent = -(Ainv @ dA @ Ainv)
+        assert jnp.allclose(tangent, expected_tangent)
+
+    def test_inv_grad(self):
+        """Reverse-mode gradient via VJP derived from JVP."""
+        A = jnp.array([[2.0, 0.0], [0.0, 4.0]])
+
+        # Scalar output f(A) = sum(inv(A))
+        def f(a):
+            return jnp.sum(qm_inv(a))
+
+        grad_A = jax.grad(f)(A)
+        # Finite-difference check
+        eps = 1e-5
+        fd = jnp.zeros_like(A)
+        for i in range(2):
+            for j in range(2):
+                Ap = A.at[i, j].add(eps)
+                Am = A.at[i, j].add(-eps)
+                fd_val = (jnp.sum(jnp.linalg.inv(Ap)) - jnp.sum(jnp.linalg.inv(Am))) / (
+                    2 * eps
+                )
+                fd = fd.at[i, j].set(fd_val)
+        assert jnp.allclose(grad_A, fd, atol=1e-4)
+
+    def test_inv_jit_grad(self):
+        """jit(grad(sum(inv(A)))) works correctly."""
+        A = jnp.array([[2.0, 0.0], [0.0, 4.0]])
+
+        def f(a):
+            return jnp.sum(qm_inv(a))
+
+        grad_A = jax.jit(jax.grad(f))(A)
+
+        def g(a):
+            return jnp.sum(jnp.linalg.inv(a))
+
+        expected = jax.grad(g)(A)
+        assert jnp.allclose(grad_A, expected, atol=1e-6)
+
+    def test_inv_vmap(self):
+        """inv_p works under jax.vmap — maps over a batch of matrices."""
+        A = jnp.stack(
+            [jnp.diag(jnp.array([2.0, 4.0])), jnp.diag(jnp.array([1.0, 2.0]))]
+        )
+        results = jax.vmap(qm_inv)(A)
+        expected = jax.vmap(jnp.linalg.inv)(A)
+        assert jnp.allclose(results, expected)
+
+    def test_inv_jit_vmap(self):
+        """jit(vmap(inv)) works correctly."""
+        A = jnp.stack(
+            [jnp.diag(jnp.array([2.0, 4.0])), jnp.diag(jnp.array([1.0, 2.0]))]
+        )
+        results = jax.jit(jax.vmap(qm_inv))(A)
+        expected = jax.vmap(jnp.linalg.inv)(A)
+        assert jnp.allclose(results, expected)
+
+    def test_inv_batched_shape(self):
+        """inv_p on a (*batch, n, n) array returns shape (*batch, n, n)."""
+        A = jnp.stack([jnp.eye(2)] * 6).reshape(3, 2, 2, 2)
+        result = jax.vmap(jax.vmap(qm_inv))(A)
+        assert result.shape == (3, 2, 2, 2)
+
+
+class TestInvQMatrix:
+    """Tests for inv_p Quax dispatch on QMatrix."""
+
+    def test_returns_QMatrix(self):
+        """Inv of a 2×2 QMatrix returns a QMatrix."""
+        A = QMat(jnp.array([[4.0, 0.0], [0.0, 1.0]]), unit=((_m, _m), (_m, _m)))
+        result = quax.quaxify(qm_inv)(A)
+        assert isinstance(result, QMat)
+
+    def test_value_2x2_diagonal(self):
+        """Numeric value equals jnp.linalg.inv of the value array."""
+        A = QMat(jnp.array([[4.0, 0.0], [0.0, 1.0]]), unit=((_m, _m), (_m, _m)))
+        result = quax.quaxify(qm_inv)(A)
+        expected_val = jnp.linalg.inv(jnp.array([[4.0, 0.0], [0.0, 1.0]]))
+        assert jnp.allclose(result.value, expected_val)
+
+    def test_unit_reciprocal(self):
+        """Unit of the inverse is the reciprocal of the original unit: 1/m."""
+        A = QMat(jnp.array([[4.0, 0.0], [0.0, 1.0]]), unit=((_m, _m), (_m, _m)))
+        result = quax.quaxify(qm_inv)(A)
+        expected_unit = u.unit("1 / m")
+        assert result.unit[0, 0] == expected_unit
+        assert result.unit[1, 1] == expected_unit
+
+    def test_unit_m2_per_rad2(self):
+        """Inv of a metric with m²/rad² entries carries rad²/m² units."""
+        m2_r2 = u.unit("m2 / rad2")
+        A = QMat(
+            jnp.array([[4.0, 0.0], [0.0, 1.0]]),
+            unit=((m2_r2, m2_r2), (m2_r2, m2_r2)),
+        )
+        result = quax.quaxify(qm_inv)(A)
+        assert result.unit[0, 0] == u.unit("rad2 / m2")
+
+    def test_jit_QMatrix(self):
+        """Inv of QMatrix works under jax.jit."""
+        A = QMat(jnp.array([[4.0, 0.0], [0.0, 1.0]]), unit=((_m, _m), (_m, _m)))
+        result = jax.jit(quax.quaxify(qm_inv))(A)
+        assert jnp.allclose(result.value, jnp.array([[0.25, 0.0], [0.0, 1.0]]))
+        assert result.unit[0, 0] == u.unit("1 / m")
+
+    def test_roundtrip_identity(self):
+        """A @ inv(A) ≈ I for a QMatrix (value check)."""
+        A = QMat(
+            jnp.array([[2.0, 1.0], [1.0, 3.0]]),
+            unit=((_m, _m), (_m, _m)),
+        )
+        Ainv = quax.quaxify(qm_inv)(A)
+        product = A.value @ Ainv.value
+        assert jnp.allclose(product, jnp.eye(2), atol=1e-6)

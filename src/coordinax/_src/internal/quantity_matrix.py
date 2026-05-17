@@ -3,7 +3,7 @@
 This module provides two closely related building blocks:
 
 - `UnitsMatrix`, an immutable nested tuple of units with indexing support
-- `QuantityMatrix`, a quantity-like wrapper around one array plus a matching
+- `QMatrix`, a quantity-like wrapper around one array plus a matching
     static `UnitsMatrix`
 
 The numeric payload is a single JAX array of shape ``(..., *shape)`` where the
@@ -23,8 +23,19 @@ correctly handles affine conversions (e.g. °F → °C), not just
 multiplicative scale factors.
 """
 
-__all__ = ("QuantityMatrix", "UnitsMatrix", "cdict_units")
+__all__ = (
+    "QMatrix",
+    "UnitsMatrix",
+    "cdict_units",
+    "det",
+    "det_p",
+    "inv",
+    "inv_p",
+)
 
+
+import functools as ft
+import operator
 
 from jaxtyping import Array, Shaped
 from typing import Any, NoReturn, TypeAlias, TypeVar, cast, final
@@ -38,12 +49,13 @@ import numpy as np
 import plum
 import quax
 from jax import lax
+from jax.extend import core as jexc
+from jax.interpreters import ad as jax_ad, batching as jax_batching, mlir as jax_mlir
 
 import unxt as u
 from unxt.quantity import AllowValue
 
-from .custom_types import CDict
-
+CDict: TypeAlias = dict[str, Any]
 _DMLS = u.unit("")
 
 
@@ -64,10 +76,7 @@ def cdict_units(p: CDict, keys: tuple[str, ...], /) -> PackedUnitOutput:
     Non-quantity entries yield `None`, so the output tuple can be used for
     heterogeneous dictionaries containing both quantity and non-quantity data.
 
-    Examples
-    --------
     >>> import unxt as u
-
     >>> d = {'x': u.Q(1.0, 'm'), 'y': 2.0, 'z': u.Q(3.0, 'kg')}
     >>> cdict_units(d, ('x', 'y', 'z'))
     (Unit("m"), None, Unit("kg"))
@@ -152,7 +161,7 @@ def _build_object_array(iterable: Any, /) -> np.ndarray:  # noqa: C901
 
 @final
 class UnitsMatrix:
-    """Immutable, hashable unit structure for `QuantityMatrix`.
+    """Immutable, hashable unit structure for `QMatrix`.
 
     `UnitsMatrix` wraps a numpy object array (``dtype=object``) of
     `~unxt.AbstractUnit` elements. Only 1-D and 2-D structures are accepted.
@@ -242,6 +251,54 @@ class UnitsMatrix:
 
         """
         return UnitsMatrix(self._units.T)
+
+    def inverse(self) -> "UnitsMatrix":
+        r"""Inverse unit structure — each unit raised to the power -1.
+
+        For a 1-D (diagonal) ``UnitsMatrix`` the inversion is done
+        entry-by-entry in *O(n)*, providing a speedup over the general 2-D
+        case.  For a 2-D ``UnitsMatrix`` with a uniform unit (all entries
+        equal) the reciprocal is computed once and broadcast in *O(1)*;
+        mixed-unit 2-D structures fall back to an element-wise *O(nm)* loop.
+
+        Examples
+        --------
+        >>> from coordinax.internal import UnitsMatrix
+
+        1-D (diagonal) case — element-wise reciprocal:
+
+        >>> UnitsMatrix(("m2", "s2")).inverse()
+        UnitsMatrix("(1 / m2, 1 / s2)")
+
+        2-D uniform-unit case:
+
+        >>> UnitsMatrix((("m2", "m2"), ("m2", "m2"))).inverse()
+        UnitsMatrix("((1 / m2, 1 / m2), (1 / m2, 1 / m2))")
+
+        2-D mixed-unit case:
+
+        >>> UnitsMatrix((("m2", "s2"), ("s2", "rad2"))).inverse()
+        UnitsMatrix("((1 / m2, 1 / s2), (1 / s2, 1 / rad2))")
+
+        """
+        inv_data = np.empty(self._units.shape, dtype=object)
+        if self._units.ndim == 1:
+            # Diagonal speedup: 1-D represents a diagonal metric's units.
+            for i in range(self._units.shape[0]):
+                inv_data[i] = self._units[i] ** (-1)
+        else:
+            # 2-D: fast path when all entries share the same unit.
+            flat = self._units.ravel()
+            first = flat[0]
+            if all(u == first for u in flat[1:]):
+                inv_unit = first ** (-1)
+                inv_data[:] = inv_unit
+            else:
+                n, m = self._units.shape
+                for i in range(n):
+                    for j in range(m):
+                        inv_data[i, j] = self._units[i, j] ** (-1)
+        return UnitsMatrix(inv_data)
 
     # ── Serialization ─────────────────────────────────────────────────
 
@@ -351,12 +408,10 @@ class UnitsMatrix:
 def unit(tuple_of_units: tuple[Any, ...], /) -> UnitsMatrix:
     """Convert a nested tuple of units into a ``UnitsMatrix``.
 
-    This allows users to specify units in a convenient nested tuple format
-    when constructing ``QuantityMatrix`` instances, and have them automatically
+    This allows users to specify units in a convenient nested tuple format when
+    constructing ``QMatrix`` instances, and have them automatically
     converted to the appropriate ``UnitsMatrix``.
 
-    Examples
-    --------
     >>> import unxt as u
 
     1D case:
@@ -377,8 +432,6 @@ def unit(tuple_of_units: tuple[Any, ...], /) -> UnitsMatrix:
 def unit(arr: np.ndarray, /) -> UnitsMatrix:
     """Convert a numpy object array of units into a ``UnitsMatrix``.
 
-    Examples
-    --------
     >>> import numpy as np
     >>> import unxt as u
     >>> from coordinax.internal import UnitsMatrix
@@ -400,8 +453,6 @@ def unit(obj: UnitsMatrix, /) -> UnitsMatrix:
 def unit_of(obj: UnitsMatrix, /) -> UnitsMatrix:
     """Identity conversion for UnitsMatrix to itself.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> unit = u.unit(("m", "s", "kg"))
     >>> u.unit_of(unit) is unit
@@ -412,13 +463,13 @@ def unit_of(obj: UnitsMatrix, /) -> UnitsMatrix:
 
 
 ##############################################################################
-# QuantityMatrix
+# QMatrix
 
 
-class QuantityMatrix(u.AbstractQuantity):
+class QMatrix(u.AbstractQuantity):
     """Quantity container whose elements may each carry different units.
 
-    `QuantityMatrix` stores one numeric array together with a static
+    `QMatrix` stores one numeric array together with a static
     `UnitsMatrix` describing the unit of each logical element. The shape of the
     unit structure determines whether the object behaves as a heterogeneous
     vector or matrix.
@@ -441,39 +492,39 @@ class QuantityMatrix(u.AbstractQuantity):
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     1D case (vector):
 
-    >>> qv = QuantityMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "s", "kg"))
+    >>> qv = QMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "s", "kg"))
     >>> qv.value
     Array([1., 2., 3.], dtype=float64)
     >>> qv.unit.shape
     (3,)
 
     >>> 2 * qv
-    QuantityMatrix([2., 4., 6.], '(m, s, kg)')
+    QMatrix([2., 4., 6.], '(m, s, kg)')
 
-    >>> qv2 = QuantityMatrix(jnp.array([0.1, 200.0, 300.0]), unit=("km", "ms", "g"))
+    >>> qv2 = QMatrix(jnp.array([0.1, 200.0, 300.0]), unit=("km", "ms", "g"))
     >>> qv + qv2
-    QuantityMatrix([101. ,   2.2,   3.3], '(m, s, kg)')
+    QMatrix([101. ,   2.2,   3.3], '(m, s, kg)')
 
     2D case (matrix):
 
-    >>> qm = QuantityMatrix(jnp.ones((2, 2)), unit=(("m", "s"), ("kg", "rad")))
+    >>> qm = QMatrix(jnp.ones((2, 2)), unit=(("m", "s"), ("kg", "rad")))
     >>> qm.value.shape
     (2, 2)
     >>> qm.unit.shape
     (2, 2)
 
     >>> 2 * qm
-    QuantityMatrix([[2., 2.],
+    QMatrix([[2., 2.],
                     [2., 2.]], '((m, s), (kg, rad))')
 
-    >>> qm2 = QuantityMatrix(jnp.array([[0.1, 200.0], [300.0, 0.5]]),
+    >>> qm2 = QMatrix(jnp.array([[0.1, 200.0], [300.0, 0.5]]),
     ...                      unit=(("km", "ms"), ("g", "deg")))
     >>> qm + qm2
-    QuantityMatrix([[101.        ,   1.2       ],
+    QMatrix([[101.        ,   1.2       ],
                     [  1.3       ,   1.00872665]], '((m, s), (kg, rad))')
 
     Indexing:
@@ -481,7 +532,7 @@ class QuantityMatrix(u.AbstractQuantity):
     >>> qv[0]
     Q(1., 'm')
     >>> qm[0]
-    QuantityMatrix([1., 1.], '(m, s)')
+    QMatrix([1., 1.], '(m, s)')
     >>> qm[1, 0]
     Q(1., 'kg')
 
@@ -501,10 +552,8 @@ class QuantityMatrix(u.AbstractQuantity):
         return self.value.shape
 
     @classmethod
-    def from_cdict(
-        cls, v: CDict, /, keys: tuple[str, ...] | None = None
-    ) -> "QuantityMatrix":
-        """Pack a component dictionary into a 1-D ``QuantityMatrix``.
+    def from_cdict(cls, v: CDict, /, keys: tuple[str, ...] | None = None) -> "QMatrix":
+        """Pack a component dictionary into a 1-D ``QMatrix``.
 
         Each value in *v* is stripped to its numeric value and stacked into a
         single JAX array.  Values that carry units (``unxt.Quantity``) retain
@@ -514,12 +563,12 @@ class QuantityMatrix(u.AbstractQuantity):
         Examples
         --------
         >>> import unxt as u
-        >>> from coordinax.internal import QuantityMatrix
+        >>> from coordinax.internal import QMatrix
 
         From a dictionary of quantities:
 
         >>> v = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "s"), "z": u.Q(3.0, "kg")}
-        >>> qv = QuantityMatrix.from_cdict(v)
+        >>> qv = QMatrix.from_cdict(v)
         >>> qv.unit.to_string()
         '(m, s, kg)'
         >>> qv.value
@@ -527,7 +576,7 @@ class QuantityMatrix(u.AbstractQuantity):
 
         Selecting and reordering a subset of keys:
 
-        >>> qv2 = QuantityMatrix.from_cdict(v, keys=("z", "x"))
+        >>> qv2 = QMatrix.from_cdict(v, keys=("z", "x"))
         >>> qv2.unit.to_string()
         '(kg, m)'
         >>> qv2.value
@@ -537,7 +586,7 @@ class QuantityMatrix(u.AbstractQuantity):
 
         >>> import jax.numpy as jnp
         >>> v2 = {"a": jnp.array(4.0), "b": u.Q(5.0, "m")}
-        >>> qv3 = QuantityMatrix.from_cdict(v2)
+        >>> qv3 = QMatrix.from_cdict(v2)
         >>> qv3.unit.to_string()
         '(, m)'
 
@@ -548,33 +597,33 @@ class QuantityMatrix(u.AbstractQuantity):
         svs = jnp.stack([u.ustrip(AllowValue, unt, x) for x, unt in strict_zip(vs, us)])
         return cls(svs, unit=UnitsMatrix(us))
 
-    def __getitem__(self, index: Any, /) -> "u.Q | QuantityMatrix":  # ty: ignore[invalid-method-override]
-        """Index into the QuantityMatrix to retrieve a specific element.
+    def __getitem__(self, index: Any, /) -> "u.Q | QMatrix":  # ty: ignore[invalid-method-override]
+        """Index into the QMatrix to retrieve a specific element.
 
         Indexing a logical dimension returns a ``Quantity`` when the result is
-        a scalar unit, or a ``QuantityMatrix`` when the result still has
+        a scalar unit, or a ``QMatrix`` when the result still has
         structure.
 
         Examples
         --------
         >>> import jax.numpy as jnp
         >>> import unxt as u
-        >>> from coordinax.internal import QuantityMatrix
+        >>> from coordinax.internal import QMatrix
 
         **1-D vector** — indexing a single element returns a ``Quantity``:
 
-        >>> qv = QuantityMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "s", "kg"))
+        >>> qv = QMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "s", "kg"))
         >>> qv[0]
         Q(1., 'm')
         >>> qv[2]
         Q(3., 'kg')
 
-        **2-D matrix** — indexing a row returns a ``QuantityMatrix``:
+        **2-D matrix** — indexing a row returns a ``QMatrix``:
 
-        >>> qm = QuantityMatrix(jnp.ones((2, 3)),
+        >>> qm = QMatrix(jnp.ones((2, 3)),
         ...                     unit=(("m", "s", "kg"), ("rad", "deg", "m")))
         >>> qm[0]
-        QuantityMatrix([1., 1., 1.], '(m, s, kg)')
+        QMatrix([1., 1., 1.], '(m, s, kg)')
 
         Indexing a specific element returns a ``Quantity``:
 
@@ -585,7 +634,7 @@ class QuantityMatrix(u.AbstractQuantity):
         value_item = self.value[index]
         unit_item = self.unit[index]
         if isinstance(unit_item, UnitsMatrix):
-            return QuantityMatrix(value=value_item, unit=unit_item)
+            return QMatrix(value=value_item, unit=unit_item)
         return u.Q(value_item, unit_item)
 
     # ── Quax API ─────────────────────────────────────────────────────
@@ -594,33 +643,33 @@ class QuantityMatrix(u.AbstractQuantity):
         return jax.core.ShapedArray(self.value.shape, self.value.dtype)
 
     def materialise(self) -> NoReturn:
-        msg = "Refusing to materialise `QuantityMatrix`."
+        msg = "Refusing to materialise `QMatrix`."
         raise RuntimeError(msg)
 
-    def diag(self) -> "QuantityMatrix":
-        """Return a 1-D ``QuantityMatrix`` containing the diagonal of this matrix.
+    def diag(self) -> "QMatrix":
+        """Return a 1-D ``QMatrix`` containing the diagonal of this matrix.
 
         Unlike ``qnp.diag``, this method operates directly on the static
         ``unit`` structure and the raw value array, so it works correctly under
         ``jax.jit`` and with heterogeneous-unit matrices.
 
-        Only supported for 2-D ``QuantityMatrix`` objects.
+        Only supported for 2-D ``QMatrix`` objects.
 
         Returns
         -------
-        QuantityMatrix
-            1-D ``QuantityMatrix`` of length ``min(n_rows, n_cols)`` whose
+        QMatrix
+            1-D ``QMatrix`` of length ``min(n_rows, n_cols)`` whose
             ``unit[i]`` is ``self.unit[i, i]`` and whose ``value[..., i]`` is
             ``self.value[..., i, i]``.
 
         Examples
         --------
         >>> import jax.numpy as jnp
-        >>> from coordinax.internal import QuantityMatrix
+        >>> from coordinax.internal import QMatrix
 
         Uniform units:
 
-        >>> A = QuantityMatrix(jnp.diag(jnp.array([1.0, 4.0, 9.0])),
+        >>> A = QMatrix(jnp.diag(jnp.array([1.0, 4.0, 9.0])),
         ...                    unit=(("m", "m", "m"), ("m", "m", "m"), ("m", "m", "m")))
         >>> d = A.diag()
         >>> d.unit.shape
@@ -630,7 +679,7 @@ class QuantityMatrix(u.AbstractQuantity):
 
         Heterogeneous units — works under jit:
 
-        >>> B = QuantityMatrix(jnp.diag(jnp.array([1.0, 2.0, 3.0])),
+        >>> B = QMatrix(jnp.diag(jnp.array([1.0, 2.0, 3.0])),
         ...                    unit=(("m", "s", "kg"),
         ...                          ("m", "s", "kg"),
         ...                          ("m", "s", "kg")))
@@ -642,27 +691,27 @@ class QuantityMatrix(u.AbstractQuantity):
 
         """
         if self.ndim != 2:
-            msg = f"QuantityMatrix.diag() requires a 2D matrix, got ndim={self.ndim}"
+            msg = f"QMatrix.diag() requires a 2D matrix, got ndim={self.ndim}"
             raise ValueError(msg)
         n = min(self.shape[-2], self.shape[-1])
         diag_value = jnp.stack([self.value[..., i, i] for i in range(n)], axis=-1)
         diag_unit = UnitsMatrix(self.unit._units.diagonal())
-        return QuantityMatrix(value=diag_value, unit=diag_unit)
+        return QMatrix(value=diag_value, unit=diag_unit)
 
     @property
-    def T(self) -> "QuantityMatrix":
-        """Transpose a 2-D ``QuantityMatrix`` (swap rows/columns and units).
+    def T(self) -> "QMatrix":
+        """Transpose a 2-D ``QMatrix`` (swap rows/columns and units).
 
-        Returns a new ``QuantityMatrix`` whose value array and unit structure
+        Returns a new ``QMatrix`` whose value array and unit structure
         are both transposed.  Only 2-D matrices are supported.
 
         Examples
         --------
         >>> import jax.numpy as jnp
         >>> import quaxed.numpy as qnp
-        >>> from coordinax.internal import QuantityMatrix
+        >>> from coordinax.internal import QMatrix
 
-        >>> a = QuantityMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
+        >>> a = QMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
         ...                    unit=(("m", "s"), ("kg", "rad")))
         >>> aT = a.T
         >>> aT.value
@@ -682,9 +731,9 @@ class QuantityMatrix(u.AbstractQuantity):
 
         """
         if self.ndim != 2:
-            msg = f"QuantityMatrix.T requires a 2-D matrix, got ndim={self.ndim}"
+            msg = f"QMatrix.T requires a 2-D matrix, got ndim={self.ndim}"
             raise ValueError(msg)
-        return QuantityMatrix(value=jnp.swapaxes(self.value, -2, -1), unit=self.unit.T)
+        return QMatrix(value=jnp.swapaxes(self.value, -2, -1), unit=self.unit.T)
 
 
 def _convert_value_vector(
@@ -734,48 +783,44 @@ def _convert_value_matrix(
     )
 
 
-@plum.conversion_method(type_from=QuantityMatrix, type_to=u.Quantity)
-def quantitymatrix_to_quantity(x: QuantityMatrix, /) -> u.Quantity:
-    """Convert a ``QuantityMatrix`` to a regular ``Quantity``.
+@plum.conversion_method(type_from=QMatrix, type_to=u.Q)
+def QMatrix_to_quantity(x: QMatrix, /) -> u.Q:
+    """Convert a ``QMatrix`` to a regular ``Quantity``.
 
-    Conversion is only valid when all elements of ``x`` share the same unit.
-    If units are heterogeneous, this conversion is ambiguous and raises
+    Conversion is only valid when all elements of ``x`` share the same unit.  If
+    units are heterogeneous, this conversion is ambiguous and raises
     ``ValueError``.
 
-    Examples
-    --------
     >>> import plum
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     Uniform units convert to a plain quantity:
 
-    >>> qmat = QuantityMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "m", "m"))
-    >>> plum.convert(qmat, u.Quantity)
+    >>> qmat = QMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "m", "m"))
+    >>> plum.convert(qmat, u.Q)
     Q([1., 2., 3.], 'm')
 
     Mixed units are rejected:
 
-    >>> bad = QuantityMatrix(jnp.array([1.0, 2.0]), unit=("m", "s"))
-    >>> plum.convert(bad, u.Quantity)
+    >>> bad = QMatrix(jnp.array([1.0, 2.0]), unit=("m", "s"))
+    >>> plum.convert(bad, u.Q)
     Traceback (most recent call last):
     ...
-    ValueError: Cannot convert QuantityMatrix to Quantity unless all units are
+    ValueError: Cannot convert QMatrix to Quantity unless all units are
     identical.
 
     """
     units = jtu.tree_leaves(x.unit.to_tuple())
 
     if not units:
-        msg = "Cannot convert QuantityMatrix with no unit entries."
+        msg = "Cannot convert QMatrix with no unit entries."
         raise ValueError(msg)
 
     first = units[0]
     if any(unit != first for unit in units[1:]):
-        msg = (
-            "Cannot convert QuantityMatrix to Quantity unless all units are identical."
-        )
+        msg = "Cannot convert QMatrix to Quantity unless all units are identical."
         raise ValueError(msg)
 
     return u.Q(x.value, first)
@@ -803,22 +848,19 @@ def _convert_value(
 
 
 @plum.dispatch
-def uconvert(to_units: UnitsMatrix, x: QuantityMatrix, /) -> QuantityMatrix:
-    """Convert a ``QuantityMatrix`` to different (but compatible) units.
+def uconvert(to_units: UnitsMatrix, x: QMatrix, /) -> QMatrix:
+    """Convert a ``QMatrix`` to different (but compatible) units.
 
-    Unlike the generic astropy ``StructuredUnit.to()`` path, this dispatch
-    uses ``_convert_value`` directly so that the regular 2D JAX array in
-    ``x.value`` is converted element-by-element without requiring a numpy
-    structured array.
+    Unlike the generic astropy ``StructuredUnit.to()`` path, this dispatch uses
+    ``_convert_value`` directly so that the regular 2D JAX array in ``x.value``
+    is converted element-by-element without requiring a numpy structured array.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     >>> x = jnp.array([[1.0, 2.0], [3.0, 4.0]])
-    >>> q = QuantityMatrix(x, (("m", "rad"), ("m", "rad")))
+    >>> q = QMatrix(x, (("m", "rad"), ("m", "rad")))
     >>> target = u.unit((("km", "deg"), ("km", "deg")))
     >>> q.uconvert(target).unit.to_string()
     '((km, deg), (km, deg))'
@@ -827,29 +869,27 @@ def uconvert(to_units: UnitsMatrix, x: QuantityMatrix, /) -> QuantityMatrix:
     if x.unit == to_units:
         return x
     value = _convert_value(x.value, x.unit, to_units)
-    return QuantityMatrix(value=value, unit=to_units)
+    return QMatrix(value=value, unit=to_units)
 
 
 @quax.register(lax.add_p)
-def add_qm_qm(x: QuantityMatrix, y: QuantityMatrix, /) -> QuantityMatrix:
-    """Element-wise addition of two `QuantityMatrix` objects.
+def add_qm_qm(x: QMatrix, y: QMatrix, /) -> QMatrix:
+    """Element-wise addition of two `QMatrix` objects.
 
-    The result adopts the units of *x*.  Each element is converted
-    from ``y.unit`` → ``x.unit`` before the numeric add.
+    The result adopts the units of *x*.  Each element is converted from
+    ``y.unit`` → ``x.unit`` before the numeric add.
 
     Works for both 1D (vector) and 2D (matrix) cases.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import quaxed.numpy as qnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     2D case:
 
-    >>> a = QuantityMatrix(jnp.ones((2, 2)), unit=(("m", "s"), ("kg", "rad")))
-    >>> b = QuantityMatrix(jnp.ones((2, 2)), unit=(("km", "ms"), ("g", "deg")))
+    >>> a = QMatrix(jnp.ones((2, 2)), unit=(("m", "s"), ("kg", "rad")))
+    >>> b = QMatrix(jnp.ones((2, 2)), unit=(("km", "ms"), ("g", "deg")))
 
     >>> result = qnp.add(a, b)
     >>> result.unit.to_string()
@@ -861,8 +901,8 @@ def add_qm_qm(x: QuantityMatrix, y: QuantityMatrix, /) -> QuantityMatrix:
 
     1D case:
 
-    >>> a1d = QuantityMatrix(jnp.ones(3), unit=("m", "s", "kg"))
-    >>> b1d = QuantityMatrix(jnp.ones(3), unit=("km", "ms", "g"))
+    >>> a1d = QMatrix(jnp.ones(3), unit=("m", "s", "kg"))
+    >>> b1d = QMatrix(jnp.ones(3), unit=("km", "ms", "g"))
 
     >>> result1d = qnp.add(a1d, b1d)
     >>> result1d.unit.to_string()
@@ -873,40 +913,38 @@ def add_qm_qm(x: QuantityMatrix, y: QuantityMatrix, /) -> QuantityMatrix:
 
     """
     y_converted = _convert_value(y.value, y.unit, x.unit)
-    return QuantityMatrix(value=lax.add(x.value, y_converted), unit=x.unit)
+    return QMatrix(value=lax.add(x.value, y_converted), unit=x.unit)
 
 
 @quax.register(lax.dot_general_p)
 def dot_general_qm_qm(
-    lhs: QuantityMatrix,
-    rhs: QuantityMatrix,
+    lhs: QMatrix,
+    rhs: QMatrix,
     /,
     *,
     dimension_numbers: lax.DotDimensionNumbers,
     precision: Any = None,
     preferred_element_type: Any = None,
     **kw: Any,
-) -> QuantityMatrix | u.Quantity:
-    """Dot product / matrix multiply two `QuantityMatrix` objects.
+) -> QMatrix | u.Q:
+    """Dot product / matrix multiply two `QMatrix` objects.
 
     Delegates to specialized implementations based on the dimensionality:
     - 1D @ 1D → scalar (vector dot product)
     - 2D @ 2D → 2D (matrix-matrix multiply)
 
     For the standard matmul contraction: contracting_dims = ((-1,), (-2,)),
-    with no batch dims (batch is handled by leading dims in QuantityMatrix).
+    with no batch dims (batch is handled by leading dims in QMatrix).
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import quaxed.numpy as qnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     1D @ 1D (dot product):
 
-    >>> v1 = QuantityMatrix(jnp.array([1.0, 2.0]), unit=("m", "km"))
-    >>> v2 = QuantityMatrix(jnp.array([3.0, 4.0]), unit=("s", "s"))
+    >>> v1 = QMatrix(jnp.array([1.0, 2.0]), unit=("m", "km"))
+    >>> v2 = QMatrix(jnp.array([3.0, 4.0]), unit=("s", "s"))
     >>> result = qnp.dot(v1, v2)
     >>> result.value
     Array(8003., dtype=float64)
@@ -915,9 +953,9 @@ def dot_general_qm_qm(
 
     2D @ 2D (matrix multiply):
 
-    >>> a = QuantityMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
+    >>> a = QMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
     ...                    unit=(("m", "km"), ("m", "km")))
-    >>> b = QuantityMatrix(jnp.array([[1.0, 0.0], [0.0, 1.0]]),
+    >>> b = QMatrix(jnp.array([[1.0, 0.0], [0.0, 1.0]]),
     ...                    unit=(("s", "s"), ("s", "s")))
 
     >>> c = qnp.matmul(a, b)
@@ -966,19 +1004,187 @@ def dot_general_qm_qm(
     raise NotImplementedError(msg)
 
 
-vec_uconvert_value = np.vectorize(u.uconvert_value)
-
-
-def _dot_general_1d_1d(
-    lhs: QuantityMatrix,
-    rhs: QuantityMatrix,
+@quax.register(lax.dot_general_p)
+def dot_general_qm_arr(
+    lhs: QMatrix,
+    rhs: jax.Array,
     /,
     *,
     dimension_numbers: lax.DotDimensionNumbers,
     precision: Any = None,
     preferred_element_type: Any = None,
     **kw: Any,
-) -> u.Quantity:
+) -> "QMatrix | u.Q":
+    """Dot product of a :class:`QMatrix` with a plain JAX array.
+
+    The plain array is treated as dimensionless.  Delegates to
+    :func:`dot_general_qm_qm` after wrapping ``rhs`` in a dimensionless
+    :class:`QMatrix`.
+
+    >>> import jax.numpy as jnp
+    >>> import quaxed.numpy as qnp
+    >>> from coordinax.internal import QMatrix, UnitsMatrix
+
+    2D metric x 1D plain vector:
+
+    >>> g = QMatrix(
+    ...     jnp.array([[2.0, 0.0], [0.0, 3.0]]),
+    ...     unit=UnitsMatrix((("m2", "m2"), ("m2", "m2"))),
+    ... )
+    >>> v = jnp.array([1.0, 1.0])
+    >>> w = qnp.matmul(g, v)
+    >>> w.unit.to_string()
+    '(m2, m2)'
+    >>> w.value
+    Array([2., 3.], dtype=float64)
+
+    """
+    if rhs.ndim == 1:
+        n = rhs.shape[0]
+        rhs_qm = QMatrix(rhs, unit=UnitsMatrix(tuple(_DMLS for _ in range(n))))
+    else:
+        nr, nc = rhs.shape[-2], rhs.shape[-1]
+        rhs_qm = QMatrix(
+            rhs,
+            unit=UnitsMatrix(tuple(tuple(_DMLS for _ in range(nc)) for _ in range(nr))),
+        )
+    return dot_general_qm_qm(
+        lhs,
+        rhs_qm,
+        dimension_numbers=dimension_numbers,
+        precision=precision,
+        preferred_element_type=preferred_element_type,
+        **kw,
+    )
+
+
+@quax.register(lax.dot_general_p)
+def dot_general_qm_qty(
+    lhs: QMatrix,
+    rhs: u.AbstractQuantity,
+    /,
+    *,
+    dimension_numbers: lax.DotDimensionNumbers,
+    precision: Any = None,
+    preferred_element_type: Any = None,
+    **kw: Any,
+) -> "QMatrix | u.Q":
+    """Dot product of a :class:`QMatrix` with a :class:`~unxt.AbstractQuantity`.
+
+    The Quantity carries a single scalar unit that applies uniformly to all
+    elements.  The ``rhs`` is wrapped as a uniform-unit
+    :class:`QMatrix` and delegated to :func:`dot_general_qm_qm`.
+
+    Note that :class:`QMatrix` is itself a subtype of
+    :class:`~unxt.AbstractQuantity`, so :func:`dot_general_qm_qm` takes
+    precedence when both sides are :class:`QMatrix`.
+
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import quaxed.numpy as qnp
+    >>> from coordinax.internal import QMatrix, UnitsMatrix
+
+    2D metric with units @ uniform-unit Quantity vector:
+
+    >>> g = QMatrix(
+    ...     jnp.array([[2.0, 0.0], [0.0, 3.0]]),
+    ...     unit=UnitsMatrix((("m2", "m2"), ("m2", "m2"))),
+    ... )
+    >>> v = u.Q(jnp.array([1.0, 1.0]), "m")
+    >>> w = qnp.matmul(g, v)
+    >>> w.unit.to_string()
+    '(m3, m3)'
+    >>> w.value
+    Array([2., 3.], dtype=float64)
+
+    """
+    rhs_unit = u.unit_of(rhs)
+    rhs_val = u.ustrip(AllowValue, rhs_unit, rhs)
+    if rhs_val.ndim == 1:
+        n = rhs_val.shape[0]
+        rhs_qm = QMatrix(rhs_val, unit=UnitsMatrix(tuple(rhs_unit for _ in range(n))))
+    else:
+        nr, nc = rhs_val.shape[-2], rhs_val.shape[-1]
+        rhs_qm = QMatrix(
+            rhs_val,
+            unit=UnitsMatrix(
+                tuple(tuple(rhs_unit for _ in range(nc)) for _ in range(nr))
+            ),
+        )
+    return dot_general_qm_qm(
+        lhs,
+        rhs_qm,
+        dimension_numbers=dimension_numbers,
+        precision=precision,
+        preferred_element_type=preferred_element_type,
+        **kw,
+    )
+
+
+@quax.register(lax.dot_general_p)
+def dot_general_arr_qm(
+    lhs: jax.Array,
+    rhs: QMatrix,
+    /,
+    *,
+    dimension_numbers: lax.DotDimensionNumbers,
+    precision: Any = None,
+    preferred_element_type: Any = None,
+    **kw: Any,
+) -> "QMatrix | u.Q":
+    """Dot product of a plain JAX array with a :class:`QMatrix`.
+
+    The plain array is treated as dimensionless.  Delegates to
+    :func:`dot_general_qm_qm` after wrapping ``lhs`` in a dimensionless
+    :class:`QMatrix`.
+
+    >>> import jax.numpy as jnp
+    >>> import quaxed.numpy as qnp
+    >>> from coordinax.internal import QMatrix
+
+    Dimensionless identity @ QMatrix vector:
+
+    >>> A = jnp.eye(2, dtype=jnp.float64)
+    >>> v = QMatrix(jnp.array([2.0, 3.0]), unit=("m / s", "m / s"))
+    >>> w = qnp.matmul(A, v)
+    >>> w.unit.to_string()
+    '(m / s, m / s)'
+    >>> w.value
+    Array([2., 3.], dtype=float64)
+
+    """
+    if lhs.ndim == 1:
+        n = lhs.shape[0]
+        lhs_qm = QMatrix(lhs, unit=UnitsMatrix(tuple(_DMLS for _ in range(n))))
+    else:
+        nr, nc = lhs.shape[-2], lhs.shape[-1]
+        lhs_qm = QMatrix(
+            lhs,
+            unit=UnitsMatrix(tuple(tuple(_DMLS for _ in range(nc)) for _ in range(nr))),
+        )
+    return dot_general_qm_qm(
+        lhs_qm,
+        rhs,
+        dimension_numbers=dimension_numbers,
+        precision=precision,
+        preferred_element_type=preferred_element_type,
+        **kw,
+    )
+
+
+vec_uconvert_value = np.vectorize(u.uconvert_value)
+
+
+def _dot_general_1d_1d(
+    lhs: QMatrix,
+    rhs: QMatrix,
+    /,
+    *,
+    dimension_numbers: lax.DotDimensionNumbers,
+    precision: Any = None,
+    preferred_element_type: Any = None,
+    **kw: Any,
+) -> u.Q:
     """Vector dot product: (N,) @ (N,) → scalar.
 
     Result = Σ_i  lhs[i] * rhs[i]
@@ -999,51 +1205,49 @@ def _dot_general_1d_1d(
     # Compute dot product with rescaling
     result_value = jnp.sum(scales * lhs.value * rhs.value, axis=-1)
 
-    return u.Quantity(result_value, ref_unit)
+    return u.Q(result_value, ref_unit)
 
 
 def _dot_general_2d_1d(
-    lhs: QuantityMatrix,
-    rhs: QuantityMatrix,
+    lhs: QMatrix,
+    rhs: QMatrix,
     /,
     *,
     dimension_numbers: lax.DotDimensionNumbers,
     precision: Any = None,
     preferred_element_type: Any = None,
     **kw: Any,
-) -> QuantityMatrix:
+) -> QMatrix:
     """Matrix-vector multiply: (N, K) @ (K,) → (N,).
 
     For ``w = A @ v`` where ``A`` is ``(N, K)`` and ``v`` is ``(K,)``:
 
     ``w[i] = Σ_j  A[i, j] * v[j]``
 
-    Each product ``A[i,j] * v[j]`` has unit ``A.unit[i][j] * v.unit[j]``.
-    All ``K`` terms in the sum for output row ``i`` must be unit-compatible.
-    We convert every term to the unit of the *first* term (``j = 0``) for
-    each output row ``i``: ``ref[i] = A.unit[i][0] * v.unit[0]``.
+    Each product ``A[i,j] * v[j]`` has unit ``A.unit[i][j] * v.unit[j]``.  All
+    ``K`` terms in the sum for output row ``i`` must be unit-compatible.  We
+    convert every term to the unit of the *first* term (``j = 0``) for each
+    output row ``i``: ``ref[i] = A.unit[i][0] * v.unit[0]``.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import quaxed.numpy as qnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     Identity matrix times a vector:
 
-    >>> A = QuantityMatrix(jnp.eye(3, dtype=jnp.float64),
+    >>> A = QMatrix(jnp.eye(3, dtype=jnp.float64),
     ...                    unit=(("", "", ""), ("", "", ""), ("", "", "")))
-    >>> v = QuantityMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "m", "m"))
+    >>> v = QMatrix(jnp.array([1.0, 2.0, 3.0]), unit=("m", "m", "m"))
     >>> w = qnp.matmul(A, v)
     >>> w.value
     Array([1., 2., 3.], dtype=float64)
 
     Mixed units on contraction axis (km column converted to m):
 
-    >>> A2 = QuantityMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
+    >>> A2 = QMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
     ...                     unit=(("m", "km"), ("m", "km")))
-    >>> v2 = QuantityMatrix(jnp.array([1.0, 1.0]), unit=("s", "s"))
+    >>> v2 = QMatrix(jnp.array([1.0, 1.0]), unit=("s", "s"))
     >>> w2 = qnp.matmul(A2, v2)
     >>> w2.value
     Array([2001., 4003.], dtype=float64)
@@ -1070,22 +1274,22 @@ def _dot_general_2d_1d(
     #    w[..., i] = Σ_j  scale[i, j] * A[..., i, j] * v[..., j]
     accum = jnp.einsum("ij,...ij,...j->...i", scale_2d, lhs.value, rhs.value)
 
-    return QuantityMatrix(value=accum, unit=out_unit)
+    return QMatrix(value=accum, unit=out_unit)
 
 
 vec_uconvert_value = np.vectorize(u.uconvert_value)
 
 
 def _dot_general_2d_2d(
-    lhs: QuantityMatrix,
-    rhs: QuantityMatrix,
+    lhs: QMatrix,
+    rhs: QMatrix,
     /,
     *,
     dimension_numbers: lax.DotDimensionNumbers,
     precision: Any = None,
     preferred_element_type: Any = None,
     **kw: Any,
-) -> QuantityMatrix:
+) -> QMatrix:
     """Matrix multiply: (N, K) @ (K, M) → (N, M).
 
     For ``C = A @ B`` where ``A`` is ``(N, K)`` and ``B`` is ``(K, M)``:
@@ -1152,29 +1356,27 @@ def _dot_general_2d_2d(
         axis=-2,
     )
 
-    return QuantityMatrix(value=accum, unit=out_unit)
+    return QMatrix(value=accum, unit=out_unit)
 
 
 @quax.register(lax.sub_p)
-def sub_qm_qm(x: QuantityMatrix, y: QuantityMatrix, /) -> QuantityMatrix:
-    """Element-wise subtraction of two `QuantityMatrix` objects.
+def sub_qm_qm(x: QMatrix, y: QMatrix, /) -> QMatrix:
+    """Element-wise subtraction of two `QMatrix` objects.
 
-    The result adopts the units of *x*.  Each element is converted
-    from ``y.unit`` → ``x.unit`` before the numeric subtract.
+    The result adopts the units of *x*.  Each element is converted from
+    ``y.unit`` → ``x.unit`` before the numeric subtract.
 
     Works for both 1D (vector) and 2D (matrix) cases.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import quaxed.numpy as qnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     2D case:
 
-    >>> a = QuantityMatrix(jnp.ones((2, 2)), unit=(("m", "s"), ("kg", "rad")))
-    >>> b = QuantityMatrix(
+    >>> a = QMatrix(jnp.ones((2, 2)), unit=(("m", "s"), ("kg", "rad")))
+    >>> b = QMatrix(
     ...     value=jnp.ones((2, 2)),
     ...     unit=(("km", u.unit("ms")), (u.unit("g"), u.unit("deg"))))
 
@@ -1188,9 +1390,9 @@ def sub_qm_qm(x: QuantityMatrix, y: QuantityMatrix, /) -> QuantityMatrix:
 
     1D case:
 
-    >>> a1d = QuantityMatrix(value=jnp.ones(3),
+    >>> a1d = QMatrix(value=jnp.ones(3),
     ...                      unit=("m", "s", "kg"))
-    >>> b1d = QuantityMatrix(value=jnp.ones(3),
+    >>> b1d = QMatrix(value=jnp.ones(3),
     ...                      unit=("km", u.unit("ms"), u.unit("g")))
 
     >>> result1d = qnp.subtract(a1d, b1d)
@@ -1202,29 +1404,25 @@ def sub_qm_qm(x: QuantityMatrix, y: QuantityMatrix, /) -> QuantityMatrix:
 
     """
     y_converted = _convert_value(y.value, y.unit, x.unit)
-    return QuantityMatrix(value=lax.sub(x.value, y_converted), unit=x.unit)
+    return QMatrix(value=lax.sub(x.value, y_converted), unit=x.unit)
 
 
 @quax.register(lax.transpose_p)
-def transpose_qm(
-    x: QuantityMatrix, /, *, permutation: tuple[int, ...]
-) -> QuantityMatrix:
-    """Transpose a ``QuantityMatrix``, swapping only the last two (matrix) axes.
+def transpose_qm(x: QMatrix, /, *, permutation: tuple[int, ...]) -> QMatrix:
+    """Transpose a ``QMatrix``, swapping only the last two (matrix) axes.
 
     Leading batch dimensions must be preserved unchanged.  Only permutations
     that swap the last two axes while keeping all batch axes in place are
     supported, because the unit structure is purely 2-D and cannot represent
     arbitrary axis re-orderings.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import quaxed.numpy as qnp
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     2-D (no batch):
 
-    >>> a = QuantityMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
+    >>> a = QMatrix(jnp.array([[1.0, 2.0], [3.0, 4.0]]),
     ...                    unit=(("m", "s"), ("kg", "rad")))
     >>> aT = qnp.matrix_transpose(a)
     >>> aT.value
@@ -1236,7 +1434,7 @@ def transpose_qm(
     Batched ``(B, N, M)`` — batch axis is preserved:
 
     >>> import jax
-    >>> b = QuantityMatrix(jnp.ones((3, 2, 2)),
+    >>> b = QMatrix(jnp.ones((3, 2, 2)),
     ...                    unit=(("m", "s"), ("kg", "rad")))
     >>> bT = qnp.matrix_transpose(b)
     >>> bT.shape
@@ -1256,7 +1454,7 @@ def transpose_qm(
         )
         raise NotImplementedError(msg)
     transposed_value = lax.transpose(x.value, permutation)
-    return QuantityMatrix(value=transposed_value, unit=x.unit.T)
+    return QMatrix(value=transposed_value, unit=x.unit.T)
 
 
 def _jit_fallback_uniform_unit(units: UnitsMatrix, out_size: int) -> UnitsMatrix:
@@ -1269,9 +1467,9 @@ def _jit_fallback_uniform_unit(units: UnitsMatrix, out_size: int) -> UnitsMatrix
     first = all_units[0]
     if any(u_i != first for u_i in all_units[1:]):
         msg = (
-            "QuantityMatrix gather (e.g. jnp.diag) under jit requires all units "
+            "QMatrix gather (e.g. jnp.diag) under jit requires all units "
             "to be equal when indices cannot be concretized. "
-            "Call eagerly (outside jit) for heterogeneous-unit QuantityMatrix."
+            "Call eagerly (outside jit) for heterogeneous-unit QMatrix."
         )
         raise ValueError(msg)
     return UnitsMatrix(np.full((out_size,), first, dtype=object))
@@ -1279,7 +1477,7 @@ def _jit_fallback_uniform_unit(units: UnitsMatrix, out_size: int) -> UnitsMatrix
 
 @quax.register(lax.gather_p)
 def gather_qm(
-    x: QuantityMatrix,
+    x: QMatrix,
     start_indices: jax.Array,
     /,
     *,
@@ -1290,17 +1488,17 @@ def gather_qm(
     fill_value: Any = None,
     unique_indices: bool = False,
     **kwargs: Any,
-) -> QuantityMatrix:
-    """Handle element-selection gathers (e.g. ``jnp.diag``) for ``QuantityMatrix``.
+) -> QMatrix:
+    """Handle element-selection gathers (e.g. ``jnp.diag``) for ``QMatrix``.
 
     Supports only *element-selection* gathers where every input dimension is
     collapsed (``offset_dims == ()`` and all ``slice_sizes == 1``).  This
     covers ``jnp.diag``, ``jnp.diagonal``, and integer-array fancy indexing on
-    ``QuantityMatrix`` objects.
+    ``QMatrix`` objects.
 
     Unit extraction:
 
-    ``QuantityMatrix.unit`` is declared ``static=True`` and is therefore always
+    ``QMatrix.unit`` is declared ``static=True`` and is therefore always
     a concrete Python object, even inside ``jax.jit``.  The *indices*, however,
     are traced under JIT and cannot be read concretely.  Because JAX's
     ``jnp.diag`` uses ``platform_dependent`` internally, quax always traces
@@ -1308,14 +1506,12 @@ def gather_qm(
     unit resolution.  Consequently, all units in the input must be equal;
     heterogeneous-unit inputs raise ``ValueError``.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
     Diagonal of a 3x3 dimensionless matrix:
 
-    >>> A = QuantityMatrix(jnp.diag(jnp.array([1.0, 4.0, 9.0])),
+    >>> A = QMatrix(jnp.diag(jnp.array([1.0, 4.0, 9.0])),
     ...                    unit=(("", "", ""), ("", "", ""), ("", "", "")))
     >>> d = A.diag()
     >>> d.unit.shape
@@ -1358,7 +1554,7 @@ def gather_qm(
     )
     if not is_element_selection:
         msg = (
-            "QuantityMatrix: only element-selection gathers (all input dims "
+            "QMatrix: only element-selection gathers (all input dims "
             "collapsed, all slice_sizes == 1) are supported. "
             f"Got offset_dims={dimension_numbers.offset_dims}, "
             f"collapsed_slice_dims={dimension_numbers.collapsed_slice_dims}, "
@@ -1380,14 +1576,12 @@ def gather_qm(
         else:  # x.unit.ndim == 2
             out_unit = UnitsMatrix(x.unit._units[idx_np[:, 0], idx_np[:, 1]])
 
-    return QuantityMatrix(value=result_value, unit=out_unit)
+    return QMatrix(value=result_value, unit=out_unit)
 
 
 @quax.register(lax.reduce_sum_p)
-def reduce_sum_p_qm(
-    operand: QuantityMatrix, /, *, axes: Any, **kwargs: Any
-) -> QuantityMatrix:
-    """Handle ``lax.reduce_sum`` for ``QuantityMatrix``.
+def reduce_sum_p_qm(operand: QMatrix, /, *, axes: Any, **kwargs: Any) -> QMatrix:
+    """Handle ``lax.reduce_sum`` for ``QMatrix``.
 
     ``jnp.diag`` on a square 2-D matrix uses ``platform_dependent`` which traces
     *both* the default (gather-based) and Mosaic implementation.  The Mosaic
@@ -1399,22 +1593,20 @@ def reduce_sum_p_qm(
 
     Unit reduction rule:
 
-    When reducing a 2-D ``QuantityMatrix`` along ``axes=(0,)`` (rows): the
+    When reducing a 2-D ``QMatrix`` along ``axes=(0,)`` (rows): the
     output unit for column *j* is taken from ``operand.unit[0, j]`` (the first
     row).  All elements being summed along a column must be unit-compatible for
     the sum to be physically meaningful.
 
-    Analogously for ``axes=(1,)`` (column reduction), the output unit
-    for row *i* is ``operand.unit[i, 0]``.
+    Analogously for ``axes=(1,)`` (column reduction), the output unit for row
+    *i* is ``operand.unit[i, 0]``.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
-    ``QuantityMatrix.diag()`` on a 3x3 uniform-unit matrix:
+    ``QMatrix.diag()`` on a 3x3 uniform-unit matrix:
 
-    >>> A = QuantityMatrix(jnp.diag(jnp.array([1.0, 4.0, 9.0])),
+    >>> A = QMatrix(jnp.diag(jnp.array([1.0, 4.0, 9.0])),
     ...                    unit=(("m", "m", "m"), ("m", "m", "m"), ("m", "m", "m")))
     >>> d = A.diag()
     >>> d.unit.shape
@@ -1435,13 +1627,393 @@ def reduce_sum_p_qm(
             # Column reduction → 1-D output; unit = first column's units.
             out_unit = UnitsMatrix(operand.unit._units[:, 0])
         else:
-            msg = f"reduce_sum_p_qm: unsupported axes={axes} for 2-D QuantityMatrix."
+            msg = f"reduce_sum_p_qm: unsupported axes={axes} for 2-D QMatrix."
             raise NotImplementedError(msg)
     else:
         msg = (
-            f"reduce_sum_p_qm: only 2-D QuantityMatrix is supported, "
-            f"got ndim={operand.ndim}."
+            f"reduce_sum_p_qm: only 2-D QMatrix is supported, got ndim={operand.ndim}."
         )
         raise NotImplementedError(msg)
 
-    return QuantityMatrix(value=result_value, unit=out_unit)
+    return QMatrix(value=result_value, unit=out_unit)
+
+
+##############################################################################
+# Custom det_p JAX primitive
+#
+# JAX has no built-in `det` primitive.  `jnp.linalg.det` decomposes into
+# arithmetic (2×2 / 3×3) or `lu_p` + log/exp (larger matrices).  We define
+# `det_p` here so that Quax can intercept determinant calls on `QMatrix`
+# objects.
+#
+# Supported transforms:
+#   - JIT via MLIR lowering that delegates to `jnp.linalg.det`
+#   - Forward-mode autodiff (JVP): d(det A)(dA) = det(A) · tr(A⁻¹ dA)
+#   - Reverse-mode autodiff (VJP): derived automatically from JVP via
+#     transposition — no explicit transpose rule needed because the JVP tangent
+#     only uses existing primitives (linalg.solve, trace, mul) that already
+#     carry transpose rules.
+#   - Batching (vmap): move the batch axis to the front and call det_p; the MLIR
+#     lowering handles any (*batch, n, n) shape natively.
+
+det_p = jexc.Primitive("det")
+det_p.multiple_results = False
+
+
+def det(x: Array, /) -> Array:
+    """Compute the determinant of a square matrix via the ``det_p`` primitive.
+
+    Delegates to ``det_p``, a custom JAX primitive that supports JIT,
+    forward and reverse differentiation, and batching (vmap).
+
+    For plain arrays the result is a bare :class:`~jaxtyping.Array`.
+    For :class:`~coordinax.internal.QMatrix` inputs the Quax
+    dispatch intercepts the call (see ``_det_p_QMatrix``) and
+    returns a :class:`~unxt.AbstractQuantity`.
+
+    Parameters
+    ----------
+    x : Array, shape ``(*batch, n, n)``
+        Square matrix or batch of square matrices.
+
+    Returns
+    -------
+    Array, shape ``(*batch,)``
+        Determinant of each matrix.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from coordinax._src.internal.quantity_matrix import det
+
+    Plain 2x2 diagonal matrix:
+
+    >>> det(jnp.array([[2.0, 0.0], [0.0, 3.0]]))
+    Array(6., dtype=float64)
+
+    Under JIT:
+
+    >>> import jax
+    >>> jax.jit(det)(jnp.array([[2.0, 0.0], [0.0, 3.0]]))
+    Array(6., dtype=float64)
+
+    Gradient (via reverse-mode autodiff):
+
+    >>> jax.grad(det)(jnp.array([[2.0, 0.0], [0.0, 3.0]]))
+    Array([[3., 0.],
+           [0., 2.]], dtype=float64)
+
+    Batched (vmap):
+
+    >>> A = jnp.stack([jnp.diag(jnp.array([2.0, 3.0])),
+    ...                jnp.diag(jnp.array([4.0, 5.0]))])
+    >>> jax.vmap(det)(A)
+    Array([ 6., 20.], dtype=float64)
+
+    """
+    return det_p.bind(x)
+
+
+# ── 1. Primal evaluation rule (eager / concrete values) ──────────────────
+
+
+def _det_impl(x: Array, /) -> Array:
+    return jnp.linalg.det(x)
+
+
+det_p.def_impl(_det_impl)
+
+
+# ── 2. Abstract evaluation rule (shape / dtype inference for JIT) ────────
+
+
+def _det_abstract_eval(x: "jax.core.ShapedArray", /) -> "jax.core.ShapedArray":
+    if x.ndim < 2:
+        msg = f"det_p requires at least 2-D input, got ndim={x.ndim}"
+        raise ValueError(msg)
+    if x.shape[-1] != x.shape[-2]:
+        msg = (
+            f"det_p requires a square matrix "
+            f"(shape[-2] == shape[-1]), got shape={x.shape}"
+        )
+        raise ValueError(msg)
+    # (*batch, n, n) → (*batch,)
+    return x.update(shape=x.shape[:-2])
+
+
+det_p.def_abstract_eval(_det_abstract_eval)
+
+
+# ── 3. MLIR / XLA lowering (JIT compilation) ─────────────────────────────
+
+jax_mlir.register_lowering(
+    det_p,
+    jax_mlir.lower_fun(_det_impl, multiple_results=False),
+)
+
+
+# ── 4. Forward-mode differentiation (JVP) ────────────────────────────────
+#
+# Jacobi's formula: d(det A)(dA) = det(A) · tr(A⁻¹ dA)
+#
+# We use `jnp.linalg.solve(A, dA)` to compute A⁻¹ dA without explicitly
+# forming the inverse — more numerically stable.  The tangent uses only
+# existing JAX primitives (solve, trace, scalar mul), so JAX derives the
+# reverse-mode (VJP) rule automatically via transposition; no explicit
+# `ad.primitive_transposes` registration is needed.
+
+
+def _det_jvp(primals: tuple, tangents: tuple) -> tuple:
+    (x,) = primals
+    (dx,) = tangents
+    primal_out = det_p.bind(x)
+    if type(dx) is jax_ad.Zero:
+        tangent_out = lax.full_like(primal_out, 0.0)
+    else:
+        # tr(A⁻¹ dA) via solve — avoids explicit matrix inversion
+        tangent_out = primal_out * jnp.trace(jnp.linalg.solve(x, dx))
+    return primal_out, tangent_out
+
+
+jax_ad.primitive_jvps[det_p] = _det_jvp
+
+
+# ── 5. Batching rule (vmap) ───────────────────────────────────────────────
+#
+# `jnp.linalg.det` (used in the MLIR lowering) already operates correctly
+# on batched (*batch, n, n) arrays.  The batching rule moves the vmap batch
+# axis to the front (just before the matrix dims) and calls det_p; the
+# result carries the batch axis at position 0.
+
+
+def _det_batch(args: tuple, batch_axes: tuple) -> tuple:
+    (x,) = args
+    (ax,) = batch_axes
+    x = jnp.moveaxis(x, ax, 0)
+    return det_p.bind(x), 0
+
+
+jax_batching.primitive_batchers[det_p] = _det_batch
+
+
+# ── 6. Quax dispatch for QMatrix ──────────────────────────────────
+
+
+@quax.register(det_p)
+def _det_p_QMatrix(x: QMatrix, /) -> "u.AbstractQuantity":
+    """Compute the determinant of a 2-D :class:`~coordinax.internal.QMatrix`.
+
+    The numeric value is computed via ``det_p.bind(x.value)``.  The unit
+    is the product of the main-diagonal units — valid for diagonal metrics
+    and any matrix where all cofactor products share the same physical
+    dimension (e.g. coordinate metric tensors).
+
+    Examples
+    --------
+    >>> import jax
+    >>> import jax.numpy as jnp
+    >>> import quax
+    >>> import unxt as u
+    >>> from coordinax.internal import QMatrix
+    >>> from coordinax._src.internal.quantity_matrix import det
+
+    >>> A = QMatrix(
+    ...     jnp.array([[2.0, 0.0], [0.0, 3.0]]),
+    ...     unit=(("m2", "m2"), ("m2", "m2")),
+    ... )
+    >>> quax.quaxify(det)(A)
+    Q(6., 'm4')
+
+    """
+    if x.ndim != 2:
+        msg = f"det_p QMatrix dispatch requires a 2-D unit structure, got ndim={x.ndim}"
+        raise ValueError(msg)
+    det_val = det_p.bind(x.value)
+    n = x.unit.shape[0]
+    det_unit = ft.reduce(operator.mul, (x.unit[i, i] for i in range(n)))
+    return u.Q(det_val, det_unit)
+
+
+##############################################################################
+# Custom inv_p JAX primitive
+#
+# JAX has no standalone `inv` primitive.  `jnp.linalg.inv` decomposes into
+# `lu_p` + `triangular_solve_p`, and Quax has no dispatch for those on
+# `QMatrix` (which raises on materialise).  We define `inv_p` to give
+# Quax a single interception point with full unit tracking.
+#
+# Supported transforms:
+#   - JIT via MLIR lowering that delegates to `jnp.linalg.inv`
+#   - Forward-mode autodiff (JVP): d(A^{-1}) = -A^{-1} dA A^{-1}
+#   - Reverse-mode autodiff (VJP): derived automatically from JVP
+#   - Batching (vmap): move batch axis to front, call inv_p
+
+inv_p = jexc.Primitive("inv")
+inv_p.multiple_results = False
+
+
+def inv(x: Array, /) -> Array:
+    """Compute the matrix inverse of a square matrix via the ``inv_p`` primitive.
+
+    Delegates to ``inv_p``, a custom JAX primitive that supports JIT,
+    forward and reverse differentiation, and batching (vmap).
+
+    For plain arrays the result is a bare :class:`~jaxtyping.Array`.
+    For :class:`~coordinax.internal.QMatrix` inputs the Quax
+    dispatch intercepts the call (see ``_inv_p_QMatrix``) and
+    returns a :class:`~coordinax.internal.QMatrix` with
+    reciprocal units.
+
+    Parameters
+    ----------
+    x : Array, shape ``(*batch, n, n)``
+        Square matrix or batch of square matrices.
+
+    Returns
+    -------
+    Array, shape ``(*batch, n, n)``
+        Matrix inverse of each square matrix.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> from coordinax._src.internal.quantity_matrix import inv
+
+    Plain 2x2 diagonal matrix:
+
+    >>> inv(jnp.array([[2.0, 0.0], [0.0, 4.0]]))
+    Array([[0.5 , 0.  ],
+           [0.  , 0.25]], dtype=float64)
+
+    Under JIT:
+
+    >>> import jax
+    >>> jax.jit(inv)(jnp.array([[2.0, 0.0], [0.0, 4.0]]))
+    Array([[0.5 , 0.  ],
+           [0.  , 0.25]], dtype=float64)
+
+    Gradient (via reverse-mode autodiff) — returns a rank-4 Jacobian:
+
+    >>> jac = jax.jacobian(inv)(jnp.array([[2.0, 0.0], [0.0, 4.0]]))
+    >>> jac.shape
+    (2, 2, 2, 2)
+
+    Batched (vmap):
+
+    >>> A = jnp.stack([jnp.diag(jnp.array([2.0, 4.0])),
+    ...                jnp.diag(jnp.array([1.0, 2.0]))])
+    >>> jax.vmap(inv)(A)
+    Array([[[0.5 , 0.  ],
+            [0.  , 0.25]],
+    <BLANKLINE>
+           [[1.  , 0.  ],
+            [0.  , 0.5 ]]], dtype=float64)
+
+    """
+    return inv_p.bind(x)
+
+
+# ── 1. Primal evaluation rule ─────────────────────────────────────────────
+
+
+def _inv_impl(x: Array, /) -> Array:
+    return jnp.linalg.inv(x)
+
+
+inv_p.def_impl(_inv_impl)
+
+
+# ── 2. Abstract evaluation rule ───────────────────────────────────────────
+
+
+def _inv_abstract_eval(x: "jax.core.ShapedArray", /) -> "jax.core.ShapedArray":
+    if x.ndim < 2:
+        msg = f"inv_p requires at least 2-D input, got ndim={x.ndim}"
+        raise ValueError(msg)
+    if x.shape[-1] != x.shape[-2]:
+        msg = (
+            f"inv_p requires a square matrix "
+            f"(shape[-2] == shape[-1]), got shape={x.shape}"
+        )
+        raise ValueError(msg)
+    return x.update(shape=x.shape)  # same shape as input
+
+
+inv_p.def_abstract_eval(_inv_abstract_eval)
+
+
+# ── 3. MLIR / XLA lowering ────────────────────────────────────────────────
+
+jax_mlir.register_lowering(
+    inv_p,
+    jax_mlir.lower_fun(_inv_impl, multiple_results=False),
+)
+
+
+# ── 4. Forward-mode differentiation (JVP) ────────────────────────────────
+#
+# d(A^{-1})(dA) = -A^{-1} dA A^{-1}
+
+
+def _inv_jvp(primals: tuple, tangents: tuple) -> tuple[Array, Array]:
+    (x,) = primals
+    (dx,) = tangents
+    primal_out = inv_p.bind(x)
+    if type(dx) is jax_ad.Zero:
+        tangent_out = jax_ad.Zero.from_primal_value(primal_out)  # ty: ignore[unresolved-attribute]
+    else:
+        tangent_out = -primal_out @ dx @ primal_out
+    return primal_out, tangent_out
+
+
+jax_ad.primitive_jvps[inv_p] = _inv_jvp
+
+
+# ── 5. Batching rule (vmap) ───────────────────────────────────────────────
+
+
+def _inv_batch(args: tuple, batch_axes: tuple) -> tuple:
+    (x,) = args
+    (ax,) = batch_axes
+    x = jnp.moveaxis(x, ax, 0)
+    return inv_p.bind(x), 0
+
+
+jax_batching.primitive_batchers[inv_p] = _inv_batch
+
+
+# ── 6. Quax dispatch for QMatrix ──────────────────────────────────
+
+
+@quax.register(inv_p)
+def _inv_p_QMatrix(x: QMatrix, /) -> QMatrix:
+    """Compute the inverse of a 2-D :class:`~coordinax.internal.QMatrix`.
+
+    The numeric value is computed via ``inv_p.bind(x.value)``.
+    Units are assumed uniform (all entries share the same physical unit,
+    as is the case for metrics produced by the Cartesian-Jacobian pullback);
+    the inverse carries the reciprocal unit throughout.
+
+    Examples
+    --------
+    >>> import jax
+    >>> import jax.numpy as jnp
+    >>> import quax
+    >>> import unxt as u
+    >>> from coordinax.internal import QMatrix, UnitsMatrix
+    >>> from coordinax._src.internal.quantity_matrix import inv
+
+    >>> A = QMatrix(
+    ...     jnp.array([[4.0, 0.0], [0.0, 1.0]]),
+    ...     unit=UnitsMatrix((('m2', 'm2'), ('m2', 'm2'))),
+    ... )
+    >>> quax.quaxify(inv)(A)
+    QMatrix([[0.25, 0.  ],
+                   [0.  , 1.  ]], '((1 / m2, 1 / m2), (1 / m2, 1 / m2))')
+
+    """
+    if x.ndim != 2:
+        msg = f"inv_p QMatrix dispatch requires a 2-D unit structure, got ndim={x.ndim}"
+        raise ValueError(msg)
+    inv_val = inv_p.bind(x.value)
+    return QMatrix(inv_val, unit=x.unit.inverse())

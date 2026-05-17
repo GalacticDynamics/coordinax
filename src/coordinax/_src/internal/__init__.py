@@ -11,7 +11,7 @@
 
 Contents:
 
-- ``QuantityMatrix``
+- ``QMatrix``
     An N-D quantity matrix/vector where every element carries its own unit.
     Supports both 1-D (vector) and 2-D (matrix) cases.
     Useful for Jacobians and metric tensors whose entries have
