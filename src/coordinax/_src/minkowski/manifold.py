@@ -27,17 +27,13 @@ class MinkowskiManifold(AbstractManifold):
     $\eta = \operatorname{diag}(-1, 1, 1, 1)$ in the canonical $(ct, x, y, z)$
     chart. It is the geometric arena of special relativity.
 
-    **Charts.** The manifold admits all
-    :class:`~coordinax.charts.SpaceTimeCT` charts, parameterised by the
-    choice of spatial sub-chart:
+    **Charts.** The manifold admits all charts registered with
+    `coordinax.manifolds.MinkowskiAtlas`. The built-in chart is
+    :class:`~coordinax.charts.MinkowskiCT` — the canonical $(ct, x, y, z)$
+    Cartesian spacetime chart.
 
-    - ``SpaceTimeCT(cart3d)`` — Minkowski coordinates $(ct, x, y, z)$
-    - ``SpaceTimeCT(sph3d)``  — adapted coordinates $(ct, r, \theta, \phi)$
-    - ``SpaceTimeCT(cyl3d)``  — adapted coordinates $(ct, \rho, \phi, z)$
-
-    **Metric.** All charts carry the pulled-back Minkowski metric
-    $g = J^T \eta J$, where $J$ is the Jacobian from the given chart to the
-    canonical Cartesian spacetime chart.
+    **Metric.** The manifold carries the flat Minkowski metric
+    $\eta = \operatorname{diag}(-1, 1, 1, 1)$.
 
     **Pre-built instance.** The module exports :obj:`minkowski4d` as a
     ready-to-use instance.
@@ -63,12 +59,9 @@ class MinkowskiManifold(AbstractManifold):
     MinkowskiAtlas(ndim=4)
 
     >>> M.default_chart()
-    SpaceTimeCT()
+    MinkowskiCT(M=MinkowskiManifold(ndim=4))
 
-    >>> M.has_chart(cxc.spacetimect)
-    True
-
-    >>> M.has_chart(cxc.SpaceTimeCT(cxc.sph3d))
+    >>> M.has_chart(cxc.minkowskict)
     True
 
     >>> M.has_chart(cxc.cart3d)

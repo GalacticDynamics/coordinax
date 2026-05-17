@@ -260,7 +260,7 @@ IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any]], ...]] = (
     PoincarePolar6D,
     # N-D
     CartND,
-    # SpaceTimeCT,  # depends on spatial chart
+    # MinkowskiCT is registered separately via MinkowskiAtlas
 )
 
 

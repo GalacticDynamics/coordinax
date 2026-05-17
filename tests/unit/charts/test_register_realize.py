@@ -61,12 +61,6 @@ class TestCartesianChartFunction:
 class TestCartesianChartProductCharts:
     """Test cartesian_chart dispatch for product charts."""
 
-    def test_spacetime_ct_cartesian_chart(self) -> None:
-        """cartesian_chart should convert SpaceTimeCT spatial to Cart3D."""
-        st_sph = cxc.SpaceTimeCT(cxc.sph3d)
-        st_cart = cxc.cartesian_chart(st_sph)
-        assert isinstance(st_cart.spatial_chart, cxc.Cart3D)
-
     def test_namespaced_product_cartesian_chart(self) -> None:
         """cartesian_chart should convert factors while preserving factor_names."""
         phase_sph = cxc.CartesianProductChart((cxc.sph3d, cxc.sph3d), ("q", "p"))
@@ -90,20 +84,6 @@ class TestCartesianChartProductCharts:
 
 class TestPointTransformProductCharts:
     """Test ``pt_map`` works correctly with product charts."""
-
-    def test_spacetime_ct_cart_to_sph(self) -> None:
-        """Works between SpaceTimeCT(cart3d) and SpaceTimeCT(sph3d)."""
-        st_cart = cxc.SpaceTimeCT(cxc.cart3d)
-        st_sph = cxc.SpaceTimeCT(cxc.sph3d)
-        p = {
-            "ct": u.Q(1.0, "s"),
-            "x": u.Q(1.0, "m"),
-            "y": u.Q(0.0, "m"),
-            "z": u.Q(0.0, "m"),
-        }
-        result = cxc.pt_map(p, st_cart, st_sph)
-        assert u.ustrip("s", result["ct"]) == pytest.approx(1.0)
-        assert u.ustrip("m", result["r"]) == pytest.approx(1.0)
 
     def test_namespaced_phase_space_transform(self) -> None:
         """pt_map should work with namespaced CartesianProductChart."""

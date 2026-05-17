@@ -19,6 +19,7 @@ from coordinax._src.base import (
 )
 from coordinax._src.custom_types import Len
 from coordinax._src.euclidean.atlas import EuclideanAtlas
+from coordinax._src.euclidean.manifold import RN
 from coordinax._src.null import no_manifold
 
 

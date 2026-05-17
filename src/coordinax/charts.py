@@ -28,24 +28,15 @@ True
 >>> sph_chart.coord_dimensions
 ('length', 'angle', 'angle')
 
-Another example is a 4D spacetime chart:
+Another example is a 4D Minkowski spacetime chart:
 
->>> st_chart = cxc.SpaceTimeCT()
+>>> st_chart = cxc.MinkowskiCT()
 >>> st_chart.components
 ('ct', 'x', 'y', 'z')
 >>> st_chart.coord_dimensions
 ('length', 'length', 'length', 'length')
->>> st_chart.time_chart
-Time1D(M=Rn(1))
->>> st_chart.spatial_chart
-Cart3D(M=Rn(3))
-
->>> cxc.SpaceTimeCT(cxc.sph3d)
-SpaceTimeCT(spatial_chart=Spherical3D(M=Rn(3)))
-
-`SpaceTimeCT` is a special case of a Cartesian product chart. It has a fixed
-time factor `time1d` and a user-selectable spatial factor and flattens its chart
-factors into a "single" chart.
+>>> st_chart.cartesian is st_chart
+True
 
 We can also build arbitrary Cartesian products of charts (without flattening)
 using `CartesianProductChart`:
@@ -125,6 +116,8 @@ __all__ = (
     "MathSpherical3D",
     "math_sph3d",
     "ProlateSpheroidal3D",  # Not exported as instance
+    # - 4D --------------------------------------
+    "Abstract4D",
     # - 6D --------------------------------------
     "Abstract6D",
     "PoincarePolar6D",
@@ -154,8 +147,10 @@ __all__ = (
     "AbstractCartesianProductChart",
     "AbstractFlatCartesianProductChart",
     "CartesianProductChart",
-    "SpaceTimeCT",
-    "spacetimect",
+    "GalileanCT",
+    "galileanct",
+    "MinkowskiCT",
+    "minkowskict",
 )
 
 from coordinax._src.setup_package import install_import_hook
@@ -173,6 +168,7 @@ with install_import_hook("coordinax.charts"):
         Abstract1D,
         Abstract2D,
         Abstract3D,
+        Abstract4D,
         Abstract6D,
         AbstractND,
         AbstractSpherical3D,
@@ -208,12 +204,13 @@ with install_import_hook("coordinax.charts"):
         time1d,
     )
     from coordinax._src.exceptions import NoGlobalCartesianChartError
+    from coordinax._src.minkowski import MinkowskiCT, minkowskict
     from coordinax._src.product import (
         AbstractCartesianProductChart,
         AbstractFlatCartesianProductChart,
         CartesianProductChart,
-        SpaceTimeCT,
-        spacetimect,
+        GalileanCT,
+        galileanct,
     )
     from coordinax._src.spherical import (
         AbstractSphericalHyperSphere,

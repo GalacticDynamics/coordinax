@@ -1,18 +1,20 @@
-"""Spacetime representations with non-Euclidean metrics."""
+"""Galilean spacetime manifold, atlas, metric, and chart."""
 
-__all__ = ("SpaceTimeCT", "spacetimect")
+__all__ = ("galilean_spacetime", "GalileanCT", "galileanct")
 
 from dataclasses import KW_ONLY, field, replace
 
 from jaxtyping import Float
-from typing import Any, ClassVar, cast, final
+from typing import Any, ClassVar, Final, cast, final
 from typing_extensions import override
 
 import jax.tree_util as jtu
+import numpy as np
 
 import unxt as u
 
 from .chart import AbstractFlatCartesianProductChart
+from .manifold import CartesianProductManifold
 from coordinax._src.base import (
     AbstractChart,
     AbstractFixedComponentsChart,
@@ -22,17 +24,25 @@ from coordinax._src.base import (
 from coordinax._src.charts.d1 import time1d
 from coordinax._src.charts.d3 import cart3d
 from coordinax._src.custom_types import CDict, Ds, Ks
+from coordinax._src.euclidean.manifold import R1, R3
 
-C_DEFAULT = u.StaticQuantity(299_792.458, "km/s")
+galilean_spacetime: Final = CartesianProductManifold(
+    factors=(R1, R3),
+    factor_names=("ct", "space"),
+)
+r"""The 4-dimensional Galilean spacetime manifold, $\mathbb{R} \times \mathbb{R}^3$."""
+
+
+C_DEFAULT = u.StaticQuantity(np.array(299_792.458), "km/s")
 
 
 @jtu.register_static
 @final
 @chart_dataclass_decorator
-class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
+class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     r"""4D spacetime rep with components ``(ct, x, y, z)`` and Minkowski metric.
 
-    This is a Cartesian product chart: SpaceTimeCT(spatial_chart) ≡ time1d x
+    This is a Cartesian product chart: GalileanCT(spatial_chart) ≡ time1d x
     spatial_chart
 
     The time component is always the canonical 1D time chart `time1d` with
@@ -69,11 +79,11 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     >>> import unxt as u
     >>> import coordinax.charts as cxc
 
-    >>> cxc.SpaceTimeCT()
-    SpaceTimeCT()
+    >>> cxc.GalileanCT()
+    GalileanCT()
 
-    >>> cxc.SpaceTimeCT(cxc.sph3d)
-    SpaceTimeCT(spatial_chart=Spherical3D(M=Rn(3)))
+    >>> cxc.GalileanCT(cxc.sph3d)
+    GalileanCT(spatial_chart=Spherical3D(M=Rn(3)))
 
     """
 
@@ -84,7 +94,15 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     c: Float[u.StaticQuantity["speed"], ""] = field(default=C_DEFAULT)  # pylint: disable=invalid-field-call
     """Speed of light, by default ``Quantity(299_792.458, "km/s")``."""
 
-    M: ClassVar[AbstractManifold]  # ty: ignore[invalid-attribute-override]
+    M: ClassVar[AbstractManifold]
+
+    @property
+    def M(self) -> AbstractManifold:
+        """The manifold this chart belongs to, derived from the spatial chart."""
+        return galilean_spacetime
+
+    # ===============================================================
+    # Product Chart API
 
     @property
     def time_chart(self) -> AbstractChart[Any, Any]:
@@ -103,6 +121,28 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         """Factor names are ('time', 'space')."""
         return ("time", "space")
 
+    @override
+    def split_components(self, p: CDict) -> tuple[CDict, CDict]:
+        """Split CDict by factors, keeping 'ct' for time factor.
+
+        GalileanCT uses 'ct' for the time component. The split returns
+        factor dicts with their native keys ('ct' for time, spatial keys for space).
+        """
+        time_dict = {"ct": p["ct"]}
+        spatial_dict = {k: p[k] for k in self.spatial_chart.components}
+        return (time_dict, spatial_dict)
+
+    @override
+    def merge_components(self, parts: tuple[CDict, CDict], /) -> CDict:  # ty: ignore[invalid-method-override]
+        """Merge factor CDicts back into GalileanCT components.
+
+        Expects time factor dict with 'ct' key, spatial factor dict with spatial keys.
+        """
+        return {**parts[0], **parts[1]}
+
+    # ===============================================================
+    # Chart API
+
     @property
     def components(self) -> Ks:
         # Override to use "ct" instead of "t" for the time component
@@ -114,38 +154,19 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         return cast("Ds", ("length", *self.spatial_chart.coord_dimensions))
 
     @override
-    def split_components(self, p: CDict) -> tuple[CDict, CDict]:
-        """Split CDict by factors, keeping 'ct' for time factor.
-
-        SpaceTimeCT uses 'ct' for the time component. The split returns
-        factor dicts with their native keys ('ct' for time, spatial keys for space).
-        """
-        time_dict = {"ct": p["ct"]}
-        spatial_dict = {k: p[k] for k in self.spatial_chart.components}
-        return (time_dict, spatial_dict)
-
-    @override
-    def merge_components(self, parts: tuple[CDict, CDict], /) -> CDict:  # ty: ignore[invalid-method-override]
-        """Merge factor CDicts back into SpaceTimeCT components.
-
-        Expects time factor dict with 'ct' key, spatial factor dict with spatial keys.
-        """
-        return {**parts[0], **parts[1]}
-
-    @override
     @property
-    def cartesian(self) -> "SpaceTimeCT":
+    def cartesian(self) -> "GalileanCT":
         """Get a Cartesian-chart version of the given spacetime chart.
 
         Examples
         --------
         >>> import coordinax.charts as cxc
-        >>> rep = cxc.SpaceTimeCT(cxc.sph3d)
+        >>> rep = cxc.GalileanCT(cxc.sph3d)
         >>> rep
-        SpaceTimeCT(spatial_chart=Spherical3D(M=Rn(3)))
+        GalileanCT(spatial_chart=Spherical3D(M=Rn(3)))
 
         >>> rep.cartesian  # default is Cart3D
-        SpaceTimeCT(spatial_chart=Cart3D(M=Rn(3)))
+        GalileanCT(spatial_chart=Cart3D(M=Rn(3)))
 
         """
         spatial_cart = self.spatial_chart.cartesian
@@ -155,14 +176,14 @@ class SpaceTimeCT(AbstractFlatCartesianProductChart[Ks, Ds]):
         return replace(self, spatial_chart=spatial_cart)
 
 
-spacetimect = SpaceTimeCT(spatial_chart=cart3d)
-"""Default SpaceTimeCT with Cartesian spatial chart (i.e. Cartesian 4D spacetime).
+galileanct = GalileanCT(spatial_chart=cart3d)
+"""Default GalileanCT with Cartesian spatial chart (i.e. Cartesian 4D spacetime).
 
 >>> import coordinax.charts as cxc
->>> cxc.spacetimect
-SpaceTimeCT()
+>>> cxc.galileanct
+GalileanCT()
 
->>> cxc.spacetimect.cartesian is cxc.spacetimect
+>>> cxc.galileanct.cartesian is cxc.galileanct
 True
 
 """

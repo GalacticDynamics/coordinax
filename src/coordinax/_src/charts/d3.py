@@ -459,6 +459,7 @@ ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 @final
 @chart_dataclass_decorator
 class ProlateSpheroidal3D(
+    Abstract3D,
     AbstractFixedComponentsChart[ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
 ):
     r"""Prolate spheroidal coordinates $(\mu, \nu, \phi)$ with focal length $\Delta$.

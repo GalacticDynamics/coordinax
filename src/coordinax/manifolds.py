@@ -59,6 +59,8 @@ __all__ = (
     "CustomAtlas",
     "CustomMetric",
     "CustomManifold",
+    # Product / Galilean
+    "galilean_spacetime",
 )
 
 from ._src.setup_package import install_import_hook
@@ -109,6 +111,7 @@ with install_import_hook("coordinax.manifolds"):
         CartesianProductManifold,
         CartesianProductMetric,
     )
+    from ._src.product.galilean_ct import galilean_spacetime
     from ._src.spherical import (
         S1,
         S2,
