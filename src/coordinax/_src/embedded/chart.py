@@ -323,7 +323,7 @@ def pt_map(
         msg = "EmbeddedChart ambient kinds must match for conversion."
         raise ValueError(msg)
 
-    p_ambient = cxmapi.pt_embed(p, from_chart)  # TODO: support usys
+    p_ambient = cxmapi.pt_embed(p, from_chart, usys=usys)
     p_ambient = cxcapi.pt_map(
         p_ambient,
         from_chart.ambient.M,
@@ -332,7 +332,7 @@ def pt_map(
         to_chart.ambient,
         usys=usys,
     )
-    out = cxmapi.pt_project(p_ambient, to_chart)  # TODO: support usys
+    out = cxmapi.pt_project(p_ambient, to_chart, usys=usys)
     return cast("CDict", out)
 
 
@@ -424,7 +424,7 @@ def pt_map(
     {'r': Q(1., 'm'), 'theta': Q(1., 'rad'), 'phi': Q(0.5, 'rad')}
 
     """
-    p_ambient = cxmapi.pt_embed(p, from_chart)
+    p_ambient = cxmapi.pt_embed(p, from_chart, usys=usys)
     out = cxcapi.pt_map(
         p_ambient,
         from_chart.ambient.M,

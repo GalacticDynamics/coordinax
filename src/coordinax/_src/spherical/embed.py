@@ -9,7 +9,6 @@ from typing import Any, final
 import unxt as u
 
 import coordinax.charts as cxc
-from .manifold import HyperSphericalManifold
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.embedded import (
     AbstractEmbeddingMap,
@@ -17,7 +16,8 @@ from coordinax._src.embedded import (
     EmbeddedManifold,
     IntrinsicT,
 )
-from coordinax._src.euclidean import EuclideanManifold
+from coordinax._src.euclidean.manifold import R3
+from coordinax._src.spherical.manifold import S2
 
 
 @final
@@ -165,7 +165,5 @@ def embedded_twosphere(
 
     """
     return EmbeddedManifold(
-        intrinsic=HyperSphericalManifold(2),
-        ambient=EuclideanManifold(3),
-        embed_map=TwoSphereIn3D(radius=radius),
+        intrinsic=S2, ambient=R3, embed_map=TwoSphereIn3D(radius=radius)
     )
