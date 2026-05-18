@@ -53,12 +53,7 @@ class TestTangentMapRoundTripCart2dPolar2d:
     Here we check this end-to-end via two successive ``tangent_map`` calls.
     """
 
-    @given(
-        r_=_pos_m,
-        theta=_any_angle_rad,
-        vx=_v_elem,
-        vy=_v_elem,
-    )
+    @given(r_=_pos_m, theta=_any_angle_rad, vx=_v_elem, vy=_v_elem)
     @settings(deadline=None)
     def test_round_trip(self, r_, theta, vx, vy) -> None:
         """Tangent map round-trip Cart2D → Polar2D → Cart2D recovers original v."""
