@@ -20,8 +20,8 @@ class TestCconvertTangentGeometry:
 
     def test_same_chart_noncartesian_matches_change_basis(self) -> None:
         """Same-chart tangent conversion should reduce to basis conversion."""
-        v = {"r": jnp.array(5.0), "theta": jnp.array(1.0), "phi": jnp.array(2.0)}
-        at = {"r": jnp.array(3.0), "theta": jnp.array(0.5), "phi": jnp.array(0.0)}
+        v = {"r": jnp.array(5), "theta": jnp.array(1), "phi": jnp.array(2)}
+        at = {"r": jnp.array(3), "theta": jnp.array(0.5), "phi": jnp.array(0)}
 
         result = cxr.cconvert(
             v, cxc.sph3d, cxr.coord_disp, cxc.sph3d, cxr.phys_disp, at=at, usys=usys
@@ -36,27 +36,27 @@ class TestCconvertTangentGeometry:
 
     def test_cart2d_to_polar2d_coord_disp(self) -> None:
         """Cconvert with coord_disp routes through tangent_map (Jacobian)."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0)}
         result = cxr.cconvert(
             v, cxc.cart2d, cxr.coord_disp, cxc.polar2d, cxr.coord_disp, at=at, usys=usys
         )
-        np.testing.assert_allclose(result["r"], 1.0, atol=1e-6)
-        np.testing.assert_allclose(result["theta"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["r"], 1, atol=1e-6)
+        np.testing.assert_allclose(result["theta"], 0, atol=1e-6)
 
     def test_same_chart_identity(self) -> None:
         """Cconvert with same chart + TangentGeometry returns input unchanged."""
-        v = {"x": jnp.array(2.0), "y": jnp.array(3.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v = {"x": jnp.array(2), "y": jnp.array(3)}
+        at = {"x": jnp.array(1), "y": jnp.array(0)}
         result = cxr.cconvert(
             v, cxc.cart2d, cxr.coord_disp, cxc.cart2d, cxr.coord_disp, at=at, usys=usys
         )
-        np.testing.assert_allclose(result["x"], 2.0)
-        np.testing.assert_allclose(result["y"], 3.0)
+        np.testing.assert_allclose(result["x"], 2)
+        np.testing.assert_allclose(result["y"], 3)
 
     def test_same_chart_cartesian_without_at(self) -> None:
         """Cartesian same-chart basis conversion should not require `at`."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(2.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(2)}
         result = cxr.cconvert(
             v, cxc.cart2d, cxr.coord_disp, cxc.cart2d, cxr.phys_disp, usys=usys
         )
@@ -65,20 +65,20 @@ class TestCconvertTangentGeometry:
 
     def test_cart3d_to_sph3d_coord_vel(self) -> None:
         """Cconvert with coord_vel representation uses tangent_map semantics."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
         result = cxr.cconvert(
             v, cxc.cart3d, cxr.coord_vel, cxc.sph3d, cxr.coord_vel, at=at, usys=usys
         )
         # Purely radial result
-        np.testing.assert_allclose(result["r"], 1.0, atol=1e-6)
-        np.testing.assert_allclose(result["theta"], 0.0, atol=1e-6)
-        np.testing.assert_allclose(result["phi"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["r"], 1, atol=1e-6)
+        np.testing.assert_allclose(result["theta"], 0, atol=1e-6)
+        np.testing.assert_allclose(result["phi"], 0, atol=1e-6)
 
     def test_same_chart_respects_tangent_semantic_kind(self) -> None:
         """Displacement and velocity variants should follow the same basis map."""
-        v = {"r": jnp.array(5.0), "theta": jnp.array(1.0), "phi": jnp.array(2.0)}
-        at = {"r": jnp.array(3.0), "theta": jnp.array(0.5), "phi": jnp.array(0.0)}
+        v = {"r": jnp.array(5), "theta": jnp.array(1), "phi": jnp.array(2)}
+        at = {"r": jnp.array(3), "theta": jnp.array(0.5), "phi": jnp.array(0)}
 
         out_disp = cxr.cconvert(
             v, cxc.sph3d, cxr.coord_disp, cxc.sph3d, cxr.phys_disp, at=at, usys=usys
@@ -93,8 +93,8 @@ class TestCconvertTangentGeometry:
 
     def test_jit_compatible(self) -> None:
         """Cconvert with TangentGeometry is JIT-compatible."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0)}
 
         @jax.jit
         def run(v, at):
@@ -109,12 +109,12 @@ class TestCconvertTangentGeometry:
             )
 
         result = run(v, at)
-        np.testing.assert_allclose(result["r"], 1.0, atol=1e-6)
+        np.testing.assert_allclose(result["r"], 1, atol=1e-6)
 
     def test_round_trip(self) -> None:
         """Cconvert tangent round trip: cart2d → polar2d → cart2d is identity."""
-        v_cart = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
-        at_cart = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v_cart = {"x": jnp.array(1), "y": jnp.array(0)}
+        at_cart = {"x": jnp.array(1), "y": jnp.array(0)}
 
         # cart → polar
         v_polar = cxr.cconvert(
@@ -150,7 +150,7 @@ class TestCconvertAtRequired:
 
     def test_at_required_for_nonlinear_charts(self) -> None:
         """Missing `at` raises informative error for non-Cartesian charts."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0)}
         with pytest.raises((TypeError, ValueError)):
             cxr.cconvert(
                 v, cxc.cart2d, cxr.coord_disp, cxc.polar2d, cxr.coord_disp, usys=usys
