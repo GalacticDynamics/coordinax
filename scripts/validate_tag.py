@@ -133,9 +133,7 @@ def validate_tag_for_package(tag: str, package: str | None = None) -> tuple[bool
 def main() -> int:
     """Run tag validation for CI."""
     logging.basicConfig(
-        level=logging.INFO,
-        format="%(message)s",
-        handlers=[logging.StreamHandler()],
+        level=logging.INFO, format="%(message)s", handlers=[logging.StreamHandler()]
     )
 
     if len(sys.argv) < 2:

@@ -160,10 +160,7 @@ def docs(s: nox.Session, /) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--serve", action="store_true", help="Serve after building")
     parser.add_argument(
-        "-b",
-        dest="builder",
-        default="html",
-        help="Build target (default: html)",
+        "-b", dest="builder", default="html", help="Build target (default: html)"
     )
     parser.add_argument("--output-dir", dest="output_dir", default="_build")
     args, posargs = parser.parse_known_args(s.posargs)
@@ -184,14 +181,7 @@ def docs(s: nox.Session, /) -> None:
     )
 
     if args.builder == "linkcheck":
-        s.run(
-            "sphinx-build",
-            "-b",
-            "linkcheck",
-            ".",
-            "_build/linkcheck",
-            *posargs,
-        )
+        s.run("sphinx-build", "-b", "linkcheck", ".", "_build/linkcheck", *posargs)
         return
 
     shared_args = (

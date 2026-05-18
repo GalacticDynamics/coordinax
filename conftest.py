@@ -271,8 +271,7 @@ class CodeCellParser:
     def __init__(self, doctest_optionflags: int = 0) -> None:  # noqa: D107
         self.doctest_parser = DocTestStringParser(DocTestEvaluator(doctest_optionflags))
         self.codeblock_parser = myst.CodeBlockParser(
-            language="ipython3",
-            evaluator=PythonEvaluator(),
+            language="ipython3", evaluator=PythonEvaluator()
         )
 
     @staticmethod
