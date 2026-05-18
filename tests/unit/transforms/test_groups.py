@@ -39,15 +39,13 @@ def test_composed_rotate_and_translate_promotes_to_euclidean_group() -> None:
 
 def test_composed_rotate_and_scale_promotes_to_affine_group() -> None:
     """Adding a scale lifts a rigid motion into the affine group."""
-    op = cxfm.Rotate.from_euler("z", u.Q(0, "deg")) | cxfm.Scale.from_factors(
-        [2.0, 1.0, 1.0]
-    )
+    op = cxfm.Rotate.from_euler("z", u.Q(0, "deg")) | cxfm.Scale.from_factors([2, 1, 1])
     assert op.groups() == frozenset((cxfm.AffineGroup, cxfm.DiffeomorphismGroup))
 
 
 def test_composed_reflect_and_rotate_promotes_to_orthogonal_group() -> None:
     """Reflection composed with rotation stays inside the orthogonal group."""
-    op = cxfm.Reflect.from_normal([1.0, 0.0, 0.0]) | cxfm.Rotate.from_euler(
+    op = cxfm.Reflect.from_normal([1, 0, 0]) | cxfm.Rotate.from_euler(
         "z", u.Q(0, "deg")
     )
     assert op.groups() == frozenset((cxfm.OrthogonalGroup, cxfm.DiffeomorphismGroup))

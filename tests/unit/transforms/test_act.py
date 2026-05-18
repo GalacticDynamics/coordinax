@@ -641,7 +641,7 @@ class TestRotateTangentGeometryNonCartesian:
             at=at_sph,
         )
         at_sph_rot = {
-            "r": u.Q(1.0, "m"),
+            "r": u.Q(1, "m"),
             "theta": u.Q(jnp.pi / 2, "rad"),
             "phi": u.Q(jnp.pi / 2, "rad"),
         }
@@ -655,7 +655,7 @@ class TestRotateTangentGeometryNonCartesian:
             cxr.coord_vel,
             at=at_sph_rot,
         )
-        assert abs(float(v_recovered["r"].to_value("m/s")) - 1.0) < ATOL
+        assert abs(float(v_recovered["r"].to_value("m/s")) - 1) < ATOL
         assert abs(float(v_recovered["theta"].to_value("rad/s"))) < ATOL
         assert abs(float(v_recovered["phi"].to_value("rad/s"))) < ATOL
 
