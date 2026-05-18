@@ -101,7 +101,7 @@ def test_dimension_angular_acceleration_returns_acc() -> None:
 
 def test_quantity_length_returns_loc() -> None:
     """guess_semantic_kind(Quantity in meters) returns loc."""
-    result = cxr.guess_semantic_kind(u.Q(1.0, "m"))
+    result = cxr.guess_semantic_kind(u.Q(1, "m"))
     assert result == cxr.loc
 
 
@@ -114,30 +114,30 @@ def test_quantity_angle_returns_loc() -> None:
 def test_quantity_unknown_dim_raises() -> None:
     """guess_semantic_kind raises ValueError for a quantity with unknown dimension."""
     with pytest.raises(ValueError, match="Cannot infer semantic kind"):
-        cxr.guess_semantic_kind(u.Q(1.0, "s"))
+        cxr.guess_semantic_kind(u.Q(1, "s"))
 
 
 def test_quantity_speed_returns_vel() -> None:
     """guess_semantic_kind(Quantity in m/s) returns vel."""
-    result = cxr.guess_semantic_kind(u.Q(1.0, "m / s"))
+    result = cxr.guess_semantic_kind(u.Q(1, "m / s"))
     assert result == cxr.vel
 
 
 def test_quantity_angular_speed_returns_vel() -> None:
     """guess_semantic_kind(Quantity in rad/s) returns vel."""
-    result = cxr.guess_semantic_kind(u.Q(1.0, "rad / s"))
+    result = cxr.guess_semantic_kind(u.Q(1, "rad / s"))
     assert result == cxr.vel
 
 
 def test_quantity_acceleration_returns_acc() -> None:
     """guess_semantic_kind(Quantity in m/s^2) returns acc."""
-    result = cxr.guess_semantic_kind(u.Q(1.0, "m / s**2"))
+    result = cxr.guess_semantic_kind(u.Q(1, "m / s**2"))
     assert result == cxr.acc
 
 
 def test_quantity_angular_acceleration_returns_acc() -> None:
     """guess_semantic_kind(Quantity in rad/s^2) returns acc."""
-    result = cxr.guess_semantic_kind(u.Q(1.0, "rad / s**2"))
+    result = cxr.guess_semantic_kind(u.Q(1, "rad / s**2"))
     assert result == cxr.acc
 
 
@@ -147,21 +147,21 @@ def test_quantity_angular_acceleration_returns_acc() -> None:
 
 def test_cdict_cartesian_returns_loc() -> None:
     """guess_semantic_kind on a Cartesian CDict returns loc."""
-    d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+    d = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.loc
 
 
 def test_cdict_spherical_mixed_dims_returns_loc() -> None:
     """guess_semantic_kind on a spherical CDict (length + angle) returns loc."""
-    d = {"r": u.Q(1.0, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(1.0, "rad")}
+    d = {"r": u.Q(1, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(1, "rad")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.loc
 
 
 def test_cdict_pure_angle_returns_loc() -> None:
     """guess_semantic_kind on an angular CDict (lon/lat) returns loc."""
-    d = {"lon": u.Q(1.0, "deg"), "lat": u.Q(2.0, "deg")}
+    d = {"lon": u.Q(1, "deg"), "lat": u.Q(2, "deg")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.loc
 
@@ -175,47 +175,47 @@ def test_cdict_empty_raises() -> None:
 def test_cdict_unknown_dim_raises() -> None:
     """guess_semantic_kind raises ValueError for a CDict with unknown dimension."""
     with pytest.raises(ValueError, match="Cannot infer semantic kind"):
-        cxr.guess_semantic_kind({"t": u.Q(1.0, "s")})
+        cxr.guess_semantic_kind({"t": u.Q(1, "s")})
 
 
 def test_cdict_speed_returns_vel() -> None:
     """guess_semantic_kind on a speed CDict returns vel."""
-    d = {"vx": u.Q(1.0, "m / s"), "vy": u.Q(2.0, "m / s")}
+    d = {"vx": u.Q(1, "m / s"), "vy": u.Q(2, "m / s")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.vel
 
 
 def test_cdict_angular_speed_returns_vel() -> None:
     """guess_semantic_kind on an angular-speed CDict returns vel."""
-    d = {"vphi": u.Q(1.0, "rad / s"), "vtheta": u.Q(0.5, "rad / s")}
+    d = {"vphi": u.Q(1, "rad / s"), "vtheta": u.Q(0.5, "rad / s")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.vel
 
 
 def test_cdict_mixed_speed_angular_speed_returns_vel() -> None:
     """guess_semantic_kind on a mixed speed+angular-speed CDict returns vel."""
-    d = {"vr": u.Q(1.0, "m / s"), "vphi": u.Q(0.5, "rad / s")}
+    d = {"vr": u.Q(1, "m / s"), "vphi": u.Q(0.5, "rad / s")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.vel
 
 
 def test_cdict_acceleration_returns_acc() -> None:
     """guess_semantic_kind on an acceleration CDict returns acc."""
-    d = {"ax": u.Q(1.0, "m / s**2"), "ay": u.Q(2.0, "m / s**2")}
+    d = {"ax": u.Q(1, "m / s**2"), "ay": u.Q(2, "m / s**2")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.acc
 
 
 def test_cdict_angular_acceleration_returns_acc() -> None:
     """guess_semantic_kind on an angular-acceleration CDict returns acc."""
-    d = {"aphi": u.Q(1.0, "rad / s**2"), "atheta": u.Q(0.5, "rad / s**2")}
+    d = {"aphi": u.Q(1, "rad / s**2"), "atheta": u.Q(0.5, "rad / s**2")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.acc
 
 
 def test_cdict_mixed_acceleration_angular_acceleration_returns_acc() -> None:
     """guess_semantic_kind on mixed acceleration/ang-acc CDict returns acc."""
-    d = {"ar": u.Q(1.0, "m / s**2"), "aphi": u.Q(0.5, "rad / s**2")}
+    d = {"ar": u.Q(1, "m / s**2"), "aphi": u.Q(0.5, "rad / s**2")}
     result = cxr.guess_semantic_kind(d)
     assert result == cxr.acc
 
@@ -313,7 +313,7 @@ class TestGuessGeometryKind:
 
     def test_quantity_length_returns_point_geom(self) -> None:
         """guess_geometry_kind(Quantity in metres) returns point_geom."""
-        result = cxr.guess_geometry_kind(u.Q(1.0, "m"))
+        result = cxr.guess_geometry_kind(u.Q(1, "m"))
         assert result == cxr.point_geom
 
     def test_quantity_angle_returns_point_geom(self) -> None:
@@ -324,45 +324,45 @@ class TestGuessGeometryKind:
     def test_quantity_unknown_dim_raises(self) -> None:
         """Raises ValueError for a quantity with unknown dimension."""
         with pytest.raises(ValueError, match="Cannot infer geometry kind"):
-            cxr.guess_geometry_kind(u.Q(1.0, "s"))
+            cxr.guess_geometry_kind(u.Q(1, "s"))
 
     def test_quantity_speed_returns_tangent_geom(self) -> None:
         """guess_geometry_kind(Quantity in m/s) returns tangent_geom."""
-        result = cxr.guess_geometry_kind(u.Q(1.0, "m / s"))
+        result = cxr.guess_geometry_kind(u.Q(1, "m / s"))
         assert result == cxr.tangent_geom
 
     def test_quantity_angular_speed_returns_tangent_geom(self) -> None:
         """guess_geometry_kind(Quantity in rad/s) returns tangent_geom."""
-        result = cxr.guess_geometry_kind(u.Q(1.0, "rad / s"))
+        result = cxr.guess_geometry_kind(u.Q(1, "rad / s"))
         assert result == cxr.tangent_geom
 
     def test_quantity_acceleration_returns_tangent_geom(self) -> None:
         """guess_geometry_kind(Quantity in m/s^2) returns tangent_geom."""
-        result = cxr.guess_geometry_kind(u.Q(1.0, "m / s**2"))
+        result = cxr.guess_geometry_kind(u.Q(1, "m / s**2"))
         assert result == cxr.tangent_geom
 
     def test_quantity_angular_acceleration_returns_tangent_geom(self) -> None:
         """guess_geometry_kind(Quantity in rad/s^2) returns tangent_geom."""
-        result = cxr.guess_geometry_kind(u.Q(1.0, "rad / s**2"))
+        result = cxr.guess_geometry_kind(u.Q(1, "rad / s**2"))
         assert result == cxr.tangent_geom
 
     # --- CDict dispatch (no chart) ---
 
     def test_cdict_cartesian_returns_point_geom(self) -> None:
         """guess_geometry_kind on a Cartesian CDict returns point_geom."""
-        d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+        d = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.point_geom
 
     def test_cdict_spherical_mixed_dims_returns_point_geom(self) -> None:
         """On a spherical CDict (length + angle) returns point_geom."""
-        d = {"r": u.Q(1.0, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(1.0, "rad")}
+        d = {"r": u.Q(1, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(1, "rad")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.point_geom
 
     def test_cdict_pure_angle_returns_point_geom(self) -> None:
         """guess_geometry_kind on an angular CDict (lon/lat) returns point_geom."""
-        d = {"lon": u.Q(1.0, "deg"), "lat": u.Q(2.0, "deg")}
+        d = {"lon": u.Q(1, "deg"), "lat": u.Q(2, "deg")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.point_geom
 
@@ -374,35 +374,35 @@ class TestGuessGeometryKind:
     def test_cdict_unknown_dim_raises(self) -> None:
         """guess_geometry_kind raises ValueError for a CDict with unknown dimension."""
         with pytest.raises(ValueError, match="Cannot infer geometry kind"):
-            cxr.guess_geometry_kind({"t": u.Q(1.0, "s")})
+            cxr.guess_geometry_kind({"t": u.Q(1, "s")})
 
     def test_cdict_speed_returns_tangent_geom(self) -> None:
         """guess_geometry_kind on a speed CDict returns tangent_geom."""
-        d = {"vx": u.Q(1.0, "m / s"), "vy": u.Q(2.0, "m / s")}
+        d = {"vx": u.Q(1, "m / s"), "vy": u.Q(2, "m / s")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.tangent_geom
 
     def test_cdict_angular_speed_returns_tangent_geom(self) -> None:
         """guess_geometry_kind on an angular-speed CDict returns tangent_geom."""
-        d = {"vphi": u.Q(1.0, "rad / s"), "vtheta": u.Q(0.5, "rad / s")}
+        d = {"vphi": u.Q(1, "rad / s"), "vtheta": u.Q(0.5, "rad / s")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.tangent_geom
 
     def test_cdict_mixed_speed_angular_speed_returns_tangent_geom(self) -> None:
         """guess_geometry_kind on mixed speed/angular-speed CDict."""
-        d = {"vr": u.Q(1.0, "m / s"), "vphi": u.Q(0.5, "rad / s")}
+        d = {"vr": u.Q(1, "m / s"), "vphi": u.Q(0.5, "rad / s")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.tangent_geom
 
     def test_cdict_acceleration_returns_tangent_geom(self) -> None:
         """guess_geometry_kind on an acceleration CDict returns tangent_geom."""
-        d = {"ax": u.Q(1.0, "m / s**2"), "ay": u.Q(2.0, "m / s**2")}
+        d = {"ax": u.Q(1, "m / s**2"), "ay": u.Q(2, "m / s**2")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.tangent_geom
 
     def test_cdict_angular_acceleration_returns_tangent_geom(self) -> None:
         """guess_geometry_kind on an angular-acceleration CDict returns tangent_geom."""
-        d = {"aphi": u.Q(1.0, "rad / s**2"), "atheta": u.Q(0.5, "rad / s**2")}
+        d = {"aphi": u.Q(1, "rad / s**2"), "atheta": u.Q(0.5, "rad / s**2")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.tangent_geom
 
@@ -410,7 +410,7 @@ class TestGuessGeometryKind:
         self,
     ) -> None:
         """guess_geometry_kind on mixed acceleration/ang-acc CDict."""
-        d = {"ar": u.Q(1.0, "m / s**2"), "aphi": u.Q(0.5, "rad / s**2")}
+        d = {"ar": u.Q(1, "m / s**2"), "aphi": u.Q(0.5, "rad / s**2")}
         result = cxr.guess_geometry_kind(d)
         assert result == cxr.tangent_geom
 
@@ -418,13 +418,13 @@ class TestGuessGeometryKind:
 
     def test_cdict_with_chart_returns_point_geom(self) -> None:
         """guess_geometry_kind(CDict, chart) with matching keys returns point_geom."""
-        d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+        d = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
         result = cxr.guess_geometry_kind(d, cxc.cart2d)
         assert result == cxr.point_geom
 
     def test_cdict_with_chart_wrong_keys_raises(self) -> None:
         """Raises when CDict keys don't match chart."""
-        d = {"a": u.Q(1.0, "m"), "b": u.Q(2.0, "m")}
+        d = {"a": u.Q(1, "m"), "b": u.Q(2, "m")}
         with pytest.raises(ValueError, match="Data keys do not match chart components"):
             cxr.guess_geometry_kind(d, cxc.cart2d)
 
@@ -432,12 +432,8 @@ class TestGuessGeometryKind:
 
     def test_cdict_prolate_spheroidal_returns_point_geom(self) -> None:
         """On prolate-spheroidal CDict {area, angle} returns point_geom."""
-        d = {
-            "mu": u.Q(1.0, "km2"),
-            "nu": u.Q(0.5, "km2"),
-            "phi": u.Q(1.0, "deg"),
-        }
-        chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1.0, "km"))
+        d = {"mu": u.Q(1, "km2"), "nu": u.Q(0.5, "km2"), "phi": u.Q(1, "deg")}
+        chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1, "km"))
         result = cxr.guess_geometry_kind(d, chart)
         assert result == cxr.point_geom
 
@@ -496,12 +492,12 @@ class TestGuessRep:
 
     def test_quantity_length_returns_point(self) -> None:
         """guess_rep(Quantity in metres) returns point."""
-        result = cxr.guess_rep(u.Q(1.0, "m"))
+        result = cxr.guess_rep(u.Q(1, "m"))
         assert result == cxr.point
 
     def test_cdict_cartesian_returns_point(self) -> None:
         """guess_rep on a Cartesian CDict returns point."""
-        d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+        d = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
         result = cxr.guess_rep(d)
         assert result == cxr.point
 
@@ -509,7 +505,7 @@ class TestGuessRep:
 
     def test_cdict_with_chart_returns_point(self) -> None:
         """guess_rep(CDict, chart) returns point."""
-        d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+        d = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
         result = cxr.guess_rep(d, cxc.cart2d)
         assert result == cxr.point
 
@@ -541,26 +537,26 @@ class TestGuessRep:
 
     def test_quantity_speed_returns_tangent_vel(self) -> None:
         """guess_rep(Quantity in m/s) returns TangentGeometry + Velocity."""
-        result = cxr.guess_rep(u.Q(1.0, "m / s"))
+        result = cxr.guess_rep(u.Q(1, "m / s"))
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.vel
 
     def test_quantity_angular_speed_returns_tangent_vel(self) -> None:
         """guess_rep(Quantity in rad/s) returns TangentGeometry + Velocity."""
-        result = cxr.guess_rep(u.Q(1.0, "rad / s"))
+        result = cxr.guess_rep(u.Q(1, "rad / s"))
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.vel
 
     def test_cdict_speed_returns_tangent_vel(self) -> None:
         """guess_rep on a speed CDict returns TangentGeometry + Velocity."""
-        d = {"vx": u.Q(1.0, "m / s"), "vy": u.Q(2.0, "m / s")}
+        d = {"vx": u.Q(1, "m / s"), "vy": u.Q(2, "m / s")}
         result = cxr.guess_rep(d)
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.vel
 
     def test_cdict_mixed_speed_angular_speed_returns_tangent_vel(self) -> None:
         """guess_rep on mixed speed/angular-speed CDict returns tangent vel."""
-        d = {"vr": u.Q(1.0, "m / s"), "vphi": u.Q(0.5, "rad / s")}
+        d = {"vr": u.Q(1, "m / s"), "vphi": u.Q(0.5, "rad / s")}
         result = cxr.guess_rep(d)
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.vel
@@ -601,19 +597,19 @@ class TestGuessRep:
 
     def test_quantity_acceleration_returns_tangent_acc(self) -> None:
         """guess_rep(Quantity in m/s^2) returns TangentGeometry + Acceleration."""
-        result = cxr.guess_rep(u.Q(1.0, "m / s**2"))
+        result = cxr.guess_rep(u.Q(1, "m / s**2"))
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.acc
 
     def test_quantity_angular_acceleration_returns_tangent_acc(self) -> None:
         """guess_rep(Quantity in rad/s^2) returns TangentGeometry + Acceleration."""
-        result = cxr.guess_rep(u.Q(1.0, "rad / s**2"))
+        result = cxr.guess_rep(u.Q(1, "rad / s**2"))
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.acc
 
     def test_cdict_acceleration_returns_tangent_acc(self) -> None:
         """guess_rep on an acceleration CDict returns TangentGeometry + Acceleration."""
-        d = {"ax": u.Q(1.0, "m / s**2"), "ay": u.Q(2.0, "m / s**2")}
+        d = {"ax": u.Q(1, "m / s**2"), "ay": u.Q(2, "m / s**2")}
         result = cxr.guess_rep(d)
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.acc
@@ -622,7 +618,7 @@ class TestGuessRep:
         self,
     ) -> None:
         """guess_rep on mixed acceleration/ang-acc CDict returns tangent acc."""
-        d = {"ar": u.Q(1.0, "m / s**2"), "aphi": u.Q(0.5, "rad / s**2")}
+        d = {"ar": u.Q(1, "m / s**2"), "aphi": u.Q(0.5, "rad / s**2")}
         result = cxr.guess_rep(d)
         assert result.geom_kind == cxr.TangentGeometry()
         assert result.semantic_kind == cxr.acc

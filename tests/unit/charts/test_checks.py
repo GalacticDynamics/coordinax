@@ -84,12 +84,7 @@ class TestStrictlyPositive:
     """Tests for strictly_positive check."""
 
     # Use 0.0625 (1/16) which is exactly representable in float32
-    @given(
-        ust.quantities(
-            shape=(),
-            elements=float32s(min_value=0.0625, max_value=1e9),
-        )
-    )
+    @given(ust.quantities(shape=(), elements=float32s(min_value=0.0625, max_value=1e9)))
     @settings(deadline=None)
     def test_positive_values_pass(self, x: u.AbstractQuantity) -> None:
         """Positive values should pass through unchanged."""

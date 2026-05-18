@@ -60,7 +60,7 @@ def test_dimension_unknown_raises() -> None:
 
 def test_quantity_length_returns_no_basis() -> None:
     """guess_basis_kind(Quantity in meters) returns no_basis."""
-    result = cxr.guess_basis_kind(u.Q(1.0, "m"))
+    result = cxr.guess_basis_kind(u.Q(1, "m"))
     assert result == cxr.no_basis
 
 
@@ -73,7 +73,7 @@ def test_quantity_angle_returns_no_basis() -> None:
 def test_quantity_unknown_dim_raises() -> None:
     """guess_basis_kind raises ValueError for a quantity with unknown dimension."""
     with pytest.raises(ValueError, match="Cannot infer basis kind"):
-        cxr.guess_basis_kind(u.Q(1.0, "s"))
+        cxr.guess_basis_kind(u.Q(1, "s"))
 
 
 # ===================================================================
@@ -82,21 +82,21 @@ def test_quantity_unknown_dim_raises() -> None:
 
 def test_cdict_cartesian_returns_no_basis() -> None:
     """guess_basis_kind({'x': Q(m), 'y': Q(m)}) returns no_basis."""
-    d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+    d = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
     result = cxr.guess_basis_kind(d)
     assert result == cxr.no_basis
 
 
 def test_cdict_cartesian3d_returns_no_basis() -> None:
     """guess_basis_kind({'x': Q(m), 'y': Q(m), 'z': Q(m)}) returns no_basis."""
-    d = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+    d = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
     result = cxr.guess_basis_kind(d)
     assert result == cxr.no_basis
 
 
 def test_cdict_angular_returns_no_basis() -> None:
     """guess_basis_kind({'lon': Q(deg), 'lat': Q(deg)}) returns no_basis."""
-    d = {"lon": u.Q(1.0, "deg"), "lat": u.Q(2.0, "deg")}
+    d = {"lon": u.Q(1, "deg"), "lat": u.Q(2, "deg")}
     result = cxr.guess_basis_kind(d)
     assert result == cxr.no_basis
 

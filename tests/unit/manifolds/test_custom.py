@@ -16,8 +16,7 @@ class TestCustomAtlas:
     def test_supports_registered_chart_classes_only(self) -> None:
         """Supports returns True only for explicitly registered chart classes."""
         atlas = cxm.CustomAtlas(
-            charts=(cxc.Cart2D, cxc.Polar2D),
-            chart_default=cxc.cart2d,
+            charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d
         )
 
         assert isinstance(atlas.charts, tuple)
@@ -30,25 +29,20 @@ class TestCustomAtlas:
         """Constructing with duplicate chart classes raises ValueError."""
         with pytest.raises(ValueError, match="must be unique"):
             _ = cxm.CustomAtlas(
-                charts=(cxc.Cart2D, cxc.Cart2D),
-                chart_default=cxc.cart2d,
+                charts=(cxc.Cart2D, cxc.Cart2D), chart_default=cxc.cart2d
             )
 
     def test_raises_when_registered_chart_ndim_mismatch(self) -> None:
         """Constructing with mixed chart dimensions raises ValueError."""
         with pytest.raises(ValueError, match="has ndim=3 but expected 2"):
             _ = cxm.CustomAtlas(
-                charts=(cxc.Cart2D, cxc.Cart3D),
-                chart_default=cxc.cart2d,
+                charts=(cxc.Cart2D, cxc.Cart3D), chart_default=cxc.cart2d
             )
 
     def test_raises_when_default_chart_not_registered(self) -> None:
         """Default chart must be included in the registered chart set."""
         with pytest.raises(ValueError, match="Default chart class"):
-            _ = cxm.CustomAtlas(
-                charts=(cxc.Polar2D,),
-                chart_default=cxc.cart2d,
-            )
+            _ = cxm.CustomAtlas(charts=(cxc.Polar2D,), chart_default=cxc.cart2d)
 
 
 class TestCustomManifold:
@@ -57,8 +51,7 @@ class TestCustomManifold:
     def test_forwards_ndim_and_default_chart(self) -> None:
         """Manifold ndim and default chart are forwarded from atlas."""
         atlas = cxm.CustomAtlas(
-            charts=(cxc.Cart2D, cxc.Polar2D),
-            chart_default=cxc.cart2d,
+            charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d
         )
         manifold = cxm.CustomManifold(atlas, metric=cxm.FlatMetric(2))
 
@@ -68,8 +61,7 @@ class TestCustomManifold:
     def test_has_chart_and_check_chart(self) -> None:
         """Chart membership and validation are delegated to the atlas."""
         atlas = cxm.CustomAtlas(
-            charts=(cxc.Cart2D, cxc.Polar2D),
-            chart_default=cxc.cart2d,
+            charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d
         )
         manifold = cxm.CustomManifold(atlas, metric=cxm.FlatMetric(2))
 
@@ -100,7 +92,7 @@ def test_custom_manifold_property_transition(M: cxm.CustomManifold) -> None:
     """Generated 2D custom manifolds support cart2d->polar2d transitions."""
     # Fixed input point keeps this property focused on manifold/chart validity,
     # not numeric fuzz from random values.
-    x = {"x": 1.0, "y": 1.0}
+    x = {"x": 1, "y": 1}
     # The required chart classes ensure this transition path is defined.
     got = cxc.pt_map(x, cxc.cart2d, cxc.polar2d)
     # Transition result schema should match polar chart component keys.

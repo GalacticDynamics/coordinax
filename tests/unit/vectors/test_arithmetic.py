@@ -55,8 +55,8 @@ class TestCartesianAdd:
 
     def test_jit(self) -> None:
         f = jax.jit(lambda a, b: a + b)
-        result = f(_cart_vec(1.0, 2.0, 3.0), _cart_vec(4.0, 5.0, 6.0))
-        assert result["x"] == u.Q(5.0, "m")
+        result = f(_cart_vec(1, 2, 3), _cart_vec(4, 5, 6))
+        assert result["x"] == u.Q(5, "m")
 
     def test_cx_add(self) -> None:
         result = cxr.add(_cart_vec(1, 2, 3), _cart_vec(4, 5, 6))
@@ -83,16 +83,16 @@ class TestCartesianSubtract:
         assert result.rep == cxr.point
 
     def test_subtract_self_is_zero(self) -> None:
-        v = _cart_vec(4.0, 5.0, 6.0)
+        v = _cart_vec(4, 5, 6)
         result = v - v
-        assert result["x"] == u.Q(0.0, "m")
-        assert result["y"] == u.Q(0.0, "m")
-        assert result["z"] == u.Q(0.0, "m")
+        assert result["x"] == u.Q(0, "m")
+        assert result["y"] == u.Q(0, "m")
+        assert result["z"] == u.Q(0, "m")
 
     def test_jit(self) -> None:
         f = jax.jit(lambda a, b: a - b)
-        result = f(_cart_vec(4.0, 5.0, 6.0), _cart_vec(1.0, 2.0, 3.0))
-        assert result["x"] == u.Q(3.0, "m")
+        result = f(_cart_vec(4, 5, 6), _cart_vec(1, 2, 3))
+        assert result["x"] == u.Q(3, "m")
 
     def test_cx_subtract(self) -> None:
         result = cxr.subtract(_cart_vec(4, 5, 6), _cart_vec(1, 2, 3))
@@ -108,16 +108,16 @@ class TestSphericalAdd:
     """Spherical + Spherical uses Cartesian round-trip."""
 
     def test_chart_preserved(self) -> None:
-        result = _sph_vec(1.0, 0.3, 0.5) + _sph_vec(0.5, 0.1, 0.2)
+        result = _sph_vec(1, 0.3, 0.5) + _sph_vec(0.5, 0.1, 0.2)
         assert result.chart == cxc.sph3d
 
     def test_rep_preserved(self) -> None:
-        result = _sph_vec(1.0, 0.3, 0.5) + _sph_vec(0.5, 0.1, 0.2)
+        result = _sph_vec(1, 0.3, 0.5) + _sph_vec(0.5, 0.1, 0.2)
         assert result.rep == cxr.point
 
     def test_add_is_not_componentwise(self) -> None:
         """Sph add must NOT be component-wise (it's a Cartesian round-trip)."""
-        s1 = _sph_vec(1.0, 0.3, 0.5)
+        s1 = _sph_vec(1, 0.3, 0.5)
         s2 = _sph_vec(0.5, 0.1, 0.2)
         result = s1 + s2
 
@@ -126,7 +126,7 @@ class TestSphericalAdd:
 
     def test_jit(self) -> None:
         f = jax.jit(lambda a, b: a + b)
-        result = f(_sph_vec(1.0, 0.3, 0.5), _sph_vec(0.5, 0.1, 0.2))
+        result = f(_sph_vec(1, 0.3, 0.5), _sph_vec(0.5, 0.1, 0.2))
         assert result.chart == cxc.sph3d
 
 
@@ -134,23 +134,23 @@ class TestSphericalSubtract:
     """Spherical - Spherical uses Cartesian round-trip."""
 
     def test_chart_preserved(self) -> None:
-        result = _sph_vec(1.0, 0.3, 0.5) - _sph_vec(0.5, 0.1, 0.2)
+        result = _sph_vec(1, 0.3, 0.5) - _sph_vec(0.5, 0.1, 0.2)
         assert result.chart == cxc.sph3d
 
     def test_rep_preserved(self) -> None:
-        result = _sph_vec(1.0, 0.3, 0.5) - _sph_vec(0.5, 0.1, 0.2)
+        result = _sph_vec(1, 0.3, 0.5) - _sph_vec(0.5, 0.1, 0.2)
         assert result.rep == cxr.point
 
     def test_subtract_self_is_near_zero(self) -> None:
         """Sph subtract self should give r ≈ 0 (Cartesian round-trip)."""
-        s = _sph_vec(1.0, 0.5, 0.5)
+        s = _sph_vec(1, 0.5, 0.5)
         result = s - s
         # r should be ~0 after Cartesian round-trip
-        assert float(result["r"].value) == pytest.approx(0.0, abs=1e-6)
+        assert float(result["r"].value) == pytest.approx(0, abs=1e-6)
 
     def test_subtract_is_not_componentwise(self) -> None:
         """Sph subtract must NOT be component-wise."""
-        s1 = _sph_vec(1.0, 0.3, 0.5)
+        s1 = _sph_vec(1, 0.3, 0.5)
         s2 = _sph_vec(0.5, 0.1, 0.2)
         result = s1 - s2
 
@@ -159,7 +159,7 @@ class TestSphericalSubtract:
 
     def test_jit(self) -> None:
         f = jax.jit(lambda a, b: a - b)
-        result = f(_sph_vec(1.0, 0.3, 0.5), _sph_vec(0.5, 0.1, 0.2))
+        result = f(_sph_vec(1, 0.3, 0.5), _sph_vec(0.5, 0.1, 0.2))
         assert result.chart == cxc.sph3d
 
 
@@ -172,26 +172,26 @@ class TestCrossChart:
     """Cross-chart arithmetic: result keeps lhs chart."""
 
     def test_cart_minus_sph_keeps_cart(self) -> None:
-        c = _cart_vec(1.0, 2.0, 3.0)
-        s = _sph_vec(1.0, 0.3, 0.5)
+        c = _cart_vec(1, 2, 3)
+        s = _sph_vec(1, 0.3, 0.5)
         result = c - s
         assert result.chart == cxc.cart3d
 
     def test_cart_plus_sph_keeps_cart(self) -> None:
-        c = _cart_vec(1.0, 2.0, 3.0)
-        s = _sph_vec(1.0, 0.3, 0.5)
+        c = _cart_vec(1, 2, 3)
+        s = _sph_vec(1, 0.3, 0.5)
         result = c + s
         assert result.chart == cxc.cart3d
 
     def test_sph_minus_cart_keeps_sph(self) -> None:
-        c = _cart_vec(1.0, 2.0, 3.0)
-        s = _sph_vec(1.0, 0.3, 0.5)
+        c = _cart_vec(1, 2, 3)
+        s = _sph_vec(1, 0.3, 0.5)
         result = s - c
         assert result.chart == cxc.sph3d
 
     def test_sph_plus_cart_keeps_sph(self) -> None:
-        c = _cart_vec(1.0, 2.0, 3.0)
-        s = _sph_vec(1.0, 0.3, 0.5)
+        c = _cart_vec(1, 2, 3)
+        s = _sph_vec(1, 0.3, 0.5)
         result = s + c
         assert result.chart == cxc.sph3d
 
@@ -232,31 +232,31 @@ class TestTangentAdd:
     """Tangent + Tangent: component-wise (linear space, no round-trip)."""
 
     def test_basic(self) -> None:
-        v1 = _cart_tangent(1.0, 2.0, 3.0)
-        v2 = _cart_tangent(4.0, 5.0, 6.0)
+        v1 = _cart_tangent(1, 2, 3)
+        v2 = _cart_tangent(4, 5, 6)
         result = v1 + v2
-        assert result["x"] == u.Q(5.0, "m/s")
-        assert result["y"] == u.Q(7.0, "m/s")
-        assert result["z"] == u.Q(9.0, "m/s")
+        assert result["x"] == u.Q(5, "m/s")
+        assert result["y"] == u.Q(7, "m/s")
+        assert result["z"] == u.Q(9, "m/s")
 
     def test_chart_preserved(self) -> None:
-        result = _cart_tangent(1.0, 2.0, 3.0) + _cart_tangent(4.0, 5.0, 6.0)
+        result = _cart_tangent(1, 2, 3) + _cart_tangent(4, 5, 6)
         assert result.chart == cxc.cart3d
 
     def test_rep_preserved(self) -> None:
-        result = _cart_tangent(1.0, 2.0, 3.0) + _cart_tangent(4.0, 5.0, 6.0)
+        result = _cart_tangent(1, 2, 3) + _cart_tangent(4, 5, 6)
         assert result.rep == cxr.coord_vel
 
     def test_jit(self) -> None:
         f = jax.jit(lambda a, b: a + b)
-        result = f(_cart_tangent(1.0, 2.0, 3.0), _cart_tangent(4.0, 5.0, 6.0))
-        assert result["x"] == u.Q(5.0, "m/s")
+        result = f(_cart_tangent(1, 2, 3), _cart_tangent(4, 5, 6))
+        assert result["x"] == u.Q(5, "m/s")
 
     def test_cx_add(self) -> None:
-        v1 = _cart_tangent(1.0, 2.0, 3.0)
-        v2 = _cart_tangent(4.0, 5.0, 6.0)
+        v1 = _cart_tangent(1, 2, 3)
+        v2 = _cart_tangent(4, 5, 6)
         result = cxr.add(v1, v2)
-        assert result["x"] == u.Q(5.0, "m/s")
+        assert result["x"] == u.Q(5, "m/s")
 
 
 # ===================================================================
@@ -268,38 +268,38 @@ class TestTangentSubtract:
     """Tangent - Tangent: component-wise (linear space)."""
 
     def test_basic(self) -> None:
-        v1 = _cart_tangent(4.0, 5.0, 6.0)
-        v2 = _cart_tangent(1.0, 2.0, 3.0)
+        v1 = _cart_tangent(4, 5, 6)
+        v2 = _cart_tangent(1, 2, 3)
         result = v1 - v2
-        assert result["x"] == u.Q(3.0, "m/s")
-        assert result["y"] == u.Q(3.0, "m/s")
-        assert result["z"] == u.Q(3.0, "m/s")
+        assert result["x"] == u.Q(3, "m/s")
+        assert result["y"] == u.Q(3, "m/s")
+        assert result["z"] == u.Q(3, "m/s")
 
     def test_subtract_self_is_zero(self) -> None:
-        v = _cart_tangent(1.0, 2.0, 3.0)
+        v = _cart_tangent(1, 2, 3)
         result = v - v
-        assert result["x"] == u.Q(0.0, "m/s")
-        assert result["y"] == u.Q(0.0, "m/s")
-        assert result["z"] == u.Q(0.0, "m/s")
+        assert result["x"] == u.Q(0, "m/s")
+        assert result["y"] == u.Q(0, "m/s")
+        assert result["z"] == u.Q(0, "m/s")
 
     def test_chart_preserved(self) -> None:
-        result = _cart_tangent(4.0, 5.0, 6.0) - _cart_tangent(1.0, 2.0, 3.0)
+        result = _cart_tangent(4, 5, 6) - _cart_tangent(1, 2, 3)
         assert result.chart == cxc.cart3d
 
     def test_rep_preserved(self) -> None:
-        result = _cart_tangent(4.0, 5.0, 6.0) - _cart_tangent(1.0, 2.0, 3.0)
+        result = _cart_tangent(4, 5, 6) - _cart_tangent(1, 2, 3)
         assert result.rep == cxr.coord_vel
 
     def test_jit(self) -> None:
         f = jax.jit(lambda a, b: a - b)
-        result = f(_cart_tangent(4.0, 5.0, 6.0), _cart_tangent(1.0, 2.0, 3.0))
-        assert result["x"] == u.Q(3.0, "m/s")
+        result = f(_cart_tangent(4, 5, 6), _cart_tangent(1, 2, 3))
+        assert result["x"] == u.Q(3, "m/s")
 
     def test_cx_subtract(self) -> None:
-        v1 = _cart_tangent(4.0, 5.0, 6.0)
-        v2 = _cart_tangent(1.0, 2.0, 3.0)
+        v1 = _cart_tangent(4, 5, 6)
+        v2 = _cart_tangent(1, 2, 3)
         result = cxr.subtract(v1, v2)
-        assert result["x"] == u.Q(3.0, "m/s")
+        assert result["x"] == u.Q(3, "m/s")
 
 
 # ===================================================================
@@ -311,29 +311,29 @@ class TestTangentNeg:
     """Unary negation of a Tangent is component-wise."""
 
     def test_basic(self) -> None:
-        v = _cart_tangent(1.0, 2.0, 3.0)
+        v = _cart_tangent(1, 2, 3)
         result = -v
-        assert result["x"] == u.Q(-1.0, "m/s")
-        assert result["y"] == u.Q(-2.0, "m/s")
-        assert result["z"] == u.Q(-3.0, "m/s")
+        assert result["x"] == u.Q(-1, "m/s")
+        assert result["y"] == u.Q(-2, "m/s")
+        assert result["z"] == u.Q(-3, "m/s")
 
     def test_chart_preserved(self) -> None:
-        result = -_cart_tangent(1.0, 2.0, 3.0)
+        result = -_cart_tangent(1, 2, 3)
         assert result.chart == cxc.cart3d
 
     def test_rep_preserved(self) -> None:
-        result = -_cart_tangent(1.0, 2.0, 3.0)
+        result = -_cart_tangent(1, 2, 3)
         assert result.rep == cxr.coord_vel
 
     def test_double_neg_identity(self) -> None:
-        v = _cart_tangent(1.0, 2.0, 3.0)
+        v = _cart_tangent(1, 2, 3)
         neg_v = -v
         assert (-neg_v)["x"] == v["x"]
 
     def test_jit(self) -> None:
         f = jax.jit(lambda a: -a)
-        result = f(_cart_tangent(1.0, 2.0, 3.0))
-        assert result["x"] == u.Q(-1.0, "m/s")
+        result = f(_cart_tangent(1, 2, 3))
+        assert result["x"] == u.Q(-1, "m/s")
 
 
 # ===================================================================
@@ -345,60 +345,60 @@ class TestTangentScalarMul:
     """Scalar * Tangent and Tangent * scalar."""
 
     def test_scalar_times_tangent(self) -> None:
-        v = _cart_tangent(1.0, 2.0, 3.0)
-        result = 2.0 * v
-        assert result["x"] == u.Q(2.0, "m/s")
-        assert result["y"] == u.Q(4.0, "m/s")
-        assert result["z"] == u.Q(6.0, "m/s")
+        v = _cart_tangent(1, 2, 3)
+        result = 2 * v
+        assert result["x"] == u.Q(2, "m/s")
+        assert result["y"] == u.Q(4, "m/s")
+        assert result["z"] == u.Q(6, "m/s")
 
     def test_tangent_times_scalar(self) -> None:
-        v = _cart_tangent(1.0, 2.0, 3.0)
-        result = v * 3.0
-        assert result["x"] == u.Q(3.0, "m/s")
-        assert result["y"] == u.Q(6.0, "m/s")
-        assert result["z"] == u.Q(9.0, "m/s")
+        v = _cart_tangent(1, 2, 3)
+        result = v * 3
+        assert result["x"] == u.Q(3, "m/s")
+        assert result["y"] == u.Q(6, "m/s")
+        assert result["z"] == u.Q(9, "m/s")
 
     def test_chart_preserved(self) -> None:
-        result = 2.0 * _cart_tangent(1.0, 2.0, 3.0)
+        result = 2 * _cart_tangent(1, 2, 3)
         assert result.chart == cxc.cart3d
 
     def test_rep_preserved(self) -> None:
-        result = 2.0 * _cart_tangent(1.0, 2.0, 3.0)
+        result = 2 * _cart_tangent(1, 2, 3)
         assert result.rep == cxr.coord_vel
 
     def test_jit_scalar_times_tangent(self) -> None:
         f = jax.jit(lambda s, v: s * v)
-        result = f(2.0, _cart_tangent(1.0, 2.0, 3.0))
-        assert result["x"] == u.Q(2.0, "m/s")
+        result = f(2, _cart_tangent(1, 2, 3))
+        assert result["x"] == u.Q(2, "m/s")
 
     def test_jit_tangent_times_scalar(self) -> None:
         f = jax.jit(lambda v, s: v * s)
-        result = f(_cart_tangent(1.0, 2.0, 3.0), 3.0)
-        assert result["x"] == u.Q(3.0, "m/s")
+        result = f(_cart_tangent(1, 2, 3), 3)
+        assert result["x"] == u.Q(3, "m/s")
 
 
 class TestTangentScalarDiv:
     """Tangent / scalar."""
 
     def test_basic(self) -> None:
-        v = _cart_tangent(2.0, 4.0, 6.0)
-        result = v / 2.0
-        assert result["x"] == u.Q(1.0, "m/s")
-        assert result["y"] == u.Q(2.0, "m/s")
-        assert result["z"] == u.Q(3.0, "m/s")
+        v = _cart_tangent(2, 4, 6)
+        result = v / 2
+        assert result["x"] == u.Q(1, "m/s")
+        assert result["y"] == u.Q(2, "m/s")
+        assert result["z"] == u.Q(3, "m/s")
 
     def test_chart_preserved(self) -> None:
-        result = _cart_tangent(2.0, 4.0, 6.0) / 2.0
+        result = _cart_tangent(2, 4, 6) / 2
         assert result.chart == cxc.cart3d
 
     def test_rep_preserved(self) -> None:
-        result = _cart_tangent(2.0, 4.0, 6.0) / 2.0
+        result = _cart_tangent(2, 4, 6) / 2
         assert result.rep == cxr.coord_vel
 
     def test_jit(self) -> None:
         f = jax.jit(lambda v, s: v / s)
-        result = f(_cart_tangent(2.0, 4.0, 6.0), 2.0)
-        assert result["x"] == u.Q(1.0, "m/s")
+        result = f(_cart_tangent(2, 4, 6), 2)
+        assert result["x"] == u.Q(1, "m/s")
 
 
 # ===================================================================
@@ -410,9 +410,9 @@ class TestTangentMismatchedRep:
     """Adding/subtracting Tangents with different reps raises ValueError."""
 
     def _vel_acc(self) -> tuple:
-        vel = _cart_tangent(1.0, 2.0, 3.0)  # coord_vel semantic
+        vel = _cart_tangent(1, 2, 3)  # coord_vel semantic
         acc = cx.Tangent.from_(
-            {"x": u.Q(1.0, "m/s2"), "y": u.Q(0.0, "m/s2"), "z": u.Q(0.0, "m/s2")},
+            {"x": u.Q(1, "m/s2"), "y": u.Q(0, "m/s2"), "z": u.Q(0, "m/s2")},
             cxc.cart3d,
             cxr.coord_acc,
         )
@@ -448,9 +448,9 @@ class TestCoordinateBroadcast:
     """broadcast_in_dim on Coordinate must propagate to point and all tangents."""
 
     def _make_coord(self) -> cx.Coordinate:
-        point = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        point = cx.Point.from_([1, 0, 0], "m")
         vel = cx.Tangent.from_(
-            {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+            {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")},
             cxc.cart3d,
             cxr.coord_vel,
         )
@@ -470,16 +470,16 @@ class TestCoordinateBroadcast:
         pv = self._make_coord()
         f = jax.jit(lambda x: x)
         result = f(pv)
-        assert result.point["x"] == u.Q(1.0, "m")
+        assert result.point["x"] == u.Q(1, "m")
 
 
 class TestCoordinateConvertElementType:
     """convert_element_type on Coordinate must propagate to point and all tangents."""
 
     def _make_coord(self) -> cx.Coordinate:
-        point = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        point = cx.Point.from_([1, 0, 0], "m")
         vel = cx.Tangent.from_(
-            {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+            {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")},
             cxc.cart3d,
             cxr.coord_vel,
         )
@@ -494,4 +494,4 @@ class TestCoordinateConvertElementType:
         pv = self._make_coord()
         f = jax.jit(lambda x: x)
         result = f(pv)
-        assert result.point["x"] == u.Q(1.0, "m")
+        assert result.point["x"] == u.Q(1, "m")

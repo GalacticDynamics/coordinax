@@ -79,10 +79,7 @@ def distances(
     # Generate the Distance quantity
     return draw(  # ty: ignore[invalid-return-type]
         ust.quantities(
-            unit,
-            quantity_cls=cxd.Distance,
-            check_negative=check_negative,
-            **kwargs,
+            unit, quantity_cls=cxd.Distance, check_negative=check_negative, **kwargs
         )
     )
 

@@ -15,7 +15,7 @@ from coordinax.internal import CDict
 @pytest.fixture
 def cart_delta() -> CDict:
     """A sample delta vector in Cartesian coordinates."""
-    return {"x": jnp.array(1.0), "y": jnp.array(2.0), "z": jnp.array(3.0)}
+    return {"x": jnp.array(1), "y": jnp.array(2), "z": jnp.array(3)}
 
 
 @pytest.fixture
@@ -39,19 +39,19 @@ def translate_acc(cart_delta) -> cxfm.Translate:
 @pytest.fixture
 def point_cdict() -> CDict:
     """A sample point in Cartesian coordinates."""
-    return {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+    return {"x": jnp.array(0), "y": jnp.array(0), "z": jnp.array(0)}
 
 
 @pytest.fixture
 def vel_cdict() -> CDict:
     """A sample velocity vector in Cartesian coordinates."""
-    return {"x": jnp.array(10.0), "y": jnp.array(20.0), "z": jnp.array(30.0)}
+    return {"x": jnp.array(10), "y": jnp.array(20), "z": jnp.array(30)}
 
 
 @pytest.fixture
 def disp_cdict() -> CDict:
     """A sample displacement vector in Cartesian coordinates."""
-    return {"x": jnp.array(5.0), "y": jnp.array(6.0), "z": jnp.array(7.0)}
+    return {"x": jnp.array(5), "y": jnp.array(6), "z": jnp.array(7)}
 
 
 @pytest.fixture
@@ -198,11 +198,7 @@ class TestTranslateVelJAXCompatibility:
             assert jnp.allclose(result[k], vel_cdict[k] + translate_vel.delta[k])
 
     def test_vmap_velocity_semantic(self, translate_vel):
-        batch = {
-            "x": jnp.ones(4) * 10.0,
-            "y": jnp.ones(4) * 20.0,
-            "z": jnp.ones(4) * 30.0,
-        }
+        batch = {"x": jnp.ones(4) * 10, "y": jnp.ones(4) * 20, "z": jnp.ones(4) * 30}
         result = jax.vmap(
             lambda v: cxfm.act(translate_vel, None, v, cxc.cart3d, cxr.coord_vel)
         )(batch)
@@ -226,7 +222,7 @@ class TestTranslateVelRoundtrip:
 
     def test_point_roundtrip_with_quantity(self):
         shift = cxfm.Translate.from_([1, 2, 3], "km")
-        x = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+        x = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
         shifted = cxfm.act(shift, None, x, cxc.cart3d, cxr.point)
         restored = cxfm.act(shift.inverse, None, shifted, cxc.cart3d, cxr.point)
         for k, v in x.items():
@@ -280,15 +276,11 @@ class TestTranslateDisplacementNonCartesianDelta:
         usys = u.unitsystems.si
 
         # delta expressed in spherical 3d chart (with units)
-        sph_delta = {
-            "r": u.Q(1.0, "km"),
-            "theta": u.Q(0.0, "rad"),
-            "phi": u.Q(0.0, "rad"),
-        }
+        sph_delta = {"r": u.Q(1, "km"), "theta": u.Q(0, "rad"), "phi": u.Q(0, "rad")}
         t = cxfm.Translate(sph_delta, chart=cxc.sph3d)
 
         # Apply to a Cartesian point (with units)
-        x = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+        x = {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
         # Previously raised NotImplementedError; now uses tangent_map Jacobian
         result = cxfm.act(t, None, x, cxc.cart3d, cxr.point, usys=usys)
         assert "x" in result

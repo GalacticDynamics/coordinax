@@ -53,12 +53,7 @@ class TestTangentMapRoundTripCart2dPolar2d:
     Here we check this end-to-end via two successive ``tangent_map`` calls.
     """
 
-    @given(
-        r_=_pos_m,
-        theta=_any_angle_rad,
-        vx=_v_elem,
-        vy=_v_elem,
-    )
+    @given(r_=_pos_m, theta=_any_angle_rad, vx=_v_elem, vy=_v_elem)
     @settings(deadline=None)
     def test_round_trip(self, r_, theta, vx, vy) -> None:
         """Tangent map round-trip Cart2D → Polar2D → Cart2D recovers original v."""
@@ -75,18 +70,8 @@ class TestTangentMapRoundTripCart2dPolar2d:
             v_polar, cxc.polar2d, cxr.coord_disp, cxc.cart2d, at=p_polar
         )
 
-        np.testing.assert_allclose(
-            np.asarray(v_back["x"]),
-            vx,
-            atol=1e-4,
-            rtol=1e-4,
-        )
-        np.testing.assert_allclose(
-            np.asarray(v_back["y"]),
-            vy,
-            atol=1e-4,
-            rtol=1e-4,
-        )
+        np.testing.assert_allclose(np.asarray(v_back["x"]), vx, atol=1e-4, rtol=1e-4)
+        np.testing.assert_allclose(np.asarray(v_back["y"]), vy, atol=1e-4, rtol=1e-4)
 
 
 # ===========================================================================
@@ -181,8 +166,8 @@ class TestTangentMapCyl3dKnownExamples:
 
     def test_at_x1_y0_z0_identity(self) -> None:
         """At (1,0,0) the Jacobian is identity: every component is preserved."""
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        for vx, vy, vz in [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)]:
+        at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
+        for vx, vy, vz in [(1, 0, 0), (0, 1, 0), (0, 0, 1)]:
             v = {"x": jnp.array(vx), "y": jnp.array(vy), "z": jnp.array(vz)}
             result = cxr.tangent_map(
                 v, cxc.cart3d, cxr.coord_disp, cxc.cyl3d, at=at, usys=usys
@@ -193,36 +178,36 @@ class TestTangentMapCyl3dKnownExamples:
 
     def test_x_hat_at_0_1_0_maps_to_minus_phi_hat(self) -> None:
         """At (0,1,0): x̂ → (ρ=0, φ=-1, z=0) — negative azimuthal direction."""
-        at = {"x": jnp.array(0.0), "y": jnp.array(1.0), "z": jnp.array(0.0)}
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        at = {"x": jnp.array(0), "y": jnp.array(1), "z": jnp.array(0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
         result = cxr.tangent_map(
             v, cxc.cart3d, cxr.coord_disp, cxc.cyl3d, at=at, usys=usys
         )
-        np.testing.assert_allclose(result["rho"], 0.0, atol=1e-6)
-        np.testing.assert_allclose(result["phi"], -1.0, atol=1e-6)
-        np.testing.assert_allclose(result["z"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["rho"], 0, atol=1e-6)
+        np.testing.assert_allclose(result["phi"], -1, atol=1e-6)
+        np.testing.assert_allclose(result["z"], 0, atol=1e-6)
 
     def test_y_hat_at_0_1_0_maps_to_rho_hat(self) -> None:
         """At (0,1,0): ŷ → (ρ=1, φ=0, z=0) — becomes radial."""
-        at = {"x": jnp.array(0.0), "y": jnp.array(1.0), "z": jnp.array(0.0)}
-        v = {"x": jnp.array(0.0), "y": jnp.array(1.0), "z": jnp.array(0.0)}
+        at = {"x": jnp.array(0), "y": jnp.array(1), "z": jnp.array(0)}
+        v = {"x": jnp.array(0), "y": jnp.array(1), "z": jnp.array(0)}
         result = cxr.tangent_map(
             v, cxc.cart3d, cxr.coord_disp, cxc.cyl3d, at=at, usys=usys
         )
-        np.testing.assert_allclose(result["rho"], 1.0, atol=1e-6)
-        np.testing.assert_allclose(result["phi"], 0.0, atol=1e-6)
-        np.testing.assert_allclose(result["z"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["rho"], 1, atol=1e-6)
+        np.testing.assert_allclose(result["phi"], 0, atol=1e-6)
+        np.testing.assert_allclose(result["z"], 0, atol=1e-6)
 
     def test_cyl_to_cart_rho_hat_at_phi0(self) -> None:
         """At (ρ=1, φ=0, z=0): ρ̂ → (x=1, y=0, z=0) — becomes x̂."""
-        at = {"rho": jnp.array(1.0), "phi": jnp.array(0.0), "z": jnp.array(0.0)}
-        v = {"rho": jnp.array(1.0), "phi": jnp.array(0.0), "z": jnp.array(0.0)}
+        at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
+        v = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
         result = cxr.tangent_map(
             v, cxc.cyl3d, cxr.coord_disp, cxc.cart3d, at=at, usys=usys
         )
-        np.testing.assert_allclose(result["x"], 1.0, atol=1e-6)
-        np.testing.assert_allclose(result["y"], 0.0, atol=1e-6)
-        np.testing.assert_allclose(result["z"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["x"], 1, atol=1e-6)
+        np.testing.assert_allclose(result["y"], 0, atol=1e-6)
+        np.testing.assert_allclose(result["z"], 0, atol=1e-6)
 
     def test_cyl_phi_hat_at_phi0_maps_to_y_hat(self) -> None:
         """At (R=1, φ=0, z=0): φ̂ in Cartesian is ŷ.
@@ -230,14 +215,14 @@ class TestTangentMapCyl3dKnownExamples:
         ∂x/∂φ = -R sinφ = 0,  ∂y/∂φ = R cosφ = 1,  ∂z/∂φ = 0.
         So φ̂ (i.e. v_phi=1, others=0) → (x=0, y=1, z=0).
         """
-        at = {"rho": jnp.array(1.0), "phi": jnp.array(0.0), "z": jnp.array(0.0)}
-        v = {"rho": jnp.array(0.0), "phi": jnp.array(1.0), "z": jnp.array(0.0)}
+        at = {"rho": jnp.array(1), "phi": jnp.array(0), "z": jnp.array(0)}
+        v = {"rho": jnp.array(0), "phi": jnp.array(1), "z": jnp.array(0)}
         result = cxr.tangent_map(
             v, cxc.cyl3d, cxr.coord_disp, cxc.cart3d, at=at, usys=usys
         )
-        np.testing.assert_allclose(result["x"], 0.0, atol=1e-6)
-        np.testing.assert_allclose(result["y"], 1.0, atol=1e-6)
-        np.testing.assert_allclose(result["z"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["x"], 0, atol=1e-6)
+        np.testing.assert_allclose(result["y"], 1, atol=1e-6)
+        np.testing.assert_allclose(result["z"], 0, atol=1e-6)
 
 
 # ===========================================================================
@@ -264,8 +249,8 @@ class TestTangentMapLinearity:
         wx=_v_elem,
         wy=_v_elem,
         wz=_v_elem,
-        a=st.floats(min_value=-3.0, max_value=3.0, allow_nan=False, width=32),
-        b=st.floats(min_value=-3.0, max_value=3.0, allow_nan=False, width=32),
+        a=st.floats(min_value=-3, max_value=3, allow_nan=False, width=32),
+        b=st.floats(min_value=-3, max_value=3, allow_nan=False, width=32),
     )
     @settings(deadline=None)
     def test_linearity_cart3d_to_sph3d(
@@ -318,8 +303,8 @@ class TestTangentMapWithQuantityAt:
 
     def test_result_r_unit_matches_input_unit(self) -> None:
         """J[r, *] is dimensionless, so result['r'] has same unit as v['x']."""
-        at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
-        v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+        at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
+        v = {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")}
         result = cxr.tangent_map(v, cxc.cart3d, cxr.coord_vel, cxc.sph3d, at=at)
         # At (1, 0, 0): only r has non-zero result: r̂ component = 1 m/s
         r_result = result["r"]
@@ -330,10 +315,10 @@ class TestTangentMapWithQuantityAt:
 
     def test_result_theta_unit_is_angular_velocity(self) -> None:
         """J[θ, *] is rad/m, so result['theta'] has rad * (m/s) / m = rad/s."""
-        at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+        at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
         # Use ŷ input which has non-zero dφ component at (1,0,0)
         # At (1,0,0): dθ/dy = 0, dφ/dy = 1 rad/m → result phi = 1 rad/s for vy=1 m/s
-        v = {"x": u.Q(0.0, "m/s"), "y": u.Q(1.0, "m/s"), "z": u.Q(0.0, "m/s")}
+        v = {"x": u.Q(0, "m/s"), "y": u.Q(1, "m/s"), "z": u.Q(0, "m/s")}
         result = cxr.tangent_map(v, cxc.cart3d, cxr.coord_vel, cxc.sph3d, at=at)
         phi_result = result["phi"]
         assert hasattr(phi_result, "unit"), "result['phi'] should be a Quantity"
@@ -361,8 +346,8 @@ class TestTangentMapViaCconvert:
 
     def test_cart2d_polar2d_via_cconvert(self) -> None:
         """Cconvert with TangentGeometry dispatches through to tangent_map."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0)}
         result = cxr.cconvert(
             v,
             cxc.cart2d,
@@ -373,13 +358,13 @@ class TestTangentMapViaCconvert:
             cxr.coord_disp,
             at=at,
         )
-        np.testing.assert_allclose(result["r"], 1.0, atol=1e-6)
-        np.testing.assert_allclose(result["theta"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["r"], 1, atol=1e-6)
+        np.testing.assert_allclose(result["theta"], 0, atol=1e-6)
 
     def test_cart3d_sph3d_via_cconvert(self) -> None:
         """Cconvert for tangent gives same result as tangent_map."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
 
         direct = cxr.tangent_map(
             v, cxc.cart3d, cxr.coord_disp, cxc.sph3d, at=at, usys=usys
@@ -403,8 +388,8 @@ class TestTangentMapViaCconvert:
 
     def test_cart3d_cyl3d_via_cconvert(self) -> None:
         """cconvert(cart3d→cyl3d) tangent: x̂ at (0,1,0) → (ρ=0, φ=-1, z=0)."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        at = {"x": jnp.array(0.0), "y": jnp.array(1.0), "z": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
+        at = {"x": jnp.array(0), "y": jnp.array(1), "z": jnp.array(0)}
         result = cxr.cconvert(
             v,
             cxc.cart3d,
@@ -416,9 +401,9 @@ class TestTangentMapViaCconvert:
             at=at,
             usys=usys,
         )
-        np.testing.assert_allclose(result["rho"], 0.0, atol=1e-6)
-        np.testing.assert_allclose(result["phi"], -1.0, atol=1e-6)
-        np.testing.assert_allclose(result["z"], 0.0, atol=1e-6)
+        np.testing.assert_allclose(result["rho"], 0, atol=1e-6)
+        np.testing.assert_allclose(result["phi"], -1, atol=1e-6)
+        np.testing.assert_allclose(result["z"], 0, atol=1e-6)
 
 
 # ===========================================================================
@@ -435,18 +420,18 @@ class TestTangentMapSemanticPreservationCyl3d:
 
     def test_coord_vel_cart3d_to_cyl3d(self) -> None:
         """coord_vel converts Cart3D → Cyl3D correctly."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
         result = cxr.tangent_map(
             v, cxc.cart3d, cxr.coord_vel, cxc.cyl3d, at=at, usys=usys
         )
         assert set(result.keys()) == {"rho", "phi", "z"}
-        np.testing.assert_allclose(result["rho"], 1.0, atol=1e-6)
+        np.testing.assert_allclose(result["rho"], 1, atol=1e-6)
 
     def test_coord_acc_cart3d_to_cyl3d(self) -> None:
         """coord_acc converts Cart3D → Cyl3D correctly."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0), "z": jnp.array(0)}
         result = cxr.tangent_map(
             v, cxc.cart3d, cxr.coord_acc, cxc.cyl3d, at=at, usys=usys
         )

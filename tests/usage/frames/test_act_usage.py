@@ -114,8 +114,7 @@ class TestRotateUsage:
     def test_on_quantity_matrix(self, rot90z):
         """QMatrix (1,0,0) km → (0,1,0) km."""
         qm = QMatrix(
-            jnp.array([1, 0, 0]),
-            unit=(u.unit("km"), u.unit("km"), u.unit("km")),
+            jnp.array([1, 0, 0]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
         )
         result = cxfm.act(rot90z, None, qm)
         assert isinstance(result, QMatrix)
@@ -124,8 +123,7 @@ class TestRotateUsage:
     def test_on_quantity_matrix_mixed_units(self, rot90z):
         """QMatrix with km,m,m: converted to common unit internally."""
         qm = QMatrix(
-            jnp.array([1, 0, 0]),
-            unit=(u.unit("km"), u.unit("m"), u.unit("m")),
+            jnp.array([1, 0, 0]), unit=(u.unit("km"), u.unit("m"), u.unit("m"))
         )
         result = cxfm.act(rot90z, None, qm)
         assert isinstance(result, QMatrix)
@@ -149,8 +147,7 @@ class TestRotateUsage:
     def test_on_coordinate(self, rot90z):
         """Point at (1,0,0) km in Alice frame → (0,1,0) km."""
         coord = cx.Point.from_(
-            {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
-            cxf.alice,
+            {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}, cxf.alice
         )
         result = cxfm.act(rot90z, None, coord)
         _assert_close(result.data["y"].value, 1)
@@ -205,8 +202,7 @@ class TestTranslateUsage:
     def test_on_coordinate(self, shift_1_2_3):
         """Point at origin in Alice → translated to (1,2,3) km."""
         coord = cx.Point.from_(
-            {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
-            cxf.alice,
+            {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}, cxf.alice
         )
         result = cxfm.act(shift_1_2_3, None, coord)
         _assert_close(result.data["x"].value, 1)
@@ -236,8 +232,7 @@ class TestComposedUsage:
     def test_on_quantity_matrix(self, pipe):
         """QMatrix through composed pipeline."""
         qm = QMatrix(
-            jnp.array([0, 0, 0]),
-            unit=(u.unit("km"), u.unit("km"), u.unit("km")),
+            jnp.array([0, 0, 0]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
         )
         result = cxfm.act(pipe, None, qm)
         assert isinstance(result, QMatrix)
@@ -262,8 +257,7 @@ class TestComposedUsage:
     def test_on_coordinate(self, pipe):
         """Point through composed pipeline."""
         coord = cx.Point.from_(
-            {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},
-            cxf.alice,
+            {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}, cxf.alice
         )
         result = cxfm.act(pipe, None, coord)
         _assert_close(result.data["x"].value, -2)
@@ -313,8 +307,7 @@ class TestRoundtripUsage:
     def test_roundtrip_on_quantity_matrix(self, rot90z):
         """Rotate then inverse-rotate a QMatrix recovers original."""
         qm = QMatrix(
-            jnp.array([3, -1, 2]),
-            unit=(u.unit("km"), u.unit("km"), u.unit("km")),
+            jnp.array([3, -1, 2]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
         )
         fwd = cxfm.act(rot90z, None, qm)
         back = cxfm.act(rot90z.inverse, None, fwd)

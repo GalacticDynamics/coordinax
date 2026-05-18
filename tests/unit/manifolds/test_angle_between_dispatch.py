@@ -16,9 +16,9 @@ class TestAngleBetweenEuclidean:
 
     def test_cartesian_right_angle_returns_angle(self):
         metric = cxm.FlatMetric(2)
-        at = {"x": u.Q(jnp.array(0.0), "m"), "y": u.Q(jnp.array(0.0), "m")}
-        uvec = {"x": u.Q(jnp.array(1.0), "m"), "y": u.Q(jnp.array(0.0), "m")}
-        vvec = {"x": u.Q(jnp.array(0.0), "m"), "y": u.Q(jnp.array(2.0), "m")}
+        at = {"x": u.Q(jnp.array(0), "m"), "y": u.Q(jnp.array(0), "m")}
+        uvec = {"x": u.Q(jnp.array(1), "m"), "y": u.Q(jnp.array(0), "m")}
+        vvec = {"x": u.Q(jnp.array(0), "m"), "y": u.Q(jnp.array(2), "m")}
 
         got = cxm.angle_between(metric, cxc.cart2d, uvec, vvec, at=at)
 
@@ -31,9 +31,9 @@ class TestAngleBetweenFailureModes:
 
     def test_zero_norm_vector_raises_value_error(self):
         metric = cxm.FlatMetric(2)
-        at = {"x": jnp.array(0.0), "y": jnp.array(0.0)}
-        zero = {"x": jnp.array(0.0), "y": jnp.array(0.0)}
-        other = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        at = {"x": jnp.array(0), "y": jnp.array(0)}
+        zero = {"x": jnp.array(0), "y": jnp.array(0)}
+        other = {"x": jnp.array(1), "y": jnp.array(0)}
 
         with pytest.raises(ValueError, match="zero"):
             cxm.angle_between(metric, cxc.cart2d, zero, other, at=at)
@@ -41,22 +41,22 @@ class TestAngleBetweenFailureModes:
     def test_indefinite_metric_is_not_supported(self):
         metric = cxm.MinkowskiMetric()
         at = {
-            "ct": jnp.array(0.0),
-            "x": jnp.array(0.0),
-            "y": jnp.array(0.0),
-            "z": jnp.array(0.0),
+            "ct": jnp.array(0),
+            "x": jnp.array(0),
+            "y": jnp.array(0),
+            "z": jnp.array(0),
         }
         uvec = {
-            "ct": jnp.array(0.0),
-            "x": jnp.array(1.0),
-            "y": jnp.array(0.0),
-            "z": jnp.array(0.0),
+            "ct": jnp.array(0),
+            "x": jnp.array(1),
+            "y": jnp.array(0),
+            "z": jnp.array(0),
         }
         vvec = {
-            "ct": jnp.array(0.0),
-            "x": jnp.array(0.0),
-            "y": jnp.array(1.0),
-            "z": jnp.array(0.0),
+            "ct": jnp.array(0),
+            "x": jnp.array(0),
+            "y": jnp.array(1),
+            "z": jnp.array(0),
         }
 
         with pytest.raises(NotImplementedError, match=r"pseudo.*indefinite"):
@@ -71,9 +71,9 @@ class TestAngleBetweenJAX:
 
         @jax.jit
         def compute(theta):
-            at = {"theta": theta, "phi": jnp.array(0.0)}
-            uvec = {"theta": jnp.array(1.0), "phi": jnp.array(0.0)}
-            vvec = {"theta": jnp.array(1.0), "phi": jnp.array(1.0)}
+            at = {"theta": theta, "phi": jnp.array(0)}
+            uvec = {"theta": jnp.array(1), "phi": jnp.array(0)}
+            vvec = {"theta": jnp.array(1), "phi": jnp.array(1)}
             return u.ustrip(
                 "rad", cxm.angle_between(metric, cxc.sph2, uvec, vvec, at=at)
             )
@@ -86,13 +86,13 @@ class TestAngleBetweenJAX:
         thetas = jnp.array([jnp.pi / 6, jnp.pi / 4, jnp.pi / 2])
 
         def compute(theta):
-            at = {"theta": theta, "phi": jnp.array(0.0)}
-            uvec = {"theta": jnp.array(1.0), "phi": jnp.array(0.0)}
-            vvec = {"theta": jnp.array(1.0), "phi": jnp.array(1.0)}
+            at = {"theta": theta, "phi": jnp.array(0)}
+            uvec = {"theta": jnp.array(1), "phi": jnp.array(0)}
+            vvec = {"theta": jnp.array(1), "phi": jnp.array(1)}
             return u.ustrip(
                 "rad", cxm.angle_between(metric, cxc.sph2, uvec, vvec, at=at)
             )
 
         got = jax.vmap(compute)(thetas)
-        expected = jnp.arccos(1.0 / jnp.sqrt(1.0 + jnp.sin(thetas) ** 2))
+        expected = jnp.arccos(1 / jnp.sqrt(1 + jnp.sin(thetas) ** 2))
         assert jnp.allclose(got, expected, atol=1e-6)

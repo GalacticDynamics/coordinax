@@ -242,10 +242,7 @@ class TestParameterCombinations:
 class TestGeneratedClassProperties:
     """Test properties of generated classes."""
 
-    @given(
-        data=st.data(),
-        chart_cls=cxst.chart_classes(exclude_abstract=True),
-    )
+    @given(data=st.data(), chart_cls=cxst.chart_classes(exclude_abstract=True))
     def test_generated_class_is_instantiable(
         self, data, chart_cls: type[cxc.AbstractChart]
     ) -> None:
@@ -259,10 +256,7 @@ class TestGeneratedClassProperties:
         except (TypeError, ValueError) as e:
             pytest.fail(f"Failed to instantiate {chart_cls} with {kwargs}: {e}")
 
-    @given(
-        data=st.data(),
-        chart_cls=cxst.chart_classes(exclude_abstract=True),
-    )
+    @given(data=st.data(), chart_cls=cxst.chart_classes(exclude_abstract=True))
     def test_generated_class_has_valid_ndim(
         self, data, chart_cls: type[cxc.AbstractChart]
     ) -> None:
@@ -273,10 +267,7 @@ class TestGeneratedClassProperties:
         assert isinstance(ndim, int)
         assert ndim >= 0
 
-    @given(
-        data=st.data(),
-        chart_cls=cxst.chart_classes(exclude_abstract=True),
-    )
+    @given(data=st.data(), chart_cls=cxst.chart_classes(exclude_abstract=True))
     def test_generated_class_has_components(
         self, data, chart_cls: type[cxc.AbstractChart]
     ) -> None:
@@ -290,10 +281,7 @@ class TestGeneratedClassProperties:
         # Components count should match ndim
         assert len(components) == instance.ndim
 
-    @given(
-        data=st.data(),
-        chart_cls=cxst.chart_classes(exclude_abstract=True),
-    )
+    @given(data=st.data(), chart_cls=cxst.chart_classes(exclude_abstract=True))
     def test_generated_class_components_match_ndim(
         self, data, chart_cls: type[cxc.AbstractChart]
     ) -> None:

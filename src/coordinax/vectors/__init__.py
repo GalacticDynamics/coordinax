@@ -12,13 +12,7 @@ __all__ = (
 from ._setup_package import install_import_hook
 
 with install_import_hook("coordinax.vectors"):
-    from ._src import (
-        AbstractVector,
-        Coordinate,
-        Point,
-        Tangent,
-        ToUnitsOptions,
-    )
+    from ._src import AbstractVector, Coordinate, Point, Tangent, ToUnitsOptions
     from coordinax.api.representations import cconvert
 
 del install_import_hook

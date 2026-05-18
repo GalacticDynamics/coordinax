@@ -210,10 +210,7 @@ class FrenetSerretTransform(AbstractParallelTransportTransform):
 
     @classmethod
     def from_curve(
-        cls,
-        curve: Callable[[Any], Any],
-        /,
-        tau_unit: u.AbstractUnit | str = "s",
+        cls, curve: Callable[[Any], Any], /, tau_unit: u.AbstractUnit | str = "s"
     ) -> "FrenetSerretTransform":
         r"""Construct a Frenet-Serret transform from a curve callable.
 

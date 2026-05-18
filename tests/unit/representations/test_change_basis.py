@@ -246,20 +246,20 @@ class TestChangeBasisManifold:
 
     def test_cartesian_with_manifold_coord_to_phys_is_identity(self):
         """Dispatch 7: Cartesian + any manifold, coord→phys = identity."""
-        v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s")}
-        at = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+        v = {"x": u.Q(3, "m/s"), "y": u.Q(4, "m/s")}
+        at = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
         out = cxr.change_basis(
             v, cxc.cart2d, cxm.R2, cxr.coord_basis, cxr.phys_basis, at=at
         )
-        np.testing.assert_allclose(u.ustrip("m/s", out["x"]), 3.0)
-        np.testing.assert_allclose(u.ustrip("m/s", out["y"]), 4.0)
+        np.testing.assert_allclose(u.ustrip("m/s", out["x"]), 3)
+        np.testing.assert_allclose(u.ustrip("m/s", out["y"]), 4)
 
     def test_cartesian_with_manifold_phys_to_coord_is_identity(self):
         """Dispatch 7: Cartesian + any manifold, phys→coord = identity."""
-        v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s")}
+        v = {"x": u.Q(3, "m/s"), "y": u.Q(4, "m/s")}
         out = cxr.change_basis(v, cxc.cart2d, cxm.R2, cxr.phys_basis, cxr.coord_basis)
-        np.testing.assert_allclose(u.ustrip("m/s", out["x"]), 3.0)
-        np.testing.assert_allclose(u.ustrip("m/s", out["y"]), 4.0)
+        np.testing.assert_allclose(u.ustrip("m/s", out["x"]), 3)
+        np.testing.assert_allclose(u.ustrip("m/s", out["y"]), 4)
 
     def test_euclidean_sph3d_manifold_matches_no_metric(self):
         """Dispatch 9 delegates to 8: EuclideanManifold+sph3d with no-metric."""
@@ -291,35 +291,31 @@ class TestChangeBasisManifold:
         out = cxr.change_basis(
             v, cxc.sph3d, cxm.R3, cxr.coord_basis, cxr.phys_basis, at=at
         )
-        np.testing.assert_allclose(u.ustrip("m/s", out["r"]), 5.0)
-        np.testing.assert_allclose(u.ustrip("m/s", out["theta"]), 2.0)  # 1 * 2
-        np.testing.assert_allclose(u.ustrip("m/s", out["phi"]), 4.0)  # 2 * 2
+        np.testing.assert_allclose(u.ustrip("m/s", out["r"]), 5)
+        np.testing.assert_allclose(u.ustrip("m/s", out["theta"]), 2)  # 1 * 2
+        np.testing.assert_allclose(u.ustrip("m/s", out["phi"]), 4)  # 2 * 2
 
     def test_diagonal_path_phys_to_coord_values(self):
         """Diagonal path: verify inverse scale-factor division at theta=pi/2."""
         # h_r=1, h_theta=2, h_phi=2
-        v_phys = {
-            "r": u.Q(5.0, "m/s"),
-            "theta": u.Q(2.0, "m/s"),
-            "phi": u.Q(4.0, "m/s"),
-        }
+        v_phys = {"r": u.Q(5, "m/s"), "theta": u.Q(2, "m/s"), "phi": u.Q(4, "m/s")}
         at = {"r": u.Q(2, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
         out = cxr.change_basis(
             v_phys, cxc.sph3d, cxm.R3, cxr.phys_basis, cxr.coord_basis, at=at
         )
-        np.testing.assert_allclose(u.ustrip("m/s", out["r"]), 5.0)
-        np.testing.assert_allclose(u.ustrip("rad/s", out["theta"]), 1.0)  # 2 / 2
-        np.testing.assert_allclose(u.ustrip("rad/s", out["phi"]), 2.0)  # 4 / 2
+        np.testing.assert_allclose(u.ustrip("m/s", out["r"]), 5)
+        np.testing.assert_allclose(u.ustrip("rad/s", out["theta"]), 1)  # 2 / 2
+        np.testing.assert_allclose(u.ustrip("rad/s", out["phi"]), 2)  # 4 / 2
 
     def test_cholesky_path_output_keys_and_units(self):
         """Cholesky path (PullbackMetric): correct keys and speed dimension."""
         manifold = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
             ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
+            embed_map=cxm.TwoSphereIn3D(radius=u.Q(1, "km")),
         )
-        v = {"theta": u.Q(1.0, "rad/s"), "phi": u.Q(2.0, "rad/s")}
-        at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0.0, "rad")}
+        v = {"theta": u.Q(1, "rad/s"), "phi": u.Q(2, "rad/s")}
+        at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0, "rad")}
         out = cxr.change_basis(
             v, cxc.sph2, manifold, cxr.coord_basis, cxr.phys_basis, at=at
         )
@@ -332,12 +328,8 @@ class TestChangeBasisManifoldJAX:
     """JAX transformation compatibility for manifold-based change_basis dispatches."""
 
     def test_jit_diagonal_path(self):
-        v = {"r": u.Q(5.0, "m/s"), "theta": u.Q(1.0, "rad/s"), "phi": u.Q(1.0, "rad/s")}
-        at = {
-            "r": u.Q(2.0, "m"),
-            "theta": u.Q(jnp.pi / 2, "rad"),
-            "phi": u.Q(0.0, "rad"),
-        }
+        v = {"r": u.Q(5, "m/s"), "theta": u.Q(1, "rad/s"), "phi": u.Q(1, "rad/s")}
+        at = {"r": u.Q(2, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
 
         @jax.jit
         def run(v, at):
@@ -346,17 +338,17 @@ class TestChangeBasisManifoldJAX:
             )
 
         out = run(v, at)
-        np.testing.assert_allclose(u.ustrip("m/s", out["r"]), 5.0)
-        np.testing.assert_allclose(u.ustrip("m/s", out["theta"]), 2.0)  # h=2
+        np.testing.assert_allclose(u.ustrip("m/s", out["r"]), 5)
+        np.testing.assert_allclose(u.ustrip("m/s", out["theta"]), 2)  # h=2
 
     def test_jit_cholesky_path(self):
         manifold = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
             ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
+            embed_map=cxm.TwoSphereIn3D(radius=u.Q(1, "km")),
         )
-        v = {"theta": u.Q(1.0, "rad/s"), "phi": u.Q(2.0, "rad/s")}
-        at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0.0, "rad")}
+        v = {"theta": u.Q(1, "rad/s"), "phi": u.Q(2, "rad/s")}
+        at = {"theta": u.Q(jnp.pi / 3, "rad"), "phi": u.Q(0, "rad")}
 
         @jax.jit
         def run(v, at):
@@ -368,8 +360,8 @@ class TestChangeBasisManifoldJAX:
         assert set(out.keys()) == {"theta", "phi"}
 
     def test_jit_cartesian_with_manifold(self):
-        v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s")}
-        at = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+        v = {"x": u.Q(3, "m/s"), "y": u.Q(4, "m/s")}
+        at = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
 
         @jax.jit
         def run(v, at):
@@ -378,8 +370,8 @@ class TestChangeBasisManifoldJAX:
             )
 
         out = run(v, at)
-        np.testing.assert_allclose(u.ustrip("m/s", out["x"]), 3.0)
-        np.testing.assert_allclose(u.ustrip("m/s", out["y"]), 4.0)
+        np.testing.assert_allclose(u.ustrip("m/s", out["x"]), 3)
+        np.testing.assert_allclose(u.ustrip("m/s", out["y"]), 4)
 
 
 class TestTriangularSolveBatching:

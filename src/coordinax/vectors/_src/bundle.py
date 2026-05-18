@@ -223,9 +223,7 @@ class Coordinate(AbstractVector):
 
     @classmethod
     def _create_unchecked(
-        cls,
-        point: Point,
-        fields: dict[str, Tangent],
+        cls, point: Point, fields: dict[str, Tangent]
     ) -> "Coordinate":
         """Create a ``Coordinate`` bypassing frame/chart alignment and validation.
 
@@ -405,8 +403,7 @@ class Coordinate(AbstractVector):
                 else cast("Point", cxr.cconvert(self.point, vec.chart))
             )
             new_fields[name] = cast(
-                "Tangent",
-                cxr.cconvert(vec, target, at=at, usys=usys),
+                "Tangent", cxr.cconvert(vec, target, at=at, usys=usys)
             )
 
         # Use _create_unchecked to bypass frame re-alignment in __init__

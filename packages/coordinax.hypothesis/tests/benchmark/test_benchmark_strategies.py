@@ -83,10 +83,7 @@ def test_benchmark_get_all_subclasses(benchmark):
 
     def run_get_subclasses():
         return get_all_subclasses(
-            cxc.AbstractChart,
-            filter=object,
-            exclude_abstract=True,
-            exclude=(),
+            cxc.AbstractChart, filter=object, exclude_abstract=True, exclude=()
         )
 
     result = benchmark(run_get_subclasses)
@@ -98,10 +95,7 @@ def test_benchmark_get_all_subclasses_filtered(benchmark):
 
     def run_get_subclasses():
         return get_all_subclasses(
-            cxc.AbstractChart,
-            filter=cxc.Abstract3D,
-            exclude_abstract=True,
-            exclude=(),
+            cxc.AbstractChart, filter=cxc.Abstract3D, exclude_abstract=True, exclude=()
         )
 
     result = benchmark(run_get_subclasses)

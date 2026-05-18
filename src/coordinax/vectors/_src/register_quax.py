@@ -78,12 +78,7 @@ def eq_p_absvecs(lhs: Point, rhs: Point, /) -> Bool[Array, "..."]:
 
     """
     # Map the equality over the dict values, matching by key.
-    comp_tree = jtu.map(
-        jnp.equal,
-        lhs.data,
-        rhs.data,
-        is_leaf=uq.is_any_quantity,
-    )
+    comp_tree = jtu.map(jnp.equal, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
 
     # Reduce the equality over the leaves.
     return jax.tree.reduce(jnp.logical_and, comp_tree)
@@ -233,8 +228,7 @@ def broadcast_in_dim_p_tangent(
     """
     c_shape = shape[:-1]
     return replace(
-        operand,
-        data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), operand.data),
+        operand, data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), operand.data)
     )
 
 
@@ -267,12 +261,7 @@ def convert_element_type_p_tangent(operand: Tangent, /, **kw: Any) -> Tangent:
 @quax.register(jax.lax.eq_p)
 def eq_p_tangents(lhs: Tangent, rhs: Tangent, /) -> Bool[Array, "..."]:
     """Element-wise equality of two Tangent vectors."""
-    comp_tree = jtu.map(
-        jnp.equal,
-        lhs.data,
-        rhs.data,
-        is_leaf=uq.is_any_quantity,
-    )
+    comp_tree = jtu.map(jnp.equal, lhs.data, rhs.data, is_leaf=uq.is_any_quantity)
     return jax.tree.reduce(jnp.logical_and, comp_tree)
 
 
@@ -297,8 +286,7 @@ def neg_p_tangent(operand: Tangent, /) -> Tangent:
 
     """
     return replace(
-        operand,
-        data=jtu.map(lambda v: -v, operand.data, is_leaf=uq.is_any_quantity),
+        operand, data=jtu.map(lambda v: -v, operand.data, is_leaf=uq.is_any_quantity)
     )
 
 
@@ -419,8 +407,7 @@ def broadcast_in_dim_p_coordinate(
     )
     new_fields = {
         name: replace(
-            vec,
-            data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), vec.data),
+            vec, data=jtu.map(lambda v: jnp.broadcast_to(v, c_shape), vec.data)
         )
         for name, vec in operand.items()
     }
@@ -453,8 +440,7 @@ def convert_element_type_p_coordinate(operand: Coordinate, /, **kw: Any) -> Coor
     convert_p = quax.quaxify(jax.lax.convert_element_type_p.bind)
 
     new_point = replace(
-        operand.point,
-        data=jtu.map(lambda v: convert_p(v, **kw), operand.point.data),
+        operand.point, data=jtu.map(lambda v: convert_p(v, **kw), operand.point.data)
     )
     new_fields = {
         name: replace(vec, data=jtu.map(lambda v: convert_p(v, **kw), vec.data))

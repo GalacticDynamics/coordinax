@@ -22,7 +22,7 @@ from coordinax.internal import CDict
 
 
 def _cart3d_vel_data() -> CDict:
-    return {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(3.0, "m/s")}
+    return {"x": u.Q(1, "m/s"), "y": u.Q(2, "m/s"), "z": u.Q(3, "m/s")}
 
 
 def _cart3d_dpl_data() -> CDict:
@@ -73,9 +73,9 @@ class TestVectorConstruction:
             basis=cxr.coord_basis,
             semantic=cxr.vel,
         )
-        assert v["x"] == u.Q(1.0, "m/s")
-        assert v["y"] == u.Q(2.0, "m/s")
-        assert v["z"] == u.Q(3.0, "m/s")
+        assert v["x"] == u.Q(1, "m/s")
+        assert v["y"] == u.Q(2, "m/s")
+        assert v["z"] == u.Q(3, "m/s")
 
     def test_chart_stored(self):
         """Chart field stores the given chart."""
@@ -114,11 +114,7 @@ class TestVectorConstruction:
             (cxr.dpl, _cart3d_dpl_data()),
             (
                 cxr.acc,
-                {
-                    "x": u.Q(0.1, "m/s^2"),
-                    "y": u.Q(0.2, "m/s^2"),
-                    "z": u.Q(0.0, "m/s^2"),
-                },
+                {"x": u.Q(0.1, "m/s^2"), "y": u.Q(0.2, "m/s^2"), "z": u.Q(0, "m/s^2")},
             ),
         ]:
             v = cx.Tangent(
@@ -138,7 +134,7 @@ class TestCheckInit:
         """Construction raises when data keys don't match chart components."""
         with pytest.raises(ValueError, match="Data keys do not match"):
             cx.Tangent(
-                data={"wrong": u.Q(1.0, "m/s")},
+                data={"wrong": u.Q(1, "m/s")},
                 chart=cxc.cart3d,
                 basis=cxr.coord_basis,
                 semantic=cxr.vel,
@@ -148,7 +144,7 @@ class TestCheckInit:
         """Construction raises when a chart component is absent from data."""
         with pytest.raises(ValueError, match="Data keys do not match"):
             cx.Tangent(
-                data={"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s")},  # z missing
+                data={"x": u.Q(1, "m/s"), "y": u.Q(2, "m/s")},  # z missing
                 chart=cxc.cart3d,
                 basis=cxr.coord_basis,
                 semantic=cxr.vel,
@@ -369,7 +365,7 @@ class TestVectorFromConstructors:
     def test_from_array_unit_chart_basis_semantic(self):
         """Tangent.from_(array, unit, chart, basis, semantic) constructs correctly."""
         v = cx.Tangent.from_(
-            jnp.array([1.0, 2.0, 3.0]), "m/s", cxc.cart3d, cxr.coord_basis, cxr.vel
+            jnp.array([1, 2, 3]), "m/s", cxc.cart3d, cxr.coord_basis, cxr.vel
         )
         assert isinstance(v, cx.Tangent)
         assert v.chart == cxc.cart3d
@@ -425,7 +421,7 @@ class TestVectorCconvert:
     def test_cconvert_cart_to_sph_preserves_rep(self):
         """Cconvert changes chart but preserves basis and semantic."""
         v = cx.Tangent.from_(_cart3d_vel_data(), cxc.cart3d, cxr.coord_basis, cxr.vel)
-        pt = cx.Point.from_([1.0, 0.0, 0.0], "m")  # base point for tangent map
+        pt = cx.Point.from_([1, 0, 0], "m")  # base point for tangent map
         v_sph = v.cconvert(cxc.sph3d, at=pt)
         assert isinstance(v_sph, cx.Tangent)
         assert v_sph.chart == cxc.sph3d
@@ -437,14 +433,14 @@ class TestVectorCconvert:
         v = cx.Tangent.from_(
             _cart3d_vel_data(), cxc.cart3d, cxr.coord_basis, cxr.vel, cxf.alice
         )
-        pt = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        pt = cx.Point.from_([1, 0, 0], "m")
         v_sph = v.cconvert(cxc.sph3d, at=pt)
         assert v_sph.frame == cxf.alice
 
     def test_cconvert_identity_chart_returns_same_data(self):
         """Cconvert to same chart returns same data."""
         v = cx.Tangent.from_(_cart3d_vel_data(), cxc.cart3d, cxr.coord_basis, cxr.vel)
-        pt = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        pt = cx.Point.from_([1, 0, 0], "m")
         v2 = v.cconvert(cxc.cart3d, at=pt)
         assert isinstance(v2, cx.Tangent)
         assert v2.chart == cxc.cart3d
@@ -452,27 +448,26 @@ class TestVectorCconvert:
     def test_cconvert_radial_velocity_at_x_axis(self):
         """Radial velocity [1,0,0] at [1,0,0] maps to vr=1, vθ=0, vφ=0."""
         v = cx.Tangent.from_(
-            {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+            {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")},
             cxc.cart3d,
-            cxr.coord_basis,
-            cxr.vel,
+            cxr.coord_vel,
         )
-        pt = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        pt = cx.Point.from_([1, 0, 0], "m")
         v_sph = v.cconvert(cxc.sph3d, at=pt)
-        assert jnp.allclose(v_sph["r"].value, jnp.array(1.0), atol=1e-6)
-        assert jnp.allclose(v_sph["theta"].value, jnp.array(0.0), atol=1e-6)
-        assert jnp.allclose(v_sph["phi"].value, jnp.array(0.0), atol=1e-6)
+        assert jnp.allclose(v_sph["r"].value, jnp.array(1), atol=1e-6)
+        assert jnp.allclose(v_sph["theta"].value, jnp.array(0), atol=1e-6)
+        assert jnp.allclose(v_sph["phi"].value, jnp.array(0), atol=1e-6)
 
     def test_cconvert_round_trip_cart_sph_cart(self):
         """Cconvert cart→sph→cart recovers original component values."""
-        data = {"x": u.Q(1.0, "m/s"), "y": u.Q(2.0, "m/s"), "z": u.Q(0.0, "m/s")}
+        data = {"x": u.Q(1, "m/s"), "y": u.Q(2, "m/s"), "z": u.Q(0, "m/s")}
         v = cx.Tangent.from_(data, cxc.cart3d, cxr.coord_basis, cxr.vel)
-        pt = cx.Point.from_([1.0, 2.0, 0.0], "m")
+        pt = cx.Point.from_([1, 2, 0], "m")
         v_rt = v.cconvert(cxc.sph3d, at=pt).cconvert(
             cxc.cart3d, at=pt.cconvert(cxc.sph3d)
         )
-        assert jnp.allclose(v_rt["x"].value, jnp.array(1.0), atol=1e-5)
-        assert jnp.allclose(v_rt["y"].value, jnp.array(2.0), atol=1e-5)
+        assert jnp.allclose(v_rt["x"].value, jnp.array(1), atol=1e-5)
+        assert jnp.allclose(v_rt["y"].value, jnp.array(2), atol=1e-5)
 
 
 # ======================================================================
@@ -495,30 +490,24 @@ class TestVectorShape:
     def test_shape_batch(self):
         """Batched components give non-empty shape."""
         data = {
-            "x": u.Q([1.0, 2.0], "m/s"),
-            "y": u.Q([3.0, 4.0], "m/s"),
-            "z": u.Q([5.0, 6.0], "m/s"),
+            "x": u.Q([1, 2], "m/s"),
+            "y": u.Q([3, 4], "m/s"),
+            "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
-            data=data,
-            chart=cxc.cart3d,
-            basis=cxr.coord_basis,
-            semantic=cxr.vel,
+            data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
         assert v.shape == (2,)
 
     def test_slice_indexing(self):
         """Integer slice indexing returns a new Tangent."""
         data = {
-            "x": u.Q([1.0, 2.0], "m/s"),
-            "y": u.Q([3.0, 4.0], "m/s"),
-            "z": u.Q([5.0, 6.0], "m/s"),
+            "x": u.Q([1, 2], "m/s"),
+            "y": u.Q([3, 4], "m/s"),
+            "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
-            data=data,
-            chart=cxc.cart3d,
-            basis=cxr.coord_basis,
-            semantic=cxr.vel,
+            data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
         v0 = v[0]
         assert isinstance(v0, cx.Tangent)
@@ -527,15 +516,12 @@ class TestVectorShape:
     def test_slice_preserves_chart_basis_semantic(self):
         """Integer indexing preserves chart, basis, and semantic."""
         data = {
-            "x": u.Q([1.0, 2.0], "m/s"),
-            "y": u.Q([3.0, 4.0], "m/s"),
-            "z": u.Q([5.0, 6.0], "m/s"),
+            "x": u.Q([1, 2], "m/s"),
+            "y": u.Q([3, 4], "m/s"),
+            "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
-            data=data,
-            chart=cxc.cart3d,
-            basis=cxr.coord_basis,
-            semantic=cxr.vel,
+            data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
         v0 = v[0]
         assert v0.chart == cxc.cart3d
@@ -576,9 +562,9 @@ class TestVectorJAXCompat:
     def test_pytree_flatten_unflatten_batch(self):
         """Pytree round-trip preserves batch Tangent."""
         data = {
-            "x": u.Q([1.0, 2.0], "m/s"),
-            "y": u.Q([3.0, 4.0], "m/s"),
-            "z": u.Q([5.0, 6.0], "m/s"),
+            "x": u.Q([1, 2], "m/s"),
+            "y": u.Q([3, 4], "m/s"),
+            "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
             data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
@@ -602,7 +588,7 @@ class TestVectorJAXCompat:
     def test_jit_cconvert(self):
         """Cconvert under jax.jit produces the correct chart."""
         v = cx.Tangent.from_(_cart3d_vel_data(), cxc.cart3d, cxr.coord_vel)
-        pt = cx.Point.from_([1.0, 0.0, 0.0], "m")
+        pt = cx.Point.from_([1, 0, 0], "m")
 
         @jax.jit
         def convert(vec: cx.Tangent, base: cx.Point) -> cx.Tangent:
@@ -614,7 +600,7 @@ class TestVectorJAXCompat:
     def test_vmap_cconvert(self):
         """Vmap over a batch of base points applies Jacobian per-element."""
         v = cx.Tangent.from_(
-            {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+            {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")},
             cxc.cart3d,
             cxr.coord_vel,
         )
@@ -660,7 +646,7 @@ class TestChangeBasisPointToDisplacement:
     """Tests for the Point -> Tangent[Displacement] promotion dispatch."""
 
     def _make_point(self) -> cx.Point:
-        return cx.Point.from_([1.0, 2.0, 3.0], "m")
+        return cx.Point.from_([1, 2, 3], "m")
 
     def test_returns_tangent(self):
         """change_basis(Point, coord_basis) returns a Tangent."""
@@ -731,7 +717,7 @@ class TestChangeBasisPointToDisplacement:
     def test_spherical_chart(self):
         """Works for a non-Cartesian (spherical) Point."""
         pt = cx.Point.from_(
-            {"r": u.Q(1.0, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(0.0, "rad")},
+            {"r": u.Q(1, "m"), "theta": u.Q(0.5, "rad"), "phi": u.Q(0, "rad")},
             cxc.sph3d,
         )
         disp = cxr.change_basis(pt, cxr.coord_basis)

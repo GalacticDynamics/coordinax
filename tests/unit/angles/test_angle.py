@@ -124,11 +124,7 @@ class TestAngleConversion:
         [(180, "deg", "rad", jnp.pi), (jnp.pi, "rad", "deg", 180)],
     )
     def test_unit_conversion(
-        self,
-        value: float,
-        from_unit: str,
-        to_unit: str,
-        expected: float,
+        self, value: float, from_unit: str, to_unit: str, expected: float
     ) -> None:
         """Converting between deg and rad gives the expected numeric value."""
         result = cxa.Angle(value, from_unit).to(u.unit(to_unit))
@@ -155,11 +151,7 @@ class TestAngleWrapTo:
     )
     @given(data=st.data())
     def test_wrap_to_range(
-        self,
-        unit_str: str,
-        lo: u.Q,
-        hi: u.Q,
-        data: st.DataObject,
+        self, unit_str: str, lo: u.Q, hi: u.Q, data: st.DataObject
     ) -> None:
         """wrap_to places every value within [lo, hi) (up to float tolerance)."""
         angle = data.draw(cxst.angles(unit=unit_str))
@@ -176,10 +168,7 @@ class TestAngleWrapTo:
         assert wrapped.unit == angle.unit
 
     @given(
-        angle=cxst.angles(
-            unit="deg",
-            wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg"))),
-        )
+        angle=cxst.angles(unit="deg", wrap_to=st.just((u.Q(0, "deg"), u.Q(360, "deg"))))
     )
     def test_strategy_wrap_to(self, angle: cxa.Angle) -> None:
         """The ``wrap_to`` strategy argument pre-wraps generated angles."""

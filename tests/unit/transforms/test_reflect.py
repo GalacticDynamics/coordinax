@@ -34,17 +34,17 @@ def _extract_xyz(result: Any) -> tuple[float, float, float]:
 
 def test_reflect_from_normal_constructs_householder_matrix() -> None:
     """Normal-vector construction yields the expected Householder reflection."""
-    op = cxfm.Reflect.from_normal([1.0, 0.0, 0.0])
-    expected = jnp.asarray([[-1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
-    np.testing.assert_allclose(op.H, expected, rtol=0.0, atol=1e-12)
+    op = cxfm.Reflect.from_normal([1, 0, 0])
+    expected = jnp.asarray([[-1, 0, 0], [0, 1, 0], [0, 0, 1]])
+    np.testing.assert_allclose(op.H, expected, rtol=0, atol=1e-12)
 
 
 def test_reflect_quantity_applies_hyperplane_reflection(reflect_op) -> None:
     """Reflect flips only the component along the chosen normal."""
-    q = u.Q(jnp.asarray([1.0, 0.0, 0.0]), "km")
+    q = u.Q(jnp.asarray([1, 0, 0]), "km")
     result = cxfm.act(reflect_op, None, q)
     np.testing.assert_allclose(
-        _extract_xyz(result), np.asarray(EXPECTED_REFLECT), rtol=0.0, atol=1e-12
+        _extract_xyz(result), np.asarray(EXPECTED_REFLECT), rtol=0, atol=1e-12
     )
 
 
@@ -53,7 +53,7 @@ def test_reflect_vector_roundtrip_is_identity(reflect_op, vector_3d) -> None:
     fwd = cxfm.act(reflect_op, None, vector_3d)
     back = cxfm.act(reflect_op.inverse, None, fwd)
     np.testing.assert_allclose(
-        _extract_xyz(back), np.asarray(EXPECTED_IDENTITY), rtol=0.0, atol=1e-12
+        _extract_xyz(back), np.asarray(EXPECTED_IDENTITY), rtol=0, atol=1e-12
     )
 
 
@@ -62,7 +62,7 @@ def test_reflect_coordinate_preserves_coordinate_type(reflect_op, coord_3d) -> N
     result = cxfm.act(reflect_op, None, coord_3d)
     assert isinstance(result, cx.Point)
     np.testing.assert_allclose(
-        _extract_xyz(result), np.asarray(EXPECTED_REFLECT), rtol=0.0, atol=1e-12
+        _extract_xyz(result), np.asarray(EXPECTED_REFLECT), rtol=0, atol=1e-12
     )
 
 

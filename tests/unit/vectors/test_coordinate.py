@@ -112,14 +112,9 @@ class TestFrameAlignment:
         """All field vectors are converted to point's frame."""
         base = cxv.Point.from_([1, 0, 0], "m", cxf.alice)
         vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel, cxf.alex)
-        acc_data = {
-            "x": u.Q(0.1, "m/s^2"),
-            "y": u.Q(0.0, "m/s^2"),
-            "z": u.Q(0.0, "m/s^2"),
-        }
+        acc_data = {"x": u.Q(0.1, "m/s^2"), "y": u.Q(0, "m/s^2"), "z": u.Q(0, "m/s^2")}
         acc = replace(
-            cx.Tangent.from_(acc_data, cxc.cart3d, cxr.coord_acc),
-            frame=cxf.alex,
+            cx.Tangent.from_(acc_data, cxc.cart3d, cxr.coord_acc), frame=cxf.alex
         )
         pv = Coordinate(point=base, velocity=vel, acceleration=acc)
         assert pv["velocity"].frame is cxf.alice
@@ -154,7 +149,7 @@ class TestChartAlignment:
     def test_mismatched_chart_field_preserved(self) -> None:
         """Field supplied in sph3d retains its sph3d chart after construction."""
         base = cxv.Point.from_([1, 0, 0], "m")  # cart3d
-        vel_sph = _make_sph_vel(1.0, 0.0, 0.0)
+        vel_sph = _make_sph_vel(1, 0, 0)
         pv = Coordinate(point=base, velocity=vel_sph)
         assert pv["velocity"].chart == cxc.sph3d
 
@@ -205,8 +200,8 @@ class TestChartAlignment:
         acc_sph = cx.Tangent.from_(
             {
                 "r": u.Q(0.1, "m/s^2"),
-                "theta": u.Q(0.0, "rad/s^2"),
-                "phi": u.Q(0.0, "rad/s^2"),
+                "theta": u.Q(0, "rad/s^2"),
+                "phi": u.Q(0, "rad/s^2"),
             },
             cxc.sph3d,
             cxr.coord_acc,
@@ -326,14 +321,14 @@ class TestCconvert:
 
     def test_base_cart_to_sph_values(self) -> None:
         """[1,0,0] in Cartesian → [r=1, theta=π/2, phi=0] in Spherical."""
-        base = cxv.Point.from_([1.0, 0.0, 0.0], "m")
+        base = cxv.Point.from_([1, 0, 0], "m")
         pv = Coordinate(point=base)
         pv_sph = pv.cconvert(cxc.sph3d)
-        assert jnp.allclose(pv_sph.point["r"].value, jnp.array(1.0), atol=1e-6)
+        assert jnp.allclose(pv_sph.point["r"].value, jnp.array(1), atol=1e-6)
         assert jnp.allclose(
             pv_sph.point["theta"].value, jnp.array(jnp.pi / 2), atol=1e-6
         )
-        assert jnp.allclose(pv_sph.point["phi"].value, jnp.array(0.0), atol=1e-6)
+        assert jnp.allclose(pv_sph.point["phi"].value, jnp.array(0), atol=1e-6)
 
     def test_velocity_uses_tangent_map(self) -> None:
         """Velocity at [1,0,0] in Cartesian converts via Jacobian to Spherical."""
@@ -344,7 +339,7 @@ class TestCconvert:
         assert pv_sph.point.chart == cxc.sph3d
         assert pv_sph["velocity"].chart == cxc.sph3d
         # Radial velocity [1,0,0] at [1,0,0] → [vr=1, vθ=0, vφ=0] in spherical
-        assert jnp.allclose(pv_sph["velocity"]["r"].value, jnp.array(1.0), atol=1e-6)
+        assert jnp.allclose(pv_sph["velocity"]["r"].value, jnp.array(1), atol=1e-6)
 
     def test_round_trip(self) -> None:
         """Cart → sph → cart should recover original base values."""

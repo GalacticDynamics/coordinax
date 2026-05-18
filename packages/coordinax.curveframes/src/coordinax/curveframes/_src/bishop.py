@@ -605,9 +605,6 @@ class BishopFrame(AbstractParallelTransportFrame[FrameT]):
 
         """
         xop = BishopTransform.from_curve(
-            curve,
-            tau_unit=tau_unit,
-            tau_0=tau_0,
-            initial_normal=initial_normal,
+            curve, tau_unit=tau_unit, tau_0=tau_0, initial_normal=initial_normal
         )
         return cls(base_frame=base_frame, xop=xop, xop_inv=xop.inverse)

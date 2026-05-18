@@ -641,7 +641,7 @@ class TestRotateTangentGeometryNonCartesian:
             at=at_sph,
         )
         at_sph_rot = {
-            "r": u.Q(1.0, "m"),
+            "r": u.Q(1, "m"),
             "theta": u.Q(jnp.pi / 2, "rad"),
             "phi": u.Q(jnp.pi / 2, "rad"),
         }
@@ -655,7 +655,7 @@ class TestRotateTangentGeometryNonCartesian:
             cxr.coord_vel,
             at=at_sph_rot,
         )
-        assert abs(float(v_recovered["r"].to_value("m/s")) - 1.0) < ATOL
+        assert abs(float(v_recovered["r"].to_value("m/s")) - 1) < ATOL
         assert abs(float(v_recovered["theta"].to_value("rad/s"))) < ATOL
         assert abs(float(v_recovered["phi"].to_value("rad/s"))) < ATOL
 
@@ -663,25 +663,14 @@ class TestRotateTangentGeometryNonCartesian:
         """act(Rotate, sph3d, TangentGeometry) raises TypeError without at=."""
         with pytest.raises(TypeError, match="requires 'at'"):
             cxfm.act(
-                rot90z,
-                None,
-                v_radial_sph,
-                cxc.sph3d,
-                cxr.tangent_geom,
-                cxr.coord_vel,
+                rot90z, None, v_radial_sph, cxc.sph3d, cxr.tangent_geom, cxr.coord_vel
             )
 
     def test_jit(self, rot90z, at_sph, v_radial_sph):
         """act(Rotate, sph3d, TangentGeometry) is JIT-compatible."""
         result = eqx.filter_jit(
             lambda v: cxfm.act(
-                rot90z,
-                None,
-                v,
-                cxc.sph3d,
-                cxr.tangent_geom,
-                cxr.coord_vel,
-                at=at_sph,
+                rot90z, None, v, cxc.sph3d, cxr.tangent_geom, cxr.coord_vel, at=at_sph
             )
         )(v_radial_sph)
         assert abs(float(result["r"].to_value("m/s")) - 1) < ATOL
