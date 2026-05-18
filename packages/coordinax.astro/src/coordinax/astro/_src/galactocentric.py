@@ -52,14 +52,12 @@ class Galactocentric(AbstractSpaceFrame):
     #: ra, dec: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
     #: distance: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
     galcen: cxv.Point[cxc.LonLatSpherical3D, Any] = eqx.field(  # ty: ignore[invalid-assignment]
-        converter=cxv.Point[cxc.LonLatSpherical3D, Any].from_,
-        default=GALCEN_DEFAULT,
+        converter=cxv.Point[cxc.LonLatSpherical3D, Any].from_, default=GALCEN_DEFAULT
     )
 
     #: Rotation angle of the Galactic center from the ICRS x-axis.
     roll: ScalarAngle = eqx.field(
-        converter=Unless(u.Angle, u.Angle.from_),
-        default=u.Angle(jnp.array(0), "deg"),
+        converter=Unless(u.Angle, u.Angle.from_), default=u.Angle(jnp.array(0), "deg")
     )
 
     #: Distance from the Sun to the Galactic midplane.

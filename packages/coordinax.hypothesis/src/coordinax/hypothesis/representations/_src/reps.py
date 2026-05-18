@@ -159,8 +159,7 @@ def representations(
         )
         basis_kind = draw(bases(include=include_bases))
     elif check_valid and not isinstance(
-        basis_kind,
-        (valid_basis_classes := valid_basis_classes_for_geometry(geom_kind)),
+        basis_kind, (valid_basis_classes := valid_basis_classes_for_geometry(geom_kind))
     ):
         valid_basis = ", ".join(c.__name__ for c in valid_basis_classes)
         msg = (

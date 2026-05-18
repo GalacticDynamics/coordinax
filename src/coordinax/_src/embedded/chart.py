@@ -95,9 +95,7 @@ class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
 
         """
         return EmbeddedManifold(
-            intrinsic=self.intrinsic.M,
-            ambient=self.ambient.M,
-            embed_map=self.embed_map,
+            intrinsic=self.intrinsic.M, ambient=self.ambient.M, embed_map=self.embed_map
         )
 
     @property

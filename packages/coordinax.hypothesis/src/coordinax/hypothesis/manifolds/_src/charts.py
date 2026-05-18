@@ -36,11 +36,6 @@ def charts(
         assume(False)
 
     radius = draw(
-        st.floats(
-            min_value=1e-6,
-            max_value=1e6,
-            allow_nan=False,
-            allow_infinity=False,
-        )
+        st.floats(min_value=1e-6, max_value=1e6, allow_nan=False, allow_infinity=False)
     )
     return cxm.EmbeddedChart(cxm.TwoSphereIn3D(radius=radius))

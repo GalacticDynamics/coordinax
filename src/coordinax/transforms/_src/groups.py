@@ -137,10 +137,7 @@ class IdentityGroup(AbstractTransformGroup):
     fixed.
     """
 
-    __declared_supergroups__ = (
-        SpecialOrthogonalGroup,
-        ProperOrthochronousLorentzGroup,
-    )
+    __declared_supergroups__ = (SpecialOrthogonalGroup, ProperOrthochronousLorentzGroup)
 
 
 @cache

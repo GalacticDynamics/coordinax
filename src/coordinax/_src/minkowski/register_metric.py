@@ -139,7 +139,6 @@ def metric_matrix(
     J = cxc.jac_pt_map(point, chart, cart_chart, usys=None)
     JT = J.T
     eta = QMatrix(
-        jnp.diag(jnp.array([-1.0, 1.0, 1.0, 1.0])),
-        unit=UnitsMatrix(unit_tup),
+        jnp.diag(jnp.array([-1.0, 1.0, 1.0, 1.0])), unit=UnitsMatrix(unit_tup)
     )
     return DenseMetric(JT @ eta @ J)

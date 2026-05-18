@@ -302,8 +302,7 @@ def _dot_general_2d_2d(
     # 3) Vectorised contraction — no Python loop, no accumulator.
     #    C[..., i, k] = Σ_j  scale[i, j, k] * A[..., i, j] * B[..., j, k]
     accum = jnp.sum(  # (N, K, M) * (..., N, K, 1) * (..., 1, K, M)
-        scale_3d * lhs.value[..., :, :, None] * rhs.value[..., None, :, :],
-        axis=-2,
+        scale_3d * lhs.value[..., :, :, None] * rhs.value[..., None, :, :], axis=-2
     )
 
     return QMatrix(value=accum, unit=out_unit)

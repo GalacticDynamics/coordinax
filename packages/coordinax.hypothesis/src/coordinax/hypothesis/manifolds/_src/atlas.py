@@ -346,10 +346,7 @@ def atlases(  # noqa: F811
     chosen_filter = draw_if_strategy(draw, filter)
 
     all_classes = get_all_subclasses(
-        cxm.AbstractAtlas,
-        filter=chosen_filter,
-        exclude_abstract=True,
-        exclude=exclude,
+        cxm.AbstractAtlas, filter=chosen_filter, exclude_abstract=True, exclude=exclude
     )
     classes = tuple(
         cls
@@ -408,9 +405,7 @@ def atlases(  # noqa: F811
     selected_cls = draw(atlas_cls)
     return draw(
         cast(Any, atlases)(
-            selected_cls,
-            ndim=ndim,
-            required_chart_classes=required_chart_classes,
+            selected_cls, ndim=ndim, required_chart_classes=required_chart_classes
         )
     )
 

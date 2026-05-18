@@ -228,9 +228,7 @@ def manifolds(  # noqa: F811
     manifold_cls = draw(manifold_cls)
     return draw(
         cast(Any, manifolds)(
-            manifold_cls,
-            ndim=ndim,
-            required_chart_classes=required_chart_classes,
+            manifold_cls, ndim=ndim, required_chart_classes=required_chart_classes
         )
     )
 
