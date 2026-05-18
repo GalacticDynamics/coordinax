@@ -78,8 +78,7 @@ def quantity_3d():
 def qmatrix_3d():
     """QMatrix [1, 0, 0] with uniform km units."""
     return QMatrix(
-        jnp.array([1, 0, 0]),
-        unit=(u.unit("km"), u.unit("km"), u.unit("km")),
+        jnp.array([1, 0, 0]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
     )
 
 

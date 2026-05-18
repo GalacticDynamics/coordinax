@@ -133,8 +133,7 @@ class TestDistanceConstruction:
     def test_negative_raises_when_checked(self) -> None:
         """Negative values raise when check_negative=True."""
         with pytest.raises(
-            (eqx.EquinoxRuntimeError, ValueError),
-            match="Distance must be non-negative",
+            (eqx.EquinoxRuntimeError, ValueError), match="Distance must be non-negative"
         ):
             cxd.Distance(-1, "kpc", check_negative=True)
 
@@ -208,9 +207,7 @@ class TestDistanceArithmetic:
     @given(
         d=cxst.distances(
             elements=st.floats(
-                min_value=_F32_OVERFLOW_MIN,
-                max_value=_F32_OVERFLOW_MAX,
-                width=32,
+                min_value=_F32_OVERFLOW_MIN, max_value=_F32_OVERFLOW_MAX, width=32
             )
         )
     )

@@ -21,11 +21,7 @@ from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
 
 
 @pytest.fixture(
-    params=[
-        jnp.array([1, 4, 9]),
-        jnp.array([1]),
-        jnp.array([2, 3]),
-    ],
+    params=[jnp.array([1, 4, 9]), jnp.array([1]), jnp.array([2, 3])],
     ids=["3d", "1d", "2d"],
 )
 def diag_metric(request):
@@ -33,11 +29,7 @@ def diag_metric(request):
 
 
 @pytest.fixture(
-    params=[
-        jnp.eye(3),
-        jnp.array([[4.0, 0.0], [0.0, 9.0]]),
-        jnp.eye(1),
-    ],
+    params=[jnp.eye(3), jnp.array([[4.0, 0.0], [0.0, 9.0]]), jnp.eye(1)],
     ids=["I3", "diag2", "I1"],
 )
 def dense_metric(request):

@@ -96,18 +96,14 @@ class TestRepresentations:
         """Explicitly provided basis_kind is used."""
         assert isinstance(rep.basis, cxr.NoBasis)
 
-    @given(
-        rep=cxsr.representations(geom_kind=cxr.point_geom, semantic_kind=cxr.location)
-    )
+    @given(rep=cxsr.representations(geom_kind=cxr.point_geom, semantic_kind=cxr.loc))
     def test_explicit_semantic_kind_is_preserved(self, rep: cxr.Representation) -> None:
         """Explicitly provided semantic_kind is used."""
         assert isinstance(rep.semantic_kind, cxr.Location)
 
     @given(
         rep=cxsr.representations(
-            geom_kind=cxr.point_geom,
-            basis_kind=cxr.no_basis,
-            semantic_kind=cxr.location,
+            geom_kind=cxr.point_geom, basis_kind=cxr.no_basis, semantic_kind=cxr.loc
         )
     )
     def test_all_three_explicit_fields(self, rep: cxr.Representation) -> None:
@@ -140,7 +136,7 @@ class TestRepresentations:
 
     @given(
         rep=cxsr.representations(
-            geom_kind=st.just(cxr.point_geom), semantic_kind=st.just(cxr.location)
+            geom_kind=st.just(cxr.point_geom), semantic_kind=st.just(cxr.loc)
         )
     )
     def test_strategy_valued_semantic_kind_is_drawn(

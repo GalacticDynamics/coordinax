@@ -224,8 +224,7 @@ class TestStrategyForAnnotation:
     @given(st.data())
     def test_quantity_dispatch_with_shape(self, data: st.DataObject):
         strategy = annotations.strategy_for_annotation(
-            u.Q["length"],
-            meta=annotations.Metadata(dtype=jnp.float64, shape=(3,)),
+            u.Q["length"], meta=annotations.Metadata(dtype=jnp.float64, shape=(3,))
         )
         value = data.draw(strategy)
         assert isinstance(value, u.Q)

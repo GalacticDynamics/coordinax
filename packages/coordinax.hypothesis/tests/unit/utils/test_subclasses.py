@@ -30,9 +30,7 @@ def test_canonicalize_resolves_via_public_parent_module(monkeypatch) -> None:
     monkeypatch.setitem(sys.modules, "coordinax.synthetic", synthetic_mod)
 
     duplicate_cls = type(
-        "SyntheticThing",
-        (),
-        {"__module__": "coordinax._src.synthetic.deep"},
+        "SyntheticThing", (), {"__module__": "coordinax._src.synthetic.deep"}
     )
 
     assert canonicalize_coordinax_class(duplicate_cls) is canonical_cls

@@ -112,14 +112,9 @@ class TestFrameAlignment:
         """All field vectors are converted to point's frame."""
         base = cxv.Point.from_([1, 0, 0], "m", cxf.alice)
         vel = cxv.Tangent.from_([1, 0, 0], "m/s", cxc.cart3d, cxr.coord_vel, cxf.alex)
-        acc_data = {
-            "x": u.Q(0.1, "m/s^2"),
-            "y": u.Q(0, "m/s^2"),
-            "z": u.Q(0, "m/s^2"),
-        }
+        acc_data = {"x": u.Q(0.1, "m/s^2"), "y": u.Q(0, "m/s^2"), "z": u.Q(0, "m/s^2")}
         acc = replace(
-            cx.Tangent.from_(acc_data, cxc.cart3d, cxr.coord_acc),
-            frame=cxf.alex,
+            cx.Tangent.from_(acc_data, cxc.cart3d, cxr.coord_acc), frame=cxf.alex
         )
         pv = Coordinate(point=base, velocity=vel, acceleration=acc)
         assert pv["velocity"].frame is cxf.alice

@@ -198,11 +198,7 @@ class TestTranslateVelJAXCompatibility:
             assert jnp.allclose(result[k], vel_cdict[k] + translate_vel.delta[k])
 
     def test_vmap_velocity_semantic(self, translate_vel):
-        batch = {
-            "x": jnp.ones(4) * 10,
-            "y": jnp.ones(4) * 20,
-            "z": jnp.ones(4) * 30,
-        }
+        batch = {"x": jnp.ones(4) * 10, "y": jnp.ones(4) * 20, "z": jnp.ones(4) * 30}
         result = jax.vmap(
             lambda v: cxfm.act(translate_vel, None, v, cxc.cart3d, cxr.coord_vel)
         )(batch)
@@ -280,11 +276,7 @@ class TestTranslateDisplacementNonCartesianDelta:
         usys = u.unitsystems.si
 
         # delta expressed in spherical 3d chart (with units)
-        sph_delta = {
-            "r": u.Q(1, "km"),
-            "theta": u.Q(0, "rad"),
-            "phi": u.Q(0, "rad"),
-        }
+        sph_delta = {"r": u.Q(1, "km"), "theta": u.Q(0, "rad"), "phi": u.Q(0, "rad")}
         t = cxfm.Translate(sph_delta, chart=cxc.sph3d)
 
         # Apply to a Cartesian point (with units)

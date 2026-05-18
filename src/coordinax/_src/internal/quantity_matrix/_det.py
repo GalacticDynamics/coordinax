@@ -22,6 +22,7 @@ import operator
 from jaxtyping import Array
 
 import jax
+import jax._src.dtypes as jax_dtypes
 import jax.core
 import jax.numpy as jnp
 import quax
@@ -113,7 +114,10 @@ def _det_abstract_eval(x: jax.core.ShapedArray, /) -> jax.core.ShapedArray:
             f"(shape[-2] == shape[-1]), got shape={x.shape}"
         )
     # (*batch, n, n) → (*batch,)
-    return x.update(shape=x.shape[:-2])
+    # jnp.linalg.det always returns a floating-point result (like numpy),
+    # so promote integer dtypes to their inexact equivalent.
+    out_dtype = jax_dtypes.to_inexact_dtype(x.dtype)
+    return x.update(shape=x.shape[:-2], dtype=out_dtype)
 
 
 det_p.def_abstract_eval(_det_abstract_eval)

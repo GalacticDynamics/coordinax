@@ -32,9 +32,7 @@ from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
 def unit_sphere_embedded():
     """EmbeddedManifold for the unit two-sphere (dimensionless, radius=1)."""
     return cxm.EmbeddedManifold(
-        intrinsic=cxm.S2,
-        ambient=cxm.R3,
-        embed_map=cxm.TwoSphereIn3D(radius=1),
+        intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=1)
     )
 
 
@@ -143,9 +141,7 @@ class TestPullbackConsistencyJIT:
 
     def test_pullback_metric_jit(self):
         M = cxm.EmbeddedManifold(
-            intrinsic=cxm.S2,
-            ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=1),
+            intrinsic=cxm.S2, ambient=cxm.R3, embed_map=cxm.TwoSphereIn3D(radius=1)
         )
 
         @jax.jit

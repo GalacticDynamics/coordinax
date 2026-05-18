@@ -114,11 +114,7 @@ class TestVectorConstruction:
             (cxr.dpl, _cart3d_dpl_data()),
             (
                 cxr.acc,
-                {
-                    "x": u.Q(0.1, "m/s^2"),
-                    "y": u.Q(0.2, "m/s^2"),
-                    "z": u.Q(0, "m/s^2"),
-                },
+                {"x": u.Q(0.1, "m/s^2"), "y": u.Q(0.2, "m/s^2"), "z": u.Q(0, "m/s^2")},
             ),
         ]:
             v = cx.Tangent(
@@ -454,8 +450,7 @@ class TestVectorCconvert:
         v = cx.Tangent.from_(
             {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")},
             cxc.cart3d,
-            cxr.coord_basis,
-            cxr.vel,
+            cxr.coord_vel,
         )
         pt = cx.Point.from_([1, 0, 0], "m")
         v_sph = v.cconvert(cxc.sph3d, at=pt)
@@ -500,10 +495,7 @@ class TestVectorShape:
             "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
-            data=data,
-            chart=cxc.cart3d,
-            basis=cxr.coord_basis,
-            semantic=cxr.vel,
+            data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
         assert v.shape == (2,)
 
@@ -515,10 +507,7 @@ class TestVectorShape:
             "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
-            data=data,
-            chart=cxc.cart3d,
-            basis=cxr.coord_basis,
-            semantic=cxr.vel,
+            data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
         v0 = v[0]
         assert isinstance(v0, cx.Tangent)
@@ -532,10 +521,7 @@ class TestVectorShape:
             "z": u.Q([5, 6], "m/s"),
         }
         v = cx.Tangent(
-            data=data,
-            chart=cxc.cart3d,
-            basis=cxr.coord_basis,
-            semantic=cxr.vel,
+            data=data, chart=cxc.cart3d, basis=cxr.coord_basis, semantic=cxr.vel
         )
         v0 = v[0]
         assert v0.chart == cxc.cart3d

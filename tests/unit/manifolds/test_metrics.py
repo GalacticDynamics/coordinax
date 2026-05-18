@@ -31,14 +31,7 @@ class TestAbstractMetricFieldContract:
     """Every AbstractMetricField subclass must satisfy these invariants."""
 
     @pytest.fixture(
-        params=[
-            "R3",
-            "R2",
-            "R1",
-            "hyperspherical2d",
-            "minkowski4d",
-            "product3d",
-        ],
+        params=["R3", "R2", "R1", "hyperspherical2d", "minkowski4d", "product3d"]
     )
     def metric(self, request):
         metrics = {
@@ -86,13 +79,7 @@ class TestAbstractDiagonalMetricFieldContract:
     """
 
     @pytest.fixture(
-        params=[
-            "R3_cart",
-            "R3_sph",
-            "R2_cart",
-            "hyperspherical2d",
-            "minkowski4d",
-        ]
+        params=["R3_cart", "R3_sph", "R2_cart", "hyperspherical2d", "minkowski4d"]
     )
     def metric_chart_at(self, request):
         cases = {
@@ -323,12 +310,7 @@ class TestMinkowskiMetric:
 
     def test_metric_matrix_is_diagonal(self):
         chart = cxc.MinkowskiCT()
-        p = {
-            "ct": u.Q(1, "m"),
-            "x": u.Q(0, "m"),
-            "y": u.Q(0, "m"),
-            "z": u.Q(0, "m"),
-        }
+        p = {"ct": u.Q(1, "m"), "x": u.Q(0, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
         g = mm_dispatch(cxm.MinkowskiManifold(), p, chart)
         assert isinstance(g, DiagonalMetric)
         expected = jnp.array([-1, 1, 1, 1])
@@ -337,12 +319,7 @@ class TestMinkowskiMetric:
     def test_metric_matrix_is_position_independent(self):
         """Minkowski metric is flat — does not depend on position."""
         chart = cxc.MinkowskiCT()
-        p1 = {
-            "ct": u.Q(1, "m"),
-            "x": u.Q(0, "m"),
-            "y": u.Q(0, "m"),
-            "z": u.Q(0, "m"),
-        }
+        p1 = {"ct": u.Q(1, "m"), "x": u.Q(0, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
         p2 = {
             "ct": u.Q(100, "m"),
             "x": u.Q(50, "m"),
@@ -355,12 +332,7 @@ class TestMinkowskiMetric:
 
     def test_metric_matrix_jit(self):
         chart = cxc.MinkowskiCT()
-        p = {
-            "ct": u.Q(1, "m"),
-            "x": u.Q(0, "m"),
-            "y": u.Q(0, "m"),
-            "z": u.Q(0, "m"),
-        }
+        p = {"ct": u.Q(1, "m"), "x": u.Q(0, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
 
         @jax.jit
         def compute(p):

@@ -70,18 +70,8 @@ class TestTangentMapRoundTripCart2dPolar2d:
             v_polar, cxc.polar2d, cxr.coord_disp, cxc.cart2d, at=p_polar
         )
 
-        np.testing.assert_allclose(
-            np.asarray(v_back["x"]),
-            vx,
-            atol=1e-4,
-            rtol=1e-4,
-        )
-        np.testing.assert_allclose(
-            np.asarray(v_back["y"]),
-            vy,
-            atol=1e-4,
-            rtol=1e-4,
-        )
+        np.testing.assert_allclose(np.asarray(v_back["x"]), vx, atol=1e-4, rtol=1e-4)
+        np.testing.assert_allclose(np.asarray(v_back["y"]), vy, atol=1e-4, rtol=1e-4)
 
 
 # ===========================================================================

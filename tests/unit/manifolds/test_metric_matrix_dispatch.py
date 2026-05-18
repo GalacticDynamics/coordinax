@@ -75,11 +75,7 @@ def manifold_point_chart(request):
             cxc.sph3d,
         )
     if key == "hyperspherical_sph2":
-        return (
-            cxm.S2,
-            {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0)},
-            cxc.sph2,
-        )
+        return (cxm.S2, {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0)}, cxc.sph2)
     if key == "minkowski_minkowskict":
         return (
             cxm.MinkowskiManifold(),

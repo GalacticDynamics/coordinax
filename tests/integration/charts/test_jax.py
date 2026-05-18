@@ -155,9 +155,7 @@ class TestVmapCompatibility:
 
         for i in range(3):
             r_i, theta_i, _phi_i = _cart3d_to_sph3d(
-                u.Q(xs.value[i], "m"),
-                u.Q(ys.value[i], "m"),
-                u.Q(zs.value[i], "m"),
+                u.Q(xs.value[i], "m"), u.Q(ys.value[i], "m"), u.Q(zs.value[i], "m")
             )
             assert u.ustrip("m", r_vmap)[i] == pytest.approx(
                 u.ustrip("m", r_i), rel=1e-5

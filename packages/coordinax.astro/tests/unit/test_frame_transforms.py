@@ -148,9 +148,7 @@ class TestFrameTransformProperties:
 
     @given(
         q=ust.quantities(
-            "pc",
-            shape=(3,),
-            elements={"min_value": -5e4, "max_value": 5e4},
+            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
         )
     )
     @settings(deadline=None)

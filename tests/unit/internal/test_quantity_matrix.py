@@ -648,10 +648,7 @@ class TestDotProduct:
         # C[1,0] = 4*10 + 5*20 = 140 in kg*s
         assert jnp.isclose(result.value[0, 0], 80)
         assert jnp.isclose(result.value[1, 0], 140)
-        assert result.unit == (
-            (_m * _s,),
-            (_kg * _s,),
-        )
+        assert result.unit == ((_m * _s,), (_kg * _s,))
         assert result.shape[-2] == 2
         assert result.shape[-1] == 1
 
@@ -972,8 +969,7 @@ class TestMatVec:
     def test_non_square_3x2_at_2(self):
         """Non-square 3x2 @ 2 → 3."""
         A = QMat(
-            jnp.array([[1, 2], [3, 4], [5, 6]]),
-            unit=((_m, _km), (_m, _km), (_m, _km)),
+            jnp.array([[1, 2], [3, 4], [5, 6]]), unit=((_m, _km), (_m, _km), (_m, _km))
         )
         v = QMat(jnp.array([1, 1]), unit=(_s, _s))
         w = _matmul(A, v)
@@ -1184,10 +1180,7 @@ class TestDiagMethod:
 
     def test_2x2_square(self):
         """2x2 matrix diagonal."""
-        A = QMat(
-            jnp.array([[5, 0], [0, 7]]),
-            unit=((_m, _s), (_kg, _rad)),
-        )
+        A = QMat(jnp.array([[5, 0], [0, 7]]), unit=((_m, _s), (_kg, _rad)))
         d = A.diag()
         assert d.shape == (2,)
         assert jnp.isclose(d.value[0], 5)
@@ -1198,10 +1191,7 @@ class TestDiagMethod:
     def test_non_square_picks_min_dim(self):
         """For non-square matrices the diagonal length is min(rows, cols)."""
         # 2x3 matrix → diagonal of length 2
-        A = QMat(
-            jnp.arange(6).reshape(2, 3),
-            unit=((_m, _s, _kg), (_rad, _km, _ms)),
-        )
+        A = QMat(jnp.arange(6).reshape(2, 3), unit=((_m, _s, _kg), (_rad, _km, _ms)))
         d = A.diag()
         assert d.shape == (2,)
         assert jnp.isclose(d.value[0], 0)  # A[0,0]
@@ -1794,10 +1784,7 @@ class TestInvQMatrix:
     def test_unit_m2_per_rad2(self):
         """Inv of a metric with m²/rad² entries carries rad²/m² units."""
         m2_r2 = u.unit("m2 / rad2")
-        A = QMat(
-            jnp.array([[4, 0], [0, 1]]),
-            unit=((m2_r2, m2_r2), (m2_r2, m2_r2)),
-        )
+        A = QMat(jnp.array([[4, 0], [0, 1]]), unit=((m2_r2, m2_r2), (m2_r2, m2_r2)))
         result = quax.quaxify(qm_inv)(A)
         assert result.unit[0, 0] == u.unit("rad2 / m2")
 
@@ -1810,10 +1797,7 @@ class TestInvQMatrix:
 
     def test_roundtrip_identity(self):
         """A @ inv(A) ≈ I for a QMatrix (value check)."""
-        A = QMat(
-            jnp.array([[2, 1], [1, 3]]),
-            unit=((_m, _m), (_m, _m)),
-        )
+        A = QMat(jnp.array([[2, 1], [1, 3]]), unit=((_m, _m), (_m, _m)))
         Ainv = quax.quaxify(qm_inv)(A)
         product = A.value @ Ainv.value
         assert jnp.allclose(product, jnp.eye(2), atol=1e-6)

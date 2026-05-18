@@ -432,11 +432,7 @@ class TestGuessGeometryKind:
 
     def test_cdict_prolate_spheroidal_returns_point_geom(self) -> None:
         """On prolate-spheroidal CDict {area, angle} returns point_geom."""
-        d = {
-            "mu": u.Q(1, "km2"),
-            "nu": u.Q(0.5, "km2"),
-            "phi": u.Q(1, "deg"),
-        }
+        d = {"mu": u.Q(1, "km2"), "nu": u.Q(0.5, "km2"), "phi": u.Q(1, "deg")}
         chart = cxc.ProlateSpheroidal3D(Delta=u.StaticQuantity(1, "km"))
         result = cxr.guess_geometry_kind(d, chart)
         assert result == cxr.point_geom

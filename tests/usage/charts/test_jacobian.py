@@ -60,10 +60,7 @@ class TestCurriedWorkflow:
         """Curried Jacobian matches direct call for Cart3D→Sph3D."""
         at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
         jac_fn = cxc.jac_pt_map(cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
-        _assert_jacobian_approx(
-            jac_fn(at),
-            cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d),
-        )
+        _assert_jacobian_approx(jac_fn(at), cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d))
 
     def test_curried_reuse_across_points(self) -> None:
         """A single curried function can be called at multiple base points."""
@@ -78,10 +75,7 @@ class TestCurriedWorkflow:
         """None-partial form also matches the direct call."""
         at = {"x": u.Q(3, "m"), "y": u.Q(4, "m"), "z": u.Q(0, "m")}
         fn = cxc.jac_pt_map(None, cxc.cart3d, cxc.sph3d, usys=u.unitsystems.si)
-        _assert_jacobian_approx(
-            fn(at),
-            cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d),
-        )
+        _assert_jacobian_approx(fn(at), cxc.jac_pt_map(at, cxc.cart3d, cxc.sph3d))
 
 
 # ===========================================================================
@@ -192,9 +186,7 @@ class TestChainRuleViaCurriedForm:
 
     def test_cart2d_polar2d_at_1_0(self) -> None:
         self._check_composition_identity(
-            cxc.cart2d,
-            cxc.polar2d,
-            {"x": u.Q(1, "m"), "y": u.Q(0, "m")},
+            cxc.cart2d, cxc.polar2d, {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
         )
 
     @given(r=_pos_m, theta=_angle_rad, phi=_any_angle_rad)
@@ -202,10 +194,7 @@ class TestChainRuleViaCurriedForm:
     def test_cart3d_sph3d_property(self, r, theta, phi) -> None:
         """Property: J_inv @ J_fwd = I for any non-singular Sph3D point."""
         self._check_composition_identity(
-            cxc.sph3d,
-            cxc.cart3d,
-            {"r": r, "theta": theta, "phi": phi},
-            atol=1e-4,
+            cxc.sph3d, cxc.cart3d, {"r": r, "theta": theta, "phi": phi}, atol=1e-4
         )
 
     @given(r=_pos_m, phi=_any_angle_rad, z=_any_m)
@@ -213,8 +202,5 @@ class TestChainRuleViaCurriedForm:
     def test_cart3d_cyl3d_property(self, r, phi, z) -> None:
         """Property: J_inv @ J_fwd = I for any non-singular Cyl3D point."""
         self._check_composition_identity(
-            cxc.cyl3d,
-            cxc.cart3d,
-            {"rho": r, "phi": phi, "z": z},
-            atol=1e-4,
+            cxc.cyl3d, cxc.cart3d, {"rho": r, "phi": phi, "z": z}, atol=1e-4
         )

@@ -298,11 +298,7 @@ class TestChangeBasisManifold:
     def test_diagonal_path_phys_to_coord_values(self):
         """Diagonal path: verify inverse scale-factor division at theta=pi/2."""
         # h_r=1, h_theta=2, h_phi=2
-        v_phys = {
-            "r": u.Q(5, "m/s"),
-            "theta": u.Q(2, "m/s"),
-            "phi": u.Q(4, "m/s"),
-        }
+        v_phys = {"r": u.Q(5, "m/s"), "theta": u.Q(2, "m/s"), "phi": u.Q(4, "m/s")}
         at = {"r": u.Q(2, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
         out = cxr.change_basis(
             v_phys, cxc.sph3d, cxm.R3, cxr.phys_basis, cxr.coord_basis, at=at
@@ -333,11 +329,7 @@ class TestChangeBasisManifoldJAX:
 
     def test_jit_diagonal_path(self):
         v = {"r": u.Q(5, "m/s"), "theta": u.Q(1, "rad/s"), "phi": u.Q(1, "rad/s")}
-        at = {
-            "r": u.Q(2, "m"),
-            "theta": u.Q(jnp.pi / 2, "rad"),
-            "phi": u.Q(0, "rad"),
-        }
+        at = {"r": u.Q(2, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
 
         @jax.jit
         def run(v, at):

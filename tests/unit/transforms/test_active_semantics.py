@@ -102,9 +102,7 @@ class TestActiveSemanticsProperty:
 
     @given(
         q=ust.quantities(
-            "m",
-            shape=(3,),
-            elements={"min_value": -1e6, "max_value": 1e6},
+            "m", shape=(3,), elements={"min_value": -1e6, "max_value": 1e6}
         )
     )
     @settings(deadline=None)

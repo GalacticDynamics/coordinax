@@ -318,11 +318,7 @@ class TestBishopTransformInverse:
         U2i = inv.normal2(tau)
         diff_inv = p_fwd - g_inv
         p_rec = qnp.stack(
-            [
-                qnp.sum(Ti * diff_inv),
-                qnp.sum(U1i * diff_inv),
-                qnp.sum(U2i * diff_inv),
-            ]
+            [qnp.sum(Ti * diff_inv), qnp.sum(U1i * diff_inv), qnp.sum(U2i * diff_inv)]
         )
 
         assert jnp.allclose(p_rec.value, p.value, atol=1e-3)
@@ -392,11 +388,7 @@ class TestBishopTransformHelix:
         U2i = inv.normal2(tau)
         diff_inv = p_fwd - g_inv
         p_rec = qnp.stack(
-            [
-                qnp.sum(Ti * diff_inv),
-                qnp.sum(U1i * diff_inv),
-                qnp.sum(U2i * diff_inv),
-            ]
+            [qnp.sum(Ti * diff_inv), qnp.sum(U1i * diff_inv), qnp.sum(U2i * diff_inv)]
         )
 
         assert jnp.allclose(p_rec.value, p.value, atol=1e-3)

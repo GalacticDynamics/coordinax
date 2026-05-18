@@ -89,10 +89,7 @@ class TestScaleFactorsGeneric:
         def compute(at):
             return cxm.scale_factors(metric, cxc.sph2, at=at)
 
-        at = {
-            "theta": u.Angle(jnp.pi / 2, "rad"),
-            "phi": u.Angle(jnp.array(0), "rad"),
-        }
+        at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(jnp.array(0), "rad")}
         result = compute(at)
 
         assert isinstance(result, QMatrix)
@@ -104,9 +101,7 @@ class TestScaleFactorsGeneric:
 
         def compute(theta):
             return cxm.scale_factors(
-                metric,
-                cxc.sph2,
-                at={"theta": theta, "phi": jnp.array(0)},
+                metric, cxc.sph2, at={"theta": theta, "phi": jnp.array(0)}
             ).value
 
         result = jax.vmap(compute)(thetas)
@@ -121,10 +116,7 @@ class TestScaleFactorsGeneric:
         )
         assert isinstance(M.metric, cxm.PullbackMetric)
 
-        at = {
-            "theta": u.Angle(jnp.pi / 6, "rad"),
-            "phi": u.Angle(jnp.array(0), "rad"),
-        }
+        at = {"theta": u.Angle(jnp.pi / 6, "rad"), "phi": u.Angle(jnp.array(0), "rad")}
 
         result = cxm.scale_factors(M.metric, cxc.sph2, at=at)
 
