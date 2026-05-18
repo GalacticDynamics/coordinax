@@ -34,7 +34,7 @@ def unit_sphere_embedded():
     return cxm.EmbeddedManifold(
         intrinsic=cxm.S2,
         ambient=cxm.R3,
-        embed_map=cxm.TwoSphereIn3D(radius=1.0),
+        embed_map=cxm.TwoSphereIn3D(radius=1),
     )
 
 
@@ -45,7 +45,7 @@ def unit_sphere_embedded():
 
 def _round_dense_matrix(theta, phi):
     """Expected round-metric as a dense 2×2 array at (theta, phi)."""
-    return jnp.array([[1.0, 0.0], [0.0, jnp.sin(theta) ** 2]])
+    return jnp.array([[1, 0], [0, jnp.sin(theta) ** 2]])
 
 
 # ---------------------------------------------------------------------------
@@ -78,7 +78,7 @@ class TestPullbackConsistencyNumerical:
     @pytest.mark.parametrize(
         ("theta", "phi"),
         [
-            (jnp.pi / 2, 0.0),  # equator, phi=0
+            (jnp.pi / 2, 0),  # equator, phi=0
             (jnp.pi / 3, jnp.pi / 4),  # off-equator
             (jnp.pi / 6, jnp.pi),  # high latitude, phi=π
             (0.1, 2.5),  # near pole, arbitrary phi
@@ -105,7 +105,7 @@ class TestPullbackConsistencyNumerical:
             min_value=0.05, max_value=3.09, allow_nan=False, allow_infinity=False
         ),
         phi=st.floats(
-            min_value=0.0, max_value=6.28, allow_nan=False, allow_infinity=False
+            min_value=0, max_value=6.28, allow_nan=False, allow_infinity=False
         ),
     )
     @settings(max_examples=30, deadline=None)
@@ -138,14 +138,14 @@ class TestPullbackConsistencyJIT:
             pt = {"theta": theta, "phi": phi}
             return cxmapi.metric_matrix(cxm.S2, pt, cxc.sph2).diagonal
 
-        result = compute(jnp.array(jnp.pi / 3), jnp.array(0.0))
+        result = compute(jnp.array(jnp.pi / 3), jnp.array(0))
         assert result.shape == (2,)
 
     def test_pullback_metric_jit(self):
         M = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
             ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=1.0),
+            embed_map=cxm.TwoSphereIn3D(radius=1),
         )
 
         @jax.jit
@@ -153,7 +153,7 @@ class TestPullbackConsistencyJIT:
             pt = {"theta": theta, "phi": phi}
             return cxmapi.metric_matrix(M, pt, cxc.sph2).matrix.value
 
-        result = compute(jnp.array(jnp.pi / 3), jnp.array(0.0))
+        result = compute(jnp.array(jnp.pi / 3), jnp.array(0))
         assert result.shape == (2, 2)
 
 
@@ -169,9 +169,9 @@ class TestPullbackMetricUnits:
         M = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
             ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
+            embed_map=cxm.TwoSphereIn3D(radius=u.Q(1, "km")),
         )
-        at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+        at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
         g = cxmapi.metric_matrix(M, at, cxc.sph2)
         assert isinstance(g, DenseMetric)
         # At the equator sin(π/2)=1, so metric should be identity × km²/rad²
@@ -182,10 +182,10 @@ class TestPullbackMetricUnits:
         M = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
             ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "m")),
+            embed_map=cxm.TwoSphereIn3D(radius=u.Q(2, "m")),
         )
-        at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
+        at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
         g = cxmapi.metric_matrix(M, at, cxc.sph2)
         # Metric = R² × I at equator → values should be [[4, 0], [0, 4]]
-        assert jnp.allclose(g.matrix.value, 4.0 * jnp.eye(2), atol=1e-6)
+        assert jnp.allclose(g.matrix.value, 4 * jnp.eye(2), atol=1e-6)
         assert str(g.matrix.unit[0, 0]) == "m2 / rad2"

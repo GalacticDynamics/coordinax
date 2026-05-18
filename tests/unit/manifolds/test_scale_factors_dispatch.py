@@ -18,9 +18,9 @@ class TestScaleFactorsEuclidean:
     def test_cartesian_metric_returns_1d_QMatrix(self):
         metric = cxm.FlatMetric(3)
         at = {
-            "x": u.Q(jnp.array(1.0), "m"),
-            "y": u.Q(jnp.array(2.0), "m"),
-            "z": u.Q(jnp.array(3.0), "m"),
+            "x": u.Q(jnp.array(1), "m"),
+            "y": u.Q(jnp.array(2), "m"),
+            "z": u.Q(jnp.array(3), "m"),
         }
 
         result = cxm.scale_factors(metric, cxc.cart3d, at=at)
@@ -28,13 +28,13 @@ class TestScaleFactorsEuclidean:
         assert isinstance(result, QMatrix)
         assert result.shape == (3,)
         assert result.ndim == 1
-        assert jnp.allclose(result.value, jnp.array([1.0, 1.0, 1.0]))
+        assert jnp.allclose(result.value, jnp.array([1, 1, 1]))
         assert all(result.unit[i] == u.unit("") for i in range(3))
 
     def test_spherical_metric_returns_metric_diagonal_entries(self):
         metric = cxm.FlatMetric(3)
         at = {
-            "r": u.Q(jnp.array(2.0), "m"),
+            "r": u.Q(jnp.array(2), "m"),
             "theta": u.Angle(jnp.pi / 6, "rad"),
             "phi": u.Angle(jnp.array(0.4), "rad"),
         }
@@ -43,7 +43,7 @@ class TestScaleFactorsEuclidean:
 
         assert isinstance(result, QMatrix)
         assert result.shape == (3,)
-        assert jnp.allclose(result.value, jnp.array([1.0, 4.0, 1.0]), atol=1e-6)
+        assert jnp.allclose(result.value, jnp.array([1, 4, 1]), atol=1e-6)
         assert result.unit[0] == u.unit("")
         assert result.unit[1] == u.unit("m2 / rad2")
         assert result.unit[2] == u.unit("m2 / rad2")
@@ -54,13 +54,13 @@ class TestScaleFactorsGeneric:
 
     def test_hyperspherical_bare_arrays_promote_to_QMatrix(self):
         metric = cxm.RoundMetric(ndim=2)
-        at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
+        at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0)}
 
         result = cxm.scale_factors(metric, cxc.sph2, at=at)
 
         assert isinstance(result, QMatrix)
         assert result.shape == (2,)
-        assert jnp.allclose(result.value, jnp.array([1.0, 1.0]), atol=1e-6)
+        assert jnp.allclose(result.value, jnp.array([1, 1]), atol=1e-6)
         assert all(result.unit[i] == u.unit("") for i in range(2))
 
     def test_generic_path_matches_metric_matrix_diag(self):
@@ -91,12 +91,12 @@ class TestScaleFactorsGeneric:
 
         at = {
             "theta": u.Angle(jnp.pi / 2, "rad"),
-            "phi": u.Angle(jnp.array(0.0), "rad"),
+            "phi": u.Angle(jnp.array(0), "rad"),
         }
         result = compute(at)
 
         assert isinstance(result, QMatrix)
-        assert jnp.allclose(result.value, jnp.array([1.0, 1.0]), atol=1e-6)
+        assert jnp.allclose(result.value, jnp.array([1, 1]), atol=1e-6)
 
     def test_vmap_values(self):
         metric = cxm.RoundMetric(ndim=2)
@@ -106,7 +106,7 @@ class TestScaleFactorsGeneric:
             return cxm.scale_factors(
                 metric,
                 cxc.sph2,
-                at={"theta": theta, "phi": jnp.array(0.0)},
+                at={"theta": theta, "phi": jnp.array(0)},
             ).value
 
         result = jax.vmap(compute)(thetas)
@@ -117,13 +117,13 @@ class TestScaleFactorsGeneric:
         M = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
             ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=u.Q(jnp.array(2.0), "m")),
+            embed_map=cxm.TwoSphereIn3D(radius=u.Q(jnp.array(2), "m")),
         )
         assert isinstance(M.metric, cxm.PullbackMetric)
 
         at = {
             "theta": u.Angle(jnp.pi / 6, "rad"),
-            "phi": u.Angle(jnp.array(0.0), "rad"),
+            "phi": u.Angle(jnp.array(0), "rad"),
         }
 
         result = cxm.scale_factors(M.metric, cxc.sph2, at=at)
@@ -136,7 +136,7 @@ class TestScaleFactorsGeneric:
         # 4 * 1/4 = 1 with the same units. Using a non-equatorial point makes it
         # clear that we are testing the induced metric of the embedded sphere,
         # not just a coincidental [4, 4] value at the equator.
-        expected = jnp.array([4.0, 1.0])
+        expected = jnp.array([4, 1])
 
         assert isinstance(result, QMatrix)
         assert result.shape == (2,)

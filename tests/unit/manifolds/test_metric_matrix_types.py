@@ -22,9 +22,9 @@ from coordinax._src.metric.matrix import DenseMetric, DiagonalMetric
 
 @pytest.fixture(
     params=[
-        jnp.array([1.0, 4.0, 9.0]),
-        jnp.array([1.0]),
-        jnp.array([2.0, 3.0]),
+        jnp.array([1, 4, 9]),
+        jnp.array([1]),
+        jnp.array([2, 3]),
     ],
     ids=["3d", "1d", "2d"],
 )
@@ -77,7 +77,7 @@ class TestDiagonalMetric:
         n = diag_metric.ndim
         dense = diag_metric.to_dense()
         off_diag_mask = ~jnp.eye(n, dtype=bool)
-        assert jnp.allclose(dense.matrix[off_diag_mask], 0.0)
+        assert jnp.allclose(dense.matrix[off_diag_mask], 0)
 
     def test_matmul(self, diag_metric):
         n = diag_metric.ndim
@@ -87,7 +87,7 @@ class TestDiagonalMetric:
 
     def test_matmul_matches_dense(self, diag_metric):
         n = diag_metric.ndim
-        v = jnp.arange(1.0, n + 1)
+        v = jnp.arange(1, n + 1)
         assert jnp.allclose(diag_metric @ v, diag_metric.to_dense() @ v)
 
     def test_inverse_shape(self, diag_metric):
@@ -96,7 +96,7 @@ class TestDiagonalMetric:
         assert inv.diagonal.shape == diag_metric.diagonal.shape
 
     def test_inverse_values(self, diag_metric):
-        assert jnp.allclose(diag_metric.inverse.diagonal, 1.0 / diag_metric.diagonal)
+        assert jnp.allclose(diag_metric.inverse.diagonal, 1 / diag_metric.diagonal)
 
     def test_inverse_roundtrip(self, diag_metric):
         """G * g⁻¹ ≈ I element-wise."""
@@ -135,7 +135,7 @@ class TestDiagonalMetric:
 
     def test_is_not_static(self):
         """DiagonalMetric is a dynamic pytree, not a static leaf."""
-        d = DiagonalMetric(jnp.array([1.0, 2.0]))
+        d = DiagonalMetric(jnp.array([1, 2]))
         leaves, _ = jax.tree_util.tree_flatten(d)
         assert len(leaves) > 0, "diagonal should be a dynamic JAX leaf"
 
@@ -162,21 +162,21 @@ class TestDenseMetric:
     def test_matmul_identity(self):
         n = 3
         g = DenseMetric(jnp.eye(n))
-        v = jnp.arange(1.0, n + 1)
+        v = jnp.arange(1, n + 1)
         assert jnp.allclose(g @ v, v)
 
     def test_matmul_diagonal(self):
-        g = DenseMetric(jnp.array([[4.0, 0.0], [0.0, 9.0]]))
-        v = jnp.array([1.0, 1.0])
-        assert jnp.allclose(g @ v, jnp.array([4.0, 9.0]))
+        g = DenseMetric(jnp.array([[4, 0], [0, 9]]))
+        v = jnp.array([1, 1])
+        assert jnp.allclose(g @ v, jnp.array([4, 9]))
 
     def test_inverse_identity(self):
         g = DenseMetric(jnp.eye(3))
         assert jnp.allclose(g.inverse.matrix, jnp.eye(3))
 
     def test_inverse_diagonal(self):
-        g = DenseMetric(jnp.array([[4.0, 0.0], [0.0, 9.0]]))
-        expected = jnp.array([[0.25, 0.0], [0.0, 1.0 / 9.0]])
+        g = DenseMetric(jnp.array([[4, 0], [0, 9]]))
+        expected = jnp.array([[0.25, 0], [0, 1 / 9]])
         assert jnp.allclose(g.inverse.matrix, expected)
 
     def test_inverse_roundtrip(self, dense_metric):
@@ -185,11 +185,11 @@ class TestDenseMetric:
         assert jnp.allclose(product, jnp.eye(n), atol=1e-5)
 
     def test_determinant_identity(self):
-        assert jnp.allclose(DenseMetric(jnp.eye(3)).determinant, 1.0)
+        assert jnp.allclose(DenseMetric(jnp.eye(3)).determinant, 1)
 
     def test_determinant_diagonal(self):
-        g = DenseMetric(jnp.array([[2.0, 0.0], [0.0, 3.0]]))
-        assert jnp.allclose(g.determinant, 6.0)
+        g = DenseMetric(jnp.array([[2, 0], [0, 3]]))
+        assert jnp.allclose(g.determinant, 6)
 
     def test_jit_matmul(self, dense_metric):
         n = dense_metric.ndim
@@ -231,18 +231,18 @@ class TestDiagonalDenseConsistency:
     """DiagonalMetric.to_dense() must agree with DenseMetric on operations."""
 
     def test_matmul_consistency(self):
-        diag = DiagonalMetric(jnp.array([2.0, 3.0, 4.0]))
+        diag = DiagonalMetric(jnp.array([2, 3, 4]))
         dense = diag.to_dense()
-        v = jnp.array([1.0, 2.0, 3.0])
+        v = jnp.array([1, 2, 3])
         assert jnp.allclose(diag @ v, dense @ v)
 
     def test_determinant_consistency(self):
-        diag = DiagonalMetric(jnp.array([2.0, 3.0]))
+        diag = DiagonalMetric(jnp.array([2, 3]))
         dense = diag.to_dense()
         assert jnp.allclose(diag.determinant, dense.determinant)
 
     def test_inverse_consistency(self):
-        diag = DiagonalMetric(jnp.array([2.0, 5.0]))
+        diag = DiagonalMetric(jnp.array([2, 5]))
         assert jnp.allclose(
             jnp.diag(diag.inverse.to_dense().matrix),
             diag.to_dense().inverse.matrix.diagonal(),

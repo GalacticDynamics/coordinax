@@ -99,35 +99,35 @@ class TestAbstractDiagonalMetricFieldContract:
             "R3_cart": (
                 cxm.FlatMetric(3),
                 cxc.cart3d,
-                {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")},
+                {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")},
             ),
             "R3_sph": (
                 cxm.FlatMetric(3),
                 cxc.sph3d,
                 {
-                    "r": u.Q(2.0, "m"),
+                    "r": u.Q(2, "m"),
                     "theta": u.Angle(jnp.pi / 3, "rad"),
-                    "phi": u.Angle(1.0, "rad"),
+                    "phi": u.Angle(1, "rad"),
                 },
             ),
             "R2_cart": (
                 cxm.FlatMetric(2),
                 cxc.cart2d,
-                {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")},
+                {"x": u.Q(1, "m"), "y": u.Q(2, "m")},
             ),
             "hyperspherical2d": (
                 cxm.RoundMetric(ndim=2),
                 cxc.sph2,
-                {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")},
+                {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")},
             ),
             "minkowski4d": (
                 cxm.MinkowskiMetric(),
                 cxc.MinkowskiCT(),
                 {
-                    "ct": u.Q(1.0, "m"),
-                    "x": u.Q(0.0, "m"),
-                    "y": u.Q(0.0, "m"),
-                    "z": u.Q(0.0, "m"),
+                    "ct": u.Q(1, "m"),
+                    "x": u.Q(0, "m"),
+                    "y": u.Q(0, "m"),
+                    "z": u.Q(0, "m"),
                 },
             ),
         }
@@ -182,13 +182,13 @@ class TestFlatMetric:
         assert m.ndim == 3
 
     def test_metric_matrix_cart3d_is_identity(self):
-        p = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+        p = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
         g = mm_dispatch(cxm.R3, p, cxc.cart3d)
         assert isinstance(g, DiagonalMetric)
         assert jnp.allclose(g.diagonal, jnp.ones(3))
 
     def test_metric_matrix_cart2d_is_identity(self):
-        p = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}
+        p = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}
         g = mm_dispatch(cxm.R2, p, cxc.cart2d)
         assert isinstance(g, DiagonalMetric)
         assert jnp.allclose(g.diagonal, jnp.ones(2))
@@ -196,29 +196,29 @@ class TestFlatMetric:
     def test_metric_matrix_sph3d_at_origin(self):
         """Spherical metric at (1, pi/2, 0): diag(1, r^2, r^2 sin^2 theta)."""
         p = {
-            "r": u.Q(1.0, "m"),
+            "r": u.Q(1, "m"),
             "theta": u.Angle(jnp.pi / 2, "rad"),
-            "phi": u.Angle(0.0, "rad"),
+            "phi": u.Angle(0, "rad"),
         }
         g = mm_dispatch(cxm.R3, p, cxc.sph3d)
         dense = g.to_dense()
         assert dense.matrix.shape == (3, 3)
         # diagonal entries: g_rr=1, g_tt=r^2=1, g_pp=r^2 sin^2(theta)=1
-        expected_diag = jnp.array([1.0, 1.0, 1.0])
+        expected_diag = jnp.array([1, 1, 1])
         assert jnp.allclose(jnp.diag(_mat_val(dense)), expected_diag, atol=1e-6)
 
     def test_metric_matrix_sph3d_diagonal(self):
         """Spherical metric is always diagonal."""
         p = {
-            "r": u.Q(2.0, "m"),
+            "r": u.Q(2, "m"),
             "theta": u.Angle(jnp.pi / 3, "rad"),
-            "phi": u.Angle(1.0, "rad"),
+            "phi": u.Angle(1, "rad"),
         }
         g = mm_dispatch(cxm.R3, p, cxc.sph3d)
         assert isinstance(g, DiagonalMetric)
 
     def test_metric_matrix_jit(self):
-        p = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+        p = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
 
         @jax.jit
         def compute(p):
@@ -251,22 +251,22 @@ class TestRoundMetric:
 
     def test_metric_matrix_at_equator(self):
         """S^2 metric at equator: diag(1, sin^2(theta)) = diag(1, 1)."""
-        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         g = mm_dispatch(cxm.S2, p, cxc.sph2)
         assert isinstance(g, DiagonalMetric)
-        expected = jnp.array([1.0, 1.0])
+        expected = jnp.array([1, 1])
         assert jnp.allclose(g.diagonal, expected, atol=1e-6)
 
     def test_metric_matrix_at_pole_theta_component(self):
         """S^2 metric g_theta_theta = 1 everywhere."""
-        p = {"theta": u.Angle(0.1, "rad"), "phi": u.Angle(0.0, "rad")}
+        p = {"theta": u.Angle(0.1, "rad"), "phi": u.Angle(0, "rad")}
         g = mm_dispatch(cxm.S2, p, cxc.sph2)
-        assert jnp.allclose(g.diagonal[0], 1.0, atol=1e-6)
+        assert jnp.allclose(g.diagonal[0], 1, atol=1e-6)
 
     @pytest.mark.parametrize("theta", [0.1, jnp.pi / 4, jnp.pi / 2, jnp.pi * 3 / 4])
     def test_metric_matrix_phi_component_at_various_latitudes(self, theta):
         """g_phi_phi = sin^2(theta)."""
-        p = {"theta": u.Angle(theta, "rad"), "phi": u.Angle(0.0, "rad")}
+        p = {"theta": u.Angle(theta, "rad"), "phi": u.Angle(0, "rad")}
         g = mm_dispatch(cxm.S2, p, cxc.sph2)
         exp = jnp.sin(theta) ** 2
         assert jnp.allclose(g.diagonal[1], exp, atol=1e-6), (
@@ -275,12 +275,12 @@ class TestRoundMetric:
 
     def test_metric_matrix_is_diagonal(self):
         """S^2 metric matrix is always diagonal."""
-        p = {"theta": u.Angle(jnp.pi / 3, "rad"), "phi": u.Angle(1.0, "rad")}
+        p = {"theta": u.Angle(jnp.pi / 3, "rad"), "phi": u.Angle(1, "rad")}
         g = mm_dispatch(cxm.S2, p, cxc.sph2)
         assert isinstance(g, DiagonalMetric)
 
     def test_metric_matrix_jit(self):
-        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
 
         @jax.jit
         def compute(p):
@@ -293,7 +293,7 @@ class TestRoundMetric:
         thetas = jnp.linspace(0.1, jnp.pi - 0.1, 5)
 
         def single(theta_val):
-            p = {"theta": u.Angle(theta_val, "rad"), "phi": u.Angle(0.0, "rad")}
+            p = {"theta": u.Angle(theta_val, "rad"), "phi": u.Angle(0, "rad")}
             return mm_dispatch(cxm.S2, p, cxc.sph2)
 
         gs = jax.vmap(single)(thetas)
@@ -324,30 +324,30 @@ class TestMinkowskiMetric:
     def test_metric_matrix_is_diagonal(self):
         chart = cxc.MinkowskiCT()
         p = {
-            "ct": u.Q(1.0, "m"),
-            "x": u.Q(0.0, "m"),
-            "y": u.Q(0.0, "m"),
-            "z": u.Q(0.0, "m"),
+            "ct": u.Q(1, "m"),
+            "x": u.Q(0, "m"),
+            "y": u.Q(0, "m"),
+            "z": u.Q(0, "m"),
         }
         g = mm_dispatch(cxm.MinkowskiManifold(), p, chart)
         assert isinstance(g, DiagonalMetric)
-        expected = jnp.array([-1.0, 1.0, 1.0, 1.0])
+        expected = jnp.array([-1, 1, 1, 1])
         assert jnp.allclose(g.diagonal, expected, atol=1e-6)
 
     def test_metric_matrix_is_position_independent(self):
         """Minkowski metric is flat — does not depend on position."""
         chart = cxc.MinkowskiCT()
         p1 = {
-            "ct": u.Q(1.0, "m"),
-            "x": u.Q(0.0, "m"),
-            "y": u.Q(0.0, "m"),
-            "z": u.Q(0.0, "m"),
+            "ct": u.Q(1, "m"),
+            "x": u.Q(0, "m"),
+            "y": u.Q(0, "m"),
+            "z": u.Q(0, "m"),
         }
         p2 = {
-            "ct": u.Q(100.0, "m"),
-            "x": u.Q(50.0, "m"),
-            "y": u.Q(-30.0, "m"),
-            "z": u.Q(20.0, "m"),
+            "ct": u.Q(100, "m"),
+            "x": u.Q(50, "m"),
+            "y": u.Q(-30, "m"),
+            "z": u.Q(20, "m"),
         }
         g1 = mm_dispatch(cxm.MinkowskiManifold(), p1, chart)
         g2 = mm_dispatch(cxm.MinkowskiManifold(), p2, chart)
@@ -356,8 +356,8 @@ class TestMinkowskiMetric:
     def test_metric_matrix_jit(self):
         chart = cxc.MinkowskiCT()
         p = {
-            "ct": u.Q(1.0, "m"),
-            "x": u.Q(0.0, "m"),
+            "ct": u.Q(1, "m"),
+            "x": u.Q(0, "m"),
             "y": u.Q(0, "m"),
             "z": u.Q(0, "m"),
         }
@@ -386,15 +386,15 @@ class TestPullbackMetric:
 
     def test_induced_metric_is_not_abstractdiagonalmetric(self):
         """PullbackMetric is NOT an AbstractDiagonalMetricField."""
-        manifold = cxm.embedded_twosphere(radius=1.0)
+        manifold = cxm.embedded_twosphere(radius=1)
         assert not isinstance(manifold.metric, cxm.AbstractDiagonalMetricField)
 
     def test_unit_sphere_at_equator(self):
         """Induced metric on S^2 embedded in R^3 at equator matches sphere metric."""
-        manifold = cxm.embedded_twosphere(radius=1.0)
+        manifold = cxm.embedded_twosphere(radius=1)
         assert isinstance(manifold.metric, cxm.PullbackMetric)
 
-        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         g = mm_dispatch(manifold, p, cxc.sph2)
         assert isinstance(g, DenseMetric)
         assert g.matrix.shape == (2, 2)
@@ -410,26 +410,26 @@ class TestPullbackMetric:
         manifold = cxm.EmbeddedManifold(
             intrinsic=cxm.S2,
             ambient=cxm.R3,
-            embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "m")),
+            embed_map=cxm.TwoSphereIn3D(radius=u.Q(2, "m")),
         )
         assert isinstance(manifold.metric, cxm.PullbackMetric)
 
-        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         g = mm_dispatch(manifold, p, cxc.sph2)
         assert isinstance(g, DenseMetric)
         assert g.matrix.shape == (2, 2)
-        expected = jnp.diag(jnp.array([4.0, 4.0]))
+        expected = jnp.diag(jnp.array([4, 4]))
         assert jnp.allclose(_mat_val(g), expected, atol=1e-3)
 
     def test_induced_metric_jit(self):
         """metric_matrix dispatch should work under jit for EmbeddedManifold."""
-        manifold = cxm.embedded_twosphere(radius=1.0)
+        manifold = cxm.embedded_twosphere(radius=1)
 
         @jax.jit
         def compute(p):
             return mm_dispatch(manifold, p, cxc.sph2)
 
-        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+        p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         g = compute(p)
         assert isinstance(g, DenseMetric)
         assert g.matrix.shape == (2, 2)
@@ -466,8 +466,8 @@ class TestProductMetric:
         chart = cxc.CartesianProductChart((cxc.sph2, cxc.cart1d), ("S2", "R1"))
         p = {
             "S2.theta": u.Angle(jnp.pi / 2, "rad"),
-            "S2.phi": u.Angle(0.0, "rad"),
-            "R1.x": u.Q(1.0, "m"),
+            "S2.phi": u.Angle(0, "rad"),
+            "R1.x": u.Q(1, "m"),
         }
 
         g = mm_dispatch(M, p, chart)
