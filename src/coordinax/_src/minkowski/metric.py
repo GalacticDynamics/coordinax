@@ -7,21 +7,14 @@ import dataclasses
 from typing import final
 
 import jax
-import jax.numpy as jnp
 
-import quaxed.numpy as qnp
-import unxt as u
-
-import coordinax.charts as cxc
-from coordinax._src.base import AbstractDiagonalMetric
-from coordinax._src.custom_types import CDict, OptUSys
-from coordinax.internal import QuantityMatrix, UnitsMatrix
+from coordinax._src.base import AbstractDiagonalMetricField
 
 
 @jax.tree_util.register_static
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class MinkowskiMetric(AbstractDiagonalMetric):
+class MinkowskiMetric(AbstractDiagonalMetricField):
     r"""Pseudo-Riemannian (Lorentzian) metric on Minkowski spacetime.
 
     In the canonical {class}`~coordinax.charts.MinkowskiCT` chart
@@ -43,17 +36,16 @@ class MinkowskiMetric(AbstractDiagonalMetric):
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
+    >>> from coordinax.api.manifolds import metric_matrix
 
     Canonical Cartesian spacetime chart:
 
     >>> m = cxm.MinkowskiMetric()
+    >>> M = cxm.MinkowskiManifold()
     >>> at = {"ct": jnp.array(0.0), "x": jnp.array(0.0),
     ...       "y": jnp.array(0.0), "z": jnp.array(0.0)}
-    >>> m.metric_matrix(cxc.minkowskict, at=at).value
-    Array([[-1.,  0.,  0.,  0.],
-           [ 0.,  1.,  0.,  0.],
-           [ 0.,  0.,  1.,  0.],
-           [ 0.,  0.,  0.,  1.]], dtype=float64)
+    >>> metric_matrix(M, at, cxc.minkowskict).diagonal
+    Array([-1.,  1.,  1.,  1.], dtype=float64)
 
     The signature is Lorentzian (pseudo-Riemannian):
 
@@ -69,68 +61,3 @@ class MinkowskiMetric(AbstractDiagonalMetric):
     def signature(self) -> tuple[int, ...]:
         """Metric signature: ``(-1, 1, 1, 1)`` — Lorentzian pseudo-Riemannian."""
         return (-1, 1, 1, 1)
-
-    def metric_matrix(
-        self, chart: cxc.AbstractChart, /, *, at: CDict, usys: OptUSys = None
-    ) -> QuantityMatrix:
-        r"""Compute the Minkowski metric tensor $g_{ij}$ at the base point ``at``.
-
-        In the canonical :class:`~coordinax.charts.MinkowskiCT` chart returns
-        $\eta = \operatorname{diag}(-1, 1, 1, 1)$ directly. For any other
-        registered chart computes the pullback $g = J^T \eta J$ via
-        :func:`~coordinax.charts.jac_pt_map`.
-
-        Parameters
-        ----------
-        chart : AbstractChart
-            Coordinate chart in which to express the metric. Must be a chart
-            registered with :class:`~coordinax.manifolds.MinkowskiAtlas` and
-            support a ``.cartesian`` property.
-        at : CDict
-            Base point in ``chart`` coordinates at which to evaluate.
-        usys : OptUSys, optional
-            Unit system to use for the metric evaluation.
-
-        Returns
-        -------
-        QuantityMatrix, shape (4, 4)
-            Metric matrix $g_{ij}$ in the given chart basis.
-
-        Examples
-        --------
-        >>> import jax.numpy as jnp
-        >>> import coordinax.charts as cxc
-        >>> import coordinax.manifolds as cxm
-
-        Canonical Minkowski chart — returns the flat Minkowski matrix:
-
-        >>> m = cxm.MinkowskiMetric()
-        >>> at = {"ct": jnp.array(0.0), "x": jnp.array(0.0),
-        ...       "y": jnp.array(0.0), "z": jnp.array(0.0)}
-        >>> m.metric_matrix(cxc.minkowskict, at=at).value
-        Array([[-1.,  0.,  0.,  0.],
-               [ 0.,  1.,  0.,  0.],
-               [ 0.,  0.,  1.,  0.],
-               [ 0.,  0.,  0.,  1.]], dtype=float64)
-
-        """
-        n = 4
-        unit_tup = tuple(tuple(u.unit("") for _ in range(n)) for _ in range(n))
-
-        cart_chart = chart.cartesian
-        if chart == cart_chart:
-            # Already the canonical Cartesian spacetime chart: η = diag(-1,1,1,1)
-            return QuantityMatrix(
-                jnp.diag(jnp.array([-1.0, 1.0, 1.0, 1.0])),
-                unit=UnitsMatrix(unit_tup),
-            )
-
-        # Pullback: g = J^T η J
-        # J: jacobian of chart → cart_chart, shape (4, 4)
-        J = cxc.jac_pt_map(at, chart, cart_chart, usys=usys)
-        JT = qnp.transpose(J, (1, 0))
-        eta = QuantityMatrix(
-            jnp.diag(jnp.array([-1.0, 1.0, 1.0, 1.0])),
-            unit=UnitsMatrix(unit_tup),
-        )
-        return JT @ eta @ J  # ty: ignore[invalid-return-type]

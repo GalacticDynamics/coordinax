@@ -55,10 +55,9 @@ class TestParallaxConstruction:
     def test_negative_raises(self) -> None:
         """Parallax with negative value raises when check_negative=True."""
         with pytest.raises(
-            (eqx.EquinoxRuntimeError, ValueError),
-            match="Parallax must be non-negative",
+            (eqx.EquinoxRuntimeError, ValueError), match="Parallax must be non-negative"
         ):
-            cxastro.Parallax(-1.0, "mas", check_negative=True)
+            cxastro.Parallax(-1, "mas", check_negative=True)
 
     @given(plx=cxastrost.parallaxes())
     def test_has_value_and_unit(self, plx: cxastro.Parallax) -> None:

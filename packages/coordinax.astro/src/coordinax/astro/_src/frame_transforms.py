@@ -26,8 +26,6 @@ def frame_transition(
 ) -> cxfm.Composed:
     """Compute frame transformations with ICRS as the intermediary.
 
-    Examples
-    --------
     >>> import plum
     >>> import unxt as u
     >>> import coordinax.frames as cxf
@@ -69,8 +67,6 @@ def frame_transition(
 def frame_transition(from_frame: ICRS, to_frame: ICRS, /) -> cxfm.Identity:
     """Return an identity operator for the ICRS->ICRS transformation.
 
-    Examples
-    --------
     >>> import coordinax.frames as cxf
     >>> import coordinax.astro as cxastro
 
@@ -92,8 +88,6 @@ def frame_transition(
 ) -> cxfm.Composed:
     """Return a sequence of operators for the Galactocentric frame self transformation.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.frames as cxf
     >>> import coordinax.astro as cxastro

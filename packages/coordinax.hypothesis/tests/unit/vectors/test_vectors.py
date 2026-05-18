@@ -16,9 +16,9 @@ SUPPORTED_CHARTS = cxcst.charts(
 )
 
 # Shared float32 element strategies (width=32 matches the default JAX dtype).
-_F32_POS = st.floats(min_value=1.0, max_value=100.0, width=32)
-_F32_NEG = st.floats(min_value=-100.0, max_value=-1.0, width=32)
-_F32_BOUNDED = st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, width=32)
+_F32_POS = st.floats(min_value=1, max_value=100, width=32)
+_F32_NEG = st.floats(min_value=-100, max_value=-1, width=32)
+_F32_BOUNDED = st.floats(min_value=-10, max_value=10, allow_nan=False, width=32)
 
 
 @given(vec=vector_strategy())
@@ -128,5 +128,5 @@ class TestPointValueControl:
     @given(vec=vector_strategy(cxc.cart2d, cxr.point, elements=_F32_BOUNDED))
     def test_bounded_range(self, vec: cxv.Point) -> None:
         """elements= with explicit bounds keeps all component magnitudes in range."""
-        assert -10.0 <= vec.data["x"].ustrip("m") <= 10.0
-        assert -10.0 <= vec.data["y"].ustrip("m") <= 10.0
+        assert -10 <= vec.data["x"].ustrip("m") <= 10
+        assert -10 <= vec.data["y"].ustrip("m") <= 10

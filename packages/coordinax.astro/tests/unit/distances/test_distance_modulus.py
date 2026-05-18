@@ -59,7 +59,7 @@ class TestDistanceModulusConstruction:
     def test_invalid_unit_raises(self) -> None:
         """DistanceModulus with non-mag unit raises ValueError."""
         with pytest.raises(ValueError, match="magnitude"):
-            cxastro.DistanceModulus(15.0, "kpc")
+            cxastro.DistanceModulus(15, "kpc")
 
 
 class TestDistanceModulusArithmetic:
@@ -76,7 +76,7 @@ class TestDistanceModulusArithmetic:
         """DistanceModulus - DistanceModulus returns DistanceModulus with zero."""
         result = dm - dm
         assert isinstance(result, cxastro.DistanceModulus)
-        assert jnp.allclose(result.value, 0.0)
+        assert jnp.allclose(result.value, 0)
 
     @given(dm=cxastrost.distance_moduli())
     def test_scalar_mul(self, dm: cxastro.DistanceModulus) -> None:
@@ -89,9 +89,7 @@ class TestDistanceModulusArithmetic:
 class TestDistanceModulusConversionProperties:
     """Tests for DistanceModulus conversion properties."""
 
-    @given(
-        dm=cxastrost.distance_moduli(elements={"min_value": -5.0, "max_value": 25.0})
-    )
+    @given(dm=cxastrost.distance_moduli(elements={"min_value": -5, "max_value": 25}))
     @settings(deadline=None)
     def test_distance_property(self, dm: cxastro.DistanceModulus) -> None:
         """.distance property returns a Distance."""
@@ -147,18 +145,14 @@ class TestDistanceModulusPlumConvert:
         assert q.unit is dm.unit
         assert q.value is dm.value
 
-    @given(
-        dm=cxastrost.distance_moduli(elements={"min_value": -5.0, "max_value": 25.0})
-    )
+    @given(dm=cxastrost.distance_moduli(elements={"min_value": -5, "max_value": 25}))
     @settings(deadline=None)
     def test_convert_to_distance(self, dm: cxastro.DistanceModulus) -> None:
         """Can convert DistanceModulus to Distance."""
         d = plum.convert(dm, cxd.Distance)
         assert isinstance(d, cxd.Distance)
 
-    @given(
-        dm=cxastrost.distance_moduli(elements={"min_value": -5.0, "max_value": 25.0})
-    )
+    @given(dm=cxastrost.distance_moduli(elements={"min_value": -5, "max_value": 25}))
     @settings(deadline=None)
     def test_convert_to_parallax(self, dm: cxastro.DistanceModulus) -> None:
         """Can convert DistanceModulus to Parallax."""

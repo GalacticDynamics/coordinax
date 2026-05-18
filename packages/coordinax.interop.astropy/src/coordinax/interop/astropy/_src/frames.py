@@ -83,8 +83,6 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
     coordinax and Astropy implementations have no frame-specific parameters, so
     the conversion is straightforward.
 
-    Examples
-    --------
     >>> import coordinax.astro as cxa
     >>> import astropy.coordinates as apyc
     >>> import plum
@@ -104,8 +102,6 @@ def coordinax_icrs_to_astropy_icrs(frame: cxastro.ICRS, /) -> apyc.ICRS:
 def from_(cls: type[cxastro.ICRS], obj: apyc.ICRS, /) -> cxastro.ICRS:
     """Construct from a `astropy.coordinates.ICRS`.
 
-    Examples
-    --------
     >>> import coordinax.astro as cxastro
     >>> from plum import convert
     >>> import astropy.coordinates as apyc
@@ -232,8 +228,6 @@ def from_(
 ) -> cxastro.Galactocentric:
     """Construct from a `astropy.coordinates.Galactocentric`.
 
-    Examples
-    --------
     >>> import astropy.coordinates as apyc
     >>> import coordinax.frames as cxf
 

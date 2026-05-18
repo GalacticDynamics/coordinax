@@ -40,7 +40,7 @@ def test_distance_modulus_2d(dm: cxastro.DistanceModulus) -> None:
 def test_distance_modulus_with_custom_elements(dm: cxastro.DistanceModulus) -> None:
     """Test distance modulus with custom elements range."""
     assert isinstance(dm, cxastro.DistanceModulus)
-    assert 0.0 <= dm.value <= 30.0
+    assert 0 <= dm.value <= 30
     assert dm.unit == "mag"
 
 

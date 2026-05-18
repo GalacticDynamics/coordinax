@@ -135,8 +135,6 @@ def frame_transition(
 ) -> AbstractTransform:
     """Return a frame transform operator to a transformed frame.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf
@@ -168,8 +166,6 @@ def frame_transition(
 ) -> AbstractTransform:
     """Return a frame transform operator from a transformed frame.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf
@@ -206,8 +202,6 @@ def frame_transition(
     When ``from_frame`` and ``to_frame`` are the same object the result is
     the identity transform.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax.vectors as cxv
     >>> import coordinax.frames as cxf

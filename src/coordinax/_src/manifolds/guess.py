@@ -36,7 +36,7 @@ def guess_manifold(obj: AbstractManifold, /) -> AbstractManifold:
     """Return the manifold of a manifold.
 
     >>> import coordinax.manifolds as cxm
-    >>> M = cxm.EuclideanManifold(3)
+    >>> M = cxm.Rn(3)
     >>> cxm.guess_manifold(M) is M
     True
 

@@ -60,15 +60,11 @@ class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
     This chart has no coordinate components and no coordinate dimensions.
     It is the canonical Cartesian chart for 0D representations.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> cxc.cart0d.components
     ()
-
     >>> cxc.cart0d.coord_dimensions
     ()
-
     >>> isinstance(cxc.cartesian_chart(cxc.cart0d), cxc.Cart0D)
     True
 

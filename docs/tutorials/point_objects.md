@@ -157,22 +157,23 @@ Q(1, 'm')
 
 ## Reading Metric Diagonals
 
-Because a vector carries both its chart and its manifold, you can ask the manifold for the metric diagonal entries at the represented location:
+Because a vector carries both its chart and its manifold, you can ask for the metric diagonal entries at the represented location:
 
 ```{code-block} python
+>>> import coordinax.manifolds as cxm
 >>> v = cx.Point.from_(
 ...     {"r": u.Q(2, "km"), "theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")},
 ...     cxc.sph3d,
 ... )
 
->>> gdiag = v.M.scale_factors(v.chart, at=v.data)
+>>> gdiag = cxm.scale_factors(v.chart, at=v.data)
 >>> gdiag.shape
 (3,)
 >>> gdiag.unit.to_string()
 '(, km2 / rad2, km2 / rad2)'
 ```
 
-`scale_factors` returns the diagonal metric entries $g_{ii}$ as a 1-D `QuantityMatrix`, so each direction can keep its own unit.
+`scale_factors` returns the diagonal metric entries $g_{ii}$ as a 1-D `QMatrix`, so each direction can keep its own unit.
 
 ## Changing The Chart (Coordinate Conversion)
 

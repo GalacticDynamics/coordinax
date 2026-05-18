@@ -340,10 +340,10 @@ class BishopTransform(AbstractParallelTransportTransform):
 
         def tangent_fn(tau: u.AbstractQuantity) -> u.AbstractQuantity:
             r"""Compute unit tangent $\mathbf{T} = \gamma'/\|\gamma'\|$."""
-            return _normalize(dcurve(tau))
+            return _normalize(dcurve(tau.astype(float)))
 
         # Compute initial tangent and normal at the reference parameter.
-        T0 = tangent_fn(tau_0)
+        T0 = tangent_fn(tau_0)  # dimensionless unit vector
         T0_val = T0.value  # dimensionless plain array
 
         if initial_normal is not None:

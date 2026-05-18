@@ -376,6 +376,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = [
   "ANN",
+  "ARG002", # Unused method argument
   "ARG005", # Unused lambda argument
   "D102",
   "D401",   # First line of docstring should be in imperative mood
@@ -418,6 +419,8 @@ ignore = [
 "coordinax.vectors"                    = "cxv"
 equinox                                = "eqx"
 functools                              = "ft"
+"jax.extend.core"                      = "jexc"
+"jax.tree_util"                        = "jtu"
 unxt                                   = "u"
 
 

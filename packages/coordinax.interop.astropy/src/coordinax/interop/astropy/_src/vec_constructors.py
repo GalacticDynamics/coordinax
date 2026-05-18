@@ -22,8 +22,6 @@ def from_astropy_cartesian_representation(
 ) -> cxv.Point:
     """Construct Point from Astropy CartesianRepresentation.
 
-    Examples
-    --------
     >>> import coordinax.vectors as cxv
     >>> from astropy.coordinates import CartesianRepresentation
 
@@ -42,8 +40,6 @@ def from_astropy_cylindrical_representation(
 ) -> cxv.Point:
     """Construct Point from Astropy CylindricalRepresentation.
 
-    Examples
-    --------
     >>> import astropy.units as apyu
     >>> import coordinax.vectors as cxv
     >>> from astropy.coordinates import CylindricalRepresentation
@@ -67,8 +63,6 @@ def from_astropy_physics_spherical_representation(
 ) -> cxv.Point:
     """Construct Point from Astropy PhysicsSphericalRepresentation.
 
-    Examples
-    --------
     >>> import coordinax.vectors as cxv
     >>> from astropy.coordinates import PhysicsSphericalRepresentation
     >>> import astropy.units as apyu
@@ -92,8 +86,6 @@ def from_astropy_spherical_representation(
 ) -> cxv.Point:
     """Construct Point from Astropy SphericalRepresentation.
 
-    Examples
-    --------
     >>> import coordinax.vectors as cxv
     >>> from astropy.coordinates import SphericalRepresentation
     >>> import astropy.units as apyu
@@ -119,8 +111,6 @@ def from_astropy_spherical_representation(
 def from_(cls: type[cxv.Point], obj: apyc.BaseCoordinateFrame, /) -> cxv.Point:
     """Construct Point from Astropy frame with data.
 
-    Examples
-    --------
     >>> import astropy.units as apyu
     >>> import astropy.coordinates as apyc
     >>> import coordinax.vectors as cxv
@@ -164,8 +154,6 @@ def convert_astropy_frame_with_data_to_cx_point(
 ) -> cxv.Point:
     """Convert an Astropy frame with data to a Coordinax Point.
 
-    Examples
-    --------
     >>> import astropy.units as apyu
     >>> import astropy.coordinates as apyc
     >>> import plum

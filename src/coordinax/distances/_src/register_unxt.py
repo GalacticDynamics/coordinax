@@ -16,11 +16,8 @@ from .constants import LENGTH
 def dimension_of(obj: type[AbstractDistance], /) -> u.AbstractDimension:
     """Get the dimension of an angle.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.distances as cxd
-
     >>> u.dimension_of(cxd.AbstractDistance)
     PhysicalType('length')
 

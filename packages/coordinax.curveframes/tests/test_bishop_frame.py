@@ -123,15 +123,15 @@ class TestActBishopTransformQuantity:
 
         p = gamma(0) => delta=0 => result = (0,0,0)
         """
-        tau = u.Q(0.0, "s")
-        p = u.Q(jnp.array([1.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p = u.Q(jnp.array([1, 0, 0]), "km")
         result = cxfm.act(circle_bishop_transform, tau, p)
-        np.testing.assert_allclose(_as_array(result, "km"), [0.0, 0.0, 0.0], atol=1e-5)
+        np.testing.assert_allclose(_as_array(result, "km"), [0, 0, 0], atol=1e-5)
 
     def test_act_inverse_roundtrip(self, circle_bishop_transform) -> None:
         """Forward then inverse recovers original point."""
         tau = u.Q(0.5, "s")
-        p = u.Q(jnp.array([3.0, -1.0, 2.0]), "km")
+        p = u.Q(jnp.array([3, -1, 2]), "km")
 
         p_curve = cxfm.act(circle_bishop_transform, tau, p)
         p_back = cxfm.act(circle_bishop_transform.inverse, tau, p_curve)
@@ -142,10 +142,10 @@ class TestActBishopTransformQuantity:
 
     def test_act_at_different_tau_values(self, circle_bishop_transform) -> None:
         """Different tau values give different results for same point."""
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
-        r1 = cxfm.act(circle_bishop_transform, u.Q(0.0, "s"), p)
-        r2 = cxfm.act(circle_bishop_transform, u.Q(1.0, "s"), p)
+        r1 = cxfm.act(circle_bishop_transform, u.Q(0, "s"), p)
+        r2 = cxfm.act(circle_bishop_transform, u.Q(1, "s"), p)
 
         assert not np.allclose(_as_array(r1, "km"), _as_array(r2, "km"), atol=1e-3)
 
@@ -168,7 +168,7 @@ class TestFrameTransitionBishop:
     def test_roundtrip_alice_to_bishop_and_back(self, circle_bishop_frame) -> None:
         """Alice -> Bishop -> Alice is identity."""
         tau = u.Q(0.5, "s")
-        p = u.Q(jnp.array([3.0, -1.0, 2.0]), "km")
+        p = u.Q(jnp.array([3, -1, 2]), "km")
 
         op_fwd = cxf.frame_transition(cxf.Alice(), circle_bishop_frame)
         op_bwd = cxf.frame_transition(circle_bishop_frame, cxf.Alice())
@@ -183,8 +183,8 @@ class TestFrameTransitionBishop:
     def test_alice_bishop_alex_chain(self) -> None:
         """Alice -> Bishop(tau) -> Alex chain and reverse."""
         b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), _circle_curve)
-        tau = u.Q(0.0, "s")
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
         # Alice -> Bishop
         op_a_to_b = cxf.frame_transition(cxf.Alice(), b_frame)
@@ -214,7 +214,7 @@ class TestFrameTransitionBishop:
         """Alice -> Bishop -> Alex -> Bishop -> Alice recovers original."""
         b_frame = cxfc.BishopFrame.from_curve(cxf.Alice(), _circle_curve)
         tau = u.Q(0.3, "s")
-        p = u.Q(jnp.array([5.0, -2.0, 1.0]), "km")
+        p = u.Q(jnp.array([5, -2, 1]), "km")
 
         op1 = cxf.frame_transition(cxf.Alice(), b_frame)
         op2 = cxf.frame_transition(b_frame, cxf.Alex())
@@ -230,8 +230,8 @@ class TestFrameTransitionBishop:
 
     def test_straight_line_frame_transition(self, line_bishop_frame) -> None:
         """Frame transition works on a straight line (kappa=0)."""
-        tau = u.Q(1.0, "s")
-        p = u.Q(jnp.array([2.0, 1.0, 0.0]), "km")
+        tau = u.Q(1, "s")
+        p = u.Q(jnp.array([2, 1, 0]), "km")
 
         op = cxf.frame_transition(cxf.Alice(), line_bishop_frame)
         p_bishop = cxfm.act(op, tau, p)
@@ -253,8 +253,8 @@ class TestBishopFrameJAX:
 
     def test_act_jit(self, circle_bishop_transform) -> None:
         """Act with BishopTransform is JIT-compatible."""
-        tau = u.Q(0.0, "s")
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
         result_eager = cxfm.act(circle_bishop_transform, tau, p)
         result_jit = jax.jit(lambda t, x: cxfm.act(circle_bishop_transform, t, x))(
@@ -269,8 +269,8 @@ class TestBishopFrameJAX:
 
     def test_act_vmap_over_tau(self, circle_bishop_transform) -> None:
         """Act can be vmapped over the tau parameter."""
-        taus = u.Q(jnp.linspace(0.0, 2.0, 5), "s")
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        taus = u.Q(jnp.linspace(0, 2, 5), "s")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
         results = jax.vmap(lambda t: cxfm.act(circle_bishop_transform, t, p))(taus)
 
@@ -286,26 +286,26 @@ class TestBishopActiveSemantics:
 
     def test_forward_moves_point_to_curve_frame(self, circle_bishop_transform) -> None:
         """Point at gamma(0) maps to (0,0,0) in the curve frame."""
-        tau = u.Q(0.0, "s")
-        p_on_curve = u.Q(jnp.array([1.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p_on_curve = u.Q(jnp.array([1, 0, 0]), "km")
         result = cxfm.act(circle_bishop_transform, tau, p_on_curve)
 
-        np.testing.assert_allclose(_as_array(result, "km"), [0.0, 0.0, 0.0], atol=1e-5)
+        np.testing.assert_allclose(_as_array(result, "km"), [0, 0, 0], atol=1e-5)
 
     def test_inverse_moves_point_back_to_ambient(self, circle_bishop_transform) -> None:
         """Origin of curve frame at tau=0 maps back to gamma(0)."""
-        tau = u.Q(0.0, "s")
-        p_origin = u.Q(jnp.array([0.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p_origin = u.Q(jnp.array([0, 0, 0]), "km")
         result = cxfm.act(circle_bishop_transform.inverse, tau, p_origin)
 
-        np.testing.assert_allclose(_as_array(result, "km"), [1.0, 0.0, 0.0], atol=1e-3)
+        np.testing.assert_allclose(_as_array(result, "km"), [1, 0, 0], atol=1e-3)
 
     def test_frame_transition_matches_direct_transform(
         self, circle_bishop_frame, circle_bishop_transform
     ) -> None:
         """frame_transition(Alice, bishop_frame) matches direct act."""
         tau = u.Q(0.5, "s")
-        p = u.Q(jnp.array([2.0, 1.0, 0.0]), "km")
+        p = u.Q(jnp.array([2, 1, 0]), "km")
 
         op = cxf.frame_transition(cxf.Alice(), circle_bishop_frame)
         result_ft = cxfm.act(op, tau, p)

@@ -13,9 +13,10 @@ import unxt as u
 
 import coordinax.angles as cxa
 import coordinax.api.manifolds as cxmapi
-from coordinax._src.base import AbstractChart, AbstractMetric
+from coordinax._src.base import AbstractChart, AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax.internal import QuantityMatrix, UnitsMatrix, pack_to_qmatrix
+from coordinax._src.metric.matrix import DenseMetric
+from coordinax.internal import QMatrix, UnitsMatrix, pack_to_qmatrix
 
 
 @plum.dispatch
@@ -30,8 +31,6 @@ def angle_between(
 ) -> cxa.AbstractAngle:
     """Manifold-level dispatch: delegate to the attached metric.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
@@ -49,7 +48,7 @@ def angle_between(
 
 @plum.dispatch
 def angle_between(
-    metric: AbstractMetric,
+    metric: AbstractMetricField,
     chart: AbstractChart,
     uvec: CDict,
     vvec: CDict,
@@ -61,17 +60,15 @@ def angle_between(
     """Return the metric angle between two tangent vectors.
 
     The input component dictionaries are interpreted as tangent-vector
-    components in the coordinate basis of ``chart``. The metric is evaluated
-    at the base point ``at``.
+    components in the coordinate basis of ``chart``. The metric is evaluated at
+    the base point ``at``.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> metric = cxm.EuclideanMetric(3)
+    >>> metric = cxm.FlatMetric(3)
     >>> at = {
     ...     "r": u.Q(2.0, "m"),
     ...     "theta": u.Angle(jnp.pi / 2, "rad"),
@@ -96,7 +93,10 @@ def angle_between(
     chart.check_data(uvec, keys=True, values=False)
     chart.check_data(vvec, keys=True, values=False)
 
-    g = _as_quantity_matrix(metric.metric_matrix(chart, at=at, usys=usys))
+    mm = cxmapi.metric_matrix(chart.M, at, chart)
+    g = _as_quantity_matrix(
+        mm.matrix if isinstance(mm, DenseMetric) else mm.to_dense().matrix  # ty: ignore[unresolved-attribute]
+    )
     u_qm = pack_to_qmatrix(uvec, keys=chart.components)
     v_qm = pack_to_qmatrix(vvec, keys=chart.components)
 
@@ -111,14 +111,14 @@ def angle_between(
     return cxa.Angle(qnp.arccos(cosine_value), "rad")
 
 
-def _as_quantity_matrix(x: QuantityMatrix | Array) -> QuantityMatrix:
-    """Convert a numeric matrix into a dimensionless QuantityMatrix."""
-    if isinstance(x, QuantityMatrix):
+def _as_quantity_matrix(x: QMatrix | Array) -> QMatrix:
+    """Convert a numeric matrix into a dimensionless QMatrix."""
+    if isinstance(x, QMatrix):
         return x
 
     n_rows, n_cols = x.shape[-2:]
     units = UnitsMatrix(np.full((n_rows, n_cols), u.unit("")))
-    return QuantityMatrix(value=x, unit=units)
+    return QMatrix(value=x, unit=units)
 
 
 def _check_nonzero_norm(*norms: u.AbstractQuantity) -> None:

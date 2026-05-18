@@ -53,18 +53,16 @@ def test_distance_with_strategy_check_negative(dist: cxd.Distance) -> None:
     # check_negative varies, so we can't assert about the sign
 
 
-@given(
-    dist=cxst.distances(elements=st.floats(min_value=1.0, max_value=100.0, width=32))
-)
+@given(dist=cxst.distances(elements=st.floats(min_value=1, max_value=100, width=32)))
 def test_distance_with_custom_elements(dist: cxd.Distance) -> None:
     """Test distance with custom elements range."""
     assert isinstance(dist, cxd.Distance)
-    assert 1.0 <= dist.value <= 100.0
+    assert 1 <= dist.value <= 100
 
 
 @given(
     dist=cxst.distances(
-        check_negative=True, elements=st.floats(min_value=0.0, max_value=10.0, width=32)
+        check_negative=True, elements=st.floats(min_value=0, max_value=10, width=32)
     )
 )
 def test_distance_check_negative_with_elements(dist: cxd.Distance) -> None:
@@ -72,7 +70,7 @@ def test_distance_check_negative_with_elements(dist: cxd.Distance) -> None:
     assert isinstance(dist, cxd.Distance)
     # When check_negative=True and elements provided, min_value should be adjusted
     assert dist.value >= 0
-    assert dist.value <= 50.0
+    assert dist.value <= 50
 
 
 class TestDistanceFromType:

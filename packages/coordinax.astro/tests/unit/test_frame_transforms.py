@@ -90,40 +90,31 @@ def _astropy_gcf_to_icrs_xyz_pc(xyz_pc: Iterable[float], frame: cxastro.Galactoc
 
 @pytest.mark.parametrize(
     "xyz_pc",
-    [
-        (0.0, 0.0, 0.0),
-        (100.0, -20.0, 50.0),
-        (-5000.0, 3200.0, 1200.0),
-    ],
+    [(0, 0, 0), (100, -20, 50), (-5000, 3200, 1200)],
 )
 def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
     """ICRS->Galactocentric position transforms match Astropy."""
     gcf = cxastro.Galactocentric()
     op = cxf.frame_transition(cxastro.ICRS(), gcf)
 
-    got = _to_np(cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")), "pc")
+    got = cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")).ustrip("pc")
     expected = _astropy_icrs_to_gcf_xyz_pc(xyz_pc, gcf)
 
-    np.testing.assert_allclose(got, expected, rtol=0.0, atol=1e-6)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
 
 @pytest.mark.parametrize(
-    "xyz_pc",
-    [
-        (-8122.0, 0.0, 21.0),
-        (-7800.0, 600.0, -200.0),
-        (-9200.0, -500.0, 300.0),
-    ],
+    "xyz_pc", [(-8122, 0, 21), (-7800, 600, -200), (-9200, -500, 300)]
 )
 def test_galactocentric_to_icrs_matches_astropy_positions(xyz_pc) -> None:
     """Galactocentric->ICRS position transforms match Astropy."""
     gcf = cxastro.Galactocentric()
     op = cxf.frame_transition(gcf, cxastro.ICRS())
 
-    got = _to_np(cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")), "pc")
+    got = cxfm.act(op, None, u.Q(jnp.asarray(xyz_pc), "pc")).ustrip("pc")
     expected = _astropy_gcf_to_icrs_xyz_pc(xyz_pc, gcf)
 
-    np.testing.assert_allclose(got, expected, rtol=0.0, atol=1e-6)
+    np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)
 
 
 def test_icrs_galactocentric_transitions_are_inverse_for_positions() -> None:
@@ -134,7 +125,7 @@ def test_icrs_galactocentric_transitions_are_inverse_for_positions() -> None:
     fwd = cxf.frame_transition(icrs, gcf)
     bwd = cxf.frame_transition(gcf, icrs)
 
-    q = u.Q(jnp.asarray([450.0, -100.0, 220.0]), "pc")
+    q = u.Q(jnp.asarray([450, -100, 220]), "pc")
     back = cxfm.act(bwd, None, cxfm.act(fwd, None, q))
 
     np.testing.assert_allclose(_to_np(back, "pc"), _to_np(q, "pc"), rtol=0.0, atol=1e-6)
@@ -165,7 +156,7 @@ class TestFrameTransformProperties:
 
         back = cxfm.act(bwd, None, cxfm.act(fwd, None, q))
         np.testing.assert_allclose(
-            _to_np(back, "pc"), _to_np(q, "pc"), rtol=0.0, atol=1e-6
+            _to_np(back, "pc"), _to_np(q, "pc"), rtol=0, atol=1e-6
         )
 
     @given(
@@ -185,9 +176,7 @@ class TestFrameTransformProperties:
         bwd = cxf.frame_transition(icrs, gcf)
 
         back = cxfm.act(bwd, None, cxfm.act(fwd, None, q))
-        np.testing.assert_allclose(
-            _to_np(back, "pc"), _to_np(q, "pc"), rtol=0.0, atol=1e-6
-        )
+        np.testing.assert_allclose(back.ustrip("pc"), q.ustrip("pc"), rtol=0, atol=1e-6)
 
     @given(
         q=ust.quantities(
@@ -216,7 +205,7 @@ class TestFrameTransformProperties:
         via_bwd = cxfm.act(bwd, None, q_gcf)
 
         np.testing.assert_allclose(
-            _to_np(via_inverse, "pc"), _to_np(via_bwd, "pc"), rtol=0.0, atol=1e-6
+            via_inverse.ustrip("pc"), via_bwd.ustrip("pc"), rtol=0.0, atol=1e-6
         )
 
     @given(
@@ -234,7 +223,7 @@ class TestFrameTransformProperties:
         gcf = cxastro.Galactocentric()
         op = cxf.frame_transition(cxastro.ICRS(), gcf)
 
-        xyz = _to_np(q, "pc")
-        got = _to_np(cxfm.act(op, None, q), "pc")
+        xyz = q.ustrip("pc")
+        got = cxfm.act(op, None, q).ustrip("pc")
         expected = _astropy_icrs_to_gcf_xyz_pc((xyz[0], xyz[1], xyz[2]), gcf)
         np.testing.assert_allclose(got, expected, rtol=0.0, atol=1e-6)

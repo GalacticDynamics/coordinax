@@ -33,19 +33,19 @@ def test_uconvert_to_rad_non_angle_quantity_raises() -> None:
 def test_uconvert_to_rad_arraylike_without_usys_is_radians() -> None:
     """Plain numerics and JAX arrays are interpreted as radians by default."""
     scalar = uconvert_to_rad(float(jnp.pi / 3), None)
-    vector = uconvert_to_rad(jnp.array([0.0, jnp.pi / 2, jnp.pi]), None)
+    vector = uconvert_to_rad(jnp.array([0, jnp.pi / 2, jnp.pi]), None)
 
     assert isinstance(scalar, float)
     assert scalar == pytest.approx(float(jnp.pi / 3))
-    assert bool(jnp.allclose(vector, jnp.array([0.0, jnp.pi / 2, jnp.pi])))
+    assert bool(jnp.allclose(vector, jnp.array([0, jnp.pi / 2, jnp.pi])))
 
 
 def test_uconvert_to_rad_arraylike_with_usys_angle_unit() -> None:
     """Plain numerics and JAX arrays can be interpreted through usys['angle']."""
     usys = u.unitsystem("m", "deg")
 
-    scalar = uconvert_to_rad(90.0, usys)
-    vector = uconvert_to_rad(jnp.array([0.0, 90.0, 180.0]), usys)
+    scalar = uconvert_to_rad(90, usys)
+    vector = uconvert_to_rad(jnp.array([0, 90, 180]), usys)
 
     assert scalar == pytest.approx(float(jnp.pi / 2))
-    assert bool(jnp.allclose(vector, jnp.array([0.0, jnp.pi / 2, jnp.pi])))
+    assert bool(jnp.allclose(vector, jnp.array([0, jnp.pi / 2, jnp.pi])))

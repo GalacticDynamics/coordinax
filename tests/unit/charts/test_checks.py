@@ -31,8 +31,8 @@ class TestPolarRange:
 
     @given(
         data=st.data(),
-        lower=float32s(min_value=0.0, max_value=1.0),
-        upper=float32s(min_value=2.0, max_value=PI_F32),
+        lower=float32s(min_value=0, max_value=1),
+        upper=float32s(min_value=2, max_value=PI_F32),
         quantity_cls=angle_classes,
     )
     @settings(deadline=None)
@@ -51,7 +51,7 @@ class TestPolarRange:
         result = checks.polar_range(angle)
         assert jnp.array_equal(result.value, angle.value)
 
-    @given(ust.quantities("m", elements=float32s(min_value=0.0, max_value=PI_F32)))
+    @given(ust.quantities("m", elements=float32s(min_value=0, max_value=PI_F32)))
     @settings(deadline=None)
     def test_non_angular_units_raises(self, x: u.AbstractQuantity) -> None:
         """Non-angular quantities always raise, regardless of value."""
@@ -67,8 +67,8 @@ class TestPolarRange:
             ust.quantities(
                 "rad",
                 elements=st.one_of(
-                    float32s(min_value=-10.0, max_value=0.0, exclude_max=True),
-                    float32s(min_value=PI_F32, max_value=10.0, exclude_min=True),
+                    float32s(min_value=-10, max_value=0, exclude_max=True),
+                    float32s(min_value=PI_F32, max_value=10, exclude_min=True),
                 ),
                 quantity_cls=data.draw(angle_classes),
             ),
@@ -98,7 +98,7 @@ class TestStrictlyPositive:
 
     def test_zero_raises(self) -> None:
         """Zero should raise an error."""
-        x = u.Q(0.0, "m")
+        x = u.Q(0, "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
@@ -107,7 +107,7 @@ class TestStrictlyPositive:
 
     def test_negative_raises(self) -> None:
         """Negative values should raise an error."""
-        x = u.Q(-1.0, "m")
+        x = u.Q(-1, "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
@@ -116,7 +116,7 @@ class TestStrictlyPositive:
 
     def test_array_with_zero_raises(self) -> None:
         """Arrays containing zero should raise an error."""
-        x = u.Q([1.0, 0.0, 2.0], "m")
+        x = u.Q([1, 0, 2], "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
@@ -125,7 +125,7 @@ class TestStrictlyPositive:
 
     def test_array_with_negative_raises(self) -> None:
         """Arrays containing negative values should raise an error."""
-        x = u.Q([1.0, -1.0, 2.0], "m")
+        x = u.Q([1, -1, 2], "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be non-negative and non-zero",
@@ -136,13 +136,13 @@ class TestStrictlyPositive:
 class TestLeq:
     """Tests for leq (less than or equal) check."""
 
-    @given(data=st.data(), max_val=float32s(min_value=1.0, max_value=100.0))
+    @given(data=st.data(), max_val=float32s(min_value=1, max_value=100))
     @settings(deadline=None)
     def test_values_below_max_pass(self, data: st.DataObject, max_val: float) -> None:
         """Values <= max should pass through unchanged."""
         x = data.draw(
             ust.quantities(
-                "m", shape=(), elements=float32s(min_value=0.0, max_value=max_val)
+                "m", shape=(), elements=float32s(min_value=0, max_value=max_val)
             )
         )
         max_q = u.Q(max_val, "m")
@@ -151,15 +151,15 @@ class TestLeq:
 
     def test_equal_to_max_passes(self) -> None:
         """Values equal to max should pass."""
-        x = u.Q(5.0, "m")
-        max_q = u.Q(5.0, "m")
+        x = u.Q(5, "m")
+        max_q = u.Q(5, "m")
         result = checks.leq(x, max_q)
         assert jnp.array_equal(result.value, x.value)
 
     def test_above_max_raises(self) -> None:
         """Values above max should raise an error."""
-        x = u.Q(6.0, "m")
-        max_q = u.Q(5.0, "m")
+        x = u.Q(6, "m")
+        max_q = u.Q(5, "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError), match="must be less than or equal to"
         ):
@@ -167,8 +167,8 @@ class TestLeq:
 
     def test_array_with_value_above_max_raises(self) -> None:
         """Arrays with any value above max should raise an error."""
-        x = u.Q([1.0, 5.0, 6.0], "m")
-        max_q = u.Q(5.0, "m")
+        x = u.Q([1, 5, 6], "m")
+        max_q = u.Q(5, "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError), match="must be less than or equal to"
         ):
@@ -178,17 +178,12 @@ class TestLeq:
 class TestGeq:
     """Tests for geq (greater than or equal) check."""
 
-    @given(
-        data=st.data(),
-        min_val=float32s(min_value=0.0, max_value=10.0),
-    )
+    @given(data=st.data(), min_val=float32s(min_value=0, max_value=10))
     def test_values_above_min_pass(self, data: st.DataObject, min_val: float) -> None:
         """Values >= min should pass through unchanged."""
         x = data.draw(
             ust.quantities(
-                "m",
-                shape=(),
-                elements=float32s(min_value=min_val, max_value=100.0),
+                "m", shape=(), elements=float32s(min_value=min_val, max_value=100)
             )
         )
         min_q = u.Q(min_val, "m")
@@ -197,15 +192,15 @@ class TestGeq:
 
     def test_equal_to_min_passes(self) -> None:
         """Values equal to min should pass."""
-        x = u.Q(5.0, "m")
-        min_q = u.Q(5.0, "m")
+        x = u.Q(5, "m")
+        min_q = u.Q(5, "m")
         result = checks.geq(x, min_q)
         assert jnp.array_equal(result.value, x.value)
 
     def test_below_min_raises(self) -> None:
         """Values below min should raise an error."""
-        x = u.Q(4.0, "m")
-        min_q = u.Q(5.0, "m")
+        x = u.Q(4, "m")
+        min_q = u.Q(5, "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be greater than or equal to",
@@ -214,8 +209,8 @@ class TestGeq:
 
     def test_array_with_value_below_min_raises(self) -> None:
         """Arrays with any value below min should raise an error."""
-        x = u.Q([4.0, 5.0, 6.0], "m")
-        min_q = u.Q(5.0, "m")
+        x = u.Q([4, 5, 6], "m")
+        min_q = u.Q(5, "m")
         with pytest.raises(
             (eqx.EquinoxRuntimeError, ValueError),
             match="must be greater than or equal to",

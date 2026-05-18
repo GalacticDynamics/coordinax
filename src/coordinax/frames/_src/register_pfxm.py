@@ -21,11 +21,8 @@ def frame_transition(from_frame: NoFrame, to_frame: NoFrame, /) -> cxfm.Identity
     frame-agnostic) there is nothing to transform, so the result is the
     identity operation.
 
-    Examples
-    --------
     >>> import coordinax.frames as cxf
     >>> import coordinax.transforms as cxfm
-
     >>> op = cxf.frame_transition(cxf.noframe, cxf.noframe)
     >>> isinstance(op, cxfm.Identity)
     True
@@ -40,10 +37,7 @@ def frame_transition(
 ) -> NoReturn:
     """Cannot transform from the null frame.
 
-    Examples
-    --------
     >>> import coordinax.frames as cxf
-
     >>> try:
     ...     cxf.frame_transition(cxf.noframe, cxf.alice)
     ... except cxf.FrameTransformError as e:
@@ -61,10 +55,7 @@ def frame_transition(
 ) -> NoReturn:
     """Cannot transform to the null frame.
 
-    Examples
-    --------
     >>> import coordinax.frames as cxf
-
     >>> try:
     ...     cxf.frame_transition(cxf.alice, cxf.noframe)
     ... except cxf.FrameTransformError as e:

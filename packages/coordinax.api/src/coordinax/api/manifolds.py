@@ -2,6 +2,8 @@
 
 __all__ = (
     "guess_manifold",
+    "metric_matrix",
+    "metric_representation",
     "scale_factors",
     "angle_between",
     "pt_embed",
@@ -24,8 +26,6 @@ if TYPE_CHECKING:
 def guess_manifold(*args: Any, **kwargs: Any) -> "coordinax.manifolds.AbstractManifold":
     """Guess the manifold from arguments.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
@@ -495,4 +495,90 @@ def pt_map(*args: Any, **kwargs: Any) -> CDict:
 
     """
     del args, kwargs  # Unused in abstract method
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def metric_matrix(M: Any, point: Any, chart: Any, /) -> Any:
+    """Compute the coordinate metric matrix at ``point`` in ``chart``.
+
+    Dispatches on the triple ``(type(M), type(point), type(chart))``.
+    Concrete implementations for each ``(M, chart)`` pair are registered
+    in the corresponding ``register_metric.py`` modules via
+    :func:`plum.dispatch`.
+
+    Parameters
+    ----------
+    M : AbstractManifold
+        The manifold carrying the metric field.
+    point : CDict
+        A component dictionary giving the coordinates in ``chart``.
+    chart : AbstractChart
+        The coordinate chart in which to express the metric.
+
+    Returns
+    -------
+    AbstractMetricMatrix
+        The metric matrix at ``point``.  The concrete type
+        (`~coordinax._src.metric.matrix.DiagonalMetric` or
+        `~coordinax._src.metric.matrix.DenseMetric`) depends on the ``(M,
+        chart)`` pair and is declared by :func:`metric_representation`.
+
+    Raises
+    ------
+    NotImplementedError
+        When no specific dispatch rule is registered for the given types.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> at = {"x": jnp.array(1.0), "y": jnp.array(2.0), "z": jnp.array(3.0)}
+    >>> cxmapi.metric_matrix(cxm.R3, at, cxc.cart3d)
+    DiagonalMetric(diagonal=f64[3])
+
+    """
+    del M, point, chart
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def metric_representation(M: Any, chart: Any, /) -> Any:
+    """Return the `AbstractMetricMatrix` subtype for ``(manifold, chart)``.
+
+    A lightweight, allocation-free query that reports which concrete
+    `~coordinax._src.metric.matrix.AbstractMetricMatrix` subclass
+    :func:`metric_matrix` will return for a given ``(manifold, chart)`` pair,
+    without actually computing the metric values.
+
+    Dispatches on ``(type(manifold), type(chart))``.  Concrete rules are
+    registered in the relevant ``register_metric.py`` modules.  The default
+    fallback returns `~coordinax._src.metric.matrix.DenseMetric`.
+
+    Parameters
+    ----------
+    M : AbstractManifold
+        The manifold.
+    chart : AbstractChart
+        The coordinate chart.
+
+    Returns
+    -------
+    type[AbstractMetricMatrix]
+        The metric matrix type guaranteed for this ``(manifold, chart)`` pair.
+
+    Examples
+    --------
+    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> cxmapi.metric_representation(cxm.R3, cxc.cart3d) is cxm.DiagonalMetric
+    True
+
+    """
+    del M, chart
     raise NotImplementedError  # pragma: no cover

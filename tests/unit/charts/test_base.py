@@ -68,47 +68,42 @@ class TestAbstractChartCheckData:
 
     def test_check_data_passes_for_valid_data(self) -> None:
         """check_data passes for valid data matching chart components."""
-        data = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+        data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
         cxc.cart3d.check_data(data)
 
     def test_check_data_raises_for_missing_component(self) -> None:
         """check_data raises when a component is missing."""
-        data = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}  # missing z
+        data = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}  # missing z
         with pytest.raises(ValueError, match="Data keys do not match"):
             cxc.cart3d.check_data(data)
 
     def test_check_data_raises_for_extra_component(self) -> None:
         """check_data raises when an extra component is present."""
-        data = {
-            "x": u.Q(1.0, "m"),
-            "y": u.Q(2.0, "m"),
-            "z": u.Q(3.0, "m"),
-            "w": u.Q(4.0, "m"),
-        }
+        data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m"), "w": u.Q(4, "m")}
         with pytest.raises(ValueError, match="Data keys do not match"):
             cxc.cart3d.check_data(data)
 
     def test_check_data_skips_key_check_when_disabled(self) -> None:
         """check_data skips key check when keys=False."""
-        data = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m")}  # missing z
+        data = {"x": u.Q(1, "m"), "y": u.Q(2, "m")}  # missing z
         cxc.cart3d.check_data(data, keys=False)  # should not raise
 
     # --- dimensions check ---
 
     def test_check_data_passes_for_valid_dimensions(self) -> None:
         """check_data passes when data dimensions match chart coord_dimensions."""
-        data = {"x": u.Q(1.0, "m"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+        data = {"x": u.Q(1, "m"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
         cxc.cart3d.check_data(data, values=True)
 
     def test_check_data_raises_for_wrong_dimension(self) -> None:
         """check_data raises when a value's dimension doesn't match the chart."""
-        data = {"x": u.Q(1.0, "s"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+        data = {"x": u.Q(1, "s"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
         with pytest.raises(ValueError, match="Data dimension for 'x' does not match"):
             cxc.cart3d.check_data(data, values=True)
 
     def test_check_data_ignores_values_by_default(self) -> None:
         """check_data does not check value dimensions when values=False (default)."""
-        data = {"x": u.Q(1.0, "s"), "y": u.Q(2.0, "m"), "z": u.Q(3.0, "m")}
+        data = {"x": u.Q(1, "s"), "y": u.Q(2, "m"), "z": u.Q(3, "m")}
         cxc.cart3d.check_data(data)  # should not raise
 
 

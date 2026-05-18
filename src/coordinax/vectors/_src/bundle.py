@@ -551,8 +551,6 @@ class Coordinate(AbstractVector):
 def from_(cls: type[Coordinate], pv: Coordinate, /) -> Coordinate:
     """Identity: return the same Coordinate unchanged.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> pv = cx.Coordinate(point=cx.Point.from_([1.0, 2.0, 3.0], "m"))
     >>> cx.Coordinate.from_(pv) is pv
@@ -566,8 +564,6 @@ def from_(cls: type[Coordinate], pv: Coordinate, /) -> Coordinate:
 def from_(cls: type[Coordinate], p: Point, /) -> Coordinate:
     """Wrap a single ``Point`` as a point-only bundle (no field vectors).
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> p = cx.Point.from_([1.0, 2.0, 3.0], "m")
     >>> pv = cx.Coordinate.from_(p)
@@ -591,8 +587,6 @@ def from_(
     The mapping may contain a ``"point"`` key for the base; the explicit
     ``point`` keyword argument takes precedence if both are supplied.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> import coordinax.charts as cxc

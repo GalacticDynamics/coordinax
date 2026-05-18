@@ -221,8 +221,6 @@ class Point(
 def from_(cls: type[Point], obj: Point, /) -> Point:
     """Construct a point from another point.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> vec1 = cx.Point.from_([1, 2, 3], "m")
     >>> vec2 = cx.Point.from_(vec1)
@@ -246,8 +244,6 @@ def from_(
 ) -> Point:
     """Construct a vector from an object, and chart and rep info.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.main as cx
@@ -346,8 +342,6 @@ def from_(cls: type[Point], obj: Any, /) -> Any:
     Note that this is a pretty limited constructor since it often lacks the
     necessary information to do a proper construction.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.main as cx
@@ -444,8 +438,6 @@ def from_(
 ) -> Any:
     """Construct a vector from an array, unit, chart, and rep.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.main as cx
 
@@ -478,8 +470,6 @@ def from_(
 ) -> Point:
     """Construct a point from another point, replacing its frame.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.frames as cxf
 
@@ -506,8 +496,6 @@ def from_(
 ) -> Point:
     """Construct a point from any object with a frame.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.frames as cxf
     >>> import unxt as u
@@ -534,8 +522,6 @@ def from_(
 ) -> Point:
     """Construct a point from an object, chart, and frame.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.frames as cxf
     >>> import coordinax.charts as cxc
@@ -564,8 +550,6 @@ def from_(
 ) -> Point:
     """Construct a point from an object, chart, representation, and frame.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.frames as cxf
     >>> import coordinax.charts as cxc
@@ -596,8 +580,6 @@ def from_(
 ) -> Point:
     """Construct a point from an array, unit, and frame.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import coordinax.frames as cxf
 

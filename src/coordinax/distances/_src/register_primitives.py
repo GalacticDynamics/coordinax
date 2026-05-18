@@ -25,8 +25,6 @@ T = TypeVar("T")
 def atan2_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
     """Arctangent2 of two distances degrades to a quantity.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> from coordinax.distances import Distance
 
@@ -49,8 +47,6 @@ def atan2_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.
 def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
     """Cube root of a distance.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> from coordinax.distances import Distance
     >>> d = Distance(8, "m")
@@ -69,8 +65,6 @@ def cbrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQua
 def div_p_abstractdistances(x: AbstractDistance, y: AbstractDistance, /) -> u.Q:
     """Division of two Distances.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> from coordinax.distances import Distance
 
@@ -92,8 +86,6 @@ def dot_general_p_abstractdistances(
 ) -> BareQuantity:
     """Dot product of two Distances.
 
-    Examples
-    --------
     This is a dot product of two Distances.
 
     >>> import quaxed.numpy as jnp
@@ -131,8 +123,6 @@ def dot_general_p_abstractdistances(
 def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQuantity:
     """Integer power of a Distance.
 
-    Examples
-    --------
     >>> from coordinax.distances import Distance
     >>> q = Distance(2, "m")
     >>> q ** 3
@@ -149,8 +139,6 @@ def integer_pow_p_abstractdistance(x: AbstractDistance, /, *, y: Any) -> BareQua
 def neg_p_distance(x: Distance, /) -> u.Q:
     """Negation of a Distance degrades to a Quantity.
 
-    Examples
-    --------
     >>> from coordinax.distances import Distance
     >>> q = Distance(10, "m")
     >>> -q
@@ -169,8 +157,6 @@ def pow_p_abstractdistance_arraylike(
 ) -> BareQuantity:
     """Power of a Distance by redispatching to Quantity.
 
-    Examples
-    --------
     >>> import math
     >>> from coordinax.distances import Distance
 
@@ -191,8 +177,6 @@ def pow_p_abstractdistance_arraylike(
 def sqrt_p_abstractdistance(x: AbstractDistance, /, *, accuracy: Any) -> BareQuantity:
     """Square root of a quantity.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
 
     >>> from coordinax.distances import Distance

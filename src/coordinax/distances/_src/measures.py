@@ -69,11 +69,8 @@ class Distance(AbstractDistance):
 def from_(cls: type[Distance], value: ArrayLike, unit: Any, /, **kw: Any) -> Distance:
     """Construct a distance.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.distances as cxd
-
     >>> cxd.Distance.from_(1, "kpc")
     Distance(1, 'kpc')
 
@@ -85,8 +82,6 @@ def from_(cls: type[Distance], value: ArrayLike, unit: Any, /, **kw: Any) -> Dis
 def from_(cls: type[Distance], d: Distance, /, **kw: Any) -> Distance:
     """Compute distance from distance.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.distances as cxd
 
@@ -107,11 +102,8 @@ def from_(cls: type[Distance], d: Distance, /, **kw: Any) -> Distance:
 def from_(cls: type[Distance], d: u.Q["length"], /, **kw: Any) -> Distance:
     """Compute distance from distance.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.distances as cxd
-
     >>> q = u.Q(1, "kpc")
     >>> cxd.Distance.from_(q, dtype=float)
     Distance(1., 'kpc')
@@ -125,8 +117,6 @@ def from_(cls: type[Distance], d: u.Q["length"], /, **kw: Any) -> Distance:
 def from_(cls: type[Distance], p: u.Q["angle"], /, **kw: Any) -> Distance:
     """Compute distance from parallax.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.distances as cxd
 
@@ -144,8 +134,6 @@ def from_(cls: type[Distance], p: u.Q["angle"], /, **kw: Any) -> Distance:
 def from_(cls: type[Distance], dm: u.Q["mag"], /, **kw: Any) -> Distance:
     """Compute distance from distance modulus.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.distances as cxd
 

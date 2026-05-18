@@ -47,12 +47,12 @@ False
 >>> import coordinax.charts as cxc
 >>> import coordinax.manifolds as cxm
 
->>> E2 = cxm.EuclideanManifold(2)
->>> E2.default_chart()
+>>> R2 = cxm.EuclideanManifold(2)
+>>> R2.default_chart()
 Cart2D(M=Rn(2))
->>> E2.has_chart(cxc.cart2d)
+>>> R2.has_chart(cxc.cart2d)
 True
->>> E2.has_chart(cxc.polar2d)
+>>> R2.has_chart(cxc.polar2d)
 True
 ```
 
@@ -64,7 +64,7 @@ True
 >>> import coordinax.charts as cxc
 >>> import coordinax.manifolds as cxm
 
->>> S2 = cxm.HyperSphericalManifold()
+>>> S2 = cxm.HyperSphericalManifold(2)
 >>> S2.default_chart()
 SphericalTwoSphere(M=Sn(2))
 >>> S2.has_chart(cxc.sph2)
@@ -97,7 +97,6 @@ Use `cxc.pt_map` (or `cxm.pt_map`) to convert a point between two charts on the 
 >>> import coordinax.manifolds as cxm
 >>> import unxt as u
 
->>> M = cxm.EuclideanManifold(2)
 >>> p = {"x": u.Q(1, "km"), "y": u.Q(1, "km")}
 >>> p_pol = cxc.pt_map(p, cxc.cart2d, cxc.polar2d)
 >>> sorted(p_pol)
@@ -108,7 +107,7 @@ Use `cxc.pt_map` (or `cxm.pt_map`) to convert a point between two charts on the 
 
 Use `scale_factors` when you want the diagonal entries of the metric matrix in a chart.
 
-This returns the metric diagonal $g_{ii}$, not the basis lengths $\sqrt{g_{ii}}$. The result is a 1-D `QuantityMatrix` because different coordinate directions can carry different units.
+This returns the metric diagonal $g_{ii}$, not the basis lengths $\sqrt{g_{ii}}$. The result is a 1-D `QMatrix` because different coordinate directions can carry different units.
 
 ```{code-block} python
 >>> import coordinax.charts as cxc
@@ -116,14 +115,13 @@ This returns the metric diagonal $g_{ii}$, not the basis lengths $\sqrt{g_{ii}}$
 >>> import quaxed.numpy as jnp
 >>> import unxt as u
 
->>> M = cxm.EuclideanManifold(3)
 >>> at = {
 ...     "r": u.Q(2, "km"),
 ...     "theta": u.Angle(jnp.pi / 2, "rad"),
 ...     "phi": u.Angle(0, "rad"),
 ... }
 
->>> gdiag = M.scale_factors(cxc.sph3d, at=at)
+>>> gdiag = cxm.scale_factors(cxc.sph3d, at=at)
 >>> gdiag.shape
 (3,)
 >>> jnp.allclose(gdiag.value, jnp.array([1.0, 4.0, 4.0]))
@@ -132,7 +130,7 @@ Array(True, dtype=bool)
 '(, km2 / rad2, km2 / rad2)'
 ```
 
-For generic metrics, `scale_factors` follows the metric matrix path and returns the diagonal. For `EuclideanMetric`, coordinax uses a more efficient specialization that avoids forming the full metric matrix.
+For generic metrics, `scale_factors` follows the metric matrix path and returns the diagonal. For `FlatMetric`, coordinax uses a more efficient specialization that avoids forming the full metric matrix.
 
 ## Measuring Angles Between Tangent Vectors
 
@@ -146,12 +144,11 @@ This is a tangent-space operation, not a point-to-point operation. The vectors a
 >>> import quaxed.numpy as jnp
 >>> import unxt as u
 
->>> M = cxm.EuclideanManifold(2)
 >>> at = {"x": u.Q(0, "m"), "y": u.Q(0, "m")}
 >>> uvec = {"x": u.Q(1, "m"), "y": u.Q(0, "m")}
 >>> vvec = {"x": u.Q(0, "m"), "y": u.Q(1, "m")}
 
->>> ang = M.angle_between(cxc.cart2d, uvec, vvec, at=at)
+>>> ang = cxm.angle_between(cxc.cart2d, uvec, vvec, at=at)
 >>> jnp.allclose(u.ustrip("rad", ang), jnp.pi / 2)
 Array(True, dtype=bool)
 ```
@@ -159,7 +156,7 @@ Array(True, dtype=bool)
 For curvilinear charts, the angle is still intrinsic, but the metric weights the coordinate directions at the supplied base point:
 
 ```{code-block} python
->>> metric = cxm.HyperSphericalMetric(ndim=2)
+>>> metric = cxm.RoundMetric(ndim=2)
 >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
 >>> uvec = {"theta": jnp.array(1.0), "phi": jnp.array(0.0)}
 >>> vvec = {"theta": jnp.array(1.0), "phi": jnp.array(1.0)}
@@ -237,8 +234,7 @@ Use `EmbeddedManifold` when you need explicit manifold objects with atlas compat
 >>> import unxt as u
 
 >>> em = cxm.EmbeddedManifold(
-...     intrinsic=cxm.HyperSphericalManifold(),
-...     ambient=cxm.EuclideanManifold(3),
+...     intrinsic=cxm.S2, ambient=cxm.R3,
 ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")),
 ... )
 >>> em.ndim
@@ -300,7 +296,7 @@ When needed, build manifolds from explicit chart sets with `CustomAtlas` and `Cu
 >>> import coordinax.manifolds as cxm
 
 >>> A = cxm.CustomAtlas(charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d)
->>> M = cxm.CustomManifold(A, metric=cxm.EuclideanMetric(2))
+>>> M = cxm.CustomManifold(A, metric=cxm.FlatMetric(2))
 
 >>> M.has_chart(cxc.cart2d)
 True
@@ -316,8 +312,7 @@ Product manifolds combine independent factors and sum dimensions.
 >>> import coordinax.manifolds as cxm
 
 >>> MP = cxm.CartesianProductManifold(
-...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
-...     factor_names=("S2", "R1"),
+...     factors=(cxm.S2, cxm.R1), factor_names=("S2", "R1")
 ... )
 >>> MP.ndim
 3

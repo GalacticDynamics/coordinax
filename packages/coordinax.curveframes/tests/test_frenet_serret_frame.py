@@ -112,10 +112,10 @@ class TestActFrenetSerretTransformQuantity:
         At tau=0: gamma=(1,0,0) km, T=(0,1,0), N=(-1,0,0), B=(0,0,1)
         R @ (p - gamma) where p=(1,0,0) km => R @ (0,0,0) = (0,0,0) km.
         """
-        tau = u.Q(0.0, "s")
-        p = u.Q(jnp.array([1.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p = u.Q(jnp.array([1, 0, 0]), "km")
         result = cxfm.act(circle_fs_transform, tau, p)
-        np.testing.assert_allclose(_as_array(result, "km"), [0.0, 0.0, 0.0], atol=1e-6)
+        np.testing.assert_allclose(_as_array(result, "km"), [0, 0, 0], atol=1e-6)
 
     def test_act_forward_off_curve(self, circle_fs_transform) -> None:
         """Forward transform at tau=0 on a point offset from the curve.
@@ -124,15 +124,15 @@ class TestActFrenetSerretTransformQuantity:
         p=(2,0,0) km => delta=(1,0,0)
         R @ delta = [T·delta, N·delta, B·delta] = [0, -1, 0] km
         """
-        tau = u.Q(0.0, "s")
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
         result = cxfm.act(circle_fs_transform, tau, p)
-        np.testing.assert_allclose(_as_array(result, "km"), [0.0, -1.0, 0.0], atol=1e-6)
+        np.testing.assert_allclose(_as_array(result, "km"), [0, -1, 0], atol=1e-6)
 
     def test_act_inverse_roundtrip(self, circle_fs_transform) -> None:
         """Forward then inverse recovers original point."""
         tau = u.Q(0.5, "s")
-        p = u.Q(jnp.array([3.0, -1.0, 2.0]), "km")
+        p = u.Q(jnp.array([3, -1, 2]), "km")
 
         p_curve = cxfm.act(circle_fs_transform, tau, p)
         p_back = cxfm.act(circle_fs_transform.inverse, tau, p_curve)
@@ -143,10 +143,10 @@ class TestActFrenetSerretTransformQuantity:
 
     def test_act_at_different_tau_values(self, circle_fs_transform) -> None:
         """Different tau values give different results for same point."""
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
-        r1 = cxfm.act(circle_fs_transform, u.Q(0.0, "s"), p)
-        r2 = cxfm.act(circle_fs_transform, u.Q(1.0, "s"), p)
+        r1 = cxfm.act(circle_fs_transform, u.Q(0, "s"), p)
+        r2 = cxfm.act(circle_fs_transform, u.Q(1, "s"), p)
 
         # These should be different since the frame rotates
         assert not np.allclose(_as_array(r1, "km"), _as_array(r2, "km"), atol=1e-3)
@@ -172,7 +172,7 @@ class TestFrameTransitionFrenetSerret:
     def test_roundtrip_alice_to_fs_and_back(self, circle_fs_frame) -> None:
         """Alice -> FS -> Alice is identity for any point."""
         tau = u.Q(0.5, "s")
-        p = u.Q(jnp.array([3.0, -1.0, 2.0]), "km")
+        p = u.Q(jnp.array([3, -1, 2]), "km")
 
         op_fwd = cxf.frame_transition(cxf.Alice(), circle_fs_frame)
         op_bwd = cxf.frame_transition(circle_fs_frame, cxf.Alice())
@@ -193,8 +193,8 @@ class TestFrameTransitionFrenetSerret:
         Alice-to-Alex transition.
         """
         fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), _circle_curve)
-        tau = u.Q(0.0, "s")
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
         # Alice -> FS
         op_a_to_fs = cxf.frame_transition(cxf.Alice(), fs_frame)
@@ -224,7 +224,7 @@ class TestFrameTransitionFrenetSerret:
         """Alice -> FS -> Alex -> FS -> Alice recovers original point."""
         fs_frame = cxfc.FrenetSerretFrame.from_curve(cxf.Alice(), _circle_curve)
         tau = u.Q(0.3, "s")
-        p = u.Q(jnp.array([5.0, -2.0, 1.0]), "km")
+        p = u.Q(jnp.array([5, -2, 1]), "km")
 
         # Alice -> FS -> Alex
         op1 = cxf.frame_transition(cxf.Alice(), fs_frame)
@@ -250,8 +250,8 @@ class TestFrenetSerretFrameJAX:
 
     def test_act_jit(self, circle_fs_transform) -> None:
         """Act with FrenetSerretTransform is JIT-compatible."""
-        tau = u.Q(0.0, "s")
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
         result_eager = cxfm.act(circle_fs_transform, tau, p)
         result_jit = jax.jit(lambda t, x: cxfm.act(circle_fs_transform, t, x))(tau, p)
@@ -262,8 +262,8 @@ class TestFrenetSerretFrameJAX:
 
     def test_act_vmap_over_tau(self, circle_fs_transform) -> None:
         """Act can be vmapped over the tau parameter."""
-        taus = u.Q(jnp.linspace(0.0, 2.0, 5), "s")
-        p = u.Q(jnp.array([2.0, 0.0, 0.0]), "km")
+        taus = u.Q(jnp.linspace(0, 2, 5), "s")
+        p = u.Q(jnp.array([2, 0, 0]), "km")
 
         results = jax.vmap(lambda t: cxfm.act(circle_fs_transform, t, p))(taus)
 
@@ -284,29 +284,29 @@ class TestFrenetSerretActiveSemantics:
         At tau=0, the curve is at (1,0,0) km with T=(0,1,0), N=(-1,0,0).
         The point at the curve origin should map to (0,0,0) in the frame.
         """
-        tau = u.Q(0.0, "s")
-        p_on_curve = u.Q(jnp.array([1.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p_on_curve = u.Q(jnp.array([1, 0, 0]), "km")
         result = cxfm.act(circle_fs_transform, tau, p_on_curve)
 
-        np.testing.assert_allclose(_as_array(result, "km"), [0.0, 0.0, 0.0], atol=1e-6)
+        np.testing.assert_allclose(_as_array(result, "km"), [0, 0, 0], atol=1e-6)
 
     def test_inverse_moves_point_back_to_ambient(self, circle_fs_transform) -> None:
         """Inverse transform moves a curve-frame point back to ambient.
 
         Origin of curve frame at tau=0 should map back to gamma(0)=(1,0,0).
         """
-        tau = u.Q(0.0, "s")
-        p_origin = u.Q(jnp.array([0.0, 0.0, 0.0]), "km")
+        tau = u.Q(0, "s")
+        p_origin = u.Q(jnp.array([0, 0, 0]), "km")
         result = cxfm.act(circle_fs_transform.inverse, tau, p_origin)
 
-        np.testing.assert_allclose(_as_array(result, "km"), [1.0, 0.0, 0.0], atol=1e-6)
+        np.testing.assert_allclose(_as_array(result, "km"), [1, 0, 0], atol=1e-6)
 
     def test_frame_transition_matches_direct_transform(
         self, circle_fs_frame, circle_fs_transform
     ) -> None:
         """frame_transition(Alice, fs_frame) applies the same as the xop."""
         tau = u.Q(0.5, "s")
-        p = u.Q(jnp.array([2.0, 1.0, -1.0]), "km")
+        p = u.Q(jnp.array([2, 1, -1]), "km")
 
         via_transition = cxfm.act(
             cxf.frame_transition(cxf.Alice(), circle_fs_frame), tau, p
@@ -314,7 +314,5 @@ class TestFrenetSerretActiveSemantics:
         via_direct = cxfm.act(circle_fs_transform, tau, p)
 
         np.testing.assert_allclose(
-            _as_array(via_transition, "km"),
-            _as_array(via_direct, "km"),
-            atol=1e-10,
+            _as_array(via_transition, "km"), _as_array(via_direct, "km"), atol=1e-10
         )

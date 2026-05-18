@@ -300,7 +300,7 @@ class AbstractParallelTransportTransform(cxt.AbstractCompositeTransform):
         Q([-0.,  1.,  0.], '')
 
         """
-        R = self._rotation_matrix(tau)
+        R = self._rotation_matrix(tau.astype(float))
         return u.Q(R[0], "")
 
     # ---------------------------------------------------------------

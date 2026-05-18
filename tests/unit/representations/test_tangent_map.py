@@ -141,11 +141,7 @@ class TestTangentMapPhysicalBasis:
 
     def test_same_chart_identity_phys_basis(self) -> None:
         """Same-chart optimisation also holds for PhysicalBasis inputs."""
-        v = {
-            "r": jnp.array(2.0),
-            "theta": jnp.array(-1.5),
-            "phi": jnp.array(0.25),
-        }
+        v = {"r": jnp.array(2.0), "theta": jnp.array(-1.5), "phi": jnp.array(0.25)}
         at = {"r": jnp.array(3.0), "theta": jnp.array(0.5), "phi": jnp.array(0.1)}
 
         result = cxr.tangent_map(v, cxc.sph3d, cxr.phys_basis, cxc.sph3d, at=at)
@@ -274,17 +270,14 @@ class TestTangentMapJAXCompatibility:
     def test_vmap(self) -> None:
         """tangent_map can be vmap-ped over a batch of base points."""
         vs = {"x": jnp.ones(3), "y": jnp.zeros(3)}
-        ats = {
-            "x": jnp.array([1.0, 2.0, 3.0]),
-            "y": jnp.zeros(3),
-        }
+        ats = {"x": jnp.array([1, 2, 3]), "y": jnp.zeros(3)}
 
         def single_map(v: dict[str, Any], at: dict[str, Any]) -> dict[str, Any]:
             return cxr.tangent_map(v, cxc.cart2d, cxr.coord_disp, cxc.polar2d, at=at)
 
         batched = jax.vmap(single_map)(vs, ats)
         # At y=0, any x>0: dr/dx = x/r = 1, so dr = 1 always
-        np.testing.assert_allclose(batched["r"], 1.0, atol=1e-6)
+        np.testing.assert_allclose(batched["r"], 1, atol=1e-6)
 
 
 class TestTangentMapSemanticPreservation:
@@ -292,14 +285,14 @@ class TestTangentMapSemanticPreservation:
 
     def test_vel_rep(self) -> None:
         """tangent_map works with coord_vel representation."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0)}
         result = cxr.tangent_map(v, cxc.cart2d, cxr.coord_vel, cxc.polar2d, at=at)
-        np.testing.assert_allclose(result["r"], 1.0, atol=1e-6)
+        np.testing.assert_allclose(result["r"], 1, atol=1e-6)
 
     def test_acc_rep(self) -> None:
         """tangent_map works with coord_acc representation."""
-        v = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
-        at = {"x": jnp.array(1.0), "y": jnp.array(0.0)}
+        v = {"x": jnp.array(1), "y": jnp.array(0)}
+        at = {"x": jnp.array(1), "y": jnp.array(0)}
         result = cxr.tangent_map(v, cxc.cart2d, cxr.coord_acc, cxc.polar2d, at=at)
-        np.testing.assert_allclose(result["r"], 1.0, atol=1e-6)
+        np.testing.assert_allclose(result["r"], 1, atol=1e-6)

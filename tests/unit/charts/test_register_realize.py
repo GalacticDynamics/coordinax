@@ -90,15 +90,15 @@ class TestPointTransformProductCharts:
         phase_cart = cxc.CartesianProductChart((cxc.cart3d, cxc.cart3d), ("q", "p"))
         phase_sph = cxc.CartesianProductChart((cxc.sph3d, cxc.sph3d), ("q", "p"))
         p = {
-            "q.x": u.Q(1.0, "m"),
-            "q.y": u.Q(0.0, "m"),
-            "q.z": u.Q(0.0, "m"),
-            "p.x": u.Q(0.0, "m"),
-            "p.y": u.Q(1.0, "m"),
-            "p.z": u.Q(0.0, "m"),
+            "q.x": u.Q(1, "m"),
+            "q.y": u.Q(0, "m"),
+            "q.z": u.Q(0, "m"),
+            "p.x": u.Q(0, "m"),
+            "p.y": u.Q(1, "m"),
+            "p.z": u.Q(0, "m"),
         }
         result = cxc.pt_map(p, phase_cart, phase_sph)
-        assert u.ustrip("m", result["q.r"]) == pytest.approx(1.0)
-        assert u.ustrip("rad", result["q.phi"]) == pytest.approx(0.0)
-        assert u.ustrip("m", result["p.r"]) == pytest.approx(1.0)
+        assert u.ustrip("m", result["q.r"]) == pytest.approx(1)
+        assert u.ustrip("rad", result["q.phi"]) == pytest.approx(0)
+        assert u.ustrip("m", result["p.r"]) == pytest.approx(1)
         assert u.ustrip("rad", result["p.phi"]) == pytest.approx(jnp.pi / 2)

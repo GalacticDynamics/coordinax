@@ -43,18 +43,12 @@ _MSG_ZERO_NORMAL: Final = "Reflect.from_normal requires a nonzero normal vector.
 class Reflect(AbstractTransform):
     r"""Operator for Euclidean hyperplane reflections.
 
-    A reflection across the hyperplane orthogonal to a nonzero normal vector
-    $
-    n
-    $ acts on Cartesian coordinates by the Householder matrix
+    A reflection across the hyperplane orthogonal to a nonzero normal vector $n$
+    acts on Cartesian coordinates by the Householder matrix
 
-    $$
-    H_n = I - 2\hat{n}\hat{n}^T,
-    $$
+    $$ H_n = I - 2\hat{n}\hat{n}^T, $$
 
-    where $
-    \hat{n} = n / \lVert n \rVert
-    $.
+    where $ \hat{n} = n / \lVert n \rVert $.
 
     Examples
     --------

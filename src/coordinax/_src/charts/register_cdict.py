@@ -14,7 +14,7 @@ import unxt as u
 import coordinax.api.charts as cxcapi
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict
-from coordinax.internal import QuantityMatrix, UnitsMatrix
+from coordinax.internal import QMatrix, UnitsMatrix
 
 # ===================================================================
 # CDict
@@ -24,8 +24,6 @@ from coordinax.internal import QuantityMatrix, UnitsMatrix
 def cdict(obj: CDict, /) -> CDict:
     """Return a dictionary as-is.
 
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> d = {"x": 1.0, "y": 2.0}
     >>> cx.cdict(d)
@@ -39,8 +37,6 @@ def cdict(obj: CDict, /) -> CDict:
 def cdict(obj: CDict, chart: AbstractChart, /) -> CDict:
     """Return a dictionary as-is.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> d = {"x": 1.0, "y": 2.0}
     >>> cxc.cdict(d, cxc.cart2d)
@@ -62,14 +58,6 @@ def cdict(obj: u.AbstractQuantity, /) -> CDict:
     dimension. The appropriate Cartesian chart is determined from the last
     dimension of the quantity.
 
-    Raises
-    ------
-    ValueError
-        If the last dimension of the quantity doesn't match a known Cartesian
-        chart (0D, 1D, 2D, or 3D).
-
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import unxt as u
     >>> q = u.Q([1.0, 2.0, 3.0], "m")
@@ -120,12 +108,12 @@ def cdict(obj: u.AbstractQuantity, keys: tuple[str, ...], /) -> CDict:
 
 
 @plum.dispatch
-def cdict(obj: QuantityMatrix, keys: tuple[str, ...], /) -> CDict:
-    """Extract component dictionary from a 1D ``QuantityMatrix``.
+def cdict(obj: QMatrix, keys: tuple[str, ...], /) -> CDict:
+    """Extract component dictionary from a 1D ``QMatrix``.
 
     This overload supports heterogeneous per-component units by constructing
     one quantity per chart component from the corresponding numeric slice and
-    unit in the ``QuantityMatrix``.
+    unit in the ``QMatrix``.
 
     Raises
     ------
@@ -137,21 +125,21 @@ def cdict(obj: QuantityMatrix, keys: tuple[str, ...], /) -> CDict:
     --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
-    >>> q = QuantityMatrix(jnp.array([1.0, 2.0, 3.0]),
+    >>> q = QMatrix(jnp.array([1.0, 2.0, 3.0]),
     ...                    unit=("m", "km/s", "rad"))
     >>> cxc.cdict(q, ('x', 'y', 'z'))
     {'x': Q(1., 'm'), 'y': Q(2., 'km / s'), 'z': Q(3., 'rad')}
 
     """
     if obj.unit.ndim != 1:
-        msg = f"QuantityMatrix must be 1D for cdict, got ndim={obj.ndim}."
+        msg = f"QMatrix must be 1D for cdict, got ndim={obj.ndim}."
         raise ValueError(msg)
 
     if obj.shape[-1] != len(keys):
         msg = (
-            f"QuantityMatrix last dimension {obj.shape[-1]} does not match "
+            f"QMatrix last dimension {obj.shape[-1]} does not match "
             f"provided keys {len(keys)}."
         )
         raise ValueError(msg)
@@ -171,14 +159,6 @@ def cdict(obj: u.AbstractQuantity, chart: AbstractChart, /) -> CDict:
     2. The chart has homogeneous coordinate dimensions (all components have the
        same physical dimension, like Cartesian charts)
 
-    Raises
-    ------
-    ValueError
-        If the last dimension of the quantity doesn't match the chart's
-        component count, or if dimensions don't match.
-
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import unxt as u
 
@@ -191,27 +171,19 @@ def cdict(obj: u.AbstractQuantity, chart: AbstractChart, /) -> CDict:
 
 
 @plum.dispatch
-def cdict(obj: QuantityMatrix, chart: AbstractChart, /) -> CDict:
-    """Extract component dictionary from a 1D ``QuantityMatrix``.
+def cdict(obj: QMatrix, chart: AbstractChart, /) -> CDict:
+    """Extract component dictionary from a 1D ``QMatrix``.
 
     This overload supports heterogeneous per-component units by constructing
     one quantity per chart component from the corresponding numeric slice and
-    unit in the ``QuantityMatrix``.
+    unit in the ``QMatrix``.
 
-    Raises
-    ------
-    ValueError
-        If ``obj`` is not 1D, or if the last dimension does not match the
-        chart component count.
-
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.charts as cxc
     >>> import unxt as u
-    >>> from coordinax.internal import QuantityMatrix
+    >>> from coordinax.internal import QMatrix
 
-    >>> q = QuantityMatrix(
+    >>> q = QMatrix(
     ...     jnp.array([1.0, 2.0, 3.0]),
     ...     unit=(u.unit("m"), u.unit("km/s"), u.unit("rad")),
     ... )
@@ -260,14 +232,6 @@ def cdict(obj: ArrayLike, keys: tuple[str, ...], /) -> CDict:
 def cdict(obj: ArrayLike, chart: AbstractChart, /) -> CDict:
     """Extract component dictionary from an array.
 
-    Raises
-    ------
-    ValueError
-        If the last dimension of the quantity doesn't match a known Cartesian
-        chart (0D, 1D, 2D, or 3D).
-
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])
@@ -288,14 +252,6 @@ def cdict(
 ) -> CDict:
     """Extract component dictionary from an array.
 
-    Raises
-    ------
-    ValueError
-        If the last dimension of the quantity doesn't match a known Cartesian
-        chart (0D, 1D, 2D, or 3D).
-
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])
@@ -317,14 +273,6 @@ def cdict(
 ) -> CDict:
     """Extract component dictionary from an array.
 
-    Raises
-    ------
-    ValueError
-        If the last dimension of the quantity doesn't match a known Cartesian
-        chart (0D, 1D, 2D, or 3D).
-
-    Examples
-    --------
     >>> import coordinax.main as cx
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])
@@ -343,8 +291,6 @@ def cdict(obj: ArrayLike, unit: u.AbstractUnit | str | UnitsMatrix, /) -> CDict:
     dimension. The appropriate Cartesian chart is determined from the last
     dimension of the quantity.
 
-    Examples
-    --------
     >>> import coordinax.charts as cxc
     >>> import jax.numpy as jnp
     >>> arr = jnp.array([1.0, 2.0, 3.0])

@@ -969,7 +969,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.charts` | `CartesianProductChart`, </br> `cartesian_chart`, `guess_chart`, `cdict`, `pt_map`, `jac_pt_map`, </br> `cart0d`, </br> `cart1d`, `radial1d`, `time1d`, </br> `cart2d`, `polar2d`, </br> `cart3d`, `cyl3d`, `sph3d`, `lonlat_sph3d`, `loncoslat_sph3d`, `math_sph3d`, </br> `cartnd`, </br> `minkowskict`, `galileanct` |
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
-| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `EuclideanMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
+| `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
 | `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `TransformedReferenceFrame` |
 
@@ -983,8 +983,8 @@ These names are importable and supported for inter-package use, but they are **n
 
 Semi-public API:
 
-- `QuantityMatrix`: heterogeneous 1-D or 2-D quantity container with a per-element unit structure
-- `UnitsMatrix`: immutable, hashable wrapper around a numpy object array of `AbstractUnit` elements, aligned with a `QuantityMatrix`; supports tuple-style indexing, iteration, and `to_tuple()`/`to_string()`. **Not** a subclass of `astropy.StructuredUnit`; bidirectional converters to/from `astropy.StructuredUnit` live in `coordinax.interop.astropy`.
+- `QMatrix`: heterogeneous 1-D or 2-D quantity container with a per-element unit structure
+- `UnitsMatrix`: immutable, hashable wrapper around a numpy object array of `AbstractUnit` elements, aligned with a `QMatrix`; supports tuple-style indexing, iteration, and `to_tuple()`/`to_string()`. **Not** a subclass of `astropy.StructuredUnit`; bidirectional converters to/from `astropy.StructuredUnit` live in `coordinax.interop.astropy`.
 - `cdict_units`: extract per-component units from a coordinate dictionary
 - `pack_uniform_unit`: stack component data into an array using a shared unit
 - `pack_nonuniform_unit`: stack component data into an array while preserving per-component units
@@ -1142,7 +1142,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
     - Input `unxt.AbstractQuantity` with last axis size 1, 2, or 3: call `guess_chart` on the quantity to infer chart dimensionality, then apply the chart-based dispatch.
     - Input array-like with chart context: split last axis into named components using `chart.components`. Last axis length MUST match the chart's component count.
     - Input `unxt.AbstractQuantity` with chart context: split last axis into named quantities using `chart.components`. Requires last axis size to match chart.
-    - Input `QuantityMatrix` with chart context: extract heterogeneous per-component quantities, one for each chart component.
+    - Input `QMatrix` with chart context: extract heterogeneous per-component quantities, one for each chart component.
 
     Failure semantics:
 
@@ -1212,7 +1212,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
       raw array Jacobian. Requires `usys`.
 
     - `(at: CDict, from_chart, to_chart, /, *, usys: OptUSys = None)` ->
-      `Array | QuantityMatrix`. The general dict dispatch. Branches on whether `at`
+      `Array | QMatrix`. The general dict dispatch. Branches on whether `at`
       values are plain arrays or quantities:
 
       - **Array-valued** (`is_array=True`): stacks `at` into a plain array via
@@ -1220,13 +1220,13 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
         forwarded and must be an `AbstractUnitSystem` unless a more-specific analytical
         dispatch handles it.
 
-      - **Quantity-valued** (`is_array=False`): packs `at` into a 1-D `QuantityMatrix`
+      - **Quantity-valued** (`is_array=False`): packs `at` into a 1-D `QMatrix`
         via `pack_to_qmatrix(at, keys=from_chart.components)`, casts to `float`, then
         computes `J_qq = jax.jacfwd(pt_map_fn)(at_in)`. The jacfwd result is a
-        `QuantityMatrix` whose `.value` is itself a `QuantityMatrix` encoding the input
+        `QMatrix` whose `.value` is itself a `QMatrix` encoding the input
         units, and whose `.unit` encodes the output units. `_repack_q_from_jac` extracts
         both to build the correct 2-D `UnitsMatrix` and returns
-        `QuantityMatrix(J_arr, unit=unit_matrix)` of shape `(n_out, n_in)`.
+        `QMatrix(J_arr, unit=unit_matrix)` of shape `(n_out, n_in)`.
 
     **`usys` parameter:** required for the `None`-partial, curried, and plain-`Array`
     dispatches. Optional (`None`) for the `CDict` generic dispatch's quantity-valued
@@ -1822,7 +1822,17 @@ A representation is therefore **not** the same thing as a chart: the chart deter
 
     **`cconvert` integration:** `cconvert` dispatches to `tangent_map` when the source representation has `TangentGeometry`, passing `at` through the `at` keyword argument.
 
-    **Same-chart basis conversion:** `change_basis(v, chart, from_basis, to_basis, /, *, at)` changes tangent component conventions without changing charts. In v1 it is defined only for Cartesian charts and `CoordinateBasis` $
+    **Same-chart basis conversion:** `change_basis(v, chart, from_basis, to_basis, /, *, at)` changes tangent component conventions without changing charts. It is defined for `CoordinateBasis` ↔ `PhysicalBasis` conversions on any chart that carries a manifold (via `chart.M`), and as an identity map for `NoBasis` and same-basis cases. The following primary overloads are defined:
+
+    - `change_basis(v, chart, from_basis, to_basis, /, *, at)` — uses `chart.M` as the implicit manifold.
+    - `change_basis(v, chart, manifold, from_basis, to_basis, /, *, at)` — uses an explicit `manifold: AbstractManifold`; internally delegates to `manifold.metric`.
+
+    **Basis semantics for `change_basis`:**
+
+    - **`CoordinateBasis` → `PhysicalBasis`**: Call `metric_matrix(manifold, at, chart)`. If the result is a `DiagonalMetric` (i.e. `isinstance(manifold.metric, AbstractDiagonalMetricField)` held when the dispatch registered the rule), scale each component by the scale factor $h_i = \sqrt{g_{ii}}$: $\hat{v}^i = h_i\,v^i$ (no summation). If the result is a `DenseMetric`, compute the Cholesky factor $L$ of the metric matrix and apply the vielbein $E = L^\top$: $\hat{v} = E\,v$.
+    - **`PhysicalBasis` → `CoordinateBasis`**: inverse of the above. For diagonal metrics, $v^i = \hat{v}^i / h_i$. For general metrics, triangular-solve $E\,v = \hat{v}$.
+    - **Cartesian charts** (`Cart0D` … `CartND`) with any manifold: always the identity map, returned at `precedence=1` (scale factors are all 1).
+    - **`NoBasis` → `CoordinateBasis`** or **`NoBasis` → `PhysicalBasis`**: identity map (used for basis-agnostic data). The `NoBasis` → `PhysicalBasis` overload additionally checks that all components share the same physical dimension.
 
     **Point-to-Displacement promotion:** `change_basis(v: Point, to_basis, /, *, at)` promotes a `Point` to a `Tangent` with `Displacement` semantics. The component data are unchanged; only the geometric interpretation is recast from a manifold point (affine, `PointGeometry`) to a tangent-space displacement vector (`TangentGeometry`, `Displacement`). The resulting `Tangent` carries the same chart as the input `Point`, and its basis is `to_basis`. This operation is the inverse of treating a displacement as an absolute position, and it respects the affine/tangent distinction enforced throughout the spec.
 
@@ -2636,34 +2646,26 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     cxm.scale_factors(chart, /, *, at, usys=None)
     ```
 
-    Or via convenience wrappers on metric and manifold objects:
-
-    ```
-    metric.scale_factors(chart, at=at, usys=usys)
-    manifold.scale_factors(chart, at=at, usys=usys)
-    ```
-
     **Arguments:**
 
-    - `metric_or_manifold`: an `AbstractMetric` instance (metric-level call) or an `AbstractManifold` instance (manifold-level call). When a manifold is passed, `scale_factors` delegates to `manifold.metric`.
+    - `manifold_or_metric`: an `AbstractManifold` or `AbstractMetricField` instance.
     - `chart`: the coordinate chart in which the metric is expressed.
     - `at` (keyword): the base point $p$ in chart coordinates at which the metric is evaluated.
     - `usys` (keyword, optional): unit system forwarded to metric evaluation when needed.
 
     **Return:**
 
-    - Always a 1-D `QuantityMatrix` of length `ndim`.
-    - A `QuantityMatrix` is used even when the diagonal entries are dimensionless, because different coordinate directions may carry different units.
+    - Always a 1-D `QMatrix` of length `ndim`.
+    - A `QMatrix` is used even when the diagonal entries are dimensionless, because different coordinate directions may carry different units.
 
     **Dispatch behavior:**
 
-    - Generic metric dispatch: evaluate `metric.metric_matrix(chart, at=at, usys=usys)` and return `QuantityMatrix.diag()` on the result. If the metric matrix is array-valued, it is first promoted to a dimensionless `QuantityMatrix` and then diagonalized.
-    - Manifold dispatch: resolve to `scale_factors(manifold.metric, chart, at=at, usys=usys)`.
-    - `EuclideanMetric` specialization: compute the diagonal more efficiently than forming the full metric matrix. In Cartesian charts this returns a vector of ones directly; in non-Cartesian Euclidean charts it uses the chart-to-Cartesian Jacobian and computes only the squared column norms needed for the diagonal entries.
+    - Evaluate `metric_matrix(manifold, at, chart)` and extract the diagonal.
+    - `FlatMetric` specialization: compute the diagonal more efficiently than forming the full metric matrix. In Cartesian charts this returns a vector of ones directly; in non-Cartesian Euclidean charts it uses the chart-to-Cartesian Jacobian and computes only the squared column norms needed for the diagonal entries.
 
     **Position dependence:**
 
-    - For flat metrics (for example `EuclideanMetric` in Cartesian coordinates), the result may be position-independent numerically, though `at` remains part of the API.
+    - For flat metrics (for example `FlatMetric` in Cartesian coordinates), the result may be position-independent numerically, though `at` remains part of the API.
     - For curved or curvilinear cases, the returned diagonal entries depend on the supplied base point.
 
     **Examples**
@@ -2683,19 +2685,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> gdiag = cxm.scale_factors(cxc.sph3d, at=at)
     >>> gdiag.shape
     (3,)
-    >>> gdiag.unit.to_string()
-    '(, km2 / rad2, km2 / rad2)'
-
-    >>> metric = cxm.HyperSphericalMetric(2)
-    >>> at_s2 = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
-    >>> cxm.scale_factors(metric, cxc.sph2, at=at_s2).value
-    Array([1., 1.], dtype=float64)
     ```
-
-    **Notes:**
-
-    - `AbstractMetric.scale_factors` and `AbstractManifold.scale_factors` are thin wrappers over `cxm.scale_factors`.
-    - The name `scale_factors` in the software API follows the library convention for metric diagonal entries, even though some mathematical texts reserve “scale factor” for $\sqrt{g_{ii}}$.
 
 (software-spec-angle-between)=
 
@@ -2723,23 +2713,16 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     **Signature:**
 
     ```
-    cxm.angle_between(metric, chart, u, v, /, *, at, usys=None)
+    cxm.angle_between(manifold, chart, u, v, /, *, at, usys=None)
     ```
     or
     ```
     cxm.angle_between(chart, u, v, /, *, at, usys=None)
     ```
 
-    Or via convenience wrappers on metric and manifold objects:
-
-    ```
-    metric.angle_between(chart, u, v, at=at, usys=usys)
-    manifold.angle_between(chart, u, v, at=at, usys=usys)
-    ```
-
     **Arguments:**
 
-    - `metric_or_manifold`: an `AbstractMetric` instance (metric-level call) or an `AbstractManifold` instance (manifold-level call). When a manifold is passed, `angle_between` delegates to `manifold.metric`.
+    - `manifold_or_metric`: an `AbstractManifold` or `AbstractMetricField` instance. When a manifold is passed, `angle_between` uses `manifold.metric`.
     - `chart`: the coordinate chart in whose basis the tangent-vector components are expressed.
     - `u`, `v`: `CDict` tangent-vector components keyed by `chart.components`.
     - `at` (keyword): the base point $p$ in chart coordinates at which the metric is evaluated.
@@ -2752,8 +2735,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Dispatch behavior:**
 
-    - Generic metric dispatch: evaluate `metric.metric_matrix(chart, at=at, usys=usys)`, compute the bilinear forms `u^T g v`, `u^T g u`, and `v^T g v`, then return `arccos(...)` of the normalized inner product.
-    - Manifold dispatch: resolve to `angle_between(chart, u, v, at=at, usys=usys)`.
+    - Evaluate `metric_matrix(manifold, at, chart)`, compute the bilinear forms `u^T g v`, `u^T g u`, and `v^T g v`, then return `arccos(...)` of the normalized inner product.
     - The implementation supports full symmetric metric matrices; it is not restricted to diagonal metrics.
 
     **Failure semantics:**
@@ -2770,7 +2752,6 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> M = cxm.EuclideanManifold(2)
     >>> at = {"x": u.Q(0.0, "m"), "y": u.Q(0.0, "m")}
     >>> uvec = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m")}
     >>> vvec = {"x": u.Q(0.0, "m"), "y": u.Q(1.0, "m")}
@@ -2851,11 +2832,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     Chart-level transitions can be called directly via `cxc.pt_map`.
 
-(software-spec-abstractmetric)=
+(software-spec-abstractmetricfield)=
 
-!!! info `AbstractMetric`
+!!! info `AbstractMetricField`
 
-    `AbstractMetric` is the abstract base for metric tensors used by manifold objects.
+    `AbstractMetricField` is the abstract base for metric tensors used by manifold objects.
 
     A metric assigns a symmetric, non-degenerate bilinear form to each tangent space:
 
@@ -2868,49 +2849,45 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Immutability and JAX-static requirements:**
 
-    - All metric classes are immutable frozen dataclasses.
-    - All metric classes are registered with `@jax.tree_util.register_static`.
-    - Metric instances therefore flatten as static PyTree nodes (no dynamic leaves).
+    - Most metric classes are immutable frozen dataclasses registered with `@jax.tree_util.register_static` and therefore flatten as static PyTree nodes (no dynamic leaves).
+    - Exception: `RoundMetric` from `coordinax._src.metric.field` is an `equinox.Module` with a dynamic `radius` leaf, allowing JIT-compilation and differentiation through the radius parameter.
 
     **Core API contract:**
 
     - `signature: tuple[int, ...]` (abstract property): encodes metric signature signs in coordinate order and has length equal to the metric dimension.
     - `ndim: int`: defined as `len(signature)`.
-    - `metric_matrix(chart, /, *, at, usys=None) -> QuantityMatrix | Array` (abstract method): returns the metric matrix expressed in `chart`, evaluated at base point `at`.
-
-    **Metric matrix requirements:**
-
-    - Shape is `(ndim, ndim)`.
-    - Matrix is symmetric.
-    - The return type follows input/unit context.
-    - Quantity-valued evaluation returns `QuantityMatrix`.
-    - Array-valued evaluation may return `Array`.
-
-    **Behavioral guarantees:**
-
-    - Position-independent metrics (for example Minkowski in canonical coordinates) may ignore `at` numerically, but must still satisfy the same interface.
-    - Position-dependent metrics (for example induced or hyperspherical metrics) evaluate `metric_matrix` at the supplied base point.
-    - Chart compatibility is a manifold-level concern; metrics assume callers provide charts and points compatible with the surrounding manifold contract.
 
     **Subclassing requirements:**
 
-    - Implement `signature` and `metric_matrix`.
-    - Preserve immutability and static PyTree behavior.
+    - Implement `signature`.
+    - Preserve immutability and static PyTree behavior (or use `equinox.Module` if carrying dynamic parameters).
     - Remain JAX-transform compatible (`jit`, `vmap`) as pure functions of inputs.
+
+    **Three-layer metric architecture:**
+
+    The metric matrix computation follows a three-layer design:
+
+    1. **Metric field** (`AbstractMetricField` subclass): describes the *kind* of geometry (flat, round, Lorentzian, etc.) without specifying a coordinate representation or computing matrix components.
+    2. **Dispatch layer** (`metric_matrix` function): given a manifold, a base point, and a chart, computes and returns the metric matrix as a typed result object.
+    3. **Metric matrix** (`AbstractMetricMatrix` subclass: `DiagonalMetric` or `DenseMetric`): encodes the computed matrix and its sparsity structure.
+
+    The metric matrix is obtained via the dispatch function, not via a method on the metric field object:
+
+    ```python
+    import coordinax.api.manifolds as cxmapi
+
+    g = cxmapi.metric_matrix(manifold, point, chart)  # → DiagonalMetric or DenseMetric
+    ```
+
+    See [metric_matrix dispatch function](#software-spec-metric-matrix-dispatch) and [AbstractMetricMatrix](#software-spec-abstractmetricmatrix) for details.
 
     See the [Metrics](#software-spec-metrics) section for concrete metric families and formulas.
 
-    **Methods:**
+(software-spec-abstractdiagonalmetricfield)=
 
-    - `scale_factors(chart, /, *, at, usys=None)`: convenience wrapper around [`cxm.scale_factors`](#software-spec-scale-factors). Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`.
-    - `is_diagonal(chart, /, *, at, usys=None) -> Bool[Array, ""]`: returns `True` if all off-diagonal entries of the metric matrix vanish at `at`, checked numerically via `jnp.allclose`. This is a **point-specific, numerical** check. For a **structural, global** guarantee on a metric's diagonal chart domain (typically orthogonal charts), use `isinstance(metric, AbstractDiagonalMetric)`.
-    - `cholesky(chart, /, *, at, usys=None) -> QuantityMatrix | Array`: returns the lower-triangular Cholesky factor $L$ satisfying $g = L\,L^\top$. The vielbein is $E = L^\top$; see [Diagonal metrics and orthogonal coordinate systems](#diagonal-metrics-and-orthogonal-coordinate-systems) for the relationship to physical-basis components. Returns a `QuantityMatrix` when the metric matrix carries units, otherwise a plain `Array`. Element $L_{ij}$ carries unit $\sqrt{u_{ij}}$ where $u_{ij}$ is the unit of $g_{ij}$.
+!!! info `AbstractDiagonalMetricField`
 
-(software-spec-abstractdiagonalmetric)=
-
-!!! info `AbstractDiagonalMetric`
-
-    `AbstractDiagonalMetric` is an abstract subclass of `AbstractMetric` for metrics whose matrix is diagonal at every base point in every compatible chart.
+    `AbstractDiagonalMetricField` is an abstract subclass of `AbstractMetricField` for metrics whose matrix is diagonal at every base point in every compatible chart.
 
     A metric is **diagonal** (equivalently, the coordinate chart is an **orthogonal coordinate system**) when all off-diagonal entries of the metric matrix vanish:
 
@@ -2926,7 +2903,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Role: structural marker, not behavioral interface.**
 
-    `AbstractDiagonalMetric` adds no new abstract methods beyond those of `AbstractMetric`.  Its sole purpose is to **declare** that `metric_matrix` will always return a diagonal matrix.  This allows:
+    `AbstractDiagonalMetricField` adds no new abstract methods beyond those of `AbstractMetricField`.  Its sole purpose is to **declare** that `metric_matrix` will always return a diagonal matrix.  This allows:
 
     - Dispatch specialisations that compute `scale_factors` more efficiently
       (e.g., extracting only the diagonal of $g$, or using squared Jacobian
@@ -2936,59 +2913,141 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     **Subclassing contract:**
 
-    Subclasses must implement the two abstract members inherited from
-    `AbstractMetric`:
+    Subclasses must implement the abstract member inherited from
+    `AbstractMetricField`:
 
     - `signature` (abstract property): a tuple of $\pm 1$ of length `ndim`
       encoding the metric signature in coordinate order.  Positive entries
       are Riemannian (space-like); a ``-1`` entry is pseudo-Riemannian
       (time-like).
-    - `metric_matrix(chart, /, *, at, usys=None)` (abstract method): must
-      return a diagonal `QuantityMatrix` (or plain `Array`) of shape
-      `(ndim, ndim)` with all off-diagonal entries exactly zero.
 
-    All other behavioral requirements of `AbstractMetric` also apply:
-    immutability (frozen dataclass), static JAX PyTree registration, and
-    `jit`/`vmap` compatibility.
+    All other behavioral requirements of `AbstractMetricField` also apply:
+    immutability (frozen dataclass or `equinox.Module`), static JAX PyTree
+    registration, and `jit`/`vmap` compatibility.
 
-    **Relationship to `AbstractMetric.is_diagonal`:**
+    **Relationship to `metric_representation`:**
 
-    `AbstractMetric.is_diagonal(chart, at=at)` inspects the metric matrix at
-    a **specific base point** and returns a `bool`.
-    `AbstractDiagonalMetric` makes this an unconditional **structural
-    promise** across all base points: instances are always diagonal,
-    regardless of which chart or point is supplied.
+    `metric_representation(manifold, chart)` returns the *type* of metric matrix
+    (`DiagonalMetric` or `DenseMetric`) that will be produced for a given
+    manifold–chart pair.  When `isinstance(manifold.metric, AbstractDiagonalMetricField)`,
+    dispatch rules can return a `DiagonalMetric` (storing only the diagonal)
+    rather than a full `DenseMetric`.  This is a **structural, global**
+    guarantee — instances are always diagonal regardless of the base point.
 
     **Concrete subclasses (built-in):**
 
     | Class | Manifold | Diagonal in |
     |-------|----------|-------------|
-    | [`EuclideanMetric`](#software-spec-euclideanmetric) | $\mathbb{R}^n$ | Cartesian charts; orthogonal curvilinear charts via $g = J^\top J$ |
-    | [`HyperSphericalMetric`](#software-spec-hypersphericalmetric) | $S^{n-1}$ | Intrinsic hyperspherical chart; cumulative-sine rule $g_{kk} = \prod_{j<k}\sin^2\!\theta_j$ |
+    | [`FlatMetric`](#software-spec-flatmetric) | $\mathbb{R}^n$ | Cartesian charts; orthogonal curvilinear charts via $g = J^\top J$ |
+    | [`RoundMetric`](#software-spec-roundmetric) | $S^{n-1}$ | Intrinsic hyperspherical chart; cumulative-sine rule $g_{kk} = \prod_{j<k}\sin^2\!\theta_j$ |
     | [`MinkowskiMetric`](#software-spec-minkowskimetric) | $\mathbb{R}^{1,3}$ | Canonical Cartesian spacetime chart $\eta = \operatorname{diag}(-1,1,1,1)$ |
 
     **Example**
 
     ```pycon
-    >>> from coordinax._src.manifolds.diagonal import AbstractDiagonalMetric
+    >>> from coordinax._src.base import AbstractDiagonalMetricField
     >>> import coordinax.manifolds as cxm
 
-    >>> isinstance(cxm.EuclideanMetric(3), AbstractDiagonalMetric)
+    >>> isinstance(cxm.FlatMetric(3), AbstractDiagonalMetricField)
     True
 
-    >>> isinstance(cxm.MinkowskiMetric(), AbstractDiagonalMetric)
+    >>> isinstance(cxm.MinkowskiMetric(), AbstractDiagonalMetricField)
     True
 
     >>> import unxt as u
     >>> isinstance(
-    ...     cxm.InducedMetric(
+    ...     cxm.PullbackMetric(
     ...         cxm.TwoSphereIn3D(radius=u.Q(1.0, "m")),
-    ...         cxm.EuclideanMetric(3),
+    ...         cxm.FlatMetric(3),
     ...     ),
-    ...     AbstractDiagonalMetric,
+    ...     AbstractDiagonalMetricField,
     ... )
     False
     ```
+
+(software-spec-metric-matrix-dispatch)=
+
+!!! info `metric_matrix` and `metric_representation` dispatch functions
+
+    The metric matrix computation is separated from the metric field type.
+    Two standalone dispatch functions bridge metric fields to concrete matrix results:
+
+    **`metric_matrix(manifold, point, chart) → AbstractMetricMatrix`**
+
+    Evaluates the metric at `point` in `chart` and returns a typed matrix object:
+
+    ```
+    cxmapi.metric_matrix(manifold, point, chart) → DiagonalMetric | DenseMetric
+    ```
+
+    - `manifold`: an `AbstractManifold` instance (e.g. `cxm.R3`, `cxm.S2`, `EmbeddedManifold`).
+    - `point`: a coordinate dict in the given chart's coordinate system.
+    - `chart`: the coordinate chart in which the metric is expressed.
+
+    Returns a `DiagonalMetric` when the manifold's metric is an `AbstractDiagonalMetricField` and the chart is orthogonal; otherwise returns a `DenseMetric`.
+
+    **`metric_representation(manifold, chart) → type[AbstractMetricMatrix]`**
+
+    Returns the *type* of metric matrix that `metric_matrix` will produce for the given manifold–chart pair, without evaluating at a point:
+
+    ```
+    cxmapi.metric_representation(manifold, chart) → type[DiagonalMetric] | type[DenseMetric]
+    ```
+
+    **Example:**
+
+    ```pycon
+    >>> import jax.numpy as jnp
+    >>> import coordinax.api.manifolds as cxmapi
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+    >>> g = cxmapi.metric_matrix(cxm.R3, at, cxc.cart3d)
+    >>> g.diagonal
+    Array([1., 1., 1.], dtype=float64)
+
+    >>> cxmapi.metric_representation(cxm.R3, cxc.cart3d)
+    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
+    ```
+
+(software-spec-abstractmetricmatrix)=
+
+!!! info `AbstractMetricMatrix`, `DiagonalMetric`, `DenseMetric`
+
+    These types encode the result of `metric_matrix` together with its sparsity structure.
+
+    **`AbstractMetricMatrix`** (base class):
+
+    - `ndim: int` — dimension of the metric.
+    - `to_dense() → DenseMetric` — expand to a full $(n \times n)$ matrix.
+
+    **`DiagonalMetric`** (returned for orthogonal charts):
+
+    - Stores only the 1-D diagonal `(g_{11}, \ldots, g_{nn})` as an `Array` or `QMatrix`.
+    - `diagonal: Array | QMatrix` — the diagonal entries.
+    - `inverse → DiagonalMetric` — reciprocal of each diagonal entry.
+    - `determinant → Array | Quantity` — product of diagonal entries.
+    - `__matmul__(v) → Array` — element-wise product (O(n), not O(n²)).
+
+    **`DenseMetric`** (returned for non-orthogonal charts and embedded manifolds):
+
+    - Stores the full $(n \times n)$ matrix as an `Array` or `QMatrix`.
+    - `matrix: Array | QMatrix` — the full matrix.
+    - `inverse → DenseMetric` — via `jnp.linalg.inv`; preserves unit tracking.
+    - `determinant → Array | Quantity` — via a custom `det_p` JAX primitive; preserves unit tracking.
+    - `__matmul__(v) → Array | QMatrix` — full matrix-vector product.
+
+    **Unit tracking:**
+
+    Both types propagate units through `QMatrix` fields.  For metrics
+    induced by Jacobian pullback, units are `cart_unit² / (intrinsic_unit_i × intrinsic_unit_j)`.
+
+    **Basis change integration:**
+
+    `change_basis` uses the metric matrix type to select the efficient path:
+    - `DiagonalMetric` → scale each component by the scale factor $h_i = \sqrt{g_{ii}}$.
+    - `DenseMetric` → compute Cholesky vielbein $E = L^\top$ and apply $\hat{v} = E\,v$.
 
 (software-spec-abstractmanifold)=
 
@@ -3027,7 +3086,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     The manifold provides thin wrappers around coordinate transformations that ensure atlas compatibility before delegating to chart‑level machinery.
 
     - ``pt_map(...)`` performs chart transitions while checking that both charts belong to the manifold.
-    - ``scale_factors(chart, /, *, at, usys=None)``: convenience wrapper that delegates to the manifold metric. Returns the 1-D `QuantityMatrix` of diagonal metric entries in `chart` at base point `at`. See the [`scale_factors` functional API section](#software-spec-scale-factors) for full semantics.
+    - ``scale_factors(chart, /, *, at, usys=None)``: convenience wrapper that delegates to the manifold metric. Returns the 1-D `QMatrix` of diagonal metric entries in `chart` at base point `at`. See the [`scale_factors` functional API section](#software-spec-scale-factors) for full semantics.
 
     Pre-defined manifolds:
 
@@ -3138,11 +3197,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     False
     ```
 
-(software-spec-euclideanmetric)=
+(software-spec-flatmetric)=
 
-!!! info `EuclideanMetric`
+!!! info `FlatMetric`
 
-    `EuclideanMetric` is the flat Riemannian metric on $\mathbb{R}^n$.
+    `FlatMetric` is the flat Riemannian metric on $\mathbb{R}^n$.
 
     In Cartesian coordinates, the metric matrix is the identity:
 
@@ -3159,16 +3218,16 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Construction:
 
     ```text
-    EuclideanMetric(ndim: int)
+    FlatMetric(ndim: int)
     ```
 
     Semantics:
 
     - `signature = (1,) * ndim`.
-    - `metric_matrix(chart, /, *, at, usys=None)` returns a `QuantityMatrix`.
-    - For Cartesian charts, `metric_matrix` returns a dimensionless identity matrix of shape `(ndim, ndim)`.
-    - For compatible non-Cartesian charts, `metric_matrix` is computed as `J^T J`, where `J = jac_pt_map(at, chart, chart.cartesian, usys=usys)`.
-    - This pullback is diagonal exactly for orthogonal charts. Therefore the `AbstractDiagonalMetric` interpretation of `EuclideanMetric` is scoped to that orthogonal chart domain; atlas compatibility alone does not guarantee diagonality.
+    - `metric_matrix(manifold, point, chart)` returns a `DiagonalMetric` for orthogonal charts.
+    - For Cartesian charts, the diagonal is all ones (dimensionless).
+    - For compatible non-Cartesian charts, the diagonal is computed from `J^T J`, where `J = jac_pt_map(at, chart, chart.cartesian, usys=usys)`.
+    - This pullback is diagonal exactly for orthogonal charts. Therefore the `AbstractDiagonalMetricField` interpretation of `FlatMetric` is scoped to that orthogonal chart domain; atlas compatibility alone does not guarantee diagonality.
     - If a chart has no global Cartesian sibling, the current implementation falls back to a dimensionless identity matrix.
 
     **Example**
@@ -3178,14 +3237,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> m = cxm.EuclideanMetric(3)
-    >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
-    >>> m.metric_matrix(cxc.cart3d, at=at)
-    QuantityMatrix([[1., 0., 0.],
-                    [0., 1., 0.],
-                    [0., 0., 1.]], '((, , ), (, , ), (, , ))')
+    >>> import coordinax.api.manifolds as cxmapi
+    >>> m = cxm.FlatMetric(3)
     >>> m.signature
     (1, 1, 1)
+    >>> m.ndim
+    3
+    >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+    >>> cxmapi.metric_matrix(cxm.R3, at, cxc.cart3d).diagonal
+    Array([1., 1., 1.], dtype=float64)
     ```
 
 (software-spec-euclideanmanifold)=
@@ -3204,7 +3264,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     A `EuclideanManifold(n)` provides both Euclidean smooth and metric structure:
 
     - `atlas = EuclideanAtlas(n)`
-    - `metric = EuclideanMetric(n)`
+    - `metric = FlatMetric(n)`
 
     with manifold dimension $ \dim M = n. $
 
@@ -3228,7 +3288,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
 
-    >>> M = cxm.EuclideanManifold(3)
+    >>> M = cxm.R3
     >>> M.ndim
     3
     >>> M.default_chart
@@ -3275,11 +3335,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     As with `EuclideanAtlas`, membership is determined by chart registration rather than by hard-coded enumeration using the ``register`` class method.
 
-(software-spec-hypersphericalmetric)=
+(software-spec-roundmetric)=
 
-!!! info `HyperSphericalMetric`
+!!! info `RoundMetric`
 
-    `HyperSphericalMetric` is the round Riemannian metric on the unit sphere in hyperspherical coordinates.
+    `RoundMetric` is the round Riemannian metric on the unit sphere in hyperspherical coordinates.
 
     For $S^2$ with chart $(\theta, \phi)$, the metric is
 
@@ -3301,15 +3361,14 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Construction:
 
     ```text
-    HyperSphericalMetric(ndim: int)
+    RoundMetric(ndim: int)
     ```
 
     Semantics:
 
     - `signature = (1,) * ndim`.
-    - `metric_matrix(chart, /, *, at, usys=None)` returns either a plain array or a `QuantityMatrix`, depending on whether inputs are unitful.
+    - `metric_matrix(manifold, point, chart)` returns a `DiagonalMetric` in the intrinsic hyperspherical chart basis.
     - Angular inputs are interpreted in radians by default, or via `usys["angle"]` when a unit system is provided.
-    - The returned metric is diagonal in the intrinsic hyperspherical chart basis.
 
     **Example**
 
@@ -3318,13 +3377,15 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
-    >>> m = cxm.HyperSphericalMetric(2)
-    >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
-    >>> m.metric_matrix(cxc.sph2, at=at)
-    Array([[1., 0.],
-           [0., 1.]], dtype=float64)
+    >>> import coordinax.api.manifolds as cxmapi
+    >>> m = cxm.RoundMetric(2)
     >>> m.signature
     (1, 1)
+    >>> m.ndim
+    2
+    >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
+    >>> cxmapi.metric_matrix(cxm.S2, at, cxc.sph2).diagonal
+    Array([1., 1.], dtype=float64)
     ```
 
 (software-spec-twospheremanifold)=
@@ -3348,7 +3409,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Structure:
 
     - `atlas = HyperSphericalAtlas()`
-    - `metric = HyperSphericalMetric(ndim)`
+    - `metric = RoundMetric(ndim)`
 
     The intrinsic dimension is $ \dim S^2 = 2$.
 
@@ -3380,7 +3441,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
 
-    >>> M = cxm.HyperSphericalManifold()
+    >>> M = cxm.HyperSphericalManifold(2)
     >>> M.ndim
     2
 
@@ -3463,9 +3524,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     - `signature = (-1, 1, 1, 1)`.
     - `ndim = 4`.
-    - `metric_matrix(chart, /, *, at, usys=None)` returns a `QuantityMatrix`.
-    - In the canonical `MinkowskiCT` chart, `metric_matrix` returns `diag(-1, 1, 1, 1)` directly.
-    - For other registered charts, `metric_matrix` returns `J^T η J`.
+    - `metric_matrix(manifold, point, chart)` returns a `DiagonalMetric` in the canonical `MinkowskiCT` chart with diagonal `(-1, 1, 1, 1)`.
+    - For other registered charts, the full matrix is `J^T η J` (returned as a `DenseMetric`).
 
     **Example**
 
@@ -3474,20 +3534,21 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
+    >>> import coordinax.api.manifolds as cxmapi
     >>> m = cxm.MinkowskiMetric()
+    >>> m.signature
+    (-1, 1, 1, 1)
+    >>> m.ndim
+    4
+    >>> M = cxm.MinkowskiManifold()
     >>> at = {
     ...     "ct": jnp.array(0.0),
     ...     "x": jnp.array(0.0),
     ...     "y": jnp.array(0.0),
     ...     "z": jnp.array(0.0),
     ... }
-    >>> m.metric_matrix(cxc.minkowskict, at=at).value
-    Array([[-1.,  0.,  0.,  0.],
-           [ 0.,  1.,  0.,  0.],
-           [ 0.,  0.,  1.,  0.],
-           [ 0.,  0.,  0.,  1.]], dtype=float64)
-    >>> m.signature
-    (-1, 1, 1, 1)
+    >>> cxmapi.metric_matrix(M, at, cxc.minkowskict).diagonal
+    Array([-1.,  1.,  1.,  1.], dtype=float64)
     ```
 
 (software-spec-minkowskimanifold)=
@@ -3597,19 +3658,19 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     ```text
     CustomMetric(
-        metric_matrix: Callable[[AbstractChart], QuantityMatrix | Array],
+        metric_matrix: Callable[[AbstractChart], QMatrix | Array],
         signature: tuple[int, ...],
     )
     ```
 
     Semantics:
 
-    - `metric_matrix(chart, /, *, at, usys=None)` is supplied by the caller and must satisfy the [`AbstractMetric`](#software-spec-abstractmetric) contract.
+    - The `metric_matrix` callable is supplied by the caller and must satisfy the [`AbstractMetricField`](#software-spec-abstractmetricfield) contract.
     - `signature` is the metric signature as a tuple of `+1` and `-1` entries.
     - `ndim = len(signature)`.
     - `CustomMetric` is immutable and registered as a static JAX PyTree, matching the behavior required of all concrete metric types.
 
-    This type exists so users can define metrics for custom manifolds without subclassing `AbstractMetric`.
+    This type exists so users can define metrics for custom manifolds without subclassing `AbstractMetricField`.
 
     **Example**
 
@@ -3642,7 +3703,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Construction:
 
     ```text
-    CustomManifold(atlas: CustomAtlas, metric: AbstractMetric)
+    CustomManifold(atlas: CustomAtlas, metric: AbstractMetricField)
     ```
 
     The manifold is intentionally thin: it forwards chart-membership checks, default-chart selection, and point transition wrappers to the provided atlas, while storing an explicit metric object for geometric computations.
@@ -3663,7 +3724,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ...     charts=(cxc.Cart2D, cxc.Polar2D),
     ...     chart_default=cxc.cart2d,
     ... )
-    >>> M = cxm.CustomManifold(A, cxm.EuclideanMetric(2))
+    >>> M = cxm.CustomManifold(A, cxm.FlatMetric(2))
 
     >>> M.ndim
     2
@@ -3753,11 +3814,11 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     False
     ```
 
-(software-spec-cartesianproductmetric)=
+(software-spec-productmetric)=
 
-!!! info `CartesianProductMetric`
+!!! info `ProductMetric`
 
-    `CartesianProductMetric` is the canonical metric on a Cartesian product manifold.
+    `ProductMetric` is the canonical metric on a Cartesian product manifold.
 
     For factor manifolds $(M_i, g_i)$, the product manifold
     $$
@@ -3772,14 +3833,14 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Construction:
 
     ```text
-    CartesianProductMetric(factors: tuple[AbstractMetric, ...])
+    ProductMetric(factors: tuple[AbstractMetricField, ...])
     ```
 
     Semantics:
 
     - `signature` is the concatenation of factor signatures in product order.
     - `ndim = sum(metric.ndim for metric in factors)`.
-    - `metric_matrix(chart, /, *, at, usys=None)` requires a product chart and returns a block-diagonal matrix with one block per factor metric.
+    - `metric_matrix(manifold, point, chart)` requires a product chart and returns a block-diagonal `DenseMetric` with one block per factor metric.
     - Each block is the factor metric matrix evaluated at the corresponding factor point extracted from `at` using product-chart factor splitting.
 
     **Example**
@@ -3790,10 +3851,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.manifolds as cxm
     >>> import unxt as u
 
-    >>> M = cxm.CartesianProductManifold(
-    ...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
-    ...     factor_names=("S2", "R1"),
-    ... )
+    >>> M = cxm.CartesianProductManifold(factors=(cxm.S2, cxm.R1), factor_names=("S2", "R1"))
     >>> metric = M.metric
     >>> metric.signature
     (1, 1, 1)
@@ -3806,8 +3864,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     ...     "S2.phi": u.Angle(0.0, "rad"),
     ...     "R1.x": u.Q(1.0, "m"),
     ... }
-    >>> g = metric.metric_matrix(chart, at=at)
-    >>> g.shape
+    >>> import coordinax.api.manifolds as cxmapi
+    >>> g = cxmapi.metric_matrix(M, at, chart)
+    >>> g.to_dense().matrix.value.shape
     (3, 3)
     ```
 
@@ -3836,7 +3895,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     - `ndim = sum(factor.ndim for factor in factors)`
     - `atlas = CartesianProductAtlas(...)` formed from factor atlases.
-    - `metric = CartesianProductMetric(...)` formed from factor metrics.
+    - `metric = ProductMetric(...)` formed from factor metrics.
     - `default_chart = atlas.default_chart()`
     - Factor names must be unique and are used as keys when accessing the product atlas.
 
@@ -3858,10 +3917,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.manifolds as cxm
     >>> import coordinax.charts as cxc
 
-    >>> M = cxm.CartesianProductManifold(
-    ...     factors=(cxm.HyperSphericalManifold(), cxm.EuclideanManifold(1)),
-    ...     factor_names=("S2", "R1"),
-    ... )
+    >>> M = cxm.CartesianProductManifold(factors=(cxm.S2, cxm.R1), factor_names=("S2", "R1"))
     >>> M.ndim
     3
 
@@ -3978,13 +4034,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     CustomEmbeddingMap(intrinsic=Cart1D(), ambient=Cart2D(), ...)
     ```
 
-(software-spec-inducedmetric)=
+(software-spec-pullbackmetric)=
 
-!!! info `InducedMetric`
+!!! info `PullbackMetric`
 
-    `InducedMetric` is the pullback metric on an embedded manifold.
+    `PullbackMetric` is the pullback metric on an embedded manifold.
 
-    Given an embedding $\iota : N \hookrightarrow M$, `InducedMetric` constructs the intrinsic metric on $N$ from the ambient metric on $M$ by pullback:
+    Given an embedding $\iota : N \hookrightarrow M$, `PullbackMetric` constructs the intrinsic metric on $N$ from the ambient metric on $M$ by pullback:
 
     $$
     g_N = \iota^* g_M,
@@ -4001,9 +4057,9 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     Construction:
 
     ```text
-    InducedMetric(
+    PullbackMetric(
         embed_map: AbstractEmbeddingMap,
-        ambient_metric: AbstractMetric,
+        ambient_metric: AbstractMetricField,
     )
     ```
 
@@ -4011,7 +4067,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     - `embed_map` defines the intrinsic and ambient charts used to compute the pullback.
     - `ambient_metric` is evaluated at the embedded point `embed_map.embed(at, usys=usys)`.
-    - `metric_matrix(chart, /, *, at, usys=None)` computes the embedding Jacobian and returns `J^T G J` as a `QuantityMatrix`.
+    - `metric_matrix(manifold, point, chart)` (called on the `EmbeddedManifold`) computes the embedding Jacobian and returns `J^T G J` as a `DenseMetric`.
     - The current implementation ignores the `chart` argument numerically and computes the induced metric in the embedding map's intrinsic chart.
     - `signature = (1,) * embed_map.intrinsic.ndim`.
     - `ndim = embed_map.intrinsic.ndim`.
@@ -4026,14 +4082,18 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> import coordinax.charts as cxc
     >>> import coordinax.manifolds as cxm
 
+    >>> import coordinax.api.manifolds as cxmapi
     >>> embed_map = cxm.TwoSphereIn3D(radius=u.Q(1.0, "km"))
-    >>> metric = cxm.InducedMetric(embed_map, cxm.EuclideanMetric(3))
+    >>> M_emb = cxm.EmbeddedManifold(
+    ...     intrinsic=cxm.S2,
+    ...     ambient=cxm.R3,
+    ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(1.0, "km")),
+    ... )
     >>> at = {"theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0.0, "rad")}
-    >>> metric.metric_matrix(cxc.sph2, at=at)
-    QuantityMatrix([[1., 0.],
-                    [0., 1.]], '((km2 / rad2, km2 / rad2), (km2 / rad2, km2 / rad2))')
-    >>> metric.signature
-    (1, 1)
+    >>> g = cxmapi.metric_matrix(M_emb, at, cxc.sph2)
+    >>> g.matrix.value
+    Array([[1., 0.],
+           [0., 1.]], dtype=float64, weak_type=True)
     ```
 
 (software-spec-embeddedmanifold)=
@@ -4065,7 +4125,7 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     - `embed_map: AbstractEmbeddingMap` — the smooth embedding defining coordinates transformation
     - `atlas = intrinsic.atlas` — uses the intrinsic manifold's atlas
     - `ndim = intrinsic.ndim` — the dimension is that of the intrinsic manifold
-    - `metric = InducedMetric(embed_map, ambient.metric)` — the metric is derived from the embedding and the ambient manifold metric, not passed separately at construction time
+    - `metric = PullbackMetric(embed_map, ambient.metric)` — the metric is derived from the embedding and the ambient manifold metric, not passed separately at construction time
 
     Embedding API:
 
@@ -4108,8 +4168,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
 
     >>> # Create a 2-sphere embedded in R^3 with radius 2 km
     >>> manifold = cxm.EmbeddedManifold(
-    ...     intrinsic=cxm.HyperSphericalManifold(),
-    ...     ambient=cxm.EuclideanManifold(3),
+    ...     intrinsic=cxm.S2,
+    ...     ambient=cxm.R3,
     ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")),
     ... )
     >>> manifold.metric.signature

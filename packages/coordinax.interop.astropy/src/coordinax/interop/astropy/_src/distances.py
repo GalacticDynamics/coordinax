@@ -18,12 +18,9 @@ import coordinax.distances as cxd
 def convert_astropy_quantity_to_unxt_distance(q: apyu.Quantity, /) -> cxd.Distance:
     """Convert a `astropy.units.Quantity` to a `coordinax.distances.Distance`.
 
-    Examples
-    --------
     >>> import astropy.units as apyu
     >>> import plum
     >>> import coordinax.distances as cxd
-
     >>> plum.convert(apyu.Quantity(1.0, "cm"), cxd.Distance)
     Distance(1., 'cm')
 
@@ -39,12 +36,9 @@ def convert_astropy_quantity_to_unxt_distance(q: apyu.Quantity, /) -> cxd.Distan
 def convert_astropy_quantity_to_unxt_parallax(q: apyu.Quantity, /) -> cxastro.Parallax:
     """Convert a `astropy.units.Quantity` to a `coordinax.astro.Parallax`.
 
-    Examples
-    --------
     >>> import astropy.units as apyu
     >>> import plum
     >>> import coordinax.astro as cxastro
-
     >>> plum.convert(apyu.Quantity(1.0, "radian"), cxastro.Parallax)
     Parallax(1., 'rad')
 
@@ -57,17 +51,12 @@ def convert_astropy_quantity_to_unxt_parallax(q: apyu.Quantity, /) -> cxastro.Pa
 
 
 @conversion_method(type_from=apyu.Quantity, type_to=cxastro.DistanceModulus)
-def convert_astropy_quantity_to_unxt_distmod(
-    q: apyu.Quantity, /
-) -> cxastro.DistanceModulus:
+def convert_astropy_q_to_unxt_distmod(q: apyu.Quantity, /) -> cxastro.DistanceModulus:
     """Convert a `astropy.units.Quantity` to a `coordinax.astro.DistanceModulus`.
 
-    Examples
-    --------
     >>> import astropy.units as apyu
     >>> import plum
     >>> import coordinax.astro as cxastro
-
     >>> plum.convert(apyu.Quantity(1.0, "mag"), cxastro.DistanceModulus)
     DistanceModulus(1., 'mag')
 

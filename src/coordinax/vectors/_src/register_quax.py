@@ -129,12 +129,10 @@ def neg_p_absvec(operand: Point, /) -> Point:
 def add_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
     r"""Element-wise addition of two points.
 
-    For non-Cartesian charts the operation converts both operands to the
-    ambient Cartesian chart, adds there, and converts the result back
-    to the ``lhs`` chart.  For Cartesian charts the addition is direct.
+    For non-Cartesian charts the operation converts both operands to the ambient
+    Cartesian chart, adds there, and converts the result back to the ``lhs``
+    chart.  For Cartesian charts the addition is direct.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax.main as cx
 
@@ -152,14 +150,12 @@ def add_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
 def sub_p_absvecs(lhs: Point, rhs: Point, /, **kw: Any) -> Point:
     r"""Element-wise subtraction of two points.
 
-    For non-Cartesian charts the operation converts both operands to the
-    ambient Cartesian chart, subtracts there, and converts the result back
-    to the ``lhs`` chart.  For Cartesian charts the subtraction is direct.
+    For non-Cartesian charts the operation converts both operands to the ambient
+    Cartesian chart, subtracts there, and converts the result back to the
+    ``lhs`` chart.  For Cartesian charts the subtraction is direct.
 
     The result keeps the ``lhs`` chart and representation.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax.main as cx
 

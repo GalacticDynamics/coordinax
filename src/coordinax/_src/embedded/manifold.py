@@ -13,7 +13,7 @@ import plum
 import coordinax.api.charts as cxcapi
 import coordinax.api.manifolds as cxmapi
 from .embedmap import AbstractEmbeddingMap, AmbientT, IntrinsicT
-from .metric import InducedMetric
+from .metric import PullbackMetric
 from coordinax._src.base import AbstractAtlas, AbstractChart, AbstractManifold
 from coordinax._src.custom_types import CDict, OptUSys
 
@@ -39,8 +39,8 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     >>> import unxt as u
 
     >>> M = cxm.EmbeddedManifold(
-    ...     intrinsic=cxm.HyperSphericalManifold(),
-    ...     ambient=cxm.EuclideanManifold(3),
+    ...     intrinsic=cxm.S2,
+    ...     ambient=cxm.R3,
     ...     embed_map=cxm.TwoSphereIn3D(radius=u.Q(2.0, "km")))
     >>> p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
     >>> sph = cxm.pt_embed(p, M)
@@ -94,9 +94,9 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     # Manifold API
 
     @property
-    def metric(self) -> InducedMetric:
+    def metric(self) -> PullbackMetric:
         """Induced (pullback) Riemannian metric from the ambient manifold."""
-        return InducedMetric(self.embed_map, self.ambient.metric)
+        return PullbackMetric(self.embed_map, self.ambient.metric)
 
     @override
     @property

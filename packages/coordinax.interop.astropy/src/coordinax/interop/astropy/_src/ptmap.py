@@ -22,8 +22,6 @@ from .custom_types import CDict
 def convert_cx_cdict_to_astropy_cartrep(p: CDict, /) -> apyc.CartesianRepresentation:
     """Convert a CDict to an astropy CartesianRepresentation.
 
-    Examples
-    --------
     >>> import astropy.coordinates as apyc
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -70,8 +68,6 @@ def cdict(r: apyc.CartesianRepresentation) -> CDict:
 def convert_cx_cdict_to_astropy_cylrep(p: CDict, /) -> apyc.CylindricalRepresentation:
     """Convert a CDict to an astropy CylindricalRepresentation.
 
-    Examples
-    --------
     >>> import astropy.coordinates as apyc
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -120,8 +116,6 @@ def convert_cx_cdict_to_astropy_physsphrep(
 ) -> apyc.PhysicsSphericalRepresentation:
     """Convert a CDict to an astropy PhysicsSphericalRepresentation.
 
-    Examples
-    --------
     >>> import astropy.coordinates as apyc
     >>> import coordinax.charts as cxc
     >>> import unxt as u
@@ -169,8 +163,6 @@ def cdict(r: apyc.PhysicsSphericalRepresentation) -> CDict:
 def convert_cx_cdict_to_astropy_sphrep(p: CDict, /) -> apyc.SphericalRepresentation:
     """Convert a CDict to an astropy SphericalRepresentation.
 
-    Examples
-    --------
     >>> import astropy.coordinates as apyc
     >>> import coordinax.charts as cxc
     >>> import unxt as u

@@ -34,8 +34,6 @@ def tree_cast_int_bool_to_float(tree: PyTree[NumericLeaf], /) -> PyTree[InexactL
     This intentionally does not cast complex leaves, which prevents silent
     imaginary-part loss.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> from coordinax.internal import tree_cast_int_bool_to_float
 

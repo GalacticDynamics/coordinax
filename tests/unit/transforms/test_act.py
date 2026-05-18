@@ -1,7 +1,7 @@
 """Red/Green TDD tests for ``coordinax.frames.act`` dispatches.
 
 Tests every combination of {Identity, Rotate, Translate, Composed} ×
-{Array, Quantity, QuantityMatrix, CDict, Vector, Point+Frame, Point+XfmFrame}.
+{Array, Quantity, QMatrix, CDict, Vector, Point+Frame, Point+XfmFrame}.
 
 Each class tests:
   - correctness: known-value checks
@@ -31,7 +31,7 @@ from .conftest import (
     EXPECTED_ROTATE,
     EXPECTED_TRANSLATE,
 )
-from coordinax.internal import QuantityMatrix
+from coordinax.internal import QMatrix
 
 ATOL = 1e-5
 
@@ -56,7 +56,7 @@ def _extract_xyz(result):
         z = float(u.ustrip("km", d["z"]))
         return (x, y, z)
 
-    if isinstance(result, QuantityMatrix):
+    if isinstance(result, QMatrix):
         x = float(u.ustrip("km", u.Q(result.value[0], result.unit[0])))
         y = float(u.ustrip("km", u.Q(result.value[1], result.unit[1])))
         z = float(u.ustrip("km", u.Q(result.value[2], result.unit[2])))
@@ -179,12 +179,12 @@ class TestActOnQuantity:
 
 
 # ===================================================================
-# Level 3: QuantityMatrix
+# Level 3: QMatrix
 # ===================================================================
 
 
-class TestActOnQuantityMatrix:
-    """Apply transforms to ``QuantityMatrix``.
+class TestActOnQMatrix:
+    """Apply transforms to ``QMatrix``.
 
     This is expected to be RED initially — no dispatches exist.
     """
@@ -207,7 +207,7 @@ class TestActOnQuantityMatrix:
 
     def test_returns_quantity_matrix(self, rotate_op, qmatrix_3d):
         result = cxfm.act(rotate_op, None, qmatrix_3d)
-        assert isinstance(result, QuantityMatrix)
+        assert isinstance(result, QMatrix)
 
     def test_rotate_roundtrip(self, rotate_op, qmatrix_3d):
         fwd = cxfm.act(rotate_op, None, qmatrix_3d)
@@ -233,14 +233,13 @@ class TestActOnQuantityMatrix:
         _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
 
     def test_heterogeneous_units_identity(self, identity_op):
-        """QuantityMatrix with mixed units passes through Identity."""
-        qm = QuantityMatrix(
-            jnp.array([1.0, 2.0, 3.0]),
-            unit=(u.unit("km"), u.unit("km"), u.unit("km")),
+        """QMatrix with mixed units passes through Identity."""
+        qm = QMatrix(
+            jnp.array([1, 2, 3]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
         )
         result = cxfm.act(identity_op, None, qm)
-        assert isinstance(result, QuantityMatrix)
-        _assert_close(_extract_xyz(result), (1.0, 2.0, 3.0))
+        assert isinstance(result, QMatrix)
+        _assert_close(_extract_xyz(result), (1, 2, 3))
 
 
 # ===================================================================
@@ -463,7 +462,7 @@ class TestCrossLevelConsistency:
         results.append(_extract_xyz(cxfm.act(rotate_op, None, array_3d)))
         # Level 2: Quantity
         results.append(_extract_xyz(cxfm.act(rotate_op, None, quantity_3d)))
-        # Level 3: QuantityMatrix
+        # Level 3: QMatrix
         results.append(_extract_xyz(cxfm.act(rotate_op, None, qmatrix_3d)))
         # Level 4: CDict
         results.append(_extract_xyz(cxfm.act(rotate_op, None, cdict_3d)))
@@ -589,20 +588,12 @@ class TestRotateTangentGeometryNonCartesian:
     @pytest.fixture
     def at_sph(self):
         """Base point at the equator phi=0; Cartesian (1,0,0)."""
-        return {
-            "r": u.Q(1.0, "m"),
-            "theta": u.Q(jnp.pi / 2, "rad"),
-            "phi": u.Q(0.0, "rad"),
-        }
+        return {"r": u.Q(1, "m"), "theta": u.Q(jnp.pi / 2, "rad"), "phi": u.Q(0, "rad")}
 
     @pytest.fixture
     def v_radial_sph(self):
         """Purely radial velocity in spherical coord-basis."""
-        return {
-            "r": u.Q(1.0, "m/s"),
-            "theta": u.Q(0.0, "rad/s"),
-            "phi": u.Q(0.0, "rad/s"),
-        }
+        return {"r": u.Q(1, "m/s"), "theta": u.Q(0, "rad/s"), "phi": u.Q(0, "rad/s")}
 
     def test_cart_consistency(self, rot90z, at_sph, v_radial_sph):
         """cart(R*v at R*p) == R * cart(v at p)."""
@@ -618,7 +609,7 @@ class TestRotateTangentGeometryNonCartesian:
         )
         # Rotated base point in spherical (phi: 0 -> pi/2)
         at_sph_rot = {
-            "r": u.Q(1.0, "m"),
+            "r": u.Q(1, "m"),
             "theta": u.Q(jnp.pi / 2, "rad"),
             "phi": u.Q(jnp.pi / 2, "rad"),
         }
@@ -693,7 +684,7 @@ class TestRotateTangentGeometryNonCartesian:
                 at=at_sph,
             )
         )(v_radial_sph)
-        assert abs(float(result["r"].to_value("m/s")) - 1.0) < ATOL
+        assert abs(float(result["r"].to_value("m/s")) - 1) < ATOL
 
 
 # ===================================================================
@@ -709,9 +700,9 @@ class TestCoordinateToFrameNonCartesianTangent:
         rot = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
         rotated_frame = cxf.TransformedReferenceFrame(cxf.alice, rot)
 
-        point = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
+        point = cx.Point.from_([1, 0, 0], "m", cxf.alice)
         vel = cx.Tangent(
-            {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+            {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")},
             cxc.cart3d,
             cxr.coord_basis,
             cxr.vel,
@@ -723,20 +714,20 @@ class TestCoordinateToFrameNonCartesianTangent:
         # Point (1,0,0) rotated 90° about z -> (0,1,0)
         _assert_close(
             (
-                float(result.point.data["x"].to_value("m")),
-                float(result.point.data["y"].to_value("m")),
-                float(result.point.data["z"].to_value("m")),
+                float(result.point.data["x"].ustrip("m")),
+                float(result.point.data["y"].ustrip("m")),
+                float(result.point.data["z"].ustrip("m")),
             ),
-            (0.0, 1.0, 0.0),
+            (0, 1, 0),
         )
         # Velocity (1,0,0) m/s rotated -> (0,1,0) m/s
         _assert_close(
             (
-                float(result["velocity"].data["x"].to_value("m/s")),
-                float(result["velocity"].data["y"].to_value("m/s")),
-                float(result["velocity"].data["z"].to_value("m/s")),
+                float(result["velocity"].data["x"].ustrip("m/s")),
+                float(result["velocity"].data["y"].ustrip("m/s")),
+                float(result["velocity"].data["z"].ustrip("m/s")),
             ),
-            (0.0, 1.0, 0.0),
+            (0, 1, 0),
         )
 
     def test_coordinate_to_frame_then_cconvert_sph(self):
@@ -744,9 +735,9 @@ class TestCoordinateToFrameNonCartesianTangent:
         rot = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
         rotated_frame = cxf.TransformedReferenceFrame(cxf.alice, rot)
 
-        point = cx.Point.from_([1.0, 0.0, 0.0], "m", cxf.alice)
+        point = cx.Point.from_([1, 0, 0], "m", cxf.alice)
         vel = cx.Tangent(
-            {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+            {"x": u.Q(1, "m/s"), "y": u.Q(0, "m/s"), "z": u.Q(0, "m/s")},
             cxc.cart3d,
             cxr.coord_basis,
             cxr.vel,
@@ -756,10 +747,10 @@ class TestCoordinateToFrameNonCartesianTangent:
         result = coord.to_frame(rotated_frame).cconvert(cxc.sph3d)
 
         # Point should land at (r=1, theta=pi/2, phi=pi/2)
-        assert abs(float(result.point.data["r"].to_value("m")) - 1.0) < ATOL
+        assert abs(float(result.point.data["r"].to_value("m")) - 1) < ATOL
         assert (
             abs(float(result.point.data["theta"].to_value("rad")) - jnp.pi / 2) < ATOL
         )
         assert abs(float(result.point.data["phi"].to_value("rad")) - jnp.pi / 2) < ATOL
         # Velocity should be purely radial (ṙ≈1, θ̇≈0, φ̇≈0)
-        assert abs(float(result["velocity"].data["r"].to_value("m/s")) - 1.0) < ATOL
+        assert abs(float(result["velocity"].data["r"].to_value("m/s")) - 1) < ATOL

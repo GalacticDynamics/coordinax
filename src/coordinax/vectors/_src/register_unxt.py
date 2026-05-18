@@ -13,7 +13,7 @@ import plum
 import unxt as u
 
 from .point import Point
-from coordinax.internal import QuantityMatrix, pack_nonuniform_unit
+from coordinax.internal import QMatrix, pack_nonuniform_unit
 
 
 @final
@@ -45,8 +45,6 @@ class ToUnitsOptions(Enum):
 def uconvert(usys: u.AbstractUnitSystem, vec: Point, /) -> Point:
     """Convert the point to the given units.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
 
@@ -68,8 +66,6 @@ def uconvert(
 ) -> Point:
     """Convert the point to the given units.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
 
@@ -100,8 +96,6 @@ def uconvert(
 def uconvert(units: Mapping[str, Any], vec: Point, /) -> Point:
     """Convert the point to the given units.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
 
@@ -138,17 +132,10 @@ def uconvert(units: Mapping[str, Any], vec: Point, /) -> Point:
 def uconvert(flag: Literal[ToUnitsOptions.consistent], vec: Point, /) -> Point:
     """Convert the point to a self-consistent set of units.
 
-    Parameters
-    ----------
-    flag
-        The point is converted to consistent units by looking for the first
-        quantity with each physical type and converting all components to
-        the units of that quantity.
-    vec
-        The point to convert.
+    The point is converted to consistent units by looking for the first quantity
+    with each physical type and converting all components to the units of that
+    quantity.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
 
@@ -183,17 +170,8 @@ def uconvert(flag: Literal[ToUnitsOptions.consistent], vec: Point, /) -> Point:
 
 @plum.dispatch
 def uconvert(usys: str, vec: Point, /) -> Point:
-    """Convert the vector to the given units system.
+    """Convert the Point to the given units system.
 
-    Parameters
-    ----------
-    usys
-        The units system to convert to, as a string.
-    vec
-        The vector to convert.
-
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
 
@@ -216,8 +194,6 @@ def uconvert(usys: str, vec: Point, /) -> Point:
 def point_to_q(obj: Point, /) -> u.AbstractQuantity:
     """`coordinax.Point` -> `unxt.Quantity`.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
     >>> from plum import convert
@@ -230,13 +206,13 @@ def point_to_q(obj: Point, /) -> u.AbstractQuantity:
     ...     {"r": u.Q(1, "km"), "theta": u.Q(2, "deg"), "phi": u.Q(3, "deg")},
     ...     cx.sph3d)
     >>> convert(vec, u.AbstractQuantity)
-    QuantityMatrix([1, 2, 3], '(km, deg, deg)')
+    QMatrix([1, 2, 3], '(km, deg, deg)')
 
     >>> vec = cx.Point.from_(
     ...     {"rho": u.Q(1, "km"), "phi": u.Q(2, "deg"), "z": u.Q(3, "m")},
     ...     cx.cyl3d)
     >>> convert(vec, u.AbstractQuantity)
-    QuantityMatrix([1, 2, 3], '(km, deg, m)')
+    QMatrix([1, 2, 3], '(km, deg, m)')
 
     """
     # Pack the the data into value, unit tuple
@@ -248,4 +224,4 @@ def point_to_q(obj: Point, /) -> u.AbstractQuantity:
         unit = u.unit("") if units[0] is None else units[0]
         return u.Q(vals, unit)
 
-    return QuantityMatrix(vals, units)
+    return QMatrix(vals, units)

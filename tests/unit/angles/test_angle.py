@@ -27,10 +27,10 @@ import coordinax.hypothesis.main as cxst
 _bounded_f32 = st.floats(min_value=-1e10, max_value=1e10, width=32)
 
 # Float32 values in [0, 1] — used for algebraic property tests
-_unit_f32 = st.floats(min_value=0.0, max_value=1.0, width=32)
+_unit_f32 = st.floats(min_value=0, max_value=1, width=32)
 
 # Float32 values in [-1, 1] — safe trig domain for grad tests
-_trig_f32 = st.floats(min_value=-1.0, max_value=1.0, width=32)
+_trig_f32 = st.floats(min_value=-1, max_value=1, width=32)
 
 # ---------------------------------------------------------------------------
 # Named constants for float32 overflow boundary
@@ -93,10 +93,7 @@ class TestAngleConstruction:
 
     @pytest.mark.parametrize(
         ("value", "unit_str", "expected_shape"),
-        [
-            (1, "rad", ()),
-            ([1.0, 2.0, 3.0], "deg", (3,)),
-        ],
+        [(1, "rad", ()), ([1, 2, 3], "deg", (3,))],
     )
     def test_construct_from_python(
         self, value: object, unit_str: str, expected_shape: tuple[int, ...]
@@ -108,7 +105,7 @@ class TestAngleConstruction:
 
     def test_construct_from_jnp_array(self) -> None:
         """Angles can be constructed from a JAX array."""
-        arr = jnp.array([0.0, jnp.pi / 2, jnp.pi])
+        arr = jnp.array([0, jnp.pi / 2, jnp.pi])
         a = cxa.Angle(arr, "rad")
         assert isinstance(a, cxa.Angle)
         assert a.shape == (3,)
@@ -116,7 +113,7 @@ class TestAngleConstruction:
     def test_invalid_unit_raises(self) -> None:
         """Non-angular units are rejected at construction time."""
         with pytest.raises(ValueError, match="angular dimensions"):
-            cxa.Angle(1.0, "m")
+            cxa.Angle(1, "m")
 
 
 class TestAngleConversion:
@@ -124,10 +121,7 @@ class TestAngleConversion:
 
     @pytest.mark.parametrize(
         ("value", "from_unit", "to_unit", "expected"),
-        [
-            (180.0, "deg", "rad", jnp.pi),
-            (jnp.pi, "rad", "deg", 180.0),
-        ],
+        [(180, "deg", "rad", jnp.pi), (jnp.pi, "rad", "deg", 180)],
     )
     def test_unit_conversion(
         self,
@@ -205,8 +199,8 @@ class TestAngleWrapTo:
     @pytest.mark.parametrize(
         ("value", "expected"),
         [
-            (370.0, 10.0),  # one full turn above the range
-            (-10.0, 350.0),  # one step below zero
+            (370, 10),  # one full turn above the range
+            (-10, 350),  # one step below zero
         ],
     )
     def test_wrap_known_values(self, value: float, expected: float) -> None:
@@ -235,7 +229,7 @@ class TestAngleArithmetic:
     def test_sub_self_is_zero(self, angle: cxa.Angle) -> None:
         result = angle - angle
         assert isinstance(result, cxa.Angle)
-        assert jnp.allclose(result.value, 0.0)
+        assert jnp.allclose(result.value, 0)
 
     @given(angle=cxst.angles())
     def test_neg_flips_sign(self, angle: cxa.Angle) -> None:
@@ -275,7 +269,7 @@ class TestAngleArithmetic:
     @given(angle=cxst.angles())
     def test_mul_quantity_leaves_angle_type(self, angle: cxa.Angle) -> None:
         """Angle x dimensioned Quantity yields a plain Quantity, not an Angle."""
-        result = angle * u.Q(2.0, "s")
+        result = angle * u.Q(2, "s")
         assert isinstance(result, u.AbstractQuantity)
         assert not isinstance(result, AbstractAngle)
 

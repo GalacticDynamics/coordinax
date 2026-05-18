@@ -28,7 +28,7 @@ class TestMinkowskiCTConstruction:
     def test_wrong_manifold_raises(self) -> None:
         """Passing a non-MinkowskiManifold manifold raises ValueError."""
         with pytest.raises((ValueError, TypeError)):
-            cxc.MinkowskiCT(M=cxm.EuclideanManifold(3))
+            cxc.MinkowskiCT(M=cxm.R3)
 
 
 # =============================================================================

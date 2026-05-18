@@ -5,3 +5,4 @@ from .chart import *
 from .galilean_ct import *
 from .manifold import *
 from .metric import *
+from .register_metric import *

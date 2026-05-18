@@ -323,11 +323,8 @@ class Rotate(AbstractTransform):
 def from_(cls: type[Rotate], obj: Rotate, /) -> Rotate:
     """Construct a Rotate from another Rotate.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax.transforms as cxfm
-
     >>> R = cxfm.Rotate(jnp.eye(3))
     >>> cxfm.Rotate.from_(R) is R
     True
@@ -340,11 +337,9 @@ def from_(cls: type[Rotate], obj: Rotate, /) -> Rotate:
 def from_(cls: type[Rotate], obj: Callable[..., Any], /) -> Rotate:
     """Construct a Rotate from a callable.
 
-    The callable must have a return type annotation with shape ending in NxN
-    (a square matrix).
+    The callable must have a return type annotation with shape ending in NxN (a
+    square matrix).
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.transforms as cxfm
     >>> from jaxtyping import Array, Real
@@ -394,12 +389,9 @@ def from_(cls: type[Rotate], obj: Callable[..., Any], /) -> Rotate:
 def from_(cls: type[Rotate], obj: AbcQ, /) -> Rotate:
     """Construct a Rotate from a Quantity.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
-
     >>> cxfm.Rotate.from_(u.Q(jnp.eye(3), ""))
     Rotate(f64[3,3](jax))
 
@@ -411,11 +403,8 @@ def from_(cls: type[Rotate], obj: AbcQ, /) -> Rotate:
 def from_(cls: type[Rotate], obj: ArrayLike, /) -> Rotate:
     """Construct a Rotate from an Array.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> import coordinax.transforms as cxfm
-
     >>> cxfm.Rotate.from_(jnp.eye(3))
     Rotate(f64[3,3](jax))
 
@@ -427,8 +416,6 @@ def from_(cls: type[Rotate], obj: ArrayLike, /) -> Rotate:
 def from_(cls: type[Rotate], obj: jtransform.Rotation, /) -> Rotate:
     """Initialize from a `jax.scipy.spatial.transform.Rotation`.
 
-    Examples
-    --------
     >>> import jax.numpy as jnp
     >>> from jax.scipy.spatial.transform import Rotation
     >>> import coordinax.main as cx
@@ -451,8 +438,6 @@ def from_(cls: type[Rotate], obj: jtransform.Rotation, /) -> Rotate:
 def simplify(op: Rotate, /, **kw: Any) -> AbstractTransform:
     """Simplify the Galilean rotation operator.
 
-    Examples
-    --------
     >>> import quaxed.numpy as jnp
     >>> import coordinax.main as cx
 

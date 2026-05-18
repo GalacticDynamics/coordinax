@@ -101,13 +101,9 @@ def frame_transition(
 ) -> cxfm.Identity:
     """Return an identity operator for frames that are the same.
 
-    Examples
-    --------
     >>> import coordinax.frames as cxf
-
     >>> cxf.frame_transition(cxf.alice, cxf.alice)
     Identity()
-
     >>> cxf.frame_transition(cxf.alex, cxf.alex)
     Identity()
 
@@ -119,11 +115,8 @@ def frame_transition(
 def frame_transition(from_frame: Alice, to_frame: Alex, /) -> cxfm.Composed:
     """Transform from Alice's frame to Alex's frame.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
-
     >>> op = cxf.frame_transition(cxf.alice, cxf.alex)
     >>> print(op)
     Composed(( Translate(...), Rotate(...) ))
@@ -140,11 +133,8 @@ def frame_transition(
 ) -> cxfm.Composed:
     """Transform back.
 
-    Examples
-    --------
     >>> import unxt as u
     >>> import coordinax.main as cx
-
     >>> op = cxf.frame_transition(cxf.alex, cxf.alice)
     >>> print(op)
     Composed(( Rotate(...), Translate(...) ))

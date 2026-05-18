@@ -12,7 +12,7 @@ import coordinax.hypothesis.main as cxst
 def test_promote_distance(d):
     """Test the promotion rule for distance."""
     # Quantities
-    q = u.Q(1.0, "kpc")
+    q = u.Q(1, "kpc")
 
     # Explicit promotion test
     d_p, q_p = plum.promote(d, q)

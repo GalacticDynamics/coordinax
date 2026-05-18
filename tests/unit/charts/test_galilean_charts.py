@@ -155,10 +155,10 @@ class TestGalileanCTProductStructure:
         """split_components returns time dict with 'ct' key."""
         chart = cxc.GalileanCT()
         p = {
-            "ct": u.Q(1.0, "km"),
-            "x": u.Q(2.0, "km"),
-            "y": u.Q(3.0, "km"),
-            "z": u.Q(4.0, "km"),
+            "ct": u.Q(1, "km"),
+            "x": u.Q(2, "km"),
+            "y": u.Q(3, "km"),
+            "z": u.Q(4, "km"),
         }
         time_part, spatial_part = chart.split_components(p)
         assert "ct" in time_part
@@ -168,10 +168,10 @@ class TestGalileanCTProductStructure:
         """merge_components(split_components(p)) == p."""
         chart = cxc.GalileanCT()
         p = {
-            "ct": u.Q(1.0, "km"),
-            "x": u.Q(2.0, "km"),
-            "y": u.Q(3.0, "km"),
-            "z": u.Q(4.0, "km"),
+            "ct": u.Q(1, "km"),
+            "x": u.Q(2, "km"),
+            "y": u.Q(3, "km"),
+            "z": u.Q(4, "km"),
         }
         time_part, spatial_part = chart.split_components(p)
         merged = chart.merge_components((time_part, spatial_part))

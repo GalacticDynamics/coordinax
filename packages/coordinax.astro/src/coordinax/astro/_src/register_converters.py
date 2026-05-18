@@ -14,8 +14,6 @@ from .parallax import Parallax
 def convert_quantity_to_distmod(q: u.AbstractQuantity, /) -> DistanceModulus:
     """Convert any quantity to a DistanceModulus.
 
-    Examples
-    --------
     >>> from plum import convert
     >>> import unxt as u
     >>> from coordinax.astro import DistanceModulus
@@ -40,8 +38,6 @@ def convert_quantity_to_distmod(q: u.AbstractQuantity, /) -> DistanceModulus:
 def convert_quantity_to_parallax(q: u.AbstractQuantity, /) -> Parallax:
     """Convert any quantity to a Parallax.
 
-    Examples
-    --------
     >>> from plum import convert
     >>> import unxt as u
     >>> from coordinax.astro import Parallax

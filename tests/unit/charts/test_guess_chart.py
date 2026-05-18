@@ -69,7 +69,7 @@ def test_guess_chart_from_dict_returns_same_components(
 ) -> None:
     """guess_chart with dict input returns chart with same components."""
     # Create a component dictionary with dummy values
-    d = dict.fromkeys(chart.components, 1.0)
+    d = dict.fromkeys(chart.components, 1)
 
     # Guess the chart from the dict
     guessed = cxc.guess_chart(d)
@@ -90,8 +90,8 @@ class TestGuessChartCaching:
 
     def test_dict_dispatch_returns_same_type(self) -> None:
         """The dict dispatch should return same chart type for same keys."""
-        d1 = {"x": 1.0, "y": 2.0, "z": 3.0}
-        d2 = {"x": 5.0, "y": 6.0, "z": 7.0}
+        d1 = {"x": 1, "y": 2, "z": 3}
+        d2 = {"x": 5, "y": 6, "z": 7}
         result1 = cxc.guess_chart(d1)
         result2 = cxc.guess_chart(d2)
         assert type(result1) is type(result2)

@@ -14,9 +14,8 @@ import dataclassish
 import coordinax.angles as cxa
 import coordinax.api.manifolds as cxmapi
 from .atlas import AbstractAtlas
-from .metric import AbstractMetric
+from .metric import AbstractMetricField
 from coordinax._src.custom_types import CDict, OptUSys
-from coordinax.internal import QuantityMatrix
 
 if TYPE_CHECKING:
     import coordinax.charts  # noqa: ICN001
@@ -81,7 +80,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     The Euclidean 3-manifold $\mathbb{R}^3$ with its standard atlas:
 
     >>> import coordinax.manifolds as cxm
-    >>> M = cxm.EuclideanManifold(3)
+    >>> M = cxm.Rn(3)
     >>> M
     Rn(3)
 
@@ -131,7 +130,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     The two-sphere $S^2$ is a 2-dimensional manifold that is *not* a subspace
     of any Euclidean atlas. Its atlas admits only angular charts:
 
-    >>> S2 = cxm.HyperSphericalManifold()
+    >>> S2 = cxm.HyperSphericalManifold(2)
     >>> S2.ndim
     2
 
@@ -149,7 +148,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
     atlas: AbstractAtlas
     """Charts compatible with this manifold. This defines the smooth structure."""
 
-    metric: AbstractMetric
+    metric: AbstractMetricField
     """The manifold's metric. This defines the geometric structure."""
 
     def __post_init__(self) -> None:
@@ -173,7 +172,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         therefore determines its dimension.
 
         >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(3)
+        >>> M = cxm.Rn(3)
         >>> M.ndim
         3
 
@@ -186,7 +185,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         This is a convenience property that proxies to the atlas default chart.
 
         >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(2)
+        >>> M = cxm.Rn(2)
         >>> M.default_chart()
         Cart2D(M=Rn(2))
 
@@ -197,7 +196,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         """Return whether ``chart`` belongs to this manifold atlas.
 
         >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(2)
+        >>> M = cxm.Rn(2)
         >>> M.has_chart(cxc.cart2d)
         True
         >>> M.has_chart(cxc.cart3d)
@@ -210,7 +209,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         """Check that ``chart`` belongs to this manifold atlas.
 
         >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(2)
+        >>> M = cxm.Rn(2)
         >>> M.check_chart(cxc.cart2d)  # does not raise
 
         """
@@ -219,21 +218,6 @@ class AbstractManifold(metaclass=abc.ABCMeta):
             raise ValueError(msg)
 
     # =====================================================
-
-    def scale_factors(
-        self,
-        chart: "coordinax.charts.AbstractChart[Any, Any]",
-        /,
-        *,
-        at: CDict,
-        usys: OptUSys = None,
-    ) -> QuantityMatrix:
-        r"""Return the diagonal entries of the manifold metric in ``chart`` at ``at``.
-
-        This is a thin convenience wrapper over
-        ``cxmapi.scale_factors(self.metric, chart, at=at, usys=usys)``.
-        """
-        return cxmapi.scale_factors(self.metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
     def angle_between(
         self,
@@ -259,7 +243,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
 
         >>> import wadler_lindig as wl
         >>> import coordinax.manifolds as cxm
-        >>> M = cxm.EuclideanManifold(3)
+        >>> M = cxm.Rn(3)
         >>> wl.pprint(M)
         Rn(3)
 

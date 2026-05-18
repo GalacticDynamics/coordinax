@@ -30,8 +30,7 @@ def pt_project(
     >>> q = cx.Point.from_(
     ...     {"r": u.Q(1, "m"), "theta": u.Q(2, "rad"), "phi": u.Q(3, "rad")},
     ...     cx.sph3d)
-    >>> M = cxm.HyperSphericalManifold(2)
-    >>> cxm.pt_project(q, M)
+    >>> cxm.pt_project(q, cxm.S2)
     Point({'theta': Q(2, 'rad'), 'phi': Q(3, 'rad')}, chart=SphericalTwoSphere(M=Sn(2)))
 
     """

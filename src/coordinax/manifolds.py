@@ -8,11 +8,17 @@ __all__ = (
     "pt_map",
     "scale_factors",
     "angle_between",
+    "metric_matrix",
+    "metric_representation",
     # Abstract Manifold/Atlas/Metric
     "AbstractAtlas",
-    "AbstractMetric",
+    "AbstractMetricField",
     "AbstractManifold",
-    "AbstractDiagonalMetric",
+    "AbstractDiagonalMetricField",
+    # Metric matrix classes
+    "AbstractMetricMatrix",
+    "DiagonalMetric",
+    "DenseMetric",
     # Null
     "NoManifold",
     "no_manifold",
@@ -22,7 +28,7 @@ __all__ = (
     "no_atlas",
     # Euclidean
     "EuclideanAtlas",
-    "EuclideanMetric",
+    "FlatMetric",
     "EuclideanManifold",
     "Rn",
     "R0",
@@ -32,7 +38,7 @@ __all__ = (
     "RN",
     # HyperSpherical
     "HyperSphericalAtlas",
-    "HyperSphericalMetric",
+    "RoundMetric",
     "HyperSphericalManifold",
     "Sn",
     "S1",
@@ -44,7 +50,7 @@ __all__ = (
     "minkowski4d",
     # Product
     "CartesianProductAtlas",
-    "CartesianProductMetric",
+    "ProductMetric",
     "CartesianProductManifold",
     # Embeddings
     "EmbeddedManifold",
@@ -54,7 +60,7 @@ __all__ = (
     "embedded_twosphere",
     "EmbeddedManifold",
     "EmbeddedChart",
-    "InducedMetric",
+    "PullbackMetric",
     # Custom
     "CustomAtlas",
     "CustomMetric",
@@ -68,9 +74,9 @@ from ._src.setup_package import install_import_hook
 with install_import_hook("coordinax.manifolds"):
     from ._src.base import (
         AbstractAtlas,
-        AbstractDiagonalMetric,
+        AbstractDiagonalMetricField,
         AbstractManifold,
-        AbstractMetric,
+        AbstractMetricField,
     )
     from ._src.custom import CustomAtlas, CustomManifold, CustomMetric
     from ._src.embedded import (
@@ -78,7 +84,7 @@ with install_import_hook("coordinax.manifolds"):
         CustomEmbeddingMap,
         EmbeddedChart,
         EmbeddedManifold,
-        InducedMetric,
+        PullbackMetric,
     )
     from ._src.euclidean import (
         R0,
@@ -88,10 +94,11 @@ with install_import_hook("coordinax.manifolds"):
         RN,
         EuclideanAtlas,
         EuclideanManifold,
-        EuclideanMetric,
+        FlatMetric,
         Rn,
     )
     from ._src.manifolds import *  # noqa: F403
+    from ._src.metric import AbstractMetricMatrix, DenseMetric, DiagonalMetric
     from ._src.minkowski import (
         MinkowskiAtlas,
         MinkowskiManifold,
@@ -109,7 +116,7 @@ with install_import_hook("coordinax.manifolds"):
     from ._src.product import (
         CartesianProductAtlas,
         CartesianProductManifold,
-        CartesianProductMetric,
+        ProductMetric,
     )
     from ._src.product.galilean_ct import galilean_spacetime
     from ._src.spherical import (
@@ -117,7 +124,7 @@ with install_import_hook("coordinax.manifolds"):
         S2,
         HyperSphericalAtlas,
         HyperSphericalManifold,
-        HyperSphericalMetric,
+        RoundMetric,
         Sn,
         TwoSphereIn3D,
         embedded_twosphere,
@@ -126,6 +133,8 @@ with install_import_hook("coordinax.manifolds"):
     from coordinax.api.manifolds import (
         angle_between,
         guess_manifold,
+        metric_matrix,
+        metric_representation,
         pt_embed,
         pt_project,
         scale_factors,

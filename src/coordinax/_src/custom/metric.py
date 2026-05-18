@@ -9,17 +9,17 @@ from typing import Any, final
 
 import jax
 
-from coordinax._src.base import AbstractMetric
+from coordinax._src.base import AbstractMetricField
 
 
 @jax.tree_util.register_static
 @final
 @dataclasses.dataclass(frozen=True, slots=True)
-class CustomMetric(AbstractMetric):  # ty: ignore[abstract-method-in-final-class]
+class CustomMetric(AbstractMetricField):  # ty: ignore[abstract-method-in-final-class]
     r"""Metric for a {class}`CustomManifold`, defined by user-provided callables.
 
     ``CustomMetric`` allows users to supply their own metric without subclassing
-    ``AbstractMetric``. Both the metric-matrix callable and the signature must
+    ``AbstractMetricField``. Both the metric-matrix callable and the signature must
     be provided at construction time.
 
     Parameters

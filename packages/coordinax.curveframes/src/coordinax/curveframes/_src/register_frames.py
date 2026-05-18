@@ -98,18 +98,6 @@ def frame_transition(  # noqa: F811
         (\mathcal{B} \to \mathcal{A})
     $$
 
-    Parameters
-    ----------
-    from_frame : AbstractParallelTransportFrame
-        The source curve-attached frame.
-    to_frame : AbstractReferenceFrame
-        The target (ambient) frame.
-
-    Returns
-    -------
-    AbstractTransform
-        The composed frame-transition operator.
-
     Examples
     --------
     >>> import jax.numpy as jnp
@@ -152,18 +140,6 @@ def frame_transition(  # noqa: F811
     This dispatch has ``precedence=1`` so it takes priority over the more
     general to-curve-frame and from-curve-frame dispatches when both arguments
     are ``AbstractParallelTransportFrame``.
-
-    Parameters
-    ----------
-    from_frame : AbstractParallelTransportFrame
-        The source curve-attached frame.
-    to_frame : AbstractParallelTransportFrame
-        The target curve-attached frame.
-
-    Returns
-    -------
-    AbstractTransform
-        The composed frame-transition operator.
 
     Examples
     --------

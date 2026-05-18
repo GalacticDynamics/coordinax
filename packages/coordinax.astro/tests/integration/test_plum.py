@@ -16,7 +16,7 @@ import coordinax.hypothesis.distances as cxdst
 def test_promotion_rule(a):
     """Test the promotion rule for angles."""
     # Quantities
-    q = u.Q(1.0, "rad")
+    q = u.Q(1, "rad")
 
     # Explicit promotion test
     a_p, q_p = plum.promote(a, q)
@@ -102,7 +102,7 @@ class TestDistanceDistanceModulusRoundtrip:
         d_back_pc = u.ustrip("pc", d_back)
         assert jnp.allclose(d_pc, d_back_pc, rtol=1e-4)
 
-    @given(dm=cxastrost.distance_moduli(elements={"min_value": 1.0, "max_value": 25.0}))
+    @given(dm=cxastrost.distance_moduli(elements={"min_value": 1, "max_value": 25}))
     @settings(deadline=None)
     def test_dm_to_distance_to_dm(self, dm: cxastro.DistanceModulus) -> None:
         """DM -> Distance -> DM roundtrip is consistent."""

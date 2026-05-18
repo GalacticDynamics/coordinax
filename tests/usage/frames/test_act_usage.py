@@ -6,7 +6,7 @@ supported object level:
 
 1. ArrayLike  (+usys)
 2. Quantity
-3. QuantityMatrix
+3. QMatrix
 4. CDict
 5. Vector
 6. Coordinate (with a concrete frame)
@@ -29,7 +29,7 @@ import coordinax.frames as cxf
 import coordinax.main as cx
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
-from coordinax.internal import QuantityMatrix
+from coordinax.internal import QMatrix
 
 # ===================================================================
 # Helpers
@@ -71,7 +71,7 @@ class TestIdentityUsage:
     """Identity transform leaves every object unchanged."""
 
     def test_on_quantity(self):
-        q = u.Q([1.0, 2.0, 3.0], "km")
+        q = u.Q([1, 2, 3], "km")
         result = cxfm.act(cxfm.Identity(), None, q)
         assert result is q, "Identity should return the exact same object"
 
@@ -100,51 +100,51 @@ class TestRotateUsage:
         Must pass usys so the framework knows how to interpret the bare
         array as having metre units.
         """
-        x = jnp.array([1.0, 0.0, 0.0])
+        x = jnp.array([1, 0, 0])
         result = cxfm.act(rot90z, None, x, cxc.cart3d, cxr.point, usys=usys)
-        _assert_close(result, [0.0, 1.0, 0.0])
+        _assert_close(result, [0, 1, 0])
 
     def test_on_quantity(self, rot90z):
         """Quantity [1,0,0] km → [0,1,0] km."""
-        q = u.Q([1.0, 0.0, 0.0], "km")
+        q = u.Q([1, 0, 0], "km")
         result = cxfm.act(rot90z, None, q)
-        _assert_close(result.value, [0.0, 1.0, 0.0])
+        _assert_close(result.value, [0, 1, 0])
         assert result.unit == u.unit("km")
 
     def test_on_quantity_matrix(self, rot90z):
-        """QuantityMatrix (1,0,0) km → (0,1,0) km."""
-        qm = QuantityMatrix(
-            jnp.array([1.0, 0.0, 0.0]),
+        """QMatrix (1,0,0) km → (0,1,0) km."""
+        qm = QMatrix(
+            jnp.array([1, 0, 0]),
             unit=(u.unit("km"), u.unit("km"), u.unit("km")),
         )
         result = cxfm.act(rot90z, None, qm)
-        assert isinstance(result, QuantityMatrix)
-        _assert_close(result.value, [0.0, 1.0, 0.0])
+        assert isinstance(result, QMatrix)
+        _assert_close(result.value, [0, 1, 0])
 
     def test_on_quantity_matrix_mixed_units(self, rot90z):
-        """QuantityMatrix with km,m,m: converted to common unit internally."""
-        qm = QuantityMatrix(
-            jnp.array([1.0, 0.0, 0.0]),
+        """QMatrix with km,m,m: converted to common unit internally."""
+        qm = QMatrix(
+            jnp.array([1, 0, 0]),
             unit=(u.unit("km"), u.unit("m"), u.unit("m")),
         )
         result = cxfm.act(rot90z, None, qm)
-        assert isinstance(result, QuantityMatrix)
+        assert isinstance(result, QMatrix)
         # Internal conversion normalizes to common unit (km); x→0, y→1km, z→0
-        _assert_close(result.value, [0.0, 1.0, 0.0], atol=1e-12)
+        _assert_close(result.value, [0, 1, 0], atol=1e-12)
 
     def test_on_cdict(self, rot90z):
         """CDict {x:1, y:0, z:0} km → {x:0, y:1, z:0} km."""
         v = {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
         result = cxfm.act(rot90z, None, v, cxc.cart3d, cxr.point)
-        _assert_close(result["y"].value, 1.0)
-        _assert_close(result["x"].value, 0.0)
+        _assert_close(result["y"].value, 1)
+        _assert_close(result["x"].value, 0)
 
     def test_on_vector(self, rot90z):
         """Vector(x=1km) → Vector(y=1km) under 90° z-rotation."""
         vec = cx.Point.from_({"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")})
         result = cxfm.act(rot90z, None, vec)
-        _assert_close(result.data["y"].value, 1.0)
-        _assert_close(result.data["x"].value, 0.0)
+        _assert_close(result.data["y"].value, 1)
+        _assert_close(result.data["x"].value, 0)
 
     def test_on_coordinate(self, rot90z):
         """Point at (1,0,0) km in Alice frame → (0,1,0) km."""
@@ -153,8 +153,8 @@ class TestRotateUsage:
             cxf.alice,
         )
         result = cxfm.act(rot90z, None, coord)
-        _assert_close(result.data["y"].value, 1.0)
-        _assert_close(result.data["x"].value, 0.0)
+        _assert_close(result.data["y"].value, 1)
+        _assert_close(result.data["x"].value, 0)
 
 
 # ===================================================================
@@ -167,41 +167,40 @@ class TestTranslateUsage:
 
     def test_on_array(self, shift_1_2_3, usys):
         """Array [0,0,0] + shift [1,2,3] km → [1000,2000,3000] (in metres)."""
-        x = jnp.array([0.0, 0.0, 0.0])
+        x = jnp.array([0, 0, 0])
         result = cxfm.act(shift_1_2_3, None, x, cxc.cart3d, cxr.point, usys=usys)
-        _assert_close(result, [1000.0, 2000.0, 3000.0])
+        _assert_close(result, [1000, 2000, 3000])
 
     def test_on_quantity(self, shift_1_2_3):
         """Quantity [0,0,0] km + shift → [1,2,3] km."""
-        q = u.Q([0.0, 0.0, 0.0], "km")
+        q = u.Q([0, 0, 0], "km")
         result = cxfm.act(shift_1_2_3, None, q)
-        _assert_close(result.value, [1.0, 2.0, 3.0])
+        _assert_close(result.value, [1, 2, 3])
 
     def test_on_quantity_matrix(self, shift_1_2_3):
-        """QuantityMatrix [0,0,0] km + shift → [1,2,3] km."""
-        qm = QuantityMatrix(
-            jnp.array([0.0, 0.0, 0.0]),
-            unit=(u.unit("km"), u.unit("km"), u.unit("km")),
+        """QMatrix [0,0,0] km + shift → [1,2,3] km."""
+        qm = QMatrix(
+            jnp.array([0, 0, 0]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
         )
         result = cxfm.act(shift_1_2_3, None, qm)
-        assert isinstance(result, QuantityMatrix)
-        _assert_close(result.value, [1.0, 2.0, 3.0])
+        assert isinstance(result, QMatrix)
+        _assert_close(result.value, [1, 2, 3])
 
     def test_on_cdict(self, shift_1_2_3):
         """CDict {x:0, y:0, z:0} km → {x:1, y:2, z:3} km."""
         v = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
         result = cxfm.act(shift_1_2_3, None, v, cxc.cart3d, cxr.point)
-        _assert_close(result["x"].value, 1.0)
-        _assert_close(result["y"].value, 2.0)
-        _assert_close(result["z"].value, 3.0)
+        _assert_close(result["x"].value, 1)
+        _assert_close(result["y"].value, 2)
+        _assert_close(result["z"].value, 3)
 
     def test_on_vector(self, shift_1_2_3):
         """Vector at origin + (1,2,3) km shift."""
         vec = cx.Point.from_({"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")})
         result = cxfm.act(shift_1_2_3, None, vec)
-        _assert_close(result.data["x"].value, 1.0)
-        _assert_close(result.data["y"].value, 2.0)
-        _assert_close(result.data["z"].value, 3.0)
+        _assert_close(result.data["x"].value, 1)
+        _assert_close(result.data["y"].value, 2)
+        _assert_close(result.data["z"].value, 3)
 
     def test_on_coordinate(self, shift_1_2_3):
         """Point at origin in Alice → translated to (1,2,3) km."""
@@ -210,9 +209,9 @@ class TestTranslateUsage:
             cxf.alice,
         )
         result = cxfm.act(shift_1_2_3, None, coord)
-        _assert_close(result.data["x"].value, 1.0)
-        _assert_close(result.data["y"].value, 2.0)
-        _assert_close(result.data["z"].value, 3.0)
+        _assert_close(result.data["x"].value, 1)
+        _assert_close(result.data["y"].value, 2)
+        _assert_close(result.data["z"].value, 3)
 
 
 # ===================================================================
@@ -230,35 +229,35 @@ class TestComposedUsage:
 
     def test_on_quantity(self, pipe):
         """[0,0,0] km → translate → [1,2,3] km → rotate 90°z → [-2,1,3] km."""
-        q = u.Q([0.0, 0.0, 0.0], "km")
+        q = u.Q([0, 0, 0], "km")
         result = cxfm.act(pipe, None, q)
-        _assert_close(result.value, [-2.0, 1.0, 3.0])
+        _assert_close(result.value, [-2, 1, 3])
 
     def test_on_quantity_matrix(self, pipe):
-        """QuantityMatrix through composed pipeline."""
-        qm = QuantityMatrix(
-            jnp.array([0.0, 0.0, 0.0]),
+        """QMatrix through composed pipeline."""
+        qm = QMatrix(
+            jnp.array([0, 0, 0]),
             unit=(u.unit("km"), u.unit("km"), u.unit("km")),
         )
         result = cxfm.act(pipe, None, qm)
-        assert isinstance(result, QuantityMatrix)
-        _assert_close(result.value, [-2.0, 1.0, 3.0])
+        assert isinstance(result, QMatrix)
+        _assert_close(result.value, [-2, 1, 3])
 
     def test_on_cdict(self, pipe):
         """CDict through composed pipeline."""
         v = {"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
         result = cxfm.act(pipe, None, v, cxc.cart3d, cxr.point)
-        _assert_close(result["x"].value, -2.0)
-        _assert_close(result["y"].value, 1.0)
-        _assert_close(result["z"].value, 3.0)
+        _assert_close(result["x"].value, -2)
+        _assert_close(result["y"].value, 1)
+        _assert_close(result["z"].value, 3)
 
     def test_on_vector(self, pipe):
         """Vector through composed pipeline."""
         vec = cx.Point.from_({"x": u.Q(0, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")})
         result = cxfm.act(pipe, None, vec)
-        _assert_close(result.data["x"].value, -2.0)
-        _assert_close(result.data["y"].value, 1.0)
-        _assert_close(result.data["z"].value, 3.0)
+        _assert_close(result.data["x"].value, -2)
+        _assert_close(result.data["y"].value, 1)
+        _assert_close(result.data["z"].value, 3)
 
     def test_on_coordinate(self, pipe):
         """Point through composed pipeline."""
@@ -267,9 +266,9 @@ class TestComposedUsage:
             cxf.alice,
         )
         result = cxfm.act(pipe, None, coord)
-        _assert_close(result.data["x"].value, -2.0)
-        _assert_close(result.data["y"].value, 1.0)
-        _assert_close(result.data["z"].value, 3.0)
+        _assert_close(result.data["x"].value, -2)
+        _assert_close(result.data["y"].value, 1)
+        _assert_close(result.data["z"].value, 3)
 
 
 # ===================================================================
@@ -282,14 +281,14 @@ class TestRoundtripUsage:
 
     def test_rotate_roundtrip(self, rot90z):
         """Rotate then inverse-rotate a Quantity recovers original."""
-        q = u.Q([3.0, -1.0, 2.0], "km")
+        q = u.Q([3, -1, 2], "km")
         fwd = cxfm.act(rot90z, None, q)
         back = cxfm.act(rot90z.inverse, None, fwd)
         _assert_close(back.value, q.value)
 
     def test_translate_roundtrip(self, shift_1_2_3):
         """Translate then inverse-translate recovers original."""
-        q = u.Q([5.0, 7.0, -3.0], "km")
+        q = u.Q([5, 7, -3], "km")
         fwd = cxfm.act(shift_1_2_3, None, q)
         back = cxfm.act(shift_1_2_3.inverse, None, fwd)
         _assert_close(back.value, q.value)
@@ -297,7 +296,7 @@ class TestRoundtripUsage:
     def test_composed_roundtrip(self, rot90z, shift_1_2_3):
         """Composed pipeline and its inverse recover original."""
         pipe = cxfm.Composed((shift_1_2_3, rot90z))
-        q = u.Q([2.0, 4.0, 6.0], "km")
+        q = u.Q([2, 4, 6], "km")
         fwd = cxfm.act(pipe, None, q)
         back = cxfm.act(pipe.inverse, None, fwd)
         _assert_close(back.value, q.value)
@@ -307,19 +306,19 @@ class TestRoundtripUsage:
         vec = cx.Point.from_({"x": u.Q(3, "km"), "y": u.Q(-1, "km"), "z": u.Q(2, "km")})
         fwd = cxfm.act(rot90z, None, vec)
         back = cxfm.act(rot90z.inverse, None, fwd)
-        _assert_close(back.data["x"].value, 3.0)
-        _assert_close(back.data["y"].value, -1.0)
-        _assert_close(back.data["z"].value, 2.0)
+        _assert_close(back.data["x"].value, 3)
+        _assert_close(back.data["y"].value, -1)
+        _assert_close(back.data["z"].value, 2)
 
     def test_roundtrip_on_quantity_matrix(self, rot90z):
-        """Rotate then inverse-rotate a QuantityMatrix recovers original."""
-        qm = QuantityMatrix(
-            jnp.array([3.0, -1.0, 2.0]),
+        """Rotate then inverse-rotate a QMatrix recovers original."""
+        qm = QMatrix(
+            jnp.array([3, -1, 2]),
             unit=(u.unit("km"), u.unit("km"), u.unit("km")),
         )
         fwd = cxfm.act(rot90z, None, qm)
         back = cxfm.act(rot90z.inverse, None, fwd)
-        _assert_close(back.value, [3.0, -1.0, 2.0])
+        _assert_close(back.value, [3, -1, 2])
 
 
 # ===================================================================
@@ -331,13 +330,13 @@ class TestCallSyntaxUsage:
     """Transforms are callable: op(x) == act(op, None, x)."""
 
     def test_rotate_call(self, rot90z):
-        q = u.Q([1.0, 0.0, 0.0], "km")
+        q = u.Q([1, 0, 0], "km")
         via_act = cxfm.act(rot90z, None, q)
         via_call = rot90z(q)
         _assert_close(via_call.value, via_act.value)
 
     def test_translate_call(self, shift_1_2_3):
-        q = u.Q([0.0, 0.0, 0.0], "km")
+        q = u.Q([0, 0, 0], "km")
         via_act = cxfm.act(shift_1_2_3, None, q)
         via_call = shift_1_2_3(q)
         _assert_close(via_call.value, via_act.value)
