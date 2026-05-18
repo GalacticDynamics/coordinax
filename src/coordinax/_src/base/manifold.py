@@ -219,6 +219,43 @@ class AbstractManifold(metaclass=abc.ABCMeta):
 
     # =====================================================
 
+    def norm(
+        self, v: Any, *args: Any, at: Any, usys: OptUSys = None, **kwargs: Any
+    ) -> Any:
+        r"""Compute the norm $\|v\|_g = \sqrt{g(v, v)}$.
+
+        Convenience wrapper that calls
+        ``cxmapi.norm(v, self.metric, chart, at=at, usys=usys)`` directly.
+        The ``chart`` must be passed as the second positional argument (after
+        ``v``).
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinax.charts as cxc
+        >>> import coordinax.manifolds as cxm
+
+        >>> M = cxm.EuclideanManifold(3)
+        >>> chart = cxc.Cart3D(M=M)
+        >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+
+        With a stacked ``jax.Array`` (usys required):
+
+        >>> usys = u.unitsystems.si
+        >>> v = jnp.array([3.0, 4.0, 0.0])
+        >>> M.norm(v, chart, at=at, usys=usys)
+        Array(5., dtype=float64)
+
+        With a CDict of quantities (usys optional):
+
+        >>> v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s"), "z": u.Q(0.0, "m/s")}
+        >>> M.norm(v, chart, at=at)
+        Q(5., 'm / s')
+
+        """
+        return cxmapi.norm(v, self.metric, *args, at=at, usys=usys, **kwargs)
+
     def angle_between(
         self,
         chart: "coordinax.charts.AbstractChart[Any, Any]",
