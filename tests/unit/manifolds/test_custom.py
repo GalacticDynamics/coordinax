@@ -16,8 +16,7 @@ class TestCustomAtlas:
     def test_supports_registered_chart_classes_only(self) -> None:
         """Supports returns True only for explicitly registered chart classes."""
         atlas = cxm.CustomAtlas(
-            charts=(cxc.Cart2D, cxc.Polar2D),
-            chart_default=cxc.cart2d,
+            charts=(cxc.Cart2D, cxc.Polar2D), chart_default=cxc.cart2d
         )
 
         assert isinstance(atlas.charts, tuple)

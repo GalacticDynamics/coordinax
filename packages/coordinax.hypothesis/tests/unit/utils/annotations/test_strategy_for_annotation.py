@@ -1,13 +1,12 @@
 """Tests for strategy_for_annotation utility function."""
 
-import jaxtyping
-
 import jax.numpy as jnp
+import jaxtyping
+import unxt as u
 from hypothesis import given, strategies as st
 
-import unxt as u
-
 import coordinax.charts as cxc
+
 from coordinax.hypothesis.utils._src.annotations.jaxtyping_utils import (
     parse_jaxtyping_annotation,
     strategy_for_annotation,

@@ -87,8 +87,7 @@ class TestCDictValueControl:
         """
         p_x = data.draw(
             cxst.cdicts(
-                cxc.cart2d,
-                elements=st.floats(min_value=-100, max_value=-1, width=32),
+                cxc.cart2d, elements=st.floats(min_value=-100, max_value=-1, width=32)
             )
         )
         p_y = data.draw(

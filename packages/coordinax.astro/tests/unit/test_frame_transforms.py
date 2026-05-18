@@ -55,11 +55,7 @@ def _astropy_icrs_to_gcf_xyz_pc(xyz_pc: Iterable[float], frame: cxastro.Galactoc
     )
     out = sc.transform_to(_as_astropy_galactocentric(frame)).cartesian
     return np.array(
-        [
-            out.x.to_value(apyu.pc),
-            out.y.to_value(apyu.pc),
-            out.z.to_value(apyu.pc),
-        ],
+        [out.x.to_value(apyu.pc), out.y.to_value(apyu.pc), out.z.to_value(apyu.pc)],
         dtype=float,
     )
 
@@ -79,19 +75,12 @@ def _astropy_gcf_to_icrs_xyz_pc(xyz_pc: Iterable[float], frame: cxastro.Galactoc
     )
     out = sc.transform_to(apyc.ICRS()).cartesian
     return np.array(
-        [
-            out.x.to_value(apyu.pc),
-            out.y.to_value(apyu.pc),
-            out.z.to_value(apyu.pc),
-        ],
+        [out.x.to_value(apyu.pc), out.y.to_value(apyu.pc), out.z.to_value(apyu.pc)],
         dtype=float,
     )
 
 
-@pytest.mark.parametrize(
-    "xyz_pc",
-    [(0, 0, 0), (100, -20, 50), (-5000, 3200, 1200)],
-)
+@pytest.mark.parametrize("xyz_pc", [(0, 0, 0), (100, -20, 50), (-5000, 3200, 1200)])
 def test_icrs_to_galactocentric_matches_astropy_positions(xyz_pc) -> None:
     """ICRS->Galactocentric position transforms match Astropy."""
     gcf = cxastro.Galactocentric()
@@ -128,7 +117,7 @@ def test_icrs_galactocentric_transitions_are_inverse_for_positions() -> None:
     q = u.Q(jnp.asarray([450, -100, 220]), "pc")
     back = cxfm.act(bwd, None, cxfm.act(fwd, None, q))
 
-    np.testing.assert_allclose(_to_np(back, "pc"), _to_np(q, "pc"), rtol=0.0, atol=1e-6)
+    np.testing.assert_allclose(_to_np(back, "pc"), _to_np(q, "pc"), rtol=0, atol=1e-6)
 
 
 # ===================================================================
@@ -140,9 +129,7 @@ class TestFrameTransformProperties:
 
     @given(
         q=ust.quantities(
-            "pc",
-            shape=(3,),
-            elements={"min_value": -5e4, "max_value": 5e4},
+            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
         )
     )
     @settings(deadline=None)
@@ -180,9 +167,7 @@ class TestFrameTransformProperties:
 
     @given(
         q=ust.quantities(
-            "pc",
-            shape=(3,),
-            elements={"min_value": -5e4, "max_value": 5e4},
+            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
         )
     )
     @settings(deadline=None)
@@ -205,14 +190,12 @@ class TestFrameTransformProperties:
         via_bwd = cxfm.act(bwd, None, q_gcf)
 
         np.testing.assert_allclose(
-            via_inverse.ustrip("pc"), via_bwd.ustrip("pc"), rtol=0.0, atol=1e-6
+            via_inverse.ustrip("pc"), via_bwd.ustrip("pc"), rtol=0, atol=1e-6
         )
 
     @given(
         q=ust.quantities(
-            "pc",
-            shape=(3,),
-            elements={"min_value": -5e4, "max_value": 5e4},
+            "pc", shape=(3,), elements={"min_value": -5e4, "max_value": 5e4}
         )
     )
     @settings(deadline=None)
@@ -226,4 +209,4 @@ class TestFrameTransformProperties:
         xyz = q.ustrip("pc")
         got = cxfm.act(op, None, q).ustrip("pc")
         expected = _astropy_icrs_to_gcf_xyz_pc((xyz[0], xyz[1], xyz[2]), gcf)
-        np.testing.assert_allclose(got, expected, rtol=0.0, atol=1e-6)
+        np.testing.assert_allclose(got, expected, rtol=0, atol=1e-6)

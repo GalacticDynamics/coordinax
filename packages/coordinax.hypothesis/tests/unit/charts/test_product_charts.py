@@ -60,7 +60,7 @@ class TestProductChartsWithFixedFactors:
         chart=cxst.charts(
             cxc.CartesianProductChart,
             factor_charts=(cxc.cart3d, cxc.cart2d),
-            factor_names=("position", "velocity"),
+            factor_names=("q", "p"),
         )
     )
     def test_fixed_factors(self, chart: cxc.AbstractCartesianProductChart) -> None:
@@ -87,8 +87,7 @@ class TestProductChartsWithFixedFactors:
 
     @given(
         chart=cxst.charts(
-            cxc.CartesianProductChart,
-            factor_charts=(cxc.sph3d, cxc.cart2d),
+            cxc.CartesianProductChart, factor_charts=(cxc.sph3d, cxc.cart2d)
         )
     )
     def test_mixed_chart_types(self, chart: cxc.AbstractCartesianProductChart) -> None:
@@ -246,9 +245,7 @@ class TestProductChartsEdgeCases:
         chart=cxst.charts(
             cxc.CartesianProductChart,
             factor_charts=st.lists(
-                cxst.charts(exclude=(cxc.Abstract0D,)),
-                min_size=1,
-                max_size=3,
+                cxst.charts(exclude=(cxc.Abstract0D,)), min_size=1, max_size=3
             ).map(tuple),
         )
     )

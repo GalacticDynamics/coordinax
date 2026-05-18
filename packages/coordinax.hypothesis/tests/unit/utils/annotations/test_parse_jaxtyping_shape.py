@@ -1,8 +1,7 @@
 """Tests for parse_jaxtyping_shape utility function."""
 
-import jaxtyping
-
 import jax.numpy as jnp
+import jaxtyping
 from hypothesis import given, strategies as st
 
 from coordinax.hypothesis.utils._src.annotations.jaxtyping_utils import (

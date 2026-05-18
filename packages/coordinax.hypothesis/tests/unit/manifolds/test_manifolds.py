@@ -71,9 +71,7 @@ def test_custom_manifold_strategy_basic(M: cxm.CustomManifold) -> None:
 
 @given(
     M=cxst.manifolds(
-        cxm.CustomManifold,
-        ndim=2,
-        required_chart_classes=(cxc.Cart2D, cxc.Polar2D),
+        cxm.CustomManifold, ndim=2, required_chart_classes=(cxc.Cart2D, cxc.Polar2D)
     )
 )
 def test_custom_manifold_required_chart_classes(M: cxm.CustomManifold) -> None:
@@ -91,9 +89,7 @@ def test_custom_manifold_from_strategy_selector(M: cxm.CustomManifold) -> None:
 
 @given(
     atlas=cxst.atlases(
-        cxm.CustomAtlas,
-        ndim=2,
-        required_chart_classes=(cxc.Cart2D, cxc.Polar2D),
+        cxm.CustomAtlas, ndim=2, required_chart_classes=(cxc.Cart2D, cxc.Polar2D)
     )
 )
 def test_required_chart_classes_are_present(atlas: cxm.CustomAtlas) -> None:
