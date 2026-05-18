@@ -22,8 +22,8 @@ import operator
 from jaxtyping import Array
 
 import jax
-import jax._src.dtypes as jax_dtypes
 import jax.core
+import jax.dtypes
 import jax.numpy as jnp
 import quax
 from jax import lax
@@ -36,6 +36,14 @@ from ._quantity_matrix import QMatrix
 
 det_p = jexc.Primitive("det")
 det_p.multiple_results = False
+
+
+def to_inexact_dtype(dtype: jnp.dtype) -> jnp.dtype:
+    return (
+        dtype
+        if jnp.issubdtype(dtype, jnp.inexact)
+        else jnp.result_type(dtype, jnp.float32)
+    )
 
 
 def det(x: Array, /) -> Array:
@@ -116,7 +124,7 @@ def _det_abstract_eval(x: jax.core.ShapedArray, /) -> jax.core.ShapedArray:
     # (*batch, n, n) → (*batch,)
     # jnp.linalg.det always returns a floating-point result (like numpy),
     # so promote integer dtypes to their inexact equivalent.
-    out_dtype = jax_dtypes.to_inexact_dtype(x.dtype)
+    out_dtype = to_inexact_dtype(x.dtype)
     return x.update(shape=x.shape[:-2], dtype=out_dtype)
 
 
