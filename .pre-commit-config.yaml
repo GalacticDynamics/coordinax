@@ -92,3 +92,11 @@ repos:
     hooks:
       - id: validate-pyproject
         # additional_dependencies: ["validate-pyproject-schema-store[all]"]
+
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty check
+        entry: uv run ty check .
+        language: system
+        pass_filenames: false

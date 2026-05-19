@@ -34,26 +34,6 @@ from coordinax.internal import QMatrix, UnitsMatrix
 
 @plum.dispatch
 def metric_representation(
-    M: MinkowskiManifold, chart: MinkowskiCT, /
-) -> type[DiagonalMetric]:
-    """Minkowski manifold in the canonical CT chart → :class:`DiagonalMetric`.
-
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
-    >>> from coordinax._src.metric.matrix import DiagonalMetric
-
-    >>> M = cxm.MinkowskiManifold()
-    >>> metric_representation(M, cxc.minkowskict)
-    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
-
-    """
-    del M, chart
-    return DiagonalMetric
-
-
-@plum.dispatch
-def metric_representation(
     M: MinkowskiManifold, chart: AbstractChart, /
 ) -> type[DenseMetric]:
     """Minkowski manifold in a general chart → :class:`DenseMetric`.
@@ -70,6 +50,26 @@ def metric_representation(
     """
     del M, chart
     return DenseMetric
+
+
+@plum.dispatch
+def metric_representation(
+    M: MinkowskiManifold, chart: MinkowskiCT, /
+) -> type[DiagonalMetric]:
+    """Minkowski manifold in the canonical CT chart → :class:`DiagonalMetric`.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinax._src.metric.matrix import DiagonalMetric
+
+    >>> M = cxm.MinkowskiManifold()
+    >>> metric_representation(M, cxc.minkowskict)
+    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
+
+    """
+    del M, chart
+    return DiagonalMetric
 
 
 # =====================================================================
