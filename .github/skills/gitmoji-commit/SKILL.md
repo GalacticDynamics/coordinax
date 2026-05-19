@@ -89,7 +89,7 @@ Use [the full type reference](./references/types.md) to pick the most specific t
 | ♻️ | `refactor` | Internal restructure, no behaviour change |
 | ✅ | `test` | Add or update tests |
 | 🧹 | `chore` | Miscellaneous maintenance |
-| 🔧 | `config` | pyproject.toml, noxfile, pre-commit, config files |
+| 🔧 | `config` | pyproject.toml, noxfile, prek, config files |
 | 💚 | `ci` | GitHub Actions, CI workflows |
 | 👷 | `build` | Build system changes |
 | ⬆️ | `dep-bump` | Upgrade dependencies |

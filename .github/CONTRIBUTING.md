@@ -36,14 +36,14 @@ py -m install -v -e .[dev]
 
 # Post setup
 
-You should prepare pre-commit, which will help you by checking that commits pass required checks:
+You should prepare prek, which will help you by checking that commits pass required checks:
 
 ```bash
-pip install pre-commit # or brew install pre-commit on macOS
-pre-commit install # Will install a pre-commit hook into the git repo
+pip install prek # or brew install prek on macOS
+prek install # Will install a prek hook into the git repo
 ```
 
-You can also/alternatively run `pre-commit run` (changes only) or `pre-commit run --all-files` to check even without installing the hook.
+You can also/alternatively run `prek run` (changes only) or `prek run --all-files` to check even without installing the hook.
 
 # Testing
 
@@ -77,10 +77,10 @@ nox -s docs -- --serve
 
 # Pre-commit
 
-This project uses pre-commit for all style checking. While you can run it with nox, this is such an important tool that it deserves to be installed on its own. Install pre-commit and run:
+This project uses prek for all style checking. While you can run it with nox, this is such an important tool that it deserves to be installed on its own. Install prek and run:
 
 ```bash
-pre-commit run -a
+prek run --all-files
 ```
 
 to check all files.

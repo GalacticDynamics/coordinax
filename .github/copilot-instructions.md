@@ -526,7 +526,7 @@ result = jnp.sqrt(d)  # Uses registered sqrt_p rule
   uv run nox -s all
   ```
 - Common sessions:
-  - `nox -s lint`: pre-commit + pylint
+  - `nox -s lint`: prek + pylint
   - `nox -s test`: pytest suite
   - `nox -s docs`: build documentation (add `--serve` to preview)
   - `nox -s pytest_benchmark`: run CodSpeed benchmarks
