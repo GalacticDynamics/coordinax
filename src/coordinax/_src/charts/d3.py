@@ -21,7 +21,7 @@ __all__ = (
 import dataclasses
 
 from jaxtyping import Real
-from typing import Annotated, Any, Final, Literal as L, final  # noqa: N817
+from typing import Annotated, Any, Final, Literal as L, Self  # noqa: N817
 from typing_extensions import override
 
 import jax.tree_util as jtu
@@ -31,9 +31,9 @@ import quaxed.numpy as jnp
 import unxt as u
 
 from coordinax._src.base import (
+    MT,
     AbstractDimensionalFlag,
     AbstractFixedComponentsChart,
-    AbstractManifold,
     chart_dataclass_decorator,
     is_not_abstract_chart_subclass,
 )
@@ -79,9 +79,8 @@ Cart3DDims = tuple[Len, Len, Len]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Cart3D(AbstractFixedComponentsChart[Cart3DKeys, Cart3DDims], Abstract3D):
+class Cart3D(AbstractFixedComponentsChart[MT, Cart3DKeys, Cart3DDims], Abstract3D):
     r"""Three-dimensional Cartesian chart $(x, y, z)$.
 
     Components are ordered as ``("x", "y", "z")`` with dimensions ``("length",
@@ -105,11 +104,11 @@ class Cart3D(AbstractFixedComponentsChart[Cart3DKeys, Cart3DDims], Abstract3D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> "Cart3D":
+    def cartesian(self) -> Self:
         """Return the canonical Cartesian chart for a 3D chart.
 
         >>> import coordinax.charts as cxc
@@ -120,7 +119,7 @@ class Cart3D(AbstractFixedComponentsChart[Cart3DKeys, Cart3DDims], Abstract3D):
         return self
 
 
-cart3d: Final = Cart3D()
+cart3d: Final = Cart3D(M=R3)
 """The canonical 3D Cartesian chart.
 
 >>> import coordinax.charts as cxc
@@ -141,10 +140,9 @@ Cylindrical3DDims = tuple[Len, Ang, Len]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class Cylindrical3D(
-    AbstractFixedComponentsChart[CylindricalKeys, Cylindrical3DDims], Abstract3D
+    AbstractFixedComponentsChart[MT, CylindricalKeys, Cylindrical3DDims], Abstract3D
 ):
     r"""Three-dimensional cylindrical chart $(\rho, \phi, z)$.
 
@@ -169,11 +167,11 @@ class Cylindrical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> Cart3D:
+    def cartesian(self) -> Cart3D[MT]:
         """Return the canonical Cartesian chart for a 3D cylindrical chart.
 
         >>> import coordinax.charts as cxc
@@ -183,7 +181,7 @@ class Cylindrical3D(
         return Cart3D(M=self.M)
 
 
-cyl3d: Final = Cylindrical3D()
+cyl3d: Final = Cylindrical3D(M=R3)
 """The canonical 3D cylindrical chart.
 
 >>> import coordinax.charts as cxc
@@ -196,15 +194,15 @@ True
 # Spherical
 
 
-class AbstractSpherical3D(AbstractFixedComponentsChart[Ks, Ds], Abstract3D):
+class AbstractSpherical3D(AbstractFixedComponentsChart[MT, Ks, Ds], Abstract3D):
     """Abstract spherical vector representation."""
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> Cart3D:
+    def cartesian(self) -> Cart3D[MT]:
         """Return the canonical Cartesian chart for a 3D chart.
 
         >>> import coordinax.charts as cxc
@@ -227,9 +225,8 @@ Spherical3DDims = tuple[Len, Ang, Ang]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Spherical3D(AbstractSpherical3D[SphericalKeys, Spherical3DDims]):
+class Spherical3D(AbstractSpherical3D[MT, SphericalKeys, Spherical3DDims]):
     r"""Three-dimensional spherical coordinates $(r, \theta, \phi)$.
 
     The Cartesian embedding is
@@ -259,7 +256,7 @@ class Spherical3D(AbstractSpherical3D[SphericalKeys, Spherical3DDims]):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -269,7 +266,7 @@ class Spherical3D(AbstractSpherical3D[SphericalKeys, Spherical3DDims]):
         return data
 
 
-sph3d: Final = Spherical3D()
+sph3d: Final = Spherical3D(M=R3)
 """The canonical 3D spherical chart.
 
 >>> import coordinax.charts as cxc
@@ -287,10 +284,9 @@ LonLatSpherical3DDims = tuple[Ang, Ang, Len]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class LonLatSpherical3D(
-    AbstractSpherical3D[LonLatSphericalKeys, LonLatSpherical3DDims],
+    AbstractSpherical3D[MT, LonLatSphericalKeys, LonLatSpherical3DDims],
 ):
     r"""Longitude-latitude spherical coordinates.
 
@@ -319,7 +315,7 @@ class LonLatSpherical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -329,7 +325,7 @@ class LonLatSpherical3D(
         return data
 
 
-lonlat_sph3d: Final = LonLatSpherical3D()
+lonlat_sph3d: Final = LonLatSpherical3D(M=R3)
 """The canonical longitude-latitude spherical chart.
 
 >>> import coordinax.charts as cxc
@@ -347,10 +343,9 @@ LonCosLatSpherical3DDims = tuple[Ang, Ang, Len]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class LonCosLatSpherical3D(
-    AbstractSpherical3D[LonCosLatSphericalKeys, LonCosLatSpherical3DDims]
+    AbstractSpherical3D[MT, LonCosLatSphericalKeys, LonCosLatSpherical3DDims]
 ):
     r"""Longitude-cos(latitude) spherical coordinates.
 
@@ -373,7 +368,7 @@ class LonCosLatSpherical3D(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -383,7 +378,7 @@ class LonCosLatSpherical3D(
         return data
 
 
-loncoslat_sph3d: Final = LonCosLatSpherical3D()
+loncoslat_sph3d: Final = LonCosLatSpherical3D(M=R3)
 """The canonical longitude-cos(latitude) spherical chart.
 
 >>> import coordinax.charts as cxc
@@ -400,9 +395,8 @@ MathSphericalKeys = tuple[L["r"], L["theta"], L["phi"]]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class MathSpherical3D(AbstractSpherical3D[MathSphericalKeys, Spherical3DDims]):
+class MathSpherical3D(AbstractSpherical3D[MT, MathSphericalKeys, Spherical3DDims]):
     r"""Mathematical-convention spherical coordinates $(r, \theta, \phi)$.
 
     In this convention:
@@ -429,7 +423,7 @@ class MathSpherical3D(AbstractSpherical3D[MathSphericalKeys, Spherical3DDims]):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -438,7 +432,7 @@ class MathSpherical3D(AbstractSpherical3D[MathSphericalKeys, Spherical3DDims]):
         return data
 
 
-math_sph3d: Final = MathSpherical3D()
+math_sph3d: Final = MathSpherical3D(M=R3)
 """The canonical mathematical-convention spherical chart.
 
 >>> import coordinax.charts as cxc
@@ -456,11 +450,10 @@ ProlateSpheroidal3DDims = tuple[L["area"], L["area"], Ang]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class ProlateSpheroidal3D(
     Abstract3D,
-    AbstractFixedComponentsChart[ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
+    AbstractFixedComponentsChart[MT, ProlateSpheroidalKeys, ProlateSpheroidal3DDims],
 ):
     r"""Prolate spheroidal coordinates $(\mu, \nu, \phi)$ with focal length $\Delta$.
 
@@ -502,7 +495,7 @@ class ProlateSpheroidal3D(
     ]
     """Focal length of the coordinate system."""
 
-    M: AbstractManifold = R3
+    M: MT = R3  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)  # call base check
@@ -516,7 +509,7 @@ class ProlateSpheroidal3D(
 
     @override
     @property
-    def cartesian(self) -> Cart3D:
+    def cartesian(self) -> Cart3D[MT]:
         """Return the canonical Cartesian chart for a 3D chart.
 
         >>> import coordinax.charts as cxc

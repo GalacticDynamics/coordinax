@@ -30,7 +30,7 @@ from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 V = TypeVar("V")
 
 
-class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
+class AbstractCartesianProductChart(AbstractChart[CartesianProductManifold, Ks, Ds]):
     """Abstract base class for Cartesian product charts.
 
     A Cartesian product chart is defined by a finite ordered tuple of factor
@@ -56,7 +56,7 @@ class AbstractCartesianProductChart(AbstractChart[Ks, Ds]):
     - `components` must follow the key convention above
     """
 
-    factors: tuple["AbstractChart[Any, Any]", ...]
+    factors: tuple["AbstractChart[Any, Any, Any]", ...]
     """Ordered tuple of factor charts."""
 
     factor_names: tuple[str, ...]
@@ -316,7 +316,7 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
 
     """
 
-    factors: tuple[AbstractChart[Any, Any], ...]
+    factors: tuple[AbstractChart[Any, Any, Any], ...]
     """Ordered tuple of factor charts."""
 
     factor_names: tuple[str, ...]
@@ -360,11 +360,11 @@ class CartesianProductChart(AbstractCartesianProductChart[Ks, Ds]):
         cart_factors = tuple(cxcapi.cartesian_chart(f) for f in self.factors)
         # Check if already cartesian
         if cart_factors == self.factors:
-            return self
+            return self  # ty: ignore[invalid-return-type]
         cart_factors = cast("tuple[AbstractChart, ...]", cart_factors)
         return CartesianProductChart(cart_factors, self.factor_names)
 
-    def __getitem__(self, idx: str) -> AbstractChart[Any, Any]:
+    def __getitem__(self, idx: str) -> AbstractChart[Any, Any, Any]:
         """Allow indexing to access factor charts.
 
         Examples

@@ -113,7 +113,7 @@ class AbstractSemanticKind(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def coord_dimensions(
-        cls, chart: cxc.AbstractChart[Any, Any], /
+        cls, chart: cxc.AbstractChart[Any, Any, Any], /
     ) -> tuple[u.AbstractDimension | None, ...]:
         """Return the physical dimensions of the components for this semantic kind.
 
@@ -259,7 +259,7 @@ class Location(AbstractSemanticKind):
     @classmethod
     @ft.cache
     def coord_dimensions(
-        cls, chart: cxc.AbstractChart[Any, Any], /
+        cls, chart: cxc.AbstractChart[Any, Any, Any], /
     ) -> tuple[u.AbstractDimension | None, ...]:
         """Return the physical dimensions of each component for a location.
 
@@ -385,7 +385,7 @@ class AbstractTangentSemanticKind(AbstractSemanticKind):
     @classmethod
     @ft.cache
     def coord_dimensions(
-        cls, chart: cxc.AbstractChart[Any, Any], /
+        cls, chart: cxc.AbstractChart[Any, Any, Any], /
     ) -> tuple[u.AbstractDimension | None, ...]:
         """Return the physical dimensions of each component for this tangent kind.
 

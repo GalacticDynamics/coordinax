@@ -202,7 +202,7 @@ def cartesian_chart(obj: AbstractChart, /) -> AbstractChart:  # type: ignore[typ
 
 ```
 @plum.dispatch
-def cartesian_chart(obj: AbstractChart[Any, Any], /) -> AbstractChart[Any, Any]:
+def cartesian_chart(obj: AbstractChart[Any, Any, Any], /) -> AbstractChart[Any, Any, Any]:
     """This breaks plum's type matching!"""
     ...
 ```
@@ -210,7 +210,7 @@ def cartesian_chart(obj: AbstractChart[Any, Any], /) -> AbstractChart[Any, Any]:
 **Why this matters:**
 
 - Plum uses runtime type introspection to match function signatures
-- Parameterized generics (e.g., `AbstractChart[Any, Any]`) confuse plum's type matcher
+- Parameterized generics (e.g., `AbstractChart[Any, Any, Any]`) confuse plum's type matcher
 - Type checkers will warn about missing type arguments; use `type: ignore[type-arg]`
 - This applies to ALL generic types: `AbstractChart`, etc.
 

@@ -19,7 +19,9 @@ from coordinax.hypothesis.utils import (
 )
 
 
-def _is_zero_arg_constructible(chart_cls: type[cxc.AbstractChart[Any, Any]], /) -> bool:
+def _is_zero_arg_constructible(
+    chart_cls: type[cxc.AbstractChart[Any, Any, Any]], /
+) -> bool:
     """Return True if chart_cls can be instantiated with no arguments."""
     try:
         chart_cls()
@@ -30,11 +32,11 @@ def _is_zero_arg_constructible(chart_cls: type[cxc.AbstractChart[Any, Any]], /) 
 
 def _matching_chart_classes_for_ndim(
     ndim: int, /
-) -> tuple[type[cxc.AbstractChart[Any, Any]], ...]:
+) -> tuple[type[cxc.AbstractChart[Any, Any, Any]], ...]:
     """Return zero-arg chart classes with default instance ndim == target ndim."""
-    classes: list[type[cxc.AbstractChart[Any, Any]]] = []
+    classes: list[type[cxc.AbstractChart[Any, Any, Any]]] = []
     for cls in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True):
-        cls = cast(type[cxc.AbstractChart[Any, Any]], cls)
+        cls = cast(type[cxc.AbstractChart[Any, Any, Any]], cls)
         if not _is_zero_arg_constructible(cls):
             continue
         if cls().ndim == ndim:

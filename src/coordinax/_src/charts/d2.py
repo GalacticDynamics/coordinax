@@ -5,8 +5,8 @@ __all__ = ("Abstract2D", "Cart2D", "cart2d", "Polar2D", "polar2d")
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, final  # noqa: N817
-from typing_extensions import override
+from typing import Any, Final, Literal as L, Self  # noqa: N817
+from typing_extensions import TypeVar, override
 
 import jax.tree_util as jtu
 
@@ -22,7 +22,9 @@ from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
 )
-from coordinax._src.euclidean.manifold import R2
+from coordinax._src.euclidean.manifold import R2, Rn
+
+MT = TypeVar("MT", bound=AbstractManifold, default=Rn)
 
 
 class Abstract2D(AbstractDimensionalFlag, n=2):
@@ -57,9 +59,8 @@ Cart2DDims = tuple[Len, Len]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Cart2D(AbstractFixedComponentsChart[Cart2DKeys, Cart2DDims], Abstract2D):
+class Cart2D(AbstractFixedComponentsChart[MT, Cart2DKeys, Cart2DDims], Abstract2D):
     r"""Two-dimensional Cartesian chart $(x, y)$.
 
     Components are ordered as ``("x", "y")`` with dimensions ``("length",
@@ -83,11 +84,11 @@ class Cart2D(AbstractFixedComponentsChart[Cart2DKeys, Cart2DDims], Abstract2D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R2
+    M: MT = R2  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> "Cart2D":
+    def cartesian(self) -> Self:
         """Return the canonical Cartesian chart for a 2D chart.
 
         >>> import coordinax.charts as cxc
@@ -98,7 +99,7 @@ class Cart2D(AbstractFixedComponentsChart[Cart2DKeys, Cart2DDims], Abstract2D):
         return self
 
 
-cart2d: Final = Cart2D()
+cart2d: Final = Cart2D(M=R2)
 """The canonical 2D Cartesian chart.
 
 >>> import coordinax.charts as cxc
@@ -119,9 +120,8 @@ Polar2DDims = tuple[Len, Ang]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Polar2D(AbstractFixedComponentsChart[PolarKeys, Polar2DDims], Abstract2D):
+class Polar2D(AbstractFixedComponentsChart[MT, PolarKeys, Polar2DDims], Abstract2D):
     r"""Two-dimensional polar chart $(r, \theta)$.
 
     Components are ordered as ``("r", "theta")`` with dimensions ``("length",
@@ -145,11 +145,11 @@ class Polar2D(AbstractFixedComponentsChart[PolarKeys, Polar2DDims], Abstract2D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R2
+    M: MT = R2  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> "Cart2D":
+    def cartesian(self) -> "Cart2D[MT]":
         """Return the canonical Cartesian chart for a 2D chart.
 
         >>> import coordinax.charts as cxc
@@ -160,7 +160,7 @@ class Polar2D(AbstractFixedComponentsChart[PolarKeys, Polar2DDims], Abstract2D):
         return Cart2D(M=self.M)
 
 
-polar2d: Final = Polar2D()
+polar2d: Final = Polar2D(M=R2)
 """The canonical 2D polar chart.
 
 >>> import coordinax.charts as cxc

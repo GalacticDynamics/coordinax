@@ -11,6 +11,7 @@ __all__ = (
     "is_not_abstract_chart_subclass",
     "MISSING",
     "CDictT",
+    "MT",
 )
 
 import abc
@@ -41,6 +42,7 @@ from .manifold import AbstractManifold
 from coordinax._src.custom_types import CDictT, Ds, Ks
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
+MT = TypeVar("MT", bound=AbstractManifold)
 V = TypeVar("V")
 
 # Charts are registered in CHART_CLASSES when they are defined, via
@@ -48,11 +50,13 @@ V = TypeVar("V")
 # dispatch and other purposes. We use a weak set to avoid keeping classes alive
 # unnecessarily, and a mapping proxy to prevent modification of the set from
 # outside this module.
-CHART_CLASSES: weakref.WeakSet[type["AbstractChart[Any, Any]"]] = weakref.WeakSet()
-
-NON_ABC_CHART_CLASSES: weakref.WeakSet[type["AbstractChart[Any, Any]"]] = (
+CHART_CLASSES: weakref.WeakSet[type["AbstractChart[AbstractManifold, Any, Any]"]] = (
     weakref.WeakSet()
 )
+
+NON_ABC_CHART_CLASSES: weakref.WeakSet[
+    type["AbstractChart[AbstractManifold, Any, Any]"]
+] = weakref.WeakSet()
 
 chart_dataclass_decorator = dataclasses.dataclass(
     frozen=True, slots=False, repr=False, eq=False
@@ -77,10 +81,10 @@ MISSINGDEFAULT = MissingDefault()
 
 
 @jtu.register_static
-class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
+class AbstractChart(Generic[MT, Ks, Ds], metaclass=abc.ABCMeta):
     """Abstract base class for charts (coordinate representations)."""
 
-    M: AbstractManifold
+    M: MT
     """The manifold that this chart belongs to.
 
     Default is `no_manifold` for charts that do not belong to any manifold.
@@ -128,7 +132,7 @@ class AbstractChart(Generic[Ks, Ds], metaclass=abc.ABCMeta):
 
     @property
     @abc.abstractmethod
-    def cartesian(self) -> "AbstractChart[Ks, Ds]":
+    def cartesian(self) -> "AbstractChart[MT, Ks, Ds]":
         """Return the corresponding Cartesian chart."""
         raise NotImplementedError  # pragma: no cover
 
@@ -339,7 +343,7 @@ def _get_tuple(tp: GAT, /) -> GAT:
     return tuple(arg.__args__[0] for arg in get_args(tp))
 
 
-class AbstractFixedComponentsChart(AbstractChart[Ks, Ds]):
+class AbstractFixedComponentsChart(AbstractChart[MT, Ks, Ds]):
     """Abstract base class for charts with fixed components and dimensions."""
 
     _components: Ks
@@ -354,10 +358,10 @@ class AbstractFixedComponentsChart(AbstractChart[Ks, Ds]):
                     origin, AbstractFixedComponentsChart
                 ):
                     args = get_args(base)
-                    if len(args) != 2:
+                    if len(args) != 3:
                         raise TypeError
-                    cls._components = _get_tuple(args[0])
-                    cls._coord_dimensions = _get_tuple(args[1])
+                    cls._components = _get_tuple(args[1])
+                    cls._coord_dimensions = _get_tuple(args[2])
                     break
 
         super().__init_subclass__(**kw)  # AbstractChart has.

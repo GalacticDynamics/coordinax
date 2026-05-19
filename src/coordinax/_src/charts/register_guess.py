@@ -28,7 +28,7 @@ from coordinax._src.custom_types import CDict
 
 # TODO: speed this up. The problem is that caching the results breaks something,
 # causing functions in other modules to fail type(x) is type(y) checks.
-def guess_chart_cls(obj: frozenset[str]) -> type[AbstractChart[Any, Any]]:
+def guess_chart_cls(obj: frozenset[str]) -> type[AbstractChart[Any, Any, Any]]:
     """Infer a chart class from the keys of a component dictionary.
 
     This only works on charts with fixed components.
@@ -119,7 +119,7 @@ def guess_chart(
     Cart1D(M=Rn(1))
 
     """
-    return cart1d
+    return cart1d  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch
@@ -135,7 +135,7 @@ def guess_chart(
     Cart2D(M=Rn(2))
 
     """
-    return cart2d
+    return cart2d  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch
@@ -151,7 +151,7 @@ def guess_chart(
     Cart3D(M=Rn(3))
 
     """
-    return cart3d
+    return cart3d  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
@@ -167,4 +167,4 @@ def guess_chart(
     CartND(M=Rn(True))
 
     """
-    return cartnd
+    return cartnd  # ty: ignore[invalid-return-type]

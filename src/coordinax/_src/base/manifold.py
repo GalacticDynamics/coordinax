@@ -179,7 +179,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         """
         return self.atlas.ndim
 
-    def default_chart(self) -> "coordinax.charts.AbstractChart[Any, Any]":
+    def default_chart(self) -> "coordinax.charts.AbstractChart[Any, Any, Any]":
         """Return a default chart from the atlas.
 
         This is a convenience property that proxies to the atlas default chart.
@@ -192,7 +192,9 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         """
         return self.atlas.default_chart()
 
-    def has_chart(self, chart: "coordinax.charts.AbstractChart[Any, Any]", /) -> bool:
+    def has_chart(
+        self, chart: "coordinax.charts.AbstractChart[Any, Any, Any]", /
+    ) -> bool:
         """Return whether ``chart`` belongs to this manifold atlas.
 
         >>> import coordinax.manifolds as cxm
@@ -205,7 +207,9 @@ class AbstractManifold(metaclass=abc.ABCMeta):
         """
         return self.atlas.has_chart(chart)
 
-    def check_chart(self, chart: "coordinax.charts.AbstractChart[Any, Any]", /) -> None:
+    def check_chart(
+        self, chart: "coordinax.charts.AbstractChart[Any, Any, Any]", /
+    ) -> None:
         """Check that ``chart`` belongs to this manifold atlas.
 
         >>> import coordinax.manifolds as cxm
@@ -221,7 +225,7 @@ class AbstractManifold(metaclass=abc.ABCMeta):
 
     def angle_between(
         self,
-        chart: "coordinax.charts.AbstractChart[Any, Any]",
+        chart: "coordinax.charts.AbstractChart[Any, Any, Any]",
         uvec: CDict,
         vvec: CDict,
         /,

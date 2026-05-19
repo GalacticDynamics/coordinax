@@ -18,8 +18,8 @@ __all__ = (
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, TypeVar, final  # noqa: N817
-from typing_extensions import override
+from typing import Any, Final, Literal as L, Self  # noqa: N817
+from typing_extensions import TypeVar, override
 
 import jax.tree_util as jtu
 
@@ -35,9 +35,10 @@ from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
 )
-from coordinax._src.euclidean.manifold import R1
+from coordinax._src.euclidean.manifold import R1, Rn
 
 GAT = TypeVar("GAT", bound=type(L[" ", "  "]))  # ty: ignore[invalid-type-form]
+MT = TypeVar("MT", bound=AbstractManifold, default=Rn)
 V = TypeVar("V")
 
 
@@ -71,9 +72,8 @@ Cart1DDims = tuple[Len]
 
 
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Cart1D(AbstractFixedComponentsChart[Cart1DKeys, Cart1DDims], Abstract1D):
+class Cart1D(AbstractFixedComponentsChart[MT, Cart1DKeys, Cart1DDims], Abstract1D):
     r"""One-dimensional Cartesian chart $(x)$.
 
     Components are ordered as ``("x",)`` with dimension ``("length",)``.
@@ -96,11 +96,11 @@ class Cart1D(AbstractFixedComponentsChart[Cart1DKeys, Cart1DDims], Abstract1D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R1
+    M: MT = R1  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> "Cart1D":
+    def cartesian(self) -> Self:
         """Return the canonical Cartesian chart for a 1D chart.
 
         >>> import coordinax.charts as cxc
@@ -132,9 +132,8 @@ Radial1DDims = tuple[Len]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Radial1D(AbstractFixedComponentsChart[RadialKeys, Radial1DDims], Abstract1D):
+class Radial1D(AbstractFixedComponentsChart[MT, RadialKeys, Radial1DDims], Abstract1D):
     r"""One-dimensional radial chart $(r)$.
 
     Components are ordered as ``("r",)`` with dimension ``("length",)``.
@@ -158,11 +157,11 @@ class Radial1D(AbstractFixedComponentsChart[RadialKeys, Radial1DDims], Abstract1
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R1
+    M: MT = R1  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> "Cart1D":
+    def cartesian(self) -> "Cart1D[MT]":
         """Return the canonical Cartesian chart for a 1D radial chart.
 
         >>> import coordinax.charts as cxc
@@ -173,7 +172,7 @@ class Radial1D(AbstractFixedComponentsChart[RadialKeys, Radial1DDims], Abstract1
         return Cart1D(M=self.M)
 
 
-radial1d: Final = Radial1D()
+radial1d: Final = Radial1D(M=R1)
 """The canonical 1D radial chart.
 
 >>> import coordinax.charts as cxc
@@ -191,9 +190,8 @@ TimeDims = tuple[L["time"]]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Time1D(AbstractFixedComponentsChart[TimeKeys, TimeDims], Abstract1D):
+class Time1D(AbstractFixedComponentsChart[MT, TimeKeys, TimeDims], Abstract1D):
     """One-dimensional time chart ``(t)``.
 
     Components are ordered as ``("t",)`` with dimension ``("time",)``.
@@ -216,7 +214,7 @@ class Time1D(AbstractFixedComponentsChart[TimeKeys, TimeDims], Abstract1D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R1
+    M: MT = R1  # ty: ignore[invalid-assignment]
 
     @override
     @property
@@ -231,7 +229,7 @@ class Time1D(AbstractFixedComponentsChart[TimeKeys, TimeDims], Abstract1D):
         return time1d
 
 
-time1d: Final = Time1D()
+time1d: Final = Time1D(M=R1)
 """The canonical 1D time chart.
 
 >>> import coordinax.charts as cxc

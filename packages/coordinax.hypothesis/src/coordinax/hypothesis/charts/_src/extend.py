@@ -19,8 +19,9 @@ from coordinax.hypothesis.utils import draw_if_strategy
 def charts_like(
     draw: st.DrawFn,
     /,
-    chart: cxc.AbstractChart[Any, Any] | st.SearchStrategy[cxc.AbstractChart[Any, Any]],
-) -> cxc.AbstractChart[Any, Any]:
+    chart: cxc.AbstractChart[Any, Any, Any]
+    | st.SearchStrategy[cxc.AbstractChart[Any, Any, Any]],
+) -> cxc.AbstractChart[Any, Any, Any]:
     """Generate charts similar to the provided one.
 
     This strategy inspects the provided chart to determine its flags
@@ -64,7 +65,9 @@ def charts_like(
     template = draw_if_strategy(draw, chart)
 
     # Extract flags by looking through the MRO for AbstractDimensionalFlag subclasses
-    flags: tuple[type[cxc.AbstractDimensionalFlag | cxc.AbstractChart[Any, Any]], ...]
+    flags: tuple[
+        type[cxc.AbstractDimensionalFlag | cxc.AbstractChart[Any, Any, Any]], ...
+    ]
     flags = tuple(
         base
         for base in type(template).mro()

@@ -32,7 +32,9 @@ if TYPE_CHECKING:
     from .custom_types import CDict
 
 ChartT = TypeVar(
-    "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
+    "ChartT",
+    bound=cxc.AbstractChart[Any, Any, Any],
+    default=cxc.AbstractChart[Any, Any, Any],
 )
 GeomT = TypeVar("GeomT", bound=cxr.AbstractGeometry, default=cxr.AbstractGeometry)
 BasisT = TypeVar("BasisT", bound=cxr.AbstractBasis, default=cxr.AbstractBasis)

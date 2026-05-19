@@ -585,9 +585,9 @@ def atlases(  # noqa: F811
                 f"expected ndim={custom_ndim}."
             )
 
-    filtered_classes: list[type[cxc.AbstractChart[Any, Any]]] = []
+    filtered_classes: list[type[cxc.AbstractChart[Any, Any, Any]]] = []
     for cls in get_all_subclasses(cxc.AbstractChart, exclude_abstract=True):
-        cls = cast(type[cxc.AbstractChart[Any, Any]], cls)
+        cls = cast(type[cxc.AbstractChart[Any, Any, Any]], cls)
         try:
             chart = cls()
         except TypeError:

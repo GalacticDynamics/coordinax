@@ -14,7 +14,6 @@ from .atlas import MinkowskiAtlas
 from .manifold import MinkowskiManifold
 from coordinax._src.base import (
     AbstractFixedComponentsChart,
-    AbstractManifold,
     chart_dataclass_decorator,
 )
 from coordinax._src.charts.d4 import Abstract4D
@@ -31,7 +30,8 @@ _WRONG_M_MSG = "MinkowskiCT chart must belong to a MinkowskiManifold, got {typen
 @final
 @chart_dataclass_decorator
 class MinkowskiCT(
-    Abstract4D, AbstractFixedComponentsChart[MinkowskiCTKeys, MinkowskiCTDims]
+    Abstract4D,
+    AbstractFixedComponentsChart[MinkowskiManifold, MinkowskiCTKeys, MinkowskiCTDims],
 ):
     r"""4D Minkowski spacetime chart $(ct, x, y, z)$.
 
@@ -67,7 +67,7 @@ class MinkowskiCT(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = dataclasses.field(default_factory=MinkowskiManifold)
+    M: MinkowskiManifold = MinkowskiManifold()
 
     def __post_init__(self) -> None:
         """Validate that M is compatible with this chart."""

@@ -88,14 +88,14 @@ class Scale(AbstractTransform):
 
     @staticmethod
     def _validate_shape_match(
-        S: SMatrix, cart: cxc.AbstractChart[Any, Any], /
+        S: SMatrix, cart: cxc.AbstractChart[Any, Any, Any], /
     ) -> SMatrix:
         n = S.shape[0]
         if cart.ndim != n or len(cart.components) != n:
             raise ValueError(_MSG_S_X_SHAPE_MISMATCH.format(S=S, cart=cart))
         return S
 
-    def _get_S(self, cart: cxc.AbstractChart[Any, Any], /) -> SMatrix:
+    def _get_S(self, cart: cxc.AbstractChart[Any, Any, Any], /) -> SMatrix:
         S = self._validate_square(self.S)
         return self._validate_shape_match(S, cart)
 
@@ -250,7 +250,10 @@ def act(
     }
 
     def _maybe(
-        factor_chart: cxc.AbstractChart[Any, Any], part: CDict, /, **ats: CDict | None
+        factor_chart: cxc.AbstractChart[Any, Any, Any],
+        part: CDict,
+        /,
+        **ats: CDict | None,
     ) -> CDict:
         cart = factor_chart.cartesian
         if cart.ndim != n or len(cart.components) != n:

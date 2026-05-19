@@ -87,7 +87,7 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     """
 
-    spatial_chart: AbstractFixedComponentsChart[Any, Any] = field(default=cart3d)  # pylint: disable=invalid-field-call
+    spatial_chart: AbstractFixedComponentsChart[Any, Any, Any] = field(default=cart3d)  # pylint: disable=invalid-field-call
     """Spatial part of the representation. Defaults: `coordinax.charts.cart3d`."""
 
     _: KW_ONLY
@@ -105,13 +105,13 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
     # Product Chart API
 
     @property
-    def time_chart(self) -> AbstractChart[Any, Any]:
+    def time_chart(self) -> AbstractChart[Any, Any, Any]:
         """Time factor chart (always `time1d`)."""
         return time1d
 
     @override
     @property
-    def factors(self) -> tuple[AbstractChart[Any, Any], ...]:
+    def factors(self) -> tuple[AbstractChart[Any, Any, Any], ...]:
         """Return (time1d, spatial_chart) as required by product chart spec."""
         return (self.time_chart, self.spatial_chart)
 
@@ -155,7 +155,7 @@ class GalileanCT(AbstractFlatCartesianProductChart[Ks, Ds]):
 
     @override
     @property
-    def cartesian(self) -> "GalileanCT":
+    def cartesian(self) -> "GalileanCT[Any, Any]":
         """Get a Cartesian-chart version of the given spacetime chart.
 
         Examples

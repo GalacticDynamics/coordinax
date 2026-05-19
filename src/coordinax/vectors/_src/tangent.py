@@ -31,7 +31,9 @@ if TYPE_CHECKING:
     from coordinax.internal import CDict
 
 ChartT = TypeVar(
-    "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
+    "ChartT",
+    bound=cxc.AbstractChart[Any, Any, Any],
+    default=cxc.AbstractChart[Any, Any, Any],
 )
 BasisT = TypeVar(
     "BasisT", bound=cxr.AbstractLinearBasis, default=cxr.AbstractLinearBasis

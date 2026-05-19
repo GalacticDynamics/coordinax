@@ -5,7 +5,7 @@ __all__ = ("Abstract6D", "PoincarePolar6D", "poincarepolar6d")
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, NoReturn, final  # noqa: N817
+from typing import Any, Final, Literal as L, NoReturn  # noqa: N817
 from typing_extensions import override
 
 import jax.tree_util as jtu
@@ -54,10 +54,9 @@ PoincarePolarDims = tuple[
 
 
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class PoincarePolar6D(
-    AbstractFixedComponentsChart[PoincarePolarKeys, PoincarePolarDims], Abstract6D
+    AbstractFixedComponentsChart[Any, PoincarePolarKeys, PoincarePolarDims], Abstract6D
 ):
     r"""Six-dimensional Poincare-polar chart.
 

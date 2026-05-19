@@ -15,7 +15,9 @@ EMPTY: Final = inspect.Parameter.empty
 
 
 def can_pt_map(
-    from_chart: cxc.AbstractChart[Any, Any], to_chart: cxc.AbstractChart[Any, Any], /
+    from_chart: cxc.AbstractChart[Any, Any, Any],
+    to_chart: cxc.AbstractChart[Any, Any, Any],
+    /,
 ) -> bool:
     """Return ``pt_map`` can convert between the two charts."""
     if type(to_chart) is type(from_chart):

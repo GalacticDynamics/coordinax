@@ -12,7 +12,8 @@ __all__: tuple[str, ...] = (
     "Ds",
 )
 
-from typing import Any, Literal, TypeAlias, TypeVar
+from typing import Any, Literal, TypeAlias
+from typing_extensions import TypeVar
 
 import unxt as u
 
@@ -34,5 +35,5 @@ CKey: TypeAlias = str
 CDict: TypeAlias = dict[CKey, Any]
 CDictT = TypeVar("CDictT", bound=CDict)
 
-Ks = TypeVar("Ks", bound=tuple[CKey, ...])
-Ds = TypeVar("Ds", bound=tuple[str | None, ...])
+Ks = TypeVar("Ks", bound=tuple[CKey, ...], default=tuple[str, ...])
+Ds = TypeVar("Ds", bound=tuple[str | None, ...], default=tuple[str | None, ...])

@@ -31,7 +31,9 @@ from .tangent import Tangent, _vectorform_pdoc as _vec_vectorform_pdoc
 from coordinax.internal import OptUSys
 
 ChartT = TypeVar(
-    "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
+    "ChartT",
+    bound=cxc.AbstractChart[Any, Any, Any],
+    default=cxc.AbstractChart[Any, Any, Any],
 )
 
 
