@@ -13,7 +13,7 @@
     <a href="https://codecov.io/gh/GalacticDynamics/coordinax"> <img alt="codecov" src="https://codecov.io/gh/GalacticDynamics/coordinax/graph/badge.svg" /> </a>
     <a href="https://scientific-python.org/specs/spec-0000/"> <img alt="ruff" src="https://img.shields.io/badge/SPEC-0-green?labelColor=%23004811&color=%235CA038" /> </a>
     <a href="https://docs.astral.sh/ruff/"> <img alt="ruff" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json" /> </a>
-    <a href="https://pre-commit.com"> <img alt="pre-commit" src="https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit" /> </a>
+    <a href="https://github.com/j178/prek"> <img alt="prek" src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/j178/prek/master/docs/assets/badge-v0.json" /> </a>
 </p>
 
 ---
@@ -180,7 +180,7 @@ If you found this library to be useful in academic work, then please cite.
 
 ## Development
 
-[![Actions Status][actions-badge]][actions-link] [![Documentation Status][rtd-badge]][rtd-link] [![codecov][codecov-badge]][codecov-link] [![SPEC 0 — Minimum Supported Dependencies][spec0-badge]][spec0-link] [![pre-commit][pre-commit-badge]][pre-commit-link] [![ruff][ruff-badge]][ruff-link]
+[![Actions Status][actions-badge]][actions-link] [![Documentation Status][rtd-badge]][rtd-link] [![codecov][codecov-badge]][codecov-link] [![SPEC 0 — Minimum Supported Dependencies][spec0-badge]][spec0-link] [![prek][prek-badge]][prek-link] [![ruff][ruff-badge]][ruff-link]
 
 We welcome contributions!
 
@@ -191,8 +191,8 @@ For the local development workflow, see `docs/dev.md`. For pull request expectat
 [actions-link]:             https://github.com/GalacticDynamics/coordinax/actions
 [codecov-badge]:            https://codecov.io/gh/GalacticDynamics/unxt/graph/badge.svg
 [codecov-link]:             https://codecov.io/gh/GalacticDynamics/unxt
-[pre-commit-badge]:         https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit
-[pre-commit-link]:          https://pre-commit.com
+[prek-badge]:               https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/j178/prek/master/docs/assets/badge-v0.json
+[prek-link]:                https://github.com/j178/prek
 [pypi-link]:                https://pypi.org/project/coordinax/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/coordinax
 [pypi-version]:             https://img.shields.io/pypi/v/coordinax

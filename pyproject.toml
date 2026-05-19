@@ -103,7 +103,7 @@ docs = [
   "sphinxext-rediraffe>=0.2.7",
 ]
 ide = ["ipykernel>=7.1.0", "jaxmore>=0.2.0"]
-lint = ["pre-commit>=4.5.0", "pylint>=3.3.2", "ty>=0.0.19"]
+lint = ["prek>=0.4.0", "pylint>=3.3.2", "ty>=0.0.19"]
 nox = ["nox>=2024.10.9", "nox-uv>=0.6.3"]
 test = [
   "coordinax.curveframes",
@@ -156,7 +156,12 @@ skip = ["uv.lock"]
 
 
 [tool.repo-review]
-ignore = ["PC140"] # ty is run via nox, not pre-commit
+ignore = [
+  "PC140", # ty is run via prek, not pre-commit
+  "PC901", # custom autoupdate_commit_msg set in .pre-commit-config.yaml
+  "PC902", # custom autofix_commit_msg set in .pre-commit-config.yaml
+  "PC903", # autoupdate_schedule set in .pre-commit-config.yaml
+]
 
 
 [tool.commitizen]

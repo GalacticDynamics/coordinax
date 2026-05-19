@@ -87,7 +87,7 @@ def lint(s: nox.Session, /) -> None:
 @session(uv_groups=["lint"], reuse_venv=True)
 def precommit(s: nox.Session, /) -> None:
     """Run the linter."""
-    s.run("pre-commit", "run", "--all-files", *s.posargs)
+    s.run("prek", "run", "--all-files", *s.posargs)
 
 
 @session(uv_groups=["lint"], reuse_venv=True)

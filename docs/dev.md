@@ -37,7 +37,7 @@ cd coordinax
 uv sync --group dev --extra workspace
 ```
 
-This installs the local development toolchain, including `nox`, `pytest`, `pre-commit`, docs dependencies, and the workspace packages used by the full contributor workflow.
+This installs the local development toolchain, including `nox`, `pytest`, `prek`, docs dependencies, and the workspace packages used by the full contributor workflow.
 
 If you prefer to run tools without activating a shell environment, use `uv run ...` directly. For example:
 
@@ -78,13 +78,13 @@ The authoritative session definitions live in the repository root `noxfile.py`. 
 ### Main Sessions
 
 - `uv run nox -s all`: runs the default contributor gate: lint, test, and docs.
-- `uv run nox -s lint`: runs `precommit`, `pylint`, and `ty`.
+- `uv run nox -s lint`: runs `prek`, `pylint`, and `ty`.
 - `uv run nox -s test`: runs the default test session.
 - `uv run nox -s docs`: builds the documentation.
 
 ### Linting and Type Checks
 
-- `uv run nox -s precommit`: runs all pre-commit hooks.
+- `uv run nox -s precommit`: runs all prek/pre-commit hooks.
 - `uv run nox -s "pylint(package='coordinax')"`: run Pylint for the main package.
 - `uv run nox -s "pylint(package='api')"`: run Pylint for `coordinax.api`.
 - `uv run nox -s "pylint(package='astro')"`: run Pylint for `coordinax.astro`.
