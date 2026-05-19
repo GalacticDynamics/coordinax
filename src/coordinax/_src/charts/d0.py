@@ -4,8 +4,8 @@ __all__ = ("Abstract0D", "Cart0D", "cart0d")
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, final  # noqa: N817
-from typing_extensions import override
+from typing import Any, Final, Literal as L, Self  # noqa: N817
+from typing_extensions import TypeVar, override
 
 import jax.tree_util as jtu
 
@@ -20,7 +20,9 @@ from coordinax._src.euclidean.atlas import (
     EUCLIDEAN_ATLAS_DEFAULT_CHARTS,
     EuclideanAtlas,
 )
-from coordinax._src.euclidean.manifold import R0
+from coordinax._src.euclidean.manifold import R0, Rn
+
+MT = TypeVar("MT", bound=AbstractManifold, default=Rn)
 
 
 class Abstract0D(AbstractDimensionalFlag, n=0):
@@ -52,9 +54,8 @@ ZeroDDims = tuple[()]
 
 @EuclideanAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
-class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
+class Cart0D(AbstractFixedComponentsChart[MT, ZeroDKeys, ZeroDDims], Abstract0D):
     """Zero-dimensional Cartesian chart.
 
     This chart has no coordinate components and no coordinate dimensions.
@@ -71,11 +72,11 @@ class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = R0
+    M: MT = R0  # ty: ignore[invalid-assignment]
 
     @override
     @property
-    def cartesian(self) -> "Cart0D":
+    def cartesian(self) -> Self:
         """Return the canonical Cartesian chart for a 0D chart.
 
         >>> import coordinax.charts as cxc
@@ -85,7 +86,7 @@ class Cart0D(AbstractFixedComponentsChart[ZeroDKeys, ZeroDDims], Abstract0D):
         return self
 
 
-cart0d: Final = Cart0D()
+cart0d: Final = Cart0D(M=R0)
 """The canonical 0D Cartesian chart.
 
 >>> import coordinax.charts as cxc

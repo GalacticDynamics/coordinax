@@ -24,7 +24,9 @@ from coordinax._src.custom_types import CDict, Ds, Ks, OptUSys
 @jax.tree_util.register_static
 @final
 @chart_dataclass_decorator
-class EmbeddedChart(AbstractChart[Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]):
+class EmbeddedChart(
+    AbstractChart[EmbeddedManifold, Ks, Ds], Generic[IntrinsicT, AmbientT, Ks, Ds]
+):
     r"""Chart for intrinsic coordinates on an embedding manifold.
 
     This is a convenience wrapper that combines an intrinsic chart with an

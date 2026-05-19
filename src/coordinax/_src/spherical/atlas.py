@@ -11,12 +11,12 @@ import jax
 
 from coordinax._src.base import AbstractAtlas, AbstractChart
 
-CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])
+CT = TypeVar("CT", bound=type[AbstractChart[Any, Any, Any]])
 
 
-SPHERICAL_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any]]] = {}
+SPHERICAL_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any, Any]]] = {}
 SPHERICAL_ATLAS_ELIGIBLE_CHARTS: Final[
-    weakref.WeakSet[type[AbstractChart[Any, Any]]]
+    weakref.WeakSet[type[AbstractChart[Any, Any, Any]]]
 ] = weakref.WeakSet()
 
 
@@ -59,11 +59,11 @@ class HyperSphericalAtlas(AbstractAtlas):
     ndim: int = 2
     """Dimension of the two-sphere."""
 
-    def default_chart(self) -> AbstractChart[Any, Any]:
+    def default_chart(self) -> AbstractChart[Any, Any, Any]:
         """Return the default chart (SphericalTwoSphere) for this atlas."""
         return SPHERICAL_ATLAS_DEFAULT_CHARTS[self.ndim]
 
-    def has_chart(self, chart: AbstractChart[Any, Any], /) -> bool:
+    def has_chart(self, chart: AbstractChart[Any, Any, Any], /) -> bool:
         """Return whether the atlas supports the given chart.
 
         Examples

@@ -1075,7 +1075,7 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     ```python
     class ChartExample(
-        AbstractFixedComponentsChart[tuple[Literal["x"]], Literal["Length"]]
+        AbstractFixedComponentsChart[Any, tuple[Literal["x"]], Literal["Length"]]
     ):
         pass
     ```

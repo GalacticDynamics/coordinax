@@ -65,8 +65,8 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     def embed(
         self,
         intrinsic_point: CDict,
-        from_intrinsic_chart: AbstractChart[Any, Any],
-        to_ambient_chart: AbstractChart[Any, Any],
+        from_intrinsic_chart: AbstractChart[Any, Any, Any],
+        to_ambient_chart: AbstractChart[Any, Any, Any],
         /,
         *,
         usys: OptUSys = None,
@@ -79,8 +79,8 @@ class EmbeddedManifold(AbstractManifold, Generic[IntrinsicT, AmbientT]):
     def project(
         self,
         ambient_point: CDict,
-        from_ambient_chart: AbstractChart[Any, Any],
-        to_intrinsic_chart: AbstractChart[Any, Any],
+        from_ambient_chart: AbstractChart[Any, Any, Any],
+        to_intrinsic_chart: AbstractChart[Any, Any, Any],
         /,
         *,
         usys: OptUSys = None,

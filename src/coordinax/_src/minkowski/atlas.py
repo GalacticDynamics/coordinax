@@ -11,7 +11,7 @@ import jax
 import coordinax.charts as cxc
 from coordinax._src.base import AbstractAtlas
 
-CT = TypeVar("CT", bound=type[cxc.AbstractChart[Any, Any]])
+CT = TypeVar("CT", bound=type[cxc.AbstractChart[Any, Any, Any]])
 
 
 @jax.tree_util.register_static
@@ -62,9 +62,9 @@ class MinkowskiAtlas(AbstractAtlas):
     ndim: int = 4
     """Dimension of Minkowski spacetime (always 4)."""
 
-    _ELIGIBLE_CHARTS: ClassVar[set[type[cxc.AbstractChart[Any, Any]]]] = set()
+    _ELIGIBLE_CHARTS: ClassVar[set[type[cxc.AbstractChart[Any, Any, Any]]]] = set()
 
-    def default_chart(self) -> cxc.AbstractChart[Any, Any]:
+    def default_chart(self) -> cxc.AbstractChart[Any, Any, Any]:
         """Return the default chart (canonical ``MinkowskiCT``).
 
         Examples
@@ -76,7 +76,7 @@ class MinkowskiAtlas(AbstractAtlas):
         """
         return cxc.minkowskict
 
-    def has_chart(self, chart: cxc.AbstractChart[Any, Any], /) -> bool:
+    def has_chart(self, chart: cxc.AbstractChart[Any, Any, Any], /) -> bool:
         """Return whether the chart belongs to this atlas.
 
         A chart belongs when its dimensionality is 4 and its class is

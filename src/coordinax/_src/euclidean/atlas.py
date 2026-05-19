@@ -13,11 +13,11 @@ import coordinax.charts as cxc
 from coordinax._src.base import AbstractAtlas, AbstractChart
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 
-CT = TypeVar("CT", bound=type[AbstractChart[Any, Any]])
+CT = TypeVar("CT", bound=type[AbstractChart[Any, Any, Any]])
 
-EUCLIDEAN_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any]]] = {}
+EUCLIDEAN_ATLAS_DEFAULT_CHARTS: Final[dict[int, AbstractChart[Any, Any, Any]]] = {}
 
-EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS: weakref.WeakSet[type[AbstractChart[Any, Any]]] = (
+EUCLIDEAN_ATLAS_ELIGIBLE_CHARTS: weakref.WeakSet[type[AbstractChart[Any, Any, Any]]] = (
     weakref.WeakSet()
 )
 
@@ -125,7 +125,7 @@ class EuclideanAtlas(AbstractAtlas):
     ndim: int
     """Dimension of the Euclidean manifold."""
 
-    def default_chart(self) -> AbstractChart[Any, Any]:
+    def default_chart(self) -> AbstractChart[Any, Any, Any]:
         """Return the default chart for this atlas.
 
         Examples
@@ -153,7 +153,7 @@ class EuclideanAtlas(AbstractAtlas):
         """
         return EUCLIDEAN_ATLAS_DEFAULT_CHARTS.get(self.ndim, cxc.cartnd)
 
-    def has_chart(self, chart: AbstractChart[Any, Any], /) -> bool:
+    def has_chart(self, chart: AbstractChart[Any, Any, Any], /) -> bool:
         """Return whether the atlas supports the given chart.
 
         This checks if the chart has the same dimension as the atlas and is

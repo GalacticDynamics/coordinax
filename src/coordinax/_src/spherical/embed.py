@@ -88,12 +88,12 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
     radius: u.AbstractQuantity | float | int = dataclasses.field()
 
     @property
-    def intrinsic(self) -> cxc.AbstractChart[Any, Any]:
+    def intrinsic(self) -> cxc.AbstractChart[Any, Any, Any]:
         """The intrinsic chart is always `coordinax.charts.SphericalTwoSphere`."""
         return cxc.sph2
 
     @property
-    def ambient(self) -> cxc.AbstractChart[Any, Any]:
+    def ambient(self) -> cxc.AbstractChart[Any, Any, Any]:
         """The ambient chart is always `coordinax.charts.Spherical3D`."""
         return cxc.sph3d
 
@@ -110,7 +110,7 @@ class TwoSphereIn3D(AbstractEmbeddingMap[IntrinsicT, AmbientT]):
 
 def embedded_twosphere(
     radius: float | u.AbstractQuantity,
-    ambient: cxc.AbstractChart[Any, Any] = cxc.sph3d,
+    ambient: cxc.AbstractChart[Any, Any, Any] = cxc.sph3d,
 ) -> EmbeddedManifold:
     """Create an `coordinax.manifolds.EmbeddedManifold` for the two-sphere.
 

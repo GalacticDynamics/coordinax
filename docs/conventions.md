@@ -206,7 +206,7 @@ from typing import Any
 
 
 @plum.dispatch
-def process(obj: cxc.AbstractChart[Any, Any], /):
+def process(obj: cxc.AbstractChart[Any, Any, Any], /):
     ...
 ```
 

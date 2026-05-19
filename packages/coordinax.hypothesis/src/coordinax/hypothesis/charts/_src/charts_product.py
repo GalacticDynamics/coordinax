@@ -72,7 +72,7 @@ def cartesian_product_factors(
     ndim: int | None = None,
     min_factors: int = 1,
     max_factors: int = 4,
-) -> tuple[cxc.AbstractChart[Any, Any], ...]:
+) -> tuple[cxc.AbstractChart[Any, Any, Any], ...]:
     """Generate factors and names for a product chart with target dimensionality.
 
     Parameters

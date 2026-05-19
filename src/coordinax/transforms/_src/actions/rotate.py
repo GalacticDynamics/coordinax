@@ -235,7 +235,7 @@ class Rotate(AbstractTransform):
 
     @staticmethod
     def _validate_shape_match(
-        R: HasShape, cart: cxc.AbstractChart[Any, Any], /
+        R: HasShape, cart: cxc.AbstractChart[Any, Any, Any], /
     ) -> RMatrix:
         n = R.shape[0]
         return eqx.error_if(
@@ -244,7 +244,7 @@ class Rotate(AbstractTransform):
             _MSG_R_X_SHAPE_MISMATCH.format(R=R, cart=cart),
         )
 
-    def _get_R(self, cart: cxc.AbstractChart[Any, Any], /) -> RMatrix:
+    def _get_R(self, cart: cxc.AbstractChart[Any, Any, Any], /) -> RMatrix:
         R = self.R
         R = eqx.error_if(R, callable(R), "need to call `materialize_transform`.")
         R = self._validate_square(R)
@@ -757,7 +757,10 @@ def act(
     }
 
     def _maybe(
-        factor_chart: cxc.AbstractChart[Any, Any], part: CDict, /, **ats: CDict | None
+        factor_chart: cxc.AbstractChart[Any, Any, Any],
+        part: CDict,
+        /,
+        **ats: CDict | None,
     ) -> CDict:
         # Determine if this factor's chart should be rotated.
         cart = factor_chart.cartesian

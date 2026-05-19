@@ -238,7 +238,7 @@ def pt_map(
 # ===================================================================
 # Self representation conversions
 
-IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any]], ...]] = (
+IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any, Any]], ...]] = (
     # 0D
     Cart0D,
     # 1D

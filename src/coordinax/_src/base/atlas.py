@@ -105,7 +105,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
     """Dimension of the manifold that this atlas covers."""
 
     @abc.abstractmethod
-    def default_chart(self) -> "coordinax.charts.AbstractChart[Any, Any]":
+    def default_chart(self) -> "coordinax.charts.AbstractChart[Any, Any, Any]":
         """Return a default chart from the atlas.
 
         >>> import coordinax.manifolds as cxm
@@ -118,7 +118,7 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
 
     def default_chart_for(
         self, M: "coordinax.manifolds.AbstractManifold", /
-    ) -> "coordinax.charts.AbstractChart[Any, Any]":
+    ) -> "coordinax.charts.AbstractChart[Any, Any, Any]":
         """Return a default chart from the atlas for the given manifold.
 
         This is a thin convenience wrapper over ``self.default_chart()`` that
@@ -145,7 +145,9 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         return dataclasses.replace(chart, M=M)
 
     @abc.abstractmethod
-    def has_chart(self, chart: "coordinax.charts.AbstractChart[Any, Any]", /) -> bool:
+    def has_chart(
+        self, chart: "coordinax.charts.AbstractChart[Any, Any, Any]", /
+    ) -> bool:
         """Return whether the atlas supports the given chart.
 
         >>> import coordinax.manifolds as cxm
@@ -159,7 +161,9 @@ class AbstractAtlas(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError  # pragma: no cover
 
-    def __contains__(self, chart: "coordinax.charts.AbstractChart[Any, Any]") -> bool:
+    def __contains__(
+        self, chart: "coordinax.charts.AbstractChart[Any, Any, Any]"
+    ) -> bool:
         """Return whether the atlas supports the given chart.
 
         >>> import coordinax.manifolds as cxm

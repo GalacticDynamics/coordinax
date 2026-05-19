@@ -22,15 +22,15 @@ __all__ = (
 
 import dataclasses
 
-from typing import Any, Final, Literal as L, NoReturn, final  # noqa: N817
-from typing_extensions import override
+from typing import Any, Final, Literal as L, NoReturn  # noqa: N817
+from typing_extensions import TypeVar, override
 
 import jax.tree_util as jtu
 
 import unxt as u
 
 from .atlas import SPHERICAL_ATLAS_DEFAULT_CHARTS, HyperSphericalAtlas
-from .manifold import S1, S2
+from .manifold import S1, S2, Sn
 from coordinax._src.base import (
     AbstractFixedComponentsChart,
     AbstractManifold,
@@ -43,13 +43,15 @@ from coordinax._src.constants import Deg0, Deg90, Deg180
 from coordinax._src.custom_types import Ang, CDictT, Ds, Ks
 from coordinax._src.exceptions import NoGlobalCartesianChartError
 
+MT = TypeVar("MT", bound=AbstractManifold, default=Sn)
+
 _MSG_NO_CART: Final = (
     "{cls} has no global Cartesian representation. Use an embedding "
     "via EmbeddedChart or a specific local projection if/when provided."
 )
 
 
-class AbstractSphericalHyperSphere(AbstractFixedComponentsChart[Ks, Ds]):
+class AbstractSphericalHyperSphere(AbstractFixedComponentsChart[MT, Ks, Ds]):
     r"""Abstract base class for intrinsic charts on the unit hypersphere.
 
     All hypersphere charts represent coordinates on the surface of a unit
@@ -97,7 +99,7 @@ class AbstractSphericalHyperSphere(AbstractFixedComponentsChart[Ks, Ds]):
 # Base class for all circle charts
 
 
-class AbstractSphericalOneSphere(AbstractSphericalHyperSphere[Ks, Ds], Abstract1D):
+class AbstractSphericalOneSphere(AbstractSphericalHyperSphere[MT, Ks, Ds], Abstract1D):
     r"""Abstract base class for intrinsic charts on the unit circle.
 
     All circle charts represent coordinates on the surface of a unit circle.
@@ -120,10 +122,9 @@ CircularOneSphereDims = tuple[Ang]
 
 @HyperSphericalAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class CircularOneSphere(
-    AbstractSphericalOneSphere[CircularOneSphereKeys, CircularOneSphereDims]
+    AbstractSphericalOneSphere[MT, CircularOneSphereKeys, CircularOneSphereDims]
 ):
     """Standard circular coordinates on the unit circle.
 
@@ -149,7 +150,7 @@ class CircularOneSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = S1
+    M: MT = S1  # ty: ignore[invalid-assignment]
 
 
 sph1: Final = CircularOneSphere()
@@ -162,7 +163,7 @@ SPHERICAL_ATLAS_DEFAULT_CHARTS[1] = sph1
 
 
 @chart_dataclass_decorator
-class AbstractSphericalTwoSphere(AbstractSphericalHyperSphere[Ks, Ds], Abstract2D):
+class AbstractSphericalTwoSphere(AbstractSphericalHyperSphere[MT, Ks, Ds], Abstract2D):
     r"""Abstract base class for intrinsic charts on the unit two-sphere.
 
     All 2-sphere charts represent coordinates on the surface of a unit sphere.
@@ -185,7 +186,7 @@ class AbstractSphericalTwoSphere(AbstractSphericalHyperSphere[Ks, Ds], Abstract2
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = S2
+    M: MT = S2  # ty: ignore[invalid-assignment]
 
 
 # ===============================================================================
@@ -198,10 +199,9 @@ SphericalTwoSphereDims = tuple[Ang, Ang]
 
 @HyperSphericalAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class SphericalTwoSphere(
-    AbstractSphericalTwoSphere[SphericalTwoSphereKeys, SphericalTwoSphereDims],
+    AbstractSphericalTwoSphere[MT, SphericalTwoSphereKeys, SphericalTwoSphereDims],
 ):
     r"""Intrinsic chart on the unit two-sphere with components ``(theta, phi)``.
 
@@ -235,7 +235,7 @@ class SphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = S2
+    M: MT = S2  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         # call base check
@@ -259,11 +259,10 @@ LonLatSphericalTwoSphereDims = tuple[Ang, Ang]
 
 @HyperSphericalAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class LonLatSphericalTwoSphere(
     AbstractSphericalTwoSphere[
-        LonLatSphericalTwoSphereKeys, LonLatSphericalTwoSphereDims
+        MT, LonLatSphericalTwoSphereKeys, LonLatSphericalTwoSphereDims
     ]
 ):
     r"""Longitude-latitude chart on the two-sphere.
@@ -289,7 +288,7 @@ class LonLatSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = S2
+    M: MT = S2  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -311,11 +310,10 @@ LonCosLatSphericalTwoSphereDims = tuple[Ang, Ang]
 
 @HyperSphericalAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class LonCosLatSphericalTwoSphere(
     AbstractSphericalTwoSphere[
-        LonCosLatSphericalTwoSphereKeys, LonCosLatSphericalTwoSphereDims
+        MT, LonCosLatSphericalTwoSphereKeys, LonCosLatSphericalTwoSphereDims
     ]
 ):
     r"""Longitude-cos(latitude) chart on the two-sphere.
@@ -337,7 +335,7 @@ class LonCosLatSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = S2
+    M: MT = S2  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -346,7 +344,7 @@ class LonCosLatSphericalTwoSphere(
         return data
 
 
-loncoslat_sph2: Final = LonCosLatSphericalTwoSphere()
+loncoslat_sph2: Final = LonCosLatSphericalTwoSphere(M=S2)
 """Longitude-cos(latitude) spherical coordinates on the two-sphere."""
 
 # ===============================================================================
@@ -357,10 +355,9 @@ MathSphericalTwoSphereKeys = tuple[L["theta"], L["phi"]]
 
 @HyperSphericalAtlas.register
 @jtu.register_static
-@final
 @chart_dataclass_decorator
 class MathSphericalTwoSphere(
-    AbstractSphericalTwoSphere[MathSphericalTwoSphereKeys, SphericalTwoSphereDims]
+    AbstractSphericalTwoSphere[MT, MathSphericalTwoSphereKeys, SphericalTwoSphereDims]
 ):
     r"""Math-convention chart on the two-sphere.
 
@@ -384,7 +381,7 @@ class MathSphericalTwoSphere(
     """
 
     _: dataclasses.KW_ONLY
-    M: AbstractManifold = S2
+    M: MT = S2  # ty: ignore[invalid-assignment]
 
     def check_data(self, data: CDictT, /, *, values: bool = False, **kw: Any) -> CDictT:
         super().check_data(data, **kw)
@@ -393,5 +390,5 @@ class MathSphericalTwoSphere(
         return data
 
 
-math_sph2: Final = MathSphericalTwoSphere()
+math_sph2: Final = MathSphericalTwoSphere(M=S2)
 """Standard spherical coordinates on the two-sphere with mathematics convention."""

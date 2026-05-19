@@ -22,7 +22,7 @@ from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 from coordinax._src.utils import uconvert_to_rad
 
-IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any]], ...]] = (
+IDENTITY_TRANSFORM_CHARTS: Final[tuple[type[AbstractChart[Any, Any, Any]], ...]] = (
     SphericalTwoSphere,
     LonLatSphericalTwoSphere,
     LonCosLatSphericalTwoSphere,

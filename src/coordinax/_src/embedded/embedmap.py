@@ -12,8 +12,8 @@ import jax
 from coordinax._src.base import AbstractChart
 from coordinax._src.custom_types import CDict, OptUSys
 
-IntrinsicT = TypeVar("IntrinsicT", bound=AbstractChart[Any, Any])
-AmbientT = TypeVar("AmbientT", bound=AbstractChart[Any, Any])
+IntrinsicT = TypeVar("IntrinsicT", bound=AbstractChart[Any, Any, Any])
+AmbientT = TypeVar("AmbientT", bound=AbstractChart[Any, Any, Any])
 
 
 @jax.tree_util.register_static

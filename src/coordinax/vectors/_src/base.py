@@ -34,7 +34,9 @@ if TYPE_CHECKING:
 Ks = TypeVar("Ks", bound=tuple[str, ...])
 Ds = TypeVar("Ds", bound=tuple[str | None, ...])
 ChartT = TypeVar(
-    "ChartT", bound=cxc.AbstractChart[Any, Any], default=cxc.AbstractChart[Any, Any]
+    "ChartT",
+    bound=cxc.AbstractChart[Any, Any, Any],
+    default=cxc.AbstractChart[Any, Any, Any],
 )
 GeomT = TypeVar("GeomT", bound=cxr.AbstractGeometry, default=cxr.AbstractGeometry)
 BasisT = TypeVar("BasisT", bound=cxr.AbstractBasis, default=cxr.AbstractBasis)

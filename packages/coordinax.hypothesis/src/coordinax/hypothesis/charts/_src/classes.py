@@ -21,7 +21,7 @@ def chart_classes(
     *,
     exclude_abstract: bool | st.SearchStrategy[bool] = True,
     exclude: tuple[type, ...] = (),
-) -> type[cxc.AbstractChart[Any, Any]]:
+) -> type[cxc.AbstractChart[Any, Any, Any]]:
     """Strategy to draw chart classes.
 
     Parameters

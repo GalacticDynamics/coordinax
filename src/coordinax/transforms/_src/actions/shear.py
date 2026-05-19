@@ -75,14 +75,14 @@ class Shear(AbstractTransform):
 
     @staticmethod
     def _validate_shape_match(
-        H: HMatrix, cart: cxc.AbstractChart[Any, Any], /
+        H: HMatrix, cart: cxc.AbstractChart[Any, Any, Any], /
     ) -> HMatrix:
         n = H.shape[0]
         if cart.ndim != n or len(cart.components) != n:
             raise ValueError(_MSG_H_X_SHAPE_MISMATCH.format(H=H, cart=cart))
         return H
 
-    def _get_H(self, cart: cxc.AbstractChart[Any, Any], /) -> HMatrix:
+    def _get_H(self, cart: cxc.AbstractChart[Any, Any, Any], /) -> HMatrix:
         H = self._validate_square(self.H)
         return self._validate_shape_match(H, cart)
 
@@ -237,7 +237,10 @@ def act(
     }
 
     def _maybe(
-        factor_chart: cxc.AbstractChart[Any, Any], part: CDict, /, **ats: CDict | None
+        factor_chart: cxc.AbstractChart[Any, Any, Any],
+        part: CDict,
+        /,
+        **ats: CDict | None,
     ) -> CDict:
         cart = factor_chart.cartesian
         if cart.ndim != n or len(cart.components) != n:
