@@ -97,22 +97,26 @@ class TestTranslateSemanticKindField:
 
 
 class TestTranslateDisplacementSemantic:
-    """Translate with semantic_kind=dpl (default) acts on points and displacements."""
+    """Translate with semantic_kind=dpl (default) shifts points only.
+
+    Per spec: a spatial Translate is identity for all tangent representations
+    (displacements, velocities, accelerations).
+    """
 
     def test_shifts_point(self, translate_dpl, point_cdict, cart_delta):
         result = cxfm.act(translate_dpl, None, point_cdict, cxc.cart3d, cxr.point)
         for k in point_cdict:
             assert jnp.allclose(result[k], point_cdict[k] + cart_delta[k])
 
-    def test_shifts_coord_disp(self, translate_dpl, disp_cdict, cart_delta):
+    def test_identity_for_coord_disp(self, translate_dpl, disp_cdict):
         result = cxfm.act(translate_dpl, None, disp_cdict, cxc.cart3d, cxr.coord_disp)
         for k in disp_cdict:
-            assert jnp.allclose(result[k], disp_cdict[k] + cart_delta[k])
+            assert jnp.allclose(result[k], disp_cdict[k])
 
-    def test_shifts_phys_disp(self, translate_dpl, disp_cdict, cart_delta):
+    def test_identity_for_phys_disp(self, translate_dpl, disp_cdict):
         result = cxfm.act(translate_dpl, None, disp_cdict, cxc.cart3d, cxr.phys_disp)
         for k in disp_cdict:
-            assert jnp.allclose(result[k], disp_cdict[k] + cart_delta[k])
+            assert jnp.allclose(result[k], disp_cdict[k])
 
     def test_identity_for_velocity(self, translate_dpl, vel_cdict):
         result = cxfm.act(translate_dpl, None, vel_cdict, cxc.cart3d, cxr.coord_vel)

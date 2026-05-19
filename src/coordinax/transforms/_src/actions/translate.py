@@ -288,7 +288,11 @@ def _act_translate_cdict(
     /,
     usys: OptUSys = None,
 ) -> CDict:
-    """Displacement-semantic translate: shifts points and displacement vectors."""
+    """Displacement-semantic translate: shifts points only.
+
+    Per the spec, a spatial ``Translate`` is identity for all tangent
+    representations (displacements, velocities, accelerations).
+    """
     op_eval = materialize_transform(op, tau)
 
     if rep == cxr.point:
@@ -317,25 +321,8 @@ def _act_translate_cdict(
         )
         return cast("CDict", cxc.pt_map(x_cart2, cart, chart, usys=usys))
 
-    if isinstance(rep.semantic_kind, cxr.Displacement):
-        # Shift displacement-valued tangent representations.
-        if op_eval.chart != chart:
-            msg = (
-                f"Translate.delta is defined in chart {op_eval.chart!r}, "
-                f"but the representation is in chart {chart!r}. "
-                "Convert delta to the target chart before constructing Translate."
-            )
-            raise ValueError(msg)
-        return cast(
-            "CDict",
-            jtu.map(
-                jnp.add,
-                *((x, op_eval.delta) if op_eval.right_add else (op_eval.delta, x)),
-                is_leaf=u.quantity.is_any_quantity,
-            ),
-        )
-
-    # Identity for velocity, acceleration, and other representations.
+    # Identity for displacements, velocities, accelerations, and all other
+    # tangent representations.
     return x
 
 

@@ -73,54 +73,6 @@ def _angle_unit(q: Any, /) -> u.AbstractUnit:
 
 @plum.dispatch
 def metric_representation(
-    M: EuclideanManifold, chart: Cart1D | Cart2D | Cart3D | CartND, /
-) -> type[DiagonalMetric]:
-    """Euclidean manifold in a Cartesian chart → :class:`DiagonalMetric`.
-
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
-    >>> from coordinax._src.metric.matrix import DiagonalMetric
-
-    >>> metric_representation(cxm.R3, cxc.cart3d)
-    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
-
-    """
-    del M, chart
-    return DiagonalMetric
-
-
-@plum.dispatch
-def metric_representation(
-    M: EuclideanManifold,
-    chart: Radial1D
-    | Polar2D
-    | Cylindrical3D
-    | Spherical3D
-    | MathSpherical3D
-    | LonLatSpherical3D,
-    /,
-) -> type[DiagonalMetric]:
-    """Euclidean manifold in an orthogonal curvilinear chart → `DiagonalMetric`.
-
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.manifolds as cxm
-    >>> from coordinax.api.manifolds import metric_representation
-    >>> from coordinax._src.metric.matrix import DiagonalMetric
-
-    >>> metric_representation(cxm.R2, cxc.polar2d)
-    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
-
-    >>> metric_representation(cxm.R3, cxc.sph3d)
-    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
-
-    """
-    del M, chart
-    return DiagonalMetric
-
-
-@plum.dispatch
-def metric_representation(
     M: EuclideanManifold, chart: AbstractChart, /
 ) -> type[DenseMetric]:
     """Euclidean manifold in a general (non-Cartesian) chart → `DenseMetric`.
@@ -138,6 +90,44 @@ def metric_representation(
     """
     del M, chart
     return DenseMetric
+
+
+@plum.dispatch
+def metric_representation(
+    M: EuclideanManifold,
+    chart: Cart1D
+    | Cart2D
+    | Cart3D
+    | CartND
+    | Radial1D
+    | Polar2D
+    | Cylindrical3D
+    | Spherical3D
+    | MathSpherical3D
+    | LonLatSpherical3D,
+    /,
+) -> type[DiagonalMetric]:
+    """Euclidean manifold in a Cartesian or orthogonal curvilinear chart.
+
+    Returns :class:`DiagonalMetric`.
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+    >>> from coordinax.api.manifolds import metric_representation
+    >>> from coordinax._src.metric.matrix import DiagonalMetric
+
+    >>> metric_representation(cxm.R3, cxc.cart3d)
+    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
+
+    >>> metric_representation(cxm.R2, cxc.polar2d)
+    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
+
+    >>> metric_representation(cxm.R3, cxc.sph3d)
+    <class 'coordinax._src.metric.matrix.DiagonalMetric'>
+
+    """
+    del M, chart
+    return DiagonalMetric
 
 
 # =====================================================================
