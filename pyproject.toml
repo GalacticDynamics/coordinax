@@ -473,7 +473,11 @@ quantity.str.use_short_name = true
 
 [tool.uv]
 # Temporary constraint to restrict JAX version
-constraint-dependencies = ["numpy<2.4.0"]
+constraint-dependencies = [
+  "numpy<2.4.0",
+  "starlette>=1.0.1",
+  "tornado>=6.5.6",
+]
 
 [tool.uv.sources]
 "coordinax.api"             = { workspace = true }
