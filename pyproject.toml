@@ -473,7 +473,7 @@ quantity.str.use_short_name = true
 
 [tool.uv]
 constraint-dependencies = [
-  "numpy<2.4.0",  # Temporary constraint to restrict JAX version
+  "numpy<2.4.0",      # Temporary constraint to restrict JAX version
   "starlette>=1.0.1",
   "tornado>=6.5.6",
 ]
