@@ -324,6 +324,15 @@ xfail_strict = true
 COORDINAX_ENABLE_RUNTIME_TYPECHECKING = "beartype.beartype"
 JAX_ENABLE_X64                        = "1"
 
+[tool.ty]
+environment.extra-paths = [
+  "packages/coordinax.api/src",
+  "packages/coordinax.astro/src",
+  "packages/coordinax.curveframes/src",
+  "packages/coordinax.hypothesis/src",
+  "packages/coordinax.interop.astropy/src",
+]
+
 [tool.ty.src]
 exclude = [
   "tests",

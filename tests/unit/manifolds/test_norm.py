@@ -90,7 +90,7 @@ class TestNormSphere:
 
     def test_equator_equal_components(self):
         """At equator sin(theta)=1, norm = sqrt(1 + 1) = sqrt(2)."""
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         v = {"theta": u.Q(1, "rad/s"), "phi": u.Q(1, "rad/s")}
         result = cxm.norm(v, metric, cxc.sph2, at=p)
@@ -98,7 +98,7 @@ class TestNormSphere:
 
     def test_near_pole_phi_vanishes(self):
         """Near north pole, phi contribution -> 0."""
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         p = {"theta": u.Angle(0.001, "rad"), "phi": u.Angle(0, "rad")}
         v = {"theta": u.Q(0, "rad/s"), "phi": u.Q(1, "rad/s")}
         result = cxm.norm(v, metric, cxc.sph2, at=p)
@@ -106,7 +106,7 @@ class TestNormSphere:
 
     def test_theta_only_norm_is_one(self):
         """Pure theta motion has norm 1."""
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         for theta_val in [0.1, jnp.pi / 4, jnp.pi / 2]:
             p = {"theta": u.Angle(theta_val, "rad"), "phi": u.Angle(0, "rad")}
             v = {"theta": u.Q(1, "rad/s"), "phi": u.Q(0, "rad/s")}
@@ -208,6 +208,16 @@ class TestNormBareCDict:
         assert jnp.allclose(result, 5)
         assert not isinstance(result, u.AbstractQuantity)
 
+    def test_curved_chart_bare_cdict_with_usys(self):
+        """Bare CDict on a curved chart with usys provided returns bare Array."""
+        metric = cxm.RoundMetric(ndim=2)
+        at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
+        v = {"theta": jnp.array(1.0), "phi": jnp.array(0.0)}
+        result = cxm.norm(v, metric, cxc.sph2, at=at, usys=u.unitsystems.si)
+        # v=(1,0) at equator: g_θθ=1, so norm = 1
+        assert jnp.allclose(result, 1.0, atol=1e-6)
+        assert not isinstance(result, u.AbstractQuantity)
+
 
 # =============================================================================
 # cxm.norm() with a single AbstractQuantity (1-D overload)
@@ -252,14 +262,14 @@ class TestNormMetricWrapper:
     """Tests for metric.norm() convenience method."""
 
     def test_euclidean_cdict_quantities(self):
-        metric = cxm.EuclideanMetric(3)
+        metric = cxm.FlatMetric(3)
         at = {"x": jnp.array(0), "y": jnp.array(0), "z": jnp.array(0)}
         v = {"x": u.Q(3, "m/s"), "y": u.Q(4, "m/s"), "z": u.Q(0, "m/s")}
         result = metric.norm(v, cxc.cart3d, at=at)
         assert qnp.allclose(result, u.Q(5, "m/s"), atol=u.Q(1e-5, "m/s"))
 
     def test_euclidean_bare_array_with_usys(self):
-        metric = cxm.EuclideanMetric(3)
+        metric = cxm.FlatMetric(3)
         at = {"x": jnp.array(0), "y": jnp.array(0), "z": jnp.array(0)}
         result = metric.norm(
             jnp.array([3, 4, 0]), cxc.cart3d, at=at, usys=u.unitsystems.si
@@ -267,7 +277,7 @@ class TestNormMetricWrapper:
         assert jnp.allclose(result, 5)
 
     def test_euclidean_bare_cdict_with_usys(self):
-        metric = cxm.EuclideanMetric(3)
+        metric = cxm.FlatMetric(3)
         at = {"x": jnp.array(0), "y": jnp.array(0), "z": jnp.array(0)}
         v = {"x": jnp.array(3), "y": jnp.array(4), "z": jnp.array(0)}
         result = metric.norm(v, cxc.cart3d, at=at, usys=u.unitsystems.si)
@@ -275,7 +285,7 @@ class TestNormMetricWrapper:
 
     def test_agrees_with_functional_api(self):
         """metric.norm(v, chart, at=at) == cxm.norm(v, metric, chart, at=at)."""
-        metric = cxm.EuclideanMetric(3)
+        metric = cxm.FlatMetric(3)
         at = {"x": jnp.array(0), "y": jnp.array(0), "z": jnp.array(0)}
         v = {"x": u.Q(3, "m"), "y": u.Q(4, "m"), "z": u.Q(0, "m")}
         result_wrapper = metric.norm(v, cxc.cart3d, at=at)
@@ -283,8 +293,8 @@ class TestNormMetricWrapper:
         assert qnp.allclose(result_wrapper, result_functional, atol=u.Q(1e-5, "m"))
 
     def test_spherical_metric_wrapper_matches_direct(self):
-        """HyperSphericalMetric.norm matches cxm.norm at S² equator."""
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        """RoundMetric.norm matches cxm.norm at S² equator."""
+        metric = cxm.RoundMetric(ndim=2)
         at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         v = {"theta": u.Q(1, "rad/s"), "phi": u.Q(0, "rad/s")}
         result_wrapper = metric.norm(v, cxc.sph2, at=at)
@@ -479,7 +489,7 @@ class TestNormErrors:
 
     def test_metric_mismatch_raises_value_error(self):
         """Passing a metric that doesn't belong to the chart raises ValueError."""
-        wrong_metric = cxm.EuclideanMetric(3)  # sph2 uses HyperSphericalMetric(ndim=2)
+        wrong_metric = cxm.FlatMetric(3)  # sph2 uses RoundMetric(ndim=2)
         at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         v = {"theta": u.Q(1, "rad/s"), "phi": u.Q(0, "rad/s")}
         with pytest.raises(ValueError, match=r"[Mm]etric"):
@@ -492,10 +502,10 @@ class TestNormErrors:
 
 
 class TestNormJAXCompatSphere:
-    """JIT and vmap for norm() on the HyperSphericalMetric."""
+    """JIT and vmap for norm() on the RoundMetric."""
 
     def test_jit_sph2_cdict_quantities(self):
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
 
         @jax.jit
@@ -508,7 +518,7 @@ class TestNormJAXCompatSphere:
 
     def test_vmap_over_base_point_phi_norm_equals_sin_theta(self):
         """Norm of unit phi-velocity = sin(theta) on S²."""
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         v = {"theta": u.Q(0, "rad/s"), "phi": u.Q(1, "rad/s")}
         thetas = jnp.array([jnp.pi / 6, jnp.pi / 4, jnp.pi / 2])
         expected = jnp.sin(thetas)  # g_φφ = sin²θ → norm = |sinθ|
@@ -523,7 +533,7 @@ class TestNormJAXCompatSphere:
 
     def test_vmap_over_vectors_at_fixed_point(self):
         """Norm scales linearly with vector magnitude."""
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         at = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         magnitudes = jnp.array([1, 2, 3])
         v_batch = {
@@ -535,7 +545,7 @@ class TestNormJAXCompatSphere:
 
     def test_position_dependence_for_curved_metric(self):
         """Norm of phi-velocity differs at different latitudes on S²."""
-        metric = cxm.HyperSphericalMetric(ndim=2)
+        metric = cxm.RoundMetric(ndim=2)
         v = {"theta": u.Q(0, "rad/s"), "phi": u.Q(1, "rad/s")}
         at_equator = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0, "rad")}
         at_30deg = {"theta": u.Angle(jnp.pi / 6, "rad"), "phi": u.Angle(0, "rad")}

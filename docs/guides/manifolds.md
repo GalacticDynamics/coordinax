@@ -332,9 +332,9 @@ Three equivalent call forms are available:
 
 - **Via manifold**: `manifold.norm(v, chart, at=at)` — uses the manifold's metric automatically.
 - **Via metric**: `metric.norm(v, chart, at=at)` — uses the metric object directly.
-- **Functional form**: `cxm.norm(v, metric_or_manifold, chart, at=at)`.
+- **Functional form**: `cxm.norm(v, chart, at=at)`.
 
-The `at` keyword argument specifies the base point for position-dependent metrics (for example `HyperSphericalMetric`). For flat metrics such as `EuclideanMetric`, `at` is not always required by the interface and does not affect the result numerically.
+The `at` keyword argument specifies the base point for position-dependent metrics (for example `RoundMetric`), where it is required. For flat Euclidean Cartesian fast paths (`FlatMetric` with a `CartND` chart), `at` may be omitted because the metric is constant and does not depend on the base point.
 
 ### Euclidean norms with Quantity components
 

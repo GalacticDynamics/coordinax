@@ -50,7 +50,7 @@ def norm(G: Array, v: Array, /) -> Array:
     return jnp.sqrt(jnp.einsum("...i,...ij,...j->...", v, G, v))
 
 
-array_norm = norm.invoke(Array, Array)
+array_norm = norm.invoke(Array, Array)  # ty: ignore[unresolved-attribute]
 
 
 @plum.dispatch
@@ -206,7 +206,7 @@ def norm(
 
     This was using the Euclidean metric, but it also works on curved metrics.
 
-    >>> metric = cxm.HyperSphericalMetric(2)
+    >>> metric = cxm.RoundMetric(2)
     >>> at = {"theta": u.Q(jnp.pi / 4, "rad"), "phi": u.Q(1.0, "rad")}
     >>> v = {"theta": u.Q(0.5, "rad/s"), "phi": u.Q(0.5, "rad/s")}
     >>> cxm.norm(v, metric, cxc.sph2, at=at)
@@ -214,7 +214,13 @@ def norm(
 
     """
     keys = chart.components
-    is_qty = any(map(is_any_quantity, v.values()))
+    qty_flags = [is_any_quantity(val) for val in v.values()]
+    if any(qty_flags) and not all(qty_flags):
+        raise TypeError(
+            "norm(): mixed CDict with both Quantity and bare Array values is not "
+            "supported. All components must be either all Quantity or all bare Array."
+        )
+    is_qty = all(qty_flags)
 
     if metric != chart.M.metric:
         raise ValueError("Metric-level dispatch: metric must match chart's metric")
@@ -227,10 +233,10 @@ def norm(
         )
 
     # Compute metric matrix; metric_matrix handles both bare and quantity at
-    G = metric.metric_matrix(chart, at=at, usys=usys)
+    G = metric.metric_matrix(chart, at=at, usys=usys)  # ty: ignore[unresolved-attribute]
 
-    if not is_qty:  # Bare arrays
-        v_vec = jnp.stack([jnp.asarray(v[k]) for k in keys])
+    if not is_qty:  # Bare arrays — stack on last axis for correct batch broadcasting
+        v_vec = jnp.stack([jnp.asarray(v[k]) for k in keys], axis=-1)
         return jnp.sqrt(jnp.einsum("...i,...ij,...j->...", v_vec, G, v_vec))
 
     # Pack CDict of quantities into a QMatrix, preserving per-component
@@ -321,7 +327,7 @@ def norm(
 
     Unit-sphere S²: ``v = (1, 0)`` at the equator has norm 1:
 
-    >>> M = cxm.HyperSphericalMetric(2)
+    >>> M = cxm.RoundMetric(2)
     >>> at_eq = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
     >>> cxm.norm(jnp.array([1.0, 0.0]), M, cxc.sph2,
     ...          at=at_eq, usys=u.unitsystems.si)
@@ -334,8 +340,8 @@ def norm(
             "(no unit information). "
             "Example: pass `usys=unxt.unitsystems.si`."
         )
-    G = metric.metric_matrix(chart, at=at, usys=usys)
-    return cxmapi.norm(G, v)
+    G = metric.metric_matrix(chart, at=at, usys=usys)  # ty: ignore[unresolved-attribute]
+    return cxmapi.norm(G, v)  # ty: ignore[invalid-return-type]
 
 
 # ===========================================================================
@@ -343,14 +349,78 @@ def norm(
 
 
 @plum.dispatch
-def norm(v: CDict, chart: AbstractChart, /, *, at: CDict, usys: OptUSys = None) -> Any:
-    r"""Norm of a vector w.r.t. the chart.
+def norm(
+    v: CDict, chart: AbstractChart, /, *, at: CDict | None = None, usys: OptUSys = None
+) -> Any:
+    r"""Norm of a CDict vector w.r.t. the chart.
 
-    Dispatches to the metric-level overload, passing the chart's metric and the
-    chart itself.
+    Dispatches to the metric-level overload via the chart's attached metric.
+    For flat (Euclidean) charts ``at`` is optional; for curved metrics it is
+    required and passed through to ``metric.metric_matrix``.
 
     """
     return cxmapi.norm(v, chart.M.metric, chart, at=at, usys=usys)  # type: ignore[return-value]
+
+
+@plum.dispatch
+def norm(
+    v: Array, chart: AbstractChart, /, *, at: Any = None, usys: Any = None
+) -> Array:
+    r"""Norm of a packed ``jax.Array`` w.r.t. the chart.
+
+    Delegates to the metric-level ``norm(v, metric, chart, ...)`` overload via
+    the chart's attached metric.  For Euclidean Cartesian charts the fast-path
+    ``jnp.linalg.norm`` overload is picked automatically.  For curved charts
+    ``at`` and ``usys`` are required; missing ``usys`` raises ``TypeError``.
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    Euclidean fast-path (no ``at`` needed):
+
+    >>> cxm.norm(jnp.array([3.0, 4.0, 0.0]), cxc.cart3d)
+    Array(5., dtype=float64)
+
+    Curved chart (``at`` and ``usys`` required):
+
+    >>> at = {"theta": jnp.array(jnp.pi / 2), "phi": jnp.array(0.0)}
+    >>> cxm.norm(jnp.array([1.0, 0.0]), cxc.sph2, at=at, usys=u.unitsystems.si)
+    Array(1., dtype=float64)
+
+    """
+    return cxmapi.norm(v, chart.M.metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def norm(
+    v: u.AbstractQuantity, chart: AbstractChart, /, *, at: Any = None, usys: Any = None
+) -> u.AbstractQuantity:
+    r"""Norm of a single ``AbstractQuantity`` w.r.t. the chart.
+
+    Wraps the quantity in a one-element CDict keyed by the chart's first
+    component name, then delegates to the metric-level overload.  Primarily
+    useful for 1-D charts (``Cart1D``).
+
+    Examples
+    --------
+    >>> import jax.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.manifolds as cxm
+
+    >>> at = {"x": jnp.array(0.0)}
+    >>> cxm.norm(u.Q(5.0, "m/s"), cxc.cart1d, at=at)
+    Q(5., 'm / s')
+
+    >>> cxm.norm(u.Q(-3.0, "m"), cxc.cart1d, at=at)
+    Q(3., 'm')
+
+    """
+    return cxmapi.norm(v, chart.M.metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
 
 # ===========================================================================
