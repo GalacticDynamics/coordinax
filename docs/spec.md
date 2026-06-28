@@ -2699,12 +2699,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     \|v\|_g = \sqrt{g_p(v, v)}
     $$
 
-    where $g$ is the metric tensor and $p$ is the base point at which the metric is evaluated. It dispatches on the type of the second argument (either an `AbstractMetric` or an `AbstractManifold`) and on the type of `v`.
+    where $g$ is the metric tensor and $p$ is the base point at which the metric is evaluated. It dispatches on the type of `v` and on whether the metric is supplied implicitly (via a `chart`, using its attached `chart.M.metric`) or explicitly (via an `AbstractMetric`).
 
-    **Signature:**
+    **Signatures:**
 
     ```
-    cxm.norm(v, chart, /, *, at=None, usys=None)
+    cxm.norm(v, chart, /, *, at=None, usys=None)          # chart-level: uses chart.M.metric
+    cxm.norm(v, metric, chart, /, *, at=None, usys=None)  # metric-level: explicit metric
     ```
 
     Or via convenience wrappers on metric and manifold objects:
@@ -2713,6 +2714,8 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     metric.norm(v, chart, at=at, usys=usys)
     manifold.norm(v, chart, at=at, usys=usys)
     ```
+
+    There is no functional overload that takes an `AbstractManifold` as the second argument; norms with respect to a manifold are taken through the `manifold.norm(...)` wrapper, which delegates to the metric-level form using `manifold.metric`.
 
     **Arguments:**
 
@@ -2771,6 +2774,13 @@ $$g_{ij}(q) = g_p\!\left(\frac{\partial}{\partial q^i}, \frac{\partial}{\partial
     >>> metric = cxm.FlatMetric(3)
     >>> metric.norm(v, chart)
     Q(5., 'm / s')
+
+    >>> # Metric-level functional form on a curved chart (at is required):
+    >>> rmetric = cxm.RoundMetric(2)
+    >>> at_eq = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
+    >>> w = {"theta": u.Q(1.0, "rad/s"), "phi": u.Q(0.0, "rad/s")}
+    >>> cxm.norm(w, rmetric, cxc.sph2, at=at_eq)
+    Q(1., 'rad / s')
     ```
 
     **Notes:**
