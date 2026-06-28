@@ -382,7 +382,7 @@ You can also call `norm` on a standalone metric object:
 >>> import coordinax.charts as cxc
 >>> import coordinax.manifolds as cxm
 
->>> metric = cxm.EuclideanMetric(3)
+>>> metric = cxm.FlatMetric(3)
 >>> chart = cxc.cart3d
 >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
 >>> v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s"), "z": u.Q(0.0, "m/s")}
