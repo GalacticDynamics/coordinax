@@ -9,6 +9,7 @@ __all__ = (
     "pt_embed",
     "pt_project",
     "pt_map",
+    "norm",
 )
 
 from typing import TYPE_CHECKING, Any
@@ -42,6 +43,16 @@ def guess_manifold(*args: Any, **kwargs: Any) -> "coordinax.manifolds.AbstractMa
     >>> cxm.guess_manifold(cxc.sph2)
     HyperSphericalManifold(ndim=2)
 
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def norm(v: Any, metric: Any, /, *args: Any, **kwargs: Any) -> Any:
+    """Compute the Riemannian norm of a vector.
+
+    Dispatches on the type of the second argument (metric-related) and
+    the type of ``v``.
     """
     raise NotImplementedError  # pragma: no cover
 

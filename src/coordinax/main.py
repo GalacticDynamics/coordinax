@@ -175,7 +175,7 @@ from coordinax.vectors import Coordinate, Point, Tangent, ToUnitsOptions
 
 # Import interop modules to register conversions and chart transitions.
 with contextlib.suppress(ImportError):
-    import coordinax.interop.astropy as _  # noqa: F401  # ty: ignore[unresolved-import]
+    import coordinax.interop.astropy as _  # noqa: F401
 
 # Clean up namespace
 del contextlib

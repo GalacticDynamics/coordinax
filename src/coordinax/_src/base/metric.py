@@ -4,7 +4,12 @@ __all__ = ("AbstractMetricField", "AbstractDiagonalMetricField")
 
 import abc
 
+from typing import Any
+
 import jax
+
+import coordinax.api.manifolds as cxmapi
+from coordinax._src.custom_types import OptUSys
 
 
 @jax.tree_util.register_static
@@ -60,6 +65,41 @@ class AbstractMetricField(metaclass=abc.ABCMeta):
     def signature(self) -> tuple[int, ...]:
         """Return the signature of the metric as a tuple of integers."""
         raise NotImplementedError  # pragma: no cover
+
+    def norm(
+        self, v: Any, *args: Any, at: Any, usys: OptUSys = None, **kwargs: Any
+    ) -> Any:
+        r"""Compute the norm $\|v\|_g = \sqrt{g(v, v)}$.
+
+        Convenience wrapper that calls
+        ``cxmapi.norm(v, self, chart, at=at, usys=usys)`` directly.  The
+        ``chart`` must be passed as the second positional argument (after
+        ``v``).
+
+        Examples
+        --------
+        >>> import jax.numpy as jnp
+        >>> import unxt as u
+        >>> import coordinax.charts as cxc
+        >>> import coordinax.manifolds as cxm
+
+        >>> metric = cxm.FlatMetric(3)
+        >>> at = {"x": jnp.array(0.0), "y": jnp.array(0.0), "z": jnp.array(0.0)}
+
+        With a CDict of quantities (usys optional):
+
+        >>> v = {"x": u.Q(3.0, "m/s"), "y": u.Q(4.0, "m/s"), "z": u.Q(0.0, "m/s")}
+        >>> metric.norm(v, cxc.cart3d, at=at)
+        Q(5., 'm / s')
+
+        With a stacked ``jax.Array`` (usys required):
+
+        >>> v = jnp.array([3.0, 4.0, 0.0])
+        >>> metric.norm(v, cxc.cart3d, at=at, usys=u.unitsystems.si)
+        Array(5., dtype=float64)
+
+        """
+        return cxmapi.norm(v, self, *args, at=at, usys=usys, **kwargs)
 
 
 class AbstractDiagonalMetricField(AbstractMetricField):

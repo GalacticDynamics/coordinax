@@ -136,24 +136,22 @@ def embedded_twosphere(
 
     Default ambient (Spherical3D)::
 
-    >>> manifold = cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
-    >>> manifold
+    >>> M = cxm.embedded_twosphere(radius=u.Q(2.0, "km"))
+    >>> M
     EmbeddedManifold(intrinsic=HyperSphericalManifold(...),
                      ambient=Rn(3),
                      embed_map=TwoSphereIn3D(radius=Q(2., 'km')))
 
     >>> p = {"theta": u.Angle(jnp.pi / 2, "rad"), "phi": u.Angle(0.0, "rad")}
-    >>> sph = cxm.pt_embed(p, manifold)
+    >>> sph = cxm.pt_embed(p, M)
     >>> sph
     {'r': Q(2., 'km'), 'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
     With Cartesian ambient::
 
-    >>> manifold = cxm.embedded_twosphere(
-    ...     radius=u.Q(2.0, "km"), ambient=cxc.cart3d,
-    ... )
-    >>> xyz = cxm.pt_embed(p, manifold)
-    >>> p3 = cxm.pt_project(xyz, manifold)
+    >>> M = cxm.embedded_twosphere(radius=u.Q(2.0, "km"), ambient=cxc.cart3d)
+    >>> xyz = cxm.pt_embed(p, M)
+    >>> p3 = cxm.pt_project(xyz, M)
     >>> p3
     {'theta': Angle(1.57079633, 'rad'), 'phi': Angle(0., 'rad')}
 
