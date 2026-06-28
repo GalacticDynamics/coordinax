@@ -75,8 +75,7 @@ def norm(G: Array, v: u.AbstractQuantity, /) -> u.AbstractQuantity:
 
     """
     unit = u.unit_of(v)
-    v_arr = u.ustrip(unit, v)
-    out = jnp.sqrt(jnp.einsum("...i,...ij,...j->...", v_arr, G, v_arr))
+    out = array_norm(G, u.ustrip(unit, v))
     return u.Q(out, unit)
 
 
@@ -125,25 +124,31 @@ def norm(G: Array, v: CDict, /) -> Array | u.AbstractQuantity:
     >>> norm(G, v)
     Q(5., 'm / s')
 
+    Identity metric (Euclidean), CDict of bare arrays — returns a bare ``Array``:
+
+    >>> v = {"x": jnp.array(3.0), "y": jnp.array(4.0), "z": jnp.array(0.0)}
+    >>> norm(G, v)
+    Array(5., dtype=float64)
+
     """
+    keys = tuple(v.keys())
+    qty_flags = [is_any_quantity(val) for val in v.values()]
+    if any(qty_flags) and not all(qty_flags):
+        raise TypeError(
+            "norm(): mixed CDict with both Quantity and bare Array values is not "
+            "supported. All components must be either all Quantity or all bare Array."
+        )
+
+    if not all(qty_flags):  # Bare arrays — stack on last axis and contract
+        v_vec = jnp.stack([jnp.asarray(v[k]) for k in keys], axis=-1)
+        return array_norm(G, v_vec)
+
     # Pack CDict of quantities into a QMatrix, preserving per-component
     # units.  Then compute v^T G v via QMatrix ops, which handle all unit
     # conversions correctly (including mixed-unit components like m/s and 1/s).
-    v_vec, units = pack_nonuniform_unit(v, tuple(v.keys()))
+    v_vec, units = pack_nonuniform_unit(v, keys)
     v_qm = QMatrix(v_vec, unit=units)
     return jnp.sqrt(jnp.dot(v_qm, jnp.matmul(G, v_qm)))
-
-    # # Pack vector components into a uniform array. This also checks that all
-    # # components have the same units.
-    # v_arr, unit = pack_uniform_unit(v, tuple(v.keys()))
-
-    # # Compute g_ij v^i v^j
-    # # For a vector v, the squared norm is v^T @ g @ v
-    # # Note: v_arr has shape (..., n) with components in the last dimension
-    # norm2 = jnp.einsum("...i,...ij,...j->...", v_arr, G, v_arr)
-
-    # # Return the norm, taking care of units if present
-    # return jnp.sqrt(norm2) if unit is None else u.Q(jnp.sqrt(norm2), unit)
 
 
 # ===========================================================================
@@ -232,20 +237,22 @@ def norm(
             "Example: pass `usys=unxt.unitsystems.si`."
         )
 
-    # Compute metric matrix; metric_matrix handles both bare and quantity at
-    G = metric.metric_matrix(chart, at=at, usys=usys)  # ty: ignore[unresolved-attribute]
+    # Evaluate the metric matrix at the base point.  ``metric_matrix`` returns a
+    # typed ``AbstractMetricMatrix`` (Diagonal/Dense) and handles both bare-array
+    # and Quantity ``at`` values; it needs no unit system.
+    mm = cxmapi.metric_matrix(chart.M, at, chart)
 
     if not is_qty:  # Bare arrays — stack on last axis for correct batch broadcasting
         v_vec = jnp.stack([jnp.asarray(v[k]) for k in keys], axis=-1)
-        return jnp.sqrt(jnp.einsum("...i,...ij,...j->...", v_vec, G, v_vec))
+        return array_norm(mm.to_dense().matrix, v_vec)  # ty: ignore[unresolved-attribute]
 
-    # Pack CDict of quantities into a QMatrix, preserving per-component
-    # units.  Then compute v^T G v via QMatrix operations, which handle
-    # all unit conversions correctly (including mixed-unit components like m/s
-    # and 1/s).
+    # Pack CDict of quantities into a QMatrix, preserving per-component units,
+    # then compute sqrt(vᵀ G v) via QMatrix/AbstractMetricMatrix arithmetic,
+    # which handles all unit conversions correctly (including mixed-unit
+    # components like m/s and rad/s).
     v_vec, units = pack_nonuniform_unit(v, keys)
     v_qm = QMatrix(v_vec, unit=units)
-    return jnp.sqrt(jnp.dot(v_qm, jnp.matmul(G, v_qm)))
+    return jnp.sqrt(v_qm @ (mm @ v_qm))
 
 
 @plum.dispatch
@@ -281,7 +288,14 @@ def norm(
     Q(5., 'm / s')
 
     """
-    v_dict = cxcapi.cdict(v, chart)
+    keys = chart.components
+    if len(keys) == 1:
+        # Single-component chart: wrap the (scalar or length-1) quantity in a
+        # one-element CDict, squeezing the trailing component axis if present.
+        v_dict = {keys[0]: v if v.ndim == 0 else v[..., 0]}
+    else:
+        # Multi-component chart: split the packed quantity across components.
+        v_dict = cxcapi.cdict(v, chart)
     return cxmapi.norm(v_dict, metric, chart, at=at, usys=usys)  # ty: ignore[invalid-return-type]
 
 
@@ -340,8 +354,8 @@ def norm(
             "(no unit information). "
             "Example: pass `usys=unxt.unitsystems.si`."
         )
-    G = metric.metric_matrix(chart, at=at, usys=usys)  # ty: ignore[unresolved-attribute]
-    return cxmapi.norm(G, v)  # ty: ignore[invalid-return-type]
+    mm = cxmapi.metric_matrix(chart.M, at, chart)
+    return array_norm(mm.to_dense().matrix, v)  # ty: ignore[unresolved-attribute]
 
 
 # ===========================================================================
