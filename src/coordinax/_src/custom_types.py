@@ -12,7 +12,7 @@ __all__: tuple[str, ...] = (
     "Ds",
 )
 
-from typing import Any, Literal, TypeAlias
+from typing import Literal, TypeAlias
 from typing_extensions import TypeVar
 
 import unxt as u
@@ -32,7 +32,11 @@ OptUSys: TypeAlias = u.AbstractUnitSystem | None
 # Vector-related Types
 
 CKey: TypeAlias = str
-CDict: TypeAlias = dict[CKey, Any]
+# NOTE: deliberately the bare `dict`, not `dict[str, Any]`: a parametric
+# annotation makes every plum signature that uses CDict "unfaithful",
+# which disables plum's method cache and forces a full (~200x slower)
+# resolution on every call of `act`/`pt_map`/`cconvert`/etc.
+CDict: TypeAlias = dict
 CDictT = TypeVar("CDictT", bound=CDict)
 
 Ks = TypeVar("Ks", bound=tuple[CKey, ...], default=tuple[str, ...])

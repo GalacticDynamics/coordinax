@@ -55,7 +55,11 @@ from jax.interpreters import ad as jax_ad, batching as jax_batching, mlir as jax
 import unxt as u
 from unxt.quantity import AllowValue
 
-CDict: TypeAlias = dict[str, Any]
+# NOTE: deliberately the bare `dict`, not `dict[str, Any]`: a parametric
+# annotation makes every plum signature that uses CDict "unfaithful",
+# which disables plum's method cache and forces a full (~200x slower)
+# resolution on every call of `act`/`pt_map`/`cconvert`/etc.
+CDict: TypeAlias = dict
 _DMLS = u.unit("")
 
 

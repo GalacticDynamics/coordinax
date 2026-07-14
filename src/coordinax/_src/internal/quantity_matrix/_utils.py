@@ -4,7 +4,11 @@ from typing import Any, TypeAlias, cast
 
 import unxt as u
 
-CDict: TypeAlias = dict[str, Any]
+# NOTE: deliberately the bare `dict`, not `dict[str, Any]`: a parametric
+# annotation makes every plum signature that uses CDict "unfaithful",
+# which disables plum's method cache and forces a full (~200x slower)
+# resolution on every call of `act`/`pt_map`/`cconvert`/etc.
+CDict: TypeAlias = dict
 _DMLS = u.unit("")
 
 PackedUnitOutput: TypeAlias = tuple[u.AbstractUnit | None, ...]
