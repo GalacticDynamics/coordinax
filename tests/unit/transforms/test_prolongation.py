@@ -416,6 +416,15 @@ class TestErrors:
                 op, u.Q(1.0, "s"), a, cxc.cart3d, cxr.tangent_geom, cxr.coord_acc, at=at
             )
 
+    def test_td_rotate_pushforward_requires_tau(self):
+        """Materializing a callable R without tau raises informatively."""
+        op = cxfm.Rotate.from_(rot_z)
+        d = q3(1.0, 0.0, 0.0, "m")
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) rotation"):
+            cxfm.pushforward(op, None, d, cxc.cart3d, cxr.coord_disp)
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) rotation"):
+            cxfm.act(op, None, d, cxc.cart3d, cxr.point)
+
     def test_td_translate_point_requires_tau(self):
         """Materializing a callable delta without tau raises informatively."""
         moving = cxfm.Translate(

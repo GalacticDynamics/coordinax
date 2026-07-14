@@ -431,6 +431,18 @@ def from_(cls: type[Rotate], obj: jtransform.Rotation, /) -> Rotate:
     return cls(obj.as_matrix())
 
 
+_MSG_TAU_REQUIRED_R = (
+    "act/pushforward(Rotate, ...) with a time-dependent (callable) rotation "
+    "matrix requires a time parameter; got tau=None."
+)
+
+
+def _check_tau(op: "Rotate", tau: Any, /) -> None:
+    """Raise an informative TypeError before materializing a callable R."""
+    if tau is None and callable(op.R):
+        raise TypeError(_MSG_TAU_REQUIRED_R)
+
+
 # ============================================================================
 # Simplification
 
@@ -501,6 +513,7 @@ def act(
         raise TypeError(msg)
 
     # Process rotation
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(chart)
 
@@ -538,6 +551,7 @@ def act(
         raise ValueError(msg)
 
     # Rotation matrix
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(chart)
     return jnp.einsum("ij,...j->...i", R, x)  # ty: ignore[invalid-return-type]
@@ -598,6 +612,7 @@ def act(
     # print("CART", cart.__class__, chart.__class__)
     comps_cart = cart.components
 
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(cart)
 
@@ -671,6 +686,7 @@ def _rotate_pushforward_cdict(
 
     """
     cart = chart.cartesian
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(cart)
 
@@ -857,6 +873,7 @@ def act(
       base-point.
 
     """
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     n = op_eval._validate_square(op_eval.R).shape[-1]
 
