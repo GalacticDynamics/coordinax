@@ -16,6 +16,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .add import AbstractAdd
 from .custom_types import CDict, OptUSys
+from .utils import is_flat_chart
 from coordinax.transforms._src.groups import AffineGroup, DiffeomorphismGroup
 
 if TYPE_CHECKING:
@@ -28,10 +29,6 @@ _MSG_TAU_REQUIRED_POINT = (
 _MSG_TAU_REQUIRED_TANGENT = (
     "act(Boost, ...) with a time-dependent delta on order-{m} tangent data "
     "requires a time parameter; got tau=None."
-)
-_MSG_CHART_MISMATCH = (
-    "Boost requires the input chart to match the boost chart. "
-    "Got input chart={chart!r} and boost chart={op_chart!r}."
 )
 
 
@@ -166,19 +163,31 @@ def act(
     {'x': Q(1., 'km / s2'), 'y': Q(0., 'km / s2'), 'z': Q(0., 'km / s2')}
 
     """
-    del kw
-
     # --- Point input: x + dv * tau, via the Translate ladder machinery.
     if rep == cxr.point:
         if tau is None:
             raise TypeError(_MSG_TAU_REQUIRED_POINT)
         return cast(
-            "CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys)
+            "CDict",
+            cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw),
         )
 
-    # --- Tangent input of ladder order m.
+    # The closed forms below hold only when dv and the data live in the same
+    # Cartesian-type (flat) chart, where the boost's point action is a flat
+    # translation at each tau. Otherwise the action is base-point dependent
+    # in the data's coordinates — delegate everything (including
+    # displacements) to the equivalent displacement Translate, whose generic
+    # fallback handles the anchors (at=, at_vel=) and raises informative
+    # errors when they are missing.
+    if not (chart == op.chart and is_flat_chart(chart)):
+        return cast(
+            "CDict",
+            cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw),
+        )
+
+    # --- Tangent input of ladder order m, flat matching chart.
     m = rep.semantic_kind.order
-    # Displacements are invariant (the Jacobian of a translation is I).
+    # Displacements are invariant (the Jacobian of a flat translation is I).
     if m == 0:
         return x
 
@@ -187,9 +196,6 @@ def act(
         if m != 1:
             # Constant dv: higher derivatives of dv*tau vanish.
             return x
-        if op.chart != chart:
-            msg = _MSG_CHART_MISMATCH.format(chart=chart, op_chart=op.chart)
-            raise ValueError(msg)
         return cast(
             "CDict",
             jtu.map(
@@ -203,4 +209,6 @@ def act(
     # whose ladder rule computes d^m (dv(tau) * tau) / dtau^m.
     if tau is None:
         raise TypeError(_MSG_TAU_REQUIRED_TANGENT.format(m=m))
-    return cast("CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys))
+    return cast(
+        "CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw)
+    )

@@ -129,9 +129,14 @@ class TestBoostOnVelocity:
             # right_add=False: delta + x
             assert jnp.allclose(result[k], delta_v[k] + vel_cdict[k])
 
-    def test_raises_on_chart_mismatch(self, boost):
+    def test_chart_mismatch_defers_to_generic(self, boost):
+        """A mismatched data chart is well-defined via the generic engine.
+
+        It requires the base point (and a time, since the boost's point
+        action is time-dependent) rather than raising a chart error.
+        """
         v = {"rho": jnp.array(2.0), "phi": jnp.array(3.0), "z": jnp.array(4.0)}
-        with pytest.raises(ValueError, match="input chart to match the boost chart"):
+        with pytest.raises(TypeError, match=r"requires the base point|time parameter"):
             cxfm.act(boost, None, v, cxc.cyl3d, cxr.coord_vel)
 
 

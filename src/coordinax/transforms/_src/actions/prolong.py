@@ -190,7 +190,9 @@ def tau_derivative(f: Callable[[Any], Any], tau: Any, /, *, n: int = 1) -> Any:
     # evaluation where possible (eval_shape preserves static unit metadata).
     try:
         y0 = jax.eval_shape(f, tau)
-    except Exception:  # noqa: BLE001 - non-jax callables fall back to a real call
+    except TypeError:
+        # Not abstractly traceable (e.g. concretization inside f): fall back
+        # to a real call. Other errors (units, shapes) propagate.
         y0 = f(tau)
     leaves0, treedef = jtu.flatten(y0, is_leaf=is_any_quantity)
     units = [u.unit_of(leaf) for leaf in leaves0]
@@ -284,7 +286,10 @@ def _point_act_units(
         y0 = jax.eval_shape(
             lambda q: cxfmapi.act(op, tau, q, chart, cxr.point, usys=usys), q0
         )
-    except Exception:  # noqa: BLE001 - non-jax actions fall back to a real call
+    except TypeError:
+        # Not abstractly traceable (e.g. concretization inside the point
+        # action): fall back to a real call. Other errors (units, shapes)
+        # propagate.
         y0 = cxfmapi.act(op, tau, q0, chart, cxr.point, usys=usys)
     return _cdict_units(cast("CDict", y0))
 

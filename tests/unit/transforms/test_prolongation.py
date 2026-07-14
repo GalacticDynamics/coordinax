@@ -814,3 +814,40 @@ class TestNonCartesianOpChart:
         }
         with pytest.raises(TypeError, match=r"slot 1 .*missing \['z'\]"):
             cxfm.prolong(op, None, jet, cxc.cart3d)
+
+    def test_boost_nonflat_chart_acceleration_not_identity(self):
+        """Static Boost on spherical-chart accelerations is not identity.
+
+        It defers to the generic engine (previously silently identity) and
+        forwards the anchors.
+        """
+        usys = u.unitsystems.si
+        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        boost = cxfm.Boost(dv, chart=cxc.cart3d)
+        a = {
+            "r": u.Q(0.0, "km/s2"),
+            "theta": u.Q(0.0, "rad/s2"),
+            "phi": u.Q(0.0, "rad/s2"),
+        }
+        v = {
+            "r": u.Q(0.3, "km/s"),
+            "theta": u.Q(0.0, "rad/s"),
+            "phi": u.Q(0.0, "rad/s"),
+        }
+        tau = u.Q(2.0, "s")
+        with pytest.raises(TypeError, match="requires the base point"):
+            cxfm.act(boost, tau, a, cxc.sph3d, cxr.coord_acc, usys=usys)
+        fast = cxfm.act(
+            boost, tau, a, cxc.sph3d, cxr.coord_acc, at=self.sph_at, at_vel=v, usys=usys
+        )
+        td = cxfm.Translate(
+            lambda t: {k: c * t for k, c in dv.items()}, chart=cxc.cart3d
+        )
+        gen = prolong_jet(td, tau, {0: self.sph_at, 1: v, 2: a}, cxc.sph3d, usys=usys)
+        for k in fast:
+            unit = u.unit_of(gen[2][k])
+            assert jnp.allclose(
+                u.ustrip(unit, fast[k]), gen[2][k].value, rtol=1e-5, atol=1e-9
+            )
+        # the true result is nonzero: it was previously silently identity
+        assert not jnp.allclose(u.ustrip("km/s2", fast["r"]), 0.0)
