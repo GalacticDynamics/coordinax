@@ -416,6 +416,26 @@ class TestErrors:
                 op, u.Q(1.0, "s"), a, cxc.cart3d, cxr.tangent_geom, cxr.coord_acc, at=at
             )
 
+    def test_td_translate_point_requires_tau(self):
+        """Materializing a callable delta without tau raises informatively."""
+        moving = cxfm.Translate(
+            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
+        )
+        p = q3(0.0, 0.0, 0.0, "km")
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) delta"):
+            cxfm.act(moving, None, p, cxc.cart3d, cxr.point)
+
+    def test_td_vel_kick_matching_order_requires_tau(self):
+        """A callable vel-kick on velocity data (n==0) also needs tau."""
+        kick = cxfm.Translate(
+            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km/s"),
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+        v = q3(0.0, 0.0, 0.0, "km/s")
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) delta"):
+            cxfm.act(kick, None, v, cxc.cart3d, cxr.coord_vel)
+
     def test_td_translate_tangent_requires_tau(self):
         moving = cxfm.Translate(
             lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d

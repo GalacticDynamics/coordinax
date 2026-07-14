@@ -43,8 +43,10 @@ class Translate(AbstractAdd):
     Parameters
     ----------
     delta : CDict | Callable[[tau], CDict]
-        The displacement to apply. Must have length dimension.  If callable,
-        will be evaluated at the time parameter ``tau``.
+        The offset to apply. Its physical dimension follows ``semantic_kind``:
+        length for the default displacement kind (``dpl``), speed for a
+        velocity kick (``vel``), and so on up the time-derivative ladder. If
+        callable, it is evaluated at the time parameter ``tau``.
 
     Notes
     -----
@@ -129,6 +131,18 @@ class Translate(AbstractAdd):
     # inverse and __neg__ inherited from AbstractAdd
 
 
+_MSG_TAU_REQUIRED = (
+    "act(Translate, ...) with a time-dependent (callable) delta requires a "
+    "time parameter; got tau=None."
+)
+
+
+def _check_tau(op: "Translate", tau: Any, /) -> None:
+    """Raise an informative TypeError before materializing a callable delta."""
+    if tau is None and callable(op.delta):
+        raise TypeError(_MSG_TAU_REQUIRED)
+
+
 # ============================================================================
 # act
 
@@ -184,6 +198,7 @@ def act(
     )
 
     # Process Translation
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
 
     # Convert delta to array using chart components and usys
@@ -244,6 +259,7 @@ def act(
         return x
 
     # Process Translation
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
 
     # Convert delta to array using chart components and usys
@@ -321,14 +337,11 @@ def act(
     # Contribution: d^(m-k) delta / dtau^(m-k).
     n = m - k
     if n == 0:
+        _check_tau(op, tau)
         delta = materialize_transform(op, tau).delta
     elif callable(op.delta):
         if tau is None:
-            msg = (
-                "act(Translate, ...) with a time-dependent delta on "
-                f"order-{m} tangent data requires a time parameter; got tau=None."
-            )
-            raise TypeError(msg)
+            raise TypeError(_MSG_TAU_REQUIRED)
         delta = tau_derivative(op.delta, tau, n=n)
     else:
         # Static delta: all tau-derivatives vanish.
@@ -362,6 +375,7 @@ def _translate_point_cdict(
     usys: OptUSys = None,
 ) -> CDict:
     """Shift a point by the (materialized) delta, via the Cartesian chart."""
+    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
 
     # Translate in Cartesian space, then map back.
