@@ -1132,3 +1132,49 @@ class TestLinearOpsUnderNewVerbs:
             assert not u.quantity.is_any_quantity(out[k])  # stays raw
             assert jnp.allclose(out[k], gen[1][k], atol=1e-7)
         assert jnp.allclose(out["y"], 1.0, atol=1e-7)
+
+
+# ============================================================================
+# Robustness: double inversion, integer dtypes
+
+
+class TestRobustness:
+    """Robustness fixes: Neg double-inversion and integer-dtype promotion."""
+
+    def test_time_dependent_inverse_roundtrip(self):
+        """inverse.inverse of a time-dependent additive op is usable."""
+        moving = cxfm.Translate(
+            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
+        )
+        inv2 = moving.inverse.inverse  # was: TypeError from jnp.negative(Neg)
+        tau = u.Q(2.0, "s")
+        p = q3(1.0, 0.0, 0.0, "km")
+        out = cxfm.act(inv2, tau, p, cxc.cart3d, cxr.point)
+        expected = cxfm.act(moving, tau, p, cxc.cart3d, cxr.point)
+        assert allclose_cdict(out, expected, "km")
+
+    def test_integer_inputs_through_prolongation(self):
+        """Integer-valued Quantities are promoted at the jvp boundary."""
+        moving = cxfm.Translate(
+            lambda t: {
+                "x": u.Q(3.0, "km/s") * t,
+                "y": u.Q(0.0, "km"),
+                "z": u.Q(0.0, "km"),
+            },
+            chart=cxc.cart3d,
+        )
+        tau = u.Q(2, "s")  # int
+        jet = {
+            0: {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")},  # ints
+            1: q3(0.0, 0.0, 0.0, "km/s"),
+        }
+        out = cxfm.prolong(moving, tau, jet, cxc.cart3d)
+        assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 3.0)
+
+    def test_integer_inputs_through_pushforward(self):
+        """Integer-valued anchors are promoted in pushforward."""
+        op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
+        v = {"x": u.Q(1, "m/s"), "y": u.Q(1, "m/s"), "z": u.Q(1, "m/s")}
+        at = {"x": u.Q(1, "m"), "y": u.Q(0, "m"), "z": u.Q(0, "m")}
+        out = cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
+        assert jnp.allclose(u.ustrip("m/s", out["y"]), 3.0)

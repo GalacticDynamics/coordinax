@@ -85,10 +85,13 @@ class AbstractAdd(AbstractTransform):
 
         """
         delta = self.delta
-        if not callable(delta) or isinstance(delta, Neg):
-            inv = jtu.map(jnp.negative, delta, is_leaf=is_any_quantity)
-        else:
+        if isinstance(delta, Neg):
+            # Double negation unwraps to the original callable.
+            inv = delta.param
+        elif callable(delta):
             inv = Neg(delta)
+        else:
+            inv = jtu.map(jnp.negative, delta, is_leaf=is_any_quantity)
         return replace(self, delta=inv)
 
     def __add__(self, other: object, /) -> Union["AbstractAdd", Composed]:

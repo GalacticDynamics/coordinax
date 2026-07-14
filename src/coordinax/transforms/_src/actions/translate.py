@@ -168,6 +168,7 @@ def act(
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
     /,
+    *,
     usys: OptUSys = None,
     **kw: Any,
 ) -> Array:
@@ -254,6 +255,7 @@ def act(
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
     /,
+    *,
     usys: OptUSys = None,
     **kw: Any,
 ) -> u.AbstractQuantity:
@@ -309,6 +311,7 @@ def act(
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
     /,
+    *,
     usys: OptUSys = None,
     **kw: Any,
 ) -> CDict:

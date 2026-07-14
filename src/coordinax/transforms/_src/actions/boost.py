@@ -130,6 +130,7 @@ def act(
     chart: cxc.AbstractChart,
     rep: cxr.Representation,
     /,
+    *,
     usys: OptUSys = None,
     **kw: Any,
 ) -> CDict:

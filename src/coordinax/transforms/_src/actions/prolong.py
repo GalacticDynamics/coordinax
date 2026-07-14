@@ -59,6 +59,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .base import AbstractTransform, is_time_dependent
 from .custom_types import CDict, OptUSys
+from coordinax.internal import tree_cast_int_bool_to_float
 
 JetDict: TypeAlias = dict[int, CDict]
 """A jet of curve data: ``{0: q, 1: v, 2: a, ...}``.
@@ -200,7 +201,11 @@ def tau_derivative(f: Callable[[Any], Any], tau: Any, /, *, n: int = 1) -> Any:
     def g(tv: Any, /) -> list[Any]:
         t = _attach_leaf(tau_unit, tv)
         leaves, _ = jtu.flatten(f(t), is_leaf=is_any_quantity)
-        return [_strip_leaf(un, leaf) for un, leaf in zip(units, leaves, strict=True)]
+        vals = [_strip_leaf(un, leaf) for un, leaf in zip(units, leaves, strict=True)]
+        return tree_cast_int_bool_to_float(vals)
+
+    # jvp requires inexact dtypes; promote integer/bool inputs.
+    tau_val = tree_cast_int_bool_to_float(tau_val)
 
     gn = g
     for _ in range(n):
@@ -271,6 +276,8 @@ def pushforward_generic(
     time_unit = _common_time_unit(tau, in_units, _cdict_units(v), order)
     v_vals = {k: _strip_leaf(_per_time(in_units[k], time_unit, order), v[k]) for k in v}
     at_vals = _strip_cdict(at, in_units)
+    # jvp requires inexact dtypes; promote integer/bool inputs.
+    at_vals, v_vals = tree_cast_int_bool_to_float((at_vals, v_vals))
 
     _, dy = jax.jvp(f, (at_vals,), (v_vals,))
     return _attach_cdict(
@@ -462,6 +469,10 @@ def prolong_jet(
         for m in range(1, max_order + 1)
     ]
 
+    # jvp requires inexact dtypes; promote integer/bool inputs.
+    tau_val, q0_vals, slot_vals = tree_cast_int_bool_to_float(
+        (tau_val, q0_vals, slot_vals)
+    )
     slot_outs = _total_derivative_chain(f, tau_val, q0_vals, slot_vals)
     return {
         m: _attach_cdict(

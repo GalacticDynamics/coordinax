@@ -16,7 +16,6 @@ import jax.scipy.spatial.transform as jtransform
 import jax.tree as jtu
 import plum
 from jax.typing import ArrayLike
-from quax import quaxify
 
 import quaxed.numpy as jnp
 import unxt as u
@@ -32,8 +31,6 @@ from .prolong import _attach_leaf, _strip_leaf, prolong_slot
 from .utils import Neg
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
-
-vec_matmul = quaxify(jax.numpy.vectorize(jax.numpy.matmul, signature="(N,N),(N)->(N)"))
 
 RMatrix: TypeAlias = Shaped[Array, " N N"]
 
