@@ -41,7 +41,9 @@ class TestBobFrameTransitions:
         assert isinstance(op, cxfm.Composed)
         assert len(op.transforms) == 2
         assert isinstance(op.transforms[0], cxfm.Translate)
-        assert isinstance(op.transforms[1], cxfm.Boost)
+        # The velocity offset is a fibre-only kick: Translate(semantic_kind=vel).
+        assert isinstance(op.transforms[1], cxfm.Translate)
+        assert op.transforms[1].semantic_kind == cxr.vel
 
     def test_alice_to_bob_has_correct_chart(self):
         op = cxf.frame_transition(cxf.alice, cxf.bob)
@@ -53,7 +55,8 @@ class TestBobFrameTransitions:
         op = cxf.frame_transition(cxf.bob, cxf.alice)
         assert isinstance(op, cxfm.Composed)
         assert len(op.transforms) == 2
-        assert isinstance(op.transforms[0], cxfm.Boost)
+        assert isinstance(op.transforms[0], cxfm.Translate)
+        assert op.transforms[0].semantic_kind == cxr.vel
         assert isinstance(op.transforms[1], cxfm.Translate)
 
     def test_bob_to_alice_is_inverse_of_alice_to_bob(self):

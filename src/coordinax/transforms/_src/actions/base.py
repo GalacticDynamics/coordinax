@@ -1,6 +1,6 @@
 """Base classes for operators on coordinates."""
 
-__all__ = ("AbstractTransform", "materialize_transform")
+__all__ = ("AbstractTransform", "is_time_dependent", "materialize_transform")
 
 import abc
 import dataclasses
@@ -423,3 +423,54 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:
 
     # Create a new operator of the same type with the evaluated parameters
     return type(op)(**evaluated_params)
+
+
+def is_time_dependent(op: Any, /) -> bool:
+    r"""Whether any parameter of the operator is a callable of ``tau``.
+
+    This is a static (trace-time) check mirroring the partition rule of
+    `materialize_transform`: an operator is time-dependent iff any leaf of its
+    dataclass-field values is callable. Composite operators (e.g. ``Composed``)
+    are time-dependent iff any of their component operators is, which follows
+    from the same rule since the components are pytree children.
+
+    Parameters
+    ----------
+    op
+        The operator to inspect.
+
+    Returns
+    -------
+    bool
+        A plain Python bool, safe to branch on during JAX tracing.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.transforms as cxfm
+
+    >>> static = cxfm.Translate.from_([1, 2, 3], "km")
+    >>> cxfm.is_time_dependent(static)
+    False
+
+    >>> moving = cxfm.Translate(
+    ...     lambda t: cx.cdict(u.Q([t.ustrip("s"), 0, 0], "km")), chart=cxc.cart3d
+    ... )
+    >>> cxfm.is_time_dependent(moving)
+    True
+
+    A composition is time-dependent iff any component is:
+
+    >>> cxfm.is_time_dependent(static | moving)
+    True
+    >>> cxfm.is_time_dependent(static | cxfm.Identity())
+    False
+
+    """
+    # NOTE: no `is_leaf=callable` — operators themselves define __call__, and
+    # descending into composite operators as pytrees is exactly what makes
+    # this rule match `materialize_transform`'s eqx.partition(callable).
+    params = [getattr(op, field.name) for field in dataclasses.fields(op)]
+    return any(callable(leaf) for leaf in jtu.leaves(params))

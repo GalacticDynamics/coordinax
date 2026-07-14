@@ -28,6 +28,7 @@ import coordinax.representations as cxr
 from .base import AbstractTransform, materialize_transform
 from .custom_types import CDict, HasShape, OptUSys
 from .identity import identity
+from .prolong import tau_derivative
 from .utils import Neg
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -615,21 +616,18 @@ def act(
     return cast("CDict", out)
 
 
-@plum.dispatch
-def act(
-    op: Rotate,
+def _rotate_pushforward_cdict(
+    op: "Rotate",
     tau: Any,
     x: CDict,
     chart: cxc.AbstractChart,
-    geom: cxr.TangentGeometry,
     rep: cxr.Representation,
     /,
     *,
     at: CDict | None = None,
     usys: OptUSys = None,
-    **kw: Any,
 ) -> CDict:
-    """Apply a spatial rotation to a TangentGeometry coordinate dictionary.
+    """Frozen-tau Jacobian pushforward of tangent data under a rotation.
 
     Rotation acts on tangent vectors via the Jacobian pushforward, not as a
     direct coordinate substitution.  The algorithm is:
@@ -672,8 +670,6 @@ def act(
     1.0
 
     """
-    del geom, kw
-
     cart = chart.cartesian
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(cart)
@@ -709,6 +705,142 @@ def act(
 
     # Pull rotated tangent back to original chart via inverse Jacobian.
     return cxr.tangent_map(p_cart_rot, cart, rep, chart, at=at_cart_rot, usys=usys)  # ty: ignore[missing-argument]
+
+
+@plum.dispatch
+def pushforward(
+    op: Rotate,
+    tau: Any,
+    v: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    usys: OptUSys = None,
+) -> CDict:
+    r"""Frozen-$\tau$ pushforward of tangent data under a rotation: $R(\tau) v$.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    >>> v = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> out = cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel)
+    >>> out["y"].round(3)
+    Q(1., 'm / s')
+
+    """
+    return _rotate_pushforward_cdict(op, tau, v, chart, rep, at=at, usys=usys)
+
+
+@plum.dispatch
+def act(
+    op: Rotate,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    geom: cxr.TangentGeometry,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    at_vel: CDict | None = None,
+    usys: OptUSys = None,
+    **kw: Any,
+) -> CDict:
+    r"""Apply a rotation to tangent data (kinematic prolongation).
+
+    - Displacement data and any data under a time-independent rotation
+      transform by the frozen-$\tau$ pushforward $v \mapsto R(\tau) v$.
+    - Under a time-dependent rotation $R(\tau)$, velocities gain the
+      $\dot R$ term of the prolongation, $v' = R v + \dot R x$, which
+      requires the base point ``at``; accelerations gain
+      $a' = R a + 2 \dot R v + \ddot R x$, requiring ``at`` and ``at_vel``.
+
+    Examples
+    --------
+    >>> import quaxed.numpy as jnp
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+    >>> from jaxtyping import Array, Real
+
+    A uniformly rotating frame (angular speed 1 rad/s about z):
+
+    >>> def R_func(t) -> Real[Array, "3 3"]:
+    ...     th = t.ustrip("s")
+    ...     st, ct = jnp.sin(th), jnp.cos(th)
+    ...     return jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
+    >>> op = cxfm.Rotate.from_(R_func)
+
+    At tau=0 the rotation is the identity but the velocity still gains the
+    $\dot R x$ (angular) term:
+
+    >>> at = {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")}
+    >>> v = {"x": u.Q(0.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}
+    >>> out = cxfm.act(op, u.Q(0.0, "s"), v, cxc.cart3d, cxr.tangent_geom,
+    ...                cxr.coord_vel, at=at)
+    >>> out["y"].round(3)
+    Q(1., 'm / s')
+
+    """
+    del geom, kw
+
+    m = rep.semantic_kind.order  # ty: ignore[unresolved-attribute]
+    # Displacements and time-independent rotations: pure pushforward.
+    if m == 0 or not callable(op.R):
+        return _rotate_pushforward_cdict(op, tau, x, chart, rep, at=at, usys=usys)
+
+    # Time-dependent rotation: the prolongation needs the lower jet slots.
+    if tau is None:
+        msg = (
+            "act(Rotate, ...) with a time-dependent rotation on tangent data "
+            "requires a time parameter; got tau=None."
+        )
+        raise TypeError(msg)
+    if at is None:
+        msg = (
+            f"act(Rotate, ...) with a time-dependent rotation on order-{m} "
+            "tangent data requires the base point via 'at' (the dR/dtau term "
+            "acts on the position), or use a coordinax.Coordinate bundle."
+        )
+        raise TypeError(msg)
+
+    cart = chart.cartesian
+    if m == 1 and chart is cart:
+        # Closed form in Cartesian components: v' = R v + dR/dtau x.
+        op_eval = materialize_transform(op, tau)
+        R = op_eval._get_R(cart)
+        comps = cart.components
+        v_arr, v_unit = pack_uniform_unit(x, keys=comps)
+        at_arr, at_unit = pack_uniform_unit(at, keys=comps)
+        tau_unit = u.unit_of(tau)
+        Rdot = tau_derivative(op.R, tau, n=1)  # raw array, per unit(tau)
+        Rv = u.Q(jnp.einsum("ij,...j->...i", R, v_arr), v_unit)
+        Rdot_at = u.Q(
+            jnp.einsum("ij,...j->...i", Rdot, at_arr),
+            at_unit / tau_unit if tau_unit is not None else at_unit,
+        )
+        out_arr = u.ustrip(v_unit, Rv + Rdot_at)
+        return cast("CDict", cxc.cdict(out_arr, v_unit, comps))
+
+    # General case (acceleration, or non-Cartesian chart): generic prolongation.
+    jet: dict[int, CDict] = {0: at, m: x}
+    if m >= 2:
+        if at_vel is None:
+            msg = (
+                f"act(Rotate, ...) with a time-dependent rotation on order-{m} "
+                "tangent data requires 'at_vel' (the velocity at the base "
+                "point), or use a coordinax.Coordinate bundle."
+            )
+            raise TypeError(msg)
+        jet[1] = at_vel
+    out = cast("dict[int, CDict]", cxfmapi.prolong(op, tau, jet, chart, usys=usys))
+    return out[m]
 
 
 # -----------------------------------------------

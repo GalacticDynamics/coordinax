@@ -19,6 +19,7 @@ from .add import AbstractAdd
 from .base import materialize_transform
 from .composed import Composed
 from .custom_types import CDict, OptUSys
+from .prolong import tau_derivative
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
@@ -47,10 +48,19 @@ class Translate(AbstractAdd):
 
     Notes
     -----
-    - Only applicable to ``Point`` role vectors
-    - Raises ``TypeError`` when applied to other roles (e.g., ``PhysVel``)
-    - The ``delta`` is interpreted as a ``PhysDisp``-role displacement
-      internally
+    The ``semantic_kind`` field sets the ladder order $k$ of the offset
+    (``dpl``: $k=0$, ``vel``: $k=1$, ...). Acting on data of ladder order $m$
+    (points behave as the curve position for $k=0$):
+
+    - $k = 0$: shifts points by $\delta(\tau)$; velocities gain
+      $\dot\delta(\tau)$ and accelerations $\ddot\delta(\tau)$ when
+      ``delta`` is time-dependent (the kinematic prolongation).
+    - $k \geq 1$: identity on points and on all orders $m < k$; order $m = k$
+      gains $\delta(\tau)$; orders $m > k$ gain
+      $d^{m-k}\delta/d\tau^{m-k}$ when ``delta`` is time-dependent.
+    - ``Displacement`` data ($m = 0$) is always unaffected: a displacement is
+      a same-$\tau$ point difference and the Jacobian of a translation is the
+      identity.
 
     Examples
     --------
@@ -257,10 +267,13 @@ def act(
     usys: OptUSys = None,
     **kw: Any,
 ) -> CDict:
-    """Apply Translate to a Point-valued component dictionary.
+    r"""Apply Translate to a component dictionary (ladder rule).
 
-    Dispatches on ``op.semantic_kind`` to determine which representations
-    are shifted.
+    The behavior follows the time-derivative ladder: with $k$ the operator's
+    ``semantic_kind`` order and $m$ the input's ladder order, the input gains
+    $d^{m-k}\delta/d\tau^{m-k}$ for $m \geq k$ (points act as the curve
+    position for $k = 0$), and is unaffected for $m < k$ or for
+    ``Displacement`` data ($m = 0$).
 
     >>> import coordinax.transforms as cxfm
     >>> import unxt as u
@@ -272,94 +285,106 @@ def act(
     >>> cxfm.act(shift, None, x, cxc.cart3d, cxr.point)
     {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}
 
+    A static translate does not affect velocities:
+
+    >>> v = {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+    >>> cxfm.act(shift, None, v, cxc.cart3d, cxr.coord_vel)
+    {'x': Q(1., 'km / s'), 'y': Q(0., 'km / s'), 'z': Q(0., 'km / s')}
+
+    But a time-dependent translate boosts velocities by its rate
+    (the kinematic prolongation):
+
+    >>> delta = lambda t: {"x": u.Q(3.0, "km/s") * t, "y": u.Q(0.0, "km"),
+    ...                    "z": u.Q(0.0, "km")}
+    >>> moving = cxfm.Translate(delta, chart=cxc.cart3d)
+    >>> cxfm.act(moving, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel)
+    {'x': Q(4., 'km / s'), 'y': Q(0., 'km / s'), 'z': Q(0., 'km / s')}
+
     """
     del kw
-    return _act_translate_cdict(op.semantic_kind, op, tau, x, chart, rep, usys=usys)
+    k = op.semantic_kind.order
 
-
-@plum.dispatch
-def _act_translate_cdict(
-    sk: cxr.Displacement,
-    op: Translate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    usys: OptUSys = None,
-) -> CDict:
-    """Displacement-semantic translate: shifts points only.
-
-    Per the spec, a spatial ``Translate`` is identity for all tangent
-    representations (displacements, velocities, accelerations).
-    """
-    op_eval = materialize_transform(op, tau)
-
+    # --- Point input: the curve position, shifted only by a k=0 translate.
     if rep == cxr.point:
-        # Translate in Cartesian space, then map back.
-        cart = chart.cartesian
-        x_cart = cxc.pt_map(x, chart, cart, usys=usys)
+        if k != 0:
+            return x
+        return _translate_point_cdict(op, tau, x, chart, usys=usys)
 
-        if op_eval.chart == cart:
-            delta_cart = op_eval.delta
-        else:
-            # Push delta through the Jacobian into Cartesian.
-            at_in_op_chart = cxc.pt_map(x_cart, cart, op_eval.chart, usys=usys)
-            delta_cart = cxr.tangent_map(  # ty: ignore[missing-argument]
-                op_eval.delta,
-                op_eval.chart,
-                cxr.coord_disp,
-                cart,
-                at=at_in_op_chart,
-                usys=usys,
-            )
-
-        x_cart2 = jtu.map(
-            jnp.add,
-            *((x_cart, delta_cart) if op_eval.right_add else (delta_cart, x_cart)),
-            is_leaf=u.quantity.is_any_quantity,
-        )
-        return cast("CDict", cxc.pt_map(x_cart2, cart, chart, usys=usys))
-
-    # Identity for displacements, velocities, accelerations, and all other
-    # tangent representations.
-    return x
-
-
-@plum.dispatch
-def _act_translate_cdict(
-    sk: cxr.AbstractTangentSemanticKind,
-    op: Translate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    usys: OptUSys = None,
-) -> CDict:
-    """Velocity/acceleration-semantic translate: shifts matching tangent vectors."""
-    op_eval = materialize_transform(op, tau)
-
-    # A vel/acc-semantic translate does not move position points.
-    if rep == cxr.point:
+    # --- Tangent input of ladder order m.
+    m = rep.semantic_kind.order  # ty: ignore[unresolved-attribute]
+    # Displacements are same-tau point differences (never gain dtau terms and
+    # the Jacobian of a translation is the identity); lower-order fibres are
+    # untouched by a higher-order offset.
+    if m == 0 or m < k:
         return x
 
-    if rep.semantic_kind == sk:
-        if op_eval.chart != chart:
+    # Contribution: d^(m-k) delta / dtau^(m-k).
+    n = m - k
+    if n == 0:
+        delta = materialize_transform(op, tau).delta
+    elif callable(op.delta):
+        if tau is None:
             msg = (
-                f"Translate.delta is defined in chart {op_eval.chart!r}, "
-                f"but the representation is in chart {chart!r}. "
-                "Convert delta to the target chart before constructing Translate."
+                "act(Translate, ...) with a time-dependent delta on "
+                f"order-{m} tangent data requires a time parameter; got tau=None."
             )
-            raise ValueError(msg)
-        return cast(
-            "CDict",
-            jtu.map(
-                jnp.add,
-                *((x, op_eval.delta) if op_eval.right_add else (op_eval.delta, x)),
-                is_leaf=u.quantity.is_any_quantity,
-            ),
+            raise TypeError(msg)
+        delta = tau_derivative(op.delta, tau, n=n)
+    else:
+        # Static delta: all tau-derivatives vanish.
+        return x
+
+    if op.chart != chart:
+        msg = (
+            f"Translate.delta is defined in chart {op.chart!r}, "
+            f"but the representation is in chart {chart!r}. "
+            "Convert delta to the target chart before constructing Translate."
+        )
+        raise ValueError(msg)
+
+    return cast(
+        "CDict",
+        jtu.map(
+            jnp.add,
+            *((x, delta) if op.right_add else (delta, x)),
+            is_leaf=u.quantity.is_any_quantity,
+        ),
+    )
+
+
+def _translate_point_cdict(
+    op: Translate,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    /,
+    *,
+    usys: OptUSys = None,
+) -> CDict:
+    """Shift a point by the (materialized) delta, via the Cartesian chart."""
+    op_eval = materialize_transform(op, tau)
+
+    # Translate in Cartesian space, then map back.
+    cart = chart.cartesian
+    x_cart = cxc.pt_map(x, chart, cart, usys=usys)
+
+    if op_eval.chart == cart:
+        delta_cart = op_eval.delta
+    else:
+        # Push delta through the Jacobian into Cartesian.
+        at_in_op_chart = cxc.pt_map(x_cart, cart, op_eval.chart, usys=usys)
+        delta_cart = cxr.tangent_map(  # ty: ignore[missing-argument]
+            op_eval.delta,
+            op_eval.chart,
+            cxr.coord_disp,
+            cart,
+            at=at_in_op_chart,
+            usys=usys,
         )
 
-    # Identity for non-matching representations.
-    return x
+    x_cart2 = jtu.map(
+        jnp.add,
+        *((x_cart, delta_cart) if op_eval.right_add else (delta_cart, x_cart)),
+        is_leaf=u.quantity.is_any_quantity,
+    )
+    return cast("CDict", cxc.pt_map(x_cart2, cart, chart, usys=usys))

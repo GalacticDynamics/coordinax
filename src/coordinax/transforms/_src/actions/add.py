@@ -203,6 +203,43 @@ def from_(cls: type[AbstractAdd], x: ArrayLike, unit: str) -> AbstractAdd:
 
 
 # ============================================================================
+# pushforward
+
+
+@plum.dispatch
+def pushforward(
+    op: AbstractAdd,
+    tau: Any,
+    v: CDict,
+    chart: cxc.AbstractChart,
+    rep: Any,
+    /,
+    *,
+    at: CDict | None = None,
+    usys: Any = None,
+) -> CDict:
+    r"""Pushforward under an additive operator: identity.
+
+    The point action of an additive operator is a translation of the ambient
+    (flat) space, whose differential is the identity, so tangent components
+    are unchanged. No base point is required.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> op = cxfm.Translate.from_([1, 2, 3], "km")
+    >>> d = {"x": u.Q(1.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+    >>> cxfm.pushforward(op, None, d, cxc.cart3d, cxr.coord_disp)
+    {'x': Q(1., 'km'), 'y': Q(0., 'km'), 'z': Q(0., 'km')}
+
+    """
+    del op, tau, chart, rep, at, usys
+    return v
+
+
+# ============================================================================
 # Simplification
 
 

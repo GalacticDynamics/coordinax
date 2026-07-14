@@ -21,9 +21,13 @@ from ._setup_package import install_import_hook
 __all__: tuple[str, ...] = (
     # API
     "act",
+    "pushforward",
+    "prolong",
     "simplify",
     "compose",
     "materialize_transform",
+    "is_time_dependent",
+    "tau_derivative",
     # Groups
     "AbstractTransformGroup",
     "IdentityGroup",
@@ -62,7 +66,9 @@ with install_import_hook("coordinax.transforms"):
         Shear,
         Translate,
         identity,
+        is_time_dependent,
         materialize_transform,
+        tau_derivative,
     )
     from ._src.groups import (
         AbstractTransformGroup,
@@ -76,7 +82,7 @@ with install_import_hook("coordinax.transforms"):
         ProperOrthochronousLorentzGroup,
         SpecialOrthogonalGroup,
     )
-    from coordinax.api.transforms import act, compose, simplify
+    from coordinax.api.transforms import act, compose, prolong, pushforward, simplify
 
 
 _TRANSFORM_EXPORTS_ENTRYPOINT_GROUP: Final = "coordinax.transforms"

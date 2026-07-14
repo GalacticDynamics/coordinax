@@ -517,8 +517,23 @@ def subtract(lhs: Tangent, rhs: Tangent, /) -> Tangent:
 
 
 @plum.dispatch
-def act(op: cxfm.AbstractTransform, tau: Any, x: Tangent, /, **kw: Any) -> Tangent:
+def act(
+    op: cxfm.AbstractTransform,
+    tau: Any,
+    x: Tangent,
+    /,
+    *,
+    at: Any = None,
+    at_vel: Any = None,
+    **kw: Any,
+) -> Tangent:
     """Act a frame transform on a tangent Tangent.
+
+    ``at`` (the base point) and ``at_vel`` (the velocity at the base point)
+    anchor the transformation when it is needed — for Jacobian pushforwards in
+    non-Cartesian charts and for the kinematic prolongation under
+    time-dependent transforms. They may be `Point`/`Tangent` instances (whose
+    ``.data`` is used, after a chart check) or raw ``CDict`` data.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
@@ -537,8 +552,29 @@ def act(op: cxfm.AbstractTransform, tau: Any, x: Tangent, /, **kw: Any) -> Tange
         [0. 1. 0.]>
 
     """
+    at_data = _unwrap_anchor(at, x.chart, "at")
+    at_vel_data = _unwrap_anchor(at_vel, x.chart, "at_vel")
+    if at_data is not None:
+        kw["at"] = at_data
+    if at_vel_data is not None:
+        kw["at_vel"] = at_vel_data
     data = cxfmapi.act(op, tau, x.data, x.chart, x.rep, **kw)
     return replace(x, data=data)
+
+
+def _unwrap_anchor(anchor: Any, chart: Any, name: str, /) -> CDict | None:
+    """Unwrap a Point/Tangent anchor to its data, checking the chart."""
+    if anchor is None:
+        return None
+    if isinstance(anchor, (Point, Tangent)):
+        if anchor.chart != chart:
+            msg = (
+                f"{name!r} chart {anchor.chart!r} does not match "
+                f"the tangent's chart {chart!r}."
+            )
+            raise ValueError(msg)
+        return cast("CDict", anchor.data)
+    return cast("CDict", anchor)
 
 
 @plum.dispatch
@@ -591,7 +627,20 @@ def act(
     >>> pv_alex["velocity"].frame
     Alex()
 
+    A time-dependent transform prolongs the whole bundle jointly: a uniformly
+    moving translation boosts the velocity fibre by its rate:
+
+    >>> delta = lambda t: {"x": u.Q(3.0, "m/s") * t, "y": u.Q(0.0, "m"),
+    ...                    "z": u.Q(0.0, "m")}
+    >>> op = cx.Translate(delta, chart=cxc.cart3d)
+    >>> out = cx.act(op, u.Q(2.0, "s"), pv)
+    >>> out.point.data["x"], out["velocity"].data["x"]
+    (Q(7., 'm'), Q(4., 'm / s'))
+
     """
+    if cxfm.is_time_dependent(op):
+        return _act_coordinate_jet(op, tau, x, **kw)
+
     new_point = cxfm.act(op, tau, x.point, **kw)
     # Inject the base-point data as 'at' so non-Cartesian tangent dispatches
     # can evaluate the Jacobian at the correct location.  Callers may
@@ -612,6 +661,74 @@ def act(
         else:
             fibre_kw = kw_base
         new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
+    return Coordinate(point=new_point, **new_fields)
+
+
+def _act_coordinate_jet(
+    op: cxfm.AbstractTransform, tau: Any, x: Coordinate, /, **kw: Any
+) -> Coordinate:
+    """Act a time-dependent transform on a Coordinate via joint prolongation.
+
+    The point and all ladder fibres (velocity, acceleration, ...) form a jet
+    of the underlying curve; the transform's kinematic prolongation is applied
+    to the whole jet at once, so each fibre correctly gains the transform's
+    time-derivative terms. Displacement fibres (same-tau point differences)
+    transform by the frozen-tau pushforward at the base point.
+    """
+    usys = kw.get("usys")
+    point_chart = x.point.chart
+
+    # Assemble the jet in the point's chart. Fibres in other charts are
+    # converted in (and back out) via the Jacobian pushforward.
+    jet: dict[int, CDict] = {0: x.point.data}
+    ladder: dict[str, tuple[int, Any, Any]] = {}  # name -> (order, fibre, orig_chart)
+    push_fibres: dict[str, Any] = {}
+    for name, fibre in x._data.items():
+        order = getattr(fibre.rep.semantic_kind, "order", None)
+        if order is None or order == 0:
+            push_fibres[name] = fibre
+            continue
+        orig_chart = fibre.chart
+        f = fibre
+        if orig_chart != point_chart:
+            at_f = cast("Point", cxr.cconvert(x.point, orig_chart)).data
+            f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
+        if order in jet:
+            msg = (
+                f"Coordinate has multiple fibres at ladder order {order}; "
+                "the joint prolongation under a time-dependent transform is "
+                "ambiguous."
+            )
+            raise ValueError(msg)
+        jet[order] = cast("CDict", f.data)
+        ladder[name] = (order, f, orig_chart)
+
+    out_jet = cast(
+        "dict[int, CDict]", cxfmapi.prolong(op, tau, jet, point_chart, usys=usys)
+    )
+    new_point = replace(x.point, data=out_jet[0])
+
+    new_fields: dict[str, Any] = {}
+    for name, (order, f, orig_chart) in ladder.items():
+        nf = replace(f, data=out_jet[order])
+        if orig_chart != point_chart:
+            nf = cast(
+                "Tangent", cxrapi.cconvert(nf, orig_chart, at=out_jet[0], usys=usys)
+            )
+        new_fields[name] = nf
+
+    # Displacement (and other non-ladder) fibres: frozen-tau pushforward
+    # anchored at the pre-transform base point.
+    for name, fibre in push_fibres.items():
+        if fibre.chart == point_chart:
+            at_data = x.point.data
+        else:
+            at_data = cast("Point", cxr.cconvert(x.point, fibre.chart)).data
+        data = cxfmapi.pushforward(
+            op, tau, fibre.data, fibre.chart, fibre.rep, at=at_data, usys=usys
+        )
+        new_fields[name] = replace(fibre, data=data)
+
     return Coordinate(point=new_point, **new_fields)
 
 

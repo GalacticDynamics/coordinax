@@ -155,3 +155,22 @@ def act(op: Identity, tau: Any, x: Any, /, *args: Any, **kw: Any) -> Any:
     """
     del args, tau, kw  # unused
     return x
+
+
+# Precedence=1 to catch all input types, mirroring `act`.
+@plum.dispatch(precedence=1)  # ty: ignore[no-matching-overload]
+def pushforward(op: Identity, tau: Any, v: Any, /, *args: Any, **kw: Any) -> Any:
+    """Identity pushforward - returns the tangent data unchanged.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> d = {"x": u.Q(1, "km"), "y": u.Q(2, "km"), "z": u.Q(3, "km")}
+    >>> cxfm.pushforward(cxfm.identity, None, d, cxc.cart3d, cxr.coord_disp) is d
+    True
+
+    """
+    del op, tau, args, kw
+    return v

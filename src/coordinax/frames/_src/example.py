@@ -8,8 +8,10 @@ from typing import cast, final
 import plum
 
 import unxt as u
+from dataclassish import replace
 
 import coordinax.api.frames as cxfapi
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .base import AbstractReferenceFrame
 
@@ -104,7 +106,8 @@ class Bob(AbstractReferenceFrame):
       ≈ 269 813 km s⁻¹ (≈ 0.9 c) along Alice's x-axis.
 
     Because Bob is non-rotating, no rotation operator is required; the
-    transformation only needs a spatial translation and a Galilean boost.
+    transformation only needs a spatial translation and a velocity kick
+    (a ``Translate`` with ``semantic_kind=vel``).
 
     Examples
     --------
@@ -115,28 +118,32 @@ class Bob(AbstractReferenceFrame):
     >>> cxf.frame_transition(cxf.bob, cxf.bob)
     Identity()
 
-    Transition from Alice's frame to Bob's frame (translate then boost):
+    Transition from Alice's frame to Bob's frame (translate then velocity
+    kick):
 
     >>> op = cxf.frame_transition(cxf.alice, cxf.bob)
     >>> print(op)
     Composed((
-      Translate( {...}, chart=Cart3D(M=Rn(3)) ),
-      Boost( {...}, chart=Cart3D(M=Rn(3)) )
+      Translate(
+          {'x': Q(100000, 'km'), 'y': Q(10000, 'km'), 'z': Q(0, 'km')},
+          chart=Cart3D(M=Rn(3))
+      ),
+      Translate(
+          {'x': Q(2.69813212e+08, 'm / s'), 'y': Q(0., 'm / s'), 'z': Q(0., 'm / s')},
+          chart=Cart3D(M=Rn(3)),
+          semantic_kind=vel
+      )
     ))
 
-    Applying the Alice -> Bob transform to a bare array is not supported,
-    because the boost cannot infer whether the array represents a position or a
-    velocity:
+    Applying the Alice -> Bob transform to a bare array treats the array as a
+    position; the velocity kick leaves positions unchanged:
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
     >>> x = jnp.asarray([0.0, 0.0, 0.0])
-    >>> cxfm.act(
-    ...     op, None, x, usys=u.unitsystems.si
-    ... )
-    Traceback (most recent call last):
-    plum._resolver.NotFoundLookupError: ...
+    >>> cxfm.act(op, None, x, usys=u.unitsystems.si)
+    Array([1.e+08, 1.e+07, 0.e+00], dtype=float64)
 
     Applying the Alice -> Bob transform to a ``Quantity`` works:
 
@@ -203,14 +210,17 @@ def frame_transition(from_frame: Alice, to_frame: Bob, /) -> cxfm.Composed:
     r"""Transform from Alice's frame to Bob's frame.
 
     This is an example of a reference frame transformation that includes
-    both a spatial translation (Translate) and a velocity boost (Boost).
+    both a spatial translation and a velocity kick (a ``Translate`` with
+    ``semantic_kind=vel`` — the fibre-only offset; contrast with
+    `coordinax.transforms.Boost`, the true Galilean boost, whose point action
+    moves positions by $\Delta v \, \tau$ and therefore requires a time).
 
-    The Boost has well-defined actions on kinematic roles:
+    The velocity kick has well-defined actions on kinematic roles:
 
-    - **Point**: identity (points are unchanged by a Galilean boost)
-    - **Pos**: identity (displacements are Galilean invariant)
-    - **Vel**: adds $v_0$
-    - **PhysAcc**: identity (for constant boost)
+    - **Point**: identity (points are unchanged by a velocity kick)
+    - **Displacement**: identity (Galilean invariant)
+    - **Velocity**: adds $v_0$
+    - **Acceleration**: identity (for a constant kick)
 
     Examples
     --------
@@ -223,12 +233,13 @@ def frame_transition(from_frame: Alice, to_frame: Bob, /) -> cxfm.Composed:
 
     >>> op = cxf.frame_transition(alice, bob)
     >>> print(op)
-    Composed(( Translate(...), Boost(...) ))
+    Composed(( Translate(...), Translate(...) ))
 
     """
     shift = cxfm.Translate.from_([100_000, 10_000, 0], "km")
-    boost = cxfm.Boost.from_([269_813_212.2, 0, 0], "m/s")
-    return shift | boost  # ty: ignore[unsupported-operator]
+    kick_delta = cxfm.Translate.from_(u.Q([269_813_212.2, 0, 0], "m/s"))
+    kick = replace(kick_delta, semantic_kind=cxr.vel)
+    return shift | kick  # ty: ignore[unsupported-operator]
 
 
 @plum.dispatch.multi((Alex, Alice), (Bob, Alice))
@@ -243,10 +254,17 @@ def frame_transition(
     >>> cxf.frame_transition(cxf.alex, cxf.alice)
     Composed(( Rotate(...), Translate(...) ))
 
-    >>> cxf.frame_transition(cxf.bob, cxf.alice)
+    >>> print(cxf.frame_transition(cxf.bob, cxf.alice))
     Composed((
-      Boost( {...}, chart=Cart3D(M=Rn(3)) ),
-      Translate( {...}, chart=Cart3D(M=Rn(3)) )
+      Translate(
+          {'x': Q(-2.69813212e+08, 'm / s'), ...},
+          chart=Cart3D(M=Rn(3)),
+          semantic_kind=vel
+      ),
+      Translate(
+          {'x': Q(-100000, 'km'), 'y': Q(-10000, 'km'), 'z': Q(0, 'km')},
+          chart=Cart3D(M=Rn(3))
+      )
     ))
 
     """

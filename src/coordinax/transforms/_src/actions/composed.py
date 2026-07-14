@@ -280,23 +280,29 @@ def act(
     {'x': Q(1, 'km'), 'y': Q(2, 'km'), 'z': Q(3, 'km')}
 
     """
-    # 'at' tracks the evolving base point for tangent Jacobians: advance it
-    # after each sub-op so the next step evaluates at the correct anchor.
+    # 'at' / 'at_vel' track the evolving jet slots (base point and velocity)
+    # for tangent transformations: advance them after each sub-op so the next
+    # step evaluates at the correct anchor.
     current_at = kw.get("at")
-    kw_no_at = {k: v for k, v in kw.items() if k != "at"}
+    current_at_vel = kw.get("at_vel")
+    kw_rest = {k: v for k, v in kw.items() if k not in ("at", "at_vel")}
     result = x
     for sub_op in op.transforms:
-        result = cxfmapi.act(
-            sub_op,
-            tau,
-            result,
-            chart,
-            rep,
-            **({**kw, "at": current_at} if current_at is not None else kw),
-        )
+        step_kw = dict(kw_rest)
+        if current_at is not None:
+            step_kw["at"] = current_at
+        if current_at_vel is not None:
+            step_kw["at_vel"] = current_at_vel
+        result = cxfmapi.act(sub_op, tau, result, chart, rep, **step_kw)
+        # Advance the anchor jet (velocity first: it needs the old base point).
+        if current_at_vel is not None:
+            at_kw = {"at": current_at} if current_at is not None else {}
+            current_at_vel = cxfmapi.act(
+                sub_op, tau, current_at_vel, chart, cxr.coord_vel, **kw_rest, **at_kw
+            )
         if current_at is not None:
             current_at = cxfmapi.act(
-                sub_op, tau, current_at, chart, cxr.point, **kw_no_at
+                sub_op, tau, current_at, chart, cxr.point, **kw_rest
             )
     return cast("CDict", result)
 
@@ -351,6 +357,69 @@ def act(
     for xfm in op.transforms:
         result = cxfmapi.act(xfm, tau, result, **kw)
     return result  # ty: ignore[invalid-return-type]
+
+
+# ===================================================================
+# `prolong` / `pushforward` for Composed
+
+
+@plum.dispatch
+def prolong(
+    op: Composed,
+    tau: Any,
+    jet: dict,
+    chart: cxc.AbstractChart,
+    /,
+    **kw: object,
+) -> dict:
+    """Prolong a Composed transform: fold the prolongations left-to-right.
+
+    Jets compose by the chain rule, so the prolongation of a composition is
+    the composition of the prolongations. Each sub-transform materializes its
+    time-dependent parameters exactly once per step.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.transforms as cxfm
+
+    >>> dv = {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+    >>> pipe = cxfm.Composed((cxfm.Boost(dv, chart=cxc.cart3d), cxfm.Identity()))
+    >>> jet = {0: {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")},
+    ...        1: {"x": u.Q(0.0, "km/s"), "y": u.Q(0.0, "km/s"),
+    ...            "z": u.Q(0.0, "km/s")}}
+    >>> out = cxfm.prolong(pipe, u.Q(2.0, "s"), jet, cxc.cart3d)
+    >>> out[0]["x"], out[1]["x"]
+    (Q(2., 'km'), Q(1., 'km / s'))
+
+    """
+    result = jet
+    for sub_op in op.transforms:
+        result = cast("dict", cxfmapi.prolong(sub_op, tau, result, chart, **kw))
+    return result
+
+
+@plum.dispatch
+def pushforward(
+    op: Composed,
+    tau: Any,
+    v: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    **kw: object,
+) -> CDict:
+    """Pushforward under a Composed transform: fold, advancing the base point."""
+    result = v
+    current_at = at
+    for sub_op in op.transforms:
+        result = cxfmapi.pushforward(
+            sub_op, tau, result, chart, rep, at=current_at, **kw
+        )
+        if current_at is not None:
+            current_at = cxfmapi.act(sub_op, tau, current_at, chart, cxr.point, **kw)
+    return cast("CDict", result)
 
 
 # ===================================================================

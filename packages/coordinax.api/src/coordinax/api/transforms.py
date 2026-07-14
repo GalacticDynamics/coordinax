@@ -1,6 +1,6 @@
 """Representations."""
 
-__all__: tuple[str, ...] = ("act", "compose")
+__all__: tuple[str, ...] = ("act", "compose", "prolong", "pushforward")
 
 from typing import Any
 
@@ -105,6 +105,89 @@ def act(*args: Any, **kwargs: Any) -> Any:
     >>> op = R | T  # rotate then translate
     >>> cxfm.act(op, None, q).round(3)
     Q([1., 1., 0.], 'km')
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def pushforward(*args: Any, **kwargs: Any) -> Any:
+    r"""Apply the frozen-$\tau$ spatial differential of a transform.
+
+    For a transform with point action $\phi(\tau, x)$, this computes the
+    pushforward of a tangent vector $v$ anchored at the base point ``at``:
+
+    $$ v' = \partial_x \phi(\tau, \cdot)\big|_{\mathrm{at}} \cdot v $$
+
+    holding the time parameter fixed. This is the transformation law for
+    `Displacement` data (a same-$\tau$ point difference) and coincides with
+    `act` on all tangent kinds for time-independent transforms.
+
+    Contrast with `act` on kinematic tangent data (velocity, acceleration,
+    ...), which is the full *prolongation* and includes $\partial_\tau \phi$
+    terms for time-dependent transforms.
+
+    Canonical signature::
+
+        pushforward(op, tau, v, chart, rep, /, *, at=None, usys=None)
+
+    ``at`` is required whenever the transform's point action is nonlinear in
+    the chart coordinates (e.g. any transform in a non-Cartesian chart);
+    linear/affine fast paths may not need it.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    A displacement is invariant under any translation, even a time-dependent
+    one (the Jacobian of a translation is the identity):
+
+    >>> delta = lambda t: {"x": u.Q(3.0, "km/s") * t, "y": u.Q(0.0, "km"),
+    ...                    "z": u.Q(0.0, "km")}
+    >>> op = cxfm.Translate(delta, chart=cxc.cart3d)
+    >>> d = {"x": u.Q(1.0, "km"), "y": u.Q(2.0, "km"), "z": u.Q(0.0, "km")}
+    >>> at = {"x": u.Q(0.0, "km"), "y": u.Q(0.0, "km"), "z": u.Q(0.0, "km")}
+    >>> cxfm.pushforward(op, u.Q(5.0, "s"), d, cxc.cart3d, cxr.coord_disp, at=at)
+    {'x': Q(1., 'km'), 'y': Q(2., 'km'), 'z': Q(0., 'km')}
+
+    """
+    raise NotImplementedError  # pragma: no cover
+
+
+@plum.dispatch.abstract
+def prolong(*args: Any, **kwargs: Any) -> Any:
+    r"""Apply the kinematic (jet) prolongation of a transform to a jet.
+
+    A *jet* is a dictionary of curve data keyed by time-derivative order:
+    ``{0: q, 1: v, 2: a, ...}`` — slot 0 is the base point (position), slot 1
+    the velocity, slot 2 the acceleration. All-integer keys keep the jet a
+    valid JAX pytree. Displacement data (a same-$\tau$ point difference, not
+    a curve derivative) is never a jet slot; it transforms by `pushforward`.
+
+    For a transform with point action $\phi(\tau, x)$ acting on a curve
+    $x(\tau)$ via $x'(\tau) = \phi(\tau, x(\tau))$, the transformed jet slots
+    are the total $\tau$-derivatives:
+
+    $$ v' = \partial_\tau \phi + \partial_x \phi \cdot v, \qquad
+       a' = \partial_{\tau\tau}\phi + 2\,\partial_\tau\partial_x\phi \cdot v
+            + \partial_{xx}\phi(v, v) + \partial_x \phi \cdot a, \ \ldots $$
+
+    This is the joint, order-consistent application of `act` to a full
+    phase-space state — the natural verb for `coordinax.Coordinate` bundles
+    and for time-dependent transforms, where higher slots depend on all
+    lower ones.
+
+    Canonical signature::
+
+        prolong(op, tau, jet, chart, /, *, usys=None) -> jet
+
+    See Also
+    --------
+    act : per-slot application (delegates here for time-dependent transforms)
+    pushforward : the frozen-tau spatial differential
 
     """
     raise NotImplementedError  # pragma: no cover
