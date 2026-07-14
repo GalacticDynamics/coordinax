@@ -11,6 +11,8 @@ def test_module_exports() -> None:
         "AbstractSpaceFrame",
         "ICRS",
         "icrs",
+        "Galactic",
+        "galactic",
         "Galactocentric",
     }
 

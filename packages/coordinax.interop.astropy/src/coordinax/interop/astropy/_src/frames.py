@@ -7,6 +7,7 @@ parameters and enable seamless integration between the two libraries.
 Supported Frames:
 
 - ICRS: International Celestial Reference System
+- Galactic: heliocentric Galactic (l, b) coordinate system
 - Galactocentric: Galactic center-based coordinate system
 
 All conversions are implemented using plum's `@plum.conversion_method` decorator,
@@ -146,6 +147,71 @@ def astropy_icrs_to_coordinax_icrs(frame: apyc.ICRS, /) -> cxastro.ICRS:
 
 
 # =============================================================================
+# Galactic
+
+
+@plum.conversion_method(cxastro.Galactic, apyc.BaseCoordinateFrame)
+@plum.conversion_method(cxastro.Galactic, apyc.Galactic)
+def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.Galactic:
+    """Convert coordinax Galactic frame to Astropy Galactic frame.
+
+    The (heliocentric) Galactic frame has no frame-specific parameters in
+    either library, so the conversion is straightforward.
+
+    >>> import coordinax.astro as cxa
+    >>> import astropy.coordinates as apyc
+    >>> import plum
+
+    >>> cx_frame = cxastro.Galactic()
+    >>> plum.convert(cx_frame, apyc.Galactic)
+    <Galactic Frame>
+
+    >>> plum.convert(cx_frame, apyc.BaseCoordinateFrame)
+    <Galactic Frame>
+
+    """
+    return apyc.Galactic()
+
+
+@cxf.AbstractReferenceFrame.from_.dispatch  # ty: ignore[unresolved-attribute]
+def from_(cls: type[cxastro.Galactic], obj: apyc.Galactic, /) -> cxastro.Galactic:
+    """Construct from a `astropy.coordinates.Galactic`.
+
+    >>> import coordinax.astro as cxastro
+    >>> from plum import convert
+    >>> import astropy.coordinates as apyc
+
+    >>> apy_frame = apyc.Galactic()
+    >>> cxastro.Galactic.from_(apy_frame)
+    Galactic()
+
+    """
+    if obj.has_data:
+        raise ValueError("Astropy frame must not have data.")
+    return cls()
+
+
+@plum.conversion_method(apyc.Galactic, cxastro.AbstractSpaceFrame)
+@plum.conversion_method(apyc.Galactic, cxastro.Galactic)
+def astropy_galactic_to_coordinax_galactic(frame: apyc.Galactic, /) -> cxastro.Galactic:
+    """Convert Astropy Galactic frame to coordinax Galactic frame.
+
+    >>> import astropy.coordinates as apyc
+    >>> import coordinax.astro as cxastro
+    >>> import plum
+
+    >>> apy_frame = apyc.Galactic()
+    >>> plum.convert(apy_frame, cxastro.Galactic)
+    Galactic()
+
+    >>> plum.convert(apy_frame, cxastro.AbstractSpaceFrame)
+    Galactic()
+
+    """
+    return cxastro.galactic
+
+
+# =============================================================================
 # Galactocentric
 
 
@@ -208,15 +274,15 @@ def coordinax_galactocentric_to_astropy_galactocentric(
     # Convert the galcen position
     galcen_coord = apyc.ICRS(plum.convert(frame.galcen, apyc.SphericalRepresentation))
 
-    # # Convert the galcen velocity
-    # galcen_v_sun: apyc.CartesianDifferential = plum.convert(
-    #     frame.galcen_v_sun, apyc.CartesianDifferential
-    # )
+    # Convert the galcen velocity
+    galcen_v_sun: apyc.CartesianDifferential = plum.convert(
+        frame.galcen_v_sun, apyc.CartesianDifferential
+    )
 
     return apyc.Galactocentric(
         galcen_coord=galcen_coord,
         galcen_distance=plum.convert(frame.galcen["distance"], apyu.Quantity),
-        # galcen_v_sun=galcen_v_sun,
+        galcen_v_sun=galcen_v_sun,
         z_sun=plum.convert(frame.z_sun, apyu.Quantity),
         roll=plum.convert(frame.roll, apyu.Quantity),
     )
@@ -240,11 +306,22 @@ def from_(
     >>> gcf
     Galactocentric(
       galcen=Point(
-        { 'lon': Q(f64[], 'deg'), 'lat': Q(f64[], 'deg'), 'distance': Q(f64[], 'kpc') },
-        chart=LonLatSpherical3D(M=Rn(3)), frame=ICRS()
+        {
+          'lon': Q(f64[], 'deg'),
+          'lat': Q(f64[], 'deg'),
+          'distance': Q(f64[], 'kpc')
+        },
+        chart=LonLatSpherical3D(M=Rn(3)),
+        frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
-      z_sun=Quantity(f64[], 'pc')
+      z_sun=Quantity(f64[], 'pc'),
+      galcen_v_sun=Tangent(
+        {'x': Q(f64[], 'km / s'), 'y': Q(f64[], 'km / s'), 'z': Q(f64[], 'km / s')},
+        chart=Cart3D(M=Rn(3)),
+        basis=coord_basis,
+        semantic=vel
+      )
     )
 
     Checking equality
@@ -268,16 +345,15 @@ def from_(
         galcen_data, chart=cxc.lonlat_sph3d, frame=cxastro.icrs
     )
 
-    # # Convert galcen_v_sun to CartesianVel3D
-    # galcen_v_sun: cx.Tangent[cxc.Cart3D, cxr.PhysVel] = plum.convert(
-    #     frame.galcen_v_sun, cx.Tangent
-    # )
+    # Convert galcen_v_sun to a Cartesian velocity Tangent
+    # (astropy stores galcen_v_sun as a CartesianDifferential)
+    galcen_v_sun: cxv.Tangent = plum.convert(frame.galcen_v_sun, cxv.Tangent)
 
     return cxastro.Galactocentric(
         galcen=galcen,
         roll=plum.convert(frame.roll, u.Q),
         z_sun=plum.convert(frame.z_sun, u.Q),
-        # galcen_v_sun=galcen_v_sun,
+        galcen_v_sun=galcen_v_sun,
     )
 
 
@@ -314,11 +390,22 @@ def astropy_galactocentric_to_coordinax_galactocentric(
     >>> convert(apy_frame, cxastro.Galactocentric)
     Galactocentric(
       galcen=Point(
-        { 'lon': Q(f64[], 'deg'), 'lat': Q(f64[], 'deg'), 'distance': Q(f64[], 'kpc') },
-        chart=LonLatSpherical3D(M=Rn(3)), frame=ICRS()
+        {
+          'lon': Q(f64[], 'deg'),
+          'lat': Q(f64[], 'deg'),
+          'distance': Q(f64[], 'kpc')
+        },
+        chart=LonLatSpherical3D(M=Rn(3)),
+        frame=ICRS()
       ),
       roll=Angle(f64[], 'deg'),
-      z_sun=Quantity(f64[], 'pc')
+      z_sun=Quantity(f64[], 'pc'),
+      galcen_v_sun=Tangent(
+        {'x': Q(f64[], 'km / s'), 'y': Q(f64[], 'km / s'), 'z': Q(f64[], 'km / s')},
+        chart=Cart3D(M=Rn(3)),
+        basis=coord_basis,
+        semantic=vel
+      )
     )
 
     Convert with custom parameters:

@@ -11,8 +11,10 @@ import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.frames as cxf
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .base_frame import AbstractSpaceFrame
+from .galactic import ICRS_TO_GALACTIC_MATRIX, Galactic
 from .galactocentric import Galactocentric
 from .icrs import ICRS, icrs
 
@@ -50,7 +52,8 @@ def frame_transition(
       Rotate(f64[3,3](jax)),
       Rotate(f64[3,3](jax)),
       Translate( {...}, chart=Cart3D(M=Rn(3)) ),
-      Rotate(f64[3,3](jax))
+      Rotate(f64[3,3](jax)),
+      Translate( {...}, chart=Cart3D(M=Rn(3)), semantic_kind=vel )
     ))
 
     """  # noqa: E501
@@ -83,6 +86,88 @@ def frame_transition(from_frame: ICRS, to_frame: ICRS, /) -> cxfm.Identity:
 
 
 @plum.dispatch
+def frame_transition(from_frame: Galactic, to_frame: Galactic, /) -> cxfm.Identity:
+    """Return an identity operator for the Galactic->Galactic transformation.
+
+    >>> import coordinax.frames as cxf
+    >>> import coordinax.astro as cxastro
+
+    >>> cxf.frame_transition(cxastro.galactic, cxastro.galactic)
+    Identity()
+
+    """
+    return cxfm.identity
+
+
+@plum.dispatch
+def frame_transition(from_frame: ICRS, to_frame: Galactic, /) -> cxfm.Rotate:
+    r"""Return an ICRS to Galactic frame transformation operator.
+
+    The Galactic frame is related to ICRS by a fixed rotation (the IAU 1958
+    definition, via Astropy's FK4-B1950-derived matrix including the ICRS/FK5
+    frame bias). Being a pure static rotation, it acts on positions,
+    displacements, velocities, and accelerations alike by the rotation
+    matrix.
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.astro as cxastro
+
+    >>> frame_op = cx.frame_transition(cxastro.icrs, cxastro.galactic)
+    >>> frame_op
+    Rotate(f64[3,3](jax))
+
+    The North Galactic Pole (in ICRS) maps to the +z axis:
+
+    >>> ngp = cx.Point.from_(
+    ...     {"lon": u.Q(192.8594812065348, "deg"), "lat": u.Q(27.12825118085622, "deg"),
+    ...      "distance": u.Q(1, "kpc")}, cx.lonlat_sph3d)
+    >>> print(frame_op(ngp).cconvert(cx.cart3d).round(6))
+    <Point: chart=Cart3D (x, y, z) [kpc]
+        [0. 0. 1.]>
+
+    Velocities rotate too:
+
+    >>> v = cx.Tangent.from_([100.0, 0.0, 0.0], "km/s")
+    >>> print(frame_op(None, v).round(3))
+    <Tangent: chart=Cart3D (x, y, z) [km / s]
+        [ -5.488  49.411 -86.767]>
+
+    """
+    del from_frame, to_frame
+    return cxfm.Rotate(ICRS_TO_GALACTIC_MATRIX)
+
+
+@plum.dispatch
+def frame_transition(from_frame: Galactic, to_frame: ICRS, /) -> cxfm.Rotate:
+    r"""Return a Galactic to ICRS frame transformation operator.
+
+    The inverse of the ICRS -> Galactic rotation (the matrix transpose).
+
+    Examples
+    --------
+    >>> import unxt as u
+    >>> import coordinax.main as cx
+    >>> import coordinax.astro as cxastro
+
+    >>> fwd = cx.frame_transition(cxastro.icrs, cxastro.galactic)
+    >>> bwd = cx.frame_transition(cxastro.galactic, cxastro.icrs)
+
+    >>> q = u.Q([1.0, 2.0, 3.0], "kpc")
+    >>> bwd(fwd(q)).round(6)
+    Q([1., 2., 3.], 'kpc')
+
+    """
+    del from_frame, to_frame
+    return cxfm.Rotate(ICRS_TO_GALACTIC_MATRIX).inverse
+
+
+# ---------------------------------------------------------------
+
+
+@plum.dispatch
 def frame_transition(
     from_frame: Galactocentric, to_frame: Galactocentric, /
 ) -> cxfm.Composed:
@@ -101,12 +186,14 @@ def frame_transition(
     >>> frame_op2 = cxf.frame_transition(gcf_frame, gcf_frame2)
     >>> frame_op2
     Composed((
+      Translate( {...}, chart=Cart3D(M=Rn(3)), semantic_kind=vel ),
       Rotate(f64[3,3](jax)),
       Translate( {...}, chart=Cart3D(M=Rn(3)) ),
       Rotate(f64[3,3](jax)),
       Rotate(f64[3,3](jax)),
       Translate( {...}, chart=Cart3D(M=Rn(3)) ),
-      Rotate(f64[3,3](jax))
+      Rotate(f64[3,3](jax)),
+      Translate( {...}, chart=Cart3D(M=Rn(3)), semantic_kind=vel )
     ))
 
     """
@@ -154,7 +241,8 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     Composed((
       Rotate(f64[3,3](jax)),
       Translate( {...}, chart=Cart3D(M=Rn(3)) ),
-      Rotate(f64[3,3](jax))
+      Rotate(f64[3,3](jax)),
+      Translate( {...}, chart=Cart3D(M=Rn(3)), semantic_kind=vel )
     ))
 
     Transform a position at the origin of ICRS to Galactocentric:
@@ -167,6 +255,19 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     The result shows the Sun's position in Galactocentric coordinates: the Sun
     is about 8.1 kpc from the Galactic center along the x-axis and about 21 pc
     above the Galactic plane.
+
+    Velocities are transformed too: a star at rest in ICRS moves with the
+    solar velocity in the Galactocentric frame:
+
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> point = cx.Point.from_([0, 0, 0], "pc")
+    >>> vel = cx.Tangent.from_([0.0, 0.0, 0.0], "km/s")
+    >>> pv = cx.Coordinate(point=point, velocity=vel)
+    >>> out = frame_op(None, pv)
+    >>> print(out["velocity"])
+    <Tangent: chart=Cart3D (x, y, z) [km / s]
+        [ 12.9  245.6    7.78]>
 
     Works with unxt Quantities too:
 
@@ -192,7 +293,8 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     - R: Combined rotation matrix (longitude x latitude x roll)
     - offset_q: Translation by the Galactic center distance
     - H: Rotation to account for Sun's height above plane
-    - offset_v: Velocity boost to Galactocentric rest frame
+    - offset_v: Solar-velocity kick to the Galactocentric rest frame
+      (a fibre-only ``Translate(semantic_kind=vel)``)
 
     The default Galactocentric frame uses parameters from the Astropy default
     values (as of v4.0), which are based on various literature sources.
@@ -215,15 +317,16 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     # Post-rotation spatial offset to Galactic center.
     offset_q = cxfm.Translate.from_(-galcen["distance"] * jnp.asarray([1, 0, 0]))
 
-    # TODO: re-add when Boost is a class
-    # # Post-rotation velocity offset
-    # galcen_v_sun = to_frame.galcen_v_sun
-    # offset_v = cxf.Boost(galcen_v_sun.data, chart=galcen_v_sun.chart)
+    # Post-rotation velocity offset: the solar-velocity kick. This is a
+    # fibre-only velocity translation (`Translate(semantic_kind=vel)`): the
+    # frame transform is a fixed-epoch snapshot, so positions are not advected
+    # in time. (Contrast with `coordinax.transforms.Boost`, the Galilean
+    # boost, whose point action moves positions by v*tau.)
+    v_sun = to_frame.galcen_v_sun
+    offset_v = cxfm.Translate(v_sun.data, chart=v_sun.chart, semantic_kind=cxr.vel)
 
-    # # Total Operator
-    # return R | offset_q | H | offset_v
     # Total Operator
-    return R | offset_q | H
+    return R | offset_q | H | offset_v
 
 
 # ---------------------------------------------------------------

@@ -65,6 +65,7 @@ def coordinax_frames_exports() -> dict[str, object]:
     """Return frame symbols exported to ``coordinax.frames`` via entry-point."""
     try:
         from ._src.base_frame import AbstractSpaceFrame  # noqa: PLC0415
+        from ._src.galactic import Galactic, galactic  # noqa: PLC0415
         from ._src.galactocentric import Galactocentric  # noqa: PLC0415
         from ._src.icrs import ICRS, icrs  # noqa: PLC0415
     except ImportError as exc:
@@ -80,5 +81,7 @@ def coordinax_frames_exports() -> dict[str, object]:
         "AbstractSpaceFrame": AbstractSpaceFrame,
         "ICRS": ICRS,
         "icrs": icrs,
+        "Galactic": Galactic,
+        "galactic": galactic,
         "Galactocentric": Galactocentric,
     }

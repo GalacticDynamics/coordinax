@@ -230,13 +230,22 @@ def from_astropy_skycoord(cls: type[cxv.Point], obj: apyc.SkyCoord, /) -> cxv.Po
       chart=Cart3D(M=Rn(3)),
       frame=Galactocentric(
         galcen=Point(
-          { 'lon': Q(266.4051, 'deg'), 'lat': Q(-28.936175, 'deg'),
+          {
+            'lon': Q(266.4051, 'deg'),
+            'lat': Q(-28.936175, 'deg'),
             'distance': Q(8.122, 'kpc')
           },
-          chart=LonLatSpherical3D(M=Rn(3)), frame=ICRS()
+          chart=LonLatSpherical3D(M=Rn(3)),
+          frame=ICRS()
         ),
         roll=Angle(0., 'deg'),
-        z_sun=Q(20.8, 'pc')
+        z_sun=Q(20.8, 'pc'),
+        galcen_v_sun=Tangent(
+          {'x': Q(12.9, 'km / s'), 'y': Q(245.6, 'km / s'), 'z': Q(7.78, 'km / s')},
+          chart=Cart3D(M=Rn(3)),
+          basis=coord_basis,
+          semantic=vel
+        )
       )
     )
 

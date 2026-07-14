@@ -67,14 +67,14 @@ class Galactocentric(AbstractSpaceFrame):
         default=u.Q(jnp.array(20.8), "pc"),
     )
 
-    # #: Velocity of the Sun in the Galactic center frame.
-    # #: https://ui.adsabs.harvard.edu/abs/2018RNAAS...2..210D
-    # #: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
-    # #: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
-    # galcen_v_sun: cxv.Vector[cxc.Cart3D, cxr.TangentGeometry] = eqx.field(
-    #     converter=cxv.Vector[cxc.Cart3D, cxr.TangentGeometry].from_,
-    #     default=galcen_v_sun_default,
-    # )
+    #: Velocity of the Sun in the Galactic center frame.
+    #: https://ui.adsabs.harvard.edu/abs/2018RNAAS...2..210D
+    #: https://ui.adsabs.harvard.edu/abs/2018A%26A...615L..15G
+    #: https://ui.adsabs.harvard.edu/abs/2004ApJ...616..872R
+    galcen_v_sun: cxv.Tangent = eqx.field(  # ty: ignore[invalid-assignment]
+        converter=Unless(cxv.Tangent, cxv.Tangent.from_),
+        default=GALCEN_V_SUN_DEFAULT,
+    )
 
     # --------
 

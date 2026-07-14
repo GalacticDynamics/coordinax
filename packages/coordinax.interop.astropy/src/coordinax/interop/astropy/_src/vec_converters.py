@@ -326,3 +326,63 @@ def apysph_to_lonlatsph(obj: apyc.SphericalRepresentation, /) -> cxv.Point:
 
     """
     return cxv.Point.from_(obj)  # ty: ignore[invalid-return-type]
+
+
+# =====================================
+# Cartesian velocity (Tangent <-> CartesianDifferential)
+
+
+@plum.conversion_method(cxv.Tangent, apyc.CartesianDifferential)
+def tangent_to_apycartdiff(obj: cxv.Tangent, /) -> apyc.CartesianDifferential:
+    """`coordinax.Tangent` (Cartesian velocity) -> `astropy.CartesianDifferential`.
+
+    >>> import unxt as u
+    >>> import coordinax.vectors as cxv
+
+    >>> vel = cxv.Tangent.from_([12.9, 245.6, 7.78], "km/s")
+    >>> convert(vel, apyc.CartesianDifferential)
+    <CartesianDifferential (d_x, d_y, d_z) in km / s
+        (12.9, 245.6, 7.78)>
+
+    """
+    # Check that the tangent has velocity semantics.
+    obj = check_semantics(obj, need=cxr.Velocity)
+    if obj.chart != cxc.cart3d:
+        msg = (
+            "Tangent -> CartesianDifferential conversion requires a "
+            f"Cartesian chart; got {obj.chart!r}. Convert with `cconvert` "
+            "(supplying `at=`) first."
+        )
+        raise ValueError(msg)
+
+    return apyc.CartesianDifferential(
+        d_x=plum.convert(obj["x"], apyu.Quantity),
+        d_y=plum.convert(obj["y"], apyu.Quantity),
+        d_z=plum.convert(obj["z"], apyu.Quantity),
+    )
+
+
+@plum.conversion_method(apyc.CartesianDifferential, cxv.Tangent)
+def apycartdiff_to_tangent(obj: apyc.CartesianDifferential, /) -> cxv.Tangent:
+    """`astropy.CartesianDifferential` -> `coordinax.Tangent` (Cartesian velocity).
+
+    >>> import astropy.units as apyu
+    >>> import astropy.coordinates as apyc
+    >>> import coordinax.vectors as cxv
+
+    >>> dif = apyc.CartesianDifferential(
+    ...     d_x=12.9 * apyu.km / apyu.s,
+    ...     d_y=245.6 * apyu.km / apyu.s,
+    ...     d_z=7.78 * apyu.km / apyu.s,
+    ... )
+    >>> print(convert(dif, cxv.Tangent))
+    <Tangent: chart=Cart3D (x, y, z) [km / s]
+        [ 12.9  245.6    7.78]>
+
+    """
+    data = {
+        "x": plum.convert(obj.d_x, u.Q),  # ty: ignore[unresolved-attribute]
+        "y": plum.convert(obj.d_y, u.Q),  # ty: ignore[unresolved-attribute]
+        "z": plum.convert(obj.d_z, u.Q),  # ty: ignore[unresolved-attribute]
+    }
+    return cxv.Tangent(data, cxc.cart3d, cxr.coord_basis, cxr.vel)  # ty: ignore[missing-argument]

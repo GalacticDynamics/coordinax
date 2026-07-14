@@ -152,7 +152,8 @@ describe_command = [
 
 
 [tool.codespell]
-skip = ["uv.lock"]
+ignore-words-list = "precessed,precessing"
+skip              = ["uv.lock"]
 
 
 [tool.repo-review]

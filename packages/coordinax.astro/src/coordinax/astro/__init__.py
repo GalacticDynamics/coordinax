@@ -6,6 +6,8 @@ __all__ = (
     "AbstractSpaceFrame",
     "ICRS",
     "icrs",
+    "Galactic",
+    "galactic",
     "Galactocentric",
 )
 
@@ -16,8 +18,10 @@ with install_import_hook("coordinax.astro"):
         ICRS,
         AbstractSpaceFrame,
         DistanceModulus,
+        Galactic,
         Galactocentric,
         Parallax,
+        galactic,
         icrs,
     )
 

@@ -4,6 +4,7 @@ from .base_frame import *
 from .constants import *
 from .distance_modulus import *
 from .frame_transforms import *
+from .galactic import *
 from .galactocentric import *
 from .icrs import *
 from .parallax import *
