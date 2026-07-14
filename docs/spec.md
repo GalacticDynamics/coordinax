@@ -2164,7 +2164,7 @@ Separating semantics from geometry provides two advantages:
     Abstract marker base class for semantic kinds of tangent vectors.
 
     - All tangent-vector semantic kinds (Displacement, Velocity, Acceleration) share the same Jacobian transformation law.
-    - Semantic kind is used for role-aware dispatch in frame transformations (e.g. `Boost` acts on `Velocity`, is identity on `Displacement`).
+    - Semantic kind is used for role-aware dispatch in frame transformations (e.g. a velocity kick `Translate(semantic_kind=vel)` acts on `Velocity` and is identity on `Displacement`).
 
     **`order` class variable** (`ClassVar[int]`):
 
@@ -4545,11 +4545,15 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Translate`
 
-    A **Translate** is a transformation that adds a constant displacement to position components while leaving other representations unchanged.
+    A **Translate** is a transformation that adds an offset on the
+    time-derivative (semantic-kind) ladder. By default the offset is a
+    displacement (`semantic_kind=dpl`, ladder order $k=0$) that shifts
+    positions; with `semantic_kind=vel` ($k=1$) it is a fibre-only velocity
+    *kick*, and so on up the ladder.
 
     **Mathematical definition**:
 
-    The transform shifts all points by a constant displacement vector:
+    The default ($k=0$) transform shifts all points by a displacement vector:
 
     $$
     F(p) = p + a .
@@ -4557,16 +4561,30 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     In Cartesian coordinates this is $ x’ = x + a .$
 
-    A time-dependent translation replaces the constant $a$ with a smooth curve $a(t)$:
+    A time-dependent translation replaces the constant $a$ with a smooth curve $a(\tau)$:
 
     $$
-    F_t(p) = p + a(t).
+    F_\tau(p) = p + a(\tau).
     $$
+
+    **Kinematic prolongation (ladder rule):** acting on tangent data of ladder
+    order $m$, an order-$k$ Translate contributes $d^{m-k} a / d\tau^{m-k}$
+    for $m \ge k$ and is the identity for $m < k$. In particular:
+
+    - a *static* $k=0$ Translate leaves displacements, velocities, and
+      accelerations unchanged;
+    - a *time-dependent* $k=0$ Translate additionally shifts velocities by
+      $\dot a(\tau)$ and accelerations by $\ddot a(\tau)$ (the kinematic
+      prolongation of the point action);
+    - `Displacement` data ($m=0$) is always unchanged — a displacement is a
+      same-$\tau$ point difference and the Jacobian of a translation is the
+      identity.
 
     **Fields:**
 
-    - `delta : CDict | Callable[[tau], CDict]` — the position offset $\Delta x$. If callable, evaluated at the time parameter `tau`.
+    - `delta : CDict | Callable[[tau], CDict]` — the offset. Its physical dimension follows `semantic_kind` (length for `dpl`, speed for `vel`, ...). If callable, evaluated at the time parameter `tau`.
     - `chart : AbstractChart` — the chart in which `delta` is expressed (static).
+    - `semantic_kind : AbstractTangentSemanticKind` (default `dpl`) — the ladder order $k$ of the offset.
     - `right_add : bool` (default `True`) — whether to compute $x + \Delta x$ (``True``) or $\Delta x + x$ (``False``).
 
     **Inverse:**
@@ -4737,25 +4755,28 @@ Each group corresponds to a set of transformations preserving a particular geome
 
 !!! info `Boost`
 
-    A **Boost** is a Galilean velocity-offset operator. It acts on phase-space data by adding a constant velocity $\Delta v$ to velocity components and leaving all other representations unchanged.
+    A **Boost** is the Galilean boost: the change to a frame moving at constant velocity $\Delta v$.
 
     **Mathematical definition** (in a Cartesian chart):
 
     $$
-    B_{\Delta v} : \dot{x} \mapsto \dot{x} + \Delta v.
+    B_{\Delta v} : (\tau, x) \mapsto (\tau,\, x + \Delta v\,\tau).
     $$
 
-    Positions, displacements, and accelerations are unchanged:
+    Its kinematic prolongation follows: points move by $\Delta v\,\tau$, velocities shift by $\Delta v$, and (for constant $\Delta v$) accelerations and displacements are unchanged:
 
     $$
-    B_{\Delta v}(x) = x, \quad
+    B_{\Delta v}(x) = x + \Delta v\,\tau, \quad
+    B_{\Delta v}(\dot{x}) = \dot{x} + \Delta v, \quad
     B_{\Delta v}(\Delta x) = \Delta x, \quad
     B_{\Delta v}(\ddot{x}) = \ddot{x}.
     $$
 
+    Equivalently, `Boost(dv)` is the time-dependent translation `Translate(delta=lambda tau: dv * tau)`. Contrast with `Translate(semantic_kind=vel)` — a fibre-only velocity *kick* that shifts velocities without moving points.
+
     **Fields:**
 
-    - `delta : CDict | Callable[[tau], CDict]` — the velocity offset $\Delta v$. If callable, evaluated at the time parameter `tau`.
+    - `delta : CDict | Callable[[tau], CDict]` — the boost velocity $\Delta v$. If callable, evaluated at the time parameter `tau` (and the prolongation gains the corresponding derivative terms).
     - `chart : AbstractChart` — the chart in which `delta` is expressed (static).
     - `right_add : bool` (default `True`) — whether to compute $\dot{x} + \Delta v$ (``True``) or $\Delta v + \dot{x}$ (``False``).
 
@@ -4763,10 +4784,10 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     | Representation semantic kind | Effect of `act` |
     |------------------------------|-----------------|
-    | `Point` / `Location`         | identity        |
+    | `Point` / `Location`         | $x \mapsto x + \Delta v\,\tau$ (requires `tau`; `tau=None` raises `TypeError`) |
     | `Displacement`               | identity        |
     | `Velocity`                   | $\dot{x} \mapsto \dot{x} + \Delta v$ |
-    | `Acceleration`               | identity        |
+    | `Acceleration`               | identity (for constant $\Delta v$; gains $\dot{\Delta v}$ if time-dependent) |
 
     **`act` dispatch signature:**
 
@@ -4818,9 +4839,11 @@ Each group corresponds to a set of transformations preserving a particular geome
     >>> cxfm.act(boost, None, v, cxc.cart3d, cxr.coord_vel)
     {'x': Array(3., dtype=float64), 'y': Array(3., dtype=float64), 'z': Array(0., dtype=float64)}
 
+    Points move by ``delta * tau`` (a time parameter is required):
+
     >>> p = {"x": jnp.array(1.0), "y": jnp.array(2.0), "z": jnp.array(3.0)}
-    >>> cxfm.act(boost, None, p, cxc.cart3d, cxr.point)
-    {'x': Array(1., dtype=float64), 'y': Array(2., dtype=float64), 'z': Array(3., dtype=float64)}
+    >>> cxfm.act(boost, jnp.array(2.0), p, cxc.cart3d, cxr.point)
+    {'x': Array(3., dtype=float64), 'y': Array(2., dtype=float64), 'z': Array(3., dtype=float64)}
     ```
 
 </br>
@@ -4862,24 +4885,24 @@ A **reference frame** is an abstract label used to identify a coordinate descrip
     - **Spatial offset** from Alice's origin: $[\,100\,000\ \text{km},\; 10\,000\ \text{km},\; 0\,]$.
     - **Velocity** relative to Alice: $\approx 269\,813\ \text{km\,s}^{-1}$ ($\approx 0.9\,c$) along Alice's $x$-axis.
 
-    Because Bob is non-rotating, the Alice → Bob transformation requires only a spatial `Translate` followed by a Galilean `Boost`. No rotation is needed.
+    Because Bob is non-rotating, the Alice → Bob transformation requires only a spatial `Translate` followed by a velocity kick (`Translate(semantic_kind=vel)` — a fibre-only offset; contrast with `Boost`, the Galilean boost, whose point action moves positions by $\Delta v\,\tau$ and therefore requires a time). No rotation is needed.
 
     **Frame transition table:**
 
     | From → To     | Transform                          |
     |---------------|------------------------------------|
     | `Bob → Bob`   | `Identity()`                       |
-    | `Alice → Bob` | `Translate([100 000, 10 000, 0] km) \| Boost([269 813 212.2, 0, 0] m/s)` |
-    | `Bob → Alice` | inverse of Alice → Bob: `Boost([−269 813 212.2, 0, 0] m/s) \| Translate([−100 000, −10 000, 0] km)` |
+    | `Alice → Bob` | `Translate([100 000, 10 000, 0] km) \| Translate([269 813 212.2, 0, 0] m/s, semantic_kind=vel)` |
+    | `Bob → Alice` | inverse of Alice → Bob: `Translate([−269 813 212.2, 0, 0] m/s, semantic_kind=vel) \| Translate([−100 000, −10 000, 0] km)` |
 
     **Semantic behaviour** (per representation):
 
     | Representation semantic | Effect of Alice → Bob transform |
     |-------------------------|---------------------------------|
-    | `Point` / `Location`    | position shifted by `[100 000, 10 000, 0] km` |
-    | `Displacement`          | unchanged (both Translate and Boost are identity on displacements) |
+    | `Point` / `Location`    | position shifted by `[100 000, 10 000, 0] km` (the velocity kick is identity on points, so bare arrays/Quantities act as positions) |
+    | `Displacement`          | unchanged (both offsets are identity on displacements) |
     | `Velocity`              | velocity shifted by `[269 813 212.2, 0, 0] m/s` |
-    | `Acceleration`          | unchanged (`Boost` is identity on accelerations) |
+    | `Acceleration`          | unchanged (a constant velocity kick is identity on accelerations) |
 
     **Pre-defined instance:**
 
