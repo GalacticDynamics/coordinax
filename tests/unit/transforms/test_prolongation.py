@@ -799,3 +799,18 @@ class TestNonCartesianOpChart:
         out = cxfm.pushforward(op, None, a, cxc.cart3d, cxr.coord_acc, at=at)
         assert out["x"].unit == u.unit("kpc/Myr2")
         assert jnp.allclose(out["x"].value, 2.0)
+
+    def test_is_time_dependent_non_transform_raises(self):
+        """Non-dataclass inputs get a clear TypeError, not a dataclasses one."""
+        with pytest.raises(TypeError, match="expects a transform"):
+            cxfm.is_time_dependent(lambda t: t)
+
+    def test_prolong_jet_mismatched_slot_keys_raises(self):
+        """Jet slots with different components than slot 0 raise informatively."""
+        op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+        jet = {
+            0: q3(1.0, 0.0, 0.0, "km"),
+            1: {"x": u.Q(0.0, "km/s"), "y": u.Q(0.0, "km/s")},  # missing z
+        }
+        with pytest.raises(TypeError, match=r"slot 1 .*missing \['z'\]"):
+            cxfm.prolong(op, None, jet, cxc.cart3d)

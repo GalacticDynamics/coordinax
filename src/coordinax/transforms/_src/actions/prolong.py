@@ -370,6 +370,17 @@ def prolong_jet(
         if m not in jet:
             msg = _MSG_JET_SLOT_MISSING.format(op=type(op).__name__, m=max_order, k=m)
             raise TypeError(msg)
+        if set(jet[m]) != set(q0):
+            missing = sorted(set(q0) - set(jet[m]))
+            extra = sorted(set(jet[m]) - set(q0))
+            msg = (
+                f"prolong({type(op).__name__}, ...): jet slot {m} components "
+                f"do not match slot 0's {sorted(q0)}"
+                + (f"; missing {missing}" if missing else "")
+                + (f"; unexpected {extra}" if extra else "")
+                + "."
+            )
+            raise TypeError(msg)
 
     if is_time_dependent(op) and tau is None and max_order >= 1:
         msg = _MSG_TAU_REQUIRED.format(op=type(op).__name__)

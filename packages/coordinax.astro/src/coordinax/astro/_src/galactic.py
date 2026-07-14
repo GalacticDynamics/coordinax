@@ -5,7 +5,7 @@ __all__ = ("Galactic", "galactic")
 
 from typing import final
 
-import jax.numpy as jnp
+import numpy as np
 
 from .base_frame import AbstractSpaceFrame
 
@@ -16,12 +16,18 @@ from .base_frame import AbstractSpaceFrame
 #: matrix includes the ~25 mas ICRS/FK5 frame bias. It therefore differs at
 #: the sub-arcsecond level from matrices built directly from the J2000 NGP
 #: Euler angles (e.g. Liu, Zhu, & Zhang 2011, A&A 526, A16).
-ICRS_TO_GALACTIC_MATRIX = jnp.asarray(
+# NOTE: a NumPy float64 array, not a JAX array: JAX would silently truncate
+# these constants to float32 at import time when jax_enable_x64 is off,
+# discarding precision before any computation. As a NumPy array the constant
+# keeps full precision; conversion (and any x32 truncation) happens only at
+# use, under the runtime's own dtype policy.
+ICRS_TO_GALACTIC_MATRIX = np.asarray(
     [
         [-0.054875657712591654, -0.8734370519556157, -0.48383507361671546],
         [0.49410943719272676, -0.44482972122329517, 0.7469821839866674],
         [-0.8676661375596576, -0.19807633727300053, 0.4559838136873017],
-    ]
+    ],
+    dtype=np.float64,
 )
 
 #: The inverse (transpose) rotation, taking Galactic Cartesian components to

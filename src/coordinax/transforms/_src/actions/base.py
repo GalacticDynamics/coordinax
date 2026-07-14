@@ -469,6 +469,13 @@ def is_time_dependent(op: Any, /) -> bool:
     False
 
     """
+    if not dataclasses.is_dataclass(op):
+        msg = (
+            "is_time_dependent expects a transform (a dataclass instance); "
+            f"got {type(op).__name__!r}."
+        )
+        raise TypeError(msg)
+
     # NOTE: no `is_leaf=callable` — operators themselves define __call__, and
     # descending into composite operators as pytrees is exactly what makes
     # this rule match `materialize_transform`'s eqx.partition(callable).

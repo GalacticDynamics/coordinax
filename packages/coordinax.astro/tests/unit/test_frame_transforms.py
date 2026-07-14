@@ -475,3 +475,13 @@ def test_galactic_to_galactocentric_via_fallback_matches_astropy() -> None:
     )
     np.testing.assert_allclose(got_q, exp_q, rtol=0, atol=1e-6)
     np.testing.assert_allclose(got_v, exp_v, rtol=0, atol=1e-6)
+
+
+def test_galactic_matrix_is_float64():
+    """The Galactic rotation constant keeps float64 regardless of the x64 flag.
+
+    A JAX-array constant would be silently truncated to float32 at import
+    time under jax_enable_x64=False, discarding precision before use.
+    """
+    assert isinstance(ICRS_TO_GALACTIC_MATRIX, np.ndarray)
+    assert ICRS_TO_GALACTIC_MATRIX.dtype == np.float64

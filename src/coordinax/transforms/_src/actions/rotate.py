@@ -812,7 +812,7 @@ def act(
         return _rotate_pushforward_cdict(op, tau, x, chart, rep, at=at, usys=usys)
 
     cart = chart.cartesian
-    if m == 1 and chart is cart and tau is not None and at is not None:
+    if m == 1 and chart == cart and tau is not None and at is not None:
         # Closed form in Cartesian components: v' = R v + dR/dtau x.
         # One jvp evaluates R(tau) and dR/dtau together.
         tau_unit = u.unit_of(tau)
