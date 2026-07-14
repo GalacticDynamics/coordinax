@@ -133,9 +133,12 @@ class TestActiveSemanticsProperty:
         back = cxfm.act(cxf.frame_transition(transformed, cxf.alice), None, fwd)
 
         assert isinstance(back, cxv.Point)
+        # Roundoff of a rotation roundtrip scales with the vector magnitude
+        # (~|q| * eps), so the tolerance must too; atol=1e-6 m matches the
+        # |q| <= 1e6 m strategy bound (same as test_alice_alex_roundtrip).
         for key in ("x", "y", "z"):
             np.testing.assert_allclose(
                 float(u.ustrip("m", q.data[key])),
                 float(u.ustrip("m", back.data[key])),
-                atol=1e-10,
+                atol=1e-6,
             )
