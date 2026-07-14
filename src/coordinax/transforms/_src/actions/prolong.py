@@ -252,8 +252,8 @@ def pushforward_generic(
 
     # Strip v consistently with the base point: v_k is expressed in
     # in_unit_k / T for a common time unit T, so the stripped values form a
-    # valid coordinate tangent. Any common T works; prefer tau's unit.
-    time_unit = _pushforward_time_unit(tau, in_units, _cdict_units(v), order)
+    # valid coordinate tangent.
+    time_unit = _common_time_unit(tau, in_units, _cdict_units(v), order)
     v_vals = {k: _strip_leaf(_per_time(in_units[k], time_unit, order), v[k]) for k in v}
     at_vals = _strip_cdict(at, in_units)
 
@@ -287,16 +287,28 @@ def _point_act_units(
     return _cdict_units(cast("CDict", y0))
 
 
-def _pushforward_time_unit(
+def _common_time_unit(
     tau: Any, in_units: dict[str, Any], v_units: dict[str, Any], order: int, /
 ) -> Any:
-    """Choose a common time unit for stripping order-``order`` tangent data."""
+    """Choose a common time unit T for stripping order-``order`` tangent data.
+
+    Any dimensionally-consistent T is mathematically valid, but the choice
+    fixes the *units* of the output (``out_unit / T**order``). Prefer deriving
+    T from the data itself (``T**order = in_unit / v_unit``) so that outputs
+    preserve the data's own units — e.g. a ``kpc/Myr`` velocity pushes forward
+    to ``kpc/Myr``, not ``kpc/s``. Fall back to ``tau``'s unit, then to
+    seconds for a unitful/raw mix.
+    """
     if order == 0:
         return None
+    for k, vu in v_units.items():
+        iu = in_units.get(k)
+        if vu is not None and iu is not None:
+            ratio = iu / vu
+            return ratio if order == 1 else ratio ** (1.0 / order)
     tau_unit = u.unit_of(tau) if tau is not None else None
     if tau_unit is not None:
         return tau_unit
-    # No unitful tau: derive from the data if it carries units, else raw.
     if any(un is not None for un in v_units.values()):
         return u.unit("s")
     return None
@@ -367,32 +379,42 @@ def prolong_jet(
 
     in_units = _cdict_units(q0)
     out_units = _point_act_units(op, tau, q0, chart, usys=usys)
-    tau_val, tau_unit = _tau_value_unit(tau) if tau is not None else (None, None)
-    if tau_val is None:
-        # Time-independent op with no tau: differentiate at a dummy time.
-        tau_val = jnp.zeros(())
-        if any(un is not None for un in in_units.values()):
-            tau_unit = u.unit("s")
+    # The common time unit T fixes the units of the output slots
+    # (out_unit / T**m); derive it from the data so units are preserved.
+    # Everything in the chain — the jet slots AND tau itself — is expressed
+    # per T so the chain rule's dtau- and dx-contributions add consistently.
+    time_unit = _common_time_unit(tau, in_units, _cdict_units(jet[1]), 1)
+    if tau is None:
+        tau_val = jnp.zeros(())  # unused: f below ignores tv when tau is None
+    elif time_unit is not None:
+        tau_val = u.ustrip(time_unit, tau)
+    else:
+        tau_val = jnp.asarray(tau)
 
     comps = tuple(q0.keys())
 
     def f(tv: Any, xv: dict[str, Any], /) -> dict[str, Any]:
-        t = _attach_leaf(tau_unit, tv)
+        # With tau=None the point action is applied AT tau=None — no dummy
+        # time is fabricated. The (unused) tv slot then contributes exactly
+        # zero to the derivatives, and a point action that genuinely requires
+        # a time raises its own informative error instead of being silently
+        # evaluated at a made-up instant.
+        t = _attach_leaf(time_unit, tv) if tau is not None else None
         x = _attach_cdict(xv, in_units)
         y = cxfmapi.act(op, t, x, chart, cxr.point, usys=usys)
         return _strip_cdict(y, out_units)
 
-    # Stripped jet slots: slot m in units in_unit_k / tau_unit**m.
+    # Stripped jet slots: slot m in units in_unit_k / T**m.
     q0_vals = _strip_cdict(q0, in_units)
     slot_vals = [
-        {k: _strip_leaf(_per_time(in_units[k], tau_unit, m), jet[m][k]) for k in comps}
+        {k: _strip_leaf(_per_time(in_units[k], time_unit, m), jet[m][k]) for k in comps}
         for m in range(1, max_order + 1)
     ]
 
     slot_outs = _total_derivative_chain(f, tau_val, q0_vals, slot_vals)
     return {
         m: _attach_cdict(
-            ym, {k: _per_time(un, tau_unit, m) for k, un in out_units.items()}
+            ym, {k: _per_time(un, time_unit, m) for k, un in out_units.items()}
         )
         for m, ym in enumerate(slot_outs)
     }

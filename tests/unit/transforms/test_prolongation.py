@@ -584,3 +584,72 @@ class TestFibreKickProlong:
         assert jnp.allclose(u.ustrip("km", out[0]["x"]), 4.0)  # x + dv*tau
         assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 1.5)  # v + dv
         assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 0.1)  # a unchanged
+
+
+# ============================================================================
+# Unit preservation and tau=None semantics (PR review)
+
+
+class TestUnitPreservation:
+    """Outputs preserve the data's own units; tau=None is passed through."""
+
+    def test_pushforward_preserves_time_units(self):
+        """A kpc/Myr velocity pushes forward to kpc/Myr, not kpc/s."""
+        op = cxfm.Scale.from_factors([2.0, 2.0, 2.0])
+        v = {k: u.Q(x, "kpc/Myr") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        at = {k: u.Q(x, "kpc") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        out = cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
+        assert out["x"].unit == u.unit("kpc/Myr")
+        assert jnp.allclose(out["x"].value, 2.0)
+
+    def test_prolong_preserves_time_units(self):
+        """Jet slots come back in the data's own time base."""
+        op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+        jet = {
+            0: {k: u.Q(x, "kpc") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)},
+            1: {
+                k: u.Q(x, "kpc/Myr")
+                for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)
+            },
+        }
+        out = cxfm.prolong(op, None, jet, cxc.cart3d)
+        assert out[1]["y"].unit == u.unit("kpc/Myr")
+        assert jnp.allclose(out[1]["y"].value, 1.0)
+
+    def test_prolong_chain_consistent_across_tau_units(self):
+        """Chain rule stays unit-consistent across differing tau units.
+
+        The result must not depend on whether tau is given in seconds or
+        Myr when the data's time base is Myr.
+        """
+        g = u.Q(1.0, "kpc/Myr2")
+        moving = cxfm.Translate(
+            lambda t: {"x": 0.5 * g * t**2, "y": u.Q(0.0, "kpc"), "z": u.Q(0.0, "kpc")},
+            chart=cxc.cart3d,
+        )
+        jet = {
+            0: {k: u.Q(0.0, "kpc") for k in "xyz"},
+            1: {
+                k: u.Q(v, "kpc/Myr")
+                for k, v in zip("xyz", (1.0, 0.0, 0.0), strict=False)
+            },
+        }
+        out_myr = cxfm.prolong(moving, u.Q(2.0, "Myr"), jet, cxc.cart3d)
+        out_s = cxfm.prolong(moving, u.Q(2.0, "Myr").uconvert("s"), jet, cxc.cart3d)
+        # v' = v + g*tau = 1 + 2 = 3 kpc/Myr, regardless of tau's unit
+        assert jnp.allclose(u.ustrip("kpc/Myr", out_myr[1]["x"]), 3.0)
+        assert jnp.allclose(u.ustrip("kpc/Myr", out_s[1]["x"]), 3.0, atol=1e-6)
+
+    def test_prolong_tau_none_passes_through_to_point_action(self):
+        """tau=None is not replaced by a dummy time.
+
+        A point action that genuinely requires tau (Boost) raises its own
+        informative error even on the generic autodiff path.
+        """
+        boost = cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
+        jet = {0: q3(1.0, 0.0, 0.0, "km"), 1: q3(0.0, 0.0, 0.0, "km/s")}
+        generic = cxfm.prolong.invoke(
+            cxfm.AbstractTransform, object, dict, cxc.AbstractChart
+        )
+        with pytest.raises(TypeError, match="requires a time parameter"):
+            generic(boost, None, jet, cxc.cart3d)
