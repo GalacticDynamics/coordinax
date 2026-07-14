@@ -56,15 +56,23 @@ class Translate(AbstractAdd):
     (``dpl``: $k=0$, ``vel``: $k=1$, ...). Acting on data of ladder order $m$
     (points behave as the curve position for $k=0$):
 
-    - $k = 0$: shifts points by $\delta(\tau)$; velocities gain
-      $\dot\delta(\tau)$ and accelerations $\ddot\delta(\tau)$ when
-      ``delta`` is time-dependent (the kinematic prolongation).
+    - $k = 0$ with ``delta`` in a Cartesian-type (flat) chart: shifts points
+      by $\delta(\tau)$; velocities gain $\dot\delta(\tau)$ and
+      accelerations $\ddot\delta(\tau)$ when ``delta`` is time-dependent
+      (the kinematic prolongation); ``Displacement`` data ($m = 0$) is
+      unaffected (a displacement is a same-$\tau$ point difference and the
+      Jacobian of a flat translation is the identity).
+    - $k = 0$ with ``delta`` in a non-flat chart: the point action pushes
+      ``delta`` through the chart Jacobian at the point, so it is base-point
+      dependent. All tangent data — including displacements — transforms by
+      the generic pushforward/prolongation of the point action, which is
+      generally not the identity and requires the base point (``at=``, or a
+      `~coordinax.Coordinate` bundle).
     - $k \geq 1$: identity on points and on all orders $m < k$; order $m = k$
       gains $\delta(\tau)$; orders $m > k$ gain
-      $d^{m-k}\delta/d\tau^{m-k}$ when ``delta`` is time-dependent.
-    - ``Displacement`` data ($m = 0$) is always unaffected: a displacement is
-      a same-$\tau$ point difference and the Jacobian of a translation is the
-      identity.
+      $d^{m-k}\delta/d\tau^{m-k}$ when ``delta`` is time-dependent. The
+      componentwise rule is definitional (the point action is the identity),
+      independent of chart flatness.
 
     Examples
     --------

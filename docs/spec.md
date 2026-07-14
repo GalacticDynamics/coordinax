@@ -4569,16 +4569,33 @@ Each group corresponds to a set of transformations preserving a particular geome
 
     **Kinematic prolongation (ladder rule):** acting on tangent data of ladder
     order $m$, an order-$k$ Translate contributes $d^{m-k} a / d\tau^{m-k}$
-    for $m \ge k$ and is the identity for $m < k$. In particular:
+    for $m \ge k$ and is the identity for $m < k$.
+
+    For a $k=0$ offset the componentwise ladder rule holds when `delta` is
+    expressed in a **Cartesian-type (flat) chart**, where the point action is
+    a true translation of the ambient space (Jacobian = identity, no
+    base-point dependence). In that case:
 
     - a *static* $k=0$ Translate leaves displacements, velocities, and
       accelerations unchanged;
     - a *time-dependent* $k=0$ Translate additionally shifts velocities by
       $\dot a(\tau)$ and accelerations by $\ddot a(\tau)$ (the kinematic
       prolongation of the point action);
-    - `Displacement` data ($m=0$) is always unchanged — a displacement is a
-      same-$\tau$ point difference and the Jacobian of a translation is the
-      identity.
+    - `Displacement` data ($m=0$) is unchanged — a displacement is a
+      same-$\tau$ point difference and the Jacobian of a flat translation is
+      the identity.
+
+    A $k=0$ offset expressed in a **non-flat chart** is *not* a translation:
+    the point action pushes `delta` through the chart Jacobian at the point,
+    so it is base-point dependent. Tangent data (including displacements)
+    then transforms by the generic pushforward/prolongation of that point
+    action — which is generally not the identity, requires the base point
+    (``at=``, or a `~coordinax.Coordinate` bundle), and is computed by
+    autodiff rather than the componentwise rule.
+
+    Fibre-only offsets ($k \ge 1$) act componentwise in their own chart by
+    definition (their point action is the identity), independent of chart
+    flatness.
 
     **Fields:**
 
