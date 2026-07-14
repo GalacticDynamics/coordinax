@@ -341,13 +341,15 @@ def act(
     if m < k:
         return x
 
-    # The flat ladder rule below is the prolongation of the point action only
-    # when a k=0 delta lives in a Cartesian chart, where the point action is
-    # a true translation. In a non-Cartesian chart the point action pushes
-    # delta through the chart Jacobian AT the point, so it is base-point
-    # dependent and its prolongation/pushforward gains coupling terms — defer
-    # to the generic autodiff engine (which requires the base point 'at').
-    if k == 0 and not is_flat_chart(op.chart):
+    # The componentwise ladder rule below is the prolongation of the point
+    # action only when the k=0 delta and the data live in the SAME
+    # Cartesian-type chart, where the point action is a true translation. If
+    # delta lives in a non-flat chart (pushed through the chart Jacobian AT
+    # the point) or the data's chart is non-flat / different (the translation
+    # is nonlinear in the data's coordinates), the pushforward/prolongation
+    # gains base-point-dependent coupling terms — defer to the generic
+    # autodiff engine (which requires the base point 'at').
+    if k == 0 and not (chart == op.chart and is_flat_chart(chart)):
         return _act_translate_nonflat(op, tau, x, chart, rep, m, kw, usys)
 
     # Displacements are same-tau point differences (never gain dtau terms and
@@ -368,6 +370,8 @@ def act(
         # Static delta: all tau-derivatives vanish.
         return x
 
+    # Only k >= 1 fibre kicks reach here cross-chart (k=0 routed to the
+    # generic engine above); they have no well-defined cross-chart rule.
     if op.chart != chart:
         msg = (
             f"Translate.delta is defined in chart {op.chart!r}, "
@@ -397,7 +401,7 @@ def _act_translate_nonflat(
     usys: OptUSys,
     /,
 ) -> CDict:
-    """Generic-engine fallback for a k=0 delta in a non-Cartesian chart."""
+    """Generic-engine fallback for a k=0 offset that is not a flat translation."""
     if m == 0 or not is_time_dependent(op):
         return cast(
             "CDict",

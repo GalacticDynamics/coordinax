@@ -754,3 +754,48 @@ class TestNonCartesianOpChart:
         assert is_flat_chart(cxc.cart3d)
         assert not is_flat_chart(cxc.sph3d)
         assert not is_flat_chart(cxc.PoincarePolar6D())
+
+    def test_flat_delta_nonflat_data_chart_matches_generic(self):
+        """Fast path equals generic when the data's chart is non-flat.
+
+        A Cartesian delta acting on spherical-chart tangent data is
+        nonlinear in the data's coordinates.
+        """
+        usys = u.unitsystems.si
+        v = {
+            "r": u.Q(0.3, "km/s"),
+            "theta": u.Q(0.0, "rad/s"),
+            "phi": u.Q(0.0, "rad/s"),
+        }
+        # static: NOT identity in spherical components
+        op = cxfm.Translate.from_([100.0, 0.0, 0.0], "km")
+        out = cxfm.act(op, None, v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys)
+        assert not jnp.allclose(u.ustrip("km/s", out["r"]), 0.3)
+        # TD: computes (previously raised ValueError) and equals generic
+        op_td = cxfm.Translate(
+            lambda t: {
+                "x": u.Q(3.0, "km/s") * t,
+                "y": u.Q(0.0, "km"),
+                "z": u.Q(0.0, "km"),
+            },
+            chart=cxc.cart3d,
+        )
+        tau = u.Q(2.0, "s")
+        fast = cxfm.act(
+            op_td, tau, v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys
+        )
+        gen = prolong_jet(op_td, tau, {0: self.sph_at, 1: v}, cxc.sph3d, usys=usys)
+        for k in fast:
+            unit = u.unit_of(gen[1][k])
+            assert jnp.allclose(u.ustrip(unit, fast[k]), gen[1][k].value, rtol=1e-6)
+
+    def test_order2_unit_preservation(self):
+        """Acceleration units survive the exact rational time-unit root."""
+        op = cxfm.Scale.from_factors([2.0, 2.0, 2.0])
+        a = {
+            k: u.Q(x, "kpc/Myr2") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)
+        }
+        at = {k: u.Q(x, "kpc") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        out = cxfm.pushforward(op, None, a, cxc.cart3d, cxr.coord_acc, at=at)
+        assert out["x"].unit == u.unit("kpc/Myr2")
+        assert jnp.allclose(out["x"].value, 2.0)

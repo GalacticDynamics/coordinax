@@ -295,11 +295,17 @@ def pushforward(
     at: CDict | None = None,
     usys: Any = None,
 ) -> CDict:
-    r"""Pushforward under an additive operator: identity.
+    r"""Pushforward under an additive operator.
 
-    The point action of an additive operator is a translation of the ambient
-    (flat) space, whose differential is the identity, so tangent components
-    are unchanged. No base point is required.
+    When the offset and the data live in the same Cartesian-type (flat)
+    chart — or the operator is a fibre-only offset (ladder order $k \geq 1$,
+    identity point action) — the point action's differential is the identity,
+    tangent components are unchanged, and no base point is required.
+
+    A $k=0$ offset in a non-flat chart, or acting on data in a different or
+    non-flat chart, is not a flat translation: the differential is base-point
+    dependent, so this defers to the generic engine, which **requires** the
+    base point ``at``.
 
     >>> import unxt as u
     >>> import coordinax.charts as cxc
@@ -312,11 +318,11 @@ def pushforward(
     {'x': Q(1., 'km'), 'y': Q(0., 'km'), 'z': Q(0., 'km')}
 
     """
-    # A k=0 offset in a non-Cartesian chart is NOT a flat translation: its
-    # point action pushes delta through the chart Jacobian at the point, so
-    # the differential is base-point dependent. Defer to the generic engine.
+    # A k=0 offset is a flat translation only when delta and the data live
+    # in the same Cartesian-type chart; otherwise the differential is
+    # base-point dependent. Defer to the generic engine.
     k = getattr(op, "semantic_kind", cxr.dpl).order
-    if k == 0 and not is_flat_chart(op.chart):
+    if k == 0 and not (chart == op.chart and is_flat_chart(chart)):
         from .prolong import pushforward_generic  # noqa: PLC0415 - avoid cycle
 
         return pushforward_generic(op, tau, v, chart, rep, at=at, usys=usys)

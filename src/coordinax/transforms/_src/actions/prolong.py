@@ -40,6 +40,8 @@ __all__ = (
     "tau_derivative",
 )
 
+from fractions import Fraction
+
 from collections.abc import Callable
 from typing import Any, TypeAlias, cast
 
@@ -305,7 +307,7 @@ def _common_time_unit(
         iu = in_units.get(k)
         if vu is not None and iu is not None:
             ratio = iu / vu
-            return ratio if order == 1 else ratio ** (1.0 / order)
+            return ratio if order == 1 else ratio ** Fraction(1, order)
     tau_unit = u.unit_of(tau) if tau is not None else None
     if tau_unit is not None:
         return tau_unit
