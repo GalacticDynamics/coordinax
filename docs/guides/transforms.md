@@ -348,13 +348,44 @@ Concretely:
 
 Because the $\dot R\,x$-style terms depend on the base point, acting a time-dependent transform on a _lone_ velocity or acceleration requires the anchor keywords `at=` (and `at_vel=` for accelerations) — or act on a `Coordinate` bundle, which supplies the whole jet automatically.
 
-Three related verbs are exposed:
+### The Three Verbs
 
-- `act(op, tau, x, ...)` — order-$m$ tangent data transforms by the $m$-th prolongation above;
-- `pushforward(op, tau, v, chart, rep, at=...)` — the frozen-$\tau$ spatial differential $\partial_x\phi\cdot v$; this is the transformation law for `Displacement` data (a same-$\tau$ point difference never gains $\partial_\tau$ terms);
-- `prolong(op, tau, jet, chart)` — transform a whole jet `{0: q, 1: v, 2: a, ...}` jointly (what `Coordinate` bundles use).
+| Verb | Meaning | Use for |
+| --- | --- | --- |
+| `act(op, tau, x, ...)` | Kinematic prolongation (default) | Positions and physically-evolving tangent data |
+| `pushforward(op, tau, v, ..., at=q)` | Frozen-$\tau$ spatial differential $\partial_x\phi \cdot v$ | Displacements; the pure geometric map |
+| `prolong(op, tau, jet, chart)` | Joint action on a whole jet `{0: q, 1: v, 2: a, ...}` | Phase-space states, arbitrary derivative order |
+
+Acting a time-dependent transform on a _lone_ velocity or acceleration needs the lower jet slots (the $\dot R x$ term acts on the position); pass `at=` / `at_vel=`, or — simpler — act on a `coordinax.Coordinate` bundle, which supplies the whole jet automatically:
+
+```python
+import coordinax.main as cx
+
+pv = cx.Coordinate(
+    point=cx.Point.from_([1.0, 0.0, 0.0], "m"),
+    velocity=cx.Tangent.from_([0.0, 0.0, 0.0], "m/s"),
+)
+out = cxfm.act(rot_td, u.Q(0.0, "s"), pv)
+# out["velocity"] now includes the omega x r term of the rotating frame
+```
 
 Helpers: `is_time_dependent(op)` tests for callable parameters, and `tau_derivative(f, tau, n=...)` takes unit-aware $\tau$-derivatives of a callable parameter.
+
+### Semantics at a Glance
+
+For an operator with point action $\phi$, acting on data of each kind ($J = \partial_x \phi$ at frozen $\tau$; "TD" = time-dependent parameters):
+
+| op \ data | point | displacement | velocity | acceleration |
+| --- | --- | --- | --- | --- |
+| `Translate`, static $\delta$ | $x+\delta$ | $d$ | $v$ | $a$ |
+| `Translate`, $\delta(\tau)$ | $x+\delta(\tau)$ | $d$ | $v+\dot\delta$ | $a+\ddot\delta$ |
+| `Translate(semantic_kind=vel)` (velocity kick) | $x$ | $d$ | $v+\delta$ | $a$ (+$\dot\delta$ if TD) |
+| `Boost` (Galilean) | $x+\Delta v\,\tau$ | $d$ | $v+\Delta v$ | $a$ |
+| `Rotate`, static $R$ | $Rx$ | $Rd$ | $Rv$ | $Ra$ |
+| `Rotate`, $R(\tau)$ | $R(\tau)x$ | $R(\tau)d$ | $Rv+\dot Rx$ | $Ra+2\dot Rv+\ddot Rx$ |
+| any static op | $\phi(x)$ | $Jd$ | $Jv$ | $Ja$ |
+
+Every hand-written rule above is property-tested against the generic autodiff prolongation, which derives all of them from the point action by nested `jax.jvp` — a custom operator only needs to register its point action to get correct velocity and acceleration transforms for free.
 
 ## Quick Reference
 
@@ -373,4 +404,9 @@ Helpers: `is_time_dependent(op)` tests for callable parameters, and `tau_derivat
 | Pushforward a displacement | `cxfm.pushforward(op, tau, d, chart, rep, at=...)` |
 | Prolong a jet | `cxfm.prolong(op, tau, {0: q, 1: v}, chart)` |
 | Time-dependent translation | `cxfm.Translate(callable_returning_dict, chart=...)` |
+| Galilean boost | `cxfm.Boost(delta_v_dict, chart=...)` |
+| Velocity kick (fibre-only) | `cxfm.Translate(dv_dict, chart=..., semantic_kind=cxr.vel)` |
+| Act on a phase-space bundle | `cxfm.act(op, tau, coordinate)` (jet handled automatically) |
+| Is it time-dependent? | `cxfm.is_time_dependent(op)` |
+| d/dtau of a parameter | `cxfm.tau_derivative(fn, tau, n=1)` |
 | Materialise at time | `cxfm.materialize_transform(op, tau)` |

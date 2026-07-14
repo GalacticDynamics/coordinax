@@ -26,20 +26,21 @@ out = cxfm.act(frame_op, None, v)
 
 ## Functional API
 
-- `act(transform, tau, x)`: apply a transform to data (the kinematic prolongation for tangent data)
-- `pushforward(transform, tau, v, chart, rep, *, at)`: frozen-`tau` spatial differential (the law for `Displacement` data)
-- `prolong(transform, tau, jet, chart)`: joint kinematic prolongation of a jet `{0: q, 1: v, 2: a, ...}`
+- `act(transform, tau, x)`: apply a transform to data (the kinematic prolongation for tangent data — see the [transforms guide](../guides/transforms.md#time-dependence-couples-the-ladder-kinematic-prolongation))
+- `pushforward(transform, tau, v, chart, rep, *, at)`: the frozen-tau spatial differential — the transformation law for displacement data
+- `prolong(transform, tau, jet, chart)`: joint action on a jet `{0: point, 1: velocity, 2: acceleration, ...}`
 - `simplify(transform)`: simplify transform structure
 - `compose(*transforms)`: compose transforms into `Composed`
 - `materialize_transform(transform, tau)`: materialize time-dependent transform parameters
-- `is_time_dependent(transform)`: whether any transform parameter is a callable of `tau`
-- `tau_derivative(f, tau, n=)`: unit-aware `n`-th derivative of a callable parameter
+- `is_time_dependent(transform)`: whether any parameter is a callable of `tau`
+- `tau_derivative(fn, tau, n=1)`: unit-aware n-th time derivative of a parameter function
 
 ## Transform Types
 
 - `AbstractTransform`: base class for transforms
 - `Identity`: null transform
-- `Translate`: pure displacement
+- `Translate`: additive offset on the semantic-kind ladder (displacement by default; a velocity kick with `semantic_kind=vel`)
+- `Boost`: Galilean boost (moves points by `dv * tau`, shifts velocities by `dv`)
 - `Rotate`: pure rotation
 - `Reflect`: Householder hyperplane reflection
 - `Scale`: Cartesian linear scaling
