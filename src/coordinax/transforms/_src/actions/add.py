@@ -229,8 +229,10 @@ def prolong(
 ) -> dict:
     r"""Prolong an additive operator slot-wise.
 
-    An additive operator's point Jacobian is the identity, so its
-    prolongation has no cross-slot coupling: each jet slot transforms
+    When the offset and the jet live in the same Cartesian-type (flat) chart
+    (or the operator is a fibre-only offset, whose point action is the
+    identity), the point Jacobian is the identity and the prolongation has
+    no cross-slot coupling: each jet slot transforms
     independently by the operator's ladder rule (slot $m$ gains
     $d^{m-k}\delta/d\tau^{m-k}$ for the operator's ladder order $k$). This
     also makes fibre-only offsets (e.g. ``Translate(semantic_kind=vel)``) —

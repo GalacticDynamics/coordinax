@@ -104,12 +104,11 @@ def act(
     Array(True, dtype=bool)
 
     """
-    # Iterate the (Translate, Rotate) pipeline, threading the
-    # intermediate result through each sub-transform's act dispatch.
-    result: Any = x
-    for sub_op in op.transforms:
-        result = cxfm.act(sub_op, tau, result, chart, rep, **kw)
-    return result  # ty: ignore[invalid-return-type]
+    # Delegate to Composed, which threads the pipeline AND advances the
+    # tangent anchors (at/at_vel) between the time-dependent sub-transforms —
+    # a hand-rolled loop that forwards `at` unchanged would evaluate the
+    # Rotate's dR/dtau term at the un-translated base point.
+    return cxfm.act(cxfm.Composed(op.transforms), tau, x, chart, rep, **kw)  # ty: ignore[invalid-return-type]
 
 
 @plum.dispatch
@@ -172,9 +171,40 @@ def act(  # noqa: F811
     True
 
     """
-    # Same pipeline iteration, but the CDict flows through each
-    # sub-transform's CDict-aware act dispatch.
-    result: Any = x
-    for sub_op in op.transforms:
-        result = cxfm.act(sub_op, tau, result, chart, rep, **kw)
-    return result  # ty: ignore[invalid-return-type]
+    # Delegate to Composed (see the Quantity overload for why: anchor
+    # threading between the time-dependent sub-transforms).
+    return cxfm.act(cxfm.Composed(op.transforms), tau, x, chart, rep, **kw)  # ty: ignore[invalid-return-type]
+
+
+@plum.dispatch
+def pushforward(
+    op: AbstractParallelTransportTransform,
+    tau: Any,
+    v: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    /,
+    *,
+    at: CDict | None = None,
+    usys: Any = None,
+) -> CDict:
+    """Frozen-tau pushforward: delegate to the Composed pipeline."""
+    return cxfm.pushforward(  # ty: ignore[invalid-return-type]
+        cxfm.Composed(op.transforms), tau, v, chart, rep, at=at, usys=usys
+    )
+
+
+@plum.dispatch
+def prolong(
+    op: AbstractParallelTransportTransform,
+    tau: Any,
+    jet: dict,
+    chart: cxc.AbstractChart,
+    /,
+    *,
+    usys: Any = None,
+) -> dict:
+    """Kinematic prolongation of a jet: delegate to the Composed pipeline."""
+    return cxfm.prolong(  # ty: ignore[invalid-return-type]
+        cxfm.Composed(op.transforms), tau, jet, chart, usys=usys
+    )

@@ -15,6 +15,7 @@ import unxt_hypothesis as ust
 import coordinax.astro as cxastro
 import coordinax.frames as cxf
 import coordinax.main as cx
+import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 import coordinax.vectors as cxv
 from coordinax.astro._src.galactic import ICRS_TO_GALACTIC_MATRIX
@@ -485,3 +486,48 @@ def test_galactic_matrix_is_float64():
     """
     assert isinstance(ICRS_TO_GALACTIC_MATRIX, np.ndarray)
     assert ICRS_TO_GALACTIC_MATRIX.dtype == np.float64
+
+
+def test_galactocentric_spherical_velocity_fibre():
+    """The velocity kick handles non-Cartesian velocity fibres.
+
+    Proper-motion-style (spherical) velocity data must traverse the
+    ICRS->Galactocentric chain and agree with the same physics computed
+    from a Cartesian velocity fibre.
+    """
+    usys = u.unitsystems.galactic
+    op = cxf.frame_transition(cxastro.ICRS(), cxastro.Galactocentric())
+    pt = cxv.Point.from_(
+        {"lon": u.Q(30.0, "deg"), "lat": u.Q(10.0, "deg"), "distance": u.Q(1.0, "kpc")},
+        cx.lonlat_sph3d,
+    )
+    vel_sph = cxv.Tangent(
+        {
+            "lon": u.Q(1e-12, "rad/s"),
+            "lat": u.Q(0.0, "rad/s"),
+            "distance": u.Q(10.0, "km/s"),
+        },
+        cx.lonlat_sph3d,
+        cxr.coord_basis,
+        cxr.vel,
+    )
+    out = cx.act(op, None, cxv.Coordinate(pt, vel=vel_sph), usys=usys)
+
+    # reference: same input with a Cartesian velocity fibre
+    vel_cart = cx.cconvert(vel_sph, cx.cart3d, at=pt.data, usys=usys)
+    out_ref = cx.act(
+        op,
+        None,
+        cxv.Coordinate(cx.cconvert(pt, cx.cart3d), vel=vel_cart),
+        usys=usys,
+    )
+    out_v = cx.cconvert(
+        out._data["vel"],
+        cx.cart3d,
+        at=cx.cconvert(out.point, out._data["vel"].chart).data,
+        usys=usys,
+    )
+    for k in "xyz":
+        a = u.ustrip("km/s", out_v.data[k])
+        b = u.ustrip("km/s", out_ref._data["vel"].data[k])
+        assert jnp.allclose(a, b, rtol=1e-5)

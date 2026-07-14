@@ -18,6 +18,7 @@ import coordinax.charts as cxc
 import coordinax.main as cx
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+import coordinax.vectors as cxv
 from coordinax.transforms._src.actions.prolong import prolong_jet
 from coordinax.transforms._src.actions.utils import is_flat_chart
 
@@ -851,3 +852,206 @@ class TestNonCartesianOpChart:
             )
         # the true result is nonzero: it was previously silently identity
         assert not jnp.allclose(u.ustrip("km/s2", fast["r"]), 0.0)
+
+
+# ============================================================================
+# Final-audit regressions: fibre kicks, bundles, linear ops under new verbs
+
+
+class TestFibreKickCrossChart:
+    """A fibre kick is a tangent vector: cross-chart action via the Jacobian."""
+
+    kick = None  # built in tests to avoid import-time work
+
+    def test_kick_on_spherical_velocity_matches_tangent_map(self):
+        """Cartesian vel-kick on spherical velocity == Jacobian-mapped add."""
+        usys = u.unitsystems.si
+        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
+        at = {"r": u.Q(5.0, "km"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")}
+        v = {
+            "r": u.Q(0.3, "km/s"),
+            "theta": u.Q(0.01, "rad/s"),
+            "phi": u.Q(0.02, "rad/s"),
+        }
+        out = cxfm.act(kick, None, v, cxc.sph3d, cxr.coord_vel, at=at, usys=usys)
+        # reference: map delta into the spherical chart at the point, add
+        at_cart = cxc.pt_map(at, cxc.sph3d, cxc.cart3d, usys=usys)
+        vel_rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, cxr.vel)
+        dv_sph = cxr.tangent_map(
+            dv, cxc.cart3d, vel_rep, cxc.sph3d, at=at_cart, usys=usys
+        )
+        for k, vk in v.items():
+            unit = u.unit_of(dv_sph[k])
+            expect = u.ustrip(unit, vk) + dv_sph[k].value
+            assert jnp.allclose(u.ustrip(unit, out[k]), expect, rtol=1e-6)
+
+    def test_kick_cross_chart_requires_at(self):
+        """Without the base point the cross-chart kick raises informatively."""
+        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
+        v = {
+            "r": u.Q(0.3, "km/s"),
+            "theta": u.Q(0.01, "rad/s"),
+            "phi": u.Q(0.02, "rad/s"),
+        }
+        with pytest.raises(TypeError, match="requires the base point"):
+            cxfm.act(kick, None, v, cxc.sph3d, cxr.coord_vel, usys=u.unitsystems.si)
+
+    def test_kick_rejects_bare_arrays(self):
+        """Unitless arrays are ambiguous under a kick: rejected, not no-op'd."""
+        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
+        arr = jnp.asarray([1.0, 0.0, 0.0])
+        with pytest.raises(TypeError, match="ambiguous"):
+            cxfm.act(kick, None, arr, cxc.cart3d, cxr.point, usys=u.unitsystems.si)
+
+
+class TestCoordinateBundleEdges:
+    """Bundle-layer seams from the final audit."""
+
+    @staticmethod
+    def _bundle(**fields):
+        pt = cxv.Point.from_([1.0, 2.0, 3.0], "km")
+        return cxv.Coordinate(pt, **fields)
+
+    def test_td_bundle_rejects_anchor_overrides(self):
+        """TD Coordinate act raises on at= instead of silently ignoring it."""
+        moving = cxfm.Translate(
+            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
+        )
+        vel = cxv.Tangent(
+            q3(0.1, 0.0, 0.0, "km/s"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        coord = self._bundle(vel=vel)
+        with pytest.raises(TypeError, match="does not accept keyword overrides"):
+            cx.act(moving, u.Q(1.0, "s"), coord, at=q3(9.0, 0.0, 0.0, "km"))
+
+    def test_static_boost_bundle_with_nonflat_fibre(self):
+        """Static Boost on a bundle with a cylindrical fibre works.
+
+        Boost's point action is intrinsically tau-dependent, so the bundle
+        takes the joint-jet path even with a constant delta-v.
+        """
+        boost = cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
+        vel = cxv.Tangent(
+            q3(0.1, 0.0, 0.0, "km/s"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        acc = cxv.Tangent(
+            {
+                "rho": u.Q(0.1, "km/s2"),
+                "phi": u.Q(0.0, "rad/s2"),
+                "z": u.Q(0.0, "km/s2"),
+            },
+            cxc.cyl3d,
+            cxr.coord_basis,
+            cxr.acc,
+        )
+        coord = self._bundle(vel=vel, acc=acc)
+        out = cx.act(boost, u.Q(1.0, "s"), coord, usys=u.unitsystems.si)
+        assert jnp.allclose(u.ustrip("km", out.point.data["x"]), 2.0)  # x + dv*tau
+        assert jnp.allclose(u.ustrip("km/s", out._data["vel"].data["x"]), 1.1)
+
+    def test_td_bundle_duplicate_ladder_order_raises(self):
+        """Two fibres at the same ladder order are ambiguous for the jet."""
+        moving = cxfm.Translate(
+            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
+        )
+        v1 = cxv.Tangent(
+            q3(0.1, 0.0, 0.0, "km/s"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        v2 = cxv.Tangent(
+            q3(0.2, 0.0, 0.0, "km/s"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        coord = self._bundle(vel=v1, vel2=v2)
+        with pytest.raises(ValueError, match="multiple fibres at ladder order"):
+            cx.act(moving, u.Q(1.0, "s"), coord)
+
+    def test_td_bundle_cross_chart_fibre_matches_cartesian(self):
+        """Cross-chart fibre round trip matches the Cartesian-fibre result.
+
+        A cylindrical velocity fibre under a TD op equals the same physics
+        computed with a Cartesian fibre.
+        """
+        moving = cxfm.Translate(
+            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
+        )
+        tau = u.Q(2.0, "s")
+        usys = u.unitsystems.si
+        vel_cart = cxv.Tangent(
+            q3(0.1, 0.2, 0.0, "km/s"), cxc.cart3d, cxr.coord_basis, cxr.vel
+        )
+        coord_cart = self._bundle(vel=vel_cart)
+        out_cart = cx.act(moving, tau, coord_cart, usys=usys)
+
+        vel_cyl = cxr.cconvert(vel_cart, cxc.cyl3d, at=coord_cart.point.data, usys=usys)
+        coord_cyl = self._bundle(vel=vel_cyl)
+        out_cyl = cx.act(moving, tau, coord_cyl, usys=usys)
+        # convert the cylindrical output fibre back to cartesian at the new point
+        back = cxr.cconvert(
+            out_cyl._data["vel"],
+            cxc.cart3d,
+            at=cxr.cconvert(out_cyl.point, cxc.cyl3d).data,
+            usys=usys,
+        )
+        for k in "xyz":
+            assert jnp.allclose(
+                u.ustrip("km/s", back.data[k]),
+                u.ustrip("km/s", out_cart._data["vel"].data[k]),
+                atol=1e-6,
+            )
+
+    def test_td_bundle_displacement_fibre_pushforward(self):
+        """Displacement fibres in a TD bundle take the frozen-tau pushforward.
+
+        They are invariant under a flat translation.
+        """
+        moving = cxfm.Translate(
+            lambda t: q3(3.0 * t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
+        )
+        d = cxv.Tangent(q3(0.5, 0.0, 0.0, "km"), cxc.cart3d, cxr.coord_basis, cxr.dpl)
+        coord = self._bundle(disp=d)
+        out = cx.act(moving, u.Q(2.0, "s"), coord)
+        assert jnp.allclose(u.ustrip("km", out._data["disp"].data["x"]), 0.5)
+
+
+class TestLinearOpsUnderNewVerbs:
+    """Shear/Reflect coverage via the generic engine (previously untested)."""
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            cxfm.Shear(
+                jnp.asarray([[1.0, 0.3, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+            ),
+            cxfm.Reflect.from_normal([1.0, 0.0, 0.0]),
+        ],
+        ids=["shear", "reflect"],
+    )
+    def test_pushforward_matches_act_on_velocity(self, op):
+        """Static linear ops: act on velocity == frozen-tau pushforward."""
+        at = q3(1.0, -2.0, 0.5, "m")
+        v = q3(0.3, 0.1, -0.2, "m/s")
+        a1 = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
+        a2 = cxfm.pushforward(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
+        assert allclose_cdict(a1, a2, "m/s", atol=1e-8)
+
+    @pytest.mark.parametrize(
+        "op",
+        [
+            cxfm.Shear(
+                jnp.asarray([[1.0, 0.3, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]])
+            ),
+            cxfm.Reflect.from_normal([1.0, 0.0, 0.0]),
+        ],
+        ids=["shear", "reflect"],
+    )
+    def test_prolong_jet_matches_per_slot(self, op):
+        """Prolong on a 1-jet gives the same slots as point-act + vel-act."""
+        at = q3(1.0, -2.0, 0.5, "m")
+        v = q3(0.3, 0.1, -0.2, "m/s")
+        jet = cxfm.prolong(op, None, {0: at, 1: v}, cxc.cart3d)
+        p_ref = cxfm.act(op, None, at, cxc.cart3d, cxr.point)
+        v_ref = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
+        assert allclose_cdict(jet[0], p_ref, "m", atol=1e-8)
+        assert allclose_cdict(jet[1], v_ref, "m/s", atol=1e-8)

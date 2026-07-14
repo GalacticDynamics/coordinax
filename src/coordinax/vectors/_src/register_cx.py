@@ -638,7 +638,19 @@ def act(
     (Q(7., 'm'), Q(4., 'm / s'))
 
     """
-    if cxfm.is_time_dependent(op):
+    if _needs_joint_jet(op):
+        # The jet anchors are structurally the bundle's own point and fibres;
+        # caller-supplied anchor overrides are meaningless here — reject them
+        # loudly rather than silently ignoring them (the static path below
+        # honors an 'at' override, so silence would diverge invisibly).
+        unsupported = set(kw) - {"usys"}
+        if unsupported:
+            msg = (
+                "act on a Coordinate under a time-dependent transform "
+                f"does not accept keyword overrides {sorted(unsupported)}: "
+                "the bundle itself supplies the jet anchors."
+            )
+            raise TypeError(msg)
         return _act_coordinate_jet(op, tau, x, usys=kw.get("usys"))
 
     new_point = cxfm.act(op, tau, x.point, **kw)
@@ -658,6 +670,24 @@ def act(
             fibre_kw = kw_base
         new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
     return Coordinate(point=new_point, **new_fields)
+
+
+def _needs_joint_jet(op: cxfm.AbstractTransform, /) -> bool:
+    """Whether a Coordinate bundle must be transformed as a joint jet.
+
+    True when the op has time-dependent (callable) parameters, and also for
+    `Boost`, whose *point action* is intrinsically tau-dependent (x + dv*tau)
+    even when dv is a constant — its per-fibre closed forms then need the
+    lower jet slots that only the joint path supplies.
+
+    TODO: replace the isinstance test with a declared property on the
+    transform (tracked with the TimeDep parameter refactor, issue #537).
+    """
+    if isinstance(op, cxfm.Boost):
+        return True
+    if isinstance(op, cxfm.Composed):
+        return any(_needs_joint_jet(sub) for sub in op.transforms)
+    return cxfm.is_time_dependent(op)
 
 
 def _point_data_in(point: Point, chart: Any, /) -> CDict:

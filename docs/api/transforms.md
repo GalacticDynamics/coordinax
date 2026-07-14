@@ -26,10 +26,14 @@ out = cxfm.act(frame_op, None, v)
 
 ## Functional API
 
-- `act(transform, tau, x)`: apply a transform to data
+- `act(transform, tau, x)`: apply a transform to data (the kinematic prolongation for tangent data)
+- `pushforward(transform, tau, v, chart, rep, *, at)`: frozen-`tau` spatial differential (the law for `Displacement` data)
+- `prolong(transform, tau, jet, chart)`: joint kinematic prolongation of a jet `{0: q, 1: v, 2: a, ...}`
 - `simplify(transform)`: simplify transform structure
 - `compose(*transforms)`: compose transforms into `Composed`
 - `materialize_transform(transform, tau)`: materialize time-dependent transform parameters
+- `is_time_dependent(transform)`: whether any transform parameter is a callable of `tau`
+- `tau_derivative(f, tau, n=)`: unit-aware `n`-th derivative of a callable parameter
 
 ## Transform Types
 

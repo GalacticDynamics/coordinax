@@ -970,7 +970,7 @@ A non-exhaustive table of exported objects are:
 | `coordinax.representations` | `cconvert`, `change_basis`, `tangent_map`, </br> `Representation`, `point`, `coord_disp`, `coord_vel`, `coord_acc`, `phys_disp`, `phys_vel`, `phys_acc`, </br> `PointGeometry`, `point_geom`, `TangentGeometry`, `tangent_geom`, </br> `NoBasis`, `no_basis`, `CoordinateBasis`, `coord_basis`, `PhysicalBasis`, `phys_basis`, </br> `Location`, `loc`, `Displacement`, `dpl`, `Velocity`, `vel`, `Acceleration`, `acc`, </br> `guess_geometry_kind`, `guess_semantic_kind`, `guess_rep` |
 | `coordinax.vectors` | `Point`, `Tangent`, `Coordinate`, `ToUnitsOptions` |
 | `coordinax.manifolds` | `guess_manifold`, `scale_factors`, `angle_between`, </br> `EuclideanManifold`, `Rn`, `FlatMetric`, `R3`, </br> `EmbeddedManifold`, `EmbeddedChart` </br> `S2`, `embedded_twosphere`, </br> `CustomManifold`,`CustomAtlas`, </br> `CartesianProductManifold`, `galilean_spacetime` |
-| `coordinax.transforms` | `act`, `simplify`, `compose`, `materialize_transform`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
+| `coordinax.transforms` | `act`, `pushforward`, `prolong`, `simplify`, `compose`, `materialize_transform`, `is_time_dependent`, `tau_derivative`, </br> `AbstractTransform`, `Identity`, `Composed`, `Translate`, `Rotate`, `Reflect`, `Scale`, `Shear`, `Boost`, `identity`, </br> `AbstractTransformGroup`, `IdentityGroup`, `DiffeomorphismGroup`, `AffineGroup`, `EuclideanGroup`, `OrthogonalGroup`, `SpecialOrthogonalGroup`, `PoincareGroup`, `LorentzGroup`, `ProperOrthochronousLorentzGroup` |
 | `coordinax.frames` | `frame_transition`, </br> `AbstractReferenceFrame`, `FrameTransformError`, </br> `NoFrame`, `Alice`, `Alex`, `Bob`, `bob`, `TransformedReferenceFrame` |
 
 </br>
@@ -4916,7 +4916,7 @@ A **reference frame** is an abstract label used to identify a coordinate descrip
 
     | Representation semantic | Effect of Alice → Bob transform |
     |-------------------------|---------------------------------|
-    | `Point` / `Location`    | position shifted by `[100 000, 10 000, 0] km` (the velocity kick is identity on points, so bare arrays/Quantities act as positions) |
+    | `Point` / `Location`    | position shifted by `[100 000, 10 000, 0] km` (unitful Quantities act as positions; bare unitless arrays are rejected — the velocity kick cannot tell a position array from a velocity array) |
     | `Displacement`          | unchanged (both offsets are identity on displacements) |
     | `Velocity`              | velocity shifted by `[269 813 212.2, 0, 0] m/s` |
     | `Acceleration`          | unchanged (a constant velocity kick is identity on accelerations) |

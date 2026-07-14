@@ -59,6 +59,14 @@ The International Celestial Reference System (ICRS) is the standard celestial re
 frame = cxastro.ICRS()
 ```
 
+### Galactic
+
+The (heliocentric) IAU 1958 Galactic coordinate frame, related to ICRS by a fixed rotation (matching Astropy's Galactic frame, including the ICRS/FK5 frame bias). Parameter-free.
+
+```
+frame = cxastro.Galactic()
+```
+
 ### Galactocentric
 
 A reference frame centered on the Galactic center with configurable parameters.

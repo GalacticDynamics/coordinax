@@ -328,7 +328,33 @@ v_test = cxv.Point.from_([1, 0, 0], "km")
 v_combined = combined(tau_5s, v_test)
 ```
 
-When `act` encounters a `Composed` transform, it calls `materialize_transform` on each primitive with the same `tau` before applying it. Callable and static parts mix freely.
+When `act` encounters a `Composed` transform, each primitive is applied at the same `tau`; for tangent data the anchors (base point and velocity) are advanced between the steps so the chain rule is respected. Callable and static parts mix freely.
+
+## Time Dependence Couples the Ladder: Kinematic Prolongation
+
+Materialise-then-apply is the whole story only for **point** data. For tangent data (velocities, accelerations), `act` computes the **kinematic prolongation** of the transform's point action $\phi(\tau, x)$: if the transformed curve is $x'(\tau) = \phi(\tau, x(\tau))$, then
+
+$$
+v' = \partial_\tau \phi + \partial_x \phi \cdot v, \qquad
+a' = \partial_{\tau\tau} \phi + 2\,\partial_\tau \partial_x \phi \cdot v
+   + \partial_{xx}\phi(v, v) + \partial_x \phi \cdot a .
+$$
+
+Concretely:
+
+- a time-dependent `Translate` with offset $\delta(\tau)$ shifts velocities by $\dot\delta(\tau)$ and accelerations by $\ddot\delta(\tau)$;
+- a time-dependent `Rotate` $R(\tau)$ gives $v' = R v + \dot R\,x$ and the full Coriolis/centrifugal acceleration law;
+- `Boost` is the Galilean boost: points move by $\Delta v\,\tau$ (a time is **required** for point data), velocities shift by $\Delta v$. The fibre-only velocity kick that leaves points fixed is `Translate(..., semantic_kind=cxr.vel)`.
+
+Because the $\dot R\,x$-style terms depend on the base point, acting a time-dependent transform on a _lone_ velocity or acceleration requires the anchor keywords `at=` (and `at_vel=` for accelerations) — or act on a `Coordinate` bundle, which supplies the whole jet automatically.
+
+Three related verbs are exposed:
+
+- `act(op, tau, x, ...)` — order-$m$ tangent data transforms by the $m$-th prolongation above;
+- `pushforward(op, tau, v, chart, rep, at=...)` — the frozen-$\tau$ spatial differential $\partial_x\phi\cdot v$; this is the transformation law for `Displacement` data (a same-$\tau$ point difference never gains $\partial_\tau$ terms);
+- `prolong(op, tau, jet, chart)` — transform a whole jet `{0: q, 1: v, 2: a, ...}` jointly (what `Coordinate` bundles use).
+
+Helpers: `is_time_dependent(op)` tests for callable parameters, and `tau_derivative(f, tau, n=...)` takes unit-aware $\tau$-derivatives of a callable parameter.
 
 ## Quick Reference
 
@@ -343,5 +369,8 @@ When `act` encounters a `Composed` transform, it calls `materialize_transform` o
 | Invert | `op.inverse` |
 | Simplify | `op.simplify()` or `cxfm.simplify(op)` |
 | Time-dependent rotation | `cxfm.Rotate(callable_returning_matrix)` |
+| Act on a lone velocity (TD op) | `cxfm.act(op, tau, v, chart, rep, at=base_point)` |
+| Pushforward a displacement | `cxfm.pushforward(op, tau, d, chart, rep, at=...)` |
+| Prolong a jet | `cxfm.prolong(op, tau, {0: q, 1: v}, chart)` |
 | Time-dependent translation | `cxfm.Translate(callable_returning_dict, chart=...)` |
 | Materialise at time | `cxfm.materialize_transform(op, tau)` |

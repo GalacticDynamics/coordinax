@@ -40,7 +40,10 @@ class Translate(AbstractAdd):
     Formally, in a Cartesian chart on $\mathbb{R}^n$: $T_\Delta:\; x \mapsto
     x+\Delta$.
 
-    Its differential (pushforward) is the identity: $(dT_\Delta)_x = I$.
+    In that flat setting its differential (pushforward) is the identity,
+    $(dT_\Delta)_x = I$. When ``delta`` lives in a non-flat chart, or acts on
+    data in a different or non-flat chart, the point action is base-point
+    dependent and the differential is NOT the identity — see the Notes.
 
     Parameters
     ----------
@@ -182,13 +185,18 @@ def act(
     >>> cxfm.act(shift, None, x,  cxc.cart3d, cxr.point, usys=usys)
     Array([1000., 2000., 3000.], dtype=float64)
 
-    Velocity-semantic translate is identity on point arrays:
+    A fibre kick (e.g. ``semantic_kind=vel``) cannot infer whether a bare,
+    unitless array is a position (kick is identity) or the matching tangent
+    data (kick applies) — that ambiguity is rejected loudly:
 
     >>> import coordinax.representations as cxr
     >>> from dataclassish import replace
     >>> vel_shift = replace(shift, semantic_kind=cxr.vel)
-    >>> cxfm.act(vel_shift, None, x, cxc.cart3d, cxr.point, usys=usys)
-    Array([0., 0., 0.], dtype=float64)
+    >>> try:
+    ...     cxfm.act(vel_shift, None, x, cxc.cart3d, cxr.point, usys=usys)
+    ... except TypeError as e:
+    ...     print(str(e)[:44])
+    A fibre offset (Translate with semantic_kind
 
     """
     del kw
@@ -196,9 +204,20 @@ def act(
     if rep != cxr.point:
         raise TypeError("Translate can only be applied to point representations")
 
-    # A vel/acc-semantic translate does not move position points.
+    # A bare, unitless array is ambiguous under a fibre kick: it could be a
+    # position (kick is identity) or the kick's own tangent data (kick
+    # applies). Silently choosing 'position' would drop the kick for velocity
+    # arrays — reject instead. (Quantities are unambiguous: units select the
+    # representation.)
     if not isinstance(op.semantic_kind, cxr.Displacement):
-        return jnp.asarray(x)
+        msg = (
+            f"A fibre offset (Translate with semantic_kind="
+            f"{op.semantic_kind!r}) cannot act on a bare array: it is "
+            "ambiguous whether the array is a position (offset is identity) "
+            "or tangent data (offset applies). Use a Quantity with units, a "
+            "component dict, or a typed vector."
+        )
+        raise TypeError(msg)
 
     if usys is None:
         raise TypeError("Translate requires usys to convert delta to x's units")
@@ -371,14 +390,11 @@ def act(
         return x
 
     # Only k >= 1 fibre kicks reach here cross-chart (k=0 routed to the
-    # generic engine above); they have no well-defined cross-chart rule.
+    # generic engine above). A kick is a tangent vector at the point, so it
+    # has a well-defined cross-chart rule: push its components through the
+    # chart Jacobian AT the base point (requires the anchor `at`).
     if op.chart != chart:
-        msg = (
-            f"Translate.delta is defined in chart {op.chart!r}, "
-            f"but the representation is in chart {chart!r}. "
-            "Convert delta to the target chart before constructing Translate."
-        )
-        raise ValueError(msg)
+        delta = _kick_delta_in_chart(op, delta, chart, kw.get("at"), usys)
 
     return cast(
         "CDict",
@@ -386,6 +402,34 @@ def act(
             jnp.add,
             *((x, delta) if op.right_add else (delta, x)),
             is_leaf=u.quantity.is_any_quantity,
+        ),
+    )
+
+
+def _kick_delta_in_chart(
+    op: Translate,
+    delta: CDict,
+    chart: cxc.AbstractChart,
+    at: CDict | None,
+    usys: OptUSys,
+    /,
+) -> CDict:
+    """Push a fibre-kick offset through the chart Jacobian at the base point."""
+    if at is None:
+        msg = (
+            f"Translate.delta (a fibre offset) is defined in chart "
+            f"{op.chart!r}, but the data is in chart {chart!r}. "
+            "Converting the offset requires the base point: pass 'at' (a "
+            "CDict in the data's chart) or use a coordinax.Coordinate "
+            "bundle, which supplies it automatically."
+        )
+        raise TypeError(msg)
+    at_in_op_chart = cxc.pt_map(at, chart, op.chart, usys=usys)
+    kick_rep = cxr.Representation(cxr.tangent_geom, cxr.coord_basis, op.semantic_kind)
+    return cast(
+        "CDict",
+        cxr.tangent_map(  # ty: ignore[missing-argument]
+            delta, op.chart, kick_rep, chart, at=at_in_op_chart, usys=usys
         ),
     )
 
