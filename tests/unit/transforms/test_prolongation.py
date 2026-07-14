@@ -19,6 +19,7 @@ import coordinax.main as cx
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from coordinax.transforms._src.actions.prolong import prolong_jet
+from coordinax.transforms._src.actions.utils import is_flat_chart
 
 # ============================================================================
 # Helpers
@@ -747,3 +748,9 @@ class TestNonCartesianOpChart:
         v = {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
         out = cxfm.act(op, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel)
         assert jnp.allclose(u.ustrip("km/s", out["x"]), 4.0)
+
+    def test_is_flat_chart_no_global_cartesian(self):
+        """Charts with no global Cartesian chart are non-flat, not an error."""
+        assert is_flat_chart(cxc.cart3d)
+        assert not is_flat_chart(cxc.sph3d)
+        assert not is_flat_chart(cxc.PoincarePolar6D())

@@ -20,8 +20,20 @@ def is_flat_chart(chart: Any, /) -> bool:
     ambient space (Jacobian = identity, no base-point dependence). In any
     other chart an offset must be pushed through the chart Jacobian at the
     point, so additive fast paths do not apply.
+
+    A chart with no global Cartesian chart (e.g. ``PoincarePolar6D``) is not
+    flat: this predicate returns `False` rather than propagating
+    `~coordinax.charts.NoGlobalCartesianChartError`.
     """
-    return isinstance(chart, type(chart.cartesian))
+    from coordinax._src.exceptions import (  # noqa: PLC0415 - avoid cycle
+        NoGlobalCartesianChartError,
+    )
+
+    try:
+        cart = chart.cartesian
+    except NoGlobalCartesianChartError:
+        return False
+    return isinstance(chart, type(cart))
 
 
 @final
