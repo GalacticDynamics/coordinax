@@ -457,7 +457,10 @@ class AbstractTangentSemanticKind(AbstractSemanticKind):
         if hasattr(super(), "__init_subclass__"):
             super().__init_subclass__(**kwargs)
 
-        if not hasattr(cls, "order"):
+        # NOTE: AbstractSemanticKind declares `order: ClassVar[int | None] = None`
+        # (None for non-ladder kinds), so a tangent subclass that fails to set
+        # `order` inherits None rather than missing the attribute.
+        if getattr(cls, "order", None) is None:
             raise TypeError(
                 f"{cls.__name__!r} must define class variable 'order' as an int "
                 "before registration in the tangent time-order ladder."
