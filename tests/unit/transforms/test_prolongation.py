@@ -425,12 +425,25 @@ class TestErrors:
             cxfm.act(moving, None, v, cxc.cart3d, cxr.coord_vel)
 
     def test_prolong_missing_slot(self):
+        # A non-additive op: the generic chain needs every lower slot.
+        op = cxfm.Rotate.from_(rot_z)
+        jet = {0: q3(0.0, 0.0, 0.0, "m"), 2: q3(0.0, 0.0, 0.0, "m/s2")}
+        with pytest.raises(TypeError, match="slot 1 is missing"):
+            cxfm.prolong(op, u.Q(1.0, "s"), jet, cxc.cart3d)
+
+    def test_prolong_additive_skips_intermediate_slots(self):
+        # Additive ops prolong slot-wise: no intermediate slots required.
         moving = cxfm.Translate(
-            lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
+            lambda t: {
+                "x": 0.5 * u.Q(2.0, "km/s2") * t**2,
+                "y": u.Q(0.0, "km"),
+                "z": u.Q(0.0, "km"),
+            },
+            chart=cxc.cart3d,
         )
         jet = {0: q3(0.0, 0.0, 0.0, "km"), 2: q3(0.0, 0.0, 0.0, "km/s2")}
-        with pytest.raises(TypeError, match="slot 1 is missing"):
-            cxfm.prolong(moving, u.Q(1.0, "s"), jet, cxc.cart3d)
+        out = cxfm.prolong(moving, u.Q(1.0, "s"), jet, cxc.cart3d)
+        assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 2.0)
 
     def test_static_scale_vel_requires_at(self):
         op = cxfm.Scale.from_factors([2.0, 3.0, 4.0])
@@ -474,3 +487,71 @@ class TestCoordinateBundle:
         out = cx.act(op, None, pv)
         assert jnp.allclose(u.ustrip("m", out.point.data["x"]), 2.0)
         assert jnp.allclose(u.ustrip("m/s", out["velocity"].data["x"]), 1.0)
+
+
+# ============================================================================
+# Fibre-only offsets through the jet path
+
+
+class TestFibreKickProlong:
+    """Fibre-only offsets must survive the joint (jet) prolongation path.
+
+    A `Translate(semantic_kind=vel)` has identity point action, so a
+    point-action-only prolongation would drop it; the slot-wise `prolong`
+    registered for additive operators keeps it.
+    """
+
+    def test_vel_kick_prolong_slotwise(self):
+        kick = cxfm.Translate(
+            q3(100.0, 0.0, 0.0, "m/s"), chart=cxc.cart3d, semantic_kind=cxr.vel
+        )
+        jet = {0: q3(1.0, 0.0, 0.0, "m"), 1: q3(1.0, 0.0, 0.0, "m/s")}
+        out = cxfm.prolong(kick, None, jet, cxc.cart3d)
+        assert jnp.allclose(u.ustrip("m", out[0]["x"]), 1.0)
+        assert jnp.allclose(u.ustrip("m/s", out[1]["x"]), 101.0)
+
+    def test_td_translate_composed_with_vel_kick_on_coordinate(self):
+        """Coordinate jet path == bare-tangent path for TD op | vel-kick."""
+        moving = cxfm.Translate(
+            lambda t: {
+                "x": u.Q(3.0, "m/s") * t,
+                "y": u.Q(0.0, "m"),
+                "z": u.Q(0.0, "m"),
+            },
+            chart=cxc.cart3d,
+        )
+        kick = cxfm.Translate(
+            q3(100.0, 0.0, 0.0, "m/s"), chart=cxc.cart3d, semantic_kind=cxr.vel
+        )
+        op = moving | kick
+        tau = u.Q(2.0, "s")
+
+        pv = cx.Coordinate(
+            point=cx.Point.from_([1.0, 0.0, 0.0], "m"),
+            velocity=cx.Tangent.from_([1.0, 0.0, 0.0], "m/s"),
+        )
+        out = cx.act(op, tau, pv)
+        # v' = v + delta-dot + kick = 1 + 3 + 100
+        assert jnp.allclose(u.ustrip("m/s", out["velocity"].data["x"]), 104.0)
+
+        # and it matches the bare-tangent path
+        v = q3(1.0, 0.0, 0.0, "m/s")
+        at = q3(1.0, 0.0, 0.0, "m")
+        bare = cxfm.act(op, tau, v, cxc.cart3d, cxr.coord_vel, at=at)
+        assert jnp.allclose(
+            u.ustrip("m/s", out["velocity"].data["x"]), u.ustrip("m/s", bare["x"])
+        )
+
+    def test_galilean_boost_prolong_slotwise(self):
+        """Boost's prolong (via AbstractAdd) matches its act closed forms."""
+        boost = cxfm.Boost(q3(1.0, 0.0, 0.0, "km/s"), chart=cxc.cart3d)
+        tau = u.Q(3.0, "s")
+        jet = {
+            0: q3(1.0, 2.0, 3.0, "km"),
+            1: q3(0.5, 0.0, 0.0, "km/s"),
+            2: q3(0.1, 0.0, 0.0, "km/s2"),
+        }
+        out = cxfm.prolong(boost, tau, jet, cxc.cart3d)
+        assert jnp.allclose(u.ustrip("km", out[0]["x"]), 4.0)  # x + dv*tau
+        assert jnp.allclose(u.ustrip("km/s", out[1]["x"]), 1.5)  # v + dv
+        assert jnp.allclose(u.ustrip("km/s2", out[2]["x"]), 0.1)  # a unchanged

@@ -28,7 +28,7 @@ import coordinax.representations as cxr
 from .base import AbstractTransform, materialize_transform
 from .custom_types import CDict, HasShape, OptUSys
 from .identity import identity
-from .prolong import tau_derivative
+from .prolong import prolong_slot
 from .utils import Neg
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -790,36 +790,27 @@ def act(
     """
     del geom, kw
 
-    m = rep.semantic_kind.order  # ty: ignore[unresolved-attribute]
+    m = rep.semantic_kind.order
     # Displacements and time-independent rotations: pure pushforward.
     if m == 0 or not callable(op.R):
         return _rotate_pushforward_cdict(op, tau, x, chart, rep, at=at, usys=usys)
 
-    # Time-dependent rotation: the prolongation needs the lower jet slots.
-    if tau is None:
-        msg = (
-            "act(Rotate, ...) with a time-dependent rotation on tangent data "
-            "requires a time parameter; got tau=None."
-        )
-        raise TypeError(msg)
-    if at is None:
-        msg = (
-            f"act(Rotate, ...) with a time-dependent rotation on order-{m} "
-            "tangent data requires the base point via 'at' (the dR/dtau term "
-            "acts on the position), or use a coordinax.Coordinate bundle."
-        )
-        raise TypeError(msg)
-
     cart = chart.cartesian
-    if m == 1 and chart is cart:
+    if m == 1 and chart is cart and tau is not None and at is not None:
         # Closed form in Cartesian components: v' = R v + dR/dtau x.
-        op_eval = materialize_transform(op, tau)
-        R = op_eval._get_R(cart)
+        # One jvp evaluates R(tau) and dR/dtau together.
+        tau_unit = u.unit_of(tau)
+        tau_val = u.ustrip(tau_unit, tau) if tau_unit is not None else jnp.asarray(tau)
+        R_fn = op.R
+        R, Rdot = jax.jvp(
+            lambda tv: R_fn(u.Q(tv, tau_unit) if tau_unit is not None else tv),  # ty: ignore[call-top-callable]
+            (tau_val,),
+            (jax.numpy.ones_like(tau_val),),
+        )
+        R = op._validate_shape_match(op._validate_square(R), cart)
         comps = cart.components
         v_arr, v_unit = pack_uniform_unit(x, keys=comps)
         at_arr, at_unit = pack_uniform_unit(at, keys=comps)
-        tau_unit = u.unit_of(tau)
-        Rdot = tau_derivative(op.R, tau, n=1)  # raw array, per unit(tau)
         Rv = u.Q(jnp.einsum("ij,...j->...i", R, v_arr), v_unit)
         Rdot_at = u.Q(
             jnp.einsum("ij,...j->...i", Rdot, at_arr),
@@ -828,19 +819,9 @@ def act(
         out_arr = u.ustrip(v_unit, Rv + Rdot_at)
         return cast("CDict", cxc.cdict(out_arr, v_unit, comps))
 
-    # General case (acceleration, or non-Cartesian chart): generic prolongation.
-    jet: dict[int, CDict] = {0: at, m: x}
-    if m >= 2:
-        if at_vel is None:
-            msg = (
-                f"act(Rotate, ...) with a time-dependent rotation on order-{m} "
-                "tangent data requires 'at_vel' (the velocity at the base "
-                "point), or use a coordinax.Coordinate bundle."
-            )
-            raise TypeError(msg)
-        jet[1] = at_vel
-    out = cast("dict[int, CDict]", cxfmapi.prolong(op, tau, jet, chart, usys=usys))
-    return out[m]
+    # General case (acceleration, or non-Cartesian chart): generic prolongation
+    # (which also owns the missing-tau / missing-anchor errors).
+    return prolong_slot(op, tau, x, chart, m, at=at, at_vel=at_vel, usys=usys)
 
 
 # -----------------------------------------------

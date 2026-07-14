@@ -24,6 +24,11 @@ ICRS_TO_GALACTIC_MATRIX = jnp.asarray(
     ]
 )
 
+#: The inverse (transpose) rotation, taking Galactic Cartesian components to
+#: ICRS Cartesian components. Precomputed so the reverse frame transition does
+#: not construct-and-invert an operator at call time.
+GALACTIC_TO_ICRS_MATRIX = ICRS_TO_GALACTIC_MATRIX.T
+
 
 @final
 class Galactic(AbstractSpaceFrame):

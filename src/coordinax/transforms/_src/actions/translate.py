@@ -310,8 +310,8 @@ def act(
             return x
         return _translate_point_cdict(op, tau, x, chart, usys=usys)
 
-    # --- Tangent input of ladder order m.
-    m = rep.semantic_kind.order  # ty: ignore[unresolved-attribute]
+    # --- Tangent input of ladder order m (int for all tangent kinds).
+    m = cast("int", rep.semantic_kind.order)
     # Displacements are same-tau point differences (never gain dtau terms and
     # the Jacobian of a translation is the identity); lower-order fibres are
     # untouched by a higher-order offset.

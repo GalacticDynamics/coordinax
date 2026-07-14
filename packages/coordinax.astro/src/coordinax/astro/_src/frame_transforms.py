@@ -14,7 +14,7 @@ import coordinax.frames as cxf
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .base_frame import AbstractSpaceFrame
-from .galactic import ICRS_TO_GALACTIC_MATRIX, Galactic
+from .galactic import GALACTIC_TO_ICRS_MATRIX, ICRS_TO_GALACTIC_MATRIX, Galactic
 from .galactocentric import Galactocentric
 from .icrs import ICRS, icrs
 
@@ -161,7 +161,7 @@ def frame_transition(from_frame: Galactic, to_frame: ICRS, /) -> cxfm.Rotate:
 
     """
     del from_frame, to_frame
-    return cxfm.Rotate(ICRS_TO_GALACTIC_MATRIX).inverse
+    return cxfm.Rotate(GALACTIC_TO_ICRS_MATRIX)
 
 
 # ---------------------------------------------------------------
@@ -259,8 +259,6 @@ def frame_transition(from_frame: ICRS, to_frame: Galactocentric, /) -> cxfm.Comp
     Velocities are transformed too: a star at rest in ICRS moves with the
     solar velocity in the Galactocentric frame:
 
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.representations as cxr
     >>> point = cx.Point.from_([0, 0, 0], "pc")
     >>> vel = cx.Tangent.from_([0.0, 0.0, 0.0], "km/s")
     >>> pv = cx.Coordinate(point=point, velocity=vel)

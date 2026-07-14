@@ -35,6 +35,7 @@ Two related verbs are distinguished:
 __all__ = (
     "JetDict",
     "prolong_jet",
+    "prolong_slot",
     "pushforward_generic",
     "tau_derivative",
 )
@@ -236,18 +237,13 @@ def pushforward_generic(
     data and, for time-independent transforms, for all tangent kinds.
 
     """
+    order = rep.semantic_kind.order
     if at is None:
-        msg = _MSG_AT_REQUIRED.format(
-            verb="pushforward",
-            op=type(op).__name__,
-            m=rep.semantic_kind.order,  # ty: ignore[unresolved-attribute]
-        )
+        msg = _MSG_AT_REQUIRED.format(verb="pushforward", op=type(op).__name__, m=order)
         raise TypeError(msg)
 
     in_units = _cdict_units(at)
-    # Primal act (used only for output units; dead-code-eliminated under jit).
-    y0 = cxfmapi.act(op, tau, at, chart, cxr.point, usys=usys)
-    out_units = _cdict_units(y0)
+    out_units = _point_act_units(op, tau, at, chart, usys=usys)
 
     def f(xv: dict[str, Any], /) -> dict[str, Any]:
         x = _attach_cdict(xv, in_units)
@@ -257,7 +253,6 @@ def pushforward_generic(
     # Strip v consistently with the base point: v_k is expressed in
     # in_unit_k / T for a common time unit T, so the stripped values form a
     # valid coordinate tangent. Any common T works; prefer tau's unit.
-    order = rep.semantic_kind.order  # ty: ignore[unresolved-attribute]
     time_unit = _pushforward_time_unit(tau, in_units, _cdict_units(v), order)
     v_vals = {k: _strip_leaf(_per_time(in_units[k], time_unit, order), v[k]) for k in v}
     at_vals = _strip_cdict(at, in_units)
@@ -266,6 +261,30 @@ def pushforward_generic(
     return _attach_cdict(
         dy, {k: _per_time(un, time_unit, order) for k, un in out_units.items()}
     )
+
+
+def _point_act_units(
+    op: AbstractTransform,
+    tau: Any,
+    q0: CDict,
+    chart: cxc.AbstractChart,
+    /,
+    *,
+    usys: OptUSys,
+) -> dict[str, Any]:
+    """Per-component output units of the point action, without computing values.
+
+    Units are static metadata on Quantities, so `jax.eval_shape` discovers
+    them without evaluating the action; a real evaluation is the fallback for
+    non-traceable actions.
+    """
+    try:
+        y0 = jax.eval_shape(
+            lambda q: cxfmapi.act(op, tau, q, chart, cxr.point, usys=usys), q0
+        )
+    except Exception:  # noqa: BLE001 - non-jax actions fall back to a real call
+        y0 = cxfmapi.act(op, tau, q0, chart, cxr.point, usys=usys)
+    return _cdict_units(cast("CDict", y0))
 
 
 def _pushforward_time_unit(
@@ -338,20 +357,16 @@ def prolong_jet(
             msg = _MSG_JET_SLOT_MISSING.format(op=type(op).__name__, m=max_order, k=m)
             raise TypeError(msg)
 
-    time_dep = is_time_dependent(op)
-    if time_dep and tau is None and max_order >= 1:
+    if is_time_dependent(op) and tau is None and max_order >= 1:
         msg = _MSG_TAU_REQUIRED.format(op=type(op).__name__)
         raise TypeError(msg)
 
-    # Slot 0: the plain point action (this is also the primal for units).
-    y0 = cast("CDict", cxfmapi.act(op, tau, q0, chart, cxr.point, usys=usys))
-    out: JetDict = {0: y0}
-
     if max_order == 0:
-        return out
+        y0 = cast("CDict", cxfmapi.act(op, tau, q0, chart, cxr.point, usys=usys))
+        return {0: y0}
 
     in_units = _cdict_units(q0)
-    out_units = _cdict_units(y0)
+    out_units = _point_act_units(op, tau, q0, chart, usys=usys)
     tau_val, tau_unit = _tau_value_unit(tau) if tau is not None else (None, None)
     if tau_val is None:
         # Time-independent op with no tau: differentiate at a dummy time.
@@ -375,12 +390,12 @@ def prolong_jet(
     ]
 
     slot_outs = _total_derivative_chain(f, tau_val, q0_vals, slot_vals)
-    for m, ym in enumerate(slot_outs, start=1):
-        out[m] = _attach_cdict(
+    return {
+        m: _attach_cdict(
             ym, {k: _per_time(un, tau_unit, m) for k, un in out_units.items()}
         )
-
-    return out
+        for m, ym in enumerate(slot_outs)
+    }
 
 
 def _total_derivative_chain(
@@ -389,27 +404,31 @@ def _total_derivative_chain(
     q0_vals: dict[str, Any],
     slot_vals: list[dict[str, Any]],
     /,
-) -> list[dict[str, Any]]:
+) -> tuple[dict[str, Any], ...]:
     r"""Evaluate the chain of total-derivative laws of ``f`` along a jet.
 
-    Builds $f_m(t, x, d_1, \ldots, d_m) = \mathrm{jvp}(f_{m-1}, (t, x, d_1,
-    \ldots, d_{m-1}), (1, d_1, d_2, \ldots, d_m))$ and returns
-    $[f_1(\ldots), f_2(\ldots), \ldots]$ — the transformed jet slot values.
+    Nests $F_m(t, x, d_1, \ldots, d_m) = \mathrm{jvp}(F_{m-1}, (t, x, d_1,
+    \ldots, d_{m-1}), (1, d_1, d_2, \ldots, d_m))$, threading the primals
+    through each level so that one evaluation of the outermost $F_M$ yields
+    every jet slot $(y_0, y_1, \ldots, y_M)$ — lower orders are not
+    recomputed per slot.
     """
-    outs: list[dict[str, Any]] = []
-    prev = f
-    args: list[Any] = [tau_val, q0_vals]
-    for dm in slot_vals:
 
-        def curr(
-            *a: Any, _prev: Callable[..., dict[str, Any]] = prev
-        ) -> dict[str, Any]:
-            return jax.jvp(_prev, a[:-1], (jax_np.ones_like(a[0]), *a[2:]))[1]
+    def chain0(t: Any, x: dict[str, Any], /) -> tuple[dict[str, Any], ...]:
+        return (f(t, x),)
 
-        args.append(dm)
-        outs.append(curr(*args))
-        prev = curr
-    return outs
+    chain = chain0
+    for _ in slot_vals:
+
+        def chain(
+            *a: Any, _prev: Callable[..., tuple[dict[str, Any], ...]] = chain
+        ) -> tuple[dict[str, Any], ...]:
+            primals, tangents = a[:-1], (jax_np.ones_like(a[0]), *a[2:])
+            p, t = jax.jvp(_prev, primals, tangents)
+            # p holds (y0..y_{m-1}); the last tangent is d/dtau y_{m-1} = y_m.
+            return (*p, t[-1])
+
+    return chain(tau_val, q0_vals, *slot_vals)
 
 
 # =============================================================================
@@ -479,13 +498,35 @@ def act(
 
     """
     del kw
-    m = rep.semantic_kind.order  # ty: ignore[unresolved-attribute]
+    m = rep.semantic_kind.order
 
     if m == 0 or not is_time_dependent(op):
         return cast(
             "CDict", cxfmapi.pushforward(op, tau, x, chart, rep, at=at, usys=usys)
         )
 
+    return prolong_slot(op, tau, x, chart, m, at=at, at_vel=at_vel, usys=usys)
+
+
+def prolong_slot(
+    op: AbstractTransform,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    m: int,
+    /,
+    *,
+    at: CDict | None,
+    at_vel: CDict | None,
+    usys: OptUSys,
+) -> CDict:
+    """Apply the m-th prolongation to a single order-``m`` slot.
+
+    Validates that the lower jet slots are available (the base point ``at``
+    and, for ``m == 2``, the velocity ``at_vel``), assembles the jet, and
+    returns the transformed slot. Shared by the generic tangent rule and by
+    operator fast paths that fall back to the generic prolongation.
+    """
     if tau is None:
         raise TypeError(_MSG_TAU_REQUIRED.format(op=type(op).__name__))
     if at is None:

@@ -639,7 +639,7 @@ def act(
 
     """
     if cxfm.is_time_dependent(op):
-        return _act_coordinate_jet(op, tau, x, **kw)
+        return _act_coordinate_jet(op, tau, x, usys=kw.get("usys"))
 
     new_point = cxfm.act(op, tau, x.point, **kw)
     # Inject the base-point data as 'at' so non-Cartesian tangent dispatches
@@ -653,19 +653,27 @@ def act(
     new_fields: dict[str, Any] = {}
     for name, fibre in x._data.items():
         if "at" not in kw_base:
-            if fibre.chart == x.point.chart:
-                at_data = x.point.data
-            else:
-                at_data = cast("Point", cxr.cconvert(x.point, fibre.chart)).data
-            fibre_kw = {**kw_base, "at": at_data}
+            fibre_kw = {**kw_base, "at": _point_data_in(x.point, fibre.chart)}
         else:
             fibre_kw = kw_base
         new_fields[name] = cxfm.act(op, tau, fibre, **fibre_kw)
     return Coordinate(point=new_point, **new_fields)
 
 
+def _point_data_in(point: Point, chart: Any, /) -> CDict:
+    """Return the point's data expressed in ``chart`` (no-op if it matches)."""
+    if point.chart == chart:
+        return point.data
+    return cast("Point", cxr.cconvert(point, chart)).data
+
+
 def _act_coordinate_jet(
-    op: cxfm.AbstractTransform, tau: Any, x: Coordinate, /, **kw: Any
+    op: cxfm.AbstractTransform,
+    tau: Any,
+    x: Coordinate,
+    /,
+    *,
+    usys: OptUSys = None,
 ) -> Coordinate:
     """Act a time-dependent transform on a Coordinate via joint prolongation.
 
@@ -675,7 +683,6 @@ def _act_coordinate_jet(
     time-derivative terms. Displacement fibres (same-tau point differences)
     transform by the frozen-tau pushforward at the base point.
     """
-    usys = kw.get("usys")
     point_chart = x.point.chart
 
     # Assemble the jet in the point's chart. Fibres in other charts are
@@ -684,14 +691,14 @@ def _act_coordinate_jet(
     ladder: dict[str, tuple[int, Any, Any]] = {}  # name -> (order, fibre, orig_chart)
     push_fibres: dict[str, Any] = {}
     for name, fibre in x._data.items():
-        order = getattr(fibre.rep.semantic_kind, "order", None)
+        order = fibre.rep.semantic_kind.order
         if order is None or order == 0:
             push_fibres[name] = fibre
             continue
         orig_chart = fibre.chart
         f = fibre
         if orig_chart != point_chart:
-            at_f = cast("Point", cxr.cconvert(x.point, orig_chart)).data
+            at_f = _point_data_in(x.point, orig_chart)
             f = cast("Tangent", cxrapi.cconvert(f, point_chart, at=at_f, usys=usys))
         if order in jet:
             msg = (
@@ -720,12 +727,14 @@ def _act_coordinate_jet(
     # Displacement (and other non-ladder) fibres: frozen-tau pushforward
     # anchored at the pre-transform base point.
     for name, fibre in push_fibres.items():
-        if fibre.chart == point_chart:
-            at_data = x.point.data
-        else:
-            at_data = cast("Point", cxr.cconvert(x.point, fibre.chart)).data
         data = cxfmapi.pushforward(
-            op, tau, fibre.data, fibre.chart, fibre.rep, at=at_data, usys=usys
+            op,
+            tau,
+            fibre.data,
+            fibre.chart,
+            fibre.rep,
+            at=_point_data_in(x.point, fibre.chart),
+            usys=usys,
         )
         new_fields[name] = replace(fibre, data=data)
 

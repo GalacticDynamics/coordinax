@@ -282,21 +282,23 @@ def act(
     """
     # 'at' / 'at_vel' track the evolving jet slots (base point and velocity)
     # for tangent transformations: advance them after each sub-op so the next
-    # step evaluates at the correct anchor.
+    # step evaluates at the correct anchor. Whether each anchor is provided is
+    # loop-invariant, so the step kwargs dict is built once and updated.
     current_at = kw.get("at")
     current_at_vel = kw.get("at_vel")
     kw_rest = {k: v for k, v in kw.items() if k not in ("at", "at_vel")}
+    step_kw = dict(kw_rest)
+    at_kw = {"at": current_at} if current_at is not None else {}
     result = x
     for sub_op in op.transforms:
-        step_kw = dict(kw_rest)
         if current_at is not None:
             step_kw["at"] = current_at
+            at_kw["at"] = current_at
         if current_at_vel is not None:
             step_kw["at_vel"] = current_at_vel
         result = cxfmapi.act(sub_op, tau, result, chart, rep, **step_kw)
         # Advance the anchor jet (velocity first: it needs the old base point).
         if current_at_vel is not None:
-            at_kw = {"at": current_at} if current_at is not None else {}
             current_at_vel = cxfmapi.act(
                 sub_op, tau, current_at_vel, chart, cxr.coord_vel, **kw_rest, **at_kw
             )

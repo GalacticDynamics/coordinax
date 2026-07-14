@@ -107,6 +107,14 @@ class AbstractSemanticKind(metaclass=abc.ABCMeta):
     canonical_name: ClassVar[str | None] = None
     """Canonical name for the geometric kind."""
 
+    order: ClassVar[int | None] = None
+    """Time-derivative ladder order, or ``None`` if not on the ladder.
+
+    Tangent semantic kinds (`AbstractTangentSemanticKind`) override this with
+    an ``int`` (0=displacement, 1=velocity, 2=acceleration, ...); non-ladder
+    kinds such as `Location` leave it as ``None``.
+    """
+
     # ===============================================================
     # Dimension API
 

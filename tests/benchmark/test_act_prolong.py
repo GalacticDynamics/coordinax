@@ -94,14 +94,13 @@ def test_td_translate_jet_generic(benchmark, jet):
     )
 
 
-def test_td_rotate_jet_generic(benchmark, jet):
+def test_td_rotate_jet_generic(benchmark):
     def rot_z(t) -> Real[Array, "3 3"]:
         th = t.ustrip("s")
         st, ct = jnp.sin(th), jnp.cos(th)
         return jnp.array([[ct, -st, 0.0], [st, ct, 0.0], [0.0, 0.0, 1.0]])
 
     op = cxfm.Rotate.from_(rot_z)
-    jet2 = {k: v for k, v in jet.items() if k <= 1}
     jet2 = {
         0: q3(1.0, 2.0, 3.0, "m"),
         1: q3(0.5, -0.5, 0.0, "m/s"),

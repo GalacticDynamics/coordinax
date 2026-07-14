@@ -19,6 +19,7 @@ from dataclassish import field_items
 from unxt.quantity import AllowValue, is_any_quantity
 
 import coordinax.charts as cxc
+import coordinax.representations as cxr
 from .base import AbstractTransform
 from .composed import Composed
 from .custom_types import CDict
@@ -200,6 +201,80 @@ def from_(cls: type[AbstractAdd], x: ArrayLike, unit: str) -> AbstractAdd:
 
     """
     return cls.from_(u.Q(x, unit))  # ty: ignore[invalid-return-type]
+
+
+# ============================================================================
+# prolong
+
+
+def _slot_rep(m: int, /) -> Any:
+    """Return the coordinate-basis representation for jet slot ``m``."""
+    if m == 0:
+        return cxr.point
+    kind: cxr.AbstractTangentSemanticKind = cxr.vel
+    while kind.order < m:
+        kind = kind.derivative()
+    return cxr.Representation(cxr.tangent_geom, cxr.coord_basis, kind)
+
+
+@plum.dispatch
+def prolong(
+    op: AbstractAdd,
+    tau: Any,
+    jet: dict,
+    chart: cxc.AbstractChart,
+    /,
+    *,
+    usys: Any = None,
+) -> dict:
+    r"""Prolong an additive operator slot-wise.
+
+    An additive operator's point Jacobian is the identity, so its
+    prolongation has no cross-slot coupling: each jet slot transforms
+    independently by the operator's ladder rule (slot $m$ gains
+    $d^{m-k}\delta/d\tau^{m-k}$ for the operator's ladder order $k$). This
+    also makes fibre-only offsets (e.g. ``Translate(semantic_kind=vel)``) —
+    which are invisible to the generic point-action prolongation — correct
+    under ``prolong``.
+
+    >>> import unxt as u
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.representations as cxr
+    >>> import coordinax.transforms as cxfm
+
+    >>> kick = cxfm.Translate(
+    ...     {"x": u.Q(100.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+    ...     chart=cxc.cart3d, semantic_kind=cxr.vel,
+    ... )
+    >>> jet = {0: {"x": u.Q(1.0, "m"), "y": u.Q(0.0, "m"), "z": u.Q(0.0, "m")},
+    ...        1: {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")}}
+    >>> out = cxfm.prolong(kick, None, jet, cxc.cart3d)
+    >>> out[0]["x"], out[1]["x"]
+    (Q(1., 'm'), Q(101., 'm / s'))
+
+    """
+    import coordinax.api.transforms as cxfmapi  # noqa: PLC0415 - avoid cycle
+    from .prolong import prolong_jet  # noqa: PLC0415 - avoid cycle
+
+    if chart == op.chart:
+        return {
+            m: cxfmapi.act(op, tau, slot, chart, _slot_rep(m), usys=usys)
+            for m, slot in jet.items()
+        }
+
+    # Jet in a different chart: a point-active offset (ladder order 0) is
+    # fully captured by the point action, which handles the chart mapping —
+    # use the generic prolongation. A fibre-only offset has no well-defined
+    # cross-chart rule (same as `act`).
+    k = getattr(op, "semantic_kind", cxr.dpl).order
+    if k == 0:
+        return prolong_jet(op, tau, jet, chart, usys=usys)
+    msg = (
+        f"{type(op).__name__}.delta is defined in chart {op.chart!r}, "
+        f"but the jet is in chart {chart!r}. "
+        "Convert delta to the target chart before constructing the operator."
+    )
+    raise ValueError(msg)
 
 
 # ============================================================================

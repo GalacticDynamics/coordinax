@@ -2,7 +2,7 @@
 
 __all__ = ("Boost",)
 
-from typing import Any, cast, final
+from typing import TYPE_CHECKING, Any, cast, final
 
 import jax.tree as jtu
 import plum
@@ -16,8 +16,10 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .add import AbstractAdd
 from .custom_types import CDict, OptUSys
-from .prolong import tau_derivative
 from coordinax.transforms._src.groups import AffineGroup, DiffeomorphismGroup
+
+if TYPE_CHECKING:
+    from .translate import Translate
 
 _MSG_TAU_REQUIRED_POINT = (
     "act(Boost, ...) on point data requires a time parameter: the Galilean "
@@ -112,6 +114,13 @@ def _boost_displacement(op: Boost, /) -> Any:
     return g
 
 
+def _as_translate(op: Boost, /) -> "Translate":
+    """Return the equivalent displacement Translate: delta = dv(tau) * tau."""
+    from .translate import Translate  # noqa: PLC0415 - avoid module cycle
+
+    return Translate(_boost_displacement(op), chart=op.chart, right_add=op.right_add)
+
+
 # ============================================================================
 # act
 
@@ -159,42 +168,39 @@ def act(
     """
     del kw
 
-    # --- Point input: x + dv * tau, via the Translate point machinery.
+    # --- Point input: x + dv * tau, via the Translate ladder machinery.
     if rep == cxr.point:
         if tau is None:
             raise TypeError(_MSG_TAU_REQUIRED_POINT)
-        from .translate import Translate  # noqa: PLC0415 - avoid module cycle
-
-        eff = Translate(_boost_displacement(op), chart=op.chart, right_add=op.right_add)
-        return cast("CDict", cxfmapi.act(eff, tau, x, chart, rep, usys=usys))
+        return cast(
+            "CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys)
+        )
 
     # --- Tangent input of ladder order m.
-    m = rep.semantic_kind.order  # ty: ignore[unresolved-attribute]
+    m = rep.semantic_kind.order
     # Displacements are invariant (the Jacobian of a translation is I).
     if m == 0:
         return x
 
-    # Contribution: d^m (dv(tau) * tau) / dtau^m.
+    # Static dv: closed forms that need no time parameter.
     if not callable(op.delta):
-        if m == 1:
-            contribution = op.delta
-        else:
+        if m != 1:
             # Constant dv: higher derivatives of dv*tau vanish.
             return x
-    else:
-        if tau is None:
-            raise TypeError(_MSG_TAU_REQUIRED_TANGENT.format(m=m))
-        contribution = tau_derivative(_boost_displacement(op), tau, n=m)
+        if op.chart != chart:
+            msg = _MSG_CHART_MISMATCH.format(chart=chart, op_chart=op.chart)
+            raise ValueError(msg)
+        return cast(
+            "CDict",
+            jtu.map(
+                jnp.add,
+                *((x, op.delta) if op.right_add else (op.delta, x)),
+                is_leaf=u.quantity.is_any_quantity,
+            ),
+        )
 
-    if op.chart != chart:
-        msg = _MSG_CHART_MISMATCH.format(chart=chart, op_chart=op.chart)
-        raise ValueError(msg)
-
-    return cast(
-        "CDict",
-        jtu.map(
-            jnp.add,
-            *((x, contribution) if op.right_add else (contribution, x)),
-            is_leaf=u.quantity.is_any_quantity,
-        ),
-    )
+    # Time-dependent dv: delegate to the equivalent displacement Translate,
+    # whose ladder rule computes d^m (dv(tau) * tau) / dtau^m.
+    if tau is None:
+        raise TypeError(_MSG_TAU_REQUIRED_TANGENT.format(m=m))
+    return cast("CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys))
