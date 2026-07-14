@@ -5,6 +5,7 @@ equal the generic autodiff prolongation of the operator's point action.
 """
 
 from jaxtyping import Array, Real
+from typing import ClassVar
 
 import jax
 import pytest
@@ -17,6 +18,7 @@ import coordinax.charts as cxc
 import coordinax.main as cx
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
+from coordinax.transforms._src.actions.prolong import prolong_jet
 
 # ============================================================================
 # Helpers
@@ -653,3 +655,95 @@ class TestUnitPreservation:
         )
         with pytest.raises(TypeError, match="requires a time parameter"):
             generic(boost, None, jet, cxc.cart3d)
+
+
+# ============================================================================
+# Non-Cartesian operator charts (PR review): fast paths must defer to the
+# generic engine when delta lives in a chart where the point action is
+# base-point dependent.
+
+
+class TestNonCartesianOpChart:
+    """k=0 Translate with delta in a non-Cartesian chart."""
+
+    sph_at: ClassVar = {
+        "r": u.Q(5.0, "km"),
+        "theta": u.Q(1.0, "rad"),
+        "phi": u.Q(0.5, "rad"),
+    }
+    sph_v: ClassVar = {
+        "r": u.Q(0.3, "km/s"),
+        "theta": u.Q(0.01, "rad/s"),
+        "phi": u.Q(0.02, "rad/s"),
+    }
+
+    @staticmethod
+    def _td_op():
+        def delta(t):
+            s = t.ustrip("s")
+            return {
+                "r": u.Q(0.1, "km/s") * t,
+                "theta": u.Q(0.0, "rad"),
+                "phi": u.Q(0.02 * s, "rad"),
+            }
+
+        return cxfm.Translate(delta, chart=cxc.sph3d)
+
+    def test_td_velocity_matches_generic(self):
+        """Act on velocity equals the generic prolongation of the point action."""
+        op = self._td_op()
+        tau = u.Q(2.0, "s")
+        usys = u.unitsystems.si
+        fast = cxfm.act(
+            op, tau, self.sph_v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys
+        )
+        gen = prolong_jet(
+            op, tau, {0: self.sph_at, 1: self.sph_v}, cxc.sph3d, usys=usys
+        )
+        for k in fast:
+            unit = u.unit_of(gen[1][k])
+            assert jnp.allclose(u.ustrip(unit, fast[k]), gen[1][k].value, rtol=1e-6)
+
+    def test_static_velocity_not_identity(self):
+        """A static spherical-chart delta is not identity on velocities.
+
+        Its pushforward is base-point dependent, so velocities must NOT
+        pass through unchanged.
+        """
+        op = cxfm.Translate(
+            {"r": u.Q(0.2, "km"), "theta": u.Q(0.0, "rad"), "phi": u.Q(0.04, "rad")},
+            chart=cxc.sph3d,
+        )
+        usys = u.unitsystems.si
+        out = cxfm.act(
+            op, None, self.sph_v, cxc.sph3d, cxr.coord_vel, at=self.sph_at, usys=usys
+        )
+        # the phi-offset rotates the frame axes at the point: r-vel changes
+        assert not jnp.allclose(u.ustrip("km/s", out["r"]), 0.3)
+
+    def test_td_velocity_requires_at(self):
+        """The generic fallback demands the base point."""
+        op = self._td_op()
+        with pytest.raises(TypeError, match="requires the base point"):
+            cxfm.act(
+                op,
+                u.Q(2.0, "s"),
+                self.sph_v,
+                cxc.sph3d,
+                cxr.coord_vel,
+                usys=u.unitsystems.si,
+            )
+
+    def test_cartesian_ladder_unaffected(self):
+        """Cartesian-chart deltas keep the componentwise fast path (no at)."""
+        op = cxfm.Translate(
+            lambda t: {
+                "x": u.Q(3.0, "km/s") * t,
+                "y": u.Q(0.0, "km"),
+                "z": u.Q(0.0, "km"),
+            },
+            chart=cxc.cart3d,
+        )
+        v = {"x": u.Q(1.0, "km/s"), "y": u.Q(0.0, "km/s"), "z": u.Q(0.0, "km/s")}
+        out = cxfm.act(op, u.Q(2.0, "s"), v, cxc.cart3d, cxr.coord_vel)
+        assert jnp.allclose(u.ustrip("km/s", out["x"]), 4.0)

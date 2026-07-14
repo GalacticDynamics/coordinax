@@ -24,7 +24,7 @@ from .base import AbstractTransform
 from .composed import Composed
 from .custom_types import CDict
 from .identity import Identity, identity
-from .utils import Neg
+from .utils import Neg, is_flat_chart
 from coordinax.internal import jax_scalar_handler, pos_named_objs
 
 
@@ -256,17 +256,19 @@ def prolong(
     import coordinax.api.transforms as cxfmapi  # noqa: PLC0415 - avoid cycle
     from .prolong import prolong_jet  # noqa: PLC0415 - avoid cycle
 
-    if chart == op.chart:
+    k = getattr(op, "semantic_kind", cxr.dpl).order
+    if chart == op.chart and (k != 0 or is_flat_chart(op.chart)):
         return {
             m: cxfmapi.act(op, tau, slot, chart, _slot_rep(m), usys=usys)
             for m, slot in jet.items()
         }
 
-    # Jet in a different chart: a point-active offset (ladder order 0) is
-    # fully captured by the point action, which handles the chart mapping —
-    # use the generic prolongation. A fibre-only offset has no well-defined
-    # cross-chart rule (same as `act`).
-    k = getattr(op, "semantic_kind", cxr.dpl).order
+    # Otherwise: a point-active offset (ladder order 0) is fully captured by
+    # the point action — whether the jet is in a different chart or the
+    # offset lives in a non-Cartesian chart (where the point action is
+    # base-point dependent and the slot-wise ladder rule does not apply) —
+    # so use the generic prolongation. A fibre-only offset has no
+    # well-defined cross-chart rule (same as `act`).
     if k == 0:
         return prolong_jet(op, tau, jet, chart, usys=usys)
     msg = (
@@ -310,6 +312,15 @@ def pushforward(
     {'x': Q(1., 'km'), 'y': Q(0., 'km'), 'z': Q(0., 'km')}
 
     """
+    # A k=0 offset in a non-Cartesian chart is NOT a flat translation: its
+    # point action pushes delta through the chart Jacobian at the point, so
+    # the differential is base-point dependent. Defer to the generic engine.
+    k = getattr(op, "semantic_kind", cxr.dpl).order
+    if k == 0 and not is_flat_chart(op.chart):
+        from .prolong import pushforward_generic  # noqa: PLC0415 - avoid cycle
+
+        return pushforward_generic(op, tau, v, chart, rep, at=at, usys=usys)
+
     del op, tau, chart, rep, at, usys
     return v
 

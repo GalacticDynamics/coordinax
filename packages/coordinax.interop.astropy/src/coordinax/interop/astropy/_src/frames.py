@@ -158,7 +158,7 @@ def coordinax_galactic_to_astropy_galactic(frame: cxastro.Galactic, /) -> apyc.G
     The (heliocentric) Galactic frame has no frame-specific parameters in
     either library, so the conversion is straightforward.
 
-    >>> import coordinax.astro as cxa
+    >>> import coordinax.astro as cxastro
     >>> import astropy.coordinates as apyc
     >>> import plum
 

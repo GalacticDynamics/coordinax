@@ -13,13 +13,15 @@ import plum
 import quaxed.numpy as jnp
 import unxt as u
 
+import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .add import AbstractAdd
-from .base import materialize_transform
+from .base import is_time_dependent, materialize_transform
 from .composed import Composed
 from .custom_types import CDict, OptUSys
-from .prolong import tau_derivative
+from .prolong import prolong_slot, tau_derivative
+from .utils import is_flat_chart
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
@@ -317,7 +319,6 @@ def act(
     {'x': Q(4., 'km / s'), 'y': Q(0., 'km / s'), 'z': Q(0., 'km / s')}
 
     """
-    del kw
     k = op.semantic_kind.order
 
     # --- Point input: the curve position, shifted only by a k=0 translate.
@@ -328,10 +329,22 @@ def act(
 
     # --- Tangent input of ladder order m (int for all tangent kinds).
     m = cast("int", rep.semantic_kind.order)
+    # Lower-order fibres are untouched by a higher-order offset.
+    if m < k:
+        return x
+
+    # The flat ladder rule below is the prolongation of the point action only
+    # when a k=0 delta lives in a Cartesian chart, where the point action is
+    # a true translation. In a non-Cartesian chart the point action pushes
+    # delta through the chart Jacobian AT the point, so it is base-point
+    # dependent and its prolongation/pushforward gains coupling terms — defer
+    # to the generic autodiff engine (which requires the base point 'at').
+    if k == 0 and not is_flat_chart(op.chart):
+        return _act_translate_nonflat(op, tau, x, chart, rep, m, kw, usys)
+
     # Displacements are same-tau point differences (never gain dtau terms and
-    # the Jacobian of a translation is the identity); lower-order fibres are
-    # untouched by a higher-order offset.
-    if m == 0 or m < k:
+    # the Jacobian of a flat translation is the identity).
+    if m == 0:
         return x
 
     # Contribution: d^(m-k) delta / dtau^(m-k).
@@ -362,6 +375,28 @@ def act(
             *((x, delta) if op.right_add else (delta, x)),
             is_leaf=u.quantity.is_any_quantity,
         ),
+    )
+
+
+def _act_translate_nonflat(
+    op: Translate,
+    tau: Any,
+    x: CDict,
+    chart: cxc.AbstractChart,
+    rep: cxr.Representation,
+    m: int,
+    kw: dict[str, Any],
+    usys: OptUSys,
+    /,
+) -> CDict:
+    """Generic-engine fallback for a k=0 delta in a non-Cartesian chart."""
+    if m == 0 or not is_time_dependent(op):
+        return cast(
+            "CDict",
+            cxfmapi.pushforward(op, tau, x, chart, rep, at=kw.get("at"), usys=usys),
+        )
+    return prolong_slot(
+        op, tau, x, chart, m, at=kw.get("at"), at_vel=kw.get("at_vel"), usys=usys
     )
 
 
