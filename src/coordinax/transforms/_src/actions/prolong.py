@@ -90,6 +90,7 @@ _MSG_AT_VEL_REQUIRED = (
 _MSG_JET_SLOT_MISSING = (
     "prolong({op}, ...) requires all jet slots 1..{m}; slot {k} is missing."
 )
+_MSG_JET_SLOT0_MISSING = "prolong requires the base point at jet slot 0."
 
 
 # =============================================================================
@@ -428,8 +429,7 @@ def prolong_jet(
 
     """
     if 0 not in jet:
-        msg = "prolong requires the base point at jet slot 0."
-        raise TypeError(msg)
+        raise TypeError(_MSG_JET_SLOT0_MISSING)
     q0 = jet[0]
     max_order = max(jet)
     for m in range(1, max_order + 1):

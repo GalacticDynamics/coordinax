@@ -464,6 +464,19 @@ class TestErrors:
         with pytest.raises(TypeError, match="slot 1 is missing"):
             cxfm.prolong(op, u.Q(1.0, "s"), jet, cxc.cart3d)
 
+    def test_prolong_additive_missing_slot0(self):
+        # The componentwise (additive) path indexes jet[0] for tangent slots;
+        # a jet without slot 0 must raise the same TypeError as the generic
+        # engine, not a bare KeyError.
+        kick = cxfm.Translate(
+            {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s"), "z": u.Q(0.0, "m/s")},
+            chart=cxc.cart3d,
+            semantic_kind=cxr.vel,
+        )
+        jet = {1: q3(0.0, 0.0, 0.0, "m/s")}
+        with pytest.raises(TypeError, match="jet slot 0"):
+            cxfm.prolong(kick, None, jet, cxc.cart3d)
+
     def test_prolong_additive_skips_intermediate_slots(self):
         # Additive ops prolong slot-wise: no intermediate slots required.
         moving = cxfm.Translate(

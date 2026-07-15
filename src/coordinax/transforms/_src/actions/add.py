@@ -261,13 +261,20 @@ def prolong(
 
     """
     import coordinax.api.transforms as cxfmapi  # noqa: PLC0415 - avoid cycle
-    from .prolong import prolong_jet  # noqa: PLC0415 - avoid cycle
+    from .prolong import (  # noqa: PLC0415 - avoid cycle
+        _MSG_JET_SLOT0_MISSING,
+        prolong_jet,
+    )
 
     if is_componentwise_offset(op, chart):
         # The jet supplies the base point, so fibre kicks (k >= 1) work even
         # cross-chart: `act` pushes the offset through the chart Jacobian at
         # jet[0] when needed. The anchor is only passed for tangent slots:
         # slot 0 IS the point, so a strict point dispatch need not accept it.
+        # Any tangent slot indexes jet[0], so require it explicitly here — a
+        # bare KeyError would otherwise mask the same guard prolong_jet gives.
+        if 0 not in jet and any(m != 0 for m in jet):
+            raise TypeError(_MSG_JET_SLOT0_MISSING)
         return {
             m: cxfmapi.act(
                 op,
