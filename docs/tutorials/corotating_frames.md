@@ -15,8 +15,8 @@ You will learn how to:
 ```{admonition} The physics in one paragraph
 :class: note
 
-A turntable spins at constant angular velocity $\boldsymbol{\Omega} =
-\omega\,\hat{\mathbf{z}}$. A frictionless puck feels no real force, so in the
+A turntable spins at constant angular velocity
+$\boldsymbol{\Omega} = \omega\,\hat{\mathbf{z}}$. A frictionless puck feels no real force, so in the
 lab (inertial) frame it slides in a **straight line**. In the turntable frame
 it appears to accelerate; for a free particle that apparent acceleration is
 entirely fictitious,
@@ -24,7 +24,7 @@ entirely fictitious,
 $$
 \mathbf{a}_\text{rot}
   = \underbrace{-2\,\boldsymbol{\Omega}\times\mathbf{v}_\text{rot}}_{\text{Coriolis}}
-  \;\underbrace{-\,\boldsymbol{\Omega}\times(\boldsymbol{\Omega}\times\mathbf{r}_\text{rot})}_{\text{centrifugal}},
+  \;-\;\underbrace{\boldsymbol{\Omega}\times(\boldsymbol{\Omega}\times\mathbf{r}_\text{rot})}_{\text{centrifugal}},
 $$
 
 with $\mathbf{r}_\text{rot}, \mathbf{v}_\text{rot}$ the position and velocity
@@ -71,15 +71,14 @@ Wrap it in a `Rotate` operator and attach it to an inertial base frame to make t
 
 ## Step 2: The Puck's Phase-Space State
 
-A puck launched from near the center along the lab $x$-axis, with **no real force** acting on it. At $t = 0$ its state is position $\mathbf{r} = (1, 0, 0)\
-\text{m}$, velocity $\mathbf{v} = (3, 0, 0)\ \text{m}\,\text{s}^{-1}$, and acceleration $\mathbf{a} = \mathbf{0}$ (free particle).
+A puck launched from near the center along the lab $x$-axis, with **no real force** acting on it. At $t = 0$ its state is position $\mathbf{r} = (1, 0, 0)\ \text{m}$, velocity $\mathbf{v} = (3, 0, 0)\ \text{m}\,\text{s}^{-1}$, and acceleration $\mathbf{a} = \mathbf{0}$ (free particle).
 
 We bundle all three into a single `Coordinate`. Each fibre carries its kinematic role (`vel`, `acc`):
 
 ```pycon
 >>> def phase_space(r, v, a):
 ...     """A Coordinate bundle {point, velocity, acceleration} in Cartesian m/s."""
-...     point = cxv.Point.from_(list(r), "m")
+...     point = cxv.Point.from_(r, "m")
 ...     vel = cxv.Tangent(
 ...         {"x": u.Q(v[0], "m/s"), "y": u.Q(v[1], "m/s"), "z": u.Q(v[2], "m/s")},
 ...         cxc.cart3d,
@@ -152,8 +151,7 @@ coordinax never mentions "Coriolis" or "centrifugal" — it simply differentiate
 
 ## Step 5: The Curved Path
 
-A straight lab trajectory becomes a curve in the turntable frame. Because the frame's parameter $\tau$ and the trajectory's time are the _same_ physical time, we must feed the puck's **advancing** state $\mathbf{r}(t) =
-\mathbf{r}_0 + \mathbf{v}\,t$ at each instant. `jax.vmap` sweeps over time:
+A straight lab trajectory becomes a curve in the turntable frame. Because the frame's parameter $\tau$ and the trajectory's time are the _same_ physical time, we must feed the puck's **advancing** state $\mathbf{r}(t) = \mathbf{r}_0 + \mathbf{v}\,t$ at each instant. `jax.vmap` sweeps over time:
 
 ```pycon
 >>> r0 = jnp.array([1.0, 0.0, 0.0])
@@ -204,5 +202,4 @@ At the release instant the puck is at rest in the turntable frame ($\mathbf{v}_\
 | Rotating-frame acceleration | `out["acceleration"]` — the fictitious force per unit mass |
 | Sweep over time | `jax.vmap` the transition over the advancing state |
 
-The lesson: coordinax's transforms only need a **point action** ($\mathbf{x}
-\mapsto R(\tau)\,\mathbf{x}$). Velocities, accelerations, and hence the Coriolis and centrifugal forces come for free from the kinematic prolongation (`act`/`prolong`) — see the [transforms guide](../guides/transforms.md#time-dependence-couples-the-ladder-kinematic-prolongation) for the machinery.
+The lesson: coordinax's transforms only need a **point action** ($\mathbf{x} \mapsto R(\tau)\,\mathbf{x}$). Velocities, accelerations, and hence the Coriolis and centrifugal forces come for free from the kinematic prolongation (`act`/`prolong`) — see the [transforms guide](../guides/transforms.md#time-dependence-couples-the-ladder-kinematic-prolongation) for the machinery.
