@@ -1,13 +1,17 @@
-"""Red/Green TDD tests for ``coordinax.frames.act`` dispatches.
+"""Tests for ``coordinax.transforms.act`` dispatches.
 
-Tests every combination of {Identity, Rotate, Translate, Composed} ×
-{Array, Quantity, QMatrix, CDict, Vector, Point+Frame, Point+XfmFrame}.
-
-Each class tests:
-  - correctness: known-value checks
+The dispatch matrix — {Identity, Rotate, Reflect, Translate, Composed} ×
+{Array, Quantity, QMatrix, CDict, Vector, Point+Frame, Point+XfmFrame} — is
+covered by parametrized tests for:
+  - correctness: known-value checks (also serves as cross-level consistency,
+    since every level is compared to the same expected result)
   - return type: output matches input type
   - roundtrip:  act(op.inverse, None, act(op, None, x)) ≈ x
-  - jit compat: jax.jit wrapping works
+  - jit compat: wrapping in jit works
+
+Level-specific structural checks (frame/chart preservation, mixed-unit
+QMatrix) and the non-Cartesian tangent-geometry paths follow as their own
+tests.
 """
 
 __all__: tuple[str, ...] = ()
@@ -77,521 +81,128 @@ def _assert_close(actual_xyz, expected_xyz, atol=ATOL):
 
 
 # ===================================================================
-# Level 1: Array(like)
+# Dispatch matrix: {operator} × {input level}
+#
+# Every operator/level pair is compared against the same EXPECTED_* tuple, so
+# this parametrized correctness test doubles as the cross-level consistency
+# check (all input types represent the same fundamental action).
 # ===================================================================
 
+USYS = u.unitsystem("km", "s", "kg", "rad")
+
+# (input fixture, expected isinstance type). A bare array carries no units, so
+# translate/composed need `usys` supplied at that level only.
+INPUT_LEVELS = [
+    ("array_3d", jax.Array),
+    ("quantity_3d", u.AbstractQuantity),
+    ("qmatrix_3d", QMatrix),
+    ("cdict_3d", dict),
+    ("vector_3d", cx.Point),
+    ("coord_3d", cx.Point),
+    ("coord_xfm_3d", cx.Point),
+]
+LEVEL_FIXTURES = [name for name, _ in INPUT_LEVELS]
+LEVEL_IDS = [name.removesuffix("_3d") for name, _ in INPUT_LEVELS]
+
+# (op fixture, expected xyz, needs usys at the bare-array level)
+OPS = [
+    ("identity_op", EXPECTED_IDENTITY, False),
+    ("rotate_op", EXPECTED_ROTATE, False),
+    ("reflect_op", EXPECTED_REFLECT, False),
+    ("translate_op", EXPECTED_TRANSLATE, True),
+    ("composed_op", EXPECTED_COMPOSED, True),
+]
+OP_IDS = [name.removesuffix("_op") for name, _, _ in OPS]
+
+# Operators with a non-trivial inverse worth round-tripping.
+ROUNDTRIP_OPS = [("rotate_op", False), ("translate_op", True), ("composed_op", True)]
+
+# Levels that accept an explicit chart / (chart, rep) as extra positional args.
+CHART_LEVELS = ["quantity_3d", "qmatrix_3d", "cdict_3d"]
+
+
+def _usys_kw(level_fixture, needs_usys):
+    """`usys` is only required for the unit-less bare-array level."""
+    return {"usys": USYS} if (needs_usys and level_fixture == "array_3d") else {}
+
+
+@pytest.mark.parametrize("level_fixture", LEVEL_FIXTURES, ids=LEVEL_IDS)
+@pytest.mark.parametrize(("op_fixture", "expected", "needs_usys"), OPS, ids=OP_IDS)
+def test_act_matches_expected(request, op_fixture, expected, needs_usys, level_fixture):
+    """Each operator gives its known result on every input level."""
+    op = request.getfixturevalue(op_fixture)
+    x = request.getfixturevalue(level_fixture)
+    result = cxfm.act(op, None, x, **_usys_kw(level_fixture, needs_usys))
+    _assert_close(_extract_xyz(result), expected)
+
+
+@pytest.mark.parametrize(("level_fixture", "return_type"), INPUT_LEVELS, ids=LEVEL_IDS)
+def test_act_returns_input_type(request, rotate_op, level_fixture, return_type):
+    """The output type mirrors the input type."""
+    x = request.getfixturevalue(level_fixture)
+    assert isinstance(cxfm.act(rotate_op, None, x), return_type)
+
+
+@pytest.mark.parametrize("level_fixture", LEVEL_FIXTURES, ids=LEVEL_IDS)
+@pytest.mark.parametrize(
+    ("op_fixture", "needs_usys"), ROUNDTRIP_OPS, ids=["rotate", "translate", "composed"]
+)
+def test_act_inverse_roundtrip(request, op_fixture, needs_usys, level_fixture):
+    """act(op.inverse, act(op, x)) recovers x on every input level."""
+    op = request.getfixturevalue(op_fixture)
+    x = request.getfixturevalue(level_fixture)
+    kw = _usys_kw(level_fixture, needs_usys)
+    fwd = cxfm.act(op, None, x, **kw)
+    back = cxfm.act(op.inverse, None, fwd, **kw)
+    _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
+
+
+@pytest.mark.parametrize(
+    "level_fixture", CHART_LEVELS, ids=["quantity", "qmatrix", "cdict"]
+)
+def test_act_with_explicit_chart_and_rep(request, rotate_op, level_fixture):
+    """A chart, and a (chart, rep) pair, may be passed as extra positionals."""
+    x = request.getfixturevalue(level_fixture)
+    _assert_close(
+        _extract_xyz(cxfm.act(rotate_op, None, x, cxc.cart3d)), EXPECTED_ROTATE
+    )
+    _assert_close(
+        _extract_xyz(cxfm.act(rotate_op, None, x, cxc.cart3d, cxr.point)),
+        EXPECTED_ROTATE,
+    )
+
+
+@pytest.mark.parametrize("level_fixture", LEVEL_FIXTURES, ids=LEVEL_IDS)
+def test_act_under_jit(request, rotate_op, level_fixture):
+    """Wrapping act in jit works at every input level."""
+    x = request.getfixturevalue(level_fixture)
+    result = eqx.filter_jit(lambda y: cxfm.act(rotate_op, None, y))(x)
+    _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
+
+
+# Level-specific structural checks that don't generalize across input types.
+
+
+def test_qmatrix_heterogeneous_units_identity(identity_op):
+    """A QMatrix with mixed units passes through Identity unchanged."""
+    qm = QMatrix(jnp.array([1, 2, 3]), unit=(u.unit("km"), u.unit("km"), u.unit("km")))
+    result = cxfm.act(identity_op, None, qm)
+    assert isinstance(result, QMatrix)
+    _assert_close(_extract_xyz(result), (1, 2, 3))
 
-class TestActOnArray:
-    """Apply transforms to bare JAX arrays."""
 
-    def test_identity(self, identity_op, array_3d):
-        result = cxfm.act(identity_op, None, array_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_IDENTITY)
+def test_vector_preserves_chart(rotate_op, vector_3d):
+    assert cxfm.act(rotate_op, None, vector_3d).chart == vector_3d.chart
 
-    def test_rotate(self, rotate_op, array_3d):
-        result = cxfm.act(rotate_op, None, array_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
 
-    def test_translate(self, translate_op, array_3d):
-        # Bare arrays require usys because there's no unit info on the array.
-        # The translate delta is in km, so with SI usys the array is in meters.
-        # We use a km-based usys so both array and delta are in km.
-        usys = u.unitsystem("km", "s", "kg", "rad")
-        result = cxfm.act(translate_op, None, array_3d, usys=usys)
-        _assert_close(_extract_xyz(result), EXPECTED_TRANSLATE)
+def test_coordinate_preserves_frame(rotate_op, coord_3d):
+    result = cxfm.act(rotate_op, None, coord_3d)
+    assert isinstance(result.frame, type(coord_3d.frame))
 
-    def test_composed(self, composed_op, array_3d):
-        usys = u.unitsystem("km", "s", "kg", "rad")
-        result = cxfm.act(composed_op, None, array_3d, usys=usys)
-        _assert_close(_extract_xyz(result), EXPECTED_COMPOSED)
 
-    def test_rotate_returns_array(self, rotate_op, array_3d):
-        result = cxfm.act(rotate_op, None, array_3d)
-        assert isinstance(result, jax.Array)
-
-    def test_rotate_roundtrip(self, rotate_op, array_3d):
-        fwd = cxfm.act(rotate_op, None, array_3d)
-        back = cxfm.act(rotate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_translate_roundtrip(self, translate_op, array_3d):
-        usys = u.unitsystem("km", "s", "kg", "rad")
-        fwd = cxfm.act(translate_op, None, array_3d, usys=usys)
-        back = cxfm.act(translate_op.inverse, None, fwd, usys=usys)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_composed_roundtrip(self, composed_op, array_3d):
-        usys = u.unitsystem("km", "s", "kg", "rad")
-        fwd = cxfm.act(composed_op, None, array_3d, usys=usys)
-        back = cxfm.act(composed_op.inverse, None, fwd, usys=usys)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-
-# ===================================================================
-# Level 2: Quantity
-# ===================================================================
-
-
-class TestActOnQuantity:
-    """Apply transforms to ``unxt.Quantity``."""
-
-    def test_identity(self, identity_op, quantity_3d):
-        result = cxfm.act(identity_op, None, quantity_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_IDENTITY)
-
-    def test_rotate(self, rotate_op, quantity_3d):
-        result = cxfm.act(rotate_op, None, quantity_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_translate(self, translate_op, quantity_3d):
-        result = cxfm.act(translate_op, None, quantity_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_TRANSLATE)
-
-    def test_composed(self, composed_op, quantity_3d):
-        result = cxfm.act(composed_op, None, quantity_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_COMPOSED)
-
-    def test_returns_quantity(self, rotate_op, quantity_3d):
-        result = cxfm.act(rotate_op, None, quantity_3d)
-        assert isinstance(result, u.AbstractQuantity)
-
-    def test_rotate_roundtrip(self, rotate_op, quantity_3d):
-        fwd = cxfm.act(rotate_op, None, quantity_3d)
-        back = cxfm.act(rotate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_translate_roundtrip(self, translate_op, quantity_3d):
-        fwd = cxfm.act(translate_op, None, quantity_3d)
-        back = cxfm.act(translate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_composed_roundtrip(self, composed_op, quantity_3d):
-        fwd = cxfm.act(composed_op, None, quantity_3d)
-        back = cxfm.act(composed_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_rotate_with_explicit_chart(self, rotate_op, quantity_3d):
-        result = cxfm.act(rotate_op, None, quantity_3d, cxc.cart3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_rotate_with_chart_and_rep(self, rotate_op, quantity_3d):
-        result = cxfm.act(rotate_op, None, quantity_3d, cxc.cart3d, cxr.point)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-
-# ===================================================================
-# Level 3: QMatrix
-# ===================================================================
-
-
-class TestActOnQMatrix:
-    """Apply transforms to ``QMatrix``.
-
-    This is expected to be RED initially — no dispatches exist.
-    """
-
-    def test_identity(self, identity_op, qmatrix_3d):
-        result = cxfm.act(identity_op, None, qmatrix_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_IDENTITY)
-
-    def test_rotate(self, rotate_op, qmatrix_3d):
-        result = cxfm.act(rotate_op, None, qmatrix_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_translate(self, translate_op, qmatrix_3d):
-        result = cxfm.act(translate_op, None, qmatrix_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_TRANSLATE)
-
-    def test_composed(self, composed_op, qmatrix_3d):
-        result = cxfm.act(composed_op, None, qmatrix_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_COMPOSED)
-
-    def test_returns_quantity_matrix(self, rotate_op, qmatrix_3d):
-        result = cxfm.act(rotate_op, None, qmatrix_3d)
-        assert isinstance(result, QMatrix)
-
-    def test_rotate_roundtrip(self, rotate_op, qmatrix_3d):
-        fwd = cxfm.act(rotate_op, None, qmatrix_3d)
-        back = cxfm.act(rotate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_translate_roundtrip(self, translate_op, qmatrix_3d):
-        fwd = cxfm.act(translate_op, None, qmatrix_3d)
-        back = cxfm.act(translate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_composed_roundtrip(self, composed_op, qmatrix_3d):
-        fwd = cxfm.act(composed_op, None, qmatrix_3d)
-        back = cxfm.act(composed_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_rotate_with_explicit_chart(self, rotate_op, qmatrix_3d):
-        result = cxfm.act(rotate_op, None, qmatrix_3d, cxc.cart3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_rotate_with_chart_and_rep(self, rotate_op, qmatrix_3d):
-        result = cxfm.act(rotate_op, None, qmatrix_3d, cxc.cart3d, cxr.point)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_heterogeneous_units_identity(self, identity_op):
-        """QMatrix with mixed units passes through Identity."""
-        qm = QMatrix(
-            jnp.array([1, 2, 3]), unit=(u.unit("km"), u.unit("km"), u.unit("km"))
-        )
-        result = cxfm.act(identity_op, None, qm)
-        assert isinstance(result, QMatrix)
-        _assert_close(_extract_xyz(result), (1, 2, 3))
-
-
-# ===================================================================
-# Level 4: CDict
-# ===================================================================
-
-
-class TestActOnCDict:
-    """Apply transforms to component dictionaries (CDict)."""
-
-    def test_identity(self, identity_op, cdict_3d):
-        result = cxfm.act(identity_op, None, cdict_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_IDENTITY)
-
-    def test_rotate(self, rotate_op, cdict_3d):
-        result = cxfm.act(rotate_op, None, cdict_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_translate(self, translate_op, cdict_3d):
-        result = cxfm.act(translate_op, None, cdict_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_TRANSLATE)
-
-    def test_composed(self, composed_op, cdict_3d):
-        result = cxfm.act(composed_op, None, cdict_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_COMPOSED)
-
-    def test_returns_dict(self, rotate_op, cdict_3d):
-        result = cxfm.act(rotate_op, None, cdict_3d)
-        assert isinstance(result, dict)
-
-    def test_rotate_roundtrip(self, rotate_op, cdict_3d):
-        fwd = cxfm.act(rotate_op, None, cdict_3d)
-        back = cxfm.act(rotate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_translate_roundtrip(self, translate_op, cdict_3d):
-        fwd = cxfm.act(translate_op, None, cdict_3d)
-        back = cxfm.act(translate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_composed_roundtrip(self, composed_op, cdict_3d):
-        fwd = cxfm.act(composed_op, None, cdict_3d)
-        back = cxfm.act(composed_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_rotate_with_explicit_chart(self, rotate_op, cdict_3d):
-        result = cxfm.act(rotate_op, None, cdict_3d, cxc.cart3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_rotate_with_chart_and_rep(self, rotate_op, cdict_3d):
-        result = cxfm.act(rotate_op, None, cdict_3d, cxc.cart3d, cxr.point)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-
-# ===================================================================
-# Level 5: Vector
-# ===================================================================
-
-
-class TestActOnVector:
-    """Apply transforms to ``coordinax.Point``."""
-
-    def test_identity(self, identity_op, vector_3d):
-        result = cxfm.act(identity_op, None, vector_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_IDENTITY)
-
-    def test_rotate(self, rotate_op, vector_3d):
-        result = cxfm.act(rotate_op, None, vector_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_translate(self, translate_op, vector_3d):
-        result = cxfm.act(translate_op, None, vector_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_TRANSLATE)
-
-    def test_composed(self, composed_op, vector_3d):
-        result = cxfm.act(composed_op, None, vector_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_COMPOSED)
-
-    def test_returns_vector(self, rotate_op, vector_3d):
-        result = cxfm.act(rotate_op, None, vector_3d)
-        assert isinstance(result, cx.Point)
-
-    def test_preserves_chart(self, rotate_op, vector_3d):
-        result = cxfm.act(rotate_op, None, vector_3d)
-        assert result.chart == vector_3d.chart
-
-    def test_rotate_roundtrip(self, rotate_op, vector_3d):
-        fwd = cxfm.act(rotate_op, None, vector_3d)
-        back = cxfm.act(rotate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_translate_roundtrip(self, translate_op, vector_3d):
-        fwd = cxfm.act(translate_op, None, vector_3d)
-        back = cxfm.act(translate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_composed_roundtrip(self, composed_op, vector_3d):
-        fwd = cxfm.act(composed_op, None, vector_3d)
-        back = cxfm.act(composed_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-
-# ===================================================================
-# Level 6: Point with a concrete frame
-# ===================================================================
-
-
-class TestActOnCoordinate:
-    """Apply transforms to ``coordinax.Point`` with a concrete frame."""
-
-    def test_identity(self, identity_op, coord_3d):
-        result = cxfm.act(identity_op, None, coord_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_IDENTITY)
-
-    def test_rotate(self, rotate_op, coord_3d):
-        result = cxfm.act(rotate_op, None, coord_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_translate(self, translate_op, coord_3d):
-        result = cxfm.act(translate_op, None, coord_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_TRANSLATE)
-
-    def test_composed(self, composed_op, coord_3d):
-        result = cxfm.act(composed_op, None, coord_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_COMPOSED)
-
-    def test_returns_coordinate(self, rotate_op, coord_3d):
-        result = cxfm.act(rotate_op, None, coord_3d)
-        assert isinstance(result, cx.Point)
-
-    def test_preserves_frame(self, rotate_op, coord_3d):
-        result = cxfm.act(rotate_op, None, coord_3d)
-        assert isinstance(result.frame, type(coord_3d.frame))
-
-    def test_rotate_roundtrip(self, rotate_op, coord_3d):
-        fwd = cxfm.act(rotate_op, None, coord_3d)
-        back = cxfm.act(rotate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_translate_roundtrip(self, translate_op, coord_3d):
-        fwd = cxfm.act(translate_op, None, coord_3d)
-        back = cxfm.act(translate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_composed_roundtrip(self, composed_op, coord_3d):
-        fwd = cxfm.act(composed_op, None, coord_3d)
-        back = cxfm.act(composed_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-
-# ===================================================================
-# Level 7: Point with a TransformedReferenceFrame
-# ===================================================================
-
-
-class TestActOnCoordinateXfm:
-    """Apply transforms to ``Point`` with a ``TransformedReferenceFrame``."""
-
-    def test_identity(self, identity_op, coord_xfm_3d):
-        result = cxfm.act(identity_op, None, coord_xfm_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_IDENTITY)
-
-    def test_rotate(self, rotate_op, coord_xfm_3d):
-        result = cxfm.act(rotate_op, None, coord_xfm_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_translate(self, translate_op, coord_xfm_3d):
-        result = cxfm.act(translate_op, None, coord_xfm_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_TRANSLATE)
-
-    def test_composed(self, composed_op, coord_xfm_3d):
-        result = cxfm.act(composed_op, None, coord_xfm_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_COMPOSED)
-
-    def test_returns_coordinate(self, rotate_op, coord_xfm_3d):
-        result = cxfm.act(rotate_op, None, coord_xfm_3d)
-        assert isinstance(result, cx.Point)
-
-    def test_preserves_transformed_frame(self, rotate_op, coord_xfm_3d):
-        result = cxfm.act(rotate_op, None, coord_xfm_3d)
-        assert isinstance(result.frame, cxf.TransformedReferenceFrame)
-
-    def test_rotate_roundtrip(self, rotate_op, coord_xfm_3d):
-        fwd = cxfm.act(rotate_op, None, coord_xfm_3d)
-        back = cxfm.act(rotate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_translate_roundtrip(self, translate_op, coord_xfm_3d):
-        fwd = cxfm.act(translate_op, None, coord_xfm_3d)
-        back = cxfm.act(translate_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-    def test_composed_roundtrip(self, composed_op, coord_xfm_3d):
-        fwd = cxfm.act(composed_op, None, coord_xfm_3d)
-        back = cxfm.act(composed_op.inverse, None, fwd)
-        _assert_close(_extract_xyz(back), EXPECTED_IDENTITY)
-
-
-# ===================================================================
-# Cross-level consistency: same transform on all levels gives same answer
-# ===================================================================
-
-
-class TestCrossLevelConsistency:
-    """Verify that the same transform gives the same numerical result."""
-
-    def test_rotate_all_levels_agree(
-        self,
-        rotate_op,
-        array_3d,
-        quantity_3d,
-        qmatrix_3d,
-        cdict_3d,
-        vector_3d,
-        coord_3d,
-        coord_xfm_3d,
-    ):
-        results = []
-        # Level 1: Array
-        results.append(_extract_xyz(cxfm.act(rotate_op, None, array_3d)))
-        # Level 2: Quantity
-        results.append(_extract_xyz(cxfm.act(rotate_op, None, quantity_3d)))
-        # Level 3: QMatrix
-        results.append(_extract_xyz(cxfm.act(rotate_op, None, qmatrix_3d)))
-        # Level 4: CDict
-        results.append(_extract_xyz(cxfm.act(rotate_op, None, cdict_3d)))
-        # Level 5: Vector
-        results.append(_extract_xyz(cxfm.act(rotate_op, None, vector_3d)))
-        # Level 6: Coordinate
-        results.append(_extract_xyz(cxfm.act(rotate_op, None, coord_3d)))
-        # Level 7: Coordinate + XfmFrame
-        results.append(_extract_xyz(cxfm.act(rotate_op, None, coord_xfm_3d)))
-
-        for r in results:
-            _assert_close(r, EXPECTED_ROTATE, atol=ATOL)
-
-    def test_translate_all_levels_agree(
-        self,
-        translate_op,
-        array_3d,
-        quantity_3d,
-        qmatrix_3d,
-        cdict_3d,
-        vector_3d,
-        coord_3d,
-        coord_xfm_3d,
-    ):
-        usys = u.unitsystem("km", "s", "kg", "rad")
-        results = []
-        results.append(_extract_xyz(cxfm.act(translate_op, None, array_3d, usys=usys)))
-        results.append(_extract_xyz(cxfm.act(translate_op, None, quantity_3d)))
-        results.append(_extract_xyz(cxfm.act(translate_op, None, qmatrix_3d)))
-        results.append(_extract_xyz(cxfm.act(translate_op, None, cdict_3d)))
-        results.append(_extract_xyz(cxfm.act(translate_op, None, vector_3d)))
-        results.append(_extract_xyz(cxfm.act(translate_op, None, coord_3d)))
-        results.append(_extract_xyz(cxfm.act(translate_op, None, coord_xfm_3d)))
-
-        for r in results:
-            _assert_close(r, EXPECTED_TRANSLATE, atol=ATOL)
-
-    def test_reflect_all_levels_agree(
-        self,
-        reflect_op,
-        array_3d,
-        quantity_3d,
-        qmatrix_3d,
-        cdict_3d,
-        vector_3d,
-        coord_3d,
-        coord_xfm_3d,
-    ):
-        # A linear op: every input level is the same fundamental action.
-        for x in (
-            array_3d,
-            quantity_3d,
-            qmatrix_3d,
-            cdict_3d,
-            vector_3d,
-            coord_3d,
-            coord_xfm_3d,
-        ):
-            _assert_close(
-                _extract_xyz(cxfm.act(reflect_op, None, x)), EXPECTED_REFLECT, atol=ATOL
-            )
-
-    def test_composed_all_levels_agree(
-        self,
-        composed_op,
-        array_3d,
-        quantity_3d,
-        qmatrix_3d,
-        cdict_3d,
-        vector_3d,
-        coord_3d,
-        coord_xfm_3d,
-    ):
-        # Composed contains a Translate, so the bare-array level needs usys.
-        usys = u.unitsystem("km", "s", "kg", "rad")
-        results = [
-            _extract_xyz(cxfm.act(composed_op, None, array_3d, usys=usys)),
-            *(
-                _extract_xyz(cxfm.act(composed_op, None, x))
-                for x in (
-                    quantity_3d,
-                    qmatrix_3d,
-                    cdict_3d,
-                    vector_3d,
-                    coord_3d,
-                    coord_xfm_3d,
-                )
-            ),
-        ]
-        for r in results:
-            _assert_close(r, EXPECTED_COMPOSED, atol=ATOL)
-
-
-# ===================================================================
-# JIT compatibility
-# ===================================================================
-
-
-class TestActJIT:
-    """Verify act works under jax.jit / eqx.filter_jit for each level."""
-
-    def test_jit_array(self, rotate_op, array_3d):
-        result = jax.jit(lambda x: cxfm.act(rotate_op, None, x))(array_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_jit_quantity(self, rotate_op, quantity_3d):
-        result = jax.jit(lambda x: cxfm.act(rotate_op, None, x))(quantity_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_jit_qmatrix(self, rotate_op, qmatrix_3d):
-        result = eqx.filter_jit(lambda x: cxfm.act(rotate_op, None, x))(qmatrix_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_jit_cdict(self, rotate_op, cdict_3d):
-        result = jax.jit(lambda x: cxfm.act(rotate_op, None, x))(cdict_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_jit_vector(self, rotate_op, vector_3d):
-        result = eqx.filter_jit(lambda x: cxfm.act(rotate_op, None, x))(vector_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_jit_coordinate(self, rotate_op, coord_3d):
-        result = eqx.filter_jit(lambda x: cxfm.act(rotate_op, None, x))(coord_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
-
-    def test_jit_coordinate_xfm(self, rotate_op, coord_xfm_3d):
-        result = eqx.filter_jit(lambda x: cxfm.act(rotate_op, None, x))(coord_xfm_3d)
-        _assert_close(_extract_xyz(result), EXPECTED_ROTATE)
+def test_coordinate_xfm_preserves_transformed_frame(rotate_op, coord_xfm_3d):
+    result = cxfm.act(rotate_op, None, coord_xfm_3d)
+    assert isinstance(result.frame, cxf.TransformedReferenceFrame)
 
 
 # ===================================================================
