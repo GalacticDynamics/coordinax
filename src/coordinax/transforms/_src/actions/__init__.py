@@ -8,6 +8,7 @@ from .composite import *
 from .constants import *
 from .custom_types import *
 from .identity import *
+from .linear import *
 from .prolong import *
 from .reflect import *
 from .register_apply import *
