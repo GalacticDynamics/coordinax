@@ -36,6 +36,14 @@ PointLike: TypeAlias = ArrayLike | AbcQ | QMatrix | CDict
 # role is guessed from them.
 
 
+# NB: the return type is ``Any`` on purpose. plum performs runtime return-type
+# *conversion*, and a concrete `cxr.Representation` return trips the class's
+# invariant generic (``cxr.point`` is ``Representation[PointGeometry, ...]``),
+# while a `[Any, Any, Any]`-parametrized return breaks plum's converter. Both
+# were verified to fail; ``Any`` is the only annotation that is correct at
+# runtime and clean under the type checker.
+
+
 @plum.dispatch
 def _default_rep(x: ArrayLike, /) -> Any:
     return cxr.point
@@ -65,6 +73,11 @@ def _default_rep(x: CDict, /) -> Any:
 # generic coercion fallback for operators without a typed fast path. This
 # replaces the former per-input-type × arity boilerplate (and its ``-1``
 # precedence tier).
+#
+# The return type is ``Any``: these methods return the SAME container type they
+# receive (Array->Array, Quantity->Quantity, ...), which the type system can't
+# express, and because plum converts return values at runtime a `PointLike`
+# union return coerces/mangles the result (verified against the test suite).
 
 
 @plum.dispatch
