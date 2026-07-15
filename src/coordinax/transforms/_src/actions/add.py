@@ -259,26 +259,21 @@ def prolong(
     from .prolong import prolong_jet  # noqa: PLC0415 - avoid cycle
 
     k = getattr(op, "semantic_kind", cxr.dpl).order
-    if chart == op.chart and (k != 0 or is_flat_chart(op.chart)):
+    if k != 0 or (chart == op.chart and is_flat_chart(chart)):
+        # The jet always supplies the base point, so fibre kicks (k >= 1)
+        # work even cross-chart: `act` pushes the offset through the chart
+        # Jacobian at jet[0] when the charts differ.
         return {
-            m: cxfmapi.act(op, tau, slot, chart, _slot_rep(m), usys=usys)
+            m: cxfmapi.act(op, tau, slot, chart, _slot_rep(m), at=jet[0], usys=usys)
             for m, slot in jet.items()
         }
 
-    # Otherwise: a point-active offset (ladder order 0) is fully captured by
-    # the point action — whether the jet is in a different chart or the
-    # offset lives in a non-Cartesian chart (where the point action is
-    # base-point dependent and the slot-wise ladder rule does not apply) —
-    # so use the generic prolongation. A fibre-only offset has no
-    # well-defined cross-chart rule (same as `act`).
-    if k == 0:
-        return prolong_jet(op, tau, jet, chart, usys=usys)
-    msg = (
-        f"{type(op).__name__}.delta is defined in chart {op.chart!r}, "
-        f"but the jet is in chart {chart!r}. "
-        "Convert delta to the target chart before constructing the operator."
-    )
-    raise ValueError(msg)
+    # A point-active offset (ladder order 0) outside the flat matching case
+    # is fully captured by the point action — whether the jet is in a
+    # different chart or the offset lives in a non-Cartesian chart (where the
+    # point action is base-point dependent and the slot-wise ladder rule does
+    # not apply) — so use the generic prolongation.
+    return prolong_jet(op, tau, jet, chart, usys=usys)
 
 
 # ============================================================================

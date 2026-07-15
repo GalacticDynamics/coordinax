@@ -1055,3 +1055,25 @@ class TestLinearOpsUnderNewVerbs:
         v_ref = cxfm.act(op, None, v, cxc.cart3d, cxr.coord_vel, at=at)
         assert allclose_cdict(jet[0], p_ref, "m", atol=1e-8)
         assert allclose_cdict(jet[1], v_ref, "m/s", atol=1e-8)
+
+    def test_kick_cross_chart_in_jet(self):
+        """Prolong supplies at=jet[0], so cross-chart kicks work in jets."""
+        usys = u.unitsystems.si
+        dv = {k: u.Q(x, "km/s") for k, x in zip("xyz", (1.0, 0.0, 0.0), strict=False)}
+        kick = cxfm.Translate(dv, chart=cxc.cart3d, semantic_kind=cxr.vel)
+        jet = {
+            0: {"r": u.Q(5.0, "km"), "theta": u.Q(1.0, "rad"), "phi": u.Q(0.5, "rad")},
+            1: {
+                "r": u.Q(0.3, "km/s"),
+                "theta": u.Q(0.01, "rad/s"),
+                "phi": u.Q(0.02, "rad/s"),
+            },
+        }
+        out = cxfm.prolong(kick, None, jet, cxc.sph3d, usys=usys)
+        ref = cxfm.act(
+            kick, None, jet[1], cxc.sph3d, cxr.coord_vel, at=jet[0], usys=usys
+        )
+        for k, refk in ref.items():
+            unit = u.unit_of(refk)
+            assert jnp.allclose(u.ustrip(unit, out[1][k]), refk.value, rtol=1e-6)
+        assert jnp.allclose(u.ustrip("km", out[0]["r"]), 5.0)  # point untouched
