@@ -245,6 +245,17 @@ def pushforward_generic(
     if at is None:
         msg = _MSG_AT_REQUIRED.format(verb="pushforward", op=type(op).__name__, m=order)
         raise TypeError(msg)
+    if set(v) != set(at):
+        missing = sorted(set(at) - set(v))
+        extra = sorted(set(v) - set(at))
+        msg = (
+            f"pushforward({type(op).__name__}, ...): the tangent components "
+            f"do not match the base point's {sorted(at)}"
+            + (f"; missing {missing}" if missing else "")
+            + (f"; unexpected {extra}" if extra else "")
+            + "."
+        )
+        raise TypeError(msg)
 
     in_units = _cdict_units(at)
     out_units = _point_act_units(op, tau, at, chart, usys=usys)

@@ -1077,3 +1077,14 @@ class TestLinearOpsUnderNewVerbs:
             unit = u.unit_of(refk)
             assert jnp.allclose(u.ustrip(unit, out[1][k]), refk.value, rtol=1e-6)
         assert jnp.allclose(u.ustrip("km", out[0]["r"]), 5.0)  # point untouched
+
+    def test_pushforward_mismatched_components_raises(self):
+        """Tangent components must match the base point's components."""
+        op = cxfm.Scale.from_factors([2.0, 2.0, 2.0])
+        at = q3(1.0, 0.0, 0.0, "m")
+        v_missing = {"x": u.Q(1.0, "m/s"), "y": u.Q(0.0, "m/s")}  # no z
+        with pytest.raises(TypeError, match=r"missing \['z'\]"):
+            cxfm.pushforward(op, None, v_missing, cxc.cart3d, cxr.coord_vel, at=at)
+        v_extra = q3(1.0, 0.0, 0.0, "m/s") | {"w": u.Q(0.0, "m/s")}
+        with pytest.raises(TypeError, match=r"unexpected \['w'\]"):
+            cxfm.pushforward(op, None, v_extra, cxc.cart3d, cxr.coord_vel, at=at)
