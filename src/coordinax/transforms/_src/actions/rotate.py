@@ -27,7 +27,7 @@ import coordinax.representations as cxr
 from .base import AbstractTransform, materialize_transform
 from .custom_types import CDict, HasShape, OptUSys
 from .identity import identity
-from .prolong import _attach_leaf, _strip_leaf, prolong_slot
+from .prolong import _attach_leaf, _strip_leaf, _tau_value_unit, prolong_slot
 from .utils import Neg
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -428,18 +428,6 @@ def from_(cls: type[Rotate], obj: jtransform.Rotation, /) -> Rotate:
     return cls(obj.as_matrix())
 
 
-_MSG_TAU_REQUIRED_R = (
-    "act/pushforward(Rotate, ...) with a time-dependent (callable) rotation "
-    "matrix requires a time parameter; got tau=None."
-)
-
-
-def _check_tau(op: "Rotate", tau: Any, /) -> None:
-    """Raise an informative TypeError before materializing a callable R."""
-    if tau is None and callable(op.R):
-        raise TypeError(_MSG_TAU_REQUIRED_R)
-
-
 # ============================================================================
 # Simplification
 
@@ -510,7 +498,6 @@ def act(
         raise TypeError(msg)
 
     # Process rotation
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(chart)
 
@@ -548,7 +535,6 @@ def act(
         raise ValueError(msg)
 
     # Rotation matrix
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(chart)
     return jnp.einsum("ij,...j->...i", R, x)  # ty: ignore[invalid-return-type]
@@ -609,7 +595,6 @@ def act(
     # print("CART", cart.__class__, chart.__class__)
     comps_cart = cart.components
 
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(cart)
 
@@ -683,7 +668,6 @@ def _rotate_pushforward_cdict(
 
     """
     cart = chart.cartesian
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     R = op_eval._get_R(cart)
 
@@ -812,11 +796,10 @@ def act(
     if m == 1 and chart == cart and tau is not None and at is not None:
         # Closed form in Cartesian components: v' = R v + dR/dtau x.
         # One jvp evaluates R(tau) and dR/dtau together.
-        tau_unit = u.unit_of(tau)
-        tau_val = u.ustrip(tau_unit, tau) if tau_unit is not None else jnp.asarray(tau)
+        tau_val, tau_unit = _tau_value_unit(tau)
         R_fn = op.R
         R, Rdot = jax.jvp(
-            lambda tv: R_fn(u.Q(tv, tau_unit) if tau_unit is not None else tv),  # ty: ignore[call-top-callable]
+            lambda tv: R_fn(_attach_leaf(tau_unit, tv)),  # ty: ignore[call-top-callable]
             (tau_val,),
             (jax.numpy.ones_like(tau_val),),
         )
@@ -881,7 +864,6 @@ def act(
       base-point.
 
     """
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
     n = op_eval._validate_square(op_eval.R).shape[-1]
 

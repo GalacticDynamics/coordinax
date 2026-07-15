@@ -415,6 +415,18 @@ def materialize_transform(op: OpT, tau: Any, /) -> OpT:
     # Partition into callable (tau-dependent) and static parameters
     dynamic, static = eqx.partition(params, filter_spec=callable)
 
+    # Materializing time-dependent parameters requires a time. Guarding here
+    # (the shared choke point) gives every operator an informative error
+    # instead of an arbitrary crash from inside the user's callable at
+    # p(None). Static operators have no dynamic leaves, so tau=None is fine.
+    if tau is None and any(leaf is not None for leaf in jtu.leaves(dynamic)):
+        msg = (
+            f"materialize_transform({type(op).__name__}, ...): the operator "
+            "has time-dependent (callable) parameters, which require a time "
+            "parameter; got tau=None."
+        )
+        raise TypeError(msg)
+
     # Evaluate the dynamic parameters at the given tau
     eval_dynamic = jtu.map(lambda p: p(tau), dynamic)
 

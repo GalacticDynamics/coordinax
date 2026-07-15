@@ -424,9 +424,9 @@ class TestErrors:
         """Materializing a callable R without tau raises informatively."""
         op = cxfm.Rotate.from_(rot_z)
         d = q3(1.0, 0.0, 0.0, "m")
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) rotation"):
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
             cxfm.pushforward(op, None, d, cxc.cart3d, cxr.coord_disp)
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) rotation"):
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
             cxfm.act(op, None, d, cxc.cart3d, cxr.point)
 
     def test_td_translate_point_requires_tau(self):
@@ -435,7 +435,7 @@ class TestErrors:
             lambda t: q3(t.ustrip("s"), 0.0, 0.0, "km"), chart=cxc.cart3d
         )
         p = q3(0.0, 0.0, 0.0, "km")
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) delta"):
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
             cxfm.act(moving, None, p, cxc.cart3d, cxr.point)
 
     def test_td_vel_kick_matching_order_requires_tau(self):
@@ -446,7 +446,7 @@ class TestErrors:
             semantic_kind=cxr.vel,
         )
         v = q3(0.0, 0.0, 0.0, "km/s")
-        with pytest.raises(TypeError, match=r"time-dependent \(callable\) delta"):
+        with pytest.raises(TypeError, match=r"time-dependent \(callable\) parameters"):
             cxfm.act(kick, None, v, cxc.cart3d, cxr.coord_vel)
 
     def test_td_translate_tangent_requires_tau(self):

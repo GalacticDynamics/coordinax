@@ -16,7 +16,7 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .add import AbstractAdd
 from .custom_types import CDict, OptUSys
-from .utils import is_flat_chart
+from .utils import is_componentwise_offset
 from coordinax.transforms._src.groups import AffineGroup, DiffeomorphismGroup
 
 if TYPE_CHECKING:
@@ -164,27 +164,29 @@ def act(
     {'x': Q(1., 'km / s2'), 'y': Q(0., 'km / s2'), 'z': Q(0., 'km / s2')}
 
     """
-    # --- Point input: x + dv * tau, via the Translate ladder machinery.
-    if rep == cxr.point:
-        if tau is None:
-            raise TypeError(_MSG_TAU_REQUIRED_POINT)
+
+    def delegate() -> CDict:
+        # The single delegation tail: the equivalent displacement Translate
+        # (delta(tau) = dv*tau) implements the ladder rule, the flat-chart
+        # gating, and the generic fallback with anchors (at=, at_vel=).
         return cast(
             "CDict",
             cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw),
         )
 
+    # --- Point input: x + dv * tau, via the Translate ladder machinery.
+    if rep == cxr.point:
+        if tau is None:
+            raise TypeError(_MSG_TAU_REQUIRED_POINT)
+        return delegate()
+
     # The closed forms below hold only when dv and the data live in the same
     # Cartesian-type (flat) chart, where the boost's point action is a flat
     # translation at each tau. Otherwise the action is base-point dependent
     # in the data's coordinates — delegate everything (including
-    # displacements) to the equivalent displacement Translate, whose generic
-    # fallback handles the anchors (at=, at_vel=) and raises informative
-    # errors when they are missing.
-    if not (chart == op.chart and is_flat_chart(chart)):
-        return cast(
-            "CDict",
-            cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw),
-        )
+    # displacements).
+    if not is_componentwise_offset(op, chart):
+        return delegate()
 
     # --- Tangent input of ladder order m, flat matching chart.
     m = rep.semantic_kind.order
@@ -210,6 +212,4 @@ def act(
     # whose ladder rule computes d^m (dv(tau) * tau) / dtau^m.
     if tau is None:
         raise TypeError(_MSG_TAU_REQUIRED_TANGENT.format(m=m))
-    return cast(
-        "CDict", cxfmapi.act(_as_translate(op), tau, x, chart, rep, usys=usys, **kw)
-    )
+    return delegate()

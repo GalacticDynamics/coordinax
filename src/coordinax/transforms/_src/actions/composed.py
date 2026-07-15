@@ -290,13 +290,18 @@ def act(
     step_kw = dict(kw_rest)
     at_kw = {"at": current_at} if current_at is not None else {}
     result = x
-    for sub_op in op.transforms:
+    last = len(op.transforms) - 1
+    for i, sub_op in enumerate(op.transforms):
         if current_at is not None:
             step_kw["at"] = current_at
             at_kw["at"] = current_at
         if current_at_vel is not None:
             step_kw["at_vel"] = current_at_vel
         result = cxfmapi.act(sub_op, tau, result, chart, rep, **step_kw)
+        if i == last:
+            # The advanced anchors would never be read — skip the (eager-mode)
+            # dead work of transforming them through the final sub-op.
+            break
         # Advance the anchor jet (velocity first: it needs the old base point).
         if current_at_vel is not None:
             current_at_vel = cxfmapi.act(

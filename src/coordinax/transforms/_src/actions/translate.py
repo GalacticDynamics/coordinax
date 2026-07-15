@@ -21,7 +21,7 @@ from .base import is_time_dependent, materialize_transform
 from .composed import Composed
 from .custom_types import CDict, OptUSys
 from .prolong import prolong_slot, tau_derivative
-from .utils import is_flat_chart
+from .utils import is_componentwise_offset
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
 
@@ -144,18 +144,6 @@ class Translate(AbstractAdd):
     # inverse and __neg__ inherited from AbstractAdd
 
 
-_MSG_TAU_REQUIRED = (
-    "act(Translate, ...) with a time-dependent (callable) delta requires a "
-    "time parameter; got tau=None."
-)
-
-
-def _check_tau(op: "Translate", tau: Any, /) -> None:
-    """Raise an informative TypeError before materializing a callable delta."""
-    if tau is None and callable(op.delta):
-        raise TypeError(_MSG_TAU_REQUIRED)
-
-
 # ============================================================================
 # act
 
@@ -228,7 +216,6 @@ def act(
     )
 
     # Process Translation
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
 
     # Convert delta to array using chart components and usys
@@ -290,7 +277,6 @@ def act(
         return x
 
     # Process Translation
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
 
     # Convert delta to array using chart components and usys
@@ -371,7 +357,7 @@ def act(
     # is nonlinear in the data's coordinates), the pushforward/prolongation
     # gains base-point-dependent coupling terms — defer to the generic
     # autodiff engine (which requires the base point 'at').
-    if k == 0 and not (chart == op.chart and is_flat_chart(chart)):
+    if not is_componentwise_offset(op, chart):
         return _act_translate_nonflat(op, tau, x, chart, rep, m, kw, usys)
 
     # Displacements are same-tau point differences (never gain dtau terms and
@@ -382,11 +368,14 @@ def act(
     # Contribution: d^(m-k) delta / dtau^(m-k).
     n = m - k
     if n == 0:
-        _check_tau(op, tau)
         delta = materialize_transform(op, tau).delta
     elif callable(op.delta):
         if tau is None:
-            raise TypeError(_MSG_TAU_REQUIRED)
+            msg = (
+                "act(Translate, ...) with a time-dependent (callable) delta "
+                "requires a time parameter; got tau=None."
+            )
+            raise TypeError(msg)
         delta = tau_derivative(op.delta, tau, n=n)
     else:
         # Static delta: all tau-derivatives vanish.
@@ -469,7 +458,6 @@ def _translate_point_cdict(
     usys: OptUSys = None,
 ) -> CDict:
     """Shift a point by the (materialized) delta, via the Cartesian chart."""
-    _check_tau(op, tau)
     op_eval = materialize_transform(op, tau)
 
     # Translate in Cartesian space, then map back.

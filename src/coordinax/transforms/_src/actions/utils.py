@@ -3,7 +3,7 @@
 This module defines helpers for operator implementations.
 """
 
-__all__: tuple[str, ...] = ("Neg", "is_flat_chart")
+__all__: tuple[str, ...] = ("Neg", "is_componentwise_offset", "is_flat_chart")
 
 import dataclasses
 
@@ -51,3 +51,22 @@ class Neg:
     def __neg__(self) -> Any:
         """Return the original parameter."""
         return self.param
+
+
+def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
+    """Whether an additive offset acts componentwise on data in ``chart``.
+
+    True for fibre-only offsets (ladder order k >= 1 — their point action is
+    the identity, so the componentwise rule is definitional), and for k = 0
+    offsets whose ``delta`` and data share the same Cartesian-type (flat)
+    chart (a true ambient translation). Everything else is base-point
+    dependent and must go through the generic engine.
+
+    This is THE routing predicate for the additive family — `act`,
+    `pushforward`, and `prolong` must all use it so the fast paths stay
+    provably consistent with the generic prolongation.
+    """
+    import coordinax.representations as cxr  # noqa: PLC0415 - avoid cycle
+
+    k = getattr(op, "semantic_kind", cxr.dpl).order
+    return k != 0 or (chart == op.chart and is_flat_chart(chart))
