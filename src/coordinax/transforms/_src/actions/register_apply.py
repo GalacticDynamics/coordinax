@@ -7,6 +7,7 @@ from typing import Any, Final, TypeAlias, cast
 
 import plum
 
+import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
@@ -25,6 +26,25 @@ _MSG_CHARTS_MATCH: Final = (
 # A "point-like" input the entry funnel accepts. Faithful (each member and the
 # union), so the normalizer methods below stay in plum's method cache.
 PointLike: TypeAlias = ArrayLike | AbcQ | QMatrix | CDict
+
+
+# ===================================================================
+# Input coercion
+#
+# `guess_chart` only dispatches on JAX arrays, Quantities, and CDicts, so a bare
+# `ArrayLike` (a list, a NumPy array, a scalar) must be coerced to a JAX array
+# before chart inference. Quantity / QMatrix / CDict are passed through
+# unchanged (they already carry the structure `guess_chart` needs).
+
+
+@plum.dispatch
+def _as_data(x: PointLike, /) -> Any:
+    return x
+
+
+@plum.dispatch
+def _as_data(x: ArrayLike, /) -> Any:
+    return jnp.asarray(x)
 
 
 # ===================================================================
@@ -113,6 +133,7 @@ def act(op: AbstractTransform, tau: Any, x: PointLike, /, **kw: Any) -> Any:
     Q([0., 1., 0.], 'km')
 
     """
+    x = _as_data(x)
     chart = cxc.guess_chart(x)
     return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
 
@@ -139,6 +160,7 @@ def act(
     Q([0., 1., 0.], 'km')
 
     """
+    x = _as_data(x)
     return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
 
 
@@ -169,9 +191,9 @@ def act(
     >>> import coordinax.main as cx
 
     >>> op = cx.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> q = u.Q([1, 0, 0], "km")
-    >>> cx.act(op, None, q, cx.cart3d, cx.point).round(3)
-    Q([0., 1., 0.], 'km')
+    >>> x = jnp.asarray([1.0, 0.0, 0.0])
+    >>> cx.act(op, None, x, cx.cart3d, cx.point).round(3)
+    Array([0., 1., 0.], dtype=float64)
 
     """
     out = cxfmapi.act(op, tau, x, chart, rep.geom_kind, rep, **kw)

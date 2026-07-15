@@ -184,11 +184,13 @@ def test_act_under_jit(request, rotate_op, level_fixture):
 
 
 def test_qmatrix_heterogeneous_units_identity(identity_op):
-    """A QMatrix with mixed units passes through Identity unchanged."""
-    qm = QMatrix(jnp.array([1, 2, 3]), unit=(u.unit("km"), u.unit("km"), u.unit("km")))
+    """A QMatrix with per-component (heterogeneous) units passes through Identity."""
+    units = (u.unit("km"), u.unit("m"), u.unit("cm"))
+    qm = QMatrix(jnp.array([1.0, 2.0, 3.0]), unit=units)
     result = cxfm.act(identity_op, None, qm)
     assert isinstance(result, QMatrix)
-    _assert_close(_extract_xyz(result), (1, 2, 3))
+    np.testing.assert_allclose(np.asarray(result.value), [1.0, 2.0, 3.0])
+    assert result.unit == units
 
 
 def test_vector_preserves_chart(rotate_op, vector_3d):
