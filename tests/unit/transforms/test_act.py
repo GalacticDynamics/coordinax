@@ -28,6 +28,7 @@ import coordinax.transforms as cxfm
 from .conftest import (
     EXPECTED_COMPOSED,
     EXPECTED_IDENTITY,
+    EXPECTED_REFLECT,
     EXPECTED_ROTATE,
     EXPECTED_TRANSLATE,
 )
@@ -499,6 +500,61 @@ class TestCrossLevelConsistency:
 
         for r in results:
             _assert_close(r, EXPECTED_TRANSLATE, atol=ATOL)
+
+    def test_reflect_all_levels_agree(
+        self,
+        reflect_op,
+        array_3d,
+        quantity_3d,
+        qmatrix_3d,
+        cdict_3d,
+        vector_3d,
+        coord_3d,
+        coord_xfm_3d,
+    ):
+        # A linear op: every input level is the same fundamental action.
+        for x in (
+            array_3d,
+            quantity_3d,
+            qmatrix_3d,
+            cdict_3d,
+            vector_3d,
+            coord_3d,
+            coord_xfm_3d,
+        ):
+            _assert_close(
+                _extract_xyz(cxfm.act(reflect_op, None, x)), EXPECTED_REFLECT, atol=ATOL
+            )
+
+    def test_composed_all_levels_agree(
+        self,
+        composed_op,
+        array_3d,
+        quantity_3d,
+        qmatrix_3d,
+        cdict_3d,
+        vector_3d,
+        coord_3d,
+        coord_xfm_3d,
+    ):
+        # Composed contains a Translate, so the bare-array level needs usys.
+        usys = u.unitsystem("km", "s", "kg", "rad")
+        results = [
+            _extract_xyz(cxfm.act(composed_op, None, array_3d, usys=usys)),
+            *(
+                _extract_xyz(cxfm.act(composed_op, None, x))
+                for x in (
+                    quantity_3d,
+                    qmatrix_3d,
+                    cdict_3d,
+                    vector_3d,
+                    coord_3d,
+                    coord_xfm_3d,
+                )
+            ),
+        ]
+        for r in results:
+            _assert_close(r, EXPECTED_COMPOSED, atol=ATOL)
 
 
 # ===================================================================
