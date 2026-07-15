@@ -3,7 +3,7 @@
 __all__: tuple[str, ...] = ()
 
 from jaxtyping import Array, ArrayLike
-from typing import Any, Final, TypeAlias, cast
+from typing import Any, TypeAlias, cast
 
 import plum
 
@@ -17,11 +17,6 @@ import coordinax.representations as cxr
 from .base import AbstractTransform
 from .custom_types import CDict
 from coordinax.internal import QMatrix, pack_nonuniform_unit, pack_uniform_unit
-
-_MSG_CHARTS_MATCH: Final = (
-    "inferred chart guess_chart(x)={0.__class__.__name__} "
-    "does not match provided chart {1.__class__.__name__}"
-)
 
 # A "point-like" input the entry funnel accepts. Faithful (each member and the
 # union), so the normalizer methods below stay in plum's method cache.
