@@ -3,11 +3,10 @@
 __all__: tuple[str, ...] = ()
 
 from jaxtyping import Array, ArrayLike
-from typing import Any, Final, cast
+from typing import Any, Final, TypeAlias, cast
 
 import plum
 
-import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
@@ -23,17 +22,57 @@ _MSG_CHARTS_MATCH: Final = (
     "does not match provided chart {1.__class__.__name__}"
 )
 
+# A "point-like" input the entry funnel accepts. Faithful (each member and the
+# union), so the normalizer methods below stay in plum's method cache.
+PointLike: TypeAlias = ArrayLike | AbcQ | QMatrix | CDict
+
+
 # ===================================================================
-# On Array(like) inputs
+# Per-input-type representation default
+#
+# When ``rep`` is omitted the default depends only on the INPUT TYPE, not the
+# operator: a bare array / QMatrix carries no unit information to infer a role
+# from, so it defaults to ``point``; a Quantity / CDict carries units, so the
+# role is guessed from them.
 
 
 @plum.dispatch
-def act(op: AbstractTransform, tau: Any, x: ArrayLike, /, **kw: Any) -> Array:
-    """Apply an operator to an Array(like) object.
+def _default_rep(x: ArrayLike, /) -> Any:
+    return cxr.point
 
-    The Array is interpreted as equivalent to the data for a ``Vector``
-    with a Cartesian chart (e.g. `coordinax.charts.Cartesian3D`) and
-    `coordinax.representations.PointGeometry` geometry.
+
+@plum.dispatch
+def _default_rep(x: QMatrix, /) -> Any:
+    return cxr.point
+
+
+@plum.dispatch
+def _default_rep(x: AbcQ, /) -> Any:
+    return cxr.guess_rep(x)
+
+
+@plum.dispatch
+def _default_rep(x: CDict, /) -> Any:
+    return cxr.guess_rep(x)
+
+
+# ===================================================================
+# Normalize-once entry funnel
+#
+# One pair of arity-3 / arity-4 methods fills in the missing ``chart`` (guessed
+# once) and ``rep`` (per-type default), then redispatches to the arity-5 typed
+# ``act`` — the per-(operator, input-type) JAX fast paths, or the arity-5
+# generic coercion fallback for operators without a typed fast path. This
+# replaces the former per-input-type × arity boilerplate (and its ``-1``
+# precedence tier).
+
+
+@plum.dispatch
+def act(op: AbstractTransform, tau: Any, x: PointLike, /, **kw: Any) -> Any:
+    """Infer the chart and representation, then apply the operator.
+
+    A bare input is interpreted as the data for a `coordinax.Point` in its
+    guessed (Cartesian) chart.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
@@ -54,52 +93,48 @@ def act(op: AbstractTransform, tau: Any, x: ArrayLike, /, **kw: Any) -> Array:
     >>> cxfm.act(op, None, x, usys=usys).round(3)
     Array([1000.,    1.,    0.], dtype=float64)
 
+    A Quantity carries units, so its role is inferred from them:
+
+    >>> q = u.Q([1, 0, 0], "km")
+    >>> cxfm.act(R, None, q).round(3)
+    Q([0., 1., 0.], 'km')
+
     """
-    x_arr = jnp.asarray(x)  # Ensure array type
-    chart = cxc.guess_chart(x_arr)  # extract chart
-    # Redispatch (op, tau, x) -> (op, tau, x, chart, rep)
-    out = cxfmapi.act(op, tau, x, chart, cxr.point, **kw)
-    return cast("Array", out)
+    chart = cxc.guess_chart(x)
+    return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
 
 
 @plum.dispatch
 def act(
     op: AbstractTransform,
     tau: Any,
-    x: ArrayLike,
+    x: PointLike,
     chart: cxc.AbstractChart,
     /,
     **kw: Any,
-) -> Array:
-    """Apply an operator to an Array(like) object.
-
-    The Array is interpreted as equivalent to the data for a ``Vector``
-    with a Cartesian chart (e.g. `coordinax.charts.Cartesian3D`) and
-    `coordinax.representations.PointGeometry` geometry.
+) -> Any:
+    """Infer the representation, then apply the operator.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
-    >>> import coordinax.main as cx
+    >>> import coordinax.charts as cxc
+    >>> import coordinax.transforms as cxfm
 
-    >>> usys = u.unitsystems.si
-    >>> x = jnp.asarray([1, 0, 0])  # [m]
-
-    >>> T = cx.Translate.from_([1, 0, 0], "km")
-    >>> cx.act(T, None, x, cxc.cart3d, usys=usys).round(3)  # needs usys
-    Array([1001.,    0.,    0.], dtype=float64)
-
-    >>> R = cx.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> cx.act(R, None, x, cx.cart3d).round(3) # no usys required
-    Array([0., 1., 0.], dtype=float64)
-
-    >>> op = R | T  # rotate then translate
-    >>> cx.act(op, None, x, cx.cart3d, usys=usys).round(3)
-    Array([1000.,    1.,    0.], dtype=float64)
+    >>> R = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
+    >>> q = u.Q([1, 0, 0], "km")
+    >>> cxfm.act(R, None, q, cxc.cart3d).round(3)
+    Q([0., 1., 0.], 'km')
 
     """
-    # (op, tau, x, chart) -> (op, tau, x, chart, rep)
-    out = cxfmapi.act(op, tau, x, chart, cxr.point, **kw)
-    return cast("Array", out)
+    return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
+
+
+# ===================================================================
+# Arity-5 typed fallbacks: coerce non-CDict inputs to a Cartesian CDict, act,
+# and repack. Operators with a typed arity-5 fast path (rotate.py, translate.py,
+# ...) override these by concrete-type specificity; these serve the rest.
+#
+# On Array(like) inputs
 
 
 @plum.dispatch
@@ -114,9 +149,7 @@ def act(
 ) -> Array:
     """Apply an operator to an Array(like) object.
 
-    The Array is interpreted as equivalent to the data for a ``Vector``
-    with a Cartesian chart (e.g. `coordinax.charts.Cartesian3D`) and
-    `coordinax.representations.PointGeometry` geometry.
+    The Array is interpreted as Cartesian point coordinates.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
@@ -136,68 +169,6 @@ def act(
 # On Quantity inputs
 
 
-# Precedence=-1 so it's easily overridden, like by `Identity`.
-@plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
-def act(op: AbstractTransform, tau: Any, x: AbcQ, /, **kw: Any) -> AbcQ:
-    """Apply an operator to a Quantity.
-
-    The Quantity is interpreted as equivalent to the data for a
-    `coordinax.Point` with a Cartesian chart (e.g.
-    `coordinax.charts.Cartesian3D`) and
-    `coordinax.representations.PointGeometry` geometry.
-
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.main as cx
-
-    >>> op = cx.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> q = u.Q([1, 0, 0], "km")
-    >>> cx.act(op, None, q).round(3)
-    Q([0., 1., 0.], 'km')
-
-    """
-    # Redispatch based on the inferred role & chart
-    chart = cxc.guess_chart(x)
-    rep = cxr.guess_rep(x)
-    out = cxfmapi.act(op, tau, x, chart, rep, **kw)
-    return cast("AbcQ", out)
-
-
-@plum.dispatch
-def act(
-    op: AbstractTransform,
-    tau: Any,
-    x: AbcQ,
-    chart: cxc.AbstractChart,
-    /,
-    **kw: Any,
-) -> AbcQ:
-    """Apply operator, routing through dictionary-based implementation.
-
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.transforms as cxfm
-
-    >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> q = u.Q([1, 0, 0], "km")
-
-    Directly access this registered method, bypassing more efficient methods.
-
-    >>> func = cxfm.act.invoke(cxfm.Rotate, None, u.Q, cxc.Cart3D)
-    >>> func(op, None, q, cxc.cart3d).round(3)
-    Q([0., 1., 0.], 'km')
-
-    """
-    # Get the Cartesian CDict of the input Quantity
-    v = cxc.cdict(x, chart)
-    # Apply the operator to the CDict representation
-    rep = cxr.guess_rep(v)
-    nv = cxfmapi.act(op, tau, v, chart, rep, **kw)
-    # Stack back to a Quantity (homogeneous unit since Cartesian)
-    nva, unit = pack_uniform_unit(nv, keys=chart.components)  # ty: ignore[no-matching-overload]
-    return u.Q(jnp.stack(nva, axis=-1), unit)
-
-
 @plum.dispatch
 def act(
     op: AbstractTransform,
@@ -208,7 +179,7 @@ def act(
     /,
     **kw: Any,
 ) -> AbcQ:
-    """Apply operator, routing through dictionary-based implementation.
+    """Apply operator, routing through the CDict-based implementation.
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
@@ -238,76 +209,11 @@ def act(
 # ===================================================================
 # On QMatrix inputs
 #
-# Precedence=2 on all QMatrix dispatches so they are preferred over
-# the (SpecificTransform, AbstractQuantity) dispatches in rotate.py,
-# translate.py, and composed.py (precedence=0) AND over the Identity
-# catch-all (precedence=1). Without this, plum sees e.g.
-# (Composed, tau, QM) as ambiguous between (Composed, tau, AbcQ) and
-# (AbstractTransform, tau, QM).
-
-
-@plum.dispatch(precedence=2)  # ty: ignore[no-matching-overload]
-def act(op: AbstractTransform, tau: Any, x: QMatrix, /, **kw: Any) -> QMatrix:
-    """Apply an operator to a ``QMatrix``.
-
-    The chart is inferred from the matrix size and the representation defaults
-    to ``point``.
-
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.transforms as cxfm
-    >>> from coordinax.internal import QMatrix
-
-    >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> qm = QMatrix(
-    ...     jnp.array([1.0, 0.0, 0.0]),
-    ...     unit=(u.unit("km"), u.unit("km"), u.unit("km")),
-    ... )
-    >>> result = cxfm.act(op, None, qm)
-    >>> result.value.round(3)
-    Array([0., 1., 0.], dtype=float64)
-
-    """
-    chart = cxc.guess_chart(x)
-    out = cxfmapi.act(op, tau, x, chart, cxr.point, **kw)
-    return cast("QMatrix", out)
-
-
-@plum.dispatch(precedence=2)  # ty: ignore[no-matching-overload]
-def act(
-    op: AbstractTransform,
-    tau: Any,
-    x: QMatrix,
-    chart: cxc.AbstractChart,
-    /,
-    **kw: Any,
-) -> QMatrix:
-    """Apply an operator to a ``QMatrix`` with explicit chart.
-
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.charts as cxc
-    >>> import coordinax.transforms as cxfm
-    >>> from coordinax.internal import QMatrix
-
-    >>> qm = QMatrix(
-    ...     jnp.array([1.0, 0.0, 0.0]),
-    ...     unit=("km", "km", "km"),
-    ... )
-
-    >>> op = cxfm.Translate.from_([1, 0, 0], "km")
-    >>> result = cxfm.act(op, None, qm, cxc.cart3d)
-    >>> result.value.round(3)
-    Array([2., 0., 0.], dtype=float64)
-
-    >>> op = cxfm.Rotate.from_euler("z", u.Q(90, "deg"))
-    >>> result = cxfm.act(op, None, qm, cxc.cart3d)
-    >>> result.value.round(3)
-    Array([0., 1., 0.], dtype=float64)
-
-    """
-    out = cxfmapi.act(op, tau, x, chart, cxr.point, **kw)
-    return cast("QMatrix", out)
+# Precedence=2 so QMatrix (a subclass of AbstractQuantity) prefers this typed
+# path over the (SpecificTransform, AbstractQuantity) fast paths in rotate.py /
+# translate.py / composed.py (precedence 0) AND over the Identity catch-all
+# (precedence 1). Without it, e.g. (Composed, tau, QMatrix) is ambiguous between
+# (Composed, tau, AbcQ) and (AbstractTransform, tau, QMatrix).
 
 
 @plum.dispatch(precedence=2)  # ty: ignore[no-matching-overload]
@@ -349,55 +255,3 @@ def act(
     # Repack CDict → QMatrix
     arr, units = pack_nonuniform_unit(nv, keys=chart.components)
     return QMatrix(arr, unit=units)
-
-
-# ===================================================================
-# On CDict inputs
-
-
-@plum.dispatch
-def act(op: AbstractTransform, tau: Any, x: CDict, /, **kw: Any) -> CDict:
-    """Apply operator to a CDict representation of a vector.
-
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.transforms as cxfm
-
-    >>> op = cxfm.Rotate([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> data = {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
-    >>> cxfm.act(op, None, data)
-    {'x': Q(0, 'km'), 'y': Q(1, 'km'), 'z': Q(0, 'km')}
-
-    """
-    # Infer rep and chart from the CDict
-    chart = cxc.guess_chart(x)
-    rep = cxr.guess_rep(x)
-
-    # Redispatch to the main implementation
-    out = cxfmapi.act(op, tau, x, chart, rep, **kw)
-    return cast("CDict", out)
-
-
-@plum.dispatch
-def act(
-    op: AbstractTransform, tau: Any, x: CDict, chart: cxc.AbstractChart, /, **kw: Any
-) -> CDict:
-    """Apply operator to a CDict representation of a vector.
-
-    >>> import jax.numpy as jnp
-    >>> import unxt as u
-    >>> import coordinax.transforms as cxfm
-    >>> import coordinax.charts as cxc
-
-    >>> op = cxfm.Rotate([[0, 1, 0], [1, 0, 0], [0, 0, 1]])
-    >>> data = {"x": u.Q(1, "km"), "y": u.Q(0, "km"), "z": u.Q(0, "km")}
-    >>> cxfm.act(op, None, data, cxc.cart3d)
-    {'x': Q(0, 'km'), 'y': Q(1, 'km'), 'z': Q(0, 'km')}
-
-    """
-    # Infer rep from the CDict
-    rep = cxr.guess_rep(x)
-
-    # Redispatch to the main implementation
-    out = cxfmapi.act(op, tau, x, chart, rep, **kw)
-    return cast("CDict", out)
