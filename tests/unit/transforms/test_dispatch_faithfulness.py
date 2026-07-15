@@ -24,9 +24,9 @@ via::
 from jaxtyping import ArrayLike
 
 import jax
+import jax.numpy as jnp
 from plum import Signature
 
-import quaxed.numpy as jnp
 import unxt as u
 
 import coordinax.charts as cxc

@@ -12,7 +12,7 @@ __all__: tuple[str, ...] = (
     "Ds",
 )
 
-from typing import Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from typing_extensions import TypeVar
 
 import unxt as u
@@ -32,11 +32,15 @@ OptUSys: TypeAlias = u.AbstractUnitSystem | None
 # Vector-related Types
 
 CKey: TypeAlias = str
-# NOTE: deliberately the bare `dict`, not `dict[str, Any]`: a parametric
-# annotation makes every plum signature that uses CDict "unfaithful",
-# which disables plum's method cache and forces a full (~200x slower)
-# resolution on every call of `act`/`pt_map`/`cconvert`/etc.
-CDict: TypeAlias = dict
+if TYPE_CHECKING:
+    # Typed for static checkers only.
+    CDict: TypeAlias = dict[CKey, Any]
+else:
+    # A parametric `dict[...]` annotation makes every plum signature
+    # using CDict "unfaithful", disabling plum's method cache (a full
+    # ~200x slower resolution per call). The bare `dict` keeps the cache;
+    # the TYPE_CHECKING branch above preserves the static type.
+    CDict: TypeAlias = dict
 CDictT = TypeVar("CDictT", bound=CDict)
 
 Ks = TypeVar("Ks", bound=tuple[CKey, ...], default=tuple[str, ...])

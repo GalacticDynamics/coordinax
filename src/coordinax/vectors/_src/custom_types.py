@@ -2,16 +2,20 @@
 
 __all__ = ("Shape", "HasShape", "CKey", "CDict")
 
-from typing import Protocol, TypeAlias, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, TypeAlias, runtime_checkable
 
 import unxt as u
 
 CKey: TypeAlias = str
-# NOTE: deliberately the bare `dict`, not `dict[str, Any]`: a parametric
-# annotation makes every plum signature that uses CDict "unfaithful",
-# which disables plum's method cache and forces a full (~200x slower)
-# resolution on every call of `act`/`pt_map`/`cconvert`/etc.
-CDict: TypeAlias = dict
+if TYPE_CHECKING:
+    # Typed for static checkers only.
+    CDict: TypeAlias = dict[CKey, Any]
+else:
+    # A parametric `dict[...]` annotation makes every plum signature
+    # using CDict "unfaithful", disabling plum's method cache (a full
+    # ~200x slower resolution per call). The bare `dict` keeps the cache;
+    # the TYPE_CHECKING branch above preserves the static type.
+    CDict: TypeAlias = dict
 
 Shape: TypeAlias = tuple[int, ...]
 
