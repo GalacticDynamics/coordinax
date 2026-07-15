@@ -370,12 +370,12 @@ def act(
     if n == 0:
         delta = materialize_transform(op, tau).delta
     elif callable(op.delta):
+        # Differentiating the callable delta needs tau. Route the tau=None
+        # guard through materialize_transform (the shared choke point) so
+        # every callable-parameter tau error carries one consistent message
+        # instead of a Translate-specific one that can drift.
         if tau is None:
-            msg = (
-                "act(Translate, ...) with a time-dependent (callable) delta "
-                "requires a time parameter; got tau=None."
-            )
-            raise TypeError(msg)
+            materialize_transform(op, tau)  # raises the shared TypeError
         delta = tau_derivative(op.delta, tau, n=n)
     else:
         # Static delta: all tau-derivatives vanish.
