@@ -828,10 +828,17 @@ def act(
         v_arr, v_unit = pack_uniform_unit(x, keys=comps)
         at_arr, at_unit = pack_uniform_unit(at, keys=comps)
         Rv = u.Q(jnp.einsum("ij,...j->...i", R, v_arr), v_unit)
-        Rdot_at = u.Q(
-            jnp.einsum("ij,...j->...i", Rdot, at_arr),
-            at_unit / tau_unit if tau_unit is not None else at_unit,
-        )
+        # dR/dtau is per tau's unit; for a raw (unitless) tau with unitful
+        # data, interpret it in the data's own time base T = at_unit/v_unit
+        # (the same policy as the generic engine's _common_time_unit), so
+        # Rdot@at carries at_unit/T = v_unit and the sum is consistent.
+        if tau_unit is not None:
+            rdot_unit = at_unit / tau_unit if at_unit is not None else None
+        elif at_unit is not None and v_unit is not None:
+            rdot_unit = v_unit
+        else:
+            rdot_unit = at_unit
+        Rdot_at = u.Q(jnp.einsum("ij,...j->...i", Rdot, at_arr), rdot_unit)
         out_arr = u.ustrip(v_unit, Rv + Rdot_at)
         return cast("CDict", cxc.cdict(out_arr, v_unit, comps))
 

@@ -1088,3 +1088,26 @@ class TestLinearOpsUnderNewVerbs:
         v_extra = q3(1.0, 0.0, 0.0, "m/s") | {"w": u.Q(0.0, "m/s")}
         with pytest.raises(TypeError, match=r"unexpected \['w'\]"):
             cxfm.pushforward(op, None, v_extra, cxc.cart3d, cxr.coord_vel, at=at)
+
+    def test_rotate_raw_tau_unitful_data(self):
+        """Raw (unitless) tau with unitful data works and is consistent.
+
+        The closed form interprets d/dtau in the data's own time base,
+        matching the generic engine's raw-tau convention.
+        """
+
+        def rot_z_raw(t) -> Real[Array, "3 3"]:
+            st_, ct = jnp.sin(t), jnp.cos(t)
+            return jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
+
+        op = cxfm.Rotate.from_(rot_z_raw)
+        at = q3(1.0, 0.0, 0.0, "m")
+        v = q3(0.0, 0.0, 0.0, "m/s")
+        tau = jnp.asarray(0.0)
+        out = cxfm.act(op, tau, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at)
+        gen = prolong_jet(op, tau, {0: at, 1: v}, cxc.cart3d)
+        for k in out:
+            unit = u.unit_of(gen[1][k])
+            assert jnp.allclose(u.ustrip(unit, out[k]), gen[1][k].value, atol=1e-7)
+        # omega = 1 per data-time-base; z-hat x x-hat = y-hat
+        assert jnp.allclose(u.ustrip("m/s", out["y"]), 1.0, atol=1e-7)

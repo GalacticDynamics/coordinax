@@ -8,9 +8,9 @@ from typing import cast, final
 import plum
 
 import unxt as u
-from dataclassish import replace
 
 import coordinax.api.frames as cxfapi
+import coordinax.charts as cxc
 import coordinax.representations as cxr
 import coordinax.transforms as cxfm
 from .base import AbstractReferenceFrame
@@ -242,8 +242,11 @@ def frame_transition(from_frame: Alice, to_frame: Bob, /) -> cxfm.Composed:
 
     """
     shift = cxfm.Translate.from_([100_000, 10_000, 0], "km")
-    kick_delta = cxfm.Translate.from_(u.Q([269_813_212.2, 0, 0], "m/s"))
-    kick = replace(kick_delta, semantic_kind=cxr.vel)
+    kick = cxfm.Translate(
+        cxc.cdict(u.Q([269_813_212.2, 0, 0], "m/s"), cxc.cart3d),
+        chart=cxc.cart3d,
+        semantic_kind=cxr.vel,
+    )
     return shift | kick  # ty: ignore[unsupported-operator]
 
 

@@ -332,6 +332,39 @@ def _common_time_unit(
     return None
 
 
+def _chain_time(tau: Any, time_unit: Any, /) -> tuple[Any, Callable[[Any], Any]]:
+    """Prepare tau for the derivative chain.
+
+    Returns the raw chain value of tau (expressed per the common time unit T)
+    and a converter mapping chain values back to what the point action
+    expects:
+
+    - ``tau=None``: the point action is applied AT tau=None — no dummy time
+      is fabricated; the (unused) chain slot contributes exactly zero, and a
+      point action that genuinely requires a time raises its own informative
+      error instead of being silently evaluated at a made-up instant.
+    - unitful tau: expressed in T so the chain rule's dtau- and
+      dx-contributions add consistently.
+    - raw (unitless) tau: passed through raw — the user's callables expect a
+      number — with the derivative direction interpreted as per T (the
+      documented raw-tau convention; cf. `tau_derivative`).
+    """
+    tau_is_unitful = tau is not None and u.unit_of(tau) is not None
+    if tau is None:
+        tau_val: Any = jnp.zeros(())  # unused: to_time ignores its argument
+    elif tau_is_unitful and time_unit is not None:
+        tau_val = u.ustrip(time_unit, tau)
+    else:
+        tau_val = jnp.asarray(tau)
+
+    def to_time(tv: Any, /) -> Any:
+        if tau is None:
+            return None
+        return _attach_leaf(time_unit, tv) if tau_is_unitful else tv
+
+    return tau_val, to_time
+
+
 # =============================================================================
 # prolong_jet: joint kinematic prolongation of a jet of coordinate data
 
@@ -413,24 +446,13 @@ def prolong_jet(
     # Everything in the chain — the jet slots AND tau itself — is expressed
     # per T so the chain rule's dtau- and dx-contributions add consistently.
     time_unit = _common_time_unit(tau, in_units, _cdict_units(jet[1]), 1)
-    if tau is None:
-        tau_val = jnp.zeros(())  # unused: f below ignores tv when tau is None
-    elif time_unit is not None:
-        tau_val = u.ustrip(time_unit, tau)
-    else:
-        tau_val = jnp.asarray(tau)
+    tau_val, to_time = _chain_time(tau, time_unit)
 
     comps = tuple(q0.keys())
 
     def f(tv: Any, xv: dict[str, Any], /) -> dict[str, Any]:
-        # With tau=None the point action is applied AT tau=None — no dummy
-        # time is fabricated. The (unused) tv slot then contributes exactly
-        # zero to the derivatives, and a point action that genuinely requires
-        # a time raises its own informative error instead of being silently
-        # evaluated at a made-up instant.
-        t = _attach_leaf(time_unit, tv) if tau is not None else None
         x = _attach_cdict(xv, in_units)
-        y = cxfmapi.act(op, t, x, chart, cxr.point, usys=usys)
+        y = cxfmapi.act(op, to_time(tv), x, chart, cxr.point, usys=usys)
         return _strip_cdict(y, out_units)
 
     # Stripped jet slots: slot m in units in_unit_k / T**m.

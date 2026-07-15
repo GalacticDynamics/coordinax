@@ -263,8 +263,18 @@ def prolong(
         # The jet always supplies the base point, so fibre kicks (k >= 1)
         # work even cross-chart: `act` pushes the offset through the chart
         # Jacobian at jet[0] when the charts differ.
+        # The base point anchors the tangent slots only: slot 0 IS the point,
+        # so it gets no 'at' (a strict point dispatch need not accept one).
         return {
-            m: cxfmapi.act(op, tau, slot, chart, _slot_rep(m), at=jet[0], usys=usys)
+            m: cxfmapi.act(
+                op,
+                tau,
+                slot,
+                chart,
+                _slot_rep(m),
+                usys=usys,
+                **({"at": jet[0]} if m else {}),
+            )
             for m, slot in jet.items()
         }
 
