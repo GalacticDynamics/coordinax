@@ -4,16 +4,13 @@ __all__ = ("Rotate",)
 
 
 from dataclasses import replace
-from operator import itemgetter
 
 from collections.abc import Callable
 from jaxtyping import Array, Shaped
-from typing import Any, Final, TypeAlias, cast, final, get_type_hints
+from typing import Any, TypeAlias, cast, final, get_type_hints
 
-import equinox as eqx
 import jax
 import jax.scipy.spatial.transform as jtransform
-import jax.tree as jtu
 import plum
 from jax.typing import ArrayLike
 
@@ -21,12 +18,12 @@ import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
-import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .base import AbstractTransform, materialize_transform
-from .custom_types import CDict, HasShape, OptUSys
+from .custom_types import CDict, OptUSys
 from .identity import identity
+from .linear import AbstractLinearTransform
 from .prolong import _attach_leaf, _strip_leaf, _tau_value_unit, prolong_slot
 from .utils import Neg
 from coordinax.internal import pack_uniform_unit
@@ -34,18 +31,9 @@ from coordinax.transforms._src import groups
 
 RMatrix: TypeAlias = Shaped[Array, " N N"]
 
-_MSG_R_SHAPE: Final = "Rotate requires a square rotation matrix; got shape={shape!r}."
-
-_MSG_R_X_SHAPE_MISMATCH: Final = (
-    "Rotate() requires the chart's canonical Cartesian chart "
-    "to have dimension matching the rotation matrix. "
-    "Got R.shape={R.shape} and cartesian_chart={cart.__class__.__name__} "
-    "with ndim={cart.ndim!r}."
-)
-
 
 @final
-class Rotate(AbstractTransform):
+class Rotate(AbstractLinearTransform):
     r"""Operator for Galilean rotations.
 
     The coordinate transform is given by:
@@ -224,29 +212,9 @@ class Rotate(AbstractTransform):
 
     # -----------------------------------------------------
 
-    @staticmethod
-    def _validate_square(R: HasShape, /) -> RMatrix:
-        shape = R.shape
-        return eqx.error_if(
-            R, len(shape) != 2 or shape[0] != shape[1], _MSG_R_SHAPE.format(shape=shape)
-        )
-
-    @staticmethod
-    def _validate_shape_match(
-        R: HasShape, cart: cxc.AbstractChart[Any, Any, Any], /
-    ) -> RMatrix:
-        n = R.shape[0]
-        return eqx.error_if(
-            R,
-            cart.ndim != n or len(cart.components) != n,
-            _MSG_R_X_SHAPE_MISMATCH.format(R=R, cart=cart),
-        )
-
-    def _get_R(self, cart: cxc.AbstractChart[Any, Any, Any], /) -> RMatrix:
-        R = self.R
-        R = eqx.error_if(R, callable(R), "need to call `materialize_transform`.")
-        R = self._validate_square(R)
-        return self._validate_shape_match(R, cart)
+    @property
+    def _raw_matrix(self) -> Any:
+        return self.R
 
     # -----------------------------------------------------
     # Arithmetic operations
@@ -470,147 +438,9 @@ def simplify(op: Rotate, /, **kw: Any) -> AbstractTransform:
 # act
 
 # -----------------------------------------------
-# Special dispatches for Array.
-# These are interpreted as Cartesian coordinates in a Euclidean metric
-
-
-@plum.dispatch
-def act(
-    op: Rotate,
-    tau: Any,
-    x: ArrayLike,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    **kw: Any,
-) -> Array:
-    """Apply Rotate to an Array(like) object."""
-    del kw  # Does not require an anchoring base-point.
-
-    # Process Value
-    x_arr = jnp.asarray(x)
-    chart = cxc.guess_chart(x_arr)  # ty: ignore[invalid-assignment]
-    if chart != chart.cartesian:
-        msg = "act for Rotate with ArrayLike x requires a Cartesian chart."
-        raise ValueError(msg)
-    if rep != cxr.point:
-        msg = "act for Rotate with ArrayLike x requires a point representation."
-        raise TypeError(msg)
-
-    # Process rotation
-    op_eval = materialize_transform(op, tau)
-    R = op_eval._get_R(chart)
-
-    return jnp.einsum("ij,...j->...i", R, x_arr)
-
-
-# -----------------------------------------------
-# Special dispatches for Quantity.
-# These are interpreted as Cartesian coordinates in a Euclidean metric
-# The role is inferred from the dimensions.
-
-_MSG_NOT_CART: Final = (
-    "act({op}, ..., Quantity) requires Cartesian components. "
-    "chart {name} is not its cartesian_chart."
-)
-
-
-@plum.dispatch
-def act(
-    op: Rotate,
-    tau: Any,
-    x: AbcQ,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    **kw: Any,
-) -> AbcQ:
-    """Apply Rotate to a PointGeometry-roled Quantity."""
-    del rep, kw
-
-    # Process Value
-    cart = chart.cartesian
-    if chart != cart:
-        msg = _MSG_NOT_CART.format(op=type(op).__name__, name=type(chart).__name__)
-        raise ValueError(msg)
-
-    # Rotation matrix
-    op_eval = materialize_transform(op, tau)
-    R = op_eval._get_R(chart)
-    return jnp.einsum("ij,...j->...i", R, x)  # ty: ignore[invalid-return-type]
-
-
-# -----------------------------------------------
-# On CDict
-
-
-@plum.dispatch
-def act(
-    op: Rotate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    rep: cxr.Representation,
-    /,
-    *,
-    usys: OptUSys = None,
-    **kw: Any,
-) -> CDict:
-    # Redispatch to geom-specific dispatch.
-    out = cxfmapi.act(op, tau, x, chart, rep.geom_kind, rep, usys=usys, **kw)
-    return cast("CDict", out)
-
-
-@plum.dispatch
-def act(
-    op: Rotate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractChart,
-    geom: cxr.PointGeometry,
-    rep: cxr.Representation,
-    /,
-    *,
-    usys: OptUSys = None,
-    **kw: Any,
-) -> CDict:
-    """Apply a spatial rotation to a Point-valued coordinate dictionary.
-
-    The point is rotated by converting to the chart's canonical Cartesian chart,
-    applying the rotation in Cartesian components, then converting back.
-
-    Notes
-    -----
-    - This dispatch is for non-product charts; Cartesian-product charts have a
-      separate dispatch that rotates only matching spatial factors.
-    - The rotation matrix must be square and its dimension must match the
-      canonical Cartesian chart dimension.
-    - Units are handled by packing Cartesian components into a common unit before
-      rotation and restoring that unit afterward.
-
-    """
-    del geom, rep, kw  # Does not require an anchoring base-point.
-
-    cart = chart.cartesian
-    # print("CART", cart.__class__, chart.__class__)
-    comps_cart = cart.components
-
-    op_eval = materialize_transform(op, tau)
-    R = op_eval._get_R(cart)
-
-    # Convert point to canonical Cartesian chart.
-    p_cart = cxc.pt_map(x, chart, cart, usys=usys)
-
-    # Pack -> rotate -> unpack (batch-safe)
-    v, unit = pack_uniform_unit(
-        p_cart, keys=comps_cart
-    )  # (..., n)  # ty: ignore[no-matching-overload]
-    v_rot = jnp.einsum("ij,...j->...i", R, v)  # (..., n)
-    p_cart_rot = cxc.cdict(v_rot, unit, comps_cart)
-
-    # Convert back to original chart.
-    out = cxc.pt_map(p_cart_rot, cart, chart, usys=usys)
-    return cast("CDict", out)
+# Tangent geometry (pushforward + kinematic prolongation). The point-geometry
+# act paths (Array / Quantity / CDict / product charts) are inherited from
+# AbstractLinearTransform.
 
 
 def _rotate_pushforward_cdict(
@@ -669,7 +499,7 @@ def _rotate_pushforward_cdict(
     """
     cart = chart.cartesian
     op_eval = materialize_transform(op, tau)
-    R = op_eval._get_R(cart)
+    R = op_eval._matrix(cart)
 
     if chart is cart:
         # Cartesian chart: Jacobian is the identity — simple linear map.
@@ -829,70 +659,3 @@ def act(
     # General case (acceleration, or non-Cartesian chart): generic prolongation
     # (which also owns the missing-tau / missing-anchor errors).
     return prolong_slot(op, tau, x, chart, m, at=at, at_vel=at_vel, usys=usys)
-
-
-# -----------------------------------------------
-# On CDict with Cartesian-product charts
-
-
-@plum.dispatch
-def act(
-    op: Rotate,
-    tau: Any,
-    x: CDict,
-    chart: cxc.AbstractCartesianProductChart,
-    geom: cxr.PointGeometry,
-    rep: cxr.Representation,
-    /,
-    *,
-    usys: OptUSys = None,
-    **kw: Any,
-) -> CDict:
-    """Apply a spatial rotation to a coordinate dictionary.
-
-    For Cartesian-product charts, this applies the rotation factorwise: each
-    factor is rotated in its canonical Cartesian chart *iff* that Cartesian
-    chart's dimension matches the rotation matrix. Factors that do not match
-    (e.g. Time1D) are left unchanged.
-
-    Notes
-    -----
-    - The rotation matrix must be square.
-    - Units are handled by packing Cartesian components into a shared unit
-      before rotation and restoring that unit afterward.
-    - Kwarg requirements depend on role; eg. Points do not require an anchoring
-      base-point.
-
-    """
-    op_eval = materialize_transform(op, tau)
-    n = op_eval._validate_square(op_eval.R).shape[-1]
-
-    # Factorize the inputs
-    n_factors = len(chart.factors)
-    parts = chart.split_components(x)
-    ats = {
-        k: chart.split_components(v) if v is not None else [None] * n_factors
-        for k, v in kw.items()
-        if k.startswith("at")
-    }
-
-    def _maybe(
-        factor_chart: cxc.AbstractChart[Any, Any, Any],
-        part: CDict,
-        /,
-        **ats: CDict | None,
-    ) -> CDict:
-        # Determine if this factor's chart should be rotated.
-        cart = factor_chart.cartesian
-        if cart.ndim != n or len(cart.components) != n:
-            return part
-
-        # Apply rotation
-        out = cxfmapi.act(op_eval, tau, part, factor_chart, geom, rep, usys=usys, **ats)
-        return cast("CDict", out)
-
-    rotated_parts = tuple(
-        _maybe(f, p, **jtu.map(itemgetter(i), ats))
-        for i, (f, p) in enumerate(zip(chart.factors, parts, strict=True))
-    )
-    return chart.merge_components(rotated_parts)
