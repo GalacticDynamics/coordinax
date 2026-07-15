@@ -21,6 +21,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from plum import NotFoundLookupError
 
 import unxt as u
 
@@ -205,6 +206,43 @@ def test_coordinate_preserves_frame(rotate_op, coord_3d):
 def test_coordinate_xfm_preserves_transformed_frame(rotate_op, coord_xfm_3d):
     result = cxfm.act(rotate_op, None, coord_xfm_3d)
     assert isinstance(result.frame, cxf.TransformedReferenceFrame)
+
+
+# ===================================================================
+# Non-JAX ArrayLike inputs
+#
+# `jaxtyping.ArrayLike` covers NumPy arrays and scalars, not just JAX arrays.
+# The dispatch funnel must coerce them before chart inference (guess_chart only
+# dispatches on JAX arrays / Quantities / CDicts); these guard that path, which
+# the JAX-array fixtures above do not exercise.
+# ===================================================================
+
+
+@pytest.mark.parametrize(("op_fixture", "expected", "needs_usys"), OPS, ids=OP_IDS)
+def test_act_accepts_numpy_array(request, op_fixture, expected, needs_usys):
+    """A NumPy array is coerced and dispatched exactly like a JAX array."""
+    op = request.getfixturevalue(op_fixture)
+    x = np.asarray([1.0, 0.0, 0.0])
+    kw = {"usys": USYS} if needs_usys else {}
+    _assert_close(_extract_xyz(cxfm.act(op, None, x, **kw)), expected)
+
+
+def test_act_numpy_matches_jax_array(rotate_op):
+    """NumPy and JAX array inputs give identical results."""
+    data = [1.0, 2.0, 3.0]
+    out_np = np.asarray(cxfm.act(rotate_op, None, np.asarray(data)))
+    out_jax = np.asarray(cxfm.act(rotate_op, None, jnp.asarray(data)))
+    np.testing.assert_allclose(out_np, out_jax)
+
+
+def test_act_rejects_python_list(rotate_op):
+    """A Python list is not an ArrayLike, so it does not resolve.
+
+    This is the documented boundary: callers pass ``jnp.asarray(...)`` or a
+    Quantity, not a bare list.
+    """
+    with pytest.raises(NotFoundLookupError):
+        cxfm.act(rotate_op, None, [1.0, 0.0, 0.0])
 
 
 # ===================================================================
