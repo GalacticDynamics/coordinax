@@ -21,8 +21,9 @@ via::
     [m for m in fn._resolver.methods if not m.signature.is_faithful]
 """
 
+from jaxtyping import ArrayLike
+
 import jax
-from jax.typing import ArrayLike
 from plum import Signature
 
 import quaxed.numpy as jnp
@@ -38,6 +39,9 @@ def _point():
 
 
 def test_jax_array_and_arraylike_are_faithful():
+    # `ArrayLike` here is `jaxtyping.ArrayLike` — the exact type the hot-path
+    # dispatch signatures annotate with (e.g. register_apply / translate) — so
+    # this pins the type that actually matters, not merely `jax.typing`'s.
     # Provided by quax >= 0.3.6 (`jax.Array.__faithful__ = True`). If this
     # fails, the quax floor regressed and every ArrayLike/jax.Array dispatch
     # signature below silently loses the method cache.
