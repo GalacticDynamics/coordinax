@@ -135,15 +135,20 @@ class Bob(AbstractReferenceFrame):
       )
     ))
 
-    Applying the Alice -> Bob transform to a bare array treats the array as a
-    position; the velocity kick leaves positions unchanged:
+    A bare, unitless array is rejected: the velocity kick cannot tell a
+    position array (kick is identity) from a velocity array (kick applies),
+    so silently guessing would risk wrong physics. Use a Quantity, cdict, or
+    typed vector instead:
 
     >>> import jax.numpy as jnp
     >>> import unxt as u
     >>> import coordinax.transforms as cxfm
     >>> x = jnp.asarray([0.0, 0.0, 0.0])
-    >>> cxfm.act(op, None, x, usys=u.unitsystems.si)
-    Array([1.e+08, 1.e+07, 0.e+00], dtype=float64)
+    >>> try:
+    ...     cxfm.act(op, None, x, usys=u.unitsystems.si)
+    ... except TypeError as e:
+    ...     print(str(e)[:30])
+    A fibre offset (Translate with
 
     Applying the Alice -> Bob transform to a ``Quantity`` works:
 
