@@ -2,7 +2,7 @@
 
 __all__ = ("Boost",)
 
-from typing import TYPE_CHECKING, Any, cast, final
+from typing import Any, cast, final
 
 import jax.tree as jtu
 import plum
@@ -16,11 +16,9 @@ import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .add import AbstractAdd
 from .custom_types import CDict, OptUSys
+from .translate import Translate
 from .utils import is_componentwise_offset
 from coordinax.transforms._src.groups import AffineGroup, DiffeomorphismGroup
-
-if TYPE_CHECKING:
-    from .translate import Translate
 
 _MSG_TAU_REQUIRED_POINT = (
     "act(Boost, ...) on point data requires a time parameter: the Galilean "
@@ -111,10 +109,8 @@ def _boost_displacement(op: Boost, /) -> Any:
     return g
 
 
-def _as_translate(op: Boost, /) -> "Translate":
+def _as_translate(op: Boost, /) -> Translate:
     """Return the equivalent displacement Translate: delta = dv(tau) * tau."""
-    from .translate import Translate  # noqa: PLC0415 - avoid module cycle
-
     return Translate(_boost_displacement(op), chart=op.chart, right_add=op.right_add)
 
 

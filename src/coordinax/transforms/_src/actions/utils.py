@@ -12,6 +12,9 @@ from typing import Any, final
 import jax.numpy as jnp
 import jax.tree as jtu
 
+import coordinax.representations as cxr
+from coordinax._src.exceptions import NoGlobalCartesianChartError
+
 
 def is_flat_chart(chart: Any, /) -> bool:
     """Whether ``chart`` is a Cartesian-type chart (its own canonical Cartesian).
@@ -25,10 +28,6 @@ def is_flat_chart(chart: Any, /) -> bool:
     flat: this predicate returns `False` rather than propagating
     `~coordinax.charts.NoGlobalCartesianChartError`.
     """
-    from coordinax._src.exceptions import (  # noqa: PLC0415 - avoid cycle
-        NoGlobalCartesianChartError,
-    )
-
     try:
         cart = chart.cartesian
     except NoGlobalCartesianChartError:
@@ -66,7 +65,5 @@ def is_componentwise_offset(op: Any, chart: Any, /) -> bool:
     `pushforward`, and `prolong` must all use it so the fast paths stay
     provably consistent with the generic prolongation.
     """
-    import coordinax.representations as cxr  # noqa: PLC0415 - avoid cycle
-
     k = getattr(op, "semantic_kind", cxr.dpl).order
     return k != 0 or (chart == op.chart and is_flat_chart(chart))

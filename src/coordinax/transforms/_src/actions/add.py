@@ -19,12 +19,14 @@ import unxt as u
 from dataclassish import field_items
 from unxt.quantity import AllowValue, is_any_quantity
 
+import coordinax.api.transforms as cxfmapi
 import coordinax.charts as cxc
 import coordinax.representations as cxr
 from .base import AbstractTransform
 from .composed import Composed
 from .custom_types import CDict
 from .identity import Identity, identity
+from .prolong import _MSG_JET_SLOT0_MISSING, prolong_jet, pushforward_generic
 from .utils import Neg, is_componentwise_offset
 from coordinax.internal import jax_scalar_handler, pos_named_objs
 
@@ -260,12 +262,6 @@ def prolong(
     (Q(1., 'm'), Q(101., 'm / s'))
 
     """
-    import coordinax.api.transforms as cxfmapi  # noqa: PLC0415 - avoid cycle
-    from .prolong import (  # noqa: PLC0415 - avoid cycle
-        _MSG_JET_SLOT0_MISSING,
-        prolong_jet,
-    )
-
     if is_componentwise_offset(op, chart):
         # The jet supplies the base point, so fibre kicks (k >= 1) work even
         # cross-chart: `act` pushes the offset through the chart Jacobian at
@@ -336,8 +332,6 @@ def pushforward(
     # in the same Cartesian-type chart; otherwise the differential is
     # base-point dependent. Defer to the generic engine.
     if not is_componentwise_offset(op, chart):
-        from .prolong import pushforward_generic  # noqa: PLC0415 - avoid cycle
-
         return pushforward_generic(op, tau, v, chart, rep, at=at, usys=usys)
 
     del op, tau, chart, rep, at, usys
