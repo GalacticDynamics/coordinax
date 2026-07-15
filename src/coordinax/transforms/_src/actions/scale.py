@@ -21,14 +21,7 @@ from coordinax.transforms._src import groups
 
 SMatrix: TypeAlias = Shaped[Array, " N N"]
 
-_MSG_S_SHAPE: Final = "Scale requires a square scaling matrix; got shape={shape!r}."
 _MSG_SINGULAR: Final = "Scale matrix must be invertible."
-_MSG_S_X_SHAPE_MISMATCH: Final = (
-    "Scale() requires the chart's canonical Cartesian chart "
-    "to have dimension matching the scaling matrix. "
-    "Got S.shape={S.shape} and cartesian_chart={cart.__class__.__name__} "
-    "with ndim={cart.ndim!r}."
-)
 
 
 @final
