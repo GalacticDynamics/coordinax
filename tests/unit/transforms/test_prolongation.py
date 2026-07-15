@@ -1111,3 +1111,24 @@ class TestLinearOpsUnderNewVerbs:
             assert jnp.allclose(u.ustrip(unit, out[k]), gen[1][k].value, atol=1e-7)
         # omega = 1 per data-time-base; z-hat x x-hat = y-hat
         assert jnp.allclose(u.ustrip("m/s", out["y"]), 1.0, atol=1e-7)
+
+    def test_rotate_closed_form_fully_raw_data(self):
+        """Fully unitless data stays raw through the m=1 closed form.
+
+        Mirrors the generic engine's None-unit "stay raw" policy.
+        """
+
+        def rot_z_raw(t) -> Real[Array, "3 3"]:
+            st_, ct = jnp.sin(t), jnp.cos(t)
+            return jnp.array([[ct, -st_, 0.0], [st_, ct, 0.0], [0.0, 0.0, 1.0]])
+
+        op = cxfm.Rotate.from_(rot_z_raw)
+        at = {"x": jnp.asarray(1.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)}
+        v = {"x": jnp.asarray(0.0), "y": jnp.asarray(0.0), "z": jnp.asarray(0.0)}
+        tau = jnp.asarray(0.0)
+        out = cxfm.act(op, tau, v, cxc.cart3d, cxr.tangent_geom, cxr.coord_vel, at=at)
+        gen = prolong_jet(op, tau, {0: at, 1: v}, cxc.cart3d)
+        for k in out:
+            assert not u.quantity.is_any_quantity(out[k])  # stays raw
+            assert jnp.allclose(out[k], gen[1][k], atol=1e-7)
+        assert jnp.allclose(out["y"], 1.0, atol=1e-7)

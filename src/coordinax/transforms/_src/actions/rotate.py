@@ -28,7 +28,7 @@ import coordinax.representations as cxr
 from .base import AbstractTransform, materialize_transform
 from .custom_types import CDict, HasShape, OptUSys
 from .identity import identity
-from .prolong import prolong_slot
+from .prolong import _attach_leaf, _strip_leaf, prolong_slot
 from .utils import Neg
 from coordinax.internal import pack_uniform_unit
 from coordinax.transforms._src import groups
@@ -827,7 +827,9 @@ def act(
         comps = cart.components
         v_arr, v_unit = pack_uniform_unit(x, keys=comps)
         at_arr, at_unit = pack_uniform_unit(at, keys=comps)
-        Rv = u.Q(jnp.einsum("ij,...j->...i", R, v_arr), v_unit)
+        # None units mean "stay raw" throughout, mirroring the generic
+        # engine's _attach_leaf/_strip_leaf policy for unitless data.
+        Rv = _attach_leaf(v_unit, jnp.einsum("ij,...j->...i", R, v_arr))
         # dR/dtau is per tau's unit; for a raw (unitless) tau with unitful
         # data, interpret it in the data's own time base T = at_unit/v_unit
         # (the same policy as the generic engine's _common_time_unit), so
@@ -838,8 +840,10 @@ def act(
             rdot_unit = v_unit
         else:
             rdot_unit = at_unit
-        Rdot_at = u.Q(jnp.einsum("ij,...j->...i", Rdot, at_arr), rdot_unit)
-        out_arr = u.ustrip(v_unit, Rv + Rdot_at)
+        Rdot_at = _attach_leaf(rdot_unit, jnp.einsum("ij,...j->...i", Rdot, at_arr))
+        out_arr = _strip_leaf(v_unit, Rv + Rdot_at)
+        if v_unit is None:
+            return {k: out_arr[..., i] for i, k in enumerate(comps)}
         return cast("CDict", cxc.cdict(out_arr, v_unit, comps))
 
     # General case (acceleration, or non-Cartesian chart): generic prolongation
