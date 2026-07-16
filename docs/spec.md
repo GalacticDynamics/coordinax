@@ -1117,13 +1117,14 @@ The `coordinax.charts` module provides the chart-facing API for representing poi
 
     - Input `frozenset[str]` (component names): infer a chart whose `components` set matches exactly. The results are cached; repeated calls with the same key set return the same chart object instance.
     - Input `CDict`/mapping: infer from `frozenset(obj.keys())`.
-    - Input array-like or quantity-like with trailing axis length 1, 2, or 3: infer Cartesian chart by that trailing size.
-    - Mapping for shaped inputs: trailing `...x1 -> cart1d`, `...x2 -> cart2d`, `...x3 -> cart3d`.
+    - Input array-like or quantity-like with trailing axis length 1, 2, or 3: infer the matching low-dimensional Cartesian chart (`cart1d`/`cart2d`/`cart3d`) by that trailing size.
+    - Input array-like or quantity-like with any other trailing axis length: infer the arbitrary-dimension Cartesian chart `cartnd` (`CartND`).
+    - Mapping for shaped inputs: trailing `...x1 -> cart1d`, `...x2 -> cart2d`, `...x3 -> cart3d`, any other `...xN -> cartnd`.
 
     Failure semantics:
 
     - If no chart matches a provided key set, raise `ValueError`.
-    - Inputs outside registered dispatches (for example trailing axis sizes other than 1/2/3) are not inferred by this API.
+    - Inputs with no registered dispatch — neither a component-name set / mapping nor an array-like or quantity-like value — are not inferred by this API.
 
     Notes:
 
