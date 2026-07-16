@@ -27,9 +27,10 @@ PointLike: TypeAlias = ArrayLike | AbcQ | QMatrix | CDict
 # Input coercion
 #
 # `guess_chart` only dispatches on JAX arrays, Quantities, and CDicts, so a bare
-# `ArrayLike` (a list, a NumPy array, a scalar) must be coerced to a JAX array
-# before chart inference. Quantity / QMatrix / CDict are passed through
-# unchanged (they already carry the structure `guess_chart` needs).
+# `ArrayLike` (a NumPy array or a scalar) must be coerced to a JAX array before
+# chart inference. Quantity / QMatrix / CDict are passed through unchanged (they
+# already carry the structure `guess_chart` needs). A Python list is not an
+# `ArrayLike`, so it never reaches this funnel (see test_act_rejects_python_list).
 
 
 @plum.dispatch
