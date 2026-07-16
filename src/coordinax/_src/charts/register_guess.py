@@ -113,7 +113,7 @@ def guess_chart(
     """Infer a 1D Cartesian chart from last dimension of a value / quantity.
 
     >>> import unxt as u
-    >>> import coordinax.charts as cx
+    >>> import coordinax.charts as cxc
     >>> q = u.Q([1.0], "m")
     >>> cxc.guess_chart(q)
     Cart1D(M=Rn(1))
@@ -130,7 +130,7 @@ def guess_chart(
     """Infer a 2D Cartesian chart from last dimension of a value / quantity.
 
     >>> import unxt as u
-    >>> import coordinax.charts as cx
+    >>> import coordinax.charts as cxc
     >>> q = u.Q([1.0, 2.0], "m")
     >>> cxc.guess_chart(q)
     Cart2D(M=Rn(2))
@@ -147,7 +147,7 @@ def guess_chart(
     """Infer a 3D Cartesian chart from last dimension of a value / quantity.
 
     >>> import unxt as u
-    >>> import coordinax.charts as cx
+    >>> import coordinax.charts as cxc
     >>> q = u.Q([1.0, 2.0, 3.0], "m")
     >>> cxc.guess_chart(q)
     Cart3D(M=Rn(3))
@@ -164,7 +164,7 @@ def guess_chart(
     """Infer a N-dimensional Cartesian chart from last dimension of a value / quantity.
 
     >>> import unxt as u
-    >>> import coordinax.charts as cx
+    >>> import coordinax.charts as cxc
     >>> q = u.Q([1.0, 2.0, 3.0, 4.0], "m")
     >>> cxc.guess_chart(q)
     CartND(M=Rn(True))
