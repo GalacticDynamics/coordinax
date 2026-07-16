@@ -7,7 +7,6 @@ from typing import Any, TypeAlias, cast
 
 import plum
 
-import quaxed.numpy as jnp
 import unxt as u
 from unxt import AbstractQuantity as AbcQ
 
@@ -20,27 +19,10 @@ from coordinax.internal import QMatrix, pack_nonuniform_unit, pack_uniform_unit
 
 # A "point-like" input the entry funnel accepts. Faithful (each member and the
 # union), so the normalizer methods below stay in plum's method cache.
+# `guess_chart` accepts all of these directly (JAX and NumPy arrays, Quantities,
+# QMatrix, CDicts). A Python list is not an `ArrayLike`, so it never matches this
+# union at all (see test_act_rejects_python_list).
 PointLike: TypeAlias = ArrayLike | AbcQ | QMatrix | CDict
-
-
-# ===================================================================
-# Input coercion
-#
-# `guess_chart` only dispatches on JAX arrays, Quantities, and CDicts, so a bare
-# `ArrayLike` (a NumPy array or a scalar) must be coerced to a JAX array before
-# chart inference. Quantity / QMatrix / CDict are passed through unchanged (they
-# already carry the structure `guess_chart` needs). A Python list is not an
-# `ArrayLike`, so it never reaches this funnel (see test_act_rejects_python_list).
-
-
-@plum.dispatch
-def _as_data(x: PointLike, /) -> Any:
-    return x
-
-
-@plum.dispatch
-def _as_data(x: ArrayLike, /) -> Any:
-    return jnp.asarray(x)
 
 
 # ===================================================================
@@ -129,7 +111,6 @@ def act(op: AbstractTransform, tau: Any, x: PointLike, /, **kw: Any) -> Any:
     Q([0., 1., 0.], 'km')
 
     """
-    x = _as_data(x)
     chart = cxc.guess_chart(x)
     return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
 
@@ -156,7 +137,6 @@ def act(
     Q([0., 1., 0.], 'km')
 
     """
-    x = _as_data(x)
     return cxfmapi.act(op, tau, x, chart, _default_rep(x), **kw)
 
 

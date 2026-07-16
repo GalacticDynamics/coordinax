@@ -211,16 +211,16 @@ def test_coordinate_xfm_preserves_transformed_frame(rotate_op, coord_xfm_3d):
 # ===================================================================
 # Non-JAX ArrayLike inputs
 #
-# `jaxtyping.ArrayLike` covers NumPy arrays and scalars, not just JAX arrays.
-# The dispatch funnel must coerce them before chart inference (guess_chart only
-# dispatches on JAX arrays / Quantities / CDicts); these guard that path, which
-# the JAX-array fixtures above do not exercise.
+# `jaxtyping.ArrayLike` covers NumPy arrays as well as JAX arrays, and both
+# dispatch equivalently through `guess_chart` and the act funnel. These guard
+# that path, which the JAX-array fixtures above do not exercise. (A Python list
+# is not an ArrayLike and is rejected — see test_act_rejects_python_list.)
 # ===================================================================
 
 
 @pytest.mark.parametrize(("op_fixture", "expected", "needs_usys"), OPS, ids=OP_IDS)
 def test_act_accepts_numpy_array(request, op_fixture, expected, needs_usys):
-    """A NumPy array is coerced and dispatched exactly like a JAX array."""
+    """A NumPy array dispatches equivalently to a JAX array."""
     op = request.getfixturevalue(op_fixture)
     x = np.asarray([1.0, 0.0, 0.0])
     kw = {"usys": USYS} if needs_usys else {}

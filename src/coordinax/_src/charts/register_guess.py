@@ -2,7 +2,7 @@
 
 __all__: tuple[str, ...] = ()
 
-from jaxtyping import Array, Shaped
+from jaxtyping import ArrayLike, Shaped
 from typing import Any, cast
 
 import plum
@@ -107,7 +107,7 @@ def guess_chart(obj: CDict, /) -> AbstractChart:
 
 @plum.dispatch
 def guess_chart(
-    _: Shaped[Array, "*batch 1"] | Shaped[u.AbstractQuantity, "*batch 1"],
+    _: Shaped[ArrayLike, "*batch 1"] | Shaped[u.AbstractQuantity, "*batch 1"],
     /,
 ) -> AbstractChart:
     """Infer a 1D Cartesian chart from last dimension of a value / quantity.
@@ -124,7 +124,8 @@ def guess_chart(
 
 @plum.dispatch
 def guess_chart(
-    _: Shaped[Array, "*batch 2"] | Shaped[u.AbstractQuantity, "*batch 2"], /
+    _: Shaped[ArrayLike, "*batch 2"] | Shaped[u.AbstractQuantity, "*batch 2"],
+    /,
 ) -> AbstractChart:
     """Infer a 2D Cartesian chart from last dimension of a value / quantity.
 
@@ -140,7 +141,8 @@ def guess_chart(
 
 @plum.dispatch
 def guess_chart(
-    _: Shaped[Array, "*batch 3"] | Shaped[u.AbstractQuantity, "*batch 3"], /
+    _: Shaped[ArrayLike, "*batch 3"] | Shaped[u.AbstractQuantity, "*batch 3"],
+    /,
 ) -> AbstractChart:
     """Infer a 3D Cartesian chart from last dimension of a value / quantity.
 
@@ -156,7 +158,8 @@ def guess_chart(
 
 @plum.dispatch(precedence=-1)  # ty: ignore[no-matching-overload]
 def guess_chart(
-    _: Shaped[Array, "*batch N"] | Shaped[u.AbstractQuantity, "*batch N"], /
+    _: Shaped[ArrayLike, "*batch N"] | Shaped[u.AbstractQuantity, "*batch N"],
+    /,
 ) -> AbstractChart:
     """Infer a N-dimensional Cartesian chart from last dimension of a value / quantity.
 

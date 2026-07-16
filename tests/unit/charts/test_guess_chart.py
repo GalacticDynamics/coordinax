@@ -16,6 +16,8 @@
 
 from typing import TypeAlias
 
+import numpy as np
+import pytest
 from hypothesis import given, strategies as st
 
 import unxt_hypothesis as ust
@@ -128,3 +130,14 @@ class TestGuessChartFromArrayLike:
         q = data.draw(ust.quantities("m", shape=self.draw_shape(data, ndim)))
         guessed = cxc.guess_chart(q)
         assert guessed == expected
+
+    @pytest.mark.parametrize("ndim", [1, 2, 3])
+    def test_numpy_array_trailing_dim_guesses_cartesian(self, ndim: int) -> None:
+        """A NumPy array (not only a JAX array) guesses to Cart[N]D."""
+        guessed = cxc.guess_chart(np.ones((2, ndim)))
+        assert guessed == SHAPE_CART_MAP[ndim]
+
+    def test_numpy_array_high_dim_guesses_cartnd(self) -> None:
+        """A NumPy array with trailing dim > 3 guesses to the N-D Cartesian chart."""
+        guessed = cxc.guess_chart(np.ones((2, 5)))
+        assert type(guessed) is cxc.CartND
